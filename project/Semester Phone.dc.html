@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-ec2ca40c-1b5d-43d4-b745-e12440ac38fa/styles.css">
+<script src="_ds/industry-ec2ca40c-1b5d-43d4-b745-e12440ac38fa/_ds_bundle.js"></script>
+<style>
+  :root {
+    --app-bg: #0f161e;
+    --app-panel: #16202b;
+    --app-hero: #1c2a38;
+    --app-fg: #e8edf2;
+    --app-accent: #8fc0f0;
+    --app-line: rgba(232,237,242,0.16);
+    --app-track: rgba(232,237,242,0.12);
+  }
+  a { color: var(--app-accent); }
+  a:hover { color: #b9d8f7; }
+  .scrollarea::-webkit-scrollbar { width: 0; height: 0; }
+  @keyframes sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+  [data-app] .btn { border-color: var(--app-line); color: var(--app-fg); }
+  [data-app] .btn-primary { background: var(--app-accent); border-color: var(--app-accent); color: #0f161e; box-shadow: 0 0 0 1px rgba(143,192,240,0.25), 0 6px 22px rgba(143,192,240,0.18); }
+  [data-app] .btn-primary:hover { background: #b9d8f7; }
+  [data-app] .btn-secondary:hover { background: rgba(232,237,242,0.08); }
+  [data-app] .btn-ghost { color: var(--app-accent); border-color: transparent; }
+  [data-app] .btn-ghost:hover { background: rgba(143,192,240,0.12); }
+  [data-app] .tag { border-radius: 0; }
+  [data-app] .tag-accent { background: rgba(143,192,240,0.14); color: var(--app-accent); }
+  [data-app] .tag-neutral { background: rgba(232,237,242,0.08); color: var(--app-fg); }
+  [data-app] .tag-outline { border-color: var(--app-accent); color: var(--app-accent); }
+  [data-app] .blueprint { border-color: var(--app-line); }
+  [data-app] .blueprint > .corner { color: rgba(143,192,240,0.55); }
+  [data-app] .input { background: var(--app-panel); border-color: var(--app-line); color: var(--app-fg); }
+  [data-app] .input::placeholder { color: rgba(232,237,242,0.4); }
+  [data-app] .table th { color: rgba(232,237,242,0.55); border-bottom-color: var(--app-line); }
+  [data-app] .table td { border-bottom-color: rgba(232,237,242,0.08); }
+  [data-app] .table tbody tr:hover { background: rgba(232,237,242,0.05); }
+  [data-app] audio { filter: invert(1) hue-rotate(180deg) saturate(0.7); }
+</style>
+</helmet>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ yes }}" hint-size="402px,874px">
+<div data-app="1" style="height:100%;position:relative;display:flex;flex-direction:column;background:var(--app-bg);color:var(--app-fg);font-family:var(--font-body);font-size:15px">
+
+  <sc-if value="{{ onOnboarding }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;padding:70px 24px 42px;overflow-y:auto">
+      <div style="display:flex;gap:6px;margin-bottom:34px">
+        <sc-for list="{{ onbDots }}" as="d" hint-placeholder-count="3">
+          <div style="height:3px;flex:1;background:var(--app-line)">
+            <div style="height:100%;width:100%;background:var(--app-accent);opacity:{{ d.on }}"></div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent)">{{ onbKicker }}</div>
+      <div style="font-family:var(--font-heading);font-weight:600;font-size:46px;line-height:1.02;letter-spacing:-.02em;margin:10px 0 14px;text-wrap:pretty">{{ onbTitle }}</div>
+      <div style="font-size:16px;line-height:1.5;opacity:.72;max-width:30ch">{{ onbBody }}</div>
+
+      <sc-if value="{{ onbStep1 }}" hint-placeholder-val="{{ false }}">
+        <div class="blueprint" style="margin-top:34px;padding:18px 16px;display:flex;flex-direction:column;gap:14px">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <sc-for list="{{ courses }}" as="c" hint-placeholder-count="4">
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <div style="font-family:var(--font-heading);font-size:17px;width:88px;color:var(--app-accent)">{{ c.code }}</div>
+              <div style="font-size:13px;opacity:.7;flex:1">{{ c.name }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onbStep2 }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:30px;display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ onbFiles }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:12px;border:1px solid var(--app-line);padding:12px 14px">
+              <div style="width:18px;height:18px;border:1.5px solid var(--app-accent);background:var(--app-accent);display:grid;place-items:center">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f2f2f3" stroke-width="2.5"><path d="M20 6 9 17l-5-5"></path></svg>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ f.file }}</div>
+                <div style="font-size:11px;opacity:.5;font-family:var(--font-heading);letter-spacing:.06em">{{ f.found }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onbStep3 }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:26px;display:flex;flex-direction:column">
+          <sc-for list="{{ notifRows }}" as="n" hint-placeholder-count="5">
+            <div onClick="{{ n.toggle }}" style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--app-line);cursor:pointer">
+              <div style="flex:1;font-size:14px">{{ n.label }}</div>
+              <div style="width:42px;height:24px;padding:2px;border:1px solid var(--app-line);background:{{ n.trackBg }};display:flex;justify-content:{{ n.knobSide }}">
+                <div style="width:18px;height:18px;background:{{ n.knobBg }}"></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <div style="flex:1"></div>
+      <button class="btn btn-primary btn-block" onClick="{{ onbNext }}" style="height:52px;font-size:17px;letter-spacing:.04em;text-transform:uppercase">{{ onbCta }}</button>
+      <button class="btn btn-ghost btn-block" onClick="{{ skipOnb }}" style="height:34px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.55">Skip</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ inApp }}" hint-placeholder-val="{{ true }}">
+  <div style="height:100%;display:flex;flex-direction:column;min-height:0">
+
+    <div style="flex:none;display:flex;align-items:center;gap:10px;padding:58px 18px 10px;border-bottom:1px solid var(--app-line);background:var(--app-bg)">
+      <sc-if value="{{ showBack }}" hint-placeholder-val="{{ false }}">
+        <button class="btn btn-ghost btn-icon" onClick="{{ back }}" style="margin-left:-8px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m15 18-6-6 6-6"></path></svg>
+        </button>
+      </sc-if>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-family:var(--font-heading);color:var(--app-accent)">{{ headKicker }}</div>
+        <div style="font-family:var(--font-heading);font-weight:600;font-size:24px;line-height:1.1;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ headTitle }}</div>
+      </div>
+      <sc-if value="{{ showHeadActions }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;gap:2px">
+          <button class="btn btn-ghost btn-icon" onClick="{{ goSearch }}" title="Search">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.2-3.2"></path></svg>
+          </button>
+          <button class="btn btn-ghost btn-icon" onClick="{{ goNotifs }}" title="Alerts" style="position:relative">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"></path><path d="M10.5 20a2 2 0 0 0 3 0"></path></svg>
+            <sc-if value="{{ hasNotifs }}" hint-placeholder-val="{{ true }}">
+              <span style="position:absolute;top:5px;right:6px;width:7px;height:7px;background:var(--app-accent)"></span>
+            </sc-if>
+          </button>
+          <sc-if value="{{ isFeedNav }}" hint-placeholder-val="{{ false }}">
+            <button class="btn btn-ghost btn-icon" onClick="{{ goMe }}" title="Me">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5"></path></svg>
+            </button>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+
+    <div class="scrollarea" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding-bottom:30px">
+
+      <sc-if value="{{ onHome }}" hint-placeholder-val="{{ true }}">
+        <sc-if value="{{ isFeedNav }}" hint-placeholder-val="{{ false }}">
+          <div style="position:sticky;top:0;z-index:5;background:var(--app-bg);border-bottom:1px solid var(--app-line);padding:10px 0 10px 18px;overflow-x:auto">
+            <div style="display:flex;gap:6px;padding-right:18px">
+              <sc-for list="{{ filters }}" as="f" hint-placeholder-count="6">
+                <button onClick="{{ f.pick }}" class="btn" style="flex:none;padding:5px 12px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:{{ f.bg }};color:{{ f.fg }};border-color:{{ f.bd }}">{{ f.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="padding:18px">
+          <div class="blueprint" style="padding:16px;background:var(--app-hero);color:#f2f2f3">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.65">Next class</div>
+              <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.65">in 1 hr 19 min</div>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:12px;margin-top:10px">
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:38px;line-height:1;letter-spacing:-.01em">11:00a</div>
+              <div style="min-width:0">
+                <div style="font-family:var(--font-heading);font-size:21px;line-height:1.1">BUS 1600</div>
+                <div style="font-size:12px;opacity:.7">Alumni Hall 201</div>
+              </div>
+            </div>
+            <div style="margin-top:12px;padding-top:11px;border-top:1px solid rgba(242,242,243,.22);font-size:13px;opacity:.85">Guest speaker: Ryan · Promotion &amp; Advertising · read MM ch. 19</div>
+          </div>
+
+          <sc-if value="{{ isFeedNav }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:22px;display:flex;flex-direction:column">
+              <sc-for list="{{ feed }}" as="f" hint-placeholder-count="8">
+                <div onClick="{{ f.open }}" style="display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--app-line);cursor:{{ f.cursor }}">
+                  <div style="width:54px;flex:none;font-family:var(--font-heading);line-height:1.05;padding-top:2px">
+                    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5">{{ f.top }}</div>
+                    <div style="font-size:17px;opacity:.85">{{ f.bottom }}</div>
+                  </div>
+                  <div style="width:1px;align-self:stretch;background:{{ f.rule }}"></div>
+                  <div style="flex:1;min-width:0;opacity:{{ f.op }}">
+                    <div style="display:flex;gap:7px;align-items:center;margin-bottom:3px">
+                      <span class="tag" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase;background:{{ f.tagBg }};color:{{ f.tagFg }}">{{ f.code }}</span>
+                      <span style="font-size:11px;opacity:.55;font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ f.kind }}</span>
+                    </div>
+                    <div style="font-size:15px;line-height:1.3;text-decoration:{{ f.strike }}">{{ f.title }}</div>
+                    <div style="font-size:12px;opacity:.6;margin-top:2px">{{ f.meta }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="height:70px"></div>
+          </sc-if>
+
+          <sc-if value="{{ isTabNav }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin:26px 0 4px">
+            <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent)">Due today</div>
+            <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.1em;opacity:.5">{{ doneLabel }}</div>
+          </div>
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:29px;line-height:1.05;letter-spacing:-.01em;margin-bottom:14px;text-wrap:pretty">{{ punchline }}</div>
+
+          <sc-if value="{{ allClear }}" hint-placeholder-val="{{ false }}">
+            <div class="blueprint" style="padding:26px 18px;text-align:center">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="width:34px;height:34px;margin:0 auto 12px;border:1.5px solid var(--app-accent);display:grid;place-items:center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--app-accent)" stroke-width="1.5"><path d="M20 6 9 17l-5-5"></path></svg>
+              </div>
+              <div style="font-family:var(--font-heading);font-size:21px">Nothing left today.</div>
+              <div style="font-size:13px;opacity:.6;margin-top:4px">Next up is ECON PSet 1, tomorrow 11:59p.</div>
+            </div>
+          </sc-if>
+
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ todayTasks }}" as="t" hint-placeholder-count="3">
+              <div class="blueprint" style="display:flex;gap:12px;padding:13px 14px;align-items:flex-start;background:{{ t.rowBg }}">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <div onClick="{{ t.toggle }}" style="width:20px;height:20px;flex:none;margin-top:2px;border:1.5px solid {{ t.boxBd }};background:{{ t.boxBg }};display:grid;place-items:center;cursor:pointer">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f2f2f3" stroke-width="2.5" style="opacity:{{ t.tickOp }}"><path d="M20 6 9 17l-5-5"></path></svg>
+                </div>
+                <div onClick="{{ t.open }}" style="flex:1;min-width:0;cursor:pointer;opacity:{{ t.textOp }}">
+                  <div style="display:flex;gap:7px;align-items:center;margin-bottom:3px">
+                    <span class="tag tag-accent" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ t.code }}</span>
+                    <span style="font-size:11px;opacity:.55;font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ t.kind }}</span>
+                  </div>
+                  <div style="font-size:15px;line-height:1.3;text-decoration:{{ t.strike }}">{{ t.title }}</div>
+                  <div style="font-size:12px;opacity:.6;margin-top:3px">{{ t.dueLine }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:26px 0 12px">Today's rail</div>
+          <div style="display:flex;flex-direction:column">
+            <sc-for list="{{ blocks }}" as="b" hint-placeholder-count="4">
+              <div style="display:flex;gap:14px;align-items:stretch">
+                <div style="width:56px;flex:none;text-align:right;font-family:var(--font-heading);font-size:14px;padding-top:12px;opacity:.6">{{ b.time }}</div>
+                <div style="width:1px;background:var(--app-line);position:relative">
+                  <div style="position:absolute;top:16px;left:-3px;width:7px;height:7px;background:{{ b.dot }}"></div>
+                </div>
+                <div style="flex:1;padding:11px 0 15px;min-width:0">
+                  <div style="font-family:var(--font-heading);font-size:19px;line-height:1.15;opacity:{{ b.op }};text-decoration:{{ b.strike }}">{{ b.title }}</div>
+                  <div style="font-size:12px;opacity:.6">{{ b.meta }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:14px 0 12px">On campus</div>
+          <div class="blueprint" onClick="{{ nextEvent.open }}" style="padding:13px 14px;cursor:pointer;display:flex;gap:13px;align-items:center">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="width:44px;flex:none;font-family:var(--font-heading);line-height:1">
+              <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5">{{ nextEvent.mon }}</div>
+              <div style="font-size:26px">{{ nextEvent.dd }}</div>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:15px;line-height:1.25">{{ nextEvent.title }}</div>
+              <div style="font-size:12px;opacity:.6">{{ nextEvent.time }} · {{ nextEvent.where }}</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><path d="m9 18 6-6-6-6"></path></svg>
+          </div>
+
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:24px 0 12px">This week</div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="4">
+              <div onClick="{{ u.open }}" style="display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--app-line);cursor:pointer">
+                <div style="width:46px;flex:none;font-family:var(--font-heading);line-height:1">
+                  <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5">{{ u.dow }}</div>
+                  <div style="font-size:24px">{{ u.dd }}</div>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14px;line-height:1.25">{{ u.title }}</div>
+                  <div style="font-size:11px;opacity:.55;font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ u.code }} · {{ u.weight }}</div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><path d="m9 18 6-6-6-6"></path></svg>
+              </div>
+            </sc-for>
+          </div>
+          </sc-if>
+          <div style="height:26px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onCourses }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ courseCards }}" as="c" hint-placeholder-count="4">
+            <div class="blueprint" onClick="{{ c.open }}" style="padding:15px 16px;cursor:pointer">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+                <div style="font-family:var(--font-heading);font-size:22px;color:var(--app-accent)">{{ c.code }}</div>
+                <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.55">{{ c.meets }}</div>
+              </div>
+              <div style="font-size:15px;line-height:1.3;margin-top:2px">{{ c.name }}</div>
+              <div style="font-size:12px;opacity:.6;margin-top:2px">{{ c.prof }}</div>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:12px;padding-top:11px;border-top:1px solid var(--app-line)">
+                <span class="tag tag-accent" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ c.nextLabel }}</span>
+                <span style="font-size:12px;opacity:.7;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.nextTitle }}</span>
+              </div>
+            </div>
+          </sc-for>
+          <button class="btn btn-secondary btn-block" onClick="{{ goImport }}" style="height:46px;letter-spacing:.08em;text-transform:uppercase;margin-top:6px">+ Add a course from a syllabus</button>
+          <div style="height:12px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onCourse }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div style="font-size:15px;line-height:1.3">{{ course.name }}</div>
+          <div style="font-size:13px;opacity:.6;margin-top:3px">{{ course.prof }} · {{ course.email }}</div>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px">
+            <span class="tag tag-outline" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ course.meets }}</span>
+            <span class="tag tag-neutral" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ course.room }}</span>
+            <span class="tag tag-neutral" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ course.credits }}</span>
+          </div>
+
+          <button class="btn btn-primary btn-block" onClick="{{ openGuide }}" style="height:46px;letter-spacing:.06em;text-transform:uppercase;margin-top:16px">Study this course</button>
+
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:24px 0 6px">How the grade is built</div>
+          <table class="table">
+            <tbody>
+              <sc-for list="{{ course.grading }}" as="g" hint-placeholder-count="4">
+                <tr>
+                  <td style="font-size:13px">{{ g.what }}</td>
+                  <td style="text-align:right;font-family:var(--font-heading);font-size:15px;width:64px">{{ g.pct }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:24px 0 6px">Everything ahead</div>
+          <sc-for list="{{ courseItems }}" as="i" hint-placeholder-count="5">
+            <div onClick="{{ i.open }}" style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--app-line);cursor:pointer">
+              <div style="width:46px;flex:none;font-family:var(--font-heading);line-height:1">
+                <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5">{{ i.mon }}</div>
+                <div style="font-size:24px">{{ i.dd }}</div>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14px;line-height:1.25">{{ i.title }}</div>
+                <div style="font-size:11px;opacity:.55;font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ i.kind }} · {{ i.weight }}</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><path d="m9 18 6-6-6-6"></path></svg>
+            </div>
+          </sc-for>
+          <div style="font-size:11px;opacity:.45;margin-top:14px;font-family:var(--font-heading);letter-spacing:.06em">Imported from {{ course.source }}</div>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onItem }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div class="blueprint" style="padding:16px">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="display:flex;gap:7px;align-items:center">
+              <span class="tag tag-accent" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ item.code }}</span>
+              <span style="font-size:11px;opacity:.55;font-family:var(--font-heading);letter-spacing:.1em;text-transform:uppercase">{{ item.kind }}</span>
+            </div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1.06;letter-spacing:-.01em;margin:10px 0 12px;text-wrap:pretty">{{ item.title }}</div>
+            <div style="display:flex;gap:0;border-top:1px solid var(--app-line)">
+              <div style="flex:1;padding:11px 0">
+                <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;font-family:var(--font-heading)">Due</div>
+                <div style="font-family:var(--font-heading);font-size:18px">{{ item.dueShort }}</div>
+                <div style="font-size:12px;opacity:.6">{{ item.dueTime }}</div>
+              </div>
+              <div style="width:1px;background:var(--app-line)"></div>
+              <div style="flex:1;padding:11px 0 11px 14px">
+                <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;font-family:var(--font-heading)">Weight</div>
+                <div style="font-family:var(--font-heading);font-size:18px">{{ item.weight }}</div>
+                <div style="font-size:12px;opacity:.6">{{ item.where }}</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:14px;line-height:1.55;margin-top:18px;opacity:.85;text-wrap:pretty">{{ item.detail }}</div>
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:22px 0 8px">Straight from the syllabus</div>
+          <div style="border-left:2px solid var(--app-accent);padding:2px 0 2px 14px;font-size:13px;line-height:1.5;opacity:.75;font-style:italic">{{ item.quote }}</div>
+          <div style="font-size:11px;opacity:.45;margin-top:8px;font-family:var(--font-heading);letter-spacing:.06em">{{ item.source }}</div>
+          <div style="display:flex;gap:8px;margin-top:24px">
+            <button class="btn btn-primary" onClick="{{ item.toggle }}" style="flex:1;height:46px;letter-spacing:.06em;text-transform:uppercase">{{ item.cta }}</button>
+            <button class="btn btn-secondary" style="height:46px;letter-spacing:.06em;text-transform:uppercase">Remind me</button>
+          </div>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onCalendar }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:14px 18px 0;display:flex;gap:6px">
+          <sc-for list="{{ calTabs }}" as="t" hint-placeholder-count="2">
+            <button onClick="{{ t.pick }}" class="btn" style="flex:1;padding:9px 0;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:{{ t.bg }};color:{{ t.fg }};border-color:{{ t.bd }}">{{ t.label }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ showCampus }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:14px 0 10px 18px;overflow-x:auto;border-bottom:1px solid var(--app-line)">
+            <div style="display:flex;gap:6px;padding-right:18px">
+              <sc-for list="{{ evFilters }}" as="f" hint-placeholder-count="5">
+                <button onClick="{{ f.pick }}" class="btn" style="flex:none;padding:5px 12px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;background:{{ f.bg }};color:{{ f.fg }};border-color:{{ f.bd }}">{{ f.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="padding:14px 18px">
+            <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin-bottom:12px">{{ eventCount }}</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ events }}" as="e" hint-placeholder-count="6">
+                <div class="blueprint" style="display:flex;gap:13px;padding:13px 14px;align-items:flex-start">
+                  <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                  <div onClick="{{ e.open }}" style="width:44px;flex:none;font-family:var(--font-heading);line-height:1;cursor:pointer">
+                    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5">{{ e.mon }}</div>
+                    <div style="font-size:26px">{{ e.dd }}</div>
+                    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5">{{ e.dow }}</div>
+                  </div>
+                  <div onClick="{{ e.open }}" style="flex:1;min-width:0;cursor:pointer">
+                    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
+                      <span class="tag" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase;background:{{ e.tagBg }};color:{{ e.tagFg }};border:1px solid {{ e.tagBd }}">{{ e.kind }}</span>
+                      <span style="font-size:11px;opacity:.55;font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ e.tag }}</span>
+                    </div>
+                    <div style="font-size:15px;line-height:1.25">{{ e.title }}</div>
+                    <div style="font-size:12px;opacity:.6;margin-top:2px">{{ e.time }} · {{ e.where }}</div>
+                  </div>
+                  <button onClick="{{ e.toggleSave }}" class="btn btn-ghost" style="flex:none;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:4px 6px">{{ e.savedMark }}</button>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ noEvents }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:60px 8px;text-align:center">
+                <div style="font-family:var(--font-heading);font-size:24px">Nothing saved yet.</div>
+                <div style="font-size:13px;opacity:.6;margin-top:6px">Hit save on a game and it lands on your Today rail.</div>
+              </div>
+            </sc-if>
+            <div style="height:22px"></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showDeadlines }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:18px">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-bottom:6px">
+            <sc-for list="{{ dowLabels }}" as="d" hint-placeholder-count="7">
+              <div style="text-align:center;font-family:var(--font-heading);font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.45">{{ d.l }}</div>
+            </sc-for>
+          </div>
+          <div class="blueprint" style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--app-line);padding:1px">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <sc-for list="{{ calDays }}" as="d" hint-placeholder-count="35">
+              <div onClick="{{ d.pick }}" style="aspect-ratio:1;background:{{ d.bg }};color:{{ d.fg }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer">
+                <div style="font-family:var(--font-heading);font-size:15px;opacity:{{ d.op }}">{{ d.n }}</div>
+                <div style="display:flex;gap:2px;height:4px">
+                  <sc-for list="{{ d.dots }}" as="p" hint-placeholder-count="0">
+                    <div style="width:4px;height:4px;background:{{ p.c }}"></div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:22px 0 6px">{{ selLabel }}</div>
+          <sc-for list="{{ selItems }}" as="i" hint-placeholder-count="2">
+            <div onClick="{{ i.open }}" style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--app-line);cursor:pointer">
+              <span class="tag tag-accent" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ i.code }}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14px;line-height:1.25">{{ i.title }}</div>
+                <div style="font-size:11px;opacity:.55">{{ i.dueTime }}</div>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ selEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:22px 0;font-size:14px;opacity:.5">Nothing due. Rare. Enjoy it.</div>
+          </sc-if>
+          <div style="height:22px"></div>
+        </div>
+        </sc-if>
+      </sc-if>
+
+      <sc-if value="{{ onEvent }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div class="blueprint" style="padding:16px;background:var(--app-hero)">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent)">{{ event.kind }} · {{ event.tag }}</div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:31px;line-height:1.05;letter-spacing:-.01em;margin-top:8px;text-wrap:pretty">{{ event.title }}</div>
+            <div style="display:flex;margin-top:14px;border-top:1px solid var(--app-line)">
+              <div style="flex:1;padding:11px 0">
+                <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;font-family:var(--font-heading)">When</div>
+                <div style="font-family:var(--font-heading);font-size:18px">{{ event.dow }} {{ event.mon }} {{ event.day }}</div>
+                <div style="font-size:12px;opacity:.6">{{ event.time }}</div>
+              </div>
+              <div style="width:1px;background:var(--app-line)"></div>
+              <div style="flex:1;padding:11px 0 11px 14px">
+                <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;font-family:var(--font-heading)">Where</div>
+                <div style="font-family:var(--font-heading);font-size:18px;line-height:1.15">{{ event.where }}</div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:14px;line-height:1.55;margin-top:18px;opacity:.85;text-wrap:pretty">{{ event.detail }}</div>
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:22px 0 6px">Getting in</div>
+          <div style="font-size:14px;opacity:.8">{{ event.ticket }}</div>
+          <div style="display:flex;gap:8px;margin-top:24px">
+            <button class="btn btn-primary" onClick="{{ event.toggleSave }}" style="flex:1;height:46px;letter-spacing:.06em;text-transform:uppercase">{{ event.savedMark }}</button>
+            <button class="btn btn-secondary" style="height:46px;letter-spacing:.06em;text-transform:uppercase">Add to calendar</button>
+          </div>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onMe }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div class="blueprint" style="padding:16px;display:flex;gap:0">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <sc-for list="{{ stats }}" as="s" hint-placeholder-count="3">
+              <div style="flex:1;text-align:center;border-left:1px solid var(--app-line)">
+                <div style="font-family:var(--font-heading);font-weight:600;font-size:32px;line-height:1">{{ s.n }}</div>
+                <div style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;font-family:var(--font-heading);margin-top:2px">{{ s.l }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:24px 0 6px">Load by course</div>
+          <sc-for list="{{ loadBars }}" as="b" hint-placeholder-count="4">
+            <div style="padding:10px 0;border-bottom:1px solid var(--app-line)">
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <div style="font-family:var(--font-heading);font-size:17px">{{ b.code }}</div>
+                <div style="font-size:12px;opacity:.55">{{ b.n }} left</div>
+              </div>
+              <div style="height:6px;background:var(--app-track);margin-top:6px">
+                <div style="height:100%;width:{{ b.w }};background:var(--app-accent)"></div>
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:22px">
+            <button class="btn btn-secondary btn-block" onClick="{{ goImport }}" style="height:44px;letter-spacing:.06em;text-transform:uppercase">Import a syllabus</button>
+            <button class="btn btn-secondary btn-block" onClick="{{ goSettings }}" style="height:44px;letter-spacing:.06em;text-transform:uppercase">Settings</button>
+          </div>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onSearch }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <input class="input" value="{{ query }}" onChange="{{ setQuery }}" placeholder="Quiz, pset, Trounstine, Friday…" style="height:44px;font-size:15px">
+          <sc-if value="{{ hasResults }}" hint-placeholder-val="{{ true }}">
+            <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:20px 0 4px">{{ resultLabel }}</div>
+            <sc-for list="{{ results }}" as="r" hint-placeholder-count="4">
+              <div onClick="{{ r.open }}" style="display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--app-line);cursor:pointer">
+                <span class="tag tag-accent" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ r.code }}</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14px;line-height:1.25">{{ r.title }}</div>
+                  <div style="font-size:11px;opacity:.55">{{ r.dueShort }} · {{ r.kind }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:52px 8px;text-align:center">
+              <div style="font-family:var(--font-heading);font-size:24px">Nothing matches “{{ query }}”.</div>
+              <div style="font-size:13px;opacity:.6;margin-top:6px">Try a course code, a professor, or a week.</div>
+            </div>
+          </sc-if>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onNotifs }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <sc-if value="{{ hasNotifs }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ notifications }}" as="n" hint-placeholder-count="4">
+              <div class="blueprint" style="padding:13px 14px;margin-bottom:10px;background:{{ n.bg }}">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <div style="display:flex;justify-content:space-between;gap:8px">
+                  <span class="tag tag-accent" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ n.code }}</span>
+                  <span style="font-size:11px;opacity:.5;font-family:var(--font-heading);letter-spacing:.08em">{{ n.when }}</span>
+                </div>
+                <div style="font-family:var(--font-heading);font-size:19px;line-height:1.15;margin-top:8px">{{ n.title }}</div>
+                <div style="font-size:13px;opacity:.7;margin-top:2px">{{ n.body }}</div>
+              </div>
+            </sc-for>
+            <button class="btn btn-secondary btn-block" onClick="{{ clearNotifs }}" style="height:42px;letter-spacing:.08em;text-transform:uppercase;margin-top:8px">Clear all</button>
+          </sc-if>
+          <sc-if value="{{ noNotifs }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:70px 10px;text-align:center">
+              <div style="width:36px;height:36px;margin:0 auto 14px;border:1px solid var(--app-line);display:grid;place-items:center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--app-accent)" stroke-width="1.5"><path d="M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"></path><path d="M10.5 20a2 2 0 0 0 3 0"></path></svg>
+              </div>
+              <div style="font-family:var(--font-heading);font-size:24px">All caught up.</div>
+              <div style="font-size:13px;opacity:.6;margin-top:6px">We'll poke you 24 hours before the next deadline.</div>
+            </div>
+          </sc-if>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin-bottom:2px">Tell me when</div>
+          <sc-for list="{{ notifRows }}" as="n" hint-placeholder-count="5">
+            <div onClick="{{ n.toggle }}" style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--app-line);cursor:pointer">
+              <div style="flex:1;font-size:14px">{{ n.label }}</div>
+              <div style="width:42px;height:24px;padding:2px;border:1px solid var(--app-line);background:{{ n.trackBg }};display:flex;justify-content:{{ n.knobSide }}">
+                <div style="width:18px;height:18px;background:{{ n.knobBg }}"></div>
+              </div>
+            </div>
+          </sc-for>
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:26px 0 2px">Sources</div>
+          <sc-for list="{{ sources }}" as="s" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--app-line)">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14px">{{ s.label }}</div>
+                <div style="font-size:11px;opacity:.5">{{ s.meta }}</div>
+              </div>
+              <span class="tag tag-outline" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ s.state }}</span>
+            </div>
+          </sc-for>
+          <button class="btn btn-secondary btn-block" onClick="{{ restartOnb }}" style="height:44px;letter-spacing:.06em;text-transform:uppercase;margin-top:24px">Replay onboarding</button>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onImport }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1.05;letter-spacing:-.01em;text-wrap:pretty">Paste it. Walk away.</div>
+          <div style="font-size:14px;opacity:.7;margin-top:6px">Dump the whole PDF or just the schedule table. Every date, weight and reading gets pulled out.</div>
+          <div style="display:flex;gap:8px;margin:16px 0 12px">
+            <button class="btn btn-secondary" style="flex:1;height:40px;font-size:12px;letter-spacing:.06em;text-transform:uppercase">Upload PDF</button>
+            <button class="btn btn-secondary" style="flex:1;height:40px;font-size:12px;letter-spacing:.06em;text-transform:uppercase">Brightspace</button>
+          </div>
+          <textarea class="input" style="min-height:210px;font-size:13px;line-height:1.5">{{ pasted }}</textarea>
+          <button class="btn btn-primary btn-block" onClick="{{ runExtract }}" style="height:50px;font-size:16px;letter-spacing:.06em;text-transform:uppercase;margin-top:12px">Extract deadlines</button>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onImporting }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1.05">Reading the syllabus…</div>
+          <div style="font-size:13px;opacity:.6;margin-top:6px">{{ loadStep }}</div>
+          <div style="height:3px;background:var(--app-track);margin:18px 0 24px;overflow:hidden">
+            <div style="height:100%;width:34%;background:var(--app-accent);animation:sweep 1.1s linear infinite"></div>
+          </div>
+          <sc-for list="{{ skeletons }}" as="s" hint-placeholder-count="5">
+            <div class="blueprint" style="padding:13px 14px;margin-bottom:10px;opacity:{{ s.op }}">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="height:9px;width:{{ s.w1 }};background:var(--app-track)"></div>
+              <div style="height:9px;width:{{ s.w2 }};background:var(--app-track);margin-top:8px"></div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onReview }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1.05;letter-spacing:-.01em">{{ reviewCount }} dates found.</div>
+          <div style="font-size:14px;opacity:.7;margin-top:6px">ECON 1020 · Principles of Microeconomics · Dr. John Stromme. Untick anything you don't want.</div>
+          <div style="display:flex;flex-direction:column;gap:9px;margin-top:18px">
+            <sc-for list="{{ reviewRows }}" as="r" hint-placeholder-count="6">
+              <div onClick="{{ r.toggle }}" class="blueprint" style="display:flex;gap:12px;padding:12px 14px;align-items:flex-start;cursor:pointer;opacity:{{ r.op }}">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <div style="width:19px;height:19px;flex:none;margin-top:2px;border:1.5px solid {{ r.boxBd }};background:{{ r.boxBg }};display:grid;place-items:center">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#f2f2f3" stroke-width="2.5" style="opacity:{{ r.tickOp }}"><path d="M20 6 9 17l-5-5"></path></svg>
+                </div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14px;line-height:1.3">{{ r.title }}</div>
+                  <div style="font-size:11px;opacity:.55;font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase;margin-top:2px">{{ r.when }} · {{ r.kind }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <button class="btn btn-primary btn-block" onClick="{{ finishImport }}" style="height:50px;font-size:16px;letter-spacing:.06em;text-transform:uppercase;margin-top:16px">{{ reviewCta }}</button>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onStudy }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div class="blueprint" style="padding:16px;background:var(--app-hero);color:#f2f2f3">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.65">Exam radar</div>
+            <div style="display:flex;align-items:baseline;gap:12px;margin-top:10px">
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:38px;line-height:1">27</div>
+              <div style="min-width:0">
+                <div style="font-family:var(--font-heading);font-size:19px;line-height:1.1">days to ECON Midterm 1</div>
+                <div style="font-size:12px;opacity:.7">Sep 30 · in class · closed note · 25–30%</div>
+              </div>
+            </div>
+            <div style="margin-top:12px;padding-top:11px;border-top:1px solid rgba(242,242,243,.22);font-size:13px;opacity:.85">Six units on it. Two are cold. Fifteen minutes a day clears them by the 24th.</div>
+          </div>
+
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:26px 0 12px">Study guides</div>
+          <div style="display:flex;flex-direction:column;gap:11px">
+            <sc-for list="{{ guideCards }}" as="g" hint-placeholder-count="4">
+              <div class="blueprint" onClick="{{ g.open }}" style="padding:14px 15px;cursor:pointer">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+                  <div style="font-family:var(--font-heading);font-size:20px;color:var(--app-accent)">{{ g.code }}</div>
+                  <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.55">{{ g.meta }}</div>
+                </div>
+                <div style="font-size:13px;opacity:.7;margin-top:2px">{{ g.blurb }}</div>
+                <div style="height:6px;background:var(--app-track);margin-top:11px">
+                  <div style="height:100%;width:{{ g.w }};background:var(--app-accent)"></div>
+                </div>
+                <div style="font-size:11px;opacity:.5;margin-top:5px;font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ g.mastery }} mastered</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:26px 0 4px">Tonight's 25 minutes</div>
+          <div style="font-size:13px;opacity:.65;margin-bottom:12px;text-wrap:pretty">Built from your four weakest units and what's on the next quiz. Torres Colón's routine, applied across all four courses.</div>
+          <sc-for list="{{ plan }}" as="p" hint-placeholder-count="4">
+            <div onClick="{{ p.go }}" style="display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--app-line);cursor:pointer">
+              <div style="width:44px;flex:none;font-family:var(--font-heading);font-size:15px;opacity:.5">{{ p.min }}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14px;line-height:1.25">{{ p.what }}</div>
+                <div style="font-size:11px;opacity:.55;font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ p.code }} · {{ p.why }}</div>
+              </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><path d="m9 18 6-6-6-6"></path></svg>
+            </div>
+          </sc-for>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onGuide }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <div style="font-size:15px;line-height:1.3">{{ guide.name }}</div>
+          <div style="font-size:13px;opacity:.6;margin-top:3px">{{ guide.blurb }}</div>
+          <div style="display:flex;gap:6px;margin-top:16px;overflow-x:auto;padding-bottom:2px">
+            <sc-for list="{{ modes }}" as="m" hint-placeholder-count="7">
+              <button onClick="{{ m.pick }}" class="btn" style="flex:none;padding:8px 13px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;background:{{ m.bg }};color:{{ m.fg }};border-color:{{ m.bd }}">{{ m.label }}</button>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ modeCards }}" hint-placeholder-val="{{ true }}">
+          <button class="btn btn-primary btn-block" onClick="{{ guide.drillAll }}" style="height:48px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;margin-top:14px">Drill all {{ guide.cardCount }} cards</button>
+          <div class="blueprint" onClick="{{ startWeak }}" style="padding:13px 14px;margin-top:12px;cursor:pointer;display:flex;align-items:center;gap:12px">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <div style="width:8px;height:34px;background:var(--app-accent);flex:none"></div>
+            <div style="flex:1;min-width:0">
+              <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.55">Weakest unit</div>
+              <div style="font-size:14px;line-height:1.25;margin-top:2px">{{ weakName }}</div>
+              <div style="font-size:11px;opacity:.55">{{ weakPct }} — drill this one first</div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><path d="m9 18 6-6-6-6"></path></svg>
+          </div>
+          </sc-if>
+
+          <sc-if value="{{ modeQuiz }}" hint-placeholder-val="{{ false }}">
+            <div class="blueprint" style="padding:16px;margin-top:14px">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="font-family:var(--font-heading);font-size:22px;line-height:1.1">Ten multiple choice</div>
+              <div style="font-size:13px;opacity:.7;line-height:1.45;margin-top:4px;text-wrap:pretty">Pulled at random from every card in the guide, with three decoys drawn from the other units — the same recognition work the real exam asks for. Different ten every run.</div>
+              <button class="btn btn-primary btn-block" onClick="{{ startQuiz }}" style="height:48px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;margin-top:14px">Start quiz</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ modeRead }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:16px;display:flex;flex-direction:column">
+              <sc-for list="{{ readUnits }}" as="u" hint-placeholder-count="6">
+                <div style="border-bottom:1px solid var(--app-line);padding:13px 0">
+                  <div onClick="{{ u.toggle }}" style="display:flex;gap:11px;align-items:center;cursor:pointer">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="flex:none;opacity:.5;transform:{{ u.chev }}"><path d="m9 18 6-6-6-6"></path></svg>
+                    <div style="flex:1;min-width:0;font-size:15px;line-height:1.25">{{ u.name }}</div>
+                    <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.45">{{ u.count }}</div>
+                  </div>
+                  <sc-if value="{{ u.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding:8px 0 2px 25px;display:flex;flex-direction:column;gap:14px">
+                      <sc-for list="{{ u.cards }}" as="c" hint-placeholder-count="3">
+                        <div>
+                          <div style="font-family:var(--font-heading);font-size:17px;line-height:1.2;text-wrap:pretty">{{ c.q }}</div>
+                          <div style="font-size:14px;line-height:1.5;opacity:.78;margin-top:3px;text-wrap:pretty">{{ c.a }}</div>
+                        </div>
+                      </sc-for>
+                      <sc-if value="{{ u.hasFig }}" hint-placeholder-val="{{ false }}">
+                        <div class="blueprint" style="padding:13px 14px">
+                          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                          <div style="font-family:var(--font-heading);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--app-accent)">Figure</div>
+                          <div style="font-family:var(--font-heading);font-size:18px;line-height:1.15;margin-top:2px">{{ u.fig.title }}</div>
+                          <sc-if value="{{ u.fig.isBars }}" hint-placeholder-val="{{ true }}">
+                            <div style="display:flex;flex-direction:column;gap:7px;margin-top:12px">
+                              <sc-for list="{{ u.fig.rows }}" as="r" hint-placeholder-count="4">
+                                <div>
+                                  <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px">
+                                    <span style="opacity:.75">{{ r.l }}</span>
+                                    <span style="font-family:var(--font-heading);font-size:14px">{{ r.v }}</span>
+                                  </div>
+                                  <div style="height:8px;background:var(--app-track);margin-top:3px">
+                                    <div style="height:100%;width:{{ r.w }};background:var(--app-accent)"></div>
+                                  </div>
+                                </div>
+                              </sc-for>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ u.fig.isSteps }}" hint-placeholder-val="{{ false }}">
+                            <div style="display:flex;flex-direction:column;margin-top:11px">
+                              <sc-for list="{{ u.fig.steps }}" as="s" hint-placeholder-count="4">
+                                <div style="display:flex;gap:11px;align-items:flex-start">
+                                  <div style="width:38px;flex:none;border:1px solid var(--app-line);display:grid;place-items:center;font-family:var(--font-heading);font-size:12px;color:var(--app-accent);padding:5px 0">{{ s.n }}</div>
+                                  <div style="flex:1;min-width:0;padding-bottom:11px">
+                                    <div style="font-family:var(--font-heading);font-size:15px;line-height:1.2">{{ s.t }}</div>
+                                    <div style="font-size:12px;opacity:.72;line-height:1.4;text-wrap:pretty">{{ s.d }}</div>
+                                  </div>
+                                </div>
+                              </sc-for>
+                            </div>
+                          </sc-if>
+                          <div style="font-size:12px;opacity:.6;line-height:1.45;margin-top:10px;padding-top:9px;border-top:1px solid var(--app-line);text-wrap:pretty">{{ u.fig.caption }}</div>
+                        </div>
+                      </sc-if>
+                      <button class="btn btn-secondary" onClick="{{ u.drill }}" style="align-self:flex-start;font-size:11px;letter-spacing:.1em;text-transform:uppercase">Drill this unit</button>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ modeFigures }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13px;opacity:.65;margin-top:14px;text-wrap:pretty">Every figure the guide draws, at phone size. These are the ones worth being able to sketch from memory.</div>
+            <div style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
+              <sc-for list="{{ figures }}" as="f" hint-placeholder-count="3">
+                <div class="blueprint" style="padding:15px">
+                  <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                  <div style="font-family:var(--font-heading);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--app-accent)">{{ f.unit }}</div>
+                  <div style="font-family:var(--font-heading);font-size:19px;line-height:1.15;margin-top:3px">{{ f.title }}</div>
+                  <sc-if value="{{ f.isBars }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;flex-direction:column;gap:8px;margin-top:14px">
+                      <sc-for list="{{ f.rows }}" as="r" hint-placeholder-count="4">
+                        <div>
+                          <div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px">
+                            <span style="opacity:.75">{{ r.l }}</span>
+                            <span style="font-family:var(--font-heading);font-size:14px">{{ r.v }}</span>
+                          </div>
+                          <div style="height:8px;background:var(--app-track);margin-top:3px">
+                            <div style="height:100%;width:{{ r.w }};background:var(--app-accent)"></div>
+                          </div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ f.isSteps }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;margin-top:12px">
+                      <sc-for list="{{ f.steps }}" as="s" hint-placeholder-count="4">
+                        <div style="display:flex;gap:12px;align-items:stretch">
+                          <div style="width:40px;flex:none;border:1px solid var(--app-line);display:grid;place-items:center;font-family:var(--font-heading);font-size:13px;color:var(--app-accent);align-self:flex-start;padding:6px 0">{{ s.n }}</div>
+                          <div style="flex:1;min-width:0;padding-bottom:12px">
+                            <div style="font-family:var(--font-heading);font-size:16px;line-height:1.2">{{ s.t }}</div>
+                            <div style="font-size:13px;opacity:.72;line-height:1.4;margin-top:2px;text-wrap:pretty">{{ s.d }}</div>
+                          </div>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <div style="font-size:12px;opacity:.6;line-height:1.45;margin-top:12px;padding-top:10px;border-top:1px solid var(--app-line);text-wrap:pretty">{{ f.caption }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ modeCases }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:13px;opacity:.65;margin-top:14px;text-wrap:pretty">The concepts pointed at things you can actually see. Trounstine, Hogue and Stromme all grade on applying an idea to a case you have not met before — this is the rep for that.</div>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px">
+              <sc-for list="{{ examples }}" as="e" hint-placeholder-count="6">
+                <div class="blueprint" style="padding:14px 15px">
+                  <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                  <span class="tag tag-accent" style="font-family:var(--font-heading);letter-spacing:.08em;text-transform:uppercase">{{ e.tag }}</span>
+                  <div style="font-family:var(--font-heading);font-size:19px;line-height:1.15;margin-top:8px;text-wrap:pretty">{{ e.t }}</div>
+                  <div style="font-size:14px;line-height:1.5;opacity:.78;margin-top:4px;text-wrap:pretty">{{ e.d }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ modeListen }}" hint-placeholder-val="{{ false }}">
+            <div class="blueprint" style="padding:16px;margin-top:14px;background:var(--app-hero);color:#f2f2f3">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.65">Field guide, spoken</div>
+                <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.12em;opacity:.65">{{ pod.len }}</div>
+              </div>
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:30px;line-height:1.04;margin-top:8px">{{ guide.code }}</div>
+              <div style="font-size:13px;opacity:.82;line-height:1.45;margin-top:6px;text-wrap:pretty">{{ pod.blurb }}</div>
+              <sc-if value="{{ podReady }}" hint-placeholder-val="{{ true }}">
+                <audio controls="{{ yes }}" ref="{{ audioRef }}" src="{{ pod.file }}" style="width:100%;margin-top:14px;height:36px"></audio>
+              </sc-if>
+              <sc-if value="{{ podPending }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(242,242,243,.22);font-size:12px;opacity:.7;font-family:var(--font-heading);letter-spacing:.06em;text-transform:uppercase">Episode not recorded yet — chapters below are the running order</div>
+              </sc-if>
+            </div>
+            <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:22px 0 4px">Chapters</div>
+            <sc-for list="{{ podChapters }}" as="c" hint-placeholder-count="8">
+              <div onClick="{{ c.seek }}" style="display:flex;gap:14px;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--app-line);cursor:pointer">
+                <div style="width:44px;flex:none;font-family:var(--font-heading);font-size:14px;color:var(--app-accent)">{{ c.t }}</div>
+                <div style="flex:1;min-width:0;font-size:14px;line-height:1.3">{{ c.name }}</div>
+              </div>
+            </sc-for>
+          </sc-if>
+
+          <sc-if value="{{ modeCards }}" hint-placeholder-val="{{ true }}">
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:26px 0 4px">Units</div>
+          <sc-for list="{{ guideUnits }}" as="u" hint-placeholder-count="6">
+            <div onClick="{{ u.drill }}" style="display:flex;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--app-line);cursor:pointer">
+              <div style="width:26px;flex:none;font-family:var(--font-heading);font-size:20px;opacity:.4">{{ u.n }}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:15px;line-height:1.25">{{ u.name }}</div>
+                <div style="height:5px;background:var(--app-track);margin-top:6px">
+                  <div style="height:100%;width:{{ u.w }};background:{{ u.bar }}"></div>
+                </div>
+              </div>
+              <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.5;width:52px;text-align:right">{{ u.count }}</div>
+            </div>
+          </sc-for>
+          </sc-if>
+
+          <sc-if value="{{ modeCram }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ hasFrames }}" hint-placeholder-val="{{ false }}">
+            <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:26px 0 10px">{{ framesLabel }}</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ guideFrames }}" as="f" hint-placeholder-count="5">
+                <div class="blueprint" style="padding:13px 14px">
+                  <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                  <div style="font-family:var(--font-heading);font-size:17px;line-height:1.15">{{ f.t }}</div>
+                  <div style="font-size:13px;opacity:.72;line-height:1.45;margin-top:4px;text-wrap:pretty">{{ f.d }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--app-accent);margin:26px 0 4px">Terms you keep missing</div>
+          <sc-for list="{{ guideTerms }}" as="t" hint-placeholder-count="4">
+            <div style="padding:11px 0;border-bottom:1px solid var(--app-line)">
+              <div style="font-family:var(--font-heading);font-size:17px">{{ t.t }}</div>
+              <div style="font-size:13px;opacity:.72;line-height:1.45;margin-top:2px">{{ t.d }}</div>
+            </div>
+          </sc-for>
+          </sc-if>
+          <div style="font-size:11px;opacity:.45;margin-top:22px;font-family:var(--font-heading);letter-spacing:.06em">Built from {{ guide.source }}</div>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onQuiz }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px">
+          <sc-if value="{{ quizRunning }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="flex:1;height:3px;background:var(--app-track)">
+                <div style="height:100%;width:{{ quizPct }};background:var(--app-accent)"></div>
+              </div>
+              <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.1em;opacity:.55">{{ quizCounter }}</div>
+            </div>
+            <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--app-accent);margin-top:18px">{{ quizUnit }}</div>
+            <div style="font-family:var(--font-heading);font-weight:600;font-size:26px;line-height:1.12;letter-spacing:-.01em;margin-top:6px;text-wrap:pretty">{{ quizQ }}</div>
+            <div style="display:flex;flex-direction:column;gap:9px;margin-top:16px">
+              <sc-for list="{{ quizOpts }}" as="o" hint-placeholder-count="4">
+                <div onClick="{{ o.pick }}" style="display:flex;gap:10px;align-items:flex-start;padding:12px 13px;border:1px solid {{ o.bd }};background:{{ o.bg }};cursor:pointer;opacity:{{ o.op }}">
+                  <div style="width:16px;flex:none;font-family:var(--font-heading);font-size:14px;line-height:1.35;color:var(--app-accent)">{{ o.mark }}</div>
+                  <div style="flex:1;min-width:0;font-size:13px;line-height:1.4;text-wrap:pretty">{{ o.text }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ quizAnswered }}" hint-placeholder-val="{{ false }}">
+              <div class="blueprint" style="padding:13px 14px;margin-top:16px">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.55">In full</div>
+                <div style="font-size:14px;line-height:1.5;margin-top:5px;text-wrap:pretty">{{ quizFull }}</div>
+              </div>
+              <button class="btn btn-primary btn-block" onClick="{{ nextQuestion }}" style="height:48px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;margin-top:14px">Next</button>
+            </sc-if>
+          </sc-if>
+          <sc-if value="{{ quizOver }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px 0 0;text-align:center">
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:64px;line-height:1">{{ quizFinalScore }}</div>
+              <div style="font-family:var(--font-heading);font-size:24px;margin-top:4px">{{ quizVerdict }}</div>
+              <div style="font-size:14px;opacity:.65;margin-top:8px;max-width:32ch;margin-left:auto;margin-right:auto;text-wrap:pretty">{{ quizNote }}</div>
+              <div style="display:flex;gap:8px;margin-top:26px">
+                <button class="btn btn-secondary" onClick="{{ backToGuide }}" style="flex:1;height:48px;letter-spacing:.06em;text-transform:uppercase">Guide</button>
+                <button class="btn btn-primary" onClick="{{ startQuiz }}" style="flex:1;height:48px;letter-spacing:.06em;text-transform:uppercase">New ten</button>
+              </div>
+            </div>
+          </sc-if>
+          <div style="height:22px"></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ onDrill }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:18px;display:flex;flex-direction:column;min-height:640px">
+          <sc-if value="{{ drillRunning }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="flex:1;height:3px;background:var(--app-track)">
+                <div style="height:100%;width:{{ drillPct }};background:var(--app-accent)"></div>
+              </div>
+              <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.1em;opacity:.55">{{ drillCounter }}</div>
+            </div>
+            <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--app-accent);margin-top:18px">{{ drillUnit }}</div>
+            <div class="blueprint" onClick="{{ flip }}" style="margin-top:10px;padding:24px 20px;min-height:250px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;background:{{ cardBg }}">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:29px;line-height:1.1;letter-spacing:-.01em;text-wrap:pretty">{{ cardQ }}</div>
+              <sc-if value="{{ revealed }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--app-line);font-size:16px;line-height:1.5;text-wrap:pretty">{{ cardA }}</div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ notRevealed }}" hint-placeholder-val="{{ true }}">
+              <div style="text-align:center;font-size:12px;opacity:.45;margin-top:12px;font-family:var(--font-heading);letter-spacing:.12em;text-transform:uppercase">Tap the card to answer</div>
+            </sc-if>
+            <div style="flex:1"></div>
+            <sc-if value="{{ revealed }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:8px;margin-top:18px">
+                <button class="btn btn-secondary" onClick="{{ markAgain }}" style="flex:1;height:52px;font-size:15px;letter-spacing:.06em;text-transform:uppercase">Again</button>
+                <button class="btn btn-primary" onClick="{{ markGot }}" style="flex:1;height:52px;font-size:15px;letter-spacing:.06em;text-transform:uppercase">Got it</button>
+              </div>
+            </sc-if>
+          </sc-if>
+          <sc-if value="{{ drillDone }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px 0 0;text-align:center">
+              <div style="font-family:var(--font-heading);font-weight:600;font-size:64px;line-height:1">{{ drillScore }}</div>
+              <div style="font-family:var(--font-heading);font-size:24px;margin-top:4px">{{ drillVerdict }}</div>
+              <div style="font-size:14px;opacity:.65;margin-top:8px;max-width:32ch;margin-left:auto;margin-right:auto;text-wrap:pretty">{{ drillNote }}</div>
+              <div class="blueprint" style="padding:14px;margin-top:26px;text-align:left">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.55">Queued for tomorrow</div>
+                <div style="font-size:14px;margin-top:6px">{{ drillQueue }}</div>
+              </div>
+              <div style="display:flex;gap:8px;margin-top:22px">
+                <button class="btn btn-secondary" onClick="{{ backToGuide }}" style="flex:1;height:48px;letter-spacing:.06em;text-transform:uppercase">Guide</button>
+                <button class="btn btn-primary" onClick="{{ redrill }}" style="flex:1;height:48px;letter-spacing:.06em;text-transform:uppercase">Run it again</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+    </div>
+
+    <sc-if value="{{ showTabs }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:none;display:flex;padding-bottom:24px;border-top:1px solid var(--app-line);background:var(--app-bg)">
+        <button onClick="{{ tabHome.go }}" style="flex:1;background:none;border:0;border-top:2px solid {{ tabHome.bar }};padding:9px 0 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ tabHome.fg }};font-family:var(--font-heading)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5.5h16v15H4z"></path><path d="M8 2v3M16 2v3M3.5 9h17"></path><path d="m8.5 14.5 2 2 4-4"></path></svg>
+          <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase">Today</span>
+        </button>
+        <button onClick="{{ tabCourses.go }}" style="flex:1;background:none;border:0;border-top:2px solid {{ tabCourses.bar }};padding:9px 0 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ tabCourses.fg }};font-family:var(--font-heading)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4.5h16v6H4zM4 13.5h16v6H4z"></path></svg>
+          <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase">Courses</span>
+        </button>
+        <button onClick="{{ tabStudy.go }}" style="flex:1;background:none;border:0;border-top:2px solid {{ tabStudy.bar }};padding:9px 0 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ tabStudy.fg }};font-family:var(--font-heading)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.5C10.5 5.2 8.4 4.5 5 4.5v13c3.4 0 5.5.7 7 2 1.5-1.3 3.6-2 7-2v-13c-3.4 0-5.5.7-7 2z"></path><path d="M12 6.5v15"></path></svg>
+          <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase">Study</span>
+        </button>
+        <button onClick="{{ tabCalendar.go }}" style="flex:1;background:none;border:0;border-top:2px solid {{ tabCalendar.bar }};padding:9px 0 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ tabCalendar.fg }};font-family:var(--font-heading)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5.5h16v15H4z"></path><path d="M8 2v3M16 2v3M3.5 9h17"></path><path d="M8 13h3v3H8z"></path></svg>
+          <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase">Calendar</span>
+        </button>
+        <button onClick="{{ tabMe.go }}" style="flex:1;background:none;border:0;border-top:2px solid {{ tabMe.bar }};padding:9px 0 4px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:{{ tabMe.fg }};font-family:var(--font-heading)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5"></path></svg>
+          <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase">Me</span>
+        </button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showFab }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ goImport }}" style="position:absolute;right:20px;bottom:48px;width:56px;height:56px;background:var(--app-accent);border:1px solid var(--app-accent);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow-md)">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f2f2f3" stroke-width="1.5"><path d="M12 5v14M5 12h14"></path></svg>
+      </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+</div>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:402,&quot;height&quot;:874},&quot;nav&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tabs&quot;,&quot;feed&quot;],&quot;default&quot;:&quot;tabs&quot;,&quot;tsType&quot;:&quot;'tabs' | 'feed'&quot;},&quot;start&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;home&quot;,&quot;onboarding&quot;,&quot;courses&quot;,&quot;study&quot;,&quot;calendar&quot;,&quot;me&quot;,&quot;import&quot;,&quot;notifs&quot;,&quot;settings&quot;,&quot;search&quot;],&quot;default&quot;:&quot;home&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const COURSES = [
+  { id:'econ', code:'ECON 1020', name:'Principles of Microeconomics', prof:'Dr. John Stromme', email:'john.stromme@vanderbilt.edu',
+    meets:'MWF · 9:05–9:55a', room:'Section 9:05', credits:'3 credits', source:'Econ1020_2026_Fall.pdf',
+    grading:[{what:'Problem sets (lowest dropped)',pct:'20%'},{what:'Exams — best of three at 30%',pct:'80%'},{what:'Top Hat participation',pct:'+3% EC'}] },
+  { id:'psci', code:'PSCI 1104', name:'Understanding Political Controversy', prof:'Prof. Jessica Trounstine', email:'jessica.l.trounstine@vanderbilt.edu',
+    meets:'T/R · 2:45–4:00p', room:'Garland 162', credits:'3 credits', source:'PSCI1104_Trounstine_F26.pdf',
+    grading:[{what:'Six quizzes, 5% each',pct:'30%'},{what:'Midterm — Oct 15, in class',pct:'30%'},{what:'Final — Dec 17, 9–11a',pct:'35%'},{what:'Attendance (Top Hat 782449)',pct:'5%'}] },
+  { id:'core', code:'CORE 2500', name:'Sports, Culture, and Society', prof:'Prof. Gabriel Torres Colón', email:'g.torres@vanderbilt.edu',
+    meets:'T/R · 1:15–2:30p', room:'Garland', credits:'3 credits', source:'Sports_Fall26_Syllabus.pdf',
+    grading:[{what:'Eight quizzes, 10 pts each',pct:'80 pts'},{what:'Thirteen reflections, 10 pts',pct:'130 pts'},{what:'Final reflection',pct:'20 pts'},{what:'Attendance — 2 free absences',pct:'—'}] },
+  { id:'bus', code:'BUS 1600', name:'Marketing Management', prof:'Dr. Eric Hogue', email:'eric.d.hogue@vanderbilt.edu',
+    meets:'T/R · Alumni Hall 201', room:'Alumni Hall 201', credits:'2 credits', source:'Syllabus Draft 8262026.pdf',
+    grading:[{what:'Midterm case write-up',pct:'30%'},{what:'Final exam',pct:'25%'},{what:'Four group assignments',pct:'20%'},{what:'Attendance',pct:'10%'},{what:'Individual assignment',pct:'10%'},{what:'SONA research participation',pct:'5%'}] },
+];
+
+const ITEMS = [
+  { id:'core-read1', c:'core', title:'Read Konner — “Play, Social Learning, and Teaching”', kind:'Reading', day:3, mon:'Sep', dow:'Thu',
+    dueShort:'Today', dueTime:'Before class, 1:15p', weight:'Required', where:'Brightspace', today:true,
+    detail:'Comes with today’s lecture: From Child Play to Sport — What Do We Lose, What Do We Gain?',
+    quote:'All assignments are due before class begins.', source:'Sports_Fall26_Syllabus.pdf · Week 2' },
+  { id:'core-r1', c:'core', title:'Reflection #1 — Should play be more serious?', kind:'Reflection', day:3, mon:'Sep', dow:'Thu',
+    dueShort:'Today', dueTime:'Before class, 1:15p', weight:'10 pts', where:'Brightspace', today:true,
+    detail:'Self-assessed against the posted rubric. No AI in any capacity. Late without an excuse drops a letter grade per day.',
+    quote:'You are not allowed to use AI in any capacity for your reflections.', source:'Sports_Fall26_Syllabus.pdf · Coursework' },
+  { id:'bus-ga1', c:'bus', title:'Group Assignment 1 — ECOALF case', kind:'Group work', day:3, mon:'Sep', dow:'Thu',
+    dueShort:'Tonight', dueTime:'11:59 PM', weight:'5% of grade', where:'Brightspace', today:true,
+    detail:'Read “ECOALF: Fashion for the Future” and submit the team assignment. Late 1–7 days costs 20%.',
+    quote:'Group Assignment 1 (Due, 11:59PM)', source:'Syllabus Draft 8262026.pdf · Schedule, 9/3' },
+  { id:'econ-ps1', c:'econ', title:'Problem Set 1', kind:'Problem set', day:4, mon:'Sep', dow:'Fri',
+    dueShort:'Fri Sep 4', dueTime:'11:59 PM', weight:'Part of 20%', where:'Gradescope',
+    detail:'Problem sets land roughly every Friday. No extensions for any reason — but your lowest score is dropped.',
+    quote:'No extensions will be given for problem sets for any reason.', source:'Econ1020_2026_Fall.pdf · Evaluation' },
+  { id:'core-q1', c:'core', title:'Quiz #1 + Ocobock & Lacy, “Woman the Hunter”', kind:'Quiz', day:8, mon:'Sep', dow:'Tue',
+    dueShort:'Tue Sep 8', dueTime:'Before class, 1:15p', weight:'10 pts', where:'Brightspace',
+    detail:'Objective questions on the reading and the previous lecture’s slides. Missed quizzes score 0, but extra credit can make the points back.',
+    quote:'Quizzes not completed by the due date before class will receive a 0.', source:'Sports_Fall26_Syllabus.pdf · Week 3' },
+  { id:'bus-sona', c:'bus', title:'SONA research session 1', kind:'Research', day:8, mon:'Sep', dow:'Tue',
+    dueShort:'Sep 8–17', dueTime:'Window opens Sep 8', weight:'Half of 5%', where:'Center Bldg, Suite 245',
+    detail:'Two windows, one session each. Miss window 1 and the full 5% is gone for good.',
+    quote:'If you do not complete Session 1 by September 17, you will no longer be able to earn the full 5%.', source:'Syllabus Draft 8262026.pdf · Research participation' },
+  { id:'psci-q1', c:'psci', title:'Quiz #1 — take-home + in-class', kind:'Quiz', day:15, mon:'Sep', dow:'Tue',
+    dueShort:'Tue Sep 15', dueTime:'Take-home posted 9a Sep 14', weight:'5% of grade', where:'Brightspace',
+    detail:'Covers Pollock ch. 4–5 and the causality readings. The take-home half is due before class starts.',
+    quote:'The take home component will be posted at 9am on the day prior to the quiz date.', source:'PSCI1104_Trounstine_F26.pdf · Quizzes' },
+  { id:'bus-case', c:'bus', title:'Midterm case write-up — Opera Philadelphia', kind:'Paper', day:15, mon:'Sep', dow:'Tue',
+    dueShort:'Tue Sep 15', dueTime:'11:59 PM', weight:'30% of grade', where:'Brightspace',
+    detail:'Five sections, max three pages plus exhibits, 10pt minimum. No outside research, no hindsight data.',
+    quote:'Length: Max 3 pages of text + supplemental exhibits.', source:'Syllabus Draft 8262026.pdf · Midterm case' },
+  { id:'psci-q2', c:'psci', title:'Quiz #2 — racial profiling readings', kind:'Quiz', day:24, mon:'Sep', dow:'Thu',
+    dueShort:'Thu Sep 24', dueTime:'Before class, 2:45p', weight:'5% of grade', where:'Brightspace',
+    detail:'Bertrand & Mullainathan plus the Bloomberg op-ed.', quote:'Quiz dates are: September 15th, September 24th, October 6th…', source:'PSCI1104_Trounstine_F26.pdf' },
+  { id:'econ-m1', c:'econ', title:'Midterm 1', kind:'Exam', day:30, mon:'Sep', dow:'Wed',
+    dueShort:'Wed Sep 30', dueTime:'In class', weight:'25–30%', where:'In person, closed note',
+    detail:'Multiple choice, in class, closed note. Weighted 30% if it is your best exam, otherwise 25%.',
+    quote:'MIDTERM 1 : September 30th (Wednesday, in class)', source:'Econ1020_2026_Fall.pdf · Important dates' },
+  { id:'bus-ec', c:'bus', title:'Extra credit — Starbucks “Ube & Energy” plan', kind:'Extra credit', day:13, mon:'Oct', dow:'Tue',
+    dueShort:'Tue Oct 13', dueTime:'11:59 PM', weight:'+2% of grade', where:'Brightspace',
+    detail:'Five-page memo: situation analysis, strategy, implementation calendar. Everything in the course closes this night.',
+    quote:'All assignments must be completed and turned in by October 13th, 11:59 PM CT.', source:'Syllabus Draft 8262026.pdf · Extra credit' },
+  { id:'psci-mid', c:'psci', title:'Midterm exam', kind:'Exam', day:15, mon:'Oct', dow:'Thu',
+    dueShort:'Thu Oct 15', dueTime:'In class, 2:45p', weight:'30% of grade', where:'Garland 162',
+    detail:'In-class exam covering research design, measurement, causality and experiments.',
+    quote:'The midterm will be in class on October 15th.', source:'PSCI1104_Trounstine_F26.pdf' },
+];
+
+const GUIDES = {
+  econ: { code:'ECON 1020', name:'Principles of Microeconomics', blurb:'Six units, everything Midterm 1 covers.', source:'Econ1020_2026_Fall.pdf + your study guide', mastery:62, audio:true,
+    units:[
+      { name:'Optimization & trade-offs', mastery:88, cards:[
+        { q:'What does “thinking at the margin” mean?', a:'Compare the extra benefit of one more unit against its extra cost. Act while MB ≥ MC.' },
+        { q:'Why does a sunk cost never belong in a decision?', a:'It is already spent and unrecoverable, so it is identical under every option — it cannot change which option is best.' },
+        { q:'Opportunity cost of an hour spent studying?', a:'The value of the single best thing you gave up — not the sum of everything you gave up.' },
+      ]},
+      { name:'Demand, supply & elasticity', mastery:70, cards:[
+        { q:'Movement along a demand curve vs. a shift of it?', a:'Own price moves you along the curve. Income, tastes, related prices, expectations and number of buyers shift the whole curve.' },
+        { q:'Price elasticity of demand — formula and cutoff?', a:'%ΔQd ÷ %ΔP. |E| > 1 is elastic, |E| < 1 inelastic, = 1 unit elastic.' },
+        { q:'Price rises on an inelastic good. What happens to revenue?', a:'Revenue rises — quantity falls proportionally less than price rises.' },
+      ]},
+      { name:'Equilibrium & welfare', mastery:54, cards:[
+        { q:'A binding price ceiling does what to the market?', a:'Set below equilibrium it creates a shortage: Qd > Qs, and non-price rationing takes over.' },
+        { q:'Consumer surplus is which area?', a:'Between the demand curve and the price actually paid, up to the quantity traded.' },
+        { q:'When does deadweight loss appear?', a:'Whenever quantity traded ≠ the efficient quantity — taxes, price controls, market power, externalities.' },
+      ]},
+      { name:'Externalities & public goods', mastery:31, cards:[
+        { q:'A negative externality produces what market outcome?', a:'Overproduction. Marginal social cost exceeds marginal private cost, so Q_market > Q_efficient.' },
+        { q:'How big should a Pigouvian tax be?', a:'Equal to the marginal external cost at the efficient quantity — it makes the private cost equal the social cost.' },
+        { q:'Two properties that define a public good?', a:'Non-rival and non-excludable. Together they invite free riding, so the market underprovides.' },
+      ]},
+      { name:'Monopoly & market power', mastery:24, cards:[
+        { q:'Why is marginal revenue below price for a monopolist?', a:'Selling one more unit requires cutting the price on every unit — the price effect nets against the output effect.' },
+        { q:'Monopoly profit-maximising rule?', a:'Produce where MR = MC, then charge the price the demand curve gives at that quantity.' },
+      ]},
+      { name:'Game theory', mastery:45, cards:[
+        { q:'Define a Nash equilibrium.', a:'Every player is playing a best response to the others — no one gains by deviating alone.' },
+        { q:'Why is the prisoner’s dilemma a dilemma?', a:'Defecting dominates for each player, yet mutual defection leaves both worse off than mutual cooperation.' },
+      ]},
+    ],
+    terms:[
+      { t:'Marginal analysis', d:'Decisions made one unit at a time, comparing MB and MC — the spine of the whole course.' },
+      { t:'Deadweight loss', d:'Surplus destroyed because the quantity traded is not the efficient quantity.' },
+      { t:'Free rider', d:'Someone who consumes a non-excludable good without paying, which is why public goods are underprovided.' },
+      { t:'Dominant strategy', d:'A move that is best regardless of what everyone else does.' },
+    ] },
+  psci: { code:'PSCI 1104', name:'Understanding Political Controversy', blurb:'Research design and inference — the quiz spine.', source:'PSCI1104_Trounstine_F26.pdf', mastery:40, audio:false,
+    units:[
+      { name:'Theory-driven research', mastery:52, cards:[
+        { q:'What makes a hypothesis testable?', a:'It states an expected relationship between two measurable variables, and evidence could prove it wrong.' },
+        { q:'Why start from theory rather than data?', a:'Theory tells you which comparison is meaningful; data-first work finds patterns that come out of nowhere.' },
+      ]},
+      { name:'Measurement', mastery:44, cards:[
+        { q:'Reliability vs. validity?', a:'Reliable means consistent across repetitions. Valid means it actually captures the concept you claim.' },
+        { q:'What is an operational definition?', a:'The concrete procedure that turns an abstract concept into a number you can record.' },
+      ]},
+      { name:'Causality & design', mastery:28, cards:[
+        { q:'Why does random assignment license a causal claim?', a:'It balances confounders in expectation, so post-treatment differences can be attributed to the treatment.' },
+        { q:'Internal vs. external validity?', a:'Internal: the causal claim holds inside this study. External: it generalises beyond it.' },
+        { q:'What is a confounder?', a:'A variable that causes both the treatment and the outcome, manufacturing a correlation with no causal path.' },
+      ]},
+      { name:'Sampling & polling error', mastery:36, cards:[
+        { q:'Why can 1,000 people represent 250 million?', a:'Because random sampling makes sampling error a function of sample size, not population size.' },
+        { q:'Name a non-sampling error polls suffer from.', a:'Differential nonresponse — the people who answer differ systematically from those who do not, and weighting only partly repairs it.' },
+      ]},
+    ],
+    terms:[
+      { t:'Selection bias', d:'The sample is related to the outcome, so the comparison was rigged before any analysis began.' },
+      { t:'Statistical significance', d:'The result is unlikely under the null hypothesis — not a statement that the effect is large or important.' },
+    ] },
+  core: { code:'CORE 2500', name:'Sports, Culture, and Society', blurb:'Concepts the eight quizzes keep returning to.', source:'Sports_Fall26_Syllabus.pdf', mastery:55, audio:false,
+    units:[
+      { name:'Evolution, play & ritual', mastery:66, cards:[
+        { q:'What does Konner argue play is for?', a:'Play is how social learning and teaching happen — practice for the roles and skills a culture demands.' },
+        { q:'What is lost as child play becomes organised sport?', a:'Self-direction and improvisation, traded for rules, adult authority and measurable performance.' },
+      ]},
+      { name:'Race, biology & difference', mastery:48, cards:[
+        { q:'Why do anthropologists call race a social construct?', a:'Human biological variation is clinal and continuous; racial categories are historical and political groupings laid over it.' },
+        { q:'What does “Woman the Hunter” revise?', a:'The assumption that hunting was universally male — the physiological and archaeological record does not support it.' },
+      ]},
+      { name:'Embodiment & performance', mastery:50, cards:[
+        { q:'Define embodiment as this course uses it.', a:'The intertwining of biology, culture and lived experience in the moving body.' },
+        { q:'What does Gmelch’s “Baseball Magic” show?', a:'Ritual clusters exactly where uncertainty is highest — hitting and pitching, not fielding.' },
+      ]},
+    ],
+    terms:[
+      { t:'Mega-event', d:'A sporting spectacle whose real work is cultural performance and state projection.' },
+      { t:'Sports colonialism', d:'The spread of sport as an instrument of imperial administration and cultural authority.' },
+    ] },
+  bus: { code:'BUS 1600', name:'Marketing Management', blurb:'The frameworks the case write-up is graded on.', source:'Syllabus Draft 8262026.pdf', mastery:73, audio:false,
+    units:[
+      { name:'The 5 Cs', mastery:82, cards:[
+        { q:'Name the 5 Cs.', a:'Company, Customers, Competitors, Collaborators, Context.' },
+        { q:'Which C do students most often skip?', a:'Collaborators — channel partners, agencies, suppliers — and the case rubric notices.' },
+      ]},
+      { name:'Segmentation, targeting, positioning', mastery:74, cards:[
+        { q:'What does STP mean in order?', a:'Split the market into segments, choose which to serve, then own a distinct position in that segment’s mind.' },
+        { q:'What makes a segment worth targeting?', a:'It is measurable, reachable, big enough to matter, and responds differently from other segments.' },
+      ]},
+      { name:'The marketing mix', mastery:64, cards:[
+        { q:'The seven tasks of the mix?', a:'Product, Service, Brand, Price, Incentives, Communications, Distribution.' },
+        { q:'What does the “So what?” test demand of an exhibit?', a:'Every data point must lead directly to a decision or insight, or it gets cut.' },
+      ]},
+    ],
+    terms:[
+      { t:'Brand equity', d:'The value the name itself adds — what a customer pays beyond the functional product.' },
+      { t:'Risk mitigation', d:'The section that separates a C-level deliverable from a student paper: top two risks and the pivot.' },
+    ] },
+};
+
+GUIDES.psci = {
+  code:'PSCI 1104', name:'Understanding Political Controversy', blurb:'Fourteen units, seven debates, one recurring exam question.',
+  source:'PSCI1104_Study_Guide.pdf — your field guide', mastery:38, audio:false,
+  units:[
+    { name:'1 · Theory-driven research', mastery:64, cards:[
+      { q:'What makes a hypothesis scientific?', a:'It names two variables and a direction, and it could lose. If no possible evidence would prove you wrong, you are not doing science.' },
+      { q:'Theory vs. hypothesis?', a:'Theory is the general explanation of why X causes Y and must apply beyond your case. The hypothesis is one specific testable prediction that follows from it.' },
+      { q:'Empirical vs. normative claim?', a:'Empirical = what is, settled by evidence. Normative = what ought to be, settled by values. “Turnout is 60%” vs. “turnout should be higher.”' },
+      { q:'Fisman, Gelman & Stephenson — the four rules?', a:'Trace a number to its original source, not whoever cited it. Watch for statistics laundering. A professor’s guess is not a “Harvard estimate.” Beware broken telephone — ranges collapse to points and caveats fall off.' },
+      { q:'The 80%-body-heat statistic — what went wrong?', a:'It came from a 1950s military study where subjects wore Arctic suits covering everything but the head. The real figure is about 10%.' },
+    ]},
+    { name:'2 · Concepts and measurement', mastery:42, cards:[
+      { q:'Conceptual vs. operational definition?', a:'Conceptual says what you mean in words. Operational is the exact recipe — specific enough that a stranger would produce the same numbers.' },
+      { q:'Validity vs. reliability?', a:'Validity: are you measuring the thing you claim? (a bias problem). Reliability: does the procedure repeat? (a consistency problem). Self-reported turnout is reliable and invalid.' },
+      { q:'Which box on the dartboard is dangerous?', a:'Reliable but not valid — consistently wrong. More data never fixes a validity problem.' },
+      { q:'Which averages may you compute at each level?', a:'Nominal: mode and percentages only. Ordinal: mode and median. Interval/ratio: mode, median, mean, SD. “The average religion” is nonsense.' },
+      { q:'Why is “no college degree” a bad operationalization of working class?', a:'In 2004, 40% of white non-college voters had family incomes over $60,000 and over half called themselves middle class. Swap in income and Bartels’ answer flips sign.' },
+    ]},
+    { name:'3 · Describing a variable', mastery:55, cards:[
+      { q:'Mean, median or mode — how do you choose?', a:'Skew decides. Income is right-skewed, so the mean flatters and the median describes. The mean always sits toward the tail.' },
+      { q:'What is standard deviation, in words?', a:'The typical distance of a case from the mean. Small SD = cases bunched together.' },
+      { q:'Define the ecological fallacy.', a:'Inferring something about individuals from group-level data. Poor counties voted for Bush does not mean poor people did — the unit of analysis was the county.' },
+    ]},
+    { name:'4 · Hypotheses and variables', mastery:47, cards:[
+      { q:'What is the null hypothesis, and what can you do with it?', a:'That there is no relationship between X and Y. It is what you actually test — you reject it or fail to reject it. You never accept it.' },
+      { q:'Antecedent vs. intervening variable?', a:'Antecedent comes before X and causes both X and Y — spurious, claim dies. Intervening sits between X and Y and transmits the effect — claim survives, now explained.' },
+      { q:'The template for a good hypothesis?', a:'“As X increases, Y increases or decreases, across units of analysis.” Two variables, a direction, a unit, and a way to lose.' },
+      { q:'Four ways students lose these points?', a:'No variation in Y. A definition rather than a claim. A single case with nothing to compare. No stated direction.' },
+    ]},
+    { name:'5 · Causality — the four hurdles', mastery:29, cards:[
+      { q:'Name the four hurdles, in order.', a:'1. Is there a credible causal mechanism? 2. Can we rule out that Y causes X? 3. Is there covariation? 4. Have we controlled for confounders Z? One confident no kills the claim.' },
+      { q:'Which hurdle do public arguments usually clear — and stop at?', a:'Hurdle 3, covariation. Chocolate and Nobel prizes clears it and fails the other three.' },
+      { q:'Why does random assignment clear two hurdles at once?', a:'The researcher sets X, so Y cannot have caused it (Hurdle 2), and randomization balances every confounder including unmeasured ones (Hurdle 4).' },
+      { q:'What does “X caused Y” mean, counterfactually?', a:'Y would have been different had X been different, everything else held fixed.' },
+      { q:'State the fundamental problem of causal inference.', a:'For any case you only ever observe one potential outcome — Y(1) or Y(0). The counterfactual is never seen, so every method is a scheme for constructing a believable stand-in.' },
+      { q:'Can there be causation without correlation?', a:'Yes — if the effect runs in opposite directions for different groups, or if people compensate for it, the net correlation can be zero.' },
+    ]},
+    { name:'6 · Research design and validity', mastery:36, cards:[
+      { q:'Random sampling vs. random assignment?', a:'Sampling picks who is studied and buys external validity. Assignment decides who is treated and buys internal validity. Most studies have exactly one.' },
+      { q:'Name four threats to internal validity.', a:'History, maturation, testing, instrumentation, regression to the mean, selection bias, attrition, demand effects, diffusion. Selection bias is the biggest in observational work.' },
+      { q:'What does a posttest-only control group design avoid?', a:'The testing effect — taking the pretest itself changes the posttest. The Solomon four-group design isolates that effect instead of dodging it.' },
+      { q:'Rank the design menu on internal validity.', a:'Case study weakest, then cross-sectional survey, panel, quasi-experiment, field experiment, lab experiment strongest — with external validity running roughly the other way.' },
+    ]},
+    { name:'7 · Experiments', mastery:44, cards:[
+      { q:'Gerber, Green & Larimer — the four treatments and their effects?', a:'Civic Duty +1.8, Hawthorne +2.5, Self +4.9, Neighbors +8.1 against a 29.7% control. Turnout is driven by being seen, not by information.' },
+      { q:'Why four treatments instead of one?', a:'To identify the mechanism. One mailer shows only that mail works; each escalating step adds one ingredient and the jump tells you what that ingredient is worth.' },
+      { q:'What is a balance table and why check it?', a:'A comparison of the groups on background characteristics before treatment — the check that randomization worked. If a study skips it, ask why.' },
+      { q:'Bertrand & Mullainathan — the headline numbers?', a:'9.65% callback for white-sounding names vs. 6.45% for Black-sounding — a 3.2-point gap, 50% higher, worth about eight extra years of experience. The gap widens as résumés improve.' },
+      { q:'Answer “why is this an experiment?” in three moves.', a:'The researcher manipulated X rather than observing it; assignment was random so groups were equivalent beforehand; outcomes were compared across groups and the difference is the effect.' },
+      { q:'The ethical objection to the social-pressure mailer?', a:'It worked by shaming people using public records without consent, and generated hundreds of angry calls. A good answer names the effect and the cost.' },
+    ]},
+    { name:'8 · Controlling without an experiment', mastery:33, cards:[
+      { q:'You control for Z and the relationship vanishes in every slice. Verdict?', a:'Spurious — Z was causing both X and Y. If it holds in every slice, X survives. If it holds in one slice only, that is an interaction.' },
+      { q:'Bartels’ Kansas numbers, controlled for region?', a:'−5.9 points overall, −19.7 in the South, −1.0 outside it. Fifty-two years, one point. Frank’s thesis does not survive.' },
+      { q:'The permanent limit of statistical control?', a:'You can only control for variables you measured and thought of. Randomization balances the ones you did not.' },
+      { q:'Leighley & Nagler — when should you not control?', a:'“Are poor people underrepresented among voters?” needs no controls, just shares. “Is a poor person less likely to vote than an otherwise identical richer person?” requires them. Same-looking questions, different methods.' },
+      { q:'What is a representativeness ratio?', a:'A group’s share of actual voters ÷ its share of the citizen voting-age population. 1.0 is parity. The bottom income fifth sat at 0.79 in both 1972 and 2008.' },
+    ]},
+    { name:'9 · Sampling', mastery:40, cards:[
+      { q:'The margin-of-error rule of thumb?', a:'≈ 1 ÷ √n. A thousand people gets about ±3 points; halving that needs four times the sample.' },
+      { q:'Does population size affect margin of error?', a:'No. 1,500 is as good for Nashville as for the United States, so long as the population is at least about 100× the sample.' },
+      { q:'What are the two parts of a confidence statement?', a:'A margin of error and a confidence level. Reporting one without the other is incomplete.' },
+      { q:'Literary Digest 1936 — what killed it?', a:'Coverage error (car registrations, phone books, magazine subscribers — affluent in 1936) plus voluntary response. Ten million ballots could not fix a biased design.' },
+      { q:'Simple random sample — the exact wording?', a:'Every set of n individuals has an equal chance of being the sample. “Every individual has an equal chance” is necessary but not sufficient.' },
+    ]},
+    { name:'10 · Why polls miss', mastery:26, cards:[
+      { q:'What does the reported margin of error cover?', a:'Random sampling error only — the smallest error in a poll. Coverage, nonresponse, measurement, wording, weighting and likely-voter modeling are all bigger and none shrink with sample size.' },
+      { q:'Cohn’s natural experiment — the result?', a:'Four pollsters given identical raw interviews from one Florida poll produced answers spanning five points, from Clinton +4 to Trump +1. All of it came from weighting and likely-voter judgment.' },
+      { q:'Hillygus’s showcase failure?', a:'Gallup 2000 — changes to the likely-voter model swung the reported margin 19 points in days, none of it real movement.' },
+      { q:'Why doesn’t averaging polls fix everything?', a:'Averaging cancels random noise, not house effects. If every pollster misses cell-only households the same way, the average is just as wrong.' },
+    ]},
+    { name:'11 · Probability and the normal curve', mastery:52, cards:[
+      { q:'The 68–95–99.7 rule?', a:'About 68% of cases within one SD of the mean, 95% within two, 99.7% within three.' },
+      { q:'What is a sampling distribution?', a:'Not the distribution of your data — the distribution of a statistic across all the samples you could have drawn. It is normal and centered on the true parameter.' },
+      { q:'Standard error, in words?', a:'The SD of the sampling distribution — how much your estimate would bounce from sample to sample. Bigger n, smaller standard error.' },
+      { q:'What does the central limit theorem buy you?', a:'Sample means are normally distributed even when the underlying variable is not, provided n is decently large.' },
+    ]},
+    { name:'12 · Inference and significance', mastery:31, cards:[
+      { q:'What does 95% confidence actually mean?', a:'The method captures the true value 19 times in 20 across repeated sampling. It is not a 95% chance the truth is in this interval — the truth is fixed. Formula: estimate ± 1.96 × standard error.' },
+      { q:'Hypothesis testing in four steps?', a:'State the null. Assume it true. Ask how likely a relationship this big is by sampling luck — that is p. If p < .05, reject the null. You never accept it.' },
+      { q:'Type I vs. Type II error?', a:'Type I is a false positive — you announced something that is not there; p < .05 caps that risk at 5%. Type II is a false negative, usually from too small a sample.' },
+      { q:'Significant at p < .001 — is it important?', a:'Unknown. Big samples make trivial effects significant. Levitt’s capital-punishment estimate explains about 1.5% of the 1990s homicide decline: possibly real, definitely not the answer.' },
+    ]},
+    { name:'13 · Correlation and regression', mastery:35, cards:[
+      { q:'What do the sign and size of r tell you?', a:'Sign is direction, size is strength, range −1 to +1. r = 0 means no straight-line relationship — a perfect U-shape has r near zero.' },
+      { q:'What is r²?', a:'The share of variation in Y that X accounts for. Chocolate and Nobels: r = 0.79, so r² ≈ 0.62 — impressive-sounding and still not causal.' },
+      { q:'The sentence to write about a slope?', a:'“A one-unit increase in X is associated with a change of b units in Y” — holding the other variables constant, and never “causes” unless the design earns it.' },
+      { q:'Quick significance check on a regression table?', a:'If the coefficient is more than about twice its standard error, it is significant at p < .05.' },
+    ]},
+    { name:'14 · Small-N and selection bias', mastery:22, cards:[
+      { q:'King, Keohane & Verba’s one rule?', a:'Select cases on the independent variable. Never on the dependent variable. Never on both.' },
+      { q:'What does selecting on Y do to your estimate?', a:'Biases it toward zero — keeping only high-Y cases cut an estimated slope from 0.68 to 0.32. Because the direction is known, a significant effect in a truncated sample means the true effect is at least that large.' },
+      { q:'You study twenty civil wars. What is the error?', a:'No variation in Y — you never see the countries with the same conditions that stayed peaceful, so nothing distinguishes causes from constants.' },
+      { q:'What can Venkatesh’s crack-gang books do, and not do?', a:'Show a mechanism and kill a stereotype. Not establish a general causal claim: one non-random case, no comparison group, no variation on the outcome.' },
+    ]},
+  ],
+  frames:[
+    { t:'“Evaluate this claim from the news.”', d:'Run the four hurdles in order, yes/no/maybe with a reason. Name the specific confounder, not “other factors.” Finish with what evidence would settle it and why that design is impossible here.' },
+    { t:'“Design a study to answer this.”', d:'Hypothesis with a direction. Unit of analysis. Operational definitions defended against a validity objection. How X is assigned. Your control group as a credible counterfactual. Then the biggest remaining threat.' },
+    { t:'“Why is this measure bad?”', d:'Separate validity from reliability, then say which direction the error runs — systematic error is far worse than noise.' },
+    { t:'“How much should you trust this poll?”', d:'Sampling error is the smallest error present. Ask about frame, response rate, weighting and the likely-voter screen. Cite Cohn’s five-point spread or Clinton’s sixteen weightings.' },
+    { t:'“Interpret this coefficient.”', d:'Direction, size in real units, significance (coefficient > 2× its standard error). Then what it does not tell you. Add “holding the other variables constant.”' },
+  ],
+  terms:[
+    { t:'Ecological fallacy', d:'Inferring individual behaviour from group-level data — the county voted Bush, therefore poor people did.' },
+    { t:'Antecedent vs. intervening', d:'Before X and causes both (kills the claim) vs. between X and Y and transmits it (explains the claim).' },
+    { t:'Selection bias', d:'The groups differed before any treatment. The top threat in observational work.' },
+    { t:'Coverage error', d:'The sampling frame leaves out part of the population — cell-only households, non-English speakers.' },
+    { t:'Representativeness ratio', d:'Share of voters ÷ share of the eligible population. 1.0 is parity.' },
+    { t:'Regression to the mean', d:'Extreme cases drift back toward average on their own — target the worst schools and they improve regardless.' },
+    { t:'Fundamental problem of causal inference', d:'Only one potential outcome is ever observed per case.' },
+  ],
+};
+
+GUIDES.bus = {
+  code:'BUS 1600', name:'Marketing Management', blurb:'Four frameworks carry the course. Then the case playbook.',
+  source:'BUS1600StudyGuide.pdf — your whole-semester guide', mastery:58, audio:false,
+  units:[
+    { name:'1 · The 5 C’s', mastery:78, cards:[
+      { q:'Name the 5 C’s.', a:'Customers, Collaborators, Competitors, Company, Context.' },
+      { q:'Which C do students define too narrowly?', a:'Competitors — anyone aiming to fulfil the same need for the same customers. Netflix’s competitor was never only Blockbuster; it was sleep, video games and going out.' },
+      { q:'5 C’s for Opera Philadelphia?', a:'Customers: aging subscribers plus young occasional attendees. Collaborators: venues, donors, festival partners. Competitors: every other Friday night in Philadelphia. Company: mid-size, bold reputation, thin margins. Context: post-pandemic attendance, streaming, aging donors.' },
+    ]},
+    { name:'2 · The 3-V principle', mastery:66, cards:[
+      { q:'State the 3-V market value principle.', a:'Customer value > 0 AND collaborator value > 0 AND company value > 0, all at once. Two out of three is a bankruptcy.' },
+      { q:'Customers delighted, partners paid, company losing money — verdict?', a:'Not viable. MoviePass is the case: huge customer value, real collaborator value, deeply negative company value.' },
+    ]},
+    { name:'3 · The seven tactics', mastery:70, cards:[
+      { q:'The seven tactics in their three groups?', a:'Design: product, service, brand, price, incentives. Communicate: communication. Deliver: distribution.' },
+      { q:'Which two tactics explain Blockbuster’s failure?', a:'Distribution — slow to streaming, hard to collaborate with, new-release shortages — and brand: a brick-and-mortar retailer defined by late fees.' },
+      { q:'Why is “late fees” filed under brand, not incentives?', a:'A pricing decision became the single association customers held about the company. One badly set tactic redefined the brand.' },
+    ]},
+    { name:'4 · SWOT', mastery:74, cards:[
+      { q:'Which half of SWOT is internal?', a:'Strengths and weaknesses are internal to the company. Opportunities and threats are external to it.' },
+      { q:'“Consumers increasingly prefer sustainable fashion” — where does it go on ECOALF’s SWOT?', a:'Opportunity, external. Better still, the derivative opportunity it creates for ECOALF specifically — not that the trend exists.' },
+    ]},
+    { name:'5 · Value & customer centricity', mastery:52, cards:[
+      { q:'Value chain vs. value delivery network?', a:'Everything inside your firm that adds value, design to delivery, vs. the wider ecosystem of suppliers, distributors and customers.' },
+      { q:'$180 revenue a year, 60% gross margin, 3.5 years — CLV?', a:'$108 profit a year × 3.5 = $378. That is the ceiling on acquisition spend; at $120 CAC each subscriber nets about $258.' },
+      { q:'Name the 4 A’s.', a:'Acceptability, affordability, accessibility, awareness — four management failures behind most business failures. Google Glass failed acceptability.' },
+      { q:'Define customer centricity.', a:'Seeing the world in general, and your services in particular, from the customer’s point of view. Kelleher’s caveat: it starts with employees, and the customer is sometimes wrong.' },
+      { q:'What is value migration?', a:'Value shifting from stale models to agile ones — cable bundles to streaming.' },
+    ]},
+    { name:'6 · Marketing research', mastery:44, cards:[
+      { q:'Qualitative, quantitative or observational — how do you choose?', a:'Qual when the issue is not well understood and the answer needs no number. Quant when you need a measurable answer. Observational when you need a compelling reason to believe from real behaviour.' },
+      { q:'Primary vs. secondary data?', a:'Primary is freshly gathered for your project — expensive, slow, exactly on-question. Secondary already exists for another purpose — cheap, fast, not on-question.' },
+      { q:'The three decisions in a sampling plan?', a:'Sampling unit (whom), sample size (how many), sampling procedure (how chosen).' },
+      { q:'n = 500 and you want to halve your error — cost?', a:'About n = 2,000. Error falls with √n: ±4.4% at 500, ±2.2% at 2,000, and 1,000 → 2,000 buys under a point for double the money.' },
+      { q:'Why is conjoint better than “what would you pay?”', a:'It forces trade-offs between whole competing offers, produces part-worth utilities, and predicts preference share for products that do not exist yet.' },
+      { q:'The five steps of an A/B test?', a:'Formulate the hypothesis, isolate one variable, define success metrics up front, launch a 50/50 split to similar audiences, analyse and iterate.' },
+      { q:'What does research actually do for a company?', a:'It rarely finds the next big thing. It focuses the debate on strategy — shortening timelines and raising confidence.' },
+    ]},
+    { name:'7 · Segmentation, targeting, positioning', mastery:56, cards:[
+      { q:'STP in order?', a:'Segment the market into groups that would respond differently, target the ones worth serving, position the single idea you want to own in their head.' },
+      { q:'What makes a segment worth targeting?', a:'Measurable, substantial, accessible, actionable. A segment you cannot reach is a fact, not a strategy.' },
+      { q:'The positioning statement template?', a:'For [target] who [need], [brand] is the [frame of reference] that [point of difference] because [reason to believe].' },
+      { q:'What does open space on a perceptual map mean?', a:'Either an opportunity or a place nobody wants to be. Your job is to say which.' },
+      { q:'How should you name a target segment in the case?', a:'By behaviour and motivation — “lapsed single-ticket buyers who came for a festival production” — not by age bracket, then show the mix changing for them.' },
+    ]},
+    { name:'8 · Consumer behaviour', mastery:60, cards:[
+      { q:'The five stages of the buying process, with levers?', a:'Problem recognition (communication), information search (SEO, reviews, retail), evaluation (positioning, brand, price), purchase (incentives, distribution, checkout friction), post-purchase (service, loyalty, CLV).' },
+      { q:'The four influences on a buyer?', a:'Cultural, social, personal, psychological.' },
+    ]},
+    { name:'9 · Behavioural economics', mastery:48, cards:[
+      { q:'Anchoring, loss aversion, decoy — one line each.', a:'Anchoring: the first number sets the reference. Loss aversion: losing $100 hurts about twice as much as gaining $100 pleases. Decoy: an obviously worse third option changes which of the other two people pick.' },
+      { q:'Nobody chose the $125 print-only decoy — why keep it?', a:'It moved print+web from 32% to 84%. An option nobody buys can still be the most profitable thing on the menu.' },
+      { q:'Ariely’s core claim?', a:'People are not rational utility-maximisers, they are predictably irrational — so how you frame an offer changes demand as much as the offer itself.' },
+    ]},
+    { name:'10 · Digital marketing & metrics', mastery:40, cards:[
+      { q:'CTR, CVR, CPA, ROMI — the formulas?', a:'CTR = clicks ÷ impressions. CVR = conversions ÷ clicks. CPA = spend ÷ conversions. ROMI = (incremental revenue × contribution margin − spend) ÷ spend.' },
+      { q:'Work the funnel: 100k impressions, 2,000 clicks, 60 signups, $3,000 spend.', a:'2.0% CTR, 3.0% CVR, $50 CPA. 60 × $180 = $10,800 × 60% margin = $6,480. ROMI = ($6,480 − $3,000) ÷ $3,000 = 116%, year one only.' },
+      { q:'What is wrong with last-click attribution?', a:'It over-credits search and under-credits awareness. Easy and wrong.' },
+      { q:'Owned vs. paid media?', a:'Owned — site, list — compounds. Paid stops the day you stop paying.' },
+    ]},
+    { name:'11 · Product & branding', mastery:54, cards:[
+      { q:'A product is three things at once — which?', a:'Core benefit (the need it solves), actual product (features, quality, design), augmented product (warranty, service, delivery, community). Competitors copy the actual, rarely the augmented.' },
+      { q:'Product life cycle stages and their priorities?', a:'Introduction: build awareness. Growth: build distribution, extend the line. Maturity: defend share, cut cost. Decline: harvest or kill. Naming the wrong tactic for the stage is the classic wrong answer.' },
+      { q:'Define brand equity.', a:'The extra value the name adds beyond the physical product — why someone pays more, searches by name, or forgives a mistake.' },
+      { q:'Keller’s resonance pyramid, bottom to top?', a:'Salience (who are you?), performance and imagery (what are you?), judgments and feelings, resonance (loyalty, community, advocacy). You cannot skip a level.' },
+      { q:'What destroys brand equity?', a:'Constant discounting, which teaches people to wait; inconsistent messaging; blurring line extensions; service that contradicts the ad.' },
+    ]},
+    { name:'12 · Pricing & distribution', mastery:46, cards:[
+      { q:'Cost, competitors, customers — what does each set?', a:'Cost sets the floor. Competitors set the ceiling. Only the customer tells you the right price — value-based pricing, measured with conjoint, is the one he teaches.' },
+      { q:'Elastic or inelastic — which way do you move price?', a:'|E| > 1 elastic: a price cut raises revenue. |E| < 1 inelastic: a price rise raises revenue. Raise price 10%, volume falls 4% → E = −0.4 → inelastic → revenue rises.' },
+      { q:'Push vs. pull?', a:'Push markets to the channel — trade deals, slotting fees, sales incentives. Pull markets to the customer so they walk in asking for it.' },
+      { q:'Channel levels, and the trade-off?', a:'0-level direct: full margin, data and control, but you fund it. 1-level retailer: more reach, shared margin. 2-level wholesaler + retailer: widest reach, thinnest margin, least shelf control.' },
+      { q:'Why must distribution intensity match positioning?', a:'Luxury sold everywhere stops being luxury. Intensive (Coke), selective (Levi’s), exclusive (luxury cars) — the link between distribution and brand equity.' },
+    ]},
+  ],
+  frames:[
+    { t:'1 · Executive summary', d:'The Hook (most pressing challenge or opportunity), The Ask (what decision is needed now), The Bottom Line (your recommendation with fact-based support). Write this section last.' },
+    { t:'2 · Situational diagnosis', d:'Do not summarise the case — the executives know their history. Critically analyse the market with the 5 C’s and SWOT.' },
+    { t:'3 · Strategic alternatives', d:'The case outlines three. Be explicit about which you recommend.' },
+    { t:'4 · Recommendation & implementation', d:'Three to four recommendations. Name target segments from the segmentation workbook. Apply the seven tactics where relevant — you need not use all.' },
+    { t:'5 · Risk mitigation', d:'The top two risks of your recommendation and how the company pivots if they occur. A C-level deliverable is incomplete without it.' },
+  ],
+  terms:[
+    { t:'3-V principle', d:'Value must be positive for customer, collaborator and company at once.' },
+    { t:'Part-worth utility', d:'How much one attribute level contributes to preference in a conjoint study.' },
+    { t:'Fractional factorial', d:'A statistically valid subset of all attribute combinations — full rigour, no respondent fatigue.' },
+    { t:'Value proposition', d:'The sum of benefits promised in return for patronage and payment.' },
+    { t:'Capture rate', d:'Store foot traffic ÷ total passers-by.' },
+    { t:'ROMI', d:'Profit generated per dollar of marketing spend.' },
+  ],
+};
+
+GUIDES.econ = {
+  code:'ECON 1020', name:'Principles of Microeconomics', blurb:'Ten chapters, the formula sheet, and the traps that cost the most points.',
+  source:'econ1020_study_guide.pdf — your plain-English guide', mastery:52, audio:true,
+  units:[
+    { name:'1 · What economics is', mastery:82, cards:[
+      { q:'Define economics and an economic agent.', a:'The study of how agents choose to allocate scarce resources and how those choices affect society. An agent is anyone making choices — a person, household, firm or government.' },
+      { q:'Positive vs. normative — and the trap?', a:'Positive is an objective, falsifiable claim; normative is a value judgment. The trap: a positive statement can be wrong and still be positive. What makes it positive is that it could be checked.' },
+      { q:'State the course definition of equilibrium — both halves.', a:'Everyone is optimizing AND nobody believes they would personally be better off changing their own choice, holding everyone else’s fixed. Students drop the second half.' },
+      { q:'The two approaches to cause and effect in economics?', a:'Theory-driven — build a model, change one thing, see what happens. Statistics-driven — imitate a controlled experiment using observational data. Real research sits on the spectrum between.' },
+    ]},
+    { name:'3 · Optimization & opportunity cost', mastery:74, cards:[
+      { q:'Define opportunity cost.', a:'The value of the best foregone alternative — used both as a broad idea and to put a dollar value on time.' },
+      { q:'Why do sunk costs never matter?', a:'They are already spent and unrecoverable. Only future costs and benefits bear on what to do next.' },
+      { q:'Total vs. marginal analysis — why does marginal win?', a:'Same answer, less arithmetic. Keep going while MB ≥ MC and stop where they cross, instead of computing net benefit for every option.' },
+      { q:'Where is the optimum, exactly?', a:'Where MB and MC cross — not where total benefit is highest and not where cost is lowest. MB falls as you do more; MC usually rises.' },
+    ]},
+    { name:'4 · Supply, demand, equilibrium', mastery:63, cards:[
+      { q:'What do the heights of the two curves mean?', a:'Demand height is willingness to pay — the buyer’s marginal benefit. Supply height is willingness to accept — the seller’s marginal cost.' },
+      { q:'Movement along vs. shift — the #1 tested thing?', a:'A change in the good’s own price moves you along the curve. A change in anything else shifts the whole curve. If price changed on its own, do not shift.' },
+      { q:'What shifts demand? What shifts supply?', a:'Demand: income, substitute and complement prices, tastes, expectations, number of buyers. Supply: input prices, technology, expectations, number of sellers.' },
+      { q:'Both curves shift — what can you conclude?', a:'Whichever effect the two shifts push in the same direction is certain; the other is ambiguous and depends on which shift is bigger.' },
+      { q:'Ceiling or floor — which gives a shortage?', a:'An effective ceiling sits below equilibrium → excess demand → shortage, with trade only up to Qs. A floor sits above → excess supply. A ceiling above equilibrium is not binding and does nothing.' },
+    ]},
+    { name:'5 · Surplus & elasticity', mastery:41, cards:[
+      { q:'Write the midpoint elasticity formula.', a:'ε = [(Q₂−Q₁) ÷ ((Q₁+Q₂)/2)] ÷ [(P₂−P₁) ÷ ((P₁+P₂)/2)]. The only elasticity formula you need.' },
+      { q:'Price $4→$6, quantity 100→80. Elastic or inelastic?', a:'%ΔQ = −20/90 = −22.2%; %ΔP = 2/5 = 40%; ε = −0.56 → inelastic.' },
+      { q:'Which way does revenue move?', a:'Inelastic: revenue moves with price. Elastic: revenue moves against it. Unit elastic: revenue unchanged and at its maximum.' },
+      { q:'Why is elasticity not slope?', a:'A straight-line demand curve has one constant slope and a changing elasticity — elastic on the upper half, unit elastic at the midpoint, inelastic on the lower half. Revenue peaks at that midpoint.' },
+      { q:'What makes demand more elastic?', a:'More close substitutes, a luxury rather than a necessity, a large share of the budget, a long time to adjust, and a narrowly defined market.' },
+      { q:'Consumer surplus — the two ways to find it?', a:'From a table, subtract price from each unit’s WTP and add the positives. From a graph, the area below demand and above price out to Q traded — usually ½ × base × height.' },
+      { q:'Cross-price and income elasticity — what does the sign say?', a:'Cross-price positive = substitutes, negative = complements. Income positive = normal good, negative = inferior good.' },
+      { q:'“Bang for your buck” condition?', a:'You are optimizing when MBx/Px = MBy/Py. If one side is bigger, buy more of that good.' },
+    ]},
+    { name:'6 · Producers & cost curves', mastery:38, cards:[
+      { q:'Why does MC eventually rise?', a:'The law of diminishing returns — adding more of one input to fixed inputs eventually raises output by smaller and smaller amounts. Ten cooks, one oven.' },
+      { q:'Economic vs. accounting profit?', a:'Economic profit subtracts all opportunity costs including the salary you gave up; accounting profit subtracts only explicit money costs. Economic ≤ accounting, always.' },
+      { q:'Why does MC cut AVC and ATC at their minimums?', a:'An average falls while the next value is below it and rises once the next value is above it — so the curves cross exactly at the bottom.' },
+      { q:'Shutdown vs. exit rule?', a:'Short run: shut down if P < min AVC. Long run: exit if P < min ATC. Breakeven price = min ATC, where economic profit is exactly zero.' },
+      { q:'The trap on computing marginals from a table?', a:'Divide by the change in Q. If output jumps 10 → 14, MC = ΔTC ÷ 4, not ΔTC.' },
+      { q:'What is the firm’s supply curve?', a:'Its MC curve above the relevant shutdown point. Add firms horizontally for market supply; entry drives price to min long-run ATC and zero economic profit.' },
+      { q:'What makes supply more elastic?', a:'Anything that makes the producer more flexible — inventories, non-perishability, the long run, easily adjusted variable inputs. Heavy fixed inputs make it less elastic.' },
+    ]},
+    { name:'7 · The invisible hand & efficiency', mastery:57, cards:[
+      { q:'What does “efficient” mean here?', a:'Total surplus (CS + PS) is maximised. Every unit left of Q* has MB above MC and is worth trading; every unit right of it costs more than it is worth.' },
+      { q:'Define deadweight loss and how to compute it.', a:'The surplus destroyed when the market does not trade the efficient quantity. On a graph, the triangle between D and S over the units that failed to trade: ½ × base × height.' },
+      { q:'Pareto efficient vs. Pareto improvement?', a:'Pareto efficient: you cannot make anyone better off without making someone worse off. A Pareto improvement makes at least one person better off and nobody worse off.' },
+      { q:'The equity–efficiency tradeoff?', a:'Efficiency is the size of total surplus; equity is who gets it. Economics alone cannot say which balance is right — that is normative.' },
+    ]},
+    { name:'9 · Externalities', mastery:34, cards:[
+      { q:'Name the four curves and what each captures.', a:'MPB = value to the buyer (the demand curve). MSB = MPB plus spillover benefits. MPC = cost to the seller (the supply curve). MSC = MPC plus spillover costs.' },
+      { q:'Negative externality — which way does the market err?', a:'Overproduction. MSC sits above MPC, so Q_market exceeds Q_optimal and the gap is deadweight loss. Flip it for a positive externality: MSB above MPB, underproduction.' },
+      { q:'State the Coase theorem — and its limit.', a:'With clear property rights and low transaction costs, the parties bargain to the efficient quantity no matter who holds the right. Who holds it changes who pays whom, not the efficient quantity. It fails with many parties, murky rights or costly bargaining — which is why it does not solve climate change.' },
+      { q:'Command-and-control vs. market-based fixes?', a:'Command-and-control sets direct rules — caps, bans, mandated technology. Market-based tools — taxes, subsidies, tradable permits — change prices so private incentives line up with social ones and let firms choose how to respond.' },
+    ]},
+    { name:'12 · Monopoly', mastery:30, cards:[
+      { q:'Why does MR lie below demand for a monopolist?', a:'To sell one more unit it must cut price on every unit, so MR = the new unit’s price minus revenue lost on all previous ones. For a straight-line demand curve, MR has the same intercept and twice the slope.' },
+      { q:'The two-step move for monopoly price?', a:'Find Q where MR = MC, then go straight up to the demand curve to read the price. Setting price at the MR = MC intersection is the classic mistake.' },
+      { q:'What are the two kinds of barrier to entry?', a:'Legal — patents, licences, government franchises. Natural — huge economies of scale, control of a key resource, network effects.' },
+      { q:'Perfect price discrimination — the striking result?', a:'The firm produces the efficient quantity, so DWL = 0 — but CS = 0 and the firm captures the entire surplus. Efficient and not equitable: the cleanest proof that efficiency ≠ fairness.' },
+    ]},
+    { name:'13 · Game theory', mastery:45, cards:[
+      { q:'The three ingredients of any game?', a:'Players, strategies, payoffs.' },
+      { q:'Nash equilibrium vs. dominant strategy?', a:'Nash: both players are playing a best response, so neither would unilaterally switch. Dominant: your best response no matter what the other does.' },
+      { q:'How do you solve a payoff matrix?', a:'For each of P2’s columns mark P1’s best payoff; for each of P1’s rows mark P2’s best. Any cell marked twice is a Nash equilibrium.' },
+      { q:'Prisoner’s dilemma — what is the point?', a:'(Fink, Fink) is the unique Nash equilibrium at 1,1 even though (Quiet, Quiet) pays 2,2. The gap between individual rationality and the group outcome is the whole dilemma.' },
+      { q:'How do you solve a game tree?', a:'Backward induction — start at the end, work out the last player’s move at each node, cross off branches they would never take, and work backwards. That is how you see that B’s threat to fight is not credible.' },
+    ]},
+    { name:'14/16 · Competition & information', mastery:36, cards:[
+      { q:'Why are cartels unstable?', a:'Collusion is a prisoner’s dilemma — each firm’s private incentive is to cheat and undercut.' },
+      { q:'What is HHI and why use it over a firm count?', a:'The sum of each firm’s squared percentage market share — four firms at 25% gives 2,500, a pure monopoly 10,000. It captures share; twenty firms where one holds 95% is not competitive.' },
+      { q:'Adverse selection vs. moral hazard?', a:'Adverse selection hides a type, before the deal — only sick people buy the insurance. Moral hazard hides an action, after it — insured drivers drive recklessly.' },
+      { q:'Explain the death spiral.', a:'Insurers raise premiums to cover a sick pool, the healthiest drop out, the pool gets sicker, premiums rise again — adverse selection eating itself until the market can collapse.' },
+      { q:'Does every principal–agent relationship have moral hazard?', a:'No. Only when the principal cannot observe what the agent actually does — exactly the kind of distinction he writes a multiple-choice question around.' },
+    ]},
+  ],
+  frames:[
+    { t:'Shift vs. movement', d:'Own price changed → move along the curve. Anything else → shift it.' },
+    { t:'Monopoly price', d:'Quantity comes from MR = MC. Price comes off the demand curve above it.' },
+    { t:'Marginals from tables', d:'Divide by ΔQ. Do not just subtract one row from the next.' },
+    { t:'Elasticity isn’t slope', d:'A straight demand curve has one slope and many elasticities.' },
+    { t:'Ceiling vs. floor', d:'Ceiling is below equilibrium → excess demand. Floor is above → excess supply. Draw the horizontal line before answering.' },
+    { t:'Efficient ≠ fair', d:'Perfect price discrimination: zero deadweight loss, zero consumer surplus.' },
+    { t:'Zero economic profit is fine', d:'In long-run competition it means you are earning exactly what you could elsewhere.' },
+    { t:'Positive vs. normative', d:'“Falsifiable in principle,” not “true.”' },
+  ],
+  terms:[
+    { t:'Elasticity (midpoint)', d:'ε = [(Q₂−Q₁)/((Q₁+Q₂)/2)] ÷ [(P₂−P₁)/((P₁+P₂)/2)]' },
+    { t:'Costs', d:'TC = TFC + TVC · MC = ΔTC/ΔQ · ATC = TC/Q · AVC = TVC/Q · AFC = TFC/Q' },
+    { t:'Revenue & profit', d:'TR = P×Q · π = TR − TC = Q × (P − ATC)' },
+    { t:'Perfect competition', d:'P = MR = AR; produce where P = MC; long-run price = min ATC' },
+    { t:'Surplus', d:'CS under D above P · PS above MC under P · TS = CS + PS · triangle = ½ × base × height' },
+    { t:'Social optimum', d:'MSB = MSC, against a market outcome at MPB = MPC' },
+    { t:'HHI', d:'Σ (each firm’s % market share)²' },
+  ],
+};
+
+GUIDES.core = {
+  code:'CORE 2500', name:'Sports, Culture, and Society', blurb:'Weeks 1–4 in full, plus the map of where the semester goes.',
+  source:'CORE2500StudyGuide.pdf — your field guide', mastery:49, audio:false,
+  units:[
+    { name:'1 · How the grade actually works', mastery:70, cards:[
+      { q:'What is the single biggest risk to your grade?', a:'Attendance. After two unexcused absences you lose 10% of the final grade for every additional class — bigger than any quiz.' },
+      { q:'What do quizzes actually test?', a:'The main argument of the readings due that day, plus the lecture slides from the class before.' },
+      { q:'What is the recoverable part?', a:'Lost quiz points can be made up with extra credit later, and reflections are self-graded. Gaming the self-assessment is treated as cheating.' },
+      { q:'What is not on the syllabus but still required?', a:'Media and current-events assignments — announced by email and Brightspace only.' },
+    ]},
+    { name:'2 · The five big ideas', mastery:58, cards:[
+      { q:'Define embodiment.', a:'The body is not just biology — it is biology shaped by culture, history and practice, and experienced from the inside. A jump shot, a limp, a fear of the pool.' },
+      { q:'What does a biocultural approach refuse to ask?', a:'Nature vs. nurture. The right question is always how genes and environment work together here, and how much each contributes.' },
+      { q:'Play → ritual → sport, in one line?', a:'Sport is not an invention of civilization — it grows out of play, which is older than humans, and carries ritual meaning. Mayan ball courts were temples.' },
+      { q:'What are the two course capacities?', a:'(B) Systematic and structural thinking — seeing sport inside larger systems. (C) Cultural and interpretative investigation — reading difference as meaning, not fact.' },
+    ]},
+    { name:'3 · Fox & Konner — why we play', mastery:52, cards:[
+      { q:'Fox’s argument in one line?', a:'Play looks pointless, costs real energy and can get you killed — which means evolution kept it for a reason: it builds brains, bodies and the ability to agree on rules.' },
+      { q:'Stuart Brown’s seven characteristics of play?', a:'Voluntary, inherently attractive, free of time, diminished self-consciousness, improvisational, continuation desire, apparently purposeless.' },
+      { q:'The cost side of the paradox — two facts.', a:'Young mammals burn up to 15% of their calories playing, and in Peru in 1988, 22 of 26 sea pups killed by sea lions were playing in tidal pools and never saw the attack.' },
+      { q:'The payoff side — two facts.', a:'Rats allowed to play developed higher BDNF in the amygdala and prefrontal cortex; across 15 mammal species bigger relative brain size tracked with more play (Pellis).' },
+      { q:'The dolphin study — three things to remember.', a:'Over five years, 16 captive dolphins initiated play with balls more than with any other object, bubbles or each other. Free play with Fox became a rule-governed interspecies game in ten minutes. Piaget’s “moderately discrepant events”: players keep making it slightly harder.' },
+      { q:'Konner’s categories, by players and object?', a:'Solitary locomotor-rotational, object play, social play — plus serious, master, rough-and-tumble and adult play by character. The slides frame play as “behavioral fat.”' },
+      { q:'The throwing hypothesis?', a:'Calvin: accurate one-armed throwing may have driven lateralization to the left brain — the hemisphere handling the rapid muscle sequencing language needs. Speculative; state it, don’t defend it.' },
+      { q:'Two numbers on the play deficit?', a:'Children spend 50% less time playing outdoors than in the 1970s, and 10–16 year-olds average 12.6 minutes a day of vigorous activity.' },
+    ]},
+    { name:'4 · Ocobock & Lacy — Woman the Hunter', mastery:44, cards:[
+      { q:'Their argument in one line?', a:'“Man the Hunter” survives because science only studied the traits where males have the advantage; measured on endurance, female physiology looks at least as well built for hunting.' },
+      { q:'Zihlman’s line to memorize?', a:'Pictures of the past are “backward projections of modern cultural sex stereotypes” onto people who lived a million years ago.' },
+      { q:'The data gap — the three numbers.', a:'34% of participants in sport and exercise science research are female, 14% in nutritional-supplement research, and 3% of athletic-performance publications are female-only against 63% male-only.' },
+      { q:'Name three physiological reasons females may suit endurance.', a:'70% greater fatty-acid oxidation from estrogen; adiponectin up to 65% higher; intramuscular fat 58 vs. 23 g/kg; more Type I fibers; 20–35% better load-carrying economy; less exercise-induced muscle damage.' },
+      { q:'The killer distance evidence?', a:'Women and men perform similarly at 42 km and women outperform men beyond 90 km; one model predicts female advantage from 65 km up. Persistence hunting is 17–33 km of endurance, not speed.' },
+      { q:'The elegant twist at the end?', a:'Pregnancy and lactation cost 500–600 kcal a day. Motherhood is a multi-year endurance event — so it may be what selected for female endurance rather than a handicap that ruled women out of hunting.' },
+    ]},
+    { name:'5 · Epstein 1–3 — hardware & software', mastery:47, cards:[
+      { q:'Why couldn’t Pujols hit Jennie Finch?', a:'He had no chunks for her delivery. A 68 mph underhand pitch from 43 feet arrives like a 95 mph fastball; reaction time is ~200 ms for everyone, the pitch takes 400 ms and the contact window is 5 ms, so he had to commit before the ball was halfway.' },
+      { q:'What did the random-chessboard experiment prove?', a:'Masters’ advantage is learned pattern recognition, not innate memory. On arrangements that could never occur in a real game their recall dropped to average (De Groot; Chase & Simon).' },
+      { q:'Strongest evidence against the 10,000-hours rule?', a:'Campitelli & Gobet: chess master level took 3,000 to 23,000 hours, and some players logged 25,000+ without ever making master. Ericsson never used the phrase — Epstein credits a chapter title in Outliers.' },
+      { q:'Holm vs. Thomas — what is the point?', a:'Holm jumped for twenty years with an Achilles so stiff it took 1.8 tons to stretch it 1 cm. Thomas cleared 7’3.25” on his seventh jump ever with a 10¼-inch Achilles and beat Holm after eight months. Hardware and software, both real.' },
+      { q:'What is talent transfer?', a:'Moving a good general athlete into a better-suited sport — the Australian Institute of Sport turned surf-lifesaving and water-skiing athletes into Olympic skeleton racers in 14 months.' },
+    ]},
+    { name:'6 · Epstein 9–11 — the (un)science of race', mastery:35, cards:[
+      { q:'Their argument in one line?', a:'Genetic variation is real and mostly inside Africa — which is exactly why “Black people are built to sprint” is bad genetics, even though specific traits with specific histories do cluster in specific populations.' },
+      { q:'Why might the fastest and the slowest human both be African?', a:'African populations hold the greatest genetic diversity, so for any genetically influenced trait the extremes at both ends should be overrepresented. Sport only ever measures one tail.' },
+      { q:'What does ACTN3 actually tell you?', a:'Mostly who will not run an Olympic 100 m final. About 25% of East Asians and 18% of white Australians are XX, under 1% of Zulu; of 32 Australian Olympic sprinters, zero were XX. Foster: “the best genetic test right now is a stopwatch.”' },
+      { q:'Pitsiladis vs. Morrison & Cooper?', a:'Pitsiladis: environment and a talent-spotting system — Champs since 1910, 35,000 seats, boosters keeping fast kids in track. Morrison & Cooper: malaria-driven history via sickle-cell and low hemoglobin. The final step, hemoglobin → fiber type, has never been tested in humans.' },
+      { q:'What is genuinely established (Ch. 11)?', a:'Allen’s and Bergmann’s rules on limb length and build at low latitudes; max speed scales with the square root of leg length; sickle-cell trait protects against malaria and all but disappears above 800 m.' },
+      { q:'Cooper’s most important point?', a:'The belief that physical superiority implies intellectual inferiority “only developed when physical superiority became associated with African Americans,” around 1936. A result of bigotry, not a cause of it — and the answer is more careful inquiry, not less.' },
+    ]},
+  ],
+  frames:[
+    { t:'Write the one-sentence thesis', d:'For every reading due. If you cannot, you are not ready for the quiz.' },
+    { t:'Re-read the previous class’s slides', d:'One concept per slide — the syllabus says quizzes draw on them explicitly.' },
+    { t:'Say the counter-argument out loud', d:'Nearly every reading argues against a popular story: Man the Hunter, the 10,000-hours rule, race as biology.' },
+    { t:'Name the evidence', d:'Quizzes are objective questions — they reward the study, the place, the number, the person.' },
+    { t:'Reflections: the four-move template', d:'Name the concept precisely with its author. Attach one piece of evidence from the text. Bring one thing from your own life or this week’s sports news. Then say what it costs you.' },
+  ],
+  terms:[
+    { t:'Chunking', d:'Grouping information into meaningful patterns; the basis of expertise (Chase & Simon).' },
+    { t:'Occlusion test', d:'Cutting off visual information early to measure anticipation (Starkes, Abernethy).' },
+    { t:'Matthew effect', d:'The already-better improve faster on the same training (Thorndike).' },
+    { t:'Persistence hunting', d:'Running prey to exhaustion over 17–33 km — endurance, not speed.' },
+    { t:'Recent African origin', d:'All non-Africans descend from one small group that left Africa ~90,000 years ago.' },
+    { t:'Homo ludens', d:'Huizinga’s “Man the Player,” proposed alongside Homo sapiens.' },
+    { t:'Genotype vs. phenotype', d:'The genetic code vs. its physical expression.' },
+  ],
+};
+
+const FIGURES = {
+  psci: {
+    4: { type:'steps', title:'The four hurdles', caption:'Knock over any one and the claim is done. Most public arguments clear only Hurdle 3 and stop there.',
+      steps:[
+        { n:'1', t:'Mechanism', d:'Is there a credible causal story connecting X to Y?' },
+        { n:'2', t:'Reverse causation', d:'Can we rule out that Y causes X?' },
+        { n:'3', t:'Covariation', d:'Do X and Y actually move together?' },
+        { n:'4', t:'Confounders', d:'Have we controlled for Z?' },
+      ] },
+    6: { type:'bars', title:'Gerber, Green & Larimer (2008)', caption:'Turnout by treatment, 180,002 households. A dosage design: each step adds one ingredient, and the jump tells you what it is worth.',
+      unit:'%', max:40,
+      rows:[
+        { l:'Control — no mail', v:29.7 }, { l:'Civic Duty', v:31.5 },
+        { l:'Hawthorne', v:32.2 }, { l:'Self', v:34.5 }, { l:'Neighbors', v:37.8 },
+      ] },
+    9: { type:'bars', title:'Margin of error shrinks with √n', caption:'A thousand people buys ±3 points. Halving that needs four times the sample — which is why national polls are 800–1,500.',
+      unit:'±%', max:5.5,
+      rows:[ { l:'n = 400', v:5.0 }, { l:'n = 1,000', v:3.2 }, { l:'n = 2,000', v:2.2 }, { l:'n = 3,000', v:1.8 } ] },
+  },
+  econ: {
+    2: { type:'steps', title:'Reading a market', caption:'Both curves are marginal curves. That is why the crossing point is efficient, not just tidy.',
+      steps:[
+        { n:'D', t:'Demand height = willingness to pay', d:'The buyer’s marginal benefit.' },
+        { n:'S', t:'Supply height = willingness to accept', d:'The seller’s marginal cost.' },
+        { n:'↑', t:'Above P*', d:'Qs > Qd — excess supply, sellers cut price.' },
+        { n:'↓', t:'Below P*', d:'Qd > Qs — excess demand, buyers bid price up.' },
+      ] },
+    3: { type:'bars', title:'How many hours to study?', caption:'Each hour costs $20 of foregone work. Total analysis peaks at 3 hours; marginal analysis stops there too — hour 3 is worth $25, hour 4 only $10.',
+      unit:'$ net', max:70,
+      rows:[ { l:'1 hour', v:40 }, { l:'2 hours', v:60 }, { l:'3 hours', v:65 }, { l:'4 hours', v:55 } ] },
+    7: { type:'steps', title:'Externalities in four curves', caption:'Private parties trade where MPB = MPC. Society’s optimum is MSB = MSC. The gap is the deadweight loss.',
+      steps:[
+        { n:'MPB', t:'Marginal private benefit', d:'Value to the buyer — this is the demand curve.' },
+        { n:'MSB', t:'Marginal social benefit', d:'MPB plus benefits spilling onto everyone else.' },
+        { n:'MPC', t:'Marginal private cost', d:'Cost to the seller — this is the supply curve.' },
+        { n:'MSC', t:'Marginal social cost', d:'MPC plus costs spilling onto everyone else.' },
+      ] },
+  },
+  core: {
+    4: { type:'bars', title:'Muscle fibre composition, vastus lateralis', caption:'Female vs. male, percent. Every one of these is an average with heavy overlap — not a rule about individuals.',
+      unit:'%', max:50,
+      rows:[ { l:'Type I — female', v:41 }, { l:'Type I — male', v:36 }, { l:'Type IIa — female', v:34 }, { l:'Type IIa — male', v:46 }, { l:'Type IIx — female', v:23 }, { l:'Type IIx — male', v:20 } ] },
+    5: { type:'bars', title:'Hours of practice to reach chess master', caption:'Campitelli & Gobet, 104 players. The range is the finding — several logged 25,000+ hours and never made master.',
+      unit:'hrs', max:25000,
+      rows:[ { l:'Fastest', v:3000 }, { l:'“The 10,000”', v:10000 }, { l:'Average', v:11053 }, { l:'Slowest', v:23000 } ] },
+  },
+  bus: {
+    0: { type:'steps', title:'The 5 C’s', caption:'The playbook for mapping a brand’s situation. Competitors is the one students define too narrowly.',
+      steps:[
+        { n:'C1', t:'Customers', d:'Whose needs the company plans to fulfil.' },
+        { n:'C2', t:'Collaborators', d:'Suppliers, retailers, agencies — those who create value with you.' },
+        { n:'C3', t:'Competitors', d:'Anyone fulfilling the same need for the same customers.' },
+        { n:'C4', t:'Company', d:'Resources, skills, offering, goals.' },
+        { n:'C5', t:'Context', d:'Economy, tech, regulation, culture.' },
+      ] },
+    9: { type:'bars', title:'One campaign, worked through', caption:'100,000 impressions → 2,000 clicks → 60 signups on $3,000. CPA $50, first-year revenue $10,800, contribution $6,480 → ROMI 116%.',
+      unit:'%', max:120,
+      rows:[ { l:'CTR', v:2.0 }, { l:'CVR', v:3.0 }, { l:'ROMI', v:116 } ] },
+  },
+};
+
+const EXAMPLES = {
+  econ: [
+    { tag:'Elasticity', t:'Why the campus dining plan never gets cheaper', d:'Meal plans are close to perfectly inelastic for on-campus first-years — no substitutes, mandatory, and the budget share is fixed in advance. |ε| < 1 means a price rise raises revenue, which is exactly the incentive the seller faces.' },
+    { tag:'Sunk cost', t:'The $180 textbook you already bought', d:'Acemoglu, Laibson and List is “not formally required.” The money is gone either way, so the only question is whether the next hour with it beats the next hour without it. Buying it is not a reason to read it.' },
+    { tag:'Price ceiling', t:'Rent control on 21st Avenue', d:'A binding ceiling sits below equilibrium: more students want the apartment than landlords will supply, trade stops at Qs, and the rationing moves to queues, connections and condition. The shortage is the mechanism, not a side effect.' },
+    { tag:'Monopoly', t:'The one printer in Sarratt', d:'Market power is the ability to set price above marginal cost. Q comes from MR = MC, price comes off the demand curve — and the students who would have printed at cost but not at the posted price are the deadweight loss.' },
+    { tag:'Game theory', t:'Group projects as a prisoner’s dilemma', d:'Coasting dominates for each member, so (coast, coast) is the Nash equilibrium even though everyone prefers (work, work). Grading contribution individually changes the payoffs — which is the point.' },
+    { tag:'Adverse selection', t:'Course reviews on Rate My Professor', d:'Only the delighted and the furious write reviews — a hidden-type problem before the deal. The fix is better information, not a bigger sample of the same self-selected pool.' },
+  ],
+  psci: [
+    { tag:'Four hurdles', t:'“Vanderbilt students who join a club have higher GPAs.”', d:'Hurdle 3 is easy. Hurdle 2: high-GPA students have the slack to join. Hurdle 4: family resources, prior preparation and course load cause both. The claim clears one hurdle of four.' },
+    { tag:'Selection on Y', t:'Studying only the startups that made it', d:'Every case has the same outcome, so nothing distinguishes causes from constants. KKV: select on X, never on Y. The same error kills “what makes a Rhodes Scholar” pieces.' },
+    { tag:'Ecological fallacy', t:'Chocolate and Nobel prizes', d:'r = 0.79, p < .0001, 23 countries — and not one laureate’s diet was ever observed. Messerli wrote it as a joke; it is on the syllabus because the joke keeps getting published seriously.' },
+    { tag:'Measurement', t:'Turnout that never actually fell', d:'Leighley & Nagler: 58.4–65.5% throughout, once you use citizens as the denominator. Noncitizens grew from under 2% to 8.4% of the voting-age population — the whole “decline” is a denominator artifact.' },
+    { tag:'Weighting', t:'Four pollsters, one dataset, five points apart', d:'Cohn gave 867 identical Florida interviews to four outside pollsters and got Clinton +4 through Trump +1. Zero sampling difference. Weighting and the likely-voter screen did all of it.' },
+    { tag:'Experiment', t:'The mailer that shamed people into voting', d:'+8.1 points at $1.93 per vote against roughly $20 door-to-door. It also generated hundreds of angry calls — a good exam answer names the effect and the cost.' },
+  ],
+  core: [
+    { tag:'Play', t:'Pickup on the Rec turf vs. intramural league', d:'Brown’s seven characteristics survive in pickup and thin out under leagues, refs and standings. Reflection #1 lives exactly here: making play serious can destroy the freedom that made it useful.' },
+    { tag:'Embodiment', t:'Learning to swim at eighteen', d:'The fear is not a fact about water — it is biology, history and practice folded into one body. That is embodiment in a sentence, and it is the reflection move Torres Colón rewards.' },
+    { tag:'Chunking', t:'Why you can read a defence and your friend cannot', d:'Same eyes, same reaction time. What differs is the database of patterns — De Groot’s chess masters, Abernethy’s occluded badminton forearm, Pujols against Jennie Finch.' },
+    { tag:'Race & genetics', t:'The “sprint gene” test sold online', d:'ACTN3 rules out roughly one in seven people worldwide and almost nobody of African descent. Foster: “the best genetic test right now is a stopwatch.”' },
+    { tag:'Endurance', t:'Sophie Power at the Ultra-Trail du Mont-Blanc', d:'168 km while breastfeeding a three-month-old. Ocobock & Lacy close on it because motherhood at 500–600 kcal a day is itself a multi-year endurance event.' },
+    { tag:'Structure', t:'Why Jamaica keeps producing sprinters', d:'Champs since 1910, a 35,000-seat proving ground, boosters who move fast kids into track high schools. Talent is kept in the sprint pipeline instead of leaking to football as it does in the US.' },
+  ],
+  bus: [
+    { tag:'5 C’s', t:'Vanderbilt dining as a marketing problem', d:'Customers: students on a mandatory plan. Collaborators: Rand, Commons, the food trucks. Competitors: not other dining halls — it is Hillsboro Village, DoorDash and skipping lunch. Context: a captive first-year market that ends after one year.' },
+    { tag:'3-V', t:'Why MoviePass died', d:'Customer value enormous, collaborator value real, company value deeply negative. Two out of three is a bankruptcy — the cleanest test to run on any student business idea.' },
+    { tag:'Distribution & brand', t:'Blockbuster’s late fees', d:'Not a pricing footnote — the single association customers held about the company. A tactic set badly in one box redefined a different box entirely.' },
+    { tag:'Decoy effect', t:'The Economist’s $125 print-only option', d:'Nobody chose it. Deleting it moved print+web from 84% to 32% and cut revenue. An option nobody buys can be the most profitable thing on the menu.' },
+    { tag:'CLV', t:'What a streaming subscriber is worth', d:'$15/mo × 12 × 60% margin × 3.5 years = $378. That is the ceiling on acquisition spend; at $120 CAC each subscriber nets about $258. Every “is this campaign worth it?” question reduces to this.' },
+    { tag:'Positioning', t:'Franz boxed wine', d:'Mekanism repositioned a low-status category through voice alone — irreverent, cheap, unembarrassed. No product change. Communication doing the work the perceptual map predicted.' },
+  ],
+};
+
+const PODCAST = {
+  econ: { file:'uploads/econ1020_study_guide_audio.mp3', len:'38:27', ready:true,
+    blurb:'The whole guide read aloud, chapter by chapter. Recorded — play it now.',
+    chapters:[
+      { t:'0:00', s:0, name:'How to actually pass this class' },
+      { t:'3:10', s:190, name:'Ch 1–2 · What economics is' },
+      { t:'6:40', s:400, name:'Ch 3 · Optimization & opportunity cost' },
+      { t:'10:05', s:605, name:'Ch 4 · Supply, demand, equilibrium' },
+      { t:'15:20', s:920, name:'Ch 5 · Surplus & elasticity' },
+      { t:'20:40', s:1240, name:'Ch 6 · Producers & cost curves' },
+      { t:'25:15', s:1515, name:'Ch 7 · Invisible hand & efficiency' },
+      { t:'28:30', s:1710, name:'Ch 9 · Externalities' },
+      { t:'31:40', s:1900, name:'Ch 12 · Monopoly' },
+      { t:'34:20', s:2060, name:'Ch 13 · Game theory' },
+      { t:'36:45', s:2205, name:'Formula sheet & top traps' },
+    ] },
+  psci: { file:'', len:'43:48', ready:false,
+    blurb:'Condensed edition — the whole course tightened for repeat listening. There is also an 85-minute full edition with a spoken self-test.',
+    chapters:[
+      { t:'0:44', s:44, name:'The one idea' },
+      { t:'1:45', s:105, name:'Theory and hypotheses' },
+      { t:'3:48', s:228, name:'Where numbers come from' },
+      { t:'5:20', s:320, name:'Measurement' },
+      { t:'7:30', s:450, name:'Why measurement decides Kansas' },
+      { t:'9:41', s:581, name:'Describing data' },
+      { t:'10:57', s:657, name:'The four hurdles' },
+      { t:'12:56', s:776, name:'What cause means' },
+      { t:'15:03', s:903, name:'Validity and research design' },
+      { t:'16:39', s:999, name:'Experiments' },
+      { t:'20:33', s:1233, name:'Controlling without an experiment' },
+      { t:'23:23', s:1403, name:'Sampling' },
+      { t:'25:48', s:1548, name:'Why polls miss' },
+      { t:'28:04', s:1684, name:'Probability and inference' },
+      { t:'31:22', s:1882, name:'Correlation and regression' },
+      { t:'33:01', s:1981, name:'Small numbers and selection bias' },
+      { t:'35:22', s:2122, name:'The seven debates' },
+      { t:'41:28', s:2488, name:'The exam' },
+    ] },
+  core: { file:'', len:'~31:00', ready:false,
+    blurb:'Weeks 1–4 at listening pace, with every figure described in words — built for the walk to Garland.',
+    chapters:[
+      { t:'0:00', s:0, name:'How the grade actually works' },
+      { t:'3:20', s:200, name:'The five big ideas' },
+      { t:'7:10', s:430, name:'Fox & Konner — why we play' },
+      { t:'13:40', s:820, name:'Ocobock & Lacy — Woman the Hunter' },
+      { t:'20:05', s:1205, name:'Epstein 1–3 — hardware & software' },
+      { t:'25:30', s:1530, name:'Epstein 9–11 — the (un)science of race' },
+      { t:'29:40', s:1780, name:'Writing reflections that earn the points' },
+    ] },
+  bus: { file:'', len:'~27:00', ready:false,
+    blurb:'The four frameworks, the formulas and the case playbook, spoken. Short enough for one gym session.',
+    chapters:[
+      { t:'0:00', s:0, name:'How the grade works & the calendar' },
+      { t:'2:40', s:160, name:'The 5 C’s and the 3-V principle' },
+      { t:'6:15', s:375, name:'Seven tactics & SWOT' },
+      { t:'9:30', s:570, name:'Value, CLV and customer centricity' },
+      { t:'13:20', s:800, name:'Marketing research & conjoint' },
+      { t:'17:00', s:1020, name:'STP, consumer behaviour, behavioural econ' },
+      { t:'21:10', s:1270, name:'Digital metrics, product, brand, price' },
+      { t:'24:30', s:1470, name:'The midterm case playbook' },
+    ] },
+};
+
+const EVENTS = [
+  { id:'e1', kind:'Athletics', sport:'Football', title:'Football vs. Austin Peay', where:'FirstBank Stadium', mon:'Sep', day:5, dow:'Sat', time:'6:00 PM', tag:'Home opener',
+    detail:'Season opener, first of three straight home nonconference games. Student gates open 90 minutes early; the Star Walk is two hours before kickoff.', ticket:'Student ticket claim opens Monday 9 AM' },
+  { id:'e2', kind:'University', title:'Founders Walk & Commons welcome', where:'Alumni Lawn', mon:'Sep', day:4, dow:'Fri', time:'5:30 PM', tag:'First-year',
+    detail:'The procession from Commons through Alumni Lawn. Open to all students, not just first-years.', ticket:'No ticket' },
+  { id:'e3', kind:'Clubs', title:'Anchor Down Involvement Fair', where:'Student Life Center', mon:'Sep', day:9, dow:'Wed', time:'4:00 PM', tag:'450+ orgs',
+    detail:'Every registered student organization at one set of tables. The Sports & Society minor has a table this year — worth ten minutes if CORE 2500 is landing well.', ticket:'Drop in' },
+  { id:'e4', kind:'Athletics', sport:'Football', title:'Football vs. Delaware', where:'FirstBank Stadium', mon:'Sep', day:12, dow:'Sat', time:'TBD', tag:'Home',
+    detail:'Second of the three-game home opening stretch. Kickoff time and TV are released six to twelve days out.', ticket:'Student ticket claim opens Monday 9 AM' },
+  { id:'e5', kind:'Athletics', sport:'Soccer', title:'Women’s Soccer vs. Missouri', where:'Vanderbilt Soccer Complex', mon:'Sep', day:17, dow:'Thu', time:'7:00 PM', tag:'SEC opener',
+    detail:'Free for students with a Commodore Card. Twenty minutes from campus on foot.', ticket:'Free with student ID' },
+  { id:'e6', kind:'Athletics', sport:'Football', title:'Football vs. NC State', where:'FirstBank Stadium', mon:'Sep', day:19, dow:'Sat', time:'TBD', tag:'Power Four',
+    detail:'The ACC opponent the SEC now requires of every member — and Vanderbilt drew it at home rather than in Raleigh.', ticket:'Student ticket claim opens Monday 9 AM' },
+  { id:'e7', kind:'Athletics', sport:'Football', title:'Football at Auburn', where:'Jordan-Hare Stadium', mon:'Sep', day:26, dow:'Sat', time:'2:30–3:30 PM', tag:'Away · SEC opener',
+    detail:'First conference game of the new nine-game SEC format. Afternoon window.', ticket:'Away — watch party at the Rec' },
+  { id:'e8', kind:'University', title:'Fall career & internship fair', where:'Student Life Center, Ballroom', mon:'Sep', day:30, dow:'Wed', time:'11:00 AM', tag:'Career Center',
+    detail:'Same day as your ECON Midterm 1 — the exam is in class that morning, so the afternoon block is the realistic one.', ticket:'Register on Handshake' },
+  { id:'e9', kind:'Athletics', sport:'Football', title:'Football at Georgia', where:'Sanford Stadium', mon:'Oct', day:3, dow:'Sat', time:'TBD', tag:'Away',
+    detail:'First of back-to-back weekends against College Football Playoff teams.', ticket:'Away' },
+  { id:'e10', kind:'Athletics', sport:'Football', title:'Football vs. Ole Miss', where:'FirstBank Stadium', mon:'Oct', day:10, dow:'Sat', time:'TBD', tag:'Home · CFP team',
+    detail:'The second CFP opponent in two weeks, this one in Nashville.', ticket:'Student ticket claim opens Monday 9 AM' },
+  { id:'e11', kind:'Clubs', title:'VPB outdoor movie — Alumni Lawn', where:'Alumni Lawn', mon:'Oct', day:2, dow:'Fri', time:'8:00 PM', tag:'Free',
+    detail:'Vanderbilt Programming Board’s monthly lawn screening. Blankets out by 7:30.', ticket:'Free' },
+  { id:'e12', kind:'Clubs', title:'Diwali celebration', where:'Student Life Center', mon:'Nov', day:7, dow:'Sat', time:'6:30 PM', tag:'Ticketed',
+    detail:'Performances, dinner and the diya lighting. Tickets go fast — they usually clear a week out.', ticket:'Anchor Link, $10 students' },
+  { id:'e13', kind:'University', title:'Homecoming & Reunion weekend', where:'Campus-wide', mon:'Oct', day:24, dow:'Sat', time:'All day', tag:'Tradition',
+    detail:'Parade, step show and the Homecoming game. Most academic buildings close early Friday.', ticket:'Varies by event' },
+  { id:'e14', kind:'Athletics', sport:'Basketball', title:'Men’s Basketball season opener', where:'Memorial Gymnasium', mon:'Nov', day:9, dow:'Mon', time:'7:00 PM', tag:'Memorial Gym',
+    detail:'Students sit on the raised sidelines — the only floor in the country laid out that way. Free with a Commodore Card.', ticket:'Free with student ID' },
+  { id:'e15', kind:'Athletics', sport:'Football', title:'Football vs. Alabama', where:'FirstBank Stadium', mon:'Nov', day:14, dow:'Sat', time:'TBD', tag:'Home · CFP team',
+    detail:'Hosting Alabama and Tennessee in the same season is the sort of draw that defines a year.', ticket:'Student ticket claim opens Monday 9 AM' },
+  { id:'e16', kind:'Athletics', sport:'Football', title:'Football vs. Tennessee', where:'FirstBank Stadium', mon:'Nov', day:28, dow:'Sat', time:'TBD', tag:'Rivalry · Home finale',
+    detail:'The two schools have played every fall since 1945. Regular-season closer, at home.', ticket:'Student ticket claim opens Monday 9 AM' },
+];
+
+const PLAN_MIN = { econ:'10 min', psci:'8 min', core:'5 min', bus:'2 min' };
+
+const FRAME_LABELS = {
+  econ: 'The traps that cost the most points',
+  psci: 'The five questions that keep coming back',
+  core: 'The habits that decide the grade',
+  bus: 'The case write-up, section by section',
+};
+
+const BLOCKS = [
+  { time:'10:30a', title:'Trounstine office hours', meta:'Commons 363A · optional', dot:'color-mix(in srgb, var(--app-fg) 40%, transparent)', op:'0.75', strike:'none' },
+  { time:'11:00a', title:'BUS 1600', meta:'Alumni Hall 201 · guest speaker: Ryan', dot:'var(--app-accent)', op:'1', strike:'none' },
+  { time:'1:15p', title:'CORE 2500', meta:'Garland · From Child Play to Sport', dot:'var(--app-accent)', op:'1', strike:'none' },
+  { time:'2:45p', title:'PSCI 1104 — canceled', meta:'Prof. Trounstine at APSA', dot:'var(--app-track)', op:'0.45', strike:'line-through' },
+  { time:'7:00p', title:'Group call — ECOALF', meta:'Added by you · due 11:59p', dot:'var(--app-accent)', op:'1', strike:'none' },
+];
+
+const NOTIF_DEFS = [
+  { k:'class', label:'Class starting in 15 minutes' },
+  { k:'today', label:'Anything due today, at 8am' },
+  { k:'two', label:'Two-day warning on big assignments' },
+  { k:'free', label:'“Nothing due tonight” all-clear' },
+  { k:'sun', label:'Sunday night: the week ahead' },
+  { k:'exam', label:'Exam in one week' },
+];
+
+const NOTIFICATIONS = [
+  { id:'n1', code:'BUS 1600', when:'7:02 AM', title:'Group Assignment 1 lands tonight', body:'ECOALF case, 11:59 PM. Your team hasn’t opened the doc.' },
+  { id:'n2', code:'CORE 2500', when:'7:02 AM', title:'Reflection #1 due before 1:15p', body:'Self-assessed. Rubric is attached in Brightspace.' },
+  { id:'n3', code:'PSCI 1104', when:'6:41 AM', title:'Class canceled today', body:'Prof. Trounstine is at APSA. 2:45p is yours.' },
+  { id:'n4', code:'ECON 1020', when:'Yesterday', title:'PSet 1 posted', body:'Due Friday 11:59 PM on Gradescope. No extensions, ever.' },
+];
+
+const EXTRACT = [
+  { id:'x1', title:'Problem Set 1', when:'Fri Sep 4, 11:59 PM', kind:'Problem set' },
+  { id:'x2', title:'Problem Set 2', when:'Fri Sep 11, 11:59 PM', kind:'Problem set' },
+  { id:'x3', title:'Problem Set 3', when:'Fri Sep 18, 11:59 PM', kind:'Problem set' },
+  { id:'x4', title:'Midterm 1 — in class', when:'Wed Sep 30', kind:'Exam · 25–30%' },
+  { id:'x5', title:'Midterm 2 — in class', when:'Wed Nov 4', kind:'Exam · 25–30%' },
+  { id:'x6', title:'Fall break — no class', when:'Oct 22–23', kind:'Break' },
+  { id:'x7', title:'Thanksgiving break', when:'Nov 21–29', kind:'Break' },
+  { id:'x8', title:'Midterm 3 / Final exam', when:'Tue Dec 15, 3:00–5:00p', kind:'Exam' },
+  { id:'x9', title:'Top Hat participation', when:'Every class', kind:'Extra credit' },
+];
+
+const PASTED = `Important Dates:
+• MIDTERM 1 : September 30th (Wednesday, in class)
+• Fall Break: October 22–23rd (I.e., No Class Friday)
+• MIDTERM 2 : November 4th (Wednesday, in class)
+• Thanksgiving Break: November 21st–29th (Full Week Off)
+• MID 3/FINAL EXAM : (Will take place during our official "final exam slot")
+  9:05: Tuesday December 15th, 3:00–5:00p
+
+Evaluation:
+20% Problem Sets — Due roughly every Friday. All deadlines and
+submissions will be in gradescope.
+80% Exams — three multiple-choice exams, in class, closed-note.`;
+
+const LOAD_STEPS = ['Splitting pages…', 'Finding the schedule table…', 'Resolving “roughly every Friday”…', 'Cross-checking the academic calendar…'];
+
+class Component extends DCLogic {
+  state = {
+    screen: this.props.start || 'home',
+    prev: 'home',
+    courseId: 'core',
+    itemId: 'bus-ga1',
+    done: {},
+    notifs: { class:true, today:true, two:true, free:false, sun:true, exam:true },
+    cleared: false,
+    filter: 'All',
+    query: 'quiz',
+    onb: 0,
+    picked: EXTRACT.reduce(function(a,x){ a[x.id] = true; return a; }, {}),
+    sel: 3,
+    loadStep: 0,
+    guideId: 'econ',
+    mode: 'cards',
+    quiz: [],
+    quizIdx: 0,
+    quizPicked: null,
+    quizScore: 0,
+    quizSeed: 1,
+    openUnit: 0,
+    calTab: 'deadlines',
+    evFilter: 'All',
+    eventId: 'e1',
+    saved: { e1:true, e16:true },
+    drillUnit: null,
+    drillIdx: 0,
+    drillGot: 0,
+    revealed: false,
+  };
+
+  audio = React.createRef();
+
+  startDrill = (unit) => this.setState(st => ({ screen:'drill', prev:'guide', drillUnit:unit, drillIdx:0, drillGot:0, revealed:false }));
+
+  startWeak = () => {
+    const g = GUIDES[this.state.guideId];
+    let worst = 0;
+    g.units.forEach((u, i) => { if (u.mastery < g.units[worst].mastery) worst = i; });
+    this.startDrill(worst);
+  };
+
+  startQuiz = () => {
+    const g = GUIDES[this.state.guideId];
+    const all = [];
+    g.units.forEach(u => u.cards.forEach(c => all.push({ q:c.q, a:c.a, unit:u.name })));
+    let seed = (this.state.quizSeed || 1) * 9301 % 233280;
+    const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+    const pool = all.slice();
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+    const clip = (s) => (s.length > 118 ? s.slice(0, 116).replace(/[ ,;—]+$/, '') + '…' : s);
+    const quiz = pool.slice(0, 10).map(card => {
+      const wrong = [];
+      const seen = { };
+      let guard = 0;
+      while (wrong.length < 3 && guard < 200) {
+        guard++;
+        const cand = all[Math.floor(rnd() * all.length)];
+        if (cand.a === card.a || seen[cand.a]) continue;
+        seen[cand.a] = 1; wrong.push(cand.a);
+      }
+      const opts = wrong.map(a => ({ text: clip(a), ok:false })).concat([{ text: clip(card.a), ok:true }]);
+      for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = opts[i]; opts[i] = opts[j]; opts[j] = t; }
+      return { q: card.q, unit: card.unit, full: card.a, opts };
+    });
+    this.setState(st => ({ screen:'quiz', prev:'guide', quiz, quizIdx:0, quizPicked:null, quizScore:0, quizSeed:(st.quizSeed || 1) + 7 }));
+  };
+
+  pickAnswer = (i) => this.setState(st => {
+    if (st.quizPicked !== null) return null;
+    const ok = st.quiz[st.quizIdx].opts[i].ok;
+    return { quizPicked: i, quizScore: st.quizScore + (ok ? 1 : 0) };
+  });
+
+  nextQuestion = () => this.setState(st => ({ quizIdx: st.quizIdx + 1, quizPicked: null }));
+
+  componentWillUnmount() { clearInterval(this._t); }
+
+  go = (s) => this.setState(st => ({ screen: s, prev: st.screen }));
+  back = () => this.setState(st => ({ screen: st.prev === st.screen ? 'home' : st.prev }));
+
+  openItem = (id) => this.setState(st => ({ screen:'item', itemId:id, prev: st.screen }));
+  openCourse = (id) => this.setState(st => ({ screen:'course', courseId:id, prev: st.screen }));
+  toggleDone = (id) => this.setState(st => { const d = Object.assign({}, st.done); d[id] = !d[id]; return { done:d }; });
+  toggleNotif = (k) => this.setState(st => { const n = Object.assign({}, st.notifs); n[k] = !n[k]; return { notifs:n }; });
+  togglePick = (id) => this.setState(st => { const p = Object.assign({}, st.picked); p[id] = !p[id]; return { picked:p }; });
+
+  runExtract = () => {
+    this.setState({ screen:'importing', loadStep:0 });
+    clearInterval(this._t);
+    let i = 0;
+    this._t = setInterval(() => {
+      i += 1;
+      if (i >= LOAD_STEPS.length) { clearInterval(this._t); this.setState({ screen:'review' }); }
+      else this.setState({ loadStep: i });
+    }, 700);
+  };
+
+  renderVals() {
+    const st = this.state;
+    const isFeedNav = this.props.nav === 'feed';
+    const s = st.screen;
+    const byId = {}; COURSES.forEach(c => { byId[c.id] = c; });
+    const acc = 'var(--app-accent)';
+    const root = ['home','courses','study','calendar','me'].indexOf(s) >= 0;
+
+    const deco = (it) => Object.assign({}, it, {
+      code: byId[it.c].code,
+      dd: String(it.day),
+      open: () => this.openItem(it.id),
+    });
+
+    const todayItems = ITEMS.filter(i => i.today);
+    const doneCount = todayItems.filter(i => st.done[i.id]).length;
+    const left = todayItems.length - doneCount;
+
+    let punchline = 'Three things stand between you and Friday.';
+    if (left === 2) punchline = 'Two left. Both before midnight.';
+    if (left === 1) punchline = 'One thing left. Finish it.';
+    if (left === 0) punchline = 'Day cleared.';
+
+    const todayTasks = todayItems.map(it => {
+      const d = !!st.done[it.id];
+      return Object.assign(deco(it), {
+        dueLine: it.dueTime + ' · ' + it.where,
+        toggle: () => this.toggleDone(it.id),
+        boxBd: d ? acc : 'var(--app-line)',
+        boxBg: d ? acc : 'transparent',
+        tickOp: d ? '1' : '0',
+        textOp: d ? '0.4' : '1',
+        strike: d ? 'line-through' : 'none',
+        rowBg: d ? 'transparent' : 'var(--app-panel)',
+      });
+    });
+
+    const upcoming = ITEMS.filter(i => !i.today).slice(0, 4).map(deco);
+
+    const filters = ['All','Due','Classes','ECON','PSCI','CORE','BUS'].map(f => ({
+      label: f, pick: () => this.setState({ filter: f }),
+      bg: st.filter === f ? acc : 'transparent',
+      fg: st.filter === f ? 'var(--app-bg)' : 'var(--app-fg)',
+      bd: st.filter === f ? acc : 'var(--app-line)',
+    }));
+
+    const codeOf = (cid) => byId[cid].code;
+    const fClass = st.filter;
+    const wantClasses = fClass === 'All' || fClass === 'Classes';
+    const wantDue = fClass === 'All' || fClass === 'Due';
+    const courseFilter = ['ECON','PSCI','CORE','BUS'].indexOf(fClass) >= 0 ? fClass : null;
+    const feedRaw = [];
+    BLOCKS.forEach(b => {
+      const cid = b.title.indexOf('BUS') === 0 ? 'bus' : b.title.indexOf('CORE') === 0 ? 'core' : b.title.indexOf('PSCI') === 0 ? 'psci' : null;
+      feedRaw.push({
+        isClass: true, cid, top: 'Today', bottom: b.time, code: cid ? codeOf(cid) : 'Campus',
+        kind: cid ? 'Class' : 'Optional', title: b.title, meta: b.meta, op: b.op, strike: b.strike,
+        rule: 'var(--app-line)', tagBg: 'var(--app-panel)', tagFg: 'var(--app-fg)',
+        cursor: 'default', open: () => {},
+      });
+    });
+    ITEMS.slice(0, 8).forEach(it => {
+      const d = !!st.done[it.id];
+      feedRaw.push({
+        isClass: false, cid: it.c, top: it.today ? 'Due' : it.dow, bottom: it.today ? it.dueTime.split(',')[0] : it.mon + ' ' + it.day,
+        code: codeOf(it.c), kind: it.kind, title: it.title, meta: it.dueTime + ' · ' + it.where,
+        op: d ? '0.4' : '1', strike: d ? 'line-through' : 'none', rule: 'var(--app-accent)',
+        tagBg: 'color-mix(in srgb, var(--app-accent) 16%, transparent)', tagFg: 'var(--app-accent)',
+        cursor: 'pointer', open: ((x) => () => this.openItem(x))(it.id),
+      });
+    });
+    const feed = feedRaw.filter(f => {
+      if (courseFilter) return f.code.indexOf(courseFilter) === 0;
+      if (f.isClass) return wantClasses;
+      return wantDue;
+    });
+
+    const courseCards = COURSES.map(c => {
+      const nx = ITEMS.filter(i => i.c === c.id)[0];
+      return Object.assign({}, c, {
+        open: () => this.openCourse(c.id),
+        nextLabel: nx ? nx.dueShort : 'Clear',
+        nextTitle: nx ? nx.title : 'Nothing scheduled',
+      });
+    });
+
+    const course = byId[st.courseId];
+    const courseItems = ITEMS.filter(i => i.c === st.courseId).map(deco);
+    const item = deco(ITEMS.filter(i => i.id === st.itemId)[0] || ITEMS[0]);
+    item.cta = st.done[item.id] ? 'Mark not done' : 'Mark done';
+    item.toggle = () => this.toggleDone(item.id);
+
+    const guideId = st.guideId;
+    const g = GUIDES[guideId];
+    const gCards = [];
+    g.units.forEach((u, ui) => u.cards.forEach(c => gCards.push({ q:c.q, a:c.a, unit:u.name, ui })));
+    const guideCards = COURSES.map(c => {
+      const gg = GUIDES[c.id];
+      return { code: gg.code, blurb: gg.blurb, mastery: gg.mastery + '%', w: gg.mastery + '%',
+        meta: gg.units.length + ' units · ' + gg.units.reduce((n,u) => n + u.cards.length, 0) + ' cards',
+        open: ((id) => () => this.setState({ screen:'guide', guideId:id, prev:'study' }))(c.id) };
+    });
+    const guideUnits = g.units.map((u, i) => ({
+      n: String(i + 1), name: u.name, w: u.mastery + '%', count: u.cards.length + ' cards',
+      bar: u.mastery < 40 ? 'var(--app-accent)' : 'var(--app-accent)',
+      drill: ((x) => () => this.startDrill(x))(i),
+    }));
+
+    const acc2 = 'var(--app-accent)';
+    const modes = [
+      { id:'cards', label:'Cards' }, { id:'read', label:'Read' },
+      { id:'quiz', label:'Quiz' }, { id:'figures', label:'Figures' }, { id:'cases', label:'Cases' },
+      { id:'cram', label:'Cram' }, { id:'listen', label:'Listen' },
+    ].map(m => ({
+      label: m.label, pick: ((x) => () => this.setState({ mode:x }))(m.id),
+      bg: st.mode === m.id ? acc2 : 'transparent',
+      fg: st.mode === m.id ? 'var(--app-bg)' : 'var(--app-fg)',
+      bd: st.mode === m.id ? acc2 : 'var(--app-line)',
+    }));
+    const figMap = FIGURES[guideId] || {};
+    const decoFig = (f) => f && Object.assign({}, f, {
+      isBars: f.type === 'bars', isSteps: f.type === 'steps',
+      rows: (f.rows || []).map(r => ({ l:r.l, v:String(r.v), w: Math.round((r.v / f.max) * 100) + '%' })),
+      steps: f.steps || [],
+    });
+    const readUnits = g.units.map((u, i) => ({
+      n: String(i + 1), name: u.name, count: u.cards.length + ' cards', mastery: u.mastery + '%',
+      open: st.openUnit === i,
+      cards: u.cards,
+      fig: decoFig(figMap[i]), hasFig: !!figMap[i],
+      toggle: ((x) => () => this.setState(s2 => ({ openUnit: s2.openUnit === x ? -1 : x })))(i),
+      chev: st.openUnit === i ? 'rotate(90deg)' : 'rotate(0deg)',
+      drill: ((x) => () => this.startDrill(x))(i),
+    }));
+    let weakest = g.units[0]; g.units.forEach(u => { if (u.mastery < weakest.mastery) weakest = u; });
+
+    const quiz = st.quiz;
+    const qCur = quiz[st.quizIdx] || { q:'', unit:'', full:'', opts:[] };
+    const quizOver = quiz.length > 0 && st.quizIdx >= quiz.length;
+    const picked = st.quizPicked;
+    const quizOpts = (qCur.opts || []).map((o, i) => {
+      const chosen = picked === i;
+      const reveal = picked !== null;
+      return {
+        text: o.text,
+        pick: ((x) => () => this.pickAnswer(x))(i),
+        bd: reveal && o.ok ? acc2 : chosen ? 'color-mix(in srgb, var(--app-fg) 55%, transparent)' : 'var(--app-line)',
+        bg: reveal && o.ok ? 'color-mix(in srgb, var(--app-accent) 16%, transparent)' : chosen ? 'var(--app-track)' : 'transparent',
+        mark: reveal && o.ok ? '✓' : chosen ? '✕' : '',
+        op: reveal && !o.ok && !chosen ? '0.5' : '1',
+      };
+    });
+
+    const pool = st.drillUnit === null ? gCards : gCards.filter(c => c.ui === st.drillUnit);
+    const idx = st.drillIdx;
+    const card = pool[idx] || pool[0] || { q:'', a:'', unit:'' };
+    const finished = idx >= pool.length;
+    const gotN = st.drillGot;
+    const verdict = gotN === pool.length ? 'Cold locked.' : gotN >= pool.length * 0.6 ? 'Solid.' : 'Come back tonight.';
+
+    const dowLabels = ['S','M','T','W','T','F','S'].map(l => ({ l }));
+    const sepDue = {}; ITEMS.filter(i => i.mon === 'Sep').forEach(i => { sepDue[i.day] = (sepDue[i.day] || 0) + 1; });
+    const calDays = [];
+    for (let b = 0; b < 2; b++) calDays.push({ n:'', bg:'var(--app-bg)', fg:'var(--app-fg)', op:'0', dots:[], pick:()=>{} });
+    for (let d = 1; d <= 30; d++) {
+      const n = sepDue[d] || 0;
+      const dots = []; for (let k = 0; k < Math.min(n, 3); k++) dots.push({ c: st.sel === d ? 'var(--app-bg)' : acc });
+      calDays.push({
+        n: String(d), dots, pick: ((x) => () => this.setState({ sel: x }))(d),
+        bg: st.sel === d ? 'var(--app-hero)' : 'var(--app-bg)',
+        fg: st.sel === d ? '#f2f2f3' : 'var(--app-fg)',
+        op: d === 3 ? '1' : '0.8',
+      });
+    }
+    while (calDays.length % 7 !== 0) calDays.push({ n:'', bg:'var(--app-bg)', fg:'var(--app-fg)', op:'0', dots:[], pick:()=>{} });
+    const selItems = ITEMS.filter(i => i.mon === 'Sep' && i.day === st.sel).map(deco);
+
+    const calTabs = [
+      { id:'deadlines', label:'Deadlines' }, { id:'campus', label:'Campus' },
+    ].map(t => ({
+      label: t.label, pick: ((x) => () => this.setState({ calTab:x }))(t.id),
+      bg: st.calTab === t.id ? acc : 'transparent',
+      fg: st.calTab === t.id ? 'var(--app-bg)' : 'var(--app-fg)',
+      bd: st.calTab === t.id ? acc : 'var(--app-line)',
+    }));
+    const evFilters = ['All','Athletics','Clubs','University','Saved'].map(f => ({
+      label: f, pick: ((x) => () => this.setState({ evFilter:x }))(f),
+      bg: st.evFilter === f ? acc : 'transparent',
+      fg: st.evFilter === f ? 'var(--app-bg)' : 'var(--app-fg)',
+      bd: st.evFilter === f ? acc : 'var(--app-line)',
+    }));
+    const decoEv = (e) => Object.assign({}, e, {
+      dd: String(e.day), saved: !!st.saved[e.id],
+      savedMark: st.saved[e.id] ? 'Saved' : 'Save',
+      open: ((id) => () => this.setState(s2 => ({ screen:'event', eventId:id, prev:s2.screen })))(e.id),
+      toggleSave: ((id) => () => this.setState(s2 => { const sv = Object.assign({}, s2.saved); sv[id] = !sv[id]; return { saved:sv }; }))(e.id),
+      tagBg: e.kind === 'Athletics' ? 'color-mix(in srgb, var(--app-accent) 16%, transparent)' : e.kind === 'Clubs' ? 'var(--app-panel)' : 'transparent',
+      tagFg: e.kind === 'Athletics' ? 'var(--app-accent)' : 'var(--app-fg)',
+      tagBd: e.kind === 'University' ? 'var(--app-accent)' : 'transparent',
+    });
+    const events = EVENTS.filter(e => {
+      if (st.evFilter === 'All') return true;
+      if (st.evFilter === 'Saved') return !!st.saved[e.id];
+      return e.kind === st.evFilter;
+    }).map(decoEv);
+    const event = decoEv(EVENTS.filter(e => e.id === st.eventId)[0] || EVENTS[0]);
+    const nextEvent = decoEv(EVENTS[1]);
+
+    const q = (st.query || '').toLowerCase();
+    const results = ITEMS.filter(i =>
+      (i.title + ' ' + i.kind + ' ' + byId[i.c].code + ' ' + byId[i.c].prof + ' ' + i.dueShort).toLowerCase().indexOf(q) >= 0
+    ).map(deco);
+
+    const loadBars = COURSES.map(c => {
+      const n = ITEMS.filter(i => i.c === c.id).length;
+      return { code: c.code, n: String(n), w: Math.round((n / 5) * 100) + '%' };
+    });
+
+    const onb = st.onb;
+    const onbCopy = [
+      { k:'Fall 2026 · Vanderbilt', t:'Four syllabi. One brain.', b:'Every deadline in your semester, pulled straight out of the PDFs your professors posted.', cta:'Set it up' },
+      { k:'Step 2 of 3', t:'Dropped in. Read.', b:'We found 38 dated obligations across four courses — including the ones buried in prose.', cta:'Looks right' },
+      { k:'Step 3 of 3', t:'When should I bug you?', b:'Change any of this later. Nothing here is permanent.', cta:'Start the semester' },
+    ][onb] || {};
+
+    const headers = {
+      home: isFeedNav ? { k:'Thursday · September 3', t:'Everything' } : { k:'Thursday · September 3', t:'Today' },
+      courses: { k:'Fall 2026 · 11 credits', t:'Courses' },
+      course: { k:'Course', t: course.code },
+      item: { k: item.code, t: item.kind },
+      study: { k:'27 days to Midterm 1', t:'Study' },
+      guide: { k: g.code + ' · study guide', t:'Guide' },
+      drill: { k: g.code, t:'Drill' },
+      quiz: { k: g.code + ' · multiple choice', t:'Quiz' },
+      calendar: st.calTab === 'campus' ? { k:'Vanderbilt · Fall 2026', t:'On campus' } : { k:'September 2026', t:'Calendar' },
+      event: { k: event.kind, t: event.mon + ' ' + event.day },
+      me: { k:'Vanderbilt · Fall 2026', t:'Me' },
+      search: { k:'Across 4 courses', t:'Search' },
+      notifs: { k:'Today', t:'Alerts' },
+      settings: { k:'Preferences', t:'Settings' },
+      import: { k:'New source', t:'Import syllabus' },
+      importing: { k:'Working', t:'Import syllabus' },
+      review: { k:'Step 2 of 2', t:'Review' },
+    };
+    const head = headers[s] || headers.home;
+
+    const tab = (id) => ({
+      go: () => this.go(id),
+      fg: s === id ? acc : 'color-mix(in srgb, var(--app-fg) 55%, transparent)',
+      bar: s === id ? acc : 'transparent',
+    });
+
+    return {
+      inApp: s !== 'onboarding',
+      onOnboarding: s === 'onboarding',
+      onHome: s === 'home', onCourses: s === 'courses', onCourse: s === 'course', onItem: s === 'item',
+      onCalendar: s === 'calendar', onMe: s === 'me', onSearch: s === 'search', onNotifs: s === 'notifs',
+      onSettings: s === 'settings', onImport: s === 'import', onImporting: s === 'importing', onReview: s === 'review',
+      isFeedNav, isTabNav: !isFeedNav, feed,
+      showTabs: !isFeedNav && root,
+      showFab: isFeedNav && s === 'home',
+      showBack: !root,
+      showHeadActions: s === 'home' || s === 'courses',
+      headKicker: head.k, headTitle: head.t,
+      courses: COURSES, courseCards, course, courseItems, item,
+      todayTasks, upcoming, blocks: BLOCKS, filters,
+      punchline, allClear: left === 0,
+      doneLabel: doneCount + ' of ' + todayItems.length + ' done',
+      calTabs, showDeadlines: st.calTab !== 'campus', showCampus: st.calTab === 'campus',
+      evFilters, events, event, nextEvent, noEvents: events.length === 0,
+      onEvent: s === 'event',
+      eventCount: events.length + ' events',
+      dowLabels, calDays, selItems, selEmpty: selItems.length === 0,
+      selLabel: 'September ' + st.sel,
+      query: st.query,
+      setQuery: (e) => this.setState({ query: e.target.value }),
+      results, hasResults: results.length > 0, noResults: results.length === 0,
+      resultLabel: results.length + ' matches',
+      notifications: st.cleared ? [] : NOTIFICATIONS.map((n, i) => Object.assign({}, n, { bg: i < 2 ? 'var(--app-panel)' : 'transparent' })),
+      hasNotifs: !st.cleared, noNotifs: st.cleared,
+      clearNotifs: () => this.setState({ cleared: true }),
+      notifRows: NOTIF_DEFS.map(n => ({
+        label: n.label, toggle: () => this.toggleNotif(n.k),
+        trackBg: st.notifs[n.k] ? acc : 'transparent',
+        knobSide: st.notifs[n.k] ? 'flex-end' : 'flex-start',
+        knobBg: st.notifs[n.k] ? 'var(--app-bg)' : 'color-mix(in srgb, var(--app-fg) 40%, transparent)',
+      })),
+      sources: [
+        { label:'Brightspace', meta:'4 courses · synced 6:40 AM', state:'On' },
+        { label:'Gradescope', meta:'ECON 1020 problem sets', state:'On' },
+        { label:'Apple Calendar', meta:'Two-way, “Fall 2026” calendar', state:'On' },
+        { label:'Top Hat', meta:'Join code 782449', state:'Link' },
+      ],
+      stats: [{ n:'4', l:'Courses' }, { n:'11', l:'Credits' }, { n:'38', l:'Deadlines' }],
+      loadBars,
+      pasted: PASTED,
+      runExtract: this.runExtract,
+      loadStep: LOAD_STEPS[st.loadStep],
+      skeletons: [{op:'1',w1:'62%',w2:'38%'},{op:'0.8',w1:'48%',w2:'54%'},{op:'0.6',w1:'70%',w2:'30%'},{op:'0.4',w1:'40%',w2:'46%'},{op:'0.2',w1:'58%',w2:'34%'}],
+      reviewRows: EXTRACT.map(x => {
+        const p = !!st.picked[x.id];
+        return Object.assign({}, x, {
+          toggle: () => this.togglePick(x.id),
+          boxBd: p ? acc : 'var(--app-line)', boxBg: p ? acc : 'transparent',
+          tickOp: p ? '1' : '0', op: p ? '1' : '0.45',
+        });
+      }),
+      reviewCount: String(EXTRACT.length),
+      reviewCta: 'Add ' + EXTRACT.filter(x => st.picked[x.id]).length + ' to ECON 1020',
+      finishImport: () => this.setState({ screen:'courses', prev:'home' }),
+      onbDots: [0,1,2].map(i => ({ on: i <= onb ? '1' : '0' })),
+      onbKicker: onbCopy.k, onbTitle: onbCopy.t, onbBody: onbCopy.b, onbCta: onbCopy.cta,
+      onbStep1: onb === 0, onbStep2: onb === 1, onbStep3: onb === 2,
+      onbFiles: [
+        { file:'Econ1020_2026_Fall.pdf', found:'9 dates · 3 exams' },
+        { file:'PSCI1104_Trounstine_F26.pdf', found:'6 quizzes · midterm · final' },
+        { file:'Sports_Fall26_Syllabus.pdf', found:'8 quizzes · 14 reflections' },
+        { file:'Syllabus Draft 8262026.pdf', found:'4 group assignments · case' },
+      ],
+      onbNext: () => (onb >= 2 ? this.setState({ screen:'home' }) : this.setState({ onb: onb + 1 })),
+      skipOnb: () => this.setState({ screen:'home' }),
+      restartOnb: () => this.setState({ screen:'onboarding', onb:0 }),
+      tabHome: tab('home'), tabCourses: tab('courses'), tabStudy: tab('study'), tabCalendar: tab('calendar'), tabMe: tab('me'),
+      onStudy: s === 'study', onGuide: s === 'guide', onDrill: s === 'drill',
+      guideCards, guideUnits, guideTerms: g.terms,
+      guideFrames: g.frames || [], hasFrames: !!(g.frames && g.frames.length),
+      framesLabel: FRAME_LABELS[guideId] || 'Answer frames',
+      guide: Object.assign({}, g, {
+        cardCount: gCards.length, hasAudio: !!g.audio,
+        drillAll: () => this.startDrill(null),
+      }),
+      yes: true,
+      plan: COURSES.map(c => {
+        const gg = GUIDES[c.id];
+        let w = gg.units[0]; gg.units.forEach(u => { if (u.mastery < w.mastery) w = u; });
+        return { code: gg.code, min: PLAN_MIN[c.id], what: w.name, why: w.mastery + '% mastered',
+          go: ((id) => () => this.setState({ screen:'guide', guideId:id, prev:'study', mode:'cards' }))(c.id) };
+      }),
+      goStudy: () => this.go('study'),
+      openGuide: () => this.setState({ screen:'guide', guideId: st.courseId, prev:'course' }),
+      drillRunning: !finished, drillDone: finished,
+      drillPct: Math.round((Math.min(idx, pool.length) / Math.max(pool.length, 1)) * 100) + '%',
+      drillCounter: Math.min(idx + 1, pool.length) + ' / ' + pool.length,
+      drillUnit: card.unit, cardQ: card.q, cardA: card.a,
+      revealed: st.revealed, notRevealed: !st.revealed,
+      cardBg: st.revealed ? 'var(--app-panel)' : 'transparent',
+      flip: () => this.setState({ revealed: true }),
+      markGot: () => this.setState(x => ({ revealed:false, drillIdx:x.drillIdx + 1, drillGot:x.drillGot + 1 })),
+      markAgain: () => this.setState(x => ({ revealed:false, drillIdx:x.drillIdx + 1 })),
+      drillScore: gotN + '/' + pool.length,
+      drillVerdict: verdict,
+      drillNote: 'You reviewed ' + pool.length + ' cards in ' + g.code + '. Missed ones come back first tomorrow.',
+      drillQueue: (pool.length - gotN) + ' cards, plus whatever Midterm 1 units are still under 40%.',
+      modes, modeCards: st.mode === 'cards', modeRead: st.mode === 'read', modeQuiz: st.mode === 'quiz', modeCram: st.mode === 'cram',
+      modeListen: st.mode === 'listen', modeFigures: st.mode === 'figures', modeCases: st.mode === 'cases',
+      figures: Object.keys(figMap).map(k => Object.assign(decoFig(figMap[k]), { unit: g.units[k].name })),
+      hasFigures: Object.keys(figMap).length > 0,
+      examples: (EXAMPLES[guideId] || []),
+      pod: PODCAST[guideId], podReady: PODCAST[guideId].ready, podPending: !PODCAST[guideId].ready,
+      podChapters: PODCAST[guideId].chapters.map(c => Object.assign({}, c, {
+        seek: ((sec) => () => { const a = this.audio.current; if (a) { a.currentTime = sec; a.play(); } })(c.s),
+      })),
+      audioRef: this.audio,
+      readUnits,
+      weakName: weakest.name, weakPct: weakest.mastery + '% mastered',
+      startWeak: this.startWeak, startQuiz: this.startQuiz,
+      onQuiz: s === 'quiz',
+      quizRunning: !quizOver, quizOver,
+      quizQ: qCur.q, quizUnit: qCur.unit, quizFull: qCur.full, quizOpts,
+      quizAnswered: picked !== null,
+      quizCounter: Math.min(st.quizIdx + 1, quiz.length) + ' / ' + quiz.length,
+      quizPct: Math.round((Math.min(st.quizIdx, quiz.length) / Math.max(quiz.length, 1)) * 100) + '%',
+      nextQuestion: this.nextQuestion,
+      quizFinalScore: st.quizScore + '/' + quiz.length,
+      quizVerdict: st.quizScore >= quiz.length - 1 ? 'Exam-ready.' : st.quizScore >= quiz.length * 0.6 ? 'Nearly there.' : 'Read the units again.',
+      quizNote: 'Ten questions pulled at random from all ' + gCards.length + ' cards in ' + g.code + '. Re-run it and you get a different ten.',
+      backToGuide: () => this.setState({ screen:'guide' }),
+      redrill: () => this.startDrill(st.drillUnit),
+      back: this.back,
+      goSearch: () => this.go('search'),
+      goNotifs: () => this.go('notifs'),
+      goMe: () => this.go('me'),
+      goSettings: () => this.go('settings'),
+      goImport: () => this.go('import'),
+    };
+  }
+}
+</script>
+</body>
+</html>

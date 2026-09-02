@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/industry-ec2ca40c-1b5d-43d4-b745-e12440ac38fa/styles.css">
+<script src="_ds/industry-ec2ca40c-1b5d-43d4-b745-e12440ac38fa/_ds_bundle.js"></script>
+<style>
+  body { background: var(--color-bg); }
+  a { color: var(--color-accent-700); }
+  a:hover { color: var(--color-accent); }
+</style>
+</helmet>
+
+<section style="padding:56px 56px 90px;font-family:var(--font-body);color:var(--color-text)">
+  <div style="display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap;max-width:1180px">
+    <div style="flex:1;min-width:420px">
+      <div style="font-family:var(--font-heading);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--color-accent-700)">Turn 1 · iOS · hi-fi clickable</div>
+      <h1 style="font-size:64px;line-height:.98;letter-spacing:-.02em;margin:8px 0 12px">Semester</h1>
+      <p style="font-size:17px;line-height:1.5;max-width:60ch;opacity:.78;text-wrap:pretty">One app for the four syllabi you handed me — ECON 1020, PSCI 1104, CORE 2500 and BUS 1600. Every deadline, weight and reading below is lifted from those PDFs. Both phones are live: tap around them. Set to Thursday, September 3, 9:41 AM.</p>
+    </div>
+    <div class="blueprint" style="padding:16px 18px;min-width:300px">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div style="font-family:var(--font-heading);font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.55;margin-bottom:8px">Try this</div>
+      <div style="font-size:14px;line-height:1.6">
+        Tick off today's three tasks → the all-clear state.<br>
+        Courses → “Add a course from a syllabus” → paste → extract → review.<br>
+        Settings → “Replay onboarding”.
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:56px;flex-wrap:wrap;margin-top:48px">
+
+    <div id="1a" style="width:402px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+        <span class="tag tag-accent" style="font-family:var(--font-heading);font-size:13px;letter-spacing:.12em">1A</span>
+        <h3 style="margin:0">Tab bar</h3>
+      </div>
+      <p style="font-size:14px;line-height:1.5;opacity:.7;min-height:66px;margin-bottom:18px;text-wrap:pretty">Today / Courses / Calendar / Me. Today is a fixed sequence: next class, the checklist, the day's rail, the week. You always know where a thing lives — at the cost of four taps to compare two courses.</p>
+      <dc-import name="Semester Phone" nav="tabs" start="home" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <div id="1b" style="width:402px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+        <span class="tag tag-accent" style="font-family:var(--font-heading);font-size:13px;letter-spacing:.12em">1B</span>
+        <h3 style="margin:0">One feed, filtered</h3>
+      </div>
+      <p style="font-size:14px;line-height:1.5;opacity:.7;min-height:66px;margin-bottom:18px;text-wrap:pretty">No tabs. Classes and deadlines interleave in one chronological scroll; the chip row slices it — Due, Classes, or a single course. Fastest for “what's actually next”, weaker for browsing a course as a whole.</p>
+      <dc-import name="Semester Phone" nav="feed" start="home" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <div id="1c" style="width:402px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+        <span class="tag tag-accent" style="font-family:var(--font-heading);font-size:13px;letter-spacing:.12em">1S</span>
+        <h3 style="margin:0">Study</h3>
+      </div>
+      <p style="font-size:14px;line-height:1.5;opacity:.7;min-height:66px;margin-bottom:18px;text-wrap:pretty">The study guide as a tool, not a document. Exam radar up top, one guide per course, units that go red under 40% mastery, and a tap-to-flip drill. The ECON guide carries your audio version. Study tab → ECON 1020.</p>
+      <dc-import name="Semester Phone" nav="tabs" start="study" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <div style="width:402px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+        <span class="tag tag-neutral" style="font-family:var(--font-heading);font-size:13px;letter-spacing:.12em">1C</span>
+        <h3 style="margin:0">First run</h3>
+      </div>
+      <p style="font-size:14px;line-height:1.5;opacity:.7;min-height:66px;margin-bottom:18px;text-wrap:pretty">Shared by both. Three screens: the promise, the four PDFs it just read, and the alerts you'll actually get. It ends on Today with the semester already loaded.</p>
+      <dc-import name="Semester Phone" nav="tabs" start="onboarding" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <div style="width:402px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+        <span class="tag tag-neutral" style="font-family:var(--font-heading);font-size:13px;letter-spacing:.12em">1D</span>
+        <h3 style="margin:0">Syllabus import</h3>
+      </div>
+      <p style="font-size:14px;line-height:1.5;opacity:.7;min-height:66px;margin-bottom:18px;text-wrap:pretty">The one screen the app is built around. Real text from your ECON syllabus is already pasted — hit extract to watch it resolve “roughly every Friday” into nine dated rows you confirm.</p>
+      <dc-import name="Semester Phone" nav="tabs" start="import" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <div style="width:402px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+        <span class="tag tag-neutral" style="font-family:var(--font-heading);font-size:13px;letter-spacing:.12em">1E</span>
+        <h3 style="margin:0">Alerts</h3>
+      </div>
+      <p style="font-size:14px;line-height:1.5;opacity:.7;min-height:66px;margin-bottom:18px;text-wrap:pretty">Morning batch at 8am rather than a trickle. Clear all to see the empty state. Which of these fire is set in Settings.</p>
+      <dc-import name="Semester Phone" nav="tabs" start="notifs" hint-size="402px,874px"></dc-import>
+    </div>
+
+    <div style="width:402px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
+        <span class="tag tag-neutral" style="font-family:var(--font-heading);font-size:13px;letter-spacing:.12em">1F</span>
+        <h3 style="margin:0">Calendar &amp; search</h3>
+      </div>
+      <p style="font-size:14px;line-height:1.5;opacity:.7;min-height:66px;margin-bottom:18px;text-wrap:pretty">September at a glance — one mark per deadline, tap a day for the list. Search runs across titles, professors, kinds and dates; clear the field for the no-results state.</p>
+      <dc-import name="Semester Phone" nav="tabs" start="calendar" hint-size="402px,874px"></dc-import>
+    </div>
+
+  </div>
+</section>
+</x-dc>
+</body>
+</html>
