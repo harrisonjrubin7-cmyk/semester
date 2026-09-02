@@ -1,0 +1,79 @@
+{
+  "id": "econ-podcast",
+  "course": "econ",
+  "title": "ECON 1020 \u2014 Thinking at the Margin",
+  "len": "28:17",
+  "seconds": 1696,
+  "chapters": [
+    {
+      "t": "0:00",
+      "s": 0,
+      "name": "Cold open"
+    },
+    {
+      "t": "0:36",
+      "s": 35,
+      "name": "How to actually pass"
+    },
+    {
+      "t": "2:21",
+      "s": 140,
+      "name": "What economics is"
+    },
+    {
+      "t": "3:53",
+      "s": 232,
+      "name": "Optimisation and opportunity cost"
+    },
+    {
+      "t": "5:28",
+      "s": 328,
+      "name": "Supply, demand, equilibrium"
+    },
+    {
+      "t": "7:39",
+      "s": 458,
+      "name": "Surplus and elasticity"
+    },
+    {
+      "t": "10:13",
+      "s": 613,
+      "name": "Producers and cost curves"
+    },
+    {
+      "t": "12:56",
+      "s": 776,
+      "name": "Efficiency and externalities"
+    },
+    {
+      "t": "15:52",
+      "s": 951,
+      "name": "Monopoly and game theory"
+    },
+    {
+      "t": "19:13",
+      "s": 1152,
+      "name": "Competition and information"
+    },
+    {
+      "t": "21:06",
+      "s": 1265,
+      "name": "The formula sheet"
+    },
+    {
+      "t": "22:13",
+      "s": 1332,
+      "name": "Self-test"
+    },
+    {
+      "t": "26:53",
+      "s": 1613,
+      "name": "The traps"
+    },
+    {
+      "t": "28:05",
+      "s": 1684,
+      "name": "Close"
+    }
+  ]
+}

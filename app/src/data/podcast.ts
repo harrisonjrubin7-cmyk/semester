@@ -31,8 +31,34 @@ export interface CoursePodcast {
  */
 export const PODCAST: Record<CourseId, CoursePodcast> = {
   econ: {
-    blurb: 'The whole guide read aloud, chapter by chapter.',
+    blurb: 'The whole guide, two ways — as a conversation, or read straight through.',
     editions: [
+      {
+        id: 'econ-podcast',
+        label: 'Podcast',
+        file: '/audio/econ-podcast.mp3',
+        len: '28:17',
+        seconds: 1696,
+        ready: true,
+        blurb:
+          'Two hosts through the ten chapters — the four-step study method, the workhorse model, elasticity, cost curves, monopoly, game theory — then the formula sheet, a twelve-question self-test, and the traps rapid-fire. Chapter marks are exact.',
+        chapters: [
+          { t: '0:00', s: 0, name: 'Cold open' },
+          { t: '0:36', s: 35, name: 'How to actually pass' },
+          { t: '2:21', s: 140, name: 'What economics is' },
+          { t: '3:53', s: 232, name: 'Optimisation and opportunity cost' },
+          { t: '5:28', s: 328, name: 'Supply, demand, equilibrium' },
+          { t: '7:39', s: 458, name: 'Surplus and elasticity' },
+          { t: '10:13', s: 613, name: 'Producers and cost curves' },
+          { t: '12:56', s: 776, name: 'Efficiency and externalities' },
+          { t: '15:52', s: 951, name: 'Monopoly and game theory' },
+          { t: '19:13', s: 1152, name: 'Competition and information' },
+          { t: '21:06', s: 1265, name: 'The formula sheet' },
+          { t: '22:13', s: 1332, name: 'Self-test' },
+          { t: '26:53', s: 1613, name: 'The traps' },
+          { t: '28:05', s: 1684, name: 'Close' },
+        ],
+      },
       {
         id: 'econ-guide',
         label: 'Full read',
@@ -166,6 +192,28 @@ export const PODCAST: Record<CourseId, CoursePodcast> = {
     blurb:
       'Weeks 1–4 at listening pace, with every figure described in words — built for the walk to Garland.',
     editions: [
+      {
+        id: 'core-podcast',
+        label: 'Podcast',
+        file: '/audio/core-podcast.mp3',
+        len: '26:30',
+        seconds: 1590,
+        ready: true,
+        blurb:
+          'Two hosts through the grade, the five big ideas, and weeks two to four in full — the dolphins, Woman the Hunter, Jennie Finch, ACTN3 — then a ten-question self-test and how to write a reflection that earns the points. Chapter marks are exact.',
+        chapters: [
+          { t: '0:00', s: 0, name: 'Cold open' },
+          { t: '0:29', s: 28, name: 'How the grade actually works' },
+          { t: '2:30', s: 150, name: 'The five big ideas' },
+          { t: '4:10', s: 250, name: 'Week 2 — Fox and Konner, why we play' },
+          { t: '8:47', s: 527, name: 'Week 3 — Woman the Hunter' },
+          { t: '11:57', s: 716, name: 'Week 3 — Epstein, hardware and software' },
+          { t: '15:11', s: 911, name: 'Week 4 — the (un)science of race' },
+          { t: '20:25', s: 1225, name: 'Self-test' },
+          { t: '24:49', s: 1489, name: 'Reflections that earn the points' },
+          { t: '26:21', s: 1580, name: 'Close' },
+        ],
+      },
       {
         id: 'core-full',
         label: 'Full',

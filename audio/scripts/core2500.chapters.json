@@ -1,0 +1,59 @@
+{
+  "id": "core-podcast",
+  "course": "core",
+  "title": "CORE 2500 \u2014 Why We Play",
+  "len": "26:30",
+  "seconds": 1590,
+  "chapters": [
+    {
+      "t": "0:00",
+      "s": 0,
+      "name": "Cold open"
+    },
+    {
+      "t": "0:29",
+      "s": 28,
+      "name": "How the grade actually works"
+    },
+    {
+      "t": "2:30",
+      "s": 150,
+      "name": "The five big ideas"
+    },
+    {
+      "t": "4:10",
+      "s": 250,
+      "name": "Week 2 \u2014 Fox and Konner, why we play"
+    },
+    {
+      "t": "8:47",
+      "s": 527,
+      "name": "Week 3 \u2014 Woman the Hunter"
+    },
+    {
+      "t": "11:57",
+      "s": 716,
+      "name": "Week 3 \u2014 Epstein, hardware and software"
+    },
+    {
+      "t": "15:11",
+      "s": 911,
+      "name": "Week 4 \u2014 the (un)science of race"
+    },
+    {
+      "t": "20:25",
+      "s": 1225,
+      "name": "Self-test"
+    },
+    {
+      "t": "24:49",
+      "s": 1489,
+      "name": "Reflections that earn the points"
+    },
+    {
+      "t": "26:21",
+      "s": 1580,
+      "name": "Close"
+    }
+  ]
+}

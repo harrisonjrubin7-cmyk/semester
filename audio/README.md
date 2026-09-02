@@ -17,9 +17,9 @@ separate editions, switchable per course.
 | Script | Episode | Length |
 | --- | --- | --- |
 | `bus1600.json` | BUS 1600 — The Whole Semester, Out Loud | 30:50 |
-| `psci1104.json` | PSCI 1104 — Real Finding or Good Story? | see chapters file |
-| `core2500.json` | CORE 2500 — Why We Play | see chapters file |
-| `econ1020.json` | ECON 1020 — Thinking at the Margin | see chapters file |
+| `psci1104.json` | PSCI 1104 — Real Finding or Good Story? | 35:03 |
+| `core2500.json` | CORE 2500 — Why We Play | 26:30 |
+| `econ1020.json` | ECON 1020 — Thinking at the Margin | 28:17 |
 
 BUS 1600 had no recording at all before this, so that one is new rather than an
 alternative.
