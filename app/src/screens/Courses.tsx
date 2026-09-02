@@ -1,7 +1,7 @@
+import { COURSES, COURSE_BY_ID } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { DateRow, SectionLabel } from '../components/ui';
-import { COURSES, COURSE_BY_ID } from '../data/courses';
 import { upcomingItems, datedItems } from '../lib/select';
 
 export function Courses() {

@@ -1,3 +1,4 @@
+import { COURSE_BY_ID, GUIDES } from './data/catalog';
 import { useStore } from './state/store';
 import {
   Bell,
@@ -20,8 +21,6 @@ import { Import, Importing, Review } from './screens/Import';
 import { Study } from './screens/Study';
 import { Guide } from './screens/Guide';
 import { Drill, Quiz } from './screens/Drill';
-import { COURSE_BY_ID } from './data/courses';
-import { GUIDES } from './data/guides';
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { DOW, MONTHS } from './lib/date';
 import type { Screen } from './lib/types';

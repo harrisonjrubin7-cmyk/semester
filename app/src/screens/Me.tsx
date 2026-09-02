@@ -1,8 +1,8 @@
+import { COURSES, COURSE_BY_ID } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, Meter, SectionLabel, Segmented, Toggle } from '../components/ui';
 import { Bell } from '../components/Icons';
-import { COURSES, COURSE_BY_ID } from '../data/courses';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
 import { loadByCourse, searchItems, upcomingItems } from '../lib/select';
 

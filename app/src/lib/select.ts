@@ -1,8 +1,5 @@
-import { COURSE_BY_ID, COURSES, COURSE_SHORT } from '../data/courses';
-import { ITEMS } from '../data/items';
+import { COURSE_BY_ID, COURSES, COURSE_SHORT, ITEMS, blocksFor, classNote, GUIDES } from '../data/catalog';
 import { EVENTS } from '../data/events';
-import { blocksFor, classNote } from '../data/schedule';
-import { GUIDES } from '../data/guides';
 import {
   daysBetween,
   decorateEvent,

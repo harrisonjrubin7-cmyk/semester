@@ -1,4 +1,15 @@
-export type CourseId = 'econ' | 'psci' | 'core' | 'bus';
+/**
+ * A course's short slug — 'econ', 'psci', and so on.
+ *
+ * Deliberately a plain string rather than a union of the four courses that
+ * happen to exist today. Adding a course should mean adding a folder under
+ * `data/courses/` and one line in the catalog, never widening a type that a
+ * dozen files depend on.
+ */
+export type CourseId = string;
+
+/** A short code for the filter chips — "ECON", "PSCI". */
+export type CourseShort = string;
 
 export interface GradeRow {
   what: string;
@@ -149,21 +160,6 @@ export interface Example {
   d: string;
 }
 
-export interface Chapter {
-  t: string;
-  /** Seek position, in seconds. */
-  s: number;
-  name: string;
-}
-
-export interface Podcast {
-  file: string;
-  len: string;
-  ready: boolean;
-  blurb: string;
-  chapters: Chapter[];
-}
-
 export type EventKind = 'Athletics' | 'Clubs' | 'University';
 
 export interface CampusEvent {
@@ -231,3 +227,85 @@ export type Screen =
 export type StudyMode = 'cards' | 'read' | 'quiz' | 'figures' | 'cases' | 'cram' | 'listen';
 
 export type NavMode = 'tabs' | 'feed';
+
+/** A class that repeats every week, from the syllabus meeting pattern. */
+export interface RecurringBlock {
+  /** Days of the week this repeats on, 0 = Sunday. */
+  days: number[];
+  /** Start time in minutes past midnight. */
+  at: number;
+  /** How the time is written on screen — "9:05a". */
+  time: string;
+  title: string;
+  meta: string;
+  /** Not a class — office hours, a standing group call. Rendered dimmer. */
+  optional?: boolean;
+}
+
+/** A one-off change to a specific date: a cancellation, a guest speaker. */
+export interface ScheduleException {
+  month: number;
+  day: number;
+  /** Replaces this course's recurring block that day. */
+  meta?: string;
+  canceled?: boolean;
+  /** A line for the next-class card when this course is next up. */
+  note?: string;
+  /** A block that exists only on this date. */
+  extra?: Omit<Block, 'c' | 'canceled'>;
+}
+
+export interface Chapter {
+  t: string;
+  /** Seek position, in seconds. */
+  s: number;
+  name: string;
+}
+
+export interface Episode {
+  id: string;
+  /** Shown on the edition switcher — "Condensed", "Full", "Podcast". */
+  label: string;
+  /** Path under /audio, or '' when the episode is not recorded yet. */
+  file: string;
+  len: string;
+  /** Total running time in seconds. */
+  seconds: number;
+  ready: boolean;
+  blurb: string;
+  chapters: Chapter[];
+}
+
+export interface CoursePodcast {
+  blurb: string;
+  editions: Episode[];
+}
+
+/**
+ * Everything the app knows about one course, in one object.
+ *
+ * This is the unit the pipeline produces. A course lives in its own folder
+ * under `data/courses/`, exports one of these as its default, and is picked up
+ * by adding a single line to `data/catalog.ts` — no shared file gets edited, so
+ * there is no way for one course's data to drift out of step with another's.
+ */
+export interface CourseModule {
+  course: Course;
+  /** Dated obligations lifted from the syllabus. */
+  items: Item[];
+  /** The weekly meeting pattern. */
+  schedule: RecurringBlock[];
+  /** One-off changes to specific dates. */
+  exceptions?: ScheduleException[];
+  guide: Guide;
+  /** Figures keyed by the index of the unit they illustrate. */
+  figures?: FigureMap;
+  /** Figures belonging to no single unit — shown only in Figures mode. */
+  extraFigures?: Figure[];
+  examples?: Example[];
+  podcast?: CoursePodcast;
+  /** Time-box for this course on the Study screen's "tonight" plan. */
+  planMinutes: string;
+  /** What the Cram screen calls this guide's list of exam frames. */
+  frameLabel: string;
+}

@@ -1,6 +1,6 @@
+import { GUIDES, allCards } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
-import { GUIDES, allCards } from '../data/guides';
 import { buildQuiz } from '../lib/quiz';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */

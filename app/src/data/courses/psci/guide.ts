@@ -1,4 +1,4 @@
-import type { Guide } from '../../lib/types';
+import type { Guide } from '../../../lib/types';
 
 /**
  * Ported from the "PSCI 1104 Field Guide" artifact — fourteen units, the seven

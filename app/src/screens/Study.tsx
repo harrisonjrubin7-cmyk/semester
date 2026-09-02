@@ -1,9 +1,8 @@
+import { COURSES, GUIDES, PLAN_MIN, allCards } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
-import { COURSES } from '../data/courses';
-import { GUIDES, PLAN_MIN, allCards } from '../data/guides';
 import { nextExam, tonightPlan } from '../lib/select';
 
 export function Study() {

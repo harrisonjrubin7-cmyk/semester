@@ -1,7 +1,7 @@
+import { COURSES } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { Toggle } from '../components/ui';
-import { COURSES } from '../data/courses';
 import { NOTIF_DEFS, ONBOARDING, ONBOARDING_FILES } from '../data/misc';
 import { Check } from '../components/Icons';
 

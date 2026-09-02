@@ -1,4 +1,4 @@
-import type { Guide } from '../../lib/types';
+import type { Guide } from '../../../lib/types';
 
 /**
  * Ported from the "Sport, Culture & Society Field Guide" artifact — weeks 1–4 in

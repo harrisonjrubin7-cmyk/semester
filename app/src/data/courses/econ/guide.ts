@@ -1,4 +1,4 @@
-import type { Guide } from '../../lib/types';
+import type { Guide } from '../../../lib/types';
 
 /** Built from econ1020_study_guide.pdf — the plain-English guide. */
 export const ECON_GUIDE: Guide = {

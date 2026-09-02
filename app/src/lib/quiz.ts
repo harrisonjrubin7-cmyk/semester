@@ -1,5 +1,5 @@
+import { allCards } from '../data/catalog';
 import type { Guide } from './types';
-import { allCards } from '../data/guides';
 import type { QuizQuestion } from '../state/store';
 
 /**

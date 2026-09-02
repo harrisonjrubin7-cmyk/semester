@@ -1,13 +1,10 @@
+import { GUIDES, FRAME_LABELS, allCards, weakestUnit, EXTRA_FIGURES, FIGURES, PODCAST, EXAMPLES } from '../data/catalog';
 import { useMemo, useRef } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, Meter, SectionLabel } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
-import { GUIDES, FRAME_LABELS, allCards, weakestUnit } from '../data/guides';
-import { EXTRA_FIGURES, FIGURES } from '../data/figures';
-import { PODCAST } from '../data/podcast';
-import { EXAMPLES } from '../data/examples';
 import { buildQuiz } from '../lib/quiz';
 import type { StudyMode } from '../lib/types';
 

@@ -1,9 +1,8 @@
+import { COURSE_BY_ID, blocksFor } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, DateRow, Meter, SectionLabel, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
-import { COURSE_BY_ID } from '../data/courses';
-import { blocksFor } from '../data/schedule';
 import {
   FEED_FILTERS,
   feed,

@@ -1,4 +1,4 @@
-import type { Guide } from '../../lib/types';
+import type { Guide } from '../../../lib/types';
 
 /**
  * Ported from the "BUS 1600 Field Manual" artifact — the core toolkit, all

@@ -1,8 +1,8 @@
+import { COURSE_BY_ID } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, EmptyState, SectionLabel, Segmented } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
-import { COURSE_BY_ID } from '../data/courses';
 import { DOW_INITIALS, MONTHS, monthGrid, sameDay } from '../lib/date';
 import { datedEvents, dotsForMonth, itemsOn } from '../lib/select';
 import type { EventKind } from '../lib/types';
