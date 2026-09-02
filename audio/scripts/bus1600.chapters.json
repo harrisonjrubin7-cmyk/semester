@@ -1,0 +1,84 @@
+{
+  "id": "bus-podcast",
+  "course": "bus",
+  "title": "BUS 1600 \u2014 The Whole Semester, Out Loud",
+  "len": "30:50",
+  "seconds": 1850,
+  "chapters": [
+    {
+      "t": "0:00",
+      "s": 0,
+      "name": "Cold open"
+    },
+    {
+      "t": "0:35",
+      "s": 35,
+      "name": "How the grade actually works"
+    },
+    {
+      "t": "2:16",
+      "s": 136,
+      "name": "The 5 C's"
+    },
+    {
+      "t": "3:57",
+      "s": 236,
+      "name": "The 3-V principle"
+    },
+    {
+      "t": "5:05",
+      "s": 305,
+      "name": "The seven tactics"
+    },
+    {
+      "t": "6:28",
+      "s": 387,
+      "name": "SWOT"
+    },
+    {
+      "t": "7:20",
+      "s": 440,
+      "name": "Value and customer centricity"
+    },
+    {
+      "t": "10:08",
+      "s": 608,
+      "name": "Marketing research"
+    },
+    {
+      "t": "13:03",
+      "s": 783,
+      "name": "Segmentation, targeting, positioning"
+    },
+    {
+      "t": "14:56",
+      "s": 895,
+      "name": "Consumer behaviour and behavioural economics"
+    },
+    {
+      "t": "17:28",
+      "s": 1048,
+      "name": "Digital marketing and the metrics"
+    },
+    {
+      "t": "19:30",
+      "s": 1170,
+      "name": "Product, brand, price, distribution"
+    },
+    {
+      "t": "22:52",
+      "s": 1372,
+      "name": "The midterm case playbook"
+    },
+    {
+      "t": "25:52",
+      "s": 1551,
+      "name": "Self-test"
+    },
+    {
+      "t": "30:28",
+      "s": 1828,
+      "name": "Close"
+    }
+  ]
+}

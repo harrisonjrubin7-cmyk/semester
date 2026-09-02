@@ -1,0 +1,18 @@
+{
+  "name": "Semester",
+  "short_name": "Semester",
+  "description": "Every deadline, class and study guide for Fall 2026 — built from four syllabi.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0b0e",
+  "theme_color": "#0a0b0e",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

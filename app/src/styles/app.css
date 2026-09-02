@@ -1,0 +1,364 @@
+/* Semester — the app layer over the Industry design system.
+ *
+ * The prototype's dark steel has been re-tokened into a stealth-chrome
+ * treatment: a near-black ground, sterling hairlines, and a brushed-metal
+ * gradient reserved for display type and the primary action. The Industry
+ * grammar survives intact — square corners, transparent cards, registration
+ * marks — it is just rendered in silver on black instead of steel on paper.
+ *
+ * Everything visual is a token. Screens read var(--app-*), never a hex.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&display=swap');
+
+:root {
+  /* Ground — four steps of near-black, so elevation reads without borders. */
+  --app-void: #050608;
+  --app-bg: #0a0b0e;
+  --app-panel: #121419;
+  --app-hero: #171a20;
+  --app-raise: #1d2027;
+
+  /* Ink */
+  --app-fg: #e9ebef;
+  --app-dim: rgba(233, 235, 239, 0.62);
+  --app-faint: rgba(233, 235, 239, 0.4);
+
+  /* Sterling — the accent is a metal, not a colour. */
+  --app-accent: #ced3dc;
+  --app-accent-bright: #f4f6f9;
+  --app-accent-deep: #8d95a3;
+  --app-accent-wash: rgba(206, 211, 220, 0.12);
+
+  --app-line: rgba(233, 235, 239, 0.14);
+  --app-line-soft: rgba(233, 235, 239, 0.07);
+  --app-track: rgba(233, 235, 239, 0.1);
+
+  /* Brushed metal. Used on display type, the primary button, and rules —
+     never as a flat fill on a large area, which kills the effect.
+     The dark band sits at 46–52% and is kept light enough that display text
+     clipped to this gradient still reads at a glance. */
+  --chrome: linear-gradient(
+    172deg,
+    #ffffff 0%,
+    #dfe3ea 18%,
+    #a8afbb 42%,
+    #949ba7 50%,
+    #c9cfd9 60%,
+    #f6f8fb 82%,
+    #b3b9c4 100%
+  );
+  --chrome-edge: linear-gradient(
+    90deg,
+    transparent,
+    rgba(233, 235, 239, 0.55) 35%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(233, 235, 239, 0.55) 65%,
+    transparent
+  );
+
+  --font-display: 'Cinzel', 'Barlow Condensed', Georgia, serif;
+
+  --glow: 0 0 0 1px rgba(206, 211, 220, 0.22), 0 8px 30px rgba(0, 0, 0, 0.75);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--app-void);
+  color: var(--app-fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--app-accent);
+}
+a:hover {
+  color: var(--app-accent-bright);
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* ── The device column ────────────────────────────────────────────────────
+   On a phone the app fills the viewport. On a desktop it sits in a centred
+   402px column — the prototype's artboard width — so the layout is never
+   stretched past what it was designed for. */
+
+.device {
+  height: 100%;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 402px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg);
+  color: var(--app-fg);
+  font-family: var(--font-body);
+  font-size: 15px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* A single soft sheen across the top, like light catching a brushed panel. */
+.device::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 260px;
+  background: radial-gradient(
+    120% 100% at 50% 0%,
+    rgba(206, 211, 220, 0.07),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.device > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 430px) {
+  .device {
+    height: min(874px, 100%);
+    margin-block: max(0px, calc((100dvh - 874px) / 2));
+    border: 1px solid var(--app-line);
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* The prototype sat inside an iOS frame, so its header cleared a status bar
+   and its tab bar cleared a home indicator. On real hardware that clearance
+   is the safe-area inset instead. */
+.safe-top {
+  padding-top: max(58px, calc(env(safe-area-inset-top) + 14px));
+}
+.safe-bottom {
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+.scrollarea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 30px;
+  -webkit-overflow-scrolling: touch;
+}
+.scrollarea::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.chiprow {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chiprow::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ── Chrome treatments ──────────────────────────────────────────────────── */
+
+/* Display type, milled out of metal. Falls back to solid ink where
+   background-clip:text is unsupported. */
+.chrome-text {
+  font-family: var(--font-display);
+  color: var(--app-accent-bright);
+  background: var(--chrome);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.01em;
+}
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .chrome-text {
+    -webkit-text-fill-color: currentColor;
+    background: none;
+  }
+}
+
+/* A hairline that catches light in the middle — the engraved rule. */
+.chrome-rule {
+  height: 1px;
+  border: 0;
+  margin: 0;
+  background: var(--chrome-edge);
+}
+
+/* The kicker above every screen title. */
+.kicker {
+  font-family: var(--font-heading);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+/* Section headings inside a screen. */
+.section-label {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+/* ── Industry components, restated for the stealth ground ───────────────── */
+
+.device .btn {
+  border-color: var(--app-line);
+  color: var(--app-fg);
+  font-family: var(--font-heading);
+  letter-spacing: 0.08em;
+}
+.device .btn-primary {
+  background: var(--chrome);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #0a0b0e;
+  font-weight: 600;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: var(--glow);
+}
+.device .btn-primary:hover {
+  filter: brightness(1.12);
+}
+.device .btn-primary:active {
+  filter: brightness(0.92);
+}
+.device .btn-secondary {
+  border-color: var(--app-line);
+}
+.device .btn-secondary:hover {
+  background: rgba(233, 235, 239, 0.07);
+  border-color: rgba(233, 235, 239, 0.3);
+}
+.device .btn-secondary:active {
+  background: rgba(233, 235, 239, 0.13);
+}
+.device .btn-ghost {
+  color: var(--app-accent);
+  border-color: transparent;
+}
+.device .btn-ghost:hover {
+  background: var(--app-accent-wash);
+}
+.device .btn-ghost:active {
+  background: rgba(206, 211, 220, 0.2);
+}
+
+.device .tag {
+  border-radius: 0;
+  font-family: var(--font-heading);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.device .tag-accent {
+  background: var(--app-accent-wash);
+  color: var(--app-accent);
+}
+.device .tag-neutral {
+  background: rgba(233, 235, 239, 0.07);
+  color: var(--app-dim);
+}
+.device .tag-outline {
+  border-color: var(--app-accent-deep);
+  color: var(--app-accent);
+}
+
+.device .blueprint {
+  border-color: var(--app-line);
+}
+.device .blueprint > .corner {
+  color: rgba(206, 211, 220, 0.5);
+}
+
+.device .input {
+  background: var(--app-panel);
+  border-color: var(--app-line);
+  color: var(--app-fg);
+}
+.device .input::placeholder {
+  color: var(--app-faint);
+}
+.device .input:hover {
+  border-color: rgba(233, 235, 239, 0.3);
+}
+.device .input:focus-visible {
+  border-color: var(--app-accent);
+}
+
+.device .table th {
+  color: var(--app-faint);
+  border-bottom-color: var(--app-line);
+}
+.device .table td {
+  border-bottom-color: var(--app-line-soft);
+}
+.device .table tbody tr:hover {
+  background: rgba(233, 235, 239, 0.04);
+}
+
+.device audio {
+  filter: invert(1) hue-rotate(180deg) saturate(0.25) contrast(0.92);
+}
+
+.device :focus-visible {
+  outline: 1px solid var(--app-accent);
+  outline-offset: 2px;
+}
+.device ::selection {
+  background: rgba(206, 211, 220, 0.28);
+}
+
+/* Rows and cards the prototype made clickable with an inline cursor. */
+.tappable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 120ms ease;
+}
+.tappable:hover {
+  background: rgba(233, 235, 239, 0.04);
+}
+
+/* Buttons used as bare rows — the prototype's tab bar and list rows are
+   <div onClick>; here they are real <button>s, reset to look identical. */
+.bare {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

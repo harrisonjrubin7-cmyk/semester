@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="chrome" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="18%" stop-color="#cfd4dd" />
+      <stop offset="42%" stop-color="#878e9c" />
+      <stop offset="50%" stop-color="#6d747f" />
+      <stop offset="62%" stop-color="#b9bfca" />
+      <stop offset="84%" stop-color="#f2f4f8" />
+      <stop offset="100%" stop-color="#9aa1ad" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#0a0b0e" />
+  <!-- The blueprint frame and its registration marks, at icon scale. -->
+  <rect x="96" y="96" width="320" height="320" fill="none" stroke="url(#chrome)" stroke-width="6" />
+  <g stroke="url(#chrome)" stroke-width="5">
+    <path d="M96 68v56M68 96h56" />
+    <path d="M416 68v56M388 96h56" />
+    <path d="M96 388v56M68 416h56" />
+    <path d="M416 388v56M388 416h56" />
+  </g>
+  <!-- A calendar tick: the semester, cleared. -->
+  <path
+    d="M168 258l58 58 118-118"
+    fill="none"
+    stroke="url(#chrome)"
+    stroke-width="34"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+  />
+</svg>
