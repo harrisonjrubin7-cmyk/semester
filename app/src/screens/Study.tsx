@@ -41,11 +41,14 @@ export function Study() {
           >
             {(() => {
               const guide = GUIDES[exam.item.c];
-              const cold = guide.units.filter((u) => u.mastery < 40).length;
-              const perDay = Math.max(1, Math.ceil(cold * 3 / Math.max(1, exam.days)));
-              return cold === 0
-                ? `Every unit in ${guide.code} is above 40%. Keep it warm.`
-                : `${guide.units.length} units on it. ${cold} ${cold === 1 ? 'is' : 'are'} cold. About ${perDay * 5} minutes a day clears them in time.`;
+              const coldUnits = guide.units.filter((u) => u.mastery < 40);
+              if (coldUnits.length === 0) {
+                return `All ${guide.units.length} units in ${guide.code} are above 40%. Keep them warm.`;
+              }
+              const coldCards = coldUnits.reduce((n, u) => n + u.cards.length, 0);
+              return `${guide.units.length} units on it, and ${coldUnits.length} ${
+                coldUnits.length === 1 ? 'is' : 'are'
+              } cold — ${coldCards} cards. Drill those first.`;
             })()}
           </div>
         </Blueprint>

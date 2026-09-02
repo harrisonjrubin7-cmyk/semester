@@ -1,0 +1,89 @@
+{
+  "id": "psci-podcast",
+  "course": "psci",
+  "title": "PSCI 1104 \u2014 Real Finding or Good Story?",
+  "len": "35:03",
+  "seconds": 2103,
+  "chapters": [
+    {
+      "t": "0:00",
+      "s": 0,
+      "name": "Cold open"
+    },
+    {
+      "t": "0:56",
+      "s": 56,
+      "name": "Theory and hypotheses"
+    },
+    {
+      "t": "3:40",
+      "s": 220,
+      "name": "Measurement, and why it decides Kansas"
+    },
+    {
+      "t": "6:37",
+      "s": 397,
+      "name": "Describing data, and the ecological fallacy"
+    },
+    {
+      "t": "7:43",
+      "s": 463,
+      "name": "Hypotheses and variables"
+    },
+    {
+      "t": "8:51",
+      "s": 531,
+      "name": "Causality \u2014 the four hurdles"
+    },
+    {
+      "t": "10:59",
+      "s": 658,
+      "name": "Research design and validity"
+    },
+    {
+      "t": "12:39",
+      "s": 758,
+      "name": "Experiments"
+    },
+    {
+      "t": "15:49",
+      "s": 948,
+      "name": "Controlling without an experiment"
+    },
+    {
+      "t": "18:51",
+      "s": 1131,
+      "name": "Sampling"
+    },
+    {
+      "t": "20:24",
+      "s": 1223,
+      "name": "Why polls miss"
+    },
+    {
+      "t": "22:35",
+      "s": 1354,
+      "name": "Probability, inference and regression"
+    },
+    {
+      "t": "25:59",
+      "s": 1558,
+      "name": "Small-N and selection bias"
+    },
+    {
+      "t": "27:37",
+      "s": 1657,
+      "name": "The five exam frames"
+    },
+    {
+      "t": "29:26",
+      "s": 1766,
+      "name": "Self-test"
+    },
+    {
+      "t": "34:42",
+      "s": 2082,
+      "name": "Close"
+    }
+  ]
+}

@@ -1,25 +1,60 @@
-# CODING AGENTS: READ THIS FIRST
+# Semester
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+An app for one Vanderbilt semester — Fall 2026, four courses, every deadline and
+study guide in one place.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+```bash
+cd app && npm install && npm run dev
+```
 
-## What you should do — IMPORTANT
+## Layout
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+| Path | What it is |
+| --- | --- |
+| `app/` | The application. Vite + React + TypeScript. See [`app/README.md`](app/README.md). |
+| `audio/` | Podcast scripts and the synthesiser that renders them. See [`audio/README.md`](audio/README.md). |
+| `project/` | The original Claude Design handoff — HTML prototypes, the Industry design system, the syllabus PDFs. Kept as the reference the app was built from. |
+| `chats/` | The design conversation that produced it. |
 
-**Read `project/Semester.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+`project/` and `chats/` are the source material and are not built or imported by
+the app. The one thing the app does take from `project/` verbatim is the Industry
+stylesheet, copied to `app/src/styles/industry.css`.
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+## What was built, and from what
 
-## About the design files
+The design came over as two prototypes — a canvas (`Semester.dc.html`) showing
+seven phones side by side, and the phone itself (`Semester Phone.dc.html`), a
+2,300-line single-component app covering twenty screens.
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+Three things were decided rather than inherited:
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+- **Both navigation structures ship.** The canvas compared a tab bar against a
+  single filtered feed. Rather than pick, both are built and switchable in
+  Settings, so the comparison can be settled by using it.
+- **The date is live.** The prototype pinned itself to Thursday 3 September.
+  Here every relative label, the class rail, the countdown and the exam radar are
+  derived from the real clock, with that Thursday's specifics kept as dated
+  exceptions so the design still reproduces exactly on the day it was drawn for.
+- **The study content is the real guides**, not the prototype's condensed
+  summaries — the three published field-guide artifacts plus the ECON study-guide
+  PDF, with their full text, glossaries, exam frames and self-tests.
 
-## Bundle contents
+## Audio
 
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `Mobile app design request` project files (HTML prototypes, assets, components)
+Five recordings ship in `app/public/audio`, wired into each guide's Listen mode
+with chapter marks that seek:
+
+- The four original narrated readings.
+- Four two-voice podcast editions rendered from `audio/scripts` — including
+  BUS 1600, which had no recording before.
+
+Chapter marks were measured from the audio rather than estimated wherever the
+recording allowed it. Details in [`audio/README.md`](audio/README.md).
+
+## Not yet in
+
+The ECON interactive study guide lives inside a Claude chat rather than as a
+published artifact, so it could not be read from here. Its content is already in
+the app from `econ1020_study_guide.pdf`, which is the same guide — but if the
+interactive version has extras worth pulling in, publishing it (as the other
+three field guides were published) makes it readable.
