@@ -70,7 +70,10 @@ export async function signUp(email: string, password: string): Promise<string> {
   // With email confirmation on, there is no session until the link is clicked.
   return data.session
     ? 'Account made. Your semester will sync from now on.'
-    : 'Check your email for the confirmation link, then sign in.';
+    : 'Check your email for the confirmation link, then come back and sign in. ' +
+      'If that link lands on a "localhost refused to connect" page, the confirmation ' +
+      'still worked — Supabase verifies before it redirects — so just sign in here. ' +
+      '(Whoever runs this deployment can stop that by setting the project\'s Site URL.)';
 }
 
 export async function signIn(email: string, password: string): Promise<void> {
