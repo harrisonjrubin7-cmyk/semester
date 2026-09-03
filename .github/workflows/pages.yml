@@ -62,8 +62,14 @@ jobs:
           URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
           KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
         run: |
-          echo "supabase url: $([ -n "$URL" ] && echo "yes (${#URL} chars)" || echo no)"
-          echo "supabase key: $([ -n "$KEY" ] && echo "yes (${#KEY} chars)" || echo no)"
+          # Notices and warnings surface as run annotations, which are visible
+          # without opening the log — and readable through the API, so a
+          # misconfigured deploy can be diagnosed rather than guessed at.
+          if [ -n "$URL" ] && [ -n "$KEY" ]; then
+            echo "::notice title=Accounts::Supabase configured (url ${#URL} chars, key ${#KEY} chars) — this build has accounts."
+          else
+            echo "::warning title=No accounts::VITE_SUPABASE_URL is $([ -n "$URL" ] && echo set || echo MISSING) and VITE_SUPABASE_KEY is $([ -n "$KEY" ] && echo set || echo MISSING). Add both under Settings → Secrets and variables → Actions, as repository Variables (or Secrets). This build runs device-only."
+          fi
 
       - name: Build
         working-directory: app
