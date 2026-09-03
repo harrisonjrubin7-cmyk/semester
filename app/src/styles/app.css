@@ -97,6 +97,11 @@
     transparent
   );
 
+  /* Text sitting ON the brushed metal. Overridden per ground by lib/look.ts;
+     defined here so the sheet is complete before any JavaScript runs. */
+  --chrome-ink: #08090c;
+  --chrome-glint: rgba(255, 255, 255, 0.35);
+
   --font-display: 'Cinzel', 'Barlow Condensed', Georgia, serif;
 
   --glow: 0 0 0 1px rgba(212, 217, 226, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5),
@@ -523,9 +528,9 @@ a:hover {
 .device .btn-primary {
   background: var(--chrome);
   border-color: rgba(255, 255, 255, 0.45);
-  color: #08090c;
+  color: var(--chrome-ink);
   font-weight: 600;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  text-shadow: 0 1px 0 var(--chrome-glint);
   box-shadow: var(--glow);
 }
 .device .btn-primary:hover {

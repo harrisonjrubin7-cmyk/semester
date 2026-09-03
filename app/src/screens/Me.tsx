@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import { ACCENTS, SECTIONS, SIZES, move, ordered } from '../lib/feed';
+import { SECTIONS, move, ordered } from '../lib/feed';
+import {
+  ACCENTS,
+  CORNERS,
+  DENSITIES,
+  GROUNDS,
+  SIZES,
+  TYPEFACES,
+  ground as groundOf,
+} from '../lib/look';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
-import { EmptyState, Meter, SectionLabel, Segmented, TickBox, Toggle } from '../components/ui';
+import { ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox, Toggle } from '../components/ui';
 import { SEED_SUMMARY } from '../data/seed';
 import { Bell, ChevronRight } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
@@ -12,8 +21,17 @@ import { countHits, findEverything, type Hit } from '../lib/find';
 import { destinationsIn, type Group } from '../lib/nav';
 import type { Screen } from '../lib/types';
 
-/** The order the directory reads in: what you study, then where, then you. */
-const GROUPS: Group[] = ['Study', 'Semester', 'Yours', 'Accounts', 'App'];
+/**
+ * The shelves, in the order they read: what you study, what you make with it,
+ * the semester itself, the campus around it, and then you.
+ *
+ * One at a time rather than all five stacked. The list was a single scroll of
+ * twenty-eight rows under five headings, which is a directory you read once
+ * and then never again because you cannot remember which heading a thing was
+ * under. Five short shelves you can flick between is the same information and
+ * a different object.
+ */
+const GROUPS: Group[] = ['Study', 'Make', 'Semester', 'Campus', 'Yours'];
 
 /** Already a tab on the phone, so listing them again is noise. */
 // Settings is a tab of this screen now, so listing it in the directory would
@@ -92,7 +110,7 @@ export function Me() {
       </Blueprint>
 
       {/* An empty section headed "Load by course" is worse than no section. */}
-      {bars.length > 0 && <SectionLabel style={{ margin: '24px 0 6px' }}>Load by course</SectionLabel>}
+      {bars.length > 0 && <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Load by course</SectionLabel>}
       {bars.map((b) => (
         <div key={b.code} style={{ padding: '10px 0', borderBottom: '1px solid var(--app-line)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -117,12 +135,17 @@ export function Me() {
         everything is grouped and says what it is for, which is most of what
         made the app hard to find your way around.
       */}
-      {GROUPS.map((group) => {
+      <ChipRow
+        options={GROUPS}
+        value={GROUPS.includes(state.meGroup as Group) ? (state.meGroup as Group) : GROUPS[0]}
+        onChange={(next) => dispatch({ type: 'setMeGroup', group: next })}
+      />
+      {GROUPS.filter((g) => g === (state.meGroup as Group)).map((group) => {
         const rows = destinationsIn(group).filter((d) => !HIDE_IN_ME.includes(d.screen));
         if (rows.length === 0) return null;
         return (
           <div key={group}>
-            <SectionLabel style={{ margin: '24px 0 2px' }}>{group}</SectionLabel>
+            <div style={{ height: 6 }} />
             {rows.map((d) => (
               <button
                 key={d.screen}
@@ -222,7 +245,7 @@ export function Search() {
 
       {groups.map((group) => (
         <div key={group.label}>
-          <SectionLabel style={{ margin: '18px 0 4px' }}>{group.label}</SectionLabel>
+          <SectionLabel style={{ margin: 'calc(18px * var(--density, 1)) 0 calc(4px * var(--density, 1))' }}>{group.label}</SectionLabel>
           {group.hits.map((hit) => (
             <button
               key={`${hit.kind}-${hit.title}-${hit.sub}`}
@@ -403,7 +426,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         onChange={(nav) => dispatch({ type: 'setNav', nav })}
       />
 
-      <SectionLabel style={{ margin: '26px 0 6px' }}>Your Today</SectionLabel>
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Your Today</SectionLabel>
       <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         The right order is not the same for everyone. Somebody with a job and one class wants the
         rail first; somebody with a paper due wants the checklist and would rather not scroll past
@@ -464,10 +487,10 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         );
       })}
 
-      <SectionLabel style={{ margin: '26px 0 6px' }}>How it looks</SectionLabel>
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>The accent</SectionLabel>
       <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
-        All metals. The accent being a metal rather than a colour is most of why the app looks
-        drawn instead of like a dashboard, so these change the shade and not that.
+        All metals and stones. The accent being a metal rather than a colour is most of why the
+        app looks drawn instead of like a dashboard, so these change the shade and not that.
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {ACCENTS.map((a) => {
@@ -477,7 +500,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
               key={a.id}
               type="button"
               className="btn"
-              onClick={() => dispatch({ type: 'setLook', accent: a.id })}
+              onClick={() => dispatch({ type: 'setLook', look: { accent: a.id } })}
               aria-pressed={on}
               style={{
                 flex: 'none',
@@ -504,19 +527,110 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         })}
       </div>
 
-      <div style={{ marginTop: 12 }}>
-        <Segmented
-          options={SIZES.map((z) => ({ id: z.id, label: z.label }))}
-          value={state.textSize}
-          onChange={(textSize) => dispatch({ type: 'setLook', textSize })}
-        />
-        <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
-          Scales the text. Buttons and the tab bar keep their size on purpose — a tap target that
-          grew with the type would push the bar off the bottom of a phone.
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>The ground</SectionLabel>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {GROUNDS.map((g) => {
+          const on = state.ground === g.id;
+          return (
+            <button
+              key={g.id}
+              type="button"
+              className="bare tappable"
+              aria-pressed={on}
+              onClick={() => dispatch({ type: 'setLook', look: { ground: g.id } })}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 11,
+                textAlign: 'left',
+                padding: '10px 12px',
+                borderRadius: 'var(--r-md)',
+                border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
+                background: on ? 'var(--app-accent-wash)' : 'transparent',
+              }}
+            >
+              {/* The ramp itself, as five squares — quicker to judge than a name. */}
+              <span style={{ display: 'flex', flex: 'none', borderRadius: 3, overflow: 'hidden' }}>
+                {g.ramp.map((step) => (
+                  <span key={step} style={{ width: 8, height: 22, background: step }} />
+                ))}
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 14 }}>{g.label}</span>
+                <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+                  {g.blurb}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {groundOf(state.ground).light && (
+        <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+          On a light ground the brushed-metal type inverts to a dark sweep, so display headings
+          keep their lustre instead of disappearing.
         </div>
+      )}
+
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Headings</SectionLabel>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {TYPEFACES.map((t) => {
+          const on = state.typeface === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              className="btn"
+              aria-pressed={on}
+              onClick={() => dispatch({ type: 'setLook', look: { typeface: t.id } })}
+              style={{
+                flex: 'none',
+                padding: '7px 12px',
+                fontSize: 13,
+                fontFamily: t.heading,
+                borderColor: on ? 'var(--app-accent)' : 'var(--app-line)',
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+        {TYPEFACES.find((t) => t.id === state.typeface)?.blurb}
       </div>
 
-      <SectionLabel style={{ margin: '26px 0 2px' }}>Tell me when</SectionLabel>
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Corners</SectionLabel>
+      <Segmented
+        options={CORNERS.map((c) => ({ id: c.id, label: c.label }))}
+        value={state.corners}
+        onChange={(corners) => dispatch({ type: 'setLook', look: { corners } })}
+      />
+
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Spacing</SectionLabel>
+      <Segmented
+        options={DENSITIES.map((d) => ({ id: d.id, label: d.label }))}
+        value={state.density}
+        onChange={(density) => dispatch({ type: 'setLook', look: { density } })}
+      />
+      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+        Tightens the space around every section heading, which is the app’s vertical rhythm.
+        Tap targets do not shrink with it — a 30px button is a miss, and a miss costs more than
+        the line it saved.
+      </div>
+
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Text size</SectionLabel>
+      <Segmented
+        options={SIZES.map((z) => ({ id: z.id, label: z.label }))}
+        value={state.textSize}
+        onChange={(textSize) => dispatch({ type: 'setLook', look: { textSize } })}
+      />
+      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+        Scales the text. Buttons and the tab bar keep their size on purpose — a tap target that
+        grew with the type would push the bar off the bottom of a phone.
+      </div>
+
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Tell me when</SectionLabel>
       <Reminders />
       {NOTIF_DEFS.map((n) => (
         <Toggle
@@ -527,7 +641,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         />
       ))}
 
-      <SectionLabel style={{ margin: '26px 0 2px' }}>Your courses</SectionLabel>
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Your courses</SectionLabel>
       <Toggle
         label={`Sample semester — ${SEED_SUMMARY.courses} courses, ${SEED_SUMMARY.cards} cards, ${SEED_SUMMARY.lessons} lessons`}
         on={state.sample}
@@ -561,7 +675,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         </div>
       ))}
 
-      <SectionLabel style={{ margin: '26px 0 2px' }}>Sources</SectionLabel>
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Sources</SectionLabel>
       {SOURCES.map((s) => (
         <div
           key={s.label}

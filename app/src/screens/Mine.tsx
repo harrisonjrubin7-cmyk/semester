@@ -59,7 +59,7 @@ function CoursePicker({
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   background: on ? 'var(--chrome)' : 'transparent',
-                  color: on ? '#0a0b0e' : 'var(--app-fg)',
+                  color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
                   borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
                   fontWeight: on ? 600 : 400,
                 }}
@@ -864,7 +864,7 @@ function Dictate({ onText, current }: { onText: (text: string) => void; current:
             width: 9,
             height: 9,
             borderRadius: '50%',
-            background: on ? '#0a0b0e' : 'var(--app-accent)',
+            background: on ? 'var(--chrome-ink)' : 'var(--app-accent)',
             flex: 'none',
           }}
         />

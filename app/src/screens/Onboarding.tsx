@@ -146,7 +146,7 @@ export function Onboarding() {
                   background: 'var(--chrome)',
                   display: 'grid',
                   placeItems: 'center',
-                  color: '#0a0b0e',
+                  color: 'var(--chrome-ink)',
                 }}
               >
                 <Check size={11} />

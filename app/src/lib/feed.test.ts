@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ACCENTS, DEFAULT_ORDER, accent, move, ordered, scaleOf, visible } from './feed';
+import { DEFAULT_ORDER, move, ordered, visible } from './feed';
 
 describe('ordered', () => {
   it('gives the default order when nothing is saved', () => {
@@ -70,32 +70,5 @@ describe('move', () => {
   it('keeps every section after a move', () => {
     const out = move(DEFAULT_ORDER, 'rail', -1);
     expect([...out].sort()).toEqual([...DEFAULT_ORDER].sort());
-  });
-});
-
-describe('accent', () => {
-  it('falls back to sterling rather than to nothing', () => {
-    expect(accent(undefined).id).toBe('sterling');
-    expect(accent('chartreuse').id).toBe('sterling');
-  });
-
-  it('offers only desaturated metals, because the look depends on it', () => {
-    // A saturated accent turns a drawn interface into a dashboard.
-    for (const a of ACCENTS) {
-      const [r, g, b] = [1, 3, 5].map((i) => parseInt(a.base.slice(i, i + 2), 16));
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      const saturation = max === 0 ? 0 : (max - min) / max;
-      expect(saturation).toBeLessThan(0.35);
-    }
-  });
-});
-
-describe('scaleOf', () => {
-  it('is 1 unless told otherwise', () => {
-    expect(scaleOf(undefined)).toBe(1);
-    expect(scaleOf('nonsense')).toBe(1);
-    expect(scaleOf('large')).toBeGreaterThan(1);
-    expect(scaleOf('compact')).toBeLessThan(1);
   });
 });

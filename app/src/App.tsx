@@ -43,7 +43,7 @@ import { Activities } from './screens/Activities';
 import { Brief } from './screens/Brief';
 import { Essay } from './screens/Essay';
 import { Deck } from './screens/Deck';
-import { accent, scaleOf } from './lib/feed';
+import { scaleOf, tokensFor } from './lib/look';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
@@ -487,7 +487,7 @@ export default function App() {
   const wide = useMedia(DESKTOP);
 
   /**
-   * The chosen metal and type scale, set on the document root.
+   * The whole look, written onto the document root.
    *
    * On :root rather than on a wrapper so it reaches the tab bar, the rail and
    * anything that renders outside the app's own column, and so a token defined
@@ -495,15 +495,28 @@ export default function App() {
    * tree. Type scales by the root font size, which every rem in the sheet then
    * follows; the px sizes written inline do not move, which is deliberate —
    * a tap target that grew with the text would push the tab bar off screen.
+   *
+   * The full token set is written every time rather than only what changed.
+   * That is what makes switching ground atomic: there is no frame in which the
+   * new panel colour has landed and the new text colour has not, which on a
+   * light ground would be a flash of white text on white.
    */
   useEffect(() => {
-    const chosen = accent(state.accent);
     const root = document.documentElement;
-    root.style.setProperty('--app-accent', chosen.base);
-    root.style.setProperty('--app-accent-bright', chosen.bright);
-    root.style.setProperty('--app-accent-deep', chosen.deep);
+    const tokens = tokensFor({
+      accent: state.accent,
+      ground: state.ground,
+      corners: state.corners,
+      typeface: state.typeface,
+      density: state.density,
+    });
+    for (const [name, value] of Object.entries(tokens)) root.style.setProperty(name, value);
     root.style.fontSize = `${16 * scaleOf(state.textSize)}px`;
-  }, [state.accent, state.textSize]);
+    // The browser paints its own chrome — the scrollbar, the overscroll edge,
+    // form controls — from this, and a light theme with a dark scrollbar is
+    // the tell that a theme was only half done.
+    root.style.colorScheme = state.ground === 'parchment' ? 'light' : 'dark';
+  }, [state.accent, state.textSize, state.ground, state.corners, state.typeface, state.density]);
 
   if (state.screen === 'onboarding') {
     return (
@@ -557,7 +570,7 @@ export default function App() {
             border: '1px solid rgba(255,255,255,.5)',
             display: 'grid',
             placeItems: 'center',
-            color: '#0a0b0e',
+            color: 'var(--chrome-ink)',
             boxShadow: 'var(--glow)',
           }}
         >

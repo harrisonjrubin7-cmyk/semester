@@ -17,7 +17,16 @@
 
 import type { Screen } from './types';
 
-export type Group = 'Study' | 'Semester' | 'Yours' | 'Accounts' | 'App';
+/**
+ * The shelves the directory is arranged on.
+ *
+ * Five, and each one small enough to be a tab rather than a section of a long
+ * scroll. "Semester" used to hold ten unrelated things — the calendar, the
+ * campus map, email, registration — because it was the only shelf wide enough
+ * to take them. Splitting Make and Campus out is what lets Me show one shelf
+ * at a time instead of all of them at once.
+ */
+export type Group = 'Study' | 'Make' | 'Semester' | 'Campus' | 'Yours';
 
 export interface Destination {
   screen: Screen;
@@ -109,7 +118,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Draw it',
     blurb: 'A graph, a flow, a timeline or a matrix — drawn from what you describe.',
     keywords: 'diagram graph chart draw picture figure visual illustration flowchart curve supply demand axes timeline matrix payoff structure hierarchy causal mermaid svg sketch map model',
-    group: 'Study',
+    group: 'Make',
     root: 'study',
   },
   {
@@ -125,7 +134,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Make a deck',
     blurb: 'A real PowerPoint file — from a unit you have, or from a brief.',
     keywords: 'slides slideshow deck powerpoint pptx keynote google slides presentation present talk pitch briefing bullets speaker notes export slide',
-    group: 'Study',
+    group: 'Make',
     root: 'study',
   },
   {
@@ -133,7 +142,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Draft it',
     blurb: 'A real draft for a cover letter, a statement, a newsletter — not coursework.',
     keywords: 'essay write writing draft cover letter application internship job resume personal statement scholarship fellowship op-ed blog newsletter pitch memo prose compose generator',
-    group: 'Study',
+    group: 'Make',
     root: 'study',
   },
   {
@@ -157,7 +166,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Getting there',
     blurb: 'A map you can search — campus or the whole city — and directions to anywhere.',
     keywords: 'map maps directions route walk drive transit bus navigate campus nashville where building room address google apple search find location openstreetmap nearby',
-    group: 'Semester',
+    group: 'Campus',
     root: 'maps',
   },
   {
@@ -165,7 +174,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Email',
     blurb: 'Draft the email you have been putting off — extension, question, meeting.',
     keywords: 'email mail write draft professor reply extension office hours absence recommendation letter follow up gmail outlook compose message send',
-    group: 'Semester',
+    group: 'Campus',
     root: 'courses',
   },
   {
@@ -173,7 +182,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'YES',
     blurb: 'Registration and class search — and paste your schedule straight back in.',
     keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section',
-    group: 'Semester',
+    group: 'Campus',
     root: 'courses',
   },
   {
@@ -181,7 +190,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Classmates',
     blurb: 'A room per class, for everyone at Vanderbilt taking it.',
     keywords: 'classmates classmate message messages chat talk group groups room people students friends study group discussion ask class peers social connect dm',
-    group: 'Semester',
+    group: 'Campus',
     root: 'courses',
   },
   {
@@ -189,7 +198,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Activities',
     blurb: 'Clubs, a job, research, a chapter, a team — and what the week really costs.',
     keywords: 'extracurricular extracurriculars activity activities club clubs organization organisation org research lab job work shift employment fraternity sorority greek chapter rush intramural im club sport varsity athletics team practice volunteer service music theatre arts anchorlink involvement commitment hours load',
-    group: 'Yours',
+    group: 'Campus',
     root: 'mine',
   },
   {
@@ -205,7 +214,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Me',
     blurb: 'Your load at a glance, and everything else the app can do.',
     keywords: 'profile more menu overview directory',
-    group: 'App',
+    group: 'Yours',
     root: 'me',
   },
   {
@@ -213,7 +222,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Account',
     blurb: 'Sign in so the same semester is on your phone and your laptop.',
     keywords: 'sign in log in register sync devices password email',
-    group: 'Accounts',
+    group: 'Yours',
     root: 'me',
   },
   {
@@ -221,7 +230,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Connect accounts',
     blurb: 'Brightspace, Outlook, Google, Zoom, oneVU — calendars and links in.',
     keywords: 'brightspace onevu myvu yes anchorlink outlook microsoft google zoom apple icloud ics feed subscribe claude anthropic api key sign in with claude tickets game football basketball commodores vucommodores instagram twitter x social',
-    group: 'Accounts',
+    group: 'Yours',
     root: 'me',
   },
   {
@@ -229,7 +238,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Files & mail',
     blurb: 'Pull a reading out of Drive or OneDrive; turn announcements into cards.',
     keywords: 'gmail email drive onedrive sharepoint documents attachments send tasks',
-    group: 'Accounts',
+    group: 'Yours',
     root: 'me',
   },
   {
@@ -237,7 +246,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Take it with you',
     blurb: 'Download everything, or push it to Drive or OneDrive.',
     keywords: 'export download backup save csv ics markdown json zip archive google drive onedrive transfer migrate leave copy print spreadsheet excel calendar import restore',
-    group: 'App',
+    group: 'Yours',
     root: 'me',
   },
   {
@@ -245,7 +254,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Settings',
     blurb: 'Navigation, alerts, which courses are loaded.',
     keywords: 'preferences options remove course sample notifications feed tab bar',
-    group: 'App',
+    group: 'Yours',
     root: 'me',
   },
   {
@@ -253,7 +262,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Alerts',
     blurb: 'What the app would have poked you about.',
     keywords: 'notifications reminders',
-    group: 'App',
+    group: 'Yours',
     root: 'me',
   },
 ];

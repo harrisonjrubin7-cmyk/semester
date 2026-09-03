@@ -222,7 +222,7 @@ export function Cloud() {
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     background: on ? 'var(--chrome)' : 'transparent',
-                    color: on ? '#0a0b0e' : 'var(--app-fg)',
+                    color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
                     borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
                   }}
                 >

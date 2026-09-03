@@ -45,6 +45,7 @@ import { score, type Reviews } from '../lib/review';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import { DEFAULT_ORDER } from '../lib/feed';
+import { readLook, type Look } from '../lib/look';
 import { dateToIso, isoToDate } from '../lib/date';
 
 /**
@@ -83,9 +84,18 @@ interface Persisted {
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
-  /** Which metal the app wears, and how large it sets type. */
+  /**
+   * How the app looks. Every one of these is an id into a list in `lib/look.ts`
+   * rather than a value, so a look saved today survives the palette being
+   * retuned tomorrow, and an id from a future version falls back rather than
+   * writing a broken colour onto the root element.
+   */
   accent: string;
   textSize: string;
+  ground: string;
+  density: string;
+  corners: string;
+  typeface: string;
   /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
@@ -155,6 +165,8 @@ interface Ephemeral {
   coursesTab: 'courses' | 'due' | 'grades';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all' | 'settings';
+  /** Which shelf of the directory is showing under Everything. */
+  meGroup: string;
   /** Which standing the Coming-up list is showing: ahead, missed or finished. */
   dueTab: 'ahead' | 'overdue' | 'done';
   /**
@@ -235,7 +247,23 @@ const DEFAULT_PERSISTED: Persisted = {
   feedHidden: {},
   accent: 'sterling',
   textSize: 'normal',
+  ground: 'ink',
+  density: 'comfortable',
+  corners: 'drawn',
+  typeface: 'condensed',
 };
+
+/** The look, gathered off the state it is spread across. */
+function currentLook(state: Persisted): Look {
+  return {
+    accent: state.accent,
+    textSize: state.textSize,
+    ground: state.ground,
+    density: state.density,
+    corners: state.corners,
+    typeface: state.typeface,
+  };
+}
 
 function initialEphemeral(now: Date): Ephemeral {
   return {
@@ -257,6 +285,7 @@ function initialEphemeral(now: Date): Ephemeral {
     homeTab: 'today',
     coursesTab: 'courses',
     meTab: 'you',
+    meGroup: 'Study',
     dueTab: 'ahead',
     mailSeed: null,
     studyTab: 'guides',
@@ -314,8 +343,14 @@ function loadPersisted(): Persisted {
       commitments: saved.commitments ?? [],
       feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
-      accent: saved.accent ?? 'sterling',
-      textSize: saved.textSize ?? 'normal',
+      ...readLook({
+        accent: saved.accent,
+        textSize: saved.textSize,
+        ground: saved.ground,
+        density: saved.density,
+        corners: saved.corners,
+        typeface: saved.typeface,
+      }),
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -355,6 +390,10 @@ export function pickPersisted(state: State): Persisted {
     feedHidden: state.feedHidden,
     accent: state.accent,
     textSize: state.textSize,
+    ground: state.ground,
+    density: state.density,
+    corners: state.corners,
+    typeface: state.typeface,
   };
 }
 
@@ -381,7 +420,7 @@ export type Action =
   | { type: 'removeCommitment'; id: string }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'toggleFeedSection'; id: string }
-  | { type: 'setLook'; accent?: string; textSize?: string }
+  | { type: 'setLook'; look: Partial<Look> }
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
   | { type: 'setCalTab'; tab: 'deadlines' | 'campus' }
@@ -409,6 +448,7 @@ export type Action =
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
+  | { type: 'setMeGroup'; group: string }
   | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
   | {
       type: 'writeMail';
@@ -552,11 +592,9 @@ export function reducer(state: State, action: Action): State {
       };
 
     case 'setLook':
-      return {
-        ...state,
-        accent: action.accent ?? state.accent,
-        textSize: action.textSize ?? state.textSize,
-      };
+      // Read back through readLook so an id the app does not know cannot be
+      // stored — the fallback happens once, here, rather than on every render.
+      return { ...state, ...readLook({ ...currentLook(state), ...action.look }) };
 
     case 'setGrade':
       return { ...state, grades: { ...state.grades, [action.key]: action.value } };
@@ -696,6 +734,9 @@ export function reducer(state: State, action: Action): State {
 
     case 'setCoursesTab':
       return { ...state, coursesTab: action.tab };
+
+    case 'setMeGroup':
+      return { ...state, meGroup: action.group };
 
     case 'setMeTab':
       return { ...state, meTab: action.tab };

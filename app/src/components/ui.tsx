@@ -2,6 +2,16 @@ import type { CSSProperties, ReactNode } from 'react';
 import { ChevronRight } from './Icons';
 
 /** The uppercase rule that opens a section. */
+/**
+ * The heading above a section, and the app's vertical rhythm.
+ *
+ * The margins are a calc against `--density` rather than fixed pixels, which
+ * is what makes the Spacing setting real: this component sets the gap between
+ * nearly every section on nearly every screen, so scaling it here scales the
+ * whole app without touching a single screen. Call sites that pass their own
+ * margin keep it — a few sections genuinely need to sit tighter than the
+ * rhythm, and overriding one gap is not worth a second knob.
+ */
 export function SectionLabel({
   children,
   style,
@@ -10,7 +20,13 @@ export function SectionLabel({
   style?: CSSProperties;
 }) {
   return (
-    <div className="section-label" style={{ margin: '26px 0 12px', ...style }}>
+    <div
+      className="section-label"
+      style={{
+        margin: 'calc(26px * var(--density, 1)) 0 calc(12px * var(--density, 1))',
+        ...style,
+      }}
+    >
       {children}
     </div>
   );
@@ -47,7 +63,7 @@ export function ChipRow<T extends string>({
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 background: on ? 'var(--chrome)' : 'transparent',
-                color: on ? '#0a0b0e' : 'var(--app-fg)',
+                color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
                 borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
                 fontWeight: on ? 600 : 400,
               }}
@@ -91,7 +107,7 @@ export function Segmented<T extends string>({
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               background: on ? 'var(--chrome)' : 'transparent',
-              color: on ? '#0a0b0e' : 'var(--app-fg)',
+              color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
               borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
               fontWeight: on ? 600 : 400,
             }}
@@ -234,7 +250,7 @@ export function TickBox({ on, size = 20 }: { on: boolean; size?: number }) {
         height={size * 0.6}
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#0a0b0e"
+        stroke="var(--chrome-ink)"
         strokeWidth={3}
         strokeLinecap="round"
         strokeLinejoin="round"
