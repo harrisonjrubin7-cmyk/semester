@@ -93,8 +93,21 @@ and an answer stays prose.
   Put it in `app/.env.local`; without one the app says so and points at the file
   route instead.
 
+Apple is a third case, and the screen says which half is which: **iCloud
+calendars** come in with no account and no key — publish one from the Calendar
+app and paste the `webcal://` link — while **Sign in with Apple** gives identity
+only, and needs a paid developer account, an https redirect (Apple rejects
+localhost) and the dev server to sign its client secret.
+
 Brightspace grades and submissions need D2L's Valence API, which Vanderbilt has
 to issue a key for. The calendar feed is what a student can turn on alone.
+
+**myVU, YES and AnchorLink** have no API a student can use alone, so the app
+links out to them rather than pretending to read them: one tap from Connect,
+opening the installed app where the phone recognises the address. Every address
+is editable and your edit is what persists — myVU ships with none at all,
+because where it opens differs between people and a confident wrong link is
+worse than a field that asks. You can add links of your own beside them.
 
 ## Claude, in the app
 
@@ -108,13 +121,20 @@ the app stores it on-device only, sends it only to Anthropic, and treats a
 proxy that holds the key server-side as the better option rather than the
 fallback.
 
-## Phone, laptop, or its own window
+## Phone, iPad, laptop, or its own window
 
-The same build runs three ways. Under 900px it is the phone it was drawn as;
-above that the tab bar unrolls into a rail beside the column. A web manifest and
-a service worker make it installable — a real window on macOS or Windows, an
-icon on a home screen — and keep the lessons playable with no signal. Audio is
-never pre-cached: what you have played is kept, and nothing else.
+One build, four shapes:
+
+- **Phone** — as drawn, filling the screen.
+- **iPad** — from 760px the tab bar unrolls into a rail beside the column, so
+  every iPad in portrait (768–834pt) gets it, and landscape and Split View
+  follow the window live. An iPad mini upright, and any half-width split, stay
+  on the phone layout at full height.
+- **Laptop** — the same rail, with the column framed and centred.
+- **Installed** — a manifest, PNG icons (iOS ignores an SVG tile) and a service
+  worker make it a real window on macOS or Windows and an icon on a home screen,
+  with the app shell and anything you have played working offline. Audio is
+  never pre-cached: what you played is kept, and nothing else.
 
 ## Not yet in
 

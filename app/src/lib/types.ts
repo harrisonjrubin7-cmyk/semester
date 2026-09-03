@@ -279,6 +279,21 @@ export interface CourseUpdate {
   created: number;
 }
 
+/**
+ * A campus system the app links out to rather than reads — myVU, YES,
+ * AnchorLink. No API, no sign-in here: a shortcut, kept editable because the
+ * addresses are the university's to change, not ours.
+ */
+export interface CampusLink {
+  id: string;
+  name: string;
+  /** Empty when the app does not presume to know it. */
+  url: string;
+  /** Shown as the input's placeholder — a suggestion, not a claim. */
+  hint: string;
+  note: string;
+}
+
 /** An external calendar the app reads — Brightspace, Outlook, anything .ics. */
 export interface FeedSource {
   id: string;

@@ -13,10 +13,16 @@ It is a mobile-first web app that also has a desktop layout and installs as its
 own application.
 
 - **Phone** — fills the screen; add to the home screen from the share sheet.
-- **Laptop** — from 900px the tab bar unrolls into a rail beside the column. The
-  column keeps its width: the type and the touch targets were drawn for it.
-- **Installed** — `public/manifest.webmanifest` and `public/sw.js` make it
-  installable from Chrome or Edge as a standalone window, and keep the app shell
+- **iPad and laptop** — from 760px the tab bar unrolls into a rail beside the
+  column (`lib/media.ts`). 760 rather than 900 so an iPad in portrait gets it:
+  the 11-inch is 834pt wide, the 9.7-inch 768. The column keeps its width — the
+  type and the touch targets were drawn for it — and the query follows Split
+  View live. Below the breakpoint the column runs full height rather than
+  floating in a frame, which is right for a tablet held upright and for a
+  half-width split.
+- **Installed** — `public/manifest.webmanifest`, PNG icons (iOS ignores an SVG
+  `apple-touch-icon`, so `apple-touch-icon.png` is rendered from the SVG) and
+  `public/sw.js` make it installable as a standalone window, and keep the app shell
   and anything you have played working offline. Audio is cached as you play it,
   never up front — 46 MB of lessons downloaded on first open would be a hostile
   thing to do to a phone plan.
@@ -149,6 +155,13 @@ Google and Zoom: PKCE in the browser, client IDs from `.env.local`, tokens in
 this device's storage and nowhere else. Zoom's API sends no CORS headers, so it
 goes through the dev-server proxy in `vite.config.ts`; the same file forwards
 `/feed?url=` so a subscribed calendar can be fetched at all.
+
+Campus systems with no student-usable API — myVU, YES, AnchorLink — are links
+rather than integrations, held in `src/data/campus.ts` with the addresses
+editable in the app; the edit is what persists. Apple is half a connection: its
+calendars arrive as a published `webcal://` feed with no account at all, while
+Sign in with Apple needs a signed client secret, which `vite.config.ts` builds
+server-side so the .p8 never reaches the browser.
 
 `src/lib/claude.ts` is the Messages API client behind **Ask Claude** — streamed,
 with the course guide as system context, and a card-maker that refuses anything

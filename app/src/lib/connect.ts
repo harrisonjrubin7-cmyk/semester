@@ -19,12 +19,17 @@
  *
  *  · **Zoom** — scheduled meetings and cloud recordings.
  *
+ *  · **Apple** — sign-in only. There is no iCloud calendar API; the way in is
+ *    to publish a calendar from the Calendar app and give the app the webcal
+ *    link, which needs no account here and no key anywhere.
+ *
  * Every provider needs a client ID, because an OAuth client is registered by
  * whoever runs the app, not shipped inside it. Set them in `app/.env.local`:
  *
  *     VITE_MS_CLIENT_ID=…
  *     VITE_GOOGLE_CLIENT_ID=…
  *     VITE_ZOOM_CLIENT_ID=…
+ *     VITE_APPLE_CLIENT_ID=…           # a Services ID, and see vite.config.ts
  *     VITE_OAUTH_PROXY=/oauth        # optional; see vite.config.ts
  *
  * Without one, the app says so on the Connect screen and offers the file route
@@ -38,7 +43,7 @@
 import type { FeedEvent } from './types';
 import { matchCourse } from './ics';
 
-export type ProviderId = 'microsoft' | 'google' | 'zoom';
+export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
 
 interface ProviderSpec {
   id: ProviderId;
@@ -52,6 +57,10 @@ interface ProviderSpec {
   console: string;
   /** True when the provider's API refuses browser calls without a proxy. */
   needsProxy: boolean;
+  /** False when signing in gets you identity and nothing readable. */
+  calendar: boolean;
+  /** Anything the person has to know before they try. */
+  caveat?: string;
 }
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
@@ -68,6 +77,7 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     clientId: env.VITE_MS_CLIENT_ID ?? '',
     console: 'portal.azure.com → App registrations → single-page application',
     needsProxy: false,
+    calendar: true,
   },
   google: {
     id: 'google',
@@ -80,6 +90,7 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     clientId: env.VITE_GOOGLE_CLIENT_ID ?? '',
     console: 'console.cloud.google.com → Credentials → OAuth client → Web application',
     needsProxy: false,
+    calendar: true,
   },
   zoom: {
     id: 'zoom',
@@ -93,6 +104,31 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     // Zoom's API sends no CORS headers, so browser calls have to go through
     // the dev proxy. Saying so beats a silent network error.
     needsProxy: true,
+    calendar: true,
+  },
+  apple: {
+    id: 'apple',
+    name: 'Apple',
+    blurb: 'Sign in with Apple, for who you are. Your calendar comes the other way — see below.',
+    authorizeUrl: 'https://appleid.apple.com/auth/authorize',
+    tokenUrl: 'https://appleid.apple.com/auth/token',
+    // Asking for name or email forces response_mode=form_post, which POSTs to
+    // the redirect and a single-page app cannot receive. Identity alone comes
+    // back on the query string, which is all this needs.
+    scopes: '',
+    clientId: env.VITE_APPLE_CLIENT_ID ?? '',
+    console: 'developer.apple.com → Identifiers → Services ID (a paid account)',
+    // Apple's client secret is a JWT signed with a private key. That signing
+    // cannot happen in a browser, so this one always goes through the proxy.
+    needsProxy: true,
+    calendar: false,
+    caveat:
+      'Apple gives no calendar API. To bring an iCloud calendar in, publish it — ' +
+      'Calendar → share a calendar → Public Calendar — and paste the webcal link above. ' +
+      'That route needs no account here at all. Signing in with Apple is only worth it ' +
+      'if you want the app to know who you are, and it needs a paid developer account, ' +
+      'a Services ID whose redirect is https (Apple rejects localhost), and the proxy ' +
+      'to sign the client secret.',
   },
 };
 
@@ -176,7 +212,9 @@ export async function beginAuth(id: ProviderId): Promise<void> {
   url.searchParams.set('client_id', spec.clientId);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('redirect_uri', redirectUri());
-  url.searchParams.set('scope', spec.scopes);
+  // Apple takes no scope here on purpose: asking for name or email switches it
+  // to a form POST that a single-page app never receives.
+  if (spec.scopes) url.searchParams.set('scope', spec.scopes);
   url.searchParams.set('state', state);
   url.searchParams.set('code_challenge', await challenge(verifier));
   url.searchParams.set('code_challenge_method', 'S256');
@@ -338,6 +376,11 @@ const HORIZON_DAYS = 120;
 
 /** Everything on the connected calendar between today and the end of term. */
 export async function pullCalendar(id: ProviderId): Promise<FeedEvent[]> {
+  if (!PROVIDERS[id].calendar) {
+    throw new Error(
+      `${PROVIDERS[id].name} has no calendar API. Publish the calendar and add its webcal link instead.`,
+    );
+  }
   const from = new Date();
   from.setHours(0, 0, 0, 0);
   const to = new Date(from.getTime() + HORIZON_DAYS * 24 * 3600 * 1000);
@@ -425,6 +468,8 @@ export interface RemoteFile {
 
 /** Recent documents, for pulling a posted reading into a course. */
 export async function listRemoteFiles(id: ProviderId): Promise<RemoteFile[]> {
+  if (id === 'apple') throw new Error('Apple exposes no file API to a web app.');
+
   if (id === 'microsoft') {
     type Item = {
       id: string;

@@ -24,5 +24,13 @@ export function useMedia(query: string): boolean {
   return matches;
 }
 
-/** Wide enough for the rail and a reading column beside it. */
-export const DESKTOP = '(min-width: 900px)';
+/**
+ * Wide enough for the rail and a reading column beside it.
+ *
+ * 760px rather than 900 so an iPad in portrait gets the rail: the 11-inch is
+ * 834pt wide, the 10.9-inch 820, the 9.7-inch 768. Below that — an iPad mini
+ * held upright at 744, and every phone — the app is the phone it was drawn as,
+ * filling the screen. Split View is just a narrower window, and the query
+ * follows it live.
+ */
+export const DESKTOP = '(min-width: 760px)';

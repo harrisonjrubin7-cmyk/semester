@@ -10,6 +10,7 @@ import {
 } from 'react';
 import type {
   Appointment,
+  CampusLink,
   CourseId,
   CourseUpdate,
   FeedEvent,
@@ -48,6 +49,10 @@ interface Persisted {
   /** External calendars — Brightspace, Outlook, any .ics. */
   feeds: FeedSource[];
   feedEvents: FeedEvent[];
+  /** Addresses for the campus links, keyed by id. Yours beat the defaults. */
+  linkUrls: Record<string, string>;
+  /** Links you added yourself, alongside the campus ones. */
+  extraLinks: CampusLink[];
 }
 
 interface Ephemeral {
@@ -123,6 +128,8 @@ const DEFAULT_PERSISTED: Persisted = {
   updates: [],
   feeds: [],
   feedEvents: [],
+  linkUrls: {},
+  extraLinks: [],
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -182,6 +189,8 @@ function loadPersisted(): Persisted {
       updates: saved.updates ?? [],
       feeds: saved.feeds ?? [],
       feedEvents: saved.feedEvents ?? [],
+      linkUrls: saved.linkUrls ?? {},
+      extraLinks: saved.extraLinks ?? [],
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -246,7 +255,10 @@ export type Action =
   | { type: 'addFeed'; feed: Omit<FeedSource, 'id' | 'added'>; events: FeedEvent[] }
   | { type: 'syncFeed'; id: string; events: FeedEvent[]; status: string }
   | { type: 'failFeed'; id: string; status: string }
-  | { type: 'removeFeed'; id: string };
+  | { type: 'removeFeed'; id: string }
+  | { type: 'setLinkUrl'; id: string; url: string }
+  | { type: 'addLink'; name: string; url: string }
+  | { type: 'removeLink'; id: string };
 
 const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
 
@@ -577,6 +589,29 @@ export function reducer(state: State, action: Action): State {
         feedEvents: state.feedEvents.filter((e) => e.sourceId !== action.id),
       };
 
+    case 'setLinkUrl':
+      return { ...state, linkUrls: { ...state.linkUrls, [action.id]: action.url.trim() } };
+
+    case 'addLink': {
+      const link: CampusLink = {
+        id: newId(),
+        name: action.name.trim() || 'Link',
+        url: action.url.trim(),
+        hint: '',
+        note: '',
+      };
+      return { ...state, extraLinks: [...state.extraLinks, link] };
+    }
+
+    case 'removeLink': {
+      const { [action.id]: _gone, ...linkUrls } = state.linkUrls;
+      return {
+        ...state,
+        linkUrls,
+        extraLinks: state.extraLinks.filter((l) => l.id !== action.id),
+      };
+    }
+
     default:
       return state;
   }
@@ -634,6 +669,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updates: state.updates,
       feeds: state.feeds,
       feedEvents: state.feedEvents,
+      linkUrls: state.linkUrls,
+      extraLinks: state.extraLinks,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
@@ -654,6 +691,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     state.updates,
     state.feeds,
     state.feedEvents,
+    state.linkUrls,
+    state.extraLinks,
   ]);
 
   const value = useMemo(() => ({ state, dispatch, now }), [state, now]);

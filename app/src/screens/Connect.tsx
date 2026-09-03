@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';
+import { CAMPUS_LINKS } from '../data/campus';
 import {
   PROVIDERS,
   beginAuth,
@@ -14,7 +15,230 @@ import {
   type ProviderId,
   type RemoteFile,
 } from '../lib/connect';
-import type { FeedSource } from '../lib/types';
+import type { CampusLink, FeedSource } from '../lib/types';
+
+/**
+ * The campus systems the app links out to rather than reads.
+ *
+ * myVU, YES and AnchorLink have no API a student can use alone, so pretending
+ * to integrate with them would mean pretending. What is real is the tap: the
+ * address is held here, opens the installed app where the phone recognises it,
+ * and is editable — because these are the university's addresses to change, and
+ * a link that has gone stale should be a ten-second fix rather than a bug.
+ *
+ * myVU starts empty on purpose. Where it opens differs between people and
+ * devices, and a confident wrong link is worse than a field that asks.
+ */
+function CampusLinks() {
+  const { state, dispatch } = useStore();
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newUrl, setNewUrl] = useState('');
+
+  const links = [...CAMPUS_LINKS, ...state.extraLinks];
+  const addressOf = (link: CampusLink) => state.linkUrls[link.id] ?? link.url;
+
+  const host = (url: string) => {
+    try {
+      return new URL(url).host.replace(/^www\./, '');
+    } catch {
+      return url;
+    }
+  };
+
+  const save = (id: string) => {
+    // A bare "yes.vanderbilt.edu" is what people paste; make it a real address
+    // rather than refusing it.
+    const url = draft.trim();
+    dispatch({ type: 'setLinkUrl', id, url: url && !/^https?:\/\//i.test(url) ? `https://${url}` : url });
+    setEditing(null);
+  };
+
+  return (
+    <>
+      <SectionLabel>Campus</SectionLabel>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {links.map((link) => {
+          const url = addressOf(link);
+          const open = editing === link.id;
+          return (
+            <div
+              key={link.id}
+              style={{ borderBottom: '1px solid var(--app-line)', padding: '12px 0' }}
+            >
+              <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+                {url ? (
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="bare"
+                    style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <span style={{ display: 'block', fontSize: 14.5, lineHeight: 1.3 }}>
+                      {link.name}
+                    </span>
+                    <span
+                      style={{
+                        display: 'block',
+                        fontSize: 11,
+                        opacity: 0.5,
+                        fontFamily: 'var(--font-heading)',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        marginTop: 2,
+                      }}
+                    >
+                      {host(url)}
+                    </span>
+                  </a>
+                ) : (
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 14.5, lineHeight: 1.3 }}>
+                      {link.name}
+                    </span>
+                    <span
+                      style={{
+                        display: 'block',
+                        fontSize: 11,
+                        opacity: 0.5,
+                        fontFamily: 'var(--font-heading)',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        marginTop: 2,
+                      }}
+                    >
+                      No address yet
+                    </span>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="bare"
+                  onClick={() => {
+                    setDraft(url);
+                    setEditing(open ? null : link.id);
+                  }}
+                  style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                >
+                  {open ? 'CANCEL' : url ? 'EDIT' : 'ADD'}
+                </button>
+                {state.extraLinks.some((l) => l.id === link.id) && !open && (
+                  <button
+                    type="button"
+                    className="bare"
+                    onClick={() => dispatch({ type: 'removeLink', id: link.id })}
+                    style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                  >
+                    REMOVE
+                  </button>
+                )}
+              </div>
+
+              {open && (
+                <>
+                  <input
+                    className="input"
+                    value={draft}
+                    placeholder={link.hint || 'https://…'}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && save(link.id)}
+                    style={{ fontSize: 12.5, marginTop: 9 }}
+                    aria-label={`${link.name} address`}
+                  />
+                  {link.note && (
+                    <div style={{ fontSize: 11.5, opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
+                      {link.note}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => save(link.id)}
+                    style={{
+                      marginTop: 9,
+                      fontSize: 11,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Save
+                  </button>
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {adding ? (
+        <Blueprint style={{ padding: '13px 14px', marginTop: 12 }}>
+          <div className="kicker">Your own link</div>
+          <input
+            className="input"
+            placeholder="What it is — Commodore Card, the gym"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            style={{ fontSize: 13, marginTop: 9 }}
+          />
+          <input
+            className="input"
+            placeholder="https://…"
+            value={newUrl}
+            onChange={(e) => setNewUrl(e.target.value)}
+            style={{ fontSize: 12.5, marginTop: 8 }}
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setAdding(false)}
+              style={{ flex: 1, height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={!newName.trim() || !newUrl.trim()}
+              onClick={() => {
+                const url = newUrl.trim();
+                dispatch({
+                  type: 'addLink',
+                  name: newName,
+                  url: /^https?:\/\//i.test(url) ? url : `https://${url}`,
+                });
+                setNewName('');
+                setNewUrl('');
+                setAdding(false);
+              }}
+              style={{ flex: 1, height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            >
+              Add it
+            </button>
+          </div>
+        </Blueprint>
+      ) : (
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          onClick={() => setAdding(true)}
+          style={{ height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
+        >
+          Add a link of your own
+        </button>
+      )}
+
+      <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
+        These open the system itself — the app on a phone that recognises the address, the site
+        otherwise. None of them expose an API a student can use alone, so the app links out rather
+        than pretending to read them. Correct any address here and the correction is what sticks.
+      </div>
+    </>
+  );
+}
 
 /**
  * The Connect screen.
@@ -74,7 +298,9 @@ export function Connect() {
   };
 
   const subscribe = async (kind: FeedSource['kind']) => {
-    const target = url.trim();
+    // webcal:// is what Apple, Outlook and half the campus systems hand you.
+    // It is an https address wearing a different scheme.
+    const target = url.trim().replace(/^webcal:\/\//i, 'https://');
     if (!target) return;
     setBusy('feed');
     try {
@@ -146,6 +372,8 @@ export function Connect() {
         </Blueprint>
       )}
 
+      <CampusLinks />
+
       {/* ── Brightspace ─────────────────────────────────────────────────── */}
       <SectionLabel>Brightspace</SectionLabel>
       <Blueprint style={{ padding: '14px 15px' }}>
@@ -155,7 +383,8 @@ export function Connect() {
         <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
           In Brightspace, open <strong>Calendar</strong>, click <strong>Subscribe</strong>, and copy
           the link it gives you. It already carries your access — no password, and nothing to
-          install. Paste it below.
+          install. Paste it below. Any other calendar link works here too, including a{' '}
+          <code style={{ fontSize: 11 }}>webcal://</code> one from iCloud or Outlook.
         </div>
         <input
           className="input"
@@ -251,6 +480,7 @@ export function Connect() {
                     </button>
                   ) : (
                     <>
+                      {spec.calendar && (
                       <button
                         type="button"
                         className="btn btn-secondary"
@@ -285,15 +515,18 @@ export function Connect() {
                       >
                         Pull calendar
                       </button>
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        disabled={busy !== ''}
-                        onClick={() => void browse(id)}
-                        style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-                      >
-                        {id === 'zoom' ? 'Recordings' : 'Recent files'}
-                      </button>
+                      )}
+                      {spec.calendar && (
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          disabled={busy !== ''}
+                          onClick={() => void browse(id)}
+                          style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                        >
+                          {id === 'zoom' ? 'Recordings' : 'Recent files'}
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="bare"
@@ -307,6 +540,22 @@ export function Connect() {
                       </button>
                     </>
                   )}
+                </div>
+              )}
+
+              {spec.caveat && (
+                <div
+                  style={{
+                    fontSize: 11.5,
+                    opacity: 0.6,
+                    lineHeight: 1.5,
+                    marginTop: 10,
+                    paddingTop: 10,
+                    borderTop: '1px solid var(--app-line)',
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {spec.caveat}
                 </div>
               )}
 

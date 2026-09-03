@@ -133,7 +133,11 @@ a:hover {
   z-index: 1;
 }
 
-@media (min-width: 430px) {
+/* The framed, floating column is for a desktop browser window. A tablet held
+   upright — an iPad mini at 744, or any iPad in Split View — is a device, not a
+   window, so the column runs the full height there instead of hovering in the
+   middle of the screen. */
+@media (min-width: 900px) {
   .device {
     height: min(874px, 100%);
     margin-block: max(0px, calc((100dvh - 874px) / 2));
@@ -143,15 +147,18 @@ a:hover {
 }
 
 /* ── The desk ─────────────────────────────────────────────────────────────
-   From 900px the phone column keeps its width — the type and touch targets
-   were drawn for it — and gains a rail beside it, so a laptop shows the
-   navigation instead of hiding it behind a tab bar that only fits a thumb.
-   Below 900px none of this applies and the app is the phone it was. */
+   From 760px the phone column keeps its width — the type and touch targets
+   were drawn for it — and gains a rail beside it, so an iPad or a laptop shows
+   the navigation instead of hiding it behind a tab bar that only fits a thumb.
+   760 rather than 900 because an iPad in portrait is 768–834pt wide, and on a
+   tablet held upright the rail is the whole point. Below that the app is the
+   phone it was. */
 
 .desk {
   height: 100%;
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
+  /* Narrows on a portrait tablet so the reading column keeps its width. */
+  grid-template-columns: clamp(168px, 22vw, 232px) minmax(0, 1fr);
   background: var(--app-void);
 }
 
@@ -204,6 +211,17 @@ a:hover {
   box-shadow: none;
   border: 0;
   border-inline: 1px solid var(--app-line);
+}
+
+/* iOS zooms the page when a field under 16px takes focus, which on an iPad
+   leaves the layout scrolled sideways with no way back. Only touch pointers
+   need the larger type, so a mouse keeps the drawn sizes. */
+@media (pointer: coarse) {
+  .device input,
+  .device textarea,
+  .device select {
+    font-size: 16px;
+  }
 }
 
 /* Printing is how the guide becomes a PDF on a machine with no pipeline.
