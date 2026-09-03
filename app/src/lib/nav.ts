@@ -73,6 +73,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'work',
+    label: 'Work on it',
+    blurb: 'Paste an assignment and get it broken down — rubric, plan, dates, what to ask.',
+    keywords: 'assignment essay paper homework problem set instructions rubric deadline draft feedback outline plan generate write',
+    group: 'Study',
+    root: 'study',
+  },
+  {
     screen: 'import',
     label: 'Add a course',
     blurb: 'Upload a syllabus and get the course back, checked before you keep it.',

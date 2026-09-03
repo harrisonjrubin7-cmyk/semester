@@ -73,6 +73,22 @@ export function Study() {
         <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
       </Blueprint>
 
+      <Blueprint
+        onClick={() => dispatch({ type: 'go', screen: 'work' })}
+        style={{ padding: '13px 15px', marginTop: 10, display: 'flex', gap: 12, alignItems: 'center' }}
+      >
+        <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span className="kicker" style={{ display: 'block' }}>
+            Work on it
+          </span>
+          <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3, marginTop: 2 }}>
+            An assignment broken down — rubric, plan, dates, what to ask about
+          </span>
+        </span>
+        <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+      </Blueprint>
+
       <SectionLabel>Study guides</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {catalog.courses.map((c) => {

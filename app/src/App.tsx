@@ -26,6 +26,7 @@ import { LessonPlayer } from './screens/Lesson';
 import { AddMaterial } from './screens/Update';
 import { Connect } from './screens/Connect';
 import { Ask } from './screens/Ask';
+import { Work } from './screens/Work';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
@@ -121,6 +122,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Accounts and calendars', title: 'Connect' };
     case 'ask':
       return { kicker: `${guide.code} · with the guide`, title: 'Ask Claude' };
+    case 'work':
+      return { kicker: `${guide.code} · assignments`, title: 'Work on it' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -339,6 +342,8 @@ function CurrentScreen() {
       return <Connect />;
     case 'ask':
       return <Ask />;
+    case 'work':
+      return <Work />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':

@@ -316,6 +316,8 @@ export type Action =
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   | { type: 'deleteAppointment'; id: string }
   | { type: 'newNote'; courseId: CourseId | null }
+  /** Save a finished piece of text as a note without leaving the screen. */
+  | { type: 'keepNote'; title: string; body: string; courseId: CourseId | null }
   | { type: 'openNote'; id: string }
   | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId'>> }
   | { type: 'attachFile'; noteId: string; fileId: string }
@@ -571,6 +573,21 @@ export function reducer(state: State, action: Action): State {
         fileIds: [],
       };
       return push({ ...state, notes: [note, ...state.notes], noteId: note.id }, 'note');
+    }
+
+    case 'keepNote': {
+      // Unlike newNote this does not navigate: it is used from screens where
+      // you are mid-task and being thrown into an editor would lose your place.
+      const note: Note = {
+        id: newId(),
+        title: action.title.trim() || 'Untitled',
+        body: action.body,
+        created: Date.now(),
+        updated: Date.now(),
+        courseId: action.courseId,
+        fileIds: [],
+      };
+      return { ...state, notes: [note, ...state.notes] };
     }
 
     case 'openNote':

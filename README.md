@@ -180,6 +180,29 @@ the device. A key in a browser can be read by anything in that browser — which
 is why the shared one lives in a function, metered per account, and why the
 screen tells you which route a question is about to take.
 
+## Working on an assignment
+
+**Study → Work on it.** Paste the instructions, or drop the file your professor
+posted, and you get the assignment taken apart: every deliverable including the
+ones buried in a paragraph about margins, the rubric with its weights, a plan of
+four to eight steps dated between now and the deadline, which of your own units
+it draws on, a pre-submission checklist, and — the most useful part — the
+questions the instructions do not answer, to ask in office hours. The steps
+become tasks with one tap.
+
+**Read my draft** gives feedback against that rubric: what is working, the two
+or three things that would move the grade most, and any claim your course
+material does not support. It does not rewrite your sentences, on purpose — a
+paragraph handed back rewritten teaches nothing.
+
+**Anything else** is a general Claude workspace with the course in front of it:
+a revision timetable, practice questions, a summary of a reading, an email to a
+professor. Anything worth keeping saves as a note.
+
+What it will not do is write the work you submit. Ask it to and it says so in
+one line and offers the version that helps you write it. Vanderbilt's Honor Code
+is student-run and the work has to be yours.
+
 ## Phone, iPad, laptop, or its own window
 
 One build, four shapes:
