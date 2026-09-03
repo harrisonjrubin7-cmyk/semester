@@ -99,14 +99,22 @@ export interface Ground {
 }
 
 /**
- * Four grounds.
+ * Nine grounds — six dark, three light.
  *
- * Ink is the original and stays the default. Graphite is the same idea two
- * steps lighter, for a screen that is not an OLED phone in a dark room.
- * Midnight leans the blue that Ink only hints at. Parchment is the light one,
- * and it is warm rather than white — a pure white ground under a desaturated
- * metal accent looks like an unstyled page, and the small amount of warmth is
- * what keeps the accents reading as metal rather than as grey.
+ * Ink is the original and stays the default. The rest are the ways a dark
+ * screen can actually differ: how light it is, and which way the shadows lean.
+ * Graphite is Ink two steps up for a bright room. Midnight leans the blue Ink
+ * only hints at; Basalt leans the other way, into a warm charcoal; Oxide is
+ * dark enough for an OLED to switch pixels off entirely, which is both the
+ * blackest and the cheapest on battery; Forest and Wine are the two hues that
+ * still read as neutral at this darkness, and are there because a whole app in
+ * one of them is a different room to sit in.
+ *
+ * The light three are ordered the same way. Parchment is warm; Paper is the
+ * cooler, plainer one; Fog is grey enough that a phone in direct sun still
+ * shows the panel edges, which a white ground does not.
+ *
+ * Every one of them defines every token — see `tokensFor`.
  */
 export const GROUNDS: Ground[] = [
   {
@@ -140,6 +148,46 @@ export const GROUNDS: Ground[] = [
     faintAlpha: 0.42,
   },
   {
+    id: 'basalt',
+    label: 'Basalt',
+    blurb: 'Warm charcoal — the other way from Midnight.',
+    light: false,
+    ramp: ['#0b0a09', '#131211', '#1c1a18', '#252220', '#302c29'],
+    fg: '#eeebe6',
+    dimAlpha: 0.65,
+    faintAlpha: 0.43,
+  },
+  {
+    id: 'oxide',
+    label: 'Oxide',
+    blurb: 'True black. On an OLED the pixels are off, and the battery notices.',
+    light: false,
+    ramp: ['#000000', '#000000', '#0b0d10', '#14171c', '#1e2229'],
+    fg: '#eceef2',
+    dimAlpha: 0.62,
+    faintAlpha: 0.4,
+  },
+  {
+    id: 'forest',
+    label: 'Forest',
+    blurb: 'Very dark green. Still neutral enough to read all evening.',
+    light: false,
+    ramp: ['#030705', '#070d0a', '#0e1712', '#141f19', '#1d2b23'],
+    fg: '#e7efe9',
+    dimAlpha: 0.64,
+    faintAlpha: 0.42,
+  },
+  {
+    id: 'wine',
+    label: 'Wine',
+    blurb: 'Very dark red-brown. Warm without being brown.',
+    light: false,
+    ramp: ['#080405', '#0e090a', '#171012', '#201618', '#2c1f21'],
+    fg: '#f0e9ea',
+    dimAlpha: 0.64,
+    faintAlpha: 0.42,
+  },
+  {
     id: 'parchment',
     label: 'Parchment',
     blurb: 'Dark on warm light, for daylight and for printing.',
@@ -148,6 +196,26 @@ export const GROUNDS: Ground[] = [
     fg: '#1b1a17',
     dimAlpha: 0.68,
     faintAlpha: 0.46,
+  },
+  {
+    id: 'paper',
+    label: 'Paper',
+    blurb: 'Cooler and plainer than Parchment. Nearly white.',
+    light: true,
+    ramp: ['#dfe2e8', '#f2f4f7', '#fbfcfd', '#ffffff', '#ffffff'],
+    fg: '#15181d',
+    dimAlpha: 0.68,
+    faintAlpha: 0.46,
+  },
+  {
+    id: 'fog',
+    label: 'Fog',
+    blurb: 'Grey enough that panel edges still show in direct sun.',
+    light: true,
+    ramp: ['#c9cdd4', '#dde1e7', '#e9ecf1', '#f4f6f9', '#fdfdfe'],
+    fg: '#14171c',
+    dimAlpha: 0.7,
+    faintAlpha: 0.48,
   },
 ];
 
