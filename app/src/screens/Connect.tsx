@@ -389,8 +389,6 @@ export function Connect() {
         </Blueprint>
       )}
 
-      <CampusLinks />
-
       {/* ── Brightspace ─────────────────────────────────────────────────── */}
       <SectionLabel>Brightspace</SectionLabel>
       <Blueprint style={{ padding: '14px 15px' }}>
@@ -708,6 +706,15 @@ export function Connect() {
           </div>
         </>
       )}
+      {/*
+        Campus links sit last on purpose. They used to be the first thing on
+        the screen, directly under a paragraph promising to bring calendars in
+        — so the section that delivers that promise was below a list of
+        bookmarks, and the page opened by answering a question nobody had
+        asked. Connecting comes first; shortcuts come after.
+      */}
+      <CampusLinks />
+
       <div style={{ height: 22 }} />
     </div>
   );

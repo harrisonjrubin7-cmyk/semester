@@ -898,7 +898,7 @@ function Cram() {
           <SectionLabel>{catalog.frameLabels[state.guideId]}</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {guide.frames.map((f) => (
-              <Blueprint key={f.t} style={{ padding: '13px 14px' }}>
+              <Blueprint key={f.t} plain style={{ padding: '13px 14px' }}>
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17, lineHeight: 1.15 }}>
                   {f.t}
                 </div>
@@ -932,7 +932,7 @@ function Cram() {
           <SectionLabel>Added since the guide was made</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {notes.map((n) => (
-              <Blueprint key={n.id} style={{ padding: '13px 14px' }}>
+              <Blueprint key={n.id} plain style={{ padding: '13px 14px' }}>
                 <div className="kicker">
                   {n.source || 'Yours'}
                   {n.unit !== null && guide.units[n.unit] ? ` · ${guide.units[n.unit].name}` : ''}

@@ -260,7 +260,7 @@ export function FieldGuide() {
           <SectionLabel style={{ margin: '36px 0 10px' }}>Case files</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {guide.cases.map((c) => (
-              <Blueprint key={c.title} style={{ padding: '15px 15px' }}>
+              <Blueprint key={c.title} plain style={{ padding: '15px 15px' }}>
                 <div className="kicker">{c.when}</div>
                 <div
                   style={{

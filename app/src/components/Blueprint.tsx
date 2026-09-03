@@ -12,14 +12,25 @@ export function Blueprint({
   className,
   onClick,
   as = 'div',
+  plain = false,
 }: {
   children: ReactNode;
   style?: CSSProperties;
   className?: string;
   onClick?: () => void;
   as?: 'div' | 'button';
+  /**
+   * Drop the registration marks.
+   *
+   * The marks say "this is a framed object", which is true of a hero card and
+   * false of the fourth row in a list. Ten stacked cards put forty little
+   * crosses on the screen, they collide across the gaps between rows, and what
+   * was a signature becomes texture you have to read past. Feature cards keep
+   * them; repeated rows set this.
+   */
+  plain?: boolean;
 }) {
-  const marks = (
+  const marks = plain ? null : (
     <>
       <i className="corner tl" />
       <i className="corner tr" />

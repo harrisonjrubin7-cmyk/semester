@@ -370,8 +370,18 @@ function MonthView() {
     }
   }
 
-  const selectedDay = state.selDate ? Number(state.selDate.split('-')[2]) : null;
-  const selItems = selectedDay ? itemsOn(catalog, now, calYear, calMonth, selectedDay) : [];
+  // Nothing was selected until you tapped, so the month opened with an empty
+  // half-screen under a heading that said "Pick a day". Today is the day you
+  // came to look at nine times out of ten, so it starts selected — and when
+  // you are looking at another month, its first day stands in rather than
+  // nothing at all.
+  const inThisMonth = now.getFullYear() === calYear && now.getMonth() === calMonth;
+  const selectedDay = state.selDate
+    ? Number(state.selDate.split('-')[2])
+    : inThisMonth
+      ? now.getDate()
+      : 1;
+  const selItems = itemsOn(catalog, now, calYear, calMonth, selectedDay);
 
   return (
     <div style={{ padding: 18 }}>
@@ -489,8 +499,44 @@ function MonthView() {
         })}
       </Blueprint>
 
-      <SectionLabel style={{ margin: '22px 0 6px' }}>
-        {selectedDay ? `${MONTHS[calMonth]} ${selectedDay}` : 'Pick a day'}
+      {/*
+        The grid draws three different marks and, until now, explained none of
+        them: a square meant a deadline in that course's colour, a circle meant
+        a campus event, an outline meant something of your own. Nobody was ever
+        going to work that out, which made the whole month view decorative.
+      */}
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '6px 14px',
+          marginTop: 10,
+          fontSize: 10.5,
+          fontFamily: 'var(--font-heading)',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          opacity: 0.5,
+        }}
+      >
+        {(
+          [
+            ['Due', { background: 'var(--app-accent)' }],
+            ['Campus', { background: 'var(--app-accent)', borderRadius: '50%' }],
+            ['Yours', { border: '1px solid var(--app-accent)' }],
+          ] as const
+        ).map(([label, mark]) => (
+          <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ width: 5, height: 5, flex: 'none', ...mark }} />
+            {label}
+          </span>
+        ))}
+        <span style={{ opacity: 0.8 }}>Colour = course</span>
+      </div>
+
+      <SectionLabel style={{ margin: '20px 0 6px' }}>
+        {DOW[new Date(calYear, calMonth, selectedDay).getDay()]} · {MONTHS[calMonth]}{' '}
+        {selectedDay}
+        {inThisMonth && selectedDay === now.getDate() ? ' · today' : ''}
       </SectionLabel>
 
       {selItems.map((i) => (
@@ -515,25 +561,34 @@ function MonthView() {
         </button>
       ))}
 
-      {selectedDay && selItems.length > 0 && (
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => {
-            dispatch({ type: 'setCalDay', date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}` });
-            dispatch({ type: 'setCalView', view: 'day' });
-          }}
-          style={{ height: 42, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 14 }}
-        >
-          Open that day
-        </button>
-      )}
-
-      {selectedDay && selItems.length === 0 && (
-        <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.5 }}>
-          Nothing due. Rare. Enjoy it.
+      {selItems.length === 0 && (
+        <div style={{ padding: '12px 0 2px', fontSize: 14, opacity: 0.55 }}>
+          Nothing due this day.
         </div>
       )}
+
+      {/* Always offered, including on an empty day: this list is deadlines
+          only, and classes and anything of your own live in the day view. */}
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => {
+          dispatch({
+            type: 'setCalDay',
+            date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
+          });
+          dispatch({ type: 'setCalView', view: 'day' });
+        }}
+        style={{
+          height: 42,
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          fontSize: 11,
+          marginTop: 14,
+        }}
+      >
+        See classes and events that day
+      </button>
       <div style={{ height: 22 }} />
     </div>
   );

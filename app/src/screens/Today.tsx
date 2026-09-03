@@ -235,6 +235,7 @@ function TabHome() {
           return (
             <Blueprint
               key={it.id}
+              plain
               style={{
                 display: 'flex',
                 gap: 12,

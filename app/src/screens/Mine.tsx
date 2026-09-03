@@ -562,7 +562,7 @@ export function Mine() {
       <Segmented
         options={[
           { id: 'tasks', label: 'Tasks' },
-          { id: 'appointments', label: 'Diary' },
+          { id: 'appointments', label: 'Events' },
           { id: 'notes', label: 'Notes' },
           { id: 'files', label: 'Files' },
         ]}

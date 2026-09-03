@@ -255,6 +255,7 @@ export function Notifications() {
       {NOTIFICATIONS.map((n, i) => (
         <Blueprint
           key={n.id}
+          plain
           style={{
             padding: '13px 14px',
             marginBottom: 10,
