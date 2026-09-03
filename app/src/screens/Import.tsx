@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -7,6 +7,14 @@ import { extractText, type Extracted } from '../lib/extract';
 import { generateCourse, type GenerationResult } from '../lib/generate';
 import { configured, provider } from '../lib/claude';
 import { SEMESTER_YEAR } from '../lib/date';
+import {
+  diff,
+  keepIds,
+  movedLine,
+  summary as rediffSummary,
+  ticksKept,
+  type Diff,
+} from '../lib/rediff';
 
 /**
  * Upload a syllabus, get a course.
@@ -20,7 +28,7 @@ import { SEMESTER_YEAR } from '../lib/date';
  * deadlines and a topic list; the readings are where the cards come from.
  */
 export function Import() {
-  const { dispatch } = useStore();
+  const { state, dispatch } = useStore();
   const [files, setFiles] = useState<Extracted[]>([]);
   const [hint, setHint] = useState('');
   const [busy, setBusy] = useState('');
@@ -79,8 +87,36 @@ export function Import() {
     }
   };
 
+  /**
+   * The course you already have that this import looks like a new copy of.
+   *
+   * Matched on the course code, which is the one thing that does not get
+   * re-worded between two printings of the same syllabus. Only your own
+   * courses — the four samples are compiled in and cannot be replaced.
+   */
+  const existing = result
+    ? state.courses.find(
+        (c: (typeof state.courses)[number]) =>
+          c.course.code.trim().toLowerCase() === result.module.course.code.trim().toLowerCase(),
+      )
+    : undefined;
+
+  const changes = useMemo(
+    () => (existing && result ? diff(existing, result.module, SEMESTER_YEAR) : null),
+    [existing, result],
+  );
+
   const save = () => {
     if (!result) return;
+    // Replacing rather than adding, when it is the same course, and with the
+    // surviving items keeping the ids their ticks are filed under — otherwise
+    // a re-import silently un-ticks everything already done.
+    if (existing) {
+      const merged = keepIds(existing, result.module);
+      dispatch({ type: 'replaceCourse', module: merged });
+      dispatch({ type: 'openCourse', id: merged.course.id });
+      return;
+    }
     dispatch({ type: 'addCourse', module: result.module });
     dispatch({ type: 'openCourse', id: result.module.course.id });
   };
@@ -204,14 +240,132 @@ export function Import() {
         </div>
       )}
 
-      {result && <Preview result={result} onSave={save} />}
+      {result && changes && existing ? (
+        <Rediff
+          changes={changes}
+          kept={ticksKept(existing, result.module, state.done)}
+          code={result.module.course.code}
+        />
+      ) : null}
+      {result && <Preview result={result} onSave={save} replacing={Boolean(existing)} />}
       <div style={{ height: 22 }} />
     </div>
   );
 }
 
+/**
+ * What a re-import would change, before it changes it.
+ *
+ * Importing a syllabus twice used to replace the course wholesale and say
+ * nothing, so the safe thing to do with a corrected syllabus was nothing —
+ * and a course updated mid-term stayed wrong on purpose. Removals are listed
+ * first because they are what a person actually loses.
+ */
+function Rediff({
+  changes,
+  kept,
+  code,
+}: {
+  changes: Diff;
+  kept: { kept: number; lost: number };
+  code: string;
+}) {
+  const line = (label: string, right: string) => (
+    <div
+      key={`${label}-${right}`}
+      style={{
+        display: 'flex',
+        gap: 12,
+        alignItems: 'baseline',
+        padding: '9px 0',
+        borderBottom: '1px solid var(--app-line-soft)',
+      }}
+    >
+      <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, lineHeight: 1.35 }}>{label}</span>
+      <span style={{ flex: 'none', fontSize: 11.5, opacity: 0.6 }}>{right}</span>
+    </div>
+  );
+
+  return (
+    <>
+      <SectionLabel>You already have {code}</SectionLabel>
+      <Blueprint style={{ padding: '14px 15px' }}>
+        <div className="chrome-text" style={{ fontSize: 20, lineHeight: 1.2, textWrap: 'pretty' }}>
+          {rediffSummary(changes)}
+        </div>
+        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 7, lineHeight: 1.5 }}>
+          {changes.same} unchanged. Saving replaces the course you have rather than adding a second
+          copy of it.
+        </div>
+        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+          {kept.lost === 0
+            ? `Everything you have ticked off stays ticked${kept.kept > 0 ? ` — all ${kept.kept} of them` : ''}.`
+            : `${kept.kept} of your ticks carry over; ${kept.lost} ${kept.lost === 1 ? 'belongs' : 'belong'} to a deadline this syllabus no longer has.`}
+          {' '}Cards and drill history are keyed to the question text and are untouched.
+        </div>
+      </Blueprint>
+
+      {changes.removed.length > 0 && (
+        <>
+          <SectionLabel>Gone from the new syllabus</SectionLabel>
+          {changes.removed.map((i) => line(i.title, `${i.month + 1}/${i.day}`))}
+        </>
+      )}
+
+      {changes.moved.length > 0 && (
+        <>
+          <SectionLabel>Moved</SectionLabel>
+          {changes.moved.map((m) =>
+            line(m.after.title, `${m.before.month + 1}/${m.before.day} → ${m.after.month + 1}/${m.after.day} · ${movedLine(m)}`),
+          )}
+        </>
+      )}
+
+      {changes.added.length > 0 && (
+        <>
+          <SectionLabel>New</SectionLabel>
+          {changes.added.map((i) => line(i.title, `${i.month + 1}/${i.day}`))}
+        </>
+      )}
+
+      {changes.renamed.length > 0 && (
+        <>
+          <SectionLabel>Reworded, same date</SectionLabel>
+          {changes.renamed.map((r) => line(r.after.title, 'was ' + r.before.title))}
+        </>
+      )}
+
+      {(changes.reweighted.length > 0 ||
+        changes.gradingAdded.length > 0 ||
+        changes.gradingRemoved.length > 0) && (
+        <>
+          <SectionLabel>How the grade is built</SectionLabel>
+          {changes.reweighted.map((r) => line(r.what, `${r.before} → ${r.after}`))}
+          {changes.gradingRemoved.map((r) => line(r.what, `${r.pct} · gone`))}
+          {changes.gradingAdded.map((r) => line(r.what, `${r.pct} · new`))}
+        </>
+      )}
+
+      {changes.fields.length > 0 && (
+        <>
+          <SectionLabel>The course itself</SectionLabel>
+          {changes.fields.map((f) => line(f.field, `${f.before || '—'} → ${f.after || '—'}`))}
+        </>
+      )}
+    </>
+  );
+}
+
 /** What was found, what was dropped, and the chance to say no. */
-function Preview({ result, onSave }: { result: GenerationResult; onSave: () => void }) {
+function Preview({
+  result,
+  onSave,
+  replacing = false,
+}: {
+  result: GenerationResult;
+  onSave: () => void;
+  replacing?: boolean;
+}) {
   const { module: m, notes } = result;
   const [summary, ...warnings] = notes;
 
@@ -308,11 +462,12 @@ function Preview({ result, onSave }: { result: GenerationResult; onSave: () => v
           marginTop: 18,
         }}
       >
-        Add {m.course.code} to my semester
+        {replacing ? `Replace ${m.course.code}` : `Add ${m.course.code} to my semester`}
       </button>
       <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
-        You can add readings to it later, and everything you add flows into the cards, the quiz and
-        the slides at once.
+        {replacing
+          ? 'The changes above are what this replaces. Your ticks and your drill history stay where they are.'
+          : 'You can add readings to it later, and everything you add flows into the cards, the quiz and the slides at once.'}
       </div>
     </>
   );
