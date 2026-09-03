@@ -527,6 +527,41 @@ export function examFileName(title: string): string {
   return `${stem || 'practice-paper'}.md`;
 }
 
+/**
+ * A paper, offered to a class room.
+ *
+ * No new table and no new schema: a shared paper is a message carrying its
+ * code, because the code already reproduces the questions exactly. Anybody in
+ * the room types it in and sits the same paper, and their marks are their own
+ * — which is the only version of "compare marks" that does not need somebody's
+ * answers to leave their device.
+ */
+export function invite(args: {
+  code: string;
+  courseCode: string;
+  minutes: number;
+  formatId: string;
+}): string {
+  return [
+    `Practice paper ${args.code} — ${args.courseCode}, ${args.minutes} min, ${format(
+      args.formatId,
+    ).label.toLowerCase()}.`,
+    'Sit the same one: Practice paper → Sit one you have sat before → enter the code.',
+  ].join('\n');
+}
+
+/**
+ * A paper code found in a message, or null.
+ *
+ * Anchored to the word "paper" so an ordinary four-character word in a
+ * sentence is not offered as a paper somebody can sit — a chip that leads
+ * nowhere is worse than no chip.
+ */
+export function codeIn(body: string): string | null {
+  const found = /\bpaper\s+([0-9A-Z]{4})\b/.exec(body);
+  return found ? found[1] : null;
+}
+
 /** A countdown, said the way a clock says it. */
 export function clock(seconds: number): string {
   const left = Math.max(0, Math.round(seconds));

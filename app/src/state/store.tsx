@@ -197,7 +197,15 @@ interface Ephemeral {
    * clock — but each offers the other now, and this is how the handover
    * carries the shape across.
    */
-  examPreset: { minutes: number; formatId: string } | null;
+  examPreset: { minutes: number; formatId: string; code?: string } | null;
+  /**
+   * A message queued for a class room, read once by Classmates.
+   *
+   * How a shared practice paper gets from the Exam screen to the room without
+   * a new table: the code already reproduces the questions, so the share is a
+   * message and everybody's marks stay on their own device.
+   */
+  roomDraft: string;
   /** Which standing the Coming-up list is showing: ahead, missed or finished. */
   dueTab: 'ahead' | 'overdue' | 'done';
   /**
@@ -321,6 +329,7 @@ function initialEphemeral(now: Date): Ephemeral {
     meTab: 'you',
     meGroup: 'Study',
     examPreset: null,
+    roomDraft: '',
     dueTab: 'ahead',
     mailSeed: null,
     studyTab: 'guides',
@@ -495,8 +504,10 @@ export type Action =
   | { type: 'addSource'; source: NewSource }
   | { type: 'patchSource'; id: string; patch: Partial<Source> }
   | { type: 'dropSource'; id: string }
-  | { type: 'sitPaper'; minutes: number; formatId: string }
+  | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
   | { type: 'clearPaperPreset' }
+  | { type: 'writeRoomDraft'; text: string }
+  | { type: 'clearRoomDraft' }
   | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
   | {
       type: 'writeMail';
@@ -826,7 +837,7 @@ export function reducer(state: State, action: Action): State {
 
     case 'sitPaper':
       return push(
-        { ...state, examPreset: { minutes: action.minutes, formatId: action.formatId } },
+        { ...state, examPreset: { minutes: action.minutes, formatId: action.formatId, code: action.code } },
         'exam',
       );
 
@@ -834,6 +845,12 @@ export function reducer(state: State, action: Action): State {
     // last choice rather than on whatever the quiz asked for an hour ago.
     case 'clearPaperPreset':
       return { ...state, examPreset: null };
+
+    case 'writeRoomDraft':
+      return { ...state, roomDraft: action.text };
+
+    case 'clearRoomDraft':
+      return { ...state, roomDraft: '' };
 
     case 'setMeTab':
       return { ...state, meTab: action.tab };

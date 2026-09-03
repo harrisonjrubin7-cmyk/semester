@@ -14,6 +14,7 @@ import {
   clock,
   examFileName,
   fromGuide,
+  invite,
   letter,
   marksFor,
   paper,
@@ -53,7 +54,7 @@ type Stage = 'setup' | 'sitting' | 'marking';
  * teaches the most.
  */
 export function Exam() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, account } = useStore();
   const { guide } = useLive(state.guideId);
   const course = catalog.byId[state.guideId];
 
@@ -72,7 +73,7 @@ export function Exam() {
   // handed to somebody else. Empty for a paper a model wrote, which is not
   // reproducible from a number.
   const [seed, setSeed] = useState<number | null>(null);
-  const [reuse, setReuse] = useState('');
+  const [reuse, setReuse] = useState(state.examPreset?.code ?? '');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [left, setLeft] = useState(0);
@@ -622,6 +623,42 @@ export function Exam() {
                 Enter it on the setup screen to sit these exact questions again, or give it to
                 somebody in your class and compare marks on the same paper.
               </div>
+              {/*
+                Sharing is a message carrying the code, not a new table. The
+                code already reproduces the questions exactly, and everybody's
+                marks stay on their own device — which is the only version of
+                "compare marks" that does not send somebody's answers anywhere.
+
+                Offered only with an account, because without one the button
+                led to a room screen saying "sign in first" and nothing said
+                what had become of the paper.
+              */}
+              {account ? (
+              <button
+                type="button"
+                className="btn btn-secondary btn-block"
+                onClick={() => {
+                  dispatch({
+                    type: 'writeRoomDraft',
+                    text: invite({
+                      code: seedCode(seed),
+                      courseCode: course?.code ?? guide.code,
+                      minutes,
+                      formatId,
+                    }),
+                  });
+                  dispatch({ type: 'go', screen: 'classmates' });
+                }}
+                style={{ height: 40, marginTop: 10 }}
+              >
+                Share it with the class
+              </button>
+              ) : (
+                <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+                  Sharing it into your class room needs an account — Me → Account. The code works
+                  read aloud either way.
+                </div>
+              )}
             </Blueprint>
           )}
 

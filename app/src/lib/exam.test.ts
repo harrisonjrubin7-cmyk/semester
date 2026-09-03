@@ -4,9 +4,11 @@ import {
   SYSTEM,
   brief,
   clock,
+  codeIn,
   examFileName,
   format,
   fromGuide,
+  invite,
   letter,
   marksFor,
   paper,
@@ -313,6 +315,31 @@ describe('seed codes', () => {
     expect(readSeed('hello there')).toBe(null);
     expect(readSeed('!!')).toBe(null);
     expect(readSeed('0')).toBe(null);
+  });
+});
+
+describe('sharing a paper', () => {
+  it('writes an invitation carrying the code and the shape', () => {
+    const text = invite({ code: '7PS4', courseCode: 'ECON 1020', minutes: 15, formatId: 'choice' });
+    expect(text).toContain('Practice paper 7PS4');
+    expect(text).toContain('ECON 1020, 15 min');
+    expect(text).toContain('all multiple choice');
+  });
+
+  it('reads the code back out of the message', () => {
+    const text = invite({ code: '7PS4', courseCode: 'ECON 1020', minutes: 15, formatId: 'choice' });
+    expect(codeIn(text)).toBe('7PS4');
+  });
+
+  it('does not offer an ordinary word as a paper anybody can sit', () => {
+    // A chip that leads nowhere is worse than no chip.
+    expect(codeIn('does anyone have the reading for TUES')).toBe(null);
+    expect(codeIn('nothing here at all')).toBe(null);
+  });
+
+  it('only reads a code that follows the word paper', () => {
+    expect(codeIn('the code is 7PS4')).toBe(null);
+    expect(codeIn('sit paper 7PS4 if you have time')).toBe('7PS4');
   });
 });
 

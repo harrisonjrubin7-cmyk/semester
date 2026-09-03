@@ -30,6 +30,7 @@ import {
   type Message,
   type Profile,
 } from '../lib/classmates';
+import { codeIn } from '../lib/exam';
 
 /**
  * The people in your classes.
@@ -301,9 +302,15 @@ function Room({
   onBack: () => void;
   onLeave: () => void;
 }) {
+  const { state, dispatch } = useStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [people, setPeople] = useState<Profile[]>([]);
-  const [draft, setDraft] = useState('');
+  // A paper shared from the Exam screen arrives here as a queued message,
+  // read once so coming back later does not re-fill the box.
+  const [draft, setDraft] = useState(state.roomDraft);
+  useEffect(() => {
+    if (state.roomDraft) dispatch({ type: 'clearRoomDraft' });
+  }, [state.roomDraft, dispatch]);
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [showPeople, setShowPeople] = useState(false);
@@ -459,6 +466,29 @@ function Room({
               <div style={{ fontSize: 14, lineHeight: 1.5, marginTop: 3, whiteSpace: 'pre-wrap' }}>
                 {m.body}
               </div>
+              {/*
+                A message carrying a paper code gets a way to sit it. The code
+                reproduces the questions exactly, so two people in a room can
+                answer the same paper without either one's answers leaving
+                their device.
+              */}
+              {codeIn(m.body) ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    dispatch({
+                      type: 'sitPaper',
+                      minutes: 15,
+                      formatId: 'choice',
+                      code: codeIn(m.body) ?? undefined,
+                    });
+                  }}
+                  style={{ height: 36, marginTop: 8, fontSize: 12.5, width: 'auto', padding: '0 14px' }}
+                >
+                  Sit paper {codeIn(m.body)}
+                </button>
+              ) : null}
             </div>
           );
         })}
