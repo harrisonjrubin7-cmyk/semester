@@ -89,6 +89,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'grades',
+    label: 'Grades',
+    blurb: 'What you have so far, and what the rest has to average.',
+    keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
+    group: 'Semester',
+    root: 'courses',
+  },
+  {
     screen: 'mine',
     label: 'Mine',
     blurb: 'Your own tasks, appointments, notes and files.',

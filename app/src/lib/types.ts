@@ -355,6 +355,7 @@ export type Screen =
   | 'connect'
   | 'ask'
   | 'work'
+  | 'grades'
   | 'slides'
   | 'account'
   | 'cloud';

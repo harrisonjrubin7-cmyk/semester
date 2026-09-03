@@ -88,6 +88,19 @@ export function Courses() {
       >
         + Add a course from a syllabus
       </button>
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => dispatch({ type: 'go', screen: 'grades' })}
+        style={{
+          height: 46,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          marginTop: 8,
+        }}
+      >
+        Grades — what you need
+      </button>
       <div style={{ height: 12 }} />
     </div>
   );

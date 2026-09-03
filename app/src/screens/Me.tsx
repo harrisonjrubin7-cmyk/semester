@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useStore } from '../state/store';
+import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, Meter, SectionLabel, Segmented, Toggle } from '../components/ui';
 import { SEED_SUMMARY } from '../data/seed';
@@ -306,6 +308,47 @@ export function Notifications() {
   );
 }
 
+/**
+ * The permission the toggles below need, and an honest note about their reach.
+ *
+ * These switches did nothing for the whole life of the app: no permission was
+ * ever requested, no notification ever shown. They work now while the app is
+ * running. What they cannot do is wake a closed phone, and saying so here is
+ * the difference between a limitation and a lie.
+ */
+function Reminders() {
+  const [perm, setPerm] = useState<Permission>(() => permission());
+
+  const line =
+    perm === 'granted'
+      ? 'Reminders are on for this device.'
+      : perm === 'denied'
+        ? 'This browser is blocking notifications. Turn them back on in its site settings — the app cannot ask again.'
+        : perm === 'unsupported'
+          ? 'This browser has no notification support, so these stay off.'
+          : 'These need permission before anything can be shown.';
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+        {line} They arrive while the app is open or running in the background. Waking a phone whose
+        browser is closed needs a push server, which this deployment does not have — so treat these
+        as a nudge while you are working, not an alarm clock.
+      </div>
+      {perm === 'default' && (
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          onClick={() => void requestPermission().then(setPerm)}
+          style={{ height: 40, marginTop: 10, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        >
+          Allow notifications
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function Settings() {
   const { state, dispatch } = useStore();
 
@@ -326,6 +369,7 @@ export function Settings() {
       />
 
       <SectionLabel style={{ margin: '26px 0 2px' }}>Tell me when</SectionLabel>
+      <Reminders />
       {NOTIF_DEFS.map((n) => (
         <Toggle
           key={n.k}

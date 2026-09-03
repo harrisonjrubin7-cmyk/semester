@@ -39,6 +39,8 @@ import {
 import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
 import { newId } from '../lib/files';
+import { dueReminders, fire } from '../lib/notify';
+import { datedItems, railFor } from '../lib/select';
 import { score, type Reviews } from '../lib/review';
 import { dateToIso, isoToDate } from '../lib/date';
 
@@ -58,6 +60,8 @@ interface Persisted {
    * changed nothing that outlived the screen.
    */
   reviews: Reviews;
+  /** Your own scores per course grading category, as you typed them. */
+  grades: Record<string, string>;
   /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
@@ -179,6 +183,7 @@ const DEFAULT_PERSISTED: Persisted = {
   sample: false,
   waysOpen: true,
   reviews: {},
+  grades: {},
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -247,6 +252,7 @@ function loadPersisted(): Persisted {
       sample: saved.sample ?? saved.courses === undefined,
     waysOpen: saved.waysOpen ?? true,
       reviews: saved.reviews ?? {},
+      grades: saved.grades ?? {},
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -279,6 +285,7 @@ export function pickPersisted(state: State): Persisted {
     sample: state.sample,
     waysOpen: state.waysOpen,
     reviews: state.reviews,
+    grades: state.grades,
   };
 }
 
@@ -297,6 +304,7 @@ export type Action =
   | { type: 'togglePick'; id: string }
   | { type: 'setNav'; nav: NavMode }
   | { type: 'toggleWays' }
+  | { type: 'setGrade'; key: string; value: string }
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
   | { type: 'setCalTab'; tab: 'deadlines' | 'campus' }
@@ -414,6 +422,9 @@ export function reducer(state: State, action: Action): State {
 
     case 'setMode':
       return { ...state, mode: action.mode };
+
+    case 'setGrade':
+      return { ...state, grades: { ...state.grades, [action.key]: action.value } };
 
     case 'toggleWays':
       return { ...state, waysOpen: !state.waysOpen };
@@ -819,6 +830,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(id);
   }, []);
 
+
+
   // Serialise once per dispatch — `state` is one object that changes identity
   // when the reducer runs, so this is not per-render work.
   //
@@ -968,6 +981,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () => buildCatalog(state.sample ? [...seed, ...state.courses] : state.courses),
     [state.sample, seed, state.courses],
   );
+
+  // Reminders. These toggles existed from the first build and did nothing —
+  // no permission was ever asked for and no notification was ever shown. They
+  // fire now, on the same tick the clock already runs, from data on the
+  // device. What they still cannot do is wake a phone whose browser is closed;
+  // the Settings screen says so rather than implying otherwise.
+  useEffect(() => {
+    if (catalog.empty) return;
+    const check = () => {
+      fire(
+        dueReminders(new Date(), state.notifs, {
+          items: datedItems(catalog, new Date()),
+          classes: railFor(catalog, new Date(), state.appointments).map((b) => ({
+            label: b.title,
+            at: b.at,
+            where: b.meta,
+          })),
+        }),
+      );
+    };
+    check();
+    const id = setInterval(check, 60_000);
+    return () => clearInterval(id);
+  }, [catalog, state.notifs, state.appointments]);
 
   const value = useMemo(
     () => ({ state, dispatch, now, catalog, account, sync }),
