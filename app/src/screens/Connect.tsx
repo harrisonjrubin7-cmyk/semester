@@ -423,9 +423,33 @@ export function Connect() {
             addIcsText(await file.text(), file.name.replace(/\.ics$/i, ''), '', 'ics');
           }}
         />
-        <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.45, marginTop: 10 }}>
-          Grades and submissions need D2L’s Valence API, which Vanderbilt has to issue a key for.
-          The calendar feed is what a student can turn on alone, and it carries the dates.
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <a
+            href={state.linkUrls.brightspace || 'https://brightspace.vanderbilt.edu/d2l/home'}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-secondary"
+            style={{
+              flex: 1,
+              height: 40,
+              fontSize: 11,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              display: 'grid',
+              placeItems: 'center',
+              textDecoration: 'none',
+            }}
+          >
+            Open Brightspace
+          </a>
+        </div>
+        <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
+          What a Brightspace account can and cannot give this app, plainly: the{' '}
+          <strong>calendar feed</strong> carries every due date and needs nothing but the link.{' '}
+          <strong>Grades, submissions and files</strong> live behind D2L’s Valence API, whose keys
+          are issued to the university rather than to a student — no app you install can read them
+          on your behalf, however it asks. So the app reads the dates, links you to each course’s
+          own page from the course screen, and takes uploaded files from you directly.
         </div>
       </Blueprint>
 

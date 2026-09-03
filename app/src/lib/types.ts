@@ -28,6 +28,11 @@ export interface Course {
   credits: string;
   /** The PDF this course was imported from. */
   source: string;
+  /**
+   * This course's shell in the LMS — the Brightspace page for it. D2L exposes
+   * no API a student can use alone, so the app links rather than reads.
+   */
+  lms?: string;
   grading: GradeRow[];
 }
 

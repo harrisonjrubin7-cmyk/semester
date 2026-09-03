@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useStore } from '../state/store';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { DateRow, SectionLabel } from '../components/ui';
 import { upcomingItems, datedItems } from '../lib/select';
+import type { Course } from '../lib/types';
 
 export function Courses() {
   const { dispatch, now, catalog } = useStore();
@@ -91,6 +93,103 @@ export function Courses() {
   );
 }
 
+/**
+ * The course's shell in Brightspace, one tap away.
+ *
+ * D2L has an API — Valence — but its keys are issued to the institution, not to
+ * a student, so an app a student installs cannot read their grades or their
+ * submissions no matter how it asks. What it can do is stop making them hunt
+ * for the tab: the deadlines here already carry "Brightspace" as their where,
+ * and this makes that a place you can go.
+ *
+ * The address is remembered per course, so it survives a re-import.
+ */
+function LmsLink({ course }: { course: Course }) {
+  const { state, dispatch } = useStore();
+  const key = `lms:${course.id}`;
+  const url = state.linkUrls[key] ?? course.lms ?? '';
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(url);
+
+  return (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {url && (
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-secondary"
+            style={{
+              flex: 1,
+              height: 42,
+              fontSize: 11,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              display: 'grid',
+              placeItems: 'center',
+              textDecoration: 'none',
+            }}
+          >
+            Open in Brightspace
+          </a>
+        )}
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => {
+            setDraft(url);
+            setEditing(!editing);
+          }}
+          style={{
+            flex: url ? 'none' : 1,
+            height: 42,
+            fontSize: 11,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+          }}
+        >
+          {editing ? 'Cancel' : url ? 'Edit' : 'Link its Brightspace page'}
+        </button>
+      </div>
+
+      {editing && (
+        <>
+          <input
+            className="input"
+            value={draft}
+            placeholder="https://brightspace.vanderbilt.edu/d2l/home/123456"
+            onChange={(e) => setDraft(e.target.value)}
+            style={{ fontSize: 12.5, marginTop: 9 }}
+            aria-label={`${course.code} Brightspace address`}
+          />
+          <div style={{ fontSize: 11.5, opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
+            Open the course in Brightspace and copy the address from the bar. Grades and
+            submissions need D2L’s Valence API, which only Vanderbilt can issue a key for — so
+            this is a link, and the dates come from the calendar feed under Connect.
+          </div>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => {
+              const next = draft.trim();
+              dispatch({
+                type: 'setLinkUrl',
+                id: key,
+                url: next && !/^https?:\/\//i.test(next) ? `https://${next}` : next,
+              });
+              setEditing(false);
+            }}
+            style={{ marginTop: 9, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase' }}
+          >
+            Save
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function CourseDetail() {
   const { state, dispatch, now, catalog } = useStore();
   const course = catalog.byId[state.courseId];
@@ -121,6 +220,8 @@ export function CourseDetail() {
       >
         Study this course
       </button>
+
+      <LmsLink course={course} />
 
       <SectionLabel style={{ margin: '24px 0 6px' }}>How the grade is built</SectionLabel>
       <table className="table">

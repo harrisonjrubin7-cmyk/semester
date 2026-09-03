@@ -52,6 +52,7 @@ Return ONLY JSON matching this shape:
     "meets": "MWF · 9:05–9:55a",
     "room": "",
     "credits": "3 credits",
+    "lms": "the course's Brightspace/Canvas URL if the syllabus gives one, else empty",
     "grading": [{ "what": "Problem sets", "pct": "20%" }]
   },
   "schedule": [{ "days": [1,3,5], "at": 545, "time": "9:05a", "title": "ECON 1020", "meta": "room · professor" }],
@@ -162,6 +163,9 @@ function validate(reply: string, input: GenerationInput): GenerationResult {
     room: raw.course.room ?? '',
     credits: raw.course.credits ?? '',
     source,
+    lms: typeof raw.course.lms === 'string' && /^https?:\/\//i.test(raw.course.lms)
+      ? raw.course.lms
+      : undefined,
     grading: raw.course.grading ?? [],
   };
 
