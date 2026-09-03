@@ -11,6 +11,7 @@ import {
   untilLabel,
 } from './date';
 import type { Reviews } from './review';
+import { blocksOn, type Commitment } from './activities';
 import { liveGuide } from './live';
 import type {
   Appointment,
@@ -295,7 +296,12 @@ export function appointmentsOn(appointments: Appointment[], date: Date): Appoint
  * merged in time order. Appointments are marked `mine` so the UI can show whose
  * they are rather than implying the syllabus asked for them.
  */
-export function railFor(cat: Catalog, date: Date, appointments: Appointment[]): (Block & { mine?: boolean; kind?: string })[] {
+export function railFor(
+  cat: Catalog,
+  date: Date,
+  appointments: Appointment[],
+  commitments: Commitment[] = [],
+): (Block & { mine?: boolean; kind?: string; minutes?: number })[] {
   const classes = blocksFor(cat, date);
   const mine = appointmentsOn(appointments, date).map((a) => ({
     time: a.time,
@@ -306,7 +312,11 @@ export function railFor(cat: Catalog, date: Date, appointments: Appointment[]): 
     mine: true,
     kind: a.kind ?? 'other',
   }));
-  return [...classes, ...mine].sort((a, b) => a.at - b.at);
+  // A club, a shift, a practice. They are on the day whether or not the app
+  // draws them, and a Tuesday that already has practice on it should look
+  // full before you agree to something else.
+  const standing = blocksOn(commitments, date);
+  return [...classes, ...mine, ...standing].sort((a, b) => a.at - b.at);
 }
 
 /**
@@ -320,13 +330,16 @@ export function hoursFor(
   cat: Catalog,
   date: Date,
   appointments: Appointment[],
+  commitments: Commitment[] = [],
 ): { id: string; title: string; meta: string; at: number; minutes: number; kind: string | null; canceled?: boolean }[] {
-  return railFor(cat, date, appointments).map((b, i) => ({
+  return railFor(cat, date, appointments, commitments).map((b, i) => ({
     id: `${b.at}-${i}-${b.title}`,
     title: b.title,
+    // A commitment states its own length; an appointment is a point in time
+    // and gets fifty minutes rather than a duration nobody stated.
+    minutes: b.minutes ?? (b.mine ? 50 : lengthOf(cat, b)),
     meta: b.meta,
     at: b.at,
-    minutes: b.mine ? 50 : lengthOf(cat, b),
     kind: b.mine ? (b.kind ?? 'other') : null,
     canceled: b.canceled,
   }));

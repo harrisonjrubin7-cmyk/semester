@@ -70,7 +70,7 @@ function DayView() {
   const isToday = sameDay(day, now);
   const source = state.calSource;
 
-  const rail = source === 'all' || source === 'classes' ? railFor(catalog, day, state.appointments) : [];
+  const rail = source === 'all' || source === 'classes' ? railFor(catalog, day, state.appointments, state.commitments) : [];
   const due = source === 'all' || source === 'deadlines'
     ? datedItems(catalog, now).filter((i) => sameDay(i.date, day))
     : [];
@@ -158,7 +158,7 @@ function DayView() {
           <SectionLabel style={{ margin: '0 0 6px' }}>By the hour</SectionLabel>
           <KindKey compact />
           <HourGrid
-            blocks={hoursFor(catalog, day, state.appointments)}
+            blocks={hoursFor(catalog, day, state.appointments, state.commitments)}
             now={isToday ? minutesNow(now) : null}
             style={{ margin: '14px 0 26px' }}
           />
@@ -377,7 +377,7 @@ function WeekView() {
     return {
       date,
       isToday: sameDay(date, now),
-      blocks: hoursFor(catalog, date, state.appointments),
+      blocks: hoursFor(catalog, date, state.appointments, state.commitments),
       onOpen: () => {
         dispatch({ type: 'setCalDay', date: dateToIso(date) });
         dispatch({ type: 'setCalView', view: 'day' });

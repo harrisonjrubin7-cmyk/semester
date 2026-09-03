@@ -161,6 +161,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'activities',
+    label: 'Activities',
+    blurb: 'Clubs, a job, research, a chapter, a team — and what the week really costs.',
+    keywords: 'extracurricular extracurriculars activity activities club clubs organization organisation org research lab job work shift employment fraternity sorority greek chapter rush intramural im club sport varsity athletics team practice volunteer service music theatre arts anchorlink involvement commitment hours load',
+    group: 'Yours',
+    root: 'mine',
+  },
+  {
     screen: 'mine',
     label: 'Mine',
     blurb: 'Your own tasks, appointments, notes and files.',

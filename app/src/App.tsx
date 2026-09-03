@@ -38,6 +38,7 @@ import { Solve } from './screens/Solve';
 import { EditCourse } from './screens/EditCourse';
 import { Analyse } from './screens/Analyse';
 import { Classmates } from './screens/Classmates';
+import { Activities } from './screens/Activities';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
@@ -155,6 +156,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Computed here, not guessed', title: 'Analyse data' };
     case 'classmates':
       return { kicker: 'Confirmed Vanderbilt addresses', title: 'Classmates' };
+    case 'activities':
+      return { kicker: 'Everything that is not a class', title: 'Activities' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -392,6 +395,8 @@ function CurrentScreen() {
       return <Analyse />;
     case 'classmates':
       return <Classmates />;
+    case 'activities':
+      return <Activities />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':

@@ -224,7 +224,7 @@ function TabHome() {
   const today = itemsDueToday(catalog, now);
   const doneCount = today.filter((i) => state.done[i.id]).length;
   const left = today.length - doneCount;
-  const rail = railFor(catalog, now, state.appointments);
+  const rail = railFor(catalog, now, state.appointments, state.commitments);
   const minutes = minutesNow(now);
   const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
   const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
@@ -605,7 +605,7 @@ function DoneToday() {
  */
 function HoursToday() {
   const { state, dispatch, now, catalog } = useStore();
-  const blocks = hoursFor(catalog, now, state.appointments);
+  const blocks = hoursFor(catalog, now, state.appointments, state.commitments);
 
   return (
     <>

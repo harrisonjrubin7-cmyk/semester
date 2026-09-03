@@ -43,6 +43,7 @@ import { dueReminders, fire } from '../lib/notify';
 import { datedItems, railFor } from '../lib/select';
 import { score, type Reviews } from '../lib/review';
 import type { SavedPlace } from '../lib/place';
+import type { Commitment } from '../lib/activities';
 import { dateToIso, isoToDate } from '../lib/date';
 
 /**
@@ -72,6 +73,12 @@ interface Persisted {
    * this list, done on the device.
    */
   places: SavedPlace[];
+  /**
+   * Clubs, a job, research, a chapter, a team — everything you do that is not
+   * a class. Persisted because it is yours, and because a week without it in
+   * the picture is a week the app is wrong about.
+   */
+  commitments: Commitment[];
   /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
@@ -214,6 +221,7 @@ const DEFAULT_PERSISTED: Persisted = {
   reviews: {},
   grades: {},
   places: [],
+  commitments: [],
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -289,6 +297,7 @@ function loadPersisted(): Persisted {
       reviews: saved.reviews ?? {},
       grades: saved.grades ?? {},
       places: saved.places ?? [],
+      commitments: saved.commitments ?? [],
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -323,6 +332,7 @@ export function pickPersisted(state: State): Persisted {
     reviews: state.reviews,
     grades: state.grades,
     places: state.places,
+    commitments: state.commitments,
   };
 }
 
@@ -344,6 +354,9 @@ export type Action =
   | { type: 'setGrade'; key: string; value: string }
   | { type: 'addPlace'; place: Omit<SavedPlace, 'id' | 'created'> }
   | { type: 'removePlace'; id: string }
+  | { type: 'addCommitment'; commitment: Omit<Commitment, 'id' | 'created'> }
+  | { type: 'patchCommitment'; id: string; patch: Partial<Commitment> }
+  | { type: 'removeCommitment'; id: string }
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
   | { type: 'setCalTab'; tab: 'deadlines' | 'campus' }
@@ -482,6 +495,26 @@ export function reducer(state: State, action: Action): State {
 
     case 'removePlace':
       return { ...state, places: state.places.filter((p) => p.id !== action.id) };
+
+    case 'addCommitment':
+      return {
+        ...state,
+        commitments: [
+          ...state.commitments,
+          { ...action.commitment, id: newId(), created: Date.now() },
+        ],
+      };
+
+    case 'patchCommitment':
+      return {
+        ...state,
+        commitments: state.commitments.map((c) =>
+          c.id === action.id ? { ...c, ...action.patch } : c,
+        ),
+      };
+
+    case 'removeCommitment':
+      return { ...state, commitments: state.commitments.filter((c) => c.id !== action.id) };
 
     case 'setGrade':
       return { ...state, grades: { ...state.grades, [action.key]: action.value } };
