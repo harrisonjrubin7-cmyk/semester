@@ -42,6 +42,7 @@ import { newId } from '../lib/files';
 import { dueReminders, fire } from '../lib/notify';
 import { datedItems, railFor } from '../lib/select';
 import { score, type Reviews } from '../lib/review';
+import type { SavedPlace } from '../lib/place';
 import { dateToIso, isoToDate } from '../lib/date';
 
 /**
@@ -62,6 +63,15 @@ interface Persisted {
   reviews: Reviews;
   /** Your own scores per course grading category, as you typed them. */
   grades: Record<string, string>;
+  /**
+   * Places you named, so a coordinate can mean something.
+   *
+   * The app never geocodes — there is no free way to turn a position into a
+   * building name that does not mean sending your position to somebody else.
+   * You stand somewhere and name it once; everything else is arithmetic on
+   * this list, done on the device.
+   */
+  places: SavedPlace[];
   /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
@@ -126,7 +136,7 @@ interface Ephemeral {
    * the app — so Today, Courses and Study use it too rather than each being a
    * single long scroll with everything on it.
    */
-  mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
+  mineTab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done';
   coursesTab: 'courses' | 'due' | 'grades';
   studyTab: 'guides' | 'tonight' | 'ask';
@@ -194,6 +204,7 @@ const DEFAULT_PERSISTED: Persisted = {
   waysOpen: true,
   reviews: {},
   grades: {},
+  places: [],
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -266,6 +277,7 @@ function loadPersisted(): Persisted {
     waysOpen: saved.waysOpen ?? true,
       reviews: saved.reviews ?? {},
       grades: saved.grades ?? {},
+      places: saved.places ?? [],
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -299,6 +311,7 @@ export function pickPersisted(state: State): Persisted {
     waysOpen: state.waysOpen,
     reviews: state.reviews,
     grades: state.grades,
+    places: state.places,
   };
 }
 
@@ -318,6 +331,8 @@ export type Action =
   | { type: 'setNav'; nav: NavMode }
   | { type: 'toggleWays' }
   | { type: 'setGrade'; key: string; value: string }
+  | { type: 'addPlace'; place: Omit<SavedPlace, 'id' | 'created'> }
+  | { type: 'removePlace'; id: string }
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
   | { type: 'setCalTab'; tab: 'deadlines' | 'campus' }
@@ -341,7 +356,7 @@ export type Action =
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
-  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
+  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
   | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
@@ -439,6 +454,15 @@ export function reducer(state: State, action: Action): State {
 
     case 'setMode':
       return { ...state, mode: action.mode };
+
+    case 'addPlace':
+      return {
+        ...state,
+        places: [...state.places, { ...action.place, id: newId(), created: Date.now() }],
+      };
+
+    case 'removePlace':
+      return { ...state, places: state.places.filter((p) => p.id !== action.id) };
 
     case 'setGrade':
       return { ...state, grades: { ...state.grades, [action.key]: action.value } };

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { Capture } from '../components/Capture';
+import { RecordButton } from '../components/RecordButton';
 import { configured, readShots } from '../lib/claude';
 import type { ShotFile } from '../lib/shots';
 import type { StudyCard } from '../lib/types';
@@ -318,6 +319,20 @@ export function AddMaterial() {
           Connect → Claude. You can still attach the photo as a file below.
         </div>
       )}
+
+      {/* A lecture, kept. Audio only — transcribing an hour of it is not
+          something a browser does, and the button says so rather than
+          implying a transcript is coming. */}
+      <SectionLabel>Record the lecture</SectionLabel>
+      <div style={{ fontSize: 12.5, opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
+        Captures audio and keeps the file against this course. It is a recording to play back, not
+        a transcript — for speech to text, dictate into a note instead.
+      </div>
+      <RecordButton
+        courseId={courseId}
+        label={guide.code}
+        onSaved={(meta) => setFiles((f) => [...f, meta])}
+      />
 
       <SectionLabel>Files</SectionLabel>
       <input

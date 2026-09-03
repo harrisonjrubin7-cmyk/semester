@@ -7,6 +7,16 @@ import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } 
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import type { CourseId } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
+import { dictate, dictationSupported } from '../lib/mic';
+import {
+  DEFAULT_RADIUS,
+  far,
+  here,
+  locationSupported,
+  nearest,
+  placeAt,
+  type Fix,
+} from '../lib/place';
 
 /**
  * Everything you added yourself.
@@ -614,6 +624,7 @@ export function Mine() {
           { id: 'tasks', label: 'Tasks' },
           { id: 'appointments', label: 'Events' },
           { id: 'notes', label: 'Notes' },
+          { id: 'places', label: 'Places' },
           { id: 'files', label: 'Files' },
         ]}
         value={state.mineTab}
@@ -623,8 +634,251 @@ export function Mine() {
       {state.mineTab === 'tasks' && <Tasks />}
       {state.mineTab === 'appointments' && <Appointments />}
       {state.mineTab === 'notes' && <Notes />}
+      {state.mineTab === 'places' && <Places />}
       {state.mineTab === 'files' && <Files />}
     </div>
+  );
+}
+
+/**
+ * Places you named, so a coordinate can mean something.
+ *
+ * The app never geocodes. There is no free way to turn a position into a
+ * building name that does not involve sending your position to somebody else's
+ * server, and a study app has no business doing that. You stand somewhere that
+ * matters, tap once, and name it — after that the app can say you are at Alumni
+ * Hall, and tag a study session with where it happened, entirely from
+ * arithmetic on this list.
+ */
+function Places() {
+  const { state, dispatch } = useStore();
+  const [fix, setFix] = useState<Fix | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [label, setLabel] = useState('');
+
+  const locate = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      setFix(await here());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const at = fix ? placeAt(fix, state.places) : null;
+  const list = fix ? nearest(fix, state.places) : state.places.map((place) => ({ place, metres: -1 }));
+
+  return (
+    <>
+      <div style={{ fontSize: 13, opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
+        Name the places you actually go — the lecture hall, the library floor you like, your
+        apartment. Nothing is looked up and nothing is sent anywhere: the app compares where you
+        are to this list, on this device, and that is the whole of it.
+      </div>
+
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        disabled={busy || !locationSupported()}
+        onClick={() => void locate()}
+        style={{ height: 44, marginTop: 14, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+      >
+        {busy ? 'Locating…' : locationSupported() ? 'Where am I?' : 'No location on this browser'}
+      </button>
+
+      {fix && (
+        <Blueprint style={{ padding: '13px 14px', marginTop: 12, background: 'var(--app-hero)' }}>
+          <div className="kicker">{at ? 'You are at' : 'Somewhere new'}</div>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18, marginTop: 4 }}>
+            {at ? at.label : 'Not a place you have named'}
+          </div>
+          <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 4 }}>
+            Accurate to about {far(fix.accuracy)}.
+          </div>
+
+          {!at && (
+            <>
+              <input
+                className="input"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="Alumni Hall, Central Library, home…"
+                aria-label="Name this place"
+                style={{ fontSize: 14, marginTop: 12 }}
+              />
+              <button
+                type="button"
+                className="btn btn-primary btn-block"
+                disabled={!label.trim()}
+                onClick={() => {
+                  dispatch({
+                    type: 'addPlace',
+                    place: {
+                      label: label.trim(),
+                      lat: fix.lat,
+                      lon: fix.lon,
+                      radius: DEFAULT_RADIUS,
+                    },
+                  });
+                  setLabel('');
+                }}
+                style={{ height: 42, marginTop: 8, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              >
+                Save this spot
+              </button>
+            </>
+          )}
+        </Blueprint>
+      )}
+
+      {error && (
+        <div
+          style={{
+            fontSize: 12.5,
+            color: 'var(--app-accent)',
+            marginTop: 12,
+            lineHeight: 1.45,
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {state.places.length === 0 ? (
+        <EmptyState
+          title="No places yet."
+          body="Tap the button while you are somewhere that matters, and give it a name."
+        />
+      ) : (
+        <>
+          <SectionLabel>Saved</SectionLabel>
+          {list.map(({ place, metres }) => (
+            <div
+              key={place.id}
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'center',
+                padding: '12px 0',
+                borderBottom: '1px solid var(--app-line)',
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 15, lineHeight: 1.25 }}>{place.label}</div>
+                <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 2 }}>
+                  {metres >= 0 ? `${far(metres)} away · ` : ''}
+                  {place.radius} m across
+                </div>
+              </div>
+              <button
+                type="button"
+                className="bare"
+                onClick={() => dispatch({ type: 'removePlace', id: place.id })}
+                style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+              >
+                REMOVE
+              </button>
+            </div>
+          ))}
+        </>
+      )}
+      <div style={{ height: 22 }} />
+    </>
+  );
+}
+
+/**
+ * Speech to text, into whatever you are writing.
+ *
+ * The browser's own recogniser does the work, which is why this exists at all
+ * and why it is absent in Firefox — the screen says which you have rather than
+ * showing a button that quietly does nothing. Where the audio goes to be
+ * recognised is the browser's business and differs between them, which is
+ * worth knowing before dictating anything you would not say in public.
+ *
+ * Dictated words append to what is already written rather than replacing it,
+ * because losing a paragraph to a misfired button is unforgivable.
+ */
+function Dictate({ onText, current }: { onText: (text: string) => void; current: string }) {
+  const [on, setOn] = useState(false);
+  const [error, setError] = useState('');
+  const stop = useRef<(() => void) | null>(null);
+  const base = useRef('');
+
+  useEffect(() => () => stop.current?.(), []);
+
+  if (!dictationSupported()) {
+    return (
+      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+        This browser has no speech recognition, so dictation is off. Chrome and Safari have it.
+      </div>
+    );
+  }
+
+  const begin = () => {
+    setError('');
+    base.current = current ? `${current.replace(/\s+$/, '')}\n\n` : '';
+    stop.current = dictate(
+      (text) => onText(base.current + text),
+      (message) => {
+        setError(message);
+        setOn(false);
+      },
+    );
+    setOn(true);
+  };
+
+  const end = () => {
+    stop.current?.();
+    stop.current = null;
+    setOn(false);
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        className={on ? 'btn btn-primary btn-block' : 'btn btn-secondary btn-block'}
+        onClick={() => (on ? end() : begin())}
+        style={{
+          height: 42,
+          marginTop: 10,
+          fontSize: 11,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 9,
+        }}
+      >
+        <span
+          style={{
+            width: 9,
+            height: 9,
+            borderRadius: '50%',
+            background: on ? '#0a0b0e' : 'var(--app-accent)',
+            flex: 'none',
+          }}
+        />
+        {on ? 'Stop dictating' : 'Dictate'}
+      </button>
+      {on && (
+        <div style={{ fontSize: 11.5, opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
+          Listening. Words appear as you say them, after whatever was already written.
+        </div>
+      )}
+      {error && (
+        <div style={{ fontSize: 12, color: 'var(--app-accent)', marginTop: 8, lineHeight: 1.45 }}>
+          {error}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -677,6 +931,13 @@ export function NoteEditor() {
         placeholder="Write anything."
         style={{ minHeight: 260, fontSize: 14, lineHeight: 1.55, marginTop: 12 }}
         aria-label="Note body"
+      />
+
+      <Dictate
+        onText={(text) =>
+          dispatch({ type: 'updateNote', id: note.id, patch: { body: text } })
+        }
+        current={note.body}
       />
 
       <input
