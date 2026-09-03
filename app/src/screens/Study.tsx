@@ -7,6 +7,7 @@ import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { nextExam, tonightPlan } from '../lib/select';
+import { destinationsIn } from '../lib/nav';
 
 /**
  * Study, in the shape Calendar and Mine already use.
@@ -74,7 +75,7 @@ export function Study() {
         options={[
           { id: 'guides', label: 'Guides' },
           { id: 'tonight', label: 'Tonight' },
-          { id: 'ask', label: 'Ask' },
+          { id: 'ask', label: 'Tools' },
         ]}
         value={tab}
         onChange={(next) => dispatch({ type: 'setStudyTab', tab: next })}
@@ -83,38 +84,53 @@ export function Study() {
 
       {tab === 'ask' && (
         <>
-      <Blueprint
-        onClick={() => dispatch({ type: 'go', screen: 'ask' })}
-        style={{ padding: '13px 15px', marginTop: 14, display: 'flex', gap: 12, alignItems: 'center' }}
-      >
-        <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
-        <span style={{ flex: 1, minWidth: 0 }}>
-          <span className="kicker" style={{ display: 'block' }}>
-            Ask Claude
-          </span>
-          <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3, marginTop: 2 }}>
-            A question about a course, answered against that course’s guide
-          </span>
-        </span>
-        <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
-      </Blueprint>
-
-      <Blueprint
-        onClick={() => dispatch({ type: 'go', screen: 'work' })}
-        style={{ padding: '13px 15px', marginTop: 10, display: 'flex', gap: 12, alignItems: 'center' }}
-      >
-        <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
-        <span style={{ flex: 1, minWidth: 0 }}>
-          <span className="kicker" style={{ display: 'block' }}>
-            Work on it
-          </span>
-          <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3, marginTop: 2 }}>
-            An assignment broken down — rubric, plan, dates, what to ask about
-          </span>
-        </span>
-        <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
-      </Blueprint>
-
+          {/*
+            Generated from the directory rather than written out here.
+            This tab used to be two hand-written cards, Ask Claude and Work on
+            it, and every tool added afterwards — the diagram drawer, the
+            problem solver, the data analysis, the deck builder, the drafting
+            tool, the practice paper — was reachable only through search or
+            three taps into Me. Six features nobody would ever find. Reading
+            the list from `lib/nav.ts` means the next one appears here the day
+            it is added, without anybody remembering to come back.
+          */}
+          <div style={{ fontSize: 12.5, opacity: 0.6, margin: '14px 0 2px', lineHeight: 1.5 }}>
+            Everything the app can do with a course, in one place.
+          </div>
+          {[...destinationsIn('Study'), ...destinationsIn('Make')]
+            .filter((d) => d.screen !== 'study')
+            .map((d) => (
+              <Blueprint
+                key={d.screen}
+                onClick={() => dispatch({ type: 'go', screen: d.screen })}
+                style={{
+                  padding: '13px 15px',
+                  marginTop: 10,
+                  display: 'flex',
+                  gap: 12,
+                  alignItems: 'center',
+                }}
+              >
+                <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span className="kicker" style={{ display: 'block' }}>
+                    {d.label}
+                  </span>
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: 13.5,
+                      lineHeight: 1.35,
+                      marginTop: 3,
+                      textWrap: 'pretty',
+                    }}
+                  >
+                    {d.blurb}
+                  </span>
+                </span>
+                <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+              </Blueprint>
+            ))}
         </>
       )}
 

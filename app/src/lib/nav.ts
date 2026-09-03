@@ -162,6 +162,18 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    // Reachable from a course, and now by name. Several screens tell you to
+    // "record it under Edit the course" — the essay tool's AI-policy check
+    // most of all — and until this was listed, searching those words found
+    // nothing.
+    screen: 'edit',
+    label: 'Edit the course',
+    blurb: 'A syllabus is a first draft — fix dates, weightings, rooms and the AI policy.',
+    keywords: 'edit change fix correct course syllabus date moved weighting grading room professor email meets credits delete deadline add assignment ai policy allowed banned rules',
+    group: 'Semester',
+    root: 'courses',
+  },
+  {
     screen: 'grades',
     label: 'Grades',
     blurb: 'What you have so far, and what the rest has to average.',
