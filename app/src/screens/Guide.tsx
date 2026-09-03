@@ -7,6 +7,7 @@ import { ChipRow, Meter, SectionLabel } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
 import { buildQuiz } from '../lib/quiz';
+import { asset } from '../lib/asset';
 import type { StudyMode } from '../lib/types';
 
 const MODES: { id: StudyMode; label: string }[] = [
@@ -510,7 +511,7 @@ function Decks() {
         One point per slide, question before answer. Better than Read for a unit you have not met
         yet; worse than Cards for one you nearly know.
       </div>
-      <a href={`/decks/${state.guideId}.pptx`} target="_blank" rel="noreferrer" className="bare">
+      <a href={asset(`/decks/${state.guideId}.pptx`)} target="_blank" rel="noreferrer" className="bare">
         <Blueprint style={{ padding: '12px 14px', marginTop: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
           <span
             style={{
@@ -594,11 +595,11 @@ function Documents() {
   const stem = `/handouts/${state.guideId}`;
 
   const files = [
-    { label: 'PDF', href: `${stem}.pdf`, note: 'Reads anywhere. Print it.' },
-    { label: 'Word', href: `${stem}.docx`, note: 'Annotate it, or open it in Google Docs.' },
+    { label: 'PDF', href: asset(`${stem}.pdf`), note: 'Reads anywhere. Print it.' },
+    { label: 'Word', href: asset(`${stem}.docx`), note: 'Annotate it, or open it in Google Docs.' },
     {
       label: 'PPTX',
-      href: `/decks/${state.guideId}.pptx`,
+      href: asset(`/decks/${state.guideId}.pptx`),
       note: 'The deck, for PowerPoint, Keynote or Google Slides.',
     },
   ];
@@ -1022,7 +1023,7 @@ function Listen() {
             ref={audioRef}
             controls
             preload="metadata"
-            src={episode.file}
+            src={asset(episode.file)}
             style={{ width: '100%', marginTop: 14, height: 36 }}
           >
             <track kind="captions" />

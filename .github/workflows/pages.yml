@@ -1,0 +1,76 @@
+# Publish the app to GitHub Pages, so it is a real address on a phone rather
+# than a dev server on a laptop.
+#
+# The site lands at https://<user>.github.io/<repo>/ — a subpath, not a root,
+# which is why the build is given VITE_BASE and why nothing in the app reads a
+# leading-slash path directly (see app/src/lib/asset.ts).
+#
+# It ships the audio too: ~200 MB of lessons and podcast editions, well inside
+# the 1 GB Pages limit. The upload is the slow part of this job.
+
+name: Deploy to Pages
+
+on:
+  push:
+    branches: ['main']
+  # So a deploy can be re-run without an empty commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and never cancel one half-way: an interrupted deploy
+# can leave the site serving a partial build.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # `enablement: true` turns Pages on the first time this runs, so there is
+      # no manual settings step.
+      - uses: actions/configure-pages@v5
+        id: pages
+        with:
+          enablement: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      - name: Build
+        working-directory: app
+        env:
+          # e.g. /semester/ — supplied by configure-pages, so a rename of the
+          # repo cannot silently break every asset path.
+          VITE_BASE: ${{ steps.pages.outputs.base_path }}/
+        run: npm run build
+
+      # Pages serves static files, so a deep link like /semester/?screen=study
+      # is fine but any unknown path 404s. Copying index.html to 404.html makes
+      # the app answer those too.
+      - name: Fall back to the app on unknown paths
+        run: cp app/dist/index.html app/dist/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/dist
+
+      - uses: actions/deploy-pages@v4
+        id: deployment

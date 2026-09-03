@@ -171,6 +171,10 @@ const appleToken = () => ({
 })
 
 export default defineConfig({
+  // GitHub Pages serves a project site from /<repo>/, not from the root. The
+  // workflow sets VITE_BASE; everywhere else this stays '/' and nothing about
+  // development changes.
+  base: process.env.VITE_BASE ?? '/',
   plugins: [react(), icsProxy(), appleToken()],
   server: {
     proxy: {

@@ -21,7 +21,11 @@ const VERSION = 'semester-v1';
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 
-const SHELL_FILES = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg'];
+// The worker is served from wherever the app is — '/' locally, '/semester/' on
+// GitHub Pages — so every path it holds is derived from its own location. A
+// hard-coded '/index.html' would cache the wrong page, or none.
+const BASE = new URL('./', self.location).pathname;
+const SHELL_FILES = [BASE, `${BASE}index.html`, `${BASE}manifest.webmanifest`, `${BASE}icon.svg`];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -59,7 +63,9 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('/index.html').then((r) => r || fetch(request))),
+      fetch(request).catch(() =>
+        caches.match(`${BASE}index.html`).then((r) => r || fetch(request)),
+      ),
     );
     return;
   }

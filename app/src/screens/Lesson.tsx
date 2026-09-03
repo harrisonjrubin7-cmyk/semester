@@ -5,6 +5,7 @@ import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
+import { asset } from '../lib/asset';
 import type { LessonCue } from '../lib/types';
 
 const SPEEDS = [1, 1.25, 1.5];
@@ -262,7 +263,7 @@ export function LessonPlayer() {
       <audio
         ref={audioRef}
         preload="metadata"
-        src={lesson.file}
+        src={asset(lesson.file)}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
