@@ -1,13 +1,56 @@
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { Toggle } from '../components/ui';
-import { NOTIF_DEFS, ONBOARDING, ONBOARDING_FILES } from '../data/misc';
+import { NOTIF_DEFS } from '../data/misc';
 import { Check } from '../components/Icons';
+import type { Catalog } from '../data/catalog';
 
-/** Three screens: the promise, the four PDFs it just read, and the alerts. */
+/**
+ * The first three screens, written from what is actually loaded.
+ *
+ * These used to be four fixed sentences about one student's four PDFs — a new
+ * user was told "We found 38 dated obligations across four courses" before
+ * they had uploaded anything, and shown four filenames that were not theirs.
+ * The first thing the app said was false, which is a bad way to be trusted
+ * with a semester. Now it counts what is there, and when nothing is there it
+ * says what will happen instead of pretending it already has.
+ */
+function steps(cat: Catalog) {
+  const n = cat.courses.length;
+  const items = cat.items.length;
+  const empty = n === 0;
+
+  return [
+    {
+      k: 'Semester',
+      t: empty ? 'Your syllabi. One brain.' : `${n} ${n === 1 ? 'syllabus' : 'syllabi'}. One brain.`,
+      b: empty
+        ? 'Upload the PDFs your professors posted and get the semester back — every deadline, a study guide you can drill, and a calendar that knows when your classes are.'
+        : 'Every deadline in your semester, pulled straight out of the PDFs your professors posted.',
+      cta: empty ? 'Show me' : 'Set it up',
+    },
+    {
+      k: 'Step 2 of 3',
+      t: empty ? 'Drop one in.' : 'Dropped in. Read.',
+      b: empty
+        ? 'A syllabus goes in as a PDF, a Word file or pasted text. What comes back is checked before you see it — dates forced into the real calendar, and every quote tested against your own document.'
+        : `${items} dated ${items === 1 ? 'obligation' : 'obligations'} across ${n} ${n === 1 ? 'course' : 'courses'} — including the ones buried in prose.`,
+      cta: empty ? 'Good' : 'Looks right',
+    },
+    {
+      k: 'Step 3 of 3',
+      t: 'When should I bug you?',
+      b: 'Change any of this later. Nothing here is permanent.',
+      cta: empty ? 'Get started' : 'Start the semester',
+    },
+  ];
+}
+
+/** Three screens: the promise, what it read, and the alerts. */
 export function Onboarding() {
   const { state, dispatch, catalog } = useStore();
-  const step = ONBOARDING[state.onb] ?? ONBOARDING[0];
+  const all = steps(catalog);
+  const step = all[state.onb] ?? all[0];
 
   return (
     <div
@@ -52,7 +95,8 @@ export function Onboarding() {
         {step.b}
       </div>
 
-      {state.onb === 0 && (
+      {/* Empty boxes on a first run look like something failed to load. */}
+      {state.onb === 0 && catalog.courses.length > 0 && (
         <Blueprint
           style={{
             marginTop: 34,
@@ -80,11 +124,11 @@ export function Onboarding() {
         </Blueprint>
       )}
 
-      {state.onb === 1 && (
+      {state.onb === 1 && catalog.courses.length > 0 && (
         <div style={{ marginTop: 30, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {ONBOARDING_FILES.map((f) => (
+          {catalog.courses.map((c) => (
             <div
-              key={f.file}
+              key={c.id}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -116,7 +160,7 @@ export function Onboarding() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {f.file}
+                  {c.source || c.code}
                 </div>
                 <div
                   style={{
@@ -126,7 +170,8 @@ export function Onboarding() {
                     letterSpacing: '0.08em',
                   }}
                 >
-                  {f.found}
+                  {catalog.items.filter((i) => i.c === c.id).length} dates ·{' '}
+                  {catalog.guides[c.id]?.units.length ?? 0} units
                 </div>
               </div>
             </div>

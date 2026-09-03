@@ -2,9 +2,18 @@ import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, Meter, SectionLabel, Segmented, Toggle } from '../components/ui';
 import { SEED_SUMMARY } from '../data/seed';
-import { Bell } from '../components/Icons';
+import { Bell, ChevronRight } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
-import { loadByCourse, searchItems, upcomingItems } from '../lib/select';
+import { loadByCourse, upcomingItems } from '../lib/select';
+import { countHits, findEverything, type Hit } from '../lib/find';
+import { destinationsIn, type Group } from '../lib/nav';
+import type { Screen } from '../lib/types';
+
+/** The order the directory reads in: what you study, then where, then you. */
+const GROUPS: Group[] = ['Study', 'Semester', 'Yours', 'Accounts', 'App'];
+
+/** Already a tab on the phone, so listing them again is noise. */
+const HIDE_IN_ME: Screen[] = ['home', 'me', 'notifs'];
 
 export function Me() {
   const { state, dispatch, now, catalog, account } = useStore();
@@ -12,9 +21,13 @@ export function Me() {
   const bars = loadByCourse(catalog, now, state.done);
   const doneCount = Object.values(state.done).filter(Boolean).length;
 
+  // Credits used to be the literal string '11', which stayed 11 for a new user
+  // with no courses at all. It is a sum, and when no syllabus states credits
+  // the column is dropped rather than shown as zero.
+  const credits = catalog.courses.reduce((sum, c) => sum + (parseFloat(c.credits) || 0), 0);
   const stats = [
     { n: String(catalog.courses.length), l: 'Courses' },
-    { n: '11', l: 'Credits' },
+    ...(credits > 0 ? [{ n: String(credits), l: 'Credits' }] : []),
     { n: String(ahead.length), l: 'Ahead' },
     { n: String(doneCount), l: 'Done' },
   ];
@@ -50,7 +63,8 @@ export function Me() {
         ))}
       </Blueprint>
 
-      <SectionLabel style={{ margin: '24px 0 6px' }}>Load by course</SectionLabel>
+      {/* An empty section headed "Load by course" is worse than no section. */}
+      {bars.length > 0 && <SectionLabel style={{ margin: '24px 0 6px' }}>Load by course</SectionLabel>}
       {bars.map((b) => (
         <div key={b.code} style={{ padding: '10px 0', borderBottom: '1px solid var(--app-line)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -63,85 +77,94 @@ export function Me() {
         </div>
       ))}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 22 }}>
-        {/* The feed has no tab bar, so this screen is where the rest of the app
-            stays reachable in that mode. */}
-        {state.nav === 'feed' &&
-          (
-            [
-              ['courses', 'Courses'],
-              ['study', 'Study'],
-              ['calendar', 'Calendar'],
-            ] as const
-          ).map(([screen, label]) => (
-            <button
-              key={screen}
-              type="button"
-              className="btn btn-secondary btn-block"
-              onClick={() => dispatch({ type: 'go', screen })}
-              style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-            >
-              {label}
-            </button>
-          ))}
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => dispatch({ type: 'go', screen: 'import' })}
-          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Import a syllabus
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => dispatch({ type: 'go', screen: 'account' })}
-          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          {account ? 'Account · synced' : 'Sign in to sync'}
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => dispatch({ type: 'go', screen: 'connect' })}
-          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Connect accounts
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => dispatch({ type: 'go', screen: 'cloud' })}
-          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Files &amp; mail
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => dispatch({ type: 'go', screen: 'ask' })}
-          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Ask Claude
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => dispatch({ type: 'go', screen: 'settings' })}
-          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Settings
-        </button>
-      </div>
+      {/*
+        This used to be seven identical grey buttons in a column, each labelled
+        with two words and explaining nothing. "Files & mail" and "Connect
+        accounts" sound like the same thing until you have opened both. Now
+        everything is grouped and says what it is for, which is most of what
+        made the app hard to find your way around.
+      */}
+      {GROUPS.map((group) => {
+        const rows = destinationsIn(group).filter((d) => !HIDE_IN_ME.includes(d.screen));
+        if (rows.length === 0) return null;
+        return (
+          <div key={group}>
+            <SectionLabel style={{ margin: '24px 0 2px' }}>{group}</SectionLabel>
+            {rows.map((d) => (
+              <button
+                key={d.screen}
+                type="button"
+                className="bare tappable"
+                onClick={() => dispatch({ type: 'go', screen: d.screen })}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  width: '100%',
+                  padding: '13px 0',
+                  borderBottom: '1px solid var(--app-line)',
+                  textAlign: 'left',
+                }}
+              >
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span
+                    style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 15.5 }}
+                  >
+                    {d.screen === 'account' && account ? 'Account · synced' : d.label}
+                  </span>
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: 12,
+                      opacity: 0.55,
+                      lineHeight: 1.4,
+                      marginTop: 2,
+                      textWrap: 'pretty',
+                    }}
+                  >
+                    {d.screen === 'account' && !account ? 'Not signed in — this device only.' : d.blurb}
+                  </span>
+                </span>
+                <ChevronRight size={16} />
+              </button>
+            ))}
+          </div>
+        );
+      })}
       <div style={{ height: 22 }} />
     </div>
   );
 }
 
+/**
+ * Search, across the whole app rather than the deadlines alone.
+ *
+ * It also finds screens, so somebody who wants their Gmail readings does not
+ * have to know that the thing they want is called "Files & mail" and lives two
+ * taps under Me. Typing what you want is allowed to be the way you get there.
+ */
 export function Search() {
   const { state, dispatch, now, catalog } = useStore();
-  const results = searchItems(catalog, now, state.query);
+  const groups = findEverything(catalog, now, state.query, state.notes, state.tasks);
+  const total = countHits(groups);
   const typed = state.query.trim().length > 0;
+
+  const open = (hit: Hit) => {
+    switch (hit.kind) {
+      case 'item':
+        return dispatch({ type: 'openItem', id: hit.id });
+      case 'course':
+        return dispatch({ type: 'openCourse', id: hit.id });
+      case 'unit':
+        return dispatch({ type: 'openGuide', id: hit.courseId, mode: hit.mode, unit: hit.unit });
+      case 'note':
+        return dispatch({ type: 'openNote', id: hit.id });
+      case 'task':
+        return dispatch({ type: 'setMineTab', tab: 'tasks' }), dispatch({ type: 'go', screen: 'mine' });
+      case 'screen':
+        return dispatch({ type: 'go', screen: hit.screen });
+    }
+  };
 
   return (
     <div style={{ padding: 18 }}>
@@ -149,55 +172,62 @@ export function Search() {
         className="input"
         value={state.query}
         onChange={(e) => dispatch({ type: 'setQuery', query: e.target.value })}
-        placeholder="Quiz, pset, Trounstine, Friday…"
+        placeholder="A course, a topic, a deadline, a screen…"
         style={{ height: 44, fontSize: 15 }}
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
-        aria-label="Search deadlines"
+        aria-label="Search everything"
       />
 
-      {typed && results.length > 0 && (
-        <>
-          <SectionLabel style={{ margin: '20px 0 4px' }}>
-            {results.length} {results.length === 1 ? 'match' : 'matches'}
-          </SectionLabel>
-          {results.map((r) => (
+      {typed && total > 0 && (
+        <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 10 }}>
+          {total} {total === 1 ? 'result' : 'results'}
+        </div>
+      )}
+
+      {groups.map((group) => (
+        <div key={group.label}>
+          <SectionLabel style={{ margin: '18px 0 4px' }}>{group.label}</SectionLabel>
+          {group.hits.map((hit) => (
             <button
-              key={r.id}
+              key={`${hit.kind}-${hit.title}-${hit.sub}`}
               type="button"
               className="bare tappable"
-              onClick={() => dispatch({ type: 'openItem', id: r.id })}
+              onClick={() => open(hit)}
               style={{
                 display: 'flex',
                 gap: 10,
                 alignItems: 'center',
                 padding: '12px 0',
                 borderBottom: '1px solid var(--app-line)',
+                textAlign: 'left',
               }}
             >
-              <span className="tag tag-accent">{catalog.byId[r.c].code}</span>
+              <span className={hit.kind === 'screen' ? 'tag tag-outline' : 'tag tag-accent'}>
+                {hit.tag}
+              </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{r.title}</span>
-                <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>
-                  {r.dueShort} · {r.kind}
+                <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{hit.title}</span>
+                <span style={{ display: 'block', fontSize: 11, opacity: 0.55, lineHeight: 1.35 }}>
+                  {hit.sub}
                 </span>
               </span>
             </button>
           ))}
-        </>
-      )}
+        </div>
+      ))}
 
-      {typed && results.length === 0 && (
+      {typed && total === 0 && (
         <EmptyState
           title={`Nothing matches “${state.query}”.`}
-          body="Try a course code, a professor, or a week."
+          body="Try a course code, a topic from a guide, a professor, or the name of a screen."
         />
       )}
 
       {!typed && (
         <EmptyState
-          title="Search the semester."
-          body="Titles, professors, kinds and dates across all four courses."
+          title="Search everything."
+          body="Deadlines, courses, study units, your own notes and tasks — and the app's own screens, so you can type where you want to go instead of hunting for it."
         />
       )}
       <div style={{ height: 22 }} />

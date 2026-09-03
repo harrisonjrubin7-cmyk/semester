@@ -30,11 +30,18 @@ import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
 import { datedEvents, datedItems, nextExam } from './lib/select';
+import { destination, rootOf } from './lib/nav';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import type { Screen } from './lib/types';
 
-const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
+/**
+ * The screens that keep the whole display.
+ *
+ * A drill is one card at a time and a tab bar under it invites a mis-tap; a
+ * lesson and a deck are playback. Everything else keeps the bar.
+ */
+const FULLSCREEN: Screen[] = ['drill', 'quiz', 'lesson', 'slides', 'onboarding'];
 
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
@@ -44,11 +51,19 @@ function useHeader(): { kicker: string; title: string } {
 
   const today = `${DOW[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`;
 
+  // These read off the courses actually loaded. They used to say "Fall 2026 ·
+  // 11 credits" and "Across 4 courses" to everyone, which is a lie to every
+  // user but one, and the kind that quietly says the app is not really yours.
+  const n = catalog.courses.length;
+  const courseCount = `${n} ${n === 1 ? 'course' : 'courses'}`;
+  const credits = catalog.courses.reduce((sum, c) => sum + (parseFloat(c.credits) || 0), 0);
+  const load = credits > 0 ? `${courseCount} · ${credits} credits` : courseCount;
+
   switch (state.screen) {
     case 'home':
       return { kicker: today, title: state.nav === 'feed' ? 'Everything' : 'Today' };
     case 'courses':
-      return { kicker: 'Fall 2026 · 11 credits', title: 'Courses' };
+      return { kicker: load, title: 'Courses' };
     case 'course':
       return { kicker: 'Course', title: catalog.byId[state.courseId].code };
     case 'item': {
@@ -57,7 +72,7 @@ function useHeader(): { kicker: string; title: string } {
     }
     case 'study':
       return {
-        kicker: exam ? `${exam.days} days to ${exam.code}` : 'Fall 2026',
+        kicker: exam ? `${exam.days} days to ${exam.code}` : courseCount,
         title: 'Study',
       };
     case 'guide':
@@ -87,9 +102,9 @@ function useHeader(): { kicker: string; title: string } {
       };
     }
     case 'me':
-      return { kicker: 'Vanderbilt · Fall 2026', title: 'Me' };
+      return { kicker: load, title: 'Me' };
     case 'search':
-      return { kicker: 'Across 4 courses', title: 'Search' };
+      return { kicker: 'Anything in the app', title: 'Search' };
     case 'notifs':
       return { kicker: 'Today', title: 'Alerts' };
     case 'settings':
@@ -125,7 +140,12 @@ function Header() {
   // Back appears whenever there is somewhere to go back to, which in feed mode
   // includes the root screens the tab bar would otherwise have covered.
   const canGoBack = state.history.length > 0;
-  const showActions = state.screen === 'home' || state.screen === 'courses';
+  // Search used to appear on two screens out of twenty-five, so the one tool
+  // that finds anything was itself the hardest thing to find. It is now on
+  // every screen except the one it opens. Alerts stay at the top level, where
+  // a header is not already competing with a Back button and a long title.
+  const showActions = state.screen !== 'search';
+  const atRoot = rootOf(state.screen) === state.screen;
 
   return (
     <div
@@ -178,6 +198,7 @@ function Header() {
           >
             <SearchIcon size={19} />
           </button>
+          {atRoot && (
           <button
             type="button"
             className="btn btn-ghost btn-icon"
@@ -199,7 +220,8 @@ function Header() {
               />
             )}
           </button>
-          {state.nav === 'feed' && (
+          )}
+          {state.nav === 'feed' && atRoot && (
             <button
               type="button"
               className="btn btn-ghost btn-icon"
@@ -226,6 +248,7 @@ const TABS: { id: Screen; label: string; Icon: typeof TodayIcon }[] = [
 
 function TabBar() {
   const { state, dispatch } = useStore();
+  const here = rootOf(state.screen);
 
   return (
     <nav
@@ -238,7 +261,9 @@ function TabBar() {
       }}
     >
       {TABS.map(({ id, label, Icon }) => {
-        const on = state.screen === id;
+        // Lit for the screen itself and for everything nested under it, so a
+        // flashcard three levels deep still shows you are inside Study.
+        const on = here === id;
         return (
           <button
             key={id}
@@ -335,19 +360,18 @@ function CurrentScreen() {
  */
 function Rail() {
   const { state, dispatch } = useStore();
-  const extras: { id: Screen; label: string }[] = [
-    { id: 'account', label: 'Account' },
-    { id: 'ask', label: 'Ask Claude' },
-    { id: 'connect', label: 'Connect' },
-    { id: 'cloud', label: 'Files & mail' },
-    { id: 'import', label: 'Import' },
-  ];
+  const here = rootOf(state.screen);
+  // Taken from the one list of places, so the rail cannot drift out of step
+  // with what Me and search know about.
+  const extras = ['ask', 'import', 'account', 'connect', 'cloud', 'settings']
+    .map((s) => destination(s as Screen))
+    .filter((d): d is NonNullable<typeof d> => Boolean(d));
 
   return (
     <nav className="rail">
       <div className="rail-mark chrome-text">Semester</div>
       {TABS.map(({ id, label, Icon }) => {
-        const on = state.screen === id;
+        const on = here === id;
         return (
           <button
             key={id}
@@ -366,13 +390,14 @@ function Rail() {
         );
       })}
       <div className="rail-gap" />
-      {extras.map(({ id, label }) => (
+      {extras.map(({ screen, label, blurb }) => (
         <button
-          key={id}
+          key={screen}
           type="button"
           className="bare rail-item rail-quiet"
-          onClick={() => dispatch({ type: 'go', screen: id })}
-          style={{ color: state.screen === id ? 'var(--app-accent)' : 'var(--app-faint)' }}
+          onClick={() => dispatch({ type: 'go', screen })}
+          title={blurb}
+          style={{ color: state.screen === screen ? 'var(--app-accent)' : 'var(--app-faint)' }}
         >
           <span>{label}</span>
         </button>
@@ -393,8 +418,11 @@ export default function App() {
     );
   }
 
-  const isRoot = ROOTS.includes(state.screen);
-  const showTabs = state.nav === 'tabs' && isRoot && !wide;
+  // The tab bar used to hide on every screen that was not itself a tab, so
+  // opening a course guide left Back as the only exit — five taps from a
+  // flashcard to the calendar. It now stays put everywhere except the screens
+  // that genuinely need the whole display: a running drill, a lesson, a deck.
+  const showTabs = state.nav === 'tabs' && !FULLSCREEN.includes(state.screen) && !wide;
   const showFab = state.nav === 'feed' && state.screen === 'home' && !wide;
 
   if (wide) {

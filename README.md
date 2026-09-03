@@ -103,6 +103,18 @@ right in one place and stale in another.
 | Doc | The guide as a real .docx and .pdf, plus a print view. |
 | Listen | The podcast editions, with chapter marks that seek. |
 
+## Finding things
+
+The search icon is in the header of every screen, and it searches the whole
+app rather than the deadlines alone: courses, study units and the cards inside
+them, your own notes and tasks, and the app's own screens. Type `monopoly` and
+you land on that unit with it already open; type `gmail` and you get **Files &
+mail**, without having to know that is what it is called.
+
+The tab bar stays put while you move around — going into a guide no longer
+leaves Back as the only exit — and **Me** is a directory of everything the app
+can do, grouped, with a line under each saying what it is for.
+
 ## Adding to a course mid-semester
 
 A reading posted in week six, a handout before the midterm, a photograph of the

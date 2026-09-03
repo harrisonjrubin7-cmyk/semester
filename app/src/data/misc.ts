@@ -96,30 +96,3 @@ export const LOAD_STEPS = [
 ];
 
 /** The three onboarding screens. */
-export const ONBOARDING = [
-  {
-    k: 'Fall 2026 · Vanderbilt',
-    t: 'Four syllabi. One brain.',
-    b: 'Every deadline in your semester, pulled straight out of the PDFs your professors posted.',
-    cta: 'Set it up',
-  },
-  {
-    k: 'Step 2 of 3',
-    t: 'Dropped in. Read.',
-    b: 'We found 38 dated obligations across four courses — including the ones buried in prose.',
-    cta: 'Looks right',
-  },
-  {
-    k: 'Step 3 of 3',
-    t: 'When should I bug you?',
-    b: 'Change any of this later. Nothing here is permanent.',
-    cta: 'Start the semester',
-  },
-];
-
-export const ONBOARDING_FILES = [
-  { file: 'Econ1020_2026_Fall.pdf', found: '9 dates · 3 exams' },
-  { file: 'PSCI1104_Trounstine_F26.pdf', found: '6 quizzes · midterm · final' },
-  { file: 'Sports_Fall26_Syllabus.pdf', found: '8 quizzes · 14 reflections' },
-  { file: 'Syllabus Draft 8262026.pdf', found: '4 group assignments · case' },
-];

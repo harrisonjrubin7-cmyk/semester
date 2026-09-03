@@ -265,7 +265,7 @@ export type Action =
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }
   | { type: 'openEvent'; id: string }
-  | { type: 'openGuide'; id: CourseId; mode?: StudyMode; from?: Screen }
+  | { type: 'openGuide'; id: CourseId; mode?: StudyMode; from?: Screen; unit?: number }
   | { type: 'setMode'; mode: StudyMode }
   | { type: 'setEpisode'; id: string }
   | { type: 'toggleDone'; id: string }
@@ -374,7 +374,15 @@ export function reducer(state: State, action: Action): State {
 
     case 'openGuide':
       return push(
-        { ...state, guideId: action.id, mode: action.mode ?? state.mode, openUnit: 0, episodeId: null },
+        {
+          ...state,
+          guideId: action.id,
+          mode: action.mode ?? state.mode,
+          // Search can name a unit, and landing on the guide with it already
+          // open is the difference between finding it and looking for it again.
+          openUnit: action.unit ?? 0,
+          episodeId: null,
+        },
         'guide',
       );
 
