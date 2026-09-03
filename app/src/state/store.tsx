@@ -46,6 +46,7 @@ import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import { DEFAULT_ORDER } from '../lib/feed';
 import { readLook, type Look } from '../lib/look';
+import { save, trouble } from '../lib/keep';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
 import { dateToIso, isoToDate } from '../lib/date';
@@ -1122,6 +1123,14 @@ interface Store {
   catalog: Catalog;
   account: Account | null;
   sync: { status: SyncStatus; at: number; error: string };
+  /**
+   * What went wrong saving to this device, in a sentence, or empty.
+   *
+   * On the context rather than in a toast because it is not an event — it is
+   * a standing condition, and the app should keep saying so for as long as it
+   * is true.
+   */
+  saveTrouble: string;
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -1167,12 +1176,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // the two lists cannot drift apart because there is only one.
   const persisted = useMemo(() => JSON.stringify(pickPersisted(state)), [state]);
 
+  /**
+   * Whether the last save worked, and what it cost.
+   *
+   * Held rather than thrown away because the old catch swallowed a quota
+   * error exactly as readily as a private window with storage off. Past the
+   * point where the budget ran out the app went on working perfectly, and
+   * then a reload took the lot with nothing having suggested a problem.
+   */
+  const [saveTrouble, setSaveTrouble] = useState('');
+
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, persisted);
-    } catch {
-      // Storage unavailable; the app still works for this session.
-    }
+    const result = save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value));
+    const said = trouble(result);
+    // Only when it changes: setting the same string every dispatch would
+    // re-render the whole app on every keystroke.
+    setSaveTrouble((was) => (was === said ? was : said));
   }, [persisted]);
 
   // ── The account copy ────────────────────────────────────────────────────
@@ -1365,8 +1384,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [catalog, state.notifs, state.appointments]);
 
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, account, sync }),
-    [state, now, catalog, account, sync],
+    () => ({ state, dispatch, now, catalog, account, sync, saveTrouble }),
+    [state, now, catalog, account, sync, saveTrouble],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

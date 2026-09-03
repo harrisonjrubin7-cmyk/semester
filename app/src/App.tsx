@@ -515,7 +515,7 @@ function Rail() {
 }
 
 export default function App() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, saveTrouble } = useStore();
   const wide = useMedia(DESKTOP);
 
   /**
@@ -565,12 +565,39 @@ export default function App() {
   const showTabs = state.nav === 'tabs' && !FULLSCREEN.includes(state.screen) && !wide;
   const showFab = state.nav === 'feed' && state.screen === 'home' && !wide;
 
+  /**
+   * A banner for a device that has stopped saving.
+   *
+   * Under the header rather than as a toast: this is a standing condition, not
+   * an event. Until it is fixed, everything the person does is being lost on
+   * the next reload, and a message that fades after four seconds is worse than
+   * none because it makes them think they imagined it.
+   */
+  const trouble = saveTrouble ? (
+    <div
+      role="status"
+      style={{
+        flex: 'none',
+        padding: '10px 18px 11px',
+        background: 'var(--app-warn-wash)',
+        borderBottom: '1px solid var(--app-warn-line)',
+        color: 'var(--app-fg)',
+        fontSize: 12.5,
+        lineHeight: 1.45,
+        textWrap: 'pretty',
+      }}
+    >
+      {saveTrouble}
+    </div>
+  ) : null;
+
   if (wide) {
     return (
       <div className="desk">
         <Rail />
         <div className="device device-pane">
           <Header />
+          {trouble}
           <main className="scrollarea" key={state.screen}>
             <CurrentScreen />
           </main>
@@ -582,6 +609,7 @@ export default function App() {
   return (
     <div className="device">
       <Header />
+      {trouble}
       <main className="scrollarea" key={state.screen}>
         <CurrentScreen />
       </main>
