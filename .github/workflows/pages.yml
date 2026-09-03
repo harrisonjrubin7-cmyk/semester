@@ -37,12 +37,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # `enablement: true` turns Pages on the first time this runs, so there is
-      # no manual settings step.
+      # Pages has to be switched on by a person, once: Settings → Pages →
+      # Build and deployment → Source: GitHub Actions. A workflow token is not
+      # allowed to create the site ("Resource not accessible by integration"),
+      # so asking it to would only fail on every run.
       - uses: actions/configure-pages@v5
         id: pages
-        with:
-          enablement: true
 
       - uses: actions/setup-node@v4
         with:
