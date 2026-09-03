@@ -21,6 +21,8 @@
 
 import type { StudyCard } from './types';
 
+import { DEFAULT_MODEL as OPENAI_DEFAULT, OPENAI_MODELS, askOpenAI } from './openai';
+
 const SETTINGS_KEY = 'semester.claude.v1';
 
 export interface ClaudeSettings {
@@ -28,7 +30,21 @@ export interface ClaudeSettings {
   /** A server that holds the key instead of this browser. Preferred. */
   proxy: string;
   model: string;
+  /**
+   * Which company answers.
+   *
+   * Not a claim that one is better. An app somebody keeps a semester in should
+   * not stop working because one account lapses or one service is down the
+   * night before a midterm, and everything above `ask()` is unaware of which
+   * is answering.
+   */
+  provider: Provider;
+  /** Only used on the OpenAI route, which has no shared key behind it. */
+  openaiKey: string;
+  openaiModel: string;
 }
+
+export type Provider = 'anthropic' | 'openai';
 
 export const MODELS = [
   { id: 'claude-opus-5', label: 'Opus 5', note: 'The best at explaining a hard idea.' },
@@ -39,7 +55,14 @@ export const MODELS = [
 // Haiku's id carried a date suffix that is not part of the model id.
 const RENAMED: Record<string, string> = { 'claude-haiku-4-5-20251001': 'claude-haiku-4-5' };
 
-const DEFAULTS: ClaudeSettings = { apiKey: '', proxy: '', model: 'claude-opus-5' };
+const DEFAULTS: ClaudeSettings = {
+  apiKey: '',
+  proxy: '',
+  model: 'claude-opus-5',
+  provider: 'anthropic',
+  openaiKey: '',
+  openaiModel: OPENAI_DEFAULT,
+};
 
 export function settings(): ClaudeSettings {
   try {
@@ -77,15 +100,51 @@ function sharedEndpoint(): string {
 }
 
 export function configured(s = settings()): boolean {
+  if (s.provider === 'openai') return Boolean(s.openaiKey.trim());
   return Boolean(s.proxy.trim() || s.apiKey.trim() || (sessionToken && sharedEndpoint()));
 }
 
 /** Which of the three routes a call will take — the UI says so plainly. */
-export function route(s = settings()): 'proxy' | 'shared' | 'own' | 'none' {
+export function route(s = settings()): 'proxy' | 'shared' | 'own' | 'openai' | 'none' {
+  // The OpenAI route has only one shape: your own key, in this browser. There
+  // is no proxy and no shared key behind it, because the Edge Function holds
+  // an Anthropic key and nothing else.
+  if (s.provider === 'openai') return s.openaiKey.trim() ? 'openai' : 'none';
   if (s.proxy.trim()) return 'proxy';
   if (s.apiKey.trim()) return 'own';
   if (sessionToken && sharedEndpoint()) return 'shared';
   return 'none';
+}
+
+/**
+ * "shared key", "your proxy", "your OpenAI key" — where an answer came from.
+ *
+ * Three screens were each writing their own version of this ternary, and none
+ * of them knew about the OpenAI route, so all three would have said "your key"
+ * next to a Claude model name while ChatGPT answered. One function so a fourth
+ * route cannot go missing in three places at once.
+ */
+export function routeLabel(s = settings()): string {
+  switch (route(s)) {
+    case 'shared':
+      return 'the shared key';
+    case 'proxy':
+      return 'your proxy';
+    case 'openai':
+      return 'your OpenAI key';
+    case 'own':
+      return 'your key';
+    default:
+      return 'nothing yet';
+  }
+}
+
+/** The model actually answering, whichever provider that is. */
+export function modelLabel(s = settings()): string {
+  if (s.provider === 'openai') {
+    return OPENAI_MODELS.find((m) => m.id === s.openaiModel)?.label ?? s.openaiModel;
+  }
+  return MODELS.find((m) => m.id === s.model)?.label ?? s.model;
 }
 
 export interface Turn {
@@ -93,7 +152,7 @@ export interface Turn {
   content: string;
 }
 
-type Route = 'proxy' | 'shared' | 'own' | 'none';
+type Route = 'proxy' | 'shared' | 'own' | 'openai' | 'none';
 
 /**
  * Turn a failed call into a sentence that names the fix.
@@ -216,7 +275,27 @@ export async function ask(options: AskOptions): Promise<string> {
   const s = settings();
   const taking = route(s);
   if (taking === 'none') {
-    throw new Error('No key yet. Sign in to use the shared one, or add your own under Settings.');
+    throw new Error(
+      s.provider === 'openai'
+        ? 'No OpenAI key yet. Add one under Ask Claude → Settings, or switch back to Claude.'
+        : 'No key yet. Sign in to use the shared one, or add your own under Settings.',
+    );
+  }
+
+  // The one branch in the whole app that knows there are two providers.
+  // Everything above this — the guides, the email drafting, the diagrams, the
+  // problem solver — calls ask() and never learns which company answered.
+  if (taking === 'openai') {
+    return askOpenAI({
+      apiKey: s.openaiKey,
+      model: s.openaiModel,
+      system: options.system,
+      messages: options.messages,
+      maxTokens: options.maxTokens,
+      images: options.images,
+      onText: options.onText,
+      signal: options.signal,
+    });
   }
 
   const headers: Record<string, string> = {

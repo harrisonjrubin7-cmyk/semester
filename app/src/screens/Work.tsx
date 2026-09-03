@@ -7,7 +7,7 @@ import { ChipRow, SectionLabel } from '../components/ui';
 import { Check, Plus } from '../components/Icons';
 import { extractText } from '../lib/extract';
 import { breakDown, critique, type Breakdown } from '../lib/assignment';
-import { ask, configured, route } from '../lib/claude';
+import { ask, configured, routeLabel } from '../lib/claude';
 import { datedItems } from '../lib/select';
 import type { CourseId } from '../lib/types';
 
@@ -363,7 +363,7 @@ export function Work() {
       )}
 
       <div style={{ fontSize: 11, opacity: 0.4, marginTop: 20, lineHeight: 1.45 }}>
-        Going through {route() === 'shared' ? 'the shared key' : route() === 'proxy' ? 'your proxy' : 'your key'}.
+        Going through {routeLabel()}.
         Whatever you submit has to be your own work.
       </div>
       <div style={{ height: 22 }} />

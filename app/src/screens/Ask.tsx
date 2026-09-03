@@ -13,7 +13,10 @@ import {
   saveSettings,
   settings,
   type Turn,
+  modelLabel,
+  routeLabel,
 } from '../lib/claude';
+import { OPENAI_MODELS } from '../lib/openai';
 import type { CourseId } from '../lib/types';
 
 /**
@@ -172,11 +175,94 @@ export function Ask() {
             Where the answers come from
           </div>
           <div style={{ fontSize: 13, opacity: 0.78, lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
-            {route() === 'shared'
-              ? 'Signed in, so this is already working — the shared key lives in a server function, metered per account, and never reaches this browser. Add your own key below only if you want past the monthly limit.'
-              : 'A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed about it: anything running in this browser can read a key in this browser. Signing in uses the shared key instead, and a proxy you run is better still — the proxy field wins when both are filled in.'}
+            {config.provider === 'openai'
+              ? 'Two providers, so a lapsed account or an outage the night before a midterm does not stop the app working. Nothing above this setting knows which one answered.'
+              : route() === 'shared'
+                ? 'Signed in, so this is already working — the shared key lives in a server function, metered per account, and never reaches this browser. Add your own key below only if you want past the monthly limit.'
+                : 'A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed about it: anything running in this browser can read a key in this browser. Signing in uses the shared key instead, and a proxy you run is better still — the proxy field wins when both are filled in.'}
           </div>
 
+          <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+            {(
+              [
+                { id: 'anthropic', label: 'Claude' },
+                { id: 'openai', label: 'ChatGPT' },
+              ] as const
+            ).map((p) => {
+              const on = config.provider === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className="btn"
+                  onClick={() => setConfig({ ...config, provider: p.id })}
+                  aria-pressed={on}
+                  style={{
+                    flex: 1,
+                    padding: '7px 11px',
+                    fontSize: 11,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    background: on ? 'var(--chrome)' : 'transparent',
+                    color: on ? '#0a0b0e' : 'var(--app-fg)',
+                    borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
+                  }}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {config.provider === 'openai' ? (
+            <>
+              <div style={{ fontSize: 12.5, opacity: 0.75, lineHeight: 1.5, marginTop: 10 }}>
+                There is no shared key on this side — the server function holds an Anthropic key
+                and nothing else. So this means your own OpenAI key, in this browser, where
+                anything running here can read it. It is billable and has no spend cap of its own.
+              </div>
+              <input
+                className="input"
+                type="password"
+                placeholder="sk-…"
+                value={config.openaiKey}
+                onChange={(e) => setConfig({ ...config, openaiKey: e.target.value })}
+                style={{ fontSize: 13, marginTop: 10 }}
+                aria-label="OpenAI API key"
+              />
+              <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                {OPENAI_MODELS.map((m) => {
+                  const on = config.openaiModel === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className="btn"
+                      onClick={() => setConfig({ ...config, openaiModel: m.id })}
+                      aria-pressed={on}
+                      style={{
+                        padding: '5px 11px',
+                        fontSize: 11,
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        background: on ? 'var(--chrome)' : 'transparent',
+                        color: on ? '#0a0b0e' : 'var(--app-fg)',
+                        borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
+                      }}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6 }}>
+                {OPENAI_MODELS.find((m) => m.id === config.openaiModel)?.note}
+                {' '}Extended thinking is Anthropic-only, so the screens that ask for it simply do
+                not get it here.
+              </div>
+            </>
+          ) : (
+            <>
           <input
             className="input"
             type="password"
@@ -223,6 +309,8 @@ export function Ask() {
           <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6 }}>
             {MODELS.find((m) => m.id === config.model)?.note}
           </div>
+            </>
+          )}
 
           <button
             type="button"
@@ -252,8 +340,7 @@ export function Ask() {
           }}
         >
           <div className="kicker">
-            {guide.code} · {MODELS.find((m) => m.id === config.model)?.label ?? config.model} ·{' '}
-            {route() === 'shared' ? 'shared key' : route() === 'proxy' ? 'your proxy' : 'your key'}
+            {guide.code} · {modelLabel()} · {routeLabel()}
           </div>
           <button
             type="button"
