@@ -3,9 +3,20 @@
 An app for one Vanderbilt semester — Fall 2026, four courses, every deadline and
 study guide in one place.
 
+**Live: https://harrisonjrubin7-cmyk.github.io/semester/**
+
+On a phone, open that in Safari or Chrome and use *Add to Home Screen* — it then
+runs full screen with its own icon, and keeps working with no signal. Lessons
+and podcast editions are cached as you play them, never up front.
+
 ```bash
 cd app && npm install && npm run dev
 ```
+
+Every push to `main` runs the checks and redeploys the site
+(`.github/workflows/`). Pages serves the app from `/semester/` rather than the
+root, which is why nothing in the app reads a leading-slash path directly — see
+`app/src/lib/asset.ts`.
 
 ## Layout
 
