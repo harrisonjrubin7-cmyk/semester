@@ -634,3 +634,46 @@ a:hover {
     transition-duration: 0.001ms !important;
   }
 }
+
+
+/* ── The map ───────────────────────────────────────────────────────────────
+   OpenStreetMap's tiles are drawn for a white page and this app is not one.
+   Rather than pay for a dark tile set, the tile pane alone is inverted and
+   hue-rotated back, which is the standard trick and holds up: roads stay
+   lighter than blocks, water stays blue-ish, labels stay legible. The filter
+   is scoped to the tiles so it never touches the markers, the popups or the
+   attribution — inverting those would make the credit unreadable, and the
+   credit is the licence. */
+.leaflet-container {
+  background: var(--app-panel);
+  font-family: inherit;
+}
+.leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.92) saturate(0.75);
+}
+.leaflet-control-attribution {
+  background: rgba(10, 11, 14, 0.72) !important;
+  color: var(--app-faint) !important;
+  font-size: 10px;
+}
+.leaflet-control-attribution a {
+  color: var(--app-dim) !important;
+}
+.leaflet-bar a {
+  background: var(--app-raise) !important;
+  color: var(--app-fg) !important;
+  border-color: var(--app-line) !important;
+}
+.leaflet-bar a:hover {
+  background: var(--app-hero) !important;
+}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--app-raise);
+  color: var(--app-fg);
+  border-radius: var(--r-md);
+}
+.leaflet-popup-content {
+  margin: 9px 12px;
+  font-size: 13px;
+}

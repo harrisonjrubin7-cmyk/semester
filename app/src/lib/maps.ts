@@ -1,18 +1,17 @@
 /**
- * Getting there.
+ * Handing a destination to a map app.
  *
- * Two things this deliberately does not do. It does not embed a map — a live,
- * pannable map needs a Google Maps API key, which means a billing account and
- * a key in the page for anyone to lift. And it does not route: turn-by-turn is
- * a hard problem that four companies have already solved, on devices that
- * already know where you are.
+ * There is a map in the app now — see `findplace.ts` and `LiveMap.tsx`, which
+ * use OpenStreetMap, because OSM asks for attribution where Google asks for an
+ * API key. What that map does not do is route, and this file is the reason it
+ * does not need to: turn-by-turn is a hard problem four companies have already
+ * solved, on a device that already knows where you are, talks to you, and
+ * works with the screen off. Looking at a map and being guided along a route
+ * are different jobs, and the app is only better at the first one.
  *
- * What it does is hand off well. Every button here opens the map app the phone
- * already has, with the destination already filled in — which is both better
- * than an embedded map (it has your live position, it talks, it works with the
- * screen off) and free of any key. The app's job is to know *where you are
- * going*, and it does: it holds every room from every syllabus and every place
- * you have named.
+ * So every button here opens the map app the phone already has, with the
+ * destination filled in. The app's contribution is knowing *where you are
+ * going*: every room from every syllabus, and every place you have named.
  *
  * Addresses are built to the documented URL schemes rather than scraped from a
  * browser's address bar, so none of them carry the session and campaign

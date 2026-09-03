@@ -99,8 +99,8 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'maps',
     label: 'Getting there',
-    blurb: 'Directions to any room or place you go, and the campus and city maps.',
-    keywords: 'map maps directions route walk drive transit bus navigate campus nashville where building room address google apple',
+    blurb: 'A map you can search — campus or the whole city — and directions to anywhere.',
+    keywords: 'map maps directions route walk drive transit bus navigate campus nashville where building room address google apple search find location openstreetmap nearby',
     group: 'Semester',
     root: 'calendar',
   },
