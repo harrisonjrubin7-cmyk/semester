@@ -393,6 +393,7 @@ export type Screen =
   | 'deck'
   | 'exam'
   | 'check'
+  | 'ahead'
   | 'slides'
   | 'account'
   | 'cloud';

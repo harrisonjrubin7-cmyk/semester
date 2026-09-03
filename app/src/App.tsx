@@ -45,6 +45,7 @@ import { Essay } from './screens/Essay';
 import { Deck } from './screens/Deck';
 import { Exam } from './screens/Exam';
 import { CheckDates } from './screens/CheckDates';
+import { Ahead } from './screens/Ahead';
 import { scaleOf, tokensFor } from './lib/look';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
@@ -175,6 +176,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
     case 'check':
       return { kicker: 'Syllabus against calendar', title: 'Check the dates' };
+    case 'ahead':
+      return { kicker: 'Counted, before it happens', title: 'The week ahead' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -431,6 +434,8 @@ function CurrentScreen() {
       return <Exam />;
     case 'check':
       return <CheckDates />;
+    case 'ahead':
+      return <Ahead />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':

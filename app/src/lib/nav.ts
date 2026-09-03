@@ -174,6 +174,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'ahead',
+    label: 'The week ahead',
+    blurb: 'The next seven days in hours — what is promised, what is due, where the room is.',
+    keywords: 'week ahead next seven days forecast load hours busy workload plan planning free time capacity schedule how much time commitments heaviest day room',
+    group: 'Semester',
+    root: 'home',
+  },
+  {
     screen: 'check',
     label: 'Check the dates',
     blurb: 'Your syllabus dates against what the LMS calendar says today.',

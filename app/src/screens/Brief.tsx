@@ -249,6 +249,28 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
         </>
       )}
 
+      {/*
+        The report answers "what is today". The week ahead answers the question
+        people actually get wrong, which is whether the next seven days are
+        survivable — so it sits under both halves rather than only the morning
+        one, because the evening is when somebody looks past tomorrow.
+      */}
+      <SectionLabel>Further out</SectionLabel>
+      <Blueprint
+        onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
+        style={{ padding: '12px 14px', display: 'flex', gap: 12, alignItems: 'center' }}
+      >
+        <span style={{ width: 6, height: 30, background: 'var(--chrome)', flex: 'none' }} />
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3 }}>
+            The week ahead, in hours
+          </span>
+          <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+            What is promised, what is due, and where the room is.
+          </span>
+        </span>
+      </Blueprint>
+
       {configured() && (
         <>
           <button
