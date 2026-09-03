@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Capture } from '../components/Capture';
 import { RecordButton } from '../components/RecordButton';
+import { Rework } from '../components/Rework';
 import { configured, readShots } from '../lib/claude';
 import type { ShotFile } from '../lib/shots';
 import type { StudyCard } from '../lib/types';
@@ -404,6 +405,8 @@ export function AddMaterial() {
       >
         Add to {guide.code}
       </button>
+
+      <Rework courseId={courseId} guide={guide} updates={updates} />
 
       {updates.length > 0 && (
         <>
