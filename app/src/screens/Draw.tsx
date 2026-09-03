@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
 import { KINDS, drawingName, kind as kindById, systemFor, unfence } from '../lib/diagram';
 import { download } from '../lib/deliver';
@@ -212,6 +213,7 @@ export function Draw() {
           </div>
         </>
       )}
+      {code ? <PrintButton label="Print the drawing" style={{ marginTop: 8 }} /> : null}
       <div style={{ height: 26 }} />
     </div>
   );

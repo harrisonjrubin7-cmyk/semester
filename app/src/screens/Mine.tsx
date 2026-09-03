@@ -9,6 +9,7 @@ import type { CourseId } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 import { dictate, dictationSupported } from '../lib/mic';
 import { RecordButton } from '../components/RecordButton';
+import { PrintButton } from '../components/PrintButton';
 import {
   DEFAULT_RADIUS,
   far,
@@ -940,6 +941,8 @@ export function NoteEditor() {
         }
         current={note.body}
       />
+
+      <PrintButton label="Print this note" style={{ marginTop: 10 }} />
 
       {/* Dictation is for talking to the page; this is for keeping the audio
           too — a seminar, a meeting with a TA, a thought on the walk home.

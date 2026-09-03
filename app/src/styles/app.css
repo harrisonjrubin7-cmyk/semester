@@ -312,6 +312,73 @@ a:hover {
     -webkit-text-fill-color: #111318 !important;
     color: #111318 !important;
   }
+
+  /* Anything you press is noise on paper. The exception is a link, which is
+     printed with its address after it further down. */
+  button,
+  input[type='file'],
+  select,
+  .chiprow,
+  .segmented,
+  .tabbar,
+  .no-print {
+    display: none !important;
+  }
+
+  /* A textarea is a document on paper, not a box. Its scrollbar and its border
+     are the two things that make a printed one useless. */
+  textarea,
+  input[type='text'],
+  input {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    color: #111318 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    resize: none !important;
+  }
+
+  /* Every card, table row and figure stays whole. Half a flashcard at the
+     bottom of a page is worse than a shorter page. */
+  .blueprint,
+  tr,
+  svg,
+  pre,
+  figure,
+  li {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  h1,
+  h2,
+  h3,
+  .section-label,
+  .kicker {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* A printed link that only says "here" is useless; the address goes after
+     it. Not for in-app anchors, which point at nothing outside the screen. */
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 9pt;
+    opacity: 0.6;
+    word-break: break-all;
+  }
+
+  .blueprint {
+    border: 1px solid #c8ccd4 !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+
+  @page {
+    margin: 16mm 14mm;
+  }
 }
 
 /* The prototype sat inside an iOS frame, so its header cleared a status bar

@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
 import { MAX_SHOTS, toShots } from '../lib/shots';
 import { APPROACHES, READ_SYSTEM, SYSTEM, approach as byId, brief } from '../lib/solve';
@@ -258,6 +259,7 @@ export function Solve() {
           </button>
         </>
       )}
+      {out ? <PrintButton label="Print this" style={{ marginTop: 8 }} /> : null}
       <div style={{ height: 26 }} />
     </div>
   );

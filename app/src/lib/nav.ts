@@ -89,6 +89,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'analyse',
+    label: 'Analyse data',
+    blurb: 'A CSV in, and the statistics out — computed here, then explained.',
+    keywords: 'data analysis statistics stats csv spreadsheet excel mean median average standard deviation sd variance correlation regression ols slope r squared scatter histogram quartile summary descriptive dataset numbers analyse analyze',
+    group: 'Study',
+    root: 'study',
+  },
+  {
     screen: 'draw',
     label: 'Draw it',
     blurb: 'A graph, a flow, a timeline or a matrix — drawn from what you describe.',
