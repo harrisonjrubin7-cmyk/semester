@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react';
-import { COURSES, COURSE_BY_ID } from '../data/catalog';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -21,7 +20,7 @@ import type { CourseId } from '../lib/types';
  * answer stays prose, because a made-up card gets drilled and believed.
  */
 export function AddMaterial() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, catalog } = useStore();
   const courseId = state.guideId;
   const { guide, updates } = useLive(courseId);
 
@@ -88,7 +87,7 @@ export function AddMaterial() {
       <SectionLabel>Which course</SectionLabel>
       <div className="chiprow">
         <div style={{ display: 'flex', gap: 6 }}>
-          {COURSES.map((c) => {
+          {catalog.courses.map((c) => {
             const on = c.id === courseId;
             return (
               <button
@@ -108,7 +107,7 @@ export function AddMaterial() {
                   borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
                 }}
               >
-                {COURSE_BY_ID[c.id].code}
+                {catalog.byId[c.id].code}
               </button>
             );
           })}

@@ -24,7 +24,9 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const COURSES_DIR = join(ROOT, 'app/src/data/courses');
 const AUDIO_DIR = join(ROOT, 'app/public/audio');
-const CATALOG = join(ROOT, 'app/src/data/catalog.ts');
+// The four hand-built courses are registered as the sample semester now;
+// everything else in the app arrives as data from an account.
+const SEED = join(ROOT, 'app/src/data/seed.ts');
 
 const problems = [];
 const warnings = [];
@@ -47,7 +49,7 @@ const courseDirs = readdirSync(COURSES_DIR).filter((d) =>
 
 if (courseDirs.length === 0) fail('No courses found under app/src/data/courses.');
 
-const catalog = read(CATALOG);
+const seed = read(SEED);
 const seenItemIds = new Map();
 const seenEpisodeIds = new Map();
 
@@ -67,10 +69,10 @@ for (const id of courseDirs) {
   const guide = existsSync(guidePath) ? read(guidePath) : '';
 
   // ── registered in the catalog ───────────────────────────────────────────
-  if (!new RegExp(`from './courses/${id}'`).test(catalog)) {
-    fail(`${id}: not imported in data/catalog.ts — the app will not see it.`);
-  } else if (!new RegExp(`CATALOG[^=]*=\\s*\\[[^\\]]*\\b${id}\\b`, 's').test(catalog)) {
-    fail(`${id}: imported but missing from the CATALOG array.`);
+  if (!new RegExp(`from './courses/${id}'`).test(seed)) {
+    fail(`${id}: not imported in data/seed.ts — the sample semester will not include it.`);
+  } else if (!new RegExp(`SEED_MODULES[^=]*=\\s*\\[[^\\]]*\\b${id}\\b`, 's').test(seed)) {
+    fail(`${id}: imported but missing from the SEED_MODULES array.`);
   }
 
   // ── figure keys against unit count ──────────────────────────────────────

@@ -1,4 +1,3 @@
-import { COURSES } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { Toggle } from '../components/ui';
@@ -7,7 +6,7 @@ import { Check } from '../components/Icons';
 
 /** Three screens: the promise, the four PDFs it just read, and the alerts. */
 export function Onboarding() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, catalog } = useStore();
   const step = ONBOARDING[state.onb] ?? ONBOARDING[0];
 
   return (
@@ -63,7 +62,7 @@ export function Onboarding() {
             gap: 14,
           }}
         >
-          {COURSES.map((c) => (
+          {catalog.courses.map((c) => (
             <div key={c.id} style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
               <div
                 style={{

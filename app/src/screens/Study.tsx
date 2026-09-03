@@ -1,5 +1,6 @@
-import { COURSES, LESSONS, PLAN_MIN, allCards } from '../data/catalog';
+import { allCards } from '../data/catalog';
 import { useStore } from '../state/store';
+import { FirstRun } from './FirstRun';
 import { liveGuide } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
@@ -7,9 +8,10 @@ import { ChevronRight } from '../components/Icons';
 import { nextExam, tonightPlan } from '../lib/select';
 
 export function Study() {
-  const { state, dispatch, now } = useStore();
-  const exam = nextExam(now);
-  const plan = tonightPlan(state.updates);
+  const { state, dispatch, now, catalog } = useStore();
+  const exam = nextExam(catalog, now);
+  const plan = tonightPlan(catalog, state.updates);
+  if (catalog.empty) return <FirstRun where="to study" />;
 
   return (
     <div style={{ padding: 18 }}>
@@ -40,7 +42,7 @@ export function Study() {
             }}
           >
             {(() => {
-              const guide = liveGuide(exam.item.c, state.updates);
+              const guide = liveGuide(catalog, exam.item.c, state.updates);
               const coldUnits = guide.units.filter((u) => u.mastery < 40);
               if (coldUnits.length === 0) {
                 return `All ${guide.units.length} units in ${guide.code} are above 40%. Keep them warm.`;
@@ -72,8 +74,8 @@ export function Study() {
 
       <SectionLabel>Study guides</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-        {COURSES.map((c) => {
-          const g = liveGuide(c.id, state.updates);
+        {catalog.courses.map((c) => {
+          const g = liveGuide(catalog, c.id, state.updates);
           const cards = allCards(g).length;
           return (
             <Blueprint
@@ -102,8 +104,8 @@ export function Study() {
                   }}
                 >
                   {g.units.length} units · {cards} cards
-                  {LESSONS[c.id] && Object.keys(LESSONS[c.id]).length > 0
-                    ? ` · ${Object.keys(LESSONS[c.id]).length} lessons`
+                  {catalog.lessons[c.id] && Object.keys(catalog.lessons[c.id]).length > 0
+                    ? ` · ${Object.keys(catalog.lessons[c.id]).length} lessons`
                     : ''}
                 </div>
               </div>
@@ -156,7 +158,7 @@ export function Study() {
               opacity: 0.5,
             }}
           >
-            {PLAN_MIN[p.courseId]}
+            {catalog.planMinutes[p.courseId]}
           </span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{p.unit.name}</span>

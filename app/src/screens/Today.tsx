@@ -1,5 +1,5 @@
-import { COURSE_BY_ID } from '../data/catalog';
 import { useStore } from '../state/store';
+import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, DateRow, Meter, SectionLabel, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
@@ -7,7 +7,7 @@ import {
   appointmentsOn,
   railFor,
   tasksOn,
-  FEED_FILTERS,
+  feedFilters,
   feed,
   filterFeed,
   itemsDueToday,
@@ -21,8 +21,8 @@ import { datedEvents } from '../lib/select';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
-  const { now } = useStore();
-  const next = nextClass(now);
+  const { now, catalog } = useStore();
+  const next = nextClass(catalog, now);
   if (!next) return null;
 
   return (
@@ -50,7 +50,7 @@ function NextClassCard() {
             {next.block.title}
           </div>
           <div style={{ fontSize: 12, opacity: 0.7 }}>
-            {next.block.c ? COURSE_BY_ID[next.block.c].room : next.block.meta}
+            {next.block.c ? catalog.byId[next.block.c].room : next.block.meta}
           </div>
         </div>
       </div>
@@ -76,7 +76,7 @@ function NextClassCard() {
  * citation attached; this does not, and says so.
  */
 function YourTasks() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const mine = tasksOn(state.tasks, now);
   const appts = appointmentsOn(state.appointments, now);
   if (mine.length === 0 && appts.length === 0) return null;
@@ -144,7 +144,7 @@ function YourTasks() {
               </div>
               {(t.time || t.courseId) && (
                 <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
-                  {t.courseId ? `${COURSE_BY_ID[t.courseId]?.code} · ` : ''}
+                  {t.courseId ? `${catalog.byId[t.courseId]?.code} · ` : ''}
                   {t.time}
                 </div>
               )}
@@ -158,14 +158,14 @@ function YourTasks() {
 
 /** Nav mode 1A — a fixed sequence: next class, checklist, rail, campus, week. */
 function TabHome() {
-  const { state, dispatch, now } = useStore();
-  const today = itemsDueToday(now);
+  const { state, dispatch, now, catalog } = useStore();
+  const today = itemsDueToday(catalog, now);
   const doneCount = today.filter((i) => state.done[i.id]).length;
   const left = today.length - doneCount;
-  const rail = railFor(now, state.appointments);
+  const rail = railFor(catalog, now, state.appointments);
   const minutes = minutesNow(now);
-  const ahead = upcomingItems(now).filter((i) => !i.isToday);
-  const nextEvent = datedEvents(now).find((e) => !e.isPast);
+  const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
+  const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
 
   return (
     <div style={{ padding: 18 }}>
@@ -259,7 +259,7 @@ function TabHome() {
                 style={{ flex: 1, minWidth: 0, opacity: done ? 0.4 : 1 }}
               >
                 <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 3 }}>
-                  <span className="tag tag-accent">{COURSE_BY_ID[it.c].code}</span>
+                  <span className="tag tag-accent">{catalog.byId[it.c].code}</span>
                   <span
                     style={{
                       fontSize: 11,
@@ -403,7 +403,7 @@ function TabHome() {
             top={u.dow}
             bottom={String(u.day)}
             title={u.title}
-            meta={`${COURSE_BY_ID[u.c].code} · ${u.weight}`}
+            meta={`${catalog.byId[u.c].code} · ${u.weight}`}
             onClick={() => dispatch({ type: 'openItem', id: u.id })}
           />
         ))}
@@ -415,8 +415,8 @@ function TabHome() {
 
 /** Nav mode 1B — one chronological scroll, sliced by the chip row. */
 function FeedHome() {
-  const { state, dispatch, now } = useStore();
-  const entries = filterFeed(feed(now, state.done), state.filter as FeedFilter);
+  const { state, dispatch, now, catalog } = useStore();
+  const entries = filterFeed(catalog, feed(catalog, now, state.done), state.filter as FeedFilter);
 
   return (
     <>
@@ -431,7 +431,7 @@ function FeedHome() {
         }}
       >
         <ChipRow
-          options={FEED_FILTERS}
+          options={feedFilters(catalog)}
           value={state.filter as FeedFilter}
           onChange={(f) => dispatch({ type: 'setFilter', filter: f })}
         />
@@ -526,7 +526,8 @@ function FeedHome() {
 }
 
 export function Today() {
-  const { state } = useStore();
+  const { state, catalog } = useStore();
+  if (catalog.empty) return <FirstRun where="on today" />;
   return state.nav === 'feed' ? <FeedHome /> : <TabHome />;
 }
 

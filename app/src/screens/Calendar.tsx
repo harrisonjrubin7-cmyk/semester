@@ -1,5 +1,5 @@
-import { COURSE_BY_ID, COURSES } from '../data/catalog';
 import { useStore } from '../state/store';
+import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, EmptyState, SectionLabel, Segmented } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
@@ -21,7 +21,7 @@ import {
   itemsOn,
   railFor,
 } from '../lib/select';
-import type { CourseId, DatedEvent, DatedItem, EventKind } from '../lib/types';
+import type { Course, CourseId, DatedEvent, DatedItem, EventKind } from '../lib/types';
 
 /**
  * The calendar has two independent axes.
@@ -45,9 +45,9 @@ type Source = (typeof SOURCES)[number]['id'];
 const EV_FILTERS = ['All', 'Athletics', 'Clubs', 'University', 'Saved'] as const;
 
 /** Colour a course consistently wherever it appears on the calendar. */
-function courseTint(id: CourseId | null): string {
+function courseTint(courses: Course[], id: CourseId | null): string {
   if (!id) return 'var(--app-accent-deep)';
-  const index = COURSES.findIndex((c) => c.id === id);
+  const index = courses.findIndex((c) => c.id === id);
   // A single accent, stepped in opacity — the system is mono by design, so
   // courses are distinguished by weight rather than by inventing new hues.
   const steps = [1, 0.78, 0.56, 0.38];
@@ -57,17 +57,17 @@ function courseTint(id: CourseId | null): string {
 // ── Day ───────────────────────────────────────────────────────────────────
 
 function DayView() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const day = state.calDay ? isoToDate(state.calDay) : now;
   const isToday = sameDay(day, now);
   const source = state.calSource;
 
-  const rail = source === 'all' || source === 'classes' ? railFor(day, state.appointments) : [];
+  const rail = source === 'all' || source === 'classes' ? railFor(catalog, day, state.appointments) : [];
   const due = source === 'all' || source === 'deadlines'
-    ? datedItems(now).filter((i) => sameDay(i.date, day))
+    ? datedItems(catalog, now).filter((i) => sameDay(i.date, day))
     : [];
   const events = source === 'all' || source === 'campus'
-    ? datedEvents(now).filter((e) => sameDay(e.date, day))
+    ? datedEvents(now, state.sample).filter((e) => sameDay(e.date, day))
     : [];
   const tasks = source === 'all' || source === 'deadlines' ? appointmentsOn([], day) : [];
   const myTasks = source === 'all' || source === 'deadlines'
@@ -170,7 +170,7 @@ function DayView() {
                         ? 'var(--app-track)'
                         : b.mine
                           ? 'transparent'
-                          : courseTint(b.c),
+                          : courseTint(catalog.courses, b.c),
                       border: b.mine ? '1px solid var(--app-accent)' : 'none',
                     }}
                   />
@@ -219,7 +219,7 @@ function DayView() {
                 borderBottom: '1px solid var(--app-line)',
               }}
             >
-              <span className="tag tag-accent">{COURSE_BY_ID[i.c]?.code}</span>
+              <span className="tag tag-accent">{catalog.byId[i.c]?.code}</span>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{i.title}</span>
                 <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>{i.dueTime}</span>
@@ -245,7 +245,7 @@ function DayView() {
               }}
             >
               <span className="tag tag-neutral">
-                {t.courseId ? COURSE_BY_ID[t.courseId]?.code : 'Personal'}
+                {t.courseId ? catalog.byId[t.courseId]?.code : 'Personal'}
               </span>
               <span
                 style={{
@@ -341,7 +341,7 @@ function DayView() {
 // ── Month ─────────────────────────────────────────────────────────────────
 
 function MonthView() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const { calYear, calMonth, calSource } = state;
   const cells = monthGrid(calYear, calMonth);
 
@@ -353,25 +353,25 @@ function MonthView() {
   };
 
   if (calSource === 'all' || calSource === 'deadlines') {
-    datedItems(now).forEach((i) => add(i.date, { c: i.c, kind: 'due' }));
+    datedItems(catalog, now).forEach((i) => add(i.date, { c: i.c, kind: 'due' }));
     state.tasks.forEach((t) => {
       if (t.date) add(isoToDate(t.date), { c: t.courseId, kind: 'mine' });
     });
   }
   if (calSource === 'all' || calSource === 'campus') {
-    datedEvents(now).forEach((e) => add(e.date, { c: null, kind: 'event' }));
+    datedEvents(now, state.sample).forEach((e) => add(e.date, { c: null, kind: 'event' }));
     state.feedEvents.forEach((e) => add(isoToDate(e.date), { c: e.courseId, kind: 'feed' }));
   }
   if (calSource === 'classes') {
     // Mark every day that has a class on it, so a term's teaching days show up.
     for (let d = 1; d <= new Date(calYear, calMonth + 1, 0).getDate(); d++) {
       const date = new Date(calYear, calMonth, d);
-      railFor(date, []).forEach((b) => add(date, { c: b.c, kind: 'class' }));
+      railFor(catalog, date, []).forEach((b) => add(date, { c: b.c, kind: 'class' }));
     }
   }
 
   const selectedDay = state.selDate ? Number(state.selDate.split('-')[2]) : null;
-  const selItems = selectedDay ? itemsOn(now, calYear, calMonth, selectedDay) : [];
+  const selItems = selectedDay ? itemsOn(catalog, now, calYear, calMonth, selectedDay) : [];
 
   return (
     <div style={{ padding: 18 }}>
@@ -477,7 +477,7 @@ function MonthView() {
                     style={{
                       width: 4,
                       height: 4,
-                      background: m.kind === 'mine' ? 'transparent' : courseTint(m.c),
+                      background: m.kind === 'mine' ? 'transparent' : courseTint(catalog.courses, m.c),
                       border: m.kind === 'mine' ? '1px solid var(--app-accent)' : 'none',
                       borderRadius: m.kind === 'event' ? '50%' : 0,
                     }}
@@ -507,7 +507,7 @@ function MonthView() {
             borderBottom: '1px solid var(--app-line)',
           }}
         >
-          <span className="tag tag-accent">{COURSE_BY_ID[i.c]?.code}</span>
+          <span className="tag tag-accent">{catalog.byId[i.c]?.code}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{i.title}</span>
             <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>{i.dueTime}</span>
@@ -549,11 +549,11 @@ function MonthView() {
  * something new.
  */
 function SemesterView() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const source = state.calSource;
 
-  const items = source === 'all' || source === 'deadlines' ? datedItems(now) : [];
-  const events = source === 'all' || source === 'campus' ? datedEvents(now) : [];
+  const items = source === 'all' || source === 'deadlines' ? datedItems(catalog, now) : [];
+  const events = source === 'all' || source === 'campus' ? datedEvents(now, state.sample) : [];
 
   // Weeks from the first Sunday on or before the earliest thing, to the last.
   const dates = [...items.map((i) => i.date), ...events.map((e) => e.date)];
@@ -645,7 +645,7 @@ function SemesterView() {
                           style={{
                             flex: 1,
                             maxWidth: `${100 / busiest}%`,
-                            background: courseTint(it.c),
+                            background: courseTint(catalog.courses, it.c),
                             border: it.kind === 'Exam' ? '1px solid var(--app-accent-bright)' : 'none',
                           }}
                         />
@@ -678,7 +678,7 @@ function SemesterView() {
                         onClick={() => dispatch({ type: 'openItem', id: it.id })}
                         style={{ width: 'auto', display: 'block', textAlign: 'left' }}
                       >
-                        <span style={{ opacity: 0.55 }}>{COURSE_BY_ID[it.c]?.code.split(' ')[0]}</span>{' '}
+                        <span style={{ opacity: 0.55 }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
                         {it.title.length > 42 ? `${it.title.slice(0, 40)}…` : it.title}
                       </button>
                     ))}
@@ -716,7 +716,7 @@ function SemesterView() {
 
 function CampusList() {
   const { state, dispatch, now } = useStore();
-  const events = datedEvents(now).filter((e) => {
+  const events = datedEvents(now, state.sample).filter((e) => {
     if (state.evFilter === 'All') return !e.isPast;
     if (state.evFilter === 'Saved') return !!state.saved[e.id];
     return e.kind === (state.evFilter as EventKind) && !e.isPast;
@@ -818,7 +818,8 @@ function CampusList() {
 }
 
 export function Calendar() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  if (catalog.empty) return <FirstRun where="on the calendar" />;
 
   return (
     <>
@@ -861,7 +862,7 @@ export function Calendar() {
 
 export function EventDetail() {
   const { state, dispatch, now } = useStore();
-  const all = datedEvents(now);
+  const all = datedEvents(now, state.sample);
   const event = all.find((e) => e.id === state.eventId) ?? all[0];
   if (!event) return null;
   const saved = !!state.saved[event.id];

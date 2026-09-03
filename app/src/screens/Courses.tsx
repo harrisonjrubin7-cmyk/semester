@@ -1,16 +1,17 @@
-import { COURSES, COURSE_BY_ID } from '../data/catalog';
 import { useStore } from '../state/store';
+import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { DateRow, SectionLabel } from '../components/ui';
 import { upcomingItems, datedItems } from '../lib/select';
 
 export function Courses() {
-  const { dispatch, now } = useStore();
-  const ahead = upcomingItems(now);
+  const { dispatch, now, catalog } = useStore();
+  const ahead = upcomingItems(catalog, now);
+  if (catalog.empty) return <FirstRun where="in your courses" />;
 
   return (
     <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {COURSES.map((c) => {
+      {catalog.courses.map((c) => {
         const next = ahead.find((i) => i.c === c.id);
         return (
           <Blueprint
@@ -91,9 +92,9 @@ export function Courses() {
 }
 
 export function CourseDetail() {
-  const { state, dispatch, now } = useStore();
-  const course = COURSE_BY_ID[state.courseId];
-  const items = datedItems(now).filter((i) => i.c === course.id);
+  const { state, dispatch, now, catalog } = useStore();
+  const course = catalog.byId[state.courseId];
+  const items = datedItems(catalog, now).filter((i) => i.c === course.id);
 
   return (
     <div style={{ padding: 18 }}>
@@ -171,8 +172,8 @@ export function CourseDetail() {
 }
 
 export function ItemDetail() {
-  const { state, dispatch, now } = useStore();
-  const all = datedItems(now);
+  const { state, dispatch, now, catalog } = useStore();
+  const all = datedItems(catalog, now);
   const item = all.find((i) => i.id === state.itemId) ?? all[0];
   if (!item) return null;
   const done = !!state.done[item.id];
@@ -181,7 +182,7 @@ export function ItemDetail() {
     <div style={{ padding: 18 }}>
       <Blueprint style={{ padding: 16 }}>
         <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
-          <span className="tag tag-accent">{COURSE_BY_ID[item.c].code}</span>
+          <span className="tag tag-accent">{catalog.byId[item.c].code}</span>
           <span
             style={{
               fontSize: 11,

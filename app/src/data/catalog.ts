@@ -13,94 +13,80 @@ import type {
 } from '../lib/types';
 import { SEMESTER_YEAR, sameDay } from '../lib/date';
 
-// ── The register ──────────────────────────────────────────────────────────
+// ── The catalog ───────────────────────────────────────────────────────────
 //
-// To add a course: create `courses/<id>/` with an `index.ts` exporting a
-// CourseModule, then add it to this array. That is the whole procedure — no
-// shared data file is edited, and no type widened, so a new course cannot
-// knock an existing one out of step. `pipeline/new-course.mjs` does both steps
-// for you.
+// A course used to be a TypeScript module compiled into the app, which was
+// right while the app held one person's four courses and wrong the moment it
+// held anyone else's. Now a course is data: it arrives from an account, or from
+// a syllabus someone uploaded ten seconds ago, and the catalog is whatever that
+// account currently holds.
+//
+// Everything below is a pure function of a list of modules, so the same code
+// serves a signed-in student with eleven courses, a new account with none, and
+// the sample semester.
 
-import econ from './courses/econ';
-import psci from './courses/psci';
-import core from './courses/core';
-import bus from './courses/bus';
-
-export const CATALOG: CourseModule[] = [econ, psci, core, bus];
-
-// ── Derived lookups ───────────────────────────────────────────────────────
-// Everything below is computed from CATALOG, so it can never disagree with it.
-
-export const COURSES: Course[] = CATALOG.map((m) => m.course);
-
-export const MODULE_BY_ID: Record<CourseId, CourseModule> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m]),
-);
-
-export const COURSE_BY_ID: Record<CourseId, Course> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.course]),
-);
-
-export const GUIDES: Record<CourseId, Guide> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.guide]),
-);
-
-export const FIGURES: Record<CourseId, FigureMap> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.figures ?? {}]),
-);
-
-export const EXTRA_FIGURES: Record<CourseId, Figure[]> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.extraFigures ?? []]),
-);
-
-export const EXAMPLES: Record<CourseId, Example[]> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.examples ?? []]),
-);
-
-export const PODCAST: Record<CourseId, CoursePodcast> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.podcast ?? { blurb: '', editions: [] }]),
-);
-
-/** Narrated lessons, keyed by course then by unit index. */
-export const LESSONS: Record<CourseId, Record<number, Lesson>> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.lessons ?? {}]),
-);
-
-export const PLAN_MIN: Record<CourseId, string> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.planMinutes]),
-);
-
-export const FRAME_LABELS: Record<CourseId, string> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.frameLabel]),
-);
-
-/** Every dated obligation across every course. */
-export const ITEMS: Item[] = CATALOG.flatMap((m) => m.items);
-
-export function codeOf(id: CourseId): string {
-  return COURSE_BY_ID[id]?.code ?? id.toUpperCase();
+export interface Catalog {
+  modules: CourseModule[];
+  courses: Course[];
+  byId: Record<CourseId, Course>;
+  moduleById: Record<CourseId, CourseModule>;
+  guides: Record<CourseId, Guide>;
+  figures: Record<CourseId, FigureMap>;
+  extraFigures: Record<CourseId, Figure[]>;
+  examples: Record<CourseId, Example[]>;
+  podcast: Record<CourseId, CoursePodcast>;
+  lessons: Record<CourseId, Record<number, Lesson>>;
+  planMinutes: Record<CourseId, string>;
+  frameLabels: Record<CourseId, string>;
+  /** Every dated obligation across every course. */
+  items: Item[];
+  /** The filter chips: the first word of each course code. */
+  shortCodes: string[];
+  short: Record<CourseId, string>;
+  /** True when there is nothing in it — the state a new account starts in. */
+  empty: boolean;
 }
 
-/**
- * The short code the filter chips use — the first word of the course code, so
- * "ECON 1020" becomes "ECON". Derived rather than declared, so a new course
- * needs no entry anywhere.
- */
-export const COURSE_SHORT: Record<CourseId, string> = Object.fromEntries(
-  CATALOG.map((m) => [m.course.id, m.course.code.split(/\s+/)[0]]),
-);
+const index = <T,>(modules: CourseModule[], pick: (m: CourseModule) => T): Record<CourseId, T> =>
+  Object.fromEntries(modules.map((m) => [m.course.id, pick(m)]));
 
-export const SHORT_CODES: string[] = CATALOG.map((m) => m.course.code.split(/\s+/)[0]);
+export function buildCatalog(modules: CourseModule[]): Catalog {
+  return {
+    modules,
+    courses: modules.map((m) => m.course),
+    byId: index(modules, (m) => m.course),
+    moduleById: index(modules, (m) => m),
+    guides: index(modules, (m) => m.guide),
+    figures: index(modules, (m) => m.figures ?? {}),
+    extraFigures: index(modules, (m) => m.extraFigures ?? []),
+    examples: index(modules, (m) => m.examples ?? []),
+    podcast: index(modules, (m) => m.podcast ?? { blurb: '', editions: [] }),
+    lessons: index(modules, (m) => m.lessons ?? {}),
+    planMinutes: index(modules, (m) => m.planMinutes),
+    frameLabels: index(modules, (m) => m.frameLabel),
+    items: modules.flatMap((m) => m.items),
+    shortCodes: modules.map((m) => m.course.code.split(/\s+/)[0]),
+    short: index(modules, (m) => m.course.code.split(/\s+/)[0]),
+    empty: modules.length === 0,
+  };
+}
+
+/** The catalog of an account with nothing in it yet. */
+export const EMPTY_CATALOG = buildCatalog([]);
+
+export function codeOf(cat: Catalog, id: CourseId): string {
+  return cat.byId[id]?.code ?? id.toUpperCase();
+}
 
 /**
  * The rail for one day: every course's recurring classes, with that date's
  * exceptions applied, in time order.
  */
-export function blocksFor(date: Date): Block[] {
+export function blocksFor(cat: Catalog, date: Date): Block[] {
   const dow = date.getDay();
   const blocks: Block[] = [];
 
-  for (const mod of CATALOG) {
+  for (const mod of cat.modules) {
     const todays = (mod.exceptions ?? []).filter((e) =>
       sameDay(new Date(SEMESTER_YEAR, e.month, e.day), date),
     );
@@ -109,9 +95,7 @@ export function blocksFor(date: Date): Block[] {
       if (!b.days.includes(dow)) continue;
       // An exception applies to the block it names; an unnamed one applies to
       // real classes only, so cancelling a lecture leaves office hours alone.
-      const ex = todays.find(
-        (e) => !e.extra && (e.title ? e.title === b.title : !b.optional),
-      );
+      const ex = todays.find((e) => !e.extra && (e.title ? e.title === b.title : !b.optional));
       blocks.push({
         time: b.time,
         at: b.at,
@@ -132,9 +116,9 @@ export function blocksFor(date: Date): Block[] {
 }
 
 /** The line the next-class card shows when a date has something special on. */
-export function classNote(date: Date, c: CourseId | null): string | undefined {
+export function classNote(cat: Catalog, date: Date, c: CourseId | null): string | undefined {
   if (!c) return undefined;
-  const mod = MODULE_BY_ID[c];
+  const mod = cat.moduleById[c];
   if (!mod) return undefined;
   return (mod.exceptions ?? []).find(
     (e) => sameDay(new Date(SEMESTER_YEAR, e.month, e.day), date) && e.note,

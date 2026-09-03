@@ -1,19 +1,19 @@
-import { COURSES, COURSE_BY_ID } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, Meter, SectionLabel, Segmented, Toggle } from '../components/ui';
+import { SEED_SUMMARY } from '../data/seed';
 import { Bell } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
 import { loadByCourse, searchItems, upcomingItems } from '../lib/select';
 
 export function Me() {
-  const { state, dispatch, now } = useStore();
-  const ahead = upcomingItems(now);
-  const bars = loadByCourse(now, state.done);
+  const { state, dispatch, now, catalog } = useStore();
+  const ahead = upcomingItems(catalog, now);
+  const bars = loadByCourse(catalog, now, state.done);
   const doneCount = Object.values(state.done).filter(Boolean).length;
 
   const stats = [
-    { n: String(COURSES.length), l: 'Courses' },
+    { n: String(catalog.courses.length), l: 'Courses' },
     { n: '11', l: 'Credits' },
     { n: String(ahead.length), l: 'Ahead' },
     { n: String(doneCount), l: 'Done' },
@@ -123,8 +123,8 @@ export function Me() {
 }
 
 export function Search() {
-  const { state, dispatch, now } = useStore();
-  const results = searchItems(now, state.query);
+  const { state, dispatch, now, catalog } = useStore();
+  const results = searchItems(catalog, now, state.query);
   const typed = state.query.trim().length > 0;
 
   return (
@@ -159,7 +159,7 @@ export function Search() {
                 borderBottom: '1px solid var(--app-line)',
               }}
             >
-              <span className="tag tag-accent">{COURSE_BY_ID[r.c].code}</span>
+              <span className="tag tag-accent">{catalog.byId[r.c].code}</span>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{r.title}</span>
                 <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>
@@ -286,6 +286,40 @@ export function Settings() {
           on={state.notifs[n.k]}
           onChange={() => dispatch({ type: 'toggleNotif', k: n.k })}
         />
+      ))}
+
+      <SectionLabel style={{ margin: '26px 0 2px' }}>Your courses</SectionLabel>
+      <Toggle
+        label={`Sample semester — ${SEED_SUMMARY.courses} courses, ${SEED_SUMMARY.cards} cards, ${SEED_SUMMARY.lessons} lessons`}
+        on={state.sample}
+        onChange={() => dispatch({ type: 'setSample', on: !state.sample })}
+      />
+      {state.courses.map((c) => (
+        <div
+          key={c.course.id}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '13px 0',
+            borderBottom: '1px solid var(--app-line)',
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14 }}>{c.course.code}</div>
+            <div style={{ fontSize: 11, opacity: 0.5 }}>
+              {c.guide.units.length} units · {c.items.length} deadlines · from {c.course.source}
+            </div>
+          </div>
+          <button
+            type="button"
+            className="bare"
+            onClick={() => dispatch({ type: 'removeCourse', id: c.course.id })}
+            style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+          >
+            REMOVE
+          </button>
+        </div>
       ))}
 
       <SectionLabel style={{ margin: '26px 0 2px' }}>Sources</SectionLabel>

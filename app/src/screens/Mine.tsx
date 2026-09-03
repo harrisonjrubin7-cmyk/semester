@@ -3,7 +3,6 @@ import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
-import { COURSES, COURSE_BY_ID } from '../data/catalog';
 import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import type { CourseId } from '../lib/types';
@@ -26,10 +25,11 @@ function CoursePicker({
   value: CourseId | null;
   onChange: (id: CourseId | null) => void;
 }) {
+  const { catalog } = useStore();
   return (
     <div className="chiprow" style={{ marginTop: 10 }}>
       <div style={{ display: 'flex', gap: 6 }}>
-        {[{ id: null, label: 'Personal' }, ...COURSES.map((c) => ({ id: c.id, label: c.code }))].map(
+        {[{ id: null, label: 'Personal' }, ...catalog.courses.map((c) => ({ id: c.id, label: c.code }))].map(
           (o) => {
             const on = value === o.id;
             return (
@@ -64,7 +64,7 @@ function CoursePicker({
 const inputStyle = { height: 40, fontSize: 14, marginTop: 8 } as const;
 
 function Tasks() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
@@ -205,7 +205,7 @@ function Tasks() {
                     </div>
                     <div style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>
                       <span className="tag tag-neutral" style={{ marginRight: 6 }}>
-                        {t.courseId ? COURSE_BY_ID[t.courseId]?.code : 'Personal'}
+                        {t.courseId ? catalog.byId[t.courseId]?.code : 'Personal'}
                       </span>
                       {t.date ? longLabel(isoToDate(t.date)) : 'No date'}
                       {t.time ? ` · ${t.time}` : ''}
@@ -381,7 +381,7 @@ function Appointments() {
 }
 
 function Notes() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, catalog } = useStore();
   const notes = [...state.notes].sort((a, b) => b.updated - a.updated);
 
   return (
@@ -431,7 +431,7 @@ function Notes() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {n.courseId ? `${COURSE_BY_ID[n.courseId]?.code} · ` : ''}
+                  {n.courseId ? `${catalog.byId[n.courseId]?.code} · ` : ''}
                   {n.fileIds.length > 0 ? `${n.fileIds.length} file · ` : ''}
                   {n.body.slice(0, 60) || 'Empty'}
                 </span>

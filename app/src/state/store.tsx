@@ -12,6 +12,7 @@ import type {
   Appointment,
   CampusLink,
   CourseId,
+  CourseModule,
   CourseUpdate,
   FeedEvent,
   FeedSource,
@@ -22,6 +23,8 @@ import type {
   StudyMode,
 } from '../lib/types';
 import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
+import { buildCatalog, type Catalog } from '../data/catalog';
+import { SEED_MODULES } from '../data/seed';
 import { newId } from '../lib/files';
 import { dateToIso, isoToDate } from '../lib/date';
 
@@ -49,6 +52,13 @@ interface Persisted {
   /** External calendars — Brightspace, Outlook, any .ics. */
   feeds: FeedSource[];
   feedEvents: FeedEvent[];
+  /**
+   * The courses this account holds. Generated from uploaded syllabi, or added
+   * by hand — either way they are data, not code.
+   */
+  courses: CourseModule[];
+  /** Whether the sample semester is switched on alongside them. */
+  sample: boolean;
   /** Addresses for the campus links, keyed by id. Yours beat the defaults. */
   linkUrls: Record<string, string>;
   /** Links you added yourself, alongside the campus ones. */
@@ -130,6 +140,11 @@ const DEFAULT_PERSISTED: Persisted = {
   feedEvents: [],
   linkUrls: {},
   extraLinks: [],
+  courses: [],
+  // A new account starts empty and is walked through its first syllabus. The
+  // sample is a button, not a default: nobody's first impression of the app
+  // should be somebody else's timetable.
+  sample: false,
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -191,6 +206,11 @@ function loadPersisted(): Persisted {
       feedEvents: saved.feedEvents ?? [],
       linkUrls: saved.linkUrls ?? {},
       extraLinks: saved.extraLinks ?? [],
+      courses: saved.courses ?? [],
+      // An install that predates courses-as-data was running the four built-in
+      // ones; it keeps them, or the app would look wiped on the next load. A
+      // genuinely new account starts empty.
+      sample: saved.sample ?? saved.courses === undefined,
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -258,7 +278,11 @@ export type Action =
   | { type: 'removeFeed'; id: string }
   | { type: 'setLinkUrl'; id: string; url: string }
   | { type: 'addLink'; name: string; url: string }
-  | { type: 'removeLink'; id: string };
+  | { type: 'removeLink'; id: string }
+  | { type: 'addCourse'; module: CourseModule }
+  | { type: 'replaceCourse'; module: CourseModule }
+  | { type: 'removeCourse'; id: CourseId }
+  | { type: 'setSample'; on: boolean };
 
 const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
 
@@ -603,6 +627,28 @@ export function reducer(state: State, action: Action): State {
       return { ...state, extraLinks: [...state.extraLinks, link] };
     }
 
+    case 'addCourse':
+      return { ...state, courses: [...state.courses, action.module] };
+
+    case 'replaceCourse':
+      return {
+        ...state,
+        courses: state.courses.map((c) =>
+          c.course.id === action.module.course.id ? action.module : c,
+        ),
+      };
+
+    case 'removeCourse':
+      return {
+        ...state,
+        courses: state.courses.filter((c) => c.course.id !== action.id),
+        // Anything filed against it goes too, or it becomes unreachable data.
+        updates: state.updates.filter((u) => u.courseId !== action.id),
+      };
+
+    case 'setSample':
+      return { ...state, sample: action.on };
+
     case 'removeLink': {
       const { [action.id]: _gone, ...linkUrls } = state.linkUrls;
       return {
@@ -622,6 +668,8 @@ interface Store {
   dispatch: (action: Action) => void;
   /** The current time, refreshed each minute so countdowns stay honest. */
   now: Date;
+  /** The account's courses, with every lookup derived from them. */
+  catalog: Catalog;
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -671,6 +719,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       feedEvents: state.feedEvents,
       linkUrls: state.linkUrls,
       extraLinks: state.extraLinks,
+      courses: state.courses,
+      sample: state.sample,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
@@ -693,9 +743,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     state.feedEvents,
     state.linkUrls,
     state.extraLinks,
+    state.courses,
+    state.sample,
   ]);
 
-  const value = useMemo(() => ({ state, dispatch, now }), [state, now]);
+  // The sample stays compiled in rather than copied into storage, so switching
+  // it on costs a flag rather than 300 KB.
+  const catalog = useMemo(
+    () => buildCatalog(state.sample ? [...SEED_MODULES, ...state.courses] : state.courses),
+    [state.sample, state.courses],
+  );
+
+  const value = useMemo(() => ({ state, dispatch, now, catalog }), [state, now, catalog]);
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 

@@ -1,4 +1,3 @@
-import { COURSE_BY_ID, GUIDES } from './data/catalog';
 import { useStore } from './state/store';
 import {
   Bell,
@@ -37,9 +36,9 @@ const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
 
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
-  const { state, now } = useStore();
-  const guide = GUIDES[state.guideId];
-  const exam = nextExam(now);
+  const { state, now, catalog } = useStore();
+  const guide = catalog.guides[state.guideId];
+  const exam = nextExam(catalog, now);
 
   const today = `${DOW[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`;
 
@@ -49,10 +48,10 @@ function useHeader(): { kicker: string; title: string } {
     case 'courses':
       return { kicker: 'Fall 2026 · 11 credits', title: 'Courses' };
     case 'course':
-      return { kicker: 'Course', title: COURSE_BY_ID[state.courseId].code };
+      return { kicker: 'Course', title: catalog.byId[state.courseId].code };
     case 'item': {
-      const item = datedItems(now).find((i) => i.id === state.itemId);
-      return { kicker: item ? COURSE_BY_ID[item.c].code : 'Item', title: item?.kind ?? 'Item' };
+      const item = datedItems(catalog, now).find((i) => i.id === state.itemId);
+      return { kicker: item ? catalog.byId[item.c].code : 'Item', title: item?.kind ?? 'Item' };
     }
     case 'study':
       return {

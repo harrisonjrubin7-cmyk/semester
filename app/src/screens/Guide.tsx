@@ -1,4 +1,4 @@
-import { FRAME_LABELS, allCards, weakestUnit, PODCAST, EXAMPLES } from '../data/catalog';
+import { allCards, weakestUnit } from '../data/catalog';
 import { useMemo, useRef } from 'react';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
@@ -718,9 +718,9 @@ function Figures() {
 }
 
 function Cases() {
-  const { state } = useStore();
+  const { state, catalog } = useStore();
   const { guide } = useLive(state.guideId);
-  const examples = EXAMPLES[state.guideId] ?? [];
+  const examples = catalog.examples[state.guideId] ?? [];
 
   return (
     <>
@@ -833,7 +833,7 @@ function Cases() {
 }
 
 function Cram() {
-  const { state } = useStore();
+  const { state, catalog } = useStore();
   const { guide, updates } = useLive(state.guideId);
   const notes = updates.filter((u) => u.body);
 
@@ -841,7 +841,7 @@ function Cram() {
     <>
       {guide.frames && guide.frames.length > 0 && (
         <>
-          <SectionLabel>{FRAME_LABELS[state.guideId]}</SectionLabel>
+          <SectionLabel>{catalog.frameLabels[state.guideId]}</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {guide.frames.map((f) => (
               <Blueprint key={f.t} style={{ padding: '13px 14px' }}>
@@ -944,10 +944,10 @@ function Cram() {
 }
 
 function Listen() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, catalog } = useStore();
   const { guide, updates } = useLive(state.guideId);
   const addedSince = updates.reduce((n, u) => n + u.cards.length, 0);
-  const pod = PODCAST[state.guideId];
+  const pod = catalog.podcast[state.guideId];
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const episode = useMemo(() => {

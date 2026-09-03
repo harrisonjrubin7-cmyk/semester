@@ -40,7 +40,7 @@
  * held in this browser's storage, and there is no backend to send them to.
  */
 
-import type { FeedEvent } from './types';
+import type { Course, FeedEvent } from './types';
 import { matchCourse } from './ics';
 
 export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
@@ -345,6 +345,7 @@ function clock(d: Date): string {
 }
 
 function toFeedEvent(
+  courses: Course[],
   id: string,
   title: string,
   start: Date,
@@ -361,7 +362,7 @@ function toFeedEvent(
     time: allDay ? 'All day' : clock(start),
     where,
     note: note.slice(0, 400),
-    courseId: matchCourse(`${title} ${where} ${note}`),
+    courseId: matchCourse(courses, `${title} ${where} ${note}`),
   };
 }
 
@@ -375,7 +376,7 @@ async function get<T>(id: ProviderId, url: string): Promise<T> {
 const HORIZON_DAYS = 120;
 
 /** Everything on the connected calendar between today and the end of term. */
-export async function pullCalendar(id: ProviderId): Promise<FeedEvent[]> {
+export async function pullCalendar(courses: Course[], id: ProviderId): Promise<FeedEvent[]> {
   if (!PROVIDERS[id].calendar) {
     throw new Error(
       `${PROVIDERS[id].name} has no calendar API. Publish the calendar and add its webcal link instead.`,
@@ -401,6 +402,7 @@ export async function pullCalendar(id: ProviderId): Promise<FeedEvent[]> {
     );
     return json.value.map((e) =>
       toFeedEvent(
+        courses,
         e.id,
         e.subject || 'Untitled',
         new Date(`${e.start.dateTime}${e.start.dateTime.endsWith('Z') ? '' : 'Z'}`),
@@ -427,6 +429,7 @@ export async function pullCalendar(id: ProviderId): Promise<FeedEvent[]> {
     );
     return json.items.map((e) =>
       toFeedEvent(
+        courses,
         e.id,
         e.summary ?? 'Untitled',
         e.start.dateTime ? new Date(e.start.dateTime) : new Date(`${e.start.date}T00:00:00`),
@@ -446,6 +449,7 @@ export async function pullCalendar(id: ProviderId): Promise<FeedEvent[]> {
     .filter((m) => m.start_time)
     .map((m) =>
       toFeedEvent(
+        courses,
         String(m.id),
         m.topic || 'Zoom meeting',
         new Date(m.start_time as string),

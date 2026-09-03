@@ -12,8 +12,7 @@
  * guessed at.
  */
 
-import { COURSES } from '../data/catalog';
-import type { FeedEvent } from './types';
+import type { Course, FeedEvent } from './types';
 
 /** Folded lines are continued with a space or tab. Undo that first. */
 function unfold(text: string): string[] {
@@ -74,16 +73,16 @@ function clock(date: Date): string {
 }
 
 /** Which course a feed entry looks like it belongs to, by its code. */
-export function matchCourse(text: string): string | null {
+export function matchCourse(courses: Course[], text: string): string | null {
   const upper = text.toUpperCase();
-  for (const c of COURSES) {
+  for (const c of courses) {
     const code = c.code.toUpperCase();
     if (upper.includes(code) || upper.includes(code.replace(/\s+/g, ''))) return c.id;
   }
   // A bare subject code — "ECON" — is enough when only one course has it.
-  for (const c of COURSES) {
+  for (const c of courses) {
     const subject = c.code.split(/\s+/)[0].toUpperCase();
-    const others = COURSES.filter((o) => o.code.toUpperCase().startsWith(subject));
+    const others = courses.filter((o) => o.code.toUpperCase().startsWith(subject));
     if (others.length === 1 && upper.includes(subject)) return c.id;
   }
   return null;
@@ -142,7 +141,7 @@ export interface IcsResult {
   name: string;
 }
 
-export function parseIcs(text: string, sourceId = ''): IcsResult {
+export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsResult {
   const lines = unfold(text);
   const events: FeedEvent[] = [];
   let name = '';
@@ -154,7 +153,7 @@ export function parseIcs(text: string, sourceId = ''): IcsResult {
       continue;
     }
     if (line.startsWith('END:VEVENT')) {
-      if (current) events.push(...toEvents(current, sourceId));
+      if (current) events.push(...toEvents(courses, current, sourceId));
       current = null;
       continue;
     }
@@ -181,7 +180,7 @@ export function parseIcs(text: string, sourceId = ''): IcsResult {
   return { events, name };
 }
 
-function toEvents(raw: RawEvent, sourceId: string): FeedEvent[] {
+function toEvents(courses: Course[], raw: RawEvent, sourceId: string): FeedEvent[] {
   const startField = raw.DTSTART;
   if (!startField) return [];
   const when = parseWhen(startField);
@@ -191,7 +190,7 @@ function toEvents(raw: RawEvent, sourceId: string): FeedEvent[] {
   const where = unescape(raw.LOCATION?.value ?? '');
   const note = unescape(raw.DESCRIPTION?.value ?? '').slice(0, 400);
   const uid = raw.UID?.value ?? `${title}-${when.date.getTime()}`;
-  const courseId = matchCourse(`${title} ${where} ${note}`);
+  const courseId = matchCourse(courses, `${title} ${where} ${note}`);
 
   const dates = raw.RRULE ? expand(raw.RRULE.value, when.date) : [when.date];
   const all = dates.length ? dates : [when.date];

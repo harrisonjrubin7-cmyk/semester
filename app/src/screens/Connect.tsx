@@ -258,7 +258,7 @@ function CampusLinks() {
  * send one to.
  */
 export function Connect() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, catalog } = useStore();
   const [busy, setBusy] = useState<string>('');
   // A sign-in comes back as a page load, so whatever main.tsx left behind is
   // read once, on the way in.
@@ -277,7 +277,7 @@ export function Connect() {
   const live = tokens();
 
   const addIcsText = (text: string, name: string, from: string, kind: FeedSource['kind']) => {
-    const { events, name: calName } = parseIcs(text);
+    const { events, name: calName } = parseIcs(catalog.courses, text);
     if (events.length === 0) {
       setNote('No events in that calendar. It may be the wrong link — the feed has to be the .ics one.');
       return;
@@ -333,7 +333,7 @@ export function Connect() {
   const sync = async (feed: FeedSource, id: ProviderId) => {
     setBusy(feed.id);
     try {
-      const events = await pullCalendar(id);
+      const events = await pullCalendar(catalog.courses, id);
       dispatch({ type: 'syncFeed', id: feed.id, events, status: `${events.length} events` });
       setNote(`${PROVIDERS[id].name}: ${events.length} events.`);
     } catch (e) {
@@ -492,7 +492,7 @@ export function Connect() {
                           if (existing) return void sync(existing, id);
                           // First pull creates the feed the events hang off.
                           setBusy(id);
-                          pullCalendar(id)
+                          pullCalendar(catalog.courses, id)
                             .then((events) => {
                               dispatch({
                                 type: 'addFeed',

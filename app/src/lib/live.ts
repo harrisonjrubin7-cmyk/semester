@@ -23,7 +23,7 @@
  */
 
 import { useMemo } from 'react';
-import { EXTRA_FIGURES, FIGURES, GUIDES, LESSONS } from '../data/catalog';
+import type { Catalog } from '../data/catalog';
 import { useStore } from '../state/store';
 import type {
   CourseId,
@@ -161,26 +161,41 @@ export interface Live {
 
 /** Everything a study screen needs for one course, with your additions folded in. */
 export function useLive(courseId: CourseId): Live {
-  const { state } = useStore();
+  const { state, catalog } = useStore();
   const updates = useMemo(
     () => forCourse(state.updates, courseId),
     [state.updates, courseId],
   );
 
   return useMemo(() => {
-    const guide = mergeGuide(GUIDES[courseId], updates);
+    const base = catalog.guides[courseId] ?? EMPTY_GUIDE;
     return {
-      guide,
-      figures: mergeFigures(FIGURES[courseId] ?? {}, updates),
-      extras: extraFigures(EXTRA_FIGURES[courseId] ?? [], updates),
-      lessons: LESSONS[courseId] ?? {},
+      guide: mergeGuide(base, updates),
+      figures: mergeFigures(catalog.figures[courseId] ?? {}, updates),
+      extras: extraFigures(catalog.extraFigures[courseId] ?? [], updates),
+      lessons: catalog.lessons[courseId] ?? {},
       updates,
       onUnit: (index: number) => updates.filter((u) => u.unit === index),
     };
-  }, [courseId, updates]);
+  }, [catalog, courseId, updates]);
 }
 
 /** The same merge outside React — for selectors that run on plain state. */
-export function liveGuide(courseId: CourseId, updates: CourseUpdate[]): LiveGuide {
-  return mergeGuide(GUIDES[courseId], forCourse(updates, courseId));
+export function liveGuide(cat: Catalog, courseId: CourseId, updates: CourseUpdate[]): LiveGuide {
+  return mergeGuide(cat.guides[courseId] ?? EMPTY_GUIDE, forCourse(updates, courseId));
 }
+
+/**
+ * A course that has gone — deleted while its guide was open, say. Rendering an
+ * empty guide beats throwing on a screen the person is already looking at.
+ */
+const EMPTY_GUIDE: Guide = {
+  code: '',
+  name: '',
+  blurb: '',
+  source: '',
+  mastery: 0,
+  audio: false,
+  units: [],
+  terms: [],
+};

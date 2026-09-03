@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react';
-import { COURSES, COURSE_BY_ID } from '../data/catalog';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -26,7 +25,7 @@ import type { CourseId } from '../lib/types';
  * Cram and the lesson slides at once.
  */
 export function Ask() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const courseId: CourseId = state.guideId;
   const { guide } = useLive(courseId);
 
@@ -42,7 +41,7 @@ export function Ask() {
 
   // The course, compressed enough to send and specific enough to be useful.
   const context = useMemo(() => {
-    const due = datedItems(now)
+    const due = datedItems(catalog, now)
       .filter((i) => i.c === courseId && !i.isPast)
       .slice(0, 6)
       .map((i) => `- ${i.title} · ${i.mon} ${i.day} · ${i.weight}`)
@@ -132,7 +131,7 @@ export function Ask() {
     <div style={{ padding: 18 }}>
       <div className="chiprow">
         <div style={{ display: 'flex', gap: 6 }}>
-          {COURSES.map((c) => {
+          {catalog.courses.map((c) => {
             const on = c.id === courseId;
             return (
               <button
@@ -152,7 +151,7 @@ export function Ask() {
                   borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
                 }}
               >
-                {COURSE_BY_ID[c.id].code.split(/\s+/)[0]}
+                {catalog.byId[c.id].code.split(/\s+/)[0]}
               </button>
             );
           })}
