@@ -498,7 +498,8 @@ a:hover {
   color: var(--app-accent-deep);
 }
 
-/* Section headings inside a screen. */
+/* Section headings inside a screen. An <h2>, so the reset is deliberate:
+   the browser's own heading margin and size would fight the inline ones. */
 .section-label {
   font-family: var(--font-heading);
   font-size: 12px;
@@ -651,6 +652,11 @@ a:hover {
   outline: none;
   box-shadow: 0 0 0 1px var(--app-bg), 0 0 0 3px var(--app-accent-deep);
   border-radius: var(--r-sm);
+  /* Tabbing scrolls the focused control into view, and the frosted header sits
+     on top of the scroller — so without this the thing you just focused lands
+     underneath it and the ring is half hidden. */
+  scroll-margin-top: 96px;
+  scroll-margin-bottom: 84px;
 }
 .device ::selection {
   background: rgba(212, 217, 226, 0.26);

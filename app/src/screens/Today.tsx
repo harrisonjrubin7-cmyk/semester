@@ -100,7 +100,9 @@ function YourTasks() {
           margin: '26px 0 12px',
         }}
       >
-        <div className="section-label">Yours today</div>
+        <h2 className="section-label" style={{ margin: 0, fontSize: 12, fontWeight: 'inherit' }}>
+          Yours today
+        </h2>
         <button
           type="button"
           className="bare"
@@ -342,7 +344,9 @@ function Feed_due() {
           margin: '26px 0 4px',
         }}
       >
-        <div className="section-label">Due today</div>
+        <h2 className="section-label" style={{ margin: 0, fontSize: 12, fontWeight: 'inherit' }}>
+          Due today
+        </h2>
         <div
           style={{
             fontFamily: 'var(--font-heading)',

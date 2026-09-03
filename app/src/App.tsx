@@ -199,7 +199,11 @@ function Header() {
   const atRoot = rootOf(state.screen) === state.screen;
 
   return (
-    <div className="safe-top app-header">
+    // A real <header>, and the screen's name is the page's <h1>. Both were
+    // styled divs, so a screen reader had no landmarks past <main> and no
+    // heading to jump to — the whole app was one undifferentiated run of
+    // buttons. Nothing about how it looks changes.
+    <header className="safe-top app-header">
       {canGoBack && (
         <button
           type="button"
@@ -214,7 +218,7 @@ function Header() {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="kicker">{kicker}</div>
-        <div
+        <h1
           className="chrome-text"
           style={{
             fontSize: 23,
@@ -222,10 +226,13 @@ function Header() {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
+            margin: 0,
+            fontWeight: 'inherit',
+            letterSpacing: 'inherit',
           }}
         >
           {title}
-        </div>
+        </h1>
       </div>
 
       {showActions && (
@@ -273,7 +280,7 @@ function Header() {
           )}
         </div>
       )}
-    </div>
+    </header>
   );
 }
 

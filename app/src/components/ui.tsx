@@ -20,15 +20,21 @@ export function SectionLabel({
   style?: CSSProperties;
 }) {
   return (
-    <div
+    // An <h2>, not a styled div. The screen's name is the <h1>; these are the
+    // sections under it, and until they were headings a screen reader had no
+    // structure to move through — the whole app read as one long run of
+    // buttons with no way to skip. The reset keeps it looking identical.
+    <h2
       className="section-label"
       style={{
         margin: 'calc(26px * var(--density, 1)) 0 calc(12px * var(--density, 1))',
+        fontSize: 12,
+        fontWeight: 'inherit',
         ...style,
       }}
     >
       {children}
-    </div>
+    </h2>
   );
 }
 
