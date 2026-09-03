@@ -16,7 +16,9 @@ import type { Screen } from '../lib/types';
 const GROUPS: Group[] = ['Study', 'Semester', 'Yours', 'Accounts', 'App'];
 
 /** Already a tab on the phone, so listing them again is noise. */
-const HIDE_IN_ME: Screen[] = ['home', 'me', 'notifs'];
+// Settings is a tab of this screen now, so listing it in the directory would
+// send you to a separate copy of what is one tap to the left.
+const HIDE_IN_ME: Screen[] = ['home', 'me', 'notifs', 'settings'];
 
 export function Me() {
   const { state, dispatch, now, catalog, account } = useStore();
@@ -35,8 +37,31 @@ export function Me() {
     { n: String(doneCount), l: 'Done' },
   ];
 
+  const tab = state.meTab;
+
   return (
     <div style={{ padding: 18 }}>
+      {/*
+        Every other tab opens on a switcher and then one view. Me was the one
+        long scroll in the app — a stats card, then a chart, then five headed
+        lists of links — which meant Settings was below five sections of things
+        that are not settings.
+      */}
+      <Segmented
+        options={[
+          { id: 'you', label: 'You' },
+          { id: 'all', label: 'Everything' },
+          { id: 'settings', label: 'Settings' },
+        ]}
+        value={tab}
+        onChange={(next) => dispatch({ type: 'setMeTab', tab: next })}
+        style={{ marginBottom: 16 }}
+      />
+
+      {tab === 'settings' && <Settings bare />}
+
+      {tab === 'you' && (
+        <>
       <Blueprint style={{ padding: 16, display: 'flex' }}>
         {stats.map((s, i) => (
           <div
@@ -80,6 +105,11 @@ export function Me() {
         </div>
       ))}
 
+        </>
+      )}
+
+      {tab === 'all' && (
+        <>
       {/*
         This used to be seven identical grey buttons in a column, each labelled
         with two words and explaining nothing. "Files & mail" and "Connect
@@ -134,6 +164,8 @@ export function Me() {
           </div>
         );
       })}
+        </>
+      )}
       <div style={{ height: 22 }} />
     </div>
   );
@@ -350,11 +382,13 @@ function Reminders() {
   );
 }
 
-export function Settings() {
+export function Settings({ bare = false }: { bare?: boolean } = {}) {
   const { state, dispatch } = useStore();
 
+  // `bare` when it is a tab of Me, which has already padded the page; the
+  // standalone screen still exists so search and a deep link can reach it.
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: bare ? 0 : 18 }}>
       <SectionLabel style={{ margin: '0 0 6px' }}>Navigation</SectionLabel>
       <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         Two structures, the same screens. The tab bar gives every thing a fixed home. The feed

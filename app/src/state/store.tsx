@@ -153,6 +153,8 @@ interface Ephemeral {
   mineTab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done';
   coursesTab: 'courses' | 'due' | 'grades';
+  /** Me follows the same shape as every other tab: a switcher, then one view. */
+  meTab: 'you' | 'all' | 'settings';
   /** Which standing the Coming-up list is showing: ahead, missed or finished. */
   dueTab: 'ahead' | 'overdue' | 'done';
   /**
@@ -254,6 +256,7 @@ function initialEphemeral(now: Date): Ephemeral {
     mineTab: 'tasks',
     homeTab: 'today',
     coursesTab: 'courses',
+    meTab: 'you',
     dueTab: 'ahead',
     mailSeed: null,
     studyTab: 'guides',
@@ -405,6 +408,7 @@ export type Action =
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
+  | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
   | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
   | {
       type: 'writeMail';
@@ -692,6 +696,9 @@ export function reducer(state: State, action: Action): State {
 
     case 'setCoursesTab':
       return { ...state, coursesTab: action.tab };
+
+    case 'setMeTab':
+      return { ...state, meTab: action.tab };
 
     case 'setDueTab':
       return { ...state, dueTab: action.tab };
