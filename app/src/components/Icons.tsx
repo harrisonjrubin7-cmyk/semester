@@ -72,6 +72,18 @@ export const StudyIcon = svg(
     <path d="M12 6.5v15" />
   </>,
 );
+export const NotesIcon = svg(
+  <>
+    <path d="M5.5 3.5h13v17h-13z" />
+    <path d="M9 8h6M9 12h6M9 16h3" />
+  </>,
+);
+export const PlayIcon = svg(<path d="M8 5.5v13l11-6.5z" />);
+export const PauseIcon = svg(
+  <>
+    <path d="M9 5v14M15 5v14" />
+  </>,
+);
 export const CalendarIcon = svg(
   <>
     <path d="M4 5.5h16v15H4z" />

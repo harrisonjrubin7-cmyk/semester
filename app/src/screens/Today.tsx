@@ -1,9 +1,12 @@
-import { COURSE_BY_ID, blocksFor } from '../data/catalog';
+import { COURSE_BY_ID } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, DateRow, Meter, SectionLabel, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import {
+  appointmentsOn,
+  railFor,
+  tasksOn,
   FEED_FILTERS,
   feed,
   filterFeed,
@@ -67,13 +70,99 @@ function NextClassCard() {
   );
 }
 
+/**
+ * Your own tasks for today, below the coursework and clearly labelled as yours.
+ * The app's premise is that syllabus content is trustworthy because it has a
+ * citation attached; this does not, and says so.
+ */
+function YourTasks() {
+  const { state, dispatch, now } = useStore();
+  const mine = tasksOn(state.tasks, now);
+  const appts = appointmentsOn(state.appointments, now);
+  if (mine.length === 0 && appts.length === 0) return null;
+
+  const left = mine.filter((t) => !t.done).length;
+
+  return (
+    <>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'baseline',
+          justifyContent: 'space-between',
+          margin: '26px 0 12px',
+        }}
+      >
+        <div className="section-label">Yours today</div>
+        <button
+          type="button"
+          className="bare"
+          onClick={() => dispatch({ type: 'go', screen: 'mine' })}
+          style={{
+            width: 'auto',
+            fontFamily: 'var(--font-heading)',
+            fontSize: 12,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--app-accent)',
+          }}
+        >
+          {left > 0 ? `${left} left` : 'All done'}
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {mine.map((t) => (
+          <div
+            key={t.id}
+            style={{
+              display: 'flex',
+              gap: 12,
+              alignItems: 'flex-start',
+              padding: '10px 0',
+              borderBottom: '1px solid var(--app-line)',
+            }}
+          >
+            <button
+              type="button"
+              className="bare"
+              onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+              aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
+              style={{ width: 20, flex: 'none', marginTop: 2 }}
+            >
+              <TickBox on={t.done} />
+            </button>
+            <div style={{ flex: 1, minWidth: 0, opacity: t.done ? 0.42 : 1 }}>
+              <div
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.3,
+                  textDecoration: t.done ? 'line-through' : 'none',
+                }}
+              >
+                {t.title}
+              </div>
+              {(t.time || t.courseId) && (
+                <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
+                  {t.courseId ? `${COURSE_BY_ID[t.courseId]?.code} · ` : ''}
+                  {t.time}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 /** Nav mode 1A — a fixed sequence: next class, checklist, rail, campus, week. */
 function TabHome() {
   const { state, dispatch, now } = useStore();
   const today = itemsDueToday(now);
   const doneCount = today.filter((i) => state.done[i.id]).length;
   const left = today.length - doneCount;
-  const blocks = blocksFor(now);
+  const rail = railFor(now, state.appointments);
   const minutes = minutesNow(now);
   const ahead = upcomingItems(now).filter((i) => !i.isToday);
   const nextEvent = datedEvents(now).find((e) => !e.isPast);
@@ -201,14 +290,16 @@ function TabHome() {
         })}
       </div>
 
+      <YourTasks />
+
       <SectionLabel>Today’s rail</SectionLabel>
-      {blocks.length === 0 ? (
+      {rail.length === 0 ? (
         <div style={{ fontSize: 14, opacity: 0.5, paddingBottom: 8 }}>
           No classes today. The rail picks up again on your next teaching day.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {blocks.map((b, i) => {
+          {rail.map((b, i) => {
             const past = b.at < minutes;
             return (
               <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'stretch' }}>
@@ -235,9 +326,12 @@ function TabHome() {
                       height: 7,
                       background: b.canceled
                         ? 'var(--app-track)'
-                        : b.optional
-                          ? 'var(--app-accent-deep)'
-                          : 'var(--app-accent)',
+                        : b.mine
+                          ? 'transparent'
+                          : b.optional
+                            ? 'var(--app-accent-deep)'
+                            : 'var(--app-accent)',
+                      border: b.mine ? '1px solid var(--app-accent)' : 'none',
                     }}
                   />
                 </div>
@@ -253,7 +347,14 @@ function TabHome() {
                   >
                     {b.title}
                   </div>
-                  <div style={{ fontSize: 12, opacity: 0.6 }}>{b.meta}</div>
+                  <div style={{ fontSize: 12, opacity: 0.6 }}>
+                    {b.mine && (
+                      <span className="tag tag-neutral" style={{ marginRight: 6 }}>
+                        Yours
+                      </span>
+                    )}
+                    {b.meta}
+                  </div>
                 </div>
               </div>
             );

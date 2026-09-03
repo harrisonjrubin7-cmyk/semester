@@ -1,6 +1,7 @@
 import { COURSE_BY_ID, COURSES, COURSE_SHORT, ITEMS, blocksFor, classNote, GUIDES } from '../data/catalog';
 import { EVENTS } from '../data/events';
 import {
+  dateToIso,
   daysBetween,
   decorateEvent,
   decorateItem,
@@ -9,7 +10,14 @@ import {
   SEMESTER_YEAR,
   untilLabel,
 } from './date';
-import type { Block, CourseId, DatedEvent, DatedItem } from './types';
+import type {
+  Appointment,
+  Block,
+  CourseId,
+  DatedEvent,
+  DatedItem,
+  PersonalTask,
+} from './types';
 
 /** Every deadline, dated against the current clock, soonest first. */
 export function datedItems(now: Date): DatedItem[] {
@@ -240,6 +248,38 @@ export function tonightPlan() {
     });
     return { courseId: c.id, code: guide.code, unit: weakest, index };
   });
+}
+
+// ── Your own things, folded into the day ──────────────────────────────────
+
+/** Personal tasks due on a given day. */
+export function tasksOn(tasks: PersonalTask[], date: Date): PersonalTask[] {
+  const iso = dateToIso(date);
+  return tasks.filter((t) => t.date === iso);
+}
+
+/** Appointments on a given day, in time order. */
+export function appointmentsOn(appointments: Appointment[], date: Date): Appointment[] {
+  const iso = dateToIso(date);
+  return appointments.filter((a) => a.date === iso).sort((a, b) => a.at - b.at);
+}
+
+/**
+ * The full rail for a day: classes from the syllabi and your own appointments,
+ * merged in time order. Appointments are marked `mine` so the UI can show whose
+ * they are rather than implying the syllabus asked for them.
+ */
+export function railFor(date: Date, appointments: Appointment[]): (Block & { mine?: boolean })[] {
+  const classes = blocksFor(date);
+  const mine = appointmentsOn(appointments, date).map((a) => ({
+    time: a.time,
+    at: a.at,
+    title: a.title,
+    meta: a.where || 'Added by you',
+    c: null,
+    mine: true,
+  }));
+  return [...classes, ...mine].sort((a, b) => a.at - b.at);
 }
 
 export const SEMESTER = { year: SEMESTER_YEAR };

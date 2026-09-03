@@ -8,8 +8,18 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import type { CourseId, NavMode, Screen, StudyMode } from '../lib/types';
+import type {
+  Appointment,
+  CourseId,
+  NavMode,
+  Note,
+  PersonalTask,
+  Screen,
+  StudyMode,
+} from '../lib/types';
 import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
+import { newId } from '../lib/files';
+import { dateToIso, isoToDate } from '../lib/date';
 
 /**
  * The prototype held everything in one component's state and lost it on reload.
@@ -26,6 +36,10 @@ interface Persisted {
   picked: Record<string, boolean>;
   seenOnboarding: boolean;
   cleared: boolean;
+  /** Things you added yourself — kept apart from anything a syllabus produced. */
+  tasks: PersonalTask[];
+  appointments: Appointment[];
+  notes: Note[];
 }
 
 interface Ephemeral {
@@ -41,6 +55,18 @@ interface Ephemeral {
   filter: string;
   evFilter: string;
   calTab: 'deadlines' | 'campus';
+  /** Which schedule view the calendar is showing. */
+  calView: 'day' | 'month' | 'semester';
+  /** Which sources the calendar is showing — combined, or one at a time. */
+  calSource: 'all' | 'classes' | 'deadlines' | 'campus';
+  /** Day the Day view is on, as an ISO date. Null means today. */
+  calDay: string | null;
+  /** Which section of the Mine screen is open. */
+  mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
+  /** Note currently open in the editor. */
+  noteId: string | null;
+  /** Unit whose lesson is playing. */
+  lessonUnit: number;
   query: string;
   onb: number;
   loadStep: number;
@@ -81,6 +107,9 @@ const DEFAULT_PERSISTED: Persisted = {
   }, {}),
   seenOnboarding: false,
   cleared: false,
+  tasks: [],
+  appointments: [],
+  notes: [],
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -96,6 +125,12 @@ function initialEphemeral(now: Date): Ephemeral {
     filter: 'All',
     evFilter: 'All',
     calTab: 'deadlines',
+    calView: 'month',
+    calSource: 'all',
+    calDay: null,
+    mineTab: 'tasks',
+    noteId: null,
+    lessonUnit: 0,
     query: '',
     onb: 0,
     loadStep: 0,
@@ -127,6 +162,9 @@ function loadPersisted(): Persisted {
       done: saved.done ?? {},
       saved: saved.saved ?? DEFAULT_PERSISTED.saved,
       picked: { ...DEFAULT_PERSISTED.picked, ...(saved.picked ?? {}) },
+      tasks: saved.tasks ?? [],
+      appointments: saved.appointments ?? [],
+      notes: saved.notes ?? [],
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -166,9 +204,26 @@ export type Action =
   | { type: 'redrill' }
   | { type: 'startQuiz'; quiz: QuizQuestion[] }
   | { type: 'pickAnswer'; index: number }
-  | { type: 'nextQuestion' };
+  | { type: 'nextQuestion' }
+  | { type: 'setCalView'; view: 'day' | 'month' | 'semester' }
+  | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
+  | { type: 'setCalDay'; date: string | null }
+  | { type: 'stepDay'; delta: number }
+  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
+  | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
+  | { type: 'toggleTask'; id: string }
+  | { type: 'deleteTask'; id: string }
+  | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
+  | { type: 'deleteAppointment'; id: string }
+  | { type: 'newNote'; courseId: CourseId | null }
+  | { type: 'openNote'; id: string }
+  | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId'>> }
+  | { type: 'attachFile'; noteId: string; fileId: string }
+  | { type: 'detachFile'; noteId: string; fileId: string }
+  | { type: 'deleteNote'; id: string }
+  | { type: 'openLesson'; unit: number };
 
-const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'me'];
+const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
 
 function push(state: State, screen: Screen): State {
   if (screen === state.screen) return state;
@@ -313,6 +368,111 @@ export function reducer(state: State, action: Action): State {
     case 'nextQuestion':
       return { ...state, quizIdx: state.quizIdx + 1, quizPicked: null };
 
+    case 'setCalView':
+      return { ...state, calView: action.view };
+
+    case 'setCalSource':
+      return { ...state, calSource: action.source };
+
+    case 'setCalDay':
+      return { ...state, calDay: action.date };
+
+    case 'stepDay': {
+      const base = state.calDay ? isoToDate(state.calDay) : new Date();
+      base.setDate(base.getDate() + action.delta);
+      return { ...state, calDay: dateToIso(base) };
+    }
+
+    case 'setMineTab':
+      return { ...state, mineTab: action.tab };
+
+    case 'addTask':
+      return {
+        ...state,
+        tasks: [
+          ...state.tasks,
+          { ...action.task, id: newId(), created: Date.now(), done: false },
+        ],
+      };
+
+    case 'toggleTask':
+      return {
+        ...state,
+        tasks: state.tasks.map((t) => (t.id === action.id ? { ...t, done: !t.done } : t)),
+      };
+
+    case 'deleteTask':
+      return { ...state, tasks: state.tasks.filter((t) => t.id !== action.id) };
+
+    case 'addAppointment':
+      return {
+        ...state,
+        appointments: [
+          ...state.appointments,
+          { ...action.appointment, id: newId(), created: Date.now() },
+        ],
+      };
+
+    case 'deleteAppointment':
+      return {
+        ...state,
+        appointments: state.appointments.filter((a) => a.id !== action.id),
+      };
+
+    case 'newNote': {
+      const note: Note = {
+        id: newId(),
+        title: '',
+        body: '',
+        created: Date.now(),
+        updated: Date.now(),
+        courseId: action.courseId,
+        fileIds: [],
+      };
+      return push({ ...state, notes: [note, ...state.notes], noteId: note.id }, 'note');
+    }
+
+    case 'openNote':
+      return push({ ...state, noteId: action.id }, 'note');
+
+    case 'updateNote':
+      return {
+        ...state,
+        notes: state.notes.map((n) =>
+          n.id === action.id ? { ...n, ...action.patch, updated: Date.now() } : n,
+        ),
+      };
+
+    case 'attachFile':
+      return {
+        ...state,
+        notes: state.notes.map((n) =>
+          n.id === action.noteId && !n.fileIds.includes(action.fileId)
+            ? { ...n, fileIds: [...n.fileIds, action.fileId], updated: Date.now() }
+            : n,
+        ),
+      };
+
+    case 'detachFile':
+      return {
+        ...state,
+        notes: state.notes.map((n) =>
+          n.id === action.noteId
+            ? { ...n, fileIds: n.fileIds.filter((f) => f !== action.fileId), updated: Date.now() }
+            : n,
+        ),
+      };
+
+    case 'deleteNote':
+      return {
+        ...state,
+        notes: state.notes.filter((n) => n.id !== action.id),
+        noteId: state.noteId === action.id ? null : state.noteId,
+      };
+
+    case 'openLesson':
+      return push({ ...state, lessonUnit: action.unit }, 'lesson');
+
     default:
       return state;
   }
@@ -362,6 +522,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       picked: state.picked,
       seenOnboarding: state.seenOnboarding,
       cleared: state.cleared,
+      tasks: state.tasks,
+      appointments: state.appointments,
+      notes: state.notes,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
@@ -376,6 +539,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     state.picked,
     state.seenOnboarding,
     state.cleared,
+    state.tasks,
+    state.appointments,
+    state.notes,
   ]);
 
   const value = useMemo(() => ({ state, dispatch, now }), [state, now]);

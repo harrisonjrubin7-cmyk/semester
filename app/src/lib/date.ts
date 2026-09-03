@@ -22,6 +22,24 @@ export const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const DOW_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
+/**
+ * YYYY-MM-DD in local time.
+ *
+ * Deliberately not `toISOString()`, which converts to UTC first and so lands on
+ * the wrong day for anyone west of Greenwich after their evening.
+ */
+export function dateToIso(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+/** The inverse — parsed as a local date, not UTC midnight. */
+export function isoToDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}
+
 /** Midnight on the day `d` falls in — the unit every comparison here works in. */
 export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());

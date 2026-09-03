@@ -11,6 +11,7 @@ import {
   Search as SearchIcon,
   StudyIcon,
   TodayIcon,
+  NotesIcon,
 } from './components/Icons';
 import { Onboarding } from './screens/Onboarding';
 import { Today } from './screens/Today';
@@ -21,11 +22,12 @@ import { Import, Importing, Review } from './screens/Import';
 import { Study } from './screens/Study';
 import { Guide } from './screens/Guide';
 import { Drill, Quiz } from './screens/Drill';
+import { Mine, NoteEditor } from './screens/Mine';
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { DOW, MONTHS } from './lib/date';
 import type { Screen } from './lib/types';
 
-const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'me'];
+const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
 
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
@@ -76,6 +78,10 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Today', title: 'Alerts' };
     case 'settings':
       return { kicker: 'Preferences', title: 'Settings' };
+    case 'mine':
+      return { kicker: 'Yours, not the syllabus', title: 'Mine' };
+    case 'note':
+      return { kicker: 'Note', title: 'Editing' };
     case 'import':
       return { kicker: 'New source', title: 'Import syllabus' };
     case 'importing':
@@ -188,6 +194,7 @@ const TABS: { id: Screen; label: string; Icon: typeof TodayIcon }[] = [
   { id: 'courses', label: 'Courses', Icon: CoursesIcon },
   { id: 'study', label: 'Study', Icon: StudyIcon },
   { id: 'calendar', label: 'Calendar', Icon: CalendarIcon },
+  { id: 'mine', label: 'Mine', Icon: NotesIcon },
   { id: 'me', label: 'Me', Icon: Person },
 ];
 
@@ -259,6 +266,10 @@ function CurrentScreen() {
       return <Notifications />;
     case 'settings':
       return <Settings />;
+    case 'mine':
+      return <Mine />;
+    case 'note':
+      return <NoteEditor />;
     case 'import':
       return <Import />;
     case 'importing':

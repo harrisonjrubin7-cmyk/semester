@@ -204,6 +204,52 @@ export interface AppNotification {
   body: string;
 }
 
+// ── Your own things ───────────────────────────────────────────────────────
+// Everything above comes out of a syllabus. Everything below you added
+// yourself, and the app keeps the two visibly apart.
+
+/** A task you added — not something a syllabus asked for. */
+export interface PersonalTask {
+  id: string;
+  title: string;
+  /** ISO date, YYYY-MM-DD. Undated tasks sit in "someday". */
+  date: string | null;
+  /** Free text — "6:30 PM", "before work". Never parsed. */
+  time: string;
+  note: string;
+  done: boolean;
+  created: number;
+  /** Filed against a course, or null when it is nothing to do with school. */
+  courseId: CourseId | null;
+}
+
+/** Something with a time and a place, on the day's rail alongside classes. */
+export interface Appointment {
+  id: string;
+  title: string;
+  /** ISO date, YYYY-MM-DD. */
+  date: string;
+  /** Minutes past midnight, so it sorts into the rail with classes. */
+  at: number;
+  /** How the time is written — "6:30p". */
+  time: string;
+  where: string;
+  note: string;
+  created: number;
+}
+
+/** A note you wrote. */
+export interface Note {
+  id: string;
+  title: string;
+  body: string;
+  created: number;
+  updated: number;
+  courseId: CourseId | null;
+  /** Ids of files attached to this note, held in IndexedDB. */
+  fileIds: string[];
+}
+
 export type Screen =
   | 'onboarding'
   | 'home'
@@ -222,9 +268,40 @@ export type Screen =
   | 'study'
   | 'guide'
   | 'quiz'
-  | 'drill';
+  | 'drill'
+  | 'lesson'
+  | 'mine'
+  | 'note';
 
-export type StudyMode = 'cards' | 'read' | 'quiz' | 'figures' | 'cases' | 'cram' | 'listen';
+export type StudyMode =
+  | 'cards'
+  | 'read'
+  | 'watch'
+  | 'quiz'
+  | 'figures'
+  | 'cases'
+  | 'cram'
+  | 'listen';
+
+/** One beat of a narrated lesson: what is on screen from `at` seconds. */
+export interface LessonCue {
+  /** Seconds into the narration. */
+  at: number;
+  /** 'title' opens the unit, 'q' poses a card, 'a' answers it, 'close' ends. */
+  kind: 'title' | 'q' | 'a' | 'point' | 'close';
+  text: string;
+}
+
+/** A narrated lesson for one unit of a guide. */
+export interface Lesson {
+  /** Index of the unit this teaches. */
+  unit: number;
+  title: string;
+  file: string;
+  seconds: number;
+  len: string;
+  cues: LessonCue[];
+}
 
 export type NavMode = 'tabs' | 'feed';
 
@@ -304,6 +381,8 @@ export interface CourseModule {
   extraFigures?: Figure[];
   examples?: Example[];
   podcast?: CoursePodcast;
+  /** Narrated lessons, one per unit, keyed by unit index. */
+  lessons?: Record<number, Lesson>;
   /** Time-box for this course on the Study screen's "tonight" plan. */
   planMinutes: string;
   /** What the Cram screen calls this guide's list of exam frames. */
