@@ -36,6 +36,23 @@ export function cloud(): SupabaseClient {
   return client;
 }
 
+/**
+ * Where an email link or an OAuth round trip should come back to.
+ *
+ * Deliberately not `window.location.href`. That href can still be carrying the
+ * `?code=` or `?error=` of the callback that just happened, and a redirect URL
+ * has to match the project's allowlist exactly — a near miss is not an error,
+ * it silently falls back to the Site URL, which is the kind of failure nobody
+ * can diagnose from the outside. The app's own address is stable, matches one
+ * allowlist entry, and is the same string in dev (`http://localhost:5173/`) as
+ * deployed (`https://…/semester/`).
+ */
+export function appUrl(): string {
+  const base = import.meta.env.BASE_URL || '/';
+  // `URL` is taken in this module by the project address, hence globalThis.
+  return new globalThis.URL(base, window.location.origin).href;
+}
+
 // ── Signing in ────────────────────────────────────────────────────────────
 
 export interface Account {
@@ -64,16 +81,15 @@ export async function signUp(email: string, password: string): Promise<string> {
   const { data, error } = await cloud().auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: window.location.href },
+    options: { emailRedirectTo: appUrl() },
   });
   if (error) throw new Error(error.message);
   // With email confirmation on, there is no session until the link is clicked.
   return data.session
     ? 'Account made. Your semester will sync from now on.'
     : 'Check your email for the confirmation link, then come back and sign in. ' +
-      'If that link lands on a "localhost refused to connect" page, the confirmation ' +
-      'still worked — Supabase verifies before it redirects — so just sign in here. ' +
-      '(Whoever runs this deployment can stop that by setting the project\'s Site URL.)';
+      'If the link lands on a page that will not load, the confirmation still worked — ' +
+      'it is verified before the redirect — so come back here and sign in anyway.';
 }
 
 export async function signIn(email: string, password: string): Promise<void> {
@@ -85,14 +101,14 @@ export async function signIn(email: string, password: string): Promise<void> {
 export async function signInWith(provider: 'google' | 'apple'): Promise<void> {
   const { error } = await cloud().auth.signInWithOAuth({
     provider,
-    options: { redirectTo: window.location.href },
+    options: { redirectTo: appUrl() },
   });
   if (error) throw new Error(error.message);
 }
 
 export async function sendReset(email: string): Promise<void> {
   const { error } = await cloud().auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.href,
+    redirectTo: appUrl(),
   });
   if (error) throw new Error(error.message);
 }
