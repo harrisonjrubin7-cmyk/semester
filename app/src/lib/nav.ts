@@ -113,6 +113,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'yes',
+    label: 'YES',
+    blurb: 'Registration and class search — and paste your schedule straight back in.',
+    keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section',
+    group: 'Semester',
+    root: 'courses',
+  },
+  {
     screen: 'mine',
     label: 'Mine',
     blurb: 'Your own tasks, appointments, notes and files.',

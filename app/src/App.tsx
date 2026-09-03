@@ -31,6 +31,7 @@ import { Grades } from './screens/Grades';
 import { Maps } from './screens/Maps';
 import { Mail } from './screens/Mail';
 import { Export } from './screens/Export';
+import { Yes } from './screens/Yes';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
@@ -136,6 +137,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Drafted here, sent by you', title: 'Email' };
     case 'export':
       return { kicker: 'Formats other software reads', title: 'Take it with you' };
+    case 'yes':
+      return { kicker: 'Registration, and the road back', title: 'YES' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -345,6 +348,8 @@ function CurrentScreen() {
       return <Mail />;
     case 'export':
       return <Export />;
+    case 'yes':
+      return <Yes />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':

@@ -368,6 +368,7 @@ export type Screen =
   | 'maps'
   | 'mail'
   | 'export'
+  | 'yes'
   | 'slides'
   | 'account'
   | 'cloud';

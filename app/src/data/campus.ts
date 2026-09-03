@@ -47,6 +47,26 @@ export const CAMPUS_LINKS: CampusLink[] = [
     note: 'Your Enrollment Services — registration, the official schedule, transcripts.',
   },
   {
+    id: 'yes-landing',
+    name: 'YES · Student Landing',
+    // The address this was taken from carried ?studentId=C… — one specific
+    // student's number. Everyone else tapping it would have been sending
+    // somebody else's identifier to the university, and YES resolves the
+    // signed-in student from the session anyway, so the parameter is not
+    // only unsafe to ship, it is unnecessary.
+    url: 'https://landing.app.vanderbilt.edu/landing/student-landing',
+    hint: '',
+    note: 'The page YES opens on: enrolment, holds, your advisor, the official schedule.',
+  },
+  {
+    id: 'yes-classes',
+    name: 'YES · Search Classes',
+    // Same again: the original carried ?commodoreIdToLoad=001049871.
+    url: 'https://more.app.vanderbilt.edu/more/SearchClasses!input.action',
+    hint: '',
+    note: 'The class search — what is offered, when it meets, what is still open. Copy a schedule out of it and paste it into Add a course.',
+  },
+  {
     id: 'anchorlink',
     name: 'AnchorLink',
     url: 'https://anchorlink.vanderbilt.edu',
