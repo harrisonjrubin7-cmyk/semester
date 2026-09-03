@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { addressIn } from '../lib/mail';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, SectionLabel } from '../components/ui';
 import { parseMaterial } from '../lib/parse';
@@ -347,6 +348,22 @@ export function Cloud() {
                   style={{ fontSize: 11, letterSpacing: '0.1em', opacity: 0.8, width: 'auto' }}
                 >
                   MAKE A TASK
+                </button>
+                <button
+                  type="button"
+                  className="bare"
+                  onClick={() =>
+                    dispatch({
+                      type: 'writeMail',
+                      purposeId: 'reply',
+                      courseId: m.courseId ?? '',
+                      to: addressIn(m.from),
+                      incoming: `From: ${m.from}\nSubject: ${m.subject}\n\n${m.preview}`,
+                    })
+                  }
+                  style={{ fontSize: 11, letterSpacing: '0.1em', opacity: 0.8, width: 'auto' }}
+                >
+                  DRAFT A REPLY
                 </button>
                 {m.link && (
                   <a href={m.link} target="_blank" rel="noreferrer" style={{ fontSize: 11, letterSpacing: '0.1em', opacity: 0.5 }}>

@@ -141,6 +141,13 @@ interface Ephemeral {
   coursesTab: 'courses' | 'due' | 'grades';
   /** Which standing the Coming-up list is showing: ahead, missed or finished. */
   dueTab: 'ahead' | 'overdue' | 'done';
+  /**
+   * What the Email screen should open already filled in.
+   *
+   * Set by whoever sent you there — a course page knows the professor, a
+   * message in the Mail tab knows what you are replying to — and read once.
+   */
+  mailSeed: { purposeId: string; courseId: CourseId | ''; to: string; incoming: string } | null;
   studyTab: 'guides' | 'tonight' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
@@ -229,6 +236,7 @@ function initialEphemeral(now: Date): Ephemeral {
     homeTab: 'today',
     coursesTab: 'courses',
     dueTab: 'ahead',
+    mailSeed: null,
     studyTab: 'guides',
     noteId: null,
     lessonUnit: 0,
@@ -363,6 +371,13 @@ export type Action =
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
   | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
+  | {
+      type: 'writeMail';
+      purposeId: string;
+      courseId?: CourseId | '';
+      to?: string;
+      incoming?: string;
+    }
   | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
   | { type: 'toggleTask'; id: string }
@@ -609,6 +624,17 @@ export function reducer(state: State, action: Action): State {
 
     case 'setDueTab':
       return { ...state, dueTab: action.tab };
+
+    case 'writeMail':
+      return {
+        ...push(state, 'mail'),
+        mailSeed: {
+          purposeId: action.purposeId,
+          courseId: action.courseId ?? '',
+          to: action.to ?? '',
+          incoming: action.incoming ?? '',
+        },
+      };
 
     case 'setStudyTab':
       return { ...state, studyTab: action.tab };

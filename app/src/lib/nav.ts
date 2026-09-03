@@ -105,6 +105,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'calendar',
   },
   {
+    screen: 'mail',
+    label: 'Email',
+    blurb: 'Draft the email you have been putting off — extension, question, meeting.',
+    keywords: 'email mail write draft professor reply extension office hours absence recommendation letter follow up gmail outlook compose message send',
+    group: 'Semester',
+    root: 'courses',
+  },
+  {
     screen: 'mine',
     label: 'Mine',
     blurb: 'Your own tasks, appointments, notes and files.',

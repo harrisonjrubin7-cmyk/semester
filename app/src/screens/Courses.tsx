@@ -347,6 +347,19 @@ export function CourseDetail() {
         Study this course
       </button>
 
+      {course.email ? (
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          onClick={() =>
+            dispatch({ type: 'writeMail', purposeId: 'question', courseId: course.id })
+          }
+          style={{ height: 44, marginTop: 8 }}
+        >
+          Email {course.prof || 'the professor'}
+        </button>
+      ) : null}
+
       <LmsLink course={course} />
 
       <SectionLabel style={{ margin: '24px 0 6px' }}>How the grade is built</SectionLabel>
