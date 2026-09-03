@@ -17,6 +17,7 @@ import {
   appointmentsOn,
   datedEvents,
   datedItems,
+  feedEventsOn,
   itemsOn,
   railFor,
 } from '../lib/select';
@@ -73,8 +74,18 @@ function DayView() {
     ? state.tasks.filter((t) => t.date === dateToIso(day))
     : [];
 
+  // Anything a connected calendar says is on — Brightspace, Outlook, Zoom.
+  // It sits in its own section, labelled, so a feed can never be mistaken for
+  // a date the syllabus stated.
+  const feedToday =
+    source === 'all' || source === 'campus' ? feedEventsOn(state.feedEvents, day) : [];
+
   const empty =
-    rail.length === 0 && due.length === 0 && events.length === 0 && myTasks.length === 0;
+    rail.length === 0 &&
+    due.length === 0 &&
+    events.length === 0 &&
+    myTasks.length === 0 &&
+    feedToday.length === 0;
 
   return (
     <div style={{ padding: 18 }}>
@@ -279,6 +290,48 @@ function DayView() {
         </>
       )}
 
+      {feedToday.length > 0 && (
+        <>
+          <SectionLabel>From your calendars</SectionLabel>
+          {feedToday.map((e) => {
+            const feed = state.feeds.find((f) => f.id === e.sourceId);
+            return (
+              <div
+                key={e.id}
+                style={{
+                  display: 'flex',
+                  gap: 10,
+                  alignItems: 'center',
+                  padding: '12px 0',
+                  borderBottom: '1px solid var(--app-line)',
+                }}
+              >
+                <span
+                  style={{
+                    width: 54,
+                    flex: 'none',
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: 12,
+                    opacity: 0.6,
+                  }}
+                >
+                  {e.time}
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>
+                    {e.title}
+                  </span>
+                  <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>
+                    {feed?.name ?? 'Calendar'}
+                    {e.where ? ` · ${e.where}` : ''}
+                  </span>
+                </span>
+              </div>
+            );
+          })}
+        </>
+      )}
+
       {tasks.length > 0 && null}
       <div style={{ height: 22 }} />
     </div>
@@ -307,6 +360,7 @@ function MonthView() {
   }
   if (calSource === 'all' || calSource === 'campus') {
     datedEvents(now).forEach((e) => add(e.date, { c: null, kind: 'event' }));
+    state.feedEvents.forEach((e) => add(isoToDate(e.date), { c: e.courseId, kind: 'feed' }));
   }
   if (calSource === 'classes') {
     // Mark every day that has a class on it, so a term's teaching days show up.

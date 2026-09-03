@@ -55,8 +55,12 @@ const courseName = nameMatch ? nameMatch[1] : '';
 
 // Units and their cards, in order.
 const unitBlocks = src.split(/\n {4}\{\n {6}name: '/).slice(1);
-const units = unitBlocks.map((block) => {
-  const name = block.slice(0, block.indexOf("'"));
+const units = unitBlocks.map((rawBlock) => {
+  const name = rawBlock.slice(0, rawBlock.indexOf("'"));
+  // The final split runs to the end of the file, so bound it at the next
+  // top-level key or the self-test lands inside the last unit as well.
+  const end = rawBlock.search(/\n {2}(?:frames|selfTest|terms|cases)\s*:/);
+  const block = end === -1 ? rawBlock : rawBlock.slice(0, end);
   const cards = grab(
     /\{\n\s*q: '((?:[^'\\]|\\.)*)',\n\s*a: '((?:[^'\\]|\\.)*)',\n\s*\}/g,
     block,

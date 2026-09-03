@@ -10,9 +10,16 @@ mechanical about that, or turned out to be a mistake worth catching, is here.
 ingest.py        any document → clean text
 new-course.mjs   scaffold a course folder and register it
 validate.mjs     the checks that catch silent breakage
+guide_reader.py  read a guide out of its TypeScript source
 make-script.mjs  guide → podcast script draft
+lessons.py       guide → a narrated lesson per unit, with slide cues
+slides.py        guide → a PowerPoint deck
+handout.py       guide → a Word document and a PDF
 chapters.py      recover chapter marks from an existing recording
 ```
+
+Everything after `guide_reader.py` reads the same guide through it, so a deck, a
+handout and a lesson cannot disagree with the app or with each other.
 
 `audio/synth.py` renders a script to an MP3 with exact chapter marks. See
 [`../audio/README.md`](../audio/README.md).
@@ -100,6 +107,47 @@ episode never shipping a list.
 If it finds nothing, the recording has no pauses long enough. Say so in the data
 rather than inventing marks — the ECON full read is in exactly that state and is
 labelled approximate.
+
+## lessons.py
+
+A narrated lesson for every unit: the tutor names the unit, poses each question,
+leaves two seconds, answers it, and closes.
+
+```bash
+python3 pipeline/lessons.py econ --dry-run     # what it would render, and how long
+python3 pipeline/lessons.py econ               # all units
+python3 pipeline/lessons.py econ --unit 3      # just one, keeping the rest
+```
+
+It writes `app/public/audio/lessons/<course>/unit-<n>.mp3`, a `lessons.json`
+beside it, and `app/src/data/courses/<course>/lessons.ts` for the module to
+import — one line in `index.ts` and the Watch mode has them.
+
+The cues are the point. Each line records the second its beat begins, measured
+from the render, so the app draws the slide in step with the voice instead of
+playing a video of type. Forty-four lessons come to 46 MB; the same content as
+video would be ten times that and blurrier.
+
+`--mp4` also writes a video file per unit, for handing to someone who wants a
+file rather than an app.
+
+## slides.py and handout.py
+
+The same guide as a deck and as a document.
+
+```bash
+python3 pipeline/slides.py --all      # app/public/decks/<course>.pptx
+python3 pipeline/handout.py --all     # app/public/handouts/<course>.docx and .pdf
+```
+
+The deck puts every question on its own slide, with the answer on the next — a
+deck that shows both at once is a document, and there is a document for that.
+The .docx opens in Word, in Pages, and in Google Docs; the PDF is for reading
+and printing. Both are linked from the guide's Doc mode, and the validator warns
+when a course has no files for those links to point at.
+
+Print styling in the app covers the third case: a machine with no pipeline can
+still turn the guide into a PDF through the browser.
 
 ## make-script.mjs
 

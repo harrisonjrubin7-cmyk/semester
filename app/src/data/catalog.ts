@@ -9,6 +9,7 @@ import type {
   FigureMap,
   Guide,
   Item,
+  Lesson,
 } from '../lib/types';
 import { SEMESTER_YEAR, sameDay } from '../lib/date';
 
@@ -58,6 +59,11 @@ export const EXAMPLES: Record<CourseId, Example[]> = Object.fromEntries(
 
 export const PODCAST: Record<CourseId, CoursePodcast> = Object.fromEntries(
   CATALOG.map((m) => [m.course.id, m.podcast ?? { blurb: '', editions: [] }]),
+);
+
+/** Narrated lessons, keyed by course then by unit index. */
+export const LESSONS: Record<CourseId, Record<number, Lesson>> = Object.fromEntries(
+  CATALOG.map((m) => [m.course.id, m.lessons ?? {}]),
 );
 
 export const PLAN_MIN: Record<CourseId, string> = Object.fromEntries(

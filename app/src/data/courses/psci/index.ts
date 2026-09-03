@@ -1,5 +1,6 @@
 import type { CourseModule } from '../../../lib/types';
 import { PSCI_GUIDE } from './guide';
+import lessons from './lessons';
 
 /**
  * PSCI 1104 · Understanding Political Controversy · Fall 2026
@@ -174,6 +175,7 @@ const psci: CourseModule = {
   ],
 
   guide: PSCI_GUIDE,
+  lessons,
 
   figures: {
     1: {

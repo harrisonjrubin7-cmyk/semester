@@ -1,9 +1,10 @@
-import { GUIDES, FRAME_LABELS, allCards, weakestUnit, EXTRA_FIGURES, FIGURES, PODCAST, EXAMPLES } from '../data/catalog';
+import { FRAME_LABELS, allCards, weakestUnit, PODCAST, EXAMPLES } from '../data/catalog';
 import { useMemo, useRef } from 'react';
 import { useStore } from '../state/store';
+import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, Meter, SectionLabel } from '../components/ui';
-import { ChevronRight } from '../components/Icons';
+import { ChevronRight, Plus } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
 import { buildQuiz } from '../lib/quiz';
 import type { StudyMode } from '../lib/types';
@@ -11,6 +12,9 @@ import type { StudyMode } from '../lib/types';
 const MODES: { id: StudyMode; label: string }[] = [
   { id: 'cards', label: 'Cards' },
   { id: 'read', label: 'Read' },
+  { id: 'watch', label: 'Watch' },
+  { id: 'slides', label: 'Slides' },
+  { id: 'doc', label: 'Doc' },
   { id: 'quiz', label: 'Quiz' },
   { id: 'figures', label: 'Figures' },
   { id: 'cases', label: 'Cases' },
@@ -20,15 +24,35 @@ const MODES: { id: StudyMode; label: string }[] = [
 
 export function Guide() {
   const { state, dispatch } = useStore();
-  const guide = GUIDES[state.guideId];
+  const { guide, figures: figMap, updates, onUnit } = useLive(state.guideId);
   const cards = allCards(guide);
   const weak = weakestUnit(guide);
-  const figMap = FIGURES[state.guideId] ?? {};
 
   return (
     <div style={{ padding: 18 }}>
       <div style={{ fontSize: 15, lineHeight: 1.3 }}>{guide.name}</div>
       <div style={{ fontSize: 13, opacity: 0.6, marginTop: 3 }}>{guide.blurb}</div>
+
+      <button
+        type="button"
+        className="btn btn-secondary"
+        onClick={() => dispatch({ type: 'openUpdate', courseId: state.guideId, unit: null })}
+        style={{
+          marginTop: 12,
+          height: 36,
+          fontSize: 11,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 7,
+        }}
+      >
+        <Plus size={14} />
+        {updates.length === 0
+          ? 'New reading or handout'
+          : `${updates.length} added · add more`}
+      </button>
 
       <div style={{ marginTop: 16 }}>
         <ChipRow
@@ -263,45 +287,90 @@ export function Guide() {
                       gap: 14,
                     }}
                   >
-                    {u.cards.map((c) => (
-                      <div key={c.q}>
-                        <div
-                          style={{
-                            fontFamily: 'var(--font-heading)',
-                            fontSize: 17,
-                            lineHeight: 1.2,
-                            textWrap: 'pretty',
-                          }}
-                        >
-                          {c.q}
+                    {u.cards.map((c, ci) => {
+                      // Anything past the count the guide shipped with is
+                      // something you added, and says so.
+                      const isNew = ci >= (guide.baseCards[i] ?? u.cards.length);
+                      return (
+                        <div key={c.q}>
+                          {isNew && <span className="tag tag-accent">Added</span>}
+                          <div
+                            style={{
+                              fontFamily: 'var(--font-heading)',
+                              fontSize: 17,
+                              lineHeight: 1.2,
+                              textWrap: 'pretty',
+                              marginTop: isNew ? 6 : 0,
+                            }}
+                          >
+                            {c.q}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 14,
+                              lineHeight: 1.5,
+                              opacity: 0.78,
+                              marginTop: 3,
+                              textWrap: 'pretty',
+                            }}
+                          >
+                            {c.a}
+                          </div>
                         </div>
-                        <div
-                          style={{
-                            fontSize: 14,
-                            lineHeight: 1.5,
-                            opacity: 0.78,
-                            marginTop: 3,
-                            textWrap: 'pretty',
-                          }}
-                        >
-                          {c.a}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
+
+                    {onUnit(i)
+                      .filter((up) => up.body)
+                      .map((up) => (
+                        <Blueprint key={up.id} style={{ padding: '13px 14px' }}>
+                          <div className="kicker">
+                            Added{up.source ? ` · ${up.source}` : ''}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 13.5,
+                              lineHeight: 1.55,
+                              opacity: 0.82,
+                              marginTop: 6,
+                              whiteSpace: 'pre-wrap',
+                              textWrap: 'pretty',
+                            }}
+                          >
+                            {up.body}
+                          </div>
+                        </Blueprint>
+                      ))}
+
                     {fig && <FigureCard figure={fig} />}
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => dispatch({ type: 'startDrill', unit: i })}
-                      style={{
-                        alignSelf: 'flex-start',
-                        fontSize: 11,
-                        letterSpacing: '0.12em',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      Drill this unit
-                    </button>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => dispatch({ type: 'startDrill', unit: i })}
+                        style={{
+                          fontSize: 11,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        Drill this unit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() =>
+                          dispatch({ type: 'openUpdate', courseId: state.guideId, unit: i })
+                        }
+                        style={{
+                          fontSize: 11,
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        Add to this unit
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -310,6 +379,9 @@ export function Guide() {
         </div>
       )}
 
+      {state.mode === 'watch' && <Watch />}
+      {state.mode === 'slides' && <Decks />}
+      {state.mode === 'doc' && <Documents />}
       {state.mode === 'figures' && <Figures />}
       {state.mode === 'cases' && <Cases />}
       {state.mode === 'cram' && <Cram />}
@@ -331,11 +403,287 @@ export function Guide() {
   );
 }
 
+/**
+ * The lesson list.
+ *
+ * A lesson is the unit taught out loud — the same material as Read, in the
+ * order a lecturer would take it, with the slide changing as the voice moves.
+ * Everything that has a recording is here; anything added since shows as a
+ * count on the row, because the lesson still plays the old narration and the
+ * app should say so rather than let it look complete.
+ */
+function Watch() {
+  const { state, dispatch } = useStore();
+  const { guide, lessons, onUnit } = useLive(state.guideId);
+  const made = Object.keys(lessons).length;
+  const total = Object.values(lessons).reduce((n, l) => n + l.seconds, 0);
+
+  if (made === 0) {
+    return (
+      <Blueprint style={{ padding: 16, marginTop: 14, background: 'var(--app-hero)' }}>
+        <div className="kicker">Lessons</div>
+        <div className="chrome-text" style={{ fontSize: 26, marginTop: 8, lineHeight: 1.1 }}>
+          Not recorded yet
+        </div>
+        <div style={{ fontSize: 13, opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
+          One narrated lesson per unit, rendered by the pipeline:{' '}
+          <code style={{ fontSize: 12 }}>python3 pipeline/lessons.py {state.guideId}</code>
+        </div>
+      </Blueprint>
+    );
+  }
+
+  return (
+    <>
+      <div style={{ fontSize: 13, opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+        {made} {made === 1 ? 'lesson' : 'lessons'} · {Math.round(total / 60)} minutes. Each unit
+        taught out loud, with the slide changing as the voice moves. Headphones on the walk to
+        Buttrick and you have covered a unit.
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 14 }}>
+        {guide.units.map((u, i) => {
+          const lesson = lessons[i];
+          const added = onUnit(i).reduce((n, up) => n + up.cards.length, 0);
+          return (
+            <button
+              key={u.name}
+              type="button"
+              className="bare tappable"
+              disabled={!lesson}
+              onClick={() => lesson && dispatch({ type: 'openLesson', unit: i })}
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'center',
+                padding: '13px 0',
+                borderBottom: '1px solid var(--app-line)',
+                opacity: lesson ? 1 : 0.4,
+                textAlign: 'left',
+              }}
+            >
+              <span
+                style={{
+                  width: 26,
+                  flex: 'none',
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 20,
+                  opacity: 0.4,
+                }}
+              >
+                {i + 1}
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 15, lineHeight: 1.25 }}>{u.name}</span>
+                <span
+                  style={{
+                    display: 'block',
+                    fontSize: 11,
+                    opacity: 0.55,
+                    fontFamily: 'var(--font-heading)',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    marginTop: 3,
+                  }}
+                >
+                  {lesson ? lesson.len : 'not recorded'}
+                  {added > 0 && ` · ${added} added since`}
+                </span>
+              </span>
+              <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+/** Unit decks, for reading a unit through rather than drilling it. */
+function Decks() {
+  const { state, dispatch } = useStore();
+  const { guide } = useLive(state.guideId);
+
+  return (
+    <>
+      <div style={{ fontSize: 13, opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+        One point per slide, question before answer. Better than Read for a unit you have not met
+        yet; worse than Cards for one you nearly know.
+      </div>
+      <a href={`/decks/${state.guideId}.pptx`} target="_blank" rel="noreferrer" className="bare">
+        <Blueprint style={{ padding: '12px 14px', marginTop: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: 12,
+              letterSpacing: '0.12em',
+              color: 'var(--app-accent)',
+              flex: 'none',
+            }}
+          >
+            PPTX
+          </span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.35 }}>
+            The whole course as a PowerPoint deck
+          </span>
+          <ChevronRight size={15} style={{ opacity: 0.4, flex: 'none' }} />
+        </Blueprint>
+      </a>
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: 14 }}>
+        {guide.units.map((u, i) => (
+          <button
+            key={u.name}
+            type="button"
+            className="bare tappable"
+            onClick={() => dispatch({ type: 'openDeck', unit: i })}
+            style={{
+              display: 'flex',
+              gap: 12,
+              alignItems: 'center',
+              padding: '13px 0',
+              borderBottom: '1px solid var(--app-line)',
+              textAlign: 'left',
+            }}
+          >
+            <span
+              style={{
+                width: 26,
+                flex: 'none',
+                fontFamily: 'var(--font-heading)',
+                fontSize: 20,
+                opacity: 0.4,
+              }}
+            >
+              {i + 1}
+            </span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'block', fontSize: 15, lineHeight: 1.25 }}>{u.name}</span>
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: 11,
+                  opacity: 0.55,
+                  fontFamily: 'var(--font-heading)',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  marginTop: 3,
+                }}
+              >
+                {u.cards.length * 2 + 2} slides
+              </span>
+            </span>
+            <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/**
+ * The guide as a document.
+ *
+ * Two routes, and both matter: the printable view is the whole guide as one
+ * page, which the browser turns into a PDF and a phone can save; the generated
+ * files are a real .docx and .pdf written by the pipeline, so the guide can be
+ * annotated in Word, dropped into Google Docs, or printed at the library.
+ */
+function Documents() {
+  const { state } = useStore();
+  const { guide } = useLive(state.guideId);
+  const stem = `/handouts/${state.guideId}`;
+
+  const files = [
+    { label: 'PDF', href: `${stem}.pdf`, note: 'Reads anywhere. Print it.' },
+    { label: 'Word', href: `${stem}.docx`, note: 'Annotate it, or open it in Google Docs.' },
+    {
+      label: 'PPTX',
+      href: `/decks/${state.guideId}.pptx`,
+      note: 'The deck, for PowerPoint, Keynote or Google Slides.',
+    },
+  ];
+
+  return (
+    <>
+      <div style={{ fontSize: 13, opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+        The same {guide.units.length} units as a document — every card, the terms and the
+        self-test, in reading order.
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginTop: 14 }}>
+        {files.map((f) => (
+          <a key={f.label} href={f.href} target="_blank" rel="noreferrer" className="bare">
+            <Blueprint style={{ padding: '14px 15px', display: 'flex', gap: 12, alignItems: 'center' }}>
+              <span
+                style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 13,
+                  letterSpacing: '0.12em',
+                  color: 'var(--app-accent)',
+                  width: 46,
+                  flex: 'none',
+                }}
+              >
+                {f.label}
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 14 }}>
+                  {guide.code} study guide
+                </span>
+                <span style={{ display: 'block', fontSize: 11.5, opacity: 0.6, marginTop: 2 }}>
+                  {f.note}
+                </span>
+              </span>
+              <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+            </Blueprint>
+          </a>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        className="btn btn-primary btn-block"
+        onClick={() => window.print()}
+        style={{
+          height: 46,
+          fontSize: 13,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          marginTop: 14,
+        }}
+      >
+        Print this screen
+      </button>
+
+      <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.5, marginTop: 10, textWrap: 'pretty' }}>
+        The two files are written by <code style={{ fontSize: 11 }}>pipeline/handout.py</code> from
+        the same data this screen reads, so they cannot drift from the app. Anything you have added
+        yourself is in the app but not yet in the files — re-run it to fold that in.
+      </div>
+
+      <SectionLabel>The whole guide, in order</SectionLabel>
+      {guide.units.map((u, i) => (
+        <div key={u.name} style={{ marginTop: 14 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17, lineHeight: 1.2 }}>
+            {i + 1}. {u.name}
+          </div>
+          {u.cards.map((c) => (
+            <div key={c.q} style={{ marginTop: 8 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
+              <div style={{ fontSize: 13.5, opacity: 0.8, lineHeight: 1.5, marginTop: 2 }}>
+                {c.a}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
 function Figures() {
   const { state } = useStore();
-  const guide = GUIDES[state.guideId];
-  const figMap = FIGURES[state.guideId] ?? {};
-  const extras = EXTRA_FIGURES[state.guideId] ?? [];
+  const { guide, figures: figMap, extras } = useLive(state.guideId);
 
   const unitFigures = Object.keys(figMap)
     .map(Number)
@@ -370,7 +718,7 @@ function Figures() {
 
 function Cases() {
   const { state } = useStore();
-  const guide = GUIDES[state.guideId];
+  const { guide } = useLive(state.guideId);
   const examples = EXAMPLES[state.guideId] ?? [];
 
   return (
@@ -485,7 +833,8 @@ function Cases() {
 
 function Cram() {
   const { state } = useStore();
-  const guide = GUIDES[state.guideId];
+  const { guide, updates } = useLive(state.guideId);
+  const notes = updates.filter((u) => u.body);
 
   return (
     <>
@@ -522,6 +871,37 @@ function Cram() {
           <div style={{ fontSize: 13, opacity: 0.72, lineHeight: 1.45, marginTop: 2 }}>{t.d}</div>
         </div>
       ))}
+
+      {notes.length > 0 && (
+        <>
+          <SectionLabel>Added since the guide was made</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {notes.map((n) => (
+              <Blueprint key={n.id} style={{ padding: '13px 14px' }}>
+                <div className="kicker">
+                  {n.source || 'Yours'}
+                  {n.unit !== null && guide.units[n.unit] ? ` · ${guide.units[n.unit].name}` : ''}
+                </div>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17, marginTop: 4 }}>
+                  {n.title || 'Note'}
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    opacity: 0.75,
+                    lineHeight: 1.5,
+                    marginTop: 4,
+                    whiteSpace: 'pre-wrap',
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {n.body}
+                </div>
+              </Blueprint>
+            ))}
+          </div>
+        </>
+      )}
 
       {guide.selfTest && (
         <>
@@ -564,7 +944,8 @@ function Cram() {
 
 function Listen() {
   const { state, dispatch } = useStore();
-  const guide = GUIDES[state.guideId];
+  const { guide, updates } = useLive(state.guideId);
+  const addedSince = updates.reduce((n, u) => n + u.cards.length, 0);
   const pod = PODCAST[state.guideId];
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -663,6 +1044,21 @@ function Listen() {
           </div>
         )}
       </Blueprint>
+
+      {addedSince > 0 && (
+        <div
+          style={{
+            fontSize: 12,
+            opacity: 0.65,
+            marginTop: 10,
+            lineHeight: 1.45,
+            textWrap: 'pretty',
+          }}
+        >
+          {addedSince} {addedSince === 1 ? 'card has' : 'cards have'} been added since this was
+          recorded. Cards, Read, Quiz and Cram have them; the recording does not.
+        </div>
+      )}
 
       <SectionLabel style={{ margin: '22px 0 4px' }}>Chapters</SectionLabel>
       {episode.chapters.map((c) => (

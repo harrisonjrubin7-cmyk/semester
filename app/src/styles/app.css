@@ -142,6 +142,104 @@ a:hover {
   }
 }
 
+/* ── The desk ─────────────────────────────────────────────────────────────
+   From 900px the phone column keeps its width — the type and touch targets
+   were drawn for it — and gains a rail beside it, so a laptop shows the
+   navigation instead of hiding it behind a tab bar that only fits a thumb.
+   Below 900px none of this applies and the app is the phone it was. */
+
+.desk {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  background: var(--app-void);
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 26px 0 20px;
+  border-right: 1px solid var(--app-line);
+  background: var(--app-bg);
+  overflow-y: auto;
+}
+
+.rail-mark {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.06em;
+  padding: 0 20px 18px;
+}
+
+.rail .rail-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 20px;
+  font-family: var(--font-heading);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: color 120ms ease;
+}
+.rail .rail-item:hover {
+  color: var(--app-accent-bright);
+}
+.rail .rail-quiet {
+  font-size: 11px;
+  opacity: 0.75;
+  padding: 9px 20px;
+}
+.rail-gap {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.device-pane {
+  max-width: 560px;
+  height: 100%;
+  margin: 0 auto;
+  box-shadow: none;
+  border: 0;
+  border-inline: 1px solid var(--app-line);
+}
+
+/* Printing is how the guide becomes a PDF on a machine with no pipeline.
+   Drop the frame, the rail and the chrome; keep the words. */
+@media print {
+  .rail,
+  .safe-top,
+  nav {
+    display: none !important;
+  }
+  .desk {
+    display: block;
+  }
+  .device,
+  .device-pane {
+    max-width: none;
+    height: auto;
+    overflow: visible;
+    border: 0;
+    box-shadow: none;
+    background: #fff;
+    color: #111318;
+  }
+  .device::before {
+    display: none;
+  }
+  .scrollarea {
+    overflow: visible;
+  }
+  .chrome-text {
+    background: none !important;
+    -webkit-text-fill-color: #111318 !important;
+    color: #111318 !important;
+  }
+}
+
 /* The prototype sat inside an iOS frame, so its header cleared a status bar
    and its tab bar cleared a home indicator. On real hardware that clearance
    is the safe-area inset instead. */

@@ -1,5 +1,6 @@
 import type { CourseModule } from '../../../lib/types';
 import { CORE_GUIDE } from './guide';
+import lessons from './lessons';
 
 /**
  * CORE 2500 · Sports, Culture, and Society · Fall 2026
@@ -137,6 +138,7 @@ const core: CourseModule = {
   ],
 
   guide: CORE_GUIDE,
+  lessons,
 
   figures: {
     2: {

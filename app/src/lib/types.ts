@@ -149,7 +149,9 @@ export type DiagramKind =
 export type Figure =
   | { type: 'bars'; title: string; caption: string; unit: string; max: number; rows: BarRow[] }
   | { type: 'steps'; title: string; caption: string; steps: Step[] }
-  | { type: 'diagram'; title: string; caption: string; kind: DiagramKind };
+  | { type: 'diagram'; title: string; caption: string; kind: DiagramKind }
+  /** A picture you added — a slide, a photo of the board. Held in IndexedDB. */
+  | { type: 'image'; title: string; caption: string; fileId: string };
 
 /** Figures are keyed by the index of the unit they illustrate. */
 export type FigureMap = Partial<Record<number, Figure>>;
@@ -250,6 +252,65 @@ export interface Note {
   fileIds: string[];
 }
 
+/**
+ * Material you added to a course after it was imported — a reading posted in
+ * week 6, a slide deck, a page of notes from a review session.
+ *
+ * Stored separately from the course module rather than merged into it. The
+ * module is what the pipeline produced from the syllabus and stays that way;
+ * this is what has happened since. Every study surface reads the two merged
+ * together (see `lib/live.ts`), so adding material updates Cards, Read, Quiz,
+ * Cram, Figures and Watch at once, and the two stay tellable apart on screen.
+ */
+export interface CourseUpdate {
+  id: string;
+  courseId: CourseId;
+  /** Unit index this extends, or null when it is a unit of its own. */
+  unit: number | null;
+  title: string;
+  /** Where it came from, in your words — "Reading 7", "Oct 8 lecture". */
+  source: string;
+  /** Prose that did not parse into cards. Shown in Read and Cram. */
+  body: string;
+  cards: StudyCard[];
+  terms: Term[];
+  /** Files in IndexedDB. Images among them become figures. */
+  fileIds: string[];
+  created: number;
+}
+
+/** An external calendar the app reads — Brightspace, Outlook, anything .ics. */
+export interface FeedSource {
+  id: string;
+  /** 'brightspace' | 'microsoft' | 'ics' — decides the label and the icon. */
+  kind: 'brightspace' | 'microsoft' | 'ics';
+  name: string;
+  /** Subscribed URL, or '' for a file that was imported once. */
+  url: string;
+  added: number;
+  /** When it last pulled, as an epoch milliseconds stamp. 0 = never. */
+  synced: number;
+  /** What the last pull said, good or bad. */
+  status: string;
+  count: number;
+}
+
+/** One dated thing out of a feed. Deliberately shaped like an Appointment. */
+export interface FeedEvent {
+  id: string;
+  sourceId: string;
+  title: string;
+  /** ISO date, YYYY-MM-DD. */
+  date: string;
+  /** Minutes past midnight, or null for an all-day entry. */
+  at: number | null;
+  time: string;
+  where: string;
+  note: string;
+  /** The course it looks like it belongs to, matched on the course code. */
+  courseId: CourseId | null;
+}
+
 export type Screen =
   | 'onboarding'
   | 'home'
@@ -271,12 +332,18 @@ export type Screen =
   | 'drill'
   | 'lesson'
   | 'mine'
-  | 'note';
+  | 'note'
+  | 'update'
+  | 'connect'
+  | 'ask'
+  | 'slides';
 
 export type StudyMode =
   | 'cards'
   | 'read'
   | 'watch'
+  | 'slides'
+  | 'doc'
   | 'quiz'
   | 'figures'
   | 'cases'

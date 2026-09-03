@@ -10,12 +10,15 @@ import {
   SEMESTER_YEAR,
   untilLabel,
 } from './date';
+import { liveGuide } from './live';
 import type {
   Appointment,
   Block,
   CourseId,
+  CourseUpdate,
   DatedEvent,
   DatedItem,
+  FeedEvent,
   PersonalTask,
 } from './types';
 
@@ -234,10 +237,15 @@ export function dotsForMonth(now: Date, year: number, month: number): Record<num
   return counts;
 }
 
-/** "Tonight's 25 minutes" — the weakest unit in each course, time-boxed. */
-export function tonightPlan() {
+/**
+ * "Tonight's 25 minutes" — the weakest unit in each course, time-boxed.
+ *
+ * Takes the updates so a unit you have just added a reading to counts as
+ * colder than it was, which is the whole point of adding it.
+ */
+export function tonightPlan(updates: CourseUpdate[] = []) {
   return COURSES.map((c) => {
-    const guide = GUIDES[c.id];
+    const guide = updates.length ? liveGuide(c.id, updates) : GUIDES[c.id];
     let weakest = guide.units[0];
     let index = 0;
     guide.units.forEach((u, i) => {
@@ -256,6 +264,14 @@ export function tonightPlan() {
 export function tasksOn(tasks: PersonalTask[], date: Date): PersonalTask[] {
   const iso = dateToIso(date);
   return tasks.filter((t) => t.date === iso);
+}
+
+/** Anything a connected calendar says is on that day, in time order. */
+export function feedEventsOn(events: FeedEvent[], date: Date): FeedEvent[] {
+  const iso = dateToIso(date);
+  return events
+    .filter((e) => e.date === iso)
+    .sort((a, b) => (a.at ?? -1) - (b.at ?? -1));
 }
 
 /** Appointments on a given day, in time order. */

@@ -11,6 +11,9 @@ import {
 import type {
   Appointment,
   CourseId,
+  CourseUpdate,
+  FeedEvent,
+  FeedSource,
   NavMode,
   Note,
   PersonalTask,
@@ -40,6 +43,11 @@ interface Persisted {
   tasks: PersonalTask[];
   appointments: Appointment[];
   notes: Note[];
+  /** Material added to a course since it was imported. See `lib/live.ts`. */
+  updates: CourseUpdate[];
+  /** External calendars — Brightspace, Outlook, any .ics. */
+  feeds: FeedSource[];
+  feedEvents: FeedEvent[];
 }
 
 interface Ephemeral {
@@ -67,6 +75,8 @@ interface Ephemeral {
   noteId: string | null;
   /** Unit whose lesson is playing. */
   lessonUnit: number;
+  /** Unit the Add-material screen is filing against; null for a new one. */
+  updateUnit: number | null;
   query: string;
   onb: number;
   loadStep: number;
@@ -110,6 +120,9 @@ const DEFAULT_PERSISTED: Persisted = {
   tasks: [],
   appointments: [],
   notes: [],
+  updates: [],
+  feeds: [],
+  feedEvents: [],
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -131,6 +144,7 @@ function initialEphemeral(now: Date): Ephemeral {
     mineTab: 'tasks',
     noteId: null,
     lessonUnit: 0,
+    updateUnit: null,
     query: '',
     onb: 0,
     loadStep: 0,
@@ -165,6 +179,9 @@ function loadPersisted(): Persisted {
       tasks: saved.tasks ?? [],
       appointments: saved.appointments ?? [],
       notes: saved.notes ?? [],
+      updates: saved.updates ?? [],
+      feeds: saved.feeds ?? [],
+      feedEvents: saved.feedEvents ?? [],
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -221,9 +238,31 @@ export type Action =
   | { type: 'attachFile'; noteId: string; fileId: string }
   | { type: 'detachFile'; noteId: string; fileId: string }
   | { type: 'deleteNote'; id: string }
-  | { type: 'openLesson'; unit: number };
+  | { type: 'openLesson'; unit: number }
+  | { type: 'openDeck'; unit: number }
+  | { type: 'openUpdate'; courseId: CourseId; unit?: number | null }
+  | { type: 'addUpdate'; update: Omit<CourseUpdate, 'id' | 'created'> }
+  | { type: 'deleteUpdate'; id: string }
+  | { type: 'addFeed'; feed: Omit<FeedSource, 'id' | 'added'>; events: FeedEvent[] }
+  | { type: 'syncFeed'; id: string; events: FeedEvent[]; status: string }
+  | { type: 'failFeed'; id: string; status: string }
+  | { type: 'removeFeed'; id: string };
 
 const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
+
+/**
+ * An installed app's shortcuts open `?screen=study` and the like. Only the
+ * roots are addressable — a deep link into a drill would land somewhere with
+ * no way back.
+ */
+function screenFromUrl(): Screen | null {
+  try {
+    const asked = new URLSearchParams(window.location.search).get('screen') as Screen | null;
+    return asked && ROOTS.includes(asked) ? asked : null;
+  } catch {
+    return null;
+  }
+}
 
 function push(state: State, screen: Screen): State {
   if (screen === state.screen) return state;
@@ -473,6 +512,71 @@ export function reducer(state: State, action: Action): State {
     case 'openLesson':
       return push({ ...state, lessonUnit: action.unit }, 'lesson');
 
+    case 'openDeck':
+      return push({ ...state, lessonUnit: action.unit }, 'slides');
+
+    case 'openUpdate':
+      return push(
+        {
+          ...state,
+          guideId: action.courseId,
+          updateUnit: action.unit === undefined ? state.updateUnit : action.unit,
+        },
+        'update',
+      );
+
+    case 'addUpdate':
+      return {
+        ...state,
+        updates: [...state.updates, { ...action.update, id: newId(), created: Date.now() }],
+      };
+
+    case 'deleteUpdate':
+      return { ...state, updates: state.updates.filter((u) => u.id !== action.id) };
+
+    case 'addFeed': {
+      const feed: FeedSource = { ...action.feed, id: newId(), added: Date.now() };
+      return {
+        ...state,
+        feeds: [...state.feeds, feed],
+        // Events carry the feed they came from, so replacing a feed's events
+        // never touches another's.
+        feedEvents: [
+          ...state.feedEvents,
+          ...action.events.map((e) => ({ ...e, sourceId: feed.id })),
+        ],
+      };
+    }
+
+    case 'syncFeed':
+      return {
+        ...state,
+        feeds: state.feeds.map((f) =>
+          f.id === action.id
+            ? { ...f, synced: Date.now(), status: action.status, count: action.events.length }
+            : f,
+        ),
+        feedEvents: [
+          ...state.feedEvents.filter((e) => e.sourceId !== action.id),
+          ...action.events.map((e) => ({ ...e, sourceId: action.id })),
+        ],
+      };
+
+    case 'failFeed':
+      return {
+        ...state,
+        feeds: state.feeds.map((f) =>
+          f.id === action.id ? { ...f, synced: Date.now(), status: action.status } : f,
+        ),
+      };
+
+    case 'removeFeed':
+      return {
+        ...state,
+        feeds: state.feeds.filter((f) => f.id !== action.id),
+        feedEvents: state.feedEvents.filter((e) => e.sourceId !== action.id),
+      };
+
     default:
       return state;
   }
@@ -502,7 +606,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return {
       ...persisted,
       ...initialEphemeral(startedAt.current),
-      screen: persisted.seenOnboarding ? ('home' as Screen) : ('onboarding' as Screen),
+      screen: persisted.seenOnboarding
+        ? (screenFromUrl() ?? ('home' as Screen))
+        : ('onboarding' as Screen),
     };
   });
 
@@ -525,6 +631,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       tasks: state.tasks,
       appointments: state.appointments,
       notes: state.notes,
+      updates: state.updates,
+      feeds: state.feeds,
+      feedEvents: state.feedEvents,
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
@@ -542,6 +651,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     state.tasks,
     state.appointments,
     state.notes,
+    state.updates,
+    state.feeds,
+    state.feedEvents,
   ]);
 
   const value = useMemo(() => ({ state, dispatch, now }), [state, now]);

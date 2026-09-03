@@ -1,5 +1,6 @@
 import type { CourseModule } from '../../../lib/types';
 import { ECON_GUIDE } from './guide';
+import lessons from './lessons';
 
 /**
  * ECON 1020 · Principles of Microeconomics · Fall 2026
@@ -99,6 +100,7 @@ const econ: CourseModule = {
   ],
 
   guide: ECON_GUIDE,
+  lessons,
 
   figures: {
     0: {

@@ -1,0 +1,666 @@
+{
+  "0": {
+    "unit": 0,
+    "title": "How the grade actually works",
+    "file": "/audio/lessons/core/unit-0.mp3",
+    "seconds": 82,
+    "len": "1:23",
+    "cues": [
+      {
+        "at": 0.0,
+        "kind": "title",
+        "text": "How the grade actually works"
+      },
+      {
+        "at": 5.18,
+        "kind": "q",
+        "text": "What is the single biggest risk to your grade?"
+      },
+      {
+        "at": 9.98,
+        "kind": "a",
+        "text": "Attendance. After two unexcused absences you lose 10% of the final grade for every additional class — bigger than any quiz."
+      },
+      {
+        "at": 17.84,
+        "kind": "q",
+        "text": "What do quizzes actually test?"
+      },
+      {
+        "at": 22.07,
+        "kind": "a",
+        "text": "The main argument of the readings due that day, plus the lecture slides from the class before."
+      },
+      {
+        "at": 27.23,
+        "kind": "q",
+        "text": "What are the three ways people lose this grade?"
+      },
+      {
+        "at": 31.67,
+        "kind": "a",
+        "text": "Attendance. Deadlines — everything is due before class begins, a missed quiz is a 0 with no make-up, late reflections drop a letter grade per day. And not checking email."
+      },
+      {
+        "at": 42.01,
+        "kind": "q",
+        "text": "What is the recoverable part?"
+      },
+      {
+        "at": 45.98,
+        "kind": "a",
+        "text": "Lost quiz points can be made up with extra credit later, and reflections are self-graded. Blatantly gaming the self-assessment is treated as cheating."
+      },
+      {
+        "at": 54.3,
+        "kind": "q",
+        "text": "What is not on the syllabus but still required?"
+      },
+      {
+        "at": 59.36,
+        "kind": "a",
+        "text": "Media and current-events assignments — announced by email and Brightspace only."
+      },
+      {
+        "at": 64.14,
+        "kind": "q",
+        "text": "What is the grade actually built from?"
+      },
+      {
+        "at": 68.74,
+        "kind": "a",
+        "text": "8 quizzes at 10 pts, 13 reflections at 10 pts, one final reflection at 20 pts (“Ultrarealism and Human Flourishment”), plus attendance. No exams."
+      },
+      {
+        "at": 80.32,
+        "kind": "close",
+        "text": "How the grade actually works — 6 cards"
+      }
+    ]
+  },
+  "1": {
+    "unit": 1,
+    "title": "The five big ideas",
+    "file": "/audio/lessons/core/unit-1.mp3",
+    "seconds": 108,
+    "len": "1:48",
+    "cues": [
+      {
+        "at": 0.0,
+        "kind": "title",
+        "text": "The five big ideas"
+      },
+      {
+        "at": 4.93,
+        "kind": "q",
+        "text": "Define embodiment."
+      },
+      {
+        "at": 8.42,
+        "kind": "a",
+        "text": "The body is not just biology — it is biology shaped by culture, history and practice, and experienced from the inside. A jump shot, a limp, a fear of the pool."
+      },
+      {
+        "at": 17.33,
+        "kind": "q",
+        "text": "What does a biocultural approach refuse to ask?"
+      },
+      {
+        "at": 22.36,
+        "kind": "a",
+        "text": "Nature vs. nurture. The right question is always how genes and environment work together here, and how much each contributes."
+      },
+      {
+        "at": 29.76,
+        "kind": "q",
+        "text": "Play → ritual → sport, in one line?"
+      },
+      {
+        "at": 34.44,
+        "kind": "a",
+        "text": "Sport is not an invention of civilization — it grows out of play, which is older than humans, and carries ritual meaning. Mayan ball courts were temples."
+      },
+      {
+        "at": 43.67,
+        "kind": "q",
+        "text": "Why is race a social fact rather than a biological unit?"
+      },
+      {
+        "at": 49.78,
+        "kind": "a",
+        "text": "Genetic variation is real; races as discrete biological groups are not. Africa holds most human genetic diversity, which is exactly why “Black athletic gene” stories collapse."
+      },
+      {
+        "at": 60.76,
+        "kind": "q",
+        "text": "The fifth big idea?"
+      },
+      {
+        "at": 64.75,
+        "kind": "a",
+        "text": "Sport reflects and reproduces power. Gender, race, class and nation are made visible in sport — and made harder to challenge by it. Sport can “enrich or stifle,” “oppress or liberate.”"
+      },
+      {
+        "at": 75.81,
+        "kind": "q",
+        "text": "What are the two course capacities?"
+      },
+      {
+        "at": 80.02,
+        "kind": "a",
+        "text": "(B) Systematic and structural thinking — seeing sport inside larger systems. (C) Cultural and interpretative investigation — reading difference as meaning, not fact."
+      },
+      {
+        "at": 90.13,
+        "kind": "q",
+        "text": "How does the semester move?"
+      },
+      {
+        "at": 93.88,
+        "kind": "a",
+        "text": "Outward: bodies and evolution → social difference and power → how anthropologists actually study sport → character and virtue. Knowing which move you are in tells you what a question is really asking."
+      },
+      {
+        "at": 105.52,
+        "kind": "close",
+        "text": "The five big ideas — 7 cards"
+      }
+    ]
+  },
+  "2": {
+    "unit": 2,
+    "title": "Fox & Konner — why we play",
+    "file": "/audio/lessons/core/unit-2.mp3",
+    "seconds": 207,
+    "len": "3:28",
+    "cues": [
+      {
+        "at": 0.0,
+        "kind": "title",
+        "text": "Fox & Konner — why we play"
+      },
+      {
+        "at": 5.4,
+        "kind": "q",
+        "text": "Fox’s argument in one line?"
+      },
+      {
+        "at": 9.66,
+        "kind": "a",
+        "text": "Play looks pointless, costs real energy and can get you killed — which means evolution kept it for a reason: it builds brains, bodies and the ability to agree on rules."
+      },
+      {
+        "at": 19.89,
+        "kind": "q",
+        "text": "Stuart Brown’s seven characteristics of play?"
+      },
+      {
+        "at": 24.93,
+        "kind": "a",
+        "text": "Voluntary, inherently attractive, free of time, diminished self-consciousness, improvisational, continuation desire, apparently purposeless."
+      },
+      {
+        "at": 34.39,
+        "kind": "q",
+        "text": "How do the classic theorists define play?"
+      },
+      {
+        "at": 38.93,
+        "kind": "a",
+        "text": "Carl Diem: “purposeless activity, for its own sake.” Huizinga: “not serious.” Roger Caillois: “an occasion of pure waste” — then spent 200 pages on it. Konner calls it “a central paradox of evolutionary biology.”"
+      },
+      {
+        "at": 52.9,
+        "kind": "q",
+        "text": "The cost side of the paradox — two facts."
+      },
+      {
+        "at": 57.93,
+        "kind": "a",
+        "text": "Young mammals burn up to 15% of their calories playing, and in Peru in 1988, 22 of 26 sea pups killed by sea lions were playing in tidal pools and never saw the attack."
+      },
+      {
+        "at": 70.37,
+        "kind": "q",
+        "text": "The payoff side — two facts."
+      },
+      {
+        "at": 74.62,
+        "kind": "a",
+        "text": "Rats allowed to play developed higher BDNF in the amygdala and prefrontal cortex; across 15 mammal species bigger relative brain size tracked with more play (Pellis)."
+      },
+      {
+        "at": 84.77,
+        "kind": "q",
+        "text": "The dolphin study — three things to remember."
+      },
+      {
+        "at": 89.55,
+        "kind": "a",
+        "text": "Over five years, 16 captive dolphins initiated play with balls more than with any other object, bubbles or each other. Free play with Fox became a rule-governed interspecies game in ten minutes. Piaget’s “moderately discrepant events”: players keep making it slightly harder."
+      },
+      {
+        "at": 105.76,
+        "kind": "q",
+        "text": "What is the EQ comparison?"
+      },
+      {
+        "at": 109.74,
+        "kind": "a",
+        "text": "Encephalization quotient: humans 7.0, dolphins ~4.5, great apes 1.5–3. More brain, more play."
+      },
+      {
+        "at": 118.85,
+        "kind": "q",
+        "text": "Konner’s categories, by players and object?"
+      },
+      {
+        "at": 124.15,
+        "kind": "a",
+        "text": "Solitary locomotor-rotational, object play, social play — plus serious, master, rough-and-tumble and adult play by character. The slides frame play as “behavioral fat.”"
+      },
+      {
+        "at": 135.31,
+        "kind": "q",
+        "text": "The throwing hypothesis?"
+      },
+      {
+        "at": 139.15,
+        "kind": "a",
+        "text": "Calvin: accurate one-armed throwing may have driven lateralization to the left brain — the hemisphere handling the rapid muscle sequencing language needs. Throwing gave an immediate return, unlike fire or tools. Speculative; state it, don’t defend it."
+      },
+      {
+        "at": 153.52,
+        "kind": "q",
+        "text": "Two numbers on the play deficit?"
+      },
+      {
+        "at": 157.7,
+        "kind": "a",
+        "text": "Children spend 50% less time playing outdoors than in the 1970s, and 10–16 year-olds average 12.6 minutes a day of vigorous activity."
+      },
+      {
+        "at": 167.97,
+        "kind": "q",
+        "text": "Why does it matter that hunter-gatherers had leisure?"
+      },
+      {
+        "at": 172.84,
+        "kind": "a",
+        "text": "Richard Lee among the !Kung: women could gather three days’ food in one day; Sahlins said hunters “keep bankers’ hours.” So play is not an invention of civilization."
+      },
+      {
+        "at": 183.47,
+        "kind": "q",
+        "text": "Name some historical ball games."
+      },
+      {
+        "at": 187.96,
+        "kind": "a",
+        "text": "Aboriginal marn grook; Copper Inuit akraurak (the aurora is arsarnerit, “the football players”); Afghan buzkashi; Greek episkyros and ephedrismos; Roman harpastum. Galen wrote the first scientific case for ball play and praised it as a leveler: “even the poorest man can play ball.”"
+      },
+      {
+        "at": 205.44,
+        "kind": "close",
+        "text": "Fox & Konner — why we play — 12 cards"
+      }
+    ]
+  },
+  "3": {
+    "unit": 3,
+    "title": "Ocobock & Lacy — Woman the Hunter",
+    "file": "/audio/lessons/core/unit-3.mp3",
+    "seconds": 184,
+    "len": "3:05",
+    "cues": [
+      {
+        "at": 0.0,
+        "kind": "title",
+        "text": "Ocobock & Lacy — Woman the Hunter"
+      },
+      {
+        "at": 5.58,
+        "kind": "q",
+        "text": "Their argument in one line?"
+      },
+      {
+        "at": 9.52,
+        "kind": "a",
+        "text": "“Man the Hunter” survives because science only studied the traits where males have the advantage; measured on endurance, female physiology looks at least as well built for hunting."
+      },
+      {
+        "at": 19.49,
+        "kind": "q",
+        "text": "What is the story being argued against?"
+      },
+      {
+        "at": 24.17,
+        "kind": "a",
+        "text": "The 1966 symposium and 1968 volume Man the Hunter (Lee & DeVore) made hunting the engine of human evolution and gave it to men. Laughlin: “Man’s life as a hunter supplied all the other ingredients for achieving civilization.”"
+      },
+      {
+        "at": 39.17,
+        "kind": "q",
+        "text": "Zihlman’s line to memorize?"
+      },
+      {
+        "at": 43.35,
+        "kind": "a",
+        "text": "Pictures of the past are “backward projections of modern cultural sex stereotypes” onto people who lived a million years ago."
+      },
+      {
+        "at": 50.62,
+        "kind": "q",
+        "text": "Why was “Woman the Gatherer” only half a fix?"
+      },
+      {
+        "at": 55.33,
+        "kind": "a",
+        "text": "Slocum (1975) and Dahlberg (1981) answered back, but still handed hunting to men. Hrdy’s The Woman That Never Evolved went further."
+      },
+      {
+        "at": 65.25,
+        "kind": "q",
+        "text": "The data gap — the three numbers."
+      },
+      {
+        "at": 69.57,
+        "kind": "a",
+        "text": "34% of participants in sport and exercise science research are female, 14% in nutritional-supplement research, and 3% of athletic-performance publications are female-only against 63% male-only."
+      },
+      {
+        "at": 84.65,
+        "kind": "q",
+        "text": "What must you say about variation?"
+      },
+      {
+        "at": 88.97,
+        "kind": "a",
+        "text": "There is more variation within sexes than between them, every metric overlaps, and sex — like gender — is not a strict binary."
+      },
+      {
+        "at": 96.58,
+        "kind": "q",
+        "text": "Name three physiological reasons females may suit endurance."
+      },
+      {
+        "at": 102.75,
+        "kind": "a",
+        "text": "70% greater fatty-acid oxidation from estrogen; adiponectin up to 65% higher; intramuscular fat 58 vs. 23 g/kg; more Type I fibers; 20–35% better load-carrying economy; less exercise-induced muscle damage."
+      },
+      {
+        "at": 119.72,
+        "kind": "q",
+        "text": "The killer distance evidence?"
+      },
+      {
+        "at": 123.57,
+        "kind": "a",
+        "text": "Women and men perform similarly at 42 km and women outperform men beyond 90 km; one model predicts female advantage from 65 km up. Persistence hunting is 17–33 km of endurance, not speed — and Bramble & Lieberman’s founding paper never mentions sex."
+      },
+      {
+        "at": 141.67,
+        "kind": "q",
+        "text": "The pacing and ethnographic evidence?"
+      },
+      {
+        "at": 146.28,
+        "kind": "a",
+        "text": "Across 190,000+ runners at the Bolder Boulder 10K, women were 1.96× more likely to hold pace at halfway. The Agta of the Philippines hunted with dogs and bows into late pregnancy; also Inuit, Tiwi, Ojibwa."
+      },
+      {
+        "at": 160.84,
+        "kind": "q",
+        "text": "The elegant twist at the end?"
+      },
+      {
+        "at": 164.99,
+        "kind": "a",
+        "text": "Pregnancy and lactation cost 500–600 kcal a day. Motherhood is a multi-year endurance event — so it may be what selected for female endurance rather than a handicap that ruled women out of hunting. Sophie Power ran the 168 km UTMB while breastfeeding a three-month-old."
+      },
+      {
+        "at": 181.85,
+        "kind": "close",
+        "text": "Ocobock & Lacy — Woman the Hunter — 10 cards"
+      }
+    ]
+  },
+  "4": {
+    "unit": 4,
+    "title": "Epstein 1–3 — hardware & software",
+    "file": "/audio/lessons/core/unit-4.mp3",
+    "seconds": 171,
+    "len": "2:52",
+    "cues": [
+      {
+        "at": 0.0,
+        "kind": "title",
+        "text": "Epstein 1–3 — hardware & software"
+      },
+      {
+        "at": 5.91,
+        "kind": "q",
+        "text": "Epstein’s argument in one line?"
+      },
+      {
+        "at": 10.31,
+        "kind": "a",
+        "text": "Elite skill is not fast reflexes and it is not 10,000 hours — it is learned pattern-recognition (“software”) running on physical equipment that varies a lot between people (“hardware”)."
+      },
+      {
+        "at": 21.22,
+        "kind": "q",
+        "text": "Why couldn’t Pujols hit Jennie Finch?"
+      },
+      {
+        "at": 25.66,
+        "kind": "a",
+        "text": "He had no chunks for her delivery. A 68 mph underhand pitch from 43 feet arrives like a 95 mph fastball; reaction time is ~200 ms for everyone, the pitch takes 400 ms and the contact window is 5 ms, so he had to commit before the ball was halfway. His own reaction time was 66th percentile against college students."
+      },
+      {
+        "at": 49.08,
+        "kind": "q",
+        "text": "What did the random-chessboard experiment prove?"
+      },
+      {
+        "at": 53.66,
+        "kind": "a",
+        "text": "Masters’ advantage is learned pattern recognition, not innate memory. De Groot’s masters rebuilt real boards from a 3-second glance; on arrangements that could never occur in a game their recall dropped to average (Chase & Simon, 1973)."
+      },
+      {
+        "at": 67.98,
+        "kind": "q",
+        "text": "What did Starkes and Abernethy add?"
+      },
+      {
+        "at": 72.47,
+        "kind": "a",
+        "text": "Occlusion tests showed the same in volleyball and field hockey — and hiding a badminton player’s forearm turns an elite player into a near-novice. Expertise is reading the body, not seeing the ball."
+      },
+      {
+        "at": 83.92,
+        "kind": "q",
+        "text": "Strongest evidence against the 10,000-hours rule?"
+      },
+      {
+        "at": 89.59,
+        "kind": "a",
+        "text": "Campitelli & Gobet: chess master level took 3,000 to 23,000 hours, and some players logged 25,000+ without ever making master. Elite basketball, field hockey and wrestling athletes average closer to 4,000/4,000/6,000 sport-specific hours."
+      },
+      {
+        "at": 108.09,
+        "kind": "q",
+        "text": "The quiz trap on Ericsson."
+      },
+      {
+        "at": 112.18,
+        "kind": "a",
+        "text": "K. Anders Ericsson never used the phrase “10,000-hours rule.” He credits it to a chapter title in Gladwell’s Outliers, which he says “misconstrued” the violin study — a cross-sectional, retrospective study of 10 pre-screened students."
+      },
+      {
+        "at": 125.97,
+        "kind": "q",
+        "text": "Holm vs. Thomas — what is the point?"
+      },
+      {
+        "at": 130.87,
+        "kind": "a",
+        "text": "Holm jumped for twenty years with an Achilles so stiff it took 1.8 tons to stretch it 1 cm. Thomas cleared 7’3.25” on his seventh jump ever with a 10¼-inch Achilles and beat Holm after eight months — and has not improved since. Hardware and software, both real."
+      },
+      {
+        "at": 148.21,
+        "kind": "q",
+        "text": "What is talent transfer?"
+      },
+      {
+        "at": 152.01,
+        "kind": "a",
+        "text": "Moving a good general athlete into a better-suited sport — the Australian Institute of Sport turned surf-lifesaving and water-skiing athletes into Olympic skeleton racers in 14 months. Danish research found late specialization worked better in centimeter/gram/second sports."
+      },
+      {
+        "at": 169.16,
+        "kind": "close",
+        "text": "Epstein 1–3 — hardware & software — 8 cards"
+      }
+    ]
+  },
+  "5": {
+    "unit": 5,
+    "title": "Epstein 9–11 — the (un)science of race",
+    "file": "/audio/lessons/core/unit-5.mp3",
+    "seconds": 250,
+    "len": "4:11",
+    "cues": [
+      {
+        "at": 0.0,
+        "kind": "title",
+        "text": "Epstein 9–11 — the (un)science of race"
+      },
+      {
+        "at": 6.3,
+        "kind": "q",
+        "text": "The argument in one line?"
+      },
+      {
+        "at": 10.27,
+        "kind": "a",
+        "text": "Genetic variation is real and mostly inside Africa — which is exactly why “Black people are built to sprint” is bad genetics, even though specific traits with specific histories do cluster in specific populations."
+      },
+      {
+        "at": 23.1,
+        "kind": "q",
+        "text": "What did Kenneth Kidd find?"
+      },
+      {
+        "at": 26.96,
+        "kind": "a",
+        "text": "Every stretch of the genome he looked at had more variation in African populations. On one stretch, a single population of African Pygmies had more variation than the entire rest of the world combined. His line: “from a genetic point of view, all Europeans look alike.”"
+      },
+      {
+        "at": 42.17,
+        "kind": "q",
+        "text": "Why might the fastest and the slowest human both be African?"
+      },
+      {
+        "at": 47.86,
+        "kind": "a",
+        "text": "African populations hold the greatest genetic diversity, so for any genetically influenced trait the extremes at both ends should be overrepresented. Sport only ever measures one tail."
+      },
+      {
+        "at": 58.57,
+        "kind": "q",
+        "text": "The nuance you must hold onto."
+      },
+      {
+        "at": 62.6,
+        "kind": "a",
+        "text": "Humans are 99–99.5% identical at the DNA level, but at least 15 million letters differ. Self-identified race matched blind DNA identification in 3,631 of 3,636 Americans — yet with every world population included the picture is a continuous spectrum, not discrete groups."
+      },
+      {
+        "at": 83.31,
+        "kind": "q",
+        "text": "How does within- vs. between-group variation depend on the trait?"
+      },
+      {
+        "at": 89.57,
+        "kind": "a",
+        "text": "~90% of skull-shape variation is within groups; ~90% of skin-color variation is between them. And African Americans range from 1% to 99% West African ancestry (Tishkoff)."
+      },
+      {
+        "at": 102.42,
+        "kind": "q",
+        "text": "What does ACTN3 actually tell you?"
+      },
+      {
+        "at": 106.84,
+        "kind": "a",
+        "text": "Mostly who will not run an Olympic 100 m final. About 25% of East Asians and 18% of white Australians are XX, under 1% of Zulu; of 32 Australian Olympic sprinters, zero were XX. Foster: “the best genetic test right now is a stopwatch.”"
+      },
+      {
+        "at": 124.71,
+        "kind": "q",
+        "text": "How was ACTN3 discovered?"
+      },
+      {
+        "at": 128.88,
+        "kind": "a",
+        "text": "Kathryn North was drafting a letter to Nature Genetics announcing a new muscular dystrophy gene — then tested the healthy family members and found the same variant. Her own caution: it “contributes a little,” there may be hundreds of genes, and diet, environment and opportunity all matter."
+      },
+      {
+        "at": 144.38,
+        "kind": "q",
+        "text": "Pitsiladis vs. Morrison & Cooper?"
+      },
+      {
+        "at": 149.41,
+        "kind": "a",
+        "text": "Pitsiladis: environment and a talent-spotting system — Champs since 1910, 100 schools, a 35,000-seat stadium, boosters like Charles Fuller recruiting Sherone Simpson; Bolt and Blake both wanted to play cricket. Morrison & Cooper: malaria-driven history via sickle-cell and low hemoglobin."
+      },
+      {
+        "at": 169.27,
+        "kind": "q",
+        "text": "What is the weak spot in each?"
+      },
+      {
+        "at": 173.2,
+        "kind": "a",
+        "text": "Pitsiladis does not explain why finalists are so consistently of West African descent. Morrison & Cooper’s final step — hemoglobin → fiber type — has never been tested in humans; only one mouse study and one rat study."
+      },
+      {
+        "at": 187.04,
+        "kind": "q",
+        "text": "What undercuts the “Maroon warrior” theory?"
+      },
+      {
+        "at": 191.73,
+        "kind": "a",
+        "text": "Maroons are not genetically distinguishable from other Jamaicans, and one of Pitsiladis’s grad students had more sprint gene variants than “the likes of a Usain Bolt.” His advice to British runners: “Go into sprinting. Don’t worry because you’re white.”"
+      },
+      {
+        "at": 205.46,
+        "kind": "q",
+        "text": "What is genuinely established (Ch. 11)?"
+      },
+      {
+        "at": 210.4,
+        "kind": "a",
+        "text": "Allen’s and Bergmann’s rules on limb length and build at low latitudes; max speed scales with the square root of leg length; sickle-cell trait protects against malaria (Allison, 1954) and all but disappears above 800 m, while being overrepresented in jumps and throws."
+      },
+      {
+        "at": 228.19,
+        "kind": "q",
+        "text": "Cooper’s most important point?"
+      },
+      {
+        "at": 232.28,
+        "kind": "a",
+        "text": "The belief that physical superiority implies intellectual inferiority “only developed when physical superiority became associated with African Americans,” around 1936. A result of bigotry, not a cause of it — and the answer is more careful inquiry, not less."
+      },
+      {
+        "at": 248.16,
+        "kind": "close",
+        "text": "Epstein 9–11 — the (un)science of race — 12 cards"
+      }
+    ]
+  }
+}

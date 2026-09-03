@@ -95,6 +95,22 @@ export function Me() {
         <button
           type="button"
           className="btn btn-secondary btn-block"
+          onClick={() => dispatch({ type: 'go', screen: 'connect' })}
+          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        >
+          Connect accounts
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          onClick={() => dispatch({ type: 'go', screen: 'ask' })}
+          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        >
+          Ask Claude
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'settings' })}
           style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >

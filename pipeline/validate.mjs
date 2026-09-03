@@ -153,6 +153,49 @@ for (const id of courseDirs) {
     }
   }
 
+  // ── lessons: files on disk, cues inside the audio, units that exist ─────
+  const lessonPath = join(COURSES_DIR, id, 'lessons.ts');
+  if (existsSync(lessonPath)) {
+    const lessons = read(lessonPath);
+    let lessonCount = 0;
+    for (const block of lessons.split(/\n {2}"\d+": \{/).slice(1)) {
+      lessonCount += 1;
+      const unit = Number(block.match(/"unit": (\d+)/)?.[1] ?? -1);
+      const file = block.match(/"file": "([^"]+)"/)?.[1] ?? '';
+      const seconds = Number(block.match(/"seconds": (\d+)/)?.[1] ?? 0);
+      const cues = [...block.matchAll(/"at": ([\d.]+)/g)].map((m) => Number(m[1]));
+
+      if (unitCount && unit >= unitCount) {
+        fail(`${id}: lesson for unit ${unit}, but the guide has ${unitCount} units.`);
+      }
+      if (file && !existsSync(join(ROOT, 'app/public', file))) {
+        fail(`${id}: lesson ${unit} names ${file}, which is not on disk. The player loads nothing.`);
+      }
+      // A cue past the end never fires, so the slide it carries is never seen.
+      const late = cues.filter((c) => c > seconds + 1);
+      if (late.length) {
+        fail(`${id}: lesson ${unit} has ${late.length} cue(s) past its ${seconds}s of audio.`);
+      }
+    }
+    if (lessonCount && unitCount && lessonCount < unitCount) {
+      warn(`${id}: ${lessonCount} lessons for ${unitCount} units — the rest show as not recorded.`);
+    }
+  }
+
+  // ── the documents the Doc and Slides modes link to ──────────────────────
+  for (const [dir, ext] of [
+    ['handouts', 'pdf'],
+    ['handouts', 'docx'],
+    ['decks', 'pptx'],
+  ]) {
+    if (!existsSync(join(ROOT, 'app/public', dir, `${id}.${ext}`))) {
+      warn(
+        `${id}: no ${dir}/${id}.${ext} — the link in the app 404s. ` +
+          `Run pipeline/${dir === 'decks' ? 'slides' : 'handout'}.py ${id}.`,
+      );
+    }
+  }
+
   // ── mastery is a percentage ─────────────────────────────────────────────
   for (const m of guide.matchAll(/mastery: (\d+)/g)) {
     const v = Number(m[1]);

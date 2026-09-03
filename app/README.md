@@ -9,10 +9,17 @@ npm run dev      # http://localhost:5173
 npm run build    # production bundle in dist/
 ```
 
-It is a mobile-first web app. On a phone it fills the screen; on a desktop it
-sits in a centred 402px column, the width the design was drawn at. Add it to an
-iPhone home screen from Safari's share sheet and it runs standalone, without
-browser chrome.
+It is a mobile-first web app that also has a desktop layout and installs as its
+own application.
+
+- **Phone** — fills the screen; add to the home screen from the share sheet.
+- **Laptop** — from 900px the tab bar unrolls into a rail beside the column. The
+  column keeps its width: the type and the touch targets were drawn for it.
+- **Installed** — `public/manifest.webmanifest` and `public/sw.js` make it
+  installable from Chrome or Edge as a standalone window, and keep the app shell
+  and anything you have played working offline. Audio is cached as you play it,
+  never up front — 46 MB of lessons downloaded on first open would be a hostile
+  thing to do to a phone plan.
 
 ## What is in it
 
@@ -23,14 +30,19 @@ Five sections, twenty screens.
   coming.
 - **Courses** — the four syllabi, how each grade is built, and every dated
   obligation with the syllabus line it came from.
-- **Study** — an exam radar, a guide per course, and "tonight's 25 minutes"
-  built from your weakest unit in each. Each guide has seven modes: **Cards**
-  (tap-to-flip drill), **Read** (the guide as prose), **Quiz** (ten multiple
-  choice, decoys drawn from other units), **Figures**, **Cases**, **Cram** and
-  **Listen**.
+- **Study** — an exam radar, a guide per course, "tonight's 25 minutes" built
+  from your weakest unit in each, and **Ask Claude**. Each guide has nine modes:
+  **Cards** (tap-to-flip drill), **Read** (the guide as prose), **Watch** (a
+  narrated lesson per unit with slides that follow the voice), **Slides** (the
+  unit as a deck), **Doc** (the guide as .docx, .pdf, or printed), **Quiz** (ten
+  multiple choice, decoys drawn from other units), **Figures**, **Cases**,
+  **Cram** and **Listen**.
 - **Calendar** — a month grid of deadlines, and a Campus tab for athletics,
   clubs and university events.
-- **Me** — load by course, plus settings and the syllabus importer.
+- **Mine** — your own tasks, appointments, notes and files, kept visibly apart
+  from anything a syllabus produced.
+- **Me** — load by course, the account connections, settings and the syllabus
+  importer.
 
 ## Two navigation structures
 
@@ -103,11 +115,55 @@ detector, which reproduced all twenty within a second; CORE's were recovered the
 same way. ECON's original recording has no detectable pauses, so its marks
 follow the guide's section order and are marked approximate in the data.
 
+## Lessons
+
+`public/audio/lessons/<course>/unit-<n>.mp3` — forty-four narrated lessons, one
+per unit, rendered by `../pipeline/lessons.py`. The slides are not in the audio:
+each course's `lessons.ts` carries a cue list giving the second each beat
+begins, and **Watch** draws the slide from it. Real type at the device's own
+resolution, a tenth of the bytes of video, and re-renderable from the guide the
+moment the guide changes.
+
+## Adding material to a course
+
+`src/lib/live.ts` is the load-bearing part. A course module is what the pipeline
+made from the syllabus and never changes by itself; a `CourseUpdate` is anything
+you have added since. The two are merged at read time, for every screen at once,
+so adding a reading updates Cards, Read, Quiz, Cram, Figures, Slides and the
+lesson slides together and none of them can go stale.
+
+Two details that matter:
+
+- Added cards stay identifiable — the app says what is new rather than blending
+  it in.
+- A unit's mastery is diluted by what you add. Ten cards at 80% plus five you
+  have never seen is not still 80%, and pretending otherwise would drop the unit
+  out of tonight's plan exactly when it should be climbing it.
+
+## Connections
+
+`src/lib/ics.ts` reads any iCalendar feed — Brightspace's subscribe link,
+Outlook, Google, Zoom — including weekly RRULEs so a repeating class appears
+more than once. `src/lib/connect.ts` handles the OAuth route for Microsoft,
+Google and Zoom: PKCE in the browser, client IDs from `.env.local`, tokens in
+this device's storage and nowhere else. Zoom's API sends no CORS headers, so it
+goes through the dev-server proxy in `vite.config.ts`; the same file forwards
+`/feed?url=` so a subscribed calendar can be fetched at all.
+
+`src/lib/claude.ts` is the Messages API client behind **Ask Claude** — streamed,
+with the course guide as system context, and a card-maker that refuses anything
+it cannot parse cleanly rather than inventing a card.
+
 ## What persists
 
 `localStorage`, under `semester.v1`: ticked tasks, saved events, alert
-preferences, nav mode, and whether onboarding has been seen. Navigation state is
-deliberately not persisted — the app opens on Today.
+preferences, nav mode, whether onboarding has been seen, your own tasks,
+appointments and notes, the material you have added to courses, and connected
+calendars. Files you attach are larger, so they live in IndexedDB
+(`semester-files`) instead. Tokens and any Claude key are under their own keys
+and are never bundled with the rest.
+
+Navigation state is deliberately not persisted — the app opens on Today.
 
 Clear it from the console with `localStorage.removeItem('semester.v1')`.
 

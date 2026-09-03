@@ -1,14 +1,15 @@
-import { COURSES, GUIDES, PLAN_MIN, allCards } from '../data/catalog';
+import { COURSES, LESSONS, PLAN_MIN, allCards } from '../data/catalog';
 import { useStore } from '../state/store';
+import { liveGuide } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { nextExam, tonightPlan } from '../lib/select';
 
 export function Study() {
-  const { dispatch, now } = useStore();
+  const { state, dispatch, now } = useStore();
   const exam = nextExam(now);
-  const plan = tonightPlan();
+  const plan = tonightPlan(state.updates);
 
   return (
     <div style={{ padding: 18 }}>
@@ -39,7 +40,7 @@ export function Study() {
             }}
           >
             {(() => {
-              const guide = GUIDES[exam.item.c];
+              const guide = liveGuide(exam.item.c, state.updates);
               const coldUnits = guide.units.filter((u) => u.mastery < 40);
               if (coldUnits.length === 0) {
                 return `All ${guide.units.length} units in ${guide.code} are above 40%. Keep them warm.`;
@@ -53,10 +54,26 @@ export function Study() {
         </Blueprint>
       )}
 
+      <Blueprint
+        onClick={() => dispatch({ type: 'go', screen: 'ask' })}
+        style={{ padding: '13px 15px', marginTop: 14, display: 'flex', gap: 12, alignItems: 'center' }}
+      >
+        <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span className="kicker" style={{ display: 'block' }}>
+            Ask Claude
+          </span>
+          <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3, marginTop: 2 }}>
+            A question about a course, answered against that course’s guide
+          </span>
+        </span>
+        <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+      </Blueprint>
+
       <SectionLabel>Study guides</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {COURSES.map((c) => {
-          const g = GUIDES[c.id];
+          const g = liveGuide(c.id, state.updates);
           const cards = allCards(g).length;
           return (
             <Blueprint
@@ -85,6 +102,9 @@ export function Study() {
                   }}
                 >
                   {g.units.length} units · {cards} cards
+                  {LESSONS[c.id] && Object.keys(LESSONS[c.id]).length > 0
+                    ? ` · ${Object.keys(LESSONS[c.id]).length} lessons`
+                    : ''}
                 </div>
               </div>
               <div style={{ fontSize: 13, opacity: 0.7, marginTop: 2 }}>{g.blurb}</div>

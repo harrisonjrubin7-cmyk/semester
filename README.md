@@ -13,6 +13,7 @@ cd app && npm install && npm run dev
 | --- | --- |
 | `app/` | The application. Vite + React + TypeScript. See [`app/README.md`](app/README.md). |
 | `audio/` | Podcast scripts and the synthesiser that renders them. See [`audio/README.md`](audio/README.md). |
+| `pipeline/` | Syllabus → course, and everything generated from a course: lessons, decks, handouts. See [`pipeline/README.md`](pipeline/README.md). |
 | `project/` | The original Claude Design handoff — HTML prototypes, the Industry design system, the syllabus PDFs. Kept as the reference the app was built from. |
 | `chats/` | The design conversation that produced it. |
 
@@ -50,6 +51,70 @@ with chapter marks that seek:
 
 Chapter marks were measured from the audio rather than estimated wherever the
 recording allowed it. Details in [`audio/README.md`](audio/README.md).
+
+## Six ways through the same material
+
+Each course carries one body of material, and every study mode is a different
+route through it — not a different copy. Cards, Read, Watch, Slides, Doc, Quiz,
+Cram, Figures, Cases and Listen all read the same guide, so nothing can be
+right in one place and stale in another.
+
+| Mode | What it is |
+| --- | --- |
+| Cards | Tap-to-flip drilling, by unit or whole guide. |
+| Read | The guide as prose, unit by unit. |
+| Watch | A narrated lesson per unit — 44 of them — with the slide changing as the voice moves. |
+| Slides | The same unit as a deck: one point per slide, question before answer. |
+| Doc | The guide as a real .docx and .pdf, plus a print view. |
+| Listen | The podcast editions, with chapter marks that seek. |
+
+## Adding to a course mid-semester
+
+A reading posted in week six, a handout before the midterm, a photograph of the
+board: **Guide → New reading or handout**. What is pasted is parsed into cards
+where it clearly is cards and kept as prose where it is not, then merged into
+the guide at read time — so Cards, Read, Quiz, Cram, Figures, Slides and the
+lesson slides all pick it up at once, and the unit's mastery is diluted by what
+you have not seen, so it climbs back into tonight's plan.
+
+Nothing added is invented. Prose that does not split cleanly into a question
+and an answer stays prose.
+
+## Connecting accounts
+
+**Me → Connect accounts.** Two routes, and the screen says which is which:
+
+- **The file route works now, for everyone.** Brightspace publishes a personal
+  calendar feed (Calendar → Subscribe); Outlook, Google and Zoom all export
+  .ics. Paste the link or drop the file and the dates are in. No password, no
+  registration, no server.
+- **The account route** is a real sign-in — Microsoft 365, Google, Zoom — over
+  OAuth with PKCE, which needs a client ID registered by whoever runs the app.
+  Put it in `app/.env.local`; without one the app says so and points at the file
+  route instead.
+
+Brightspace grades and submissions need D2L's Valence API, which Vanderbilt has
+to issue a key for. The calendar feed is what a student can turn on alone.
+
+## Claude, in the app
+
+**Study → Ask Claude.** The course guide, its deadlines and what you are
+weakest at go in with the question, so the answer is about this course rather
+than the subject in general — and an answer worth keeping becomes cards on the
+course with one tap.
+
+It needs a key. A key in a browser can be read by anything in that browser, so
+the app stores it on-device only, sends it only to Anthropic, and treats a
+proxy that holds the key server-side as the better option rather than the
+fallback.
+
+## Phone, laptop, or its own window
+
+The same build runs three ways. Under 900px it is the phone it was drawn as;
+above that the tab bar unrolls into a rail beside the column. A web manifest and
+a service worker make it installable — a real window on macOS or Windows, an
+icon on a home screen — and keep the lessons playable with no signal. Audio is
+never pre-cached: what you have played is kept, and nothing else.
 
 ## Not yet in
 

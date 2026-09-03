@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!--
+    The same mark, drawn for a maskable slot: Android and Windows crop an icon
+    to whatever shape the launcher uses, so everything that matters sits inside
+    the middle 80% and the ground runs to the edge.
+  -->
+  <defs>
+    <linearGradient id="chrome" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="18%" stop-color="#cfd4dd" />
+      <stop offset="42%" stop-color="#878e9c" />
+      <stop offset="50%" stop-color="#6d747f" />
+      <stop offset="62%" stop-color="#b9bfca" />
+      <stop offset="84%" stop-color="#f2f4f8" />
+      <stop offset="100%" stop-color="#9aa1ad" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="#0a0b0e" />
+  <rect x="146" y="146" width="220" height="220" fill="none" stroke="url(#chrome)" stroke-width="5" />
+  <path
+    d="M196 262l44 44 84 -84"
+    fill="none"
+    stroke="url(#chrome)"
+    stroke-width="26"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+  />
+</svg>

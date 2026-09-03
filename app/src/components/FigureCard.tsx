@@ -1,6 +1,53 @@
+import { useEffect, useState } from 'react';
 import type { Figure } from '../lib/types';
+import { getFile } from '../lib/files';
 import { Blueprint } from './Blueprint';
 import { Diagram } from './Diagram';
+
+/**
+ * A picture you attached. The bytes live in IndexedDB, so the object URL is
+ * made when the card mounts and revoked when it goes — a figure list of twenty
+ * photographs should not hold twenty blobs open for the session.
+ */
+function StoredImage({ fileId, alt }: { fileId: string; alt: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [missing, setMissing] = useState(false);
+
+  useEffect(() => {
+    let revoke: string | null = null;
+    let live = true;
+    getFile(fileId)
+      .then((record) => {
+        if (!record) {
+          if (live) setMissing(true);
+          return;
+        }
+        revoke = URL.createObjectURL(record.blob);
+        if (live) setUrl(revoke);
+      })
+      .catch(() => live && setMissing(true));
+    return () => {
+      live = false;
+      if (revoke) URL.revokeObjectURL(revoke);
+    };
+  }, [fileId]);
+
+  if (missing) {
+    return (
+      <div style={{ fontSize: 12, opacity: 0.55, marginTop: 12 }}>
+        The file behind this figure is no longer on the device.
+      </div>
+    );
+  }
+  if (!url) return <div style={{ height: 120, background: 'var(--app-track)', marginTop: 12 }} />;
+  return (
+    <img
+      src={url}
+      alt={alt}
+      style={{ width: '100%', display: 'block', marginTop: 12, border: '1px solid var(--app-line)' }}
+    />
+  );
+}
 
 /** One figure, in whichever of the three forms it takes. */
 export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) {
@@ -93,6 +140,8 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
       )}
 
       {figure.type === 'diagram' && <Diagram kind={figure.kind} />}
+
+      {figure.type === 'image' && <StoredImage fileId={figure.fileId} alt={figure.title} />}
 
       <div
         style={{

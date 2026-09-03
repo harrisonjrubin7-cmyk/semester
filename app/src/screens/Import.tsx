@@ -32,6 +32,7 @@ export function Import() {
         <button
           type="button"
           className="btn btn-secondary"
+          onClick={() => dispatch({ type: 'go', screen: 'connect' })}
           style={{ flex: 1, height: 40, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Brightspace

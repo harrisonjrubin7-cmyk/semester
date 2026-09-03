@@ -141,14 +141,41 @@ If it finds nothing, that recording has no pauses to lock to. Label its chapters
 approximate in the data rather than inventing marks — the ECON full read is in
 exactly that state and says so.
 
+## 8 · Lessons, decks and handouts
+
+Once the guide is right, everything else is generated from it:
+
+```bash
+python3 pipeline/lessons.py hist --dry-run   # sizes the render first
+python3 pipeline/lessons.py hist             # a narrated lesson per unit
+python3 pipeline/slides.py hist              # public/decks/hist.pptx
+python3 pipeline/handout.py hist             # public/handouts/hist.docx and .pdf
+```
+
+`lessons.py` writes `courses/hist/lessons.ts`; add `import lessons from
+'./lessons'` and `lessons,` to the module and Watch mode has them. Roughly a
+minute of audio per ten cards, and about a megabyte a minute.
+
+Re-run all three after changing a guide. The validator warns when a course has
+no deck or handout, because the app links to them unconditionally.
+
 ## Updating a course already in the app
 
 Same pipeline, no scaffold. Extract the new document, then extend the existing
 module: add items, add or extend units, add figures. Re-run the validator —
-adding a unit is precisely what shifts the figure keys.
+adding a unit is precisely what shifts the figure keys — then re-run
+`lessons.py`, `slides.py` and `handout.py` so the generated formats catch up.
 
 If the new material is a whole new reading with its own argument, it usually
 wants its own unit and its own entry in `cases`.
+
+**Note the two routes, and which one the user wants.** In the app itself,
+**Guide → New reading or handout** merges added material into every study mode
+immediately, with no code change and no re-render — that is the right route for
+a student adding a handout mid-semester, and it is what `lib/live.ts` exists
+for. Editing the module is the right route when the material is permanent, or
+when it should be narrated: the lesson audio only picks it up on a re-render.
+Do not do both for the same material or it appears twice.
 
 ## House style
 

@@ -1,12 +1,13 @@
-import { GUIDES, allCards } from '../data/catalog';
+import { allCards } from '../data/catalog';
 import { useStore } from '../state/store';
+import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
   const { state, dispatch } = useStore();
-  const guide = GUIDES[state.guideId];
+  const { guide } = useLive(state.guideId);
   const everything = allCards(guide);
 
   const pool =
@@ -213,7 +214,7 @@ export function Drill() {
 /** Ten multiple choice, with the full answer revealed after each pick. */
 export function Quiz() {
   const { state, dispatch } = useStore();
-  const guide = GUIDES[state.guideId];
+  const { guide } = useLive(state.guideId);
   const over = state.quiz.length > 0 && state.quizIdx >= state.quiz.length;
   const current = state.quiz[state.quizIdx];
 

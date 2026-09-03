@@ -1,5 +1,6 @@
 import type { CourseModule } from '../../../lib/types';
 import { BUS_GUIDE } from './guide';
+import lessons from './lessons';
 
 /**
  * BUS 1600 · Marketing Management · Fall 2026
@@ -189,6 +190,7 @@ const bus: CourseModule = {
   ],
 
   guide: BUS_GUIDE,
+  lessons,
 
   figures: {
     0: {

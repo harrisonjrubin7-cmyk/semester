@@ -23,7 +23,13 @@ import { Study } from './screens/Study';
 import { Guide } from './screens/Guide';
 import { Drill, Quiz } from './screens/Drill';
 import { Mine, NoteEditor } from './screens/Mine';
+import { LessonPlayer } from './screens/Lesson';
+import { AddMaterial } from './screens/Update';
+import { Connect } from './screens/Connect';
+import { Ask } from './screens/Ask';
+import { SlideDeck } from './screens/Slides';
 import { datedEvents, datedItems, nextExam } from './lib/select';
+import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import type { Screen } from './lib/types';
 
@@ -91,6 +97,16 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Yours, not the syllabus', title: 'Mine' };
     case 'note':
       return { kicker: 'Note', title: 'Editing' };
+    case 'lesson':
+      return { kicker: `${guide.code} · lesson`, title: 'Watch' };
+    case 'update':
+      return { kicker: `${guide.code} · new material`, title: 'Add' };
+    case 'connect':
+      return { kicker: 'Accounts and calendars', title: 'Connect' };
+    case 'ask':
+      return { kicker: `${guide.code} · with the guide`, title: 'Ask Claude' };
+    case 'slides':
+      return { kicker: `${guide.code} · deck`, title: 'Slides' };
     case 'import':
       return { kicker: 'New source', title: 'Import syllabus' };
     case 'importing':
@@ -293,13 +309,78 @@ function CurrentScreen() {
       return <Drill />;
     case 'quiz':
       return <Quiz />;
+    case 'lesson':
+      return <LessonPlayer />;
+    case 'update':
+      return <AddMaterial />;
+    case 'connect':
+      return <Connect />;
+    case 'ask':
+      return <Ask />;
+    case 'slides':
+      return <SlideDeck />;
     default:
       return <Today />;
   }
 }
 
+/**
+ * The same tabs, unrolled down the side.
+ *
+ * A laptop has room for the navigation to stay visible, and hiding it behind
+ * the phone's tab-bar rules would make the wide layout worse than the narrow
+ * one. So on a wide screen the rail is always there, whichever nav mode the
+ * phone is set to, and it carries the things the phone keeps under Me.
+ */
+function Rail() {
+  const { state, dispatch } = useStore();
+  const extras: { id: Screen; label: string }[] = [
+    { id: 'ask', label: 'Ask Claude' },
+    { id: 'connect', label: 'Connect' },
+    { id: 'import', label: 'Import' },
+  ];
+
+  return (
+    <nav className="rail">
+      <div className="rail-mark chrome-text">Semester</div>
+      {TABS.map(({ id, label, Icon }) => {
+        const on = state.screen === id;
+        return (
+          <button
+            key={id}
+            type="button"
+            className="bare rail-item"
+            onClick={() => dispatch({ type: 'go', screen: id })}
+            aria-current={on ? 'page' : undefined}
+            style={{
+              color: on ? 'var(--app-accent)' : 'var(--app-faint)',
+              borderLeft: `2px solid ${on ? 'var(--app-accent)' : 'transparent'}`,
+            }}
+          >
+            <Icon size={18} />
+            <span>{label}</span>
+          </button>
+        );
+      })}
+      <div className="rail-gap" />
+      {extras.map(({ id, label }) => (
+        <button
+          key={id}
+          type="button"
+          className="bare rail-item rail-quiet"
+          onClick={() => dispatch({ type: 'go', screen: id })}
+          style={{ color: state.screen === id ? 'var(--app-accent)' : 'var(--app-faint)' }}
+        >
+          <span>{label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
 export default function App() {
   const { state, dispatch } = useStore();
+  const wide = useMedia(DESKTOP);
 
   if (state.screen === 'onboarding') {
     return (
@@ -310,8 +391,22 @@ export default function App() {
   }
 
   const isRoot = ROOTS.includes(state.screen);
-  const showTabs = state.nav === 'tabs' && isRoot;
-  const showFab = state.nav === 'feed' && state.screen === 'home';
+  const showTabs = state.nav === 'tabs' && isRoot && !wide;
+  const showFab = state.nav === 'feed' && state.screen === 'home' && !wide;
+
+  if (wide) {
+    return (
+      <div className="desk">
+        <Rail />
+        <div className="device device-pane">
+          <Header />
+          <main className="scrollarea" key={state.screen}>
+            <CurrentScreen />
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="device">
