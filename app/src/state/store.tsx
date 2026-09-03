@@ -1072,6 +1072,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // straight back as a push.
   const settling = useRef(false);
 
+  /**
+   * Who is signed in — asked for after the first paint, not before it.
+   *
+   * The account SDK is a lazy chunk now, and asking for the session is what
+   * pulls it. Doing that in a boot effect meant the fetch went out alongside
+   * the first render and competed with it for the connection, which undoes
+   * most of the point of splitting it out. An idle callback puts it after the
+   * app is on screen; the two-second timeout is the floor, so a device that
+   * never goes idle still syncs promptly.
+   *
+   * Nothing user-visible waits on it. The app is fully usable signed out, and
+   * a signed-in account arriving a moment later is the same shape of delay it
+   * always had — `currentSession` was asynchronous before this too.
+   */
   useEffect(() => {
     if (!cloudConfigured) return;
     const take = (s: Session | null) => {
@@ -1080,8 +1094,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // what proves the account to the function.
       setSessionToken(s?.access_token ?? null);
     };
-    void currentSession().then(take);
-    return onAuthChange(take);
+
+    let stop: (() => void) | null = null;
+    let dropped = false;
+    const start = () => {
+      if (dropped) return;
+      void currentSession().then(take);
+      stop = onAuthChange(take);
+    };
+
+    // Safari only shipped requestIdleCallback recently, so the timeout is a
+    // real fallback rather than a formality.
+    const idle = typeof window.requestIdleCallback === 'function';
+    const handle = idle
+      ? window.requestIdleCallback(start, { timeout: 2000 })
+      : window.setTimeout(start, 400);
+
+    return () => {
+      dropped = true;
+      if (idle) window.cancelIdleCallback(handle);
+      else window.clearTimeout(handle);
+      stop?.();
+    };
   }, []);
 
   // On sign-in, whichever copy is newer wins — and the app says which.

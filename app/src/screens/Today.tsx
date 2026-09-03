@@ -135,7 +135,11 @@ function YourTasks() {
               className="bare"
               onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
               aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
-              style={{ width: 20, flex: 'none', marginTop: 2 }}
+              // 20px was the icon's size, not a target. This is the most
+              // tapped control in the app and it was less than half the
+              // size a thumb needs; the padding grows the hit area without
+              // moving the box, which is what DeadlineRow already did.
+              style={{ width: 34, flex: 'none', padding: '11px 12px 11px 0', margin: '-9px 0' }}
             >
               <TickBox on={t.done} />
             </button>
@@ -408,7 +412,11 @@ function Feed_due() {
                 className="bare"
                 onClick={() => dispatch({ type: 'toggleDone', id: it.id })}
                 aria-label={done ? `Mark ${it.title} not done` : `Mark ${it.title} done`}
-                style={{ width: 20, flex: 'none', marginTop: 2 }}
+                // 20px was the icon's size, not a target. This is the most
+              // tapped control in the app and it was less than half the
+              // size a thumb needs; the padding grows the hit area without
+              // moving the box, which is what DeadlineRow already did.
+              style={{ width: 34, flex: 'none', padding: '11px 12px 11px 0', margin: '-9px 0' }}
               >
                 <TickBox on={done} />
               </button>

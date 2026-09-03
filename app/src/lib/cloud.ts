@@ -17,7 +17,7 @@
  * app should make for you. The screen says so.
  */
 
-import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
+import type { Session, SupabaseClient } from '@supabase/supabase-js';
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 const URL = env.VITE_SUPABASE_URL ?? '';
@@ -26,13 +26,29 @@ const KEY = env.VITE_SUPABASE_KEY ?? '';
 /** False when no project is configured — the app then runs device-only. */
 export const cloudConfigured = Boolean(URL && KEY);
 
-let client: SupabaseClient | null = null;
+let client: Promise<SupabaseClient> | null = null;
 
-export function cloud(): SupabaseClient {
-  if (!cloudConfigured) throw new Error('No account service is configured for this build.');
-  client ??= createClient(URL, KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
-  });
+/**
+ * The Supabase client, fetched the first time anything wants it.
+ *
+ * Imported dynamically rather than at the top of this file, and that is why it
+ * is a promise. The store imports this module, so a static import put the
+ * whole SDK in front of somebody opening Today on a phone — to serve accounts,
+ * sync and the classmate rooms, none of which Today touches. It now arrives
+ * the first time somebody signs in or opens a room.
+ *
+ * The promise is cached rather than the client, so callers racing on the first
+ * use share one import and one client instead of each starting their own.
+ */
+export function cloud(): Promise<SupabaseClient> {
+  if (!cloudConfigured) {
+    return Promise.reject(new Error('No account service is configured for this build.'));
+  }
+  client ??= import('@supabase/supabase-js').then((mod) =>
+    mod.createClient(URL, KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+    }),
+  );
   return client;
 }
 
@@ -67,18 +83,35 @@ export function accountOf(session: Session | null): Account | null {
 
 export async function currentSession(): Promise<Session | null> {
   if (!cloudConfigured) return null;
-  const { data } = await cloud().auth.getSession();
+  const { data } = await (await cloud()).auth.getSession();
   return data.session;
 }
 
+/**
+ * Watch for a sign-in or a sign-out.
+ *
+ * The subscription starts once the client has loaded, so the canceller has to
+ * cope with being called before that — an effect mounted and unmounted in the
+ * same tick would otherwise leave a live subscription behind with nothing
+ * holding on to it.
+ */
 export function onAuthChange(fn: (session: Session | null) => void): () => void {
   if (!cloudConfigured) return () => {};
-  const { data } = cloud().auth.onAuthStateChange((_event, session) => fn(session));
-  return () => data.subscription.unsubscribe();
+  let stop: (() => void) | null = null;
+  let cancelled = false;
+  void cloud().then((db) => {
+    if (cancelled) return;
+    const { data } = db.auth.onAuthStateChange((_event, session) => fn(session));
+    stop = () => data.subscription.unsubscribe();
+  });
+  return () => {
+    cancelled = true;
+    stop?.();
+  };
 }
 
 export async function signUp(email: string, password: string): Promise<string> {
-  const { data, error } = await cloud().auth.signUp({
+  const { data, error } = await (await cloud()).auth.signUp({
     email,
     password,
     options: { emailRedirectTo: appUrl() },
@@ -93,13 +126,13 @@ export async function signUp(email: string, password: string): Promise<string> {
 }
 
 export async function signIn(email: string, password: string): Promise<void> {
-  const { error } = await cloud().auth.signInWithPassword({ email, password });
+  const { error } = await (await cloud()).auth.signInWithPassword({ email, password });
   if (error) throw new Error(error.message);
 }
 
 /** Google or Apple, when they are switched on in the Supabase dashboard. */
 export async function signInWith(provider: 'google' | 'apple'): Promise<void> {
-  const { error } = await cloud().auth.signInWithOAuth({
+  const { error } = await (await cloud()).auth.signInWithOAuth({
     provider,
     options: { redirectTo: appUrl() },
   });
@@ -107,14 +140,14 @@ export async function signInWith(provider: 'google' | 'apple'): Promise<void> {
 }
 
 export async function sendReset(email: string): Promise<void> {
-  const { error } = await cloud().auth.resetPasswordForEmail(email, {
+  const { error } = await (await cloud()).auth.resetPasswordForEmail(email, {
     redirectTo: appUrl(),
   });
   if (error) throw new Error(error.message);
 }
 
 export async function signOut(): Promise<void> {
-  await cloud().auth.signOut();
+  await (await cloud()).auth.signOut();
 }
 
 /**
@@ -162,7 +195,7 @@ export interface Snapshot {
 }
 
 export async function pull(userId: string): Promise<Snapshot> {
-  const db = cloud();
+  const db = (await cloud());
   const [stateRow, courseRows] = await Promise.all([
     db.from('state').select('data, updated_at').eq('user_id', userId).maybeSingle(),
     db.from('courses').select('id, data, updated_at').eq('user_id', userId),
@@ -188,7 +221,7 @@ export async function push(
   state: CloudState,
   courses: { id: string; data: unknown }[],
 ): Promise<void> {
-  const db = cloud();
+  const db = (await cloud());
 
   const { error: stateError } = await db
     .from('state')

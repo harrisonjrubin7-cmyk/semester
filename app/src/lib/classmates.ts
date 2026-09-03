@@ -173,7 +173,7 @@ export function roomsFor(codes: string[], joined: string[]): { code: string; joi
 // supabase/classmates.sql; the policies are the security, not these calls.
 
 export async function myProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await cloud()
+  const { data, error } = await (await cloud())
     .from('profiles')
     .select('user_id, handle, about')
     .eq('user_id', userId)
@@ -185,14 +185,14 @@ export async function myProfile(userId: string): Promise<Profile | null> {
 export async function saveProfile(userId: string, handle: string, about: string): Promise<void> {
   const problem = handleProblem(handle);
   if (problem) throw new Error(problem);
-  const { error } = await cloud()
+  const { error } = await (await cloud())
     .from('profiles')
     .upsert({ user_id: userId, handle: cleanHandle(handle), about: about.slice(0, 140) });
   if (error) throw new Error(explain(error.message));
 }
 
 export async function myRooms(userId: string, term: string): Promise<string[]> {
-  const { data, error } = await cloud()
+  const { data, error } = await (await cloud())
     .from('enrollments')
     .select('code')
     .eq('user_id', userId)
@@ -204,14 +204,14 @@ export async function myRooms(userId: string, term: string): Promise<string[]> {
 export async function join(userId: string, term: string, code: string): Promise<void> {
   const clean = normaliseCode(code);
   if (!clean) throw new Error('That is not a course code. "ECON 1020", with the number.');
-  const { error } = await cloud()
+  const { error } = await (await cloud())
     .from('enrollments')
     .upsert({ user_id: userId, term, code: clean }, { onConflict: 'user_id,term,code' });
   if (error) throw new Error(explain(error.message));
 }
 
 export async function leave(userId: string, term: string, code: string): Promise<void> {
-  const { error } = await cloud()
+  const { error } = await (await cloud())
     .from('enrollments')
     .delete()
     .eq('user_id', userId)
@@ -231,7 +231,7 @@ export async function leave(userId: string, term: string, code: string): Promise
  * running one more query.
  */
 export async function whoIsIn(term: string, code: string): Promise<Profile[]> {
-  const { data: rows, error } = await cloud()
+  const { data: rows, error } = await (await cloud())
     .from('enrollments')
     .select('user_id')
     .eq('term', term)
@@ -241,7 +241,7 @@ export async function whoIsIn(term: string, code: string): Promise<Profile[]> {
   const ids = [...new Set(((rows ?? []) as { user_id: string }[]).map((r) => r.user_id))];
   if (ids.length === 0) return [];
 
-  const { data, error: second } = await cloud()
+  const { data, error: second } = await (await cloud())
     .from('profiles')
     .select('user_id, handle, about')
     .in('user_id', ids);
@@ -253,7 +253,7 @@ export async function whoIsIn(term: string, code: string): Promise<Profile[]> {
 }
 
 export async function recent(term: string, code: string, limit = 60): Promise<Message[]> {
-  const { data, error } = await cloud()
+  const { data, error } = await (await cloud())
     .from('messages')
     .select('id, term, code, user_id, body, created_at')
     .eq('term', term)
@@ -269,14 +269,14 @@ export async function recent(term: string, code: string, limit = 60): Promise<Me
 export async function say(userId: string, term: string, code: string, body: string): Promise<void> {
   const text = body.trim();
   if (!text) return;
-  const { error } = await cloud()
+  const { error } = await (await cloud())
     .from('messages')
     .insert({ user_id: userId, term, code, body: text.slice(0, 2000) });
   if (error) throw new Error(explain(error.message));
 }
 
 export async function unsay(id: string): Promise<void> {
-  const { error } = await cloud().from('messages').delete().eq('id', id);
+  const { error } = await (await cloud()).from('messages').delete().eq('id', id);
   if (error) throw new Error(explain(error.message));
 }
 
@@ -292,36 +292,48 @@ export function listen(
   code: string,
   onMessage: (m: Message) => void,
 ): () => void {
-  const channel = cloud()
-    .channel(`room:${term}:${code}`)
-    .on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `code=eq.${code}`,
-      },
-      (payload) => {
-        const m = payload.new as Message;
-        if (m.term === term && m.code === code) onMessage(m);
-      },
-    )
-    .subscribe();
+  // The client loads on demand, so the channel is opened once it arrives and
+  // the canceller has to handle being called before that — a room opened and
+  // closed quickly would otherwise leave a live channel with nobody listening.
+  let close: (() => void) | null = null;
+  let cancelled = false;
+
+  void cloud().then((db) => {
+    if (cancelled) return;
+    const channel = db
+      .channel(`room:${term}:${code}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `code=eq.${code}`,
+        },
+        (payload) => {
+          const m = payload.new as Message;
+          if (m.term === term && m.code === code) onMessage(m);
+        },
+      )
+      .subscribe();
+    close = () => void db.removeChannel(channel);
+  });
+
   return () => {
-    void cloud().removeChannel(channel);
+    cancelled = true;
+    close?.();
   };
 }
 
 export async function block(userId: string, blocked: string): Promise<void> {
-  const { error } = await cloud()
+  const { error } = await (await cloud())
     .from('blocks')
     .upsert({ user_id: userId, blocked }, { onConflict: 'user_id,blocked' });
   if (error) throw new Error(explain(error.message));
 }
 
 export async function unblock(userId: string, blocked: string): Promise<void> {
-  const { error } = await cloud()
+  const { error } = await (await cloud())
     .from('blocks')
     .delete()
     .eq('user_id', userId)
@@ -330,7 +342,7 @@ export async function unblock(userId: string, blocked: string): Promise<void> {
 }
 
 export async function blocked(userId: string): Promise<string[]> {
-  const { data, error } = await cloud().from('blocks').select('blocked').eq('user_id', userId);
+  const { data, error } = await (await cloud()).from('blocks').select('blocked').eq('user_id', userId);
   if (error) throw new Error(error.message);
   return ((data ?? []) as { blocked: string }[]).map((r) => r.blocked);
 }
@@ -341,7 +353,7 @@ export async function report(
   message: Message,
   reason: string,
 ): Promise<void> {
-  const { error } = await cloud().from('reports').insert({
+  const { error } = await (await cloud()).from('reports').insert({
     reporter,
     message_id: message.id,
     about: message.user_id,
