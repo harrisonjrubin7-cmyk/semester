@@ -113,7 +113,7 @@ interface Ephemeral {
   evFilter: string;
   calTab: 'deadlines' | 'campus';
   /** Which schedule view the calendar is showing. */
-  calView: 'day' | 'month' | 'semester';
+  calView: 'day' | 'week' | 'month' | 'semester';
   /** Which sources the calendar is showing — combined, or one at a time. */
   calSource: 'all' | 'classes' | 'deadlines' | 'campus';
   /** Day the Day view is on, as an ISO date. Null means today. */
@@ -337,7 +337,7 @@ export type Action =
   | { type: 'startQuiz'; quiz: QuizQuestion[] }
   | { type: 'pickAnswer'; index: number }
   | { type: 'nextQuestion' }
-  | { type: 'setCalView'; view: 'day' | 'month' | 'semester' }
+  | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }

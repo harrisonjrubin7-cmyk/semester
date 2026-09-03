@@ -5,6 +5,8 @@ import { ChipRow, EmptyState, SectionLabel, Segmented } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
+import { WeekGrid } from '../components/WeekGrid';
+import { kindOf } from '../lib/kinds';
 import {
   DOW,
   DOW_INITIALS,
@@ -360,6 +362,112 @@ function DayView() {
   );
 }
 
+// ── Week ──────────────────────────────────────────────────────────────────
+
+/**
+ * The week as a timetable.
+ *
+ * The question most calendar-opening is really asking is when you are free,
+ * and that is a comparison across days — which needs the days beside each
+ * other, on the same hours. Seven day views in sequence cannot answer it.
+ *
+ * Tapping a column opens that day, because this view is deliberately short on
+ * detail: at phone width a column is forty pixels and a block gets a short
+ * label, so the week is for shape and the day is for reading.
+ */
+function WeekView() {
+  const { state, dispatch, now, catalog } = useStore();
+  const anchor = state.calDay ? isoToDate(state.calDay) : now;
+  const start = new Date(anchor);
+  start.setDate(start.getDate() - start.getDay());
+
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+    return {
+      date,
+      isToday: sameDay(date, now),
+      blocks: hoursFor(catalog, date, state.appointments),
+      onOpen: () => {
+        dispatch({ type: 'setCalDay', date: dateToIso(date) });
+        dispatch({ type: 'setCalView', view: 'day' });
+      },
+    };
+  });
+
+  const step = (delta: number) => {
+    const to = new Date(start);
+    to.setDate(start.getDate() + delta * 7);
+    dispatch({ type: 'setCalDay', date: dateToIso(to) });
+  };
+
+  const last = new Date(start);
+  last.setDate(start.getDate() + 6);
+  const total = days.reduce((n, d) => n + d.blocks.length, 0);
+
+  return (
+    <div style={{ padding: 18 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 10,
+        }}
+      >
+        <button
+          type="button"
+          className="btn btn-ghost btn-icon"
+          onClick={() => step(-1)}
+          aria-label="Previous week"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          type="button"
+          className="bare"
+          onClick={() => dispatch({ type: 'setCalDay', date: null })}
+          style={{ width: 'auto', textAlign: 'center' }}
+        >
+          <span className="chrome-text" style={{ fontSize: 18, display: 'block' }}>
+            {MONTHS[start.getMonth()]} {start.getDate()} –{' '}
+            {start.getMonth() === last.getMonth() ? '' : `${MONTHS[last.getMonth()]} `}
+            {last.getDate()}
+          </span>
+          <span className="kicker" style={{ display: 'block' }}>
+            {total} {total === 1 ? 'thing' : 'things'} on
+          </span>
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-icon"
+          onClick={() => step(1)}
+          aria-label="Next week"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      <KindKey compact />
+      {total === 0 ? (
+        <EmptyState
+          title="Nothing this week."
+          body="No classes and nothing of your own. Add something under Mine → Events."
+        />
+      ) : (
+        <>
+          <WeekGrid days={days} now={minutesNow(now)} style={{ marginTop: 14 }} />
+          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 14, lineHeight: 1.5 }}>
+            Tap a date to open that day in full. Deadlines are not on this grid — they are a due
+            time rather than a span, and the month view is where they read best.
+          </div>
+        </>
+      )}
+      <div style={{ height: 22 }} />
+    </div>
+  );
+}
+
 // ── Month ─────────────────────────────────────────────────────────────────
 
 function MonthView() {
@@ -368,8 +476,8 @@ function MonthView() {
   const cells = monthGrid(calYear, calMonth);
 
   // What lands on each day of this month, per the current source filter.
-  const marks: Record<number, { c: CourseId | null; kind: string }[]> = {};
-  const add = (d: Date, mark: { c: CourseId | null; kind: string }) => {
+  const marks: Record<number, { c: CourseId | null; kind: string; tint?: string }[]> = {};
+  const add = (d: Date, mark: { c: CourseId | null; kind: string; tint?: string }) => {
     if (d.getFullYear() !== calYear || d.getMonth() !== calMonth) return;
     (marks[d.getDate()] ??= []).push(mark);
   };
@@ -379,6 +487,13 @@ function MonthView() {
     state.tasks.forEach((t) => {
       if (t.date) add(isoToDate(t.date), { c: t.courseId, kind: 'mine' });
     });
+  }
+  // Your own events, in the colour the day and week grids give them, so the
+  // three views agree about what a colour means.
+  if (calSource === 'all' || calSource === 'classes') {
+    state.appointments.forEach((a) =>
+      add(isoToDate(a.date), { c: null, kind: 'appt', tint: kindOf(a.kind).tint }),
+    );
   }
   if (calSource === 'all' || calSource === 'campus') {
     datedEvents(now, state.sample).forEach((e) => add(e.date, { c: null, kind: 'event' }));
@@ -509,9 +624,12 @@ function MonthView() {
                     style={{
                       width: 4,
                       height: 4,
-                      background: m.kind === 'mine' ? 'transparent' : courseTint(catalog.courses, m.c),
+                      background:
+                        m.kind === 'mine'
+                          ? 'transparent'
+                          : (m.tint ?? courseTint(catalog.courses, m.c)),
                       border: m.kind === 'mine' ? '1px solid var(--app-accent)' : 'none',
-                      borderRadius: m.kind === 'event' ? '50%' : 0,
+                      borderRadius: m.kind === 'event' || m.kind === 'appt' ? '50%' : 0,
                     }}
                   />
                 ))}
@@ -554,6 +672,9 @@ function MonthView() {
         ))}
         <span style={{ opacity: 0.8 }}>Colour = course</span>
       </div>
+      {/* The same key the day and week grids carry, so a colour means the same
+          thing in every view rather than three private schemes. */}
+      <KindKey compact />
 
       <SectionLabel style={{ margin: '20px 0 6px' }}>
         {DOW[new Date(calYear, calMonth, selectedDay).getDay()]} · {MONTHS[calMonth]}{' '}
@@ -904,6 +1025,7 @@ export function Calendar() {
         <Segmented
           options={[
             { id: 'day', label: 'Day' },
+            { id: 'week', label: 'Week' },
             { id: 'month', label: 'Month' },
             { id: 'semester', label: 'Semester' },
           ]}
@@ -928,6 +1050,8 @@ export function Calendar() {
         <CampusList />
       ) : state.calView === 'day' ? (
         <DayView />
+      ) : state.calView === 'week' ? (
+        <WeekView />
       ) : state.calView === 'semester' ? (
         <SemesterView />
       ) : (
