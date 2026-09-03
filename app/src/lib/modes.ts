@@ -66,6 +66,14 @@ export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInf
       missing: 'Nothing to read until this course has units.',
     },
     {
+      id: 'field',
+      label: 'Field guide',
+      blurb: 'The whole thing as the published guide — masthead, sections, glossary, self-test.',
+      count: plural(units, 'section'),
+      ready: units > 0,
+      missing: 'Nothing to read until this course has units.',
+    },
+    {
       id: 'watch',
       label: 'Watch',
       blurb: 'A narrated lesson per unit, the slide changing as the voice moves.',

@@ -362,6 +362,7 @@ export type Screen =
 export type StudyMode =
   | 'cards'
   | 'read'
+  | 'field'
   | 'watch'
   | 'slides'
   | 'doc'

@@ -98,6 +98,7 @@ right in one place and stale in another.
 | --- | --- |
 | Cards | Tap-to-flip drilling, by unit or whole guide. |
 | Read | The guide as prose, unit by unit. |
+| Field guide | The whole thing as the published artifact read — masthead, contents, numbered sections with their figures, frames, case files, glossary, self-test. |
 | Watch | A narrated lesson per unit — 44 of them — with the slide changing as the voice moves. |
 | Slides | The same unit as a deck: one point per slide, question before answer. |
 | Doc | The guide as a real .docx and .pdf, plus a print view. |

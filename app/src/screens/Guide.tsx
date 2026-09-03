@@ -6,6 +6,7 @@ import { Blueprint } from '../components/Blueprint';
 import { ChipRow, Meter, SectionLabel } from '../components/ui';
 import { ModePicker } from '../components/ModePicker';
 import { modeInfo, modesFor } from '../lib/modes';
+import { FieldGuide } from './Field';
 import { ChevronRight, Plus } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
 import { buildQuiz } from '../lib/quiz';
@@ -24,8 +25,14 @@ export function Guide() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 15, lineHeight: 1.3 }}>{guide.name}</div>
-      <div style={{ fontSize: 13, opacity: 0.6, marginTop: 3 }}>{guide.blurb}</div>
+      {/* The field guide opens with its own masthead carrying both of these,
+          so repeating them above it just pushes the document down. */}
+      {state.mode !== 'field' && (
+        <>
+          <div style={{ fontSize: 15, lineHeight: 1.3 }}>{guide.name}</div>
+          <div style={{ fontSize: 13, opacity: 0.6, marginTop: 3 }}>{guide.blurb}</div>
+        </>
+      )}
 
       <button
         type="button"
@@ -426,6 +433,7 @@ export function Guide() {
         </div>
       )}
 
+      {state.mode === 'field' && <FieldGuide />}
       {state.mode === 'watch' && <Watch />}
       {state.mode === 'slides' && <Decks />}
       {state.mode === 'doc' && <Documents />}
