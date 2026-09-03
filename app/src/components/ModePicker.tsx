@@ -45,7 +45,14 @@ export function ModePicker({
               textAlign: 'left',
               padding: '10px 11px',
               border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              background: on ? 'var(--app-panel)' : 'transparent',
+              borderRadius: 'var(--r-md)',
+              background: on
+                ? 'var(--app-hero)'
+                : 'linear-gradient(180deg, rgba(255,255,255,.022), rgba(255,255,255,0) 60%)',
+              boxShadow: on
+                ? '0 0 0 3px var(--app-accent-wash)'
+                : '0 1px 0 var(--app-line-top) inset',
+              transition: 'border-color var(--fast), box-shadow var(--fast), background var(--fast)',
               // A mode with nothing in it is dimmed rather than hidden: knowing
               // Listen exists and is empty beats not knowing Listen exists.
               opacity: m.ready ? 1 : 0.45,

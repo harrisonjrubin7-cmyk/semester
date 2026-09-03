@@ -151,18 +151,7 @@ function Header() {
   const atRoot = rootOf(state.screen) === state.screen;
 
   return (
-    <div
-      className="safe-top"
-      style={{
-        flex: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '58px 18px 10px',
-        borderBottom: '1px solid var(--app-line)',
-        background: 'var(--app-bg)',
-      }}
-    >
+    <div className="safe-top app-header">
       {canGoBack && (
         <button
           type="button"
@@ -254,15 +243,7 @@ function TabBar() {
   const here = rootOf(state.screen);
 
   return (
-    <nav
-      className="safe-bottom"
-      style={{
-        flex: 'none',
-        display: 'flex',
-        borderTop: '1px solid var(--app-line)',
-        background: 'var(--app-bg)',
-      }}
-    >
+    <nav className="safe-bottom app-tabs">
       {TABS.map(({ id, label, Icon }) => {
         // Lit for the screen itself and for everything nested under it, so a
         // flashcard three levels deep still shows you are inside Study.
@@ -385,8 +366,9 @@ function Rail() {
             onClick={() => dispatch({ type: 'go', screen: id })}
             aria-current={on ? 'page' : undefined}
             style={{
-              color: on ? 'var(--app-accent)' : 'var(--app-faint)',
-              borderLeft: `2px solid ${on ? 'var(--app-accent)' : 'transparent'}`,
+              color: on ? 'var(--app-accent-bright)' : 'var(--app-faint)',
+              background: on ? 'var(--app-hero)' : 'transparent',
+              boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
             }}
           >
             <Icon size={18} />
