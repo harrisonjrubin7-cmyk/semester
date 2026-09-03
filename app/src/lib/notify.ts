@@ -18,6 +18,7 @@
  */
 
 import type { NotifKey } from '../data/misc';
+import { daysTo, type TermDate } from './registrar';
 import type { DatedItem } from './types';
 
 const SEEN_KEY = 'semester.notified';
@@ -69,6 +70,8 @@ interface Source {
   items: DatedItem[];
   /** Blocks on today's rail: label and minutes-from-midnight. */
   classes: { label: string; at: number; where: string }[];
+  /** The university's own dates, if the student has filled any in. */
+  registrar?: TermDate[];
 }
 
 const day = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -126,6 +129,23 @@ export function dueReminders(
         rule: 'two',
         title: `Two days: ${i.title}`,
         body: `${i.dueShort} · ${i.weight || i.kind}`,
+      });
+    }
+  }
+
+  // A registrar deadline at a week and again at a day. Twice rather than
+  // daily for a fortnight: the app's job here is to make sure the date is not
+  // a surprise, not to become the thing you swipe away every morning.
+  if (on.term && minutes >= 8 * 60) {
+    for (const d of src.registrar ?? []) {
+      if (!d.iso || d.kind === 'break') continue;
+      const away = daysTo(d.iso, now);
+      if (away !== 7 && away !== 1) continue;
+      out.push({
+        id: `term:${today}:${d.id}`,
+        rule: 'term',
+        title: away === 1 ? `Tomorrow: ${d.label}` : `One week: ${d.label}`,
+        body: d.cost || 'From your registrar.',
       });
     }
   }

@@ -395,6 +395,7 @@ export type Screen =
   | 'check'
   | 'ahead'
   | 'weekly'
+  | 'registrar'
   | 'sources'
   | 'slides'
   | 'account'

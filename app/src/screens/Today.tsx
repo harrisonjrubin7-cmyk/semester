@@ -20,6 +20,7 @@ import { minutesNow } from '../lib/date';
 import { datedEvents, datedItems } from '../lib/select';
 import { overdueCount } from '../lib/standing';
 import { visible } from '../lib/feed';
+import { line, pressing, standing } from '../lib/registrar';
 import { Brief } from './Brief';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
@@ -555,6 +556,53 @@ function Feed_rail() {
 }
 
 /**
+ * The university's own deadlines, when one is close.
+ *
+ * Silent the rest of the time, and silent entirely until somebody has filled
+ * the sheet in — an empty section that nags is how a person learns to scroll
+ * past a whole part of a screen. When it does speak it says the consequence
+ * rather than the name, because "last day to drop without a W" means nothing
+ * to a first-year and "after this it stays on your transcript" means
+ * everything.
+ */
+function Feed_registrar() {
+  const { state, dispatch, now } = useStore();
+  const soon = pressing(state.registrar, now);
+  if (soon.length === 0) return null;
+
+  return (
+    <>
+      <SectionLabel style={{ margin: '14px 0 12px' }}>From the registrar</SectionLabel>
+      {soon.slice(0, 3).map((d) => (
+        <Blueprint
+          key={d.id}
+          onClick={() => dispatch({ type: 'go', screen: 'registrar' })}
+          style={{ padding: '12px 14px', marginBottom: 8 }}
+        >
+          <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 15, lineHeight: 1.3 }}>{d.label}</span>
+            <span
+              style={{
+                flex: 'none',
+                fontSize: 12,
+                color: standing(d, now) === 'ahead' ? undefined : 'var(--app-warn)',
+              }}
+            >
+              {line(d, now)}
+            </span>
+          </div>
+          {d.cost ? (
+            <div style={{ fontSize: 12, opacity: 0.6, marginTop: 5, lineHeight: 1.45 }}>
+              {d.cost}
+            </div>
+          ) : null}
+        </Blueprint>
+      ))}
+    </>
+  );
+}
+
+/**
  * Today, in the order you asked for.
  *
  * Every section is its own component so the list can be reordered and switched
@@ -562,9 +610,10 @@ function Feed_rail() {
  * is turned off and appends any section a saved order predates, so an older
  * preference can never hide something that exists now.
  */
-const FEED_PARTS: Record<string, () => React.JSX.Element> = {
+const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   next: Feed_next,
   due: Feed_due,
+  registrar: Feed_registrar,
   tasks: Feed_tasks,
   rail: Feed_rail,
 };

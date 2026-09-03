@@ -48,6 +48,7 @@ export const STRATEGY: Record<string, Strategy> = {
   places: 'union',
   sittings: 'union',
   sources: 'union',
+  registrar: 'union',
   feeds: 'union',
   feedEvents: 'union',
   extraLinks: 'union',

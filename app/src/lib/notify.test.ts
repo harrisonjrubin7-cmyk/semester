@@ -4,10 +4,10 @@ import type { DatedItem } from './types';
 import type { NotifKey } from '../data/misc';
 
 const ALL: Record<NotifKey, boolean> = {
-  class: true, today: true, two: true, free: true, sun: true, exam: true,
+  class: true, today: true, two: true, free: true, sun: true, exam: true, term: true,
 };
 const NONE: Record<NotifKey, boolean> = {
-  class: false, today: false, two: false, free: false, sun: false, exam: false,
+  class: false, today: false, two: false, free: false, sun: false, exam: false, term: false,
 };
 
 const item = (over: Partial<DatedItem>): DatedItem =>
@@ -102,5 +102,57 @@ describe('dueReminders', () => {
     const a = dueReminders(THU, ALL, src).map((r) => r.id);
     const b = dueReminders(new Date(2026, 8, 3, 11, 30), ALL, src).map((r) => r.id);
     expect(a).toEqual(b);
+  });
+});
+
+describe('registrar deadlines', () => {
+  const sheet = [
+    { id: 'drop-clean', label: 'Last day to drop without a W', iso: '2026-09-10', until: '',
+      cost: 'After this it stays on your transcript.', kind: 'deadline' as const },
+  ];
+
+  it('warns a week out', () => {
+    // Thursday 3 Sep, and the drop deadline is the 10th.
+    const out = dueReminders(THU, ALL, { items: [], classes: [], registrar: sheet });
+    expect(out.filter((r) => r.rule === 'term').map((r) => r.title)).toEqual([
+      'One week: Last day to drop without a W',
+    ]);
+  });
+
+  it('says what it costs rather than what it is', () => {
+    const out = dueReminders(THU, ALL, { items: [], classes: [], registrar: sheet });
+    expect(out.find((r) => r.rule === 'term')?.body).toBe(
+      'After this it stays on your transcript.',
+    );
+  });
+
+  it('warns again the day before, and not on the days between', () => {
+    const days = [8, 9, 10].map(
+      (d) =>
+        dueReminders(new Date(2026, 8, d, 9, 0), ALL, {
+          items: [], classes: [], registrar: sheet,
+        }).filter((r) => r.rule === 'term').length,
+    );
+    // 8th: nothing. 9th: the day-before warning. 10th: the day itself, which
+    // Today already carries — a notification there would be too late to act on.
+    expect(days).toEqual([0, 1, 0]);
+  });
+
+  it('stays quiet about a break, which cannot be missed', () => {
+    const brk = [{ ...sheet[0], id: 'break', kind: 'break' as const }];
+    const out = dueReminders(THU, ALL, { items: [], classes: [], registrar: brk });
+    expect(out.filter((r) => r.rule === 'term')).toEqual([]);
+  });
+
+  it('says nothing at all when the sheet is empty', () => {
+    const out = dueReminders(THU, ALL, { items: [], classes: [] });
+    expect(out.filter((r) => r.rule === 'term')).toEqual([]);
+  });
+
+  it('is silent when the rule is off', () => {
+    const out = dueReminders(THU, { ...ALL, term: false }, {
+      items: [], classes: [], registrar: sheet,
+    });
+    expect(out.filter((r) => r.rule === 'term')).toEqual([]);
   });
 });

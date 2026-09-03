@@ -11,6 +11,7 @@
 
 import { newId } from '../../lib/files';
 import { mergePersisted } from '../../lib/merge';
+import { LANDMARKS, apply, sheet } from '../../lib/registrar';
 import type { CampusLink, FeedSource } from '../../lib/types';
 import type { Action, State } from '../shape';
 
@@ -53,6 +54,48 @@ export function library(state: State, action: Action): State | null {
         ...state,
         removedCourses: state.removedCourses.filter((id) => !action.ids.includes(id)),
       };
+
+    // The university's own dates. `sheet` fills in any landmark the saved copy
+    // does not have, so setting one date on a fresh account produces a whole
+    // sheet with one row filled rather than a list of one.
+    case 'setTermDate':
+      return {
+        ...state,
+        registrar: sheet(state.registrar).map((d) =>
+          d.id === action.id ? { ...d, iso: action.iso, until: action.until ?? '' } : d,
+        ),
+      };
+
+    case 'addTermDate': {
+      const label = action.label.trim() || 'A date of your own';
+      return {
+        ...state,
+        registrar: [
+          ...sheet(state.registrar),
+          {
+            id: newId(),
+            label,
+            iso: action.iso,
+            until: action.until ?? '',
+            cost: '',
+            kind: action.until ? 'break' : 'deadline',
+          },
+        ],
+      };
+    }
+
+    // A landmark is emptied rather than removed — it is part of the sheet and
+    // will be asked for again. One of your own goes for good.
+    case 'dropTermDate':
+      return {
+        ...state,
+        registrar: sheet(state.registrar)
+          .map((d) => (d.id === action.id ? { ...d, iso: '', until: '' } : d))
+          .filter((d) => d.iso !== '' || LANDMARKS.some((l) => l.id === d.id)),
+      };
+
+    case 'applyRegistrar':
+      return { ...state, registrar: apply(state.registrar, action.found) };
 
     case 'setSample':
       return { ...state, sample: action.on };

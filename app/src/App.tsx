@@ -47,6 +47,7 @@ import { Exam } from './screens/Exam';
 import { CheckDates } from './screens/CheckDates';
 import { Ahead } from './screens/Ahead';
 import { Weekly } from './screens/Weekly';
+import { Registrar } from './screens/Registrar';
 import { Sources } from './screens/Sources';
 import { scaleOf, tokensFor } from './lib/look';
 import { AccountScreen } from './screens/Account';
@@ -182,6 +183,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Counted, before it happens', title: 'The week ahead' };
     case 'weekly':
       return { kicker: 'What happened, and what is next', title: 'This week' };
+    case 'registrar':
+      return { kicker: 'The dates the university sets', title: 'Term deadlines' };
     case 'sources':
       return { kicker: 'Yours, never invented', title: 'Sources' };
     case 'account':
@@ -444,6 +447,8 @@ function CurrentScreen() {
       return <Ahead />;
     case 'weekly':
       return <Weekly />;
+    case 'registrar':
+      return <Registrar />;
     case 'sources':
       return <Sources />;
     case 'account':

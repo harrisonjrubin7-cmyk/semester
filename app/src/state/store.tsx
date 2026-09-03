@@ -337,13 +337,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             at: b.at,
             where: b.meta,
           })),
+          registrar: state.registrar,
         }),
       );
     };
     check();
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
-  }, [catalog, state.notifs, state.appointments]);
+  }, [catalog, state.notifs, state.appointments, state.registrar]);
 
   const value = useMemo(
     () => ({ state, dispatch, now, catalog, account, sync, saveTrouble }),

@@ -32,6 +32,7 @@ import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
 import { type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
+import type { Found, TermDate } from '../lib/registrar';
 import { readLook, type Look } from '../lib/look';
 
 /**
@@ -88,6 +89,13 @@ export interface Persisted {
    * asking happens once rather than every session.
    */
   sources: Source[];
+  /**
+   * The university's own dates — add/drop, withdrawal, registration.
+   *
+   * Ships empty and is filled in by the student from their own registrar. See
+   * `lib/registrar.ts` for why the app refuses to guess these.
+   */
+  registrar: TermDate[];
   /**
    * When each deadline was ticked, epoch ms.
    *
@@ -292,6 +300,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   recent: [],
   sittings: [],
   sources: [],
+  registrar: [],
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -397,6 +406,7 @@ export function loadPersisted(): Persisted {
       recent: saved.recent ?? [],
       sittings: saved.sittings ?? [],
       sources: saved.sources ?? [],
+      registrar: saved.registrar ?? [],
       tickedAt: saved.tickedAt ?? {},
       ...readLook({
         accent: saved.accent,
@@ -446,6 +456,7 @@ export function pickPersisted(state: State): Persisted {
     recent: state.recent,
     sittings: state.sittings,
     sources: state.sources,
+    registrar: state.registrar,
     tickedAt: state.tickedAt,
     accent: state.accent,
     textSize: state.textSize,
@@ -555,6 +566,10 @@ export type Action =
   | { type: 'addCourse'; module: CourseModule }
   | { type: 'replaceCourse'; module: CourseModule }
   | { type: 'removeCourse'; id: CourseId }
+  | { type: 'setTermDate'; id: string; iso: string; until?: string }
+  | { type: 'addTermDate'; label: string; iso: string; until?: string }
+  | { type: 'dropTermDate'; id: string }
+  | { type: 'applyRegistrar'; found: Found[] }
   | { type: 'setSample'; on: boolean }
   | { type: 'removalsPushed'; ids: CourseId[] }
   | { type: 'hydrate'; persisted: Partial<Persisted> };

@@ -188,6 +188,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'registrar',
+    label: 'Term deadlines',
+    blurb: 'Add/drop, withdrawal, registration — the dates your registrar sets, not a syllabus.',
+    keywords: 'registrar term deadline add drop withdraw withdrawal pass fail audit registration enrol enroll academic calendar reading days finals exam period evaluations grades posted last day university school important dates w transcript',
+    group: 'Semester',
+    root: 'calendar',
+  },
+  {
     screen: 'weekly',
     label: 'Weekly report',
     blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',

@@ -8,6 +8,7 @@ export const NOTIF_DEFS = [
   { k: 'free', label: '“Nothing due tonight” all-clear' },
   { k: 'sun', label: 'Sunday night: your weekly report' },
   { k: 'exam', label: 'Exam in one week' },
+  { k: 'term', label: 'A registrar deadline a week out' },
 ] as const;
 
 export type NotifKey = (typeof NOTIF_DEFS)[number]['k'];
@@ -19,6 +20,10 @@ export const DEFAULT_NOTIFS: Record<NotifKey, boolean> = {
   free: false,
   sun: true,
   exam: true,
+  // On by default, unlike the other opt-ins: this is the one whose cost is
+  // money rather than points, and somebody who has not filled the dates in
+  // gets nothing from it anyway.
+  term: true,
 };
 
 /** The morning batch. A demonstration of the alert style, not a live feed. */
