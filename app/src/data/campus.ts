@@ -67,6 +67,16 @@ export const CAMPUS_LINKS: CampusLink[] = [
     note: 'The class search — what is offered, when it meets, what is still open. Copy a schedule out of it and paste it into Add a course.',
   },
   {
+    id: 'tophat',
+    name: 'Top Hat',
+    // app.tophat.com/e/ is the join-by-code entry. It takes you to the course
+    // you are already enrolled in once you are signed in, which is why the
+    // address ships without a code in it — a code belongs to one section.
+    url: 'https://app.tophat.com/e/',
+    hint: '',
+    note: 'In-class polls and attendance. Worth pinning if a course counts Top Hat participation — ECON 1020 puts three points of extra credit on it, and those are points nobody earns by studying harder.',
+  },
+  {
     id: 'anchorlink',
     name: 'AnchorLink',
     url: 'https://anchorlink.vanderbilt.edu',
