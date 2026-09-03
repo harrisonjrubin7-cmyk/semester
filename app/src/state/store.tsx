@@ -47,6 +47,7 @@ import type { Commitment } from '../lib/activities';
 import { DEFAULT_ORDER } from '../lib/feed';
 import { readLook, type Look } from '../lib/look';
 import { save, trouble } from '../lib/keep';
+import { mergePersisted } from '../lib/merge';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
 import { dateToIso, isoToDate } from '../lib/date';
@@ -248,6 +249,18 @@ interface Ephemeral {
   quizPicked: number | null;
   quizScore: number;
   quizSeed: number;
+  /**
+   * Courses deleted on this device and not yet deleted from the account.
+   *
+   * Ephemeral on purpose. A push tells the account exactly what this device
+   * removed, and nothing else — the alternative, and what this replaces, was
+   * a push that deleted every course the account held and the pushing device
+   * did not, which meant a phone that had never synced could wipe a course
+   * imported on the laptop. It is not persisted because a synced deletion is
+   * finished business, and an unsynced one coming back on the next pull is a
+   * visible, fixable outcome rather than a silent loss.
+   */
+  removedCourses: string[];
 }
 
 export interface QuizQuestion {
@@ -363,6 +376,7 @@ function initialEphemeral(now: Date): Ephemeral {
     quizPicked: null,
     quizScore: 0,
     quizSeed: 1,
+    removedCourses: [],
   };
 }
 
@@ -560,6 +574,7 @@ export type Action =
   | { type: 'replaceCourse'; module: CourseModule }
   | { type: 'removeCourse'; id: CourseId }
   | { type: 'setSample'; on: boolean }
+  | { type: 'removalsPushed'; ids: CourseId[] }
   | { type: 'hydrate'; persisted: Partial<Persisted> };
 
 const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
@@ -1087,7 +1102,14 @@ export function reducer(state: State, action: Action): State {
     }
 
     case 'addCourse':
-      return { ...state, courses: [...state.courses, action.module] };
+      return {
+        ...state,
+        courses: [...state.courses, action.module],
+        // A course id is a slug of its code, so re-importing ECON 1020 after
+        // deleting it reuses the id. Cancel the pending deletion or the next
+        // push would remove the course it had just sent.
+        removedCourses: state.removedCourses.filter((id) => id !== action.module.course.id),
+      };
 
     case 'replaceCourse':
       return {
@@ -1103,6 +1125,18 @@ export function reducer(state: State, action: Action): State {
         courses: state.courses.filter((c) => c.course.id !== action.id),
         // Anything filed against it goes too, or it becomes unreachable data.
         updates: state.updates.filter((u) => u.courseId !== action.id),
+        // Named for the next push, so the account deletes this one and only
+        // this one. See `removedCourses`.
+        removedCourses: state.removedCourses.includes(action.id)
+          ? state.removedCourses
+          : [...state.removedCourses, action.id],
+      };
+
+    // Deleted from the account too; the queue has done its job.
+    case 'removalsPushed':
+      return {
+        ...state,
+        removedCourses: state.removedCourses.filter((id) => !action.ids.includes(id)),
       };
 
     case 'setSample':
@@ -1110,8 +1144,24 @@ export function reducer(state: State, action: Action): State {
 
     // What the account had, arriving from another device. Navigation is left
     // alone: you should land where you were, not where your laptop was.
-    case 'hydrate':
-      return { ...state, ...action.persisted };
+    //
+    // This used to be `{ ...state, ...action.persisted }`, which replaced every
+    // persisted field wholesale. Two devices each writing a note offline meant
+    // the one that synced second won its whole list, and the other note was
+    // gone with nothing to say so. `lib/merge.ts` merges field by field: lists
+    // you add to keep both sides, ticked boxes keep both ticks, settings take
+    // the copy that synced later.
+    case 'hydrate': {
+      const merged = mergePersisted(state, action.persisted);
+      // A course deleted here but not yet deleted from the account would
+      // otherwise arrive back in the union and look like it un-deleted itself.
+      return state.removedCourses.length === 0
+        ? merged
+        : {
+            ...merged,
+            courses: merged.courses.filter((c) => !state.removedCourses.includes(c.course.id)),
+          };
+    }
 
     case 'removeLink': {
       const { [action.id]: _gone, ...linkUrls } = state.linkUrls;
@@ -1222,9 +1272,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     at: 0,
     error: '',
   });
-  // Set while hydrating, so the pull's own state change does not bounce
-  // straight back as a push.
-  const settling = useRef(false);
 
   /**
    * Who is signed in — asked for after the first paint, not before it.
@@ -1288,7 +1335,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const hasRemote = remote.state !== null || remote.courses.length > 0;
 
         if (hasRemote && remote.updated > localStamp) {
-          settling.current = true;
           dispatch({
             type: 'hydrate',
             persisted: {
@@ -1297,7 +1343,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             },
           });
           localStorage.setItem(SYNCED_KEY, String(remote.updated));
-          setTimeout(() => (settling.current = false), 0);
         }
         if (live) setSync({ status: 'synced', at: Date.now(), error: '' });
       } catch (e) {
@@ -1315,19 +1360,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
   }, [account]);
 
-  // Every later change goes up, once things stop moving.
+  /**
+   * Every later change goes up, once things stop moving.
+   *
+   * The dependency is the serialised persisted half, for the reason written
+   * above the localStorage save: this list used to be seventeen hand-written
+   * fields and had fallen a dozen behind. Drilling a card, naming a place,
+   * sitting a practice paper and adding a source all changed state that this
+   * effect was not watching, so none of them reached the account until some
+   * *other* field happened to change. Depending on the same string means what
+   * is saved is what is synced, and the two cannot drift again.
+   *
+   * A pull no longer suppresses the push either. The merge in `hydrate` is a
+   * union, so the state after a pull holds this device's work as well as the
+   * account's — which is exactly the copy the account is missing. Letting it
+   * go back up is the second half of not losing a note.
+   */
   useEffect(() => {
-    if (!account || settling.current) return;
+    if (!account) return;
     const timer = setTimeout(() => {
       const { courses, ...rest } = pickPersisted(state);
+      const removed = state.removedCourses;
       void pushCloud(
         account.id,
         rest as Record<string, unknown>,
         courses.map((c) => ({ id: c.course.id, data: c })),
+        removed,
       )
         .then(() => {
           localStorage.setItem(SYNCED_KEY, String(Date.now()));
           setSync({ status: 'synced', at: Date.now(), error: '' });
+          if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
         })
         .catch((e: unknown) =>
           setSync({
@@ -1338,27 +1401,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         );
     }, 2500);
     return () => clearTimeout(timer);
-    // The same fields localStorage watches: what is worth keeping is what is
-    // worth syncing.
-  }, [
-    account,
-    state.nav,
-    state.done,
-    state.saved,
-    state.notifs,
-    state.seenOnboarding,
-    state.cleared,
-    state.tasks,
-    state.appointments,
-    state.notes,
-    state.updates,
-    state.feeds,
-    state.feedEvents,
-    state.linkUrls,
-    state.extraLinks,
-    state.courses,
-    state.sample,
-  ]);
+    // `persisted` stands in for the whole persisted half. `state` is read
+    // inside the timer and is deliberately not a dependency — it changes on
+    // every navigation, and none of those are worth a write.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [account, persisted]);
 
   // The sample is fetched the first time it is switched on, and stays in
   // memory after. It is still never copied into storage — an account holds a

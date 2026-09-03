@@ -6,11 +6,18 @@
  * second copy in Postgres and keeps the two in step — so the phone and the
  * laptop show the same semester, and a lost phone is not a lost semester.
  *
- * The reconciliation is deliberately simple and deliberately stated: **last
- * write wins, per device, by timestamp**. Two devices editing the same note
- * offline will not merge; the later save is the one that survives. Anything
- * cleverer is a distributed-systems project, and pretending otherwise in the UI
- * would be worse than saying it plainly.
+ * The reconciliation is deliberately simple and deliberately stated. It used to
+ * be **last write wins across the whole copy**, which sounded modest and was
+ * in fact destructive: two devices each writing a note offline meant the one
+ * that synced second won its entire list, and the other note was gone with
+ * nothing to say so. What arrives from the account is now merged field by
+ * field on the device — see `lib/merge.ts` — so lists you add to keep both
+ * sides and settings take the copy that synced later.
+ *
+ * What still does not merge is one record edited on both devices: the later
+ * edit of the same note is the one that survives. Anything cleverer is a
+ * distributed-systems project, and pretending otherwise in the UI would be
+ * worse than saying it plainly.
  *
  * What does not sync: files you attach. They live in IndexedDB and can be tens
  * of megabytes; uploading them silently on a phone plan is not a decision the
@@ -216,10 +223,26 @@ export async function pull(userId: string): Promise<Snapshot> {
   };
 }
 
+/**
+ * Send this device's copy up.
+ *
+ * `removed` is the courses this device has actually deleted since it last
+ * pushed — not "everything the account has that this device does not hold",
+ * which is what it used to be and which was a way to lose a whole course.
+ * A device that had never synced would push its two courses, and the third,
+ * imported on the laptop, was deleted from the account by a phone that had
+ * simply never heard of it.
+ *
+ * The trade is stated rather than hidden: delete a course offline and close
+ * the app before it syncs, and the course comes back on the next pull. That
+ * is visible and you can delete it again. The other failure was silent and
+ * you could not.
+ */
 export async function push(
   userId: string,
   state: CloudState,
   courses: { id: string; data: unknown }[],
+  removed: string[] = [],
 ): Promise<void> {
   const db = (await cloud());
 
@@ -239,12 +262,14 @@ export async function push(
   }
 
   // A course deleted on this device has to be deleted there too, or the next
-  // pull brings it back from the dead.
-  const keep = courses.map((c) => c.id);
-  const { error: pruneError } = await db
-    .from('courses')
-    .delete()
-    .eq('user_id', userId)
-    .not('id', 'in', `(${keep.map((k) => `"${k}"`).join(',') || '""'})`);
-  if (pruneError) throw new Error(pruneError.message);
+  // pull brings it back from the dead. Only those, by name.
+  const gone = removed.filter((id) => !courses.some((c) => c.id === id));
+  if (gone.length > 0) {
+    const { error: pruneError } = await db
+      .from('courses')
+      .delete()
+      .eq('user_id', userId)
+      .in('id', gone);
+    if (pruneError) throw new Error(pruneError.message);
+  }
 }

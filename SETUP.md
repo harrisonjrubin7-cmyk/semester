@@ -43,6 +43,17 @@ signed-in one sees only their own rows.
 a chat window.** It bypasses row-level security entirely. The app has no use for
 it; only the Edge Function does, and Supabase gives the function its own copy.
 
+**You can check sync without a second device.** SQL Editor → New query → paste
+[`supabase/sync.check.sql`](supabase/sync.check.sql) → Run. It makes one
+synthetic account with two devices and a stranger, and asserts the things that
+matter when a person owns a phone and a laptop: that a push from one device
+cannot delete a course imported on the other, that the upsert updates rather
+than duplicates, that `updated_at` comes from the database and not from a
+device with a wrong clock, and that another account can neither read your
+semester nor write into it. Thirteen checks; a clean run prints
+`ALL CHECKS PASSED`, and it rolls everything back. The merge itself happens on
+the device and is covered by `app/src/lib/merge.test.ts`.
+
 ### Optional · Classmates
 
 Rooms per class, for people with a confirmed university address. SQL Editor →

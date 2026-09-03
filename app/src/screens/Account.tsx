@@ -92,9 +92,15 @@ export function AccountScreen() {
 
         <SectionLabel>How conflicts resolve</SectionLabel>
         <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
-          Last write wins. Edit the same note on two devices while one is offline and the later
-          save is the one that survives — the app does not merge them, and would rather say so than
-          pretend.
+          Nothing you added on one device is dropped because you added something on the other.
+          Write a note on the laptop and another on your phone while it is offline, and you end up
+          with both; tick one box here and a different one there, and both stay ticked. Settings
+          are the exception, and deliberately so — your colours are whatever you last chose,
+          wherever you chose it.
+        </div>
+        <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty', marginTop: 8 }}>
+          What still does not merge is the same note edited on both: the later edit is the one that
+          survives. The app would rather say so than pretend.
         </div>
 
         <button
@@ -229,9 +235,9 @@ export function AccountScreen() {
 
       <SectionLabel>Before you sign up</SectionLabel>
       <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.55, textWrap: 'pretty' }}>
-        What you already have on this device is kept: the first sync sends it up rather than
-        replacing it, unless the account is newer, in which case the account wins and this device
-        catches up.
+        What you already have on this device is kept. The first sync sends it up, and if the
+        account already holds a semester the two are merged rather than one replacing the other —
+        you end up with both sides' courses, notes and ticked boxes.
       </div>
       <div style={{ height: 22 }} />
     </div>
