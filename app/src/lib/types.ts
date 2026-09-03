@@ -375,6 +375,7 @@ export type Screen =
   | 'analyse'
   | 'classmates'
   | 'activities'
+  | 'brief'
   | 'slides'
   | 'account'
   | 'cloud';

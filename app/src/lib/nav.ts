@@ -41,6 +41,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'home',
   },
   {
+    screen: 'brief',
+    label: 'Your day',
+    blurb: 'A start-of-day and an end-of-day report — what is due, and what got done.',
+    keywords: 'brief briefing report daily day start end morning evening summary recap review standup what is due what did i do plan wrap up',
+    group: 'Semester',
+    root: 'home',
+  },
+  {
     screen: 'courses',
     label: 'Courses',
     blurb: 'Every course, its deadlines, its grading and its professor.',

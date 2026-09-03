@@ -40,6 +40,7 @@ import { EditCourse } from './screens/EditCourse';
 import { Analyse } from './screens/Analyse';
 import { Classmates } from './screens/Classmates';
 import { Activities } from './screens/Activities';
+import { Brief } from './screens/Brief';
 import { accent, scaleOf } from './lib/feed';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
@@ -160,6 +161,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Confirmed Vanderbilt addresses', title: 'Classmates' };
     case 'activities':
       return { kicker: 'Everything that is not a class', title: 'Activities' };
+    case 'brief':
+      return { kicker: 'Counted, then read', title: 'Your day' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -399,6 +402,8 @@ function CurrentScreen() {
       return <Classmates />;
     case 'activities':
       return <Activities />;
+    case 'brief':
+      return <Brief />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':
