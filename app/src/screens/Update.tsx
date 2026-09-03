@@ -10,6 +10,7 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { addFile, formatBytes, type FileMeta } from '../lib/files';
+import { gather } from '../lib/bundle';
 import { describeParse, parseMaterial } from '../lib/parse';
 import type { CourseId } from '../lib/types';
 
@@ -97,22 +98,37 @@ export function AddMaterial() {
   const pick = async (list: FileList | null) => {
     if (!list || list.length === 0) return;
     setBusy(true);
+    setReadNote('');
+
+    // Zips are unpacked here too — a professor posting a week's readings as
+    // one archive is the normal case, not an edge one.
+    const got = await gather(Array.from(list));
     const added: FileMeta[] = [];
-    for (const file of Array.from(list)) {
+
+    for (const piece of got.files) {
       try {
-        added.push(await addFile(file, courseId));
+        added.push(await addFile(piece.file, courseId));
       } catch {
         // Storage refused it — a private window, or the quota. Say nothing
         // here; the list simply will not show it.
       }
       // A text file can also be read straight into the box, which is what
       // makes an exported reading useful rather than just attached.
-      if (/^text\/|json|markdown/.test(file.type) || /\.(txt|md|csv)$/i.test(file.name)) {
-        const body = await file.text();
+      if (
+        /^text\/|json|markdown/.test(piece.file.type) ||
+        /\.(txt|md|csv)$/i.test(piece.name)
+      ) {
+        const body = await piece.file.text();
         setText((t) => (t ? `${t}\n\n${body}` : body));
       }
     }
+
     setFiles((f) => [...f, ...added]);
+    if (got.skipped.length > 0) {
+      setReadNote(
+        `Left out: ${got.skipped.map((sk) => `${sk.name} (${sk.why})`).join('; ')}.`,
+      );
+    }
     setBusy(false);
   };
 
@@ -366,7 +382,7 @@ export function AddMaterial() {
         onClick={() => fileInput.current?.click()}
         style={{ height: 42, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
-        {busy ? 'Reading…' : 'Attach slides, a PDF, a photo of the board'}
+        {busy ? 'Reading…' : 'Attach slides, a PDF, a photo of the board, or a zip'}
       </button>
       {files.map((f) => (
         <div

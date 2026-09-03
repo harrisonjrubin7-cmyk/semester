@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { gather } from '../lib/bundle';
 import { extractText, type Extracted } from '../lib/extract';
 import { generateCourse, type GenerationResult } from '../lib/generate';
 import { configured } from '../lib/claude';
@@ -31,13 +32,29 @@ export function Import() {
   const add = async (list: FileList | null) => {
     if (!list?.length) return;
     setError('');
-    for (const file of Array.from(list)) {
-      setBusy(`Reading ${file.name}…`);
+    setBusy('Opening what you picked…');
+
+    // A zip is unpacked rather than refused: nobody has one syllabus, they
+    // have a download folder and whatever the professor posted.
+    const got = await gather(Array.from(list));
+    if (got.skipped.length > 0) {
+      setError(
+        `Left out: ${got.skipped.map((sk) => `${sk.name} (${sk.why})`).join('; ')}.`,
+      );
+    }
+
+    for (const piece of got.files) {
+      setBusy(`Reading ${piece.name}…`);
       try {
-        const extracted = await extractText(file);
+        const extracted = await extractText(piece.file);
         setFiles((f) => [...f.filter((x) => x.name !== extracted.name), extracted]);
       } catch (e) {
-        setError(e instanceof Error ? e.message : String(e));
+        // One unreadable file should not abandon the other nine.
+        setError((prior) =>
+          [prior, `${piece.name}: ${e instanceof Error ? e.message : String(e)}`]
+            .filter(Boolean)
+            .join(' '),
+        );
       }
     }
     setBusy('');
@@ -84,7 +101,7 @@ export function Import() {
         ref={input}
         type="file"
         multiple
-        accept=".pdf,.docx,.txt,.md,.csv,.html,text/*,application/pdf"
+        accept=".pdf,.docx,.txt,.md,.csv,.html,.zip,text/*,application/pdf,application/zip"
         style={{ display: 'none' }}
         onChange={(e) => void add(e.target.files)}
       />
@@ -95,7 +112,7 @@ export function Import() {
         disabled={busy !== ''}
         style={{ height: 46, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 16 }}
       >
-        {busy.startsWith('Reading ') ? busy : 'Choose files — PDF, Word or text'}
+        {busy ? busy : 'Choose files — PDF, Word, text, or a zip of them'}
       </button>
 
       {files.map((f) => (
