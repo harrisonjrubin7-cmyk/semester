@@ -6,6 +6,7 @@ import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import type { CourseId } from '../lib/types';
+import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 
 /**
  * Everything you added yourself.
@@ -247,13 +248,14 @@ function Appointments() {
   const [date, setDate] = useState(dateToIso(now));
   const [when, setWhen] = useState('09:00');
   const [where, setWhere] = useState('');
+  const [kind, setKind] = useState<EventKindId>('social');
 
   const add = () => {
     if (!title.trim()) return;
     const { at, time } = clockFromInput(when);
     dispatch({
       type: 'addAppointment',
-      appointment: { title: title.trim(), date, at, time, where: where.trim(), note: '' },
+      appointment: { title: title.trim(), date, at, time, where: where.trim(), note: '', kind },
     });
     setTitle('');
     setWhere('');
@@ -304,6 +306,43 @@ function Appointments() {
             style={inputStyle}
             aria-label="Place"
           />
+
+          {/* What it is for, so the hour grid can colour it and a glance at the
+              day tells you what kind of day it is. */}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 6,
+              marginTop: 10,
+            }}
+          >
+            {EVENT_KINDS.map((k) => (
+              <button
+                key={k.id}
+                type="button"
+                className="btn"
+                onClick={() => setKind(k.id)}
+                aria-pressed={kind === k.id}
+                style={{
+                  flex: 'none',
+                  padding: '5px 10px',
+                  fontSize: 11,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  background: kind === k.id ? 'var(--app-hero)' : 'transparent',
+                  borderColor: kind === k.id ? k.tint : 'var(--app-line)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <span style={{ width: 3, height: 10, background: k.tint, flex: 'none' }} />
+                {k.label}
+              </button>
+            ))}
+          </div>
+
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <button
               type="button"
@@ -343,7 +382,18 @@ function Appointments() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
         {upcoming.map((a) => (
-          <Blueprint key={a.id} style={{ display: 'flex', gap: 13, padding: '12px 14px' }}>
+          <Blueprint
+            key={a.id}
+            plain
+            style={{
+              display: 'flex',
+              gap: 13,
+              padding: '12px 14px',
+              // The same tint the hour grid uses, so a row and its block on the
+              // day are recognisably the same thing.
+              borderLeft: `2px solid ${kindOf(a.kind).tint}`,
+            }}
+          >
             <div
               style={{
                 width: 52,
@@ -359,9 +409,9 @@ function Appointments() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 15, lineHeight: 1.25 }}>{a.title}</div>
-              {a.where && (
-                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>{a.where}</div>
-              )}
+              <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>
+                {[kindOf(a.kind).label, a.where].filter(Boolean).join(' · ')}
+              </div>
             </div>
             <button
               type="button"

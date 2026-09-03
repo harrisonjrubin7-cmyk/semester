@@ -3,6 +3,8 @@ import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, EmptyState, SectionLabel, Segmented } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
+import { HourGrid } from '../components/HourGrid';
+import { KindKey } from '../components/KindKey';
 import {
   DOW,
   DOW_INITIALS,
@@ -10,6 +12,7 @@ import {
   dateToIso,
   isoToDate,
   longLabel,
+  minutesNow,
   monthGrid,
   sameDay,
 } from '../lib/date';
@@ -18,6 +21,7 @@ import {
   datedEvents,
   datedItems,
   feedEventsOn,
+  hoursFor,
   itemsOn,
   railFor,
 } from '../lib/select';
@@ -137,6 +141,24 @@ function DayView() {
               : 'Nothing from this source. Try another filter.'
           }
         />
+      )}
+
+      {/*
+        The grid first, the list under it. They answer different questions: the
+        grid shows the shape of the day — where the gaps are, what collides —
+        and the list gives each thing room for its detail. Neither replaces the
+        other, and the grid is the one you want first.
+      */}
+      {rail.length > 0 && (
+        <>
+          <SectionLabel style={{ margin: '0 0 6px' }}>By the hour</SectionLabel>
+          <KindKey compact />
+          <HourGrid
+            blocks={hoursFor(catalog, day, state.appointments)}
+            now={isToday ? minutesNow(now) : null}
+            style={{ margin: '14px 0 26px' }}
+          />
+        </>
       )}
 
       {rail.length > 0 && (

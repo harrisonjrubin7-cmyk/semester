@@ -19,6 +19,9 @@ import {
 import { minutesNow } from '../lib/date';
 import { datedEvents, datedItems } from '../lib/select';
 import { tally } from '../lib/review';
+import { hoursFor } from '../lib/select';
+import { HourGrid } from '../components/HourGrid';
+import { KindKey } from '../components/KindKey';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -174,6 +177,7 @@ function TabHome() {
       <Segmented
         options={[
           { id: 'today', label: 'Today' },
+          { id: 'hours', label: 'Hours' },
           { id: 'week', label: 'This week' },
           { id: 'done', label: 'Done' },
         ]}
@@ -431,6 +435,8 @@ function TabHome() {
         </>
       )}
 
+      {tab === 'hours' && <HoursToday />}
+
       {tab === 'done' && <DoneToday />}
 
       <div style={{ height: 26 }} />
@@ -525,6 +531,54 @@ function DoneToday() {
           ))}
         </>
       )}
+      <div style={{ height: 22 }} />
+    </>
+  );
+}
+
+/**
+ * Today by the hour.
+ *
+ * The rail below tells you what is on, in order. This tells you the shape of
+ * the day — that the morning is stacked and the afternoon is free, that the
+ * shift starts an hour after the last class, that two things collide. A list
+ * cannot show a gap, and a gap is usually the thing you are looking for.
+ */
+function HoursToday() {
+  const { state, dispatch, now, catalog } = useStore();
+  const blocks = hoursFor(catalog, now, state.appointments);
+
+  return (
+    <>
+      <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5, marginBottom: 6 }}>
+        Classes from your syllabi, in the app's own colour. Anything you add is tinted by what it
+        is for.
+      </div>
+      <KindKey />
+      {blocks.length === 0 ? (
+        <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.55, lineHeight: 1.5 }}>
+          Nothing on today. Add something below and it appears on the grid.
+        </div>
+      ) : (
+        <HourGrid blocks={blocks} now={minutesNow(now)} style={{ marginTop: 14 }} />
+      )}
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => {
+          dispatch({ type: 'setMineTab', tab: 'appointments' });
+          dispatch({ type: 'go', screen: 'mine' });
+        }}
+        style={{
+          height: 44,
+          marginTop: 18,
+          fontSize: 11,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+        }}
+      >
+        + Add something to the day
+      </button>
       <div style={{ height: 22 }} />
     </>
   );

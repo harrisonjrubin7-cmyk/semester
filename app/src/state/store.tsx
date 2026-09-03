@@ -127,7 +127,7 @@ interface Ephemeral {
    * single long scroll with everything on it.
    */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
-  homeTab: 'today' | 'week' | 'done';
+  homeTab: 'today' | 'hours' | 'week' | 'done';
   coursesTab: 'courses' | 'due' | 'grades';
   studyTab: 'guides' | 'tonight' | 'ask';
   /** Note currently open in the editor. */
@@ -342,13 +342,14 @@ export type Action =
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
-  | { type: 'setHomeTab'; tab: 'today' | 'week' | 'done' }
+  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
   | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
   | { type: 'toggleTask'; id: string }
   | { type: 'deleteTask'; id: string }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
+  | { type: 'setAppointmentKind'; id: string; kind: string }
   | { type: 'deleteAppointment'; id: string }
   | { type: 'newNote'; courseId: CourseId | null }
   /** Save a finished piece of text as a note without leaving the screen. */
@@ -609,6 +610,14 @@ export function reducer(state: State, action: Action): State {
           ...state.appointments,
           { ...action.appointment, id: newId(), created: Date.now() },
         ],
+      };
+
+    case 'setAppointmentKind':
+      return {
+        ...state,
+        appointments: state.appointments.map((a) =>
+          a.id === action.id ? { ...a, kind: action.kind } : a,
+        ),
       };
 
     case 'deleteAppointment':

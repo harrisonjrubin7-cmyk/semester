@@ -234,6 +234,13 @@ export interface PersonalTask {
 export interface Appointment {
   id: string;
   title: string;
+  /**
+   * What it is for — study, work, social, family, health, admin, other.
+   *
+   * Optional because appointments added before this existed have none, and a
+   * missing kind reads as "other" rather than breaking. See `lib/kinds.ts`.
+   */
+  kind?: string;
   /** ISO date, YYYY-MM-DD. */
   date: string;
   /** Minutes past midnight, so it sorts into the rail with classes. */

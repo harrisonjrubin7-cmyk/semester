@@ -295,7 +295,7 @@ export function appointmentsOn(appointments: Appointment[], date: Date): Appoint
  * merged in time order. Appointments are marked `mine` so the UI can show whose
  * they are rather than implying the syllabus asked for them.
  */
-export function railFor(cat: Catalog, date: Date, appointments: Appointment[]): (Block & { mine?: boolean })[] {
+export function railFor(cat: Catalog, date: Date, appointments: Appointment[]): (Block & { mine?: boolean; kind?: string })[] {
   const classes = blocksFor(cat, date);
   const mine = appointmentsOn(appointments, date).map((a) => ({
     time: a.time,
@@ -304,8 +304,69 @@ export function railFor(cat: Catalog, date: Date, appointments: Appointment[]): 
     meta: a.where || 'Added by you',
     c: null,
     mine: true,
+    kind: a.kind ?? 'other',
   }));
   return [...classes, ...mine].sort((a, b) => a.at - b.at);
+}
+
+/**
+ * A day as blocks an hour grid can draw.
+ *
+ * Classes carry a real length from the syllabus; anything you added is a point
+ * in time, so it gets fifty minutes — long enough to read, short enough not to
+ * imply a duration nobody stated.
+ */
+export function hoursFor(
+  cat: Catalog,
+  date: Date,
+  appointments: Appointment[],
+): { id: string; title: string; meta: string; at: number; minutes: number; kind: string | null; canceled?: boolean }[] {
+  return railFor(cat, date, appointments).map((b, i) => ({
+    id: `${b.at}-${i}-${b.title}`,
+    title: b.title,
+    meta: b.meta,
+    at: b.at,
+    minutes: b.mine ? 50 : lengthOf(cat, b),
+    kind: b.mine ? (b.kind ?? 'other') : null,
+    canceled: b.canceled,
+  }));
+}
+
+/**
+ * How long a class runs.
+ *
+ * The recurring schedule states a start and no end, but the course's `meets`
+ * line usually carries both — "T/R · 1:15–2:30p" is seventy-five minutes and
+ * "MWF · 9:05–9:55a" is fifty. Parsed from there, because it is data the app
+ * already has; fifty when the line does not say, which is the common case and
+ * an honest default rather than a guess at something longer.
+ */
+export function lengthOf(cat: Catalog, block: Block): number {
+  const meets = block.c ? cat.byId[block.c]?.meets : '';
+  const mins = spanOf(meets ?? '');
+  return mins ?? 50;
+}
+
+/** Minutes between the two times in "1:15–2:30p", or null. */
+export function spanOf(meets: string): number | null {
+  const m = meets.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])?\s*[–—-]\s*(\d{1,2})(?::(\d{2}))?\s*([ap])?/i);
+  if (!m) return null;
+
+  const [, h1, m1, ap1, h2, m2, ap2] = m;
+  // A range usually marks the meridiem once, at the end — "9:05–9:55a" is both
+  // morning. When only the start says, the end inherits it, and vice versa.
+  const half = (ap1 || ap2 || '').toLowerCase();
+  const to24 = (h: string, suffix: string) => {
+    let hour = Number(h) % 12;
+    if (suffix === 'p') hour += 12;
+    return hour;
+  };
+  const start = to24(h1, (ap1 || half).toLowerCase()) * 60 + Number(m1 ?? 0);
+  let end = to24(h2, (ap2 || half).toLowerCase()) * 60 + Number(m2 ?? 0);
+  // "11:30–1:00p" crosses noon: the end is simply later than the start.
+  if (end <= start) end += 12 * 60;
+  const span = end - start;
+  return span > 0 && span <= 5 * 60 ? span : null;
 }
 
 export const SEMESTER = { year: SEMESTER_YEAR };
