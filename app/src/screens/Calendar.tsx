@@ -1,26 +1,322 @@
-import { COURSE_BY_ID } from '../data/catalog';
+import { COURSE_BY_ID, COURSES } from '../data/catalog';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, EmptyState, SectionLabel, Segmented } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
-import { DOW_INITIALS, MONTHS, monthGrid, sameDay } from '../lib/date';
-import { datedEvents, dotsForMonth, itemsOn } from '../lib/select';
-import type { EventKind } from '../lib/types';
+import {
+  DOW,
+  DOW_INITIALS,
+  MONTHS,
+  dateToIso,
+  isoToDate,
+  longLabel,
+  monthGrid,
+  sameDay,
+} from '../lib/date';
+import {
+  appointmentsOn,
+  datedEvents,
+  datedItems,
+  itemsOn,
+  railFor,
+} from '../lib/select';
+import type { CourseId, DatedEvent, DatedItem, EventKind } from '../lib/types';
+
+/**
+ * The calendar has two independent axes.
+ *
+ * The **view** decides the grain — a single day hour by hour, a month grid, or
+ * the whole semester at once. The **source** decides what is on it: classes,
+ * deadlines and campus events combined, or any one of them on its own. Keeping
+ * them independent means "just my classes, for the whole semester" and "every
+ * single thing happening today" are both one tap away.
+ */
+
+const SOURCES = [
+  { id: 'all', label: 'All' },
+  { id: 'classes', label: 'Classes' },
+  { id: 'deadlines', label: 'Due' },
+  { id: 'campus', label: 'Campus' },
+] as const;
+
+type Source = (typeof SOURCES)[number]['id'];
 
 const EV_FILTERS = ['All', 'Athletics', 'Clubs', 'University', 'Saved'] as const;
 
-function Deadlines() {
+/** Colour a course consistently wherever it appears on the calendar. */
+function courseTint(id: CourseId | null): string {
+  if (!id) return 'var(--app-accent-deep)';
+  const index = COURSES.findIndex((c) => c.id === id);
+  // A single accent, stepped in opacity — the system is mono by design, so
+  // courses are distinguished by weight rather than by inventing new hues.
+  const steps = [1, 0.78, 0.56, 0.38];
+  return `color-mix(in srgb, var(--app-accent) ${(steps[index % steps.length] ?? 0.5) * 100}%, transparent)`;
+}
+
+// ── Day ───────────────────────────────────────────────────────────────────
+
+function DayView() {
   const { state, dispatch, now } = useStore();
-  const { calYear, calMonth } = state;
+  const day = state.calDay ? isoToDate(state.calDay) : now;
+  const isToday = sameDay(day, now);
+  const source = state.calSource;
+
+  const rail = source === 'all' || source === 'classes' ? railFor(day, state.appointments) : [];
+  const due = source === 'all' || source === 'deadlines'
+    ? datedItems(now).filter((i) => sameDay(i.date, day))
+    : [];
+  const events = source === 'all' || source === 'campus'
+    ? datedEvents(now).filter((e) => sameDay(e.date, day))
+    : [];
+  const tasks = source === 'all' || source === 'deadlines' ? appointmentsOn([], day) : [];
+  const myTasks = source === 'all' || source === 'deadlines'
+    ? state.tasks.filter((t) => t.date === dateToIso(day))
+    : [];
+
+  const empty =
+    rail.length === 0 && due.length === 0 && events.length === 0 && myTasks.length === 0;
+
+  return (
+    <div style={{ padding: 18 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 14,
+        }}
+      >
+        <button
+          type="button"
+          className="btn btn-ghost btn-icon"
+          onClick={() => dispatch({ type: 'stepDay', delta: -1 })}
+          aria-label="Previous day"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          type="button"
+          className="bare"
+          onClick={() => dispatch({ type: 'setCalDay', date: null })}
+          style={{ width: 'auto', textAlign: 'center' }}
+        >
+          <span className="chrome-text" style={{ fontSize: 20, display: 'block' }}>
+            {isToday ? 'Today' : DOW[day.getDay()]}
+          </span>
+          <span className="kicker" style={{ display: 'block' }}>
+            {MONTHS[day.getMonth()]} {day.getDate()}
+          </span>
+        </button>
+        <button
+          type="button"
+          className="btn btn-ghost btn-icon"
+          onClick={() => dispatch({ type: 'stepDay', delta: 1 })}
+          aria-label="Next day"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      {empty && (
+        <EmptyState
+          title="Nothing on."
+          body={
+            source === 'all'
+              ? 'No classes, no deadlines, no events. A genuinely free day.'
+              : 'Nothing from this source. Try another filter.'
+          }
+        />
+      )}
+
+      {rail.length > 0 && (
+        <>
+          <SectionLabel style={{ margin: '0 0 12px' }}>The rail</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {rail.map((b, i) => (
+              <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'stretch' }}>
+                <div
+                  style={{
+                    width: 56,
+                    flex: 'none',
+                    textAlign: 'right',
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: 14,
+                    paddingTop: 12,
+                    opacity: 0.6,
+                  }}
+                >
+                  {b.time}
+                </div>
+                <div style={{ width: 1, background: 'var(--app-line)', position: 'relative' }}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 16,
+                      left: -3,
+                      width: 7,
+                      height: 7,
+                      background: b.canceled
+                        ? 'var(--app-track)'
+                        : b.mine
+                          ? 'transparent'
+                          : courseTint(b.c),
+                      border: b.mine ? '1px solid var(--app-accent)' : 'none',
+                    }}
+                  />
+                </div>
+                <div style={{ flex: 1, padding: '11px 0 15px', minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-heading)',
+                      fontSize: 18,
+                      lineHeight: 1.15,
+                      opacity: b.canceled ? 0.45 : 1,
+                      textDecoration: b.canceled ? 'line-through' : 'none',
+                    }}
+                  >
+                    {b.title}
+                  </div>
+                  <div style={{ fontSize: 12, opacity: 0.6 }}>
+                    {b.mine && (
+                      <span className="tag tag-neutral" style={{ marginRight: 6 }}>
+                        Yours
+                      </span>
+                    )}
+                    {b.meta}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {due.length > 0 && (
+        <>
+          <SectionLabel>Due</SectionLabel>
+          {due.map((i) => (
+            <button
+              key={i.id}
+              type="button"
+              className="bare tappable"
+              onClick={() => dispatch({ type: 'openItem', id: i.id })}
+              style={{
+                display: 'flex',
+                gap: 10,
+                alignItems: 'center',
+                padding: '12px 0',
+                borderBottom: '1px solid var(--app-line)',
+              }}
+            >
+              <span className="tag tag-accent">{COURSE_BY_ID[i.c]?.code}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{i.title}</span>
+                <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>{i.dueTime}</span>
+              </span>
+            </button>
+          ))}
+        </>
+      )}
+
+      {myTasks.length > 0 && (
+        <>
+          <SectionLabel>Yours</SectionLabel>
+          {myTasks.map((t) => (
+            <div
+              key={t.id}
+              style={{
+                display: 'flex',
+                gap: 10,
+                alignItems: 'center',
+                padding: '12px 0',
+                borderBottom: '1px solid var(--app-line)',
+                opacity: t.done ? 0.45 : 1,
+              }}
+            >
+              <span className="tag tag-neutral">
+                {t.courseId ? COURSE_BY_ID[t.courseId]?.code : 'Personal'}
+              </span>
+              <span
+                style={{
+                  flex: 1,
+                  fontSize: 14,
+                  textDecoration: t.done ? 'line-through' : 'none',
+                }}
+              >
+                {t.title}
+              </span>
+            </div>
+          ))}
+        </>
+      )}
+
+      {events.length > 0 && (
+        <>
+          <SectionLabel>On campus</SectionLabel>
+          {events.map((e) => (
+            <button
+              key={e.id}
+              type="button"
+              className="bare tappable"
+              onClick={() => dispatch({ type: 'openEvent', id: e.id })}
+              style={{
+                display: 'flex',
+                gap: 10,
+                alignItems: 'center',
+                padding: '12px 0',
+                borderBottom: '1px solid var(--app-line)',
+              }}
+            >
+              <span className="tag tag-outline">{e.kind}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{e.title}</span>
+                <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>
+                  {e.time} · {e.where}
+                </span>
+              </span>
+            </button>
+          ))}
+        </>
+      )}
+
+      {tasks.length > 0 && null}
+      <div style={{ height: 22 }} />
+    </div>
+  );
+}
+
+// ── Month ─────────────────────────────────────────────────────────────────
+
+function MonthView() {
+  const { state, dispatch, now } = useStore();
+  const { calYear, calMonth, calSource } = state;
   const cells = monthGrid(calYear, calMonth);
-  const dots = dotsForMonth(now, calYear, calMonth);
 
-  const selectedDay = state.selDate
-    ? Number(state.selDate.split('-')[2])
-    : sameDay(now, new Date(calYear, calMonth, now.getDate()))
-      ? now.getDate()
-      : null;
+  // What lands on each day of this month, per the current source filter.
+  const marks: Record<number, { c: CourseId | null; kind: string }[]> = {};
+  const add = (d: Date, mark: { c: CourseId | null; kind: string }) => {
+    if (d.getFullYear() !== calYear || d.getMonth() !== calMonth) return;
+    (marks[d.getDate()] ??= []).push(mark);
+  };
 
+  if (calSource === 'all' || calSource === 'deadlines') {
+    datedItems(now).forEach((i) => add(i.date, { c: i.c, kind: 'due' }));
+    state.tasks.forEach((t) => {
+      if (t.date) add(isoToDate(t.date), { c: t.courseId, kind: 'mine' });
+    });
+  }
+  if (calSource === 'all' || calSource === 'campus') {
+    datedEvents(now).forEach((e) => add(e.date, { c: null, kind: 'event' }));
+  }
+  if (calSource === 'classes') {
+    // Mark every day that has a class on it, so a term's teaching days show up.
+    for (let d = 1; d <= new Date(calYear, calMonth + 1, 0).getDate(); d++) {
+      const date = new Date(calYear, calMonth, d);
+      railFor(date, []).forEach((b) => add(date, { c: b.c, kind: 'class' }));
+    }
+  }
+
+  const selectedDay = state.selDate ? Number(state.selDate.split('-')[2]) : null;
   const selItems = selectedDay ? itemsOn(now, calYear, calMonth, selectedDay) : [];
 
   return (
@@ -58,12 +354,7 @@ function Deadlines() {
       </div>
 
       <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7,1fr)',
-          gap: 1,
-          marginBottom: 6,
-        }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1, marginBottom: 6 }}
       >
         {DOW_INITIALS.map((d, i) => (
           <div
@@ -97,18 +388,13 @@ function Deadlines() {
           }
           const isToday = sameDay(now, new Date(calYear, calMonth, d));
           const isSelected = selectedDay === d;
-          const count = Math.min(dots[d] ?? 0, 3);
+          const dots = (marks[d] ?? []).slice(0, 4);
           return (
             <button
               key={i}
               type="button"
               className="bare"
-              onClick={() =>
-                dispatch({
-                  type: 'selectDate',
-                  date: `${calYear}-${calMonth}-${d}`,
-                })
-              }
+              onClick={() => dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${d}` })}
               style={{
                 aspectRatio: '1',
                 background: isSelected ? 'var(--app-hero)' : 'var(--app-bg)',
@@ -131,10 +417,16 @@ function Deadlines() {
                 {d}
               </span>
               <span style={{ display: 'flex', gap: 2, height: 4 }}>
-                {Array.from({ length: count }).map((_, k) => (
+                {dots.map((m, k) => (
                   <span
                     key={k}
-                    style={{ width: 4, height: 4, background: 'var(--app-accent)' }}
+                    style={{
+                      width: 4,
+                      height: 4,
+                      background: m.kind === 'mine' ? 'transparent' : courseTint(m.c),
+                      border: m.kind === 'mine' ? '1px solid var(--app-accent)' : 'none',
+                      borderRadius: m.kind === 'event' ? '50%' : 0,
+                    }}
                   />
                 ))}
               </span>
@@ -161,13 +453,27 @@ function Deadlines() {
             borderBottom: '1px solid var(--app-line)',
           }}
         >
-          <span className="tag tag-accent">{COURSE_BY_ID[i.c].code}</span>
+          <span className="tag tag-accent">{COURSE_BY_ID[i.c]?.code}</span>
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{i.title}</span>
             <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>{i.dueTime}</span>
           </span>
         </button>
       ))}
+
+      {selectedDay && selItems.length > 0 && (
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          onClick={() => {
+            dispatch({ type: 'setCalDay', date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}` });
+            dispatch({ type: 'setCalView', view: 'day' });
+          }}
+          style={{ height: 42, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 14 }}
+        >
+          Open that day
+        </button>
+      )}
 
       {selectedDay && selItems.length === 0 && (
         <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.5 }}>
@@ -179,10 +485,184 @@ function Deadlines() {
   );
 }
 
-function Campus() {
+// ── Semester ──────────────────────────────────────────────────────────────
+
+/**
+ * The whole term on one screen, week by week.
+ *
+ * A month grid answers "what is this week"; this answers "how bad does October
+ * get" — the question you actually have when deciding whether to take on
+ * something new.
+ */
+function SemesterView() {
   const { state, dispatch, now } = useStore();
-  const all = datedEvents(now);
-  const events = all.filter((e) => {
+  const source = state.calSource;
+
+  const items = source === 'all' || source === 'deadlines' ? datedItems(now) : [];
+  const events = source === 'all' || source === 'campus' ? datedEvents(now) : [];
+
+  // Weeks from the first Sunday on or before the earliest thing, to the last.
+  const dates = [...items.map((i) => i.date), ...events.map((e) => e.date)];
+  if (dates.length === 0) {
+    return (
+      <div style={{ padding: 18 }}>
+        <EmptyState title="Nothing to plot." body="Try another source filter." />
+      </div>
+    );
+  }
+  const first = new Date(Math.min(...dates.map((d) => d.getTime())));
+  const last = new Date(Math.max(...dates.map((d) => d.getTime())));
+  const start = new Date(first);
+  start.setDate(start.getDate() - start.getDay());
+
+  const weeks: { start: Date; items: DatedItem[]; events: DatedEvent[] }[] = [];
+  for (let cursor = new Date(start); cursor <= last; cursor.setDate(cursor.getDate() + 7)) {
+    const weekStart = new Date(cursor);
+    const weekEnd = new Date(cursor);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    weeks.push({
+      start: weekStart,
+      items: items.filter((i) => i.date >= weekStart && i.date < weekEnd),
+      events: events.filter((e) => e.date >= weekStart && e.date < weekEnd),
+    });
+  }
+
+  const busiest = Math.max(1, ...weeks.map((w) => w.items.length));
+
+  return (
+    <div style={{ padding: 18 }}>
+      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 16, textWrap: 'pretty' }}>
+        {items.length} deadlines and {events.length} events across {weeks.length} weeks. The bar is
+        how loaded each week is; exams are marked.
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {weeks.map((w, i) => {
+          const isNow = now >= w.start && now < new Date(w.start.getTime() + 7 * 86400000);
+          const exams = w.items.filter((it) => it.kind === 'Exam');
+          return (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'flex-start',
+                padding: '10px 0',
+                borderBottom: '1px solid var(--app-line)',
+                background: isNow ? 'var(--app-panel)' : 'transparent',
+              }}
+            >
+              <div
+                style={{
+                  width: 46,
+                  flex: 'none',
+                  fontFamily: 'var(--font-heading)',
+                  lineHeight: 1.05,
+                  color: isNow ? 'var(--app-accent)' : 'var(--app-fg)',
+                }}
+              >
+                <div style={{ fontSize: 10, letterSpacing: '0.12em', opacity: 0.5 }}>
+                  {MONTHS[w.start.getMonth()].toUpperCase()}
+                </div>
+                <div style={{ fontSize: 19 }}>{w.start.getDate()}</div>
+              </div>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 3,
+                    height: 8,
+                    alignItems: 'stretch',
+                    marginTop: 4,
+                    marginBottom: 6,
+                  }}
+                >
+                  {w.items.length === 0 && w.events.length === 0 ? (
+                    <div
+                      style={{ flex: 1, background: 'var(--app-track)', opacity: 0.4, height: 2, alignSelf: 'center' }}
+                    />
+                  ) : (
+                    <>
+                      {w.items.map((it) => (
+                        <div
+                          key={it.id}
+                          title={it.title}
+                          style={{
+                            flex: 1,
+                            maxWidth: `${100 / busiest}%`,
+                            background: courseTint(it.c),
+                            border: it.kind === 'Exam' ? '1px solid var(--app-accent-bright)' : 'none',
+                          }}
+                        />
+                      ))}
+                      {w.events.map((e) => (
+                        <div
+                          key={e.id}
+                          title={e.title}
+                          style={{
+                            width: 6,
+                            background: 'transparent',
+                            border: '1px solid var(--app-accent-deep)',
+                            borderRadius: '50%',
+                            alignSelf: 'center',
+                            height: 6,
+                          }}
+                        />
+                      ))}
+                    </>
+                  )}
+                </div>
+
+                {w.items.length > 0 && (
+                  <div style={{ fontSize: 12, opacity: 0.72, lineHeight: 1.35 }}>
+                    {w.items.slice(0, 3).map((it) => (
+                      <button
+                        key={it.id}
+                        type="button"
+                        className="bare"
+                        onClick={() => dispatch({ type: 'openItem', id: it.id })}
+                        style={{ width: 'auto', display: 'block', textAlign: 'left' }}
+                      >
+                        <span style={{ opacity: 0.55 }}>{COURSE_BY_ID[it.c]?.code.split(' ')[0]}</span>{' '}
+                        {it.title.length > 42 ? `${it.title.slice(0, 40)}…` : it.title}
+                      </button>
+                    ))}
+                    {w.items.length > 3 && (
+                      <div style={{ opacity: 0.5 }}>+{w.items.length - 3} more</div>
+                    )}
+                  </div>
+                )}
+
+                {exams.length > 0 && (
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-heading)',
+                      fontSize: 11,
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      color: 'var(--app-accent)',
+                      marginTop: 4,
+                    }}
+                  >
+                    {exams.length} exam{exams.length > 1 ? 's' : ''} this week
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ height: 22 }} />
+    </div>
+  );
+}
+
+// ── Campus list (unchanged behaviour, now reachable as a source) ───────────
+
+function CampusList() {
+  const { state, dispatch, now } = useStore();
+  const events = datedEvents(now).filter((e) => {
     if (state.evFilter === 'All') return !e.isPast;
     if (state.evFilter === 'Saved') return !!state.saved[e.id];
     return e.kind === (state.evFilter as EventKind) && !e.isPast;
@@ -190,12 +670,7 @@ function Campus() {
 
   return (
     <>
-      <div
-        style={{
-          padding: '14px 0 10px 18px',
-          borderBottom: '1px solid var(--app-line)',
-        }}
-      >
+      <div style={{ padding: '14px 0 10px 18px', borderBottom: '1px solid var(--app-line)' }}>
         <ChipRow
           options={EV_FILTERS}
           value={state.evFilter as (typeof EV_FILTERS)[number]}
@@ -214,43 +689,19 @@ function Campus() {
             return (
               <Blueprint
                 key={e.id}
-                style={{
-                  display: 'flex',
-                  gap: 13,
-                  padding: '13px 14px',
-                  alignItems: 'flex-start',
-                }}
+                style={{ display: 'flex', gap: 13, padding: '13px 14px', alignItems: 'flex-start' }}
               >
                 <button
                   type="button"
                   className="bare"
                   onClick={() => dispatch({ type: 'openEvent', id: e.id })}
-                  style={{
-                    width: 44,
-                    flex: 'none',
-                    fontFamily: 'var(--font-heading)',
-                    lineHeight: 1,
-                  }}
+                  style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}
                 >
-                  <div
-                    style={{
-                      fontSize: 10,
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                      opacity: 0.5,
-                    }}
-                  >
+                  <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.5 }}>
                     {e.mon}
                   </div>
                   <div style={{ fontSize: 26 }}>{e.day}</div>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                      opacity: 0.5,
-                    }}
-                  >
+                  <div style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.5 }}>
                     {e.dow}
                   </div>
                 </button>
@@ -260,15 +711,7 @@ function Campus() {
                   onClick={() => dispatch({ type: 'openEvent', id: e.id })}
                   style={{ flex: 1, minWidth: 0 }}
                 >
-                  <div
-                    style={{
-                      display: 'flex',
-                      gap: 6,
-                      alignItems: 'center',
-                      flexWrap: 'wrap',
-                      marginBottom: 4,
-                    }}
-                  >
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 }}>
                     <span
                       className={`tag ${e.kind === 'Athletics' ? 'tag-accent' : e.kind === 'University' ? 'tag-outline' : 'tag-neutral'}`}
                     >
@@ -295,13 +738,7 @@ function Campus() {
                   type="button"
                   className="btn btn-ghost"
                   onClick={() => dispatch({ type: 'toggleSaved', id: e.id })}
-                  style={{
-                    flex: 'none',
-                    fontSize: 10,
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    padding: '4px 6px',
-                  }}
+                  style={{ flex: 'none', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '4px 6px' }}
                 >
                   {saved ? 'Saved' : 'Save'}
                 </button>
@@ -328,19 +765,42 @@ function Campus() {
 
 export function Calendar() {
   const { state, dispatch } = useStore();
+
   return (
     <>
       <div style={{ padding: '14px 18px 0' }}>
         <Segmented
           options={[
-            { id: 'deadlines', label: 'Deadlines' },
-            { id: 'campus', label: 'Campus' },
+            { id: 'day', label: 'Day' },
+            { id: 'month', label: 'Month' },
+            { id: 'semester', label: 'Semester' },
           ]}
-          value={state.calTab}
-          onChange={(tab) => dispatch({ type: 'setCalTab', tab })}
+          value={state.calView}
+          onChange={(view) => dispatch({ type: 'setCalView', view })}
         />
       </div>
-      {state.calTab === 'campus' ? <Campus /> : <Deadlines />}
+
+      <div style={{ padding: '10px 0 0 18px' }}>
+        <ChipRow
+          options={SOURCES.map((s) => s.label)}
+          value={SOURCES.find((s) => s.id === state.calSource)?.label ?? 'All'}
+          onChange={(label) => {
+            const found = SOURCES.find((s) => s.label === label);
+            if (found) dispatch({ type: 'setCalSource', source: found.id as Source });
+          }}
+        />
+      </div>
+
+      {/* Campus on its own is better as the browsable list than as a grid. */}
+      {state.calSource === 'campus' && state.calView === 'month' ? (
+        <CampusList />
+      ) : state.calView === 'day' ? (
+        <DayView />
+      ) : state.calView === 'semester' ? (
+        <SemesterView />
+      ) : (
+        <MonthView />
+      )}
     </>
   );
 }
@@ -393,13 +853,7 @@ export function EventDetail() {
       </Blueprint>
 
       <div
-        style={{
-          fontSize: 14,
-          lineHeight: 1.55,
-          marginTop: 18,
-          opacity: 0.85,
-          textWrap: 'pretty',
-        }}
+        style={{ fontSize: 14, lineHeight: 1.55, marginTop: 18, opacity: 0.85, textWrap: 'pretty' }}
       >
         {event.detail}
       </div>
@@ -416,8 +870,22 @@ export function EventDetail() {
         >
           {saved ? 'Saved' : 'Save'}
         </button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => {
+            dispatch({ type: 'setCalDay', date: dateToIso(event.date) });
+            dispatch({ type: 'setCalView', view: 'day' });
+            dispatch({ type: 'go', screen: 'calendar' });
+          }}
+          style={{ height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        >
+          That day
+        </button>
       </div>
       <div style={{ height: 22 }} />
     </div>
   );
 }
+
+export { longLabel };

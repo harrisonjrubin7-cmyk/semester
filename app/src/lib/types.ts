@@ -323,6 +323,13 @@ export interface RecurringBlock {
 export interface ScheduleException {
   month: number;
   day: number;
+  /**
+   * Which recurring block this applies to, matched on title. Omit to apply to
+   * the course's actual classes — never to optional blocks like office hours,
+   * which have to be named explicitly so a cancelled lecture does not silently
+   * cancel them too.
+   */
+  title?: string;
   /** Replaces this course's recurring block that day. */
   meta?: string;
   canceled?: boolean;

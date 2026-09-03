@@ -45,8 +45,16 @@ const psci: CourseModule = {
   ],
 
   exceptions: [
-    // The Thursday the design was drawn against.
+    // The Thursday the design was drawn against — she is away, so both the
+    // class and the office hours go.
     { month: 8, day: 3, canceled: true, meta: 'Prof. Trounstine at APSA' },
+    {
+      month: 8,
+      day: 3,
+      title: 'Trounstine office hours',
+      canceled: true,
+      meta: 'At APSA — back next week',
+    },
   ],
 
   items: [

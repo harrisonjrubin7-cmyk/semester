@@ -59,10 +59,19 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: guide.code, title: 'Drill' };
     case 'quiz':
       return { kicker: `${guide.code} · multiple choice`, title: 'Quiz' };
-    case 'calendar':
-      return state.calTab === 'campus'
-        ? { kicker: 'Vanderbilt · Fall 2026', title: 'On campus' }
-        : { kicker: `${MONTHS[state.calMonth]} ${state.calYear}`, title: 'Calendar' };
+    case 'calendar': {
+      const source =
+        state.calSource === 'all'
+          ? 'Everything'
+          : state.calSource === 'classes'
+            ? 'Classes only'
+            : state.calSource === 'deadlines'
+              ? 'Deadlines only'
+              : 'Campus only';
+      if (state.calView === 'semester') return { kicker: source, title: 'Semester' };
+      if (state.calView === 'day') return { kicker: source, title: 'Day' };
+      return { kicker: `${source} · ${MONTHS[state.calMonth]}`, title: 'Calendar' };
+    }
     case 'event': {
       const event = datedEvents(now).find((e) => e.id === state.eventId);
       return {

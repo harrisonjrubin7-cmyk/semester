@@ -101,8 +101,11 @@ export function blocksFor(date: Date): Block[] {
 
     for (const b of mod.schedule) {
       if (!b.days.includes(dow)) continue;
-      // An exception with no `extra` applies to this course's class that day.
-      const ex = todays.find((e) => !e.extra);
+      // An exception applies to the block it names; an unnamed one applies to
+      // real classes only, so cancelling a lecture leaves office hours alone.
+      const ex = todays.find(
+        (e) => !e.extra && (e.title ? e.title === b.title : !b.optional),
+      );
       blocks.push({
         time: b.time,
         at: b.at,
