@@ -27,6 +27,7 @@ import { AddMaterial } from './screens/Update';
 import { Connect } from './screens/Connect';
 import { Ask } from './screens/Ask';
 import { AccountScreen } from './screens/Account';
+import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { DESKTOP, useMedia } from './lib/media';
@@ -107,6 +108,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: `${guide.code} · with the guide`, title: 'Ask Claude' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
+    case 'cloud':
+      return { kicker: 'Files, mail and your calendar', title: 'Your accounts' };
     case 'slides':
       return { kicker: `${guide.code} · deck`, title: 'Slides' };
     case 'import':
@@ -313,6 +316,8 @@ function CurrentScreen() {
       return <Ask />;
     case 'account':
       return <AccountScreen />;
+    case 'cloud':
+      return <Cloud />;
     case 'slides':
       return <SlideDeck />;
     default:
@@ -334,6 +339,7 @@ function Rail() {
     { id: 'account', label: 'Account' },
     { id: 'ask', label: 'Ask Claude' },
     { id: 'connect', label: 'Connect' },
+    { id: 'cloud', label: 'Files & mail' },
     { id: 'import', label: 'Import' },
   ];
 

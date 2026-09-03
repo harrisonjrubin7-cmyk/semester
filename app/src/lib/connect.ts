@@ -40,7 +40,7 @@
  * held in this browser's storage, and there is no backend to send them to.
  */
 
-import type { Course, FeedEvent } from './types';
+import type { Course, CourseId, FeedEvent } from './types';
 import { matchCourse } from './ics';
 
 export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
@@ -69,11 +69,15 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
   microsoft: {
     id: 'microsoft',
     name: 'Microsoft 365',
-    blurb: 'Outlook calendar, To Do and OneDrive — the Vanderbilt account.',
+    blurb: 'Outlook calendar and mail, To Do, OneDrive — the Vanderbilt account.',
     authorizeUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+    // Read the calendar and mail, write the calendar and To Do. Files.Read is
+    // enough to open and download OneDrive documents; nothing here can delete
+    // anything, and Mail is read-only — the app never sends mail as you.
     scopes:
-      'openid profile offline_access User.Read Calendars.Read Tasks.ReadWrite Files.Read',
+      'openid profile offline_access User.Read Calendars.ReadWrite Mail.Read ' +
+      'Tasks.ReadWrite Files.Read',
     clientId: env.VITE_MS_CLIENT_ID ?? '',
     console: 'portal.azure.com → App registrations → single-page application',
     needsProxy: false,
@@ -82,11 +86,18 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
   google: {
     id: 'google',
     name: 'Google',
-    blurb: 'Google Calendar, and Drive documents to pull into a course.',
+    blurb: 'Google Calendar, Gmail, Tasks, and Drive documents to pull into a course.',
     authorizeUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
+    // Gmail is read-only and Google treats it as a restricted scope: an
+    // unverified app is limited to the test users you list in the console
+    // until it passes review. The Connect screen says so rather than letting
+    // the button fail mysteriously.
     scopes:
-      'openid https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/drive.readonly',
+      'openid https://www.googleapis.com/auth/calendar.events ' +
+      'https://www.googleapis.com/auth/drive.readonly ' +
+      'https://www.googleapis.com/auth/gmail.readonly ' +
+      'https://www.googleapis.com/auth/tasks',
     clientId: env.VITE_GOOGLE_CLIENT_ID ?? '',
     console: 'console.cloud.google.com → Credentials → OAuth client → Web application',
     needsProxy: false,
@@ -535,4 +546,210 @@ export async function fetchRemoteText(id: ProviderId, file: RemoteFile): Promise
   });
   if (!res.ok) throw new Error(`Could not read it (${res.status}).`);
   return res.text();
+}
+
+// ── Mail ──────────────────────────────────────────────────────────────────
+// Course announcements arrive as email — a class cancelled, a reading swapped,
+// a deadline moved — and then get lost in an inbox. The app looks for the ones
+// that name a course it knows about, and offers to turn them into material, a
+// task, or an appointment. It reads; it never sends.
+
+export interface Message {
+  id: string;
+  from: string;
+  subject: string;
+  /** First few lines, enough to see what it is. */
+  preview: string;
+  /** ISO date. */
+  date: string;
+  link: string;
+  courseId: CourseId | null;
+}
+
+function shortDate(d: Date): string {
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+/**
+ * Recent mail that mentions one of your courses.
+ *
+ * The search is done on the provider's side — Graph and Gmail both take a
+ * query — so an inbox of forty thousand messages does not have to come down the
+ * wire to find six.
+ */
+export async function listMail(
+  courses: Course[],
+  id: ProviderId,
+  days = 45,
+): Promise<Message[]> {
+  if (courses.length === 0) return [];
+  const since = new Date(Date.now() - days * 24 * 3600 * 1000);
+  // Codes as the professor writes them, and as the registrar writes them.
+  const terms = courses.flatMap((c) => [c.code, c.code.replace(/\s+/g, '')]);
+
+  if (id === 'microsoft') {
+    type Mail = {
+      id: string;
+      subject?: string;
+      bodyPreview?: string;
+      receivedDateTime: string;
+      webLink?: string;
+      from?: { emailAddress?: { name?: string; address?: string } };
+    };
+    const search = terms.map((t) => `"${t}"`).join(' OR ');
+    const json = await get<{ value: Mail[] }>(
+      'microsoft',
+      `https://graph.microsoft.com/v1.0/me/messages?$search=${encodeURIComponent(search)}&$top=40`,
+    );
+    return json.value
+      .filter((m) => new Date(m.receivedDateTime) >= since)
+      .map((m) => ({
+        id: m.id,
+        from: m.from?.emailAddress?.name || m.from?.emailAddress?.address || '',
+        subject: m.subject ?? '(no subject)',
+        preview: (m.bodyPreview ?? '').slice(0, 400),
+        date: shortDate(new Date(m.receivedDateTime)),
+        link: m.webLink ?? '',
+        courseId: matchCourse(courses, `${m.subject ?? ''} ${m.bodyPreview ?? ''}`),
+      }));
+  }
+
+  if (id === 'google') {
+    type Ref = { id: string };
+    const query = `newer_than:${days}d (${terms.map((t) => `"${t}"`).join(' OR ')})`;
+    const list = await get<{ messages?: Ref[] }>(
+      'google',
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=25&q=${encodeURIComponent(query)}`,
+    );
+    const out: Message[] = [];
+    for (const ref of list.messages ?? []) {
+      type Full = {
+        id: string;
+        snippet?: string;
+        internalDate?: string;
+        payload?: { headers?: { name: string; value: string }[] };
+      };
+      const full = await get<Full>(
+        'google',
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${ref.id}` +
+          '?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date',
+      );
+      const header = (name: string) =>
+        full.payload?.headers?.find((h) => h.name.toLowerCase() === name)?.value ?? '';
+      out.push({
+        id: full.id,
+        from: header('from'),
+        subject: header('subject') || '(no subject)',
+        preview: (full.snippet ?? '').slice(0, 400),
+        date: shortDate(new Date(Number(full.internalDate ?? Date.now()))),
+        link: `https://mail.google.com/mail/u/0/#inbox/${full.id}`,
+        courseId: matchCourse(courses, `${header('subject')} ${full.snippet ?? ''}`),
+      });
+    }
+    return out;
+  }
+
+  throw new Error(`${PROVIDERS[id].name} has no mail this app can read.`);
+}
+
+// ── Writing back ──────────────────────────────────────────────────────────
+// Reading a calendar is half of it. A deadline that only exists in this app is
+// a deadline your phone's own alarms know nothing about, so it can be pushed
+// out to the calendar and the task list you already live in.
+
+async function post<T>(id: ProviderId, url: string, body: unknown): Promise<T> {
+  const token = await accessToken(id);
+  const res = await fetch(apiBase(id, url), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`${PROVIDERS[id].name} said ${res.status}. ${detail.slice(0, 160)}`);
+  }
+  return (await res.json()) as T;
+}
+
+export interface OutgoingEvent {
+  title: string;
+  /** ISO date, YYYY-MM-DD. */
+  date: string;
+  /** Minutes past midnight, or null for an all-day entry. */
+  at: number | null;
+  minutes: number;
+  note: string;
+}
+
+function localIso(date: string, minutes: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const dt = new Date(y, m - 1, d, Math.floor(minutes / 60), minutes % 60);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:00`;
+}
+
+const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+/** Put one thing on the calendar you actually use. */
+export async function addEvent(id: ProviderId, event: OutgoingEvent): Promise<void> {
+  const allDay = event.at === null;
+  const start = allDay ? event.date : localIso(event.date, event.at as number);
+  const end = allDay ? event.date : localIso(event.date, (event.at as number) + event.minutes);
+
+  if (id === 'microsoft') {
+    await post('microsoft', 'https://graph.microsoft.com/v1.0/me/events', {
+      subject: event.title,
+      body: { contentType: 'text', content: event.note },
+      isAllDay: allDay,
+      start: { dateTime: allDay ? `${start}T00:00:00` : start, timeZone: TZ },
+      end: { dateTime: allDay ? `${end}T23:59:00` : end, timeZone: TZ },
+    });
+    return;
+  }
+  if (id === 'google') {
+    await post('google', 'https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      summary: event.title,
+      description: event.note,
+      start: allDay ? { date: start } : { dateTime: `${start}`, timeZone: TZ },
+      end: allDay ? { date: end } : { dateTime: `${end}`, timeZone: TZ },
+    });
+    return;
+  }
+  throw new Error(`${PROVIDERS[id].name} has no calendar to write to.`);
+}
+
+/** Put one thing on the task list you actually use. */
+export async function addTask(
+  id: ProviderId,
+  task: { title: string; date: string | null; note: string },
+): Promise<void> {
+  if (id === 'microsoft') {
+    type List = { id: string; wellknownListName?: string; displayName: string };
+    const lists = await get<{ value: List[] }>(
+      'microsoft',
+      'https://graph.microsoft.com/v1.0/me/todo/lists',
+    );
+    const target =
+      lists.value.find((l) => l.wellknownListName === 'defaultList') ?? lists.value[0];
+    if (!target) throw new Error('That account has no To Do list to add to.');
+    await post('microsoft', `https://graph.microsoft.com/v1.0/me/todo/lists/${target.id}/tasks`, {
+      title: task.title,
+      body: { content: task.note, contentType: 'text' },
+      ...(task.date
+        ? { dueDateTime: { dateTime: `${task.date}T12:00:00`, timeZone: TZ } }
+        : {}),
+    });
+    return;
+  }
+  if (id === 'google') {
+    await post('google', 'https://tasks.googleapis.com/tasks/v1/lists/@default/tasks', {
+      title: task.title,
+      notes: task.note,
+      ...(task.date ? { due: `${task.date}T00:00:00.000Z` } : {}),
+    });
+    return;
+  }
+  throw new Error(`${PROVIDERS[id].name} has no task list to write to.`);
 }

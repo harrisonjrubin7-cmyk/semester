@@ -355,7 +355,8 @@ export type Screen =
   | 'connect'
   | 'ask'
   | 'slides'
-  | 'account';
+  | 'account'
+  | 'cloud';
 
 export type StudyMode =
   | 'cards'

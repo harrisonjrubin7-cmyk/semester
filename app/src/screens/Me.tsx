@@ -111,6 +111,14 @@ export function Me() {
         <button
           type="button"
           className="btn btn-secondary btn-block"
+          onClick={() => dispatch({ type: 'go', screen: 'cloud' })}
+          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        >
+          Files &amp; mail
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'ask' })}
           style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
