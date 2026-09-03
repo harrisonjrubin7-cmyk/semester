@@ -31,16 +31,23 @@ export interface ClaudeSettings {
 }
 
 export const MODELS = [
-  { id: 'claude-sonnet-5', label: 'Sonnet 5', note: 'Fast. The right default.' },
-  { id: 'claude-opus-5', label: 'Opus 5', note: 'Slower, better at hard explanation.' },
-  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', note: 'Cheapest.' },
+  { id: 'claude-opus-5', label: 'Opus 5', note: 'The best at explaining a hard idea.' },
+  { id: 'claude-sonnet-5', label: 'Sonnet 5', note: 'Faster and cheaper. Fine for most asking.' },
+  { id: 'claude-haiku-4-5', label: 'Haiku 4.5', note: 'Cheapest. Good for turning notes into cards.' },
 ];
 
-const DEFAULTS: ClaudeSettings = { apiKey: '', proxy: '', model: 'claude-sonnet-5' };
+// Haiku's id carried a date suffix that is not part of the model id.
+const RENAMED: Record<string, string> = { 'claude-haiku-4-5-20251001': 'claude-haiku-4-5' };
+
+const DEFAULTS: ClaudeSettings = { apiKey: '', proxy: '', model: 'claude-opus-5' };
 
 export function settings(): ClaudeSettings {
   try {
-    return { ...DEFAULTS, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') as object) };
+    const saved = {
+      ...DEFAULTS,
+      ...(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') as ClaudeSettings),
+    };
+    return { ...saved, model: RENAMED[saved.model] ?? saved.model };
   } catch {
     return { ...DEFAULTS };
   }
@@ -145,13 +152,57 @@ function explainNetworkError(taking: Route, e: unknown): Error {
   return new Error(`${said}\n\nNo connection. This is the one part of the app that needs one.`);
 }
 
+/** A photograph or screenshot, ready to send. */
+export interface Shot {
+  /** "image/jpeg", "image/png", "image/webp" or "image/gif". */
+  mediaType: string;
+  /** Base64, with no data: prefix and no newlines. */
+  data: string;
+}
+
 interface AskOptions {
   system: string;
   messages: Turn[];
   maxTokens?: number;
-  /** Called with each new piece of text as it arrives. */
+  /**
+   * Images to attach to the last user message.
+   *
+   * The API wants them before the text in the same content array — a picture
+   * followed by the question about it reads better to the model than the
+   * reverse, and it is what the documentation specifies.
+   */
+  images?: Shot[];
+  /**
+   * Let the model think before answering.
+   *
+   * Worth it for reading a photograph of a whiteboard or taking an assignment
+   * apart; wasted on a short question. Thinking blocks arrive as their own
+   * delta type, which the reader below ignores, so nothing leaks into the text.
+   */
+  think?: boolean;
   onText?: (chunk: string) => void;
   signal?: AbortSignal;
+}
+
+type Block =
+  | { type: 'text'; text: string }
+  | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } };
+
+/** The messages array, with any images hung off the final user turn. */
+function withImages(messages: Turn[], images: Shot[] | undefined) {
+  if (!images || images.length === 0) return messages;
+  const last = messages.length - 1;
+  return messages.map((m, i) => {
+    if (i !== last || m.role !== 'user') return m;
+    const blocks: Block[] = [
+      ...images.map((img) => ({
+        type: 'image' as const,
+        source: { type: 'base64' as const, media_type: img.mediaType, data: img.data },
+      })),
+      { type: 'text' as const, text: m.content },
+    ];
+    return { role: m.role, content: blocks };
+  });
 }
 
 /**
@@ -198,7 +249,8 @@ export async function ask(options: AskOptions): Promise<string> {
         max_tokens: options.maxTokens ?? 1400,
         system: options.system,
         stream: true,
-        messages: options.messages,
+        ...(options.think ? { thinking: { type: 'adaptive' } } : {}),
+        messages: withImages(options.messages, options.images),
       }),
     });
   } catch (e) {
@@ -288,5 +340,120 @@ export async function makeCards(
       .map((c) => ({ q: c.q.trim(), a: c.a.trim() }));
   } catch {
     return [];
+  }
+}
+
+/**
+ * Check a key by using it, before it is saved.
+ *
+ * A key typed with a trailing space, or a project id pasted by mistake, fails
+ * at the moment it matters — halfway through generating a course from a
+ * syllabus somebody just spent five minutes uploading. One cheap call up front
+ * turns that into a sentence on the screen where the key was typed.
+ */
+export async function checkKey(apiKey: string): Promise<{ ok: boolean; detail: string }> {
+  const key = apiKey.trim();
+  if (!key) return { ok: false, detail: 'No key given.' };
+  if (!/^sk-ant-/.test(key)) {
+    return {
+      ok: false,
+      detail:
+        'That does not look like an Anthropic API key — they begin sk-ant-. A key is not the ' +
+        'same as your claude.ai login, and not the same as an organisation id.',
+    };
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      // The smallest call that proves the key works: one token, cheapest model.
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 1,
+        messages: [{ role: 'user', content: 'hi' }],
+      }),
+    });
+
+    if (res.ok) return { ok: true, detail: 'Key works.' };
+
+    const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } };
+    const said = body.error?.message ?? `${res.status}`;
+    if (res.status === 401) return { ok: false, detail: `${said}\n\nThe key was refused.` };
+    if (res.status === 400 && /credit|balance/i.test(said)) {
+      return {
+        ok: false,
+        detail: `${said}\n\nThe key is valid but the account has no credit. Add some at console.anthropic.com under Billing.`,
+      };
+    }
+    return { ok: false, detail: said };
+  } catch (e) {
+    return {
+      ok: false,
+      detail: `${e instanceof Error ? e.message : String(e)}\n\nCould not reach the API to check.`,
+    };
+  }
+}
+
+/**
+ * Read a photograph of course material and turn it into cards.
+ *
+ * The case this exists for: the board at the end of a lecture, a page of a
+ * textbook, a printed handout with no digital copy. Typing those up is the
+ * reason material never makes it into a study app at all.
+ *
+ * The same refusal as everywhere else applies — it transcribes and organises
+ * what is in the picture and does not invent around it, because a card you
+ * cannot trace to the board is a card that gets drilled and believed.
+ */
+export async function readShots(
+  images: Shot[],
+  context: string,
+  signal?: AbortSignal,
+): Promise<{ cards: StudyCard[]; note: string }> {
+  const reply = await ask({
+    signal,
+    images,
+    think: true,
+    maxTokens: 3000,
+    system:
+      'You are reading photographs of a university student\'s course material — a lecture ' +
+      'board, a page of notes, a handout, a slide. Transcribe and organise; do not invent.\n\n' +
+      'Reply with JSON only: {"note":"…","cards":[{"q":"…","a":"…"}]}\n\n' +
+      '- note: what the picture actually shows, in one or two sentences. Say plainly if it is ' +
+      'unreadable, blurred, or not course material at all — and then return no cards.\n' +
+      '- cards: questions an exam could ask, answered from what is written in the image, with ' +
+      'the specific numbers, names and steps that appear there. Between 0 and 12.\n' +
+      '- Anything you cannot read, leave out. Do not fill a gap from general knowledge, and do ' +
+      'not guess at a word that is cut off or out of focus.',
+    messages: [
+      {
+        role: 'user',
+        content: `Course context:\n${context}\n\nRead these and make cards from what they show.`,
+      },
+    ],
+  });
+
+  const start = reply.indexOf('{');
+  const end = reply.lastIndexOf('}');
+  if (start === -1 || end === -1) return { cards: [], note: '' };
+  try {
+    const parsed = JSON.parse(reply.slice(start, end + 1)) as {
+      cards?: StudyCard[];
+      note?: string;
+    };
+    return {
+      note: typeof parsed.note === 'string' ? parsed.note.trim() : '',
+      cards: (parsed.cards ?? [])
+        .filter((c) => typeof c?.q === 'string' && typeof c?.a === 'string' && c.q && c.a)
+        .map((c) => ({ q: c.q.trim(), a: c.a.trim() })),
+    };
+  } catch {
+    return { cards: [], note: '' };
   }
 }

@@ -124,7 +124,7 @@ export const DESTINATIONS: Destination[] = [
     screen: 'connect',
     label: 'Connect accounts',
     blurb: 'Brightspace, Outlook, Google, Zoom, oneVU — calendars and links in.',
-    keywords: 'brightspace onevu myvu yes anchorlink outlook microsoft google zoom apple icloud ics feed subscribe',
+    keywords: 'brightspace onevu myvu yes anchorlink outlook microsoft google zoom apple icloud ics feed subscribe claude anthropic api key sign in with claude',
     group: 'Accounts',
     root: 'me',
   },

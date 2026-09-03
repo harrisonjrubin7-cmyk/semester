@@ -1,4 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
+import { Capture } from '../components/Capture';
+import { configured, readShots } from '../lib/claude';
+import type { ShotFile } from '../lib/shots';
+import type { StudyCard } from '../lib/types';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -24,16 +28,52 @@ export function AddMaterial() {
   const courseId = state.guideId;
   const { guide, updates } = useLive(courseId);
 
+  const claudeReady = configured();
   const [unit, setUnit] = useState<number | null>(state.updateUnit);
   const [title, setTitle] = useState('');
   const [source, setSource] = useState('');
   const [text, setText] = useState('');
   const [files, setFiles] = useState<FileMeta[]>([]);
   const [busy, setBusy] = useState(false);
+  const [shots, setShots] = useState<ShotFile[]>([]);
+  const [reading, setReading] = useState(false);
+  const [readNote, setReadNote] = useState('');
+  const [shotCards, setShotCards] = useState<StudyCard[]>([]);
+  const [shotError, setShotError] = useState('');
   const fileInput = useRef<HTMLInputElement>(null);
 
   const parsed = useMemo(() => parseMaterial(text), [text]);
-  const empty = parsed.cards.length === 0 && parsed.terms.length === 0 && !parsed.body && !files.length;
+  const empty =
+    parsed.cards.length === 0 &&
+    parsed.terms.length === 0 &&
+    !parsed.body &&
+    !files.length &&
+    shotCards.length === 0;
+
+  /** Read the photographs and hold the cards until the whole thing is saved. */
+  const readPhotos = async () => {
+    if (shots.length === 0 || reading) return;
+    setReading(true);
+    setShotError('');
+    try {
+      const context = `${guide.code} — ${guide.name}\nUnits:\n${guide.units
+        .map((u, i) => `${i + 1}. ${u.name}`)
+        .join('\n')}`;
+      const got = await readShots(
+        shots.map((sh) => sh.shot),
+        context,
+      );
+      setReadNote(got.note);
+      setShotCards(got.cards);
+      if (got.cards.length === 0 && !got.note) {
+        setShotError('Nothing came back from those photos. Nothing was added.');
+      }
+    } catch (e) {
+      setShotError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setReading(false);
+    }
+  };
 
   const save = () => {
     dispatch({
@@ -44,7 +84,7 @@ export function AddMaterial() {
         title: title.trim() || (unit !== null ? 'Added material' : 'New reading'),
         source: source.trim(),
         body: parsed.body,
-        cards: parsed.cards,
+        cards: [...parsed.cards, ...shotCards],
         terms: parsed.terms,
         fileIds: files.map((f) => f.id),
       },
@@ -212,6 +252,70 @@ export function AddMaterial() {
               and {parsed.cards.length - 3} more
             </div>
           )}
+        </div>
+      )}
+
+      {/*
+        Photographing the board is the reason material never makes it into a
+        study app: nobody types up a whiteboard. The picture goes to Claude,
+        which transcribes what is written and turns it into cards — and says so
+        rather than filling in the parts that are out of focus.
+      */}
+      <SectionLabel>Photograph it</SectionLabel>
+      {claudeReady ? (
+        <>
+          <div style={{ fontSize: 12.5, opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
+            The board at the end of a lecture, a page of a textbook, a printed handout. Read into
+            cards from what is actually written — anything unreadable is left out and said so.
+          </div>
+          <Capture shots={shots} onChange={setShots} label="Use the camera" />
+          {shots.length > 0 && (
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              disabled={reading}
+              onClick={() => void readPhotos()}
+              style={{
+                height: 44,
+                marginTop: 12,
+                fontSize: 12,
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {reading ? 'Reading the photos…' : `Read ${shots.length === 1 ? 'it' : 'them'}`}
+            </button>
+          )}
+          {readNote && (
+            <Blueprint plain style={{ padding: '11px 13px', marginTop: 12 }}>
+              <div className="kicker">What it saw</div>
+              <div style={{ fontSize: 13, lineHeight: 1.5, marginTop: 4 }}>{readNote}</div>
+              {shotCards.length > 0 && (
+                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6 }}>
+                  {shotCards.length} {shotCards.length === 1 ? 'card' : 'cards'} ready — they save
+                  with everything else below.
+                </div>
+              )}
+            </Blueprint>
+          )}
+          {shotError && (
+            <div
+              style={{
+                fontSize: 12.5,
+                color: 'var(--app-accent)',
+                marginTop: 10,
+                lineHeight: 1.45,
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {shotError}
+            </div>
+          )}
+        </>
+      ) : (
+        <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5 }}>
+          Reading a photograph needs Claude. Sign in to use the shared key, or add your own under
+          Connect → Claude. You can still attach the photo as a file below.
         </div>
       )}
 
