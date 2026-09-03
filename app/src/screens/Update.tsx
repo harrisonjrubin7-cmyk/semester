@@ -320,18 +320,28 @@ export function AddMaterial() {
         </div>
       )}
 
-      {/* A lecture, kept. Audio only — transcribing an hour of it is not
-          something a browser does, and the button says so rather than
-          implying a transcript is coming. */}
+      {/* A lecture, kept — and written down while it happens, which is the
+          only kind of transcript a browser can make. The text drops straight
+          into the box above, so what was said becomes material the same way a
+          reading does. */}
       <SectionLabel>Record the lecture</SectionLabel>
       <div style={{ fontSize: 12.5, opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
-        Captures audio and keeps the file against this course. It is a recording to play back, not
-        a transcript — for speech to text, dictate into a note instead.
+        Keeps the audio against this course, and can write it down as it goes. The transcript lands
+        in the material box above, where it becomes cards, a quiz and a guide like anything else.
       </div>
       <RecordButton
         courseId={courseId}
         label={guide.code}
-        onSaved={(meta) => setFiles((f) => [...f, meta])}
+        onSaved={(meta, seconds, transcript) => {
+          setFiles((f) => [...f, meta]);
+          if (!transcript) return;
+          // Appended, never overwritten — you may have typed notes in there.
+          setText((prior) =>
+            prior.trim() ? `${prior.trim()}\n\n${transcript}` : transcript,
+          );
+          if (!title.trim()) setTitle(`Lecture · ${new Date().toLocaleDateString()}`);
+          if (!source.trim()) setSource(`Recorded in class · ${Math.round(seconds / 60)} min`);
+        }}
       />
 
       <SectionLabel>Files</SectionLabel>

@@ -8,6 +8,7 @@ import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import type { CourseId } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 import { dictate, dictationSupported } from '../lib/mic';
+import { RecordButton } from '../components/RecordButton';
 import {
   DEFAULT_RADIUS,
   far,
@@ -939,6 +940,25 @@ export function NoteEditor() {
         }
         current={note.body}
       />
+
+      {/* Dictation is for talking to the page; this is for keeping the audio
+          too — a seminar, a meeting with a TA, a thought on the walk home.
+          Both write text; only this one leaves you a recording. */}
+      <div style={{ marginTop: 10 }}>
+        <RecordButton
+          courseId={note.courseId ?? null}
+          label={note.title || 'note'}
+          onSaved={(meta, _seconds, transcript) => {
+            dispatch({ type: 'attachFile', noteId: note.id, fileId: meta.id });
+            void listFiles().then(setFiles);
+            if (!transcript) return;
+            const body = note.body.trim()
+              ? `${note.body.replace(/\s+$/, '')}\n\n${transcript}`
+              : transcript;
+            dispatch({ type: 'updateNote', id: note.id, patch: { body } });
+          }}
+        />
+      </div>
 
       <input
         ref={input}
