@@ -394,6 +394,7 @@ export type Screen =
   | 'exam'
   | 'check'
   | 'ahead'
+  | 'weekly'
   | 'slides'
   | 'account'
   | 'cloud';

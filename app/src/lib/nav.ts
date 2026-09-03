@@ -174,6 +174,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'weekly',
+    label: 'Weekly report',
+    blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',
+    keywords: 'weekly week report review recap summary sunday end of week retrospective what happened how did the week go progress last week next week',
+    group: 'Semester',
+    root: 'home',
+  },
+  {
     screen: 'ahead',
     label: 'The week ahead',
     blurb: 'The next seven days in hours — what is promised, what is due, where the room is.',

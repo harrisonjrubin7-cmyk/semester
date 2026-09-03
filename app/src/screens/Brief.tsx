@@ -257,6 +257,21 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       */}
       <SectionLabel>Further out</SectionLabel>
       <Blueprint
+        onClick={() => dispatch({ type: 'go', screen: 'weekly' })}
+        style={{ padding: '12px 14px', display: 'flex', gap: 12, alignItems: 'center' }}
+      >
+        <span style={{ width: 6, height: 30, background: 'var(--chrome)', flex: 'none' }} />
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3 }}>
+            This week’s report
+          </span>
+          <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+            What happened, what slipped, and what next week holds.
+          </span>
+        </span>
+      </Blueprint>
+      <div style={{ height: 8 }} />
+      <Blueprint
         onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
         style={{ padding: '12px 14px', display: 'flex', gap: 12, alignItems: 'center' }}
       >

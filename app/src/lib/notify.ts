@@ -141,17 +141,28 @@ export function dueReminders(
     }
   }
 
-  // Sunday evening, looking at the week that starts tomorrow.
+  // Sunday evening: the weekly report, which covers the week just gone as
+  // well as the one starting tomorrow.
+  //
+  // It fires whether or not anything is due next week, which is a change from
+  // when this only looked forward. A week with nothing coming is exactly the
+  // week worth reading the backward half of — what slipped, what was drilled,
+  // what has had no attention — and staying silent on it meant the report
+  // never arrived in the weeks it would have helped most.
   if (on.sun && now.getDay() === 0 && minutes >= 18 * 60) {
     const week = src.items.filter((i) => i.daysAway > 0 && i.daysAway <= 7);
-    if (week.length > 0) {
-      out.push({
-        id: `sun:${today}`,
-        rule: 'sun',
-        title: `${week.length} things this week`,
-        body: week.map((i) => i.title).slice(0, 3).join(' · '),
-      });
-    }
+    out.push({
+      id: `sun:${today}`,
+      rule: 'sun',
+      title: 'Your weekly report',
+      body:
+        week.length > 0
+          ? `${week.length} due this week · ${week
+              .map((i) => i.title)
+              .slice(0, 2)
+              .join(' · ')}`
+          : 'Nothing due next week — a good one to look back on.',
+    });
   }
 
   return out;

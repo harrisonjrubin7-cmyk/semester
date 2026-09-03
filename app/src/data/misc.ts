@@ -6,7 +6,7 @@ export const NOTIF_DEFS = [
   { k: 'today', label: 'Anything due today, at 8am' },
   { k: 'two', label: 'Two-day warning on big assignments' },
   { k: 'free', label: '“Nothing due tonight” all-clear' },
-  { k: 'sun', label: 'Sunday night: the week ahead' },
+  { k: 'sun', label: 'Sunday night: your weekly report' },
   { k: 'exam', label: 'Exam in one week' },
 ] as const;
 

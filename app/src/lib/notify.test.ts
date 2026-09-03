@@ -88,6 +88,15 @@ describe('dueReminders', () => {
     expect(dueReminders(THU, ALL, src).some((r) => r.rule === 'sun')).toBe(false);
   });
 
+  it('sends the weekly report even when nothing is due next week', () => {
+    // A week with nothing coming is exactly the week worth reading the
+    // backward half of, and staying silent meant it never arrived then.
+    const quiet = { items: [], classes: [] };
+    const fired = dueReminders(SUN_EVENING, ALL, quiet).filter((r) => r.rule === 'sun');
+    expect(fired).toHaveLength(1);
+    expect(fired[0].body).toContain('look back on');
+  });
+
   it('gives every reminder an id that is stable within a day', () => {
     const src = { items: [item({ isToday: true })], classes: [] };
     const a = dueReminders(THU, ALL, src).map((r) => r.id);
