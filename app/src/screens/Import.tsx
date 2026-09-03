@@ -174,7 +174,15 @@ export function Import() {
       )}
 
       {error && (
-        <div style={{ fontSize: 13, color: 'var(--app-accent)', marginTop: 14, lineHeight: 1.5 }}>
+        <div
+          style={{
+            fontSize: 13,
+            color: 'var(--app-accent)',
+            marginTop: 14,
+            lineHeight: 1.5,
+            whiteSpace: 'pre-wrap',
+          }}
+        >
           {error}
         </div>
       )}

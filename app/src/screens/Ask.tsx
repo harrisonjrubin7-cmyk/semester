@@ -73,8 +73,8 @@ export function Ask() {
     setError('');
     setBusy(true);
     abort.current = new AbortController();
+    let sofar = '';
     try {
-      let sofar = '';
       const reply = await ask({
         system,
         messages: next,
@@ -86,7 +86,13 @@ export function Ask() {
       });
       setTurns([...next, { role: 'assistant', content: reply }]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      // Pressing Stop is a decision, not a failure. Keep what had arrived —
+      // half an answer you asked to cut short is still worth reading.
+      if (e instanceof DOMException && e.name === 'AbortError') {
+        if (sofar.trim()) setTurns([...next, { role: 'assistant', content: sofar }]);
+      } else {
+        setError(e instanceof Error ? e.message : String(e));
+      }
     } finally {
       setStreaming('');
       setBusy(false);
@@ -311,7 +317,15 @@ export function Ask() {
       </div>
 
       {error && (
-        <div style={{ fontSize: 12.5, color: 'var(--app-accent)', marginTop: 12, lineHeight: 1.45 }}>
+        <div
+          style={{
+            fontSize: 12.5,
+            color: 'var(--app-accent)',
+            marginTop: 12,
+            lineHeight: 1.45,
+            whiteSpace: 'pre-wrap',
+          }}
+        >
           {error}
         </div>
       )}

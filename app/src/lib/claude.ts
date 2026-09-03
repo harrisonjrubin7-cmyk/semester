@@ -86,6 +86,65 @@ export interface Turn {
   content: string;
 }
 
+type Route = 'proxy' | 'shared' | 'own' | 'none';
+
+/**
+ * Turn a failed call into a sentence that names the fix.
+ *
+ * The failure worth spelling out is the shared route against a project where
+ * the function has not been deployed: Supabase answers 404 with its gateway's
+ * wording, so the app would otherwise show a student the number 404 for a
+ * setup step they cannot even perform. Everything recognised says who has to
+ * do what; everything else is passed through, because the API's own wording
+ * beats a guess.
+ */
+export function explainAskError(taking: Route, status: number, detail: string): string {
+  if (taking === 'shared') {
+    if (status === 404 || /function was not found|not_found/i.test(detail)) {
+      return (
+        'The shared key is not switched on for this deployment yet — the `claude` ' +
+        'function has not been deployed. Add your own key under Settings to carry on ' +
+        'now; whoever runs this deployment can turn the shared one on (SETUP.md).'
+      );
+    }
+    if (status === 401) {
+      return 'That session is no longer valid. Sign out and back in, then try again.';
+    }
+    if (status === 546 || status === 503) {
+      return (
+        'The shared-key function is deployed but failed to run. Whoever runs this ' +
+        'deployment should check its logs; your own key under Settings works meanwhile.'
+      );
+    }
+  }
+  if (taking === 'own' && status === 401) {
+    return `${detail}\n\nThat key was refused. Check it under Settings — a key is not the same as a project id.`;
+  }
+  if (taking === 'proxy' && (status === 404 || status === 502)) {
+    return `${detail}\n\nThe proxy did not answer at /v1/messages. Check the address under Settings.`;
+  }
+  if (status === 529 || status === 429) {
+    return `${detail}\n\nThat is rate limiting rather than a mistake — wait a moment and ask again.`;
+  }
+  return detail;
+}
+
+/** What a browser reports when the request never reached anything. */
+function explainNetworkError(taking: Route, e: unknown): Error {
+  if (e instanceof DOMException && e.name === 'AbortError') return e as unknown as Error;
+  const said = e instanceof Error ? e.message : String(e);
+  if (taking === 'shared') {
+    return new Error(
+      `${said}\n\nThe request never reached the shared-key function — it is either not ` +
+        'deployed or is refusing this origin. Add your own key under Settings to carry on.',
+    );
+  }
+  if (taking === 'proxy') {
+    return new Error(`${said}\n\nThe proxy did not answer. Check its address under Settings.`);
+  }
+  return new Error(`${said}\n\nNo connection. This is the one part of the app that needs one.`);
+}
+
 interface AskOptions {
   system: string;
   messages: Turn[];
@@ -128,28 +187,34 @@ export async function ask(options: AskOptions): Promise<string> {
     headers['anthropic-dangerous-direct-browser-access'] = 'true';
   }
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers,
-    signal: options.signal,
-    body: JSON.stringify({
-      model: s.model,
-      max_tokens: options.maxTokens ?? 1400,
-      system: options.system,
-      stream: true,
-      messages: options.messages,
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers,
+      signal: options.signal,
+      body: JSON.stringify({
+        model: s.model,
+        max_tokens: options.maxTokens ?? 1400,
+        system: options.system,
+        stream: true,
+        messages: options.messages,
+      }),
+    });
+  } catch (e) {
+    throw explainNetworkError(taking, e);
+  }
 
   if (!res.ok || !res.body) {
     let detail = `${res.status}`;
     try {
-      const body = (await res.json()) as { error?: { message?: string } };
-      if (body.error?.message) detail = body.error.message;
+      // Anthropic nests it; Supabase's gateway does not. Read either.
+      const body = (await res.json()) as { error?: { message?: string }; message?: string };
+      detail = body.error?.message ?? body.message ?? detail;
     } catch {
       /* keep the status */
     }
-    throw new Error(detail);
+    throw new Error(explainAskError(taking, res.status, detail));
   }
 
   const reader = res.body.getReader();
