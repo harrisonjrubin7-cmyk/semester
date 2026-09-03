@@ -46,6 +46,7 @@ import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import { DEFAULT_ORDER } from '../lib/feed';
 import { readLook, type Look } from '../lib/look';
+import type { Sitting } from '../lib/sitting';
 import { dateToIso, isoToDate } from '../lib/date';
 
 /**
@@ -86,6 +87,15 @@ interface Persisted {
   feedHidden: Record<string, boolean>;
   /** The destinations you opened most recently, newest first. */
   recent: Screen[];
+  /**
+   * Practice papers you have sat.
+   *
+   * Capped, and the cap is real rather than cautious: a sitting keeps its
+   * missed questions, and an account has a five-megabyte budget shared with
+   * every note and course in it. Forty papers is more than a semester
+   * produces and the oldest is the least useful.
+   */
+  sittings: Sitting[];
   /**
    * How the app looks. Every one of these is an id into a list in `lib/look.ts`
    * rather than a value, so a look saved today survives the palette being
@@ -259,6 +269,7 @@ const DEFAULT_PERSISTED: Persisted = {
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   recent: [],
+  sittings: [],
   accent: 'sterling',
   textSize: 'normal',
   ground: 'ink',
@@ -359,6 +370,7 @@ function loadPersisted(): Persisted {
       feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
       recent: saved.recent ?? [],
+      sittings: saved.sittings ?? [],
       ...readLook({
         accent: saved.accent,
         textSize: saved.textSize,
@@ -405,6 +417,7 @@ export function pickPersisted(state: State): Persisted {
     feedOrder: state.feedOrder,
     feedHidden: state.feedHidden,
     recent: state.recent,
+    sittings: state.sittings,
     accent: state.accent,
     textSize: state.textSize,
     ground: state.ground,
@@ -466,6 +479,8 @@ export type Action =
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
   | { type: 'setMeGroup'; group: string }
+  | { type: 'keepSitting'; sitting: Omit<Sitting, 'id'> }
+  | { type: 'dropSitting'; id: string }
   | { type: 'sitPaper'; minutes: number; formatId: string }
   | { type: 'clearPaperPreset' }
   | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
@@ -770,6 +785,15 @@ export function reducer(state: State, action: Action): State {
 
     case 'setMeGroup':
       return { ...state, meGroup: action.group };
+
+    case 'keepSitting':
+      return {
+        ...state,
+        sittings: [{ ...action.sitting, id: newId() }, ...state.sittings].slice(0, 40),
+      };
+
+    case 'dropSitting':
+      return { ...state, sittings: state.sittings.filter((s) => s.id !== action.id) };
 
     case 'sitPaper':
       return push(

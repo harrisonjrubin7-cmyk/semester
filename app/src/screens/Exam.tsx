@@ -6,6 +6,7 @@ import { SectionLabel, Segmented } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
 import { download } from '../lib/deliver';
+import { cardsFrom, missedFrom, pctOf } from '../lib/sitting';
 import {
   FORMATS,
   SYSTEM,
@@ -80,6 +81,8 @@ export function Exam() {
   const abort = useRef<AbortController | null>(null);
 
   const shape = useMemo(() => shapeFor(minutes, formatId), [minutes, formatId]);
+  const missed = useMemo(() => missedFrom(questions, answers), [questions, answers]);
+  const [kept, setKept] = useState<'no' | 'result' | 'cards' | 'both'>('no');
 
   // Dropped as soon as it has been read, so coming back later opens on your
   // own last choice rather than on what the quiz asked for an hour ago.
@@ -101,6 +104,7 @@ export function Exam() {
     setQuestions(list);
     setTitle(named);
     setSeed(drawnWith);
+    setKept('no');
     setAnswers({});
     setLeft(minutes * 60);
     setStage('sitting');
@@ -533,6 +537,73 @@ export function Exam() {
               {verdict(marks)}
             </div>
           </Blueprint>
+
+          {/*
+            The score used to be thrown away the moment you left this screen,
+            which made the whole exercise a mirror — it told you how you did
+            and then forgot, so it could never say whether you were getting
+            better. Kept, it is the only evidence Grades has about that.
+          */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={kept === 'result' || kept === 'both'}
+              onClick={() => {
+                dispatch({
+                  type: 'keepSitting',
+                  sitting: {
+                    courseId: course?.id ?? '',
+                    title,
+                    at: Date.now(),
+                    minutes,
+                    got: marks.got,
+                    outOf: marks.outOf,
+                    pct: pctOf(marks.got, marks.outOf),
+                    code: seed === null ? '' : seedCode(seed),
+                    missed,
+                  },
+                });
+                setKept((k) => (k === 'cards' ? 'both' : 'result'));
+              }}
+              style={{ flex: 1, height: 44 }}
+            >
+              {kept === 'result' || kept === 'both' ? 'Kept' : 'Keep this result'}
+            </button>
+            {missed.length > 0 && course && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={kept === 'cards' || kept === 'both'}
+                onClick={() => {
+                  dispatch({
+                    type: 'addUpdate',
+                    update: {
+                      courseId: course.id,
+                      unit: null,
+                      title: `Missed on ${title}`,
+                      source: 'A practice paper',
+                      body: '',
+                      cards: cardsFrom(missed),
+                      terms: [],
+                      fileIds: [],
+                    },
+                  });
+                  setKept((k) => (k === 'result' ? 'both' : 'cards'));
+                }}
+                style={{ flex: 1, height: 44 }}
+              >
+                {kept === 'cards' || kept === 'both'
+                  ? 'Added'
+                  : `Drill the ${missed.length} you missed`}
+              </button>
+            )}
+          </div>
+          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+            A kept result shows on Grades beside what the rest of the course has to average — as
+            evidence about you, never folded into the projection. The missed questions become
+            cards in {course?.code ?? 'this course'}, and the drill schedule takes them from there.
+          </div>
 
           {seed !== null && (
             <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>

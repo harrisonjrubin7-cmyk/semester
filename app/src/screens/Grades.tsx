@@ -3,6 +3,7 @@ import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
 import { TARGETS, key, needFor, standing } from '../lib/grades';
+import { against, forCourse, trend, trendLine } from '../lib/sitting';
 
 /**
  * What you have, and what the rest has to be.
@@ -154,6 +155,71 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 })}
               </>
             )}
+
+            {/*
+              Practice, beside the projection and deliberately not inside it.
+              The projection is arithmetic on weights a syllabus states; a
+              practice score is evidence about you. Averaging the two makes a
+              number that is neither, and it would be the number people quote.
+            */}
+            {(() => {
+              const sat = forCourse(state.sittings, c.id);
+              if (sat.length === 0) return null;
+              const t = trend(sat);
+              const target = s.remaining > 0 && s.counted > 0 ? needFor(s, 90) : null;
+              return (
+                <div style={{ marginTop: 16 }}>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      opacity: 0.5,
+                      marginBottom: 6,
+                      fontFamily: 'var(--font-heading)',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    On practice papers
+                  </div>
+                  <div style={{ fontSize: 13.5, lineHeight: 1.5, textWrap: 'pretty' }}>
+                    {trendLine(t, sat)}
+                  </div>
+                  {target !== null && t.papers > 0 ? (
+                    <div style={{ fontSize: 12, opacity: 0.6, marginTop: 5, lineHeight: 1.45 }}>
+                      {against(t.average, target)}
+                    </div>
+                  ) : null}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9 }}>
+                    {sat.slice(0, 6).map((paper) => (
+                      <span
+                        key={paper.id}
+                        className="tag tag-outline"
+                        style={{ fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {paper.pct}%
+                        <span style={{ opacity: 0.5 }}>
+                          {' '}
+                          · {new Date(paper.at).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                  {t.missed > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-block"
+                      onClick={() => dispatch({ type: 'go', screen: 'exam' })}
+                      style={{ height: 40, marginTop: 10 }}
+                    >
+                      Sit another
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         );
       })}
