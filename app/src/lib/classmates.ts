@@ -204,7 +204,9 @@ export async function myRooms(userId: string, term: string): Promise<string[]> {
 export async function join(userId: string, term: string, code: string): Promise<void> {
   const clean = normaliseCode(code);
   if (!clean) throw new Error('That is not a course code. "ECON 1020", with the number.');
-  const { error } = await cloud().from('enrollments').upsert({ user_id: userId, term, code: clean });
+  const { error } = await cloud()
+    .from('enrollments')
+    .upsert({ user_id: userId, term, code: clean }, { onConflict: 'user_id,term,code' });
   if (error) throw new Error(explain(error.message));
 }
 
@@ -218,21 +220,36 @@ export async function leave(userId: string, term: string, code: string): Promise
   if (error) throw new Error(explain(error.message));
 }
 
-/** Everyone who says they are in this class. Not a roster; see the header. */
+/**
+ * Everyone who says they are in this class. Not a roster; see the header.
+ *
+ * Two queries rather than one embedded select. PostgREST can only embed a
+ * table it has a foreign key path to, and `enrollments` has none to
+ * `profiles` — both point at `auth.users` instead, which is not a path it can
+ * follow. Adding an FK between them would work and would also mean you could
+ * not join a class before choosing a display name, which is a worse rule than
+ * running one more query.
+ */
 export async function whoIsIn(term: string, code: string): Promise<Profile[]> {
-  const { data, error } = await cloud()
+  const { data: rows, error } = await cloud()
     .from('enrollments')
-    .select('user_id, profiles(user_id, handle, about)')
+    .select('user_id')
     .eq('term', term)
     .eq('code', code);
-  if (error) throw new Error(error.message);
-  const rows = (data ?? []) as { profiles: Profile | Profile[] | null }[];
-  const out: Profile[] = [];
-  for (const row of rows) {
-    const p = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-    if (p) out.push(p);
-  }
-  return out.sort((a, b) => a.handle.localeCompare(b.handle));
+  if (error) throw new Error(explain(error.message));
+
+  const ids = [...new Set(((rows ?? []) as { user_id: string }[]).map((r) => r.user_id))];
+  if (ids.length === 0) return [];
+
+  const { data, error: second } = await cloud()
+    .from('profiles')
+    .select('user_id, handle, about')
+    .in('user_id', ids);
+  if (second) throw new Error(explain(second.message));
+
+  // Somebody in the class who has not chosen a name yet simply is not listed,
+  // rather than appearing as a blank row.
+  return ((data ?? []) as Profile[]).sort((a, b) => a.handle.localeCompare(b.handle));
 }
 
 export async function recent(term: string, code: string, limit = 60): Promise<Message[]> {
@@ -297,7 +314,9 @@ export function listen(
 }
 
 export async function block(userId: string, blocked: string): Promise<void> {
-  const { error } = await cloud().from('blocks').upsert({ user_id: userId, blocked });
+  const { error } = await cloud()
+    .from('blocks')
+    .upsert({ user_id: userId, blocked }, { onConflict: 'user_id,blocked' });
   if (error) throw new Error(explain(error.message));
 }
 
