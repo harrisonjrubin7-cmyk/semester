@@ -37,7 +37,7 @@ import {
   type Account,
 } from '../lib/cloud';
 import type { Session } from '@supabase/supabase-js';
-import { SEED_MODULES } from '../data/seed';
+import { loadSeed } from '../data/seed';
 import { newId } from '../lib/files';
 import { score, type Reviews } from '../lib/review';
 import { dateToIso, isoToDate } from '../lib/date';
@@ -949,11 +949,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     state.sample,
   ]);
 
-  // The sample stays compiled in rather than copied into storage, so switching
-  // it on costs a flag rather than 300 KB.
+  // The sample is fetched the first time it is switched on, and stays in
+  // memory after. It is still never copied into storage — an account holds a
+  // flag saying it wants the sample, not 330 KB of somebody else's semester.
+  const [seed, setSeed] = useState<CourseModule[]>([]);
+  useEffect(() => {
+    if (!state.sample || seed.length > 0) return;
+    let live = true;
+    void loadSeed().then((mods) => {
+      if (live) setSeed(mods);
+    });
+    return () => {
+      live = false;
+    };
+  }, [state.sample, seed.length]);
+
   const catalog = useMemo(
-    () => buildCatalog(state.sample ? [...SEED_MODULES, ...state.courses] : state.courses),
-    [state.sample, state.courses],
+    () => buildCatalog(state.sample ? [...seed, ...state.courses] : state.courses),
+    [state.sample, seed, state.courses],
   );
 
   const value = useMemo(
