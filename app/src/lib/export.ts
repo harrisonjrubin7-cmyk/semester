@@ -250,3 +250,94 @@ export function safeName(text: string, fallback = 'export'): string {
 export function stampedName(stem: string, at = new Date()): string {
   return `${safeName(stem)}-${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
 }
+
+
+// ── Coming back in ───────────────────────────────────────────────────────
+
+/**
+ * Reading a backup this app wrote.
+ *
+ * An export nobody can import is a museum piece, so this is the other half.
+ * It is deliberately strict about the envelope and forgiving about the
+ * contents: the format tag has to match, and then each section is taken only
+ * if it is the right shape, so a file from an older version restores what it
+ * has and silently skips what it does not — rather than failing whole, or
+ * worse, half-applying and leaving an account in a state neither version
+ * understands.
+ *
+ * Nothing is merged. Restoring replaces the sections present in the file,
+ * because merging two semesters produces duplicate courses with the same ids
+ * and no way to tell which deadline belonged to which — and a restore that
+ * silently doubles your deadlines is worse than one that refuses.
+ */
+export interface Restore {
+  /** The sections that will be applied, named for the confirmation. */
+  parts: string[];
+  data: Record<string, unknown>;
+}
+
+const SECTIONS: { key: string; label: string; array: boolean }[] = [
+  { key: 'courses', label: 'courses', array: true },
+  { key: 'updates', label: 'added readings', array: true },
+  { key: 'notes', label: 'notes', array: true },
+  { key: 'tasks', label: 'tasks', array: true },
+  { key: 'appointments', label: 'appointments', array: true },
+  { key: 'places', label: 'saved places', array: true },
+  { key: 'extraLinks', label: 'your links', array: true },
+  { key: 'grades', label: 'grades', array: false },
+  { key: 'reviews', label: 'what you have drilled', array: false },
+  { key: 'done', label: 'what you have ticked off', array: false },
+  { key: 'saved', label: 'saved items', array: false },
+  { key: 'linkUrls', label: 'link addresses', array: false },
+];
+
+export function readBackup(text: string): Restore {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error('That is not a file this app wrote — it is not even JSON.');
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('That is not a backup file.');
+  }
+  const obj = parsed as Record<string, unknown>;
+  if (obj.format !== 'semester.backup.v1') {
+    throw new Error(
+      'That file does not carry this app\'s backup marker, so restoring it could put nonsense ' +
+        'into your account. Only a file from Take it with you can be read here.',
+    );
+  }
+
+  const data: Record<string, unknown> = {};
+  const parts: string[] = [];
+  for (const section of SECTIONS) {
+    const value = obj[section.key];
+    if (value === undefined || value === null) continue;
+    const ok = section.array
+      ? Array.isArray(value)
+      : typeof value === 'object' && !Array.isArray(value);
+    if (!ok) continue;
+    data[section.key] = value;
+    const count = section.array
+      ? (value as unknown[]).length
+      : Object.keys(value as object).length;
+    if (count > 0) parts.push(`${count} ${section.label}`);
+  }
+  if (typeof obj.sample === 'boolean') data.sample = obj.sample;
+
+  if (Object.keys(data).length === 0) {
+    throw new Error('That backup has nothing in it this version can read.');
+  }
+  return { parts, data };
+}
+
+/** When the backup was made, for the confirmation. */
+export function backupDate(text: string): string {
+  try {
+    const when = (JSON.parse(text) as { exported?: string }).exported;
+    return when ? new Date(when).toLocaleString() : '';
+  } catch {
+    return '';
+  }
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, TickBox } from '../components/ui';
@@ -10,6 +10,7 @@ import {
   deadlineCsv,
   deadlineEvents,
   notesMarkdown,
+  readBackup,
   stampedName,
   taskCsv,
   toIcs,
@@ -68,7 +69,7 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
  * right to read anything else in your Drive, and that is worth knowing.
  */
 export function Export() {
-  const { state, now, catalog } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const [picked, setPicked] = useState<Record<PartId, boolean>>({
     courses: true,
     deadlines: true,
@@ -79,6 +80,10 @@ export function Export() {
     backup: true,
   });
   const [busy, setBusy] = useState('');
+  const [offered, setOffered] = useState<{ parts: string[]; data: Record<string, unknown> } | null>(
+    null,
+  );
+  const restoreInput = useRef<HTMLInputElement>(null);
   const [done, setDone] = useState('');
   const [error, setError] = useState('');
 
@@ -295,6 +300,78 @@ export function Export() {
           {error}
         </div>
       ) : null}
+
+      <SectionLabel>Bring one back</SectionLabel>
+      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
+        A backup file from this app, from any device. An export nobody can import is a museum
+        piece.
+      </div>
+      <input
+        ref={restoreInput}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (!file) return;
+          setError('');
+          setDone('');
+          setOffered(null);
+          void file
+            .text()
+            .then((raw) => setOffered(readBackup(raw)))
+            .catch((err: unknown) =>
+              setError(err instanceof Error ? err.message : String(err)),
+            );
+        }}
+      />
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        disabled={!!busy}
+        onClick={() => restoreInput.current?.click()}
+        style={{ height: 44 }}
+      >
+        Restore from a backup file
+      </button>
+
+      {offered && (
+        <Blueprint style={{ padding: '13px 14px', marginTop: 10 }}>
+          <div className="kicker">Ready to restore</div>
+          <div style={{ fontSize: 13, marginTop: 7, lineHeight: 1.5 }}>
+            {offered.parts.length > 0 ? offered.parts.join(', ') : 'an empty backup'}.
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.65, marginTop: 8, lineHeight: 1.5 }}>
+            This replaces what is on this device for each of those, rather than merging — merging
+            two semesters produces duplicate courses sharing an id and no way to tell which
+            deadline belonged to which. Anything the file does not cover is left alone.
+            Attachments are not in a backup; they are in the zip beside it.
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setOffered(null)}
+              style={{ flex: 1, height: 42 }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                dispatch({ type: 'hydrate', persisted: offered.data as never });
+                setOffered(null);
+                setDone('Restored. Everything in the file is in place.');
+              }}
+              style={{ flex: 1, height: 42 }}
+            >
+              Replace and restore
+            </button>
+          </div>
+        </Blueprint>
+      )}
 
       <Blueprint style={{ padding: '13px 14px', marginTop: 18 }}>
         <div className="kicker">The backup file</div>

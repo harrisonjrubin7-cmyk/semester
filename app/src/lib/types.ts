@@ -371,6 +371,7 @@ export type Screen =
   | 'yes'
   | 'draw'
   | 'solve'
+  | 'edit'
   | 'slides'
   | 'account'
   | 'cloud';

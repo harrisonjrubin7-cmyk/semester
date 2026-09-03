@@ -34,6 +34,7 @@ import { Export } from './screens/Export';
 import { Yes } from './screens/Yes';
 import { Draw } from './screens/Draw';
 import { Solve } from './screens/Solve';
+import { EditCourse } from './screens/EditCourse';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
@@ -145,6 +146,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: `${guide.code} · as a picture`, title: 'Draw it' };
     case 'solve':
       return { kicker: `${guide.code} · step by step`, title: 'Work the problem' };
+    case 'edit':
+      return { kicker: 'A syllabus is a first draft', title: 'Edit the course' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -360,6 +363,8 @@ function CurrentScreen() {
       return <Draw />;
     case 'solve':
       return <Solve />;
+    case 'edit':
+      return <EditCourse />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':

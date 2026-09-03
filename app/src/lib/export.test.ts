@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   appointmentEvents,
+  backupDate,
+  readBackup,
   cell,
   deadlineCsv,
   deadlineEvents,
@@ -204,5 +206,69 @@ describe('safeName', () => {
 describe('stampedName', () => {
   it('sorts chronologically in a file list', () => {
     expect(stampedName('semester', new Date(2026, 8, 3))).toBe('semester-2026-09-03');
+  });
+});
+
+
+describe('readBackup', () => {
+  const good = JSON.stringify({
+    format: 'semester.backup.v1',
+    exported: '2026-09-03T12:00:00.000Z',
+    notes: [{ id: 'n1' }],
+    done: { a: true },
+    sample: true,
+  });
+
+  it('reads what it recognises and names it', () => {
+    const { parts, data } = readBackup(good);
+    expect(data.notes).toHaveLength(1);
+    expect(data.done).toEqual({ a: true });
+    expect(data.sample).toBe(true);
+    expect(parts.join(', ')).toContain('1 notes');
+  });
+
+  it('refuses a file without the marker', () => {
+    // Otherwise any JSON could be poured into an account.
+    expect(() => readBackup(JSON.stringify({ notes: [] }))).toThrow(/backup marker/);
+  });
+
+  it('refuses something that is not JSON at all', () => {
+    expect(() => readBackup('hello')).toThrow(/not even JSON/);
+  });
+
+  it('skips a section of the wrong shape instead of failing whole', () => {
+    // A file from an older version restores what it has.
+    const odd = JSON.stringify({ format: 'semester.backup.v1', notes: 'lots', tasks: [{ id: 't' }] });
+    const { data } = readBackup(odd);
+    expect(data.notes).toBeUndefined();
+    expect(data.tasks).toHaveLength(1);
+  });
+
+  it('refuses a backup with nothing readable in it', () => {
+    expect(() => readBackup(JSON.stringify({ format: 'semester.backup.v1' }))).toThrow(/nothing in it/);
+  });
+
+  it('does not carry across anything not on the list', () => {
+    // Notably not tokens or keys, whatever a hand-edited file claims.
+    const sneaky = JSON.stringify({
+      format: 'semester.backup.v1',
+      notes: [],
+      tokens: { google: 'secret' },
+      screen: 'account',
+    });
+    const { data } = readBackup(sneaky);
+    expect(data.tokens).toBeUndefined();
+    expect(data.screen).toBeUndefined();
+  });
+});
+
+describe('backupDate', () => {
+  it('says when it was made', () => {
+    const when = backupDate(JSON.stringify({ exported: '2026-09-03T12:00:00.000Z' }));
+    expect(when).not.toBe('');
+  });
+
+  it('is blank rather than throwing on rubbish', () => {
+    expect(backupDate('nope')).toBe('');
   });
 });

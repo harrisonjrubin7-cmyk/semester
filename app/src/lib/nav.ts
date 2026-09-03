@@ -213,6 +213,7 @@ export const DESTINATIONS: Destination[] = [
 /** Screens that are reached from somewhere rather than gone to directly. */
 const NESTED: Partial<Record<Screen, Screen>> = {
   course: 'courses',
+  edit: 'courses',
   item: 'courses',
   event: 'calendar',
   guide: 'study',
