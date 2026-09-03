@@ -7,7 +7,7 @@ import { ChipRow, SectionLabel } from '../components/ui';
 import { Check, Plus } from '../components/Icons';
 import { extractText } from '../lib/extract';
 import { breakDown, critique, type Breakdown } from '../lib/assignment';
-import { ask, configured, routeLabel } from '../lib/claude';
+import { ask, configured, provider, routeLabel } from '../lib/claude';
 import { datedItems } from '../lib/select';
 import type { CourseId } from '../lib/types';
 
@@ -124,7 +124,7 @@ export function Work() {
     return (
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
-          <div className="kicker">Needs Claude</div>
+          <div className="kicker">Needs {provider()}</div>
           <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings. Everything
             else in the app works without it.

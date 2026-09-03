@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Capture } from '../components/Capture';
 import { RecordButton } from '../components/RecordButton';
 import { Rework } from '../components/Rework';
-import { configured, readShots } from '../lib/claude';
+import { configured, provider, readShots } from '../lib/claude';
 import type { ShotFile } from '../lib/shots';
 import type { StudyCard } from '../lib/types';
 import { useStore } from '../state/store';
@@ -282,7 +282,7 @@ export function AddMaterial() {
 
       {/*
         Photographing the board is the reason material never makes it into a
-        study app: nobody types up a whiteboard. The picture goes to Claude,
+        study app: nobody types up a whiteboard. The picture goes to {provider()},
         which transcribes what is written and turns it into cards — and says so
         rather than filling in the parts that are out of focus.
       */}
@@ -339,7 +339,7 @@ export function AddMaterial() {
         </>
       ) : (
         <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5 }}>
-          Reading a photograph needs Claude. Sign in to use the shared key, or add your own under
+          Reading a photograph needs {provider()}. Sign in to use the shared key, or add your own under
           Connect → Claude. You can still attach the photo as a file below.
         </div>
       )}

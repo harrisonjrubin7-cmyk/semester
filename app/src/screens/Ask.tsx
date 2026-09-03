@@ -4,18 +4,7 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { datedItems } from '../lib/select';
-import {
-  MODELS,
-  ask,
-  configured,
-  makeCards,
-  route,
-  saveSettings,
-  settings,
-  type Turn,
-  modelLabel,
-  routeLabel,
-} from '../lib/claude';
+import { MODELS, ask, configured, makeCards, modelLabel, provider, route, routeLabel, saveSettings, settings, type Turn } from '../lib/claude';
 import { OPENAI_MODELS } from '../lib/openai';
 import type { CourseId } from '../lib/types';
 
@@ -120,7 +109,9 @@ export function Ask() {
           courseId,
           unit: null,
           title: 'From a question you asked',
-          source: 'Claude',
+          // Recorded on the material so a card's origin is still readable in a
+          // month, whichever provider was answering when it was made.
+          source: provider(),
           body: '',
           cards,
           terms: [],
@@ -375,7 +366,7 @@ export function Ask() {
         {turns.map((t, i) => (
           <div key={i}>
             <div className="kicker" style={{ color: t.role === 'user' ? 'inherit' : 'var(--app-accent)' }}>
-              {t.role === 'user' ? 'You' : 'Claude'}
+              {t.role === 'user' ? 'You' : provider()}
             </div>
             <div
               style={{
@@ -394,7 +385,7 @@ export function Ask() {
         {streaming && (
           <div>
             <div className="kicker" style={{ color: 'var(--app-accent)' }}>
-              Claude
+              {provider()}
             </div>
             <div style={{ fontSize: 14, lineHeight: 1.55, marginTop: 4, whiteSpace: 'pre-wrap' }}>
               {streaming}

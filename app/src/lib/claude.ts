@@ -147,6 +147,25 @@ export function modelLabel(s = settings()): string {
   return MODELS.find((m) => m.id === s.model)?.label ?? s.model;
 }
 
+/**
+ * What to call the thing answering, in a sentence.
+ *
+ * Copy across the app named Claude directly — "Claude only reads the counts",
+ * "Claude is given the finished statistics". True on three of the four routes
+ * and false on the fourth, which has existed since the OpenAI provider was
+ * added. Being told the wrong company wrote your answer is a small lie in a
+ * place the app otherwise works hard to be exact.
+ *
+ * Every OpenAI model the app offers is a GPT, so "GPT" is both accurate and
+ * the word a person would use. It reads correctly in every place the old
+ * hard-coded "Claude" appeared — "GPT only reads the counts", "Needs GPT",
+ * "the picture goes to GPT" — which is why it is a name rather than a phrase
+ * like "the model" that has to be re-worded around at each site.
+ */
+export function provider(s = settings()): string {
+  return s.provider === 'openai' ? 'GPT' : 'Claude';
+}
+
 export interface Turn {
   role: 'user' | 'assistant';
   content: string;

@@ -17,7 +17,9 @@ import {
   marksFor,
   paper,
   readExam,
+  readSeed,
   result,
+  seedCode,
   shapeFor,
   total,
   verdict,
@@ -54,15 +56,22 @@ export function Exam() {
   const { guide } = useLive(state.guideId);
   const course = catalog.byId[state.guideId];
 
+  // The guide's Quiz mode can hand a shape over. Read once, on the way in.
+  const preset = state.examPreset;
   const [source, setSource] = useState<'cards' | 'written'>('cards');
-  const [formatId, setFormatId] = useState(FORMATS[0].id);
-  const [minutes, setMinutes] = useState(30);
+  const [formatId, setFormatId] = useState(preset?.formatId ?? FORMATS[0].id);
+  const [minutes, setMinutes] = useState(preset?.minutes ?? 30);
   const [material, setMaterial] = useState('');
   const [about, setAbout] = useState('');
   const [topics, setTopics] = useState('');
 
   const [stage, setStage] = useState<Stage>('setup');
   const [title, setTitle] = useState('');
+  // The seed the current paper was drawn with, so it can be sat again or
+  // handed to somebody else. Empty for a paper a model wrote, which is not
+  // reproducible from a number.
+  const [seed, setSeed] = useState<number | null>(null);
+  const [reuse, setReuse] = useState('');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [left, setLeft] = useState(0);
@@ -71,6 +80,12 @@ export function Exam() {
   const abort = useRef<AbortController | null>(null);
 
   const shape = useMemo(() => shapeFor(minutes, formatId), [minutes, formatId]);
+
+  // Dropped as soon as it has been read, so coming back later opens on your
+  // own last choice rather than on what the quiz asked for an hour ago.
+  useEffect(() => {
+    if (preset) dispatch({ type: 'clearPaperPreset' });
+  }, [preset, dispatch]);
   const marks = useMemo(() => result(questions, answers), [questions, answers]);
 
   // The clock. Stops at zero rather than going negative, and does not end the
@@ -82,9 +97,10 @@ export function Exam() {
     return () => clearInterval(tick);
   }, [stage]);
 
-  const begin = (list: Question[], named: string) => {
+  const begin = (list: Question[], named: string, drawnWith: number | null = null) => {
     setQuestions(list);
     setTitle(named);
+    setSeed(drawnWith);
     setAnswers({});
     setLeft(minutes * 60);
     setStage('sitting');
@@ -92,13 +108,22 @@ export function Exam() {
   };
 
   const fromCards = () => {
-    const list = fromGuide(guide, shape, Date.now() % 100_000);
+    // A code typed in reproduces that exact paper; nothing typed draws a new
+    // one. The seed used to be Date.now(), so no paper could ever be sat twice
+    // — not after revising, and not by two people in the same class.
+    const asked = reuse.trim() ? readSeed(reuse) : null;
+    if (reuse.trim() && asked === null) {
+      setError(`"${reuse.trim()}" is not a paper code. They look like 7PS4.`);
+      return;
+    }
+    const drawnWith = asked ?? (Date.now() % 90_000) + 10_000;
+    const list = fromGuide(guide, shape, drawnWith);
     if (list.length === 0) {
       setError('This guide has no cards to build a paper from yet.');
       return;
     }
     setError('');
-    begin(list, `${guide.code} · practice paper`);
+    begin(list, `${guide.code} · paper ${seedCode(drawnWith)}`, drawnWith);
   };
 
   const write = async () => {
@@ -270,6 +295,19 @@ export function Exam() {
 
         {source === 'cards' ? (
           <>
+            <SectionLabel>Sit one you have sat before</SectionLabel>
+            <input
+              className="input"
+              value={reuse}
+              onChange={(e) => setReuse(e.target.value)}
+              placeholder="Paper code — leave empty for a new one"
+              style={{ width: '100%', textTransform: 'uppercase' }}
+            />
+            <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              Every paper drawn from cards has a code. Enter one to get the same questions back —
+              after revising, or because somebody in your class read theirs out.
+            </div>
+
             <button
               type="button"
               className="btn btn-primary btn-block"
@@ -284,8 +322,9 @@ export function Exam() {
               Sit it
             </button>
             <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
-              Built from {guide.code}'s own cards — no key needed, nothing invented, works offline.
-              Switch course from Study.
+              Built from {guide.code}'s own cards — no key needed, nothing invented, works
+              offline. Switch course from Study. For the same questions marked one at a time as
+              you answer, the guide's Quiz mode is the other half of this.
             </div>
           </>
         ) : configured() ? (
@@ -494,6 +533,26 @@ export function Exam() {
               {verdict(marks)}
             </div>
           </Blueprint>
+
+          {seed !== null && (
+            <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
+              <div className="kicker">Paper code</div>
+              <div
+                style={{
+                  fontSize: 22,
+                  letterSpacing: '0.18em',
+                  marginTop: 5,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {seedCode(seed)}
+              </div>
+              <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+                Enter it on the setup screen to sit these exact questions again, or give it to
+                somebody in your class and compare marks on the same paper.
+              </div>
+            </Blueprint>
+          )}
 
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <button

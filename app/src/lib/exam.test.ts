@@ -12,7 +12,9 @@ import {
   paper,
   pointsFor,
   readExam,
+  readSeed,
   result,
+  seedCode,
   shapeFor,
   total,
   verdict,
@@ -286,6 +288,31 @@ describe('paper', () => {
 
   it('heads it with the marks it is out of', () => {
     expect(paper(exam)).toContain(`${total(exam.questions)} marks`);
+  });
+});
+
+describe('seed codes', () => {
+  it('round-trips a seed through its code', () => {
+    for (const seed of [1, 42, 9999, 99999]) {
+      expect(readSeed(seedCode(seed))).toBe(seed);
+    }
+  });
+
+  it('reads a code back however it was typed', () => {
+    expect(readSeed('7ps')).toBe(readSeed('7PS'));
+    expect(readSeed('  7ps  ')).toBe(readSeed('7PS'));
+  });
+
+  it('is four characters for the seeds the app generates', () => {
+    expect(seedCode(1)).toHaveLength(4);
+    expect(seedCode(99_999)).toHaveLength(4);
+  });
+
+  it('refuses something that is not a code rather than guessing a paper', () => {
+    expect(readSeed('')).toBe(null);
+    expect(readSeed('hello there')).toBe(null);
+    expect(readSeed('!!')).toBe(null);
+    expect(readSeed('0')).toBe(null);
   });
 });
 

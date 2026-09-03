@@ -5,7 +5,7 @@ import { SectionLabel } from '../components/ui';
 import { gather } from '../lib/bundle';
 import { extractText, type Extracted } from '../lib/extract';
 import { generateCourse, type GenerationResult } from '../lib/generate';
-import { configured } from '../lib/claude';
+import { configured, provider } from '../lib/claude';
 import { SEMESTER_YEAR } from '../lib/date';
 
 /**
@@ -185,7 +185,7 @@ export function Import() {
 
       {!configured() && (
         <div style={{ fontSize: 12, opacity: 0.65, marginTop: 12, lineHeight: 1.5, textWrap: 'pretty' }}>
-          Building a course asks Claude to read the documents, which needs a key. Set one under{' '}
+          Building a course asks {provider()} to read the documents, which needs a key. Set one under{' '}
           <strong>Ask Claude → Settings</strong>, or sign in and use the shared one.
         </div>
       )}

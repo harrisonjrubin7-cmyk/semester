@@ -4,7 +4,7 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
-import { ask, configured } from '../lib/claude';
+import { ask, configured, provider } from '../lib/claude';
 import {
   correlation,
   describe,
@@ -153,7 +153,7 @@ export function Analyse() {
     <div style={{ padding: 18 }}>
       <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Every number here is computed on this device by tested code, not guessed at by a model.
-        Claude is given the finished statistics and asked what they mean — it never reads a column
+        {provider()} is given the finished statistics and asked what they mean — it never reads a column
         and reports a figure.
       </div>
 

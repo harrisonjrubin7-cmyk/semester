@@ -167,6 +167,17 @@ interface Ephemeral {
   meTab: 'you' | 'all' | 'settings';
   /** Which shelf of the directory is showing under Everything. */
   meGroup: string;
+  /**
+   * A paper the guide's Quiz mode asked for, read once by the Exam screen.
+   *
+   * The two used to be separate systems that did not know about each other:
+   * ten fixed multiple-choice questions in the guide, and the timed paper.
+   * Both are one tap from Study and nothing said which to use. They stay
+   * distinct — marked as you go is a different exercise from sat against a
+   * clock — but each offers the other now, and this is how the handover
+   * carries the shape across.
+   */
+  examPreset: { minutes: number; formatId: string } | null;
   /** Which standing the Coming-up list is showing: ahead, missed or finished. */
   dueTab: 'ahead' | 'overdue' | 'done';
   /**
@@ -286,6 +297,7 @@ function initialEphemeral(now: Date): Ephemeral {
     coursesTab: 'courses',
     meTab: 'you',
     meGroup: 'Study',
+    examPreset: null,
     dueTab: 'ahead',
     mailSeed: null,
     studyTab: 'guides',
@@ -449,6 +461,8 @@ export type Action =
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
   | { type: 'setMeGroup'; group: string }
+  | { type: 'sitPaper'; minutes: number; formatId: string }
+  | { type: 'clearPaperPreset' }
   | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
   | {
       type: 'writeMail';
@@ -737,6 +751,17 @@ export function reducer(state: State, action: Action): State {
 
     case 'setMeGroup':
       return { ...state, meGroup: action.group };
+
+    case 'sitPaper':
+      return push(
+        { ...state, examPreset: { minutes: action.minutes, formatId: action.formatId } },
+        'exam',
+      );
+
+    // Read once and dropped, so coming back to Exam later opens on your own
+    // last choice rather than on whatever the quiz asked for an hour ago.
+    case 'clearPaperPreset':
+      return { ...state, examPreset: null };
 
     case 'setMeTab':
       return { ...state, meTab: action.tab };

@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, SectionLabel } from '../components/ui';
-import { ask, configured } from '../lib/claude';
+import { ask, configured, provider } from '../lib/claude';
 import { datedItems } from '../lib/select';
 import {
   PURPOSES,
@@ -122,7 +122,7 @@ export function Mail() {
     return (
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
-          <div className="kicker">Needs Claude</div>
+          <div className="kicker">Needs {provider()}</div>
           <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings. The
             addresses below come from your syllabi and work without it.

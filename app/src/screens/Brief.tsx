@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
-import { ask, configured } from '../lib/claude';
+import { ask, configured, provider } from '../lib/claude';
 import {
   EVENING_SYSTEM,
   MORNING_SYSTEM,
@@ -282,7 +282,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
             </div>
           ) : null}
           <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
-            Every number above is counted from your own data. Claude only reads the counts — it is
+            Every number above is counted from your own data. {provider()} only reads the counts — it is
             told never to restate one differently or invent one.
           </div>
         </>

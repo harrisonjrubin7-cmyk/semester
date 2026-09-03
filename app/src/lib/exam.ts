@@ -493,6 +493,27 @@ export function paper(exam: Exam): string {
   return lines.join('\n');
 }
 
+/**
+ * A short, typeable code for a seed, and back again.
+ *
+ * Base 36 keeps a five-digit seed to four characters, which is short enough to
+ * read down a phone to somebody and hard enough to mistype that a wrong one
+ * fails loudly rather than quietly producing a different paper. Uppercase on
+ * the way out because that is how people read a code aloud; case-insensitive
+ * on the way back in because that is not how they type it.
+ */
+export function seedCode(seed: number): string {
+  return Math.abs(Math.round(seed)).toString(36).toUpperCase().padStart(4, '0');
+}
+
+/** A code back to its seed, or null when it is not one. */
+export function readSeed(code: string): number | null {
+  const clean = code.trim().toLowerCase();
+  if (!/^[0-9a-z]{1,8}$/.test(clean)) return null;
+  const seed = Number.parseInt(clean, 36);
+  return Number.isFinite(seed) && seed > 0 ? seed : null;
+}
+
 export function examFileName(title: string): string {
   const stem = title
     .toLowerCase()

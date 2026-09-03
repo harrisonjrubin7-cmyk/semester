@@ -3,6 +3,7 @@ import { useMemo, useRef } from 'react';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
+import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
 import { ChipRow, Meter, SectionLabel } from '../components/ui';
 import { ModePicker } from '../components/ModePicker';
 import { modeInfo, modesFor } from '../lib/modes';
@@ -271,7 +272,9 @@ export function Guide() {
             }}
           >
             Pulled at random from every card in the guide, with three decoys drawn from the other
-            units — the same recognition work the real exam asks for. Different ten every run.
+            units — the same recognition work the real exam asks for. Different ten every run,
+            and <strong>marked as you go</strong>, so a wrong answer is corrected while you still
+            remember why you chose it.
           </div>
           <button
             type="button"
@@ -289,6 +292,26 @@ export function Guide() {
           >
             Start quiz
           </button>
+
+          {/*
+            The two used to be separate systems that did not know about each
+            other, both one tap from Study, with nothing saying which to use.
+            They stay distinct — immediate feedback is a different exercise
+            from sitting against a clock — but each names the other now.
+          */}
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            onClick={() => dispatch({ type: 'sitPaper', minutes: 15, formatId: 'choice' })}
+            style={{ height: 42, marginTop: 8 }}
+          >
+            Sit it as a timed paper
+          </button>
+          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+            The paper is the same questions with a clock, marks and a key at the end instead of
+            after each one — closer to the real thing, and worse for learning a card you have
+            just met.
+          </div>
         </Blueprint>
       )}
 
@@ -565,8 +588,55 @@ function Decks() {
         One point per slide, question before answer. Better than Read for a unit you have not met
         yet; worse than Cards for one you nearly know.
       </div>
-      <a href={asset(`/decks/${state.guideId}.pptx`)} target="_blank" rel="noreferrer" className="bare">
-        <Blueprint style={{ padding: '12px 14px', marginTop: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
+      {/*
+        The prebuilt file where there is one, and the builder where there is
+        not. This used to be one unconditional link to `/decks/<id>.pptx`, and
+        for every course anybody imported it opened a 404 in a new tab.
+      */}
+      {hasPrebuiltDeck(state.guideId) ? (
+        <a
+          href={asset(`/decks/${state.guideId}.pptx`)}
+          target="_blank"
+          rel="noreferrer"
+          className="bare"
+        >
+          <Blueprint
+            style={{
+              padding: '12px 14px',
+              marginTop: 12,
+              display: 'flex',
+              gap: 12,
+              alignItems: 'center',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 12,
+                letterSpacing: '0.12em',
+                color: 'var(--app-accent)',
+                flex: 'none',
+              }}
+            >
+              PPTX
+            </span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.35 }}>
+              The whole course as a PowerPoint deck
+            </span>
+            <ChevronRight size={15} style={{ opacity: 0.4, flex: 'none' }} />
+          </Blueprint>
+        </a>
+      ) : (
+        <Blueprint
+          onClick={() => dispatch({ type: 'go', screen: 'deck' })}
+          style={{
+            padding: '12px 14px',
+            marginTop: 12,
+            display: 'flex',
+            gap: 12,
+            alignItems: 'center',
+          }}
+        >
           <span
             style={{
               fontFamily: 'var(--font-heading)',
@@ -579,11 +649,11 @@ function Decks() {
             PPTX
           </span>
           <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.35 }}>
-            The whole course as a PowerPoint deck
+            Build a deck from any unit — a real PowerPoint file, written here
           </span>
           <ChevronRight size={15} style={{ opacity: 0.4, flex: 'none' }} />
         </Blueprint>
-      </a>
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: 14 }}>
         {guide.units.map((u, i) => (
           <button
@@ -638,25 +708,32 @@ function Decks() {
 /**
  * The guide as a document.
  *
- * Two routes, and both matter: the printable view is the whole guide as one
- * page, which the browser turns into a PDF and a phone can save; the generated
- * files are a real .docx and .pdf written by the pipeline, so the guide can be
- * annotated in Word, dropped into Google Docs, or printed at the library.
+ * Three routes, and which of them exist depends on the course. The printable
+ * view is the whole guide as one page, which every browser turns into a PDF
+ * and every course has. The .docx and .pdf are written offline by
+ * `pipeline/handout.py`, which has only ever run against the four sample
+ * courses — so a course you imported is offered the printable view and told
+ * why, rather than three buttons that open a 404 in a new tab.
+ *
+ * The deck is the one that got better rather than smaller: `lib/pptx.ts`
+ * writes a real .pptx in the browser, so every course can have one now.
  */
 function Documents() {
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
   const { guide } = useLive(state.guideId);
   const stem = `/handouts/${state.guideId}`;
+  const prebuilt = hasPrebuiltDocs(state.guideId);
 
-  const files = [
-    { label: 'PDF', href: asset(`${stem}.pdf`), note: 'Reads anywhere. Print it.' },
-    { label: 'Word', href: asset(`${stem}.docx`), note: 'Annotate it, or open it in Google Docs.' },
-    {
-      label: 'PPTX',
-      href: asset(`/decks/${state.guideId}.pptx`),
-      note: 'The deck, for PowerPoint, Keynote or Google Slides.',
-    },
-  ];
+  const files = prebuilt
+    ? [
+        { label: 'PDF', href: asset(`${stem}.pdf`), note: 'Reads anywhere. Print it.' },
+        {
+          label: 'Word',
+          href: asset(`${stem}.docx`),
+          note: 'Annotate it, or open it in Google Docs.',
+        },
+      ]
+    : [];
 
   return (
     <>
@@ -665,35 +742,37 @@ function Documents() {
         self-test, in reading order.
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginTop: 14 }}>
-        {files.map((f) => (
-          <a key={f.label} href={f.href} target="_blank" rel="noreferrer" className="bare">
-            <Blueprint style={{ padding: '14px 15px', display: 'flex', gap: 12, alignItems: 'center' }}>
-              <span
-                style={{
-                  fontFamily: 'var(--font-heading)',
-                  fontSize: 13,
-                  letterSpacing: '0.12em',
-                  color: 'var(--app-accent)',
-                  width: 46,
-                  flex: 'none',
-                }}
+      {files.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginTop: 14 }}>
+          {files.map((f) => (
+            <a key={f.label} href={f.href} target="_blank" rel="noreferrer" className="bare">
+              <Blueprint
+                style={{ padding: '14px 15px', display: 'flex', gap: 12, alignItems: 'center' }}
               >
-                {f.label}
-              </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 14 }}>
-                  {guide.code} study guide
+                <span
+                  style={{
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: 13,
+                    letterSpacing: '0.12em',
+                    color: 'var(--app-accent)',
+                    width: 46,
+                    flex: 'none',
+                  }}
+                >
+                  {f.label}
                 </span>
-                <span style={{ display: 'block', fontSize: 11.5, opacity: 0.6, marginTop: 2 }}>
-                  {f.note}
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: 14 }}>{guide.code} study guide</span>
+                  <span style={{ display: 'block', fontSize: 11.5, opacity: 0.6, marginTop: 2 }}>
+                    {f.note}
+                  </span>
                 </span>
-              </span>
-              <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
-            </Blueprint>
-          </a>
-        ))}
-      </div>
+                <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+              </Blueprint>
+            </a>
+          ))}
+        </div>
+      )}
 
       <button
         type="button"
@@ -710,10 +789,31 @@ function Documents() {
         Print this screen
       </button>
 
-      <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.5, marginTop: 10, textWrap: 'pretty' }}>
-        The two files are written by <code style={{ fontSize: 11 }}>pipeline/handout.py</code> from
-        the same data this screen reads, so they cannot drift from the app. Anything you have added
-        yourself is in the app but not yet in the files — re-run it to fold that in.
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => dispatch({ type: 'go', screen: 'deck' })}
+        style={{ height: 44, marginTop: 8 }}
+      >
+        Build a PowerPoint deck
+      </button>
+
+      <div
+        style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.5, marginTop: 10, textWrap: 'pretty' }}
+      >
+        {prebuilt ? (
+          <>
+            The two files are written by <code style={{ fontSize: 11 }}>pipeline/handout.py</code>{' '}
+            from the same data this screen reads, so they cannot drift from the app. Anything you
+            have added yourself is in the app but not yet in the files — the printable view has it.
+          </>
+        ) : (
+          <>
+            No .pdf or .docx is built for {guide.code}. Those two are written offline for the
+            sample courses only; for your own courses the printable view is the route — every
+            browser saves it as a PDF, and it always has everything you have added.
+          </>
+        )}
       </div>
 
       <SectionLabel>The whole guide, in order</SectionLabel>
