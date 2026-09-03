@@ -18,7 +18,10 @@ import { Bell, ChevronRight } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
-import { destinationsIn, type Group } from '../lib/nav';
+import { DESTINATIONS, destinationsIn, type Group } from '../lib/nav';
+
+/** Already on the tab bar, so a Lately row for one would be a wasted line. */
+const TAB_SCREENS: Screen[] = ['home', 'courses', 'study', 'calendar', 'maps', 'mine', 'me'];
 import type { Screen } from '../lib/types';
 
 /**
@@ -38,6 +41,58 @@ const GROUPS: Group[] = ['Study', 'Make', 'Semester', 'Campus', 'Yours'];
 // send you to a separate copy of what is one tap to the left.
 const HIDE_IN_ME: Screen[] = ['home', 'me', 'notifs', 'settings'];
 
+/**
+ * One row of the directory.
+ *
+ * Pulled out so the Lately list and the shelves are the same object rather
+ * than two copies of the same markup that drift — the second copy is where
+ * the account's "synced" label would have been forgotten.
+ */
+function Destination({
+  to,
+  account,
+}: {
+  to: ReturnType<typeof destinationsIn>[number];
+  account: { email: string } | null;
+}) {
+  const { dispatch } = useStore();
+  return (
+    <button
+      type="button"
+      className="bare tappable"
+      onClick={() => dispatch({ type: 'go', screen: to.screen })}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        width: '100%',
+        padding: '13px 0',
+        borderBottom: '1px solid var(--app-line)',
+        textAlign: 'left',
+      }}
+    >
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 15.5 }}>
+          {to.screen === 'account' && account ? 'Account · synced' : to.label}
+        </span>
+        <span
+          style={{
+            display: 'block',
+            fontSize: 12,
+            opacity: 0.55,
+            lineHeight: 1.4,
+            marginTop: 2,
+            textWrap: 'pretty',
+          }}
+        >
+          {to.screen === 'account' && !account ? 'Not signed in — this device only.' : to.blurb}
+        </span>
+      </span>
+      <ChevronRight size={16} />
+    </button>
+  );
+}
+
 export function Me() {
   const { state, dispatch, now, catalog, account } = useStore();
   const ahead = upcomingItems(catalog, now);
@@ -56,6 +111,15 @@ export function Me() {
   ];
 
   const tab = state.meTab;
+
+  // The four most recent destinations that are in the directory and not
+  // already a tab — a tab is one tap, so listing it here would be noise.
+  const recent = state.recent
+    .filter((screen) => !HIDE_IN_ME.includes(screen))
+    .map((screen) => DESTINATIONS.find((d) => d.screen === screen))
+    .filter((d): d is (typeof DESTINATIONS)[number] => Boolean(d))
+    .filter((d) => !TAB_SCREENS.includes(d.screen))
+    .slice(0, 4);
 
   return (
     <div style={{ padding: 18 }}>
@@ -135,6 +199,22 @@ export function Me() {
         everything is grouped and says what it is for, which is most of what
         made the app hard to find your way around.
       */}
+      {/*
+        Recency above taxonomy. Five shelves fixed "which heading was that
+        under", but Take it with you and Connect accounts were still Me →
+        Everything → Yours → row. Nobody remembers a shelf for the three
+        things they actually revisit; the app already knows what those are.
+      */}
+      {recent.length > 0 && (
+        <>
+          <SectionLabel style={{ margin: '4px 0 2px' }}>Lately</SectionLabel>
+          {recent.map((d) => (
+            <Destination key={d.screen} to={d} account={account} />
+          ))}
+          <div style={{ height: 20 }} />
+        </>
+      )}
+
       <ChipRow
         options={GROUPS}
         value={GROUPS.includes(state.meGroup as Group) ? (state.meGroup as Group) : GROUPS[0]}
@@ -147,42 +227,7 @@ export function Me() {
           <div key={group}>
             <div style={{ height: 6 }} />
             {rows.map((d) => (
-              <button
-                key={d.screen}
-                type="button"
-                className="bare tappable"
-                onClick={() => dispatch({ type: 'go', screen: d.screen })}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  width: '100%',
-                  padding: '13px 0',
-                  borderBottom: '1px solid var(--app-line)',
-                  textAlign: 'left',
-                }}
-              >
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span
-                    style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 15.5 }}
-                  >
-                    {d.screen === 'account' && account ? 'Account · synced' : d.label}
-                  </span>
-                  <span
-                    style={{
-                      display: 'block',
-                      fontSize: 12,
-                      opacity: 0.55,
-                      lineHeight: 1.4,
-                      marginTop: 2,
-                      textWrap: 'pretty',
-                    }}
-                  >
-                    {d.screen === 'account' && !account ? 'Not signed in — this device only.' : d.blurb}
-                  </span>
-                </span>
-                <ChevronRight size={16} />
-              </button>
+              <Destination key={d.screen} to={d} account={account} />
             ))}
           </div>
         );

@@ -84,6 +84,8 @@ interface Persisted {
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
+  /** The destinations you opened most recently, newest first. */
+  recent: Screen[];
   /**
    * How the app looks. Every one of these is an id into a list in `lib/look.ts`
    * rather than a value, so a look saved today survives the palette being
@@ -256,6 +258,7 @@ const DEFAULT_PERSISTED: Persisted = {
   commitments: [],
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
+  recent: [],
   accent: 'sterling',
   textSize: 'normal',
   ground: 'ink',
@@ -355,6 +358,7 @@ function loadPersisted(): Persisted {
       commitments: saved.commitments ?? [],
       feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
+      recent: saved.recent ?? [],
       ...readLook({
         accent: saved.accent,
         textSize: saved.textSize,
@@ -400,6 +404,7 @@ export function pickPersisted(state: State): Persisted {
     commitments: state.commitments,
     feedOrder: state.feedOrder,
     feedHidden: state.feedHidden,
+    recent: state.recent,
     accent: state.accent,
     textSize: state.textSize,
     ground: state.ground,
@@ -520,6 +525,20 @@ function screenFromUrl(): Screen | null {
   }
 }
 
+/**
+ * Where you have been lately, for the top of the directory.
+ *
+ * Kept here rather than in the Me screen because `push` is the one funnel
+ * every route in the app goes through — a list built anywhere else would miss
+ * whichever way somebody actually got there. Screens are filtered to real
+ * destinations at render time rather than on the way in, so the list follows
+ * the directory when the directory changes instead of holding ids that no
+ * longer mean anything.
+ */
+function remember(recent: Screen[], screen: Screen): Screen[] {
+  return [screen, ...recent.filter((s) => s !== screen)].slice(0, 12);
+}
+
 function push(state: State, screen: Screen): State {
   if (screen === state.screen) return state;
   // In tab mode a root screen is a destination, so the back stack resets. In
@@ -527,7 +546,7 @@ function push(state: State, screen: Screen): State {
   // to stay reachable backwards or it becomes a dead end.
   const resets = ROOTS.includes(screen) && (state.nav === 'tabs' || screen === 'home');
   const history = resets ? [] : [...state.history, state.screen];
-  return { ...state, screen, history };
+  return { ...state, screen, history, recent: remember(state.recent, screen) };
 }
 
 export function reducer(state: State, action: Action): State {
