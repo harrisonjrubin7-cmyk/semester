@@ -54,17 +54,29 @@ jobs:
         working-directory: app
         run: npm ci
 
+      # Says whether the account service made it into this build, without
+      # printing the values. "url: no" here is the whole diagnosis when the
+      # deployed app claims it has no account service.
+      - name: Check the build inputs
+        env:
+          URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
+        run: |
+          echo "supabase url: $([ -n "$URL" ] && echo "yes (${#URL} chars)" || echo no)"
+          echo "supabase key: $([ -n "$KEY" ] && echo "yes (${#KEY} chars)" || echo no)"
+
       - name: Build
         working-directory: app
         env:
           # e.g. /semester/ — supplied by configure-pages, so a rename of the
           # repo cannot silently break every asset path.
           VITE_BASE: ${{ steps.pages.outputs.base_path }}/
-          # Repository variables, not secrets: both are public values by
-          # design, and masking them would only make the build log lie. With
-          # them unset the site still builds and runs device-only.
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY }}
+          # Variables are the right home for these — both are public values by
+          # design — but the Secrets tab is the one GitHub puts front and
+          # centre, and a site silently running device-only is a rotten way to
+          # find out which tab you used. So: either works.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
         run: npm run build
 
       # Pages serves static files, so a deep link like /semester/?screen=study
