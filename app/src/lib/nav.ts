@@ -174,6 +174,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'check',
+    label: 'Check the dates',
+    blurb: 'Your syllabus dates against what the LMS calendar says today.',
+    keywords: 'check dates changed moved deadline reconcile compare diff brightspace calendar feed ics syllabus out of date wrong date updated rescheduled verify audit',
+    group: 'Semester',
+    root: 'courses',
+  },
+  {
     screen: 'grades',
     label: 'Grades',
     blurb: 'What you have so far, and what the rest has to average.',

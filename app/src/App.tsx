@@ -44,6 +44,7 @@ import { Brief } from './screens/Brief';
 import { Essay } from './screens/Essay';
 import { Deck } from './screens/Deck';
 import { Exam } from './screens/Exam';
+import { CheckDates } from './screens/CheckDates';
 import { scaleOf, tokensFor } from './lib/look';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
@@ -172,6 +173,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'A real PowerPoint file', title: 'Make a deck' };
     case 'exam':
       return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
+    case 'check':
+      return { kicker: 'Syllabus against calendar', title: 'Check the dates' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -426,6 +429,8 @@ function CurrentScreen() {
       return <Deck />;
     case 'exam':
       return <Exam />;
+    case 'check':
+      return <CheckDates />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':

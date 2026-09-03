@@ -392,6 +392,7 @@ export type Screen =
   | 'essay'
   | 'deck'
   | 'exam'
+  | 'check'
   | 'slides'
   | 'account'
   | 'cloud';
