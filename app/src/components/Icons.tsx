@@ -84,6 +84,14 @@ export const PauseIcon = svg(
     <path d="M9 5v14M15 5v14" />
   </>,
 );
+/** A folded map, not a pin — the tab is a map, and a pin is a saved place. */
+export const MapIcon = svg(
+  <>
+    <path d="M9 3 3 5.5v15L9 18l6 3 6-2.5v-15L15 6 9 3Z" />
+    <path d="M9 3v15" />
+    <path d="M15 6v15" />
+  </>,
+);
 export const CalendarIcon = svg(
   <>
     <path d="M4 5.5h16v15H4z" />

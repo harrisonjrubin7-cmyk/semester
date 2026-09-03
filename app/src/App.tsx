@@ -2,6 +2,7 @@ import { useStore } from './state/store';
 import {
   Bell,
   CalendarIcon,
+  MapIcon,
   Check,
   ChevronLeft,
   CoursesIcon,
@@ -264,6 +265,9 @@ const TABS: { id: Screen; label: string; Icon: typeof TodayIcon }[] = [
   { id: 'courses', label: 'Courses', Icon: CoursesIcon },
   { id: 'study', label: 'Study', Icon: StudyIcon },
   { id: 'calendar', label: 'Calendar', Icon: CalendarIcon },
+  // Seven fits at 402px, and a map is one of the two or three things a person
+  // opens the app for while walking. It was two taps down under Calendar.
+  { id: 'maps', label: 'Map', Icon: MapIcon },
   { id: 'mine', label: 'Mine', Icon: NotesIcon },
   { id: 'me', label: 'Me', Icon: Person },
 ];
@@ -298,7 +302,20 @@ function TabBar() {
             }}
           >
             <Icon size={19} />
-            <span style={{ fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+            {/* Seven tabs across 402px leaves about 57px each, and "CALENDAR"
+                at the old tracking was wider than that — it would have wrapped
+                to two lines and made the bar taller on every screen. Tighter
+                and a shade smaller keeps real words rather than abbreviating
+                them, and nowrap makes a future overflow visible rather than
+                silently restacking. */}
+            <span
+              style={{
+                fontSize: 9,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+              }}
+            >
               {label}
             </span>
           </button>
