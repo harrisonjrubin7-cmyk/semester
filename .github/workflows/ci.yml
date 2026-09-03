@@ -52,6 +52,10 @@ jobs:
         working-directory: app
         run: npx oxlint src
 
+      - name: Test
+        working-directory: app
+        run: npm test
+
       - name: Build
         working-directory: app
         run: npm run build

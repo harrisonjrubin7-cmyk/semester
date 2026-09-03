@@ -116,7 +116,7 @@ const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
  * by: a fabricated detail is worse than a missing one, because the student
  * acts on it.
  */
-function clean(raw: Partial<Breakdown>, unitNames: string[]): Breakdown {
+export function clean(raw: Partial<Breakdown>, unitNames: string[]): Breakdown {
   const date = (v: unknown): string => {
     const s = str(v);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return '';

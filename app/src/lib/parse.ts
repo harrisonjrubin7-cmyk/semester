@@ -80,17 +80,28 @@ export function parseMaterial(text: string): Parsed {
 
     // A run of "term — definition" lines. One line of prose is not a term, so
     // the definition has to be long enough to be one.
-    let matched = 0;
-    for (const line of lines) {
-      if (isHeading(line)) continue;
+    const body = lines.filter((l) => !isHeading(l));
+    const hits: { line: string; term: Term }[] = [];
+    for (const line of body) {
       const m = clean(line).match(/^(.{2,60}?)\s*(?:\u2014|\u2013|:|\s-\s)\s*(.{15,})$/);
       if (m && !m[1].endsWith('?')) {
-        terms.push({ t: m[1].trim(), d: m[2].trim() });
-        matched += 1;
+        hits.push({ line, term: { t: m[1].trim(), d: m[2].trim() } });
       }
     }
-    if (matched > 0 && matched >= lines.filter((l) => !isHeading(l)).length - 1) continue;
-    if (matched > 0) terms.splice(terms.length - matched, matched);
+
+    // Two entries minimum. A single line with a colon and a longish tail is far
+    // more often "Note: bring the formula sheet" or "Room: Alumni Hall 201"
+    // than a definition, and one invented glossary entry is exactly what this
+    // module exists to refuse.
+    if (hits.length >= 2 && hits.length >= body.length - 1) {
+      terms.push(...hits.map((h) => h.term));
+      // Whatever in the block was not a term is still something you wrote.
+      // Dropping it here used to lose a whole paragraph silently, which
+      // contradicts the rule at the top of this file.
+      const rest = body.filter((l) => !hits.some((h) => h.line === l));
+      if (rest.length > 0) leftovers.push(rest.join('\n'));
+      continue;
+    }
 
     leftovers.push(block);
   }

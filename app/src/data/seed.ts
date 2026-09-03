@@ -49,4 +49,4 @@ export function loadSeed(): Promise<CourseModule[]> {
  * computing them would download the sample to describe it. `pipeline/validate.mjs`
  * checks these against the real modules on every build, so they cannot drift.
  */
-export const SEED_SUMMARY = { courses: 4, units: 44, cards: 279, lessons: 44 };
+export const SEED_SUMMARY = { courses: 4, units: 44, cards: 278, lessons: 44 };

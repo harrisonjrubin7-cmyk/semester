@@ -27,6 +27,7 @@ const AUDIO_DIR = join(ROOT, 'app/public/audio');
 // The four hand-built courses are registered as the sample semester now;
 // everything else in the app arrives as data from an account.
 const SEED = join(ROOT, 'app/src/data/seed.ts');
+const totals = { units: 0, cards: 0, lessons: 0 };
 
 const problems = [];
 const warnings = [];
@@ -69,10 +70,10 @@ for (const id of courseDirs) {
   const guide = existsSync(guidePath) ? read(guidePath) : '';
 
   // ── registered in the catalog ───────────────────────────────────────────
-  if (!new RegExp(`from './courses/${id}'`).test(seed)) {
-    fail(`${id}: not imported in data/seed.ts — the sample semester will not include it.`);
-  } else if (!new RegExp(`SEED_MODULES[^=]*=\\s*\\[[^\\]]*\\b${id}\\b`, 's').test(seed)) {
-    fail(`${id}: imported but missing from the SEED_MODULES array.`);
+  // The sample is fetched by dynamic import now rather than imported at the
+  // top, so registration means appearing inside loadSeed().
+  if (!new RegExp(`import\\('\\./courses/${id}'\\)`).test(seed)) {
+    fail(`${id}: not in loadSeed() in data/seed.ts — the sample semester will not include it.`);
   }
 
   // ── figure keys against unit count ──────────────────────────────────────
@@ -210,11 +211,41 @@ for (const id of courseDirs) {
     fail(`${id}: guide has no units.`);
   }
 
+  totals.units += unitCount;
+  // Cards inside units only — the self-test is counted separately in the UI,
+  // and SEED_SUMMARY has always meant "cards you can drill by unit".
+  const unitsOnly = guide.split(/^\s*selfTest:/m)[0];
+  totals.cards += [...unitsOnly.matchAll(/^\s*q: /gm)].length;
+  const lessonsPath = join(COURSES_DIR, id, 'lessons.ts');
+  totals.lessons += existsSync(lessonsPath)
+    ? [...read(lessonsPath).matchAll(/^\s{2}"\d+": \{/gm)].length
+    : 0;
+
   console.log(
     `${id.padEnd(6)} ${String(unitCount).padStart(2)} units  ` +
       `${String(seenItemIds.size).padStart(2)} items so far  ` +
       `${figuresBlock ? [...figuresBlock[1].matchAll(/^\s{4}\d+:/gm)].length : 0} figures`,
   );
+}
+
+// ── the sample summary, which is stated rather than counted ───────────────
+// seed.ts declares these numbers so that describing the sample does not mean
+// downloading it. Declared numbers drift, so they are checked here instead.
+{
+  const declared = seed.match(/SEED_SUMMARY = \{([^}]*)\}/)?.[1] ?? '';
+  const read1 = (k) => Number(declared.match(new RegExp(`${k}:\\s*(\\d+)`))?.[1] ?? NaN);
+  const want = {
+    courses: read1('courses'),
+    units: read1('units'),
+    cards: read1('cards'),
+    lessons: read1('lessons'),
+  };
+  const got = { courses: courseDirs.length, ...totals };
+  for (const k of Object.keys(want)) {
+    if (want[k] !== got[k]) {
+      fail(`SEED_SUMMARY.${k} says ${want[k]}, the courses have ${got[k]}. Update data/seed.ts.`);
+    }
+  }
 }
 
 // ── report ────────────────────────────────────────────────────────────────
