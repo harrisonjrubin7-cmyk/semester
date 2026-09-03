@@ -92,10 +92,16 @@ The repo deploys itself to GitHub Pages on every push to `main`
 (`.github/workflows/pages.yml`). One thing to set once:
 
 - **Settings → Pages → Source: GitHub Actions.**
-- **Settings → Secrets and variables → Actions → Variables**: add
-  `VITE_SUPABASE_URL` and `VITE_SUPABASE_KEY` so the built site knows where its
-  account service is. (Variables, not secrets — these are public values, and a
-  secret would be masked in the build output for no benefit.)
+
+The two Supabase values come from **`app/.env.production`**, which is committed.
+That is deliberate: both are public by design — the built JavaScript contains
+them however they are supplied — so a build variable would hide nothing and only
+add a step that can silently fail. A fork pointing at its own project sets
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_KEY` as repository variables, which win
+over the file, or just edits the file.
+
+The deploy prints a notice saying which of the two it used, so "accounts did not
+turn on" is answerable from the run rather than by guessing.
 
 Pages serves a project site from `/<repo>/`, which the build handles: the
 workflow passes `VITE_BASE` and nothing in the app reads a leading-slash path

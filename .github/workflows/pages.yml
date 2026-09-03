@@ -68,8 +68,13 @@ jobs:
           if [ -n "$URL" ] && [ -n "$KEY" ]; then
             echo "::notice title=Accounts::Supabase configured (url ${#URL} chars, key ${#KEY} chars) — this build has accounts."
           else
-            echo "::warning title=No accounts::VITE_SUPABASE_URL is $([ -n "$URL" ] && echo set || echo MISSING) and VITE_SUPABASE_KEY is $([ -n "$KEY" ] && echo set || echo MISSING). Add both under Settings → Secrets and variables → Actions, as repository Variables (or Secrets). This build runs device-only."
+            echo "::notice title=Accounts::No repository variables set, so the build falls back to the committed app/.env.production."
           fi
+          # An empty variable must not overwrite the committed default, so the
+          # export only happens when there is something to export.
+          [ -n "$URL" ] && echo "VITE_SUPABASE_URL=$URL" >> "$GITHUB_ENV"
+          [ -n "$KEY" ] && echo "VITE_SUPABASE_KEY=$KEY" >> "$GITHUB_ENV"
+          true
 
       - name: Build
         working-directory: app
@@ -77,12 +82,6 @@ jobs:
           # e.g. /semester/ — supplied by configure-pages, so a rename of the
           # repo cannot silently break every asset path.
           VITE_BASE: ${{ steps.pages.outputs.base_path }}/
-          # Variables are the right home for these — both are public values by
-          # design — but the Secrets tab is the one GitHub puts front and
-          # centre, and a site silently running device-only is a rotten way to
-          # find out which tab you used. So: either works.
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
         run: npm run build
 
       # Pages serves static files, so a deep link like /semester/?screen=study

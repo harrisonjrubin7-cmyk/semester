@@ -80,7 +80,10 @@ the syllabus's own words. Then you get a preview, including what was thrown out,
 and decide whether to keep it.
 
 Signing in is optional and does one thing: keeps the same semester on your phone
-and your laptop. It also lets you generate a course without supplying an API key,
+and your laptop. Accounts live in Supabase, and the two values the app needs to
+find it are committed in `app/.env.production` — both are public by design, and
+what protects an account is the row-level policy on every table, not the secrecy
+of a key that ships inside the page. It also lets you generate a course without supplying an API key,
 through a server function that meters usage per account.
 
 ## Six ways through the same material
