@@ -101,6 +101,36 @@ export async function signOut(): Promise<void> {
   await cloud().auth.signOut();
 }
 
+/**
+ * Turn a Postgres or PostgREST error into something a person can act on.
+ *
+ * The raw wording is accurate and useless: "Could not find the table
+ * 'public.state' in the schema cache" is the database telling you the setup
+ * step was missed, in a sentence that gives no hint of that. Anything not
+ * recognised is passed through untouched — a wrong guess would be worse than
+ * the original.
+ */
+export function explainSyncError(message: string): string {
+  if (/schema cache|does not exist|relation .* does not exist/i.test(message)) {
+    return (
+      `${message}\n\nThe database tables have not been created yet. Whoever runs this ` +
+      `deployment needs to run supabase/schema.sql once in the SQL Editor — and if the ` +
+      `tables are already there, the API's schema cache is stale: run ` +
+      `NOTIFY pgrst, 'reload schema'; or restart the project.`
+    );
+  }
+  if (/JWT|not authenticated|invalid claim/i.test(message)) {
+    return `${message}\n\nThe session has expired. Sign out and back in.`;
+  }
+  if (/row-level security|violates policy/i.test(message)) {
+    return (
+      `${message}\n\nThe row-level policies are refusing the write, which usually means ` +
+      `schema.sql ran only in part. Re-run it.`
+    );
+  }
+  return message;
+}
+
 // ── Syncing ───────────────────────────────────────────────────────────────
 
 /** The shape held in the `state` row: everything except the courses. */

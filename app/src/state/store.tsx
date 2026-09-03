@@ -31,6 +31,7 @@ import {
   cloudConfigured,
   currentSession,
   onAuthChange,
+  explainSyncError,
   pull,
   push as pushCloud,
   type Account,
@@ -841,7 +842,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setSync({
             status: 'error',
             at: 0,
-            error: e instanceof Error ? e.message : String(e),
+            error: explainSyncError(e instanceof Error ? e.message : String(e)),
           });
         }
       }
@@ -869,7 +870,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setSync({
             status: 'error',
             at: 0,
-            error: e instanceof Error ? e.message : String(e),
+            error: explainSyncError(e instanceof Error ? e.message : String(e)),
           }),
         );
     }, 2500);

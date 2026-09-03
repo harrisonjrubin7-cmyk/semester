@@ -71,7 +71,9 @@ export function AccountScreen() {
             {sync.status === 'syncing' && 'Catching up with your account…'}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
-            {sync.status === 'error' && `Sync failed: ${sync.error}`}
+            {sync.status === 'error' && (
+              <span style={{ whiteSpace: 'pre-wrap' }}>Sync failed. {sync.error}</span>
+            )}
           </div>
         </Blueprint>
 
