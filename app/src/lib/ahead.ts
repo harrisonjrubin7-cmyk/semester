@@ -12,12 +12,16 @@
  * There is no readiness percentage here and there will not be one. The
  * honest output is a count of hours you have already promised and a count of
  * things due, side by side, with the arithmetic visible. A single number
- * combining them would need a weight for how long a paper takes, which the app
- * does not know and cannot find out, and it would be believed.
+ * combining them would need a weight for how long a paper takes, and inventing
+ * that weight would be inventing the only figure anybody would plan against.
  *
- * The one estimate is study time, and it is an estimate the student sets: a
- * course's own `planMinutes`, which comes from its syllabus. Where a course
- * does not state one it contributes nothing rather than a guess.
+ * Two estimates are allowed in, and neither is the app's own. A course's
+ * `planMinutes` is the nightly box its syllabus asks for; a course that states
+ * none contributes nothing. And `lib/pace.ts` holds how long work has actually
+ * taken *this student*, reported a tap at a time as each box is ticked — which
+ * is the figure this file used to say could not be found out. It can, by
+ * asking. What still never happens is the app filling the gap itself: work of
+ * a kind you have never timed is counted as unknown and left out of the total.
  */
 
 import type { Appointment, DatedItem } from './types';

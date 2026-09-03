@@ -33,6 +33,7 @@ import type { NewSource, Source } from '../lib/sources';
 import { type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
+import type { Spent } from '../lib/pace';
 import { readLook, type Look } from '../lib/look';
 
 /**
@@ -96,6 +97,15 @@ export interface Persisted {
    * `lib/registrar.ts` for why the app refuses to guess these.
    */
   registrar: TermDate[];
+  /**
+   * How long each finished piece of work took, as you reported it.
+   *
+   * The one number the app could never compute and can only be told. See
+   * `lib/pace.ts` — it is asked for once, at the moment you tick a box, and
+   * it is what lets the week ahead compare hours asked against hours there
+   * are instead of listing five assignments of unknown size.
+   */
+  spent: Spent[];
   /**
    * When each deadline was ticked, epoch ms.
    *
@@ -301,6 +311,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   sittings: [],
   sources: [],
   registrar: [],
+  spent: [],
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -407,6 +418,7 @@ export function loadPersisted(): Persisted {
       sittings: saved.sittings ?? [],
       sources: saved.sources ?? [],
       registrar: saved.registrar ?? [],
+      spent: saved.spent ?? [],
       tickedAt: saved.tickedAt ?? {},
       ...readLook({
         accent: saved.accent,
@@ -457,6 +469,7 @@ export function pickPersisted(state: State): Persisted {
     sittings: state.sittings,
     sources: state.sources,
     registrar: state.registrar,
+    spent: state.spent,
     tickedAt: state.tickedAt,
     accent: state.accent,
     textSize: state.textSize,
@@ -566,6 +579,7 @@ export type Action =
   | { type: 'addCourse'; module: CourseModule }
   | { type: 'replaceCourse'; module: CourseModule }
   | { type: 'removeCourse'; id: CourseId }
+  | { type: 'timeSpent'; id: string; courseId: string; kind: string; bucketId: string }
   | { type: 'setTermDate'; id: string; iso: string; until?: string }
   | { type: 'addTermDate'; label: string; iso: string; until?: string }
   | { type: 'dropTermDate'; id: string }

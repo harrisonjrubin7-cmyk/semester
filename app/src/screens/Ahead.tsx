@@ -4,6 +4,7 @@ import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { headline, pressure, showHours, studyAsked, week } from '../lib/ahead';
+import { askedLine, forecast } from '../lib/pace';
 
 /**
  * The next seven days, in hours, before they happen.
@@ -34,6 +35,14 @@ export function Ahead() {
   );
 
   const asked = useMemo(() => studyAsked(catalog), [catalog]);
+
+  // The half of the week the app could never count until it was told. Every
+  // figure comes from work this student has timed; anything else is left out
+  // and counted, never estimated. See `lib/pace.ts`.
+  const mine = useMemo(
+    () => askedLine(forecast(state.spent, w.due.map((i) => ({ c: i.c, kind: i.kind })))),
+    [state.spent, w.due],
+  );
   const code = (id: string) => catalog.byId[id]?.code ?? id;
   const most = Math.max(1, ...w.days.map((d) => d.promised));
 
@@ -183,9 +192,23 @@ export function Ahead() {
             .
           </div>
         ) : null}
+        {mine ? (
+          <div
+            style={{
+              fontSize: 13,
+              marginTop: 9,
+              paddingTop: 9,
+              borderTop: '1px solid var(--app-line)',
+              lineHeight: 1.5,
+            }}
+          >
+            {mine}
+          </div>
+        ) : null}
         <div style={{ fontSize: 11, opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
-          Sixteen hours a day, not twenty-four. Nothing here estimates how long a paper takes —
-          the app does not know, and a number it invented is the one you would plan against.
+          Sixteen hours a day, not twenty-four. The coursework estimate is built only from work you
+          have timed yourself — the app still invents nothing, and anything it has never seen the
+          like of is counted as unknown rather than guessed at.
         </div>
       </Blueprint>
 

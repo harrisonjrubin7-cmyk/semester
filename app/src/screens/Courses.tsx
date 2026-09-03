@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { HowLong } from '../components/HowLong';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -557,6 +558,7 @@ export function ItemDetail() {
           Study
         </button>
       </div>
+      {done && <HowLong id={item.id} courseId={item.c} kind={item.kind} />}
       <div style={{ height: 22 }} />
     </div>
   );

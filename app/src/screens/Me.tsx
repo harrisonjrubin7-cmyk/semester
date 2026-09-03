@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { learned, showSpan } from '../lib/pace';
 import { SECTIONS, move, ordered } from '../lib/feed';
 import {
   ACCENTS,
@@ -97,6 +98,7 @@ export function Me() {
   const { state, dispatch, now, catalog, account } = useStore();
   const ahead = upcomingItems(catalog, now);
   const bars = loadByCourse(catalog, now, state.done);
+  const pace = learned(state.spent);
   const doneCount = Object.values(state.done).filter(Boolean).length;
 
   // Credits used to be the literal string '11', which stayed 11 for a new user
@@ -186,6 +188,46 @@ export function Me() {
           </div>
         </div>
       ))}
+
+      {/*
+        What the app has learned about your pace, shown back to you.
+
+        Only appears once there is something in it, and every row says how many
+        reports it rests on — a median of one is a data point wearing a
+        median's clothes, and hiding that would make the list look surer than
+        it is. There is no comparison with anybody else and no score: it is
+        your own arithmetic, told back.
+      */}
+      {pace.length > 0 && (
+        <>
+          <SectionLabel>How long things take you</SectionLabel>
+          {pace.map((r) => (
+            <div
+              key={`${r.courseId}-${r.kind}`}
+              style={{
+                display: 'flex',
+                gap: 10,
+                alignItems: 'baseline',
+                padding: '9px 0',
+                borderBottom: '1px solid var(--app-line)',
+              }}
+            >
+              <span className="tag tag-accent" style={{ flex: 'none' }}>
+                {catalog.byId[r.courseId]?.code ?? r.courseId}
+              </span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 13.5 }}>{r.kind}</span>
+              <span style={{ flex: 'none', fontSize: 13.5 }}>{showSpan(r.minutes / 60)}</span>
+              <span style={{ flex: 'none', fontSize: 11, opacity: 0.45, minWidth: 46, textAlign: 'right' }}>
+                {r.from === 1 ? 'from 1' : `from ${r.from}`}
+              </span>
+            </div>
+          ))}
+          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+            The middle figure of what you reported, so one all-nighter does not move it. Tick
+            something off and the app asks once — it stops asking a kind of work after five.
+          </div>
+        </>
+      )}
 
         </>
       )}

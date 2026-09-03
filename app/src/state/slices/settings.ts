@@ -11,6 +11,7 @@
  */
 
 import { readLook } from '../../lib/look';
+import { record } from '../../lib/pace';
 import { currentLook, type Action, type State } from '../shape';
 
 export function settings(state: State, action: Action): State | null {
@@ -45,6 +46,15 @@ export function settings(state: State, action: Action): State | null {
       if (nowDone) tickedAt[action.id] = Date.now();
       else delete tickedAt[action.id];
       return { ...state, done: { ...state.done, [action.id]: nowDone }, tickedAt };
+    }
+
+    // How long a finished thing took. Recorded once per item — a second
+    // report for the same id replaces the first rather than counting twice,
+    // so tapping the wrong bucket is a fixable mistake.
+    case 'timeSpent': {
+      const row = record(action.id, action.courseId, action.kind, action.bucketId, Date.now());
+      if (!row) return state;
+      return { ...state, spent: [...state.spent.filter((s) => s.id !== action.id), row] };
     }
 
     case 'toggleSaved':

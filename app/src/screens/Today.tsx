@@ -21,6 +21,7 @@ import { datedEvents, datedItems } from '../lib/select';
 import { overdueCount } from '../lib/standing';
 import { visible } from '../lib/feed';
 import { line, pressing, standing } from '../lib/registrar';
+import { HowLong } from '../components/HowLong';
 import { Brief } from './Brief';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
@@ -405,13 +406,11 @@ function Feed_due() {
               key={it.id}
               plain
               style={{
-                display: 'flex',
-                gap: 12,
                 padding: '13px 14px',
-                alignItems: 'flex-start',
                 background: done ? 'transparent' : 'var(--app-panel)',
               }}
             >
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <button
                 type="button"
                 className="bare"
@@ -458,6 +457,10 @@ function Feed_due() {
                   {it.dueTime} · {it.where}
                 </div>
               </button>
+            </div>
+            {/* Asked only of something just ticked, and only while the app
+                still has something to learn from the answer. */}
+            {done && <HowLong id={it.id} courseId={it.c} kind={it.kind} />}
             </Blueprint>
           );
         })}
