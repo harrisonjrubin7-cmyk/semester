@@ -28,6 +28,7 @@ import { Connect } from './screens/Connect';
 import { Ask } from './screens/Ask';
 import { Work } from './screens/Work';
 import { Grades } from './screens/Grades';
+import { Maps } from './screens/Maps';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
@@ -127,6 +128,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: `${guide.code} · assignments`, title: 'Work on it' };
     case 'grades':
       return { kicker: 'Weights from your syllabi', title: 'Grades' };
+    case 'maps':
+      return { kicker: 'Campus, city, and how to get there', title: 'Getting there' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -330,6 +333,8 @@ function CurrentScreen() {
       return <Work />;
     case 'grades':
       return <Grades />;
+    case 'maps':
+      return <Maps />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':

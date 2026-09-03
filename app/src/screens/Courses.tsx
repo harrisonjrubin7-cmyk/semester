@@ -4,6 +4,7 @@ import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { DateRow, SectionLabel, Segmented } from '../components/ui';
 import { Grades } from './Grades';
+import { appleMapsUrl, directionsUrl, fromRoom, prefersApple } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
 import type { Course } from '../lib/types';
 
@@ -302,7 +303,23 @@ export function CourseDetail() {
       </div>
       <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 12 }}>
         <span className="tag tag-outline">{course.meets}</span>
-        <span className="tag tag-neutral">{course.room}</span>
+        {/* The room is the one detail here you might need to act on, so it is
+            a link to directions rather than a label to read and retype. */}
+        {course.room ? (
+          <a
+            href={
+              prefersApple()
+                ? appleMapsUrl(fromRoom(course.room))
+                : directionsUrl(fromRoom(course.room))
+            }
+            target="_blank"
+            rel="noreferrer"
+            className="tag tag-neutral"
+            style={{ textDecoration: 'none' }}
+          >
+            {course.room} →
+          </a>
+        ) : null}
         <span className="tag tag-neutral">{course.credits}</span>
       </div>
 
