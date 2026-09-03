@@ -5,14 +5,18 @@
  * study format at once, explaining the card you keep failing, and answering a
  * question about a course with that course's own guide in front of it.
  *
- * **About the key.** Talking to the API from a page means the key is in the
- * page. Anything running in this browser can read it, and a key put into a
- * deployed site is a key handed to everyone who loads it. So: the key is stored
- * on this device only, never sent anywhere but api.anthropic.com, and the app
- * says all of this on the screen where it is typed. If you would rather not
- * have a key in a browser at all — the right instinct — point `proxy` at
- * something that holds the key server-side and forwards to the API. The app
- * treats a proxy as the better path, not the fallback.
+ * **Three routes to the same API, in this order of preference:**
+ *
+ *  1. **A proxy** you point the app at, holding the key server-side.
+ *  2. **The shared key**, when signed in — an Edge Function checks the account
+ *     and meters it, so a new user can generate a course without first going
+ *     and getting a key of their own.
+ *  3. **Your own key**, stored on this device.
+ *
+ * Talking to the API from a page means the key is in the page: anything running
+ * in that browser can read it, and a key baked into a deployed site is a key
+ * handed to everyone who loads it. That is why the shared key lives in a
+ * function, and why the app says all of this on the screen where a key is typed.
  */
 
 import type { StudyCard } from './types';
@@ -50,8 +54,31 @@ export function saveSettings(next: ClaudeSettings): void {
   }
 }
 
+/** Set by the store on sign-in, which is what makes the shared key available. */
+let sessionToken: string | null = null;
+
+export function setSessionToken(token: string | null): void {
+  sessionToken = token;
+}
+
+const env = import.meta.env as unknown as Record<string, string | undefined>;
+
+/** The function that holds the shared key, when this build has one. */
+function sharedEndpoint(): string {
+  const base = env.VITE_SUPABASE_URL ?? '';
+  return base ? `${base.replace(/\/$/, '')}/functions/v1/claude` : '';
+}
+
 export function configured(s = settings()): boolean {
-  return Boolean(s.proxy.trim() || s.apiKey.trim());
+  return Boolean(s.proxy.trim() || s.apiKey.trim() || (sessionToken && sharedEndpoint()));
+}
+
+/** Which of the three routes a call will take — the UI says so plainly. */
+export function route(s = settings()): 'proxy' | 'shared' | 'own' | 'none' {
+  if (s.proxy.trim()) return 'proxy';
+  if (s.apiKey.trim()) return 'own';
+  if (sessionToken && sharedEndpoint()) return 'shared';
+  return 'none';
 }
 
 export interface Turn {
@@ -77,19 +104,31 @@ interface AskOptions {
  */
 export async function ask(options: AskOptions): Promise<string> {
   const s = settings();
-  const base = s.proxy.trim() || 'https://api.anthropic.com';
+  const taking = route(s);
+  if (taking === 'none') {
+    throw new Error('No key yet. Sign in to use the shared one, or add your own under Settings.');
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'anthropic-version': '2023-06-01',
   };
-  // A proxy holds its own credentials; only the direct route needs the key,
-  // and only the direct route needs the browser-access opt-in.
-  if (!s.proxy.trim()) {
+  let url: string;
+
+  if (taking === 'proxy') {
+    // A proxy holds its own credentials; nothing goes in the headers.
+    url = `${s.proxy.trim().replace(/\/$/, '')}/v1/messages`;
+  } else if (taking === 'shared') {
+    // The function verifies the account and meters the call.
+    url = sharedEndpoint();
+    headers.Authorization = `Bearer ${sessionToken}`;
+  } else {
+    url = 'https://api.anthropic.com/v1/messages';
     headers['x-api-key'] = s.apiKey.trim();
     headers['anthropic-dangerous-direct-browser-access'] = 'true';
   }
 
-  const res = await fetch(`${base.replace(/\/$/, '')}/v1/messages`, {
+  const res = await fetch(url, {
     method: 'POST',
     headers,
     signal: options.signal,

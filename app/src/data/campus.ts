@@ -19,6 +19,13 @@ import type { CampusLink } from '../lib/types';
  */
 export const CAMPUS_LINKS: CampusLink[] = [
   {
+    id: 'onevu',
+    name: 'oneVU',
+    url: 'https://onevu.vanderbilt.edu',
+    hint: '',
+    note: 'The portal the other apps sit behind. Everything there is single-sign-on, so the app links you to it rather than pretending to read it — open an app you use often, copy its address, and add it below as a link of your own.',
+  },
+  {
     id: 'myvu',
     name: 'myVU',
     url: '',

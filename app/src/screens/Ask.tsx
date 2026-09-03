@@ -9,6 +9,7 @@ import {
   ask,
   configured,
   makeCards,
+  route,
   saveSettings,
   settings,
   type Turn,
@@ -165,10 +166,9 @@ export function Ask() {
             Where the answers come from
           </div>
           <div style={{ fontSize: 13, opacity: 0.78, lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
-            A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed
-            about it: anything running in this browser can read a key in this browser, so if you
-            have somewhere to run a small proxy, put the key there instead and give the app its
-            address. The proxy field wins when both are filled in.
+            {route() === 'shared'
+              ? 'Signed in, so this is already working — the shared key lives in a server function, metered per account, and never reaches this browser. Add your own key below only if you want past the monthly limit.'
+              : 'A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed about it: anything running in this browser can read a key in this browser. Signing in uses the shared key instead, and a proxy you run is better still — the proxy field wins when both are filled in.'}
           </div>
 
           <input
@@ -246,7 +246,8 @@ export function Ask() {
           }}
         >
           <div className="kicker">
-            {guide.code} · {MODELS.find((m) => m.id === config.model)?.label ?? config.model}
+            {guide.code} · {MODELS.find((m) => m.id === config.model)?.label ?? config.model} ·{' '}
+            {route() === 'shared' ? 'shared key' : route() === 'proxy' ? 'your proxy' : 'your key'}
           </div>
           <button
             type="button"

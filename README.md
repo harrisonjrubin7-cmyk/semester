@@ -1,9 +1,15 @@
 # Semester
 
-An app for one Vanderbilt semester — Fall 2026, four courses, every deadline and
-study guide in one place.
+Upload your syllabi; get the semester back as an app — every deadline with the
+sentence it came from, a study guide you can drill, narrated lessons, a deck, a
+document, and a calendar that knows when your classes are.
 
-**Live: https://harrisonjrubin7-cmyk.github.io/semester/**
+Built first for one Vanderbilt semester (Fall 2026, four courses, by hand), then
+generalised: anyone can sign in, upload their own syllabus and readings, and get
+the same thing for their own courses.
+
+**Live: https://harrisonjrubin7-cmyk.github.io/semester/** · running your own
+copy: [SETUP.md](SETUP.md)
 
 On a phone, open that in Safari or Chrome and use *Add to Home Screen* — it then
 runs full screen with its own icon, and keeps working with no signal. Lessons
@@ -63,6 +69,20 @@ with chapter marks that seek:
 Chapter marks were measured from the audio rather than estimated wherever the
 recording allowed it. Details in [`audio/README.md`](audio/README.md).
 
+## Starting from nothing
+
+A new account is empty, and says so. **Add your first course** takes a syllabus —
+PDF, Word or pasted text — plus any readings you have, reads them in the browser,
+and asks Claude for the structure. What comes back is checked before you see it:
+dates forced into the real calendar, ids made unique, and every quote tested
+against the document it claims to come from, because the app presents those as
+the syllabus's own words. Then you get a preview, including what was thrown out,
+and decide whether to keep it.
+
+Signing in is optional and does one thing: keeps the same semester on your phone
+and your laptop. It also lets you generate a course without supplying an API key,
+through a server function that meters usage per account.
+
 ## Six ways through the same material
 
 Each course carries one body of material, and every study mode is a different
@@ -113,7 +133,7 @@ localhost) and the dev server to sign its client secret.
 Brightspace grades and submissions need D2L's Valence API, which Vanderbilt has
 to issue a key for. The calendar feed is what a student can turn on alone.
 
-**myVU, YES and AnchorLink** have no API a student can use alone, so the app
+**oneVU, myVU, YES and AnchorLink** have no API a student can use alone, so the app
 links out to them rather than pretending to read them: one tap from Connect,
 opening the installed app where the phone recognises the address. Every address
 is editable and your edit is what persists — myVU ships with none at all,
@@ -127,10 +147,11 @@ weakest at go in with the question, so the answer is about this course rather
 than the subject in general — and an answer worth keeping becomes cards on the
 course with one tap.
 
-It needs a key. A key in a browser can be read by anything in that browser, so
-the app stores it on-device only, sends it only to Anthropic, and treats a
-proxy that holds the key server-side as the better option rather than the
-fallback.
+Three routes to the API, in the order the app prefers them: a proxy you run, the
+shared key behind the Edge Function when you are signed in, or your own key on
+the device. A key in a browser can be read by anything in that browser — which
+is why the shared one lives in a function, metered per account, and why the
+screen tells you which route a question is about to take.
 
 ## Phone, iPad, laptop, or its own window
 

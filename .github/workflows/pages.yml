@@ -60,6 +60,11 @@ jobs:
           # e.g. /semester/ — supplied by configure-pages, so a rename of the
           # repo cannot silently break every asset path.
           VITE_BASE: ${{ steps.pages.outputs.base_path }}/
+          # Repository variables, not secrets: both are public values by
+          # design, and masking them would only make the build log lie. With
+          # them unset the site still builds and runs device-only.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY }}
         run: npm run build
 
       # Pages serves static files, so a deep link like /semester/?screen=study

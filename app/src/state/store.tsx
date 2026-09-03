@@ -25,6 +25,7 @@ import type {
 } from '../lib/types';
 import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
 import { buildCatalog, type Catalog } from '../data/catalog';
+import { setSessionToken } from '../lib/claude';
 import {
   accountOf,
   cloudConfigured,
@@ -34,6 +35,7 @@ import {
   push as pushCloud,
   type Account,
 } from '../lib/cloud';
+import type { Session } from '@supabase/supabase-js';
 import { SEED_MODULES } from '../data/seed';
 import { newId } from '../lib/files';
 import { dateToIso, isoToDate } from '../lib/date';
@@ -796,8 +798,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!cloudConfigured) return;
-    void currentSession().then((s) => setAccount(accountOf(s)));
-    return onAuthChange((s) => setAccount(accountOf(s)));
+    const take = (s: Session | null) => {
+      setAccount(accountOf(s));
+      // The shared key is only available to a signed-in account, and this is
+      // what proves the account to the function.
+      setSessionToken(s?.access_token ?? null);
+    };
+    void currentSession().then(take);
+    return onAuthChange(take);
   }, []);
 
   // On sign-in, whichever copy is newer wins — and the app says which.
