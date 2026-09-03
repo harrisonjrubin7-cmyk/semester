@@ -121,8 +121,15 @@ export function AddMaterial() {
         Something new for {guide.code}
       </div>
       <div style={{ fontSize: 13, opacity: 0.7, marginTop: 6, textWrap: 'pretty' }}>
-        Paste it, attach it, or both. Whatever reads as a question and an answer becomes cards;
-        the rest is kept as notes. Every study mode picks it up as soon as you save.
+        A chapter, a handout, a lecture, a recording. Paste it, attach it, photograph it, or
+        record it — whatever reads as a question and an answer becomes cards, and the rest is kept
+        as the unit's notes.
+      </div>
+      <div style={{ fontSize: 12.5, opacity: 0.58, marginTop: 8, lineHeight: 1.5 }}>
+        The moment you save, Cards, Quiz, Read, Cram and the slides for this course all include
+        it. Nothing is regenerated and nothing you had is replaced — the new material is layered
+        over the syllabus the course was built from, and anything you add is listed at the bottom of
+        this screen where it can be taken out again.
       </div>
 
       <SectionLabel>Which course</SectionLabel>

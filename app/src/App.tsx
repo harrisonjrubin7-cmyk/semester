@@ -124,7 +124,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'lesson':
       return { kicker: `${guide.code} · lesson`, title: 'Watch' };
     case 'update':
-      return { kicker: `${guide.code} · new material`, title: 'Add' };
+      return { kicker: `${guide.code} · into every study mode`, title: 'Add a reading' };
     case 'connect':
       return { kicker: 'Accounts and calendars', title: 'Connect' };
     case 'ask':

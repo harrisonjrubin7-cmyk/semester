@@ -347,6 +347,15 @@ export function CourseDetail() {
         Study this course
       </button>
 
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => dispatch({ type: 'openUpdate', courseId: course.id, unit: null })}
+        style={{ height: 44, marginTop: 8 }}
+      >
+        Add a reading to this course
+      </button>
+
       {course.email ? (
         <button
           type="button"

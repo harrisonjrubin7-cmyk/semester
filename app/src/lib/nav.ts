@@ -81,6 +81,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'update',
+    label: 'Add a reading',
+    blurb: 'New material into a course — and every study mode picks it up.',
+    keywords: 'reading add material update new chapter article handout slides lecture notes supplement extra pdf paste attach cards quiz guide refresh keep current course content',
+    group: 'Study',
+    root: 'study',
+  },
+  {
     screen: 'draw',
     label: 'Draw it',
     blurb: 'A graph, a flow, a timeline or a matrix — drawn from what you describe.',
@@ -212,7 +220,6 @@ const NESTED: Partial<Record<Screen, Screen>> = {
   quiz: 'study',
   lesson: 'study',
   slides: 'study',
-  update: 'study',
   note: 'mine',
   search: 'home',
 };

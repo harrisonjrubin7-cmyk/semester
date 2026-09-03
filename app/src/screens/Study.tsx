@@ -226,6 +226,22 @@ export function Study() {
         })}
       </div>
 
+      {/* Adding a reading used to be reachable only from inside a guide, two
+          screens down, so the thing that keeps a course current was the
+          hardest thing in it to find. */}
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => dispatch({ type: 'openUpdate', courseId: state.guideId, unit: null })}
+        style={{ height: 44, marginTop: 14 }}
+      >
+        + Add a reading to a course
+      </button>
+      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+        A chapter, a handout, a lecture — paste or attach it and the cards, the quiz, the guide
+        and the cram sheet all take it in.
+      </div>
+
         </>
       )}
 
