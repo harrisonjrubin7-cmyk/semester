@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
+import { ProjectFile } from '../components/ProjectFile';
 import { ChipRow, SectionLabel } from '../components/ui';
 import { Check, Plus } from '../components/Icons';
 import { extractText } from '../lib/extract';
@@ -10,10 +11,11 @@ import { ask, configured, route } from '../lib/claude';
 import { datedItems } from '../lib/select';
 import type { CourseId } from '../lib/types';
 
-type Tab = 'plan' | 'draft' | 'ask';
+type Tab = 'plan' | 'file' | 'draft' | 'ask';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'plan', label: 'Break it down' },
+  { id: 'file', label: 'Project file' },
   { id: 'draft', label: 'Read my draft' },
   { id: 'ask', label: 'Anything else' },
 ];
@@ -267,6 +269,8 @@ export function Work() {
       )}
 
       {/* ── Anything else ──────────────────────────────────────────────── */}
+      {tab === 'file' && <ProjectFile courseId={courseId} course={`${guide.code} — ${guide.name}`} />}
+
       {tab === 'ask' && (
         <>
           <SectionLabel>What do you need</SectionLabel>
