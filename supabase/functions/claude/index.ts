@@ -33,8 +33,13 @@ const MONTHLY_CALLS = Number(Deno.env.get('MONTHLY_CALL_LIMIT') ?? '60');
 
 const cors = {
   'Access-Control-Allow-Origin': Deno.env.get('ALLOWED_ORIGIN') ?? '*',
-  'Access-Control-Allow-Headers': 'authorization, content-type',
+  // Every header the app actually sends. A browser refuses the whole request
+  // when a preflight omits one — anthropic-version is on every call, and
+  // leaving it out here fails before the function ever runs.
+  'Access-Control-Allow-Headers':
+    'authorization, content-type, anthropic-version, apikey, x-client-info',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 const json = (body: unknown, status = 200) =>

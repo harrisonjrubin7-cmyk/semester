@@ -73,8 +73,23 @@ Without this, each user pastes their own API key under **Ask Claude →
 Settings** and the app works fine. With it, a signed-in user can generate a
 course with no key at all.
 
+**From the dashboard, no tooling required:**
+
+1. **Edge Functions → Deploy a new function → via the editor.** Name it
+   exactly `claude` — the app calls `/functions/v1/claude`.
+2. Paste [`supabase/functions/claude/index.ts`](supabase/functions/claude/index.ts)
+   in, replacing whatever the editor starts with, and deploy.
+3. **Project Settings → Edge Functions → Secrets**: add `ANTHROPIC_API_KEY`
+   (from console.anthropic.com), and optionally `MONTHLY_CALL_LIMIT`.
+
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected by Supabase — do
+not add them yourself, and do not put the service key anywhere else.
+
+**Or from a terminal:**
+
 ```bash
 npm install -g supabase
+supabase login
 supabase link --project-ref <project-ref>
 supabase secrets set ANTHROPIC_API_KEY=sk-ant-…
 supabase secrets set MONTHLY_CALL_LIMIT=60      # per account, optional
