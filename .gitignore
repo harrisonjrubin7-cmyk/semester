@@ -1,0 +1,22 @@
+# Dependencies and build caches at the repo root.
+#
+# `app/` has had its own .gitignore since the beginning; the root had none, so
+# a stray `npx --prefix app` run from here wrote a vitest results cache into a
+# root node_modules and git tracked it. That one file then turned up as an
+# uncommitted change after every test run, for the rest of time.
+node_modules/
+.vite/
+
+# Python, for the pipeline.
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Local secrets. .env.example is committed; nothing else is.
+.env
+.env.local
+.env.*.local
+
+.DS_Store
+*.log
