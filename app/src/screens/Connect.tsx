@@ -37,7 +37,7 @@ import type { CampusLink, FeedSource } from '../lib/types';
  * myVU starts empty on purpose. Where it opens differs between people and
  * devices, and a confident wrong link is worse than a field that asks.
  */
-const GROUPS = ['Campus', 'Tickets', 'Social', 'Yours'] as const;
+const GROUPS = ['Campus', 'Books', 'Tickets', 'Social', 'Yours'] as const;
 
 function CampusLinks() {
   const { state, dispatch } = useStore();

@@ -318,7 +318,7 @@ export interface CampusLink {
   hint: string;
   note: string;
   /** Which heading it sits under. Links you add yourself go under "Yours". */
-  group?: 'Campus' | 'Tickets' | 'Social' | 'Yours';
+  group?: 'Campus' | 'Books' | 'Tickets' | 'Social' | 'Yours';
 }
 
 /** An external calendar the app reads — Brightspace, Outlook, anything .ics. */
@@ -391,6 +391,7 @@ export type Screen =
   | 'brief'
   | 'essay'
   | 'deck'
+  | 'exam'
   | 'slides'
   | 'account'
   | 'cloud';

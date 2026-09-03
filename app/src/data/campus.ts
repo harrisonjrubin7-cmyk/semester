@@ -105,6 +105,30 @@ export const CAMPUS_LINKS: CampusLink[] = [
     group: 'Tickets',
   },
 
+  // ── Books and kit ───────────────────────────────────────────────────────
+  {
+    id: 'bookstore',
+    name: 'Vanderbilt Bookstore',
+    // The address this was taken from was a paid-search landing URL carrying
+    // cm_mmc, gad_source, gad_campaignid, gbraid and gclid — an advertising
+    // campaign id and a Google click id, which identifies one specific click
+    // by one specific person. This app is used by more than one person, so
+    // shipping them would attribute everybody's visit to one student's ad
+    // click. The store is the same page without them.
+    url: 'https://www.bkstr.com/vanderbiltstore/home',
+    hint: '',
+    note: 'Textbooks, supplies and kit. Course materials can be looked up by term and course number, which is what the codes on your Courses screen are.',
+    group: 'Books',
+  },
+  {
+    id: 'bookstore-textbooks',
+    name: 'Course materials',
+    url: 'https://www.bkstr.com/vanderbiltstore/shop/textbooks-and-course-materials',
+    hint: '',
+    note: 'The textbook lookup itself. Check it against your syllabus before buying — an edition listed here is not always the edition assigned.',
+    group: 'Books',
+  },
+
   // ── Social ──────────────────────────────────────────────────────────────
   // These are the app's best guess at the official accounts, not verified
   // facts — the same rule as every other address here. Each is one tap to

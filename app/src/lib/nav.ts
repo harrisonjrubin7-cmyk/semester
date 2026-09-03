@@ -130,6 +130,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'exam',
+    label: 'Practice paper',
+    blurb: 'A paper with a shape, a total and a clock — sat, then marked against a key.',
+    keywords: 'practice test exam quiz paper mock midterm final past paper questions multiple choice short answer essay question mark marking key revision revise study test generator sit timed',
+    group: 'Study',
+    root: 'study',
+  },
+  {
     screen: 'deck',
     label: 'Make a deck',
     blurb: 'A real PowerPoint file — from a unit you have, or from a brief.',
