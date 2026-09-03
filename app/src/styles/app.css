@@ -42,6 +42,14 @@
   --app-accent-deep: #949cab;
   --app-accent-wash: rgba(212, 217, 226, 0.12);
 
+  /* The one colour in the palette, spent on the one thing worth a colour:
+     a deadline that has gone by. Oxidised rather than red — it has to be
+     legible as a warning without turning a sterling interface into a
+     dashboard. Nothing else in the app is allowed to use it. */
+  --app-warn: #c8785f;
+  --app-warn-line: rgba(200, 120, 95, 0.45);
+  --app-warn-wash: rgba(200, 120, 95, 0.09);
+
   /* Two edge weights, because light has a direction. A raised surface catches
      it along the top and loses it underneath; drawing both is the cheapest
      thing that separates a modern dark interface from a flat one. */

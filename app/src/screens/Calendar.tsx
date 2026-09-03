@@ -1,4 +1,6 @@
 import { useStore } from '../state/store';
+import { DeadlineRow } from '../components/DeadlineRow';
+import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, EmptyState, SectionLabel, Segmented } from '../components/ui';
@@ -230,25 +232,13 @@ function DayView() {
         <>
           <SectionLabel>Due</SectionLabel>
           {due.map((i) => (
-            <button
+            <DeadlineRow
               key={i.id}
-              type="button"
-              className="bare tappable"
-              onClick={() => dispatch({ type: 'openItem', id: i.id })}
-              style={{
-                display: 'flex',
-                gap: 10,
-                alignItems: 'center',
-                padding: '12px 0',
-                borderBottom: '1px solid var(--app-line)',
-              }}
-            >
-              <span className="tag tag-accent">{catalog.byId[i.c]?.code}</span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{i.title}</span>
-                <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>{i.dueTime}</span>
-              </span>
-            </button>
+              item={i}
+              tone={standingOf(i, state.done)}
+              meta={i.dueTime}
+              trail={null}
+            />
           ))}
         </>
       )}
@@ -683,25 +673,13 @@ function MonthView() {
       </SectionLabel>
 
       {selItems.map((i) => (
-        <button
+        <DeadlineRow
           key={i.id}
-          type="button"
-          className="bare tappable"
-          onClick={() => dispatch({ type: 'openItem', id: i.id })}
-          style={{
-            display: 'flex',
-            gap: 12,
-            alignItems: 'center',
-            padding: '12px 0',
-            borderBottom: '1px solid var(--app-line)',
-          }}
-        >
-          <span className="tag tag-accent">{catalog.byId[i.c]?.code}</span>
-          <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{i.title}</span>
-            <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>{i.dueTime}</span>
-          </span>
-        </button>
+          item={i}
+          tone={standingOf(i, state.done)}
+          meta={i.dueTime}
+          trail={null}
+        />
       ))}
 
       {selItems.length === 0 && (

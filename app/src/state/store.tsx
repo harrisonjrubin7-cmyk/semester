@@ -139,6 +139,8 @@ interface Ephemeral {
   mineTab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done';
   coursesTab: 'courses' | 'due' | 'grades';
+  /** Which standing the Coming-up list is showing: ahead, missed or finished. */
+  dueTab: 'ahead' | 'overdue' | 'done';
   studyTab: 'guides' | 'tonight' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
@@ -226,6 +228,7 @@ function initialEphemeral(now: Date): Ephemeral {
     mineTab: 'tasks',
     homeTab: 'today',
     coursesTab: 'courses',
+    dueTab: 'ahead',
     studyTab: 'guides',
     noteId: null,
     lessonUnit: 0,
@@ -359,6 +362,7 @@ export type Action =
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
+  | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
   | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
   | { type: 'toggleTask'; id: string }
@@ -602,6 +606,9 @@ export function reducer(state: State, action: Action): State {
 
     case 'setCoursesTab':
       return { ...state, coursesTab: action.tab };
+
+    case 'setDueTab':
+      return { ...state, dueTab: action.tab };
 
     case 'setStudyTab':
       return { ...state, studyTab: action.tab };

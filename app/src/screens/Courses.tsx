@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { DateRow, SectionLabel, Segmented } from '../components/ui';
+import { SectionLabel, Segmented } from '../components/ui';
 import { Grades } from './Grades';
 import { appleMapsUrl, directionsUrl, fromRoom, prefersApple } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
+import { DeadlineRow } from '../components/DeadlineRow';
+import { badge, overdueLine, split } from '../lib/standing';
 import type { Course } from '../lib/types';
 
 /** The one switcher, so the three views cannot drift apart. */
@@ -58,54 +60,7 @@ export function Courses() {
     return (
       <div style={{ padding: 18 }}>
         <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
-        <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5, marginBottom: 4 }}>
-          Everything still ahead of you, nearest first, across every course.
-        </div>
-        {ahead.length === 0 && (
-          <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.55 }}>
-            Nothing left this semester.
-          </div>
-        )}
-        {ahead.map((i) => (
-          <button
-            key={i.id}
-            type="button"
-            className="bare tappable"
-            onClick={() => dispatch({ type: 'openItem', id: i.id })}
-            style={{
-              display: 'flex',
-              gap: 12,
-              alignItems: 'center',
-              padding: '13px 0',
-              borderBottom: '1px solid var(--app-line)',
-              textAlign: 'left',
-            }}
-          >
-            <span className="tag tag-accent" style={{ flex: 'none' }}>
-              {catalog.byId[i.c]?.code}
-            </span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3 }}>{i.title}</span>
-              <span style={{ display: 'block', fontSize: 11, opacity: 0.55, marginTop: 2 }}>
-                {i.dueShort} · {i.kind}
-                {i.weight ? ` · ${i.weight}` : ''}
-              </span>
-            </span>
-            <span
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: 11,
-                opacity: 0.45,
-                flex: 'none',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-              }}
-            >
-              {i.daysAway === 0 ? 'today' : `${i.daysAway}d`}
-            </span>
-          </button>
-        ))}
-        <div style={{ height: 22 }} />
+        <ComingUp />
       </div>
     );
   }
@@ -190,6 +145,58 @@ export function Courses() {
       </button>
       <div style={{ height: 12 }} />
     </div>
+  );
+}
+
+/**
+ * Coming up, overdue, done.
+ *
+ * Deadlines used to vanish at midnight — `upcomingItems` drops anything in the
+ * past, so a missed paper stopped being shown rather than being shown as a
+ * problem. These are the same deadlines under three headings, and the middle
+ * one is the one that was missing.
+ */
+function ComingUp() {
+  const { state, dispatch, now, catalog } = useStore();
+  const all = datedItems(catalog, now);
+  const { ahead, overdue, done } = split(all, state.done);
+  const tab = state.dueTab;
+  const list = tab === 'overdue' ? overdue : tab === 'done' ? done : ahead;
+
+  const blurb =
+    tab === 'overdue'
+      ? overdueLine(overdue, (i) => catalog.byId[i.c]?.code ?? '')
+      : tab === 'done'
+        ? `${done.length} finished this semester. Tick one again to undo it.`
+        : 'Everything still ahead of you, nearest first, across every course.';
+
+  return (
+    <>
+      <Segmented
+        options={[
+          { id: 'ahead', label: `Ahead${badge(ahead.length)}` },
+          { id: 'overdue', label: `Overdue${badge(overdue.length)}` },
+          { id: 'done', label: `Done${badge(done.length)}` },
+        ]}
+        value={tab}
+        onChange={(t) => dispatch({ type: 'setDueTab', tab: t })}
+        style={{ marginBottom: 12 }}
+      />
+      <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5, marginBottom: 4 }}>{blurb}</div>
+      {list.length === 0 && (
+        <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.55 }}>
+          {tab === 'overdue'
+            ? 'Nothing has gone by unticked.'
+            : tab === 'done'
+              ? 'Nothing ticked off yet. The box on any row does it.'
+              : 'Nothing left this semester.'}
+        </div>
+      )}
+      {list.map((i) => (
+        <DeadlineRow key={i.id} item={i} tone={tab} />
+      ))}
+      <div style={{ height: 22 }} />
+    </>
   );
 }
 
@@ -293,7 +300,10 @@ function LmsLink({ course }: { course: Course }) {
 export function CourseDetail() {
   const { state, dispatch, now, catalog } = useStore();
   const course = catalog.byId[state.courseId];
-  const items = datedItems(catalog, now).filter((i) => i.c === course.id);
+  const mine = split(
+    datedItems(catalog, now).filter((i) => i.c === course.id),
+    state.done,
+  );
 
   return (
     <div style={{ padding: 18 }}>
@@ -360,17 +370,33 @@ export function CourseDetail() {
         </tbody>
       </table>
 
-      <SectionLabel style={{ margin: '24px 0 6px' }}>Everything ahead</SectionLabel>
-      {items.map((i) => (
-        <DateRow
-          key={i.id}
-          top={i.mon}
-          bottom={String(i.day)}
-          title={i.title}
-          meta={`${i.kind} · ${i.weight}`}
-          onClick={() => dispatch({ type: 'openItem', id: i.id })}
-        />
+      <SectionLabel style={{ margin: '24px 0 6px' }}>Still ahead</SectionLabel>
+      {mine.ahead.length === 0 && (
+        <div style={{ fontSize: 13, opacity: 0.5, padding: '8px 0' }}>
+          Nothing left in this course.
+        </div>
+      )}
+      {mine.ahead.map((i) => (
+        <DeadlineRow key={i.id} item={i} tone="ahead" />
       ))}
+
+      {mine.overdue.length > 0 && (
+        <>
+          <SectionLabel style={{ margin: '24px 0 6px' }}>Went by</SectionLabel>
+          {mine.overdue.map((i) => (
+            <DeadlineRow key={i.id} item={i} tone="overdue" />
+          ))}
+        </>
+      )}
+
+      {mine.done.length > 0 && (
+        <>
+          <SectionLabel style={{ margin: '24px 0 6px' }}>Done</SectionLabel>
+          {mine.done.map((i) => (
+            <DeadlineRow key={i.id} item={i} tone="done" />
+          ))}
+        </>
+      )}
 
       <div
         style={{

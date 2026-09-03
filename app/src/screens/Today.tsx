@@ -18,6 +18,7 @@ import {
 } from '../lib/select';
 import { minutesNow } from '../lib/date';
 import { datedEvents, datedItems } from '../lib/select';
+import { overdueCount } from '../lib/standing';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
 import { HourGrid } from '../components/HourGrid';
@@ -160,6 +161,63 @@ function YourTasks() {
   );
 }
 
+/**
+ * What went by without being ticked.
+ *
+ * Silence was the old behaviour: a deadline passed, the list it lived in
+ * dropped it, and the only signal was a count going down — which looks
+ * identical to finishing everything. This says the number out loud on the
+ * screen you open first, and goes straight to the list of them.
+ */
+function OverdueBanner() {
+  const { state, dispatch, now, catalog } = useStore();
+  const missed = overdueCount(datedItems(catalog, now), state.done);
+  if (missed === 0) return null;
+
+  return (
+    <button
+      type="button"
+      className="bare tappable"
+      onClick={() => {
+        dispatch({ type: 'setDueTab', tab: 'overdue' });
+        dispatch({ type: 'setCoursesTab', tab: 'due' });
+        dispatch({ type: 'go', screen: 'courses' });
+      }}
+      style={{
+        display: 'flex',
+        gap: 10,
+        alignItems: 'center',
+        width: '100%',
+        marginTop: 12,
+        padding: '11px 13px',
+        borderRadius: 12,
+        textAlign: 'left',
+        border: '1px solid var(--app-warn-line)',
+        background: 'var(--app-warn-wash)',
+      }}
+    >
+      <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.35 }}>
+        <strong style={{ fontWeight: 600 }}>
+          {missed} {missed === 1 ? 'deadline' : 'deadlines'} went by
+        </strong>{' '}
+        without being ticked off.
+      </span>
+      <span
+        style={{
+          flex: 'none',
+          fontFamily: 'var(--font-heading)',
+          fontSize: 11,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          opacity: 0.7,
+        }}
+      >
+        See them
+      </span>
+    </button>
+  );
+}
+
 /** Nav mode 1A — a fixed sequence: next class, checklist, rail, campus, week. */
 function TabHome() {
   const { state, dispatch, now, catalog } = useStore();
@@ -189,6 +247,7 @@ function TabHome() {
       {tab === 'today' && (
         <>
       <NextClassCard />
+      <OverdueBanner />
 
       <div
         style={{
