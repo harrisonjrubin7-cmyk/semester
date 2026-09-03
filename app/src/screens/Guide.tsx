@@ -4,30 +4,23 @@ import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, Meter, SectionLabel } from '../components/ui';
+import { ModePicker } from '../components/ModePicker';
+import { modeInfo, modesFor } from '../lib/modes';
 import { ChevronRight, Plus } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
 import { buildQuiz } from '../lib/quiz';
 import { asset } from '../lib/asset';
-import type { StudyMode } from '../lib/types';
-
-const MODES: { id: StudyMode; label: string }[] = [
-  { id: 'cards', label: 'Cards' },
-  { id: 'read', label: 'Read' },
-  { id: 'watch', label: 'Watch' },
-  { id: 'slides', label: 'Slides' },
-  { id: 'doc', label: 'Doc' },
-  { id: 'quiz', label: 'Quiz' },
-  { id: 'figures', label: 'Figures' },
-  { id: 'cases', label: 'Cases' },
-  { id: 'cram', label: 'Cram' },
-  { id: 'listen', label: 'Listen' },
-];
 
 export function Guide() {
-  const { state, dispatch } = useStore();
-  const { guide, figures: figMap, updates, onUnit } = useLive(state.guideId);
+  const { state, dispatch, catalog } = useStore();
+  const live = useLive(state.guideId);
+  const { guide, figures: figMap, updates, onUnit } = live;
   const cards = allCards(guide);
   const weak = weakestUnit(guide);
+  // What each way of studying holds for this course, so the picker can say so
+  // rather than making every mode look equally full.
+  const modes = modesFor(catalog, state.guideId, live);
+  const here = modeInfo(modes, state.mode);
 
   return (
     <div style={{ padding: 18 }}>
@@ -55,16 +48,69 @@ export function Guide() {
           : `${updates.length} added · add more`}
       </button>
 
-      <div style={{ marginTop: 16 }}>
-        <ChipRow
-          options={MODES.map((m) => m.label)}
-          value={MODES.find((m) => m.id === state.mode)?.label ?? 'Cards'}
-          onChange={(label) => {
-            const mode = MODES.find((m) => m.label === label);
-            if (mode) dispatch({ type: 'setMode', mode: mode.id });
+      {/*
+        Unrolled it is a menu of ten; rolled up it is one line saying where you
+        are. Both are right, at different points in a semester, so it is a
+        preference that persists rather than a guess made for you.
+      */}
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={() => dispatch({ type: 'toggleWays' })}
+        aria-expanded={state.waysOpen}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          width: '100%',
+          margin: '20px 0 8px',
+          textAlign: 'left',
+        }}
+      >
+        <SectionLabel style={{ margin: 0 }}>
+          {state.waysOpen ? 'Ways to study this' : `${here?.label ?? 'Cards'} · ${here?.count ?? ''}`}
+        </SectionLabel>
+        <span style={{ flex: 1 }} />
+        <span
+          style={{
+            fontSize: 10,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            opacity: 0.5,
+            fontFamily: 'var(--font-heading)',
+          }}
+        >
+          {state.waysOpen ? 'Hide' : `${modes.filter((m) => m.ready).length} ways`}
+        </span>
+        <ChevronRight
+          size={14}
+          style={{
+            opacity: 0.5,
+            flex: 'none',
+            transform: state.waysOpen ? 'rotate(90deg)' : 'none',
           }}
         />
-      </div>
+      </button>
+      {state.waysOpen && (
+        <ModePicker
+          modes={modes}
+          value={state.mode}
+          onChange={(mode) => dispatch({ type: 'setMode', mode })}
+        />
+      )}
+      {state.waysOpen && here && (
+        <div
+          style={{
+            fontSize: 12.5,
+            opacity: 0.62,
+            lineHeight: 1.45,
+            margin: '10px 0 2px',
+            textWrap: 'pretty',
+          }}
+        >
+          {here.ready ? here.blurb : here.missing}
+        </div>
+      )}
 
       {state.mode === 'cards' && (
         <>

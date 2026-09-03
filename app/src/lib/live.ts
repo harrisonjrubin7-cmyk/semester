@@ -47,7 +47,7 @@ export interface LiveGuide extends Guide {
 
 const NO_UPDATES: CourseUpdate[] = [];
 
-function forCourse(updates: CourseUpdate[], id: CourseId): CourseUpdate[] {
+export function forCourse(updates: CourseUpdate[], id: CourseId): CourseUpdate[] {
   const mine = updates.filter((u) => u.courseId === id);
   return mine.length ? mine.sort((a, b) => a.created - b.created) : NO_UPDATES;
 }

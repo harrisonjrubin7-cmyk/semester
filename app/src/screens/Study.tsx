@@ -1,7 +1,8 @@
 import { allCards } from '../data/catalog';
 import { useStore } from '../state/store';
 import { FirstRun } from './FirstRun';
-import { liveGuide } from '../lib/live';
+import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
+import { modesFor } from '../lib/modes';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
@@ -77,12 +78,24 @@ export function Study() {
         {catalog.courses.map((c) => {
           const g = liveGuide(catalog, c.id, state.updates);
           const cards = allCards(g).length;
+          const mine = forCourse(state.updates, c.id);
+          // Every way into this course that actually has something in it. They
+          // used to be reachable only by opening the guide and then finding a
+          // chip row that scrolled sideways, so most of them went unused.
+          const ways = modesFor(catalog, c.id, {
+            guide: g,
+            lessons: catalog.lessons[c.id] ?? {},
+            figures: mergeFigures(catalog.figures[c.id] ?? {}, mine),
+            extras: extraFigures(catalog.extraFigures[c.id] ?? [], mine),
+          }).filter((m) => m.ready);
           return (
-            <Blueprint
-              key={c.id}
-              onClick={() => dispatch({ type: 'openGuide', id: c.id })}
-              style={{ padding: '14px 15px', display: 'block' }}
-            >
+            <Blueprint key={c.id} style={{ padding: '14px 15px', display: 'block' }}>
+              <button
+                type="button"
+                className="bare tappable"
+                onClick={() => dispatch({ type: 'openGuide', id: c.id })}
+                style={{ display: 'block', width: '100%', textAlign: 'left' }}
+              >
               <div
                 style={{
                   display: 'flex',
@@ -91,7 +104,12 @@ export function Study() {
                   gap: 10,
                 }}
               >
-                <div className="chrome-text" style={{ fontSize: 20 }}>
+                {/* The code is the name of the thing and never wraps; the
+                    counts give way to it. */}
+                <div
+                  className="chrome-text"
+                  style={{ fontSize: 20, flex: 'none', whiteSpace: 'nowrap' }}
+                >
                   {g.code}
                 </div>
                 <div
@@ -101,12 +119,11 @@ export function Study() {
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     opacity: 0.55,
+                    textAlign: 'right',
+                    minWidth: 0,
                   }}
                 >
                   {g.units.length} units · {cards} cards
-                  {catalog.lessons[c.id] && Object.keys(catalog.lessons[c.id]).length > 0
-                    ? ` · ${Object.keys(catalog.lessons[c.id]).length} lessons`
-                    : ''}
                 </div>
               </div>
               <div style={{ fontSize: 13, opacity: 0.7, marginTop: 2 }}>{g.blurb}</div>
@@ -125,6 +142,38 @@ export function Study() {
               >
                 {g.mastery}% mastered
               </div>
+              </button>
+
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 6,
+                  marginTop: 12,
+                  paddingTop: 11,
+                  borderTop: '1px solid var(--app-line)',
+                }}
+              >
+                {ways.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className="btn"
+                    title={m.blurb}
+                    onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: m.id })}
+                    style={{
+                      flex: 'none',
+                      padding: '5px 10px',
+                      fontSize: 11,
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      background: 'transparent',
+                    }}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
             </Blueprint>
           );
         })}
@@ -132,8 +181,8 @@ export function Study() {
 
       <SectionLabel style={{ margin: '26px 0 4px' }}>Tonight’s 25 minutes</SectionLabel>
       <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 12, textWrap: 'pretty' }}>
-        Built from your four weakest units and what’s on the next quiz. Torres Colón’s routine,
-        applied across all four courses.
+        Your weakest unit in each course, and what’s on the next quiz — one short sitting rather
+        than a plan you will not keep.
       </div>
       {plan.map((p) => (
         <button

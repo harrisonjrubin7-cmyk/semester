@@ -50,6 +50,15 @@ import { dateToIso, isoToDate } from '../lib/date';
  */
 interface Persisted {
   nav: NavMode;
+  /**
+   * Whether the ten ways to study stay unrolled on a guide.
+   *
+   * Open is right the first time — otherwise six of the ten are a feature
+   * nobody knows exists. Closed is right on the hundredth night, when you came
+   * to drill cards and do not want to scroll past a menu to reach them. So it
+   * is a preference, and it remembers.
+   */
+  waysOpen: boolean;
   done: Record<string, boolean>;
   saved: Record<string, boolean>;
   notifs: Record<NotifKey, boolean>;
@@ -160,6 +169,7 @@ const DEFAULT_PERSISTED: Persisted = {
   // sample is a button, not a default: nobody's first impression of the app
   // should be somebody else's timetable.
   sample: false,
+  waysOpen: true,
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -226,6 +236,7 @@ function loadPersisted(): Persisted {
       // ones; it keeps them, or the app would look wiped on the next load. A
       // genuinely new account starts empty.
       sample: saved.sample ?? saved.courses === undefined,
+    waysOpen: saved.waysOpen ?? true,
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -256,6 +267,7 @@ export function pickPersisted(state: State): Persisted {
     extraLinks: state.extraLinks,
     courses: state.courses,
     sample: state.sample,
+    waysOpen: state.waysOpen,
   };
 }
 
@@ -273,6 +285,7 @@ export type Action =
   | { type: 'toggleNotif'; k: NotifKey }
   | { type: 'togglePick'; id: string }
   | { type: 'setNav'; nav: NavMode }
+  | { type: 'toggleWays' }
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
   | { type: 'setCalTab'; tab: 'deadlines' | 'campus' }
@@ -388,6 +401,9 @@ export function reducer(state: State, action: Action): State {
 
     case 'setMode':
       return { ...state, mode: action.mode };
+
+    case 'toggleWays':
+      return { ...state, waysOpen: !state.waysOpen };
 
     case 'setEpisode':
       return { ...state, episodeId: action.id };
@@ -767,32 +783,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(id);
   }, []);
 
+  // Serialise once per dispatch — `state` is one object that changes identity
+  // when the reducer runs, so this is not per-render work.
+  //
+  // This used to be an effect with a hand-written list of sixteen state fields
+  // as its dependencies, which is a bug waiting on the next field: adding one
+  // to pickPersisted and forgetting it here produced a setting that changed on
+  // screen, survived nothing, and gave no hint why. Depending on the
+  // serialised result means anything pickPersisted returns is persisted, and
+  // the two lists cannot drift apart because there is only one.
+  const persisted = useMemo(() => JSON.stringify(pickPersisted(state)), [state]);
+
   useEffect(() => {
-    const persisted: Persisted = pickPersisted(state);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
+      localStorage.setItem(STORAGE_KEY, persisted);
     } catch {
       // Storage unavailable; the app still works for this session.
     }
-  }, [
-    state.nav,
-    state.done,
-    state.saved,
-    state.notifs,
-    state.picked,
-    state.seenOnboarding,
-    state.cleared,
-    state.tasks,
-    state.appointments,
-    state.notes,
-    state.updates,
-    state.feeds,
-    state.feedEvents,
-    state.linkUrls,
-    state.extraLinks,
-    state.courses,
-    state.sample,
-  ]);
+  }, [persisted]);
 
   // ── The account copy ────────────────────────────────────────────────────
   const [account, setAccount] = useState<Account | null>(null);
