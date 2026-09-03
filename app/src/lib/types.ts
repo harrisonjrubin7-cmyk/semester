@@ -373,6 +373,7 @@ export type Screen =
   | 'solve'
   | 'edit'
   | 'analyse'
+  | 'classmates'
   | 'slides'
   | 'account'
   | 'cloud';

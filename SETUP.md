@@ -43,6 +43,31 @@ signed-in one sees only their own rows.
 a chat window.** It bypasses row-level security entirely. The app has no use for
 it; only the Edge Function does, and Supabase gives the function its own copy.
 
+### Optional · Classmates
+
+Rooms per class, for people with a confirmed university address. SQL Editor →
+New query → paste [`supabase/classmates.sql`](supabase/classmates.sql) → Run,
+after `schema.sql`. Safe to run twice. Skip it and the Classmates screen says
+the tables are not set up; nothing else is affected.
+
+Three things about it are worth knowing before you turn it on, and the app says
+all three on screen:
+
+- **A confirmed `@vanderbilt.edu` address proves an address, not an enrolment.**
+  Nothing can read the registrar, so a room is people who *say* they are in that
+  class. Change the domain in `classmates.sql` (`verified_student()`) and in
+  `app/src/lib/classmates.ts` (`DOMAIN`) to run this for another university.
+- **Blocking is enforced by the database**, not the interface, so a blocked
+  person's messages never reach the other device.
+- **Reports are stored and nobody is watching them.** They land in
+  `public.reports`, which no client can read — you read it in the dashboard.
+  If you run this for other people, that is your job, and the app deliberately
+  does not imply somebody else is doing it.
+
+Turn on email confirmation (Authentication → Providers → Email → *Confirm
+email*) or the domain check is the only gate and an unconfirmed address passes
+it.
+
 ### Tell Supabase where the app lives
 
 Authentication → URL Configuration:

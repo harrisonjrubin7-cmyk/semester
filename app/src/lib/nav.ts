@@ -153,6 +153,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'classmates',
+    label: 'Classmates',
+    blurb: 'A room per class, for everyone at Vanderbilt taking it.',
+    keywords: 'classmates classmate message messages chat talk group groups room people students friends study group discussion ask class peers social connect dm',
+    group: 'Semester',
+    root: 'courses',
+  },
+  {
     screen: 'mine',
     label: 'Mine',
     blurb: 'Your own tasks, appointments, notes and files.',
