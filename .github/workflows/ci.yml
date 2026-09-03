@@ -1,0 +1,62 @@
+# What CI is for here: catching the two kinds of breakage that are invisible
+# until someone opens the app.
+#
+#   1. The app stops compiling or building — caught by tsc and vite.
+#   2. The course data goes quietly wrong — a figure attached to the wrong unit,
+#      a September deadline landing in October, a lesson pointing at an audio
+#      file that is not there. None of those are type errors and none of them
+#      throw at runtime; the app just renders the wrong thing. That is what
+#      pipeline/validate.mjs exists for, and why it runs here.
+#
+# Deliberately one Node version rather than a matrix: this is one person's app,
+# it is not published as a library, and three parallel jobs re-downloading a
+# repo with 200 MB of audio in it costs more than it tells you.
+
+name: CI
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+# A newer push makes an in-flight run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      # `npm ci` rather than `npm install`: it installs the lockfile exactly,
+      # so CI cannot pass on a dependency tree nobody has locally.
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: app
+        run: npx tsc -b --noEmit
+
+      - name: Lint
+        working-directory: app
+        run: npx oxlint src
+
+      - name: Build
+        working-directory: app
+        run: npm run build
+
+      # Runs at the repo root and needs no dependencies of its own — it reads
+      # the course modules as source.
+      - name: Validate the course data
+        run: node pipeline/validate.mjs
