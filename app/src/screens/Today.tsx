@@ -19,6 +19,7 @@ import {
 import { minutesNow } from '../lib/date';
 import { datedEvents, datedItems } from '../lib/select';
 import { overdueCount } from '../lib/standing';
+import { visible } from '../lib/feed';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
 import { HourGrid } from '../components/HourGrid';
@@ -220,12 +221,9 @@ function OverdueBanner() {
 
 /** Nav mode 1A — a fixed sequence: next class, checklist, rail, campus, week. */
 function TabHome() {
+  // Today's own sections derive what they need themselves, so what is left
+  // here is only what the week tab and the switcher use.
   const { state, dispatch, now, catalog } = useStore();
-  const today = itemsDueToday(catalog, now);
-  const doneCount = today.filter((i) => state.done[i.id]).length;
-  const left = today.length - doneCount;
-  const rail = railFor(catalog, now, state.appointments, state.commitments);
-  const minutes = minutesNow(now);
   const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
   const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
   const tab = state.homeTab;
@@ -244,11 +242,88 @@ function TabHome() {
         style={{ margin: '0 0 16px' }}
       />
 
-      {tab === 'today' && (
+      {tab === 'today' && <TodayFeed />}
+
+      {tab === 'week' && (
         <>
+      {nextEvent && (
+        <>
+          <SectionLabel style={{ margin: '14px 0 12px' }}>On campus</SectionLabel>
+          <Blueprint
+            onClick={() => dispatch({ type: 'openEvent', id: nextEvent.id })}
+            style={{ padding: '13px 14px', display: 'flex', gap: 13, alignItems: 'center' }}
+          >
+            <div
+              style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}
+            >
+              <div
+                style={{
+                  fontSize: 10,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  opacity: 0.5,
+                }}
+              >
+                {nextEvent.mon}
+              </div>
+              <div style={{ fontSize: 26 }}>{nextEvent.day}</div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 15, lineHeight: 1.25 }}>{nextEvent.title}</div>
+              <div style={{ fontSize: 12, opacity: 0.6 }}>
+                {nextEvent.time} · {nextEvent.where}
+              </div>
+            </div>
+            <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+          </Blueprint>
+        </>
+      )}
+
+      <SectionLabel>What’s coming</SectionLabel>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {ahead.slice(0, 5).map((u) => (
+          <DateRow
+            key={u.id}
+            top={u.dow}
+            bottom={String(u.day)}
+            title={u.title}
+            meta={`${catalog.byId[u.c].code} · ${u.weight}`}
+            onClick={() => dispatch({ type: 'openItem', id: u.id })}
+          />
+        ))}
+      </div>
+        </>
+      )}
+
+      {tab === 'hours' && <HoursToday />}
+
+      {tab === 'done' && <DoneToday />}
+
+      <div style={{ height: 26 }} />
+    </div>
+  );
+}
+
+/** One section of the Today feed, so its place in the order can be yours. */
+function Feed_next() {
+  return (
+    <>
       <NextClassCard />
       <OverdueBanner />
+    </>
+  );
+}
 
+/** One section of the Today feed, so its place in the order can be yours. */
+function Feed_due() {
+  const { state, dispatch, now, catalog } = useStore();
+  const today = itemsDueToday(catalog, now);
+  const doneCount = today.filter((i) => state.done[i.id]).length;
+  const left = today.length - doneCount;
+  // Used only by the all-clear line, which names what is next after today.
+  const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
+  return (
+    <>
       <div
         style={{
           display: 'flex',
@@ -368,9 +443,26 @@ function TabHome() {
           );
         })}
       </div>
+    </>
+  );
+}
 
+/** One section of the Today feed, so its place in the order can be yours. */
+function Feed_tasks() {
+  return (
+    <>
       <YourTasks />
+    </>
+  );
+}
 
+/** One section of the Today feed, so its place in the order can be yours. */
+function Feed_rail() {
+  const { state, now, catalog } = useStore();
+  const rail = railFor(catalog, now, state.appointments, state.commitments);
+  const minutes = minutesNow(now);
+  return (
+    <>
       <SectionLabel>Today’s rail</SectionLabel>
       {rail.length === 0 ? (
         <div style={{ fontSize: 14, opacity: 0.5, paddingBottom: 8 }}>
@@ -440,68 +532,47 @@ function TabHome() {
           })}
         </div>
       )}
-        </>
-      )}
-
-      {tab === 'week' && (
-        <>
-      {nextEvent && (
-        <>
-          <SectionLabel style={{ margin: '14px 0 12px' }}>On campus</SectionLabel>
-          <Blueprint
-            onClick={() => dispatch({ type: 'openEvent', id: nextEvent.id })}
-            style={{ padding: '13px 14px', display: 'flex', gap: 13, alignItems: 'center' }}
-          >
-            <div
-              style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}
-            >
-              <div
-                style={{
-                  fontSize: 10,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  opacity: 0.5,
-                }}
-              >
-                {nextEvent.mon}
-              </div>
-              <div style={{ fontSize: 26 }}>{nextEvent.day}</div>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, lineHeight: 1.25 }}>{nextEvent.title}</div>
-              <div style={{ fontSize: 12, opacity: 0.6 }}>
-                {nextEvent.time} · {nextEvent.where}
-              </div>
-            </div>
-            <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
-          </Blueprint>
-        </>
-      )}
-
-      <SectionLabel>What’s coming</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {ahead.slice(0, 5).map((u) => (
-          <DateRow
-            key={u.id}
-            top={u.dow}
-            bottom={String(u.day)}
-            title={u.title}
-            meta={`${catalog.byId[u.c].code} · ${u.weight}`}
-            onClick={() => dispatch({ type: 'openItem', id: u.id })}
-          />
-        ))}
-      </div>
-        </>
-      )}
-
-      {tab === 'hours' && <HoursToday />}
-
-      {tab === 'done' && <DoneToday />}
-
-      <div style={{ height: 26 }} />
-    </div>
+    </>
   );
 }
+
+/**
+ * Today, in the order you asked for.
+ *
+ * Every section is its own component so the list can be reordered and switched
+ * off from Settings rather than being one fixed scroll. `visible()` drops what
+ * is turned off and appends any section a saved order predates, so an older
+ * preference can never hide something that exists now.
+ */
+const FEED_PARTS: Record<string, () => React.JSX.Element> = {
+  next: Feed_next,
+  due: Feed_due,
+  tasks: Feed_tasks,
+  rail: Feed_rail,
+};
+
+function TodayFeed() {
+  const { state } = useStore();
+  const order = visible(state.feedOrder, state.feedHidden);
+
+  if (order.length === 0) {
+    return (
+      <div style={{ fontSize: 13, opacity: 0.55, padding: '20px 0', lineHeight: 1.5 }}>
+        Every section of Today is switched off. Turn one back on under Me → Settings.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {order.map((id) => {
+        const Part = FEED_PARTS[id];
+        return Part ? <Part key={id} /> : null;
+      })}
+    </>
+  );
+}
+
 
 /**
  * What you have finished, which nothing in the app showed.

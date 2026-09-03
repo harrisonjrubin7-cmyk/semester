@@ -44,6 +44,7 @@ import { datedItems, railFor } from '../lib/select';
 import { score, type Reviews } from '../lib/review';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
+import { DEFAULT_ORDER } from '../lib/feed';
 import { dateToIso, isoToDate } from '../lib/date';
 
 /**
@@ -79,6 +80,12 @@ interface Persisted {
    * the picture is a week the app is wrong about.
    */
   commitments: Commitment[];
+  /** The order of the sections on Today, and which are switched off. */
+  feedOrder: string[];
+  feedHidden: Record<string, boolean>;
+  /** Which metal the app wears, and how large it sets type. */
+  accent: string;
+  textSize: string;
   /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
@@ -222,6 +229,10 @@ const DEFAULT_PERSISTED: Persisted = {
   grades: {},
   places: [],
   commitments: [],
+  feedOrder: DEFAULT_ORDER,
+  feedHidden: {},
+  accent: 'sterling',
+  textSize: 'normal',
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -298,6 +309,10 @@ function loadPersisted(): Persisted {
       grades: saved.grades ?? {},
       places: saved.places ?? [],
       commitments: saved.commitments ?? [],
+      feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
+      feedHidden: saved.feedHidden ?? {},
+      accent: saved.accent ?? 'sterling',
+      textSize: saved.textSize ?? 'normal',
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -333,6 +348,10 @@ export function pickPersisted(state: State): Persisted {
     grades: state.grades,
     places: state.places,
     commitments: state.commitments,
+    feedOrder: state.feedOrder,
+    feedHidden: state.feedHidden,
+    accent: state.accent,
+    textSize: state.textSize,
   };
 }
 
@@ -357,6 +376,9 @@ export type Action =
   | { type: 'addCommitment'; commitment: Omit<Commitment, 'id' | 'created'> }
   | { type: 'patchCommitment'; id: string; patch: Partial<Commitment> }
   | { type: 'removeCommitment'; id: string }
+  | { type: 'setFeedOrder'; order: string[] }
+  | { type: 'toggleFeedSection'; id: string }
+  | { type: 'setLook'; accent?: string; textSize?: string }
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
   | { type: 'setCalTab'; tab: 'deadlines' | 'campus' }
@@ -515,6 +537,22 @@ export function reducer(state: State, action: Action): State {
 
     case 'removeCommitment':
       return { ...state, commitments: state.commitments.filter((c) => c.id !== action.id) };
+
+    case 'setFeedOrder':
+      return { ...state, feedOrder: action.order };
+
+    case 'toggleFeedSection':
+      return {
+        ...state,
+        feedHidden: { ...state.feedHidden, [action.id]: !state.feedHidden[action.id] },
+      };
+
+    case 'setLook':
+      return {
+        ...state,
+        accent: action.accent ?? state.accent,
+        textSize: action.textSize ?? state.textSize,
+      };
 
     case 'setGrade':
       return { ...state, grades: { ...state.grades, [action.key]: action.value } };

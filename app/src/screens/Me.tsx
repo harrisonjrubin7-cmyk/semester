@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { ACCENTS, SECTIONS, SIZES, move, ordered } from '../lib/feed';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
-import { EmptyState, Meter, SectionLabel, Segmented, Toggle } from '../components/ui';
+import { EmptyState, Meter, SectionLabel, Segmented, TickBox, Toggle } from '../components/ui';
 import { SEED_SUMMARY } from '../data/seed';
 import { Bell, ChevronRight } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
@@ -367,6 +368,119 @@ export function Settings() {
         value={state.nav}
         onChange={(nav) => dispatch({ type: 'setNav', nav })}
       />
+
+      <SectionLabel style={{ margin: '26px 0 6px' }}>Your Today</SectionLabel>
+      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+        The right order is not the same for everyone. Somebody with a job and one class wants the
+        rail first; somebody with a paper due wants the checklist and would rather not scroll past
+        a countdown to a lecture they are already walking to.
+      </div>
+      {ordered(state.feedOrder).map((id, i, all) => {
+        const on = !state.feedHidden[id];
+        const section = SECTIONS.find((sx) => sx.id === id);
+        return (
+          <div
+            key={id}
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              borderBottom: '1px solid var(--app-line)',
+            }}
+          >
+            <button
+              type="button"
+              className="bare tappable"
+              onClick={() => dispatch({ type: 'toggleFeedSection', id })}
+              aria-label={on ? `Hide ${section?.label}` : `Show ${section?.label}`}
+              style={{ flex: 'none', width: 30, padding: '12px 2px 12px 0' }}
+            >
+              <TickBox on={on} />
+            </button>
+            <div style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : 0.5 }}>
+              <div style={{ fontSize: 14 }}>{section?.label ?? id}</div>
+              <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>{section?.blurb}</div>
+            </div>
+            <button
+              type="button"
+              className="bare"
+              disabled={i === 0}
+              onClick={() => dispatch({ type: 'setFeedOrder', order: move(state.feedOrder, id, -1) })}
+              aria-label={`Move ${section?.label} up`}
+              style={{ width: 26, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 15 }}
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="bare"
+              disabled={i === all.length - 1}
+              onClick={() => dispatch({ type: 'setFeedOrder', order: move(state.feedOrder, id, 1) })}
+              aria-label={`Move ${section?.label} down`}
+              style={{
+                width: 26,
+                flex: 'none',
+                opacity: i === all.length - 1 ? 0.2 : 0.6,
+                fontSize: 15,
+              }}
+            >
+              ↓
+            </button>
+          </div>
+        );
+      })}
+
+      <SectionLabel style={{ margin: '26px 0 6px' }}>How it looks</SectionLabel>
+      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+        All metals. The accent being a metal rather than a colour is most of why the app looks
+        drawn instead of like a dashboard, so these change the shade and not that.
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        {ACCENTS.map((a) => {
+          const on = state.accent === a.id;
+          return (
+            <button
+              key={a.id}
+              type="button"
+              className="btn"
+              onClick={() => dispatch({ type: 'setLook', accent: a.id })}
+              aria-pressed={on}
+              style={{
+                flex: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 7,
+                padding: '7px 12px',
+                fontSize: 12,
+                borderColor: on ? a.base : 'var(--app-line)',
+              }}
+            >
+              <span
+                style={{
+                  width: 11,
+                  height: 11,
+                  borderRadius: '50%',
+                  background: a.base,
+                  flex: 'none',
+                }}
+              />
+              {a.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{ marginTop: 12 }}>
+        <Segmented
+          options={SIZES.map((z) => ({ id: z.id, label: z.label }))}
+          value={state.textSize}
+          onChange={(textSize) => dispatch({ type: 'setLook', textSize })}
+        />
+        <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+          Scales the text. Buttons and the tab bar keep their size on purpose — a tap target that
+          grew with the type would push the bar off the bottom of a phone.
+        </div>
+      </div>
 
       <SectionLabel style={{ margin: '26px 0 2px' }}>Tell me when</SectionLabel>
       <Reminders />

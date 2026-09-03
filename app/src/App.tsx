@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useStore } from './state/store';
 import {
   Bell,
@@ -39,6 +40,7 @@ import { EditCourse } from './screens/EditCourse';
 import { Analyse } from './screens/Analyse';
 import { Classmates } from './screens/Classmates';
 import { Activities } from './screens/Activities';
+import { accent, scaleOf } from './lib/feed';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
@@ -468,6 +470,25 @@ function Rail() {
 export default function App() {
   const { state, dispatch } = useStore();
   const wide = useMedia(DESKTOP);
+
+  /**
+   * The chosen metal and type scale, set on the document root.
+   *
+   * On :root rather than on a wrapper so it reaches the tab bar, the rail and
+   * anything that renders outside the app's own column, and so a token defined
+   * in app.css is genuinely overridden rather than shadowed for part of the
+   * tree. Type scales by the root font size, which every rem in the sheet then
+   * follows; the px sizes written inline do not move, which is deliberate —
+   * a tap target that grew with the text would push the tab bar off screen.
+   */
+  useEffect(() => {
+    const chosen = accent(state.accent);
+    const root = document.documentElement;
+    root.style.setProperty('--app-accent', chosen.base);
+    root.style.setProperty('--app-accent-bright', chosen.bright);
+    root.style.setProperty('--app-accent-deep', chosen.deep);
+    root.style.fontSize = `${16 * scaleOf(state.textSize)}px`;
+  }, [state.accent, state.textSize]);
 
   if (state.screen === 'onboarding') {
     return (
