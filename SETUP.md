@@ -43,6 +43,23 @@ signed-in one sees only their own rows.
 a chat window.** It bypasses row-level security entirely. The app has no use for
 it; only the Edge Function does, and Supabase gives the function its own copy.
 
+### Tell Supabase where the app lives
+
+Authentication → URL Configuration:
+
+- **Site URL**: the deployed address, e.g.
+  `https://<you>.github.io/semester/`
+- **Redirect URLs**: add both that address and `http://localhost:5173/` (and
+  `http://localhost:5199/` if you use that port).
+
+Skip this and sign-up appears to work, but the confirmation email's link sends
+people to `localhost:3000` — Supabase's default — and the account never
+finishes. It is the most common thing to miss.
+
+Email confirmation is on by default. To let a new account sign in immediately
+while you are testing, Authentication → Providers → Email → turn off *Confirm
+email*.
+
 ### Google and Apple sign-in (optional)
 
 Authentication → Providers, switch on what you want, and paste each provider's
