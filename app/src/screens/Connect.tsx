@@ -37,6 +37,8 @@ import type { CampusLink, FeedSource } from '../lib/types';
  * myVU starts empty on purpose. Where it opens differs between people and
  * devices, and a confident wrong link is worse than a field that asks.
  */
+const GROUPS = ['Campus', 'Tickets', 'Social', 'Yours'] as const;
+
 function CampusLinks() {
   const { state, dispatch } = useStore();
   const [editing, setEditing] = useState<string | null>(null);
@@ -45,7 +47,12 @@ function CampusLinks() {
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
 
-  const links = [...CAMPUS_LINKS, ...state.extraLinks];
+  // Links you add yourself land under "Yours" rather than among the defaults,
+  // so which addresses the app guessed and which you chose stays obvious.
+  const links: CampusLink[] = [
+    ...CAMPUS_LINKS,
+    ...state.extraLinks.map((l) => ({ ...l, group: 'Yours' as const })),
+  ];
   const addressOf = (link: CampusLink) => state.linkUrls[link.id] ?? link.url;
 
   const host = (url: string) => {
@@ -66,9 +73,19 @@ function CampusLinks() {
 
   return (
     <>
-      <SectionLabel>Campus</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {links.map((link) => {
+      {/*
+        Grouped rather than one flat list. Eleven links under a single
+        heading reads as a dump; Campus, Tickets and Social are three
+        different errands and you are only ever on one of them.
+      */}
+      {GROUPS.map((group) => {
+        const inGroup = links.filter((l) => (l.group ?? 'Campus') === group);
+        if (inGroup.length === 0) return null;
+        return (
+          <div key={group}>
+            <SectionLabel>{group}</SectionLabel>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {inGroup.map((link) => {
           const url = addressOf(link);
           const open = editing === link.id;
           return (
@@ -179,7 +196,10 @@ function CampusLinks() {
             </div>
           );
         })}
-      </div>
+            </div>
+          </div>
+        );
+      })}
 
       {adding ? (
         <Blueprint style={{ padding: '13px 14px', marginTop: 12 }}>

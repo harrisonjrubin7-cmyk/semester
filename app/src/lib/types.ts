@@ -297,6 +297,8 @@ export interface CampusLink {
   /** Shown as the input's placeholder — a suggestion, not a claim. */
   hint: string;
   note: string;
+  /** Which heading it sits under. Links you add yourself go under "Yours". */
+  group?: 'Campus' | 'Tickets' | 'Social' | 'Yours';
 }
 
 /** An external calendar the app reads — Brightspace, Outlook, anything .ics. */
