@@ -68,12 +68,16 @@ export interface Behind {
   overdue: number;
   /** The week's own share of the term, for the heading. */
   label: string;
+  /** Ticked items counted by due date because no tick time was recorded. */
+  staleTicks: number;
 }
 
 export interface WeeklyInput {
   catalog: Catalog;
   now: Date;
   done: DoneMap;
+  /** When each deadline was ticked, where the app was recording it. */
+  tickedAt: Record<string, number>;
   tasks: PersonalTask[];
   sittings: Sitting[];
   reviews: Reviews;
@@ -88,11 +92,12 @@ function isoOf(d: Date): string {
 /**
  * The week just gone.
  *
- * "Ticked" is judged from the deadline's own date rather than from when the
- * box was ticked, because the app has never recorded the second one. That is
- * a real limitation and it is stated on the screen: a paper due Tuesday and
- * ticked on Saturday counts to the week it was due in, which is the week most
- * people would put it in anyway.
+ * A deadline counts to the week you ticked it, which is the honest answer to
+ * "what did I get done this week" and was not available until the app started
+ * recording the moment. Anything ticked before it started — and everything
+ * already in an existing account — has no timestamp, and falls back to the
+ * week it was due in. `staleTicks` counts those so the screen can say how much
+ * of the report rests on the fallback rather than quietly mixing the two.
  */
 export function behind(input: WeeklyInput): Behind {
   const { catalog, now, done } = input;
@@ -104,6 +109,17 @@ export function behind(input: WeeklyInput): Behind {
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   const inWeek = dated.filter((i) => i.date >= start && i.date < end);
+
+  // Ticked this week, by when the box was ticked. Anything with a recorded
+  // time is judged on that time wherever the deadline itself sat.
+  const ticked = dated.filter((i) => {
+    const at = input.tickedAt[i.id];
+    return at !== undefined && at >= start.getTime() && at < end.getTime();
+  });
+  const tickedIds = new Set(ticked.map((i) => i.id));
+
+  // And the ones with no recorded time, which fall back to their due date.
+  const fallback = inWeek.filter((i) => done[i.id] && input.tickedAt[i.id] === undefined);
   const startKey = isoOf(start);
   const endKey = isoOf(end);
 
@@ -116,8 +132,10 @@ export function behind(input: WeeklyInput): Behind {
   ).length;
 
   return {
-    done: inWeek.filter((i) => done[i.id]),
-    slipped: inWeek.filter((i) => !done[i.id] && i.isPast),
+    done: [...ticked, ...fallback].sort((a, b) => a.date.getTime() - b.date.getTime()),
+    // Slipped is still judged on the due date, which is what "slipped" means:
+    // it was due in this week and the week is going by with it undone.
+    slipped: inWeek.filter((i) => !done[i.id] && i.isPast && !tickedIds.has(i.id)),
     tasksDone: tasksInWeek.filter((t) => t.done).length,
     tasksOpen: tasksInWeek.filter((t) => !t.done).length,
     papers: input.sittings
@@ -126,6 +144,7 @@ export function behind(input: WeeklyInput): Behind {
     cardsDrilled,
     overdue: dated.filter((i) => i.isPast && !i.isToday && !done[i.id]).length,
     label: weekLabel(start),
+    staleTicks: fallback.length,
   };
 }
 

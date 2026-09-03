@@ -20,13 +20,19 @@ import type { Screen } from './types';
 /**
  * The shelves the directory is arranged on.
  *
- * Five, and each one small enough to be a tab rather than a section of a long
+ * Six, and each one small enough to be a tab rather than a section of a long
  * scroll. "Semester" used to hold ten unrelated things — the calendar, the
  * campus map, email, registration — because it was the only shelf wide enough
  * to take them. Splitting Make and Campus out is what lets Me show one shelf
  * at a time instead of all of them at once.
+ *
+ * Then Semester filled up again, at ten, while Make sat at four. The split
+ * this time is between the term and the work of maintaining it: Semester is
+ * the four things that *are* your term — today, the week, your courses, the
+ * calendar — and Upkeep is the six you go to when something needs correcting,
+ * adding or checking. Nobody opens "Check the dates" as part of their day.
  */
-export type Group = 'Study' | 'Make' | 'Semester' | 'Campus' | 'Yours';
+export type Group = 'Study' | 'Make' | 'Semester' | 'Upkeep' | 'Campus' | 'Yours';
 
 export interface Destination {
   screen: Screen;
@@ -166,7 +172,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Add a course',
     blurb: 'Upload a syllabus and get the course back, checked before you keep it.',
     keywords: 'new syllabus pdf upload generate create import',
-    group: 'Semester',
+    group: 'Upkeep',
     root: 'courses',
   },
   {
@@ -178,7 +184,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Edit the course',
     blurb: 'A syllabus is a first draft — fix dates, weightings, rooms and the AI policy.',
     keywords: 'edit change fix correct course syllabus date moved weighting grading room professor email meets credits delete deadline add assignment ai policy allowed banned rules',
-    group: 'Semester',
+    group: 'Upkeep',
     root: 'courses',
   },
   {
@@ -186,7 +192,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Weekly report',
     blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',
     keywords: 'weekly week report review recap summary sunday end of week retrospective what happened how did the week go progress last week next week',
-    group: 'Semester',
+    group: 'Upkeep',
     root: 'home',
   },
   {
@@ -194,7 +200,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'The week ahead',
     blurb: 'The next seven days in hours — what is promised, what is due, where the room is.',
     keywords: 'week ahead next seven days forecast load hours busy workload plan planning free time capacity schedule how much time commitments heaviest day room',
-    group: 'Semester',
+    group: 'Upkeep',
     root: 'home',
   },
   {
@@ -202,7 +208,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Check the dates',
     blurb: 'Your syllabus dates against what the LMS calendar says today.',
     keywords: 'check dates changed moved deadline reconcile compare diff brightspace calendar feed ics syllabus out of date wrong date updated rescheduled verify audit',
-    group: 'Semester',
+    group: 'Upkeep',
     root: 'courses',
   },
   {
@@ -210,7 +216,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Grades',
     blurb: 'What you have so far, and what the rest has to average.',
     keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
-    group: 'Semester',
+    group: 'Upkeep',
     root: 'courses',
   },
   {

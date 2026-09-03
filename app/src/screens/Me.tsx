@@ -26,7 +26,7 @@ import type { Screen } from '../lib/types';
 
 /**
  * The shelves, in the order they read: what you study, what you make with it,
- * the semester itself, the campus around it, and then you.
+ * the semester itself, the upkeep of it, the campus around it, and then you.
  *
  * One at a time rather than all five stacked. The list was a single scroll of
  * twenty-eight rows under five headings, which is a directory you read once
@@ -34,7 +34,7 @@ import type { Screen } from '../lib/types';
  * under. Five short shelves you can flick between is the same information and
  * a different object.
  */
-const GROUPS: Group[] = ['Study', 'Make', 'Semester', 'Campus', 'Yours'];
+const GROUPS: Group[] = ['Study', 'Make', 'Semester', 'Upkeep', 'Campus', 'Yours'];
 
 /** Already a tab on the phone, so listing them again is noise. */
 // Settings is a tab of this screen now, so listing it in the directory would

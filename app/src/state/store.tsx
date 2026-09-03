@@ -106,6 +106,15 @@ interface Persisted {
    */
   sources: Source[];
   /**
+   * When each deadline was ticked, epoch ms.
+   *
+   * Deliberately a second map rather than a change to `done`, which a dozen
+   * files read as `Record<string, boolean>`. Nothing that reads `done` has to
+   * know this exists, a saved store from before it simply has none, and the
+   * weekly report falls back to the due date where an entry is missing.
+   */
+  tickedAt: Record<string, number>;
+  /**
    * How the app looks. Every one of these is an id into a list in `lib/look.ts`
    * rather than a value, so a look saved today survives the palette being
    * retuned tomorrow, and an id from a future version falls back rather than
@@ -288,6 +297,7 @@ const DEFAULT_PERSISTED: Persisted = {
   recent: [],
   sittings: [],
   sources: [],
+  tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
   ground: 'ink',
@@ -391,6 +401,7 @@ function loadPersisted(): Persisted {
       recent: saved.recent ?? [],
       sittings: saved.sittings ?? [],
       sources: saved.sources ?? [],
+      tickedAt: saved.tickedAt ?? {},
       ...readLook({
         accent: saved.accent,
         textSize: saved.textSize,
@@ -439,6 +450,7 @@ export function pickPersisted(state: State): Persisted {
     recent: state.recent,
     sittings: state.sittings,
     sources: state.sources,
+    tickedAt: state.tickedAt,
     accent: state.accent,
     textSize: state.textSize,
     ground: state.ground,
@@ -679,8 +691,17 @@ export function reducer(state: State, action: Action): State {
     case 'setEpisode':
       return { ...state, episodeId: action.id };
 
-    case 'toggleDone':
-      return { ...state, done: { ...state.done, [action.id]: !state.done[action.id] } };
+    case 'toggleDone': {
+      const nowDone = !state.done[action.id];
+      // When, as well as whether. Without this the weekly report can only
+      // attribute a deadline to the week it was due in, which is wrong for
+      // anything finished early or late — and it is the one figure in that
+      // report better arithmetic could not have fixed.
+      const tickedAt = { ...state.tickedAt };
+      if (nowDone) tickedAt[action.id] = Date.now();
+      else delete tickedAt[action.id];
+      return { ...state, done: { ...state.done, [action.id]: nowDone }, tickedAt };
+    }
 
     case 'toggleSaved':
       return { ...state, saved: { ...state.saved, [action.id]: !state.saved[action.id] } };

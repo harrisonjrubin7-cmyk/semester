@@ -17,7 +17,7 @@ import {
   shape as shapeById,
 } from '../lib/project';
 import type { CourseId } from '../lib/types';
-import { asLines, forCourse } from '../lib/sources';
+import { UseSources, appendTo } from './UseSources';
 
 /**
  * The document you write the essay in.
@@ -38,11 +38,8 @@ import { asLines, forCourse } from '../lib/sources';
  * the 14th" will sometimes say the 21st.
  */
 export function ProjectFile({ courseId, course }: { courseId: CourseId; course: string }) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { dispatch, now, catalog } = useStore();
 
-  // The sources you have already kept for this course, so the refusal to
-  // invent one stops meaning "retype the same six readings every session".
-  const onFile = useMemo(() => forCourse(state.sources, courseId), [state.sources, courseId]);
 
   const [shapeId, setShapeId] = useState(SHAPES[0].id as string);
   const [instructions, setInstructions] = useState('');
@@ -217,26 +214,10 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         placeholder="One per line, however you have them written."
         style={{ width: '100%', minHeight: 80, resize: 'vertical', lineHeight: 1.5 }}
       />
-      {onFile.length > 0 && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setSources((now) => (now.trim() ? `${now.trim()}\n${asLines(onFile)}` : asLines(onFile)))}
-            style={{ flex: 1, height: 38, fontSize: 12.5 }}
-          >
-            Use my {onFile.length} kept {onFile.length === 1 ? 'source' : 'sources'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => dispatch({ type: 'go', screen: 'sources' })}
-            style={{ flex: 'none', height: 38, fontSize: 12.5 }}
-          >
-            Manage
-          </button>
-        </div>
-      )}
+      <UseSources
+        courseId={courseId}
+        onFill={(lines) => setSources((now) => appendTo(now, lines))}
+      />
       <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
         Yours only. Nothing here will invent an author, a title or a page number — a made-up
         citation looks exactly like a real one, and it goes in under your name.

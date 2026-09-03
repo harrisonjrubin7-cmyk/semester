@@ -20,6 +20,7 @@ import {
   toDeck,
   type Planned,
 } from '../lib/deck';
+import { UseSources, appendTo } from '../components/UseSources';
 
 /**
  * A deck you can hand in, from a unit or from a brief.
@@ -202,6 +203,11 @@ export function Deck() {
             onChange={(e) => setMaterial(e.target.value)}
             placeholder="Your notes, the reading, the findings. Paste it — this is the only thing it is allowed to state as fact."
             style={{ width: '100%', minHeight: 120, resize: 'vertical', lineHeight: 1.5 }}
+          />
+          <UseSources
+            courseId={state.guideId}
+            onFill={(lines) => setMaterial((now) => appendTo(now, lines))}
+            label="readings"
           />
           <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
             Anything not in here comes back as a blank in square brackets. A number invented on a

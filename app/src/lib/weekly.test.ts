@@ -54,6 +54,7 @@ const input = (over: Partial<WeeklyInput> = {}): WeeklyInput => ({
   catalog: catalog([]),
   now: NOW,
   done: {},
+  tickedAt: {},
   tasks: [],
   sittings: [],
   reviews: {},
@@ -95,6 +96,39 @@ describe('the week boundaries', () => {
 });
 
 describe('behind', () => {
+  it('counts a deadline to the week you ticked it, not the week it was due', () => {
+    // The whole point of recording the moment: a paper due last month and
+    // finished this week is this week's work.
+    const b = behind(
+      input({
+        catalog: catalog([item('late', 7, 20)]),
+        done: { late: true },
+        tickedAt: { late: new Date(2026, 8, 9).getTime() },
+      }),
+    );
+    expect(b.done.map((i) => i.id)).toEqual(['late']);
+    expect(b.staleTicks).toBe(0);
+  });
+
+  it('leaves out something ticked in a different week', () => {
+    const b = behind(
+      input({
+        catalog: catalog([item('paper', 8, 8)]),
+        done: { paper: true },
+        tickedAt: { paper: new Date(2026, 7, 20).getTime() },
+      }),
+    );
+    expect(b.done).toEqual([]);
+  });
+
+  it('falls back to the due date for a tick recorded before the app kept times', () => {
+    const b = behind(input({ catalog: catalog([item('old', 8, 8)]), done: { old: true } }));
+    expect(b.done.map((i) => i.id)).toEqual(['old']);
+    // Counted, so the screen can say how much rests on the fallback rather
+    // than quietly mixing the two.
+    expect(b.staleTicks).toBe(1);
+  });
+
   it('separates what was ticked from what went by', () => {
     const b = behind(
       input({

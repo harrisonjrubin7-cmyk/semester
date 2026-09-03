@@ -48,11 +48,12 @@ export function Weekly() {
         catalog,
         now,
         done: state.done,
+        tickedAt: state.tickedAt,
         tasks: state.tasks,
         sittings: state.sittings,
         reviews: state.reviews,
       }),
-    [catalog, now, state.done, state.tasks, state.sittings, state.reviews],
+    [catalog, now, state.done, state.tickedAt, state.tasks, state.sittings, state.reviews],
   );
 
   // Next week rather than the next seven days: this report is read at the end
@@ -294,8 +295,10 @@ export function Weekly() {
       </div>
       <PrintButton label="Print the week" style={{ marginTop: 8 }} />
       <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
-        A deadline counts to the week it was due in, not the week you ticked it — the app has
-        never recorded when a box was ticked, only that it was.
+        A deadline counts to the week you ticked it.
+        {back.staleTicks > 0
+          ? ` ${back.staleTicks} of these ${back.staleTicks === 1 ? 'was' : 'were'} ticked before the app started recording the moment, so ${back.staleTicks === 1 ? 'it counts' : 'they count'} to the week ${back.staleTicks === 1 ? 'it was' : 'they were'} due instead.`
+          : ''}
       </div>
       <div style={{ height: 26 }} />
     </div>

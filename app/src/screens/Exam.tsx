@@ -28,6 +28,7 @@ import {
   type Answer,
   type Question,
 } from '../lib/exam';
+import { UseSources, appendTo } from '../components/UseSources';
 
 type Stage = 'setup' | 'sitting' | 'marking';
 
@@ -270,6 +271,12 @@ export function Exam() {
               onChange={(e) => setMaterial(e.target.value)}
               placeholder="Your notes, the readings, the lecture. Every question has to come from what is in here."
               style={{ width: '100%', minHeight: 130, resize: 'vertical', lineHeight: 1.5 }}
+            />
+
+            <UseSources
+              courseId={state.guideId}
+              onFill={(lines) => setMaterial((now) => appendTo(now, lines))}
+              label="readings"
             />
 
             <SectionLabel>Topics to cover</SectionLabel>
