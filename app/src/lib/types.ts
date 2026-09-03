@@ -339,8 +339,6 @@ export type Screen =
   | 'notifs'
   | 'settings'
   | 'import'
-  | 'importing'
-  | 'review'
   | 'study'
   | 'guide'
   | 'quiz'
@@ -351,7 +349,8 @@ export type Screen =
   | 'update'
   | 'connect'
   | 'ask'
-  | 'slides';
+  | 'slides'
+  | 'account';
 
 export type StudyMode =
   | 'cards'

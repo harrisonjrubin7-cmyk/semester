@@ -6,6 +6,7 @@ import {
   useMemo,
   useReducer,
   useRef,
+  useState,
   type ReactNode,
 } from 'react';
 import type {
@@ -24,6 +25,15 @@ import type {
 } from '../lib/types';
 import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
 import { buildCatalog, type Catalog } from '../data/catalog';
+import {
+  accountOf,
+  cloudConfigured,
+  currentSession,
+  onAuthChange,
+  pull,
+  push as pushCloud,
+  type Account,
+} from '../lib/cloud';
 import { SEED_MODULES } from '../data/seed';
 import { newId } from '../lib/files';
 import { dateToIso, isoToDate } from '../lib/date';
@@ -120,6 +130,8 @@ export interface QuizQuestion {
 export type State = Persisted & Ephemeral;
 
 const STORAGE_KEY = 'semester.v1';
+/** When this device last agreed with the account copy, as epoch ms. */
+const SYNCED_KEY = 'semester.synced';
 
 const DEFAULT_PERSISTED: Persisted = {
   nav: 'tabs',
@@ -218,6 +230,32 @@ function loadPersisted(): Persisted {
   }
 }
 
+/**
+ * The half of the state that outlives the session — what localStorage keeps,
+ * and what an account syncs. Written once here so the two can never drift.
+ */
+export function pickPersisted(state: State): Persisted {
+  return {
+    nav: state.nav,
+    done: state.done,
+    saved: state.saved,
+    notifs: state.notifs,
+    picked: state.picked,
+    seenOnboarding: state.seenOnboarding,
+    cleared: state.cleared,
+    tasks: state.tasks,
+    appointments: state.appointments,
+    notes: state.notes,
+    updates: state.updates,
+    feeds: state.feeds,
+    feedEvents: state.feedEvents,
+    linkUrls: state.linkUrls,
+    extraLinks: state.extraLinks,
+    courses: state.courses,
+    sample: state.sample,
+  };
+}
+
 export type Action =
   | { type: 'go'; screen: Screen }
   | { type: 'back' }
@@ -282,7 +320,8 @@ export type Action =
   | { type: 'addCourse'; module: CourseModule }
   | { type: 'replaceCourse'; module: CourseModule }
   | { type: 'removeCourse'; id: CourseId }
-  | { type: 'setSample'; on: boolean };
+  | { type: 'setSample'; on: boolean }
+  | { type: 'hydrate'; persisted: Partial<Persisted> };
 
 const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];
 
@@ -649,6 +688,11 @@ export function reducer(state: State, action: Action): State {
     case 'setSample':
       return { ...state, sample: action.on };
 
+    // What the account had, arriving from another device. Navigation is left
+    // alone: you should land where you were, not where your laptop was.
+    case 'hydrate':
+      return { ...state, ...action.persisted };
+
     case 'removeLink': {
       const { [action.id]: _gone, ...linkUrls } = state.linkUrls;
       return {
@@ -663,6 +707,14 @@ export function reducer(state: State, action: Action): State {
   }
 }
 
+/** Where the account copy stands, for the Account screen to show honestly. */
+export type SyncStatus =
+  | 'off'          // no project configured in this build
+  | 'signed-out'
+  | 'syncing'
+  | 'synced'
+  | 'error';
+
 interface Store {
   state: State;
   dispatch: (action: Action) => void;
@@ -670,6 +722,8 @@ interface Store {
   now: Date;
   /** The account's courses, with every lookup derived from them. */
   catalog: Catalog;
+  account: Account | null;
+  sync: { status: SyncStatus; at: number; error: string };
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -703,25 +757,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const persisted: Persisted = {
-      nav: state.nav,
-      done: state.done,
-      saved: state.saved,
-      notifs: state.notifs,
-      picked: state.picked,
-      seenOnboarding: state.seenOnboarding,
-      cleared: state.cleared,
-      tasks: state.tasks,
-      appointments: state.appointments,
-      notes: state.notes,
-      updates: state.updates,
-      feeds: state.feeds,
-      feedEvents: state.feedEvents,
-      linkUrls: state.linkUrls,
-      extraLinks: state.extraLinks,
-      courses: state.courses,
-      sample: state.sample,
-    };
+    const persisted: Persisted = pickPersisted(state);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
     } catch {
@@ -747,6 +783,111 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     state.sample,
   ]);
 
+  // ── The account copy ────────────────────────────────────────────────────
+  const [account, setAccount] = useState<Account | null>(null);
+  const [sync, setSync] = useState<{ status: SyncStatus; at: number; error: string }>({
+    status: cloudConfigured ? 'signed-out' : 'off',
+    at: 0,
+    error: '',
+  });
+  // Set while hydrating, so the pull's own state change does not bounce
+  // straight back as a push.
+  const settling = useRef(false);
+
+  useEffect(() => {
+    if (!cloudConfigured) return;
+    void currentSession().then((s) => setAccount(accountOf(s)));
+    return onAuthChange((s) => setAccount(accountOf(s)));
+  }, []);
+
+  // On sign-in, whichever copy is newer wins — and the app says which.
+  useEffect(() => {
+    if (!account) {
+      if (cloudConfigured) setSync({ status: 'signed-out', at: 0, error: '' });
+      return;
+    }
+    let live = true;
+    setSync((s) => ({ ...s, status: 'syncing', error: '' }));
+    void (async () => {
+      try {
+        const remote = await pull(account.id);
+        if (!live) return;
+        const localStamp = Number(localStorage.getItem(SYNCED_KEY) ?? 0);
+        const hasRemote = remote.state !== null || remote.courses.length > 0;
+
+        if (hasRemote && remote.updated > localStamp) {
+          settling.current = true;
+          dispatch({
+            type: 'hydrate',
+            persisted: {
+              ...(remote.state as Partial<Persisted>),
+              courses: remote.courses.map((c) => c.data as CourseModule),
+            },
+          });
+          localStorage.setItem(SYNCED_KEY, String(remote.updated));
+          setTimeout(() => (settling.current = false), 0);
+        }
+        if (live) setSync({ status: 'synced', at: Date.now(), error: '' });
+      } catch (e) {
+        if (live) {
+          setSync({
+            status: 'error',
+            at: 0,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [account]);
+
+  // Every later change goes up, once things stop moving.
+  useEffect(() => {
+    if (!account || settling.current) return;
+    const timer = setTimeout(() => {
+      const { courses, ...rest } = pickPersisted(state);
+      void pushCloud(
+        account.id,
+        rest as Record<string, unknown>,
+        courses.map((c) => ({ id: c.course.id, data: c })),
+      )
+        .then(() => {
+          localStorage.setItem(SYNCED_KEY, String(Date.now()));
+          setSync({ status: 'synced', at: Date.now(), error: '' });
+        })
+        .catch((e: unknown) =>
+          setSync({
+            status: 'error',
+            at: 0,
+            error: e instanceof Error ? e.message : String(e),
+          }),
+        );
+    }, 2500);
+    return () => clearTimeout(timer);
+    // The same fields localStorage watches: what is worth keeping is what is
+    // worth syncing.
+  }, [
+    account,
+    state.nav,
+    state.done,
+    state.saved,
+    state.notifs,
+    state.seenOnboarding,
+    state.cleared,
+    state.tasks,
+    state.appointments,
+    state.notes,
+    state.updates,
+    state.feeds,
+    state.feedEvents,
+    state.linkUrls,
+    state.extraLinks,
+    state.courses,
+    state.sample,
+  ]);
+
   // The sample stays compiled in rather than copied into storage, so switching
   // it on costs a flag rather than 300 KB.
   const catalog = useMemo(
@@ -754,7 +895,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [state.sample, state.courses],
   );
 
-  const value = useMemo(() => ({ state, dispatch, now, catalog }), [state, now, catalog]);
+  const value = useMemo(
+    () => ({ state, dispatch, now, catalog, account, sync }),
+    [state, now, catalog, account, sync],
+  );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 

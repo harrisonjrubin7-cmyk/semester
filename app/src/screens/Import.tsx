@@ -1,205 +1,294 @@
-import { useEffect, useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
-import { TickBox } from '../components/ui';
-import { EXTRACT, LOAD_STEPS, PASTED } from '../data/misc';
+import { SectionLabel } from '../components/ui';
+import { extractText, type Extracted } from '../lib/extract';
+import { generateCourse, type GenerationResult } from '../lib/generate';
+import { configured } from '../lib/claude';
+import { SEMESTER_YEAR } from '../lib/date';
 
-/** The screen the app is built around: paste a syllabus, get dated rows back. */
+/**
+ * Upload a syllabus, get a course.
+ *
+ * The prototype faked this screen — a progress bar and a canned list of dates.
+ * This is the real thing: the files are read in the browser, sent once to
+ * Claude, and what comes back is checked before it is shown. Nothing is saved
+ * until the student has seen what was found and what was thrown away.
+ *
+ * Readings are worth uploading alongside the syllabus. A syllabus alone gives
+ * deadlines and a topic list; the readings are where the cards come from.
+ */
 export function Import() {
   const { dispatch } = useStore();
+  const [files, setFiles] = useState<Extracted[]>([]);
+  const [hint, setHint] = useState('');
+  const [busy, setBusy] = useState('');
+  const [error, setError] = useState('');
+  const [result, setResult] = useState<GenerationResult | null>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const abort = useRef<AbortController | null>(null);
 
-  return (
-    <div style={{ padding: 18 }}>
-      <div
-        className="chrome-text"
-        style={{ fontSize: 28, lineHeight: 1.08, letterSpacing: '-0.01em', textWrap: 'pretty' }}
-      >
-        Paste it. Walk away.
-      </div>
-      <div style={{ fontSize: 14, opacity: 0.7, marginTop: 6 }}>
-        Dump the whole PDF or just the schedule table. Every date, weight and reading gets pulled
-        out.
-      </div>
-
-      <div style={{ display: 'flex', gap: 8, margin: '16px 0 12px' }}>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          style={{ flex: 1, height: 40, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Upload PDF
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => dispatch({ type: 'go', screen: 'connect' })}
-          style={{ flex: 1, height: 40, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Brightspace
-        </button>
-      </div>
-
-      <textarea
-        className="input"
-        defaultValue={PASTED}
-        style={{ minHeight: 210, fontSize: 13, lineHeight: 1.5 }}
-        aria-label="Syllabus text"
-      />
-
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
-        onClick={() => dispatch({ type: 'go', screen: 'importing' })}
-        style={{
-          height: 50,
-          fontSize: 15,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: 12,
-        }}
-      >
-        Extract deadlines
-      </button>
-      <div style={{ height: 22 }} />
-    </div>
-  );
-}
-
-/** The working state. Steps through the extraction, then hands over to review. */
-export function Importing() {
-  const { state, dispatch } = useStore();
-  const step = useRef(0);
-
-  useEffect(() => {
-    step.current = 0;
-    dispatch({ type: 'setLoadStep', step: 0 });
-    const id = setInterval(() => {
-      step.current += 1;
-      if (step.current >= LOAD_STEPS.length) {
-        clearInterval(id);
-        dispatch({ type: 'go', screen: 'review' });
-      } else {
-        dispatch({ type: 'setLoadStep', step: step.current });
+  const add = async (list: FileList | null) => {
+    if (!list?.length) return;
+    setError('');
+    for (const file of Array.from(list)) {
+      setBusy(`Reading ${file.name}…`);
+      try {
+        const extracted = await extractText(file);
+        setFiles((f) => [...f.filter((x) => x.name !== extracted.name), extracted]);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
       }
-    }, 700);
-    return () => clearInterval(id);
-  }, [dispatch]);
+    }
+    setBusy('');
+  };
 
-  const skeletons = [
-    { op: 1, w1: '62%', w2: '38%' },
-    { op: 0.8, w1: '48%', w2: '54%' },
-    { op: 0.6, w1: '70%', w2: '30%' },
-    { op: 0.4, w1: '40%', w2: '46%' },
-    { op: 0.2, w1: '58%', w2: '34%' },
-  ];
+  const build = async () => {
+    if (files.length === 0) return;
+    setError('');
+    setResult(null);
+    setBusy('Reading the syllabus…');
+    abort.current = new AbortController();
+    try {
+      const built = await generateCourse(
+        { documents: files, hint, year: SEMESTER_YEAR },
+        abort.current.signal,
+      );
+      setResult(built);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy('');
+    }
+  };
+
+  const save = () => {
+    if (!result) return;
+    dispatch({ type: 'addCourse', module: result.module });
+    dispatch({ type: 'openCourse', id: result.module.course.id });
+  };
+
+  const words = files.reduce((n, f) => n + f.words, 0);
 
   return (
     <div style={{ padding: 18 }}>
       <div className="chrome-text" style={{ fontSize: 28, lineHeight: 1.08 }}>
-        Reading the syllabus…
+        Upload it. Walk away.
       </div>
-      <div style={{ fontSize: 13, opacity: 0.6, marginTop: 6 }}>
-        {LOAD_STEPS[state.loadStep] ?? LOAD_STEPS[0]}
+      <div style={{ fontSize: 14, opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+        The syllabus gives the dates and how the grade is built. Add the readings and you get the
+        study guide too — cards, terms and a self-test made from what they actually argue.
       </div>
-      <div
-        style={{
-          height: 3,
-          background: 'var(--app-track)',
-          margin: '18px 0 24px',
-          overflow: 'hidden',
-        }}
+
+      <input
+        ref={input}
+        type="file"
+        multiple
+        accept=".pdf,.docx,.txt,.md,.csv,.html,text/*,application/pdf"
+        style={{ display: 'none' }}
+        onChange={(e) => void add(e.target.files)}
+      />
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => input.current?.click()}
+        disabled={busy !== ''}
+        style={{ height: 46, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 16 }}
       >
+        {busy.startsWith('Reading ') ? busy : 'Choose files — PDF, Word or text'}
+      </button>
+
+      {files.map((f) => (
         <div
+          key={f.name}
           style={{
-            height: '100%',
-            width: '34%',
-            background: 'var(--chrome)',
-            animation: 'sweep 1.1s linear infinite',
+            display: 'flex',
+            gap: 10,
+            alignItems: 'baseline',
+            padding: '11px 0',
+            borderBottom: '1px solid var(--app-line)',
           }}
-        />
-      </div>
-      {skeletons.map((s, i) => (
-        <Blueprint key={i} style={{ padding: '13px 14px', marginBottom: 10, opacity: s.op }}>
-          <div style={{ height: 9, width: s.w1, background: 'var(--app-track)' }} />
-          <div style={{ height: 9, width: s.w2, background: 'var(--app-track)', marginTop: 8 }} />
-        </Blueprint>
+        >
+          <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {f.name}
+          </span>
+          <span style={{ fontSize: 11, opacity: 0.5, flex: 'none' }}>
+            {f.words.toLocaleString()} words
+          </span>
+          <button
+            type="button"
+            className="bare"
+            onClick={() => setFiles((list) => list.filter((x) => x.name !== f.name))}
+            style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+          >
+            REMOVE
+          </button>
+        </div>
       ))}
+
+      {files.length > 0 && (
+        <>
+          <SectionLabel>Anything it should know</SectionLabel>
+          <input
+            className="input"
+            placeholder="Optional — “the midterm moved to Oct 8”, “skip chapter 4”"
+            value={hint}
+            onChange={(e) => setHint(e.target.value)}
+            style={{ fontSize: 13.5 }}
+          />
+
+          <button
+            type="button"
+            className="btn btn-primary btn-block"
+            disabled={busy !== ''}
+            onClick={() => void build()}
+            style={{
+              height: 50,
+              fontSize: 15,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              marginTop: 14,
+            }}
+          >
+            {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${words.toLocaleString()} words`}
+          </button>
+
+          {busy && !busy.startsWith('Reading ') && (
+            <button
+              type="button"
+              className="bare"
+              onClick={() => abort.current?.abort()}
+              style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.1em', marginTop: 10 }}
+            >
+              STOP
+            </button>
+          )}
+        </>
+      )}
+
+      {!configured() && (
+        <div style={{ fontSize: 12, opacity: 0.65, marginTop: 12, lineHeight: 1.5, textWrap: 'pretty' }}>
+          Building a course asks Claude to read the documents, which needs a key. Set one under{' '}
+          <strong>Ask Claude → Settings</strong>, or sign in and use the shared one.
+        </div>
+      )}
+
+      {error && (
+        <div style={{ fontSize: 13, color: 'var(--app-accent)', marginTop: 14, lineHeight: 1.5 }}>
+          {error}
+        </div>
+      )}
+
+      {result && <Preview result={result} onSave={save} />}
+      <div style={{ height: 22 }} />
     </div>
   );
 }
 
-/** Confirm what was found before it lands in the semester. */
-export function Review() {
-  const { state, dispatch } = useStore();
-  const picked = EXTRACT.filter((x) => state.picked[x.id]).length;
+/** What was found, what was dropped, and the chance to say no. */
+function Preview({ result, onSave }: { result: GenerationResult; onSave: () => void }) {
+  const { module: m, notes } = result;
+  const [summary, ...warnings] = notes;
 
   return (
-    <div style={{ padding: 18 }}>
-      <div
-        className="chrome-text"
-        style={{ fontSize: 28, lineHeight: 1.08, letterSpacing: '-0.01em' }}
-      >
-        {EXTRACT.length} dates found.
-      </div>
-      <div style={{ fontSize: 14, opacity: 0.7, marginTop: 6 }}>
-        ECON 1020 · Principles of Microeconomics · Dr. John Stromme. Untick anything you don’t want.
-      </div>
+    <>
+      <SectionLabel>What came back</SectionLabel>
+      <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+        <div className="chrome-text" style={{ fontSize: 24, lineHeight: 1.1 }}>
+          {m.course.code}
+        </div>
+        <div style={{ fontSize: 14, marginTop: 3 }}>{m.course.name}</div>
+        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+          {[m.course.prof, m.course.meets, m.course.room, m.course.credits]
+            .filter(Boolean)
+            .join(' · ')}
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: 11.5,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            opacity: 0.7,
+            marginTop: 12,
+            paddingTop: 10,
+            borderTop: '1px solid var(--app-line)',
+          }}
+        >
+          {summary}
+        </div>
+      </Blueprint>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 18 }}>
-        {EXTRACT.map((r) => {
-          const on = !!state.picked[r.id];
-          return (
-            <Blueprint
-              key={r.id}
-              onClick={() => dispatch({ type: 'togglePick', id: r.id })}
+      {warnings.length > 0 && (
+        <>
+          <SectionLabel>Worth knowing</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            {warnings.map((w) => (
+              <div key={w} style={{ fontSize: 12.5, opacity: 0.75, lineHeight: 1.45, textWrap: 'pretty' }}>
+                · {w}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <SectionLabel>The dates it found</SectionLabel>
+      {m.items.slice(0, 8).map((i) => (
+        <div key={i.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--app-line)' }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+            <span
               style={{
-                display: 'flex',
-                gap: 12,
-                padding: '12px 14px',
-                alignItems: 'flex-start',
-                opacity: on ? 1 : 0.45,
-                textAlign: 'left',
+                fontFamily: 'var(--font-heading)',
+                fontSize: 12,
+                opacity: 0.55,
+                width: 54,
+                flex: 'none',
               }}
             >
-              <span style={{ marginTop: 2, flex: 'none' }}>
-                <TickBox on={on} size={19} />
-              </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3 }}>{r.title}</span>
-                <span
-                  style={{
-                    display: 'block',
-                    fontSize: 11,
-                    opacity: 0.55,
-                    fontFamily: 'var(--font-heading)',
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    marginTop: 2,
-                  }}
-                >
-                  {r.when} · {r.kind}
-                </span>
-              </span>
-            </Blueprint>
-          );
-        })}
-      </div>
+              {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i.month]} {i.day}
+            </span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.3 }}>{i.title}</span>
+          </div>
+          {i.quote && (
+            <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 4, lineHeight: 1.45, paddingLeft: 64 }}>
+              “{i.quote}”
+            </div>
+          )}
+        </div>
+      ))}
+      {m.items.length > 8 && (
+        <div style={{ fontSize: 12, opacity: 0.5, marginTop: 8 }}>
+          and {m.items.length - 8} more
+        </div>
+      )}
+
+      <SectionLabel>The first unit</SectionLabel>
+      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 16 }}>{m.guide.units[0]?.name}</div>
+      {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c) => (
+        <div key={c.q} style={{ marginTop: 8 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
+          <div style={{ fontSize: 13.5, opacity: 0.78, lineHeight: 1.5, marginTop: 2 }}>{c.a}</div>
+        </div>
+      ))}
 
       <button
         type="button"
         className="btn btn-primary btn-block"
-        onClick={() => dispatch({ type: 'go', screen: 'courses' })}
+        onClick={onSave}
         style={{
           height: 50,
           fontSize: 15,
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          marginTop: 16,
+          marginTop: 18,
         }}
       >
-        Add {picked} to ECON 1020
+        Add {m.course.code} to my semester
       </button>
-      <div style={{ height: 22 }} />
-    </div>
+      <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
+        You can add readings to it later, and everything you add flows into the cards, the quiz and
+        the slides at once.
+      </div>
+    </>
   );
 }

@@ -7,7 +7,7 @@ import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
 import { loadByCourse, searchItems, upcomingItems } from '../lib/select';
 
 export function Me() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, account } = useStore();
   const ahead = upcomingItems(catalog, now);
   const bars = loadByCourse(catalog, now, state.done);
   const doneCount = Object.values(state.done).filter(Boolean).length;
@@ -91,6 +91,14 @@ export function Me() {
           style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Import a syllabus
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          onClick={() => dispatch({ type: 'go', screen: 'account' })}
+          style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        >
+          {account ? 'Account · synced' : 'Sign in to sync'}
         </button>
         <button
           type="button"

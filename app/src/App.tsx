@@ -17,7 +17,7 @@ import { Today } from './screens/Today';
 import { CourseDetail, Courses, ItemDetail } from './screens/Courses';
 import { Calendar, EventDetail } from './screens/Calendar';
 import { Me, Notifications, Search, Settings } from './screens/Me';
-import { Import, Importing, Review } from './screens/Import';
+import { Import } from './screens/Import';
 import { Study } from './screens/Study';
 import { Guide } from './screens/Guide';
 import { Drill, Quiz } from './screens/Drill';
@@ -26,6 +26,7 @@ import { LessonPlayer } from './screens/Lesson';
 import { AddMaterial } from './screens/Update';
 import { Connect } from './screens/Connect';
 import { Ask } from './screens/Ask';
+import { AccountScreen } from './screens/Account';
 import { SlideDeck } from './screens/Slides';
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { DESKTOP, useMedia } from './lib/media';
@@ -104,14 +105,12 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Accounts and calendars', title: 'Connect' };
     case 'ask':
       return { kicker: `${guide.code} · with the guide`, title: 'Ask Claude' };
+    case 'account':
+      return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'slides':
       return { kicker: `${guide.code} · deck`, title: 'Slides' };
     case 'import':
-      return { kicker: 'New source', title: 'Import syllabus' };
-    case 'importing':
-      return { kicker: 'Working', title: 'Import syllabus' };
-    case 'review':
-      return { kicker: 'Step 2 of 2', title: 'Review' };
+      return { kicker: 'Syllabus in, course out', title: 'New course' };
     default:
       return { kicker: today, title: 'Today' };
   }
@@ -296,10 +295,6 @@ function CurrentScreen() {
       return <NoteEditor />;
     case 'import':
       return <Import />;
-    case 'importing':
-      return <Importing />;
-    case 'review':
-      return <Review />;
     case 'study':
       return <Study />;
     case 'guide':
@@ -316,6 +311,8 @@ function CurrentScreen() {
       return <Connect />;
     case 'ask':
       return <Ask />;
+    case 'account':
+      return <AccountScreen />;
     case 'slides':
       return <SlideDeck />;
     default:
@@ -334,6 +331,7 @@ function CurrentScreen() {
 function Rail() {
   const { state, dispatch } = useStore();
   const extras: { id: Screen; label: string }[] = [
+    { id: 'account', label: 'Account' },
     { id: 'ask', label: 'Ask Claude' },
     { id: 'connect', label: 'Connect' },
     { id: 'import', label: 'Import' },
