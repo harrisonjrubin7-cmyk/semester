@@ -153,6 +153,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
+    screen: 'export',
+    label: 'Take it with you',
+    blurb: 'Download everything, or push it to Drive or OneDrive.',
+    keywords: 'export download backup save csv ics markdown json zip archive google drive onedrive transfer migrate leave copy print spreadsheet excel calendar import restore',
+    group: 'App',
+    root: 'me',
+  },
+  {
     screen: 'settings',
     label: 'Settings',
     blurb: 'Navigation, alerts, which courses are loaded.',

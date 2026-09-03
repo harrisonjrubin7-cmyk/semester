@@ -72,12 +72,12 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     blurb: 'Outlook calendar and mail, To Do, OneDrive — the Vanderbilt account.',
     authorizeUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
     tokenUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-    // Read the calendar and mail, write the calendar and To Do. Files.Read is
-    // enough to open and download OneDrive documents; nothing here can delete
-    // anything, and Mail is read-only — the app never sends mail as you.
+    // Read the calendar and mail, write the calendar and To Do. Files.ReadWrite
+    // is what lets an export be saved back to OneDrive; nothing here deletes
+    // anything, and Mail stays read-only — the app never sends mail as you.
     scopes:
       'openid profile offline_access User.Read Calendars.ReadWrite Mail.Read ' +
-      'Tasks.ReadWrite Files.Read',
+      'Tasks.ReadWrite Files.ReadWrite',
     clientId: env.VITE_MS_CLIENT_ID ?? '',
     console: 'portal.azure.com → App registrations → single-page application',
     needsProxy: false,
@@ -96,6 +96,10 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     scopes:
       'openid https://www.googleapis.com/auth/calendar.events ' +
       'https://www.googleapis.com/auth/drive.readonly ' +
+      // drive.file is the narrow one: it grants access only to files this app
+      // itself creates, so an export can be saved to Drive without the app
+      // gaining any right to read what is already there.
+      'https://www.googleapis.com/auth/drive.file ' +
       'https://www.googleapis.com/auth/gmail.readonly ' +
       'https://www.googleapis.com/auth/tasks',
     clientId: env.VITE_GOOGLE_CLIENT_ID ?? '',
@@ -382,6 +386,90 @@ async function get<T>(id: ProviderId, url: string): Promise<T> {
   const res = await fetch(apiBase(id, url), { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error(`${PROVIDERS[id].name} said ${res.status}.`);
   return (await res.json()) as T;
+}
+
+/**
+ * Upload a file the app made.
+ *
+ * Google wants a multipart body with a metadata part and a media part; Graph
+ * wants a plain PUT to a path. Both are small enough that a library would be
+ * more code than this. Neither is given anything to read: Drive is asked for
+ * `drive.file`, which reaches only files this app created.
+ */
+export async function upload(
+  id: ProviderId,
+  name: string,
+  blob: Blob,
+  folder = 'Semester',
+): Promise<{ name: string; link: string }> {
+  const token = await accessToken(id);
+
+  if (id === 'google') {
+    const boundary = `semester${Math.random().toString(36).slice(2)}`;
+    const meta = JSON.stringify({ name, mimeType: blob.type || 'application/octet-stream' });
+    const body = new Blob([
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n`,
+      `--${boundary}\r\nContent-Type: ${blob.type || 'application/octet-stream'}\r\n\r\n`,
+      blob,
+      `\r\n--${boundary}--\r\n`,
+    ]);
+    const res = await fetch(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': `multipart/related; boundary=${boundary}`,
+        },
+        body,
+      },
+    );
+    if (!res.ok) throw new Error(await explainUpload(res, 'Google Drive'));
+    const json = (await res.json()) as { name?: string; webViewLink?: string; id?: string };
+    return {
+      name: json.name ?? name,
+      link: json.webViewLink ?? `https://drive.google.com/file/d/${json.id ?? ''}/view`,
+    };
+  }
+
+  if (id === 'microsoft') {
+    const path = `${encodeURIComponent(folder)}/${encodeURIComponent(name)}`;
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/me/drive/root:/${path}:/content`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': blob.type || 'application/octet-stream',
+        },
+        body: blob,
+      },
+    );
+    if (!res.ok) throw new Error(await explainUpload(res, 'OneDrive'));
+    const json = (await res.json()) as { name?: string; webUrl?: string };
+    return { name: json.name ?? name, link: json.webUrl ?? '' };
+  }
+
+  throw new Error(`${PROVIDERS[id].name} has nowhere to put a file.`);
+}
+
+/**
+ * Why an upload failed, in words.
+ *
+ * 403 here almost always means the account was connected before the app asked
+ * for a write scope, and the fix is to disconnect and connect again — which is
+ * not something anyone guesses from "403".
+ */
+async function explainUpload(res: Response, where: string): Promise<string> {
+  const detail = await res.text().catch(() => '');
+  if (res.status === 401 || res.status === 403) {
+    return (
+      `${where} refused the upload (${res.status}). The account was probably connected before ` +
+      'the app asked for permission to write. Disconnect it and connect it again.'
+    );
+  }
+  if (res.status === 507 || /quota/i.test(detail)) return `${where} is out of space.`;
+  return `${where} said ${res.status}.`;
 }
 
 const HORIZON_DAYS = 120;

@@ -367,6 +367,7 @@ export type Screen =
   | 'grades'
   | 'maps'
   | 'mail'
+  | 'export'
   | 'slides'
   | 'account'
   | 'cloud';
