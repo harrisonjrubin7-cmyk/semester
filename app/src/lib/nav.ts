@@ -121,6 +121,22 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'deck',
+    label: 'Make a deck',
+    blurb: 'A real PowerPoint file — from a unit you have, or from a brief.',
+    keywords: 'slides slideshow deck powerpoint pptx keynote google slides presentation present talk pitch briefing bullets speaker notes export slide',
+    group: 'Study',
+    root: 'study',
+  },
+  {
+    screen: 'essay',
+    label: 'Draft it',
+    blurb: 'A real draft for a cover letter, a statement, a newsletter — not coursework.',
+    keywords: 'essay write writing draft cover letter application internship job resume personal statement scholarship fellowship op-ed blog newsletter pitch memo prose compose generator',
+    group: 'Study',
+    root: 'study',
+  },
+  {
     screen: 'import',
     label: 'Add a course',
     blurb: 'Upload a syllabus and get the course back, checked before you keep it.',

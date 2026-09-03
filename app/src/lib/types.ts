@@ -33,7 +33,20 @@ export interface Course {
    * no API a student can use alone, so the app links rather than reads.
    */
   lms?: string;
+  /**
+   * What the syllabus says about AI, as the student recorded it.
+   *
+   * Absent means nothing has been recorded, which the drafting tool treats as
+   * a no — an unread policy is not a permissive one. Set from Edit the course.
+   */
+  ai?: CoursePolicy;
   grading: GradeRow[];
+}
+
+export interface CoursePolicy {
+  stance: 'banned' | 'limited' | 'allowed' | 'unstated';
+  /** In the syllabus's own words where possible, so it can be checked later. */
+  note: string;
 }
 
 /** A dated obligation lifted from a syllabus. */
@@ -376,6 +389,8 @@ export type Screen =
   | 'classmates'
   | 'activities'
   | 'brief'
+  | 'essay'
+  | 'deck'
   | 'slides'
   | 'account'
   | 'cloud';

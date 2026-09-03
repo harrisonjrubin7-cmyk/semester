@@ -20,6 +20,10 @@ const bus: CourseModule = {
     room: 'Alumni Hall 201',
     credits: '2 credits',
     source: 'Syllabus Draft 8262026.pdf',
+    ai: {
+      stance: 'limited',
+      note: 'Course texts and the Harvard cases must not be uploaded to a language model. Recorded here so the drafting tool refuses it. Check the syllabus for the exact wording.',
+    },
     grading: [
       { what: 'Midterm case write-up', pct: '30%' },
       { what: 'Final exam', pct: '25%' },

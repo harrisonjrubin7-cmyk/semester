@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { SEMESTER_YEAR } from '../lib/date';
+import { STANCES, stanceLine } from '../lib/essay';
 import {
   DAYS,
   KINDS,
@@ -112,6 +113,49 @@ export function EditCourse() {
       {text('Meets', draft.course.meets, (v) => field({ meets: v }), 'MWF · 9:10–10:00a')}
       {text('Room', draft.course.room, (v) => field({ room: v }), 'Buttrick 101')}
       {text('Credits', draft.course.credits, (v) => field({ credits: v }), '3')}
+
+      <SectionLabel>What the syllabus says about AI</SectionLabel>
+      <div style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
+        Recorded here, and read by the drafting tool, which will not write for a course unless
+        this says plainly that it may. Nothing recorded counts as no.
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 10 }}>
+        {STANCES.map((option) => {
+          const on = (draft.course.ai?.stance ?? 'unstated') === option.id;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              className="bare tappable"
+              aria-pressed={on}
+              onClick={() =>
+                field({ ai: { stance: option.id, note: draft.course.ai?.note ?? '' } })
+              }
+              style={{
+                textAlign: 'left',
+                padding: '9px 12px',
+                borderRadius: 'var(--r-md)',
+                border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
+                background: on ? 'var(--app-accent-wash)' : 'transparent',
+              }}
+            >
+              <span style={{ display: 'block', fontSize: 13.5 }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+                {stanceLine(option.id)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <textarea
+        className="input"
+        value={draft.course.ai?.note ?? ''}
+        placeholder="The rule in the syllabus’s own words, so you can check it later."
+        onChange={(e) =>
+          field({ ai: { stance: draft.course.ai?.stance ?? 'unstated', note: e.target.value } })
+        }
+        style={{ width: '100%', minHeight: 70, resize: 'vertical', lineHeight: 1.5 }}
+      />
 
       <SectionLabel>How the grade is built</SectionLabel>
       {draft.course.grading.map((row, i) => (

@@ -19,6 +19,10 @@ const core: CourseModule = {
     room: 'Garland',
     credits: '3 credits',
     source: 'Sports_Fall26_Syllabus.pdf',
+    ai: {
+      stance: 'banned',
+      note: 'The syllabus rules out AI for the reflections — this course’s written work is your own. Recorded here so the drafting tool refuses it. Check the syllabus for the exact wording.',
+    },
     grading: [
       { what: 'Eight quizzes, 10 pts each', pct: '80 pts' },
       { what: 'Thirteen reflections, 10 pts', pct: '130 pts' },

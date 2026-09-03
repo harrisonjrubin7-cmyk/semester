@@ -41,6 +41,8 @@ import { Analyse } from './screens/Analyse';
 import { Classmates } from './screens/Classmates';
 import { Activities } from './screens/Activities';
 import { Brief } from './screens/Brief';
+import { Essay } from './screens/Essay';
+import { Deck } from './screens/Deck';
 import { accent, scaleOf } from './lib/feed';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
@@ -163,6 +165,10 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Everything that is not a class', title: 'Activities' };
     case 'brief':
       return { kicker: 'Counted, then read', title: 'Your day' };
+    case 'essay':
+      return { kicker: 'Everything but coursework', title: 'Draft it' };
+    case 'deck':
+      return { kicker: 'A real PowerPoint file', title: 'Make a deck' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -404,6 +410,10 @@ function CurrentScreen() {
       return <Activities />;
     case 'brief':
       return <Brief />;
+    case 'essay':
+      return <Essay />;
+    case 'deck':
+      return <Deck />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':
