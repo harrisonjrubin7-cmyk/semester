@@ -11,7 +11,7 @@ import { nextExam, tonightPlan } from '../lib/select';
 export function Study() {
   const { state, dispatch, now, catalog } = useStore();
   const exam = nextExam(catalog, now);
-  const plan = tonightPlan(catalog, state.updates);
+  const plan = tonightPlan(catalog, state.updates, state.reviews);
   if (catalog.empty) return <FirstRun where="to study" />;
 
   return (
@@ -43,7 +43,7 @@ export function Study() {
             }}
           >
             {(() => {
-              const guide = liveGuide(catalog, exam.item.c, state.updates);
+              const guide = liveGuide(catalog, exam.item.c, state.updates, state.reviews);
               const coldUnits = guide.units.filter((u) => u.mastery < 40);
               if (coldUnits.length === 0) {
                 return `All ${guide.units.length} units in ${guide.code} are above 40%. Keep them warm.`;
@@ -92,7 +92,7 @@ export function Study() {
       <SectionLabel>Study guides</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {catalog.courses.map((c) => {
-          const g = liveGuide(catalog, c.id, state.updates);
+          const g = liveGuide(catalog, c.id, state.updates, state.reviews);
           const cards = allCards(g).length;
           const mine = forCourse(state.updates, c.id);
           // Every way into this course that actually has something in it. They

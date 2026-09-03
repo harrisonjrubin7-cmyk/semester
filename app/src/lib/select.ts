@@ -10,6 +10,7 @@ import {
   SEMESTER_YEAR,
   untilLabel,
 } from './date';
+import type { Reviews } from './review';
 import { liveGuide } from './live';
 import type {
   Appointment,
@@ -249,9 +250,12 @@ export function dotsForMonth(cat: Catalog, now: Date, year: number, month: numbe
  * Takes the updates so a unit you have just added a reading to counts as
  * colder than it was, which is the whole point of adding it.
  */
-export function tonightPlan(cat: Catalog, updates: CourseUpdate[] = []) {
+export function tonightPlan(cat: Catalog, updates: CourseUpdate[] = [], reviews: Reviews = {}) {
   return cat.courses.map((c) => {
-    const guide = updates.length ? liveGuide(cat, c.id, updates) : cat.guides[c.id];
+    // Always through liveGuide now: even with no added material, mastery is
+    // measured from your answers rather than read off the guide, so the plan
+    // changes as you study instead of naming the same unit every night.
+    const guide = liveGuide(cat, c.id, updates, reviews);
     let weakest = guide.units[0];
     let index = 0;
     guide.units.forEach((u, i) => {

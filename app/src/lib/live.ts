@@ -25,6 +25,7 @@
 import { useMemo } from 'react';
 import type { Catalog } from '../data/catalog';
 import { useStore } from '../state/store';
+import { cardKey, unitMastery, type Reviews } from './review';
 import type {
   CourseId,
   CourseUpdate,
@@ -103,6 +104,40 @@ export function mergeGuide(guide: Guide, updates: CourseUpdate[]): LiveGuide {
   return { ...guide, units, terms, mastery, added, baseCards: base, firstAddedUnit };
 }
 
+/**
+ * Replace declared mastery with measured mastery.
+ *
+ * Runs after the merge, so dilution by newly added cards still happens first
+ * and then supplies the estimate for every card you have not answered. A card
+ * you have answered is scored on your answers; the unit is the mean across its
+ * cards; the guide is the mean across its units, weighted by size.
+ */
+export function applyReviews(
+  guide: LiveGuide,
+  courseId: CourseId,
+  reviews: Reviews,
+  now: number,
+): LiveGuide {
+  if (guide.units.length === 0) return guide;
+
+  const units = guide.units.map((u) => ({
+    ...u,
+    mastery: unitMastery(
+      u.cards.map((c) => cardKey(courseId, c.q)),
+      reviews,
+      u.mastery,
+      now,
+    ),
+  }));
+
+  const cards = units.reduce((n, u) => n + u.cards.length, 0);
+  const mastery = cards
+    ? Math.round(units.reduce((n, u) => n + u.mastery * u.cards.length, 0) / cards)
+    : guide.mastery;
+
+  return { ...guide, units, mastery };
+}
+
 /** Images you attached, as figures on the unit they were filed against. */
 export function mergeFigures(figures: FigureMap, updates: CourseUpdate[]): FigureMap {
   if (updates.length === 0) return figures;
@@ -170,19 +205,25 @@ export function useLive(courseId: CourseId): Live {
   return useMemo(() => {
     const base = catalog.guides[courseId] ?? EMPTY_GUIDE;
     return {
-      guide: mergeGuide(base, updates),
+      guide: applyReviews(mergeGuide(base, updates), courseId, state.reviews, Date.now()),
       figures: mergeFigures(catalog.figures[courseId] ?? {}, updates),
       extras: extraFigures(catalog.extraFigures[courseId] ?? [], updates),
       lessons: catalog.lessons[courseId] ?? {},
       updates,
       onUnit: (index: number) => updates.filter((u) => u.unit === index),
     };
-  }, [catalog, courseId, updates]);
+  }, [catalog, courseId, updates, state.reviews]);
 }
 
 /** The same merge outside React — for selectors that run on plain state. */
-export function liveGuide(cat: Catalog, courseId: CourseId, updates: CourseUpdate[]): LiveGuide {
-  return mergeGuide(cat.guides[courseId] ?? EMPTY_GUIDE, forCourse(updates, courseId));
+export function liveGuide(
+  cat: Catalog,
+  courseId: CourseId,
+  updates: CourseUpdate[],
+  reviews: Reviews = {},
+): LiveGuide {
+  const merged = mergeGuide(cat.guides[courseId] ?? EMPTY_GUIDE, forCourse(updates, courseId));
+  return applyReviews(merged, courseId, reviews, Date.now());
 }
 
 /**

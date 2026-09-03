@@ -39,6 +39,7 @@ import {
 import type { Session } from '@supabase/supabase-js';
 import { SEED_MODULES } from '../data/seed';
 import { newId } from '../lib/files';
+import { score, type Reviews } from '../lib/review';
 import { dateToIso, isoToDate } from '../lib/date';
 
 /**
@@ -50,6 +51,13 @@ import { dateToIso, isoToDate } from '../lib/date';
  */
 interface Persisted {
   nav: NavMode;
+  /**
+   * Every answer you have given, keyed by card.
+   *
+   * This is the app's memory of what you know. Before it existed, drilling
+   * changed nothing that outlived the screen.
+   */
+  reviews: Reviews;
   /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
@@ -170,6 +178,7 @@ const DEFAULT_PERSISTED: Persisted = {
   // should be somebody else's timetable.
   sample: false,
   waysOpen: true,
+  reviews: {},
 };
 
 function initialEphemeral(now: Date): Ephemeral {
@@ -237,6 +246,7 @@ function loadPersisted(): Persisted {
       // genuinely new account starts empty.
       sample: saved.sample ?? saved.courses === undefined,
     waysOpen: saved.waysOpen ?? true,
+      reviews: saved.reviews ?? {},
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -268,6 +278,7 @@ export function pickPersisted(state: State): Persisted {
     courses: state.courses,
     sample: state.sample,
     waysOpen: state.waysOpen,
+    reviews: state.reviews,
   };
 }
 
@@ -300,7 +311,7 @@ export type Action =
   | { type: 'setLoadStep'; step: number }
   | { type: 'startDrill'; unit: number | null }
   | { type: 'flip' }
-  | { type: 'markCard'; got: boolean }
+  | { type: 'markCard'; got: boolean; key: string }
   | { type: 'redrill' }
   | { type: 'startQuiz'; quiz: QuizQuestion[] }
   | { type: 'pickAnswer'; index: number }
@@ -474,13 +485,21 @@ export function reducer(state: State, action: Action): State {
     case 'flip':
       return { ...state, revealed: true };
 
-    case 'markCard':
+    case 'markCard': {
+      // The answer is recorded against the card, not just counted for this
+      // run — which is the difference between a score and a study system.
+      const now = Date.now();
       return {
         ...state,
         revealed: false,
         drillIdx: state.drillIdx + 1,
         drillGot: state.drillGot + (action.got ? 1 : 0),
+        reviews: {
+          ...state.reviews,
+          [action.key]: score(state.reviews[action.key], action.got, now),
+        },
       };
+    }
 
     case 'redrill':
       return { ...state, drillIdx: 0, drillGot: 0, revealed: false };

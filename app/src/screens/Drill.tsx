@@ -1,19 +1,30 @@
+import { useMemo } from 'react';
 import { allCards } from '../data/catalog';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
+import { cardKey, dueCount, dueFirst } from '../lib/review';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, now } = useStore();
   const { guide } = useLive(state.guideId);
-  const everything = allCards(guide);
 
-  const pool =
-    state.drillUnit === null
-      ? everything
-      : everything.filter((c) => c.ui === state.drillUnit);
+  // Order is the point of keeping records: what is overdue comes first, then
+  // what you have never seen, then what you already know — weakest first
+  // inside each band. The run is fixed when it starts so answering a card does
+  // not reshuffle the deck under your thumb.
+  const pool = useMemo(() => {
+    const all = allCards(guide).map((c) => ({ ...c, key: cardKey(state.guideId, c.q) }));
+    const scoped = state.drillUnit === null ? all : all.filter((c) => c.ui === state.drillUnit);
+    return dueFirst(scoped, state.reviews, now.getTime());
+    // Deliberately NOT depending on `guide` or `state.reviews`. Both change on
+    // every answer now that mastery is measured, and re-sorting the deck under
+    // your thumb mid-run skips cards and repeats others — a full pass of 68
+    // recorded 34. The order is decided when the run starts and then held.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.guideId, state.drillUnit]);
 
   const finished = state.drillIdx >= pool.length;
   const card = pool[state.drillIdx] ?? pool[0];
@@ -28,6 +39,11 @@ export function Drill() {
 
   if (finished) {
     const got = state.drillGot;
+    const waiting = dueCount(
+      pool.map((c) => c.key),
+      state.reviews,
+      now.getTime(),
+    );
     const verdict =
       got === pool.length
         ? 'Cold locked.'
@@ -53,13 +69,22 @@ export function Drill() {
               textWrap: 'pretty',
             }}
           >
-            You reviewed {pool.length} cards in {guide.code}. Missed ones come back first tomorrow.
+            You reviewed {pool.length} cards in {guide.code}. Every answer is recorded against the
+            card, so what you missed comes back sooner and what you know comes back later.
           </div>
 
-          <Blueprint style={{ padding: 14, marginTop: 26, textAlign: 'left' }}>
-            <div className="kicker">Queued for tomorrow</div>
-            <div style={{ fontSize: 14, marginTop: 6 }}>
-              {pool.length - got} cards, plus whatever units are still under 40%.
+          {/* This used to promise "missed ones come back first tomorrow" while
+              keeping no record of what was missed. Now it reads the schedule. */}
+          <Blueprint plain style={{ padding: 14, marginTop: 26, textAlign: 'left' }}>
+            <div className="kicker">What comes back</div>
+            <div style={{ fontSize: 14, marginTop: 6, lineHeight: 1.5 }}>
+              {waiting === 0
+                ? 'Nothing in this course is due right now. Come back tomorrow.'
+                : `${waiting} ${waiting === 1 ? 'card is' : 'cards are'} due again in ${guide.code}.`}
+            </div>
+            <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
+              Missed cards return in ten minutes. A card you get right three times running moves out
+              to weeks.
             </div>
           </Blueprint>
 
@@ -192,7 +217,7 @@ export function Drill() {
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={() => dispatch({ type: 'markCard', got: false })}
+            onClick={() => dispatch({ type: 'markCard', got: false, key: card.key })}
             style={{ flex: 1, height: 52, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Again
@@ -200,7 +225,7 @@ export function Drill() {
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => dispatch({ type: 'markCard', got: true })}
+            onClick={() => dispatch({ type: 'markCard', got: true, key: card.key })}
             style={{ flex: 1, height: 52, fontSize: 15, letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Got it
