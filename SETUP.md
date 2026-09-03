@@ -59,6 +59,14 @@ all three on screen:
   `app/src/lib/classmates.ts` (`DOMAIN`) to run this for another university.
 - **Blocking is enforced by the database**, not the interface, so a blocked
   person's messages never reach the other device.
+- **You can check the rules without a second person.** SQL Editor → New query →
+  paste [`supabase/classmates.check.sql`](supabase/classmates.check.sql) → Run.
+  It creates four synthetic accounts, walks them through joining, posting,
+  blocking, reporting and leaving, asserts what each is allowed to see, and
+  rolls everything back — so it leaves nothing behind and is safe against a
+  project with real data in it. Twenty-two checks; a clean run prints
+  `ALL CHECKS PASSED`. What it cannot cover is realtime delivery, which is a
+  websocket rather than a policy and still wants one real second device.
 - **Reports are stored and nobody is watching them.** They land in
   `public.reports`, which no client can read — you read it in the dashboard.
   If you run this for other people, that is your job, and the app deliberately
