@@ -2,17 +2,116 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { DateRow, SectionLabel } from '../components/ui';
+import { DateRow, SectionLabel, Segmented } from '../components/ui';
+import { Grades } from './Grades';
 import { upcomingItems, datedItems } from '../lib/select';
 import type { Course } from '../lib/types';
 
+/** The one switcher, so the three views cannot drift apart. */
+function CoursesTabs({
+  value,
+  onChange,
+}: {
+  value: 'courses' | 'due' | 'grades';
+  onChange: (t: 'courses' | 'due' | 'grades') => void;
+}) {
+  return (
+    <Segmented
+      options={[
+        { id: 'courses', label: 'Courses' },
+        { id: 'due', label: 'Coming up' },
+        { id: 'grades', label: 'Grades' },
+      ]}
+      value={value}
+      onChange={onChange}
+      style={{ marginBottom: 16 }}
+    />
+  );
+}
+
+/**
+ * Courses, in the shape Calendar and Mine use.
+ *
+ * Three views of the same four courses: the courses themselves, everything
+ * they are asking of you as one list, and what any of it is worth. The middle
+ * one did not exist anywhere — the calendar shows deadlines by date, which
+ * answers "what is on the 14th" and not "what is coming", and those are
+ * different questions.
+ */
 export function Courses() {
-  const { dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const ahead = upcomingItems(catalog, now);
   if (catalog.empty) return <FirstRun where="in your courses" />;
+  const tab = state.coursesTab;
+
+  if (tab === 'grades') {
+    return (
+      <div style={{ padding: '18px 18px 0' }}>
+        <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
+        <Grades bare />
+      </div>
+    );
+  }
+
+  if (tab === 'due') {
+    return (
+      <div style={{ padding: 18 }}>
+        <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
+        <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5, marginBottom: 4 }}>
+          Everything still ahead of you, nearest first, across every course.
+        </div>
+        {ahead.length === 0 && (
+          <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.55 }}>
+            Nothing left this semester.
+          </div>
+        )}
+        {ahead.map((i) => (
+          <button
+            key={i.id}
+            type="button"
+            className="bare tappable"
+            onClick={() => dispatch({ type: 'openItem', id: i.id })}
+            style={{
+              display: 'flex',
+              gap: 12,
+              alignItems: 'center',
+              padding: '13px 0',
+              borderBottom: '1px solid var(--app-line)',
+              textAlign: 'left',
+            }}
+          >
+            <span className="tag tag-accent" style={{ flex: 'none' }}>
+              {catalog.byId[i.c]?.code}
+            </span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3 }}>{i.title}</span>
+              <span style={{ display: 'block', fontSize: 11, opacity: 0.55, marginTop: 2 }}>
+                {i.dueShort} · {i.kind}
+                {i.weight ? ` · ${i.weight}` : ''}
+              </span>
+            </span>
+            <span
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 11,
+                opacity: 0.45,
+                flex: 'none',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {i.daysAway === 0 ? 'today' : `${i.daysAway}d`}
+            </span>
+          </button>
+        ))}
+        <div style={{ height: 22 }} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
       {catalog.courses.map((c) => {
         const next = ahead.find((i) => i.c === c.id);
         return (
@@ -87,19 +186,6 @@ export function Courses() {
         }}
       >
         + Add a course from a syllabus
-      </button>
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
-        onClick={() => dispatch({ type: 'go', screen: 'grades' })}
-        style={{
-          height: 46,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: 8,
-        }}
-      >
-        Grades — what you need
       </button>
       <div style={{ height: 12 }} />
     </div>

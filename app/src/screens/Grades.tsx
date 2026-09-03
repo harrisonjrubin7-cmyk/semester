@@ -13,12 +13,16 @@ import { TARGETS, key, needFor, standing } from '../lib/grades';
  * the arithmetic is done — including when the answer is that an A is no longer
  * reachable, which is worth knowing in October rather than December.
  */
-export function Grades() {
+/**
+ * @param bare - rendered inside the Courses switcher, which already supplies
+ *   the page padding and the empty-state guard. Standalone it supplies its own.
+ */
+export function Grades({ bare = false }: { bare?: boolean } = {}) {
   const { state, dispatch, catalog } = useStore();
   if (catalog.empty) return <FirstRun where="to track grades" />;
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: bare ? 0 : 18 }}>
       <div style={{ fontSize: 13, opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
         Weights come from each syllabus. Put in what you have so far — a percentage, or something
         like 17/20 — and the rest is arithmetic.

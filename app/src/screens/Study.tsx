@@ -4,15 +4,28 @@ import { FirstRun } from './FirstRun';
 import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
 import { modesFor } from '../lib/modes';
 import { Blueprint } from '../components/Blueprint';
-import { Meter, SectionLabel } from '../components/ui';
+import { Meter, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { nextExam, tonightPlan } from '../lib/select';
 
+/**
+ * Study, in the shape Calendar and Mine already use.
+ *
+ * It was one long scroll: exam radar, two Claude cards, the guides, then
+ * tonight's plan at the very bottom where nobody reached it. The three are
+ * different errands — pick a course to work through, be told what to do
+ * tonight, ask something — so they are three views of the same subject rather
+ * than a queue you scroll past.
+ *
+ * The exam countdown stays above the switcher, because it is true whichever
+ * view you are on and it is the thing you want to see without looking.
+ */
 export function Study() {
   const { state, dispatch, now, catalog } = useStore();
   const exam = nextExam(catalog, now);
   const plan = tonightPlan(catalog, state.updates, state.reviews);
   if (catalog.empty) return <FirstRun where="to study" />;
+  const tab = state.studyTab;
 
   return (
     <div style={{ padding: 18 }}>
@@ -57,6 +70,19 @@ export function Study() {
         </Blueprint>
       )}
 
+      <Segmented
+        options={[
+          { id: 'guides', label: 'Guides' },
+          { id: 'tonight', label: 'Tonight' },
+          { id: 'ask', label: 'Ask' },
+        ]}
+        value={tab}
+        onChange={(next) => dispatch({ type: 'setStudyTab', tab: next })}
+        style={{ margin: '16px 0 4px' }}
+      />
+
+      {tab === 'ask' && (
+        <>
       <Blueprint
         onClick={() => dispatch({ type: 'go', screen: 'ask' })}
         style={{ padding: '13px 15px', marginTop: 14, display: 'flex', gap: 12, alignItems: 'center' }}
@@ -89,7 +115,12 @@ export function Study() {
         <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
       </Blueprint>
 
-      <SectionLabel>Study guides</SectionLabel>
+        </>
+      )}
+
+      {tab === 'guides' && (
+        <>
+      <SectionLabel>Your courses</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {catalog.courses.map((c) => {
           const g = liveGuide(catalog, c.id, state.updates, state.reviews);
@@ -195,7 +226,12 @@ export function Study() {
         })}
       </div>
 
-      <SectionLabel style={{ margin: '26px 0 4px' }}>Tonight’s 25 minutes</SectionLabel>
+        </>
+      )}
+
+      {tab === 'tonight' && (
+        <>
+      <SectionLabel style={{ margin: '20px 0 4px' }}>Tonight’s 25 minutes</SectionLabel>
       <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 12, textWrap: 'pretty' }}>
         Your weakest unit in each course, and what’s on the next quiz — one short sitting rather
         than a plan you will not keep.
@@ -244,6 +280,8 @@ export function Study() {
           <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
         </button>
       ))}
+        </>
+      )}
       <div style={{ height: 22 }} />
     </div>
   );

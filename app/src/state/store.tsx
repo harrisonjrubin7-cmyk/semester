@@ -118,8 +118,18 @@ interface Ephemeral {
   calSource: 'all' | 'classes' | 'deadlines' | 'campus';
   /** Day the Day view is on, as an ISO date. Null means today. */
   calDay: string | null;
-  /** Which section of the Mine screen is open. */
+  /**
+   * Which section of a tab is open.
+   *
+   * Calendar and Mine both open on a segmented control that switches between
+   * views of the same subject, and that turned out to be the clearest shape in
+   * the app — so Today, Courses and Study use it too rather than each being a
+   * single long scroll with everything on it.
+   */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
+  homeTab: 'today' | 'week' | 'done';
+  coursesTab: 'courses' | 'due' | 'grades';
+  studyTab: 'guides' | 'tonight' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
   /** Unit whose lesson is playing. */
@@ -203,6 +213,9 @@ function initialEphemeral(now: Date): Ephemeral {
     calSource: 'all',
     calDay: null,
     mineTab: 'tasks',
+    homeTab: 'today',
+    coursesTab: 'courses',
+    studyTab: 'guides',
     noteId: null,
     lessonUnit: 0,
     updateUnit: null,
@@ -329,6 +342,9 @@ export type Action =
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
+  | { type: 'setHomeTab'; tab: 'today' | 'week' | 'done' }
+  | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
+  | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
   | { type: 'toggleTask'; id: string }
   | { type: 'deleteTask'; id: string }
@@ -555,6 +571,15 @@ export function reducer(state: State, action: Action): State {
       base.setDate(base.getDate() + action.delta);
       return { ...state, calDay: dateToIso(base) };
     }
+
+    case 'setHomeTab':
+      return { ...state, homeTab: action.tab };
+
+    case 'setCoursesTab':
+      return { ...state, coursesTab: action.tab };
+
+    case 'setStudyTab':
+      return { ...state, studyTab: action.tab };
 
     case 'setMineTab':
       return { ...state, mineTab: action.tab };

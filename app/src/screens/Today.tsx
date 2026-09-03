@@ -1,7 +1,7 @@
 import { useStore } from '../state/store';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, DateRow, Meter, SectionLabel, TickBox } from '../components/ui';
+import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import {
   appointmentsOn,
@@ -17,7 +17,8 @@ import {
   type FeedFilter,
 } from '../lib/select';
 import { minutesNow } from '../lib/date';
-import { datedEvents } from '../lib/select';
+import { datedEvents, datedItems } from '../lib/select';
+import { tally } from '../lib/review';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -166,9 +167,23 @@ function TabHome() {
   const minutes = minutesNow(now);
   const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
   const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
+  const tab = state.homeTab;
 
   return (
     <div style={{ padding: 18 }}>
+      <Segmented
+        options={[
+          { id: 'today', label: 'Today' },
+          { id: 'week', label: 'This week' },
+          { id: 'done', label: 'Done' },
+        ]}
+        value={tab}
+        onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
+        style={{ margin: '0 0 16px' }}
+      />
+
+      {tab === 'today' && (
+        <>
       <NextClassCard />
 
       <div
@@ -362,7 +377,11 @@ function TabHome() {
           })}
         </div>
       )}
+        </>
+      )}
 
+      {tab === 'week' && (
+        <>
       {nextEvent && (
         <>
           <SectionLabel style={{ margin: '14px 0 12px' }}>On campus</SectionLabel>
@@ -409,8 +428,105 @@ function TabHome() {
           />
         ))}
       </div>
+        </>
+      )}
+
+      {tab === 'done' && <DoneToday />}
+
       <div style={{ height: 26 }} />
     </div>
+  );
+}
+
+/**
+ * What you have finished, which nothing in the app showed.
+ *
+ * The checklist hides an item the moment it is ticked, which is right for
+ * getting through a day and wrong at the end of one — the evidence that you did
+ * the work disappears exactly when it would be worth seeing.
+ */
+function DoneToday() {
+  const { state, dispatch, now, catalog } = useStore();
+  const done = datedItems(catalog, now).filter((i) => state.done[i.id]);
+  const cards = tally(state.reviews);
+
+  return (
+    <>
+      <Blueprint style={{ padding: 15, background: 'var(--app-hero)' }}>
+        <div className="kicker">Finished</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
+          <div className="chrome-text" style={{ fontSize: 34, lineHeight: 1 }}>
+            {done.length}
+          </div>
+          <div style={{ fontSize: 13, opacity: 0.75 }}>
+            {done.length === 1 ? 'thing ticked off' : 'things ticked off'}
+          </div>
+        </div>
+        {cards.cards > 0 && (
+          <div
+            style={{
+              marginTop: 12,
+              paddingTop: 11,
+              borderTop: '1px solid var(--app-line)',
+              fontSize: 13,
+              opacity: 0.8,
+              lineHeight: 1.5,
+            }}
+          >
+            {cards.cards} cards answered, {cards.pct}% right — every one of those moved a unit's
+            mastery.
+          </div>
+        )}
+      </Blueprint>
+
+      {done.length === 0 ? (
+        <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.55, lineHeight: 1.5 }}>
+          Nothing ticked off yet. Anything you finish shows up here, so a day leaves a trace rather
+          than just emptying out.
+        </div>
+      ) : (
+        <>
+          <SectionLabel>What you did</SectionLabel>
+          {done.map((i) => (
+            <button
+              key={i.id}
+              type="button"
+              className="bare tappable"
+              onClick={() => dispatch({ type: 'openItem', id: i.id })}
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'center',
+                padding: '12px 0',
+                borderBottom: '1px solid var(--app-line)',
+                textAlign: 'left',
+              }}
+            >
+              <span className="tag tag-accent" style={{ flex: 'none' }}>
+                {catalog.byId[i.c]?.code}
+              </span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span
+                  style={{
+                    display: 'block',
+                    fontSize: 14,
+                    lineHeight: 1.3,
+                    textDecoration: 'line-through',
+                    opacity: 0.7,
+                  }}
+                >
+                  {i.title}
+                </span>
+                <span style={{ display: 'block', fontSize: 11, opacity: 0.5, marginTop: 2 }}>
+                  {i.dueShort} · {i.kind}
+                </span>
+              </span>
+            </button>
+          ))}
+        </>
+      )}
+      <div style={{ height: 22 }} />
+    </>
   );
 }
 
