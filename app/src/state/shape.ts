@@ -1,0 +1,562 @@
+/**
+ * The shape of everything the app remembers, and the actions that change it.
+ *
+ * Split out of `store.tsx` so the reducer can be read, tested and extended
+ * without loading React. The store file had grown to fourteen hundred lines
+ * holding four different jobs at once — the shape, the reducer, the provider
+ * and the sync effects — and the reducer was the part nobody could test,
+ * because reaching it meant importing a React context and, behind it, the
+ * whole Supabase client.
+ *
+ * Nothing here has any dependency beyond types and small pure helpers.
+ */
+
+import type {
+  Appointment,
+  CampusLink,
+  CourseId,
+  CourseModule,
+  CourseUpdate,
+  FeedEvent,
+  FeedSource,
+  NavMode,
+  Note,
+  PersonalTask,
+  Screen,
+  StudyMode,
+} from '../lib/types';
+import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
+import type { SavedPlace } from '../lib/place';
+import type { Commitment } from '../lib/activities';
+import type { Sitting } from '../lib/sitting';
+import type { NewSource, Source } from '../lib/sources';
+import { type Reviews } from '../lib/review';
+import { DEFAULT_ORDER } from '../lib/feed';
+import { readLook, type Look } from '../lib/look';
+
+/**
+ * The prototype held everything in one component's state and lost it on reload.
+ * Here the same shape is split in two: `persisted` is the handful of things a
+ * real app has to remember between sessions — what you have ticked off, what
+ * you have saved, how you like the app set up — and everything else is
+ * ephemeral navigation state that should reset.
+ */
+export interface Persisted {
+  nav: NavMode;
+  /**
+   * Every answer you have given, keyed by card.
+   *
+   * This is the app's memory of what you know. Before it existed, drilling
+   * changed nothing that outlived the screen.
+   */
+  reviews: Reviews;
+  /** Your own scores per course grading category, as you typed them. */
+  grades: Record<string, string>;
+  /**
+   * Places you named, so a coordinate can mean something.
+   *
+   * The app never geocodes — there is no free way to turn a position into a
+   * building name that does not mean sending your position to somebody else.
+   * You stand somewhere and name it once; everything else is arithmetic on
+   * this list, done on the device.
+   */
+  places: SavedPlace[];
+  /**
+   * Clubs, a job, research, a chapter, a team — everything you do that is not
+   * a class. Persisted because it is yours, and because a week without it in
+   * the picture is a week the app is wrong about.
+   */
+  commitments: Commitment[];
+  /** The order of the sections on Today, and which are switched off. */
+  feedOrder: string[];
+  feedHidden: Record<string, boolean>;
+  /** The destinations you opened most recently, newest first. */
+  recent: Screen[];
+  /**
+   * Practice papers you have sat.
+   *
+   * Capped, and the cap is real rather than cautious: a sitting keeps its
+   * missed questions, and an account has a five-megabyte budget shared with
+   * every note and course in it. Forty papers is more than a semester
+   * produces and the oldest is the least useful.
+   */
+  sittings: Sitting[];
+  /**
+   * Sources you have collected, per course and per project.
+   *
+   * Four tools refuse to invent a citation and ask for yours; this is so that
+   * asking happens once rather than every session.
+   */
+  sources: Source[];
+  /**
+   * When each deadline was ticked, epoch ms.
+   *
+   * Deliberately a second map rather than a change to `done`, which a dozen
+   * files read as `Record<string, boolean>`. Nothing that reads `done` has to
+   * know this exists, a saved store from before it simply has none, and the
+   * weekly report falls back to the due date where an entry is missing.
+   */
+  tickedAt: Record<string, number>;
+  /**
+   * How the app looks. Every one of these is an id into a list in `lib/look.ts`
+   * rather than a value, so a look saved today survives the palette being
+   * retuned tomorrow, and an id from a future version falls back rather than
+   * writing a broken colour onto the root element.
+   */
+  accent: string;
+  textSize: string;
+  ground: string;
+  density: string;
+  corners: string;
+  typeface: string;
+  /**
+   * Whether the ten ways to study stay unrolled on a guide.
+   *
+   * Open is right the first time — otherwise six of the ten are a feature
+   * nobody knows exists. Closed is right on the hundredth night, when you came
+   * to drill cards and do not want to scroll past a menu to reach them. So it
+   * is a preference, and it remembers.
+   */
+  waysOpen: boolean;
+  done: Record<string, boolean>;
+  saved: Record<string, boolean>;
+  notifs: Record<NotifKey, boolean>;
+  picked: Record<string, boolean>;
+  seenOnboarding: boolean;
+  cleared: boolean;
+  /** Things you added yourself — kept apart from anything a syllabus produced. */
+  tasks: PersonalTask[];
+  appointments: Appointment[];
+  notes: Note[];
+  /** Material added to a course since it was imported. See `lib/live.ts`. */
+  updates: CourseUpdate[];
+  /** External calendars — Brightspace, Outlook, any .ics. */
+  feeds: FeedSource[];
+  feedEvents: FeedEvent[];
+  /**
+   * The courses this account holds. Generated from uploaded syllabi, or added
+   * by hand — either way they are data, not code.
+   */
+  courses: CourseModule[];
+  /** Whether the sample semester is switched on alongside them. */
+  sample: boolean;
+  /** Addresses for the campus links, keyed by id. Yours beat the defaults. */
+  linkUrls: Record<string, string>;
+  /** Links you added yourself, alongside the campus ones. */
+  extraLinks: CampusLink[];
+}
+
+export interface Ephemeral {
+  screen: Screen;
+  /** Back stack, so Back walks history rather than one remembered screen. */
+  history: Screen[];
+  courseId: CourseId;
+  itemId: string;
+  eventId: string;
+  guideId: CourseId;
+  mode: StudyMode;
+  episodeId: string | null;
+  filter: string;
+  evFilter: string;
+  calTab: 'deadlines' | 'campus';
+  /** Which schedule view the calendar is showing. */
+  calView: 'day' | 'week' | 'month' | 'semester';
+  /** Which sources the calendar is showing — combined, or one at a time. */
+  calSource: 'all' | 'classes' | 'deadlines' | 'campus';
+  /** Day the Day view is on, as an ISO date. Null means today. */
+  calDay: string | null;
+  /**
+   * Which section of a tab is open.
+   *
+   * Calendar and Mine both open on a segmented control that switches between
+   * views of the same subject, and that turned out to be the clearest shape in
+   * the app — so Today, Courses and Study use it too rather than each being a
+   * single long scroll with everything on it.
+   */
+  mineTab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files';
+  homeTab: 'today' | 'hours' | 'week' | 'done' | 'brief';
+  coursesTab: 'courses' | 'due' | 'grades';
+  /** Me follows the same shape as every other tab: a switcher, then one view. */
+  meTab: 'you' | 'all' | 'settings';
+  /** Which shelf of the directory is showing under Everything. */
+  meGroup: string;
+  /**
+   * A paper the guide's Quiz mode asked for, read once by the Exam screen.
+   *
+   * The two used to be separate systems that did not know about each other:
+   * ten fixed multiple-choice questions in the guide, and the timed paper.
+   * Both are one tap from Study and nothing said which to use. They stay
+   * distinct — marked as you go is a different exercise from sat against a
+   * clock — but each offers the other now, and this is how the handover
+   * carries the shape across.
+   */
+  examPreset: { minutes: number; formatId: string; code?: string } | null;
+  /**
+   * A message queued for a class room, read once by Classmates.
+   *
+   * How a shared practice paper gets from the Exam screen to the room without
+   * a new table: the code already reproduces the questions, so the share is a
+   * message and everybody's marks stay on their own device.
+   */
+  roomDraft: string;
+  /** Which standing the Coming-up list is showing: ahead, missed or finished. */
+  dueTab: 'ahead' | 'overdue' | 'done';
+  /**
+   * What the Email screen should open already filled in.
+   *
+   * Set by whoever sent you there — a course page knows the professor, a
+   * message in the Mail tab knows what you are replying to — and read once.
+   */
+  mailSeed: { purposeId: string; courseId: CourseId | ''; to: string; incoming: string } | null;
+  studyTab: 'guides' | 'tonight' | 'ask';
+  /** Note currently open in the editor. */
+  noteId: string | null;
+  /** Unit whose lesson is playing. */
+  lessonUnit: number;
+  /** Unit the Add-material screen is filing against; null for a new one. */
+  updateUnit: number | null;
+  query: string;
+  onb: number;
+  loadStep: number;
+  selDate: string | null;
+  calMonth: number;
+  calYear: number;
+  openUnit: number;
+  drillUnit: number | null;
+  drillIdx: number;
+  drillGot: number;
+  revealed: boolean;
+  quiz: QuizQuestion[];
+  quizIdx: number;
+  quizPicked: number | null;
+  quizScore: number;
+  quizSeed: number;
+  /**
+   * Courses deleted on this device and not yet deleted from the account.
+   *
+   * Ephemeral on purpose. A push tells the account exactly what this device
+   * removed, and nothing else — the alternative, and what this replaces, was
+   * a push that deleted every course the account held and the pushing device
+   * did not, which meant a phone that had never synced could wipe a course
+   * imported on the laptop. It is not persisted because a synced deletion is
+   * finished business, and an unsynced one coming back on the next pull is a
+   * visible, fixable outcome rather than a silent loss.
+   */
+  removedCourses: string[];
+}
+
+export interface QuizQuestion {
+  q: string;
+  unit: string;
+  full: string;
+  opts: { text: string; ok: boolean }[];
+}
+
+export type State = Persisted & Ephemeral;
+
+export const STORAGE_KEY = 'semester.v1';
+/** When this device last agreed with the account copy, as epoch ms. */
+export const SYNCED_KEY = 'semester.synced';
+
+export const DEFAULT_PERSISTED: Persisted = {
+  nav: 'tabs',
+  done: {},
+  saved: { e1: true, e16: true },
+  notifs: { ...DEFAULT_NOTIFS },
+  picked: EXTRACT.reduce<Record<string, boolean>>((a, x) => {
+    a[x.id] = true;
+    return a;
+  }, {}),
+  seenOnboarding: false,
+  cleared: false,
+  tasks: [],
+  appointments: [],
+  notes: [],
+  updates: [],
+  feeds: [],
+  feedEvents: [],
+  linkUrls: {},
+  extraLinks: [],
+  courses: [],
+  // A new account starts empty and is walked through its first syllabus. The
+  // sample is a button, not a default: nobody's first impression of the app
+  // should be somebody else's timetable.
+  sample: false,
+  waysOpen: true,
+  reviews: {},
+  grades: {},
+  places: [],
+  commitments: [],
+  feedOrder: DEFAULT_ORDER,
+  feedHidden: {},
+  recent: [],
+  sittings: [],
+  sources: [],
+  tickedAt: {},
+  accent: 'sterling',
+  textSize: 'normal',
+  ground: 'ink',
+  density: 'comfortable',
+  corners: 'drawn',
+  typeface: 'condensed',
+};
+
+/** The look, gathered off the state it is spread across. */
+export function currentLook(state: Persisted): Look {
+  return {
+    accent: state.accent,
+    textSize: state.textSize,
+    ground: state.ground,
+    density: state.density,
+    corners: state.corners,
+    typeface: state.typeface,
+  };
+}
+
+export function initialEphemeral(now: Date): Ephemeral {
+  return {
+    screen: 'home',
+    history: [],
+    courseId: 'core',
+    itemId: 'bus-ga1',
+    eventId: 'e1',
+    guideId: 'econ',
+    mode: 'cards',
+    episodeId: null,
+    filter: 'All',
+    evFilter: 'All',
+    calTab: 'deadlines',
+    calView: 'month',
+    calSource: 'all',
+    calDay: null,
+    mineTab: 'tasks',
+    homeTab: 'today',
+    coursesTab: 'courses',
+    meTab: 'you',
+    meGroup: 'Study',
+    examPreset: null,
+    roomDraft: '',
+    dueTab: 'ahead',
+    mailSeed: null,
+    studyTab: 'guides',
+    noteId: null,
+    lessonUnit: 0,
+    updateUnit: null,
+    query: '',
+    onb: 0,
+    loadStep: 0,
+    selDate: null,
+    calMonth: now.getMonth(),
+    calYear: now.getFullYear(),
+    openUnit: 0,
+    drillUnit: null,
+    drillIdx: 0,
+    drillGot: 0,
+    revealed: false,
+    quiz: [],
+    quizIdx: 0,
+    quizPicked: null,
+    quizScore: 0,
+    quizSeed: 1,
+    removedCourses: [],
+  };
+}
+
+export function loadPersisted(): Persisted {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_PERSISTED };
+    const saved = JSON.parse(raw) as Partial<Persisted>;
+    return {
+      ...DEFAULT_PERSISTED,
+      ...saved,
+      notifs: { ...DEFAULT_PERSISTED.notifs, ...(saved.notifs ?? {}) },
+      done: saved.done ?? {},
+      saved: saved.saved ?? DEFAULT_PERSISTED.saved,
+      picked: { ...DEFAULT_PERSISTED.picked, ...(saved.picked ?? {}) },
+      tasks: saved.tasks ?? [],
+      appointments: saved.appointments ?? [],
+      notes: saved.notes ?? [],
+      updates: saved.updates ?? [],
+      feeds: saved.feeds ?? [],
+      feedEvents: saved.feedEvents ?? [],
+      linkUrls: saved.linkUrls ?? {},
+      extraLinks: saved.extraLinks ?? [],
+      courses: saved.courses ?? [],
+      // An install that predates courses-as-data was running the four built-in
+      // ones; it keeps them, or the app would look wiped on the next load. A
+      // genuinely new account starts empty.
+      sample: saved.sample ?? saved.courses === undefined,
+    waysOpen: saved.waysOpen ?? true,
+      reviews: saved.reviews ?? {},
+      grades: saved.grades ?? {},
+      places: saved.places ?? [],
+      commitments: saved.commitments ?? [],
+      feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
+      feedHidden: saved.feedHidden ?? {},
+      recent: saved.recent ?? [],
+      sittings: saved.sittings ?? [],
+      sources: saved.sources ?? [],
+      tickedAt: saved.tickedAt ?? {},
+      ...readLook({
+        accent: saved.accent,
+        textSize: saved.textSize,
+        ground: saved.ground,
+        density: saved.density,
+        corners: saved.corners,
+        typeface: saved.typeface,
+      }),
+    };
+  } catch {
+    // A private window, or storage disabled. Run with defaults.
+    return { ...DEFAULT_PERSISTED };
+  }
+}
+
+/**
+ * The half of the state that outlives the session — what localStorage keeps,
+ * and what an account syncs. Written once here so the two can never drift.
+ */
+export function pickPersisted(state: State): Persisted {
+  return {
+    nav: state.nav,
+    done: state.done,
+    saved: state.saved,
+    notifs: state.notifs,
+    picked: state.picked,
+    seenOnboarding: state.seenOnboarding,
+    cleared: state.cleared,
+    tasks: state.tasks,
+    appointments: state.appointments,
+    notes: state.notes,
+    updates: state.updates,
+    feeds: state.feeds,
+    feedEvents: state.feedEvents,
+    linkUrls: state.linkUrls,
+    extraLinks: state.extraLinks,
+    courses: state.courses,
+    sample: state.sample,
+    waysOpen: state.waysOpen,
+    reviews: state.reviews,
+    grades: state.grades,
+    places: state.places,
+    commitments: state.commitments,
+    feedOrder: state.feedOrder,
+    feedHidden: state.feedHidden,
+    recent: state.recent,
+    sittings: state.sittings,
+    sources: state.sources,
+    tickedAt: state.tickedAt,
+    accent: state.accent,
+    textSize: state.textSize,
+    ground: state.ground,
+    density: state.density,
+    corners: state.corners,
+    typeface: state.typeface,
+  };
+}
+
+export type Action =
+  | { type: 'go'; screen: Screen }
+  | { type: 'back' }
+  | { type: 'openItem'; id: string }
+  | { type: 'openCourse'; id: CourseId }
+  | { type: 'openEvent'; id: string }
+  | { type: 'openGuide'; id: CourseId; mode?: StudyMode; from?: Screen; unit?: number }
+  | { type: 'setMode'; mode: StudyMode }
+  | { type: 'setEpisode'; id: string }
+  | { type: 'toggleDone'; id: string }
+  | { type: 'toggleSaved'; id: string }
+  | { type: 'toggleNotif'; k: NotifKey }
+  | { type: 'togglePick'; id: string }
+  | { type: 'setNav'; nav: NavMode }
+  | { type: 'toggleWays' }
+  | { type: 'setGrade'; key: string; value: string }
+  | { type: 'addPlace'; place: Omit<SavedPlace, 'id' | 'created'> }
+  | { type: 'removePlace'; id: string }
+  | { type: 'addCommitment'; commitment: Omit<Commitment, 'id' | 'created'> }
+  | { type: 'patchCommitment'; id: string; patch: Partial<Commitment> }
+  | { type: 'removeCommitment'; id: string }
+  | { type: 'setFeedOrder'; order: string[] }
+  | { type: 'toggleFeedSection'; id: string }
+  | { type: 'setLook'; look: Partial<Look> }
+  | { type: 'setFilter'; filter: string }
+  | { type: 'setEvFilter'; filter: string }
+  | { type: 'setCalTab'; tab: 'deadlines' | 'campus' }
+  | { type: 'setQuery'; query: string }
+  | { type: 'selectDate'; date: string | null }
+  | { type: 'stepMonth'; delta: number }
+  | { type: 'toggleUnit'; index: number }
+  | { type: 'clearNotifs' }
+  | { type: 'onbNext' }
+  | { type: 'restartOnboarding' }
+  | { type: 'finishOnboarding' }
+  | { type: 'setLoadStep'; step: number }
+  | { type: 'startDrill'; unit: number | null }
+  | { type: 'flip' }
+  | { type: 'markCard'; got: boolean; key: string }
+  | { type: 'redrill' }
+  | { type: 'startQuiz'; quiz: QuizQuestion[] }
+  | { type: 'pickAnswer'; index: number }
+  | { type: 'nextQuestion' }
+  | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }
+  | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
+  | { type: 'setCalDay'; date: string | null }
+  | { type: 'stepDay'; delta: number }
+  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
+  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
+  | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
+  | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
+  | { type: 'setMeGroup'; group: string }
+  | { type: 'keepSitting'; sitting: Omit<Sitting, 'id'> }
+  | { type: 'dropSitting'; id: string }
+  | { type: 'addSource'; source: NewSource }
+  | { type: 'patchSource'; id: string; patch: Partial<Source> }
+  | { type: 'dropSource'; id: string }
+  | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
+  | { type: 'clearPaperPreset' }
+  | { type: 'writeRoomDraft'; text: string }
+  | { type: 'clearRoomDraft' }
+  | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
+  | {
+      type: 'writeMail';
+      purposeId: string;
+      courseId?: CourseId | '';
+      to?: string;
+      incoming?: string;
+    }
+  | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
+  | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
+  | { type: 'toggleTask'; id: string }
+  | { type: 'deleteTask'; id: string }
+  | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
+  | { type: 'setAppointmentKind'; id: string; kind: string }
+  | { type: 'deleteAppointment'; id: string }
+  | { type: 'newNote'; courseId: CourseId | null }
+  /** Save a finished piece of text as a note without leaving the screen. */
+  | { type: 'keepNote'; title: string; body: string; courseId: CourseId | null }
+  | { type: 'openNote'; id: string }
+  | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId'>> }
+  | { type: 'attachFile'; noteId: string; fileId: string }
+  | { type: 'detachFile'; noteId: string; fileId: string }
+  | { type: 'deleteNote'; id: string }
+  | { type: 'openLesson'; unit: number }
+  | { type: 'openDeck'; unit: number }
+  | { type: 'openUpdate'; courseId: CourseId; unit?: number | null }
+  | { type: 'addUpdate'; update: Omit<CourseUpdate, 'id' | 'created'> }
+  | { type: 'deleteUpdate'; id: string }
+  | { type: 'addFeed'; feed: Omit<FeedSource, 'id' | 'added'>; events: FeedEvent[] }
+  | { type: 'syncFeed'; id: string; events: FeedEvent[]; status: string }
+  | { type: 'failFeed'; id: string; status: string }
+  | { type: 'removeFeed'; id: string }
+  | { type: 'setLinkUrl'; id: string; url: string }
+  | { type: 'addLink'; name: string; url: string }
+  | { type: 'removeLink'; id: string }
+  | { type: 'addCourse'; module: CourseModule }
+  | { type: 'replaceCourse'; module: CourseModule }
+  | { type: 'removeCourse'; id: CourseId }
+  | { type: 'setSample'; on: boolean }
+  | { type: 'removalsPushed'; ids: CourseId[] }
+  | { type: 'hydrate'; persisted: Partial<Persisted> };
+
+export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];

@@ -596,8 +596,13 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
             >
               {/* The ramp itself, as five squares — quicker to judge than a name. */}
               <span style={{ display: 'flex', flex: 'none', borderRadius: 3, overflow: 'hidden' }}>
-                {g.ramp.map((step) => (
-                  <span key={step} style={{ width: 8, height: 22, background: step }} />
+                {/* Keyed by position, not by colour: three of the grounds
+                    repeat a step — ink starts on black twice, paper and fog
+                    both end on white — and keying by the value made React
+                    drop the duplicate, so those swatches showed four bars
+                    where every other one showed five. */}
+                {g.ramp.map((step, i) => (
+                  <span key={i} style={{ width: 8, height: 22, background: step }} />
                 ))}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>

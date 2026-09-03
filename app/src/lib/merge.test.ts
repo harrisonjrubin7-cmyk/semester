@@ -173,11 +173,13 @@ describe('the table', () => {
    * The field names, read out of the store itself.
    *
    * `pickPersisted` is the one place that says what a persisted field is, so
-   * it is what this checks against — importing the store would drag React and
-   * a dozen modules into a test about a lookup table.
+   * it is what this checks against. Read out of the file rather than imported
+   * so that this stays a test about a lookup table: `shape.ts` is cheap to
+   * import today and the reason to keep it that way is exactly this sort of
+   * creep.
    */
   const persistedFields = (): string[] => {
-    const source = readFileSync(join(process.cwd(), 'src/state/store.tsx'), 'utf8');
+    const source = readFileSync(join(process.cwd(), 'src/state/shape.ts'), 'utf8');
     const body = source.split('export function pickPersisted')[1]?.split('\n}')[0] ?? '';
     return [...body.matchAll(/^\s{4}(\w+):\s*state\./gm)].map((m) => m[1]);
   };
