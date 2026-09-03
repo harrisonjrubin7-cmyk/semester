@@ -81,6 +81,22 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'draw',
+    label: 'Draw it',
+    blurb: 'A graph, a flow, a timeline or a matrix — drawn from what you describe.',
+    keywords: 'diagram graph chart draw picture figure visual illustration flowchart curve supply demand axes timeline matrix payoff structure hierarchy causal mermaid svg sketch map model',
+    group: 'Study',
+    root: 'study',
+  },
+  {
+    screen: 'solve',
+    label: 'Work the problem',
+    blurb: 'The method, worked on other numbers — and your own attempt checked.',
+    keywords: 'math maths solve problem set equation calculate algebra derivative statistics elasticity growth rate percentage formula step working check answer wrong show me how practice arithmetic quantitative',
+    group: 'Study',
+    root: 'study',
+  },
+  {
     screen: 'import',
     label: 'Add a course',
     blurb: 'Upload a syllabus and get the course back, checked before you keep it.',

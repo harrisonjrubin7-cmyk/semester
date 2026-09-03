@@ -369,6 +369,8 @@ export type Screen =
   | 'mail'
   | 'export'
   | 'yes'
+  | 'draw'
+  | 'solve'
   | 'slides'
   | 'account'
   | 'cloud';

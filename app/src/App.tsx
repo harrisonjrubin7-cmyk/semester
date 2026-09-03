@@ -32,6 +32,8 @@ import { Maps } from './screens/Maps';
 import { Mail } from './screens/Mail';
 import { Export } from './screens/Export';
 import { Yes } from './screens/Yes';
+import { Draw } from './screens/Draw';
+import { Solve } from './screens/Solve';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
@@ -139,6 +141,10 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Formats other software reads', title: 'Take it with you' };
     case 'yes':
       return { kicker: 'Registration, and the road back', title: 'YES' };
+    case 'draw':
+      return { kicker: `${guide.code} · as a picture`, title: 'Draw it' };
+    case 'solve':
+      return { kicker: `${guide.code} · step by step`, title: 'Work the problem' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -350,6 +356,10 @@ function CurrentScreen() {
       return <Export />;
     case 'yes':
       return <Yes />;
+    case 'draw':
+      return <Draw />;
+    case 'solve':
+      return <Solve />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':
