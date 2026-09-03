@@ -21,6 +21,7 @@ import {
   words,
   type Stance,
 } from '../lib/essay';
+import { asLines, forCourse } from '../lib/sources';
 
 /**
  * Drafting, for the writing that is not coursework.
@@ -81,6 +82,13 @@ export function Essay() {
   const left = draft ? holes(draft) : [];
   const count = draft ? words(draft) : 0;
   const aim = target(lengthId);
+
+  // Already-kept sources for the course chosen, or every one when this is not
+  // coursework — the point is never having to retype them.
+  const onFile = useMemo(
+    () => forCourse(state.sources, u.coursework && course ? course.id : null),
+    [state.sources, u.coursework, course],
+  );
 
   const make = async () => {
     if (busy || !verdict.ok) return;
@@ -305,6 +313,27 @@ export function Essay() {
         placeholder="One per line. Yours only — nothing here will invent one."
         style={{ width: '100%', minHeight: 64, resize: 'vertical', lineHeight: 1.5 }}
       />
+
+      {onFile.length > 0 && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setSources((now) => (now.trim() ? `${now.trim()}\n${asLines(onFile)}` : asLines(onFile)))}
+            style={{ flex: 1, height: 38, fontSize: 12.5 }}
+          >
+            Use my {onFile.length} kept {onFile.length === 1 ? 'source' : 'sources'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => dispatch({ type: 'go', screen: 'sources' })}
+            style={{ flex: 'none', height: 38, fontSize: 12.5 }}
+          >
+            Manage
+          </button>
+        </div>
+      )}
 
       <SectionLabel>How long</SectionLabel>
       <Segmented

@@ -47,6 +47,7 @@ import { Exam } from './screens/Exam';
 import { CheckDates } from './screens/CheckDates';
 import { Ahead } from './screens/Ahead';
 import { Weekly } from './screens/Weekly';
+import { Sources } from './screens/Sources';
 import { scaleOf, tokensFor } from './lib/look';
 import { AccountScreen } from './screens/Account';
 import { Cloud } from './screens/Cloud';
@@ -181,6 +182,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Counted, before it happens', title: 'The week ahead' };
     case 'weekly':
       return { kicker: 'What happened, and what is next', title: 'This week' };
+    case 'sources':
+      return { kicker: 'Yours, never invented', title: 'Sources' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
     case 'cloud':
@@ -441,6 +444,8 @@ function CurrentScreen() {
       return <Ahead />;
     case 'weekly':
       return <Weekly />;
+    case 'sources':
+      return <Sources />;
     case 'account':
       return <AccountScreen />;
     case 'cloud':

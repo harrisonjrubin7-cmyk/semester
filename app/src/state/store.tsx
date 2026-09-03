@@ -47,6 +47,7 @@ import type { Commitment } from '../lib/activities';
 import { DEFAULT_ORDER } from '../lib/feed';
 import { readLook, type Look } from '../lib/look';
 import type { Sitting } from '../lib/sitting';
+import type { NewSource, Source } from '../lib/sources';
 import { dateToIso, isoToDate } from '../lib/date';
 
 /**
@@ -96,6 +97,13 @@ interface Persisted {
    * produces and the oldest is the least useful.
    */
   sittings: Sitting[];
+  /**
+   * Sources you have collected, per course and per project.
+   *
+   * Four tools refuse to invent a citation and ask for yours; this is so that
+   * asking happens once rather than every session.
+   */
+  sources: Source[];
   /**
    * How the app looks. Every one of these is an id into a list in `lib/look.ts`
    * rather than a value, so a look saved today survives the palette being
@@ -270,6 +278,7 @@ const DEFAULT_PERSISTED: Persisted = {
   feedHidden: {},
   recent: [],
   sittings: [],
+  sources: [],
   accent: 'sterling',
   textSize: 'normal',
   ground: 'ink',
@@ -371,6 +380,7 @@ function loadPersisted(): Persisted {
       feedHidden: saved.feedHidden ?? {},
       recent: saved.recent ?? [],
       sittings: saved.sittings ?? [],
+      sources: saved.sources ?? [],
       ...readLook({
         accent: saved.accent,
         textSize: saved.textSize,
@@ -418,6 +428,7 @@ export function pickPersisted(state: State): Persisted {
     feedHidden: state.feedHidden,
     recent: state.recent,
     sittings: state.sittings,
+    sources: state.sources,
     accent: state.accent,
     textSize: state.textSize,
     ground: state.ground,
@@ -481,6 +492,9 @@ export type Action =
   | { type: 'setMeGroup'; group: string }
   | { type: 'keepSitting'; sitting: Omit<Sitting, 'id'> }
   | { type: 'dropSitting'; id: string }
+  | { type: 'addSource'; source: NewSource }
+  | { type: 'patchSource'; id: string; patch: Partial<Source> }
+  | { type: 'dropSource'; id: string }
   | { type: 'sitPaper'; minutes: number; formatId: string }
   | { type: 'clearPaperPreset' }
   | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
@@ -794,6 +808,21 @@ export function reducer(state: State, action: Action): State {
 
     case 'dropSitting':
       return { ...state, sittings: state.sittings.filter((s) => s.id !== action.id) };
+
+    case 'addSource':
+      return {
+        ...state,
+        sources: [{ ...action.source, id: newId(), created: Date.now() }, ...state.sources],
+      };
+
+    case 'patchSource':
+      return {
+        ...state,
+        sources: state.sources.map((s) => (s.id === action.id ? { ...s, ...action.patch } : s)),
+      };
+
+    case 'dropSource':
+      return { ...state, sources: state.sources.filter((s) => s.id !== action.id) };
 
     case 'sitPaper':
       return push(

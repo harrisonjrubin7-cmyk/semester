@@ -146,6 +146,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'sources',
+    label: 'Sources',
+    blurb: 'Every reading you have kept, with what each is for — and out as BibTeX.',
+    keywords: 'source sources citation citations bibliography reference references reading list bibtex zotero overleaf works cited quote author year paper article book cite',
+    group: 'Make',
+    root: 'study',
+  },
+  {
     screen: 'essay',
     label: 'Draft it',
     blurb: 'A real draft for a cover letter, a statement, a newsletter — not coursework.',
