@@ -31,6 +31,7 @@ import { HowLong } from '../components/HowLong';
 import { DropBy } from '../components/DropBy';
 import { Walks } from '../components/Walks';
 import { BehindOffer } from '../components/BehindOffer';
+import { StartToday } from '../components/StartToday';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
 import { GapOffer } from './Gap';
 import { HomeWalk } from '../components/HomeWalk';
@@ -710,6 +711,7 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   rail: Feed_rail,
   walks: Feed_walks,
   behind: BehindOffer,
+  begin: StartToday,
   since: Feed_since,
   gap: GapOffer,
   home: HomeWalk,

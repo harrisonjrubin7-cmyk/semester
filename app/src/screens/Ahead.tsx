@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useStore } from '../state/store';
 import { ClashList, DayBudget } from '../components/Clashes';
+import { StartList } from '../components/StartToday';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -72,6 +73,10 @@ export function Ahead() {
           shape of the fortnight, and a day that will not fit is the shape. */}
       <ClashList />
       <DayBudget />
+
+      {/* Start dates, which are the half this app never had. Ordered by when
+          something must begin rather than when it is due. */}
+      <StartList />
 
       <Blueprint style={{ padding: '15px 16px', marginTop: 14 }}>
         <div className="kicker">The next seven days</div>

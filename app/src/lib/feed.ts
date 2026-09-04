@@ -76,6 +76,11 @@ export const SECTIONS: FeedSection[] = [
   { id: 'tasks', label: 'Your own tasks', blurb: 'Things you added that are not from a syllabus.' },
   { id: 'rail', label: 'Today’s rail', blurb: 'The day hour by hour.' },
   {
+    id: 'begin',
+    label: 'Begin today',
+    blurb: 'What has to start now to be finished in time, worked backwards through the hours you actually have.',
+  },
+  {
     id: 'behind',
     label: 'When the week does not fit',
     blurb: 'Offered only when the arithmetic says so. Nothing on an ordinary week.',
