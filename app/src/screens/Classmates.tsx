@@ -7,10 +7,10 @@ import { SectionLabel } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { cloudConfigured } from '../lib/cloud';
 import {
-  DOMAIN,
   block,
   blocked as listBlocked,
   eligible,
+  proves,
   initials,
   join,
   leave,
@@ -41,10 +41,11 @@ import { codeIn } from '../lib/exam';
  * buried because each one is something somebody could otherwise be hurt by
  * assuming.
  *
- * A confirmed @vanderbilt.edu address proves somebody controls a Vanderbilt
- * mailbox. It does not prove they are in ECON 1020 — no student-usable API
- * exposes a class roster, so a room is people who *say* they are in that
- * class.
+ * A confirmed address at your school's own domain proves somebody controls a
+ * mailbox there. It does not prove they are in ECON 1020 — no student-usable
+ * API exposes a class roster, so a room is people who *say* they are in that
+ * class. Which domains count comes off the school profile, and a school that
+ * lists none gets no domain check with the screen saying so.
  *
  * Blocking is enforced by a database policy, so a blocked person's messages
  * never reach the device at all.
@@ -53,7 +54,7 @@ import { codeIn } from '../lib/exam';
  * the worst kind of lie here, because somebody would rely on it.
  */
 export function Classmates() {
-  const { account, catalog } = useStore();
+  const { account, catalog, state, school } = useStore();
   const rowFlush = useRowStyle(0);
   const term = termOf();
 
@@ -66,7 +67,11 @@ export function Classmates() {
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
 
-  const ok = eligible(account?.email);
+  // The school decides which addresses count, and a school that lists none
+  // admits any confirmed one — see `lib/classmates.ts`. Refusing everybody at
+  // every university but one was the old behaviour and the ground rules for
+  // school support say never to do it.
+  const ok = eligible(account?.email, school);
 
   const refresh = useCallback(async () => {
     if (!account || !ok) return;
@@ -106,10 +111,19 @@ export function Classmates() {
 
   if (!ok) {
     return (
-      <Note title={`Needs a confirmed @${DOMAIN} address`}>
-        This account is {account.email || 'signed in with another address'}. Rooms are limited to
-        confirmed Vanderbilt addresses so that a class group is mostly the class. Everything else in
-        the app works on any address — sign in with your university one to take part here.
+      <Note title="Needs an address at your school">
+        This account is {account.email || 'signed in with another address'}. {proves(school)}{' '}
+        Everything else in the app works on any address — sign in with your university one to take
+        part here.
+      </Note>
+    );
+  }
+
+  if (!state.schoolId) {
+    return (
+      <Note title="Set your school first">
+        A room belongs to a school as well as a course: without one, four universities’ ECON 1020
+        would be the same conversation. Me → Settings → where you study.
       </Note>
     );
   }
@@ -170,14 +184,19 @@ export function Classmates() {
   const offered = roomsFor(
     catalog.courses.map((c) => c.code),
     rooms,
+    state.schoolId,
   );
 
   return (
     <Page bottom={26}>
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-        {termLabel(term)}. A room is everybody who says they are in that class — a confirmed
-        Vanderbilt address is what gets somebody in the door, and no app can read the registrar to
-        check the rest.
+        {/*
+          The shell and the type tokens are main's; the sentence is this
+          branch's. The old copy named Vanderbilt in a line shown to every
+          school, which is the thing this branch exists to stop — `proves`
+          says what the room actually guarantees for the school you are in.
+        */}
+        {termLabel(term)}. A room is everybody who says they are in that class. {proves(school)}
       </div>
 
       <SectionLabel>Your classes</SectionLabel>
