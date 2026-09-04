@@ -27,6 +27,7 @@ import { DropBy } from '../components/DropBy';
 import { Walks } from '../components/Walks';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
 import { GapOffer } from './Gap';
+import { HomeWalk } from '../components/HomeWalk';
 import { Brief } from './Brief';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
@@ -704,6 +705,7 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   walks: Feed_walks,
   since: Feed_since,
   gap: GapOffer,
+  home: HomeWalk,
 };
 
 function TodayFeed() {

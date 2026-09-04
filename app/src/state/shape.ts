@@ -37,6 +37,7 @@ import type { Spent } from '../lib/pace';
 import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
 import type { Balance } from '../lib/meals';
+import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
 import { readLook, type Look } from '../lib/look';
 
@@ -133,6 +134,15 @@ export interface Persisted {
    * `lib/meals.ts`.
    */
   balances: Balance[];
+  /**
+   * Where you live, per term.
+   *
+   * Entered rather than fetched: the housing portal is behind single sign-on
+   * and publishes no interface a student can use. Two fields once a year buy
+   * the move-out arithmetic and the first walk of the day. See
+   * `lib/housing.ts`.
+   */
+  residences: Residence[];
   /**
    * Testing-centre lead time, in business days. Zero means not used.
    *
@@ -361,6 +371,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   windows: [],
   costs: [],
   balances: [],
+  residences: [],
   accessLeadDays: 0,
   tickedAt: {},
   accent: 'sterling',
@@ -473,6 +484,7 @@ export function loadPersisted(): Persisted {
       windows: saved.windows ?? [],
       costs: saved.costs ?? [],
       balances: saved.balances ?? [],
+      residences: saved.residences ?? [],
       accessLeadDays: saved.accessLeadDays ?? 0,
       tickedAt: saved.tickedAt ?? {},
       ...readLook({
@@ -529,6 +541,7 @@ export function pickPersisted(state: State): Persisted {
     windows: state.windows,
     costs: state.costs,
     balances: state.balances,
+    residences: state.residences,
     accessLeadDays: state.accessLeadDays,
     tickedAt: state.tickedAt,
     accent: state.accent,
@@ -649,6 +662,9 @@ export type Action =
   | { type: 'patchCost'; id: string; patch: Partial<Cost> }
   | { type: 'dropCost'; id: string }
   | { type: 'setAccessLead'; days: number }
+  /** Where you live this term, from the housing portal. */
+  | { type: 'setResidence'; residence: Omit<Residence, 'id' | 'created'> }
+  | { type: 'dropResidence'; id: string }
   | { type: 'logBalance'; balance: Omit<Balance, 'id'> }
   | { type: 'dropBalance'; id: string }
   | { type: 'setTermDate'; id: string; iso: string; until?: string }

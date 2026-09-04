@@ -424,6 +424,7 @@ export type Screen =
   | 'worked'
   | 'groupwork'
   | 'meals'
+  | 'housing'
   | 'runway'
   | 'weekly'
   | 'registrar'

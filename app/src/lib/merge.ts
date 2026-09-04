@@ -53,6 +53,7 @@ export const STRATEGY: Record<string, Strategy> = {
   windows: 'union',
   costs: 'union',
   balances: 'union',
+  residences: 'union',
   feeds: 'union',
   feedEvents: 'union',
   extraLinks: 'union',

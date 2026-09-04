@@ -21,6 +21,7 @@ import {
   type Gap as Window,
 } from '../lib/gap';
 import { canSpeak, hush, readAloud, say, spoken, writeAloud } from '../lib/speak';
+import { current } from '../lib/housing';
 
 /**
  * The window, worked out once and read by both the screen and the offer.
@@ -46,9 +47,11 @@ function useWindow(): Window | null {
         inMinutes: next.inMinutes,
         isTomorrow: next.isTomorrow,
       },
-      walkTo(rail, next.block.at, state.places),
+      // Before your first class the origin is where you live, if the housing
+      // portal's room has been filled in. See `lib/housing.ts`.
+      walkTo(rail, next.block.at, state.places, current(state.residences, state.term)?.hall ?? ''),
     );
-  }, [catalog, now, rail, state.places]);
+  }, [catalog, now, rail, state.places, state.residences, state.term]);
 }
 
 /**
@@ -123,9 +126,6 @@ function Run({ win }: { win: Window }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catalog, state.updates, budget]);
 
-  // From the store's clock rather than a fresh `Date.now()`, so the render
-  // is pure and the bar advances on the same thirty-second tick as the rest
-  // of the app instead of only when a card is answered.
   // The card read out loud, when asked for. What actually stops somebody
   // using a phone in motion is having to look at it; see `lib/speak.ts`.
   const card = deck[idx];
@@ -137,6 +137,9 @@ function Run({ win }: { win: Window }) {
   // Nothing should still be reading a card on the screen you left for.
   useEffect(() => hush, []);
 
+  // From the store's clock rather than a fresh `Date.now()`, so the render
+  // is pure and the bar advances on the same thirty-second tick as the rest
+  // of the app instead of only when a card is answered.
   const elapsed = now.getTime() - startedAt.current;
   const left = leftOf(win, elapsed);
   const over = stopped || left === 0 || idx >= deck.length;

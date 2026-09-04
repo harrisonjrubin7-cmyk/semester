@@ -108,7 +108,11 @@ describe('how far it is to the next thing', () => {
     created: 0,
   });
   // Roughly 400 m apart at this latitude.
-  const places = [place('Buttrick', 36.1478, -86.803), place('Furman', 36.1478, -86.7985)];
+  const places = [
+    place('Buttrick', 36.1478, -86.803),
+    place('Furman', 36.1478, -86.7985),
+    place('Branscomb', 36.1478, -86.8005),
+  ];
   const rail = [
     { meta: 'Buttrick 101', at: 9 * 60 },
     { meta: 'Furman 114', at: 11 * 60 },
@@ -129,6 +133,14 @@ describe('how far it is to the next thing', () => {
       { meta: 'Buttrick 206', at: 11 * 60 },
     ];
     expect(walkTo(same, 11 * 60, places)).toEqual({ minutes: 0, known: true });
+  });
+
+  it('starts the day at your residence hall when housing knows it', () => {
+    // Before the first class the hall is the one place you were: it is where
+    // you slept, which is more than the timetable can say.
+    const w = walkTo(rail, 9 * 60, places, 'Branscomb');
+    expect(w.known).toBe(true);
+    expect(w.minutes).toBeGreaterThan(0);
   });
 
   it('will not measure from a building you are not in', () => {

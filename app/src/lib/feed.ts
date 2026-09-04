@@ -31,6 +31,11 @@ export const SECTIONS: FeedSection[] = [
     label: 'Between classes',
     blurb: 'A gap you could fill, with the walk to your next class taken off it.',
   },
+  {
+    id: 'home',
+    label: 'Leaving the building',
+    blurb: 'What time to set off for your first class, and move-out when it is close.',
+  },
   { id: 'next', label: 'Next class', blurb: 'The countdown, and anything overdue.' },
   { id: 'due', label: 'Due today', blurb: 'The checklist, with the headline that counts down.' },
   {

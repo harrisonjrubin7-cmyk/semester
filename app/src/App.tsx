@@ -55,6 +55,7 @@ import { Worked } from './screens/Worked';
 import { Gap } from './screens/Gap';
 import { Groupwork } from './screens/Groupwork';
 import { Meals } from './screens/Meals';
+import { Housing } from './screens/Housing';
 import { Sources } from './screens/Sources';
 import { scaleOf, tokensFor } from './lib/look';
 import { AccountScreen } from './screens/Account';
@@ -200,6 +201,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Who has what, and by when', title: 'Group work' };
     case 'meals':
       return { kicker: 'Swipes, cash, and the week they run out', title: 'Meal plan' };
+    case 'housing':
+      return { kicker: 'The room, and the day you are out of it', title: 'Housing' };
     case 'runway':
       return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
     case 'weekly':
@@ -478,6 +481,8 @@ function CurrentScreen() {
       return <Groupwork />;
     case 'meals':
       return <Meals />;
+    case 'housing':
+      return <Housing />;
     case 'runway':
       return <Runway />;
     case 'weekly':

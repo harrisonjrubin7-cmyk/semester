@@ -228,6 +228,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
+    screen: 'housing',
+    label: 'Housing',
+    blurb: 'Your room, and the move-out date counted from your last exam rather than left as a rule.',
+    keywords: 'housing residence hall dorm dormitory room roommate starrez move out moveout move in movein assignment building live living address selection lottery timeslot storage checkout check out key keys',
+    group: 'Campus',
+    root: 'me',
+  },
+  {
     screen: 'runway',
     label: 'Exam runway',
     blurb: 'The weeks before an exam, counted backwards from it — and what stands in the way.',

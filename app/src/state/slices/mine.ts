@@ -122,6 +122,22 @@ export function mine(state: State, action: Action): State | null {
     case 'dropBalance':
       return { ...state, balances: state.balances.filter((b) => b.id !== action.id) };
 
+    // Where you live, per term. Replaces rather than appends: a balance is a
+    // reading and two of them are a rate, but a room is a fact and there is
+    // only one of it at a time. Filing the old one away would leave the app
+    // choosing between two rooms on a `created` stamp.
+    case 'setResidence':
+      return {
+        ...state,
+        residences: [
+          ...state.residences.filter((r) => r.term !== action.residence.term),
+          { ...action.residence, id: newId(), created: Date.now() },
+        ],
+      };
+
+    case 'dropResidence':
+      return { ...state, residences: state.residences.filter((r) => r.id !== action.id) };
+
     case 'addPlace':
       return {
         ...state,

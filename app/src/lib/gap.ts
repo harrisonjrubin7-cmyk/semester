@@ -198,8 +198,10 @@ export function roomOf(meta: string): string {
  *
  * "Now" is the last block on the rail that has already started, because that
  * is where the app has any reason to think you are. Before the first class of
- * the day it has none — you could be in bed or in the library — and it says
- * so rather than measuring from a building you are not in.
+ * the day it has one other candidate: the residence hall from the housing
+ * portal, which is where you were before anything on the timetable. Without
+ * that it still has none — you could be in bed or in the library — and it
+ * says so rather than measuring from a building you are not in.
  *
  * Two classes in the same building is a known walk of zero, which is a
  * different thing from an unknown one and is reported as such.
@@ -208,10 +210,18 @@ export function walkTo(
   rail: { meta: string; at: number; canceled?: boolean }[],
   nextAt: number,
   places: SavedPlace[],
+  /**
+   * Where you live, from the housing portal. Used only for the first class of
+   * the day, which is the one you leave the building for — see
+   * `lib/housing.ts`. Empty when it has not been filled in, which puts this
+   * back where it was: unable to say where you are before your first class.
+   */
+  home = '',
 ): { minutes: number; known: boolean } {
   const real = rail.filter((b) => !b.canceled);
-  const from = real.filter((b) => b.at < nextAt).pop();
   const to = real.find((b) => b.at === nextAt);
+  const previous = real.filter((b) => b.at < nextAt).pop();
+  const from = previous ?? (home.trim() ? { meta: home, at: 0 } : undefined);
   if (!from || !to) return { minutes: 0, known: false };
 
   const a = buildingOf(from.meta);
