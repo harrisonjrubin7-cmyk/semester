@@ -43,7 +43,7 @@ export function MyRules() {
       >
         Your own reminders
       </SectionLabel>
-      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         The seven above are defaults. These are yours — a lead time you choose, on the kind of
         thing you choose, for one course or all of them. They add to the ones above rather than
         replacing any, so nothing here can make a reminder stop arriving.
@@ -67,7 +67,7 @@ export function MyRules() {
             >
               <TickBox on={r.on} />
             </button>
-            <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, opacity: r.on ? 1 : 0.5 }}>
+            <div style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: r.on ? 1 : 0.5 }}>
               {ruleLine(r, courseCode)}
             </div>
             <button
@@ -75,7 +75,7 @@ export function MyRules() {
               className="bare"
               onClick={() => set(dropRule(rules, r.id))}
               aria-label={`Delete: ${ruleLine(r, courseCode)}`}
-              style={{ flex: 'none', width: 28, opacity: 0.5, fontSize: 15 }}
+              style={{ flex: 'none', width: 28, opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
             >
               ×
             </button>
@@ -87,7 +87,7 @@ export function MyRules() {
               value={r.days}
               onChange={(e) => set(editRule(rules, r.id, { days: Number(e.target.value) }))}
               aria-label="How long before"
-              style={{ flex: '1 1 96px', fontSize: 12.5, minWidth: 96 }}
+              style={{ flex: '1 1 96px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 96 }}
             >
               {LEADS.map((d) => (
                 <option key={d} value={d}>
@@ -103,7 +103,7 @@ export function MyRules() {
                 set(editRule(rules, r.id, { watches: e.target.value as typeof r.watches }))
               }
               aria-label="What it watches"
-              style={{ flex: '1 1 92px', fontSize: 12.5, minWidth: 92 }}
+              style={{ flex: '1 1 92px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 92 }}
             >
               <option value="deadline">every deadline</option>
               <option value="exam">exams only</option>
@@ -114,7 +114,7 @@ export function MyRules() {
               value={r.hour}
               onChange={(e) => set(editRule(rules, r.id, { hour: Number(e.target.value) }))}
               aria-label="What time of day"
-              style={{ flex: '0 1 78px', fontSize: 12.5, minWidth: 74 }}
+              style={{ flex: '0 1 78px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 74 }}
             >
               {HOURS.map((h) => (
                 <option key={h} value={h}>
@@ -128,7 +128,7 @@ export function MyRules() {
               value={r.courseId}
               onChange={(e) => set(editRule(rules, r.id, { courseId: e.target.value }))}
               aria-label="Which course"
-              style={{ flex: '1 1 120px', fontSize: 12.5, minWidth: 110 }}
+              style={{ flex: '1 1 120px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 110 }}
             >
               <option value="">all courses</option>
               {catalog.courses.map((c) => (
@@ -151,7 +151,7 @@ export function MyRules() {
           Add a reminder rule
         </button>
       ) : (
-        <div style={{ fontSize: 12.5, opacity: 0.55, marginTop: 12 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 12 }}>
           {MOST_RULES} is the limit — past that nobody remembers what they asked for.
         </div>
       )}

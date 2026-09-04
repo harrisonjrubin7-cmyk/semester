@@ -114,8 +114,8 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
         textAlign: 'left',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.3 }}>{label}</span>
-      <span style={{ flex: 'none', fontSize: 11.5, opacity: 0.55 }}>{value}</span>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{label}</span>
+      <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55 }}>{value}</span>
     </button>
   );
 
@@ -141,7 +141,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
         </div>
         <div
           className="chrome-text"
-          style={{ fontSize: 24, lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
         >
           {when === 'morning' ? morningLine(am) : eveningLine(pm)}
         </div>
@@ -151,7 +151,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
         <>
           <SectionLabel>Due today</SectionLabel>
           {am.dueToday.length === 0 ? (
-            <div style={{ fontSize: 13.5, opacity: 0.55, padding: '10px 0' }}>
+            <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.55, padding: '10px 0' }}>
               Nothing from a syllabus.
             </div>
           ) : (
@@ -164,7 +164,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
 
           <SectionLabel>On today</SectionLabel>
           {am.classes.length === 0 && am.commitments.length === 0 ? (
-            <div style={{ fontSize: 13.5, opacity: 0.55, padding: '10px 0' }}>
+            <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.55, padding: '10px 0' }}>
               No classes and nothing committed.
             </div>
           ) : (
@@ -174,7 +174,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
             </>
           )}
           {committed > 0 && (
-            <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8 }}>
               {showHours(committed)} of that is a commitment rather than a class.
             </div>
           )}
@@ -208,7 +208,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
         <>
           <SectionLabel>What you did</SectionLabel>
           {pm.ticked.length === 0 && pm.tasksDone === 0 ? (
-            <div style={{ fontSize: 13.5, opacity: 0.55, padding: '10px 0', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.55, padding: '10px 0', lineHeight: 1.5 }}>
               Nothing ticked off. A day with classes, a job and no boxes ticked is a normal day.
             </div>
           ) : (
@@ -232,7 +232,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
 
           <SectionLabel>Tomorrow</SectionLabel>
           {pm.tomorrow.length === 0 && pm.tomorrowClasses.length === 0 ? (
-            <div style={{ fontSize: 13.5, opacity: 0.55, padding: '10px 0' }}>
+            <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.55, padding: '10px 0' }}>
               Nothing due and no classes.
             </div>
           ) : (
@@ -263,10 +263,10 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       >
         <span style={{ width: 6, height: 30, background: 'var(--chrome)', flex: 'none' }} />
         <span style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3 }}>
+          <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>
             This week’s report
           </span>
-          <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+          <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
             What happened, what slipped, and what next week holds.
           </span>
         </span>
@@ -278,10 +278,10 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       >
         <span style={{ width: 6, height: 30, background: 'var(--chrome)', flex: 'none' }} />
         <span style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3 }}>
+          <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>
             The week ahead, in hours
           </span>
-          <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+          <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
             What is promised, what is due, and where the room is.
           </span>
         </span>
@@ -301,7 +301,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
           {said ? (
             <div
               style={{
-                fontSize: 14,
+                fontSize: 'calc(14px * var(--text-scale, 1))',
                 lineHeight: 1.6,
                 whiteSpace: 'pre-wrap',
                 marginTop: 12,
@@ -315,7 +315,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
             </div>
           ) : null}
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
-          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             Every number above is counted from your own data. {provider()} only reads the counts — it is
             told never to restate one differently or invent one.
           </div>

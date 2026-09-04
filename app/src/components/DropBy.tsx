@@ -71,21 +71,21 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
             <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
               <span className="tag tag-accent">{mod?.course.code ?? r.courseId}</span>
               {when ? (
-                <span style={{ flex: 1, textAlign: 'right', fontSize: 12, opacity: 0.7 }}>
+                <span style={{ flex: 1, textAlign: 'right', fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7 }}>
                   {when}
                 </span>
               ) : null}
             </div>
-            <div style={{ fontSize: 14, lineHeight: 1.4, marginTop: 7 }}>{r.said}</div>
+            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.4, marginTop: 7 }}>{r.said}</div>
 
             {next ? (
-              <div style={{ fontSize: 12.5, opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
                 {next.block.title}
                 {next.block.meta ? ` · ${next.block.meta}` : ''}
               </div>
             ) : yours ? (
               <>
-                <div style={{ fontSize: 12.5, opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
                   The app does not have this course's office hours. They are on the syllabus, and
                   they take a minute to add.
                 </div>
@@ -96,7 +96,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                     dispatch({ type: 'openCourse', id: r.courseId });
                     dispatch({ type: 'go', screen: 'edit' });
                   }}
-                  style={{ height: 38, marginTop: 9, fontSize: 12.5 }}
+                  style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
                 >
                   Add them
                 </button>
@@ -115,7 +115,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                     to: mod.course.email,
                   })
                 }
-                style={{ height: 36, marginTop: 6, fontSize: 12.5 }}
+                style={{ height: 36, marginTop: 6, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
               >
                 Or write to {mod.course.prof || 'them'} first
               </button>

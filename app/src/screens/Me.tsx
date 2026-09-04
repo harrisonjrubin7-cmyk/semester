@@ -77,13 +77,13 @@ function Destination({
       }}
     >
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 15.5 }}>
+        <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'calc(15.5px * var(--text-scale, 1))' }}>
           {to.screen === 'account' && account ? 'Account · synced' : to.label}
         </span>
         <span
           style={{
             display: 'block',
-            fontSize: 12,
+            fontSize: 'calc(12px * var(--text-scale, 1))',
             opacity: 0.55,
             lineHeight: 1.4,
             marginTop: 2,
@@ -163,12 +163,12 @@ export function Me() {
               borderLeft: i === 0 ? 'none' : '1px solid var(--app-line)',
             }}
           >
-            <div className="chrome-text" style={{ fontSize: 30, lineHeight: 1 }}>
+            <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1 }}>
               {s.n}
             </div>
             <div
               style={{
-                fontSize: 10,
+                fontSize: 'calc(10px * var(--text-scale, 1))',
                 letterSpacing: '0.14em',
                 textTransform: 'uppercase',
                 opacity: 0.5,
@@ -187,8 +187,8 @@ export function Me() {
       {bars.map((b) => (
         <div key={b.code} style={{ padding: '10px 0', borderBottom: '1px solid var(--app-line)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17 }}>{b.code}</div>
-            <div style={{ fontSize: 12, opacity: 0.55 }}>{b.n} left</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{b.code}</div>
+            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55 }}>{b.n} left</div>
           </div>
           <div style={{ marginTop: 6 }}>
             <Meter pct={b.pct} />
@@ -222,14 +222,14 @@ export function Me() {
               <span className="tag tag-accent" style={{ flex: 'none' }}>
                 {courseCode(r.courseId)}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 13.5 }}>{r.kind}</span>
-              <span style={{ flex: 'none', fontSize: 13.5 }}>{showSpan(r.minutes / 60)}</span>
-              <span style={{ flex: 'none', fontSize: 11, opacity: 0.45, minWidth: 46, textAlign: 'right' }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{r.kind}</span>
+              <span style={{ flex: 'none', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{showSpan(r.minutes / 60)}</span>
+              <span style={{ flex: 'none', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, minWidth: 46, textAlign: 'right' }}>
                 {r.from === 1 ? 'from 1' : `from ${r.from}`}
               </span>
             </div>
           ))}
-          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
             The middle figure of what you reported, so one all-nighter does not move it. Tick
             something off and the app asks once — it stops asking a kind of work after five.
           </div>
@@ -328,14 +328,14 @@ export function Search() {
         value={state.query}
         onChange={(e) => dispatch({ type: 'setQuery', query: e.target.value })}
         placeholder="A course, a topic, a deadline, a screen…"
-        style={{ height: 44, fontSize: 15 }}
+        style={{ height: 44, fontSize: 'calc(15px * var(--text-scale, 1))' }}
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
         aria-label="Search everything"
       />
 
       {typed && total > 0 && (
-        <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 10 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10 }}>
           {total} {total === 1 ? 'result' : 'results'}
         </div>
       )}
@@ -362,8 +362,8 @@ export function Search() {
                 {hit.tag}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{hit.title}</span>
-                <span style={{ display: 'block', fontSize: 11, opacity: 0.55, lineHeight: 1.35 }}>
+                <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.25 }}>{hit.title}</span>
+                <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.35 }}>
                   {hit.sub}
                 </span>
               </span>
@@ -421,7 +421,7 @@ export function Notifications() {
             <span className="tag tag-accent">{n.code}</span>
             <span
               style={{
-                fontSize: 11,
+                fontSize: 'calc(11px * var(--text-scale, 1))',
                 opacity: 0.5,
                 fontFamily: 'var(--font-heading)',
                 letterSpacing: '0.1em',
@@ -433,14 +433,14 @@ export function Notifications() {
           <div
             style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 19,
+              fontSize: 'calc(19px * var(--text-scale, 1))',
               lineHeight: 1.15,
               marginTop: 8,
             }}
           >
             {n.title}
           </div>
-          <div style={{ fontSize: 13, opacity: 0.7, marginTop: 2 }}>{n.body}</div>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 2 }}>{n.body}</div>
         </Blueprint>
       ))}
       <button
@@ -483,7 +483,7 @@ function Reminders() {
 
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         {line} They arrive while the app is open or running in the background. Waking a phone whose
         browser is closed needs a push server, which this deployment does not have — so treat these
         as a nudge while you are working, not an alarm clock.
@@ -493,7 +493,7 @@ function Reminders() {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => void requestPermission().then(setPerm)}
-          style={{ height: 40, marginTop: 10, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ height: 40, marginTop: 10, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Allow notifications
         </button>
@@ -510,7 +510,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
   return (
     <div style={{ padding: bare ? 0 : 18 }}>
       <SectionLabel style={{ margin: '0 0 6px' }}>Your name</SectionLabel>
-      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 8, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 8, textWrap: 'pretty' }}>
         Only used to address you in the app. Never sent anywhere, never guessed at from your
         email, and leaving it blank costs nothing — the app just says "you".
       </div>
@@ -521,11 +521,11 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         placeholder="What should the app call you?"
         aria-label="Your name"
         onChange={(e) => dispatch({ type: 'setMyName', name: e.target.value })}
-        style={{ width: '100%', fontSize: 13.5 }}
+        style={{ width: '100%', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
       />
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Navigation</SectionLabel>
-      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         Two structures, the same screens. The tab bar gives every thing a fixed home. The feed
         interleaves classes and deadlines in one scroll and slices it with a filter row.
       </div>
@@ -545,7 +545,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
       <YourCourses />
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Your Today</SectionLabel>
-      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         The right order is not the same for everyone. Somebody with a job and one class wants the
         rail first; somebody with a paper due wants the checklist and would rather not scroll past
         a countdown to a lecture they are already walking to.
@@ -573,8 +573,8 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
               <TickBox on={on} />
             </button>
             <div style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : 0.5 }}>
-              <div style={{ fontSize: 14 }}>{section?.label ?? id}</div>
-              <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>{section?.blurb}</div>
+              <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{section?.label ?? id}</div>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>{section?.blurb}</div>
             </div>
             <button
               type="button"
@@ -582,7 +582,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
               disabled={i === 0}
               onClick={() => dispatch({ type: 'setFeedOrder', order: move(state.feedOrder, id, -1) })}
               aria-label={`Move ${section?.label} up`}
-              style={{ width: 26, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 15 }}
+              style={{ width: 26, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'calc(15px * var(--text-scale, 1))' }}
             >
               ↑
             </button>
@@ -596,7 +596,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
                 width: 26,
                 flex: 'none',
                 opacity: i === all.length - 1 ? 0.2 : 0.6,
-                fontSize: 15,
+                fontSize: 'calc(15px * var(--text-scale, 1))',
               }}
             >
               ↓
@@ -606,7 +606,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
       })}
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>The accent</SectionLabel>
-      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         All metals and stones. The accent being a metal rather than a colour is most of why the
         app looks drawn instead of like a dashboard, so these change the shade and not that.
       </div>
@@ -626,7 +626,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
                 alignItems: 'center',
                 gap: 7,
                 padding: '7px 12px',
-                fontSize: 12,
+                fontSize: 'calc(12px * var(--text-scale, 1))',
                 borderColor: on ? a.base : 'var(--app-line)',
               }}
             >
@@ -679,8 +679,8 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
                 ))}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 14 }}>{g.label}</span>
-                <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+                <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{g.label}</span>
+                <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                   {g.blurb}
                 </span>
               </span>
@@ -689,7 +689,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         })}
       </div>
       {groundOf(state.ground).light && (
-        <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
           On a light ground the brushed-metal type inverts to a dark sweep, so display headings
           keep their lustre instead of disappearing.
         </div>
@@ -709,7 +709,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
               style={{
                 flex: 'none',
                 padding: '7px 12px',
-                fontSize: 13,
+                fontSize: 'calc(13px * var(--text-scale, 1))',
                 fontFamily: t.heading,
                 borderColor: on ? 'var(--app-accent)' : 'var(--app-line)',
               }}
@@ -719,7 +719,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
           );
         })}
       </div>
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
         {TYPEFACES.find((t) => t.id === state.typeface)?.blurb}
       </div>
 
@@ -736,7 +736,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         value={state.density}
         onChange={(density) => dispatch({ type: 'setLook', look: { density } })}
       />
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
         Tightens the space around every section heading, which is the app’s vertical rhythm.
         Tap targets do not shrink with it — a 30px button is a miss, and a miss costs more than
         the line it saved.
@@ -748,7 +748,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         value={state.textSize}
         onChange={(textSize) => dispatch({ type: 'setLook', look: { textSize } })}
       />
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
         Scales the text. Buttons and the tab bar keep their size on purpose — a tap target that
         grew with the type would push the bar off the bottom of a phone.
       </div>
@@ -759,7 +759,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
         Testing-centre lead time
       </SectionLabel>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, marginBottom: 9 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 9 }}>
         If you book exams through Student Access, its lead time is stated in business days and
         counting those backwards over a weekend is easy to get wrong. Set it here and the exam
         runway does it. Leave it at zero if you do not use one.
@@ -775,7 +775,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
           onChange={(e) => dispatch({ type: 'setAccessLead', days: Number(e.target.value) })}
           style={{ width: 90, flex: 'none' }}
         />
-        <span style={{ fontSize: 12.5, opacity: 0.6 }}>
+        <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>
           {state.accessLeadDays === 0
             ? 'not used'
             : `business days before an exam`}
@@ -815,8 +815,8 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14 }}>{c.course.code}</div>
-            <div style={{ fontSize: 11, opacity: 0.5 }}>
+            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{c.course.code}</div>
+            <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}>
               {c.guide.units.length} units · {c.items.length} deadlines · from {c.course.source}
             </div>
           </div>
@@ -824,7 +824,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
             type="button"
             className="bare"
             onClick={() => dispatch({ type: 'removeCourse', id: c.course.id })}
-            style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+            style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
           >
             REMOVE
           </button>
@@ -844,8 +844,8 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
           }}
         >
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14 }}>{s.label}</div>
-            <div style={{ fontSize: 11, opacity: 0.5 }}>{s.meta}</div>
+            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{s.label}</div>
+            <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}>{s.meta}</div>
           </div>
           <span className="tag tag-outline">{s.state}</span>
         </div>

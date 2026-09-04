@@ -115,7 +115,7 @@ export function Classmates() {
     return (
       <div style={{ padding: 18 }}>
         <SectionLabel>What classmates should call you</SectionLabel>
-        <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
           This is the only thing about you other people see, alongside the classes you share. Not
           your email, and it does not have to be your full name.
         </div>
@@ -171,7 +171,7 @@ export function Classmates() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         {termLabel(term)}. A room is everybody who says they are in that class — a confirmed
         Vanderbilt address is what gets somebody in the door, and no app can read the registrar to
         check the rest.
@@ -179,7 +179,7 @@ export function Classmates() {
 
       <SectionLabel>Your classes</SectionLabel>
       {offered.length === 0 && (
-        <div style={{ fontSize: 13, opacity: 0.55, padding: '10px 0' }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, padding: '10px 0' }}>
           No courses yet. Add one from a syllabus, or type a code below.
         </div>
       )}
@@ -206,8 +206,8 @@ export function Classmates() {
               opacity: room.joined ? 1 : 0.6,
             }}
           >
-            <span style={{ display: 'block', fontSize: 15 }}>{room.code}</span>
-            <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))' }}>{room.code}</span>
+            <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
               {room.joined ? 'You are in this room' : 'Not in it yet'}
             </span>
           </button>
@@ -226,7 +226,7 @@ export function Classmates() {
                   .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
                   .finally(() => setBusy(false));
               }}
-              style={{ flex: 'none', padding: '0 14px', height: 34, fontSize: 12 }}
+              style={{ flex: 'none', padding: '0 14px', height: 34, fontSize: 'calc(12px * var(--text-scale, 1))' }}
             >
               Join
             </button>
@@ -268,8 +268,8 @@ export function Classmates() {
 
       <SectionLabel>What other people see</SectionLabel>
       <Blueprint style={{ padding: '13px 14px' }}>
-        <div style={{ fontSize: 14 }}>{profile?.handle}</div>
-        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{profile?.handle}</div>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
           That name, and which of your classes they are also in. Not your email, not your other
           courses, not your notes, your grades or anything else in the app.
         </div>
@@ -277,7 +277,7 @@ export function Classmates() {
 
       <Blocked me={account.id} />
 
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 18, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 18, lineHeight: 1.5 }}>
         Leaving a room removes you from it and nothing you posted. Delete your own messages first if
         you want them gone. Blocking somebody is immediate and is enforced by the database, so their
         messages stop reaching this device — reports are recorded, but nobody is watching a queue,
@@ -364,12 +364,12 @@ function Room({
         <button type="button" className="btn btn-secondary" onClick={onBack} style={{ padding: '0 14px', height: 36 }}>
           ← Rooms
         </button>
-        <div style={{ flex: 1, minWidth: 0, fontSize: 15 }}>{code}</div>
+        <div style={{ flex: 1, minWidth: 0, fontSize: 'calc(15px * var(--text-scale, 1))' }}>{code}</div>
         <button
           type="button"
           className="bare"
           onClick={() => setShowPeople((s) => !s)}
-          style={{ width: 'auto', fontSize: 11.5, opacity: 0.7, letterSpacing: '0.06em' }}
+          style={{ width: 'auto', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, letterSpacing: '0.06em' }}
         >
           {people.length} HERE
         </button>
@@ -377,7 +377,7 @@ function Room({
 
       {showPeople && (
         <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
-          <div style={{ fontSize: 11.5, opacity: 0.6, marginBottom: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.45 }}>
             Everybody who says they are in {code} this term. Confirmed Vanderbilt addresses, not a
             roster — no app can read the registrar.
           </div>
@@ -391,13 +391,13 @@ function Room({
                   borderRadius: '50%',
                   display: 'grid',
                   placeItems: 'center',
-                  fontSize: 10.5,
+                  fontSize: 'calc(10.5px * var(--text-scale, 1))',
                   background: 'var(--app-raise)',
                 }}
               >
                 {initials(p.handle)}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 13.5 }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
                 {p.handle}
                 {p.user_id === me ? ' (you)' : ''}
               </span>
@@ -406,7 +406,7 @@ function Room({
                   type="button"
                   className="bare"
                   onClick={() => void block(me, p.user_id).then(() => setMessages((m) => m.filter((x) => x.user_id !== p.user_id)))}
-                  style={{ width: 'auto', fontSize: 11, opacity: 0.5 }}
+                  style={{ width: 'auto', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}
                 >
                   BLOCK
                 </button>
@@ -418,7 +418,7 @@ function Room({
 
       <div style={{ marginTop: 14 }}>
         {messages.length === 0 && (
-          <div style={{ fontSize: 13, opacity: 0.55, padding: '18px 0', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, padding: '18px 0', lineHeight: 1.5 }}>
             Nothing said yet. Somebody has to be first — a question about the reading is usually the
             easiest one.
           </div>
@@ -434,8 +434,8 @@ function Room({
               }}
             >
               <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-                <span style={{ fontSize: 12.5, opacity: mine ? 0.9 : 0.7 }}>{nameOf(m.user_id)}</span>
-                <span style={{ fontSize: 10.5, opacity: 0.4, flex: 1 }}>{whenSaid(m.created_at)}</span>
+                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: mine ? 0.9 : 0.7 }}>{nameOf(m.user_id)}</span>
+                <span style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.4, flex: 1 }}>{whenSaid(m.created_at)}</span>
                 {mine ? (
                   <button
                     type="button"
@@ -443,7 +443,7 @@ function Room({
                     onClick={() =>
                       void unsay(m.id).then(() => setMessages((all) => all.filter((x) => x.id !== m.id)))
                     }
-                    style={{ width: 'auto', fontSize: 10.5, opacity: 0.45 }}
+                    style={{ width: 'auto', fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.45 }}
                   >
                     DELETE
                   </button>
@@ -457,13 +457,13 @@ function Room({
                       );
                       if (why?.trim()) void report(me, m, why);
                     }}
-                    style={{ width: 'auto', fontSize: 10.5, opacity: 0.45 }}
+                    style={{ width: 'auto', fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.45 }}
                   >
                     REPORT
                   </button>
                 )}
               </div>
-              <div style={{ fontSize: 14, lineHeight: 1.5, marginTop: 3, whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 3, whiteSpace: 'pre-wrap' }}>
                 {m.body}
               </div>
               {/*
@@ -484,7 +484,7 @@ function Room({
                       code: codeIn(m.body) ?? undefined,
                     });
                   }}
-                  style={{ height: 36, marginTop: 8, fontSize: 12.5, width: 'auto', padding: '0 14px' }}
+                  style={{ height: 36, marginTop: 8, fontSize: 'calc(12.5px * var(--text-scale, 1))', width: 'auto', padding: '0 14px' }}
                 >
                   Sit paper {codeIn(m.body)}
                 </button>
@@ -521,7 +521,7 @@ function Room({
           Send
         </button>
       </div>
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
         Everybody in {code} can read this, and it is not private to a group of friends. Messages
         cannot be edited — delete and say it again.
       </div>
@@ -548,18 +548,18 @@ function Blocked({ me }: { me: string }) {
   return (
     <>
       <SectionLabel>Blocked</SectionLabel>
-      <div style={{ fontSize: 12.5, opacity: 0.6, marginBottom: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.45 }}>
         {ids.length} {ids.length === 1 ? 'person' : 'people'}. Their messages never reach this
         device. They are not told, and they cannot see that you blocked them.
       </div>
       {ids.map((id) => (
         <div key={id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 0' }}>
-          <span style={{ flex: 1, fontSize: 12.5, opacity: 0.6 }}>Blocked account</span>
+          <span style={{ flex: 1, fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>Blocked account</span>
           <button
             type="button"
             className="bare"
             onClick={() => void unblock(me, id).then(() => setIds((x) => x.filter((y) => y !== id)))}
-            style={{ width: 'auto', fontSize: 11, opacity: 0.6 }}
+            style={{ width: 'auto', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.6 }}
           >
             UNBLOCK
           </button>
@@ -574,7 +574,7 @@ function Note({ title, children }: { title: string; children: React.ReactNode })
     <div style={{ padding: 18 }}>
       <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
         <div className="kicker">{title}</div>
-        <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>{children}</div>
+        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>{children}</div>
       </Blueprint>
     </div>
   );
@@ -582,7 +582,7 @@ function Note({ title, children }: { title: string; children: React.ReactNode })
 
 function Problem({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 12.5, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
       {children}
     </div>
   );

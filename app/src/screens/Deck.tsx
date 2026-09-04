@@ -118,7 +118,7 @@ export function Deck() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         A real PowerPoint file, built here. It opens in PowerPoint, Keynote and Google Slides, and
         it comes out in the app's own palette rather than a template's.
       </div>
@@ -135,7 +135,7 @@ export function Deck() {
 
       {source === 'unit' ? (
         <>
-          <div style={{ fontSize: 12, opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
             No model in the loop and nothing invented — your own guide, rearranged. Question on one
             slide, answer on the next.
           </div>
@@ -154,7 +154,7 @@ export function Deck() {
             ))}
           </select>
           {catalog.courses.length > 1 && (
-            <div style={{ fontSize: 11.5, opacity: 0.45, marginTop: 6 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 6 }}>
               Switch course from Study.
             </div>
           )}
@@ -180,8 +180,8 @@ export function Deck() {
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
-                  <span style={{ display: 'block', fontSize: 14 }}>{option.label}</span>
-                  <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{option.label}</span>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                     {option.blurb}
                   </span>
                 </button>
@@ -211,7 +211,7 @@ export function Deck() {
             onFill={(lines) => setMaterial((now) => appendTo(now, lines))}
             label="readings"
           />
-          <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
             Anything not in here comes back as a blank in square brackets. A number invented on a
             slide is believed by a whole room at once.
           </div>
@@ -245,7 +245,7 @@ export function Deck() {
             value={String(minutes)}
             onChange={(next) => setMinutes(Number(next))}
           />
-          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 5 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 5 }}>
             About {slidesFor(minutes, kindById(kindId))} content slides — a slide and a half a
             minute, which is the rate people actually present at.
           </div>
@@ -266,7 +266,7 @@ export function Deck() {
               {busy ? 'Planning it…' : plan ? 'Plan it again' : 'Plan the deck'}
             </button>
           ) : (
-            <div style={{ fontSize: 12.5, opacity: 0.6, marginTop: 16, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 16, lineHeight: 1.5 }}>
               Needs a key first — set one under Ask Claude → Settings. Building a deck from a unit
               needs no key at all.
             </div>
@@ -299,7 +299,7 @@ export function Deck() {
                 {slide.bullets.map((b, n) => (
                   <div
                     key={`${b}-${n}`}
-                    style={{ fontSize: 12.5, opacity: 0.7, marginTop: 5, lineHeight: 1.45 }}
+                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 5, lineHeight: 1.45 }}
                   >
                     · {b}
                   </div>
@@ -309,7 +309,7 @@ export function Deck() {
           </div>
 
           {left.length > 0 && (
-            <div style={{ fontSize: 12, opacity: 0.65, marginTop: 10, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 10, lineHeight: 1.5 }}>
               {left.length} {left.length === 1 ? 'blank' : 'blanks'} in square brackets. Those are
               the facts it would have had to invent — fill them before you present.
             </div>
@@ -360,7 +360,7 @@ export function Deck() {
             </div>
           )}
           <PrintButton label="Print the slides" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             The notes hold what you say over each slide, which is deliberately not what is written
             on it — a slide read aloud is a slide nobody listens to.
           </div>

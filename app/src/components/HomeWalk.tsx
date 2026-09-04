@@ -83,7 +83,7 @@ export function HomeWalk() {
     >
       <div className="kicker">{morning ? 'Before your first class' : 'Move-out'}</div>
       {morning ? (
-        <div style={{ fontSize: 14.5, lineHeight: 1.4, marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.4, marginTop: 5, textWrap: 'pretty' }}>
           {morning}
         </div>
       ) : null}

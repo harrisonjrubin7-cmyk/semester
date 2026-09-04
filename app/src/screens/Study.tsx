@@ -36,14 +36,14 @@ export function Study() {
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Exam radar</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 10 }}>
-            <div className="chrome-text" style={{ fontSize: 38, lineHeight: 1 }}>
+            <div className="chrome-text" style={{ fontSize: 'calc(38px * var(--text-scale, 1))', lineHeight: 1 }}>
               {exam.days}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 19, lineHeight: 1.1 }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', lineHeight: 1.1 }}>
                 {exam.days === 1 ? 'day' : 'days'} to {exam.code} {exam.item.title}
               </div>
-              <div style={{ fontSize: 12, opacity: 0.7 }}>
+              <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7 }}>
                 {exam.item.mon} {exam.item.day} · {exam.item.dueTime} · {exam.item.weight}
               </div>
             </div>
@@ -53,7 +53,7 @@ export function Study() {
               marginTop: 12,
               paddingTop: 11,
               borderTop: '1px solid var(--app-line)',
-              fontSize: 13,
+              fontSize: 'calc(13px * var(--text-scale, 1))',
               opacity: 0.85,
               textWrap: 'pretty',
             }}
@@ -103,7 +103,7 @@ export function Study() {
             the list from `lib/nav.ts` means the next one appears here the day
             it is added, without anybody remembering to come back.
           */}
-          <div style={{ fontSize: 12.5, opacity: 0.6, margin: '14px 0 2px', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, margin: '14px 0 2px', lineHeight: 1.5 }}>
             Everything the app can do with a course, in one place.
           </div>
           {[...destinationsIn('Study'), ...destinationsIn('Make')]
@@ -128,7 +128,7 @@ export function Study() {
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 13.5,
+                      fontSize: 'calc(13.5px * var(--text-scale, 1))',
                       lineHeight: 1.35,
                       marginTop: 3,
                       textWrap: 'pretty',
@@ -193,14 +193,14 @@ export function Study() {
                     counts give way to it. */}
                 <div
                   className="chrome-text"
-                  style={{ fontSize: 20, flex: 'none', whiteSpace: 'nowrap' }}
+                  style={{ fontSize: 'calc(20px * var(--text-scale, 1))', flex: 'none', whiteSpace: 'nowrap' }}
                 >
                   {g.code}
                 </div>
                 <div
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     opacity: 0.55,
@@ -211,13 +211,13 @@ export function Study() {
                   {g.units.length} units · {cards} cards
                 </div>
               </div>
-              <div style={{ fontSize: 13, opacity: 0.7, marginTop: 2 }}>{g.blurb}</div>
+              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 2 }}>{g.blurb}</div>
               <div style={{ marginTop: 11 }}>
                 <Meter pct={g.mastery} />
               </div>
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
                   opacity: 0.5,
                   marginTop: 5,
                   fontFamily: 'var(--font-heading)',
@@ -249,7 +249,7 @@ export function Study() {
                     style={{
                       flex: 'none',
                       padding: '5px 10px',
-                      fontSize: 11,
+                      fontSize: 'calc(11px * var(--text-scale, 1))',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
                       background: 'transparent',
@@ -275,7 +275,7 @@ export function Study() {
       >
         + Add a reading to a course
       </button>
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
         A chapter, a handout, a lecture — paste or attach it and the cards, the quiz, the guide
         and the cram sheet all take it in.
       </div>
@@ -286,7 +286,7 @@ export function Study() {
       {tab === 'tonight' && (
         <>
       <SectionLabel style={{ margin: '20px 0 4px' }}>Tonight’s 25 minutes</SectionLabel>
-      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 12, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 12, textWrap: 'pretty' }}>
         Your weakest unit in each course, and what’s on the next quiz — one short sitting rather
         than a plan you will not keep.
       </div>
@@ -309,18 +309,18 @@ export function Study() {
               width: 44,
               flex: 'none',
               fontFamily: 'var(--font-heading)',
-              fontSize: 15,
+              fontSize: 'calc(15px * var(--text-scale, 1))',
               opacity: 0.5,
             }}
           >
             {catalog.planMinutes[p.courseId]}
           </span>
           <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25 }}>{p.unit.name}</span>
+            <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.25 }}>{p.unit.name}</span>
             <span
               style={{
                 display: 'block',
-                fontSize: 11,
+                fontSize: 'calc(11px * var(--text-scale, 1))',
                 opacity: 0.55,
                 fontFamily: 'var(--font-heading)',
                 letterSpacing: '0.1em',

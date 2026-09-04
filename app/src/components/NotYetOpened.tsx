@@ -30,7 +30,7 @@ export function NotYetOpened() {
       >
         Not opened yet
       </SectionLabel>
-      <div style={{ fontSize: 12.5, opacity: 0.6, marginBottom: 10, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 10, lineHeight: 1.45 }}>
         {seenLine(state.visited)} These three change each day.
       </div>
 
@@ -55,13 +55,13 @@ export function NotYetOpened() {
               <TabGlyph screen={d.screen} size={16} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 13.5 }}>{d.label}</span>
+              <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{d.label}</span>
               {/* The directory's own sentence, not a second one written for
                   here — two descriptions of the same screen would drift. */}
               <span
                 style={{
                   display: 'block',
-                  fontSize: 11.5,
+                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   opacity: 0.55,
                   marginTop: 2,
                   lineHeight: 1.4,

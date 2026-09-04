@@ -28,7 +28,7 @@ export function SectionLabel({
       className="section-label"
       style={{
         margin: 'calc(26px * var(--density, 1)) 0 calc(12px * var(--density, 1))',
-        fontSize: 12,
+        fontSize: 'calc(12px * var(--text-scale, 1))',
         fontWeight: 'inherit',
         ...style,
       }}
@@ -74,7 +74,7 @@ export function ChipRow<T extends string>({
               style={{
                 flex: 'none',
                 padding: '5px 12px',
-                fontSize: 12,
+                fontSize: 'calc(12px * var(--text-scale, 1))',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 background: on ? 'var(--chrome)' : 'transparent',
@@ -118,7 +118,7 @@ export function Segmented<T extends string>({
             style={{
               flex: 1,
               padding: '9px 0',
-              fontSize: 12,
+              fontSize: 'calc(12px * var(--text-scale, 1))',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               background: on ? 'var(--chrome)' : 'transparent',
@@ -165,7 +165,7 @@ export function DateRow({
       <div style={{ width: 46, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}>
         <div
           style={{
-            fontSize: 10,
+            fontSize: 'calc(10px * var(--text-scale, 1))',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
             opacity: 0.5,
@@ -173,13 +173,13 @@ export function DateRow({
         >
           {top}
         </div>
-        <div style={{ fontSize: 24 }}>{bottom}</div>
+        <div style={{ fontSize: 'calc(24px * var(--text-scale, 1))' }}>{bottom}</div>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, lineHeight: 1.25 }}>{title}</div>
+        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.25 }}>{title}</div>
         <div
           style={{
-            fontSize: 11,
+            fontSize: 'calc(11px * var(--text-scale, 1))',
             opacity: 0.55,
             fontFamily: 'var(--font-heading)',
             letterSpacing: '0.1em',
@@ -220,7 +220,7 @@ export function Toggle({
         borderBottom: '1px solid var(--app-line)',
       }}
     >
-      <span style={{ flex: 1, fontSize: 14 }}>{label}</span>
+      <span style={{ flex: 1, fontSize: 'calc(14px * var(--text-scale, 1))' }}>{label}</span>
       <span
         style={{
           width: 42,
@@ -348,13 +348,13 @@ export function EmptyState({
       )}
       <div
         className={inline ? 'kicker' : 'chrome-text'}
-        style={inline ? undefined : { fontSize: 24 }}
+        style={inline ? undefined : { fontSize: 'calc(24px * var(--text-scale, 1))' }}
       >
         {title}
       </div>
       <div
         style={{
-          fontSize: 13,
+          fontSize: 'calc(13px * var(--text-scale, 1))',
           opacity: 0.6,
           marginTop: inline ? 5 : 6,
           textWrap: 'pretty',
@@ -371,7 +371,7 @@ export function EmptyState({
           style={{
             height: 40,
             marginTop: 12,
-            fontSize: 12.5,
+            fontSize: 'calc(12.5px * var(--text-scale, 1))',
             ...(inline ? { width: '100%' } : { paddingInline: 20 }),
           }}
         >

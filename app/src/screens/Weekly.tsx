@@ -130,8 +130,8 @@ export function Weekly() {
         textAlign: 'left',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.3 }}>{label}</span>
-      <span style={{ flex: 'none', fontSize: 11.5, opacity: 0.55 }}>{right}</span>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{label}</span>
+      <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55 }}>{right}</span>
     </button>
   );
 
@@ -141,12 +141,12 @@ export function Weekly() {
         <div className="kicker">{back.label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 24, lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
         >
           {behindLine(back)}
         </div>
         {slippedLine(back) ? (
-          <div style={{ fontSize: 13, opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
             {slippedLine(back)}
           </div>
         ) : null}
@@ -185,7 +185,7 @@ export function Weekly() {
 
       <SectionLabel>The week coming</SectionLabel>
       <Blueprint style={{ padding: '13px 14px' }}>
-        <div style={{ fontSize: 15, lineHeight: 1.4 }}>
+        <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.4 }}>
           {showHours(forward.promised)} already promised
           {forward.due.length > 0
             ? `, ${forward.due.length} ${forward.due.length === 1 ? 'deadline' : 'deadlines'}`
@@ -193,7 +193,7 @@ export function Weekly() {
           .
         </div>
         {forward.heaviest ? (
-          <div style={{ fontSize: 12.5, opacity: 0.65, marginTop: 6, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 6, lineHeight: 1.5 }}>
             {forward.heaviest.name} carries most of it, at {showHours(forward.heaviest.promised)}
             {forward.freest && forward.freest !== forward.heaviest
               ? `; ${forward.freest.name} has the most room`
@@ -236,7 +236,7 @@ export function Weekly() {
           {said ? (
             <div
               style={{
-                fontSize: 14,
+                fontSize: 'calc(14px * var(--text-scale, 1))',
                 lineHeight: 1.6,
                 whiteSpace: 'pre-wrap',
                 marginTop: 12,
@@ -250,7 +250,7 @@ export function Weekly() {
             </div>
           ) : null}
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
-          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             Every number above is counted from your own data. {provider()} reads the counts and is
             told not to score the week — a week with three classes, a shift and two ticked boxes is
             a normal week.
@@ -291,7 +291,7 @@ export function Weekly() {
         </button>
       </div>
       <PrintButton label="Print the week" style={{ marginTop: 8 }} />
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
         A deadline counts to the week you ticked it.
         {back.staleTicks > 0
           ? ` ${back.staleTicks} of these ${back.staleTicks === 1 ? 'was' : 'were'} ticked before the app started recording the moment, so ${back.staleTicks === 1 ? 'it counts' : 'they count'} to the week ${back.staleTicks === 1 ? 'it was' : 'they were'} due instead.`

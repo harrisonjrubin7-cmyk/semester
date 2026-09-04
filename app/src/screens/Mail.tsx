@@ -126,13 +126,13 @@ export function Mail() {
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings. The
             addresses below come from your syllabi and work without it.
           </div>
         </Blueprint>
         {course?.email ? (
-          <div style={{ fontSize: 13, marginTop: 14, opacity: 0.7 }}>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 14, opacity: 0.7 }}>
             {course.prof} — {course.email}
           </div>
         ) : null}
@@ -142,7 +142,7 @@ export function Mail() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Drafts here, sends from your own mail app. Nothing leaves the app until you press send in
         Gmail or Outlook, and nothing about you goes in the draft unless you type it below.
       </div>
@@ -156,7 +156,7 @@ export function Mail() {
           if (found) setPid(found.id);
         }}
       />
-      <div style={{ fontSize: 12.5, opacity: 0.6, marginTop: 8, lineHeight: 1.45 }}>{p.blurb}</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 1.45 }}>{p.blurb}</div>
 
       {catalog.courses.length > 0 && (
         <>
@@ -184,7 +184,7 @@ export function Mail() {
         style={{ width: '100%' }}
       />
       {course?.prof ? (
-        <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 5 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 5 }}>
           {course.prof} · opens “{salutation(course.prof)}”
         </div>
       ) : null}
@@ -222,7 +222,7 @@ export function Mail() {
       )}
 
       <SectionLabel>In your own words</SectionLabel>
-      <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 6, lineHeight: 1.45 }}>
         {p.asks} Anything factual in the draft has to come from here — the app will leave a blank
         rather than invent a reason for you.
       </div>
@@ -281,7 +281,7 @@ export function Mail() {
           {blanks > 0 && (
             <div
               style={{
-                fontSize: 12.5,
+                fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 marginTop: 10,
                 padding: '10px 12px',
                 borderRadius: 10,
@@ -347,7 +347,7 @@ export function Mail() {
               Keep as note
             </button>
           </div>
-          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
             The app cannot send this. It has your mail read-only, which is the point — read it
             once more and send it yourself.
           </div>

@@ -82,7 +82,7 @@ export function Draw() {
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings.
           </div>
         </Blueprint>
@@ -92,7 +92,7 @@ export function Draw() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Drawing for {guide.code}. The picture comes back as code, so every label is yours to change
         — and nothing is invented into it: an axis you gave no numbers for is labelled with the
         quantity, not with a plausible figure.
@@ -117,8 +117,8 @@ export function Draw() {
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span style={{ display: 'block', fontSize: 14 }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2, lineHeight: 1.4 }}>
+              <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2, lineHeight: 1.4 }}>
                 {option.blurb}
               </span>
             </button>
@@ -138,7 +138,7 @@ export function Draw() {
         }
         style={{ width: '100%', minHeight: 100, resize: 'vertical', lineHeight: 1.5 }}
       />
-      <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
         Give it the numbers if you have them — they go in exactly as typed. Leave them out and the
         drawing is labelled rather than guessed.
       </div>
@@ -158,7 +158,7 @@ export function Draw() {
       {code && (
         <>
           <SectionLabel>The drawing</SectionLabel>
-          <Suspense fallback={<div style={{ fontSize: 12.5, opacity: 0.5 }}>Drawing…</div>}>
+          <Suspense fallback={<div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.5 }}>Drawing…</div>}>
             <Drawing code={code} language={k.language} />
           </Suspense>
 
@@ -172,7 +172,7 @@ export function Draw() {
               width: '100%',
               minHeight: 160,
               resize: 'vertical',
-              fontSize: 11.5,
+              fontSize: 'calc(11.5px * var(--text-scale, 1))',
               lineHeight: 1.5,
               fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
             }}
@@ -201,7 +201,7 @@ export function Draw() {
               Copy
             </button>
           </div>
-          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
             {k.language === 'svg'
               ? 'An .svg opens in a browser, drops into Word and Google Docs, and stays sharp at any size.'
               : 'A .mmd is Mermaid — it renders in GitHub, Notion and Obsidian as it stands.'}{' '}

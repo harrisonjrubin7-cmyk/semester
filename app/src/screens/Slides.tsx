@@ -78,7 +78,7 @@ export function SlideDeck() {
   }, [step]);
 
   if (!unit || slides.length === 0) {
-    return <div style={{ padding: 18, fontSize: 14, opacity: 0.6 }}>Nothing to show here.</div>;
+    return <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6 }}>Nothing to show here.</div>;
   }
 
   const slide = slides[at];
@@ -118,7 +118,7 @@ export function SlideDeck() {
             <div className="kicker">{slide.sub}</div>
             <div
               className="chrome-text"
-              style={{ fontSize: 34, lineHeight: 1.05, marginTop: 10, textWrap: 'pretty' }}
+              style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1.05, marginTop: 10, textWrap: 'pretty' }}
             >
               {slide.title}
             </div>
@@ -133,7 +133,7 @@ export function SlideDeck() {
             <div
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 25,
+                fontSize: 'calc(25px * var(--text-scale, 1))',
                 lineHeight: 1.15,
                 marginTop: 12,
                 textWrap: 'pretty',
@@ -141,7 +141,7 @@ export function SlideDeck() {
             >
               {slide.text}
             </div>
-            <div style={{ fontSize: 12, opacity: 0.45, marginTop: 16 }}>
+            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.45, marginTop: 16 }}>
               Answer it before you advance.
             </div>
           </>
@@ -152,7 +152,7 @@ export function SlideDeck() {
             <div
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 17,
+                fontSize: 'calc(17px * var(--text-scale, 1))',
                 lineHeight: 1.2,
                 opacity: 0.5,
                 textWrap: 'pretty',
@@ -162,7 +162,7 @@ export function SlideDeck() {
             </div>
             <div
               style={{
-                fontSize: 17,
+                fontSize: 'calc(17px * var(--text-scale, 1))',
                 lineHeight: 1.5,
                 marginTop: 12,
                 textWrap: 'pretty',
@@ -176,13 +176,13 @@ export function SlideDeck() {
         {slide.kind === 'figure' && (
           <>
             <div className="kicker">Figure</div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 20, marginTop: 4 }}>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 4 }}>
               {slide.figure.title}
             </div>
             {slide.figure.type === 'diagram' ? (
               <Diagram kind={slide.figure.kind} />
             ) : (
-              <div style={{ fontSize: 14, opacity: 0.75, marginTop: 10, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.75, marginTop: 10, lineHeight: 1.5 }}>
                 {slide.figure.caption}
               </div>
             )}
@@ -191,10 +191,10 @@ export function SlideDeck() {
 
         {slide.kind === 'end' && (
           <>
-            <div className="chrome-text" style={{ fontSize: 30, lineHeight: 1.08 }}>
+            <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08 }}>
               {slide.title}
             </div>
-            <div style={{ fontSize: 13, opacity: 0.7, marginTop: 8 }}>{slide.sub}</div>
+            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8 }}>{slide.sub}</div>
             <button
               type="button"
               className="btn btn-primary"
@@ -203,7 +203,7 @@ export function SlideDeck() {
                 alignSelf: 'flex-start',
                 marginTop: 16,
                 height: 42,
-                fontSize: 12,
+                fontSize: 'calc(12px * var(--text-scale, 1))',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
               }}
@@ -243,7 +243,7 @@ export function SlideDeck() {
           type="button"
           className="btn btn-primary"
           onClick={() => (at === last ? dispatch({ type: 'back' }) : step(1))}
-          style={{ flex: 1, height: 46, fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 46, fontSize: 'calc(13px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase' }}
         >
           {at === last ? 'Done' : 'Next'}
         </button>
@@ -264,7 +264,7 @@ export function SlideDeck() {
           className="btn btn-secondary"
           disabled={unitIndex === 0}
           onClick={() => dispatch({ type: 'openDeck', unit: unitIndex - 1 })}
-          style={{ flex: 1, height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Previous unit
         </button>
@@ -273,7 +273,7 @@ export function SlideDeck() {
           className="btn btn-secondary"
           disabled={unitIndex >= guide.units.length - 1}
           onClick={() => dispatch({ type: 'openDeck', unit: unitIndex + 1 })}
-          style={{ flex: 1, height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Next unit
         </button>

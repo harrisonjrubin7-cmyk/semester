@@ -116,7 +116,7 @@ export function Groupwork() {
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: '15px 16px' }}>
           <div className="kicker">Sign in first</div>
-          <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             A group is other people, so it needs an account. Everything else in the app works
             signed out.
           </div>
@@ -156,7 +156,7 @@ export function Groupwork() {
       </select>
 
       {error ? (
-        <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
           {error}
         </div>
       ) : null}
@@ -165,7 +165,7 @@ export function Groupwork() {
         <>
           <SectionLabel>Groups in {code}</SectionLabel>
           {groups.length === 0 ? (
-            <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5 }}>
               None yet. Whoever starts one is in it, and anybody else in the class can join.
             </div>
           ) : (
@@ -183,9 +183,9 @@ export function Groupwork() {
                   borderBottom: '1px solid var(--app-line)',
                 }}
               >
-                <span style={{ display: 'block', fontSize: 15, lineHeight: 1.35 }}>{g.name}</span>
+                <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.35 }}>{g.name}</span>
                 {g.due ? (
-                  <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 3 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 3 }}>
                     due {g.due}
                   </span>
                 ) : null}
@@ -229,7 +229,7 @@ export function Groupwork() {
             type="button"
             className="btn btn-ghost"
             onClick={() => setOpenId('')}
-            style={{ height: 32, fontSize: 12, marginTop: 14 }}
+            style={{ height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', marginTop: 14 }}
           >
             ← All groups
           </button>
@@ -238,22 +238,22 @@ export function Groupwork() {
             <div className="kicker">{code}</div>
             <div
               className="chrome-text"
-              style={{ fontSize: 22, lineHeight: 1.2, marginTop: 6, textWrap: 'pretty' }}
+              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 6, textWrap: 'pretty' }}
             >
               {open.name}
             </div>
-            <div style={{ fontSize: 14, opacity: 0.8, marginTop: 8, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.8, marginTop: 8, lineHeight: 1.45 }}>
               {headline(s)}
             </div>
             {/* The sentence a group can argue with. See `lib/groupwork.ts`. */}
             {paceLine(asGroup(open), parts.map(asPart), now) ? (
-              <div style={{ fontSize: 12.5, opacity: 0.65, marginTop: 7, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 7, lineHeight: 1.5 }}>
                 {paceLine(asGroup(open), parts.map(asPart), now)}
               </div>
             ) : null}
             {iAmIn && (
               <div style={{ display: 'flex', gap: 8, marginTop: 11, alignItems: 'center' }}>
-                <span style={{ fontSize: 11.5, opacity: 0.55, flex: 'none' }}>Due</span>
+                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, flex: 'none' }}>Due</span>
                 <input
                   className="input"
                   type="date"
@@ -265,7 +265,7 @@ export function Groupwork() {
                       await loadGroups();
                     })
                   }
-                  style={{ flex: 1, minWidth: 0, height: 34, fontSize: 12.5 }}
+                  style={{ flex: 1, minWidth: 0, height: 34, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
                 />
               </div>
             )}
@@ -286,13 +286,13 @@ export function Groupwork() {
                 borderBottom: '1px solid var(--app-line)',
               }}
             >
-              <span style={{ flex: 1, minWidth: 0, fontSize: 13.5 }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
                 {share.member.handle}
                 {share.member.userId === account.id ? (
                   <span style={{ opacity: 0.5 }}> · you</span>
                 ) : null}
               </span>
-              <span style={{ flex: 'none', fontSize: 12, opacity: 0.6 }}>
+              <span style={{ flex: 'none', fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}>
                 {share.has === 0 ? 'nothing yet' : `${share.done}/${share.has}`}
               </span>
             </div>
@@ -310,7 +310,7 @@ export function Groupwork() {
                     await loadOne(open.id);
                   })
                 }
-                style={{ flex: 1, height: 38, fontSize: 12.5 }}
+                style={{ flex: 1, height: 38, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
               >
                 Leave the group
               </button>
@@ -325,7 +325,7 @@ export function Groupwork() {
                     await loadOne(open.id);
                   })
                 }
-                style={{ flex: 1, height: 38, fontSize: 12.5 }}
+                style={{ flex: 1, height: 38, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
               >
                 Join it
               </button>
@@ -335,7 +335,7 @@ export function Groupwork() {
           {unclaimed(parts.map(asPart)).length > 0 && (
             <>
               <SectionLabel>Nobody has these</SectionLabel>
-              <div style={{ fontSize: 11.5, opacity: 0.55, marginBottom: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 6, lineHeight: 1.45 }}>
                 The list a group actually has to divide.
               </div>
             </>
@@ -343,7 +343,7 @@ export function Groupwork() {
 
           <SectionLabel>The parts</SectionLabel>
           {parts.length === 0 ? (
-            <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5 }}>
               Nothing on the list yet. Write down the sections and the group can divide them.
             </div>
           ) : (
@@ -371,7 +371,7 @@ export function Groupwork() {
                         await loadOne(open.id);
                       })
                     }
-                    style={{ flex: 'none', width: 22, fontSize: 14, opacity: p.done ? 1 : 0.35 }}
+                    style={{ flex: 'none', width: 22, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: p.done ? 1 : 0.35 }}
                   >
                     {p.done ? '✓' : '○'}
                   </button>
@@ -379,7 +379,7 @@ export function Groupwork() {
                     style={{
                       flex: 1,
                       minWidth: 0,
-                      fontSize: 13.5,
+                      fontSize: 'calc(13.5px * var(--text-scale, 1))',
                       lineHeight: 1.35,
                       textDecoration: p.done ? 'line-through' : 'none',
                       opacity: p.done ? 0.5 : 1,
@@ -408,12 +408,12 @@ export function Groupwork() {
                           await loadOne(open.id);
                         })
                       }
-                      style={{ flex: 'none', height: 28, fontSize: 11, padding: '0 8px' }}
+                      style={{ flex: 'none', height: 28, fontSize: 'calc(11px * var(--text-scale, 1))', padding: '0 8px' }}
                     >
                       {p.owner === account.id ? 'Yours' : owner ? owner.handle : 'Take it'}
                     </button>
                   ) : (
-                    <span style={{ flex: 'none', fontSize: 11.5, opacity: 0.5 }}>
+                    <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5 }}>
                       {owner?.handle ?? ''}
                     </span>
                   )}
@@ -429,7 +429,7 @@ export function Groupwork() {
                           await loadOne(open.id);
                         })
                       }
-                      style={{ flex: 'none', width: 22, opacity: 0.4, fontSize: 14 }}
+                      style={{ flex: 'none', width: 22, opacity: 0.4, fontSize: 'calc(14px * var(--text-scale, 1))' }}
                     >
                       ×
                     </button>
@@ -467,7 +467,7 @@ export function Groupwork() {
             </div>
           )}
 
-          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
             Any member can claim a part, tick one or fix a title — group work does not survive a
             permission model where only the person who wrote a line may correct it. Nobody can
             remove anybody from a group but themselves.

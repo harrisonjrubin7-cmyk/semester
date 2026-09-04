@@ -47,7 +47,7 @@ function NextClassCard() {
         <div
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 11,
+            fontSize: 'calc(11px * var(--text-scale, 1))',
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
             color: 'var(--app-accent-deep)',
@@ -57,14 +57,14 @@ function NextClassCard() {
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 10 }}>
-        <div className="chrome-text" style={{ fontSize: 34, lineHeight: 1 }}>
+        <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
           {next.block.time}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 21, lineHeight: 1.1 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             {next.block.title}
           </div>
-          <div style={{ fontSize: 12, opacity: 0.7 }}>
+          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7 }}>
             {next.block.c ? catalog.byId[next.block.c].room : next.block.meta}
           </div>
         </div>
@@ -74,7 +74,7 @@ function NextClassCard() {
           marginTop: 12,
           paddingTop: 11,
           borderTop: '1px solid var(--app-line)',
-          fontSize: 13,
+          fontSize: 'calc(13px * var(--text-scale, 1))',
           opacity: 0.85,
           textWrap: 'pretty',
         }}
@@ -108,7 +108,7 @@ function YourTasks() {
           margin: '26px 0 12px',
         }}
       >
-        <h2 className="section-label" style={{ margin: 0, fontSize: 12, fontWeight: 'inherit' }}>
+        <h2 className="section-label" style={{ margin: 0, fontSize: 'calc(12px * var(--text-scale, 1))', fontWeight: 'inherit' }}>
           Yours today
         </h2>
         <button
@@ -118,7 +118,7 @@ function YourTasks() {
           style={{
             width: 'auto',
             fontFamily: 'var(--font-heading)',
-            fontSize: 12,
+            fontSize: 'calc(12px * var(--text-scale, 1))',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
             color: 'var(--app-accent)',
@@ -156,7 +156,7 @@ function YourTasks() {
             <div style={{ flex: 1, minWidth: 0, opacity: t.done ? 0.42 : 1 }}>
               <div
                 style={{
-                  fontSize: 14,
+                  fontSize: 'calc(14px * var(--text-scale, 1))',
                   lineHeight: 1.3,
                   textDecoration: t.done ? 'line-through' : 'none',
                 }}
@@ -164,7 +164,7 @@ function YourTasks() {
                 {t.title}
               </div>
               {(t.time || t.courseId) && (
-                <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
+                <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                   {t.courseId ? `${courseCode(t.courseId)} · ` : ''}
                   {t.time}
                 </div>
@@ -212,7 +212,7 @@ function OverdueBanner() {
         background: 'var(--app-warn-wash)',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.35 }}>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.35 }}>
         <strong style={{ fontWeight: 600 }}>
           {missed} {missed === 1 ? 'deadline' : 'deadlines'} went by
         </strong>{' '}
@@ -222,7 +222,7 @@ function OverdueBanner() {
         style={{
           flex: 'none',
           fontFamily: 'var(--font-heading)',
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           opacity: 0.7,
@@ -278,7 +278,7 @@ function TabHome() {
             >
               <div
                 style={{
-                  fontSize: 10,
+                  fontSize: 'calc(10px * var(--text-scale, 1))',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                   opacity: 0.5,
@@ -286,11 +286,11 @@ function TabHome() {
               >
                 {nextEvent.mon}
               </div>
-              <div style={{ fontSize: 26 }}>{nextEvent.day}</div>
+              <div style={{ fontSize: 'calc(26px * var(--text-scale, 1))' }}>{nextEvent.day}</div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, lineHeight: 1.25 }}>{nextEvent.title}</div>
-              <div style={{ fontSize: 12, opacity: 0.6 }}>
+              <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{nextEvent.title}</div>
+              <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}>
                 {nextEvent.time} · {nextEvent.where}
               </div>
             </div>
@@ -352,13 +352,13 @@ function Feed_due() {
           margin: '26px 0 4px',
         }}
       >
-        <h2 className="section-label" style={{ margin: 0, fontSize: 12, fontWeight: 'inherit' }}>
+        <h2 className="section-label" style={{ margin: 0, fontSize: 'calc(12px * var(--text-scale, 1))', fontWeight: 'inherit' }}>
           Due today
         </h2>
         <div
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 12,
+            fontSize: 'calc(12px * var(--text-scale, 1))',
             letterSpacing: '0.12em',
             opacity: 0.5,
           }}
@@ -369,7 +369,7 @@ function Feed_due() {
       <div
         className="chrome-text"
         style={{
-          fontSize: 27,
+          fontSize: 'calc(27px * var(--text-scale, 1))',
           lineHeight: 1.08,
           marginBottom: 14,
           textWrap: 'pretty',
@@ -393,10 +393,10 @@ function Feed_due() {
           >
             <Check size={18} />
           </div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 21 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))' }}>
             {today.length === 0 ? 'Nothing due today.' : 'Nothing left today.'}
           </div>
-          <div style={{ fontSize: 13, opacity: 0.6, marginTop: 4 }}>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.6, marginTop: 4 }}>
             {ahead[0]
               ? `Next up is ${ahead[0].title}, ${ahead[0].dueShort.toLowerCase()}.`
               : 'The semester is clear.'}
@@ -440,7 +440,7 @@ function Feed_due() {
                   <span className="tag tag-accent">{catalog.byId[it.c].code}</span>
                   <span
                     style={{
-                      fontSize: 11,
+                      fontSize: 'calc(11px * var(--text-scale, 1))',
                       opacity: 0.55,
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.1em',
@@ -452,14 +452,14 @@ function Feed_due() {
                 </div>
                 <div
                   style={{
-                    fontSize: 15,
+                    fontSize: 'calc(15px * var(--text-scale, 1))',
                     lineHeight: 1.3,
                     textDecoration: done ? 'line-through' : 'none',
                   }}
                 >
                   {it.title}
                 </div>
-                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 3 }}>
+                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 3 }}>
                   {it.dueTime} · {it.where}
                 </div>
               </button>
@@ -540,7 +540,7 @@ function Feed_since() {
       }}
     >
       <div className="kicker">{sinceLabel(lastSeen, now)}</div>
-      <div style={{ fontSize: 13.5, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
         {sinceLine(list)}
       </div>
     </div>
@@ -564,7 +564,7 @@ function Feed_rail() {
     <>
       <SectionLabel>Today’s rail</SectionLabel>
       {rail.length === 0 ? (
-        <div style={{ fontSize: 14, opacity: 0.5, paddingBottom: 8 }}>
+        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.5, paddingBottom: 8 }}>
           No classes today. The rail picks up again on your next teaching day.
         </div>
       ) : (
@@ -579,7 +579,7 @@ function Feed_rail() {
                     flex: 'none',
                     textAlign: 'right',
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 14,
+                    fontSize: 'calc(14px * var(--text-scale, 1))',
                     paddingTop: 12,
                     opacity: 0.6,
                   }}
@@ -609,7 +609,7 @@ function Feed_rail() {
                   <div
                     style={{
                       fontFamily: 'var(--font-heading)',
-                      fontSize: 19,
+                      fontSize: 'calc(19px * var(--text-scale, 1))',
                       lineHeight: 1.15,
                       opacity: b.canceled ? 0.45 : past ? 0.6 : 1,
                       textDecoration: b.canceled ? 'line-through' : 'none',
@@ -617,7 +617,7 @@ function Feed_rail() {
                   >
                     {b.title}
                   </div>
-                  <div style={{ fontSize: 12, opacity: 0.6 }}>
+                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}>
                     {b.mine && (
                       <span className="tag tag-neutral" style={{ marginRight: 6 }}>
                         Yours
@@ -665,11 +665,11 @@ function Feed_registrar() {
           style={{ padding: '12px 14px', marginBottom: 8 }}
         >
           <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-            <span style={{ flex: 1, minWidth: 0, fontSize: 15, lineHeight: 1.3 }}>{d.label}</span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.3 }}>{d.label}</span>
             <span
               style={{
                 flex: 'none',
-                fontSize: 12,
+                fontSize: 'calc(12px * var(--text-scale, 1))',
                 color: standing(d, now) === 'ahead' ? undefined : 'var(--app-warn)',
               }}
             >
@@ -677,7 +677,7 @@ function Feed_registrar() {
             </span>
           </div>
           {d.cost ? (
-            <div style={{ fontSize: 12, opacity: 0.6, marginTop: 5, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 5, lineHeight: 1.45 }}>
               {d.cost}
             </div>
           ) : null}
@@ -714,7 +714,7 @@ function TodayFeed() {
 
   if (order.length === 0) {
     return (
-      <div style={{ fontSize: 13, opacity: 0.55, padding: '20px 0', lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, padding: '20px 0', lineHeight: 1.5 }}>
         Every section of Today is switched off. Turn one back on under Me → Settings.
       </div>
     );
@@ -748,10 +748,10 @@ function DoneToday() {
       <Blueprint style={{ padding: 15, background: 'var(--app-hero)' }}>
         <div className="kicker">Finished</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
-          <div className="chrome-text" style={{ fontSize: 34, lineHeight: 1 }}>
+          <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
             {done.length}
           </div>
-          <div style={{ fontSize: 13, opacity: 0.75 }}>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75 }}>
             {done.length === 1 ? 'thing ticked off' : 'things ticked off'}
           </div>
         </div>
@@ -761,7 +761,7 @@ function DoneToday() {
               marginTop: 12,
               paddingTop: 11,
               borderTop: '1px solid var(--app-line)',
-              fontSize: 13,
+              fontSize: 'calc(13px * var(--text-scale, 1))',
               opacity: 0.8,
               lineHeight: 1.5,
             }}
@@ -773,7 +773,7 @@ function DoneToday() {
       </Blueprint>
 
       {done.length === 0 ? (
-        <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.55, lineHeight: 1.5 }}>
+        <div style={{ padding: '22px 0', fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.5 }}>
           Nothing ticked off yet. Anything you finish shows up here, so a day leaves a trace rather
           than just emptying out.
         </div>
@@ -802,7 +802,7 @@ function DoneToday() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 14,
+                    fontSize: 'calc(14px * var(--text-scale, 1))',
                     lineHeight: 1.3,
                     textDecoration: 'line-through',
                     opacity: 0.7,
@@ -810,7 +810,7 @@ function DoneToday() {
                 >
                   {i.title}
                 </span>
-                <span style={{ display: 'block', fontSize: 11, opacity: 0.5, marginTop: 2 }}>
+                <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, marginTop: 2 }}>
                   {i.dueShort} · {i.kind}
                 </span>
               </span>
@@ -837,13 +837,13 @@ function HoursToday() {
 
   return (
     <>
-      <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5, marginBottom: 6 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 6 }}>
         Classes from your syllabi, in the app's own colour. Anything you add is tinted by what it
         is for.
       </div>
       <KindKey />
       {blocks.length === 0 ? (
-        <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.55, lineHeight: 1.5 }}>
+        <div style={{ padding: '22px 0', fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.5 }}>
           Nothing on today. Add something below and it appears on the grid.
         </div>
       ) : (
@@ -859,7 +859,7 @@ function HoursToday() {
         style={{
           height: 44,
           marginTop: 18,
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
         }}
@@ -925,7 +925,7 @@ function FeedHome() {
               >
                 <div
                   style={{
-                    fontSize: 10,
+                    fontSize: 'calc(10px * var(--text-scale, 1))',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     opacity: 0.5,
@@ -933,7 +933,7 @@ function FeedHome() {
                 >
                   {f.top}
                 </div>
-                <div style={{ fontSize: 17, opacity: 0.85 }}>{f.bottom}</div>
+                <div style={{ fontSize: 'calc(17px * var(--text-scale, 1))', opacity: 0.85 }}>{f.bottom}</div>
               </div>
               <div
                 style={{
@@ -953,7 +953,7 @@ function FeedHome() {
                   <span className={`tag ${f.isClass ? 'tag-neutral' : 'tag-accent'}`}>{f.code}</span>
                   <span
                     style={{
-                      fontSize: 11,
+                      fontSize: 'calc(11px * var(--text-scale, 1))',
                       opacity: 0.55,
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.1em',
@@ -965,14 +965,14 @@ function FeedHome() {
                 </div>
                 <div
                   style={{
-                    fontSize: 15,
+                    fontSize: 'calc(15px * var(--text-scale, 1))',
                     lineHeight: 1.3,
                     textDecoration: f.done || f.canceled ? 'line-through' : 'none',
                   }}
                 >
                   {f.title}
                 </div>
-                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>{f.meta}</div>
+                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>{f.meta}</div>
               </div>
             </button>
           ))}

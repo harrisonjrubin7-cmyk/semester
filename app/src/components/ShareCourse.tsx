@@ -57,7 +57,7 @@ export function ShareCourse({ courseId }: { courseId: CourseId }) {
       >
         Share this course
       </button>
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
         {sent
           ? 'Sent. Whoever opens it gets the deadlines, the schedule and the guide — and none of your own notes, ticks or timings, which are not in the file.'
           : 'A file with this course in it: the deadlines, the schedule and the study guide. Your notes, ticked boxes, grades and timings stay here — they are not part of a course. They open it under Add a course.'}

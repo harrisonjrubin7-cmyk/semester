@@ -63,7 +63,7 @@ export function ModePicker({
               style={{
                 display: 'block',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 14,
+                fontSize: 'calc(14px * var(--text-scale, 1))',
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
                 color: on ? 'var(--app-accent)' : 'var(--app-fg)',
@@ -74,7 +74,7 @@ export function ModePicker({
             <span
               style={{
                 display: 'block',
-                fontSize: 10.5,
+                fontSize: 'calc(10.5px * var(--text-scale, 1))',
                 opacity: 0.6,
                 marginTop: 3,
                 fontFamily: 'var(--font-heading)',

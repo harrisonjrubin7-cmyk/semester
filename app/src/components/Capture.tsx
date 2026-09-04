@@ -90,7 +90,7 @@ export function Capture({
           style={{
             flex: 1,
             height: 42,
-            fontSize: 11,
+            fontSize: 'calc(11px * var(--text-scale, 1))',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             display: 'flex',
@@ -110,7 +110,7 @@ export function Capture({
           style={{
             flex: 1,
             height: 42,
-            fontSize: 11,
+            fontSize: 'calc(11px * var(--text-scale, 1))',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
           }}
@@ -156,7 +156,7 @@ export function Capture({
                     position: 'absolute',
                     inset: 'auto 0 0 0',
                     background: 'rgba(0,0,0,.65)',
-                    fontSize: 9,
+                    fontSize: 'calc(9px * var(--text-scale, 1))',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     padding: '2px 0',
@@ -168,7 +168,7 @@ export function Capture({
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 8 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8 }}>
             {shots.length} of {MAX_SHOTS} · about {weigh(shots)} KB after resizing
           </div>
         </>
@@ -179,7 +179,7 @@ export function Capture({
           {errors.map((e) => (
             <div
               key={e}
-              style={{ fontSize: 12, color: 'var(--app-accent)', lineHeight: 1.45, marginTop: 2 }}
+              style={{ fontSize: 'calc(12px * var(--text-scale, 1))', color: 'var(--app-accent)', lineHeight: 1.45, marginTop: 2 }}
             >
               {e}
             </div>

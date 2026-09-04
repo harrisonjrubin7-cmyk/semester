@@ -196,7 +196,7 @@ export function Ask() {
                 style={{
                   flex: 'none',
                   padding: '5px 11px',
-                  fontSize: 11,
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   background: on ? 'var(--chrome)' : 'transparent',
@@ -214,10 +214,10 @@ export function Ask() {
       {!configured(config) || showKey ? (
         <Blueprint style={{ padding: 16, marginTop: 14 }}>
           <div className="kicker">Setup</div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 19, marginTop: 5 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', marginTop: 5 }}>
             Where the answers come from
           </div>
-          <div style={{ fontSize: 13, opacity: 0.78, lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.78, lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
             {config.provider === 'openai'
               ? 'Two providers, so a lapsed account or an outage the night before a midterm does not stop the app working. Nothing above this setting knows which one answered.'
               : route() === 'shared'
@@ -243,7 +243,7 @@ export function Ask() {
                   style={{
                     flex: 1,
                     padding: '7px 11px',
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     background: on ? 'var(--chrome)' : 'transparent',
@@ -259,7 +259,7 @@ export function Ask() {
 
           {config.provider === 'openai' ? (
             <>
-              <div style={{ fontSize: 12.5, opacity: 0.75, lineHeight: 1.5, marginTop: 10 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, marginTop: 10 }}>
                 There is no shared key on this side — the server function holds an Anthropic key
                 and nothing else. So this means your own OpenAI key, in this browser, where
                 anything running here can read it. It is billable and has no spend cap of its own.
@@ -270,7 +270,7 @@ export function Ask() {
                 placeholder="sk-…"
                 value={config.openaiKey}
                 onChange={(e) => setConfig({ ...config, openaiKey: e.target.value })}
-                style={{ fontSize: 13, marginTop: 10 }}
+                style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 10 }}
                 aria-label="OpenAI API key"
               />
               <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
@@ -285,7 +285,7 @@ export function Ask() {
                       aria-pressed={on}
                       style={{
                         padding: '5px 11px',
-                        fontSize: 11,
+                        fontSize: 'calc(11px * var(--text-scale, 1))',
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
                         background: on ? 'var(--chrome)' : 'transparent',
@@ -298,7 +298,7 @@ export function Ask() {
                   );
                 })}
               </div>
-              <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6 }}>
                 {OPENAI_MODELS.find((m) => m.id === config.openaiModel)?.note}
                 {' '}Extended thinking is Anthropic-only, so the screens that ask for it simply do
                 not get it here.
@@ -312,7 +312,7 @@ export function Ask() {
             placeholder="sk-ant-…"
             value={config.apiKey}
             onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
-            style={{ fontSize: 13, marginTop: 12 }}
+            style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 12 }}
             aria-label="API key"
           />
           <input
@@ -320,7 +320,7 @@ export function Ask() {
             placeholder="https://your-proxy.example.com  (better)"
             value={config.proxy}
             onChange={(e) => setConfig({ ...config, proxy: e.target.value })}
-            style={{ fontSize: 13, marginTop: 8 }}
+            style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 8 }}
             aria-label="Proxy URL"
           />
 
@@ -336,7 +336,7 @@ export function Ask() {
                   aria-pressed={on}
                   style={{
                     padding: '5px 11px',
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     background: on ? 'var(--chrome)' : 'transparent',
@@ -349,7 +349,7 @@ export function Ask() {
               );
             })}
           </div>
-          <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6 }}>
             {MODELS.find((m) => m.id === config.model)?.note}
           </div>
             </>
@@ -364,7 +364,7 @@ export function Ask() {
             }}
             style={{
               height: 44,
-              fontSize: 13,
+              fontSize: 'calc(13px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginTop: 12,
@@ -389,7 +389,7 @@ export function Ask() {
             type="button"
             className="bare"
             onClick={() => setShowKey(true)}
-            style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em' }}
+            style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}
           >
             SETTINGS
           </button>
@@ -406,7 +406,7 @@ export function Ask() {
             <Blueprint
               key={prompt}
               onClick={() => void send(prompt)}
-              style={{ padding: '12px 14px', textAlign: 'left', fontSize: 13.5, lineHeight: 1.4 }}
+              style={{ padding: '12px 14px', textAlign: 'left', fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.4 }}
             >
               {prompt}
             </Blueprint>
@@ -422,7 +422,7 @@ export function Ask() {
             </div>
             <div
               style={{
-                fontSize: 14,
+                fontSize: 'calc(14px * var(--text-scale, 1))',
                 lineHeight: 1.55,
                 marginTop: 4,
                 whiteSpace: 'pre-wrap',
@@ -439,7 +439,7 @@ export function Ask() {
             <div className="kicker" style={{ color: 'var(--app-accent)' }}>
               {provider()}
             </div>
-            <div style={{ fontSize: 14, lineHeight: 1.55, marginTop: 4, whiteSpace: 'pre-wrap' }}>
+            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.55, marginTop: 4, whiteSpace: 'pre-wrap' }}>
               {streaming}
             </div>
           </div>
@@ -463,7 +463,7 @@ export function Ask() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 9 }}>
             {proposals.map((p) => (
               <div key={p.id} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, lineHeight: 1.4 }}>
+                <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.4 }}>
                   {p.said}
                 </span>
                 <button
@@ -473,7 +473,7 @@ export function Ask() {
                     dispatch(p.action);
                     setProposals((was) => was.filter((q) => q.id !== p.id));
                   }}
-                  style={{ flex: 'none', height: 34, fontSize: 12 }}
+                  style={{ flex: 'none', height: 34, fontSize: 'calc(12px * var(--text-scale, 1))' }}
                 >
                   {p.verb}
                 </button>
@@ -482,7 +482,7 @@ export function Ask() {
                   className="bare"
                   aria-label={`Dismiss: ${p.said}`}
                   onClick={() => setProposals((was) => was.filter((q) => q.id !== p.id))}
-                  style={{ flex: 'none', width: 22, opacity: 0.4, fontSize: 14 }}
+                  style={{ flex: 'none', width: 22, opacity: 0.4, fontSize: 'calc(14px * var(--text-scale, 1))' }}
                 >
                   ×
                 </button>
@@ -496,7 +496,7 @@ export function Ask() {
           same thing — no retyping, and the conversation keeps its shape. */}
       <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
       {made > 0 && (
-        <div style={{ fontSize: 12.5, opacity: 0.75, marginTop: 12, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 12, lineHeight: 1.45 }}>
           {made} cards added to {guide.code}. They are in Cards, Read, Quiz and Cram now.
         </div>
       )}
@@ -509,7 +509,7 @@ export function Ask() {
           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void send(draft);
         }}
         placeholder="Ask about this course, or paste a reading to turn into cards…"
-        style={{ minHeight: 84, fontSize: 13.5, lineHeight: 1.5, marginTop: 16 }}
+        style={{ minHeight: 84, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 16 }}
         aria-label="Your question"
       />
       <Dictate compact current={draft} onText={setDraft} label="Say it instead" />
@@ -519,7 +519,7 @@ export function Ask() {
           className="btn btn-primary"
           disabled={busy || !draft.trim()}
           onClick={() => void send(draft)}
-          style={{ flex: 1, height: 44, fontSize: 13, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 44, fontSize: 'calc(13px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           {busy ? 'Thinking…' : 'Ask'}
         </button>
@@ -528,7 +528,7 @@ export function Ask() {
             type="button"
             className="btn btn-secondary"
             onClick={() => abort.current?.abort()}
-            style={{ height: 44, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Stop
           </button>
@@ -538,7 +538,7 @@ export function Ask() {
             className="btn btn-secondary"
             disabled={!turns.some((t) => t.role === 'assistant')}
             onClick={() => void keep()}
-            style={{ height: 44, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Keep as cards
           </button>
@@ -546,7 +546,7 @@ export function Ask() {
       </div>
 
       <SectionLabel>What it can see</SectionLabel>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         This course’s guide — {guide.units.length} units, their cards and how well you know them —
         and the deadlines still ahead. Not your notes, not your files, not the other courses.
         Nothing is sent anywhere else, and nothing is stored beyond this conversation.

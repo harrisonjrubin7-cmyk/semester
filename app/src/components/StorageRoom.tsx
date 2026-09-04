@@ -68,7 +68,7 @@ export function StorageRoom() {
         </div>
       ) : null}
 
-      <div style={{ fontSize: 12.5, opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
         {roomLine(room)}
       </div>
 
@@ -78,13 +78,13 @@ export function StorageRoom() {
           className="btn btn-secondary btn-block"
           onClick={() => void askAgain()}
           disabled={asking}
-          style={{ height: 40, marginTop: 10, fontSize: 12.5 }}
+          style={{ height: 40, marginTop: 10, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
         >
           {asking ? 'Asking…' : 'Ask the browser to keep it'}
         </button>
       )}
 
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 9, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 9, lineHeight: 1.45 }}>
         Whether to grant this is the browser's decision, not the app's. Installing the app to your
         home screen is what most often changes the answer. Signing in is the other half: an account
         keeps a copy off this device entirely, which is the only thing that survives losing it.

@@ -103,7 +103,7 @@ export function Keys() {
           className="bare"
           onClick={() => setOpen(false)}
           aria-label="Close"
-          style={{ width: 'auto', opacity: 0.5, fontSize: 14 }}
+          style={{ width: 'auto', opacity: 0.5, fontSize: 'calc(14px * var(--text-scale, 1))' }}
         >
           ×
         </button>
@@ -125,17 +125,17 @@ export function Keys() {
                 border: '1px solid var(--app-line-top)',
                 background: 'var(--app-hero)',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 11,
+                fontSize: 'calc(11px * var(--text-scale, 1))',
               }}
             >
               {keyLabel(s.key)}
             </kbd>
-            <span style={{ fontSize: 12.5, opacity: 0.8 }}>{s.does}</span>
+            <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.8 }}>{s.does}</span>
           </div>
         ))}
       </div>
 
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
         Nothing fires while you are typing, and anything with ⌘ or Ctrl stays the browser's.
         {state.nav === 'feed' ? ' The screens are the same ones the feed filter reaches.' : ''}
       </div>

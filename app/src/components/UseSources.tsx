@@ -38,7 +38,7 @@ export function UseSources({
         type="button"
         className="btn btn-secondary"
         onClick={() => onFill(asLines(kept))}
-        style={{ flex: 1, height: 38, fontSize: 12.5 }}
+        style={{ flex: 1, height: 38, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
       >
         Use my {kept.length} kept {kept.length === 1 ? label.replace(/s$/, '') : label}
       </button>
@@ -46,7 +46,7 @@ export function UseSources({
         type="button"
         className="btn btn-ghost"
         onClick={() => dispatch({ type: 'go', screen: 'sources' })}
-        style={{ flex: 'none', height: 38, fontSize: 12.5 }}
+        style={{ flex: 'none', height: 38, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
       >
         Manage
       </button>

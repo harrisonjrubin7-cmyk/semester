@@ -83,10 +83,10 @@ export function SayIt({
           border: '1px solid var(--app-line)',
         }}
       >
-        <div className="kicker" style={{ fontSize: 10 }}>
+        <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
           What you said
         </div>
-        <div style={{ fontSize: 13.5, marginTop: 5, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 5, lineHeight: 1.5, textWrap: 'pretty' }}>
           {said}
         </div>
         {/* No verdict. The three buttons below are the marking, and they are
@@ -103,7 +103,7 @@ export function SayIt({
         onClick={() => (on ? end() : begin())}
         style={{
           height: 36,
-          fontSize: 12,
+          fontSize: 'calc(12px * var(--text-scale, 1))',
           paddingInline: 16,
           display: 'flex',
           alignItems: 'center',
@@ -126,7 +126,7 @@ export function SayIt({
       {said ? (
         <div
           style={{
-            fontSize: 13,
+            fontSize: 'calc(13px * var(--text-scale, 1))',
             opacity: 0.75,
             marginTop: 10,
             lineHeight: 1.5,
@@ -139,7 +139,7 @@ export function SayIt({
       ) : null}
 
       {error ? (
-        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 8, textAlign: 'center' }}>{error}</div>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, textAlign: 'center' }}>{error}</div>
       ) : null}
     </div>
   );

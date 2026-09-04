@@ -53,7 +53,7 @@ export function Running() {
         borderRadius: 999,
         border: `1px solid ${lost ? 'var(--app-warn-line)' : 'var(--app-line-top)'}`,
         background: lost ? 'var(--app-warn-wash)' : 'var(--app-hero)',
-        fontSize: 11.5,
+        fontSize: 'calc(11.5px * var(--text-scale, 1))',
         fontVariantNumeric: 'tabular-nums',
       }}
     >

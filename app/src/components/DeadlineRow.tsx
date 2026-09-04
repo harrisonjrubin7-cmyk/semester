@@ -78,14 +78,14 @@ export function DeadlineRow({
           <span
             style={{
               display: 'block',
-              fontSize: 14,
+              fontSize: 'calc(14px * var(--text-scale, 1))',
               lineHeight: 1.3,
               textDecoration: done ? 'line-through' : 'none',
             }}
           >
             {item.title}
           </span>
-          <span style={{ display: 'block', fontSize: 11, opacity: 0.55, marginTop: 2 }}>
+          <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
             {meta ?? (
               <>
                 {item.dueShort} · {item.kind}
@@ -98,7 +98,7 @@ export function DeadlineRow({
           <span
             style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 11,
+              fontSize: 'calc(11px * var(--text-scale, 1))',
               flex: 'none',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',

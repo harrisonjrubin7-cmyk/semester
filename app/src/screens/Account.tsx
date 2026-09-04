@@ -41,10 +41,10 @@ export function AccountScreen() {
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Device only</div>
-          <div className="chrome-text" style={{ fontSize: 26, marginTop: 8, lineHeight: 1.1 }}>
+          <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
             This build has no account service
           </div>
-          <div style={{ fontSize: 13, opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
             Everything works, and everything stays on this device. To turn on accounts, set
             VITE_SUPABASE_URL and VITE_SUPABASE_KEY and redeploy — see SETUP.md.
           </div>
@@ -65,10 +65,10 @@ export function AccountScreen() {
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Signed in</div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 20, marginTop: 6 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 6 }}>
             {account.email}
           </div>
-          <div style={{ fontSize: 12.5, opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
             {sync.status === 'syncing' && 'Catching up with your account…'}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
@@ -79,27 +79,27 @@ export function AccountScreen() {
         </Blueprint>
 
         <SectionLabel>What syncs</SectionLabel>
-        <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
           Your courses, everything you have added to them, your tasks, appointments, notes and
           connected calendars. Sign in on a laptop and the same semester is there.
         </div>
 
         <SectionLabel>What does not</SectionLabel>
-        <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
           Files you attach stay on the device that has them — a lecture deck can be tens of
           megabytes and uploading it on a phone plan is not a choice the app should make for you.
           The sample semester's audio ships with the app, so it plays anywhere.
         </div>
 
         <SectionLabel>How conflicts resolve</SectionLabel>
-        <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
           Nothing you added on one device is dropped because you added something on the other.
           Write a note on the laptop and another on your phone while it is offline, and you end up
           with both; tick one box here and a different one there, and both stay ticked. Settings
           are the exception, and deliberately so — your colours are whatever you last chose,
           wherever you chose it.
         </div>
-        <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty', marginTop: 8 }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty', marginTop: 8 }}>
           What still does not merge is the same note edited on both: the later edit is the one that
           survives. The app would rather say so than pretend.
         </div>
@@ -111,7 +111,7 @@ export function AccountScreen() {
           onClick={() => void run(signOut)}
           style={{
             height: 44,
-            fontSize: 12,
+            fontSize: 'calc(12px * var(--text-scale, 1))',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             marginTop: 20,
@@ -119,7 +119,7 @@ export function AccountScreen() {
         >
           Sign out
         </button>
-        <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
         </div>
@@ -130,10 +130,10 @@ export function AccountScreen() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div className="chrome-text" style={{ fontSize: 28, lineHeight: 1.08 }}>
+      <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         {mode === 'in' ? 'Pick up where you left off.' : 'One semester, every device.'}
       </div>
-      <div style={{ fontSize: 14, opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
         An account keeps your courses, notes and progress in step between your phone and your
         laptop. The app works without one — this only decides whether it follows you.
       </div>
@@ -145,7 +145,7 @@ export function AccountScreen() {
         placeholder="you@vanderbilt.edu"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        style={{ fontSize: 14, marginTop: 16 }}
+        style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 16 }}
         aria-label="Email"
       />
       <input
@@ -155,7 +155,7 @@ export function AccountScreen() {
         placeholder={mode === 'in' ? 'Password' : 'Password — at least 8 characters'}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        style={{ fontSize: 14, marginTop: 8 }}
+        style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 }}
         aria-label="Password"
       />
 
@@ -170,7 +170,7 @@ export function AccountScreen() {
         }
         style={{
           height: 50,
-          fontSize: 15,
+          fontSize: 'calc(15px * var(--text-scale, 1))',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           marginTop: 14,
@@ -185,7 +185,7 @@ export function AccountScreen() {
           className="btn btn-secondary"
           disabled={busy}
           onClick={() => void run(() => signInWith('google'))}
-          style={{ flex: 1, height: 42, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 42, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Google
         </button>
@@ -194,12 +194,12 @@ export function AccountScreen() {
           className="btn btn-secondary"
           disabled={busy}
           onClick={() => void run(() => signInWith('apple'))}
-          style={{ flex: 1, height: 42, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 42, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Apple
         </button>
       </div>
-      <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
         Google and Apple work once they are switched on for the project — until then they answer
         with a provider error, which is the truth rather than a broken button.
       </div>
@@ -209,7 +209,7 @@ export function AccountScreen() {
           type="button"
           className="bare"
           onClick={() => setMode(mode === 'in' ? 'up' : 'in')}
-          style={{ fontSize: 12, opacity: 0.7, width: 'auto' }}
+          style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, width: 'auto' }}
         >
           {mode === 'in' ? 'Make an account' : 'I already have one'}
         </button>
@@ -218,7 +218,7 @@ export function AccountScreen() {
             type="button"
             className="bare"
             onClick={() => void run(() => sendReset(email.trim()))}
-            style={{ fontSize: 12, opacity: 0.5, width: 'auto' }}
+            style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5, width: 'auto' }}
           >
             Send a reset link
           </button>
@@ -226,16 +226,16 @@ export function AccountScreen() {
       </div>
 
       {note && (
-        <div style={{ fontSize: 13, opacity: 0.85, marginTop: 14, lineHeight: 1.5 }}>{note}</div>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.85, marginTop: 14, lineHeight: 1.5 }}>{note}</div>
       )}
       {error && (
-        <div style={{ fontSize: 13, color: 'var(--app-accent)', marginTop: 14, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', color: 'var(--app-accent)', marginTop: 14, lineHeight: 1.5 }}>
           {error}
         </div>
       )}
 
       <SectionLabel>Before you sign up</SectionLabel>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.55, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.55, textWrap: 'pretty' }}>
         What you already have on this device is kept. The first sync sends it up, and if the
         account already holds a semester the two are merged rather than one replacing the other —
         you end up with both sides' courses, notes and ticked boxes.

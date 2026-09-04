@@ -82,7 +82,7 @@ export function Onboarding() {
       <div
         className="chrome-text"
         style={{
-          fontSize: 42,
+          fontSize: 'calc(42px * var(--text-scale, 1))',
           lineHeight: 1.04,
           letterSpacing: '-0.01em',
           margin: '10px 0 14px',
@@ -91,7 +91,7 @@ export function Onboarding() {
       >
         {step.t}
       </div>
-      <div style={{ fontSize: 16, lineHeight: 1.5, opacity: 0.72, maxWidth: '30ch' }}>
+      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.5, opacity: 0.72, maxWidth: '30ch' }}>
         {step.b}
       </div>
 
@@ -111,14 +111,14 @@ export function Onboarding() {
               <div
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 17,
+                  fontSize: 'calc(17px * var(--text-scale, 1))',
                   width: 88,
                   color: 'var(--app-accent)',
                 }}
               >
                 {c.code}
               </div>
-              <div style={{ fontSize: 13, opacity: 0.7, flex: 1 }}>{c.name}</div>
+              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, flex: 1 }}>{c.name}</div>
             </div>
           ))}
         </Blueprint>
@@ -154,7 +154,7 @@ export function Onboarding() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
-                    fontSize: 13,
+                    fontSize: 'calc(13px * var(--text-scale, 1))',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -164,7 +164,7 @@ export function Onboarding() {
                 </div>
                 <div
                   style={{
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     opacity: 0.5,
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.08em',
@@ -198,7 +198,7 @@ export function Onboarding() {
         type="button"
         className="btn btn-primary btn-block"
         onClick={() => dispatch({ type: 'onbNext' })}
-        style={{ height: 52, fontSize: 16, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 52, fontSize: 'calc(16px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {step.cta}
       </button>
@@ -208,7 +208,7 @@ export function Onboarding() {
         onClick={() => dispatch({ type: 'finishOnboarding' })}
         style={{
           height: 34,
-          fontSize: 12,
+          fontSize: 'calc(12px * var(--text-scale, 1))',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
           opacity: 0.55,

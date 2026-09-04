@@ -35,8 +35,8 @@ export function Guide() {
           so repeating them above it just pushes the document down. */}
       {state.mode !== 'field' && (
         <>
-          <div style={{ fontSize: 15, lineHeight: 1.3 }}>{guide.name}</div>
-          <div style={{ fontSize: 13, opacity: 0.6, marginTop: 3 }}>{guide.blurb}</div>
+          <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.3 }}>{guide.name}</div>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.6, marginTop: 3 }}>{guide.blurb}</div>
         </>
       )}
 
@@ -47,7 +47,7 @@ export function Guide() {
         style={{
           marginTop: 12,
           height: 36,
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           display: 'flex',
@@ -86,7 +86,7 @@ export function Guide() {
         <span style={{ flex: 1 }} />
         <span
           style={{
-            fontSize: 10,
+            fontSize: 'calc(10px * var(--text-scale, 1))',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
             opacity: 0.5,
@@ -114,7 +114,7 @@ export function Guide() {
       {state.waysOpen && here && (
         <div
           style={{
-            fontSize: 12.5,
+            fontSize: 'calc(12.5px * var(--text-scale, 1))',
             opacity: 0.62,
             lineHeight: 1.45,
             margin: '10px 0 2px',
@@ -133,7 +133,7 @@ export function Guide() {
             onClick={() => dispatch({ type: 'startDrill', unit: null })}
             style={{
               height: 48,
-              fontSize: 15,
+              fontSize: 'calc(15px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginTop: 14,
@@ -159,10 +159,10 @@ export function Guide() {
               <span className="kicker" style={{ display: 'block' }}>
                 Weakest unit
               </span>
-              <span style={{ display: 'block', fontSize: 14, lineHeight: 1.25, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.25, marginTop: 2 }}>
                 {weak.unit.name}
               </span>
-              <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>
+              <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55 }}>
                 {weak.unit.mastery}% — drill this one first
               </span>
             </span>
@@ -189,14 +189,14 @@ export function Guide() {
                   width: 26,
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 20,
+                  fontSize: 'calc(20px * var(--text-scale, 1))',
                   opacity: 0.4,
                 }}
               >
                 {i + 1}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 15, lineHeight: 1.25 }}>{u.name}</span>
+                <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{u.name}</span>
                 <span style={{ display: 'block', marginTop: 6 }}>
                   <Meter pct={u.mastery} height={5} />
                 </span>
@@ -204,7 +204,7 @@ export function Guide() {
               <span
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 11,
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   opacity: 0.5,
@@ -236,19 +236,19 @@ export function Guide() {
                   width: 26,
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 20,
+                  fontSize: 'calc(20px * var(--text-scale, 1))',
                   opacity: 0.4,
                 }}
               >
                 ★
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 15 }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(15px * var(--text-scale, 1))' }}>
                 The guide’s own self-test
               </span>
               <span
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 11,
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   opacity: 0.5,
@@ -264,12 +264,12 @@ export function Guide() {
 
       {state.mode === 'quiz' && (
         <Blueprint style={{ padding: 16, marginTop: 14 }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 22, lineHeight: 1.1 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             Ten multiple choice
           </div>
           <div
             style={{
-              fontSize: 13,
+              fontSize: 'calc(13px * var(--text-scale, 1))',
               opacity: 0.7,
               lineHeight: 1.45,
               marginTop: 4,
@@ -289,7 +289,7 @@ export function Guide() {
             }
             style={{
               height: 48,
-              fontSize: 15,
+              fontSize: 'calc(15px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginTop: 14,
@@ -312,7 +312,7 @@ export function Guide() {
           >
             Sit it as a timed paper
           </button>
-          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
             The paper is the same questions with a clock, marks and a key at the end instead of
             after each one — closer to the real thing, and worse for learning a card you have
             just met.
@@ -343,13 +343,13 @@ export function Guide() {
                       transition: 'transform 140ms ease',
                     }}
                   />
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 15, lineHeight: 1.25 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>
                     {u.name}
                   </span>
                   <span
                     style={{
                       fontFamily: 'var(--font-heading)',
-                      fontSize: 11,
+                      fontSize: 'calc(11px * var(--text-scale, 1))',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
                       opacity: 0.45,
@@ -379,7 +379,7 @@ export function Guide() {
                           <div
                             style={{
                               fontFamily: 'var(--font-heading)',
-                              fontSize: 17,
+                              fontSize: 'calc(17px * var(--text-scale, 1))',
                               lineHeight: 1.2,
                               textWrap: 'pretty',
                               marginTop: isNew ? 6 : 0,
@@ -389,7 +389,7 @@ export function Guide() {
                           </div>
                           <div
                             style={{
-                              fontSize: 14,
+                              fontSize: 'calc(14px * var(--text-scale, 1))',
                               lineHeight: 1.5,
                               opacity: 0.78,
                               marginTop: 3,
@@ -411,7 +411,7 @@ export function Guide() {
                           </div>
                           <div
                             style={{
-                              fontSize: 13.5,
+                              fontSize: 'calc(13.5px * var(--text-scale, 1))',
                               lineHeight: 1.55,
                               opacity: 0.82,
                               marginTop: 6,
@@ -431,7 +431,7 @@ export function Guide() {
                         className="btn btn-secondary"
                         onClick={() => dispatch({ type: 'startDrill', unit: i })}
                         style={{
-                          fontSize: 11,
+                          fontSize: 'calc(11px * var(--text-scale, 1))',
                           letterSpacing: '0.12em',
                           textTransform: 'uppercase',
                         }}
@@ -445,7 +445,7 @@ export function Guide() {
                           dispatch({ type: 'openUpdate', courseId: state.guideId, unit: i })
                         }
                         style={{
-                          fontSize: 11,
+                          fontSize: 'calc(11px * var(--text-scale, 1))',
                           letterSpacing: '0.12em',
                           textTransform: 'uppercase',
                         }}
@@ -472,7 +472,7 @@ export function Guide() {
 
       <div
         style={{
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           opacity: 0.45,
           marginTop: 22,
           fontFamily: 'var(--font-heading)',
@@ -505,12 +505,12 @@ function Watch() {
     return (
       <Blueprint style={{ padding: 16, marginTop: 14, background: 'var(--app-hero)' }}>
         <div className="kicker">Lessons</div>
-        <div className="chrome-text" style={{ fontSize: 26, marginTop: 8, lineHeight: 1.1 }}>
+        <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
           Not recorded yet
         </div>
-        <div style={{ fontSize: 13, opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
           One narrated lesson per unit, rendered by the pipeline:{' '}
-          <code style={{ fontSize: 12 }}>python3 pipeline/lessons.py {state.guideId}</code>
+          <code style={{ fontSize: 'calc(12px * var(--text-scale, 1))' }}>python3 pipeline/lessons.py {state.guideId}</code>
         </div>
       </Blueprint>
     );
@@ -518,7 +518,7 @@ function Watch() {
 
   return (
     <>
-      <div style={{ fontSize: 13, opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
         {made} {made === 1 ? 'lesson' : 'lessons'} · {Math.round(total / 60)} minutes. Each unit
         taught out loud, with the slide changing as the voice moves. Headphones on the walk to
         Buttrick and you have covered a unit.
@@ -550,18 +550,18 @@ function Watch() {
                   width: 26,
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 20,
+                  fontSize: 'calc(20px * var(--text-scale, 1))',
                   opacity: 0.4,
                 }}
               >
                 {i + 1}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 15, lineHeight: 1.25 }}>{u.name}</span>
+                <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{u.name}</span>
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     opacity: 0.55,
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
@@ -589,7 +589,7 @@ function Decks() {
 
   return (
     <>
-      <div style={{ fontSize: 13, opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
         One point per slide, question before answer. Better than Read for a unit you have not met
         yet; worse than Cards for one you nearly know.
       </div>
@@ -617,7 +617,7 @@ function Decks() {
             <span
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 12,
+                fontSize: 'calc(12px * var(--text-scale, 1))',
                 letterSpacing: '0.12em',
                 color: 'var(--app-accent)',
                 flex: 'none',
@@ -625,7 +625,7 @@ function Decks() {
             >
               PPTX
             </span>
-            <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.35 }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.35 }}>
               The whole course as a PowerPoint deck
             </span>
             <ChevronRight size={15} style={{ opacity: 0.4, flex: 'none' }} />
@@ -645,7 +645,7 @@ function Decks() {
           <span
             style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 12,
+              fontSize: 'calc(12px * var(--text-scale, 1))',
               letterSpacing: '0.12em',
               color: 'var(--app-accent)',
               flex: 'none',
@@ -653,7 +653,7 @@ function Decks() {
           >
             PPTX
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.35 }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.35 }}>
             Build a deck from any unit — a real PowerPoint file, written here
           </span>
           <ChevronRight size={15} style={{ opacity: 0.4, flex: 'none' }} />
@@ -680,18 +680,18 @@ function Decks() {
                 width: 26,
                 flex: 'none',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 20,
+                fontSize: 'calc(20px * var(--text-scale, 1))',
                 opacity: 0.4,
               }}
             >
               {i + 1}
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 15, lineHeight: 1.25 }}>{u.name}</span>
+              <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{u.name}</span>
               <span
                 style={{
                   display: 'block',
-                  fontSize: 11,
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
                   opacity: 0.55,
                   fontFamily: 'var(--font-heading)',
                   letterSpacing: '0.1em',
@@ -742,7 +742,7 @@ function Documents() {
 
   return (
     <>
-      <div style={{ fontSize: 13, opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
         The same {guide.units.length} units as a document — every card, the terms and the
         self-test, in reading order.
       </div>
@@ -757,7 +757,7 @@ function Documents() {
                 <span
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 13,
+                    fontSize: 'calc(13px * var(--text-scale, 1))',
                     letterSpacing: '0.12em',
                     color: 'var(--app-accent)',
                     width: 46,
@@ -767,8 +767,8 @@ function Documents() {
                   {f.label}
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 14 }}>{guide.code} study guide</span>
-                  <span style={{ display: 'block', fontSize: 11.5, opacity: 0.6, marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{guide.code} study guide</span>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>
                     {f.note}
                   </span>
                 </span>
@@ -785,7 +785,7 @@ function Documents() {
         onClick={() => window.print()}
         style={{
           height: 46,
-          fontSize: 13,
+          fontSize: 'calc(13px * var(--text-scale, 1))',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           marginTop: 14,
@@ -804,11 +804,11 @@ function Documents() {
       </button>
 
       <div
-        style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.5, marginTop: 10, textWrap: 'pretty' }}
+        style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.5, marginTop: 10, textWrap: 'pretty' }}
       >
         {prebuilt ? (
           <>
-            The two files are written by <code style={{ fontSize: 11 }}>pipeline/handout.py</code>{' '}
+            The two files are written by <code style={{ fontSize: 'calc(11px * var(--text-scale, 1))' }}>pipeline/handout.py</code>{' '}
             from the same data this screen reads, so they cannot drift from the app. Anything you
             have added yourself is in the app but not yet in the files — the printable view has it.
           </>
@@ -824,13 +824,13 @@ function Documents() {
       <SectionLabel>The whole guide, in order</SectionLabel>
       {guide.units.map((u, i) => (
         <div key={u.name} style={{ marginTop: 14 }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17, lineHeight: 1.2 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.2 }}>
             {i + 1}. {u.name}
           </div>
           {u.cards.map((c) => (
             <div key={c.q} style={{ marginTop: 8 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-              <div style={{ fontSize: 13.5, opacity: 0.8, lineHeight: 1.5, marginTop: 2 }}>
+              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
+              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 1.5, marginTop: 2 }}>
                 {c.a}
               </div>
             </div>
@@ -852,7 +852,7 @@ function Figures() {
 
   if (unitFigures.length === 0 && extras.length === 0) {
     return (
-      <div style={{ fontSize: 13, opacity: 0.65, marginTop: 14 }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginTop: 14 }}>
         No figures in this guide yet.
       </div>
     );
@@ -860,7 +860,7 @@ function Figures() {
 
   return (
     <>
-      <div style={{ fontSize: 13, opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
         Every figure the guide draws, at phone size. These are the ones worth being able to sketch
         from memory.
       </div>
@@ -883,7 +883,7 @@ function Cases() {
 
   return (
     <>
-      <div style={{ fontSize: 13, opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
         The concepts pointed at things you can actually see. All four professors grade on applying
         an idea to a case you have not met before — this is the rep for that.
       </div>
@@ -898,7 +898,7 @@ function Cases() {
                 <div
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 19,
+                    fontSize: 'calc(19px * var(--text-scale, 1))',
                     lineHeight: 1.15,
                     marginTop: 4,
                     textWrap: 'pretty',
@@ -917,7 +917,7 @@ function Cases() {
                     <div
                       style={{
                         fontFamily: 'var(--font-heading)',
-                        fontSize: 10,
+                        fontSize: 'calc(10px * var(--text-scale, 1))',
                         letterSpacing: '0.16em',
                         textTransform: 'uppercase',
                         color: 'var(--app-accent)',
@@ -927,7 +927,7 @@ function Cases() {
                     </div>
                     <div
                       style={{
-                        fontSize: 13.5,
+                        fontSize: 'calc(13.5px * var(--text-scale, 1))',
                         lineHeight: 1.5,
                         opacity: 0.8,
                         marginTop: 2,
@@ -940,7 +940,7 @@ function Cases() {
                 ))}
                 <div
                   style={{
-                    fontSize: 12,
+                    fontSize: 'calc(12px * var(--text-scale, 1))',
                     opacity: 0.6,
                     lineHeight: 1.45,
                     marginTop: 10,
@@ -965,7 +965,7 @@ function Cases() {
             <div
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 19,
+                fontSize: 'calc(19px * var(--text-scale, 1))',
                 lineHeight: 1.15,
                 marginTop: 8,
                 textWrap: 'pretty',
@@ -975,7 +975,7 @@ function Cases() {
             </div>
             <div
               style={{
-                fontSize: 14,
+                fontSize: 'calc(14px * var(--text-scale, 1))',
                 lineHeight: 1.5,
                 opacity: 0.78,
                 marginTop: 4,
@@ -1004,12 +1004,12 @@ function Cram() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {guide.frames.map((f) => (
               <Blueprint key={f.t} plain style={{ padding: '13px 14px' }}>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17, lineHeight: 1.15 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.15 }}>
                   {f.t}
                 </div>
                 <div
                   style={{
-                    fontSize: 13,
+                    fontSize: 'calc(13px * var(--text-scale, 1))',
                     opacity: 0.72,
                     lineHeight: 1.45,
                     marginTop: 4,
@@ -1027,8 +1027,8 @@ function Cram() {
       <SectionLabel>Terms you keep missing</SectionLabel>
       {guide.terms.map((t) => (
         <div key={t.t} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17 }}>{t.t}</div>
-          <div style={{ fontSize: 13, opacity: 0.72, lineHeight: 1.45, marginTop: 2 }}>{t.d}</div>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{t.t}</div>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.72, lineHeight: 1.45, marginTop: 2 }}>{t.d}</div>
         </div>
       ))}
 
@@ -1042,12 +1042,12 @@ function Cram() {
                   {n.source || 'Yours'}
                   {n.unit !== null && guide.units[n.unit] ? ` · ${guide.units[n.unit].name}` : ''}
                 </div>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17, marginTop: 4 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', marginTop: 4 }}>
                   {n.title || 'Note'}
                 </div>
                 <div
                   style={{
-                    fontSize: 13,
+                    fontSize: 'calc(13px * var(--text-scale, 1))',
                     opacity: 0.75,
                     lineHeight: 1.5,
                     marginTop: 4,
@@ -1074,7 +1074,7 @@ function Cram() {
               <summary
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 16,
+                  fontSize: 'calc(16px * var(--text-scale, 1))',
                   lineHeight: 1.25,
                   cursor: 'pointer',
                   listStyle: 'none',
@@ -1085,7 +1085,7 @@ function Cram() {
               </summary>
               <div
                 style={{
-                  fontSize: 13.5,
+                  fontSize: 'calc(13.5px * var(--text-scale, 1))',
                   opacity: 0.78,
                   lineHeight: 1.5,
                   marginTop: 6,
@@ -1118,10 +1118,10 @@ function Listen() {
     return (
       <Blueprint style={{ padding: 16, marginTop: 14, background: 'var(--app-hero)' }}>
         <div className="kicker">Field guide, spoken</div>
-        <div className="chrome-text" style={{ fontSize: 26, marginTop: 8 }}>
+        <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', marginTop: 8 }}>
           Not recorded yet
         </div>
-        <div style={{ fontSize: 13, opacity: 0.8, marginTop: 6 }}>{pod.blurb}</div>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.8, marginTop: 6 }}>{pod.blurb}</div>
       </Blueprint>
     );
   }
@@ -1154,7 +1154,7 @@ function Listen() {
           <div
             style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 11,
+              fontSize: 'calc(11px * var(--text-scale, 1))',
               letterSpacing: '0.14em',
               color: 'var(--app-accent-deep)',
             }}
@@ -1162,12 +1162,12 @@ function Listen() {
             {episode.len}
           </div>
         </div>
-        <div className="chrome-text" style={{ fontSize: 28, lineHeight: 1.06, marginTop: 8 }}>
+        <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.06, marginTop: 8 }}>
           {guide.code}
         </div>
         <div
           style={{
-            fontSize: 13,
+            fontSize: 'calc(13px * var(--text-scale, 1))',
             opacity: 0.82,
             lineHeight: 1.45,
             marginTop: 6,
@@ -1193,7 +1193,7 @@ function Listen() {
               marginTop: 14,
               paddingTop: 12,
               borderTop: '1px solid var(--app-line)',
-              fontSize: 12,
+              fontSize: 'calc(12px * var(--text-scale, 1))',
               opacity: 0.7,
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.08em',
@@ -1208,7 +1208,7 @@ function Listen() {
       {addedSince > 0 && (
         <div
           style={{
-            fontSize: 12,
+            fontSize: 'calc(12px * var(--text-scale, 1))',
             opacity: 0.65,
             marginTop: 10,
             lineHeight: 1.45,
@@ -1242,13 +1242,13 @@ function Listen() {
               width: 48,
               flex: 'none',
               fontFamily: 'var(--font-heading)',
-              fontSize: 14,
+              fontSize: 'calc(14px * var(--text-scale, 1))',
               color: 'var(--app-accent)',
             }}
           >
             {c.t}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.3 }}>{c.name}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{c.name}</span>
         </button>
       ))}
     </>

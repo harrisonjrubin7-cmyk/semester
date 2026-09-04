@@ -93,13 +93,13 @@ export function Drawing({ code, language }: { code: string; language: Language }
   if (failed) {
     return (
       <div>
-        <div style={{ fontSize: 12.5, opacity: 0.6, marginBottom: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.45 }}>
           {failed} The code is below — it is often one label away from working, and it is yours to
           edit.
         </div>
         <pre
           style={{
-            fontSize: 11.5,
+            fontSize: 'calc(11.5px * var(--text-scale, 1))',
             lineHeight: 1.5,
             overflowX: 'auto',
             padding: 12,
@@ -117,7 +117,7 @@ export function Drawing({ code, language }: { code: string; language: Language }
 
   if (!svg) {
     return (
-      <div style={{ fontSize: 12.5, opacity: 0.5, padding: '20px 0' }}>Drawing…</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.5, padding: '20px 0' }}>Drawing…</div>
     );
   }
 

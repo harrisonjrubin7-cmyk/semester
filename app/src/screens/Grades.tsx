@@ -24,7 +24,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
 
   return (
     <div style={{ padding: bare ? 0 : 18 }}>
-      <div style={{ fontSize: 13, opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
         Weights come from each syllabus. Put in what you have so far — a percentage, or something
         like 17/20 — and the rest is arithmetic.
       </div>
@@ -40,10 +40,10 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 {s.current === null ? 'Nothing graded yet' : `Across ${Math.round(s.counted)}% of the grade`}
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
-                <div className="chrome-text" style={{ fontSize: 34, lineHeight: 1 }}>
+                <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
                   {s.current === null ? '—' : `${Math.round(s.current)}%`}
                 </div>
-                <div style={{ fontSize: 12.5, opacity: 0.7 }}>
+                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7 }}>
                   {s.remaining > 0
                     ? `${Math.round(s.remaining)}% still to play for`
                     : 'Everything is in'}
@@ -55,12 +55,12 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 </div>
               )}
               {s.extraCredit > 0 && (
-                <div style={{ fontSize: 12, opacity: 0.7, marginTop: 8 }}>
+                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8 }}>
                   Plus {s.extraCredit.toFixed(1)} points of extra credit.
                 </div>
               )}
               {s.incomplete && (
-                <div style={{ fontSize: 11.5, opacity: 0.6, marginTop: 8, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 1.45 }}>
                   The weights in this syllabus do not add to 100, so treat these as indicative.
                   Rows the app could not read a weight from are marked below.
                 </div>
@@ -79,10 +79,10 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, lineHeight: 1.3 }}>{r.what}</div>
+                  <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{r.what}</div>
                   <div
                     style={{
-                      fontSize: 11,
+                      fontSize: 'calc(11px * var(--text-scale, 1))',
                       opacity: 0.5,
                       marginTop: 2,
                       fontFamily: 'var(--font-heading)',
@@ -103,7 +103,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                     dispatch({ type: 'setGrade', key: key(c.id, i), value: e.target.value })
                   }
                   aria-label={`Your score for ${r.what} in ${c.code}`}
-                  style={{ width: 84, flex: 'none', height: 38, fontSize: 14, textAlign: 'center' }}
+                  style={{ width: 84, flex: 'none', height: 38, fontSize: 'calc(14px * var(--text-scale, 1))', textAlign: 'center' }}
                 />
               </div>
             ))}
@@ -112,7 +112,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
               <>
                 <div
                   style={{
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     opacity: 0.5,
                     margin: '14px 0 6px',
                     fontFamily: 'var(--font-heading)',
@@ -139,11 +139,11 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                         opacity: impossible ? 0.45 : 1,
                       }}
                     >
-                      <span style={{ fontFamily: 'var(--font-heading)', fontSize: 15 }}>
+                      <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15px * var(--text-scale, 1))' }}>
                         {t.label}
-                        <span style={{ fontSize: 11, opacity: 0.5 }}> · {t.at}%</span>
+                        <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}> · {t.at}%</span>
                       </span>
-                      <span style={{ fontSize: 13.5 }}>
+                      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
                         {done
                           ? 'already yours'
                           : impossible
@@ -171,7 +171,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 <div style={{ marginTop: 16 }}>
                   <div
                     style={{
-                      fontSize: 11,
+                      fontSize: 'calc(11px * var(--text-scale, 1))',
                       opacity: 0.5,
                       marginBottom: 6,
                       fontFamily: 'var(--font-heading)',
@@ -181,11 +181,11 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                   >
                     On practice papers
                   </div>
-                  <div style={{ fontSize: 13.5, lineHeight: 1.5, textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, textWrap: 'pretty' }}>
                     {trendLine(t, sat)}
                   </div>
                   {target !== null && t.papers > 0 ? (
-                    <div style={{ fontSize: 12, opacity: 0.6, marginTop: 5, lineHeight: 1.45 }}>
+                    <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 5, lineHeight: 1.45 }}>
                       {against(t.average, target)}
                     </div>
                   ) : null}
@@ -224,7 +224,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
         );
       })}
 
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 22, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 22, lineHeight: 1.5 }}>
         This is your own arithmetic, not a gradebook — nothing here is read from Brightspace, and
         nothing is sent anywhere. A syllabus that drops your lowest score, curves, or rounds will
         not match exactly.

@@ -48,7 +48,7 @@ export function EditCourse() {
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Not editable</div>
-          <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             This is one of the four sample courses, which are built into the app rather than held
             in your account. Your own courses — anything imported from a syllabus or added from
             your YES schedule — can be changed here freely.
@@ -80,7 +80,7 @@ export function EditCourse() {
     placeholder = '',
   ) => (
     <label style={{ display: 'block', marginBottom: 10 }}>
-      <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginBottom: 4 }}>
+      <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 4 }}>
         {label}
       </span>
       <input
@@ -95,13 +95,13 @@ export function EditCourse() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Everything a syllabus states, changeable. Dates move, weightings get corrected, rooms
         change — none of that should mean re-importing the course and losing what you have drilled.
       </div>
 
       {missing.length > 0 && (
-        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 1.5 }}>
           Currently: {missing.join(', ')}.
         </div>
       )}
@@ -141,14 +141,14 @@ export function EditCourse() {
           ))}
         </select>
       </div>
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
         The term decides which year this course's dates fall in, and keeps last semester out of
         Today without deleting it. Courses added before this existed are filed under Fall 2026,
         which is what their dates are.
       </div>
 
       <SectionLabel>What the syllabus says about AI</SectionLabel>
-      <div style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
         Recorded here, and read by the drafting tool, which will not write for a course unless
         this says plainly that it may. Nothing recorded counts as no.
       </div>
@@ -172,8 +172,8 @@ export function EditCourse() {
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span style={{ display: 'block', fontSize: 13.5 }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                 {stanceLine(option.id)}
               </span>
             </button>
@@ -230,7 +230,7 @@ export function EditCourse() {
               change(withGrading(draft, draft.course.grading.filter((_, n) => n !== i)))
             }
             aria-label={`Remove ${row.what || 'this row'}`}
-            style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 15 }}
+            style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
           >
             ×
           </button>
@@ -240,12 +240,12 @@ export function EditCourse() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => change(withGrading(draft, [...draft.course.grading, { what: '', pct: '' }]))}
-        style={{ height: 40, fontSize: 12 }}
+        style={{ height: 40, fontSize: 'calc(12px * var(--text-scale, 1))' }}
       >
         + Add a grading row
       </button>
       {note ? (
-        <div style={{ fontSize: 11.5, opacity: 0.6, marginTop: 8 }}>{note}</div>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8 }}>{note}</div>
       ) : null}
 
       <SectionLabel>When it meets</SectionLabel>
@@ -281,7 +281,7 @@ export function EditCourse() {
                   style={{
                     flex: 1,
                     padding: '6px 0',
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
@@ -334,7 +334,7 @@ export function EditCourse() {
               className="bare"
               onClick={() => change(withSchedule(draft, draft.schedule.filter((_, n) => n !== i)))}
               aria-label="Remove this meeting"
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 15 }}
+              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
             >
               ×
             </button>
@@ -353,7 +353,7 @@ export function EditCourse() {
               ]),
             )
           }
-          style={{ flex: 1, height: 40, fontSize: 12 }}
+          style={{ flex: 1, height: 40, fontSize: 'calc(12px * var(--text-scale, 1))' }}
         >
           + Add a meeting
         </button>
@@ -380,12 +380,12 @@ export function EditCourse() {
               ]),
             )
           }
-          style={{ flex: 1, height: 40, fontSize: 12 }}
+          style={{ flex: 1, height: 40, fontSize: 'calc(12px * var(--text-scale, 1))' }}
         >
           + Office hours
         </button>
       </div>
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
         The time is written as it appears on screen, and the hour grid places a block by it — so
         "9:10a" and "2:45p" are understood and "morning" is not. Office hours sit dimmer on the
         rail than a class, and are what the app watches when it notices a course going badly.
@@ -445,7 +445,7 @@ export function EditCourse() {
               className="bare"
               onClick={() => change(dropItem(draft, i.id))}
               aria-label={`Remove ${i.title || 'this deadline'}`}
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 15 }}
+              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
             >
               ×
             </button>
@@ -456,7 +456,7 @@ export function EditCourse() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => change(addItem(draft, blankItem(draft.course.id, draft.items)))}
-        style={{ height: 40, fontSize: 12 }}
+        style={{ height: 40, fontSize: 'calc(12px * var(--text-scale, 1))' }}
       >
         + Add a deadline
       </button>
@@ -471,13 +471,13 @@ export function EditCourse() {
         {dirty ? 'Save the changes' : saved ? 'Saved' : 'Nothing changed'}
       </button>
       {dirty ? (
-        <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
           Nothing is saved until you press that. A half-typed date would otherwise flow straight
           into the calendar and the overdue count while you were still typing it.
         </div>
       ) : null}
       {saved ? (
-        <div style={{ fontSize: 12.5, opacity: 0.75, marginTop: 10, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 10, lineHeight: 1.45 }}>
           Saved. The calendar, Grades, Today and every study mode are using it already. What you
           have ticked off and drilled is untouched.
         </div>

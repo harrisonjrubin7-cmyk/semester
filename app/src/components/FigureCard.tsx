@@ -34,7 +34,7 @@ function StoredImage({ fileId, alt }: { fileId: string; alt: string }) {
 
   if (missing) {
     return (
-      <div style={{ fontSize: 12, opacity: 0.55, marginTop: 12 }}>
+      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 12 }}>
         The file behind this figure is no longer on the device.
       </div>
     );
@@ -57,7 +57,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
       <div
         style={{
           fontFamily: 'var(--font-heading)',
-          fontSize: 19,
+          fontSize: 'calc(19px * var(--text-scale, 1))',
           lineHeight: 1.15,
           marginTop: 3,
         }}
@@ -74,14 +74,14 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'baseline',
-                  fontSize: 12,
+                  fontSize: 'calc(12px * var(--text-scale, 1))',
                   gap: 10,
                 }}
               >
                 <span style={{ opacity: 0.75 }}>{r.l}</span>
-                <span style={{ fontFamily: 'var(--font-heading)', fontSize: 14 }}>
+                <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(14px * var(--text-scale, 1))' }}>
                   {r.v.toLocaleString()}
-                  <span style={{ opacity: 0.5, fontSize: 11 }}> {figure.unit}</span>
+                  <span style={{ opacity: 0.5, fontSize: 'calc(11px * var(--text-scale, 1))' }}> {figure.unit}</span>
                 </span>
               </div>
               <div style={{ height: 8, background: 'var(--app-track)', marginTop: 3 }}>
@@ -110,7 +110,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                   display: 'grid',
                   placeItems: 'center',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 13,
+                  fontSize: 'calc(13px * var(--text-scale, 1))',
                   color: 'var(--app-accent)',
                   alignSelf: 'flex-start',
                   padding: '6px 0',
@@ -119,12 +119,12 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                 {s.n}
               </div>
               <div style={{ flex: 1, minWidth: 0, paddingBottom: 12 }}>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 16, lineHeight: 1.2 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.2 }}>
                   {s.t}
                 </div>
                 <div
                   style={{
-                    fontSize: 13,
+                    fontSize: 'calc(13px * var(--text-scale, 1))',
                     opacity: 0.72,
                     lineHeight: 1.4,
                     marginTop: 2,
@@ -145,7 +145,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
 
       <div
         style={{
-          fontSize: 12,
+          fontSize: 'calc(12px * var(--text-scale, 1))',
           opacity: 0.6,
           lineHeight: 1.45,
           marginTop: 12,

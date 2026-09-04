@@ -93,7 +93,7 @@ export function Timer({
 
   if (ended.kind === 'kept') {
     return (
-      <div style={{ fontSize: 12.5, opacity: 0.7, padding: '9px 0', lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, padding: '9px 0', lineHeight: 1.45 }}>
         {clockLine(ended.minutes)} on this, recorded. The week ahead knows your pace a little
         better than it did.
       </div>
@@ -102,7 +102,7 @@ export function Timer({
 
   if (ended.kind === 'dropped') {
     return (
-      <div style={{ fontSize: 12.5, opacity: 0.55, padding: '9px 0' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, padding: '9px 0' }}>
         Under two minutes — not counted.
       </div>
     );
@@ -111,7 +111,7 @@ export function Timer({
   if (ended.kind === 'ask') {
     return (
       <div style={{ padding: '9px 0 4px' }}>
-        <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 7, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, marginBottom: 7, lineHeight: 1.45 }}>
           That ran for {clockLine(ended.minutes)}, which is longer than the app will take on
           trust — a timer left running looks exactly like this. What was it really?
         </div>
@@ -125,7 +125,7 @@ export function Timer({
                 dispatch({ type: 'timeSpent', id, courseId, kind, bucketId: b.id });
                 setEnded({ kind: 'none' });
               }}
-              style={{ height: 32, fontSize: 12, padding: '0 10px', flex: 'none' }}
+              style={{ height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', padding: '0 10px', flex: 'none' }}
             >
               {b.label}
             </button>
@@ -134,7 +134,7 @@ export function Timer({
             type="button"
             className="bare"
             onClick={() => setEnded({ kind: 'none' })}
-            style={{ height: 32, fontSize: 12, opacity: 0.5, width: 'auto', padding: '0 8px' }}
+            style={{ height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5, width: 'auto', padding: '0 8px' }}
           >
             Forget it
           </button>
@@ -154,12 +154,12 @@ export function Timer({
           // `Date.now()` for the start and the pauses, which are moments
           // rather than displayed figures: banking the store's stale minute
           // would lose up to thirty seconds on every pause.
-          style={{ height: 36, fontSize: 12.5, paddingInline: 16 }}
+          style={{ height: 36, fontSize: 'calc(12.5px * var(--text-scale, 1))', paddingInline: 16 }}
         >
           Start working on this
         </button>
         {elsewhere ? (
-          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.4 }}>
             {/* Said rather than prevented: the student may well have moved on
                 to this and forgotten the other one, and starting here should
                 not be blocked by a timer they have already abandoned. */}
@@ -187,7 +187,7 @@ export function Timer({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div
           className="chrome-text"
-          style={{ fontSize: 20, flex: 1, fontVariantNumeric: 'tabular-nums' }}
+          style={{ fontSize: 'calc(20px * var(--text-scale, 1))', flex: 1, fontVariantNumeric: 'tabular-nums' }}
         >
           {clockLine(spent)}
         </div>
@@ -197,7 +197,7 @@ export function Timer({
           onClick={() =>
             setSitting(running(mine) ? hold(mine, Date.now()) : carryOn(mine, Date.now()))
           }
-          style={{ width: 'auto', padding: '0 10px', height: 32, fontSize: 12, opacity: 0.75 }}
+          style={{ width: 'auto', padding: '0 10px', height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.75 }}
         >
           {running(mine) ? 'Pause' : 'Carry on'}
         </button>
@@ -205,19 +205,19 @@ export function Timer({
           type="button"
           className="btn btn-primary"
           onClick={stop}
-          style={{ height: 32, fontSize: 12, paddingInline: 14, flex: 'none' }}
+          style={{ height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', paddingInline: 14, flex: 'none' }}
         >
           Stop
         </button>
       </div>
       {lost ? (
-        <div style={{ fontSize: 11.5, opacity: 0.7, marginTop: 7, lineHeight: 1.4 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 7, lineHeight: 1.4 }}>
           This has been running over {LONGEST / 60} hours. Stop it and the app will ask what it
           really was rather than recording this.
         </div>
       ) : null}
       {!running(mine) ? (
-        <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 7 }}>Paused. Nothing is counting.</div>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 7 }}>Paused. Nothing is counting.</div>
       ) : null}
     </div>
   );

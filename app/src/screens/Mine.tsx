@@ -55,7 +55,7 @@ function CoursePicker({
                 style={{
                   flex: 'none',
                   padding: '5px 11px',
-                  fontSize: 11,
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   background: on ? 'var(--chrome)' : 'transparent',
@@ -74,7 +74,7 @@ function CoursePicker({
   );
 }
 
-const inputStyle = { height: 40, fontSize: 14, marginTop: 8 } as const;
+const inputStyle = { height: 40, fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 } as const;
 
 function Tasks() {
   const { state, dispatch, now, courseCode } = useStore();
@@ -120,7 +120,7 @@ function Tasks() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="What needs doing?"
-            style={{ height: 42, fontSize: 15 }}
+            style={{ height: 42, fontSize: 'calc(15px * var(--text-scale, 1))' }}
             aria-label="Task"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
@@ -209,14 +209,14 @@ function Tasks() {
                   <div style={{ flex: 1, minWidth: 0, opacity: t.done ? 0.42 : 1 }}>
                     <div
                       style={{
-                        fontSize: 15,
+                        fontSize: 'calc(15px * var(--text-scale, 1))',
                         lineHeight: 1.3,
                         textDecoration: t.done ? 'line-through' : 'none',
                       }}
                     >
                       {t.title}
                     </div>
-                    <div style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>
+                    <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 3 }}>
                       <span className="tag tag-neutral" style={{ marginRight: 6 }}>
                         {t.courseId ? courseCode(t.courseId) : 'Personal'}
                       </span>
@@ -229,7 +229,7 @@ function Tasks() {
                     className="btn btn-ghost"
                     onClick={() => dispatch({ type: 'deleteTask', id: t.id })}
                     aria-label={`Delete ${t.title}`}
-                    style={{ flex: 'none', fontSize: 10, letterSpacing: '0.12em', padding: '4px 6px' }}
+                    style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
                   >
                     Del
                   </button>
@@ -287,7 +287,7 @@ function Appointments() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Dentist, advisor meeting, shift…"
-            style={{ height: 42, fontSize: 15 }}
+            style={{ height: 42, fontSize: 'calc(15px * var(--text-scale, 1))' }}
             aria-label="Appointment"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
@@ -339,7 +339,7 @@ function Appointments() {
                 style={{
                   flex: 'none',
                   padding: '5px 10px',
-                  fontSize: 11,
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   background: kind === k.id ? 'var(--app-hero)' : 'transparent',
@@ -414,14 +414,14 @@ function Appointments() {
                 lineHeight: 1.1,
               }}
             >
-              <div style={{ fontSize: 16 }}>{a.time}</div>
-              <div style={{ fontSize: 10, opacity: 0.5, letterSpacing: '0.1em' }}>
+              <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}>{a.time}</div>
+              <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}>
                 {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
               </div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 15, lineHeight: 1.25 }}>{a.title}</div>
-              <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>
+              <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{a.title}</div>
+              <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>
                 {[kindOf(a.kind).label, a.where].filter(Boolean).join(' · ')}
               </div>
             </div>
@@ -430,7 +430,7 @@ function Appointments() {
               className="btn btn-ghost"
               onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
               aria-label={`Delete ${a.title}`}
-              style={{ flex: 'none', fontSize: 10, letterSpacing: '0.12em', padding: '4px 6px' }}
+              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
             >
               Del
             </button>
@@ -479,13 +479,13 @@ function Notes() {
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 15, lineHeight: 1.25 }}>
+                <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>
                   {n.title || 'Untitled note'}
                 </span>
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     opacity: 0.55,
                     marginTop: 3,
                     overflow: 'hidden',
@@ -573,7 +573,7 @@ function Files() {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 14,
+                        fontSize: 'calc(14px * var(--text-scale, 1))',
                         lineHeight: 1.25,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -585,7 +585,7 @@ function Files() {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 11,
+                        fontSize: 'calc(11px * var(--text-scale, 1))',
                         opacity: 0.55,
                         marginTop: 2,
                         fontFamily: 'var(--font-heading)',
@@ -601,7 +601,7 @@ function Files() {
                     className="btn btn-ghost"
                     onClick={() => void deleteFile(f.id).then(refresh)}
                     aria-label={`Delete ${f.name}`}
-                    style={{ flex: 'none', fontSize: 10, letterSpacing: '0.12em', padding: '4px 6px' }}
+                    style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
                   >
                     Del
                   </button>
@@ -676,7 +676,7 @@ function Places() {
 
   return (
     <>
-      <div style={{ fontSize: 13, opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
         Name the places you actually go — the lecture hall, the library floor you like, your
         apartment. Nothing is looked up and nothing is sent anywhere: the app compares where you
         are to this list, on this device, and that is the whole of it.
@@ -687,7 +687,7 @@ function Places() {
         className="btn btn-secondary btn-block"
         disabled={busy || !locationSupported()}
         onClick={() => void locate()}
-        style={{ height: 44, marginTop: 14, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 44, marginTop: 14, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {busy ? 'Locating…' : locationSupported() ? 'Where am I?' : 'No location on this browser'}
       </button>
@@ -695,10 +695,10 @@ function Places() {
       {fix && (
         <Blueprint style={{ padding: '13px 14px', marginTop: 12, background: 'var(--app-hero)' }}>
           <div className="kicker">{at ? 'You are at' : 'Somewhere new'}</div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18, marginTop: 4 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))', marginTop: 4 }}>
             {at ? at.label : 'Not a place you have named'}
           </div>
-          <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 4 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 4 }}>
             Accurate to about {far(fix.accuracy)}.
           </div>
 
@@ -710,7 +710,7 @@ function Places() {
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="Alumni Hall, Central Library, home…"
                 aria-label="Name this place"
-                style={{ fontSize: 14, marginTop: 12 }}
+                style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 12 }}
               />
               <button
                 type="button"
@@ -728,7 +728,7 @@ function Places() {
                   });
                   setLabel('');
                 }}
-                style={{ height: 42, marginTop: 8, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ height: 42, marginTop: 8, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 Save this spot
               </button>
@@ -740,7 +740,7 @@ function Places() {
       {error && (
         <div
           style={{
-            fontSize: 12.5,
+            fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-accent)',
             marginTop: 12,
             lineHeight: 1.45,
@@ -771,8 +771,8 @@ function Places() {
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, lineHeight: 1.25 }}>{place.label}</div>
-                <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 2 }}>
+                <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{place.label}</div>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 2 }}>
                   {metres >= 0 ? `${far(metres)} away · ` : ''}
                   {place.radius} m across
                 </div>
@@ -781,7 +781,7 @@ function Places() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'removePlace', id: place.id })}
-                style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
               >
                 REMOVE
               </button>
@@ -807,7 +807,7 @@ export function NoteEditor() {
   }, [note?.fileIds.length]);
 
   if (!note) {
-    return <div style={{ padding: 18, fontSize: 14, opacity: 0.6 }}>Note not found.</div>;
+    return <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6 }}>Note not found.</div>;
   }
 
   const attached = files.filter((f) => note.fileIds.includes(f.id));
@@ -828,7 +828,7 @@ export function NoteEditor() {
         value={note.title}
         onChange={(e) => dispatch({ type: 'updateNote', id: note.id, patch: { title: e.target.value } })}
         placeholder="Title"
-        style={{ height: 46, fontSize: 17, fontFamily: 'var(--font-heading)' }}
+        style={{ height: 46, fontSize: 'calc(17px * var(--text-scale, 1))', fontFamily: 'var(--font-heading)' }}
         aria-label="Note title"
       />
 
@@ -842,7 +842,7 @@ export function NoteEditor() {
         value={note.body}
         onChange={(e) => dispatch({ type: 'updateNote', id: note.id, patch: { body: e.target.value } })}
         placeholder="Write anything."
-        style={{ minHeight: 260, fontSize: 14, lineHeight: 1.55, marginTop: 12 }}
+        style={{ minHeight: 260, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.55, marginTop: 12 }}
         aria-label="Note body"
       />
 
@@ -887,7 +887,7 @@ export function NoteEditor() {
 
       <SectionLabel>Attachments</SectionLabel>
       {attached.length === 0 && (
-        <div style={{ fontSize: 13, opacity: 0.55, marginBottom: 10 }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 10 }}>
           Nothing attached yet.
         </div>
       )}
@@ -903,7 +903,7 @@ export function NoteEditor() {
               <span
                 style={{
                   display: 'block',
-                  fontSize: 14,
+                  fontSize: 'calc(14px * var(--text-scale, 1))',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -911,7 +911,7 @@ export function NoteEditor() {
               >
                 {f.name}
               </span>
-              <span style={{ display: 'block', fontSize: 11, opacity: 0.55 }}>
+              <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55 }}>
                 {formatBytes(f.size)}
               </span>
             </button>
@@ -919,7 +919,7 @@ export function NoteEditor() {
               type="button"
               className="btn btn-ghost"
               onClick={() => dispatch({ type: 'detachFile', noteId: note.id, fileId: f.id })}
-              style={{ flex: 'none', fontSize: 10, letterSpacing: '0.12em', padding: '4px 6px' }}
+              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
             >
               Detach
             </button>

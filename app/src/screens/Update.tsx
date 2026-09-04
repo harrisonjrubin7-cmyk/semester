@@ -134,15 +134,15 @@ export function AddMaterial() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div className="chrome-text" style={{ fontSize: 26, lineHeight: 1.1 }}>
+      <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', lineHeight: 1.1 }}>
         Something new for {guide.code}
       </div>
-      <div style={{ fontSize: 13, opacity: 0.7, marginTop: 6, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, textWrap: 'pretty' }}>
         A chapter, a handout, a lecture, a recording. Paste it, attach it, photograph it, or
         record it — whatever reads as a question and an answer becomes cards, and the rest is kept
         as the unit's notes.
       </div>
-      <div style={{ fontSize: 12.5, opacity: 0.58, marginTop: 8, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.58, marginTop: 8, lineHeight: 1.5 }}>
         The moment you save, Cards, Quiz, Read, Cram and the slides for this course all include
         it. Nothing is regenerated and nothing you had is replaced — the new material is layered
         over the syllabus the course was built from, and anything you add is listed at the bottom of
@@ -164,7 +164,7 @@ export function AddMaterial() {
                 style={{
                   flex: 'none',
                   padding: '5px 11px',
-                  fontSize: 11,
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   background: on ? 'var(--chrome)' : 'transparent',
@@ -197,7 +197,7 @@ export function AddMaterial() {
           <span style={{ width: 26, flex: 'none', color: 'var(--app-accent)' }}>
             {unit === null ? '■' : '□'}
           </span>
-          <span style={{ fontSize: 14 }}>A unit of its own, at the end</span>
+          <span style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>A unit of its own, at the end</span>
         </button>
         {guide.units.map((u, i) => (
           <button
@@ -217,7 +217,7 @@ export function AddMaterial() {
             <span style={{ width: 26, flex: 'none', color: 'var(--app-accent)' }}>
               {unit === i ? '■' : '□'}
             </span>
-            <span style={{ fontSize: 14, lineHeight: 1.3 }}>{u.name}</span>
+            <span style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{u.name}</span>
           </button>
         ))}
       </div>
@@ -228,14 +228,14 @@ export function AddMaterial() {
         placeholder="Trounstine ch. 4"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        style={{ fontSize: 14 }}
+        style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}
       />
       <input
         className="input"
         placeholder="Where it came from — Brightspace, Oct 8 lecture"
         value={source}
         onChange={(e) => setSource(e.target.value)}
-        style={{ fontSize: 14, marginTop: 8 }}
+        style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 }}
       />
 
       <SectionLabel>The material</SectionLabel>
@@ -244,13 +244,13 @@ export function AddMaterial() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={'Q: What does the four-hurdle test ask first?\nA: Is there a plausible causal mechanism?\n\nOr paste the reading and keep it as notes.'}
-        style={{ minHeight: 190, fontSize: 13, lineHeight: 1.5 }}
+        style={{ minHeight: 190, fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5 }}
         aria-label="New material"
       />
       <div
         style={{
           fontFamily: 'var(--font-heading)',
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           opacity: 0.6,
@@ -264,16 +264,16 @@ export function AddMaterial() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 12 }}>
           {parsed.cards.slice(0, 3).map((c) => (
             <Blueprint key={c.q} style={{ padding: '11px 13px' }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 15, lineHeight: 1.2 }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.2 }}>
                 {c.q}
               </div>
-              <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.45, marginTop: 3 }}>
+              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.45, marginTop: 3 }}>
                 {c.a}
               </div>
             </Blueprint>
           ))}
           {parsed.cards.length > 3 && (
-            <div style={{ fontSize: 12, opacity: 0.55 }}>
+            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55 }}>
               and {parsed.cards.length - 3} more
             </div>
           )}
@@ -289,7 +289,7 @@ export function AddMaterial() {
       <SectionLabel>Photograph it</SectionLabel>
       {claudeReady ? (
         <>
-          <div style={{ fontSize: 12.5, opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
             The board at the end of a lecture, a page of a textbook, a printed handout. Read into
             cards from what is actually written — anything unreadable is left out and said so.
           </div>
@@ -303,7 +303,7 @@ export function AddMaterial() {
               style={{
                 height: 44,
                 marginTop: 12,
-                fontSize: 12,
+                fontSize: 'calc(12px * var(--text-scale, 1))',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
               }}
@@ -314,9 +314,9 @@ export function AddMaterial() {
           {readNote && (
             <Blueprint plain style={{ padding: '11px 13px', marginTop: 12 }}>
               <div className="kicker">What it saw</div>
-              <div style={{ fontSize: 13, lineHeight: 1.5, marginTop: 4 }}>{readNote}</div>
+              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 4 }}>{readNote}</div>
               {shotCards.length > 0 && (
-                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6 }}>
+                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6 }}>
                   {shotCards.length} {shotCards.length === 1 ? 'card' : 'cards'} ready — they save
                   with everything else below.
                 </div>
@@ -326,7 +326,7 @@ export function AddMaterial() {
           {shotError && (
             <div
               style={{
-                fontSize: 12.5,
+                fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 color: 'var(--app-accent)',
                 marginTop: 10,
                 lineHeight: 1.45,
@@ -338,7 +338,7 @@ export function AddMaterial() {
           )}
         </>
       ) : (
-        <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5 }}>
           Reading a photograph needs {provider()}. Sign in to use the shared key, or add your own under
           Connect → Claude. You can still attach the photo as a file below.
         </div>
@@ -349,7 +349,7 @@ export function AddMaterial() {
           into the box above, so what was said becomes material the same way a
           reading does. */}
       <SectionLabel>Record the lecture</SectionLabel>
-      <div style={{ fontSize: 12.5, opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
         Keeps the audio against this course, and can write it down as it goes. The transcript lands
         in the material box above, where it becomes cards, a quiz and a guide like anything else.
       </div>
@@ -380,7 +380,7 @@ export function AddMaterial() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => fileInput.current?.click()}
-        style={{ height: 42, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {busy ? 'Reading…' : 'Attach slides, a PDF, a photo of the board, or a zip'}
       </button>
@@ -391,7 +391,7 @@ export function AddMaterial() {
             display: 'flex',
             justifyContent: 'space-between',
             gap: 10,
-            fontSize: 13,
+            fontSize: 'calc(13px * var(--text-scale, 1))',
             padding: '9px 0',
             borderBottom: '1px solid var(--app-line)',
           }}
@@ -400,7 +400,7 @@ export function AddMaterial() {
           <span style={{ opacity: 0.5, flex: 'none' }}>{formatBytes(f.size)}</span>
         </div>
       ))}
-      <div style={{ fontSize: 12, opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
         Images become figures for the unit. Text files are read into the box above as well as
         attached. Everything stays on this device.
       </div>
@@ -412,7 +412,7 @@ export function AddMaterial() {
         onClick={save}
         style={{
           height: 50,
-          fontSize: 15,
+          fontSize: 'calc(15px * var(--text-scale, 1))',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           marginTop: 16,
@@ -439,11 +439,11 @@ export function AddMaterial() {
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3 }}>{u.title}</span>
+                <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{u.title}</span>
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     opacity: 0.55,
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
@@ -462,7 +462,7 @@ export function AddMaterial() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'deleteUpdate', id: u.id })}
-                style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE
               </button>

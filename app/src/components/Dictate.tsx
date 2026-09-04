@@ -46,7 +46,7 @@ export function Dictate({
 
   if (!dictationSupported()) {
     return (
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
         This browser has no speech recognition, so dictation is off. Chrome and Safari have it.
       </div>
     );
@@ -90,7 +90,7 @@ export function Dictate({
           paddingInline: compact ? 14 : undefined,
           width: compact ? 'auto' : undefined,
           marginTop: compact ? 8 : 10,
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           display: 'flex',
@@ -111,12 +111,12 @@ export function Dictate({
         {on ? 'Stop dictating' : label}
       </button>
       {on && (
-        <div style={{ fontSize: 11.5, opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
           Listening. Words appear as you say them, after whatever was already written.
         </div>
       )}
       {error && (
-        <div style={{ fontSize: 12, color: 'var(--app-accent)', marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', color: 'var(--app-accent)', marginTop: 8, lineHeight: 1.45 }}>
           {error}
         </div>
       )}

@@ -207,7 +207,7 @@ export function Export() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Plain formats, chosen because other software reads them. Nothing here is a bundle only this
         app understands — that would be the same trap with extra steps.
       </div>
@@ -234,15 +234,15 @@ export function Export() {
           </button>
           <div style={{ flex: 1, minWidth: 0, padding: '12px 0' }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-              <span style={{ fontSize: 14.5 }}>{part.label}</span>
+              <span style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))' }}>{part.label}</span>
               <span className="tag tag-neutral" style={{ flex: 'none' }}>
                 {part.format}
               </span>
               {counts[part.id] > 0 && part.id !== 'backup' && (
-                <span style={{ fontSize: 11, opacity: 0.45 }}>{counts[part.id]}</span>
+                <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45 }}>{counts[part.id]}</span>
               )}
             </div>
-            <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 2, lineHeight: 1.4 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2, lineHeight: 1.4 }}>
               {part.blurb}
             </div>
           </div>
@@ -283,7 +283,7 @@ export function Export() {
       ))}
 
       {clouds.length === 0 && (
-        <div style={{ fontSize: 12, opacity: 0.55, marginTop: 12, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 12, lineHeight: 1.5 }}>
           Connect Google or Microsoft under Me → Connect accounts and the zip can go straight to
           Drive or OneDrive. Drive is asked only for permission to touch files this app creates —
           it gains no right to read what is already there.
@@ -291,18 +291,18 @@ export function Export() {
       )}
 
       {done ? (
-        <div style={{ fontSize: 13, marginTop: 14, lineHeight: 1.5, opacity: 0.85 }}>{done}</div>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 14, lineHeight: 1.5, opacity: 0.85 }}>{done}</div>
       ) : null}
       {error ? (
         <div
-          style={{ fontSize: 13, marginTop: 14, lineHeight: 1.5, color: 'var(--app-warn)' }}
+          style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 14, lineHeight: 1.5, color: 'var(--app-warn)' }}
         >
           {error}
         </div>
       ) : null}
 
       <SectionLabel>Bring one back</SectionLabel>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
         A backup file from this app, from any device. An export nobody can import is a museum
         piece.
       </div>
@@ -339,10 +339,10 @@ export function Export() {
       {offered && (
         <Blueprint style={{ padding: '13px 14px', marginTop: 10 }}>
           <div className="kicker">Ready to restore</div>
-          <div style={{ fontSize: 13, marginTop: 7, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 7, lineHeight: 1.5 }}>
             {offered.parts.length > 0 ? offered.parts.join(', ') : 'an empty backup'}.
           </div>
-          <div style={{ fontSize: 12, opacity: 0.65, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 8, lineHeight: 1.5 }}>
             This replaces what is on this device for each of those, rather than merging — merging
             two semesters produces duplicate courses sharing an id and no way to tell which
             deadline belonged to which. Anything the file does not cover is left alone.
@@ -375,7 +375,7 @@ export function Export() {
 
       <Blueprint style={{ padding: '13px 14px', marginTop: 18 }}>
         <div className="kicker">The backup file</div>
-        <div style={{ fontSize: 12.5, opacity: 0.75, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 6, lineHeight: 1.5 }}>
           It holds your courses, notes, tasks, appointments, grades, saved places and what you have
           ticked off — everything except the attachments, which are in the zip beside it. Keys and
           the tokens for connected accounts are deliberately left out: a backup that carries your

@@ -72,14 +72,14 @@ export function WeekGrid({
             <span
               style={{
                 display: 'block',
-                fontSize: 9.5,
+                fontSize: 'calc(9.5px * var(--text-scale, 1))',
                 letterSpacing: '0.12em',
                 opacity: d.isToday ? 0.9 : 0.4,
               }}
             >
               {DOW_INITIALS[d.date.getDay()]}
             </span>
-            <span style={{ display: 'block', fontSize: 13, opacity: d.isToday ? 1 : 0.75 }}>
+            <span style={{ display: 'block', fontSize: 'calc(13px * var(--text-scale, 1))', opacity: d.isToday ? 1 : 0.75 }}>
               {d.date.getDate()}
             </span>
           </button>
@@ -107,7 +107,7 @@ export function WeekGrid({
                 width: GUTTER - 6,
                 textAlign: 'right',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 9,
+                fontSize: 'calc(9px * var(--text-scale, 1))',
                 letterSpacing: '0.06em',
                 opacity: 0.4,
               }}
@@ -165,7 +165,7 @@ export function WeekGrid({
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 9,
+                    fontSize: 'calc(9px * var(--text-scale, 1))',
                     lineHeight: 1.15,
                     letterSpacing: '0.01em',
                     textDecoration: b.canceled ? 'line-through' : 'none',

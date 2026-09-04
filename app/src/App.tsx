@@ -61,6 +61,7 @@ import { litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
+import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import type { Screen } from './lib/types';
@@ -258,7 +259,7 @@ function Header() {
         <h1
           className="chrome-text"
           style={{
-            fontSize: 23,
+            fontSize: 'calc(23px * var(--text-scale, 1))',
             lineHeight: 1.15,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -369,7 +370,7 @@ function TabBar() {
                 announcement" would not go here, so it has a short name. */}
             <span
               style={{
-                fontSize: 9,
+                fontSize: 'calc(9px * var(--text-scale, 1))',
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
@@ -590,7 +591,15 @@ export default function App() {
       density: state.density,
     });
     for (const [name, value] of Object.entries(tokens)) root.style.setProperty(name, value);
-    root.style.fontSize = `${16 * scaleOf(state.textSize)}px`;
+    const scale = scaleOf(state.textSize);
+    root.style.fontSize = `${16 * scale}px`;
+    // The setting used to reach almost nothing. The root font size scales
+    // anything in `rem`, and this app writes `fontSize: 14` inline, in px, in
+    // about twelve hundred places — so "Largest" moved the handful of sizes
+    // that came from the stylesheet and left every screen the same. Rewriting
+    // twelve hundred sites as rem would also rewrite twelve hundred layouts;
+    // multiplying them through one variable moves the type and nothing else.
+    root.style.setProperty('--text-scale', String(scale));
     // The browser paints its own chrome — the scrollbar, the overscroll edge,
     // form controls — from this, and a light theme with a dark scrollbar is
     // the tell that a theme was only half done.
@@ -629,7 +638,7 @@ export default function App() {
         background: 'var(--app-warn-wash)',
         borderBottom: '1px solid var(--app-warn-line)',
         color: 'var(--app-fg)',
-        fontSize: 12.5,
+        fontSize: 'calc(12.5px * var(--text-scale, 1))',
         lineHeight: 1.45,
         textWrap: 'pretty',
       }}
@@ -641,6 +650,7 @@ export default function App() {
   if (wide) {
     return (
       <div className="desk">
+        <Fresh />
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
             and not another. Renders nothing unless the sheet is open. */}
         <Keys />
@@ -658,6 +668,7 @@ export default function App() {
 
   return (
     <div className="device">
+      <Fresh />
       <Header />
       {trouble}
       <main className="scrollarea" key={state.screen}>

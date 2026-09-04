@@ -30,7 +30,7 @@ export function HowLong({
 
   return (
     <div style={{ padding: '9px 0 4px' }}>
-      <div style={{ fontSize: 11.5, opacity: 0.55, marginBottom: 6, lineHeight: 1.4 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 6, lineHeight: 1.4 }}>
         How long did that take? It teaches the week ahead your own pace.
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -40,7 +40,7 @@ export function HowLong({
             type="button"
             className="btn btn-secondary"
             onClick={() => dispatch({ type: 'timeSpent', id, courseId, kind, bucketId: b.id })}
-            style={{ height: 32, fontSize: 12, padding: '0 10px', flex: 'none' }}
+            style={{ height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', padding: '0 10px', flex: 'none' }}
           >
             {b.label}
           </button>

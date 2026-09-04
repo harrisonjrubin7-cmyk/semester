@@ -28,7 +28,7 @@ export function TermSwitch() {
         labels={Object.fromEntries(terms.map((t) => [t.id, t.label]))}
       />
       {isPast(current, now) ? (
-        <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
           A finished term. Its deadlines are out of Today, out of the hour arithmetic and out of
           the weekly report; its guides, cards, notes and papers are all still here, and it is
           still exportable. Nothing was deleted.

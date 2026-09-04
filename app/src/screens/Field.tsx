@@ -50,7 +50,7 @@ export function FieldGuide() {
         <div
           className="chrome-text"
           style={{
-            fontSize: 30,
+            fontSize: 'calc(30px * var(--text-scale, 1))',
             lineHeight: 1.06,
             letterSpacing: '-0.01em',
             marginTop: 8,
@@ -61,7 +61,7 @@ export function FieldGuide() {
         </div>
         <div
           style={{
-            fontSize: 14,
+            fontSize: 'calc(14px * var(--text-scale, 1))',
             opacity: 0.75,
             lineHeight: 1.5,
             marginTop: 8,
@@ -76,7 +76,7 @@ export function FieldGuide() {
             paddingTop: 11,
             borderTop: '1px solid var(--app-line)',
             fontFamily: 'var(--font-heading)',
-            fontSize: 10.5,
+            fontSize: 'calc(10.5px * var(--text-scale, 1))',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
             opacity: 0.55,
@@ -85,7 +85,7 @@ export function FieldGuide() {
           {meta}
         </div>
         {guide.source && (
-          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 6 }}>From {guide.source}</div>
+          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 6 }}>From {guide.source}</div>
         )}
       </Blueprint>
 
@@ -111,17 +111,17 @@ export function FieldGuide() {
               width: 24,
               flex: 'none',
               fontFamily: 'var(--font-heading)',
-              fontSize: 13,
+              fontSize: 'calc(13px * var(--text-scale, 1))',
               opacity: 0.4,
             }}
           >
             {String(i + 1).padStart(2, '0')}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.3 }}>{u.name}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{u.name}</span>
           <span
             style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 10.5,
+              fontSize: 'calc(10.5px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               opacity: 0.4,
@@ -156,14 +156,14 @@ export function FieldGuide() {
             >
               <div
                 className="chrome-text"
-                style={{ fontSize: 26, lineHeight: 1, flex: 'none', opacity: 0.55 }}
+                style={{ fontSize: 'calc(26px * var(--text-scale, 1))', lineHeight: 1, flex: 'none', opacity: 0.55 }}
               >
                 {String(i + 1).padStart(2, '0')}
               </div>
               <div
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 19,
+                  fontSize: 'calc(19px * var(--text-scale, 1))',
                   lineHeight: 1.15,
                   flex: 1,
                   minWidth: 0,
@@ -192,7 +192,7 @@ export function FieldGuide() {
                 <div
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 16,
+                    fontSize: 'calc(16px * var(--text-scale, 1))',
                     lineHeight: 1.25,
                     color: 'var(--app-accent)',
                     textWrap: 'pretty',
@@ -202,7 +202,7 @@ export function FieldGuide() {
                 </div>
                 <div
                   style={{
-                    fontSize: 14,
+                    fontSize: 'calc(14px * var(--text-scale, 1))',
                     lineHeight: 1.6,
                     opacity: 0.85,
                     marginTop: 5,
@@ -234,12 +234,12 @@ export function FieldGuide() {
                   paddingBottom: 2,
                 }}
               >
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 17, lineHeight: 1.15 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.15 }}>
                   {f.t}
                 </div>
                 <div
                   style={{
-                    fontSize: 13.5,
+                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
                     opacity: 0.75,
                     lineHeight: 1.5,
                     marginTop: 4,
@@ -265,7 +265,7 @@ export function FieldGuide() {
                 <div
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 18,
+                    fontSize: 'calc(18px * var(--text-scale, 1))',
                     lineHeight: 1.15,
                     marginTop: 4,
                   }}
@@ -285,7 +285,7 @@ export function FieldGuide() {
                       <div
                         style={{
                           fontFamily: 'var(--font-heading)',
-                          fontSize: 10,
+                          fontSize: 'calc(10px * var(--text-scale, 1))',
                           letterSpacing: '0.14em',
                           textTransform: 'uppercase',
                           opacity: 0.45,
@@ -295,7 +295,7 @@ export function FieldGuide() {
                       </div>
                       <div
                         style={{
-                          fontSize: 13.5,
+                          fontSize: 'calc(13.5px * var(--text-scale, 1))',
                           lineHeight: 1.5,
                           opacity: 0.85,
                           marginTop: 2,
@@ -331,10 +331,10 @@ export function FieldGuide() {
           <SectionLabel style={{ margin: '36px 0 6px' }}>Glossary</SectionLabel>
           {guide.terms.map((t) => (
             <div key={t.t} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 15.5 }}>{t.t}</div>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15.5px * var(--text-scale, 1))' }}>{t.t}</div>
               <div
                 style={{
-                  fontSize: 13,
+                  fontSize: 'calc(13px * var(--text-scale, 1))',
                   opacity: 0.72,
                   lineHeight: 1.5,
                   marginTop: 2,
@@ -352,7 +352,7 @@ export function FieldGuide() {
       {guide.selfTest && guide.selfTest.length > 0 && (
         <>
           <SectionLabel style={{ margin: '36px 0 6px' }}>Test yourself</SectionLabel>
-          <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
             The guide’s own questions, written to be answered out loud. Answers are below each one —
             cover them, or use Cards if you would rather they were hidden.
           </div>
@@ -362,7 +362,7 @@ export function FieldGuide() {
                 <span
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 13,
+                    fontSize: 'calc(13px * var(--text-scale, 1))',
                     opacity: 0.4,
                     flex: 'none',
                     width: 20,
@@ -375,7 +375,7 @@ export function FieldGuide() {
                     style={{
                       display: 'block',
                       fontFamily: 'var(--font-heading)',
-                      fontSize: 15,
+                      fontSize: 'calc(15px * var(--text-scale, 1))',
                       lineHeight: 1.25,
                     }}
                   >
@@ -384,7 +384,7 @@ export function FieldGuide() {
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 13.5,
+                      fontSize: 'calc(13.5px * var(--text-scale, 1))',
                       opacity: 0.7,
                       lineHeight: 1.55,
                       marginTop: 4,
@@ -405,7 +405,7 @@ export function FieldGuide() {
           marginTop: 30,
           paddingTop: 12,
           borderTop: '1px solid var(--app-line)',
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           opacity: 0.4,
           lineHeight: 1.5,
         }}

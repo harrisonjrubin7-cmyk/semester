@@ -82,7 +82,7 @@ export function Announce() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         A calendar feed carries dates. The email that <em>changes</em> a date never reaches the app,
         so the app can be a week out and say nothing. Paste it here instead.
       </div>
@@ -106,7 +106,7 @@ export function Announce() {
         ))}
       </select>
       {!module_ && shown ? (
-        <div style={{ fontSize: 11.5, opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
           This is one of the sample courses, which are built into the app. Changes can be read out
           of an announcement but not saved against it.
         </div>
@@ -132,7 +132,7 @@ export function Announce() {
           {busy ? 'Reading it…' : 'What does this change?'}
         </button>
       ) : (
-        <div style={{ fontSize: 12.5, opacity: 0.6, marginTop: 12, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 12, lineHeight: 1.5 }}>
           Needs a key first — set one under Ask Claude → Settings.
         </div>
       )}
@@ -141,12 +141,12 @@ export function Announce() {
 
       {done ? (
         <Blueprint style={{ padding: '13px 14px', marginTop: 14 }}>
-          <div style={{ fontSize: 14, lineHeight: 1.4 }}>Applied: {done}.</div>
+          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.4 }}>Applied: {done}.</div>
           <button
             type="button"
             className="btn btn-secondary btn-block"
             onClick={() => dispatch({ type: 'openCourse', id: courseId })}
-            style={{ height: 38, marginTop: 9, fontSize: 12.5 }}
+            style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
           >
             See the course
           </button>
@@ -159,7 +159,7 @@ export function Announce() {
             {found.length === 0 ? 'Nothing changed' : `${found.length} proposed`}
           </SectionLabel>
           {found.length === 0 ? (
-            <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5 }}>
               Nothing in that changes a deadline — which is a perfectly ordinary answer for an
               announcement about a room, a reading or a reminder.
             </div>
@@ -183,7 +183,7 @@ export function Announce() {
                     background: taken[i] ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
-                  <span style={{ display: 'block', fontSize: 14, lineHeight: 1.35 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                     {shown ? describe(c, shown) : ''}
                   </span>
                   {/* The sentence it rests on. This is the whole safety of it —
@@ -191,7 +191,7 @@ export function Announce() {
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 12,
+                      fontSize: 'calc(12px * var(--text-scale, 1))',
                       opacity: 0.6,
                       marginTop: 6,
                       paddingLeft: 9,
@@ -215,7 +215,7 @@ export function Announce() {
                   Apply the {Object.values(taken).filter(Boolean).length} ticked
                 </button>
               ) : (
-                <div style={{ fontSize: 12.5, opacity: 0.6, marginTop: 10, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 1.45 }}>
                   Nothing to apply them to — this is a sample course.
                 </div>
               )}
@@ -224,7 +224,7 @@ export function Announce() {
         </>
       )}
 
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
         {provider()} may only propose a date the announcement states, and every row quotes the
         sentence it came from — anything it cannot quote is dropped before you see it. A moved
         deadline keeps its id, so a box you already ticked stays ticked.

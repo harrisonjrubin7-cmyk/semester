@@ -127,7 +127,7 @@ export function Work() {
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings. Everything
             else in the app works without it.
           </div>
@@ -138,7 +138,7 @@ export function Work() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 13, opacity: 0.6, lineHeight: 1.45, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, textWrap: 'pretty' }}>
         Working on {guide.code}. Switch course from Study.
       </div>
 
@@ -157,7 +157,7 @@ export function Work() {
       {tab === 'plan' && (
         <>
           <SectionLabel>The instructions</SectionLabel>
-          <div style={{ fontSize: 12.5, opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
             Paste them, or drop the file your professor posted. You get back what is being asked,
             how it is marked, a plan with dates, and the questions worth asking in office hours.
             You do not get the assignment written — that is yours to write.
@@ -169,7 +169,7 @@ export function Work() {
             onChange={(e) => setInstructions(e.target.value)}
             placeholder="Paste the assignment instructions…"
             rows={7}
-            style={{ fontSize: 13.5, lineHeight: 1.5, resize: 'vertical' }}
+            style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, resize: 'vertical' }}
             aria-label="Assignment instructions"
           />
           <Dictate compact current={instructions} onText={setInstructions} label="Read the instructions out" />
@@ -190,7 +190,7 @@ export function Work() {
               type="button"
               className="btn btn-secondary"
               onClick={() => file.current?.click()}
-              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Upload
             </button>
@@ -205,13 +205,13 @@ export function Work() {
                   setPlan(await breakDown(instructions, context, unitNames, signal));
                 })
               }
-              style={{ flex: 1, height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               {busy ? 'Reading…' : 'Break it down'}
             </button>
           </div>
           {read && (
-            <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 8 }}>Read {read}</div>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8 }}>Read {read}</div>
           )}
 
           {plan && <PlanView plan={plan} saved={saved} onKeep={keepSteps} />}
@@ -222,7 +222,7 @@ export function Work() {
       {tab === 'draft' && (
         <>
           <SectionLabel>Your draft</SectionLabel>
-          <div style={{ fontSize: 12.5, opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
             Feedback against the rubric and the course material — what is working, what would move
             the grade most, and anything the guide does not support. Nothing is rewritten for you.
           </div>
@@ -232,7 +232,7 @@ export function Work() {
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Paste what you have written so far…"
             rows={10}
-            style={{ fontSize: 13.5, lineHeight: 1.5, resize: 'vertical' }}
+            style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, resize: 'vertical' }}
             aria-label="Your draft"
           />
           <button
@@ -249,7 +249,7 @@ export function Work() {
                 }, signal);
               })
             }
-            style={{ height: 44, marginTop: 10, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, marginTop: 10, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy ? 'Reading…' : 'Read it'}
           </button>
@@ -262,7 +262,7 @@ export function Work() {
                 className="btn btn-secondary btn-block"
                 onClick={() => keepAsNote(`Feedback · ${guide.code}`, feedback)}
                 disabled={kept}
-                style={{ height: 40, marginTop: 12, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ height: 40, marginTop: 12, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
               </button>
@@ -277,7 +277,7 @@ export function Work() {
       {tab === 'ask' && (
         <>
           <SectionLabel>What do you need</SectionLabel>
-          <div style={{ fontSize: 12.5, opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
             A revision timetable, practice questions, a summary of a reading, an email to a
             professor, an outline of your own argument to react to. This one has {guide.code} in
             front of it, so answers are about your course.
@@ -288,7 +288,7 @@ export function Work() {
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Write 15 practice questions on the units I am weakest at…"
             rows={4}
-            style={{ fontSize: 13.5, lineHeight: 1.5, resize: 'vertical' }}
+            style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, resize: 'vertical' }}
             aria-label="Your request"
           />
           <button
@@ -318,7 +318,7 @@ export function Work() {
                 });
               })
             }
-            style={{ height: 44, marginTop: 10, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, marginTop: 10, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy ? 'Working…' : 'Generate'}
           </button>
@@ -331,7 +331,7 @@ export function Work() {
                 className="btn btn-secondary btn-block"
                 onClick={() => keepAsNote(prompt.slice(0, 60), output)}
                 disabled={kept}
-                style={{ height: 40, marginTop: 12, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ height: 40, marginTop: 12, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
               </button>
@@ -345,7 +345,7 @@ export function Work() {
           type="button"
           className="btn btn-ghost btn-block"
           onClick={() => abort.current?.abort()}
-          style={{ height: 36, marginTop: 10, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase' }}
+          style={{ height: 36, marginTop: 10, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase' }}
         >
           Stop
         </button>
@@ -353,7 +353,7 @@ export function Work() {
 
       <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
 
-      <div style={{ fontSize: 11, opacity: 0.4, marginTop: 20, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.4, marginTop: 20, lineHeight: 1.45 }}>
         Going through {routeLabel()}.
         Whatever you submit has to be your own work.
       </div>
@@ -365,7 +365,7 @@ export function Work() {
 /** Model output, as paragraphs rather than one wall. */
 function Prose({ text }: { text: string }) {
   return (
-    <div style={{ fontSize: 13.5, lineHeight: 1.6, whiteSpace: 'pre-wrap', textWrap: 'pretty' }}>
+    <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.6, whiteSpace: 'pre-wrap', textWrap: 'pretty' }}>
       {text}
     </div>
   );
@@ -382,9 +382,9 @@ function PlanView({
 }) {
   const row = (label: string, body: string, key: string) => (
     <div key={key} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
-      <div style={{ fontSize: 14, lineHeight: 1.3 }}>{label}</div>
+      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{label}</div>
       {body && (
-        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>{body}</div>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>{body}</div>
       )}
     </div>
   );
@@ -395,12 +395,12 @@ function PlanView({
         <div className="kicker">What this is</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 21, lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
         >
           {plan.title}
         </div>
         {plan.due && (
-          <div style={{ fontSize: 12.5, opacity: 0.7, marginTop: 5 }}>Due {plan.due}</div>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 5 }}>Due {plan.due}</div>
         )}
       </Blueprint>
 
@@ -417,14 +417,14 @@ function PlanView({
           {plan.rubric.map((r, i) => (
             <div key={`r${i}`} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                <div style={{ fontSize: 14, flex: 1, minWidth: 0, lineHeight: 1.3 }}>
+                <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', flex: 1, minWidth: 0, lineHeight: 1.3 }}>
                   {r.criterion}
                 </div>
                 {r.weight && (
                   <div
                     style={{
                       fontFamily: 'var(--font-heading)',
-                      fontSize: 12,
+                      fontSize: 'calc(12px * var(--text-scale, 1))',
                       color: 'var(--app-accent)',
                       flex: 'none',
                     }}
@@ -434,7 +434,7 @@ function PlanView({
                 )}
               </div>
               {r.means && (
-                <div style={{ fontSize: 12, opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>
                   {r.means}
                 </div>
               )}
@@ -453,22 +453,22 @@ function PlanView({
                   width: 26,
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 20,
+                  fontSize: 'calc(20px * var(--text-scale, 1))',
                   opacity: 0.4,
                 }}
               >
                 {i + 1}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, lineHeight: 1.3 }}>{s.do}</div>
+                <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{s.do}</div>
                 {s.why && (
-                  <div style={{ fontSize: 12, opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>
+                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>
                     {s.why}
                   </div>
                 )}
                 <div
                   style={{
-                    fontSize: 10.5,
+                    fontSize: 'calc(10.5px * var(--text-scale, 1))',
                     opacity: 0.5,
                     marginTop: 5,
                     fontFamily: 'var(--font-heading)',
@@ -489,7 +489,7 @@ function PlanView({
             style={{
               height: 44,
               marginTop: 12,
-              fontSize: 12,
+              fontSize: 'calc(12px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               display: 'flex',
@@ -521,7 +521,7 @@ function PlanView({
       {plan.unclear.length > 0 && (
         <>
           <SectionLabel>Worth asking about</SectionLabel>
-          <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5, marginBottom: 4 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 4 }}>
             The instructions do not settle these. Ask in office hours or on the discussion board —
             getting this right early is worth more than any amount of redrafting.
           </div>

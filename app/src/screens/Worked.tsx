@@ -72,19 +72,19 @@ export function Worked() {
         <div className="kicker">{label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 22, lineHeight: 1.2, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 6, textWrap: 'pretty' }}
         >
           {found.length === 0
             ? 'Nothing this term will support.'
             : `${found.length} ${found.length === 1 ? 'thing' : 'things'} the term will support.`}
         </div>
-        <div style={{ fontSize: 12.5, opacity: 0.6, marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 1.5 }}>
           {basis(input)}
         </div>
       </Blueprint>
 
       {found.length === 0 ? (
-        <div style={{ fontSize: 13.5, opacity: 0.75, marginTop: 16, lineHeight: 1.55 }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 16, lineHeight: 1.55 }}>
           {nothing || 'Nothing stood out far enough above the noise to be worth saying.'}
         </div>
       ) : (
@@ -95,8 +95,8 @@ export function Worked() {
               key={f.said}
               style={{ padding: '12px 0', borderBottom: '1px solid var(--app-line)' }}
             >
-              <div style={{ fontSize: 15, lineHeight: 1.45, textWrap: 'pretty' }}>{f.said}</div>
-              <div style={{ fontSize: 11, opacity: 0.45, marginTop: 5 }}>
+              <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>{f.said}</div>
+              <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5 }}>
                 from {f.from} observation{f.from === 1 ? '' : 's'}
               </div>
             </div>
@@ -122,7 +122,7 @@ export function Worked() {
       </div>
       <PrintButton label="Print it" style={{ marginTop: 8 }} />
 
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 12, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 12, lineHeight: 1.45 }}>
         Every line is counted from what this app recorded, and anything it could not support with
         enough observations was left out rather than softened. There is no score for the term, and
         no comparison with anybody else.

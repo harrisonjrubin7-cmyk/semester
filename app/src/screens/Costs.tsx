@@ -85,12 +85,12 @@ export function Costs() {
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 24, lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
         >
           {line(t)}
         </div>
         {todo(t) ? (
-          <div style={{ fontSize: 13, opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>{todo(t)}</div>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>{todo(t)}</div>
         ) : null}
       </Blueprint>
 
@@ -110,7 +110,7 @@ export function Costs() {
                   <span className="tag tag-accent" style={{ flex: 'none' }}>
                     {c.code}
                   </span>
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, opacity: 0.6 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>
                     {theirs.length === 0
                       ? 'nothing recorded'
                       : `${theirs.length} ${theirs.length === 1 ? 'thing' : 'things'}`}
@@ -118,7 +118,7 @@ export function Costs() {
                   <span
                     style={{
                       flex: 'none',
-                      fontSize: 14,
+                      fontSize: 'calc(14px * var(--text-scale, 1))',
                       fontVariantNumeric: 'tabular-nums',
                       opacity: theirs.length === 0 ? 0.4 : 1,
                     }}
@@ -130,7 +130,7 @@ export function Costs() {
                 </div>
                 {/* The comparison worth having in August. */}
                 {before ? (
-                  <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 4 }}>
+                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 4 }}>
                     {readTerm(before.term).label}: {money(before.cents)}
                   </div>
                 ) : null}
@@ -146,7 +146,7 @@ export function Costs() {
                       borderLeft: '2px solid var(--app-line)',
                     }}
                   >
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.35 }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                       {x.what}
                       <span style={{ opacity: 0.5 }}>
                         {' · '}
@@ -155,7 +155,7 @@ export function Costs() {
                         {x.backCents > 0 ? ` · ${money(x.backCents)} back` : ''}
                       </span>
                     </span>
-                    <span style={{ flex: 'none', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ flex: 'none', fontSize: 'calc(13px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>
                       {money(x.cents)}
                     </span>
                     {!x.rented && kindOf(x.kind).resellable && x.backCents === 0 ? (
@@ -169,7 +169,7 @@ export function Costs() {
                             dispatch({ type: 'patchCost', id: x.id, patch: { backCents: cents } });
                           }
                         }}
-                        style={{ flex: 'none', height: 28, fontSize: 11, padding: '0 8px' }}
+                        style={{ flex: 'none', height: 28, fontSize: 'calc(11px * var(--text-scale, 1))', padding: '0 8px' }}
                       >
                         Sold
                       </button>
@@ -179,7 +179,7 @@ export function Costs() {
                       className="bare"
                       aria-label={`Remove ${x.what}`}
                       onClick={() => dispatch({ type: 'dropCost', id: x.id })}
-                      style={{ width: 24, flex: 'none', opacity: 0.45, fontSize: 14 }}
+                      style={{ width: 24, flex: 'none', opacity: 0.45, fontSize: 'calc(14px * var(--text-scale, 1))' }}
                     >
                       ×
                     </button>
@@ -260,7 +260,7 @@ export function Costs() {
             borderRadius: 'var(--r-md)',
             border: `1px solid ${rented ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
             background: rented ? 'var(--app-accent-wash)' : 'transparent',
-            fontSize: 13,
+            fontSize: 'calc(13px * var(--text-scale, 1))',
           }}
         >
           Rented — it goes back rather than being sold
@@ -268,7 +268,7 @@ export function Costs() {
       )}
 
       {bad ? (
-        <div style={{ fontSize: 12.5, color: 'var(--app-warn)', marginBottom: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 1.45 }}>
           {bad}
         </div>
       ) : null}
@@ -302,7 +302,7 @@ export function Costs() {
         </a>
       ) : null}
 
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
         Nothing here is looked up. Prices differ by edition, by seller and by the week, and a wrong
         one shown confidently is worse than a blank field — so you type what you paid, and the app
         remembers it for the August when you are deciding again.

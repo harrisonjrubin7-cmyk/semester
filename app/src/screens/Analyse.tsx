@@ -147,14 +147,14 @@ export function Analyse() {
 
   const stat = (label: string, value: string) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', gap: 12 }}>
-      <span style={{ fontSize: 12.5, opacity: 0.6 }}>{label}</span>
-      <span style={{ fontSize: 13.5, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+      <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>{label}</span>
+      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
   );
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Every number here is computed on this device by tested code, not guessed at by a model.
         {provider()} is given the finished statistics and asked what they mean — it never reads a column
         and reports a figure.
@@ -192,13 +192,13 @@ export function Analyse() {
           minHeight: 96,
           marginTop: 8,
           resize: 'vertical',
-          fontSize: 12,
+          fontSize: 'calc(12px * var(--text-scale, 1))',
           lineHeight: 1.5,
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
         }}
       />
       {table.rows.length > 0 && (
-        <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6 }}>
           {name ? `${name} · ` : ''}
           {table.rows.length} rows · {table.headers.length} columns · {numericCols.length} numeric
         </div>
@@ -277,7 +277,7 @@ export function Analyse() {
             </div>
           )}
           {bins.length > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, opacity: 0.45, marginTop: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 4 }}>
               <span>{show(xSummary.min)}</span>
               <span>{show(xSummary.max)}</span>
             </div>
@@ -308,7 +308,7 @@ export function Analyse() {
             {stat('R²', show(fit.r2))}
             {r === null ? null : stat('Pearson r', show(r))}
           </Blueprint>
-          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
             Rows where either column was blank were dropped, not read as zero. No p-value: turning
             t into one needs the incomplete beta function, and an approximation that is wrong in
             the tail — exactly where a p-value is read — would be worse than a table.
@@ -330,7 +330,7 @@ export function Analyse() {
           {reading ? (
             <div
               style={{
-                fontSize: 13.5,
+                fontSize: 'calc(13.5px * var(--text-scale, 1))',
                 lineHeight: 1.65,
                 whiteSpace: 'pre-wrap',
                 marginTop: 12,

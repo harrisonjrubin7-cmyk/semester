@@ -103,13 +103,13 @@ export function Courses() {
                 gap: 10,
               }}
             >
-              <div className="chrome-text" style={{ fontSize: 22 }}>
+              <div className="chrome-text" style={{ fontSize: 'calc(22px * var(--text-scale, 1))' }}>
                 {c.code}
               </div>
               <div
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 11,
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                   opacity: 0.55,
@@ -118,10 +118,10 @@ export function Courses() {
                 {c.meets}
               </div>
             </div>
-            <div style={{ fontSize: 15, lineHeight: 1.3, marginTop: 2 }}>
+            <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.3, marginTop: 2 }}>
               {nameFor(c, state.yours)}
             </div>
-            <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>{c.prof}</div>
+            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>{c.prof}</div>
             <div
               style={{
                 display: 'flex',
@@ -135,7 +135,7 @@ export function Courses() {
               <span className="tag tag-accent">{next ? next.dueShort : 'Clear'}</span>
               <span
                 style={{
-                  fontSize: 12,
+                  fontSize: 'calc(12px * var(--text-scale, 1))',
                   opacity: 0.7,
                   flex: 1,
                   minWidth: 0,
@@ -203,9 +203,9 @@ function ComingUp() {
         onChange={(t) => dispatch({ type: 'setDueTab', tab: t })}
         style={{ marginBottom: 12 }}
       />
-      <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5, marginBottom: 4 }}>{blurb}</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 4 }}>{blurb}</div>
       {list.length === 0 && (
-        <div style={{ padding: '22px 0', fontSize: 14, opacity: 0.55 }}>
+        <div style={{ padding: '22px 0', fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.55 }}>
           {tab === 'overdue'
             ? 'Nothing has gone by unticked.'
             : tab === 'done'
@@ -251,7 +251,7 @@ function LmsLink({ course }: { course: Course }) {
             style={{
               flex: 1,
               height: 42,
-              fontSize: 11,
+              fontSize: 'calc(11px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               display: 'grid',
@@ -272,7 +272,7 @@ function LmsLink({ course }: { course: Course }) {
           style={{
             flex: url ? 'none' : 1,
             height: 42,
-            fontSize: 11,
+            fontSize: 'calc(11px * var(--text-scale, 1))',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
           }}
@@ -288,10 +288,10 @@ function LmsLink({ course }: { course: Course }) {
             value={draft}
             placeholder="https://brightspace.vanderbilt.edu/d2l/home/123456"
             onChange={(e) => setDraft(e.target.value)}
-            style={{ fontSize: 12.5, marginTop: 9 }}
+            style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
             aria-label={`${course.code} Brightspace address`}
           />
-          <div style={{ fontSize: 11.5, opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
             Open the course in Brightspace and copy the address from the bar. Grades and
             submissions need D2L’s Valence API, which only Vanderbilt can issue a key for — so
             this is a link, and the dates come from the calendar feed under Connect.
@@ -308,7 +308,7 @@ function LmsLink({ course }: { course: Course }) {
               });
               setEditing(false);
             }}
-            style={{ marginTop: 9, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase' }}
+            style={{ marginTop: 9, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase' }}
           >
             Save
           </button>
@@ -331,14 +331,14 @@ export function CourseDetail() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 15, lineHeight: 1.3 }}>{nameFor(course, state.yours)}</div>
+      <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.3 }}>{nameFor(course, state.yours)}</div>
       {/* The syllabus name stays visible under a nickname. This screen is
           where somebody checks what a course actually is — dropping the real
           name here would make the rename a way to lose information. */}
       {renamed(course, state.yours) ? (
-        <div style={{ fontSize: 12, opacity: 0.45, marginTop: 2 }}>{course.name}</div>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.45, marginTop: 2 }}>{course.name}</div>
       ) : null}
-      <div style={{ fontSize: 13, opacity: 0.6, marginTop: 3 }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.6, marginTop: 3 }}>
         {course.prof} · {course.email}
       </div>
       <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 12 }}>
@@ -435,12 +435,12 @@ export function CourseDetail() {
         <tbody>
           {course.grading.map((g) => (
             <tr key={g.what}>
-              <td style={{ fontSize: 13 }}>{g.what}</td>
+              <td style={{ fontSize: 'calc(13px * var(--text-scale, 1))' }}>{g.what}</td>
               <td
                 style={{
                   textAlign: 'right',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 15,
+                  fontSize: 'calc(15px * var(--text-scale, 1))',
                   width: 74,
                 }}
               >
@@ -453,7 +453,7 @@ export function CourseDetail() {
 
       <SectionLabel style={{ margin: '24px 0 6px' }}>Still ahead</SectionLabel>
       {mine.ahead.length === 0 && (
-        <div style={{ fontSize: 13, opacity: 0.5, padding: '8px 0' }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.5, padding: '8px 0' }}>
           Nothing left in this course.
         </div>
       )}
@@ -481,7 +481,7 @@ export function CourseDetail() {
 
       <div
         style={{
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           opacity: 0.45,
           marginTop: 14,
           fontFamily: 'var(--font-heading)',
@@ -509,7 +509,7 @@ export function ItemDetail() {
           <span className="tag tag-accent">{catalog.byId[item.c].code}</span>
           <span
             style={{
-              fontSize: 11,
+              fontSize: 'calc(11px * var(--text-scale, 1))',
               opacity: 0.55,
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.12em',
@@ -522,7 +522,7 @@ export function ItemDetail() {
         <div
           className="chrome-text"
           style={{
-            fontSize: 27,
+            fontSize: 'calc(27px * var(--text-scale, 1))',
             lineHeight: 1.1,
             letterSpacing: '-0.01em',
             margin: '10px 0 12px',
@@ -533,26 +533,26 @@ export function ItemDetail() {
         </div>
         <div style={{ display: 'flex', borderTop: '1px solid var(--app-line)' }}>
           <div style={{ flex: 1, padding: '11px 0' }}>
-            <div className="kicker" style={{ fontSize: 10 }}>
+            <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               Due
             </div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18 }}>{item.dueShort}</div>
-            <div style={{ fontSize: 12, opacity: 0.6 }}>{item.dueTime}</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{item.dueShort}</div>
+            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}>{item.dueTime}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
           <div style={{ flex: 1, padding: '11px 0 11px 14px' }}>
-            <div className="kicker" style={{ fontSize: 10 }}>
+            <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               Weight
             </div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18 }}>{item.weight}</div>
-            <div style={{ fontSize: 12, opacity: 0.6 }}>{item.where}</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{item.weight}</div>
+            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}>{item.where}</div>
           </div>
         </div>
       </Blueprint>
 
       <div
         style={{
-          fontSize: 14,
+          fontSize: 'calc(14px * var(--text-scale, 1))',
           lineHeight: 1.55,
           marginTop: 18,
           opacity: 0.85,
@@ -567,7 +567,7 @@ export function ItemDetail() {
         style={{
           borderLeft: '2px solid var(--app-accent)',
           padding: '2px 0 2px 14px',
-          fontSize: 13,
+          fontSize: 'calc(13px * var(--text-scale, 1))',
           lineHeight: 1.5,
           opacity: 0.75,
           fontStyle: 'italic',
@@ -577,7 +577,7 @@ export function ItemDetail() {
       </div>
       <div
         style={{
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           opacity: 0.45,
           marginTop: 8,
           fontFamily: 'var(--font-heading)',

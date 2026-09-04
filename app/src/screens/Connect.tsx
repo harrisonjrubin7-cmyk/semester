@@ -102,13 +102,13 @@ function CampusLinks() {
                     className="bare"
                     style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
                   >
-                    <span style={{ display: 'block', fontSize: 14.5, lineHeight: 1.3 }}>
+                    <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
                       {link.name}
                     </span>
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 11,
+                        fontSize: 'calc(11px * var(--text-scale, 1))',
                         opacity: 0.5,
                         fontFamily: 'var(--font-heading)',
                         letterSpacing: '0.1em',
@@ -121,13 +121,13 @@ function CampusLinks() {
                   </a>
                 ) : (
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 14.5, lineHeight: 1.3 }}>
+                    <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
                       {link.name}
                     </span>
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 11,
+                        fontSize: 'calc(11px * var(--text-scale, 1))',
                         opacity: 0.5,
                         fontFamily: 'var(--font-heading)',
                         letterSpacing: '0.1em',
@@ -146,7 +146,7 @@ function CampusLinks() {
                     setDraft(url);
                     setEditing(open ? null : link.id);
                   }}
-                  style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                  style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                 >
                   {open ? 'CANCEL' : url ? 'EDIT' : 'ADD'}
                 </button>
@@ -155,7 +155,7 @@ function CampusLinks() {
                     type="button"
                     className="bare"
                     onClick={() => dispatch({ type: 'removeLink', id: link.id })}
-                    style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                    style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                   >
                     REMOVE
                   </button>
@@ -170,11 +170,11 @@ function CampusLinks() {
                     placeholder={link.hint || 'https://…'}
                     onChange={(e) => setDraft(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && save(link.id)}
-                    style={{ fontSize: 12.5, marginTop: 9 }}
+                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
                     aria-label={`${link.name} address`}
                   />
                   {link.note && (
-                    <div style={{ fontSize: 11.5, opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
+                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
                       {link.note}
                     </div>
                   )}
@@ -184,7 +184,7 @@ function CampusLinks() {
                     onClick={() => save(link.id)}
                     style={{
                       marginTop: 9,
-                      fontSize: 11,
+                      fontSize: 'calc(11px * var(--text-scale, 1))',
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
                     }}
@@ -209,21 +209,21 @@ function CampusLinks() {
             placeholder="What it is — Commodore Card, the gym"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            style={{ fontSize: 13, marginTop: 9 }}
+            style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 9 }}
           />
           <input
             className="input"
             placeholder="https://…"
             value={newUrl}
             onChange={(e) => setNewUrl(e.target.value)}
-            style={{ fontSize: 12.5, marginTop: 8 }}
+            style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 8 }}
           />
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <button
               type="button"
               className="btn btn-secondary"
               onClick={() => setAdding(false)}
-              style={{ flex: 1, height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Cancel
             </button>
@@ -242,7 +242,7 @@ function CampusLinks() {
                 setNewUrl('');
                 setAdding(false);
               }}
-              style={{ flex: 1, height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Add it
             </button>
@@ -253,13 +253,13 @@ function CampusLinks() {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => setAdding(true)}
-          style={{ height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
+          style={{ height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
         >
           Add a link of your own
         </button>
       )}
 
-      <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
         These open the system itself — the app on a phone that recognises the address, the site
         otherwise. None of them expose an API a student can use alone, so the app links out rather
         than pretending to read them. Correct any address here and the correction is what sticks.
@@ -333,8 +333,8 @@ function ClaudeAccount() {
     <>
       <SectionLabel>Claude</SectionLabel>
       <Blueprint style={{ padding: '14px 15px' }}>
-        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18 }}>Your own Claude key</div>
-        <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>Your own Claude key</div>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
           There is no “sign in with Claude” — Anthropic publishes no consumer login for other apps,
           so a claude.ai Pro or Max subscription cannot be linked here by any app. What works is an
           API key from <strong>console.anthropic.com → API keys</strong>, which is billed
@@ -350,7 +350,7 @@ function ClaudeAccount() {
           value={config.apiKey}
           onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
           aria-label="Anthropic API key"
-          style={{ fontSize: 13, marginTop: 12 }}
+          style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 12 }}
         />
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <button
@@ -358,7 +358,7 @@ function ClaudeAccount() {
             className="btn btn-primary"
             disabled={checking || !config.apiKey.trim()}
             onClick={() => void verify()}
-            style={{ flex: 1, height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {checking ? 'Checking…' : 'Check and save'}
           </button>
@@ -370,7 +370,7 @@ function ClaudeAccount() {
                 save({ ...config, apiKey: '' });
                 setResult(null);
               }}
-              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Remove
             </button>
@@ -380,7 +380,7 @@ function ClaudeAccount() {
         {result && (
           <div
             style={{
-              fontSize: 12.5,
+              fontSize: 'calc(12.5px * var(--text-scale, 1))',
               marginTop: 10,
               lineHeight: 1.5,
               whiteSpace: 'pre-wrap',
@@ -396,7 +396,7 @@ function ClaudeAccount() {
             marginTop: 12,
             paddingTop: 11,
             borderTop: '1px solid var(--app-line)',
-            fontSize: 12,
+            fontSize: 'calc(12px * var(--text-scale, 1))',
             opacity: 0.7,
             lineHeight: 1.45,
           }}
@@ -405,7 +405,7 @@ function ClaudeAccount() {
         </div>
       </Blueprint>
 
-      <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 10, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.5, textWrap: 'pretty' }}>
         A key kept in a browser can be read by anything running in that browser. That is a real
         risk and the reason the shared key lives in a server function instead. If you would rather
         not hold one here, sign in and use the shared one, or run a proxy and put its address in
@@ -430,10 +430,10 @@ function ClaudeAccount() {
             }}
           >
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 15 }}>
+              <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'calc(15px * var(--text-scale, 1))' }}>
                 {m.label}
               </span>
-              <span style={{ display: 'block', fontSize: 12, opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                 {m.note}
               </span>
             </span>
@@ -547,17 +547,17 @@ export function Connect() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div className="chrome-text" style={{ fontSize: 26, lineHeight: 1.1 }}>
+      <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', lineHeight: 1.1 }}>
         Everything in one place
       </div>
-      <div style={{ fontSize: 13, opacity: 0.7, marginTop: 6, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, textWrap: 'pretty' }}>
         Brightspace, Outlook, Google and Zoom all publish calendars. Point the app at them and
         their dates sit on the same day rail as your classes — kept apart, and labelled.
       </div>
 
       {note && (
         <Blueprint style={{ padding: '12px 14px', marginTop: 14, background: 'var(--app-hero)' }}>
-          <div style={{ fontSize: 13, lineHeight: 1.5, textWrap: 'pretty' }}>{note}</div>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, textWrap: 'pretty' }}>{note}</div>
         </Blueprint>
       )}
 
@@ -571,7 +571,7 @@ export function Connect() {
             <span className="kicker" style={{ display: 'block' }}>
               Use what is connected
             </span>
-            <span style={{ display: 'block', fontSize: 14, lineHeight: 1.3, marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3, marginTop: 2 }}>
               Documents into a course, course mail, deadlines onto your real calendar
             </span>
           </span>
@@ -581,21 +581,21 @@ export function Connect() {
       {/* ── Brightspace ─────────────────────────────────────────────────── */}
       <SectionLabel>Brightspace</SectionLabel>
       <Blueprint style={{ padding: '14px 15px' }}>
-        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18 }}>
+        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
           Vanderbilt Brightspace
         </div>
-        <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
           In Brightspace, open <strong>Calendar</strong>, click <strong>Subscribe</strong>, and copy
           the link it gives you. It already carries your access — no password, and nothing to
           install. Paste it below. Any other calendar link works here too, including a{' '}
-          <code style={{ fontSize: 11 }}>webcal://</code> one from iCloud or Outlook.
+          <code style={{ fontSize: 'calc(11px * var(--text-scale, 1))' }}>webcal://</code> one from iCloud or Outlook.
         </div>
         <input
           className="input"
           placeholder="https://brightspace.vanderbilt.edu/d2l/le/calendar/feed/user/feed.ics?token=…"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          style={{ fontSize: 12, marginTop: 10 }}
+          style={{ fontSize: 'calc(12px * var(--text-scale, 1))', marginTop: 10 }}
         />
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <button
@@ -603,7 +603,7 @@ export function Connect() {
             className="btn btn-primary"
             disabled={!url.trim() || busy === 'feed'}
             onClick={() => void subscribe('brightspace')}
-            style={{ flex: 1, height: 42, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ flex: 1, height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy === 'feed' ? 'Reading…' : 'Subscribe'}
           </button>
@@ -611,7 +611,7 @@ export function Connect() {
             type="button"
             className="btn btn-secondary"
             onClick={() => fileInput.current?.click()}
-            style={{ flex: 1, height: 42, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ flex: 1, height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Add an .ics file
           </button>
@@ -636,7 +636,7 @@ export function Connect() {
             style={{
               flex: 1,
               height: 40,
-              fontSize: 11,
+              fontSize: 'calc(11px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               display: 'grid',
@@ -647,7 +647,7 @@ export function Connect() {
             Open Brightspace
           </a>
         </div>
-        <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
           What a Brightspace account can and cannot give this app, plainly: the{' '}
           <strong>calendar feed</strong> carries every due date and needs nothing but the link.{' '}
           <strong>Grades, submissions and files</strong> live behind D2L’s Valence API, whose keys
@@ -671,17 +671,17 @@ export function Connect() {
               <div
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}
               >
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 18 }}>{spec.name}</div>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{spec.name}</div>
                 {token && <span className="tag tag-accent">Connected</span>}
               </div>
-              <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.5, marginTop: 4 }}>
+              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, marginTop: 4 }}>
                 {spec.blurb}
               </div>
 
               {!spec.clientId ? (
                 <div
                   style={{
-                    fontSize: 12,
+                    fontSize: 'calc(12px * var(--text-scale, 1))',
                     opacity: 0.7,
                     lineHeight: 1.5,
                     marginTop: 10,
@@ -692,8 +692,8 @@ export function Connect() {
                   }}
                 >
                   No client ID yet. Register one at <strong>{spec.console}</strong>, allow{' '}
-                  <code style={{ fontSize: 11 }}>{window.location.origin}</code> as the redirect,
-                  and put it in <code style={{ fontSize: 11 }}>app/.env.local</code>. Until then,
+                  <code style={{ fontSize: 'calc(11px * var(--text-scale, 1))' }}>{window.location.origin}</code> as the redirect,
+                  and put it in <code style={{ fontSize: 'calc(11px * var(--text-scale, 1))' }}>app/.env.local</code>. Until then,
                   export a calendar from {spec.name} and add the .ics above — same dates, no setup.
                 </div>
               ) : (
@@ -704,7 +704,7 @@ export function Connect() {
                       className="btn btn-primary"
                       disabled={busy === id}
                       onClick={() => void connect(id)}
-                      style={{ flex: 1, height: 42, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                      style={{ flex: 1, height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
                     >
                       {busy === id ? 'Opening…' : `Sign in with ${spec.name}`}
                     </button>
@@ -741,7 +741,7 @@ export function Connect() {
                             .catch((e: unknown) => setNote(describe(e)))
                             .finally(() => setBusy(''));
                         }}
-                        style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                        style={{ fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
                       >
                         Pull calendar
                       </button>
@@ -752,7 +752,7 @@ export function Connect() {
                           className="btn btn-secondary"
                           disabled={busy !== ''}
                           onClick={() => void browse(id)}
-                          style={{ fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                          style={{ fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
                         >
                           {id === 'zoom' ? 'Recordings' : 'Recent files'}
                         </button>
@@ -764,7 +764,7 @@ export function Connect() {
                           forget(id);
                           setNote(`${spec.name} disconnected. The token is gone from this device.`);
                         }}
-                        style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em' }}
+                        style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}
                       >
                         DISCONNECT
                       </button>
@@ -774,7 +774,7 @@ export function Connect() {
               )}
 
               {id === 'google' && spec.clientId && (
-                <div style={{ fontSize: 11.5, opacity: 0.6, lineHeight: 1.5, marginTop: 9 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginTop: 9 }}>
                   Reading Gmail is a restricted scope: until the OAuth client passes Google's
                   review it works only for the test users listed in the console. Calendar, Drive
                   and Tasks are not restricted and work immediately.
@@ -784,7 +784,7 @@ export function Connect() {
               {spec.caveat && (
                 <div
                   style={{
-                    fontSize: 11.5,
+                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
                     opacity: 0.6,
                     lineHeight: 1.5,
                     marginTop: 10,
@@ -798,9 +798,9 @@ export function Connect() {
               )}
 
               {spec.needsProxy && spec.clientId && (
-                <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.45, marginTop: 9 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 9 }}>
                   {spec.name}’s API refuses browser calls, so this one goes through the dev proxy
-                  (<code style={{ fontSize: 11 }}>VITE_OAUTH_PROXY</code>).
+                  (<code style={{ fontSize: 'calc(11px * var(--text-scale, 1))' }}>VITE_OAUTH_PROXY</code>).
                 </div>
               )}
             </Blueprint>
@@ -826,7 +826,7 @@ export function Connect() {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 13.5,
+                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
                     lineHeight: 1.3,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -835,13 +835,13 @@ export function Connect() {
                 >
                   {f.name}
                 </span>
-                <span style={{ display: 'block', fontSize: 11, opacity: 0.5 }}>{f.modified}</span>
+                <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}>{f.modified}</span>
               </span>
               <a
                 href={f.link}
                 target="_blank"
                 rel="noreferrer"
-                style={{ fontSize: 11, letterSpacing: '0.1em', flex: 'none', opacity: 0.7 }}
+                style={{ fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', flex: 'none', opacity: 0.7 }}
               >
                 OPEN
               </a>
@@ -866,11 +866,11 @@ export function Connect() {
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 14 }}>{f.name}</span>
+                <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{f.name}</span>
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     opacity: 0.55,
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
@@ -885,13 +885,13 @@ export function Connect() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'removeFeed', id: f.id })}
-                style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE
               </button>
             </div>
           ))}
-          <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.45, marginTop: 10 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 10 }}>
             Feed events show on the calendar under Campus, marked with where they came from. They
             never overwrite a deadline the syllabus stated.
           </div>

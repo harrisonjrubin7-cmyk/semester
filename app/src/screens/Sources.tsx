@@ -73,7 +73,7 @@ export function Sources() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Nothing here invents a citation — every source is one you entered, kept exactly as you
         wrote it. The tools that ask for your sources read from this list instead of asking again.
       </div>
@@ -154,16 +154,16 @@ export function Sources() {
         />
       ) : (
         <>
-          <div style={{ fontSize: 12.5, opacity: 0.65, marginBottom: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, lineHeight: 1.5 }}>
             {completeness(list)}
           </div>
           {list.map((s) => {
             const missing = gaps(s);
             return (
               <Blueprint key={s.id} style={{ padding: '12px 13px', marginBottom: 8 }}>
-                <div style={{ fontSize: 13.5, lineHeight: 1.45, textWrap: 'pretty' }}>{s.raw}</div>
+                <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>{s.raw}</div>
                 {s.role.trim() ? (
-                  <div style={{ fontSize: 12, opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
+                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
                     For: {s.role}
                   </div>
                 ) : (
@@ -179,7 +179,7 @@ export function Sources() {
                         patch: { role: e.target.value.trim() },
                       })
                     }
-                    style={{ width: '100%', marginTop: 8, fontSize: 12.5 }}
+                    style={{ width: '100%', marginTop: 8, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
                   />
                 )}
                 <div
@@ -194,7 +194,7 @@ export function Sources() {
                   {[s.author, s.year, s.title, s.project]
                     .filter(Boolean)
                     .map((bit) => (
-                      <span key={bit} className="tag tag-outline" style={{ fontSize: 10.5 }}>
+                      <span key={bit} className="tag tag-outline" style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))' }}>
                         {bit}
                       </span>
                     ))}
@@ -204,13 +204,13 @@ export function Sources() {
                     className="bare"
                     onClick={() => dispatch({ type: 'dropSource', id: s.id })}
                     aria-label={`Remove ${s.raw.slice(0, 40)}`}
-                    style={{ padding: '6px 10px', opacity: 0.5, fontSize: 12 }}
+                    style={{ padding: '6px 10px', opacity: 0.5, fontSize: 'calc(12px * var(--text-scale, 1))' }}
                   >
                     Remove
                   </button>
                 </div>
                 {missing.length > 0 ? (
-                  <div style={{ fontSize: 11, opacity: 0.45, marginTop: 6, lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 6, lineHeight: 1.4 }}>
                     Missing {missing.join(', ')}. Kept as you wrote it either way.
                   </div>
                 ) : null}
@@ -261,7 +261,7 @@ export function Sources() {
             {copied ? 'Copied' : 'Copy for a drafting tool'}
           </button>
           <PrintButton label="Print the list" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             BibTeX is built from the fields you entered; anything the app does not have is left out
             rather than guessed, and the line you typed always goes in as a note. Opens in Zotero
             or Overleaf.

@@ -33,7 +33,7 @@ export function Walks({ date }: { date?: Date }) {
   return (
     <>
       <SectionLabel>Getting between them</SectionLabel>
-      <div style={{ fontSize: 12.5, opacity: 0.7, lineHeight: 1.5, marginBottom: 8 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, marginBottom: 8 }}>
         {daySummary(list)}
       </div>
 
@@ -53,14 +53,14 @@ export function Walks({ date }: { date?: Date }) {
             style={{
               flex: 'none',
               width: 16,
-              fontSize: 12,
+              fontSize: 'calc(12px * var(--text-scale, 1))',
               color: h.known && tight(h) ? 'var(--app-warn)' : 'var(--app-fg)',
               opacity: h.known && tight(h) ? 1 : 0.35,
             }}
           >
             {h.known && tight(h) ? '!' : '→'}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 13, lineHeight: 1.4 }}>{hopLine(h)}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.4 }}>{hopLine(h)}</span>
         </div>
       ))}
 
@@ -69,13 +69,13 @@ export function Walks({ date }: { date?: Date }) {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'maps' })}
-          style={{ height: 38, marginTop: 9, fontSize: 12.5 }}
+          style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
         >
           Name the buildings you use
         </button>
       )}
 
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
         {pressed.length > 0
           ? 'Measured between places you saved, at an unhurried eighty metres a minute — slow on purpose, since an estimate that says you will make it and is wrong costs more than one that says you will not.'
           : 'Measured between places you saved. The app never geocodes an address, so a building it has no place for gets no distance rather than a guessed one.'}

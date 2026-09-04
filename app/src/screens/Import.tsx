@@ -196,10 +196,10 @@ export function Import() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div className="chrome-text" style={{ fontSize: 28, lineHeight: 1.08 }}>
+      <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         Upload it. Walk away.
       </div>
-      <div style={{ fontSize: 14, opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
         The syllabus gives the dates and how the grade is built. Add the readings and you get the
         study guide too — cards, terms and a self-test made from what they actually argue.
       </div>
@@ -217,7 +217,7 @@ export function Import() {
         className="btn btn-secondary btn-block"
         onClick={() => input.current?.click()}
         disabled={busy !== ''}
-        style={{ height: 46, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 16 }}
+        style={{ height: 46, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 16 }}
       >
         {busy ? busy : 'Choose files — PDF, Word, text, or a zip of them'}
       </button>
@@ -243,7 +243,7 @@ export function Import() {
         onClick={() => shared.current?.click()}
         disabled={busy !== ''}
         style={{
-          fontSize: 12.5,
+          fontSize: 'calc(12.5px * var(--text-scale, 1))',
           opacity: 0.65,
           marginTop: 10,
           width: 'auto',
@@ -265,17 +265,17 @@ export function Import() {
             borderBottom: '1px solid var(--app-line)',
           }}
         >
-          <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {f.name}
           </span>
-          <span style={{ fontSize: 11, opacity: 0.5, flex: 'none' }}>
+          <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, flex: 'none' }}>
             {f.words.toLocaleString()} words
           </span>
           <button
             type="button"
             className="bare"
             onClick={() => setFiles((list) => list.filter((x) => x.name !== f.name))}
-            style={{ fontSize: 11, opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+            style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
           >
             REMOVE
           </button>
@@ -290,7 +290,7 @@ export function Import() {
             placeholder="Optional — “the midterm moved to Oct 8”, “skip chapter 4”"
             value={hint}
             onChange={(e) => setHint(e.target.value)}
-            style={{ fontSize: 13.5 }}
+            style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
           />
 
           <button
@@ -300,7 +300,7 @@ export function Import() {
             onClick={() => void build()}
             style={{
               height: 50,
-              fontSize: 15,
+              fontSize: 'calc(15px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginTop: 14,
@@ -314,7 +314,7 @@ export function Import() {
               type="button"
               className="bare"
               onClick={() => abort.current?.abort()}
-              style={{ fontSize: 11, opacity: 0.55, letterSpacing: '0.1em', marginTop: 10 }}
+              style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, letterSpacing: '0.1em', marginTop: 10 }}
             >
               STOP
             </button>
@@ -323,7 +323,7 @@ export function Import() {
       )}
 
       {!configured() && (
-        <div style={{ fontSize: 12, opacity: 0.65, marginTop: 12, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 12, lineHeight: 1.5, textWrap: 'pretty' }}>
           Building a course asks {provider()} to read the documents, which needs a key. Set one under{' '}
           <strong>Ask Claude → Settings</strong>, or sign in and use the shared one.
         </div>
@@ -380,8 +380,8 @@ function Rediff({
         borderBottom: '1px solid var(--app-line-soft)',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, lineHeight: 1.35 }}>{label}</span>
-      <span style={{ flex: 'none', fontSize: 11.5, opacity: 0.6 }}>{right}</span>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{label}</span>
+      <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6 }}>{right}</span>
     </div>
   );
 
@@ -389,14 +389,14 @@ function Rediff({
     <>
       <SectionLabel>You already have {code}</SectionLabel>
       <Blueprint style={{ padding: '14px 15px' }}>
-        <div className="chrome-text" style={{ fontSize: 20, lineHeight: 1.2, textWrap: 'pretty' }}>
+        <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 1.2, textWrap: 'pretty' }}>
           {rediffSummary(changes)}
         </div>
-        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 7, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 7, lineHeight: 1.5 }}>
           {changes.same} unchanged. Saving replaces the course you have rather than adding a second
           copy of it.
         </div>
-        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
           {kept.lost === 0
             ? `Everything you have ticked off stays ticked${kept.kept > 0 ? ` — all ${kept.kept} of them` : ''}.`
             : `${kept.kept} of your ticks carry over; ${kept.lost} ${kept.lost === 1 ? 'belongs' : 'belong'} to a deadline this syllabus no longer has.`}
@@ -472,11 +472,11 @@ function Preview({
     <>
       <SectionLabel>What came back</SectionLabel>
       <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
-        <div className="chrome-text" style={{ fontSize: 24, lineHeight: 1.1 }}>
+        <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.1 }}>
           {m.course.code}
         </div>
-        <div style={{ fontSize: 14, marginTop: 3 }}>{m.course.name}</div>
-        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 3 }}>{m.course.name}</div>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
           {[m.course.prof, m.course.meets, m.course.room, m.course.credits]
             .filter(Boolean)
             .join(' · ')}
@@ -484,7 +484,7 @@ function Preview({
         <div
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 11.5,
+            fontSize: 'calc(11.5px * var(--text-scale, 1))',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             opacity: 0.7,
@@ -502,7 +502,7 @@ function Preview({
           <SectionLabel>Worth knowing</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {warnings.map((w) => (
-              <div key={w} style={{ fontSize: 12.5, opacity: 0.75, lineHeight: 1.45, textWrap: 'pretty' }}>
+              <div key={w} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.45, textWrap: 'pretty' }}>
                 · {w}
               </div>
             ))}
@@ -517,7 +517,7 @@ function Preview({
             <span
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 12,
+                fontSize: 'calc(12px * var(--text-scale, 1))',
                 opacity: 0.55,
                 width: 54,
                 flex: 'none',
@@ -525,27 +525,27 @@ function Preview({
             >
               {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i.month]} {i.day}
             </span>
-            <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.3 }}>{i.title}</span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{i.title}</span>
           </div>
           {i.quote && (
-            <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 4, lineHeight: 1.45, paddingLeft: 64 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 4, lineHeight: 1.45, paddingLeft: 64 }}>
               “{i.quote}”
             </div>
           )}
         </div>
       ))}
       {m.items.length > 8 && (
-        <div style={{ fontSize: 12, opacity: 0.5, marginTop: 8 }}>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8 }}>
           and {m.items.length - 8} more
         </div>
       )}
 
       <SectionLabel>The first unit</SectionLabel>
-      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 16 }}>{m.guide.units[0]?.name}</div>
+      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))' }}>{m.guide.units[0]?.name}</div>
       {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c) => (
         <div key={c.q} style={{ marginTop: 8 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-          <div style={{ fontSize: 13.5, opacity: 0.78, lineHeight: 1.5, marginTop: 2 }}>{c.a}</div>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, lineHeight: 1.5, marginTop: 2 }}>{c.a}</div>
         </div>
       ))}
 
@@ -555,7 +555,7 @@ function Preview({
         onClick={onSave}
         style={{
           height: 50,
-          fontSize: 15,
+          fontSize: 'calc(15px * var(--text-scale, 1))',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           marginTop: 18,
@@ -563,7 +563,7 @@ function Preview({
       >
         {replacing ? `Replace ${m.course.code}` : `Add ${m.course.code} to my semester`}
       </button>
-      <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
         {replacing
           ? 'The changes above are what this replaces. Your ticks and your drill history stay where they are.'
           : 'You can add readings to it later, and everything you add flows into the cards, the quiz and the slides at once.'}

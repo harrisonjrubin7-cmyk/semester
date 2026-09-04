@@ -30,7 +30,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
   return (
     <>
       <SectionLabel>Due this week</SectionLabel>
-      <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
         {weekLabel(start)} · {weekLine(days, classes)}
       </div>
 
@@ -51,7 +51,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
               flex: 'none',
               width: 46,
               fontFamily: 'var(--font-heading)',
-              fontSize: 11,
+              fontSize: 'calc(11px * var(--text-scale, 1))',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               opacity: d.items.length > 0 ? 0.8 : 0.35,
@@ -61,13 +61,13 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             {d.items.length === 0 ? (
-              <span style={{ fontSize: 12.5, opacity: 0.3 }}>—</span>
+              <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.3 }}>—</span>
             ) : (
               d.items.map((i) => (
                 <div
                   key={i.id}
                   style={{
-                    fontSize: 13,
+                    fontSize: 'calc(13px * var(--text-scale, 1))',
                     lineHeight: 1.4,
                     marginBottom: 3,
                     opacity: state.done[i.id] ? 0.45 : 1,
@@ -80,7 +80,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
                       syllabus's own words. "Before class" is what it says and
                       is more use than the kind's label, which for anything
                       uncategorised reads "Other". */}
-                  <span style={{ opacity: 0.5, fontSize: 11.5 }}>
+                  <span style={{ opacity: 0.5, fontSize: 'calc(11.5px * var(--text-scale, 1))' }}>
                     {' '}
                     {hasTime(i.dueTime) ? clock(i.dueAt) : i.dueTime.trim()}
                   </span>

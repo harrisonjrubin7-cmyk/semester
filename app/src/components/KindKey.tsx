@@ -16,7 +16,7 @@ export function KindKey({ compact = false }: { compact?: boolean }) {
         flexWrap: 'wrap',
         gap: '5px 12px',
         marginTop: compact ? 8 : 10,
-        fontSize: 10,
+        fontSize: 'calc(10px * var(--text-scale, 1))',
         fontFamily: 'var(--font-heading)',
         letterSpacing: '0.1em',
         textTransform: 'uppercase',

@@ -109,15 +109,15 @@ export function Housing() {
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 21, lineHeight: 1.25, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.25, marginTop: 6, textWrap: 'pretty' }}
         >
           {mine ? homeLine(mine) : 'No room on file yet.'}
         </div>
-        <div style={{ fontSize: 13.5, opacity: 0.8, marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, marginTop: 8, lineHeight: 1.5 }}>
           {moveOutLine(moveOut, now)}
         </div>
         {packLine(exams, moveOut, now) ? (
-          <div style={{ fontSize: 13, opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>
             {packLine(exams, moveOut, now)}
           </div>
         ) : null}
@@ -126,7 +126,7 @@ export function Housing() {
       {mine && firstToday ? (
         <Blueprint plain style={{ padding: '13px 14px', marginTop: 10 }}>
           <div className="kicker">The first walk of the day</div>
-          <div style={{ fontSize: 13.5, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
             {walk.known && walk.minutes > 0
               ? morningLine(mine, firstToday, state.places, clock)
               : hallSaved
@@ -138,7 +138,7 @@ export function Housing() {
               type="button"
               className="btn btn-ghost btn-block"
               onClick={() => dispatch({ type: 'go', screen: 'maps' })}
-              style={{ height: 38, marginTop: 9, fontSize: 12.5 }}
+              style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
             >
               Open the map
             </button>
@@ -168,7 +168,7 @@ export function Housing() {
       ) : null}
 
       <SectionLabel>What it says</SectionLabel>
-      <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 9, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 9, lineHeight: 1.5 }}>
         The building is the only field that matters. Give it a move-out date if housing named one,
         or the hours after your last exam if that is how they put it — the app will not do both.
       </div>
@@ -213,7 +213,7 @@ export function Housing() {
       </div>
 
       {bad ? (
-        <div style={{ fontSize: 12.5, color: 'var(--app-warn)', marginBottom: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 1.45 }}>
           {bad}
         </div>
       ) : null}
@@ -228,7 +228,7 @@ export function Housing() {
       </button>
 
       {!lastExam && (
-        <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
           No exams on any syllabus yet, so a move-out counted from your last one stays a rule
           rather than a date. Import a syllabus with a final on it and the app will do the sum.
         </div>
@@ -246,7 +246,7 @@ export function Housing() {
               borderBottom: '1px solid var(--app-line)',
             }}
           >
-            <span style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))' }}>
               {homeLine(mine)}
               {mine.moveOut ? ` · out ${mine.moveOut}` : ''}
               {mine.hoursAfterLastExam ? ` · ${mine.hoursAfterLastExam} hrs after the last exam` : ''}
@@ -256,7 +256,7 @@ export function Housing() {
               className="bare"
               aria-label="Remove this room"
               onClick={() => dispatch({ type: 'dropResidence', id: mine.id })}
-              style={{ flex: 'none', width: 24, opacity: 0.4, fontSize: 14 }}
+              style={{ flex: 'none', width: 24, opacity: 0.4, fontSize: 'calc(14px * var(--text-scale, 1))' }}
             >
               ×
             </button>
@@ -264,7 +264,7 @@ export function Housing() {
         </>
       )}
 
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
         Nothing is fetched. The housing portal is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The address the portal hands you carries your own session token in it;

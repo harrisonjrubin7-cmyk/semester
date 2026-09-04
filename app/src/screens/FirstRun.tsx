@@ -18,11 +18,11 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
       <div className="kicker">Nothing {where} yet</div>
       <div
         className="chrome-text"
-        style={{ fontSize: 30, lineHeight: 1.08, marginTop: 8, textWrap: 'pretty' }}
+        style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08, marginTop: 8, textWrap: 'pretty' }}
       >
         Start with a syllabus.
       </div>
-      <div style={{ fontSize: 14, opacity: 0.72, marginTop: 8, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.72, marginTop: 8, lineHeight: 1.5, textWrap: 'pretty' }}>
         Upload the PDF your professor posted — the readings too, if you have them — and the app
         builds the course from it: every dated obligation with the sentence it came from, a study
         guide, cards, a quiz and slides.
@@ -41,10 +41,10 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
       >
         <Plus size={18} />
         <span style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 17 }}>
+          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>
             Add your first course
           </span>
-          <span style={{ display: 'block', fontSize: 12, opacity: 0.6, marginTop: 2 }}>
+          <span style={{ display: 'block', fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>
             PDF, Word, or paste the text
           </span>
         </span>
@@ -59,7 +59,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
             onClick={() => dispatch({ type: 'setSample', on: true })}
             style={{
               height: 44,
-              fontSize: 12,
+              fontSize: 'calc(12px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginTop: 12,
@@ -67,7 +67,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
           >
             Look at the sample semester
           </button>
-          <div style={{ fontSize: 11.5, opacity: 0.55, lineHeight: 1.5, marginTop: 8 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.5, marginTop: 8 }}>
             {SEED_SUMMARY.courses} real courses — {SEED_SUMMARY.units} units, {SEED_SUMMARY.cards}{' '}
             cards and {SEED_SUMMARY.lessons} narrated lessons — to see what a finished one looks
             like. Switch it off again in Settings.

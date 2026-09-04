@@ -109,7 +109,7 @@ export function Solve() {
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings.
           </div>
         </Blueprint>
@@ -119,7 +119,7 @@ export function Solve() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 13, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Working on {guide.code}. It will not write the answer you are handing in — for a maths
         question the worked solution is the submitted work. It will teach the method on numbers
         that are not yours, and read your attempt and find the first step that is wrong.
@@ -144,11 +144,11 @@ export function Solve() {
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span style={{ display: 'block', fontSize: 14 }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{option.label}</span>
               <span
                 style={{
                   display: 'block',
-                  fontSize: 11.5,
+                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   opacity: 0.55,
                   marginTop: 2,
                   lineHeight: 1.4,
@@ -187,11 +187,11 @@ export function Solve() {
         className="btn btn-secondary btn-block"
         onClick={() => camera.current?.click()}
         disabled={!!busy}
-        style={{ height: 42, marginTop: 8, fontSize: 12, letterSpacing: '0.08em' }}
+        style={{ height: 42, marginTop: 8, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.08em' }}
       >
         {busy === 'Reading it…' ? 'Reading it…' : 'Photograph the problem'}
       </button>
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
         Anything the photo cannot show clearly comes back as [?] rather than a guess — a guessed
         exponent turns it into a different problem without telling you.
       </div>
@@ -239,7 +239,7 @@ export function Solve() {
           <SectionLabel>{a.label}</SectionLabel>
           <div
             style={{
-              fontSize: 13.5,
+              fontSize: 'calc(13.5px * var(--text-scale, 1))',
               lineHeight: 1.65,
               whiteSpace: 'pre-wrap',
               padding: 14,

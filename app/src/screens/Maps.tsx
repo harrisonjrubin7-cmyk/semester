@@ -185,8 +185,8 @@ export function Maps() {
       }}
     >
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: 'block', fontSize: 15, lineHeight: 1.25 }}>{item.label}</span>
-        <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+        <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{item.label}</span>
+        <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
           {item.where}
         </span>
       </span>
@@ -249,7 +249,7 @@ export function Maps() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: 12.5,
+              fontSize: 'calc(12.5px * var(--text-scale, 1))',
               opacity: 0.5,
             }}
           >
@@ -265,7 +265,7 @@ export function Maps() {
           gap: 10,
           alignItems: 'center',
           marginTop: 8,
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           opacity: 0.5,
         }}
       >
@@ -275,7 +275,7 @@ export function Maps() {
             type="button"
             className="bare"
             onClick={() => void locate()}
-            style={{ width: 'auto', fontSize: 11, letterSpacing: '0.08em', opacity: 0.9 }}
+            style={{ width: 'auto', fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.08em', opacity: 0.9 }}
           >
             WHERE AM I
           </button>
@@ -311,10 +311,10 @@ export function Maps() {
                   }}
                   style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: '12px 0' }}
                 >
-                  <span style={{ display: 'block', fontSize: 14.5, lineHeight: 1.25 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.25 }}>
                     {h.name}
                   </span>
-                  <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                     {[h.kind, h.detail, away === null ? '' : far(away)].filter(Boolean).join(' · ')}
                   </span>
                 </button>
@@ -324,7 +324,7 @@ export function Maps() {
                   rel="noreferrer"
                   style={{
                     flex: 'none',
-                    fontSize: 11,
+                    fontSize: 'calc(11px * var(--text-scale, 1))',
                     letterSpacing: '0.08em',
                     opacity: 0.75,
                     textDecoration: 'none',
@@ -347,7 +347,7 @@ export function Maps() {
           if (found) setMode(found.id);
         }}
       />
-      <div style={{ fontSize: 12, opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
         Directions open in the map app this phone already has — it knows where you are, it talks,
         and it works with the screen off.
       </div>
@@ -382,7 +382,7 @@ export function Maps() {
             <span className="kicker" style={{ display: 'block' }}>
               Campus
             </span>
-            <span style={{ display: 'block', fontSize: 14, marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 2 }}>
               Vanderbilt's own map — buildings, entrances, parking
             </span>
           </span>
@@ -403,7 +403,7 @@ export function Maps() {
             <span className="kicker" style={{ display: 'block' }}>
               Nashville
             </span>
-            <span style={{ display: 'block', fontSize: 14, marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 2 }}>
               The city and what surrounds it, in Google Maps
             </span>
           </span>
@@ -412,7 +412,7 @@ export function Maps() {
       </a>
 
       {saved.length === 0 && (
-        <div style={{ fontSize: 12, opacity: 0.55, marginTop: 16, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 16, lineHeight: 1.5 }}>
           Name a few places under Mine → Places and they appear on the map with exact coordinates,
           which route better than any search for a building name.
         </div>

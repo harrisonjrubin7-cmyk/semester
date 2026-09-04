@@ -133,7 +133,7 @@ export function Essay() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         A real draft, for the writing that is not coursework — the cover letter, the club
         newsletter, the scholarship statement, the memo. For a class, the project file under
         Work on it is the tool: it gives you the document to write in, not the writing.
@@ -161,8 +161,8 @@ export function Essay() {
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span style={{ display: 'block', fontSize: 14 }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 11.5, opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                 {option.blurb}
               </span>
             </button>
@@ -191,7 +191,7 @@ export function Essay() {
           {course && (
             <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
               <div className="kicker">Recorded policy</div>
-              <div style={{ fontSize: 13, lineHeight: 1.5, marginTop: 5 }}>
+              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 5 }}>
                 {course.ai?.note ??
                   'Nothing recorded. Read the syllabus and set it under Edit the course.'}
               </div>
@@ -208,7 +208,7 @@ export function Essay() {
                   {course.ai ? 'Change what is recorded' : 'Record the policy'}
                 </button>
               ) : (
-                <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
                   A sample course, so this is fixed. Your own courses record their own policy under
                   Edit the course.
                 </div>
@@ -236,7 +236,7 @@ export function Essay() {
           onChange={(e) => setAttested(e.target.checked)}
           style={{ marginTop: 2, flex: 'none', width: 18, height: 18 }}
         />
-        <span style={{ fontSize: 12.5, lineHeight: 1.5 }}>
+        <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.5 }}>
           {u.coursework
             ? 'I have read the syllabus and it permits a drafting tool for this assignment.'
             : 'I have checked that whoever receives this permits a drafting tool.'}
@@ -246,7 +246,7 @@ export function Essay() {
       {!verdict.ok && (
         <div
           style={{
-            fontSize: 12.5,
+            fontSize: 'calc(12.5px * var(--text-scale, 1))',
             lineHeight: 1.5,
             marginTop: 10,
             padding: '11px 13px',
@@ -286,7 +286,7 @@ export function Essay() {
         placeholder="Everything true about you it is allowed to say: what you have done, where, when, with whom, what came of it."
         style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.5 }}
       />
-      <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
         This list is the fence. Anything not on it comes back as a blank in square brackets rather
         than a guess — a letter that invents an internship reads exactly like one that does not.
       </div>
@@ -321,7 +321,7 @@ export function Essay() {
         value={lengthId}
         onChange={setLengthId}
       />
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 5 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 5 }}>
         About {aim} words. {LENGTHS.find((l) => l.id === lengthId)?.blurb}
       </div>
 
@@ -343,7 +343,7 @@ export function Essay() {
           {busy ? 'Drafting…' : out ? 'Draft it again' : 'Write the draft'}
         </button>
       ) : (
-        <div style={{ fontSize: 12.5, opacity: 0.6, marginTop: 16, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 16, lineHeight: 1.5 }}>
           Needs a key first — set one under Ask Claude → Settings.
         </div>
       )}
@@ -355,7 +355,7 @@ export function Essay() {
           <SectionLabel>The draft</SectionLabel>
           <div
             style={{
-              fontSize: 14,
+              fontSize: 'calc(14px * var(--text-scale, 1))',
               lineHeight: 1.65,
               whiteSpace: 'pre-wrap',
               padding: 14,
@@ -367,7 +367,7 @@ export function Essay() {
             {draft}
           </div>
 
-          <div style={{ fontSize: 12, opacity: 0.6, marginTop: 10, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 1.55 }}>
             {count} words against {aim}.{' '}
             {left.length > 0
               ? `${left.length} ${left.length === 1 ? 'blank' : 'blanks'} left for you — fill every one before this goes anywhere.`
@@ -380,7 +380,7 @@ export function Essay() {
             <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
               <div className="kicker">What it needs from you</div>
               {left.map((hole, i) => (
-                <div key={`${hole}-${i}`} style={{ fontSize: 12.5, padding: '4px 0', lineHeight: 1.45 }}>
+                <div key={`${hole}-${i}`} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', padding: '4px 0', lineHeight: 1.45 }}>
                   {hole.slice(1, -1)}
                 </div>
               ))}
@@ -420,7 +420,7 @@ export function Essay() {
             </button>
           </div>
           <PrintButton label="Print it" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             The saved file carries a line at the bottom saying it was drafted and edited. Take it
             off if you like — it is there so that in a month you can still tell.
           </div>

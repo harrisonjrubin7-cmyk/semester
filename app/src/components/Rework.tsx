@@ -84,7 +84,7 @@ export function Rework({
   return (
     <>
       <SectionLabel>Rebuild the guide around this</SectionLabel>
-      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
         Everything you have added already shows up in every study format. This goes further and
         reorganises the guide itself — new material put in the unit it belongs to, units split or
         renamed where they have outgrown themselves, cards written from prose that never became
@@ -92,7 +92,7 @@ export function Rework({
       </div>
 
       {!owned && (
-        <div style={{ fontSize: 12.5, opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
           This is one of the built-in sample courses, so its guide cannot be replaced. Your own
           courses can be.
         </div>
@@ -109,12 +109,12 @@ export function Rework({
       </button>
 
       {error ? (
-        <div style={{ fontSize: 13, marginTop: 10, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 10, color: 'var(--app-warn)', lineHeight: 1.45 }}>
           {error}
         </div>
       ) : null}
       {done ? (
-        <div style={{ fontSize: 13, marginTop: 10, opacity: 0.8, lineHeight: 1.5 }}>{done}</div>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 10, opacity: 0.8, lineHeight: 1.5 }}>{done}</div>
       ) : null}
 
       {plan && cost && (
@@ -122,7 +122,7 @@ export function Rework({
           <div className="kicker">What it would cost you</div>
           <div
             style={{
-              fontSize: 13,
+              fontSize: 'calc(13px * var(--text-scale, 1))',
               marginTop: 7,
               lineHeight: 1.55,
               // The one thing worth a colour: something you drilled going away.
@@ -133,7 +133,7 @@ export function Rework({
           </div>
 
           {cost.examples.length > 0 && (
-            <div style={{ fontSize: 11.5, opacity: 0.7, marginTop: 10, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 10, lineHeight: 1.5 }}>
               {cost.examples.map((e, i) => (
                 <div key={i} style={{ marginBottom: 6 }}>
                   <div style={{ textDecoration: 'line-through', opacity: 0.6 }}>{e.before}</div>
@@ -143,14 +143,14 @@ export function Rework({
             </div>
           )}
 
-          <div style={{ fontSize: 12, opacity: 0.65, marginTop: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 12, lineHeight: 1.5 }}>
             {cost.unitsBefore} units → {cost.unitsAfter}.{' '}
             {plan.guide.units.reduce((n, u) => n + u.cards.length, 0)} cards,{' '}
             {plan.guide.terms.length} terms.
           </div>
 
           {plan.notes.length > 0 && (
-            <ul style={{ fontSize: 12, opacity: 0.75, margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.55 }}>
+            <ul style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.75, margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.55 }}>
               {plan.notes.map((n, i) => (
                 <li key={i}>{n}</li>
               ))}
@@ -159,7 +159,7 @@ export function Rework({
 
           <div style={{ marginTop: 12 }}>
             {plan.guide.units.map((u, i) => (
-              <div key={i} style={{ fontSize: 12.5, opacity: 0.8, padding: '3px 0' }}>
+              <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.8, padding: '3px 0' }}>
                 {u.name} <span style={{ opacity: 0.5 }}>· {u.cards.length}</span>
               </div>
             ))}

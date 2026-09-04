@@ -96,15 +96,15 @@ export function Meals() {
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 21, lineHeight: 1.25, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.25, marginTop: 6, textWrap: 'pretty' }}
         >
           {paceLine(latest, p)}
         </div>
         {cashLine(latest) ? (
-          <div style={{ fontSize: 13.5, opacity: 0.75, marginTop: 8 }}>{cashLine(latest)}</div>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 8 }}>{cashLine(latest)}</div>
         ) : null}
         {latest ? (
-          <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6 }}>{staleLine(latest, now)}</div>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6 }}>{staleLine(latest, now)}</div>
         ) : null}
       </Blueprint>
 
@@ -130,7 +130,7 @@ export function Meals() {
       ) : null}
 
       <SectionLabel>Log what it says</SectionLabel>
-      <div style={{ fontSize: 12, opacity: 0.6, marginBottom: 9, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 9, lineHeight: 1.5 }}>
         Leave a field blank if your plan does not have it. Two readings a few days apart is what
         turns a balance into a rate.
       </div>
@@ -166,7 +166,7 @@ export function Meals() {
       </div>
 
       {bad ? (
-        <div style={{ fontSize: 12.5, color: 'var(--app-warn)', marginBottom: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 1.45 }}>
           {bad}
         </div>
       ) : null}
@@ -180,7 +180,7 @@ export function Meals() {
           type="button"
           className="btn btn-ghost btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'registrar' })}
-          style={{ height: 38, marginTop: 8, fontSize: 12.5 }}
+          style={{ height: 38, marginTop: 8, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
         >
           Set the term's last day, and the app can say what a balance is a day
         </button>
@@ -200,10 +200,10 @@ export function Meals() {
                 borderBottom: '1px solid var(--app-line)',
               }}
             >
-              <span style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))' }}>
                 {new Date(r.at).toLocaleDateString()}
               </span>
-              <span style={{ flex: 'none', fontSize: 13, fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ flex: 'none', fontSize: 'calc(13px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>
                 {r.swipes >= 0 ? `${r.swipes} swipes` : '—'}
                 {r.cashCents > 0 ? ` · ${money(r.cashCents)}` : ''}
               </span>
@@ -212,7 +212,7 @@ export function Meals() {
                 className="bare"
                 aria-label="Remove this reading"
                 onClick={() => dispatch({ type: 'dropBalance', id: r.id })}
-                style={{ flex: 'none', width: 24, opacity: 0.4, fontSize: 14 }}
+                style={{ flex: 'none', width: 24, opacity: 0.4, fontSize: 'calc(14px * var(--text-scale, 1))' }}
               >
                 ×
               </button>
@@ -221,7 +221,7 @@ export function Meals() {
         </>
       )}
 
-      <div style={{ fontSize: 11, opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
         Nothing is fetched. The balance page is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The app reports a rate and a date and stops; it has no idea whether you

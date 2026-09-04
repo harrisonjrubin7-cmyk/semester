@@ -76,7 +76,7 @@ export function Gap() {
 
   if (!win) {
     return (
-      <div style={{ padding: 18, fontSize: 14, opacity: 0.6, lineHeight: 1.55 }}>
+      <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.55 }}>
         Nothing to fill. This opens when there is a real gap before your next class — long enough
         to be worth starting something, short enough that sitting down for it would be a waste.
       </div>
@@ -166,7 +166,7 @@ function Run({ win }: { win: Window }) {
 
   if (deck.length === 0) {
     return (
-      <div style={{ padding: 18, fontSize: 14, opacity: 0.6, lineHeight: 1.55 }}>
+      <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.55 }}>
         No cards yet. Import a syllabus and the app builds them out of it.
       </div>
     );
@@ -176,17 +176,17 @@ function Run({ win }: { win: Window }) {
     return (
       <div style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: '70vh' }}>
         <div style={{ flex: 1, paddingTop: 40 }}>
-          <div className="chrome-text" style={{ fontSize: 46, lineHeight: 1.1 }}>
+          <div className="chrome-text" style={{ fontSize: 'calc(46px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             {runLine(idx, got)}
           </div>
-          <div style={{ fontSize: 15, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
             {stopped
               ? goLine(win)
               : left === 0
                 ? `That is the window. ${goLine(win)}`
                 : `${deck.length} cards was the lot. ${goLine(win)}`}
           </div>
-          <div style={{ fontSize: 12.5, opacity: 0.6, marginTop: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 12, lineHeight: 1.5 }}>
             Every answer is recorded against the card, the same as a sitting-down drill — what you
             missed comes back sooner and what you knew comes back later.
           </div>
@@ -195,7 +195,7 @@ function Run({ win }: { win: Window }) {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'home' })}
-          style={{ height: 60, fontSize: 15 }}
+          style={{ height: 60, fontSize: 'calc(15px * var(--text-scale, 1))' }}
         >
           Done
         </button>
@@ -238,7 +238,7 @@ function Run({ win }: { win: Window }) {
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          fontSize: 11,
+          fontSize: 'calc(11px * var(--text-scale, 1))',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           opacity: 0.55,
@@ -261,7 +261,7 @@ function Run({ win }: { win: Window }) {
               }}
               style={{
                 width: 'auto',
-                fontSize: 11,
+                fontSize: 'calc(11px * var(--text-scale, 1))',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 opacity: aloud ? 1 : 0.5,
@@ -299,7 +299,7 @@ function Run({ win }: { win: Window }) {
         <div
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 25,
+            fontSize: 'calc(25px * var(--text-scale, 1))',
             lineHeight: 1.25,
             textWrap: 'pretty',
           }}
@@ -309,7 +309,7 @@ function Run({ win }: { win: Window }) {
         {shown ? (
           <div
             style={{
-              fontSize: 16,
+              fontSize: 'calc(16px * var(--text-scale, 1))',
               lineHeight: 1.55,
               opacity: 0.85,
               textWrap: 'pretty',
@@ -320,7 +320,7 @@ function Run({ win }: { win: Window }) {
             {card.a}
           </div>
         ) : (
-          <div style={{ fontSize: 12, opacity: 0.4, letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.4, letterSpacing: '0.06em' }}>
             Tap anywhere to turn it over
           </div>
         )}
@@ -335,7 +335,7 @@ function Run({ win }: { win: Window }) {
               type="button"
               className="btn btn-secondary"
               onClick={() => answer(false)}
-              style={{ flex: 1, height: 76, fontSize: 15 }}
+              style={{ flex: 1, height: 76, fontSize: 'calc(15px * var(--text-scale, 1))' }}
             >
               Again
             </button>
@@ -343,7 +343,7 @@ function Run({ win }: { win: Window }) {
               type="button"
               className="btn btn-primary"
               onClick={() => answer(true)}
-              style={{ flex: 1, height: 76, fontSize: 15 }}
+              style={{ flex: 1, height: 76, fontSize: 'calc(15px * var(--text-scale, 1))' }}
             >
               Got it
             </button>
@@ -353,7 +353,7 @@ function Run({ win }: { win: Window }) {
             type="button"
             className="btn btn-secondary btn-block"
             onClick={() => setShown(true)}
-            style={{ height: 76, fontSize: 15 }}
+            style={{ height: 76, fontSize: 'calc(15px * var(--text-scale, 1))' }}
           >
             Show
           </button>
@@ -363,7 +363,7 @@ function Run({ win }: { win: Window }) {
           type="button"
           className="bare"
           onClick={() => setStopped(true)}
-          style={{ width: '100%', height: 36, fontSize: 12, opacity: 0.45, marginTop: 4 }}
+          style={{ width: '100%', height: 36, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.45, marginTop: 4 }}
         >
           Stop here
         </button>
@@ -407,13 +407,13 @@ export function GapOffer() {
       }}
     >
       <div className="kicker">Between classes</div>
-      <div style={{ fontSize: 16, lineHeight: 1.35, marginTop: 5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.35, marginTop: 5, textWrap: 'pretty' }}>
         {gapLine(win)}
       </div>
-      <div style={{ fontSize: 12.5, opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>
         {budgetLine(cards, pace)} One thumb, no typing.
       </div>
-      <div style={{ fontSize: 11.5, opacity: 0.45, marginTop: 5, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5, lineHeight: 1.45 }}>
         {walkLine(win)}
       </div>
     </button>
