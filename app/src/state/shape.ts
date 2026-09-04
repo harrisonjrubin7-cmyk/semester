@@ -57,6 +57,19 @@ import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
 import { readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
+import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
+
+/**
+ * What the last load's migration did, for the diagnostics dump.
+ *
+ * A module-level note rather than state: nothing renders it, and it is about
+ * this boot rather than about the semester.
+ */
+let lastMigration: Migrated | null = null;
+
+export function migrationReport(): Migrated | null {
+  return lastMigration;
+}
 
 /**
  * The prototype held everything in one component's state and lost it on reload.
@@ -330,6 +343,8 @@ export interface Persisted {
    * asks which school this is, only what the school has.
    */
   schoolId: string;
+  /** The shape this copy was written in. See `lib/migrate.ts`. */
+  schemaVersion: number;
   /**
    * Deadline id to when work on it began.
    *
@@ -507,6 +522,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   // Vanderbilt by default, because that is who this was built for and a fresh
   // install should be the app they already have. Changed in Settings.
   schoolId: 'vanderbilt',
+  schemaVersion: SCHEMA,
   started: {},
   cleared: false,
   tasks: [],
@@ -662,7 +678,18 @@ export function loadPersisted(): Persisted {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_PERSISTED };
-    const saved = JSON.parse(raw) as Partial<Persisted>;
+    /*
+     * Through the migration before anything reads a field.
+     *
+     * While this app had one user a shape change was free — change the code,
+     * clear the storage if it looks wrong. It stops being free the moment
+     * somebody else has a semester in here, written by whichever build they
+     * last opened. See `lib/migrate.ts`; a copy newer than this build knows
+     * about is deliberately left alone rather than walked backwards.
+     */
+    const moved = migrate(JSON.parse(raw));
+    lastMigration = moved;
+    const saved = moved.state as Partial<Persisted>;
     return {
       ...DEFAULT_PERSISTED,
       ...saved,
@@ -833,6 +860,9 @@ export function pickPersisted(state: State): Persisted {
     tickedAt: state.tickedAt,
     started: state.started,
     schoolId: state.schoolId,
+    // Stamped on the way out, so the next build to read this knows what shape
+    // it is in without having to guess from which fields are present.
+    schemaVersion: SCHEMA,
     accent: state.accent,
     textSize: state.textSize,
     ground: state.ground,

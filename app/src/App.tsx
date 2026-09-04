@@ -104,6 +104,7 @@ import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
 import { Tapped } from './components/Tapped';
 import { Adopting } from './components/Adopting';
+import { Watching } from './components/Watching';
 import { forget } from './lib/scrollback';
 import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
@@ -828,6 +829,8 @@ export default function App() {
         {/* Takes a tapped notification to the thing it was about. Draws
             nothing. */}
         <Tapped />
+        {/* Notices what goes wrong, on this device only. Draws nothing. */}
+        <Watching />
         {/* Offers the last removal back, from wherever it happened. */}
         <Undone />
         {/* The one question a first sign-in asks, and only when it is real. */}
@@ -853,6 +856,7 @@ export default function App() {
       <Ringing />
       <PushTop />
       <Tapped />
+      <Watching />
       <Undone />
       {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}

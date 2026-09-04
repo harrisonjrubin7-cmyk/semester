@@ -106,6 +106,15 @@ export const STRATEGY: Record<string, Strategy> = {
   // Ergonomics: about the screen in front of you, not about you. See `mine`.
   textSize: 'mine',
   density: 'mine',
+  /*
+   * The shape this device writes, which is never the other device's business.
+   *
+   * `mine` rather than `theirs` or `latest`: a laptop three releases behind
+   * must not be told by a phone that its storage is version 6, because the
+   * migration would then skip the steps that laptop still needs. Each device
+   * stamps its own on save. See `lib/migrate.ts`.
+   */
+  schemaVersion: 'mine',
   // The same three-way split as textSize. A comfortable measure on a laptop is
   // not one on a phone, and tab labels are height a small screen wants back
   // and a large one does not.

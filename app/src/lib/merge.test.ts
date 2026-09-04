@@ -181,7 +181,15 @@ describe('the table', () => {
   const persistedFields = (): string[] => {
     const source = readFileSync(join(process.cwd(), 'src/state/shape.ts'), 'utf8');
     const body = source.split('export function pickPersisted')[1]?.split('\n}')[0] ?? '';
-    return [...body.matchAll(/^\s{4}(\w+):\s*state\./gm)].map((m) => m[1]);
+    /*
+     * Any field, not only the ones copied off `state`.
+     *
+     * This matched `name: state.name` only, so `schemaVersion: SCHEMA` — a
+     * constant rather than a copy — was invisible to the guard and reached the
+     * sync payload with no strategy at all. A field's merge behaviour matters
+     * whatever the right-hand side looks like.
+     */
+    return [...body.matchAll(/^\s{4}(\w+):/gm)].map((m) => m[1]);
   };
 
   it('found the store, so the rest of this means something', () => {

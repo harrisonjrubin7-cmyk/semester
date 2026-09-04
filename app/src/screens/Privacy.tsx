@@ -22,6 +22,9 @@ import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { CLAIMS, SUPPORT, region } from '../lib/privacy';
+import { KEEP, LOG_KEY, dump, dumpName, read } from '../lib/diagnose';
+import { SCHEMA, migrationLine } from '../lib/migrate';
+import { migrationReport } from '../state/shape';
 import { cloudConfigured, deleteEverything } from '../lib/cloud';
 
 export function Privacy() {
@@ -29,6 +32,7 @@ export function Privacy() {
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
+  const [saved, setSaved] = useState('');
 
   const where = region((import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? '');
 
@@ -75,6 +79,57 @@ export function Privacy() {
         There is no form. Email <strong>{SUPPORT}</strong> and a person will answer — including if
         you want your account removed by hand rather than by the button below.
       </div>
+
+      <SectionLabel style={{ margin: '22px 0 5px' }}>Export diagnostics</SectionLabel>
+      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 1.6, textWrap: 'pretty' }}>
+        Saves a plain text file of the last {KEEP} things that went wrong on this device — error
+        messages, which screen you were on, which build. It holds none of your work, and it is
+        readable, so you can see what is in it before you send it. Nothing is uploaded on its own.
+      </div>
+      <button
+        type="button"
+        className="btn btn-block"
+        onClick={() => {
+          const log = read(localStorage.getItem(LOG_KEY));
+          const m = migrationReport();
+          const text = dump(
+            {
+              build: (import.meta.env.VITE_BUILD as string | undefined) ?? 'dev',
+              screen: document.body.dataset.screen ?? '',
+              language: navigator.language,
+              agent: navigator.userAgent,
+              cloud: cloudConfigured,
+              signedIn: Boolean(account),
+              storageUsed: (localStorage.getItem('semester.v1') ?? '').length,
+              schema: m ? migrationLine(m) : String(SCHEMA),
+            },
+            log,
+          );
+          try {
+            const url = globalThis.URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = dumpName(Date.now());
+            a.click();
+            setTimeout(() => globalThis.URL.revokeObjectURL(url), 30_000);
+            setSaved(`Saved ${log.length === 0 ? 'a file — nothing has gone wrong on this device' : `the last ${log.length}`}.`);
+          } catch {
+            setSaved('This browser would not save the file. Copy it from the console instead.');
+          }
+        }}
+        style={{ marginTop: 12, height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+      >
+        Export diagnostics
+      </button>
+      {saved && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}
+        >
+          {saved}
+        </div>
+      )}
 
       <SectionLabel style={{ margin: '26px 0 5px' }}>Delete my account</SectionLabel>
       {account ? (
