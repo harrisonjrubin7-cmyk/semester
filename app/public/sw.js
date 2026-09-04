@@ -148,3 +148,59 @@ self.addEventListener('fetch', (event) => {
     }),
   );
 });
+
+
+/*
+ * A reminder arriving while the app is shut.
+ *
+ * The payload is written by the app, queued, and sent back by the function
+ * that delivers it — so nothing here decides anything about semesters. It
+ * shows what it was given and opens the app where the app asked.
+ *
+ * `userVisibleOnly` was promised at subscription time, so a push that shows
+ * nothing would be a broken promise the browser eventually punishes by
+ * dropping the subscription. Hence the fallback text: something always shows.
+ */
+self.addEventListener('push', (event) => {
+  let said = { title: 'Semester', body: 'Something is due.', screen: '' };
+  try {
+    if (event.data) said = { ...said, ...event.data.json() };
+  } catch {
+    // A payload that is not JSON, or none at all. The fallback still shows.
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(said.title, {
+      body: said.body,
+      icon: `${BASE}icon-192.png`,
+      badge: `${BASE}icon-192.png`,
+      // One notification per reminder id, so a re-send replaces rather than
+      // stacks — a phone that was off for a day should not wake to nine.
+      tag: said.id || said.title,
+      data: { screen: said.screen || '' },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const screen = event.notification.data?.screen;
+  const url = `${BASE}${screen ? `?screen=${encodeURIComponent(screen)}` : ''}`;
+
+  event.waitUntil(
+    (async () => {
+      // Focus a tab that is already open rather than opening a second one:
+      // two tabs of the same app is exactly what the student did not ask for
+      // by tapping a notification.
+      const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of open) {
+        if (client.url.startsWith(self.location.origin + BASE)) {
+          await client.focus();
+          if (screen) client.postMessage({ type: 'go', screen });
+          return;
+        }
+      }
+      await self.clients.openWindow(url);
+    })(),
+  );
+});

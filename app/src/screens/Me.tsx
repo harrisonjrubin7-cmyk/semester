@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PushSwitch } from '../components/PushSwitch';
 import { useStore } from '../state/store';
 import { learned, showSpan } from '../lib/pace';
 import { WorkWindows } from '../components/WorkWindows';
@@ -762,6 +763,8 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
           onChange={() => dispatch({ type: 'toggleNotif', k: n.k })}
         />
       ))}
+
+      <PushSwitch />
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Your courses</SectionLabel>
       <Toggle

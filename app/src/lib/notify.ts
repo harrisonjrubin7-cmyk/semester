@@ -221,3 +221,47 @@ export function fire(reminders: Reminder[]): number {
   if (shown > 0) remember(already);
   return shown;
 }
+
+
+/**
+ * The reminders the next few days will produce, with when each one fires.
+ *
+ * `dueReminders` answers "what should have fired by now", which is the right
+ * question for a tab that is open and the wrong one for a phone that is not:
+ * a push has to be queued before it is due.
+ *
+ * So this walks the clock forward and collects each reminder the first time it
+ * appears. Deliberately the same function doing the deciding — a second
+ * implementation of "when should this fire" living on a server would drift
+ * from this one within a term, and the divergence would show up as a
+ * notification about a deadline that had moved.
+ *
+ * Quarter-hourly, because the tightest rule in `dueReminders` is a fifteen
+ * minute warning before a class; anything coarser would miss it.
+ */
+export function planAhead(
+  from: Date,
+  days: number,
+  on: Record<NotifKey, boolean>,
+  forDay: (d: Date) => Source,
+): { id: string; title: string; body: string; at: number }[] {
+  const out: { id: string; title: string; body: string; at: number }[] = [];
+  const seen = new Set<string>();
+  const STEP = 15 * 60 * 1000;
+
+  const end = from.getTime() + days * 86_400_000;
+
+  for (let t = from.getTime(); t <= end; t += STEP) {
+    const at = new Date(t);
+    // The source changes by day — today's classes, today's deadlines — so it
+    // is asked for per day rather than computed once.
+    const src = forDay(at);
+    for (const r of dueReminders(at, on, src)) {
+      if (seen.has(r.id)) continue;
+      seen.add(r.id);
+      out.push({ id: r.id, title: r.title, body: r.body, at: t });
+    }
+  }
+
+  return out.sort((a, b) => a.at - b.at);
+}

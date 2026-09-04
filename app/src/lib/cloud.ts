@@ -273,3 +273,73 @@ export async function push(
     if (pruneError) throw new Error(pruneError.message);
   }
 }
+
+
+// ── Push devices and the queue ────────────────────────────────────────────
+//
+// Four small writes, kept here with the rest of the account traffic rather
+// than in `lib/push.ts`, which stays free of Supabase so it can be tested
+// without one. What each row means is in `supabase/push.sql`.
+
+/** This device, so the sender knows where to post. */
+export async function saveDevice(device: {
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}): Promise<void> {
+  const db = await cloud();
+  const { data } = await db.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) throw new Error('Sign in first — a reminder has to belong to an account.');
+  const { error } = await db
+    .from('push_devices')
+    .upsert({ ...device, user_id: userId }, { onConflict: 'endpoint' });
+  if (error) throw new Error(error.message);
+}
+
+export async function dropDevice(endpoint: string): Promise<void> {
+  const db = await cloud();
+  const { error } = await db.from('push_devices').delete().eq('endpoint', endpoint);
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * The week's reminders, replacing whatever was queued before.
+ *
+ * Replacing rather than adding: the plan is recomputed from the current state
+ * of the semester, so anything left from a previous run is about a week that
+ * has moved. The primary key is (user, reminder id), and those ids are unique
+ * per reminder per day, so a re-queue overwrites in place.
+ */
+export async function saveQueue(
+  queue: { id: string; at: number; title: string; body: string }[],
+): Promise<void> {
+  const db = await cloud();
+  const { data } = await db.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) throw new Error('Sign in first — a reminder has to belong to an account.');
+
+  await db.from('push_queue').delete().eq('user_id', userId);
+  if (queue.length === 0) return;
+
+  const { error } = await db.from('push_queue').insert(
+    queue.map((r) => ({
+      user_id: userId,
+      id: r.id,
+      send_at: new Date(r.at).toISOString(),
+      title: r.title,
+      body: r.body,
+      screen: '',
+    })),
+  );
+  if (error) throw new Error(error.message);
+}
+
+/** Switching reminders off deletes what was waiting to be sent. */
+export async function wipeQueue(): Promise<void> {
+  const db = await cloud();
+  const { data } = await db.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) return;
+  await db.from('push_queue').delete().eq('user_id', userId);
+}
