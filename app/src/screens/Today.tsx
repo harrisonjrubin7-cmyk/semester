@@ -23,6 +23,7 @@ import { visible } from '../lib/feed';
 import { line, pressing, standing } from '../lib/registrar';
 import { HowLong } from '../components/HowLong';
 import { DropBy } from '../components/DropBy';
+import { Walks } from '../components/Walks';
 import { Brief } from './Brief';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
@@ -479,6 +480,11 @@ function Feed_tasks() {
   );
 }
 
+/** One section of the Today feed. Silent when nothing moves buildings. */
+function Feed_walks() {
+  return <Walks />;
+}
+
 /** One section of the Today feed, so its place in the order can be yours. */
 function Feed_rail() {
   const { state, now, catalog } = useStore();
@@ -629,6 +635,7 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   registrar: Feed_registrar,
   tasks: Feed_tasks,
   rail: Feed_rail,
+  walks: Feed_walks,
 };
 
 function TodayFeed() {

@@ -35,6 +35,11 @@ export const SECTIONS: FeedSection[] = [
   },
   { id: 'tasks', label: 'Your own tasks', blurb: 'Things you added that are not from a syllabus.' },
   { id: 'rail', label: 'Today’s rail', blurb: 'The day hour by hour.' },
+  {
+    id: 'walks',
+    label: 'Getting between them',
+    blurb: 'The walk between two buildings, and whether the gap covers it.',
+  },
 ];
 
 export const DEFAULT_ORDER = SECTIONS.map((s) => s.id);
