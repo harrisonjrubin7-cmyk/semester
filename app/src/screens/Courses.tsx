@@ -560,6 +560,11 @@ export function ItemDetail() {
         }}
       >
         {item.source}
+        {/* The page, where the API cited it. This is what turns "the app says
+            the syllabus says this" into something you can check in ten
+            seconds — see `lib/cite.ts`. Absent on a course imported before
+            citations, and on one built from pasted text. */}
+        {item.checked?.page ? ` · p. ${item.checked.page}` : ''}
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>

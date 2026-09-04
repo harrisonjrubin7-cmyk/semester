@@ -81,6 +81,17 @@ export interface Item {
   detail: string;
   /** Verbatim from the syllabus — shown under "Straight from the syllabus". */
   quote: string;
+  /**
+   * Whether the quote was found in the file, and on which page.
+   *
+   * A quote only reaches an item at all if it was confirmed — see
+   * `lib/generate.ts` — so `confirmed` is always true where this exists. The
+   * page is the part that is new and the part worth showing: it is what turns
+   * "the app says the syllabus says this" into something a student can go and
+   * check in ten seconds. Absent on every course imported before citations,
+   * and on anything built from pasted text rather than a PDF.
+   */
+  checked?: { confirmed: boolean; page?: number };
   source: string;
 }
 

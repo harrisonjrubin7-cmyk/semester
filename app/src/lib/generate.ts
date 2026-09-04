@@ -20,12 +20,20 @@
  * before it can reach a screen.
  */
 
-import { ask } from './claude';
+import { ask, type Citation, type Doc } from './claude';
 import type { Course, CourseModule, Item, RecurringBlock } from './types';
+import { check, flatten, tally, worthCiting, type Checked } from './cite';
 
 export interface GenerationInput {
-  /** The syllabus, and any readings, already turned into text. */
-  documents: { name: string; text: string }[];
+  /**
+   * The syllabus, and any readings, already turned into text.
+   *
+   * A PDF also carries `pdf`: the file itself, base64. Where that is present
+   * the document goes to the model whole and its quotes come back with a page
+   * number that can be checked — see `lib/cite.ts`. The text is still sent
+   * either way, because it is what everything else in this file reads.
+   */
+  documents: { name: string; text: string; pdf?: string }[];
   /** What the student said about the course, if anything. */
   hint: string;
   /** Year the semester falls in — dates in a syllabus rarely carry one. */
@@ -36,6 +44,8 @@ export interface GenerationResult {
   module: CourseModule;
   /** What was adjusted or thrown out on the way in, for the preview to show. */
   notes: string[];
+  /** How the quotes stood up against the file, in a sentence. Empty if unchecked. */
+  quotesLine?: string;
 }
 
 const SYSTEM = `You turn a university syllabus into structured course data for a study app.
@@ -92,26 +102,39 @@ export async function generateCourse(
   input: GenerationInput,
   signal?: AbortSignal,
 ): Promise<GenerationResult> {
-  const documents = input.documents
+  // A PDF goes whole where the app kept it, so the model reads the page
+  // rather than a flattening of it, and so the API can cite what it used.
+  const docs: Doc[] = input.documents
+    .filter((d) => d.pdf)
+    .map((d) => ({ mediaType: 'application/pdf', data: d.pdf as string, title: d.name }));
+
+  // Only the documents that could not be sent whole need pasting as text.
+  const pasted = input.documents
+    .filter((d) => !d.pdf)
     .map((d) => `--- ${d.name} ---\n${d.text.slice(0, 60_000)}`)
     .join('\n\n');
+
+  const citations: Citation[] = [];
 
   const reply = await ask({
     signal,
     maxTokens: 8000,
     system: SYSTEM,
+    docs,
+    cite: worthCiting(docs),
+    onCitation: (c) => citations.push(c),
     messages: [
       {
         role: 'user',
         content:
           `The semester falls in ${input.year}.` +
           (input.hint ? `\nThe student says: ${input.hint}` : '') +
-          `\n\n${documents}`,
+          (pasted ? `\n\n${pasted}` : ''),
       },
     ],
   });
 
-  return validate(reply, input);
+  return validate(reply, input, citations);
 }
 
 /** Pull the JSON out of a reply that may have wrapped it in prose or a fence. */
@@ -132,7 +155,11 @@ const slug = (s: string) =>
  * dropped, so the preview can show the student what was thrown away rather than
  * quietly shipping a course with three of its deadlines missing.
  */
-function validate(reply: string, input: GenerationInput): GenerationResult {
+function validate(
+  reply: string,
+  input: GenerationInput,
+  citations: Citation[] = [],
+): GenerationResult {
   const notes: string[] = [];
   let raw: {
     course?: Partial<Course>;
@@ -170,7 +197,15 @@ function validate(reply: string, input: GenerationInput): GenerationResult {
   };
 
   // Deadlines: a date has to be real, and a quote has to be in the document.
-  const haystack = input.documents.map((d) => d.text).join('\n').replace(/\s+/g, ' ');
+  //
+  // The quote was already checked against the extracted text before citations
+  // existed, and that check stays — it is the stronger of the two, because it
+  // searches the whole document rather than only what the model says it used.
+  // Two things change. It compares through `flatten`, so a curly quote or an
+  // em dash no longer throws away a real quote; and where the API cited the
+  // span, the page number comes with it, which is the part the text search
+  // could never supply.
+  const haystack = flatten(input.documents.map((d) => d.text).join('\n'));
   const seen = new Set<string>();
   const items: Item[] = [];
 
@@ -188,9 +223,19 @@ function validate(reply: string, input: GenerationInput): GenerationResult {
     // A quote that is not in the source is the one thing that must not slip
     // through: the app presents it as the syllabus's own words.
     let quote = it.quote ?? '';
-    if (quote && !haystack.includes(quote.replace(/\s+/g, ' ').trim())) {
-      notes.push(`"${it.title ?? itemId}" quoted a sentence that is not in the document — quote removed.`);
-      quote = '';
+    let checked: Checked | undefined;
+    if (quote) {
+      const inText = haystack.includes(flatten(quote));
+      const cited = check(quote, citations);
+      if (!inText && !cited.confirmed) {
+        notes.push(
+          `"${it.title ?? itemId}" quoted a sentence that is not in the document — quote removed.`,
+        );
+        quote = '';
+      } else {
+        // Confirmed either way; the page only exists if the API cited it.
+        checked = { confirmed: true, ...(cited.page ? { page: cited.page } : {}) };
+      }
     }
 
     items.push({
@@ -205,6 +250,7 @@ function validate(reply: string, input: GenerationInput): GenerationResult {
       weight: it.weight ?? '',
       detail: it.detail ?? '',
       quote,
+      ...(checked ? { checked } : {}),
       source,
     });
   }
@@ -241,6 +287,9 @@ function validate(reply: string, input: GenerationInput): GenerationResult {
 
   return {
     notes,
+    // Only where there was a document to cite. An import from pasted text
+    // gets silence rather than a reassurance the app cannot back.
+    ...(citations.length > 0 ? { quotesLine: tally(items) } : {}),
     module: {
       course,
       schedule,

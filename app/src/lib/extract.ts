@@ -98,14 +98,60 @@ export interface Extracted {
   text: string;
   /** Words, so the UI can say how much was read. */
   words: number;
+  /**
+   * The file itself, base64, for a PDF small enough to send whole.
+   *
+   * Extraction is still done — the word count, the preview and every
+   * non-Claude path need text. But a syllabus flattened to text has lost the
+   * one thing that makes it readable: a table with weeks down the left and
+   * dates across, where column alignment is the only thing saying which date
+   * belongs to which reading. Where the original can go too, it does, and the
+   * model reads the page. See `lib/claude.ts` and `lib/cite.ts`.
+   *
+   * Absent for anything that is not a PDF, and for a PDF over the limit.
+   */
+  pdf?: string;
+}
+
+/**
+ * How large a PDF may be and still be sent whole.
+ *
+ * The API's own ceiling is 32 MB for the whole request, and base64 costs a
+ * third on top. Twelve leaves room for the prompt and for a second document,
+ * and a syllabus over twelve megabytes is a scan rather than a syllabus —
+ * for which the extracted text is the better input anyway.
+ */
+const SENDABLE_PDF = 12 * 1024 * 1024;
+
+/** A file as base64, with no data: prefix and no newlines. */
+async function asBase64(file: File): Promise<string> {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  // In chunks: `String.fromCharCode(...bigArray)` overflows the call stack on
+  // anything of this size.
+  const STEP = 0x8000;
+  for (let i = 0; i < buf.length; i += STEP) {
+    binary += String.fromCharCode(...buf.subarray(i, i + STEP));
+  }
+  return btoa(binary);
 }
 
 export async function extractText(file: File): Promise<Extracted> {
   const name = file.name;
   let text: string;
+  /** The PDF itself, where it can go whole as well as flattened. */
+  let original: string | undefined;
 
   if (/\.pdf$/i.test(name) || file.type === 'application/pdf') {
     text = await fromPdf(file);
+    if (file.size <= SENDABLE_PDF) {
+      try {
+        original = await asBase64(file);
+      } catch {
+        // Out of memory on a huge file, or a browser without btoa. The text
+        // still went through, which is what the app had before this existed.
+      }
+    }
   } else if (/\.docx$/i.test(name)) {
     text = await fromDocx(file);
   } else if (/^text\//.test(file.type) || /\.(txt|md|markdown|csv|rtf|html?)$/i.test(name)) {
@@ -130,5 +176,10 @@ export async function extractText(file: File): Promise<Extracted> {
       `Nothing readable came out of ${name}. A scanned PDF is a picture of text — it needs to be run through OCR first, or pasted in by hand.`,
     );
   }
-  return { name, text, words: text.split(/\s+/).length };
+  return {
+    name,
+    text,
+    words: text.split(/\s+/).length,
+    ...(original ? { pdf: original } : {}),
+  };
 }

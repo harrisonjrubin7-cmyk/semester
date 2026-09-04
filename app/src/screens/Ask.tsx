@@ -70,6 +70,13 @@ export function Ask() {
       const reply = await ask({
         system,
         messages: next,
+        // Every question about this course opens with the same guide. Caching
+        // is a prefix match, so the saving is real only because `context`
+        // holds absolute dates rather than "in three days" — a relative time
+        // would rewrite the prompt every thirty seconds and quietly cost the
+        // whole thing. A short course will not reach the minimum cacheable
+        // length and simply will not cache, which costs nothing.
+        cache: true,
         signal: abort.current.signal,
         onText: (chunk) => {
           sofar += chunk;

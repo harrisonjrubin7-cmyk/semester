@@ -238,10 +238,63 @@ export interface Shot {
   data: string;
 }
 
+/** A document sent whole, so the model sees the page rather than a flattening. */
+export interface Doc {
+  /** "application/pdf" or "text/plain". */
+  mediaType: string;
+  /** Base64 for a PDF; the raw string for text. */
+  data: string;
+  /** Shown against every citation that comes out of it. */
+  title?: string;
+}
+
+/**
+ * A span the model says it took from a document, and where in it.
+ *
+ * Not the model's account of what it copied — the API returns these, so a
+ * quote carrying one is a quote that can be checked against the file rather
+ * than trusted. See `lib/cite.ts` for what the app does with them.
+ */
+export interface Citation {
+  /** Verbatim from the document. */
+  text: string;
+  /** 1-indexed, for a PDF. Absent for plain text. */
+  page?: number;
+  title?: string;
+}
+
 interface AskOptions {
   system: string;
   messages: Turn[];
   maxTokens?: number;
+  /**
+   * Documents to attach to the last user message, before the text.
+   *
+   * A syllabus flattened to text by pdf.js has lost the one thing that makes
+   * it readable — a table with weeks down the left and dates across, where
+   * column alignment is the only thing saying which date belongs to which
+   * reading. Sent whole, the model sees the page.
+   */
+  docs?: Doc[];
+  /**
+   * Ask the API to cite what it used.
+   *
+   * All-or-none across the documents in a request, which is why it is one
+   * flag rather than a property of each. Incompatible with structured
+   * outputs, so anything using this parses JSON out of the text itself.
+   */
+  cite?: boolean;
+  /** Told about each citation as it arrives. */
+  onCitation?: (c: Citation) => void;
+  /**
+   * Cache the system prompt.
+   *
+   * Worth it wherever the same large block of course material opens every
+   * request. Caching is a prefix match, so this only helps if the system
+   * prompt is byte-identical between calls — a timestamp in it silently
+   * costs the whole saving.
+   */
+  cache?: boolean;
   /**
    * Images to attach to the last user message.
    *
@@ -264,16 +317,76 @@ interface AskOptions {
 
 type Block =
   | { type: 'text'; text: string }
-  | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } };
+  | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
+  | {
+      type: 'document';
+      source:
+        | { type: 'base64'; media_type: string; data: string }
+        | { type: 'text'; media_type: 'text/plain'; data: string };
+      title?: string;
+      citations?: { enabled: true };
+    };
 
-/** The messages array, with any images hung off the final user turn. */
-function withImages(messages: Turn[], images: Shot[] | undefined) {
-  if (!images || images.length === 0) return messages;
+/**
+ * A citation as the wire sends it.
+ *
+ * The shape depends on what was cited: a PDF gives page numbers, plain text
+ * gives character offsets. Only the page is useful to a person, so the rest
+ * is read and dropped.
+ */
+interface RawCitation {
+  type?: string;
+  cited_text?: string;
+  document_title?: string | null;
+  start_page_number?: number;
+  end_page_number?: number;
+}
+
+/** One wire citation, or null if there is nothing usable in it. */
+export function readCitation(raw: RawCitation): Citation | null {
+  const text = (raw?.cited_text ?? '').trim();
+  if (!text) return null;
+  const page = raw.start_page_number;
+  return {
+    text,
+    ...(typeof page === 'number' && page > 0 ? { page } : {}),
+    ...(raw.document_title ? { title: raw.document_title } : {}),
+  };
+}
+
+/**
+ * The messages array, with documents and images hung off the final user turn.
+ *
+ * Both go before the text. A picture followed by the question about it reads
+ * better to the model than the reverse, and for documents it is what the
+ * documentation specifies.
+ */
+export function withAttachments(
+  messages: Turn[],
+  images: Shot[] | undefined,
+  docs: Doc[] | undefined,
+  cite = false,
+) {
+  const hasImages = images && images.length > 0;
+  const hasDocs = docs && docs.length > 0;
+  if (!hasImages && !hasDocs) return messages;
+
   const last = messages.length - 1;
   return messages.map((m, i) => {
     if (i !== last || m.role !== 'user') return m;
     const blocks: Block[] = [
-      ...images.map((img) => ({
+      ...(docs ?? []).map((d) => ({
+        type: 'document' as const,
+        source:
+          d.mediaType === 'text/plain'
+            ? { type: 'text' as const, media_type: 'text/plain' as const, data: d.data }
+            : { type: 'base64' as const, media_type: d.mediaType, data: d.data },
+        ...(d.title ? { title: d.title } : {}),
+        // All-or-none across a request: one document with citations on and
+        // another with it off is rejected.
+        ...(cite ? { citations: { enabled: true as const } } : {}),
+      })),
+      ...(images ?? []).map((img) => ({
         type: 'image' as const,
         source: { type: 'base64' as const, media_type: img.mediaType, data: img.data },
       })),
@@ -345,10 +458,14 @@ export async function ask(options: AskOptions): Promise<string> {
       body: JSON.stringify({
         model: s.model,
         max_tokens: options.maxTokens ?? 1400,
-        system: options.system,
+        // A cached system prompt is sent as a block so the breakpoint can sit
+        // on it. Plain string otherwise, which is the shorter wire form.
+        system: options.cache
+          ? [{ type: 'text', text: options.system, cache_control: { type: 'ephemeral' } }]
+          : options.system,
         stream: true,
         ...(options.think ? { thinking: { type: 'adaptive' } } : {}),
-        messages: withImages(options.messages, options.images),
+        messages: withAttachments(options.messages, options.images, options.docs, options.cite),
       }),
     });
   } catch (e) {
@@ -386,11 +503,22 @@ export async function ask(options: AskOptions): Promise<string> {
       try {
         const event = JSON.parse(payload) as {
           type: string;
-          delta?: { text?: string };
+          delta?: { type?: string; text?: string; citation?: RawCitation };
         };
         if (event.type === 'content_block_delta' && event.delta?.text) {
           text += event.delta.text;
           options.onText?.(event.delta.text);
+        }
+        // Citations arrive on their own delta type against the text block
+        // they belong to. The text is unaffected — a citation is a reference
+        // to the source, not something the model wrote.
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta?.type === 'citations_delta' &&
+          event.delta.citation
+        ) {
+          const c = readCitation(event.delta.citation);
+          if (c) options.onCitation?.(c);
         }
       } catch {
         // A partial or unknown event. Skipping it is correct.
@@ -416,6 +544,7 @@ export async function makeCards(
   const reply = await ask({
     signal,
     maxTokens: 2000,
+    cache: true,
     system:
       'You write study cards for a university student, from material they give you. ' +
       'Reply with JSON only: {"cards":[{"q":"…","a":"…"}]}. ' +
