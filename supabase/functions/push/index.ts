@@ -49,6 +49,7 @@ interface Row {
   title: string;
   body: string;
   screen: string;
+  item: string;
 }
 
 interface Device {
@@ -76,7 +77,7 @@ Deno.serve(async (req) => {
 
   const { data: due, error } = await db
     .from('push_queue')
-    .select('user_id, id, title, body, screen')
+    .select('user_id, id, title, body, screen, item')
     .lte('send_at', new Date().toISOString())
     .limit(PER_RUN);
 
@@ -112,6 +113,9 @@ Deno.serve(async (req) => {
             title: row.title,
             body: row.body,
             screen: row.screen,
+            // Relayed, not interpreted. The page decides what to do with it —
+            // see `lib/land.ts`, which refuses a screen it does not know.
+            item: row.item ?? '',
           }),
         );
         sent += 1;

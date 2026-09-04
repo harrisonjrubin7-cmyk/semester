@@ -49,6 +49,10 @@ create table if not exists public.push_queue (
   title     text        not null,
   body      text        not null,
   screen    text        not null default '',
+  -- The deadline a reminder is about, where it is about one. Sent through to
+  -- the notification so a tap opens that deadline rather than the app. See
+  -- `app/src/lib/land.ts`.
+  item      text        not null default '',
   primary key (user_id, id)
 );
 
@@ -65,3 +69,7 @@ create policy "own queue" on public.push_queue
 
 -- The sender runs with the service role, which bypasses the policies above.
 -- Nothing else needs to read another account's rows, and nothing else can.
+
+
+-- Added after the table shipped. Safe to run on an existing project.
+alter table public.push_queue add column if not exists item text not null default '';

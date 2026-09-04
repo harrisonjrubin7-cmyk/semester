@@ -384,7 +384,7 @@ export async function dropDevice(endpoint: string): Promise<void> {
  * per reminder per day, so a re-queue overwrites in place.
  */
 export async function saveQueue(
-  queue: { id: string; at: number; title: string; body: string }[],
+  queue: { id: string; at: number; title: string; body: string; screen?: string; item?: string }[],
 ): Promise<void> {
   const db = await cloud();
   const { data } = await db.auth.getUser();
@@ -401,7 +401,12 @@ export async function saveQueue(
       send_at: new Date(r.at).toISOString(),
       title: r.title,
       body: r.body,
-      screen: '',
+      // Where tapping it lands. This was a hardcoded empty string, so every
+      // reminder the server sent arrived with no destination and every tap
+      // opened the app at home — the whole point of working out where a
+      // reminder belongs, thrown away one line before it left the device.
+      screen: r.screen ?? '',
+      item: r.item ?? '',
     })),
   );
   if (error) throw new Error(error.message);
