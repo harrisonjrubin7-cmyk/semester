@@ -118,6 +118,7 @@ export function settings(state: State, action: Action): State | null {
         action.kind,
         action.minutes ?? action.bucketId ?? '',
         Date.now(),
+        action.guess,
       );
       if (!row) return state;
       return { ...state, spent: [...state.spent.filter((s) => s.id !== action.id), row] };

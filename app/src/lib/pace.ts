@@ -62,6 +62,16 @@ export interface Spent {
   /** The kind of work, normalised. See `normalKind`. */
   kind: string;
   minutes: number;
+  /**
+   * What you thought it would take, in minutes, said before you started.
+   *
+   * Absent on every report made without one, which is most of them — it is
+   * only asked at the moment a work session begins. It is here rather than
+   * derived because a guess is a thing to be asked for: the app's own estimate
+   * is the median of these very reports, so scoring that against them measures
+   * nothing. See `lib/worth.ts`.
+   */
+  guess?: number;
   /** Epoch ms, so an old semester's pace can be aged out later if it matters. */
   at: number;
 }
@@ -197,11 +207,17 @@ export function record(
   kind: string,
   from: string | number,
   at: number,
+  guess?: number,
 ): Spent | null {
   const minutes =
     typeof from === 'number' ? from : bucket(from)?.minutes;
   if (typeof minutes !== 'number' || !Number.isFinite(minutes) || minutes <= 0) return null;
-  return { id, courseId, kind: normalKind(kind), minutes: Math.round(minutes), at };
+  const row: Spent = { id, courseId, kind: normalKind(kind), minutes: Math.round(minutes), at };
+  // Only where there was one. A zero guess is not a guess of zero.
+  if (typeof guess === 'number' && Number.isFinite(guess) && guess > 0) {
+    row.guess = Math.round(guess);
+  }
+  return row;
 }
 
 /**

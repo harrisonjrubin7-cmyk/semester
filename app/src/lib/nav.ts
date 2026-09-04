@@ -356,6 +356,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'mine',
   },
   {
+    screen: 'tonight',
+    label: 'Tonight',
+    blurb: 'How long you have, and where those hours buy the most against your grade.',
+    keywords: 'tonight evening plan priority prioritise prioritize what should i do first order effort allocation worth it points per hour six hours study plan triage decide choose',
+    group: 'Study',
+    root: 'home',
+  },
+  {
     screen: 'applying',
     label: 'Applications',
     short: 'Apply',

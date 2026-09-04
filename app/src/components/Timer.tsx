@@ -59,6 +59,17 @@ export function Timer({
   const { state, dispatch, now } = useStore();
   const [sitting, setSitting] = useSitting();
   const [ended, setEnded] = useState<Ended>({ kind: 'none' });
+  /**
+   * What you think it will take, asked before you start.
+   *
+   * It has to be asked, not derived: the app's own estimate is the median of
+   * these very reports, so scoring that against them measures nothing — it
+   * converges on being right however badly the student guesses. See
+   * `lib/worth.ts`. Skipping is a first-class answer; the guess is optional
+   * everywhere it is read.
+   */
+  const [guess, setGuess] = useState<number | null>(null);
+  const [asking, setAsking] = useState(false);
 
   const mine = sitting && sitting.id === id ? sitting : null;
   const elsewhere = sitting && sitting.id !== id ? sitting : null;
@@ -83,7 +94,15 @@ export function Timer({
       setEnded({ kind: 'ask', minutes: out.minutes });
       return;
     }
-    dispatch({ type: 'timeSpent', id, courseId, kind, minutes: out.minutes });
+    dispatch({
+      type: 'timeSpent',
+      id,
+      courseId,
+      kind,
+      minutes: out.minutes,
+      guess: guess ?? undefined,
+    });
+    setGuess(null);
     setEnded({ kind: 'kept', minutes: out.minutes });
   };
 
@@ -145,12 +164,76 @@ export function Timer({
 
   if (!mine) {
     if (!worthAsking) return null;
+
+    // Asked once, before the clock starts, and skippable. Two taps at most,
+    // because a question between somebody and starting work is a question
+    // that gets the app closed.
+    if (asking) {
+      // The clock is read in the handler and passed in, not read here: a
+      // closure built during render that reads `Date.now()` is indistinguishable
+      // to a linter — and to a reader — from a render that reads the clock.
+      const start = (g: number | null, at: number) => {
+        setGuess(g);
+        setAsking(false);
+        setSitting(begin({ id, courseId, kind, title }, at));
+      };
+      return (
+        <div style={{ padding: '9px 0 4px' }}>
+          <div className="kicker">How long do you think?</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 7 }}>
+            {BUCKETS.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                className="bare tappable"
+                onClick={() => start(b.minutes, Date.now())}
+                style={{
+                  width: 'auto',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--r-sm)',
+                  border: '1px solid var(--app-line)',
+                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                }}
+              >
+                {b.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className="bare tappable"
+              onClick={() => start(null, Date.now())}
+              style={{
+                width: 'auto',
+                padding: '8px 12px',
+                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                opacity: 0.55,
+              }}
+            >
+              Just start
+            </button>
+          </div>
+          <div
+            style={{
+              fontSize: 'calc(11px * var(--text-scale, 1))',
+              opacity: 0.5,
+              marginTop: 7,
+              lineHeight: 1.45,
+              textWrap: 'pretty',
+            }}
+          >
+            Only so the app can tell you later how your guesses compare with what things
+            actually take. Nothing here is scored.
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={{ padding: '9px 0 4px' }}>
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={() => setSitting(begin({ id, courseId, kind, title }, Date.now()))}
+          onClick={() => setAsking(true)}
           // `Date.now()` for the start and the pauses, which are moments
           // rather than displayed figures: banking the store's stale minute
           // would lose up to thirty seconds on every pause.

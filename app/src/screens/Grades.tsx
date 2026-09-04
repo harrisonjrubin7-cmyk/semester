@@ -6,6 +6,7 @@ import { key, needCaveat, needFor, reaches, standing } from '../lib/grades';
 import { NO_POLICY, pointsOff, rate, tally } from '../lib/attend';
 import { PiecesRow } from '../components/PiecesRow';
 import { against, forCourse, trend, trendLine } from '../lib/sitting';
+import { projectGrade, projectionLine } from '../lib/worth';
 
 /**
  * What you have, and what the rest has to be.
@@ -71,6 +72,29 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                   Plus {s.extraCredit.toFixed(1)} points of extra credit.
                 </div>
               )}
+              {/* Where the term lands if the rest goes like the graded part.
+                  A band rather than a number, because four quizzes out of
+                  eight at 84 does not mean 84 — and never a probability, which
+                  would need a model of the student, the course and the marking
+                  and the app has none of the three. */}
+              <div
+                style={{
+                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  opacity: 0.78,
+                  marginTop: 10,
+                  lineHeight: 1.5,
+                  textWrap: 'pretty',
+                }}
+              >
+                {projectionLine(
+                  projectGrade(
+                    s,
+                    s.rows
+                      .map((r) => r.score)
+                      .filter((n): n is number => typeof n === 'number'),
+                  ),
+                )}
+              </div>
               {needCaveat(s) ? (
                 <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 1.45 }}>
                   {/* Names the number the weights actually add to. "Do not add

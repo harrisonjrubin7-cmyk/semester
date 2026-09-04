@@ -849,6 +849,12 @@ export type Action =
       /** A tapped bucket, or measured minutes from a timed session. */
       bucketId?: string;
       minutes?: number;
+      /**
+       * What you thought it would take, said before starting. Only present on
+       * a timed session that asked — see `lib/worth.ts` for why a guess has to
+       * be asked for rather than derived.
+       */
+      guess?: number;
     }
   | { type: 'addWindow'; window: Omit<Window, 'id'> }
   | { type: 'patchWindow'; id: string; patch: Partial<Window> }
