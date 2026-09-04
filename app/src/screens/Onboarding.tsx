@@ -4,6 +4,7 @@ import { Toggle } from '../components/ui';
 import { NOTIF_DEFS } from '../data/misc';
 import { Check } from '../components/Icons';
 import type { Catalog } from '../data/catalog';
+import { SchoolPicker } from '../components/SchoolPicker';
 
 /**
  * The first three screens, written from what is actually loaded.
@@ -30,7 +31,7 @@ function steps(cat: Catalog) {
       cta: empty ? 'Show me' : 'Set it up',
     },
     {
-      k: 'Step 2 of 3',
+      k: 'Step 2 of 4',
       t: empty ? 'Drop one in.' : 'Dropped in. Read.',
       b: empty
         ? 'A syllabus goes in as a PDF, a Word file or pasted text. What comes back is checked before you see it — dates forced into the real calendar, and every quote tested against your own document.'
@@ -38,7 +39,21 @@ function steps(cat: Catalog) {
       cta: empty ? 'Good' : 'Looks right',
     },
     {
-      k: 'Step 3 of 3',
+      k: 'Step 3 of 4',
+      t: 'Where do you study?',
+      /*
+       * Asked, and genuinely optional.
+       *
+       * What it buys is small and specific: the meal screen, the move-out
+       * countdown, the campus map, and the app calling your registrar by the
+       * name you call it. What it does not touch is everything anybody comes
+       * here for — so the skip below is a real path and is worded like one.
+       */
+      b: 'It switches on the handful of screens that only make sense on a campus, and changes a few words. Everything else works without it.',
+      cta: 'Next',
+    },
+    {
+      k: 'Step 4 of 4',
       t: 'When should I bug you?',
       b: 'Change any of this later. Nothing here is permanent.',
       cta: empty ? 'Get started' : 'Start the semester',
@@ -46,7 +61,7 @@ function steps(cat: Catalog) {
   ];
 }
 
-/** Three screens: the promise, what it read, and the alerts. */
+/** Four screens: the promise, what it read, where you study, and the alerts. */
 export function Onboarding() {
   const { state, dispatch, catalog } = useStore();
   const all = steps(catalog);
@@ -64,7 +79,7 @@ export function Onboarding() {
       }}
     >
       <div style={{ display: 'flex', gap: 6, marginBottom: 34 }}>
-        {[0, 1, 2].map((i) => (
+        {all.map((_, i) => (
           <div key={i} style={{ height: 3, flex: 1, background: 'var(--app-line)' }}>
             <div
               style={{
@@ -180,6 +195,12 @@ export function Onboarding() {
       )}
 
       {state.onb === 2 && (
+        <div style={{ marginTop: 26 }}>
+          <SchoolPicker />
+        </div>
+      )}
+
+      {state.onb === 3 && (
         <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column' }}>
           {NOTIF_DEFS.map((n) => (
             <Toggle

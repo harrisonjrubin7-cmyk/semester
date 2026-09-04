@@ -11,6 +11,7 @@
 
 import type { Screen } from '../../lib/types';
 import { ROOTS, type Action, type State } from '../shape';
+import { ONB_STEPS } from '../../data/misc';
 
 /**
  * Where you have been lately, for the top of the directory.
@@ -117,7 +118,7 @@ export function navigate(state: State, action: Action): State | null {
       return { ...state, mineTab: action.tab };
 
     case 'onbNext':
-      return state.onb >= 2
+      return state.onb >= ONB_STEPS - 1
         ? { ...state, screen: 'home', history: [], seenOnboarding: true, onb: 0 }
         : { ...state, onb: state.onb + 1 };
 

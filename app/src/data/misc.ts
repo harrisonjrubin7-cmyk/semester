@@ -1,6 +1,16 @@
 import type { AppNotification } from '../lib/types';
 
 /** Which alerts the app can send. Toggled in onboarding and in Settings. */
+/**
+ * How many screens the first run has.
+ *
+ * Here rather than in `screens/Onboarding.tsx` because the reducer decides
+ * when the run is over and must not hold its own copy of the number: it did,
+ * as a literal `>= 2`, and adding a step would have ended the run one screen
+ * early with the last one never shown.
+ */
+export const ONB_STEPS = 4;
+
 export const NOTIF_DEFS = [
   { k: 'class', label: 'Class starting in 15 minutes' },
   { k: 'today', label: 'Anything due today, at 8am' },
