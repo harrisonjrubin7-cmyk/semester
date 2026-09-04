@@ -356,6 +356,15 @@ export const DESTINATIONS: Destination[] = [
     root: 'mine',
   },
   {
+    screen: 'people',
+    label: 'People and letters',
+    short: 'People',
+    blurb: 'The professors who will write about you, what you have actually talked about, and what you asked them for.',
+    keywords: 'recommendation letter letters reference references professor mentor advisor office hours conversation relationship network networking grad school fellowship truman rhodes marshall boren scholarship internship referral thank you follow up',
+    group: 'Yours',
+    root: 'me',
+  },
+  {
     screen: 'degree',
     label: 'The degree',
     short: 'Degree',

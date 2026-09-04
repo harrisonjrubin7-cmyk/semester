@@ -138,6 +138,11 @@ export const STRATEGY: Record<string, Strategy> = {
   taken: 'union',
   // A grading scale is one table about one university, not a list to add to.
   scale: 'theirs',
+  // Years of relationships. Losing one of these is losing something that
+  // cannot be reconstructed from anywhere else.
+  people: 'union',
+  visits: 'union',
+  letters: 'union',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',

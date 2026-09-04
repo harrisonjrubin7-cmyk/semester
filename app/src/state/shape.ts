@@ -34,6 +34,7 @@ import { readProgress, type Progress, type Unit } from '../lib/progress';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
 import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
 import { COMMON_SCALE, readRequirements, readTaken, type Requirement, type Scale, type Taken } from '../lib/degree';
+import { readLetters, readPeople, readVisits, type Letter, type Person, type Visit } from '../lib/letters';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
@@ -132,6 +133,14 @@ export interface Persisted {
   taken: Taken[];
   /** Letter grades to points. Entered, because plus and minus values differ. */
   scale: Scale;
+  /**
+   * The people who will write about you, the conversations, and what you asked
+   * them for. See `lib/letters.ts` — the highest-cost thing a student can start
+   * late and the one with no deadline attached to warn them.
+   */
+  people: Person[];
+  visits: Visit[];
+  letters: Letter[];
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
@@ -470,6 +479,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   requirements: [],
   taken: [],
   scale: { ...COMMON_SCALE },
+  people: [],
+  visits: [],
+  letters: [],
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
@@ -606,6 +618,9 @@ export function loadPersisted(): Persisted {
       geocode: readGeocode(saved.geocode),
       requirements: readRequirements(saved.requirements),
       taken: readTaken(saved.taken),
+      people: readPeople(saved.people),
+      visits: readVisits(saved.visits),
+      letters: readLetters(saved.letters),
       scale:
         saved.scale && typeof saved.scale === 'object' && Object.keys(saved.scale).length > 0
           ? (saved.scale as Scale)
@@ -702,6 +717,9 @@ export function pickPersisted(state: State): Persisted {
     geocode: state.geocode,
     requirements: state.requirements,
     taken: state.taken,
+    people: state.people,
+    visits: state.visits,
+    letters: state.letters,
     scale: state.scale,
     feedOrder: state.feedOrder,
     tabs: state.tabs,
@@ -786,6 +804,14 @@ export type Action =
   | { type: 'patchTaken'; id: string; patch: Partial<Taken> }
   | { type: 'dropTaken'; id: string }
   | { type: 'setScale'; scale: Scale }
+  | { type: 'addPerson'; patch: Partial<Person> }
+  | { type: 'patchPerson'; id: string; patch: Partial<Person> }
+  | { type: 'dropPerson'; id: string }
+  | { type: 'addVisit'; patch: Partial<Visit> }
+  | { type: 'dropVisit'; id: string }
+  | { type: 'addLetter'; patch: Partial<Letter> }
+  | { type: 'patchLetter'; id: string; patch: Partial<Letter> }
+  | { type: 'dropLetter'; id: string }
   | { type: 'quickAdd'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }

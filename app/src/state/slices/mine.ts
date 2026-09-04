@@ -15,6 +15,7 @@ import { moveTo, newApplication } from '../../lib/apply';
 import { mark, newProgress } from '../../lib/progress';
 import { newReturned } from '../../lib/returned';
 import { newRequirement, newTaken } from '../../lib/degree';
+import { newLetter, newPerson, newVisit } from '../../lib/letters';
 import { tidy } from '../../lib/windows';
 import type { Action, State } from '../shape';
 
@@ -225,6 +226,44 @@ export function mine(state: State, action: Action): State | null {
 
     case 'setScale':
       return { ...state, scale: action.scale };
+
+    // People, conversations and letters. Dropping a person keeps neither their
+    // conversations nor their letters — an orphan row is worse than a gap,
+    // because it shows in a count and belongs to nobody.
+    case 'addPerson':
+      return { ...state, people: [...state.people, newPerson(action.patch, Date.now())] };
+
+    case 'patchPerson':
+      return {
+        ...state,
+        people: state.people.map((p) => (p.id === action.id ? { ...p, ...action.patch } : p)),
+      };
+
+    case 'dropPerson':
+      return {
+        ...state,
+        people: state.people.filter((p) => p.id !== action.id),
+        visits: state.visits.filter((v) => v.personId !== action.id),
+        letters: state.letters.filter((l) => l.personId !== action.id),
+      };
+
+    case 'addVisit':
+      return { ...state, visits: [...state.visits, newVisit(action.patch, Date.now())] };
+
+    case 'dropVisit':
+      return { ...state, visits: state.visits.filter((v) => v.id !== action.id) };
+
+    case 'addLetter':
+      return { ...state, letters: [...state.letters, newLetter(action.patch, Date.now())] };
+
+    case 'patchLetter':
+      return {
+        ...state,
+        letters: state.letters.map((l) => (l.id === action.id ? { ...l, ...action.patch } : l)),
+      };
+
+    case 'dropLetter':
+      return { ...state, letters: state.letters.filter((l) => l.id !== action.id) };
 
     case 'setRegradeWindow':
       return {
