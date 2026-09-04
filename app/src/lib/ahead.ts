@@ -31,6 +31,7 @@ import type { Commitment } from './activities';
 import { blocksOn } from './activities';
 import { decorateItem } from './date';
 import type { DoneMap } from './standing';
+import { weekShape, type WeekShape, type Window } from './windows';
 
 export interface Day {
   date: Date;
@@ -58,12 +59,17 @@ export interface Week {
   heaviest: Day | null;
   /** The day with the most room, ignoring days with a deadline on them. */
   freest: Day | null;
-  /** Waking hours in a week, less what is promised. */
+  /**
+   * Hours actually available across the week.
+   *
+   * From the windows you set, where you have set any; from a sixteen-hour day
+   * otherwise. `shape` says which, so a screen never presents a constant as
+   * though it were a fact about you.
+   */
   spare: number;
+  shape: WeekShape;
 }
 
-/** Hours a person is actually awake and available in a week. */
-const WAKING = 16 * 7;
 
 const SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -83,6 +89,8 @@ export interface WeekInput {
   done: DoneMap;
   commitments: Commitment[];
   appointments: Appointment[];
+  /** The hours this person actually works in. Empty falls back to 16 a day. */
+  windows?: Window[];
 }
 
 /**
@@ -147,13 +155,21 @@ export function week(input: WeekInput): Week {
     null,
   );
 
+  // A day's free hours come from its own windows, not from a week's worth
+  // divided by seven — the whole point is that Tuesday and Sunday differ.
+  const byDay: number[] = [];
+  for (const d of days) byDay[d.date.getDay()] = (byDay[d.date.getDay()] ?? 0) + d.promised;
+  for (let i = 0; i < 7; i++) byDay[i] = byDay[i] ?? 0;
+  const shape = weekShape(input.windows ?? [], byDay);
+
   return {
     days,
     promised,
     due: dated,
     heaviest: heaviest && heaviest.promised > 0 ? heaviest : null,
     freest,
-    spare: round(WAKING - promised),
+    spare: shape.free,
+    shape,
   };
 }
 

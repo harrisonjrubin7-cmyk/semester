@@ -5,6 +5,7 @@ import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { headline, pressure, showHours, studyAsked, week } from '../lib/ahead';
 import { askedLine, forecast } from '../lib/pace';
+import { basisLine } from '../lib/windows';
 
 /**
  * The next seven days, in hours, before they happen.
@@ -30,8 +31,9 @@ export function Ahead() {
         done: state.done,
         commitments: state.commitments,
         appointments: state.appointments,
+        windows: state.windows,
       }),
-    [catalog, now, state.done, state.commitments, state.appointments],
+    [catalog, now, state.done, state.commitments, state.appointments, state.windows],
   );
 
   const asked = useMemo(() => studyAsked(catalog), [catalog]);
@@ -181,7 +183,9 @@ export function Ahead() {
       <SectionLabel>What is left over</SectionLabel>
       <Blueprint style={{ padding: '13px 14px' }}>
         <div style={{ fontSize: 15, lineHeight: 1.4 }}>
-          {showHours(w.spare)} of waking time, after everything already promised.
+          {w.shape.fromWindows
+            ? `${showHours(w.spare)} left, of the ${showHours(w.shape.offered)} you work in.`
+            : `${showHours(w.spare)} of waking time, after everything already promised.`}
         </div>
         {asked.stated > 0 ? (
           <div style={{ fontSize: 12.5, opacity: 0.65, marginTop: 7, lineHeight: 1.5 }}>
@@ -206,10 +210,23 @@ export function Ahead() {
           </div>
         ) : null}
         <div style={{ fontSize: 11, opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
-          Sixteen hours a day, not twenty-four. The coursework estimate is built only from work you
-          have timed yourself — the app still invents nothing, and anything it has never seen the
-          like of is counted as unknown rather than guessed at.
+          {basisLine(w.shape)} The coursework estimate is built only from work you have timed
+          yourself — the app still invents nothing, and anything it has never seen the like of is
+          counted as unknown rather than guessed at.
         </div>
+        {!w.shape.fromWindows && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            onClick={() => {
+              dispatch({ type: 'setMeTab', tab: 'settings' });
+              dispatch({ type: 'go', screen: 'me' });
+            }}
+            style={{ height: 38, marginTop: 10, fontSize: 12.5 }}
+          >
+            Set the hours you actually work
+          </button>
+        )}
       </Blueprint>
 
       <PrintButton label="Print the week" style={{ marginTop: 14 }} />

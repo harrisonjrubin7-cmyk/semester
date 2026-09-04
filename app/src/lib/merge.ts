@@ -50,6 +50,7 @@ export const STRATEGY: Record<string, Strategy> = {
   sources: 'union',
   registrar: 'union',
   spent: 'union',
+  windows: 'union',
   feeds: 'union',
   feedEvents: 'union',
   extraLinks: 'union',

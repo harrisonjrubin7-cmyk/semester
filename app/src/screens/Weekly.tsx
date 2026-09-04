@@ -71,8 +71,9 @@ export function Weekly() {
         done: state.done,
         commitments: state.commitments,
         appointments: state.appointments,
+        windows: state.windows,
       }),
-    [catalog, nextWeek, state.done, state.commitments, state.appointments],
+    [catalog, nextWeek, state.done, state.commitments, state.appointments, state.windows],
   );
 
   const ahead: Ahead = {

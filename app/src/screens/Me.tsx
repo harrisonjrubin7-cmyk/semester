@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { learned, showSpan } from '../lib/pace';
+import { WorkWindows } from '../components/WorkWindows';
 import { SECTIONS, move, ordered } from '../lib/feed';
 import {
   ACCENTS,
@@ -721,6 +722,9 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         Scales the text. Buttons and the tab bar keep their size on purpose — a tap target that
         grew with the type would push the bar off the bottom of a phone.
       </div>
+
+      {/* The one setting that changes an arithmetic rather than a look. */}
+      <WorkWindows />
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Tell me when</SectionLabel>
       <Reminders />

@@ -10,6 +10,7 @@
  */
 
 import { newId } from '../../lib/files';
+import { tidy } from '../../lib/windows';
 import type { Action, State } from '../shape';
 
 export function mine(state: State, action: Action): State | null {
@@ -74,6 +75,29 @@ export function mine(state: State, action: Action): State | null {
 
     case 'removeCommitment':
       return { ...state, commitments: state.commitments.filter((c) => c.id !== action.id) };
+
+    // The hours you actually work in. See `lib/windows.ts` — these make every
+    // hour figure in the app true rather than nominal.
+    case 'addWindow': {
+      const w = tidy({ ...action.window, id: newId() });
+      return w ? { ...state, windows: [...state.windows, w] } : state;
+    }
+
+    case 'patchWindow':
+      return {
+        ...state,
+        windows: state.windows.map((w) => {
+          if (w.id !== action.id) return w;
+          // A half-edited window — no days yet, or an end before its start —
+          // is kept as typed rather than snapped back, or the fields fight
+          // the person filling them in. `freeOn` reads a backwards span as
+          // nothing, which is the safe way to be briefly wrong.
+          return { ...w, ...action.patch };
+        }),
+      };
+
+    case 'dropWindow':
+      return { ...state, windows: state.windows.filter((w) => w.id !== action.id) };
 
     case 'addPlace':
       return {

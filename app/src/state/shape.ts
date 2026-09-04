@@ -34,6 +34,7 @@ import { type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
 import type { Spent } from '../lib/pace';
+import type { Window } from '../lib/windows';
 import { LEGACY_TERM } from '../lib/term';
 import { readLook, type Look } from '../lib/look';
 
@@ -107,6 +108,13 @@ export interface Persisted {
    * are instead of listing five assignments of unknown size.
    */
   spent: Spent[];
+  /**
+   * The hours you actually work in.
+   *
+   * Empty means the app falls back to a sixteen-hour day, and says so rather
+   * than presenting a constant as a fact. See `lib/windows.ts`.
+   */
+  windows: Window[];
   /**
    * When each deadline was ticked, epoch ms.
    *
@@ -322,6 +330,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   sources: [],
   registrar: [],
   spent: [],
+  windows: [],
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -430,6 +439,7 @@ export function loadPersisted(): Persisted {
       sources: saved.sources ?? [],
       registrar: saved.registrar ?? [],
       spent: saved.spent ?? [],
+      windows: saved.windows ?? [],
       tickedAt: saved.tickedAt ?? {},
       ...readLook({
         accent: saved.accent,
@@ -482,6 +492,7 @@ export function pickPersisted(state: State): Persisted {
     sources: state.sources,
     registrar: state.registrar,
     spent: state.spent,
+    windows: state.windows,
     tickedAt: state.tickedAt,
     accent: state.accent,
     textSize: state.textSize,
@@ -592,6 +603,9 @@ export type Action =
   | { type: 'replaceCourse'; module: CourseModule }
   | { type: 'removeCourse'; id: CourseId }
   | { type: 'timeSpent'; id: string; courseId: string; kind: string; bucketId: string }
+  | { type: 'addWindow'; window: Omit<Window, 'id'> }
+  | { type: 'patchWindow'; id: string; patch: Partial<Window> }
+  | { type: 'dropWindow'; id: string }
   | { type: 'setTermDate'; id: string; iso: string; until?: string }
   | { type: 'addTermDate'; label: string; iso: string; until?: string }
   | { type: 'dropTermDate'; id: string }
