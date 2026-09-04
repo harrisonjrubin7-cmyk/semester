@@ -52,6 +52,7 @@ import { Runway } from './screens/Runway';
 import { Announce } from './screens/Announce';
 import { Costs } from './screens/Costs';
 import { Worked } from './screens/Worked';
+import { Groupwork } from './screens/Groupwork';
 import { Sources } from './screens/Sources';
 import { scaleOf, tokensFor } from './lib/look';
 import { AccountScreen } from './screens/Account';
@@ -191,6 +192,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Books, fees and what came back', title: 'What this term cost' };
     case 'worked':
       return { kicker: 'Four months of your own evidence', title: 'What worked' };
+    case 'groupwork':
+      return { kicker: 'Who has what, and by when', title: 'Group work' };
     case 'runway':
       return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
     case 'weekly':
@@ -463,6 +466,8 @@ function CurrentScreen() {
       return <Costs />;
     case 'worked':
       return <Worked />;
+    case 'groupwork':
+      return <Groupwork />;
     case 'runway':
       return <Runway />;
     case 'weekly':

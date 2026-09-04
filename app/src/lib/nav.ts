@@ -212,6 +212,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'groupwork',
+    label: 'Group work',
+    blurb: 'The shared list for a group project — who has which part, and whether it lands.',
+    keywords: 'group groups project team partner partners case study shared checklist divide split parts sections who is doing what deliverable presentation together collaborate classmates group chat assignment split up',
+    group: 'Campus',
+    root: 'courses',
+  },
+  {
     screen: 'runway',
     label: 'Exam runway',
     blurb: 'The weeks before an exam, counted backwards from it — and what stands in the way.',

@@ -78,6 +78,21 @@ all three on screen:
   project with real data in it. Twenty-two checks; a clean run prints
   `ALL CHECKS PASSED`. What it cannot cover is realtime delivery, which is a
   websocket rather than a policy and still wants one real second device.
+
+### Optional · Group work
+
+A shared checklist for a group project, inside a class room. SQL Editor → New
+query → paste [`supabase/groups.sql`](supabase/groups.sql) → Run, after
+`classmates.sql`. Safe to run twice.
+
+A group is visible to its whole class so somebody can find theirs and join it;
+its list of parts needs membership. Any member may claim a part, tick one or
+fix a title — group work does not survive a permission model where only the
+author of a line may correct it — and nobody may remove anybody from a group
+but themselves. You can check all of that without four people: paste
+[`supabase/groups.check.sql`](supabase/groups.check.sql) and run it. Fifteen
+checks, four synthetic accounts, rolled back at the end.
+
 - **Reports are stored and nobody is watching them.** They land in
   `public.reports`, which no client can read — you read it in the dashboard.
   If you run this for other people, that is your job, and the app deliberately

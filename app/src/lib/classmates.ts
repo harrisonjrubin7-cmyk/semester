@@ -390,3 +390,135 @@ export function explain(message: string): string {
   }
   return message;
 }
+
+// ── Group work ────────────────────────────────────────────────────────────
+//
+// A group is smaller than a room and outlives a conversation: members who are
+// a subset of the class, a deliverable with a date, and a list of parts with
+// owners. None of that fits in a message stream, and a message stream cannot
+// answer "what is unclaimed". `supabase/groups.sql` holds the policies; the
+// arithmetic is in `lib/groupwork.ts`.
+
+export interface GroupRow {
+  id: string;
+  term: string;
+  code: string;
+  name: string;
+  about: string;
+  due: string;
+  created_by: string;
+}
+
+export interface PartRow {
+  id: string;
+  group_id: string;
+  title: string;
+  owner: string | null;
+  done: boolean;
+  due: string;
+  created_at: string;
+}
+
+/** Every group in a room. Visible to the class, so you can find yours. */
+export async function groupsIn(term: string, code: string): Promise<GroupRow[]> {
+  const { data, error } = await (await cloud())
+    .from('groups')
+    .select('id, term, code, name, about, due, created_by')
+    .eq('term', term)
+    .eq('code', code)
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(explain(error.message));
+  return (data ?? []) as GroupRow[];
+}
+
+export async function startGroup(
+  userId: string,
+  term: string,
+  code: string,
+  name: string,
+): Promise<string> {
+  const { data, error } = await (await cloud())
+    .from('groups')
+    .insert({ term, code, name: name.trim().slice(0, 120), created_by: userId })
+    .select('id')
+    .single();
+  if (error) throw new Error(explain(error.message));
+  const id = (data as { id: string }).id;
+  // Starting a group puts you in it. Nobody means to create one and stand
+  // outside it, and a group with no members cannot be edited by anyone.
+  await joinGroup(userId, id);
+  return id;
+}
+
+export async function setGroup(id: string, patch: Partial<Pick<GroupRow, 'name' | 'about' | 'due'>>) {
+  const { error } = await (await cloud()).from('groups').update(patch).eq('id', id);
+  if (error) throw new Error(explain(error.message));
+}
+
+export async function joinGroup(userId: string, groupId: string): Promise<void> {
+  const { error } = await (await cloud())
+    .from('group_members')
+    .upsert({ group_id: groupId, user_id: userId }, { onConflict: 'group_id,user_id' });
+  if (error) throw new Error(explain(error.message));
+}
+
+export async function leaveGroup(userId: string, groupId: string): Promise<void> {
+  const { error } = await (await cloud())
+    .from('group_members')
+    .delete()
+    .eq('group_id', groupId)
+    .eq('user_id', userId);
+  if (error) throw new Error(explain(error.message));
+}
+
+/** Who is in a group, as profiles. Unnamed members are simply not listed. */
+export async function membersOf(groupId: string): Promise<Profile[]> {
+  const { data: rows, error } = await (await cloud())
+    .from('group_members')
+    .select('user_id')
+    .eq('group_id', groupId);
+  if (error) throw new Error(explain(error.message));
+
+  const ids = ((rows ?? []) as { user_id: string }[]).map((r) => r.user_id);
+  if (ids.length === 0) return [];
+
+  const { data, error: second } = await (await cloud())
+    .from('profiles')
+    .select('user_id, handle, about')
+    .in('user_id', ids);
+  if (second) throw new Error(explain(second.message));
+  return ((data ?? []) as Profile[]).sort((a, b) => a.handle.localeCompare(b.handle));
+}
+
+export async function partsOf(groupId: string): Promise<PartRow[]> {
+  const { data, error } = await (await cloud())
+    .from('group_tasks')
+    .select('id, group_id, title, owner, done, due, created_at')
+    .eq('group_id', groupId)
+    .order('created_at', { ascending: true });
+  if (error) throw new Error(explain(error.message));
+  return (data ?? []) as PartRow[];
+}
+
+export async function addPart(userId: string, groupId: string, title: string): Promise<void> {
+  const text = title.trim();
+  if (!text) return;
+  const { error } = await (await cloud())
+    .from('group_tasks')
+    .insert({ group_id: groupId, title: text.slice(0, 200), created_by: userId });
+  if (error) throw new Error(explain(error.message));
+}
+
+/** Any member may claim, tick or retitle. See the policy for why. */
+export async function setPart(
+  id: string,
+  patch: Partial<Pick<PartRow, 'title' | 'owner' | 'done' | 'due'>>,
+): Promise<void> {
+  const { error } = await (await cloud()).from('group_tasks').update(patch).eq('id', id);
+  if (error) throw new Error(explain(error.message));
+}
+
+export async function dropPart(id: string): Promise<void> {
+  const { error } = await (await cloud()).from('group_tasks').delete().eq('id', id);
+  if (error) throw new Error(explain(error.message));
+}
