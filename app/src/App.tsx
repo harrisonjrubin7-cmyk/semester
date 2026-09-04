@@ -30,6 +30,7 @@ import { scaleOf, tokensFor } from './lib/look';
  */
 const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ default: m.AccountScreen })));
 const Activities = lazy(() => import('./screens/Activities').then((m) => ({ default: m.Activities })));
+const Clocks = lazy(() => import('./screens/Clocks').then((m) => ({ default: m.Clocks })));
 const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
 const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
@@ -87,6 +88,7 @@ import { litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
+import { Ringing } from './components/Ringing';
 import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
@@ -233,6 +235,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Confirmed Vanderbilt addresses', title: 'Classmates' };
     case 'activities':
       return { kicker: 'Everything that is not a class', title: 'Activities' };
+    case 'clocks':
+      return { kicker: 'Counting, and ringing', title: 'Timers and alarms' };
     case 'brief':
       return { kicker: 'Counted, then read', title: 'Your day' };
     case 'essay':
@@ -511,6 +515,8 @@ function CurrentScreen() {
       return <Classmates />;
     case 'activities':
       return <Activities />;
+    case 'clocks':
+      return <Clocks />;
     case 'brief':
       return <Brief />;
     case 'essay':
@@ -711,6 +717,9 @@ export default function App() {
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
             and not another. Renders nothing unless the sheet is open. */}
         <Keys />
+        {/* Like Keys: mounted once so a timer set on one screen still
+            rings on another. Renders nothing until something goes off. */}
+        <Ringing />
         <Rail />
         <div className="device device-pane">
           <Header />
@@ -728,6 +737,7 @@ export default function App() {
   return (
     <div className="device">
       <Fresh />
+      <Ringing />
       <Header />
       {trouble}
       <main className="scrollarea" key={state.screen}>

@@ -442,6 +442,7 @@ export type Screen =
   | 'sources'
   | 'slides'
   | 'account'
+  | 'clocks'
   | 'cloud';
 
 export type StudyMode =

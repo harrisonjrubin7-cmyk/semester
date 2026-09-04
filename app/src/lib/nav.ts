@@ -356,6 +356,15 @@ export const DESTINATIONS: Destination[] = [
     root: 'mine',
   },
   {
+    screen: 'clocks',
+    label: 'Timers and alarms',
+    short: 'Timers',
+    blurb: 'A countdown for anything, and an alarm at a time. Nothing to do with your courses.',
+    keywords: 'timer timers alarm alarms clock countdown stopwatch minutes egg kitchen wake up wake me nap ring ringing remind reminder pomodoro count down set a timer set an alarm snooze',
+    group: 'Yours',
+    root: 'mine',
+  },
+  {
     screen: 'mine',
     label: 'Mine',
     blurb: 'Your own tasks, appointments, notes and files.',

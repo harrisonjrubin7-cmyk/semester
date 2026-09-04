@@ -111,6 +111,13 @@ export const STRATEGY: Record<string, Strategy> = {
   pieces: 'ticks',
   drops: 'ticks',
   dayBudget: 'theirs',
+  // A countdown belongs to the device it is counting on: a timer running on a
+  // phone in a kitchen means nothing on a laptop in the library, and syncing
+  // one across would either ring in the wrong room or arrive already expired.
+  // Alarms go the same way — an alarm can only ring where the app is open, so
+  // it is set on the device meant to do the ringing.
+  timers: 'mine',
+  alarms: 'mine',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',

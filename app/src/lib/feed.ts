@@ -41,6 +41,11 @@ export const SECTIONS: FeedSection[] = [
     label: 'Worth seeing coming',
     blurb: 'A day in the next fortnight that will not fit — two exams, a stack at midnight, or more hours than the day holds.',
   },
+  {
+    id: 'timers',
+    label: 'Counting',
+    blurb: 'Any timer you have running. Nothing when none is.',
+  },
   { id: 'next', label: 'Next class', blurb: 'The countdown, and anything overdue.' },
   { id: 'due', label: 'Due today', blurb: 'The checklist, with the headline that counts down.' },
   {

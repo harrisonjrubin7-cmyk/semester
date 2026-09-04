@@ -28,6 +28,7 @@ import type {
 import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
+import type { Alarm, Timer } from '../lib/clocks';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
@@ -80,6 +81,14 @@ export interface Persisted {
    * the picture is a week the app is wrong about.
    */
   commitments: Commitment[];
+  /**
+   * Countdowns and alarms of the ordinary kind — see `lib/clocks.ts`. Nothing
+   * to do with the work-session clock in `lib/session.ts`, which measures a
+   * piece of coursework and feeds `lib/pace.ts`. These belong to nothing and
+   * are for anything.
+   */
+  timers: Timer[];
+  alarms: Alarm[];
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
@@ -406,6 +415,8 @@ export const DEFAULT_PERSISTED: Persisted = {
   grades: {},
   places: [],
   commitments: [],
+  timers: [],
+  alarms: [],
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
@@ -530,6 +541,8 @@ export function loadPersisted(): Persisted {
       grades: saved.grades ?? {},
       places: saved.places ?? [],
       commitments: saved.commitments ?? [],
+      timers: saved.timers ?? [],
+      alarms: saved.alarms ?? [],
       feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
@@ -613,6 +626,8 @@ export function pickPersisted(state: State): Persisted {
     grades: state.grades,
     places: state.places,
     commitments: state.commitments,
+    timers: state.timers,
+    alarms: state.alarms,
     feedOrder: state.feedOrder,
     tabs: state.tabs,
     yours: state.yours,
@@ -667,6 +682,16 @@ export type Action =
   | { type: 'addCommitment'; commitment: Omit<Commitment, 'id' | 'created'> }
   | { type: 'patchCommitment'; id: string; patch: Partial<Commitment> }
   | { type: 'removeCommitment'; id: string }
+  // Timers and alarms. `at` is passed in rather than read from `Date.now()`
+  // inside the reducer, so a timer records the same instant the screen showed
+  // — the bug the work-session clock had, where Stop wrote a different number
+  // from the one it had been displaying.
+  | { type: 'addTimer'; label: string; seconds: number; at: number }
+  | { type: 'patchTimer'; id: string; timer: Timer }
+  | { type: 'removeTimer'; id: string }
+  | { type: 'addAlarm'; label: string; at: number; days: number[] }
+  | { type: 'patchAlarm'; id: string; patch: Partial<Alarm> }
+  | { type: 'removeAlarm'; id: string }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useStore } from '../state/store';
 import { WorstDay } from '../components/Clashes';
+import { TimerLine } from '../components/TimerLine';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
@@ -711,6 +712,7 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   // somebody who wants the warning under the checklist rather than above it
   // can have that without a second setting.
   clash: WorstDay,
+  timers: TimerLine,
 };
 
 function TodayFeed() {

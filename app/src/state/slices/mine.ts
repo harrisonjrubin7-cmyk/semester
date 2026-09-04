@@ -10,6 +10,7 @@
  */
 
 import { newId } from '../../lib/files';
+import { newAlarm, newTimer } from '../../lib/clocks';
 import { tidy } from '../../lib/windows';
 import type { Action, State } from '../shape';
 
@@ -75,6 +76,45 @@ export function mine(state: State, action: Action): State | null {
 
     case 'removeCommitment':
       return { ...state, commitments: state.commitments.filter((c) => c.id !== action.id) };
+
+    // Timers and alarms. The arithmetic lives in `lib/clocks.ts`, which is
+    // pure and tested; the reducer only ever swaps a whole timer for the one
+    // that function returned. There is no `pauseTimer` action for the same
+    // reason there is no `resumeTimer` — the rules about what pausing does to
+    // an end time are not the store's to know twice.
+    case 'addTimer': {
+      const seconds = Math.round(action.seconds);
+      if (!Number.isFinite(seconds) || seconds <= 0) return state;
+      return { ...state, timers: [newTimer(action.label, seconds, action.at), ...state.timers] };
+    }
+
+    case 'patchTimer':
+      return {
+        ...state,
+        timers: state.timers.map((t) => (t.id === action.id ? action.timer : t)),
+      };
+
+    case 'removeTimer':
+      return { ...state, timers: state.timers.filter((t) => t.id !== action.id) };
+
+    case 'addAlarm':
+      return {
+        ...state,
+        alarms: [...state.alarms, newAlarm(action.label, action.at, action.days, Date.now())].sort(
+          (a, b) => a.at - b.at,
+        ),
+      };
+
+    case 'patchAlarm':
+      return {
+        ...state,
+        alarms: state.alarms
+          .map((a) => (a.id === action.id ? { ...a, ...action.patch } : a))
+          .sort((a, b) => a.at - b.at),
+      };
+
+    case 'removeAlarm':
+      return { ...state, alarms: state.alarms.filter((a) => a.id !== action.id) };
 
     // The hours you actually work in. See `lib/windows.ts` — these make every
     // hour figure in the app true rather than nominal.
