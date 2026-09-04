@@ -40,6 +40,7 @@ import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
 import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
+import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
 import {
@@ -204,7 +205,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // Only when it changes: setting the same string every dispatch would
     // re-render the whole app on every keystroke.
     setSaveTrouble((was) => (was === said ? was : said));
+    // A second tab of this app is now told, so it can re-read rather than
+    // sit on a deadline you ticked a minute ago somewhere else. Only the
+    // fact is sent; the disk stays the single copy both tabs agree on. See
+    // `lib/tabs.ts`.
+    tellOtherTabs();
   }, [persisted]);
+
+  /**
+   * Take what another tab wrote.
+   *
+   * Re-read from disk and hydrate, which is the same path a sync pull takes —
+   * so the merge, the removed-course guard and everything else that already
+   * decides how two copies reconcile applies unchanged.
+   */
+  useEffect(() => onOtherTab(() => dispatch({ type: 'hydrate', persisted: loadPersisted() })), []);
 
   // ── The account copy ────────────────────────────────────────────────────
   const [account, setAccount] = useState<Account | null>(null);

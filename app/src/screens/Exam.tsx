@@ -5,7 +5,7 @@ import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
-import { download } from '../lib/deliver';
+import { download, shareOut } from '../lib/deliver';
 import { cardsFrom, missedFrom, pctOf } from '../lib/sitting';
 import {
   FORMATS,
@@ -673,12 +673,23 @@ export function Exam() {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() =>
-                download({ name: examFileName(title), body: document(), mime: 'text/markdown' })
-              }
+              onClick={() => {
+                const piece = {
+                  name: examFileName(title),
+                  body: document(),
+                  mime: 'text/markdown',
+                };
+                // The share sheet first, because a paper is a thing you send
+                // to the group chat rather than file away. A phone with no
+                // sheet, or a dismissal, falls back to saving it — the two
+                // are the same answer: the file has not gone anywhere yet.
+                void shareOut([piece], title).then((shared) => {
+                  if (!shared) download(piece);
+                });
+              }}
               style={{ flex: 1, height: 42 }}
             >
-              Save the paper
+              Share the paper
             </button>
             <button
               type="button"

@@ -50,6 +50,41 @@ export function download(piece: Piece): void {
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
+/**
+ * Hand it to the phone's own share sheet.
+ *
+ * `download` puts a file in a downloads folder, which on a phone is where
+ * things go to be lost. What a student actually wants to do with a practice
+ * paper or a printed week is send it to the group chat, AirDrop it to the
+ * person next to them, or put it in their own notes app — and every one of
+ * those is behind the system share sheet.
+ *
+ * Returns false when there was no sheet to use or the person dismissed it, so
+ * the caller can fall back to a download rather than appearing to do nothing.
+ * A dismissal and an absent API are deliberately the same answer: in both
+ * cases the file has not gone anywhere and the offer should stay on screen.
+ */
+export async function shareOut(pieces: Piece[], title: string): Promise<boolean> {
+  const nav = navigator as Navigator & {
+    canShare?: (data: { files?: File[] }) => boolean;
+    share?: (data: { files?: File[]; title?: string }) => Promise<void>;
+  };
+  if (!nav.share || !nav.canShare) return false;
+
+  const files = pieces.map((p) => new File([blobOf(p)], p.name, { type: p.mime }));
+  // Asking first matters: a browser with `share` but no file support throws
+  // on the call, and a thrown share looks to a person like a broken button.
+  if (!nav.canShare({ files })) return false;
+
+  try {
+    await nav.share({ files, title });
+    return true;
+  } catch {
+    // Dismissed, or refused. Neither is an error worth showing.
+    return false;
+  }
+}
+
 /** Everything in one archive, with the folder structure the names imply. */
 export async function zipOf(pieces: Piece[]): Promise<Blob> {
   const { zipSync } = await import('fflate');
