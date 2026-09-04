@@ -411,6 +411,7 @@ export type Screen =
   | 'check'
   | 'ahead'
   | 'announce'
+  | 'costs'
   | 'runway'
   | 'weekly'
   | 'registrar'

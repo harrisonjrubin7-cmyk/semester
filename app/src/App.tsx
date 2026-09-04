@@ -50,6 +50,7 @@ import { Weekly } from './screens/Weekly';
 import { Registrar } from './screens/Registrar';
 import { Runway } from './screens/Runway';
 import { Announce } from './screens/Announce';
+import { Costs } from './screens/Costs';
 import { Sources } from './screens/Sources';
 import { scaleOf, tokensFor } from './lib/look';
 import { AccountScreen } from './screens/Account';
@@ -185,6 +186,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Counted, before it happens', title: 'The week ahead' };
     case 'announce':
       return { kicker: 'The email that moves a date', title: 'An announcement' };
+    case 'costs':
+      return { kicker: 'Books, fees and what came back', title: 'What this term cost' };
     case 'runway':
       return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
     case 'weekly':
@@ -453,6 +456,8 @@ function CurrentScreen() {
       return <Ahead />;
     case 'announce':
       return <Announce />;
+    case 'costs':
+      return <Costs />;
     case 'runway':
       return <Runway />;
     case 'weekly':

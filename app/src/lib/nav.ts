@@ -204,6 +204,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'costs',
+    label: 'What this term cost',
+    blurb: 'Books, fees and access codes, with what came back — and what the same course cost last time.',
+    keywords: 'cost costs money price prices textbook textbooks book books buy rent rental sell back buyback bookstore fee fees access code clicker supplies spend spending budget expense expenses receipt total how much',
+    group: 'Campus',
+    root: 'courses',
+  },
+  {
     screen: 'runway',
     label: 'Exam runway',
     blurb: 'The weeks before an exam, counted backwards from it — and what stands in the way.',

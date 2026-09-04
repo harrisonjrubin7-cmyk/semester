@@ -35,6 +35,7 @@ import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
 import type { Spent } from '../lib/pace';
 import type { Window } from '../lib/windows';
+import type { Cost } from '../lib/cost';
 import { LEGACY_TERM } from '../lib/term';
 import { readLook, type Look } from '../lib/look';
 
@@ -115,6 +116,14 @@ export interface Persisted {
    * than presenting a constant as a fact. See `lib/windows.ts`.
    */
   windows: Window[];
+  /**
+   * What this semester cost — books, fees, access codes.
+   *
+   * Entered, never fetched: prices differ by edition, by seller and by the
+   * week, and a wrong one shown confidently is worse than a blank field. See
+   * `lib/cost.ts`.
+   */
+  costs: Cost[];
   /**
    * When each deadline was ticked, epoch ms.
    *
@@ -331,6 +340,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   registrar: [],
   spent: [],
   windows: [],
+  costs: [],
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -440,6 +450,7 @@ export function loadPersisted(): Persisted {
       registrar: saved.registrar ?? [],
       spent: saved.spent ?? [],
       windows: saved.windows ?? [],
+      costs: saved.costs ?? [],
       tickedAt: saved.tickedAt ?? {},
       ...readLook({
         accent: saved.accent,
@@ -493,6 +504,7 @@ export function pickPersisted(state: State): Persisted {
     registrar: state.registrar,
     spent: state.spent,
     windows: state.windows,
+    costs: state.costs,
     tickedAt: state.tickedAt,
     accent: state.accent,
     textSize: state.textSize,
@@ -606,6 +618,9 @@ export type Action =
   | { type: 'addWindow'; window: Omit<Window, 'id'> }
   | { type: 'patchWindow'; id: string; patch: Partial<Window> }
   | { type: 'dropWindow'; id: string }
+  | { type: 'addCost'; cost: Omit<Cost, 'id' | 'at'> }
+  | { type: 'patchCost'; id: string; patch: Partial<Cost> }
+  | { type: 'dropCost'; id: string }
   | { type: 'setTermDate'; id: string; iso: string; until?: string }
   | { type: 'addTermDate'; label: string; iso: string; until?: string }
   | { type: 'dropTermDate'; id: string }

@@ -99,6 +99,22 @@ export function mine(state: State, action: Action): State | null {
     case 'dropWindow':
       return { ...state, windows: state.windows.filter((w) => w.id !== action.id) };
 
+    // What the term cost. Yours, like everything else in this slice.
+    case 'addCost':
+      return {
+        ...state,
+        costs: [...state.costs, { ...action.cost, id: newId(), at: Date.now() }],
+      };
+
+    case 'patchCost':
+      return {
+        ...state,
+        costs: state.costs.map((c) => (c.id === action.id ? { ...c, ...action.patch } : c)),
+      };
+
+    case 'dropCost':
+      return { ...state, costs: state.costs.filter((c) => c.id !== action.id) };
+
     case 'addPlace':
       return {
         ...state,
