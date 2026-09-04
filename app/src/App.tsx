@@ -98,6 +98,8 @@ import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
 import { Undone } from './components/Undone';
+import { ScrollArea } from './components/ScrollArea';
+import { forget } from './lib/scrollback';
 import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
@@ -438,7 +440,18 @@ function TabBar() {
             key={id}
             type="button"
             className="bare"
-            onClick={() => dispatch({ type: 'go', screen: id })}
+            onClick={() => {
+              // Tapping the tab you are already on goes to the top. That is
+              // what every phone does, and it is the only way back up a long
+              // list without flicking — `go` to the current screen is a no-op
+              // in the reducer, so nothing else would happen at all.
+              if (state.screen === id) {
+                forget(id);
+                document.querySelector('.scrollarea')?.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+              }
+              dispatch({ type: 'go', screen: id });
+            }}
             aria-current={on ? 'page' : undefined}
             style={{
               flex: 1,
@@ -639,7 +652,18 @@ function Rail() {
             key={id}
             type="button"
             className="bare rail-item"
-            onClick={() => dispatch({ type: 'go', screen: id })}
+            onClick={() => {
+              // Tapping the tab you are already on goes to the top. That is
+              // what every phone does, and it is the only way back up a long
+              // list without flicking — `go` to the current screen is a no-op
+              // in the reducer, so nothing else would happen at all.
+              if (state.screen === id) {
+                forget(id);
+                document.querySelector('.scrollarea')?.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+              }
+              dispatch({ type: 'go', screen: id });
+            }}
             aria-current={on ? 'page' : undefined}
             style={{
               color: on ? 'var(--app-accent-bright)' : 'var(--app-faint)',
@@ -773,11 +797,11 @@ export default function App() {
         <div className="device device-pane">
           <Header />
           {trouble}
-          <main className="scrollarea" key={state.screen}>
+          <ScrollArea screen={state.screen} key={state.screen}>
             <Suspense fallback={<Loading />}>
               <CurrentScreen />
             </Suspense>
-          </main>
+          </ScrollArea>
         </div>
       </div>
     );
@@ -792,11 +816,11 @@ export default function App() {
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       <Header />
       {trouble}
-      <main className="scrollarea" key={state.screen}>
+      <ScrollArea screen={state.screen} key={state.screen}>
         <Suspense fallback={<Loading />}>
           <CurrentScreen />
         </Suspense>
-      </main>
+      </ScrollArea>
       {showTabs && <TabBar />}
       {showFab && (
         <button
