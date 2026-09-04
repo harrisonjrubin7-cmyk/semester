@@ -3,6 +3,8 @@ import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
 import { download } from '../lib/deliver';
@@ -54,7 +56,7 @@ export function Deck() {
   const [plan, setPlan] = useState<Planned | null>(null);
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const [kept, setKept] = useState(false);
   const abort = useRef<AbortController | null>(null);
 
@@ -66,7 +68,7 @@ export function Deck() {
   const make = async () => {
     if (busy) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     setPlan(null);
     abort.current = new AbortController();
     let sofar = '';
@@ -88,9 +90,7 @@ export function Deck() {
       });
       setPlan(readPlan(sofar));
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void make());
     } finally {
       setBusy(false);
     }
@@ -99,7 +99,7 @@ export function Deck() {
   const save = async () => {
     if (!file || saving) return;
     setSaving(true);
-    setError('');
+    trouble.clear();
     try {
       const blob = await pptx(file);
       download({
@@ -108,7 +108,9 @@ export function Deck() {
         mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      // Nothing was consumed: the deck is still in memory and building the
+      // file again costs no request.
+      trouble.failed(e, () => void save());
     } finally {
       setSaving(false);
     }
@@ -272,11 +274,7 @@ export function Deck() {
         </>
       )}
 
-      {error ? (
-        <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
-          {error}
-        </div>
-      ) : null}
+      <Trouble said={trouble.said} onRetry={trouble.again} />
 
       {file && file.slides.length > 0 && (
         <>

@@ -3,6 +3,8 @@ import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured, provider } from '../lib/claude';
 import { KINDS, drawingName, kind as kindById, systemFor, unfence } from '../lib/diagram';
@@ -36,14 +38,14 @@ export function Draw() {
   const [prompt, setPrompt] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const abort = useRef<AbortController | null>(null);
   const k = kindById(kindId);
 
   const draw = async () => {
     if (busy || !prompt.trim()) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     setCode('');
     abort.current = new AbortController();
     let sofar = '';
@@ -69,9 +71,7 @@ export function Draw() {
       });
       setCode(unfence(sofar));
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void draw());
     } finally {
       setBusy(false);
     }
@@ -153,11 +153,7 @@ export function Draw() {
         {busy ? 'Drawing…' : code ? 'Draw it again' : 'Draw it'}
       </button>
 
-      {error ? (
-        <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
-          {error}
-        </div>
-      ) : null}
+      <Trouble said={trouble.said} onRetry={trouble.again} />
 
       {code && (
         <>

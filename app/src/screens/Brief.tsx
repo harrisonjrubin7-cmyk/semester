@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -42,7 +44,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
   );
   const [said, setSaid] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const abort = useRef<AbortController | null>(null);
 
   const input: DayInput = useMemo(
@@ -66,7 +68,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
   const read = async () => {
     if (busy) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     setSaid('');
     abort.current = new AbortController();
     let sofar = '';
@@ -88,9 +90,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
         },
       });
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void read());
     } finally {
       setBusy(false);
     }
@@ -129,7 +129,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
         onChange={(next) => {
           setWhen(next);
           setSaid('');
-          setError('');
+          trouble.clear();
         }}
         style={{ marginBottom: 16 }}
       />
@@ -313,11 +313,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
               {said}
             </div>
           ) : null}
-          {error ? (
-            <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
-              {error}
-            </div>
-          ) : null}
+          <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
           <div style={{ fontSize: 11, opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             Every number above is counted from your own data. {provider()} only reads the counts — it is
             told never to restate one differently or invent one.

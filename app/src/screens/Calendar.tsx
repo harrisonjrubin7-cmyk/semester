@@ -457,7 +457,20 @@ function WeekView() {
       {total === 0 ? (
         <EmptyState
           title="Nothing this week."
-          body="No classes and nothing of your own. Add something under Mine → Events."
+          body="No classes and nothing of your own."
+          // The sentence used to end "Add something under Mine → Events",
+          // which is a set of directions to a screen the app could simply
+          // open. Naming a destination in prose is what a dead end sounds
+          // like when it is trying to be helpful.
+          action={{
+            label: 'Add an event',
+            onClick: () => {
+              // Onto the right tab, not just the right screen — landing on
+              // Mine's task list is a second thing to work out.
+              dispatch({ type: 'setMineTab', tab: 'appointments' });
+              dispatch({ type: 'go', screen: 'mine' });
+            },
+          }}
         />
       ) : (
         <>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
+import { EmptyState } from '../components/ui';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -80,12 +81,15 @@ export function Runway() {
     return (
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: '15px 16px' }}>
-          <div className="kicker">Nothing to count down to</div>
-          <div style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
-            No exam ahead in this term — or nothing the app recognises as one. It counts anything
-            named as an exam, a midterm, a final or a test, and anything else worth a quarter of
-            the grade or more.
-          </div>
+          <EmptyState
+            inline
+            title="Nothing to count down to"
+            body="No exam ahead in this term — or nothing the app recognises as one. It counts anything named as an exam, a midterm, a final or a test, and anything else worth a quarter of the grade or more."
+            action={{
+              label: 'Import a syllabus',
+              onClick: () => dispatch({ type: 'go', screen: 'import' }),
+            }}
+          />
         </Blueprint>
       </div>
     );

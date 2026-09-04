@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { ask, configured, provider } from '../lib/claude';
 import {
   SYSTEM,
@@ -33,7 +35,7 @@ export function Announce() {
   const [found, setFound] = useState<Change[] | null>(null);
   const [taken, setTaken] = useState<Record<number, boolean>>({});
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const [done, setDone] = useState('');
   const abort = useRef<AbortController | null>(null);
 
@@ -43,7 +45,7 @@ export function Announce() {
   const read = async () => {
     if (!shown || busy) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     setFound(null);
     setDone('');
     abort.current = new AbortController();
@@ -62,9 +64,7 @@ export function Announce() {
       setFound(changes);
       setTaken(Object.fromEntries(changes.map((_, i) => [i, true])));
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void read());
     } finally {
       setBusy(false);
     }
@@ -137,11 +137,7 @@ export function Announce() {
         </div>
       )}
 
-      {error ? (
-        <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
-          {error}
-        </div>
-      ) : null}
+      <Trouble said={trouble.said} onRetry={trouble.again} />
 
       {done ? (
         <Blueprint style={{ padding: '13px 14px', marginTop: 14 }}>

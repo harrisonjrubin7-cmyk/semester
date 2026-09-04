@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { EmptyState, SectionLabel, Segmented } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { download } from '../lib/deliver';
 import {
@@ -145,12 +145,13 @@ export function Sources() {
         Keep it
       </button>
 
-      <SectionLabel>{list.length === 0 ? 'Nothing yet' : heading}</SectionLabel>
+      {list.length > 0 && <SectionLabel>{heading}</SectionLabel>}
       {list.length === 0 ? (
-        <div style={{ fontSize: 13, opacity: 0.6, lineHeight: 1.5, textWrap: 'pretty' }}>
-          Paste the readings from a syllabus, or the four things you actually used for a paper.
-          The second is the more useful list.
-        </div>
+        <EmptyState
+          inline
+          title="Nothing yet"
+          body="Paste the readings from a syllabus, or the four things you actually used for a paper. The second is the more useful list."
+        />
       ) : (
         <>
           <div style={{ fontSize: 12.5, opacity: 0.65, marginBottom: 10, lineHeight: 1.5 }}>

@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { ProjectFile } from '../components/ProjectFile';
@@ -48,7 +50,7 @@ export function Work() {
   const [prompt, setPrompt] = useState('');
   const [output, setOutput] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const [saved, setSaved] = useState(0);
   const [kept, setKept] = useState(false);
   const [read, setRead] = useState('');
@@ -73,27 +75,26 @@ export function Work() {
   const run = async (fn: (signal: AbortSignal) => Promise<void>) => {
     if (busy) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     abort.current = new AbortController();
     try {
       await fn(abort.current.signal);
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void run(fn));
     } finally {
       setBusy(false);
     }
   };
 
   const upload = async (f: File) => {
-    setError('');
+    trouble.clear();
     try {
       const got = await extractText(f);
       setInstructions(got.text);
       setRead(`${got.name} · ${got.words} words`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      // The File is still held by the input, so reading it again is free.
+      trouble.failed(e, () => void upload(f));
     }
   };
 
@@ -348,19 +349,7 @@ export function Work() {
         </button>
       )}
 
-      {error && (
-        <div
-          style={{
-            fontSize: 12.5,
-            color: 'var(--app-accent)',
-            marginTop: 12,
-            lineHeight: 1.45,
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {error}
-        </div>
-      )}
+      <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
 
       <div style={{ fontSize: 11, opacity: 0.4, marginTop: 20, lineHeight: 1.45 }}>
         Going through {routeLabel()}.

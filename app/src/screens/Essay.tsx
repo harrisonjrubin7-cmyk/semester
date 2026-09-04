@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
 import { download } from '../lib/deliver';
@@ -57,7 +59,7 @@ export function Essay() {
   const [voiceId, setVoiceId] = useState('plain');
   const [out, setOut] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const [kept, setKept] = useState(false);
   const abort = useRef<AbortController | null>(null);
 
@@ -87,7 +89,7 @@ export function Essay() {
   const make = async () => {
     if (busy || !verdict.ok) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     setOut('');
     setKept(false);
     abort.current = new AbortController();
@@ -120,9 +122,7 @@ export function Essay() {
         },
       });
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void make());
     } finally {
       setBusy(false);
     }
@@ -346,11 +346,7 @@ export function Essay() {
         </div>
       )}
 
-      {error ? (
-        <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
-          {error}
-        </div>
-      ) : null}
+      <Trouble said={trouble.said} onRetry={trouble.again} />
 
       {draft && (
         <>

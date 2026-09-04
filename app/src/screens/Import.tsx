@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { troubleOf, useTrouble } from '../lib/trouble';
 import { gather } from '../lib/bundle';
 import { extractText, type Extracted } from '../lib/extract';
 import { generateCourse, type GenerationResult } from '../lib/generate';
@@ -33,7 +35,7 @@ export function Import() {
   const [files, setFiles] = useState<Extracted[]>([]);
   const [hint, setHint] = useState('');
   const [busy, setBusy] = useState('');
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const [result, setResult] = useState<GenerationResult | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const abort = useRef<AbortController | null>(null);
@@ -60,14 +62,16 @@ export function Import() {
 
   const addFiles = async (chosen: File[]) => {
     if (chosen.length === 0) return;
-    setError('');
+    trouble.clear();
     setBusy('Opening what you picked…');
 
     // A zip is unpacked rather than refused: nobody has one syllabus, they
     // have a download folder and whatever the professor posted.
     const got = await gather(chosen);
     if (got.skipped.length > 0) {
-      setError(
+      // Picking them again would skip them again — a .pages file is still a
+      // .pages file on the second go — so this is said without a retry.
+      trouble.wrong(
         `Left out: ${got.skipped.map((sk) => `${sk.name} (${sk.why})`).join('; ')}.`,
       );
     }
@@ -78,12 +82,9 @@ export function Import() {
         const extracted = await extractText(piece.file);
         setFiles((f) => [...f.filter((x) => x.name !== extracted.name), extracted]);
       } catch (e) {
-        // One unreadable file should not abandon the other nine.
-        setError((prior) =>
-          [prior, `${piece.name}: ${e instanceof Error ? e.message : String(e)}`]
-            .filter(Boolean)
-            .join(' '),
-        );
+        // One unreadable file should not abandon the other nine, so this is
+        // added to whatever is already showing rather than replacing it.
+        trouble.add(`${piece.name}: ${troubleOf(e) ?? 'could not be read.'}`);
       }
     }
     setBusy('');
@@ -96,7 +97,7 @@ export function Import() {
 
   const build = async () => {
     if (files.length === 0) return;
-    setError('');
+    trouble.clear();
     setResult(null);
     setBusy('Reading the syllabus…');
     abort.current = new AbortController();
@@ -107,7 +108,9 @@ export function Import() {
       );
       setResult(built);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      // The extracted text is still held, so a second run costs the upload
+      // nothing — only the request.
+      trouble.failed(e, () => void build());
     } finally {
       setBusy('');
     }
@@ -258,19 +261,15 @@ export function Import() {
         </div>
       )}
 
-      {error && (
-        <div
-          style={{
-            fontSize: 13,
-            color: 'var(--app-accent)',
-            marginTop: 14,
-            lineHeight: 1.5,
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {error}
-        </div>
-      )}
+      {/* The files are still read and still in state, so the retry costs
+          nothing already spent — which is the whole reason a dead end here
+          was the worst one in the app. */}
+      <Trouble
+        said={trouble.said}
+        onRetry={trouble.again}
+        label="Try building it again"
+        busy={busy !== ''}
+      />
 
       {result && changes && existing ? (
         <Rediff

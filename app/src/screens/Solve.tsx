@@ -3,6 +3,8 @@ import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured, provider } from '../lib/claude';
 import { MAX_SHOTS, toShots } from '../lib/shots';
@@ -36,7 +38,7 @@ export function Solve() {
   const [expected, setExpected] = useState('');
   const [out, setOut] = useState('');
   const [busy, setBusy] = useState('');
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const abort = useRef<AbortController | null>(null);
   const camera = useRef<HTMLInputElement>(null);
   const a = byId(aid);
@@ -45,11 +47,14 @@ export function Solve() {
 
   const readPhoto = async (files: FileList | null) => {
     if (!files?.length) return;
-    setError('');
+    trouble.clear();
     setBusy('Reading it…');
     try {
       const { shots, errors } = await toShots(Array.from(files).slice(0, MAX_SHOTS));
-      if (errors.length) setError(errors.join(' '));
+      // Some of the photos would not open. Said alongside whatever happens to
+      // the ones that did, because a transcription of three pages out of four
+      // looks complete and is not.
+      if (errors.length) trouble.wrong(errors.join(' '));
       if (shots.length === 0) return;
       abort.current = new AbortController();
       const text = await ask({
@@ -62,9 +67,9 @@ export function Solve() {
       });
       setProblem((prior) => (prior.trim() ? `${prior.trim()}\n\n${text.trim()}` : text.trim()));
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      // Reading the same photos again is the right retry here — not `run`,
+      // which is a different request against a problem that never arrived.
+      trouble.failed(e, () => void readPhoto(files));
     } finally {
       setBusy('');
     }
@@ -73,7 +78,7 @@ export function Solve() {
   const run = async () => {
     if (busy || !problem.trim()) return;
     setBusy('Working…');
-    setError('');
+    trouble.clear();
     setOut('');
     abort.current = new AbortController();
     let sofar = '';
@@ -92,9 +97,7 @@ export function Solve() {
         },
       });
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void run());
     } finally {
       setBusy('');
     }
@@ -227,11 +230,7 @@ export function Solve() {
         {busy === 'Working…' ? 'Working…' : out ? 'Do it again' : a.label}
       </button>
 
-      {error ? (
-        <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
-          {error}
-        </div>
-      ) : null}
+      <Trouble said={trouble.said} onRetry={trouble.again} />
 
       {out && (
         <>

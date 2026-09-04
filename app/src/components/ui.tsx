@@ -292,19 +292,46 @@ export function Meter({ pct, height = 6 }: { pct: number; height?: number }) {
   );
 }
 
-/** The centred empty state used by search, alerts and saved events. */
+/**
+ * A screen, or a section of one, with nothing in it yet.
+ *
+ * The app was already good at the sentence — most empty screens explained
+ * themselves in plain language rather than showing a blank. What almost none
+ * of them did was offer the thing that would fill them. A student reading
+ * "no exam ahead in this term" has been told what is wrong and left to work
+ * out for themselves that the answer is to import a syllabus.
+ *
+ * So `action` is the point of this component. Everything else was already
+ * here.
+ *
+ * Two densities. The full form is for a screen that is entirely empty and can
+ * afford to be a page; `inline` is for a section inside a screen that has
+ * other things on it, where sixty pixels of padding would push the rest off
+ * the bottom.
+ */
 export function EmptyState({
   title,
   body,
   icon,
+  action,
+  inline = false,
 }: {
   title: string;
   body: string;
   icon?: ReactNode;
+  /** What would put something here. Omitted when there is honestly nothing to offer. */
+  action?: { label: string; onClick: () => void };
+  inline?: boolean;
 }) {
   return (
-    <div style={{ padding: '62px 10px', textAlign: 'center' }}>
-      {icon && (
+    <div
+      style={
+        inline
+          ? { padding: '4px 0 2px' }
+          : { padding: '62px 10px', textAlign: 'center' }
+      }
+    >
+      {icon && !inline && (
         <div
           style={{
             width: 36,
@@ -319,10 +346,38 @@ export function EmptyState({
           {icon}
         </div>
       )}
-      <div className="chrome-text" style={{ fontSize: 24 }}>
+      <div
+        className={inline ? 'kicker' : 'chrome-text'}
+        style={inline ? undefined : { fontSize: 24 }}
+      >
         {title}
       </div>
-      <div style={{ fontSize: 13, opacity: 0.6, marginTop: 6, textWrap: 'pretty' }}>{body}</div>
+      <div
+        style={{
+          fontSize: 13,
+          opacity: 0.6,
+          marginTop: inline ? 5 : 6,
+          textWrap: 'pretty',
+          lineHeight: 1.5,
+        }}
+      >
+        {body}
+      </div>
+      {action && (
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={action.onClick}
+          style={{
+            height: 40,
+            marginTop: 12,
+            fontSize: 12.5,
+            ...(inline ? { width: '100%' } : { paddingInline: 20 }),
+          }}
+        >
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }

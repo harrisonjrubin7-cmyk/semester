@@ -3,6 +3,8 @@ import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured, provider } from '../lib/claude';
 import {
@@ -44,7 +46,7 @@ export function Analyse() {
   const [yi, setYi] = useState(1);
   const [reading, setReading] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const file = useRef<HTMLInputElement>(null);
   const abort = useRef<AbortController | null>(null);
 
@@ -72,7 +74,7 @@ export function Analyse() {
   const load = async (files: FileList | null) => {
     const f = files?.[0];
     if (!f) return;
-    setError('');
+    trouble.clear();
     try {
       setText(await f.text());
       setName(f.name);
@@ -80,14 +82,17 @@ export function Analyse() {
       setYi(1);
       setReading('');
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      // The file handle is still good, so reading it again is worth offering —
+      // a `File.text()` that failed once is usually a file still being written
+      // by something else, or a phone that put the app to sleep mid-read.
+      trouble.failed(e, () => void load(files));
     }
   };
 
   const interpret = async () => {
     if (busy || !xSummary) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     setReading('');
     abort.current = new AbortController();
     let sofar = '';
@@ -134,9 +139,7 @@ export function Analyse() {
         },
       });
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void interpret());
     } finally {
       setBusy(false);
     }
@@ -201,11 +204,7 @@ export function Analyse() {
         </div>
       )}
 
-      {error ? (
-        <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
-          {error}
-        </div>
-      ) : null}
+      <Trouble said={trouble.said} onRetry={trouble.again} />
 
       {table.headers.length > 0 && (
         <>

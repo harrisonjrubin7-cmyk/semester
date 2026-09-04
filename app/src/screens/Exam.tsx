@@ -3,6 +3,8 @@ import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
 import { download, shareOut } from '../lib/deliver';
@@ -79,7 +81,7 @@ export function Exam() {
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [left, setLeft] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const abort = useRef<AbortController | null>(null);
 
   const shape = useMemo(() => shapeFor(minutes, formatId), [minutes, formatId]);
@@ -119,23 +121,23 @@ export function Exam() {
     // — not after revising, and not by two people in the same class.
     const asked = reuse.trim() ? readSeed(reuse) : null;
     if (reuse.trim() && asked === null) {
-      setError(`"${reuse.trim()}" is not a paper code. They look like 7PS4.`);
+      trouble.wrong(`"${reuse.trim()}" is not a paper code. They look like 7PS4.`);
       return;
     }
     const drawnWith = asked ?? (Date.now() % 90_000) + 10_000;
     const list = fromGuide(guide, shape, drawnWith);
     if (list.length === 0) {
-      setError('This guide has no cards to build a paper from yet.');
+      trouble.wrong('This guide has no cards to build a paper from yet.');
       return;
     }
-    setError('');
+    trouble.clear();
     begin(list, `${guide.code} · paper ${seedCode(drawnWith)}`, drawnWith);
   };
 
   const write = async () => {
     if (busy) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     abort.current = new AbortController();
     let sofar = '';
     try {
@@ -164,9 +166,7 @@ export function Exam() {
       const read = readExam(sofar, shape);
       begin(read.questions, read.title);
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void write());
     } finally {
       setBusy(false);
     }
@@ -299,11 +299,7 @@ export function Exam() {
           </>
         )}
 
-        {error ? (
-          <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
-            {error}
-          </div>
-        ) : null}
+        <Trouble said={trouble.said} onRetry={trouble.again} />
 
         {source === 'cards' ? (
           <>

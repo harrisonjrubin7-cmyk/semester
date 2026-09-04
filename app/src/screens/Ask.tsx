@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { proposalsLine, readProposal, TOOLS, type Proposal } from '../lib/tools';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -29,7 +31,7 @@ export function Ask() {
   const [draft, setDraft] = useState('');
   const [streaming, setStreaming] = useState('');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const [made, setMade] = useState(0);
   /**
    * What Claude has offered to do, waiting on a tap.
@@ -38,6 +40,7 @@ export function Ask() {
    * an offer about a state of the world that has moved on.
    */
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  /** The last question asked, so a failure can be tried again without retyping. */
   const abort = useRef<AbortController | null>(null);
 
   /**
@@ -87,7 +90,7 @@ export function Ask() {
     setTurns(next);
     setDraft('');
     setStreaming('');
-    setError('');
+    trouble.clear();
     setProposals([]);
     setBusy(true);
     abort.current = new AbortController();
@@ -124,7 +127,11 @@ export function Ask() {
       if (e instanceof DOMException && e.name === 'AbortError') {
         if (sofar.trim()) setTurns([...next, { role: 'assistant', content: sofar }]);
       } else {
-        setError(e instanceof Error ? e.message : String(e));
+        // `send` here is the one from the render that failed, so it still
+        // closes over the transcript as it was *before* this question was
+        // appended. Calling it again re-appends the same turn rather than
+        // stacking a second copy of it.
+        trouble.failed(e, () => void send(text));
       }
     } finally {
       setStreaming('');
@@ -137,11 +144,14 @@ export function Ask() {
     const last = turns.filter((t) => t.role === 'assistant').at(-1);
     if (!last || busy) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     try {
       const cards = await makeCards(last.content, context);
       if (cards.length === 0) {
-        setError('Nothing in that answer made a clean card. Nothing was added.');
+        // Not a failure to retry: the answer is prose that does not break
+        // into questions, and asking again would cost a request to be told so
+        // a second time.
+        trouble.wrong('Nothing in that answer made a clean card. Nothing was added.');
         return;
       }
       dispatch({
@@ -161,7 +171,7 @@ export function Ask() {
       });
       setMade(cards.length);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      trouble.failed(e, () => void keep());
     } finally {
       setBusy(false);
     }
@@ -481,19 +491,9 @@ export function Ask() {
         </div>
       )}
 
-      {error && (
-        <div
-          style={{
-            fontSize: 12.5,
-            color: 'var(--app-accent)',
-            marginTop: 12,
-            lineHeight: 1.45,
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {error}
-        </div>
-      )}
+      {/* The question is still the last turn, so asking again is asking the
+          same thing — no retyping, and the conversation keeps its shape. */}
+      <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
       {made > 0 && (
         <div style={{ fontSize: 12.5, opacity: 0.75, marginTop: 12, lineHeight: 1.45 }}>
           {made} cards added to {guide.code}. They are in Cards, Read, Quiz and Cram now.

@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, SectionLabel } from '../components/ui';
 import { ask, configured, provider } from '../lib/claude';
@@ -55,7 +57,7 @@ export function Mail() {
   const [body, setBody] = useState('');
   const [app, setApp] = useState<MailApp>('gmail');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const [copied, setCopied] = useState(false);
   const abort = useRef<AbortController | null>(null);
 
@@ -76,7 +78,7 @@ export function Mail() {
   const write = async () => {
     if (busy) return;
     setBusy(true);
-    setError('');
+    trouble.clear();
     setCopied(false);
     setSubject('');
     setBody('');
@@ -99,9 +101,7 @@ export function Mail() {
       setSubject(split.subject || fallbackSubject(p, ctx));
       setBody(split.body);
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void write());
     } finally {
       setBusy(false);
     }
@@ -112,7 +112,10 @@ export function Mail() {
       await navigator.clipboard.writeText(`${subject}\n\n${body}`);
       setCopied(true);
     } catch {
-      setError('The browser would not give the app the clipboard. Select the text and copy it.');
+      // Denied clipboard access does not become granted on a second press.
+      trouble.wrong(
+        'The browser would not give the app the clipboard. Select the text and copy it.',
+      );
     }
   };
 
@@ -250,11 +253,7 @@ export function Mail() {
         {busy ? 'Writing…' : body ? 'Write it again' : 'Draft it'}
       </button>
 
-      {error ? (
-        <div style={{ fontSize: 13, marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
-          {error}
-        </div>
-      ) : null}
+      <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
 
       {(subject || body) && (
         <>

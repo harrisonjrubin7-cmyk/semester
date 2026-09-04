@@ -1,5 +1,7 @@
 import { Suspense, lazy, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
 import type { Pin } from '../components/LiveMap';
 import { ChipRow, SectionLabel, Segmented } from '../components/ui';
@@ -63,7 +65,7 @@ export function Maps() {
   const [hits, setHits] = useState<Found[]>([]);
   const [picked, setPicked] = useState<Found | null>(null);
   const [searching, setSearching] = useState(false);
-  const [error, setError] = useState('');
+  const trouble = useTrouble();
   const [you, setYou] = useState<{ lat: number; lon: number; accuracy: number } | null>(null);
   const [centre, setCentre] = useState(CENTRES.campus);
   const [zoom, setZoom] = useState(CENTRES.campus.zoom);
@@ -126,13 +128,15 @@ export function Maps() {
     abort.current?.abort();
     abort.current = new AbortController();
     setSearching(true);
-    setError('');
+    trouble.clear();
     setPicked(null);
     try {
       const found = await findPlaces(text, scope, abort.current.signal);
       setHits(found);
       if (found.length === 0) {
-        setError(
+        // The search worked; the name is what missed. Running it again returns
+        // the same nothing.
+        trouble.wrong(
           scope === 'campus'
             ? 'Nothing on campus by that name. Try the city — some of Vanderbilt sits outside the box.'
             : 'Nothing found around Nashville by that name.',
@@ -142,23 +146,24 @@ export function Maps() {
         setZoom(scope === 'campus' ? 17 : 15);
       }
     } catch (e) {
-      if (!(e instanceof DOMException && e.name === 'AbortError')) {
-        setError(e instanceof Error ? e.message : String(e));
-      }
+      trouble.failed(e, () => void search());
     } finally {
       setSearching(false);
     }
   };
 
   const locate = async () => {
-    setError('');
+    trouble.clear();
     try {
       const fix = await here();
       setYou({ lat: fix.lat, lon: fix.lon, accuracy: fix.accuracy });
       setCentre({ lat: fix.lat, lon: fix.lon, zoom: 17 });
       setZoom(17);
     } catch (e) {
-      setError(explainPlaceError(e));
+      // A refused permission stays refused until the student changes it in
+      // the browser, but a timeout or a lost fix is worth another go, and
+      // nothing here can tell which from the outside.
+      trouble.failed(explainPlaceError(e), () => void locate());
     }
   };
 
@@ -203,7 +208,7 @@ export function Maps() {
           setCentre(CENTRES[next]);
           setZoom(CENTRES[next].zoom);
           setHits([]);
-          setError('');
+          trouble.clear();
         }}
         style={{ marginBottom: 12 }}
       />
@@ -277,11 +282,7 @@ export function Maps() {
         )}
       </div>
 
-      {error ? (
-        <div style={{ fontSize: 12.5, marginTop: 10, lineHeight: 1.45, color: 'var(--app-warn)' }}>
-          {error}
-        </div>
-      ) : null}
+      <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(searching)} />
 
       {hits.length > 0 && (
         <>
