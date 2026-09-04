@@ -162,7 +162,7 @@ self.addEventListener('fetch', (event) => {
  * dropping the subscription. Hence the fallback text: something always shows.
  */
 self.addEventListener('push', (event) => {
-  let said = { title: 'Semester', body: 'Something is due.', screen: '' };
+  let said = { title: 'Semester', body: 'Something is due.', screen: '', item: '' };
   try {
     if (event.data) said = { ...said, ...event.data.json() };
   } catch {
@@ -177,7 +177,10 @@ self.addEventListener('push', (event) => {
       // One notification per reminder id, so a re-send replaces rather than
       // stacks — a phone that was off for a day should not wake to nine.
       tag: said.id || said.title,
-      data: { screen: said.screen || '' },
+      // `item` is what makes a tap land on the deadline the reminder named
+      // rather than on the app. The page decides what to do with both — see
+      // `lib/land.ts`; nothing here trusts either to name a real screen.
+      data: { screen: said.screen || '', item: said.item || '' },
     }),
   );
 });
@@ -185,7 +188,15 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const screen = event.notification.data?.screen;
-  const url = `${BASE}${screen ? `?screen=${encodeURIComponent(screen)}` : ''}`;
+  const item = event.notification.data?.item;
+  // Both go on the cold-start URL, because a tap on a phone that has the app
+  // closed is the common case and it deserves the same landing as a tap on a
+  // phone that has it open.
+  const query = [
+    screen ? `screen=${encodeURIComponent(screen)}` : '',
+    item ? `item=${encodeURIComponent(item)}` : '',
+  ].filter(Boolean).join('&');
+  const url = `${BASE}${query ? `?${query}` : ''}`;
 
   event.waitUntil(
     (async () => {
@@ -196,7 +207,7 @@ self.addEventListener('notificationclick', (event) => {
       for (const client of open) {
         if (client.url.startsWith(self.location.origin + BASE)) {
           await client.focus();
-          if (screen) client.postMessage({ type: 'go', screen });
+          if (screen || item) client.postMessage({ type: 'go', screen, item });
           return;
         }
       }

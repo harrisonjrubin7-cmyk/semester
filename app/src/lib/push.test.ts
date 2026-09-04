@@ -4,21 +4,33 @@ import { REFILL_HOURS, canPush, enrolmentOf, keyBytes, needsRefill, queueFor } f
 import type { NotifKey } from '../data/misc';
 import type { DatedItem } from './types';
 
-const ALL_ON = {
+/*
+ * The real rule names, not the ones this file used to invent.
+ *
+ * These were `due`, `drill` and `registrar`, which are not rules — the cast
+ * made them compile and `on.two` was quietly undefined, so a fixture called
+ * ALL_ON had four of the seven rules switched off and every test using it was
+ * weaker than it read.
+ */
+const ALL_ON: Record<NotifKey, boolean> = {
   class: true,
-  due: true,
+  today: true,
+  free: true,
+  two: true,
+  term: true,
   exam: true,
-  drill: true,
-  registrar: true,
-} as unknown as Record<NotifKey, boolean>;
+  sun: true,
+};
 
-const NONE = {
+const NONE: Record<NotifKey, boolean> = {
   class: false,
-  due: false,
+  today: false,
+  free: false,
+  two: false,
+  term: false,
   exam: false,
-  drill: false,
-  registrar: false,
-} as unknown as Record<NotifKey, boolean>;
+  sun: false,
+};
 
 const NOW = new Date(2026, 8, 8, 8, 0); // Tue 8 Sep 2026, 8am
 
@@ -113,6 +125,34 @@ describe('queueing the week', () => {
   it('does not queue the same reminder twice', () => {
     const ids = queueFor(NOW, ALL_ON, railEveryDay).map((r) => r.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('carries where each one should land', () => {
+    // Without this the notification arrives, is tapped, and drops the student
+    // on the home screen to go and find the thing it just told them about.
+    const queue = queueFor(NOW, ALL_ON, railEveryDay);
+    expect(queue.length).toBeGreaterThan(0);
+    for (const r of queue) {
+      expect(r.screen, r.id).toBeTruthy();
+    }
+  });
+
+  it('names the deadline on the reminders that are about one', () => {
+    const soon = {
+      id: 'econ-ps4',
+      courseId: 'econ',
+      title: 'Problem Set 4',
+      kind: 'problem set',
+      dueShort: 'Thu 11:59 PM',
+      weight: '5%',
+      daysAway: 2,
+      isToday: false,
+    } as unknown as DatedItem;
+    const withItem = queueFor(NOW, ALL_ON, () => ({ items: [soon], classes: [] }));
+    const two = withItem.find((r) => r.id.startsWith('two:'));
+    expect(two).toBeTruthy();
+    expect(two?.screen).toBe('item');
+    expect(two?.item).toBe('econ-ps4');
   });
 });
 

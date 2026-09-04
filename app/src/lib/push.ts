@@ -28,6 +28,7 @@
  * term, and why rows are deleted once sent.
  */
 
+import { landingFor } from './land';
 import { planAhead } from './notify';
 import type { NotifKey } from '../data/misc';
 
@@ -37,6 +38,10 @@ export interface Queued {
   at: number;
   title: string;
   body: string;
+  /** Where tapping it should land. See `lib/land.ts`. */
+  screen: string;
+  /** The deadline to open, where the reminder is about one. */
+  item?: string;
 }
 
 /** How far ahead to queue. A week is enough to survive a phone left in a bag. */
@@ -160,7 +165,15 @@ export function queueFor(
   on: Record<NotifKey, boolean>,
   forDay: Parameters<typeof planAhead>[3],
 ): Queued[] {
-  return planAhead(now, HORIZON_DAYS, on, forDay).filter((r) => r.at > now.getTime());
+  return planAhead(now, HORIZON_DAYS, on, forDay)
+    .filter((r) => r.at > now.getTime())
+    .map((r) => {
+      // Worked out here rather than stored on the reminder, because the id
+      // already says what it is about and a second field is a second thing to
+      // get out of step. The server only relays it.
+      const to = landingFor(r.id);
+      return { ...r, screen: to.screen as string, ...(to.item ? { item: to.item } : {}) };
+    });
 }
 
 /**

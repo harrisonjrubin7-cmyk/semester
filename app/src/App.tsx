@@ -99,6 +99,7 @@ import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
+import { Tapped } from './components/Tapped';
 import { forget } from './lib/scrollback';
 import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
@@ -790,6 +791,9 @@ export default function App() {
         <Ringing />
         {/* Keeps the reminder queue fed. Draws nothing. */}
         <PushTop />
+        {/* Takes a tapped notification to the thing it was about. Draws
+            nothing. */}
+        <Tapped />
         {/* Offers the last removal back, from wherever it happened. */}
         <Undone />
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
@@ -812,6 +816,7 @@ export default function App() {
       <Fresh />
       <Ringing />
       <PushTop />
+      <Tapped />
       <Undone />
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       <Header />
