@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { nowPlaying, playbackIs } from '../lib/device';
+import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -35,6 +37,10 @@ export function LessonPlayer() {
   const [speed, setSpeed] = useState(1);
   const [extra, setExtra] = useState(0);
 
+  // A lesson is minutes of audio with slides that change under it. The screen
+  // locking halfway through is the whole reason people give up on it.
+  useKeepAwake(playing);
+
   const cues: LessonCue[] = useMemo(() => lesson?.cues ?? [], [lesson]);
   const index = useMemo(() => {
     let i = 0;
@@ -52,6 +58,29 @@ export function LessonPlayer() {
     setTime(el.currentTime);
     void el.play();
   }, []);
+
+  // The lock screen, the headphone button and the car stereo. A lesson is
+  // exactly the thing you listen to walking across campus with the phone in a
+  // pocket, and pausing one used to mean taking it out. See `lib/device.ts`.
+  useEffect(() => {
+    if (!lesson) return;
+    nowPlaying(
+      { title: lesson.title || `Unit ${unit + 1}`, course: guide.code, album: guide.name },
+      {
+        play: () => void audioRef.current?.play(),
+        pause: () => audioRef.current?.pause(),
+        seekbackward: () => seek((audioRef.current?.currentTime ?? 0) - 15),
+        seekforward: () => seek((audioRef.current?.currentTime ?? 0) + 15),
+      },
+    );
+    // Cleared on the way out, so a lesson you have left is not still sitting
+    // on the lock screen.
+    return () => nowPlaying(null);
+  }, [lesson, unit, guide.code, guide.name, seek]);
+
+  useEffect(() => {
+    playbackIs(playing ? 'playing' : 'paused');
+  }, [playing]);
 
   // Speed is a player setting, not a per-file one, so it has to be re-applied
   // whenever the element is swapped for another unit's audio.

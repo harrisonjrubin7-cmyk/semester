@@ -38,6 +38,9 @@ import { datedItems, railFor } from '../lib/select';
 import { save, trouble } from '../lib/keep';
 import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
 import { readSeen, writeSeen } from '../lib/since';
+import { badge } from '../lib/device';
+import { SHARE_FLAG } from '../lib/shared';
+import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
 import {
   ROOTS,
@@ -65,8 +68,15 @@ export { reducer } from './reducer';
  */
 function screenFromUrl(): Screen | null {
   try {
-    const asked = new URLSearchParams(window.location.search).get('screen') as Screen | null;
-    return asked && ROOTS.includes(asked) ? asked : null;
+    const params = new URLSearchParams(window.location.search);
+    const asked = params.get('screen') as Screen | null;
+    if (asked && ROOTS.includes(asked)) return asked;
+    // A syllabus shared in from another app, or a file opened with this one,
+    // lands on the importer — which is not a root, so it needs saying
+    // explicitly. Only for a real share: `?screen=import` typed by hand is
+    // still refused, the same as any other non-root.
+    if (asked === 'import' && params.get(SHARE_FLAG) === '1') return 'import' as Screen;
+    return null;
   } catch {
     return null;
   }
@@ -430,6 +440,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
   }, [catalog, state.notifs, state.appointments, state.registrar]);
+
+  // The number on the installed icon: things due today and not ticked. In the
+  // provider rather than on Today, because the count has to be right whatever
+  // screen you left the app on — and it is the count you can act on, never a
+  // tally of notifications. See `lib/device.ts`.
+  useEffect(() => {
+    badge(itemsDueToday(catalog, now).filter((i) => !state.done[i.id]).length);
+  }, [catalog, now, state.done]);
 
   const value = useMemo(
     () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble }),

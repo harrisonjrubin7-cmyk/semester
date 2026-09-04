@@ -5,11 +5,16 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
 import { cardKey, dueCount, dueFirst } from '../lib/review';
+import { useKeepAwake } from '../lib/awake';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
   const { state, dispatch, now } = useStore();
   const { guide } = useLive(state.guideId);
+
+  // A drill has pauses in it while you try to remember, which is exactly what
+  // a phone reads as idling. See `lib/awake.ts`.
+  useKeepAwake();
 
   // Order is the point of keeping records: what is overdue comes first, then
   // what you have never seen, then what you already know — weakest first

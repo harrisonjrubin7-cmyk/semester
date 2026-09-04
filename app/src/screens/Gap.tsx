@@ -21,6 +21,8 @@ import {
   type Gap as Window,
 } from '../lib/gap';
 import { canSpeak, hush, readAloud, say, spoken, writeAloud } from '../lib/speak';
+import { buzz } from '../lib/device';
+import { useKeepAwake } from '../lib/awake';
 import { current } from '../lib/housing';
 
 /**
@@ -96,6 +98,10 @@ function Run({ win }: { win: Window }) {
   const [stopped, setStopped] = useState(false);
   const [aloud, setAloud] = useState(readAloud);
 
+  // Walking, one thumb, and the phone may be at your side while it reads the
+  // card out. The screen must not lock between two cards.
+  useKeepAwake();
+
   // Read once, and only added to. The budget must not change under you
   // mid-run: a deck that grows by four cards because you answered the first
   // three quickly is one you can never finish.
@@ -146,6 +152,10 @@ function Run({ win }: { win: Window }) {
 
   const answer = (right: boolean) => {
     if (!card) return;
+    // Something to feel, for a tap you did not look at. Firm for the answer
+    // that means more work. Absent on iOS, so it sits on top of the visible
+    // change rather than replacing it.
+    buzz(right ? 'light' : 'firm');
     writePace(addSample(readPace(), (Date.now() - cardShownAt.current) / 1000));
     dispatch({ type: 'recordCard', key: card.key, got: right });
     if (right) setGot((n) => n + 1);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
+import { StorageRoom } from '../components/StorageRoom';
 import { SectionLabel } from '../components/ui';
 import { cloudConfigured, sendReset, signIn, signInWith, signOut, signUp } from '../lib/cloud';
 
@@ -239,6 +240,8 @@ export function AccountScreen() {
         account already holds a semester the two are merged rather than one replacing the other —
         you end up with both sides' courses, notes and ticked boxes.
       </div>
+      <StorageRoom />
+
       <div style={{ height: 22 }} />
     </div>
   );

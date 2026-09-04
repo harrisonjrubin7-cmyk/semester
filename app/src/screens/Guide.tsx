@@ -1,5 +1,6 @@
 import { allCards, weakestUnit } from '../data/catalog';
 import { useMemo, useRef } from 'react';
+import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -15,6 +16,10 @@ import { asset } from '../lib/asset';
 
 export function Guide() {
   const { state, dispatch, catalog } = useStore();
+
+  // A study guide is a long read with long pauses. See `lib/awake.ts`.
+  useKeepAwake();
+
   const live = useLive(state.guideId);
   const { guide, figures: figMap, updates, onUnit } = live;
   const cards = allCards(guide);

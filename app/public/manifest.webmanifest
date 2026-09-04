@@ -1,7 +1,7 @@
 {
   "name": "Semester",
   "short_name": "Semester",
-  "description": "Every deadline, class and study guide for Fall 2026 \u2014 built from four syllabi.",
+  "description": "Every deadline, class and study guide for Fall 2026 — built from four syllabi.",
   "start_url": "./",
   "scope": "./",
   "id": "./",
@@ -54,6 +54,51 @@
     {
       "name": "Calendar",
       "url": "./?screen=calendar"
+    }
+  ],
+  "share_target": {
+    "action": "./share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "file",
+          "accept": [
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "text/plain",
+            "text/markdown",
+            "text/html",
+            ".pdf",
+            ".docx",
+            ".txt",
+            ".md"
+          ]
+        }
+      ]
+    }
+  },
+  "file_handlers": [
+    {
+      "action": "./?screen=import",
+      "accept": {
+        "application/pdf": [
+          ".pdf"
+        ],
+        "text/calendar": [
+          ".ics"
+        ]
+      }
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+semester",
+      "url": "./?screen=%s"
     }
   ]
 }

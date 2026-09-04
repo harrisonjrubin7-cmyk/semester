@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -15,6 +15,7 @@ import {
   ticksKept,
   type Diff,
 } from '../lib/rediff';
+import { arrivedByShare, forgetShare, takeShared } from '../lib/shared';
 
 /**
  * Upload a syllabus, get a course.
@@ -37,14 +38,34 @@ export function Import() {
   const input = useRef<HTMLInputElement>(null);
   const abort = useRef<AbortController | null>(null);
 
-  const add = async (list: FileList | null) => {
-    if (!list?.length) return;
+  // A syllabus shared in from Brightspace or Mail arrives here already
+  // chosen. Runs once: `takeShared` deletes as it reads, so a second pass
+  // finds nothing rather than adding the file twice. See `lib/shared.ts`.
+  useEffect(() => {
+    if (!arrivedByShare()) return;
+    let alive = true;
+    void takeShared().then((shared) => {
+      forgetShare();
+      if (!alive || shared.length === 0) return;
+      void addFiles(shared);
+    });
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** The picker hands back a FileList; a share hands back an array. */
+  const add = (list: FileList | null) => (list?.length ? addFiles(Array.from(list)) : undefined);
+
+  const addFiles = async (chosen: File[]) => {
+    if (chosen.length === 0) return;
     setError('');
     setBusy('Opening what you picked…');
 
     // A zip is unpacked rather than refused: nobody has one syllabus, they
     // have a download folder and whatever the professor posted.
-    const got = await gather(Array.from(list));
+    const got = await gather(chosen);
     if (got.skipped.length > 0) {
       setError(
         `Left out: ${got.skipped.map((sk) => `${sk.name} (${sk.why})`).join('; ')}.`,

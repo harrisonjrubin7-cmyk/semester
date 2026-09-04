@@ -51,8 +51,52 @@ const isMedia = (url) =>
   /\/(audio|decks|handouts)\//.test(url.pathname) ||
   /\.(mp3|mp4|pptx|docx|pdf)$/i.test(url.pathname);
 
+/*
+ * A syllabus shared into the app.
+ *
+ * The share arrives as a POST with the file in a multipart body, and a worker
+ * cannot hand a File to a page. So the body is stashed in a cache under a
+ * known key and the browser is redirected to a plain GET the app can boot
+ * from; the page picks the file up and deletes it. See `src/lib/shared.ts`.
+ *
+ * This is checked before the GET guard below, because it is the one POST this
+ * worker has any business answering.
+ */
+const SHARE_CACHE = 'semester-shared';
+const SHARE_KEY = './__shared';
+
+async function stashShared(request) {
+  try {
+    const form = await request.formData();
+    const file = form.get('file');
+    if (file && typeof file !== 'string') {
+      const cache = await caches.open(SHARE_CACHE);
+      await cache.put(
+        SHARE_KEY,
+        new Response(file, {
+          headers: {
+            'x-shared-name': file.name || 'shared',
+            'x-shared-type': file.type || 'application/octet-stream',
+          },
+        }),
+      );
+    }
+  } catch {
+    // A share with nothing usable in it. The redirect still happens, and the
+    // importer opens with its own file picker — which is the right landing
+    // place for somebody who meant to share something.
+  }
+  return Response.redirect(`${BASE}?screen=import&shared=1`, 303);
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+
+  if (request.method === 'POST' && new URL(request.url).pathname === `${BASE}share`) {
+    event.respondWith(stashShared(request));
+    return;
+  }
+
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
