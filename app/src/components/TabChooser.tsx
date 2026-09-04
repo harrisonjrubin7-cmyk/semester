@@ -18,7 +18,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { TabGlyph } from './TabIcon';
-import { destinationsIn, type Group } from '../lib/nav';
+import { destinationsFor, type Group } from '../lib/nav';
 import {
   MOST,
   MOST_CHOSEN,
@@ -93,7 +93,7 @@ function Preview({ tabs }: { tabs: Screen[] }) {
 }
 
 export function TabChooser() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, school } = useStore();
   const tabs = state.tabs;
   const chosen = tabs.filter((s) => s !== PINNED);
   const [refused, setRefused] = useState('');
@@ -110,7 +110,12 @@ export function TabChooser() {
 
   const spare = SHELVES.map((group) => ({
     group,
-    items: destinationsIn(group).filter((d) => d.screen !== PINNED && !chosen.includes(d.screen)),
+    // A screen this school has no equivalent of cannot be put in the bar
+    // either — otherwise the one place that lists everything would be the one
+    // place the gating leaked.
+    items: destinationsFor(group, school.capabilities).filter(
+      (d) => d.screen !== PINNED && !chosen.includes(d.screen),
+    ),
   })).filter((s) => s.items.length > 0);
 
   return (

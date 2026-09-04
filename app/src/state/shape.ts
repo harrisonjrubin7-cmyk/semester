@@ -323,6 +323,14 @@ export interface Persisted {
   picked: Record<string, boolean>;
   seenOnboarding: boolean;
   /**
+   * Which university, as an id rather than a name.
+   *
+   * Empty is a normal state, not an error: it means the universal eighty per
+   * cent of the app, which is most of it. See `lib/school.ts` — no screen ever
+   * asks which school this is, only what the school has.
+   */
+  schoolId: string;
+  /**
    * Deadline id to when work on it began.
    *
    * A tick box has two positions and coursework has three — see
@@ -496,6 +504,9 @@ export const DEFAULT_PERSISTED: Persisted = {
     return a;
   }, {}),
   seenOnboarding: false,
+  // Vanderbilt by default, because that is who this was built for and a fresh
+  // install should be the app they already have. Changed in Settings.
+  schoolId: 'vanderbilt',
   started: {},
   cleared: false,
   tasks: [],
@@ -738,6 +749,7 @@ export function loadPersisted(): Persisted {
       accessLeadDays: saved.accessLeadDays ?? 0,
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
+      schoolId: typeof saved.schoolId === 'string' ? saved.schoolId : DEFAULT_PERSISTED.schoolId,
       // Every field readLook knows about, handed straight through. Naming
       // them one by one here is how a new control gets added, saved, and then
       // silently dropped on the next reload.
@@ -820,6 +832,7 @@ export function pickPersisted(state: State): Persisted {
     accessLeadDays: state.accessLeadDays,
     tickedAt: state.tickedAt,
     started: state.started,
+    schoolId: state.schoolId,
     accent: state.accent,
     textSize: state.textSize,
     ground: state.ground,
@@ -924,6 +937,7 @@ export type Action =
   | { type: 'toggleUnit'; index: number }
   | { type: 'clearNotifs' }
   | { type: 'toggleStarted'; id: string }
+  | { type: 'setSchool'; id: string }
   | { type: 'onbNext' }
   | { type: 'restartOnboarding' }
   | { type: 'finishOnboarding' }

@@ -45,6 +45,8 @@ import { SHARE_FLAG } from '../lib/shared';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
+import { resolveSchool } from '../data/schools';
+import type { School } from '../lib/school';
 // Aliased: an effect below has its own local `said` for a save error.
 import { said as refreshSaid } from '../lib/refresh';
 import {
@@ -133,6 +135,14 @@ interface Store {
    * it says so rather than pretending to be up to date.
    */
   refresh: () => Promise<string>;
+  /**
+   * Where this student studies, and therefore what the app offers.
+   *
+   * Resolved once here rather than looked up per screen, so the directory,
+   * search and the tab chooser cannot disagree about whether a screen exists.
+   * See `lib/school.ts` — screens ask what a school has, never which it is.
+   */
+  school: School;
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -518,9 +528,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     );
   }, [catalog, now, state.done, state.badges]);
 
+  /*
+   * The bundled profile is the fallback, not the loser.
+   *
+   * Nothing is fetched here yet — the account row lands in a later phase. What
+   * matters now is that a Vanderbilt student opening this offline, signed out,
+   * on a first launch gets the full profile with no network call, which is the
+   * guarantee the rest of the app already keeps.
+   */
+  const school = useMemo(() => resolveSchool(state.schoolId, null), [state.schoolId]);
+
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh }),
-    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh],
+    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, school }),
+    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, school],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

@@ -118,6 +118,17 @@ export function settings(state: State, action: Action): State | null {
      * than a boolean so the list can say how long it has been open, which is
      * the part that is actually useful. See `lib/underway.ts`.
      */
+    /*
+     * Which university. An id, never a name.
+     *
+     * Changing it changes which screens exist — a school with no meal plan
+     * has no meal plan screen. It does not touch a single row of anybody's
+     * coursework, which is the point of gating on capabilities rather than
+     * forking the app per school.
+     */
+    case 'setSchool':
+      return state.schoolId === action.id ? state : { ...state, schoolId: action.id };
+
     case 'toggleStarted':
       return { ...state, started: toggleStarted(action.id, state.started, Date.now()) };
 

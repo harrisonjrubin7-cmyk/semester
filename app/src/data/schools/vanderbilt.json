@@ -1,0 +1,31 @@
+{
+  "id": "vanderbilt",
+  "name": "Vanderbilt University",
+  "shortName": "Vanderbilt",
+  "verified": true,
+  "capabilities": {
+    "mealPlan": "both",
+    "cardName": "Commodore Cash",
+    "swipeUnit": "meal swipes",
+    "housing": true,
+    "registrarName": "YES",
+    "registrarUrl": "https://yes.vanderbilt.edu",
+    "orgPortalName": "Anchor Link",
+    "orgPortalUrl": "https://anchorlink.vanderbilt.edu",
+    "lmsName": "Brightspace",
+    "lmsUrl": "https://brightspace.vanderbilt.edu",
+    "lmsIcsHelpUrl": "https://brightspace.vanderbilt.edu/d2l/le/calendar/6606",
+    "campusMap": true,
+    "athleticsName": "Commodores",
+    "libraryUrl": "https://www.library.vanderbilt.edu",
+    "healthUrl": "https://www.vanderbilt.edu/student-health",
+    "advisingUrl": "https://www.vanderbilt.edu/academic-advising"
+  },
+  "data": {
+    "housing": {
+      "moveOutRule": "hours_after_last_exam",
+      "hoursAfterLastExam": 24
+    },
+    "gradingNotes": "Vanderbilt grades on a 4.0 scale with pluses and minuses; an A+ still counts as 4.0."
+  }
+}

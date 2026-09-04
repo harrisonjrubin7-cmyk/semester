@@ -182,6 +182,10 @@ export const STRATEGY: Record<string, Strategy> = {
   sample: 'theirs',
   term: 'theirs',
   seenOnboarding: 'theirs',
+  // Where you study. A fact about the person, not the device — and the last
+  // device to be told is the one that is right, because somebody transferring
+  // sets it once and expects both phones to follow.
+  schoolId: 'theirs',
   cleared: 'theirs',
   waysOpen: 'theirs',
   accessLeadDays: 'theirs',

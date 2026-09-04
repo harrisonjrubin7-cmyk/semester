@@ -35,7 +35,9 @@ import { Bell, ChevronRight } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
-import { DESTINATIONS, destinationsIn, type Group } from '../lib/nav';
+import { DESTINATIONS, destinationsFor, destinationsIn, type Group } from '../lib/nav';
+import { hiddenFor, schoolLine } from '../lib/school';
+import { bundledList } from '../data/schools';
 
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
@@ -283,7 +285,7 @@ function HuePicker() {
 }
 
 export function Me() {
-  const { state, dispatch, now, catalog, account , courseCode } = useStore();
+  const { state, dispatch, now, catalog, account , courseCode, school } = useStore();
   const ahead = upcomingItems(catalog, now);
   const bars = loadByCourse(catalog, now, state.done);
   const pace = learned(state.spent);
@@ -457,7 +459,12 @@ export function Me() {
         onChange={(next) => dispatch({ type: 'setMeGroup', group: next })}
       />
       {GROUPS.filter((g) => g === (state.meGroup as Group)).map((group) => {
-        const rows = destinationsIn(group).filter((d) => !HIDE_IN_ME.includes(d.screen));
+        // Filtered by what this school has: a screen with no equivalent here
+        // disappears rather than offering an empty state about somebody's
+        // university. See `lib/school.ts`.
+        const rows = destinationsFor(group, school.capabilities).filter(
+          (d) => !HIDE_IN_ME.includes(d.screen),
+        );
         if (rows.length === 0) return null;
         return (
           <div key={group}>
@@ -483,8 +490,8 @@ export function Me() {
  * taps under Me. Typing what you want is allowed to be the way you get there.
  */
 export function Search() {
-  const { state, dispatch, now, catalog } = useStore();
-  const groups = findEverything(catalog, now, state.query, state.notes, state.tasks);
+  const { state, dispatch, now, catalog, school } = useStore();
+  const groups = findEverything(catalog, now, state.query, state.notes, state.tasks, school.capabilities);
   const total = countHits(groups);
   const typed = state.query.trim().length > 0;
 
@@ -687,7 +694,8 @@ function Reminders() {
 }
 
 export function Settings({ bare = false }: { bare?: boolean } = {}) {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, school } = useStore();
+  const hidden = hiddenFor(school.capabilities);
 
   // `bare` when it is a tab of Me, which has already padded the page; the
   // standalone screen still exists so search and a deep link can reach it.
@@ -1074,6 +1082,28 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
       <MyRules />
 
       <PushSwitch />
+
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Where you study</SectionLabel>
+      <Segmented
+        options={[
+          ...bundledList().map((sc) => ({ id: sc.id, label: sc.shortName ?? sc.name })),
+          { id: '', label: 'Somewhere else' },
+        ]}
+        value={state.schoolId}
+        onChange={(id) => dispatch({ type: 'setSchool', id })}
+      />
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
+        {schoolLine(school)}
+      </div>
+      {hidden.length > 0 && (
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
+          {/* Named rather than counted. "3 screens are hidden" invites the
+              question this answers. */}
+          Hidden: {hidden.map((h) => DESTINATIONS.find((d) => d.screen === h)?.label ?? h).join(', ')}.
+          Everything else — your courses, deadlines, grades, cards, papers, essays, the weekly
+          report — works the same wherever you are.
+        </div>
+      )}
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Your courses</SectionLabel>
       <Toggle

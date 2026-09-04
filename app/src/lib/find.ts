@@ -20,6 +20,22 @@
 import type { Catalog } from '../data/catalog';
 import { datedItems } from './select';
 import { DESTINATIONS } from './nav';
+import { allowed, type Capabilities } from './school';
+
+/**
+ * The default for a caller that has not been given a school.
+ *
+ * Everything on rather than everything off: a missing argument should not
+ * quietly make six screens unfindable, which is a failure nobody would notice
+ * until somebody could not find their meal plan.
+ */
+const ANY: Capabilities = {
+  mealPlan: 'both',
+  housing: true,
+  campusMap: true,
+  registrarUrl: 'https://example.invalid',
+  orgPortalUrl: 'https://example.invalid',
+};
 import type { CourseId, Note, PersonalTask, Screen, StudyMode } from './types';
 
 export type Hit =
@@ -71,6 +87,12 @@ export function findEverything(
   query: string,
   notes: Note[],
   tasks: PersonalTask[],
+  /**
+   * What this school has. Screens it has no equivalent of are not findable —
+   * search was the leak that would have let somebody reach a meal plan screen
+   * their university does not have.
+   */
+  caps: Capabilities = ANY,
 ): HitGroup[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -144,6 +166,7 @@ export function findEverything(
 
   const screens: Hit[] = [];
   for (const d of DESTINATIONS) {
+    if (!allowed(d.screen, caps)) continue;
     const s = score(q, d.label, `${d.blurb} ${d.keywords}`);
     if (s) screens.push({ kind: 'screen', screen: d.screen, title: d.label, sub: d.blurb, tag: 'Go to', score: s });
   }

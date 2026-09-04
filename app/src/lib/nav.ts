@@ -16,6 +16,7 @@
  */
 
 import type { Screen } from './types';
+import { allowed, type Capabilities } from './school';
 
 /**
  * The shelves the directory is arranged on.
@@ -521,4 +522,21 @@ export function destination(screen: Screen): Destination | undefined {
 
 export function destinationsIn(group: Group): Destination[] {
   return DESTINATIONS.filter((d) => d.group === group);
+}
+
+/**
+ * The same list, minus what this school has no equivalent of.
+ *
+ * A screen whose capability is absent disappears rather than rendering an
+ * empty state apologising for somebody's university — see `lib/school.ts`. It
+ * is filtered here, once, so the directory, search and the tab chooser cannot
+ * disagree about whether a screen exists.
+ */
+export function destinationsFor(group: Group, c: Capabilities): Destination[] {
+  return destinationsIn(group).filter((d) => allowed(d.screen, c));
+}
+
+/** Every destination the app can offer this student, across all groups. */
+export function offered(c: Capabilities): Destination[] {
+  return DESTINATIONS.filter((d) => allowed(d.screen, c));
 }
