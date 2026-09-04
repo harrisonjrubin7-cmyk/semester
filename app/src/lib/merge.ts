@@ -64,6 +64,9 @@ export const STRATEGY: Record<string, Strategy> = {
   feeds: 'union',
   feedEvents: 'union',
   extraLinks: 'union',
+  // Schools added by hand. Two devices adding two different ones should end
+  // with both, which is what `union` on id does.
+  mySchools: 'union',
 
   // Maps keyed by id, where each key is its own small decision.
   done: 'ticks',

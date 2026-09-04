@@ -116,6 +116,16 @@ export interface School {
   id: string;
   name: string;
   shortName?: string;
+  /**
+   * Addresses that suggest this school, and suggest is the whole of it.
+   *
+   * Used to preselect a school for somebody signing in from `@vanderbilt.edu`.
+   * Never to restrict, filter, or verify: plenty of students sign in with a
+   * personal address, and refusing somebody their own university over the
+   * domain in their email would be the worst thing this file could do. See
+   * `lib/findschool.ts`.
+   */
+  emailDomains?: string[];
   capabilities: Capabilities;
   data: SchoolData;
   /**
@@ -318,6 +328,9 @@ export function readSchool(raw: unknown): School {
     id: typeof s.id === 'string' ? s.id : '',
     name: typeof s.name === 'string' ? s.name : '',
     shortName: typeof s.shortName === 'string' ? s.shortName : undefined,
+    emailDomains: Array.isArray(s.emailDomains)
+      ? s.emailDomains.filter((d): d is string => typeof d === 'string' && d.trim() !== '')
+      : undefined,
     capabilities: readCapabilities(s.capabilities),
     data: readData(s.data),
     verified: s.verified === true,

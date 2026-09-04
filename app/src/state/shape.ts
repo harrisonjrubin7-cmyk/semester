@@ -59,6 +59,7 @@ import { readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
 import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
 import { readOverrides, type GradeSystem } from '../lib/cutoffs';
+import { readSchool, type School } from '../lib/school';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -100,6 +101,15 @@ export interface Persisted {
    * a per-course override is the level this belongs at. See `lib/cutoffs.ts`.
    */
   gradeSystems: Record<string, GradeSystem>;
+  /**
+   * Schools somebody added because the app did not have theirs.
+   *
+   * Local, unverified, and searched alongside the bundled ones. The app knows
+   * one university properly and will never know all of them; a school profile
+   * is a handful of names, links and yes/no answers, so the person who knows
+   * the answers fills them in. See `lib/findschool.ts`.
+   */
+  mySchools: School[];
   /**
    * Places you named, so a coordinate can mean something.
    *
@@ -571,6 +581,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   reviews: {},
   grades: {},
   gradeSystems: {},
+  mySchools: [],
   places: [],
   commitments: [],
   timers: [],
@@ -745,6 +756,9 @@ export function loadPersisted(): Persisted {
       reviews: saved.reviews ?? {},
       grades: saved.grades ?? {},
       gradeSystems: readOverrides(saved.gradeSystems),
+      mySchools: Array.isArray(saved.mySchools)
+        ? saved.mySchools.map(readSchool).filter((s) => s.id && s.name)
+        : [],
       places: saved.places ?? [],
       commitments: saved.commitments ?? [],
       timers: saved.timers ?? [],
@@ -848,6 +862,7 @@ export function pickPersisted(state: State): Persisted {
     reviews: state.reviews,
     grades: state.grades,
     gradeSystems: state.gradeSystems,
+    mySchools: state.mySchools,
     places: state.places,
     commitments: state.commitments,
     timers: state.timers,
@@ -933,6 +948,10 @@ export type Action =
   // `system` null clears the override, so a course falls back to the school's
   // scale rather than being stuck with a corrected one forever.
   | { type: 'setCutoffs'; courseId: string; system: GradeSystem | null }
+  // Adds the school and selects it in one action: nobody fills in that form
+  // and then wants to be handed a list to pick from.
+  | { type: 'addSchool'; school: School }
+  | { type: 'forgetSchool'; id: string }
   | { type: 'addPlace'; place: Omit<SavedPlace, 'id' | 'created'> }
   | { type: 'removePlace'; id: string }
   | { type: 'addCommitment'; commitment: Omit<Commitment, 'id' | 'created'> }

@@ -603,7 +603,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * on a first launch gets the full profile with no network call, which is the
    * guarantee the rest of the app already keeps.
    */
-  const school = useMemo(() => resolveSchool(state.schoolId, null), [state.schoolId]);
+  const school = useMemo(
+    () => resolveSchool(state.schoolId, null, state.mySchools),
+    [state.schoolId, state.mySchools],
+  );
 
   /**
    * How far along this semester is, for progressive disclosure.

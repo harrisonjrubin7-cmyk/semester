@@ -36,9 +36,9 @@ import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { DESTINATIONS, destinationsIn, listed, type Group } from '../lib/nav';
-import { hiddenFor, schoolLine } from '../lib/school';
+import { hiddenFor } from '../lib/school';
+import { SchoolPicker } from '../components/SchoolPicker';
 import { countHidden, revealLine } from '../lib/reveal';
-import { bundledList } from '../data/schools';
 
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
@@ -1104,17 +1104,11 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
       </div>
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Where you study</SectionLabel>
-      <Segmented
-        options={[
-          ...bundledList().map((sc) => ({ id: sc.id, label: sc.shortName ?? sc.name })),
-          { id: '', label: 'Somewhere else' },
-        ]}
-        value={state.schoolId}
-        onChange={(id) => dispatch({ type: 'setSchool', id })}
-      />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
-        {schoolLine(school)}
-      </div>
+      {/* Was a two-option toggle: this school, or "somewhere else". That is
+          fine for one student and useless for anyone whose university the app
+          has never heard of, which is everyone else. See
+          `components/SchoolPicker.tsx` — find it, add it, or skip. */}
+      <SchoolPicker />
       {hidden.length > 0 && (
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
           {/* Named rather than counted. "3 screens are hidden" invites the

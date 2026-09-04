@@ -33,6 +33,19 @@ export function settings(state: State, action: Action): State | null {
     case 'setGrade':
       return { ...state, grades: { ...state.grades, [action.key]: action.value } };
 
+    case 'addSchool': {
+      const rest = state.mySchools.filter((s) => s.id !== action.school.id);
+      return { ...state, mySchools: [...rest, action.school], schoolId: action.school.id };
+    }
+
+    case 'forgetSchool': {
+      const mySchools = state.mySchools.filter((s) => s.id !== action.id);
+      // Selecting a school that no longer exists would resolve to nothing and
+      // silently hide screens, so the selection falls back with it.
+      const schoolId = state.schoolId === action.id ? '' : state.schoolId;
+      return { ...state, mySchools, schoolId };
+    }
+
     case 'setCutoffs': {
       const next = { ...state.gradeSystems };
       if (action.system) next[action.courseId] = action.system;
