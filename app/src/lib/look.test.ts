@@ -119,9 +119,15 @@ describe('tokensFor', () => {
     expect(tokensFor({ accent: 'brass', ground: 'parchment' })['--app-accent']).toBe('#6b5c34');
   });
 
-  it('keeps the accent bright as a fill on every ground — a fill is not read', () => {
+  it('darkens the fill on a light ground too, because a fill still has to be seen', () => {
+    // This test used to assert the opposite, under the name "a fill is not
+    // read". A fill is not read and it does still have to be visible: on
+    // Parchment the pale metals came out at 1.26:1 against the surface behind
+    // them, which is a progress meter you cannot find. Caught by
+    // `lib/contrast.test.ts`, which checks all hundred combinations.
     for (const g of GROUNDS) {
-      expect(tokensFor({ accent: 'jade', ground: g.id })['--app-accent-fill']).toBe('#a8ccbd');
+      const fill = tokensFor({ accent: 'jade', ground: g.id })['--app-accent-fill'];
+      expect(fill).toBe(g.light ? '#3d5f52' : '#a8ccbd');
     }
   });
 

@@ -49,6 +49,13 @@ export interface Accent {
 /**
  * The accents the app will wear.
  *
+ * The `deep` step sets section labels and kickers — small uppercase text — and
+ * six of these were under WCAG's 4.5:1 against the darker panels, Oxblood
+ * worst at 3.23:1 on Graphite. They have been lightened by the smallest amount
+ * that clears it. Nothing was chosen by eye: `lib/contrast.test.ts` holds all
+ * hundred accent-and-ground combinations to the ratio, and the app has ten
+ * grounds, so ninety-six of those pairings had never been looked at by anyone.
+ *
  * Metals and stones. The look depends on the accent not being a colour — a
  * saturated one turns a drawn interface into a dashboard — so every one of
  * these is desaturated enough to sit under text without fighting it.
@@ -56,13 +63,13 @@ export interface Accent {
 export const ACCENTS: Accent[] = [
   { id: 'sterling', label: 'Sterling', base: '#d4d9e2', bright: '#f6f8fb', deep: '#949cab', shade: '#4c5561' },
   { id: 'brass', label: 'Brass', base: '#d8c79a', bright: '#f2e7c8', deep: '#a3936a', shade: '#6b5c34' },
-  { id: 'copper', label: 'Copper', base: '#d6a98d', bright: '#f0d3c0', deep: '#a67c63', shade: '#7a4c33' },
+  { id: 'copper', label: 'Copper', base: '#d6a98d', bright: '#f0d3c0', deep: '#b18c76', shade: '#7a4c33' },
   { id: 'jade', label: 'Jade', base: '#a8ccbd', bright: '#d3e9e0', deep: '#7a9a8d', shade: '#3d5f52' },
-  { id: 'slate', label: 'Slate', base: '#aebdd0', bright: '#d8e2ee', deep: '#7f8c9d', shade: '#445466' },
-  { id: 'pewter', label: 'Pewter', base: '#b9b9bd', bright: '#e2e2e6', deep: '#85858b', shade: '#55555a' },
-  { id: 'oxblood', label: 'Oxblood', base: '#c99a9a', bright: '#e8cdcd', deep: '#96706f', shade: '#6f3f3f' },
-  { id: 'moss', label: 'Moss', base: '#b6c39b', bright: '#dde5c9', deep: '#87926f', shade: '#4f5a37' },
-  { id: 'ink', label: 'Indigo', base: '#a9aed6', bright: '#d5d8ee', deep: '#7c81a5', shade: '#454a72' },
+  { id: 'slate', label: 'Slate', base: '#aebdd0', bright: '#d8e2ee', deep: '#8894a4', shade: '#445466' },
+  { id: 'pewter', label: 'Pewter', base: '#b9b9bd', bright: '#e2e2e6', deep: '#929298', shade: '#55555a' },
+  { id: 'oxblood', label: 'Oxblood', base: '#c99a9a', bright: '#e8cdcd', deep: '#ab8d8c', shade: '#6f3f3f' },
+  { id: 'moss', label: 'Moss', base: '#b6c39b', bright: '#dde5c9', deep: '#8d9776', shade: '#4f5a37' },
+  { id: 'ink', label: 'Indigo', base: '#a9aed6', bright: '#d5d8ee', deep: '#8d91b1', shade: '#454a72' },
   { id: 'gold', label: 'Old gold', base: '#d6c089', bright: '#efe1bc', deep: '#a3906a', shade: '#695a2f' },
 ];
 
@@ -195,7 +202,7 @@ export const GROUNDS: Ground[] = [
     ramp: ['#e8e4dc', '#f4f1ea', '#fbf9f4', '#ffffff', '#ffffff'],
     fg: '#1b1a17',
     dimAlpha: 0.68,
-    faintAlpha: 0.46,
+    faintAlpha: 0.47,
   },
   {
     id: 'paper',
@@ -205,7 +212,7 @@ export const GROUNDS: Ground[] = [
     ramp: ['#dfe2e8', '#f2f4f7', '#fbfcfd', '#ffffff', '#ffffff'],
     fg: '#15181d',
     dimAlpha: 0.68,
-    faintAlpha: 0.46,
+    faintAlpha: 0.47,
   },
   {
     id: 'fog',
@@ -361,9 +368,15 @@ export function tokensFor(look: Look): Record<string, string> {
     '--app-accent-bright': g.light ? a.shade : a.bright,
     '--app-accent-deep': g.light ? a.shade : a.deep,
     '--app-accent-wash': g.light ? fade(a.shade, 0.1) : fade(a.base, 0.12),
-    // The accent as a fill rather than as ink — a dot, a bar, a meter. Stays
-    // the bright metal on every ground, because a fill is not read.
-    '--app-accent-fill': a.base,
+    // The accent as a fill rather than as ink — a dot, a bar, a meter.
+    //
+    // This used to stay the bright metal on every ground, with a comment
+    // saying a fill is not read. A fill is not read and it still has to be
+    // seen: on Parchment the pale metals came out at 1.26:1 against the
+    // surface behind them, which is a progress meter you cannot find. WCAG
+    // asks 3:1 of meaningful non-text marks for exactly this reason, and
+    // `lib/contrast.test.ts` now holds all hundred combinations to it.
+    '--app-accent-fill': g.light ? a.shade : a.base,
 
     '--app-line': `rgba(${edge}, ${g.light ? 0.16 : 0.11})`,
     '--app-line-top': g.light ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.07)',
