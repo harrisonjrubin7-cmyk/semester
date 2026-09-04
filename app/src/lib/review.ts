@@ -190,3 +190,33 @@ export function tally(reviews: Reviews): { cards: number; right: number; wrong: 
   const answered = right + wrong;
   return { cards: rows.length, right, wrong, pct: answered ? Math.round((right / answered) * 100) : 0 };
 }
+
+/**
+ * The same tally, split by course.
+ *
+ * A card's key is a hash of its question, so a course cannot be recovered from
+ * one — the caller hands over each course's questions and the keys are
+ * recomputed. Done this way round so this file stays free of the catalogue,
+ * which imports half the app.
+ *
+ * Only cards you have actually answered count. A deck of two hundred you have
+ * never opened is not evidence of anything.
+ */
+export function tallyBy(
+  reviews: Reviews,
+  decks: { courseId: string; questions: string[] }[],
+): Record<string, { right: number; wrong: number }> {
+  const out: Record<string, { right: number; wrong: number }> = {};
+  for (const deck of decks) {
+    let right = 0;
+    let wrong = 0;
+    for (const q of deck.questions) {
+      const r = reviews[cardKey(deck.courseId, q)];
+      if (!r || r.seen === 0) continue;
+      right += r.right;
+      wrong += r.wrong;
+    }
+    if (right + wrong > 0) out[deck.courseId] = { right, wrong };
+  }
+  return out;
+}

@@ -22,6 +22,7 @@ import { overdueCount } from '../lib/standing';
 import { visible } from '../lib/feed';
 import { line, pressing, standing } from '../lib/registrar';
 import { HowLong } from '../components/HowLong';
+import { DropBy } from '../components/DropBy';
 import { Brief } from './Brief';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
@@ -558,6 +559,11 @@ function Feed_rail() {
   );
 }
 
+/** One section of the Today feed. Silent unless there is a reason to speak. */
+function Feed_dropby() {
+  return <DropBy limit={2} />;
+}
+
 /**
  * The university's own deadlines, when one is close.
  *
@@ -616,6 +622,7 @@ function Feed_registrar() {
 const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   next: Feed_next,
   due: Feed_due,
+  dropby: Feed_dropby,
   registrar: Feed_registrar,
   tasks: Feed_tasks,
   rail: Feed_rail,

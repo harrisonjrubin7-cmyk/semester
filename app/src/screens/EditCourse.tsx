@@ -4,6 +4,7 @@ import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { SEMESTER_YEAR } from '../lib/date';
 import { STANCES, stanceLine } from '../lib/essay';
+import { readClock } from '../lib/officehours';
 import {
   DAYS,
   KINDS,
@@ -262,11 +263,21 @@ export function EditCourse() {
               className="input"
               value={block.time}
               placeholder="9:10a"
+              aria-label="Start time"
               onChange={(e) =>
                 change(
                   withSchedule(
                     draft,
-                    draft.schedule.map((b, n) => (n === i ? { ...b, time: e.target.value } : b)),
+                    draft.schedule.map((b, n) => {
+                      if (n !== i) return b;
+                      // The grid places a block by `at`, not by `time`. Retyping
+                      // the time used to leave `at` on whatever it was, so every
+                      // block added by hand sat at 9am however it was labelled.
+                      // A time the parser cannot read leaves `at` alone rather
+                      // than moving the block to midnight mid-keystroke.
+                      const at = readClock(e.target.value);
+                      return { ...b, time: e.target.value, at: at ?? b.at };
+                    }),
                   ),
                 )
               }
@@ -298,24 +309,54 @@ export function EditCourse() {
           </div>
         </Blueprint>
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
-        onClick={() =>
-          change(
-            withSchedule(draft, [
-              ...draft.schedule,
-              { days: [1, 3, 5], at: 540, time: '9:00a', title: 'Lecture', meta: draft.course.room },
-            ]),
-          )
-        }
-        style={{ height: 40, fontSize: 12 }}
-      >
-        + Add a meeting
-      </button>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() =>
+            change(
+              withSchedule(draft, [
+                ...draft.schedule,
+                { days: [1, 3, 5], at: 540, time: '9:00a', title: 'Lecture', meta: draft.course.room },
+              ]),
+            )
+          }
+          style={{ flex: 1, height: 40, fontSize: 12 }}
+        >
+          + Add a meeting
+        </button>
+        {/*
+          Office hours are on every syllabus and were on none of the courses,
+          because putting them in meant knowing that a schedule block with
+          `optional` set is what the app calls them. This is that, as a button.
+        */}
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() =>
+            change(
+              withSchedule(draft, [
+                ...draft.schedule,
+                {
+                  days: [2],
+                  at: 14 * 60,
+                  time: '2:00p',
+                  title: `${draft.course.prof || 'Office'} office hours`.trim(),
+                  meta: draft.course.room,
+                  optional: true,
+                },
+              ]),
+            )
+          }
+          style={{ flex: 1, height: 40, fontSize: 12 }}
+        >
+          + Office hours
+        </button>
+      </div>
       <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
-        The time is written as it appears on screen. The hour grid places a class by it, so
-        "9:10a" is understood and "morning" is not.
+        The time is written as it appears on screen, and the hour grid places a block by it — so
+        "9:10a" and "2:45p" are understood and "morning" is not. Office hours sit dimmer on the
+        rail than a class, and are what the app watches when it notices a course going badly.
       </div>
 
       <SectionLabel>Deadlines</SectionLabel>

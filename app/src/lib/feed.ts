@@ -24,6 +24,11 @@ export const SECTIONS: FeedSection[] = [
   { id: 'next', label: 'Next class', blurb: 'The countdown, and anything overdue.' },
   { id: 'due', label: 'Due today', blurb: 'The checklist, with the headline that counts down.' },
   {
+    id: 'dropby',
+    label: 'Worth dropping by',
+    blurb: 'Office hours, in a week the app can say why.',
+  },
+  {
     id: 'registrar',
     label: 'University deadlines',
     blurb: 'Add/drop, withdrawal, registration — the dates that cost money.',

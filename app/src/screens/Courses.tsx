@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { HowLong } from '../components/HowLong';
+import { DropBy } from '../components/DropBy';
+import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -382,6 +384,11 @@ export function CourseDetail() {
       ) : null}
 
       <LmsLink course={course} />
+
+      {/* Silent unless the app has a reason. See `lib/officehours.ts`. */}
+      <DropBy courseId={course.id} />
+
+      <OfficeHours courseId={course.id} />
 
       <SectionLabel style={{ margin: '24px 0 6px' }}>How the grade is built</SectionLabel>
       <table className="table">

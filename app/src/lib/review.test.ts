@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   cardKey,
+  tallyBy,
   dueCount,
   dueFirst,
   emptyReview,
@@ -182,5 +183,39 @@ describe('tally', () => {
 
   it('does not divide by zero on an empty history', () => {
     expect(tally({}).pct).toBe(0);
+  });
+});
+
+describe('tallying by course', () => {
+  const deck = (courseId: string, qs: string[]) => ({ courseId, questions: qs });
+
+  it('recomputes the keys, because a hash gives its course back to nobody', () => {
+    const reviews: Reviews = {
+      [cardKey('econ', 'What is elasticity?')]: {
+        right: 3, wrong: 1, streak: 1, ease: 2.5, interval: 1, seen: 5, due: 9,
+      },
+      [cardKey('psci', 'What is federalism?')]: {
+        right: 1, wrong: 4, streak: 0, ease: 2.5, interval: 1, seen: 5, due: 9,
+      },
+    };
+    expect(
+      tallyBy(reviews, [
+        deck('econ', ['What is elasticity?']),
+        deck('psci', ['What is federalism?']),
+      ]),
+    ).toEqual({ econ: { right: 3, wrong: 1 }, psci: { right: 1, wrong: 4 } });
+  });
+
+  it('leaves out a course whose deck has never been opened', () => {
+    expect(tallyBy({}, [deck('bus', ['Anything?'])])).toEqual({});
+  });
+
+  it('ignores a card that was seeded but never answered', () => {
+    const reviews: Reviews = {
+      [cardKey('econ', 'q')]: {
+        right: 0, wrong: 0, streak: 0, ease: 2.5, interval: 0, seen: 0, due: 0,
+      },
+    };
+    expect(tallyBy(reviews, [deck('econ', ['q'])])).toEqual({});
   });
 });
