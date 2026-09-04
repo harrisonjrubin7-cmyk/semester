@@ -365,6 +365,15 @@ export function CourseDetail() {
         Add a reading to this course
       </button>
 
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => dispatch({ type: 'go', screen: 'announce' })}
+        style={{ height: 44, marginTop: 8 }}
+      >
+        Fold in an announcement
+      </button>
+
       {state.courses.some((c) => c.course.id === course.id) && (
         <button
           type="button"

@@ -196,6 +196,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'calendar',
   },
   {
+    screen: 'announce',
+    label: 'Fold in an announcement',
+    blurb: 'Paste the email that moved a deadline, and take the changes one at a time.',
+    keywords: 'announcement announce email post update moved change changed cancelled canceled postponed rescheduled deadline date shift new due date brightspace canvas notice message professor said class email paste',
+    group: 'Upkeep',
+    root: 'courses',
+  },
+  {
     screen: 'runway',
     label: 'Exam runway',
     blurb: 'The weeks before an exam, counted backwards from it — and what stands in the way.',
