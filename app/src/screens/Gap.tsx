@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { allCards } from '../data/catalog';
 import { liveGuide } from '../lib/live';
@@ -20,6 +20,7 @@ import {
   walkTo,
   type Gap as Window,
 } from '../lib/gap';
+import { canSpeak, hush, readAloud, say, spoken, writeAloud } from '../lib/speak';
 
 /**
  * The window, worked out once and read by both the screen and the offer.
@@ -90,6 +91,7 @@ function Run({ win }: { win: Window }) {
   const [shown, setShown] = useState(false);
   const [got, setGot] = useState(0);
   const [stopped, setStopped] = useState(false);
+  const [aloud, setAloud] = useState(readAloud);
 
   // Read once, and only added to. The budget must not change under you
   // mid-run: a deck that grows by four cards because you answered the first
@@ -124,10 +126,20 @@ function Run({ win }: { win: Window }) {
   // From the store's clock rather than a fresh `Date.now()`, so the render
   // is pure and the bar advances on the same thirty-second tick as the rest
   // of the app instead of only when a card is answered.
+  // The card read out loud, when asked for. What actually stops somebody
+  // using a phone in motion is having to look at it; see `lib/speak.ts`.
+  const card = deck[idx];
+  useEffect(() => {
+    if (!aloud || !card) return;
+    say(spoken(card, shown));
+  }, [aloud, card, shown]);
+
+  // Nothing should still be reading a card on the screen you left for.
+  useEffect(() => hush, []);
+
   const elapsed = now.getTime() - startedAt.current;
   const left = leftOf(win, elapsed);
   const over = stopped || left === 0 || idx >= deck.length;
-  const card = deck[idx];
 
   const answer = (right: boolean) => {
     if (!card) return;
@@ -221,8 +233,34 @@ function Run({ win }: { win: Window }) {
         }}
       >
         <span>{card.code}</span>
-        <span>
-          {left} min · {idx + 1}/{deck.length}
+        <span style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
+          {canSpeak() ? (
+            <button
+              type="button"
+              className="bare"
+              aria-pressed={aloud}
+              aria-label={aloud ? 'Stop reading cards aloud' : 'Read cards aloud'}
+              onClick={() => {
+                const on = !aloud;
+                setAloud(on);
+                writeAloud(on);
+                if (!on) hush();
+              }}
+              style={{
+                width: 'auto',
+                fontSize: 11,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                opacity: aloud ? 1 : 0.5,
+                color: aloud ? 'var(--app-accent)' : 'var(--app-fg)',
+              }}
+            >
+              {aloud ? 'Aloud ON' : 'Aloud'}
+            </button>
+          ) : null}
+          <span>
+            {left} min · {idx + 1}/{deck.length}
+          </span>
         </span>
       </div>
 
