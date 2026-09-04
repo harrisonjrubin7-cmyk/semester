@@ -17,6 +17,7 @@ import { readTabs } from '../../lib/tabbar';
 import { readRules } from '../../lib/myrules';
 import { mark as markAttendance, readPolicy } from '../../lib/attend';
 import { readDrop } from '../../lib/drop';
+import { readSettings as readGeocode } from '../../lib/geocode';
 
 export function settings(state: State, action: Action): State | null {
   switch (action.type) {
@@ -76,6 +77,12 @@ export function settings(state: State, action: Action): State | null {
 
     case 'setDayBudget':
       return { ...state, dayBudget: Math.max(1, Math.min(16, Math.round(action.hours * 2) / 2)) };
+
+    // Address lookup. Read back through `readSettings` on the way in so the
+    // rule that reverse cannot be on while the whole thing is off is enforced
+    // in one place rather than trusted to every caller.
+    case 'setGeocode':
+      return { ...state, geocode: readGeocode({ ...state.geocode, ...action.patch }) };
 
     case 'setYours':
       return { ...state, yours: action.yours };

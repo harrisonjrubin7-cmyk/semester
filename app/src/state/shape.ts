@@ -31,6 +31,8 @@ import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
 import { readApplications, type Application, type Stage } from '../lib/apply';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
+import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
+import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
@@ -104,6 +106,21 @@ export interface Persisted {
    * page book, and a page number is one somebody already has in front of them.
    */
   progress: Record<string, Progress>;
+  /**
+   * Work that has come back, and the window each course allows for saying
+   * something about it. See `lib/returned.ts` — the most consequential
+   * deadline in a syllabus and the only one nobody puts in a calendar, because
+   * it does not exist until a grade appears.
+   */
+  returned: Returned[];
+  regradeWindows: Record<string, RegradeWindow>;
+  /**
+   * Whether the app may look an address up, and how. Off by default and
+   * off in two directions independently — see `lib/geocode.ts`. With it off
+   * the app behaves exactly as it always has: you name places yourself and
+   * nothing leaves the device.
+   */
+  geocode: Geocode;
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
@@ -434,6 +451,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   alarms: [],
   applications: [],
   progress: {},
+  returned: [],
+  regradeWindows: {},
+  geocode: { on: false, reverseOn: false, service: 'nominatim' },
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
@@ -562,6 +582,9 @@ export function loadPersisted(): Persisted {
       alarms: saved.alarms ?? [],
       applications: readApplications(saved.applications),
       progress: readProgress(saved.progress),
+      returned: readReturned(saved.returned),
+      regradeWindows: readWindows(saved.regradeWindows),
+      geocode: readGeocode(saved.geocode),
       feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
@@ -649,6 +672,9 @@ export function pickPersisted(state: State): Persisted {
     alarms: state.alarms,
     applications: state.applications,
     progress: state.progress,
+    returned: state.returned,
+    regradeWindows: state.regradeWindows,
+    geocode: state.geocode,
     feedOrder: state.feedOrder,
     tabs: state.tabs,
     yours: state.yours,
@@ -720,6 +746,11 @@ export type Action =
   | { type: 'setReadingLength'; id: string; unit: Unit; total: number }
   | { type: 'markReading'; id: string; done: number }
   | { type: 'clearReading'; id: string }
+  | { type: 'markReturned'; id: string; courseId: string }
+  | { type: 'patchReturned'; id: string; patch: Partial<Returned> }
+  | { type: 'unmarkReturned'; id: string }
+  | { type: 'setRegradeWindow'; courseId: string; window: RegradeWindow }
+  | { type: 'setGeocode'; patch: Partial<Geocode> }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }

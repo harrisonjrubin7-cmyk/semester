@@ -4,6 +4,7 @@ import { WorstDay } from '../components/Clashes';
 import { TimerLine } from '../components/TimerLine';
 import { ApplyingSoon } from '../components/Applying';
 import { ReadingsOnTheGo } from '../components/ReadingProgress';
+import { ClosingWindows } from '../components/Windows';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
@@ -717,6 +718,7 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   timers: TimerLine,
   applying: ApplyingSoon,
   reading: ReadingsOnTheGo,
+  windows: ClosingWindows,
 };
 
 function TodayFeed() {

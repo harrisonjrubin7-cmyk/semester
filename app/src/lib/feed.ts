@@ -42,6 +42,11 @@ export const SECTIONS: FeedSection[] = [
     blurb: 'A day in the next fortnight that will not fit — two exams, a stack at midnight, or more hours than the day holds.',
   },
   {
+    id: 'windows',
+    label: 'Time to say something',
+    blurb: 'Regrade windows still open on work that has come back. Nothing when none is.',
+  },
+  {
     id: 'reading',
     label: 'Part way through',
     blurb: 'Readings you have started and not finished — the ones that otherwise look untouched.',

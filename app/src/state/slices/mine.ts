@@ -13,6 +13,7 @@ import { newId } from '../../lib/files';
 import { newAlarm, newTimer } from '../../lib/clocks';
 import { moveTo, newApplication } from '../../lib/apply';
 import { mark, newProgress } from '../../lib/progress';
+import { newReturned } from '../../lib/returned';
 import { tidy } from '../../lib/windows';
 import type { Action, State } from '../shape';
 
@@ -170,6 +171,31 @@ export function mine(state: State, action: Action): State | null {
       delete next[action.id];
       return { ...state, progress: next };
     }
+
+    // Work coming back. The clock for a regrade starts here rather than at the
+    // due date, which is why this could never have been worked out in advance.
+    case 'markReturned': {
+      if (state.returned.some((r) => r.id === action.id)) return state;
+      return {
+        ...state,
+        returned: [newReturned(action.id, action.courseId, Date.now()), ...state.returned],
+      };
+    }
+
+    case 'patchReturned':
+      return {
+        ...state,
+        returned: state.returned.map((r) => (r.id === action.id ? { ...r, ...action.patch } : r)),
+      };
+
+    case 'unmarkReturned':
+      return { ...state, returned: state.returned.filter((r) => r.id !== action.id) };
+
+    case 'setRegradeWindow':
+      return {
+        ...state,
+        regradeWindows: { ...state.regradeWindows, [action.courseId]: action.window },
+      };
 
     // The hours you actually work in. See `lib/windows.ts` — these make every
     // hour figure in the app true rather than nominal.

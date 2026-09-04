@@ -125,6 +125,13 @@ export const STRATEGY: Record<string, Strategy> = {
   // Each record carries its own `updated`, so two devices reading the same
   // chapter keep the later position rather than whichever synced last.
   progress: 'latest',
+  // A piece of work coming back is a fact with an id, and two devices marking
+  // two different pieces should end with both.
+  returned: 'union',
+  regradeWindows: 'ticks',
+  // A consent, and consent given on one device is consent given. `theirs`
+  // rather than `mine` so turning it off anywhere turns it off everywhere.
+  geocode: 'theirs',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',

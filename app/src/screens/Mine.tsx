@@ -8,6 +8,7 @@ import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import type { CourseId } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 import { CheckIt } from '../components/CheckIt';
+import { FindPlace } from '../components/FindPlace';
 import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
 import { PrintButton } from '../components/PrintButton';
@@ -737,6 +738,12 @@ function Places() {
           )}
         </Blueprint>
       )}
+
+      {/* The other route to a place, for the addresses you cannot stand in
+          front of. Off until switched on — see `lib/geocode.ts`. */}
+      <div style={{ marginTop: 26 }}>
+        <FindPlace />
+      </div>
 
       {error && (
         <div
