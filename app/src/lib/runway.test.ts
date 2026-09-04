@@ -290,3 +290,13 @@ describe('a testing-centre booking', () => {
     expect(bookBy(exam, 3)?.getDate()).toBe(25); // Wed 25 Nov, not the 27th
   });
 });
+
+describe('an item with no weight at all', () => {
+  it('is simply not an exam, rather than a thrown error', () => {
+    // Reachable from a shared course file or a syllabus that stated no
+    // weights, and `isExam` is now called from three places.
+    expect(isExam({ kind: 'Reading', title: 'Chapter 4' })).toBe(false);
+    expect(isExam({ kind: 'Midterm', title: '' })).toBe(true);
+    expect(isExam({ kind: 'Paper', title: '', weight: undefined })).toBe(false);
+  });
+});

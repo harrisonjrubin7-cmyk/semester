@@ -33,6 +33,7 @@ import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
 import { readLog, readPolicy, type AttendPolicy, type Attended } from '../lib/attend';
 import { readDrop } from '../lib/drop';
+import { DEFAULT_BUDGET } from '../lib/clash';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
 import { type Reviews } from '../lib/review';
@@ -109,6 +110,8 @@ export interface Persisted {
   pieces: Record<string, string>;
   /** How many lowest pieces a category drops. See `lib/drop.ts`. */
   drops: Record<string, number>;
+  /** Hours of coursework in a day before it stops being a normal day. */
+  dayBudget: number;
   /** The order they put their courses in. Ids not listed keep import order. */
   courseOrder: CourseId[];
   /** The destinations you opened most recently, newest first. */
@@ -415,6 +418,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   attendPolicy: {},
   pieces: {},
   drops: {},
+  dayBudget: DEFAULT_BUDGET,
   recent: [],
   sittings: [],
   sources: [],
@@ -539,6 +543,10 @@ export function loadPersisted(): Persisted {
         Object.entries(saved.attendPolicy ?? {}).map(([k, v]) => [k, readPolicy(v)]),
       ),
       pieces: saved.pieces ?? {},
+      dayBudget:
+        typeof saved.dayBudget === 'number' && saved.dayBudget > 0 && saved.dayBudget <= 16
+          ? saved.dayBudget
+          : DEFAULT_BUDGET,
       drops: Object.fromEntries(
         Object.entries(saved.drops ?? {}).map(([k, v]) => [k, readDrop(v)]),
       ),
@@ -613,6 +621,7 @@ export function pickPersisted(state: State): Persisted {
     attendance: state.attendance,
     attendPolicy: state.attendPolicy,
     pieces: state.pieces,
+    dayBudget: state.dayBudget,
     drops: state.drops,
     courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
@@ -667,6 +676,7 @@ export type Action =
   | { type: 'setAttendPolicy'; courseId: CourseId; policy: AttendPolicy }
   | { type: 'setPieces'; key: string; text: string }
   | { type: 'setDrop'; key: string; drop: number }
+  | { type: 'setDayBudget'; hours: number }
   | { type: 'setCourseOrder'; order: CourseId[] }
   | { type: 'toggleFeedSection'; id: string }
   | { type: 'setLook'; look: Partial<Look> }

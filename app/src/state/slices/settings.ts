@@ -74,6 +74,9 @@ export function settings(state: State, action: Action): State | null {
     case 'setDrop':
       return { ...state, drops: { ...state.drops, [action.key]: readDrop(action.drop) } };
 
+    case 'setDayBudget':
+      return { ...state, dayBudget: Math.max(1, Math.min(16, Math.round(action.hours * 2) / 2)) };
+
     case 'setYours':
       return { ...state, yours: action.yours };
 

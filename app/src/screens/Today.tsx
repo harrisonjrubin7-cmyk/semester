@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '../state/store';
+import { WorstDay } from '../components/Clashes';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
@@ -706,6 +707,10 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   since: Feed_since,
   gap: GapOffer,
   home: HomeWalk,
+  // A section like any other, so its place in the order stays the student's —
+  // somebody who wants the warning under the checklist rather than above it
+  // can have that without a second setting.
+  clash: WorstDay,
 };
 
 function TodayFeed() {

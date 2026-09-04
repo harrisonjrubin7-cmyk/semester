@@ -36,6 +36,11 @@ export const SECTIONS: FeedSection[] = [
     label: 'Leaving the building',
     blurb: 'What time to set off for your first class, and move-out when it is close.',
   },
+  {
+    id: 'clash',
+    label: 'Worth seeing coming',
+    blurb: 'A day in the next fortnight that will not fit — two exams, a stack at midnight, or more hours than the day holds.',
+  },
   { id: 'next', label: 'Next class', blurb: 'The countdown, and anything overdue.' },
   { id: 'due', label: 'Due today', blurb: 'The checklist, with the headline that counts down.' },
   {

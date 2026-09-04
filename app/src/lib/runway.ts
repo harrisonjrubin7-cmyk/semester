@@ -89,11 +89,17 @@ export function stageFor(daysAway: number): Stage {
 }
 
 /** Which deadlines count as an exam worth a runway. */
-export function isExam(item: { kind: string; title: string; weight: string }): boolean {
+export function isExam(item: { kind: string; title: string; weight?: string }): boolean {
   if (/exam|midterm|final|test\b/i.test(`${item.kind} ${item.title}`)) return true;
   // A "project" or a "paper" worth thirty per cent is an exam in everything
   // but name, and deserves the same four weeks.
-  const weight = Number.parseFloat(item.weight.replace(/[^\d.]/g, ''));
+  //
+  // `weight` is optional and guarded: this is now called from the runway, the
+  // student's own reminder rules and the clash detector, and an item that
+  // reached one of those without a weight — from a shared course file, or a
+  // syllabus that stated none — used to throw here rather than simply not be
+  // an exam.
+  const weight = Number.parseFloat((item.weight ?? '').replace(/[^\d.]/g, ''));
   return Number.isFinite(weight) && weight >= 25;
 }
 

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '../state/store';
+import { ClashList, DayBudget } from '../components/Clashes';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -67,7 +68,12 @@ export function Ahead() {
 
   return (
     <div style={{ padding: 18 }}>
-      <Blueprint style={{ padding: '15px 16px' }}>
+      {/* Before the totals: somebody who opened this screen came to see the
+          shape of the fortnight, and a day that will not fit is the shape. */}
+      <ClashList />
+      <DayBudget />
+
+      <Blueprint style={{ padding: '15px 16px', marginTop: 14 }}>
         <div className="kicker">The next seven days</div>
         <div
           className="chrome-text"

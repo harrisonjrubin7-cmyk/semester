@@ -110,6 +110,7 @@ export const STRATEGY: Record<string, Strategy> = {
   attendPolicy: 'ticks',
   pieces: 'ticks',
   drops: 'ticks',
+  dayBudget: 'theirs',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',
