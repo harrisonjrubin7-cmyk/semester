@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useStore } from '../state/store';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -24,6 +25,7 @@ import { line, pressing, standing } from '../lib/registrar';
 import { HowLong } from '../components/HowLong';
 import { DropBy } from '../components/DropBy';
 import { Walks } from '../components/Walks';
+import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
 import { Brief } from './Brief';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
@@ -480,6 +482,69 @@ function Feed_tasks() {
   );
 }
 
+/**
+ * When this run of the app began.
+ *
+ * Module scope, so it is fixed for as long as the tab is open. Anything
+ * ticked after this was ticked here, on this device, in front of the person
+ * reading — which is exactly what the line must not report back to them.
+ */
+const sessionStart = Date.now();
+
+/**
+ * What moved while you were not looking.
+ *
+ * Silent almost always — within a sitting, on a first run, and whenever
+ * nothing arrived from anywhere else. It never lists what *you* did: a person
+ * who just ticked four things does not need telling they ticked four things.
+ */
+function Feed_since() {
+  const { state, now, lastSeen } = useStore();
+
+  const list = useMemo(
+    () =>
+      shouldSpeak(lastSeen, now)
+        ? changes({
+            lastSeen,
+            now,
+            tickedAt: state.tickedAt,
+            // Anything ticked since this session started was ticked here.
+            mine: Object.entries(state.tickedAt)
+              .filter(([, at]) => at >= sessionStart)
+              .map(([id]) => id),
+            feeds: state.feeds.map((f) => ({
+              id: f.id,
+              name: f.name,
+              synced: f.synced,
+              count: f.count,
+            })),
+            updates: state.updates.map((u) => ({ id: u.id, created: u.created })),
+            sittings: state.sittings.map((s) => ({ id: s.id, at: s.at })),
+          })
+        : [],
+    [lastSeen, now, state.tickedAt, state.feeds, state.updates, state.sittings],
+  );
+
+  if (list.length === 0) return null;
+
+  return (
+    <div
+      style={{
+        padding: '11px 13px',
+        marginBottom: 14,
+        borderRadius: 'var(--r-md)',
+        border: '1px solid var(--app-line)',
+        background: 'var(--app-panel)',
+      }}
+    >
+      <div className="kicker">{sinceLabel(lastSeen, now)}</div>
+      <div style={{ fontSize: 13.5, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+        {sinceLine(list)}
+      </div>
+    </div>
+  );
+}
+
 /** One section of the Today feed. Silent when nothing moves buildings. */
 function Feed_walks() {
   return <Walks />;
@@ -636,6 +701,7 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   tasks: Feed_tasks,
   rail: Feed_rail,
   walks: Feed_walks,
+  since: Feed_since,
 };
 
 function TodayFeed() {

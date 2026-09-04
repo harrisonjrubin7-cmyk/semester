@@ -37,6 +37,7 @@ import { dueReminders, fire } from '../lib/notify';
 import { datedItems, railFor } from '../lib/select';
 import { save, trouble } from '../lib/keep';
 import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
+import { readSeen, writeSeen } from '../lib/since';
 import { reducer } from './reducer';
 import {
   ROOTS,
@@ -89,6 +90,8 @@ interface Store {
   catalog: Catalog;
   /** Every term the account has a course in, newest first. */
   terms: Term[];
+  /** When this device last had the app open, epoch ms. Zero on a first run. */
+  lastSeen: number;
   /**
    * A course code, from any term.
    *
@@ -120,6 +123,15 @@ function currentMinute(): Date {
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const startedAt = useRef(currentMinute());
+
+  /**
+   * When this device last had the app open.
+   *
+   * Read once, at boot, and kept fixed for the session — it is the mark that
+   * "what changed since you last looked" counts against, and a mark moving
+   * while you read it would make the answer disappear as you looked at it.
+   */
+  const lastSeen = useRef(readSeen());
   const [now, tick] = useReducer(currentMinute, startedAt.current);
 
   const [state, dispatch] = useReducer(reducer, undefined, () => {
@@ -138,6 +150,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const id = setInterval(() => tick(), 30_000);
     return () => clearInterval(id);
+  }, []);
+
+  // The mark moves forward as the app runs, so closing the tab and coming
+  // back tomorrow compares against today rather than against last week. On a
+  // timer rather than on unload, which browsers no longer reliably fire on a
+  // phone.
+  useEffect(() => {
+    const stamp = () => writeSeen(Date.now());
+    const id = setInterval(stamp, 60_000);
+    return () => {
+      clearInterval(id);
+      stamp();
+    };
   }, []);
 
 
@@ -407,7 +432,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [catalog, state.notifs, state.appointments, state.registrar]);
 
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, account, sync, saveTrouble }),
+    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble }),
     [state, now, catalog, terms, courseCode, account, sync, saveTrouble],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

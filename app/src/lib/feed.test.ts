@@ -45,9 +45,12 @@ describe('visible', () => {
 
 describe('move', () => {
   it('swaps with the neighbour', () => {
-    const out = move(DEFAULT_ORDER, 'due', -1);
-    expect(out[0]).toBe('due');
-    expect(out[1]).toBe('next');
+    // Named by position rather than by id, so adding a section to the top of
+    // the default feed is not a test failure.
+    const [first, second] = DEFAULT_ORDER;
+    const out = move(DEFAULT_ORDER, second, -1);
+    expect(out[0]).toBe(second);
+    expect(out[1]).toBe(first);
   });
 
   it('stops at the ends rather than wrapping', () => {
