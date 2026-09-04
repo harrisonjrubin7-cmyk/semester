@@ -11,7 +11,8 @@ import type {
   Item,
   Lesson,
 } from '../lib/types';
-import { SEMESTER_YEAR, sameDay } from '../lib/date';
+import { sameDay } from '../lib/date';
+import { readTerm, yearFor } from '../lib/term';
 
 // ── The catalog ───────────────────────────────────────────────────────────
 //
@@ -64,7 +65,12 @@ export function buildCatalog(modules: CourseModule[]): Catalog {
     lessons: index(modules, (m) => m.lessons ?? {}),
     planMinutes: index(modules, (m) => m.planMinutes),
     frameLabels: index(modules, (m) => m.frameLabel),
-    items: modules.flatMap((m) => m.items),
+    // The one place a year is decided. Every screen downstream reads
+    // `item.date` and knows nothing about terms, which is the point.
+    items: modules.flatMap((m) => {
+      const term = readTerm(m.course.term);
+      return m.items.map((i) => ({ ...i, year: i.year ?? yearFor(term, i.month) }));
+    }),
     shortCodes: modules.map((m) => m.course.code.split(/\s+/)[0]),
     short: index(modules, (m) => m.course.code.split(/\s+/)[0]),
     empty: modules.length === 0,
@@ -87,8 +93,9 @@ export function blocksFor(cat: Catalog, date: Date): Block[] {
   const blocks: Block[] = [];
 
   for (const mod of cat.modules) {
+    const term = readTerm(mod.course.term);
     const todays = (mod.exceptions ?? []).filter((e) =>
-      sameDay(new Date(SEMESTER_YEAR, e.month, e.day), date),
+      sameDay(new Date(yearFor(term, e.month), e.month, e.day), date),
     );
 
     for (const b of mod.schedule) {
@@ -120,8 +127,9 @@ export function classNote(cat: Catalog, date: Date, c: CourseId | null): string 
   if (!c) return undefined;
   const mod = cat.moduleById[c];
   if (!mod) return undefined;
+  const term = readTerm(mod.course.term);
   return (mod.exceptions ?? []).find(
-    (e) => sameDay(new Date(SEMESTER_YEAR, e.month, e.day), date) && e.note,
+    (e) => sameDay(new Date(yearFor(term, e.month), e.month, e.day), date) && e.note,
   )?.note;
 }
 

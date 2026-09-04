@@ -34,6 +34,7 @@ import { type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
 import type { Spent } from '../lib/pace';
+import { LEGACY_TERM } from '../lib/term';
 import { readLook, type Look } from '../lib/look';
 
 /**
@@ -158,6 +159,14 @@ export interface Persisted {
   courses: CourseModule[];
   /** Whether the sample semester is switched on alongside them. */
   sample: boolean;
+  /**
+   * The term being shown — '2026FA'.
+   *
+   * Courses from other terms stay in the account and out of the way: off
+   * Today, out of the hour arithmetic, one tap from the shelf. See
+   * `lib/term.ts`.
+   */
+  term: string;
   /** Addresses for the campus links, keyed by id. Yours beat the defaults. */
   linkUrls: Record<string, string>;
   /** Links you added yourself, alongside the campus ones. */
@@ -300,6 +309,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   // sample is a button, not a default: nobody's first impression of the app
   // should be somebody else's timetable.
   sample: false,
+  term: LEGACY_TERM,
   waysOpen: true,
   reviews: {},
   grades: {},
@@ -407,6 +417,7 @@ export function loadPersisted(): Persisted {
       // ones; it keeps them, or the app would look wiped on the next load. A
       // genuinely new account starts empty.
       sample: saved.sample ?? saved.courses === undefined,
+      term: saved.term ?? LEGACY_TERM,
     waysOpen: saved.waysOpen ?? true,
       reviews: saved.reviews ?? {},
       grades: saved.grades ?? {},
@@ -458,6 +469,7 @@ export function pickPersisted(state: State): Persisted {
     extraLinks: state.extraLinks,
     courses: state.courses,
     sample: state.sample,
+    term: state.term,
     waysOpen: state.waysOpen,
     reviews: state.reviews,
     grades: state.grades,
@@ -585,6 +597,7 @@ export type Action =
   | { type: 'dropTermDate'; id: string }
   | { type: 'applyRegistrar'; found: Found[] }
   | { type: 'setSample'; on: boolean }
+  | { type: 'setTerm'; term: string }
   | { type: 'removalsPushed'; ids: CourseId[] }
   | { type: 'hydrate'; persisted: Partial<Persisted> };
 

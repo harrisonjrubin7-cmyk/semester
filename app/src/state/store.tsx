@@ -36,6 +36,7 @@ import { loadSeed } from '../data/seed';
 import { dueReminders, fire } from '../lib/notify';
 import { datedItems, railFor } from '../lib/select';
 import { save, trouble } from '../lib/keep';
+import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
 import { reducer } from './reducer';
 import {
   ROOTS,
@@ -84,8 +85,10 @@ interface Store {
   dispatch: (action: Action) => void;
   /** The current time, refreshed each minute so countdowns stay honest. */
   now: Date;
-  /** The account's courses, with every lookup derived from them. */
+  /** The current term's courses, with every lookup derived from them. */
   catalog: Catalog;
+  /** Every term the account has a course in, newest first. */
+  terms: Term[];
   account: Account | null;
   sync: { status: SyncStatus; at: number; error: string };
   /**
@@ -316,10 +319,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
   }, [state.sample, seed.length]);
 
-  const catalog = useMemo(
-    () => buildCatalog(state.sample ? [...seed, ...state.courses] : state.courses),
+  /**
+   * Every course the account holds, across every term.
+   *
+   * Kept separately from the catalogue because the term switcher has to know
+   * what terms exist, and a catalogue filtered to one term by definition
+   * cannot say.
+   */
+  const allModules = useMemo(
+    () => (state.sample ? [...seed, ...state.courses] : state.courses),
     [state.sample, seed, state.courses],
   );
+
+  const terms = useMemo(
+    () => sortTerms(allModules.map((m) => m.course.term ?? LEGACY_TERM)),
+    [allModules],
+  );
+
+  /**
+   * The catalogue is one term's worth.
+   *
+   * Everything downstream — Today, the rail, the hour arithmetic, the weekly
+   * report — reads the catalogue and therefore sees one semester, which is
+   * what it always assumed it was seeing. A term nobody has a course in falls
+   * back to showing everything rather than an empty app, which is the state a
+   * saved `term` from a deleted semester would otherwise leave somebody in.
+   */
+  const catalog = useMemo(() => {
+    const wanted = allModules.filter((m) => (m.course.term ?? LEGACY_TERM) === state.term);
+    return buildCatalog(wanted.length > 0 || terms.length === 0 ? wanted : allModules);
+  }, [allModules, state.term, terms]);
 
   // Reminders. These toggles existed from the first build and did nothing —
   // no permission was ever asked for and no notification was ever shown. They
@@ -347,8 +376,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [catalog, state.notifs, state.appointments, state.registrar]);
 
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, account, sync, saveTrouble }),
-    [state, now, catalog, account, sync, saveTrouble],
+    () => ({ state, dispatch, now, catalog, terms, account, sync, saveTrouble }),
+    [state, now, catalog, terms, account, sync, saveTrouble],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

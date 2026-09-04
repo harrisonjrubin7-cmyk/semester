@@ -44,11 +44,20 @@ export function ChipRow<T extends string>({
   value,
   onChange,
   style,
+  labels,
 }: {
   options: readonly T[];
   value: T;
   onChange: (next: T) => void;
   style?: CSSProperties;
+  /**
+   * What to show instead of the option itself, where the two differ.
+   *
+   * Every caller until now filtered by a word that was also its own label. A
+   * term is '2026FA' on disk and "Fall 2026" on screen, and putting the id on
+   * a chip would be showing somebody a storage format.
+   */
+  labels?: Record<string, string>;
 }) {
   return (
     <div className="chiprow" style={style}>
@@ -74,7 +83,7 @@ export function ChipRow<T extends string>({
                 fontWeight: on ? 600 : 400,
               }}
             >
-              {o}
+              {labels?.[o] ?? o}
             </button>
           );
         })}

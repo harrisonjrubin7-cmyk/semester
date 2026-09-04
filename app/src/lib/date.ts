@@ -1,6 +1,13 @@
 import type { DatedEvent, DatedItem, CampusEvent, Item } from './types';
 
-/** Every date in the app is a Fall 2026 date. */
+/**
+ * The year the app shipped configured for.
+ *
+ * Every date used to be read against this, which made the whole app a Fall
+ * 2026 app. It is now only a fallback, for an item saved before courses
+ * carried a term — see `lib/term.ts`, and `LEGACY_TERM` there, which is the
+ * same claim said the other way round.
+ */
 export const SEMESTER_YEAR = 2026;
 
 export const MONTHS = [
@@ -85,7 +92,10 @@ export function dueLabel(date: Date, now: Date, dueTime: string): string {
 }
 
 export function decorateItem(item: Item, now: Date): DatedItem {
-  const date = new Date(SEMESTER_YEAR, item.month, item.day);
+  // The year is stamped on at catalogue-build time from the course's term.
+  // An item from before terms existed has none and reads as Fall 2026, which
+  // is what its dates actually are.
+  const date = new Date(item.year ?? SEMESTER_YEAR, item.month, item.day);
   const away = daysBetween(now, date);
   return {
     ...item,

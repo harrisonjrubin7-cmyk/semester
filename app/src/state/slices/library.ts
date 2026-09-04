@@ -97,6 +97,9 @@ export function library(state: State, action: Action): State | null {
     case 'applyRegistrar':
       return { ...state, registrar: apply(state.registrar, action.found) };
 
+    case 'setTerm':
+      return { ...state, term: action.term };
+
     case 'setSample':
       return { ...state, sample: action.on };
 

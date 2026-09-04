@@ -26,6 +26,14 @@ export interface Course {
   meets: string;
   room: string;
   credits: string;
+  /**
+   * Which term this course belongs to — '2026FA'. See `lib/term.ts`.
+   *
+   * Optional because every course saved before terms existed has none; those
+   * fall back to the term the app shipped configured for, which is what their
+   * dates actually are.
+   */
+  term?: string;
   /** The PDF this course was imported from. */
   source: string;
   /**
@@ -55,9 +63,17 @@ export interface Item {
   c: CourseId;
   title: string;
   kind: string;
-  /** Month index, 0-based, in {@link SEMESTER_YEAR}. */
+  /** Month index, 0-based. */
   month: number;
   day: number;
+  /**
+   * The calendar year this falls in.
+   *
+   * Stamped on when the catalogue is built, from the course's term — see
+   * `lib/term.ts`. Optional because an item saved before terms existed has
+   * none, and `decorateItem` falls back to the year the app shipped for.
+   */
+  year?: number;
   /** Time of day, exactly as the syllabus words it. */
   dueTime: string;
   weight: string;

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { HowLong } from '../components/HowLong';
 import { DropBy } from '../components/DropBy';
+import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -71,6 +72,8 @@ export function Courses() {
   return (
     <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
+      {/* Absent until there is more than one term. See `components/TermSwitch`. */}
+      <TermSwitch />
       {catalog.courses.map((c) => {
         const next = ahead.find((i) => i.c === c.id);
         return (

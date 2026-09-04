@@ -6,7 +6,7 @@ import { gather } from '../lib/bundle';
 import { extractText, type Extracted } from '../lib/extract';
 import { generateCourse, type GenerationResult } from '../lib/generate';
 import { configured, provider } from '../lib/claude';
-import { SEMESTER_YEAR } from '../lib/date';
+import { readTerm } from '../lib/term';
 import {
   diff,
   keepIds,
@@ -68,6 +68,11 @@ export function Import() {
     setBusy('');
   };
 
+  // The term a new course lands in. Defaults to the one the app is showing,
+  // which is what somebody importing in September means, and is changeable
+  // before it is saved because August imports of a spring course happen.
+  const term = readTerm(state.term);
+
   const build = async () => {
     if (files.length === 0) return;
     setError('');
@@ -76,7 +81,7 @@ export function Import() {
     abort.current = new AbortController();
     try {
       const built = await generateCourse(
-        { documents: files, hint, year: SEMESTER_YEAR },
+        { documents: files, hint, year: term.year },
         abort.current.signal,
       );
       setResult(built);
@@ -102,8 +107,8 @@ export function Import() {
     : undefined;
 
   const changes = useMemo(
-    () => (existing && result ? diff(existing, result.module, SEMESTER_YEAR) : null),
-    [existing, result],
+    () => (existing && result ? diff(existing, result.module, term.year) : null),
+    [existing, result, term.year],
   );
 
   const save = () => {
@@ -117,8 +122,14 @@ export function Import() {
       dispatch({ type: 'openCourse', id: merged.course.id });
       return;
     }
-    dispatch({ type: 'addCourse', module: result.module });
-    dispatch({ type: 'openCourse', id: result.module.course.id });
+    // Stamped with the term it was imported into, so its dates resolve to the
+    // right year and it does not follow you into next semester.
+    const filed = {
+      ...result.module,
+      course: { ...result.module.course, term: result.module.course.term ?? term.id },
+    };
+    dispatch({ type: 'addCourse', module: filed });
+    dispatch({ type: 'openCourse', id: filed.course.id });
   };
 
   const words = files.reduce((n, f) => n + f.words, 0);

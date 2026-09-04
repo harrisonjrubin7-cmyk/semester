@@ -81,6 +81,7 @@ export const STRATEGY: Record<string, Strategy> = {
   feedOrder: 'theirs',
   nav: 'theirs',
   sample: 'theirs',
+  term: 'theirs',
   seenOnboarding: 'theirs',
   cleared: 'theirs',
   waysOpen: 'theirs',

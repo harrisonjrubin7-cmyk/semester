@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
-import { SEMESTER_YEAR } from '../lib/date';
 import { STANCES, stanceLine } from '../lib/essay';
 import { readClock } from '../lib/officehours';
+import { SEASONS, readTerm, termId, yearFor } from '../lib/term';
 import {
   DAYS,
   KINDS,
@@ -114,6 +114,38 @@ export function EditCourse() {
       {text('Meets', draft.course.meets, (v) => field({ meets: v }), 'MWF · 9:10–10:00a')}
       {text('Room', draft.course.room, (v) => field({ room: v }), 'Buttrick 101')}
       {text('Credits', draft.course.credits, (v) => field({ credits: v }), '3')}
+
+      <SectionLabel>Which term</SectionLabel>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <input
+          className="input"
+          type="number"
+          aria-label="Year"
+          value={readTerm(draft.course.term).year}
+          onChange={(e) =>
+            field({ term: termId(Number(e.target.value), readTerm(draft.course.term).id.slice(4)) })
+          }
+          style={{ width: 96, flex: 'none' }}
+        />
+        <select
+          className="input"
+          aria-label="Season"
+          value={readTerm(draft.course.term).id.slice(4)}
+          onChange={(e) => field({ term: termId(readTerm(draft.course.term).year, e.target.value) })}
+          style={{ flex: 1, minWidth: 0 }}
+        >
+          {SEASONS.map((s) => (
+            <option key={s.code} value={s.code}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+        The term decides which year this course's dates fall in, and keeps last semester out of
+        Today without deleting it. Courses added before this existed are filed under Fall 2026,
+        which is what their dates are.
+      </div>
 
       <SectionLabel>What the syllabus says about AI</SectionLabel>
       <div style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
@@ -373,7 +405,7 @@ export function EditCourse() {
             <input
               className="input"
               type="date"
-              value={toInputDate(i.month, i.day, SEMESTER_YEAR)}
+              value={toInputDate(i.month, i.day, yearFor(readTerm(draft.course.term), i.month))}
               onChange={(e) => {
                 const on = fromInputDate(e.target.value);
                 if (on) change(patchItem(draft, i.id, on));
