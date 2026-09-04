@@ -103,6 +103,13 @@ export const STRATEGY: Record<string, Strategy> = {
   // collect — merging two devices' would produce a set neither asked for.
   myRules: 'theirs',
   myName: 'theirs',
+  // A mark on a class is a fact about a day, and two devices marking two
+  // different days should end with both. Keyed by course and date inside
+  // `readLog`, so a duplicate cannot become a second absence.
+  attendance: 'union',
+  attendPolicy: 'ticks',
+  pieces: 'ticks',
+  drops: 'ticks',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',

@@ -8,7 +8,7 @@ const course = (grading: { what: string; pct: string }[]) =>
 
 describe('readWeight', () => {
   it('reads a plain percentage', () => {
-    expect(readWeight('20%')).toEqual({ weight: 20, extra: false });
+    expect(readWeight('20%')).toEqual({ weight: 20, extra: false, points: null });
   });
 
   it('takes the midpoint of a range', () => {
@@ -16,7 +16,7 @@ describe('readWeight', () => {
   });
 
   it('marks extra credit as extra rather than part of the hundred', () => {
-    expect(readWeight('+3% EC')).toEqual({ weight: 3, extra: true });
+    expect(readWeight('+3% EC')).toEqual({ weight: 3, extra: true, points: null });
   });
 
   it('does not read a count as a range', () => {
@@ -124,6 +124,7 @@ describe('what a target grade would take', () => {
     remaining: Math.max(0, total - counted),
     current: counted > 0 ? avg : null,
     extraCredit: 0,
+    pointsOff: 0,
     incomplete: Math.abs(total - 100) > 0.5,
   });
 
@@ -187,6 +188,7 @@ describe('the caveat that travels with the figures', () => {
     remaining: total - 50,
     current: 80,
     extraCredit: 0,
+    pointsOff: 0,
     incomplete: Math.abs(total - 100) > 0.5,
   });
 
@@ -199,5 +201,156 @@ describe('the caveat that travels with the figures', () => {
     // figure is then a ratio of the wrong denominator.
     expect(needCaveat(s(95))).toContain('add to 95%');
     expect(needCaveat(s(95))).toMatch(/Fix the weights/);
+  });
+});
+
+describe('a category scored from its pieces', () => {
+  const course = {
+    id: 'core',
+    grading: [
+      { what: 'Quizzes', pct: '40%' },
+      { what: 'Final', pct: '60%' },
+    ],
+  } as unknown as Course;
+
+  it('averages the pieces after the syllabus strikes the lowest out', () => {
+    // Eight quizzes with the lowest two dropped is what CORE 2500 says, and
+    // a student entering a category average is entering a number their course
+    // does not use.
+    const s = standing(course, {}, {
+      pieces: { [key('core', 0)]: '54, 68, 88, 92, 96' },
+      drops: { [key('core', 0)]: 2 },
+    });
+    expect(s.rows[0].score).toBeCloseTo(92, 5);
+  });
+
+  it('is the plain average with no rule', () => {
+    const s = standing(course, {}, { pieces: { [key('core', 0)]: '80, 90' } });
+    expect(s.rows[0].score).toBe(85);
+  });
+
+  it('falls back to the single box when no pieces are entered', () => {
+    const s = standing(course, { [key('core', 0)]: '77' }, {});
+    expect(s.rows[0].score).toBe(77);
+  });
+
+  it('prefers the pieces over the box when both are there', () => {
+    // The pieces are the more specific answer, and leaving a stale box value
+    // winning would be a figure nobody could account for.
+    const s = standing(course, { [key('core', 0)]: '77' }, {
+      pieces: { [key('core', 0)]: '90, 90' },
+    });
+    expect(s.rows[0].score).toBe(90);
+  });
+});
+
+describe('absences, in the projection', () => {
+  const course = { id: 'core', grading: [{ what: 'Exams', pct: '100%' }] } as unknown as Course;
+
+  it('comes off the finished grade, not out of the weighting', () => {
+    const clean = standing(course, { [key('core', 0)]: '88' });
+    const docked = standing(course, { [key('core', 0)]: '88' }, { pointsOff: 10 });
+    expect(clean.current).toBe(88);
+    expect(docked.current).toBe(78);
+    expect(docked.pointsOff).toBe(10);
+  });
+
+  it('never takes a grade below zero', () => {
+    const s = standing(course, { [key('core', 0)]: '30' }, { pointsOff: 50 });
+    expect(s.current).toBe(0);
+  });
+
+  it('raises what you need on everything left', () => {
+    // Leaving the penalty out here would tell somebody three absences over
+    // the allowance that they need 78% when they need 108%.
+    const two = { id: 'x', grading: [{ what: 'A', pct: '50%' }, { what: 'B', pct: '50%' }] } as unknown as Course;
+    const clean = standing(two, { [key('x', 0)]: '90' });
+    const docked = standing(two, { [key('x', 0)]: '90' }, { pointsOff: 10 });
+    expect(needFor(docked, 85)! - needFor(clean, 85)!).toBeCloseTo(20, 5);
+  });
+});
+
+describe('attendance as a graded category', () => {
+  const course = { id: 'bus', grading: [{ what: 'Exams', pct: '90%' }] } as unknown as Course;
+
+  it('joins the rows, weighted and counted like any other line', () => {
+    const s = standing(course, { [key('bus', 0)]: '80' }, {
+      attendance: { worth: 10, rate: 100 },
+    });
+    expect(s.rows.map((r) => r.what)).toContain('Attendance');
+    expect(s.counted).toBe(100);
+    expect(s.current).toBeCloseTo(82, 5);
+  });
+
+  it('counts towards the weight but not the average until it is marked', () => {
+    const s = standing(course, { [key('bus', 0)]: '80' }, {
+      attendance: { worth: 10, rate: null },
+    });
+    expect(s.counted).toBe(90);
+    expect(s.current).toBe(80);
+  });
+
+  it('adds no row when the syllabus does not grade it', () => {
+    const s = standing(course, {}, { attendance: { worth: 0, rate: 100 } });
+    expect(s.rows.map((r) => r.what)).not.toContain('Attendance');
+  });
+});
+
+describe('a syllabus that states points rather than percentages', () => {
+  // CORE 2500, as its syllabus actually words it. Until this, every weight
+  // read as null and the whole screen said "nothing graded yet" for a course
+  // whose grading was completely specified.
+  const core = {
+    id: 'core',
+    grading: [
+      { what: 'Eight quizzes, 10 pts each', pct: '80 pts' },
+      { what: 'Thirteen reflections, 10 pts', pct: '130 pts' },
+      { what: 'Final reflection', pct: '20 pts' },
+    ],
+  } as unknown as Course;
+
+  it('reads the points off the row', () => {
+    expect(readWeight('80 pts').points).toBe(80);
+    expect(readWeight('20 points').points).toBe(20);
+    expect(readWeight('40%').points).toBeNull();
+  });
+
+  it('weighs each row against the total the syllabus adds up to', () => {
+    const s = standing(core, {});
+    // 80 + 130 + 20 = 230.
+    expect(s.rows[0].weight).toBeCloseTo((80 / 230) * 100, 5);
+    expect(s.rows[1].weight).toBeCloseTo((130 / 230) * 100, 5);
+    expect(s.rows.reduce((n, r) => n + (r.weight ?? 0), 0)).toBeCloseTo(100, 5);
+  });
+
+  it('stops calling a fully specified course incomplete', () => {
+    expect(standing(core, {}).incomplete).toBe(false);
+    expect(needCaveat(standing(core, {}))).toBe('');
+  });
+
+  it('projects a real grade from it', () => {
+    const s = standing(core, { [key('core', 0)]: '90', [key('core', 1)]: '80' });
+    expect(s.current).toBeCloseTo((0.9 * 80 + 0.8 * 130) / 210 * 100, 5);
+  });
+
+  it('leaves a mixed syllabus alone rather than guessing', () => {
+    // "40%" and "20 pts" are two statements about two different denominators.
+    // Relating them would be a confident wrong number; the points row stays
+    // unweighted, which the screen already marks and explains.
+    const mixed = {
+      id: 'x',
+      grading: [
+        { what: 'Exams', pct: '40%' },
+        { what: 'Labs', pct: '20 pts' },
+      ],
+    } as unknown as Course;
+    const s = standing(mixed, {});
+    expect(s.rows[0].weight).toBe(40);
+    expect(s.rows[1].weight).toBeNull();
+  });
+
+  it('is null all round when a course states neither', () => {
+    const vague = { id: 'y', grading: [{ what: 'Participation', pct: 'as announced' }] } as unknown as Course;
+    expect(standing(vague, {}).rows[0].weight).toBeNull();
   });
 });

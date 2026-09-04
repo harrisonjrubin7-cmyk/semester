@@ -15,6 +15,8 @@ import { record } from '../../lib/pace';
 import { currentLook, type Action, type State } from '../shape';
 import { readTabs } from '../../lib/tabbar';
 import { readRules } from '../../lib/myrules';
+import { mark as markAttendance, readPolicy } from '../../lib/attend';
+import { readDrop } from '../../lib/drop';
 
 export function settings(state: State, action: Action): State | null {
   switch (action.type) {
@@ -50,6 +52,27 @@ export function settings(state: State, action: Action): State | null {
       // Trimmed and capped here rather than in the field, so a name pasted in
       // from somewhere else cannot arrive as a paragraph.
       return { ...state, myName: action.name.trim().slice(0, 40) };
+
+    // Attendance is the one record here the app must never write on its own —
+    // no inference from a phone that did not move, no default once a class
+    // has ended. See `lib/attend.ts`.
+    case 'markAttendance':
+      return {
+        ...state,
+        attendance: markAttendance(state.attendance, action.courseId, action.date, action.mark),
+      };
+
+    case 'setAttendPolicy':
+      return {
+        ...state,
+        attendPolicy: { ...state.attendPolicy, [action.courseId]: readPolicy(action.policy) },
+      };
+
+    case 'setPieces':
+      return { ...state, pieces: { ...state.pieces, [action.key]: action.text } };
+
+    case 'setDrop':
+      return { ...state, drops: { ...state.drops, [action.key]: readDrop(action.drop) } };
 
     case 'setYours':
       return { ...state, yours: action.yours };

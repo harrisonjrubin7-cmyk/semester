@@ -1,5 +1,6 @@
 import { useStore } from '../state/store';
 import { DeadlineRow } from '../components/DeadlineRow';
+import { MarkClass } from '../components/MarkClass';
 import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -233,6 +234,16 @@ function DayView() {
                     )}
                     {b.meta}
                   </div>
+                  {/* Only a real class, only once it has started. An
+                      appointment you added is not attendance, and marking
+                      Friday's lecture on Tuesday records nothing. */}
+                  {b.c && !b.mine && !b.canceled ? (
+                    <MarkClass
+                      courseId={b.c}
+                      date={dateToIso(day)}
+                      started={day < now || (isToday && minutesNow(now) >= b.at)}
+                    />
+                  ) : null}
                 </div>
               </div>
             ))}

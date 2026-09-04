@@ -31,6 +31,8 @@ import type { Commitment } from '../lib/activities';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
+import { readLog, readPolicy, type AttendPolicy, type Attended } from '../lib/attend';
+import { readDrop } from '../lib/drop';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
 import { type Reviews } from '../lib/review';
@@ -99,6 +101,14 @@ export interface Persisted {
    * email address — a name is a thing you ask for, not derive.
    */
   myName: string;
+  /** Every class marked present, absent or excused. See `lib/attend.ts`. */
+  attendance: Attended[];
+  /** What each course's syllabus says about turning up, keyed by course id. */
+  attendPolicy: Record<string, AttendPolicy>;
+  /** Individual scores inside a grading category, keyed like a grade. */
+  pieces: Record<string, string>;
+  /** How many lowest pieces a category drops. See `lib/drop.ts`. */
+  drops: Record<string, number>;
   /** The order they put their courses in. Ids not listed keep import order. */
   courseOrder: CourseId[];
   /** The destinations you opened most recently, newest first. */
@@ -401,6 +411,10 @@ export const DEFAULT_PERSISTED: Persisted = {
   courseOrder: [],
   myRules: [],
   myName: '',
+  attendance: [],
+  attendPolicy: {},
+  pieces: {},
+  drops: {},
   recent: [],
   sittings: [],
   sources: [],
@@ -520,6 +534,14 @@ export function loadPersisted(): Persisted {
       yours: saved.yours ?? {},
       myRules: readRules(saved.myRules),
       myName: typeof saved.myName === 'string' ? saved.myName : '',
+      attendance: readLog(saved.attendance),
+      attendPolicy: Object.fromEntries(
+        Object.entries(saved.attendPolicy ?? {}).map(([k, v]) => [k, readPolicy(v)]),
+      ),
+      pieces: saved.pieces ?? {},
+      drops: Object.fromEntries(
+        Object.entries(saved.drops ?? {}).map(([k, v]) => [k, readDrop(v)]),
+      ),
       courseOrder: saved.courseOrder ?? [],
       recent: saved.recent ?? [],
       // Seeded from `recent` for anybody upgrading: without this the app
@@ -588,6 +610,10 @@ export function pickPersisted(state: State): Persisted {
     yours: state.yours,
     myRules: state.myRules,
     myName: state.myName,
+    attendance: state.attendance,
+    attendPolicy: state.attendPolicy,
+    pieces: state.pieces,
+    drops: state.drops,
     courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
     recent: state.recent,
@@ -637,6 +663,10 @@ export type Action =
   | { type: 'setYours'; yours: YoursBy }
   | { type: 'setMyRules'; rules: MyRule[] }
   | { type: 'setMyName'; name: string }
+  | { type: 'markAttendance'; courseId: CourseId; date: string; mark: Attended['mark'] | null }
+  | { type: 'setAttendPolicy'; courseId: CourseId; policy: AttendPolicy }
+  | { type: 'setPieces'; key: string; text: string }
+  | { type: 'setDrop'; key: string; drop: number }
   | { type: 'setCourseOrder'; order: CourseId[] }
   | { type: 'toggleFeedSection'; id: string }
   | { type: 'setLook'; look: Partial<Look> }

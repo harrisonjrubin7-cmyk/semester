@@ -4,6 +4,7 @@ import { nameFor, renamed, tintFor } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
 import { Timer } from '../components/Timer';
 import { ShareCourse } from '../components/ShareCourse';
+import { Attendance } from '../components/Attendance';
 import { DropBy } from '../components/DropBy';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
@@ -429,6 +430,9 @@ export function CourseDetail() {
       <DropBy courseId={course.id} />
 
       <OfficeHours courseId={course.id} />
+
+      {/* Next to the grade, because that is what it changes. */}
+      <Attendance courseId={course.id} />
 
       <SectionLabel style={{ margin: '24px 0 6px' }}>How the grade is built</SectionLabel>
       <table className="table">

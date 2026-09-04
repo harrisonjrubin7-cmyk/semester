@@ -3,6 +3,8 @@ import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
 import { key, needCaveat, needFor, reaches, standing } from '../lib/grades';
+import { NO_POLICY, pointsOff, rate, tally } from '../lib/attend';
+import { PiecesRow } from '../components/PiecesRow';
 import { against, forCourse, trend, trendLine } from '../lib/sitting';
 
 /**
@@ -30,7 +32,17 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
       </div>
 
       {catalog.courses.map((c) => {
-        const s = standing(c, state.grades);
+        // Everything the projection now needs beyond the syllabus: the
+        // absence penalty, attendance as a graded category, the individual
+        // pieces inside a category and how many of them the course drops.
+        const policy = state.attendPolicy[c.id] ?? NO_POLICY;
+        const t = tally(state.attendance, c.id);
+        const s = standing(c, state.grades, {
+          pieces: state.pieces,
+          drops: state.drops,
+          pointsOff: pointsOff(policy, t),
+          attendance: { worth: policy.worth, rate: rate(t) },
+        });
         return (
           <div key={c.id}>
             <SectionLabel style={{ margin: '26px 0 8px' }}>{c.code}</SectionLabel>
@@ -70,14 +82,13 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
             </Blueprint>
 
             {s.rows.map((r, i) => (
+              <div key={r.what} style={{ borderBottom: '1px solid var(--app-line)' }}>
               <div
-                key={r.what}
                 style={{
                   display: 'flex',
                   gap: 12,
                   alignItems: 'center',
                   padding: '11px 0',
-                  borderBottom: '1px solid var(--app-line)',
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -107,6 +118,15 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                   aria-label={`Your score for ${r.what} in ${c.code}`}
                   style={{ width: 84, flex: 'none', height: 38, fontSize: 'calc(14px * var(--text-scale, 1))', textAlign: 'center' }}
                 />
+              </div>
+              {/* The attendance row is appended by `standing` past the end of
+                  the syllabus's own categories, and is computed from the log
+                  rather than typed — so it gets no pieces row. Keyed on the
+                  index rather than the name, because a syllabus with a real
+                  category called "Attendance" is not this. */}
+              {i < c.grading.length && r.weight !== null ? (
+                <PiecesRow gradeKey={key(c.id, i)} what={r.what} />
+              ) : null}
               </div>
             ))}
 

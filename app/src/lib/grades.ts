@@ -15,6 +15,7 @@
  */
 
 import type { Course, GradeRow } from './types';
+import { afterDrops, readScores } from './drop';
 
 export interface Weighted extends GradeRow {
   /** The weight as a number, or null when it could not be read. */
@@ -37,6 +38,14 @@ export interface Standing {
   current: number | null;
   /** Extra-credit points available on top. */
   extraCredit: number;
+  /**
+   * Points already lost to absences, subtracted from the finished grade.
+   *
+   * Separate from the weighting on purpose: a syllabus that docks 10% of the
+   * final grade per class is subtracting, not adding a category, and folding
+   * it into the weights would produce a different number.
+   */
+  pointsOff: number;
   /** True when the weights do not add to 100 and the numbers are indicative. */
   incomplete: boolean;
 }
@@ -49,7 +58,12 @@ export interface Standing {
  * cannot be read comes back null and is shown as unweighted rather than
  * guessed at — a made-up weight would put a made-up grade on the screen.
  */
-export function readWeight(pct: string): { weight: number | null; extra: boolean } {
+export function readWeight(pct: string): {
+  weight: number | null;
+  extra: boolean;
+  /** The figure when the syllabus stated points rather than a percentage. */
+  points: number | null;
+} {
   const extra = /\+|\bEC\b|extra credit/i.test(pct);
 
   // A range first, and only when the two numbers are joined by a dash: real
@@ -57,10 +71,39 @@ export function readWeight(pct: string): { weight: number | null; extra: boolean
   // every number instead would read "best 2 of 3 exams, 60%" as a range from
   // two to three.
   const range = pct.match(/(\d+(?:\.\d+)?)\s*[–—-]\s*(\d+(?:\.\d+)?)\s*%/);
-  if (range) return { weight: (Number(range[1]) + Number(range[2])) / 2, extra };
+  if (range) return { weight: (Number(range[1]) + Number(range[2])) / 2, extra, points: null };
 
   const single = pct.match(/(\d+(?:\.\d+)?)\s*%/);
-  return { weight: single ? Number(single[1]) : null, extra };
+  if (single) return { weight: Number(single[1]), extra, points: null };
+
+  // A syllabus that states points rather than percentages — "80 pts", "130
+  // pts" — has been unreadable to this until now: every weight came back null
+  // and the whole screen said "nothing graded yet" for a course whose grading
+  // was fully specified. Points are a weighting; they are just expressed
+  // against a total the row does not carry, so they are read here and
+  // converted once `standing` knows the total. See `asWeights`.
+  const points = pct.match(/(\d+(?:\.\d+)?)\s*(?:pts?|points?)\b/i);
+  return { weight: null, extra, points: points ? Number(points[1]) : null };
+}
+
+/**
+ * Points turned into percentages, when that is what the syllabus used.
+ *
+ * Only when *no* row states a percentage. A syllabus mixing "40%" and "20 pts"
+ * is stating two different things about two different denominators, and
+ * guessing at how they relate would produce a confident wrong number — so a
+ * mixed one keeps the percentages and leaves the points rows unweighted,
+ * which the screen already marks and explains.
+ */
+export function asWeights(
+  read: { weight: number | null; extra: boolean; points: number | null }[],
+): (number | null)[] {
+  const anyPercent = read.some((r) => r.weight !== null);
+  if (anyPercent) return read.map((r) => r.weight);
+
+  const total = read.filter((r) => !r.extra).reduce((n, r) => n + (r.points ?? 0), 0);
+  if (total <= 0) return read.map(() => null);
+  return read.map((r) => (r.points === null ? null : (r.points / total) * 100));
 }
 
 /** A score as a person types it: "88", "88%", "17/20", "0.88". */
@@ -84,11 +127,61 @@ export function readScore(text: string): number | null {
 
 const clamp = (n: number) => Math.max(0, Math.min(1000, n));
 
-export function standing(course: Course, scores: Record<string, string>): Standing {
+/**
+ * Everything the projection needs beyond the syllabus and a score per row.
+ *
+ * Optional throughout: a course with none of it behaves exactly as it did
+ * before any of this existed, which is most courses.
+ */
+export interface Extras {
+  /** Individual pieces per category, as typed. See `lib/drop.ts`. */
+  pieces?: Record<string, string>;
+  /** How many lowest pieces the syllabus strikes out, per category. */
+  drops?: Record<string, number>;
+  /** Points off the final grade for absences. See `lib/attend.ts`. */
+  pointsOff?: number;
+  /** Attendance as a graded category: its weight and your rate. */
+  attendance?: { worth: number; rate: number | null };
+}
+
+export function standing(
+  course: Course,
+  scores: Record<string, string>,
+  extras: Extras = {},
+): Standing {
+  // Read every row first, so points can be weighed against their own total.
+  const read = course.grading.map((g) => readWeight(g.pct));
+  const weights = asWeights(read);
+
   const rows: Weighted[] = course.grading.map((g, i) => {
-    const { weight, extra } = readWeight(g.pct);
-    return { ...g, weight, extra, score: readScore(scores[key(course.id, i)] ?? '') };
+    const { extra } = read[i];
+    const weight = weights[i];
+    const k = key(course.id, i);
+    // A category with pieces entered is scored from them, after the syllabus's
+    // drop rule — which is the number the course actually uses. The single box
+    // is the fallback, and stays the whole story for most rows.
+    const listed = readScores(extras.pieces?.[k] ?? '');
+    const fromPieces = listed.length > 0 ? afterDrops(listed, extras.drops?.[k] ?? 0).mean : null;
+    return {
+      ...g,
+      weight,
+      extra,
+      score: fromPieces ?? readScore(scores[k] ?? ''),
+    };
   });
+
+  // Attendance as a weighted category, when the syllabus makes it one. Added
+  // as a row rather than adjusted afterwards, so it is counted, weighted and
+  // shown exactly like every other line of the grade.
+  if (extras.attendance && extras.attendance.worth > 0) {
+    rows.push({
+      what: 'Attendance',
+      pct: `${extras.attendance.worth}%`,
+      weight: extras.attendance.worth,
+      extra: false,
+      score: extras.attendance.rate,
+    });
+  }
 
   const graded = rows.filter((r) => !r.extra && r.weight !== null);
   const total = graded.reduce((n, r) => n + (r.weight ?? 0), 0);
@@ -101,13 +194,19 @@ export function standing(course: Course, scores: Record<string, string>): Standi
     .filter((r) => r.extra && r.weight !== null && r.score !== null)
     .reduce((n, r) => n + ((r.weight ?? 0) * (r.score ?? 0)) / 100, 0);
 
+  // Absence penalties come off the finished grade rather than into the
+  // weighting, because that is what the syllabus does with them: "10% of the
+  // final grade per class" is a subtraction, not a category.
+  const off = Math.max(0, extras.pointsOff ?? 0);
+
   return {
     rows,
     earned,
     counted,
     remaining: Math.max(0, total - counted),
-    current: counted > 0 ? (earned / counted) * 100 : null,
+    current: counted > 0 ? Math.max(0, (earned / counted) * 100 - off) : null,
     extraCredit,
+    pointsOff: off,
     incomplete: Math.abs(total - 100) > 0.5,
   };
 }
@@ -120,7 +219,10 @@ export function standing(course: Course, scores: Record<string, string>): Standi
  */
 export function needFor(s: Standing, target: number): number | null {
   if (s.remaining <= 0) return null;
-  return ((target - s.earned - s.extraCredit) / s.remaining) * 100;
+  // The penalty is already lost, so the target has to be reached on top of it.
+  // Leaving it out here would tell somebody three absences over the allowance
+  // that they need 78% when they need 108%.
+  return ((target + s.pointsOff - s.earned - s.extraCredit) / s.remaining) * 100;
 }
 
 /**
