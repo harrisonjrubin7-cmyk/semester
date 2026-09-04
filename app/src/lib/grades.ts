@@ -300,9 +300,16 @@ export function reachFor(s: Standing, target: number, label = ''): Need {
   };
 }
 
-/** Every band, with its verdict. Highest first, as the letters read. */
-export function reaches(s: Standing): Need[] {
-  return TARGETS.map((t) => reachFor(s, t.at, t.label));
+/**
+ * Every band, with its verdict. Highest first, as the letters read.
+ *
+ * The bands are passed in rather than owned here. What earns an A is a fact
+ * about a course and a university, not about arithmetic — see `lib/cutoffs.ts`
+ * for where a scale comes from and why the fallback is stated as a guess on
+ * the screen rather than shown as a fact.
+ */
+export function reaches(s: Standing, targets: { label: string; at: number }[] = TARGETS): Need[] {
+  return targets.map((t) => reachFor(s, t.at, t.label));
 }
 
 /**
@@ -324,7 +331,14 @@ export function key(courseId: string, index: number): string {
   return `${courseId}:${index}`;
 }
 
-/** The usual American letter bands, for the "what do I need" table. */
+/**
+ * The usual American letter bands.
+ *
+ * Kept as the default argument to `reaches` so a caller that has no school
+ * profile to hand still gets a table. Every screen reads them through
+ * `lib/cutoffs.ts` instead, which knows whether they are the school's numbers
+ * or an assumption and says so.
+ */
 export const TARGETS = [
   { label: 'A', at: 93 },
   { label: 'A−', at: 90 },

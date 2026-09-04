@@ -33,6 +33,13 @@ export function settings(state: State, action: Action): State | null {
     case 'setGrade':
       return { ...state, grades: { ...state.grades, [action.key]: action.value } };
 
+    case 'setCutoffs': {
+      const next = { ...state.gradeSystems };
+      if (action.system) next[action.courseId] = action.system;
+      else delete next[action.courseId];
+      return { ...state, gradeSystems: next };
+    }
+
     case 'setFeedOrder':
       return { ...state, feedOrder: action.order };
 

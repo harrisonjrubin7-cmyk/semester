@@ -42,6 +42,8 @@
  * and Vanderbilt becomes the school that uses it.
  */
 
+import { readGradeSystem, type GradeSystem } from './cutoffs';
+
 /** What the app may offer, given where somebody studies. */
 export interface Capabilities {
   mealPlan: 'swipes' | 'dollars' | 'both' | 'none';
@@ -98,6 +100,15 @@ export interface SchoolData {
     fixedDate?: string;
   };
   gradingNotes?: string;
+  /**
+   * The school's own grading scale, where it publishes one.
+   *
+   * Absent for most, including Vanderbilt: a university publishes what an A−
+   * is worth towards a GPA and leaves the percentage that earns one to the
+   * instructor. See `lib/cutoffs.ts` — a school with no scale here gets the
+   * common table, stated as an assumption, rather than a number nobody wrote.
+   */
+  gradeSystem?: GradeSystem;
   athleticsFeedUrl?: string;
 }
 
@@ -283,6 +294,23 @@ export function readCapabilities(raw: unknown): Capabilities {
   };
 }
 
+/**
+ * The data pack, read safely.
+ *
+ * Most branches are inert — a buildings list with a bad row draws one fewer
+ * pin. The grading scale is not inert: it decides what the app tells somebody
+ * they need on the final, so it goes through its own reader and a malformed
+ * one falls through to the stated assumption rather than reaching a screen.
+ */
+function readData(raw: unknown): SchoolData {
+  if (!raw || typeof raw !== 'object') return {};
+  const d = { ...(raw as SchoolData) };
+  const scale = readGradeSystem((raw as Record<string, unknown>).gradeSystem);
+  if (scale) d.gradeSystem = scale;
+  else delete d.gradeSystem;
+  return d;
+}
+
 export function readSchool(raw: unknown): School {
   if (!raw || typeof raw !== 'object') return { ...NO_SCHOOL };
   const s = raw as Record<string, unknown>;
@@ -291,7 +319,7 @@ export function readSchool(raw: unknown): School {
     name: typeof s.name === 'string' ? s.name : '',
     shortName: typeof s.shortName === 'string' ? s.shortName : undefined,
     capabilities: readCapabilities(s.capabilities),
-    data: s.data && typeof s.data === 'object' ? (s.data as SchoolData) : {},
+    data: readData(s.data),
     verified: s.verified === true,
   };
 }

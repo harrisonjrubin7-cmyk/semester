@@ -58,6 +58,7 @@ import { LEGACY_TERM } from '../lib/term';
 import { readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
 import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
+import { readOverrides, type GradeSystem } from '../lib/cutoffs';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -89,6 +90,16 @@ export interface Persisted {
   reviews: Reviews;
   /** Your own scores per course grading category, as you typed them. */
   grades: Record<string, string>;
+  /**
+   * The grading cutoffs a course uses, where its syllabus differs.
+   *
+   * Keyed by course id. Empty is the normal state: the app then reads the
+   * school's published scale, and where the school has not published one it
+   * shows the common American table and says on the screen that it is
+   * assuming. Professors deviate from their own university often enough that
+   * a per-course override is the level this belongs at. See `lib/cutoffs.ts`.
+   */
+  gradeSystems: Record<string, GradeSystem>;
   /**
    * Places you named, so a coordinate can mean something.
    *
@@ -559,6 +570,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   waysOpen: true,
   reviews: {},
   grades: {},
+  gradeSystems: {},
   places: [],
   commitments: [],
   timers: [],
@@ -732,6 +744,7 @@ export function loadPersisted(): Persisted {
     waysOpen: saved.waysOpen ?? true,
       reviews: saved.reviews ?? {},
       grades: saved.grades ?? {},
+      gradeSystems: readOverrides(saved.gradeSystems),
       places: saved.places ?? [],
       commitments: saved.commitments ?? [],
       timers: saved.timers ?? [],
@@ -834,6 +847,7 @@ export function pickPersisted(state: State): Persisted {
     waysOpen: state.waysOpen,
     reviews: state.reviews,
     grades: state.grades,
+    gradeSystems: state.gradeSystems,
     places: state.places,
     commitments: state.commitments,
     timers: state.timers,
@@ -916,6 +930,9 @@ export type Action =
   | { type: 'setNav'; nav: NavMode }
   | { type: 'toggleWays' }
   | { type: 'setGrade'; key: string; value: string }
+  // `system` null clears the override, so a course falls back to the school's
+  // scale rather than being stuck with a corrected one forever.
+  | { type: 'setCutoffs'; courseId: string; system: GradeSystem | null }
   | { type: 'addPlace'; place: Omit<SavedPlace, 'id' | 'created'> }
   | { type: 'removePlace'; id: string }
   | { type: 'addCommitment'; commitment: Omit<Commitment, 'id' | 'created'> }

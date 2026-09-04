@@ -7,6 +7,8 @@ import { NO_POLICY, pointsOff, rate, tally } from '../lib/attend';
 import { PiecesRow } from '../components/PiecesRow';
 import { against, forCourse, trend, trendLine } from '../lib/sitting';
 import { projectGrade, projectionLine } from '../lib/worth';
+import { NO_CUTOFFS, letterFor, systemFor, targetsOf } from '../lib/cutoffs';
+import { Cutoffs } from '../components/Cutoffs';
 
 /**
  * What you have, and what the rest has to be.
@@ -22,7 +24,7 @@ import { projectGrade, projectionLine } from '../lib/worth';
  *   the page padding and the empty-state guard. Standalone it supplies its own.
  */
 export function Grades({ bare = false }: { bare?: boolean } = {}) {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, school } = useStore();
   if (catalog.empty) return <FirstRun where="to track grades" />;
 
   return (
@@ -37,6 +39,10 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
         // absence penalty, attendance as a graded category, the individual
         // pieces inside a category and how many of them the course drops.
         const policy = state.attendPolicy[c.id] ?? NO_POLICY;
+        // What earns an A here, and whether the app actually knows or is
+        // assuming. See `lib/cutoffs.ts` — the two must not look alike.
+        const { system } = systemFor(c.id, state.gradeSystems, school);
+        const targets = targetsOf(system);
         const t = tally(state.attendance, c.id);
         const s = standing(c, state.grades, {
           pieces: state.pieces,
@@ -55,6 +61,14 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
                 <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
                   {s.current === null ? '—' : `${Math.round(s.current)}%`}
+                  {/* The letter beside the number, where the scale in force
+                      has cutoffs to read it against. The line under the
+                      targets below says whose cutoffs those are. */}
+                  {s.current !== null && letterFor(s.current, system) ? (
+                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', opacity: 0.6, marginLeft: 8 }}>
+                      {letterFor(s.current, system)}
+                    </span>
+                  ) : null}
                 </div>
                 <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7 }}>
                   {s.remaining > 0
@@ -168,7 +182,12 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 >
                   To finish with, you need
                 </div>
-                {reaches(s).map((t) => {
+                {targets.length === 0 && (
+                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, textWrap: 'pretty' }}>
+                    {NO_CUTOFFS}
+                  </div>
+                )}
+                {reaches(s, targets).map((t) => {
                   if (t.need === null) return null;
                   // `reachFor` decides what the number means; this only draws
                   // it. The old test here was `need > 100`, which showed a
@@ -207,6 +226,18 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 })}
               </>
             )}
+
+            {/*
+              Outside the targets block on purpose.
+
+              The hero names a letter, and a letter is only as true as the
+              cutoff behind it. If this sat inside the block above it would
+              disappear for a course with nothing graded yet and for one where
+              everything is in — leaving a letter on the screen with nothing
+              anywhere saying whose numbers produced it, which is the failure
+              `lib/cutoffs.ts` exists to prevent.
+            */}
+            <Cutoffs courseId={c.id} code={c.code} />
 
             {/*
               Practice, beside the projection and deliberately not inside it.
