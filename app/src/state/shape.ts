@@ -306,6 +306,8 @@ export interface Persisted {
 }
 
 export interface Ephemeral {
+  /** Whether the one-line capture box is open. See `lib/capture.ts`. */
+  quickAdd: boolean;
   screen: Screen;
   /** Back stack, so Back walks history rather than one remembered screen. */
   history: Screen[];
@@ -500,6 +502,9 @@ export function currentLook(state: Persisted): Look {
 
 export function initialEphemeral(now: Date): Ephemeral {
   return {
+    // Ephemeral on purpose: a capture box left open is not a state worth
+    // restoring, and reopening the app into a modal is a way to lose people.
+    quickAdd: false,
     screen: 'home',
     history: [],
     courseId: 'core',
@@ -751,6 +756,7 @@ export type Action =
   | { type: 'unmarkReturned'; id: string }
   | { type: 'setRegradeWindow'; courseId: string; window: RegradeWindow }
   | { type: 'setGeocode'; patch: Partial<Geocode> }
+  | { type: 'quickAdd'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }

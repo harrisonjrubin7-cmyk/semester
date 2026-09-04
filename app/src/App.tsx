@@ -93,6 +93,7 @@ import { Running } from './components/Running';
 import { Keys } from './components/Keys';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
+import { QuickAdd } from './components/QuickAdd';
 import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
@@ -349,6 +350,17 @@ function Header() {
           {/* Before the icons, because it is the only thing here that is
               counting. Renders nothing at all unless a timer is running. */}
           <Running />
+          {/* One line, from anywhere. The alternative to this button is four
+              taps through two pickers, which is why nobody adds the thing
+              they were told about walking out of a lecture. */}
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon"
+            onClick={() => dispatch({ type: 'quickAdd', open: true })}
+            aria-label="Add something in one line"
+          >
+            <Plus size={19} />
+          </button>
           <button
             type="button"
             className="btn btn-ghost btn-icon"
@@ -738,6 +750,7 @@ export default function App() {
         <Ringing />
         {/* Keeps the reminder queue fed. Draws nothing. */}
         <PushTop />
+        {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
         <Rail />
         <div className="device device-pane">
           <Header />
@@ -757,6 +770,7 @@ export default function App() {
       <Fresh />
       <Ringing />
       <PushTop />
+      {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       <Header />
       {trouble}
       <main className="scrollarea" key={state.screen}>

@@ -36,7 +36,7 @@ export interface Shortcut {
   /** A screen to open, for the plain navigation ones. */
   screen?: Screen;
   /** A named action for the ones that are not navigation. */
-  action?: 'search' | 'back' | 'help' | 'timer';
+  action?: 'search' | 'back' | 'help' | 'timer' | 'capture';
 }
 
 /**
@@ -54,6 +54,7 @@ export const SHORTCUTS: Shortcut[] = [
   { key: 'm', does: 'Mine — your tasks, notes and files', screen: 'mine' },
   { key: 'a', does: 'Ask Claude about this course', screen: 'ask' },
   { key: 'n', does: 'Add a course from a syllabus', screen: 'import' },
+  { key: 'q', does: 'Add something in one line', action: 'capture' },
   { key: '/', does: 'Search everything', action: 'search' },
   { key: 'escape', does: 'Back', action: 'back' },
   { key: '?', does: 'This list', action: 'help' },

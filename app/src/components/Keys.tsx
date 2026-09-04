@@ -51,6 +51,9 @@ export function Keys() {
         case 'search':
           dispatch({ type: 'go', screen: 'search' });
           break;
+        case 'capture':
+          dispatch({ type: 'quickAdd', open: true });
+          break;
         case 'back':
           dispatch({ type: 'back' });
           break;
