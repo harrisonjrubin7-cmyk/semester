@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Dictate } from '../components/Dictate';
 import { proposalsLine, readProposal, TOOLS, type Proposal } from '../lib/tools';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
@@ -511,6 +512,7 @@ export function Ask() {
         style={{ minHeight: 84, fontSize: 13.5, lineHeight: 1.5, marginTop: 16 }}
         aria-label="Your question"
       />
+      <Dictate compact current={draft} onText={setDraft} label="Say it instead" />
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         <button
           type="button"

@@ -7,7 +7,7 @@ import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } 
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import type { CourseId } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
-import { dictate, dictationSupported } from '../lib/mic';
+import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
 import { PrintButton } from '../components/PrintButton';
 import {
@@ -794,95 +794,6 @@ function Places() {
   );
 }
 
-/**
- * Speech to text, into whatever you are writing.
- *
- * The browser's own recogniser does the work, which is why this exists at all
- * and why it is absent in Firefox — the screen says which you have rather than
- * showing a button that quietly does nothing. Where the audio goes to be
- * recognised is the browser's business and differs between them, which is
- * worth knowing before dictating anything you would not say in public.
- *
- * Dictated words append to what is already written rather than replacing it,
- * because losing a paragraph to a misfired button is unforgivable.
- */
-function Dictate({ onText, current }: { onText: (text: string) => void; current: string }) {
-  const [on, setOn] = useState(false);
-  const [error, setError] = useState('');
-  const stop = useRef<(() => void) | null>(null);
-  const base = useRef('');
-
-  useEffect(() => () => stop.current?.(), []);
-
-  if (!dictationSupported()) {
-    return (
-      <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
-        This browser has no speech recognition, so dictation is off. Chrome and Safari have it.
-      </div>
-    );
-  }
-
-  const begin = () => {
-    setError('');
-    base.current = current ? `${current.replace(/\s+$/, '')}\n\n` : '';
-    stop.current = dictate(
-      (text) => onText(base.current + text),
-      (message) => {
-        setError(message);
-        setOn(false);
-      },
-    );
-    setOn(true);
-  };
-
-  const end = () => {
-    stop.current?.();
-    stop.current = null;
-    setOn(false);
-  };
-
-  return (
-    <>
-      <button
-        type="button"
-        className={on ? 'btn btn-primary btn-block' : 'btn btn-secondary btn-block'}
-        onClick={() => (on ? end() : begin())}
-        style={{
-          height: 42,
-          marginTop: 10,
-          fontSize: 11,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 9,
-        }}
-      >
-        <span
-          style={{
-            width: 9,
-            height: 9,
-            borderRadius: '50%',
-            background: on ? 'var(--chrome-ink)' : 'var(--app-accent)',
-            flex: 'none',
-          }}
-        />
-        {on ? 'Stop dictating' : 'Dictate'}
-      </button>
-      {on && (
-        <div style={{ fontSize: 11.5, opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
-          Listening. Words appear as you say them, after whatever was already written.
-        </div>
-      )}
-      {error && (
-        <div style={{ fontSize: 12, color: 'var(--app-accent)', marginTop: 8, lineHeight: 1.45 }}>
-          {error}
-        </div>
-      )}
-    </>
-  );
-}
 
 /** The note editor. Saves as you type — there is no save button on purpose. */
 export function NoteEditor() {

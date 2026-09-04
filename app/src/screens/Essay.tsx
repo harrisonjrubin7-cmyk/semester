@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Dictate } from '../components/Dictate';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { Trouble } from '../components/Trouble';
@@ -298,6 +299,7 @@ export function Essay() {
         placeholder="The job ad, the prompt, the call for pitches. Paste it."
         style={{ width: '100%', minHeight: 80, resize: 'vertical', lineHeight: 1.5 }}
       />
+      <Dictate compact current={instructions} onText={setInstructions} label="Say what you need" />
 
       <SectionLabel>Sources, if it needs any</SectionLabel>
       <textarea

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Dictate } from '../components/Dictate';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -168,6 +169,7 @@ export function Solve() {
         placeholder="Type it, or photograph it below."
         style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.55 }}
       />
+      <Dictate compact current={problem} onText={setProblem} label="Read the problem out" />
       <input
         ref={camera}
         type="file"

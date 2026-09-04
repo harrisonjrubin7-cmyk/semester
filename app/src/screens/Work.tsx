@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Dictate } from '../components/Dictate';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { useLive } from '../lib/live';
@@ -171,6 +172,7 @@ export function Work() {
             style={{ fontSize: 13.5, lineHeight: 1.5, resize: 'vertical' }}
             aria-label="Assignment instructions"
           />
+          <Dictate compact current={instructions} onText={setInstructions} label="Read the instructions out" />
 
           <input
             ref={file}

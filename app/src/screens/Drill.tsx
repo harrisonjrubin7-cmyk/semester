@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { allCards } from '../data/catalog';
 import { useStore } from '../state/store';
+import { SayIt } from '../components/SayIt';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
@@ -30,6 +31,11 @@ export function Drill() {
     // recorded 34. The order is decided when the run starts and then held.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.guideId, state.drillUnit]);
+
+  // Cleared whenever the card changes, so the last card's answer cannot be
+  // left sitting under the next question.
+  const [said, setSaid] = useState('');
+  useEffect(() => setSaid(''), [state.drillIdx]);
 
   const finished = state.drillIdx >= pool.length;
   const card = pool[state.drillIdx] ?? pool[0];
@@ -198,6 +204,11 @@ export function Drill() {
           </span>
         )}
       </button>
+
+      {/* Committing to an answer before turning the card over is the whole
+          difference between recall and recognition. Nothing scores it — see
+          `components/SayIt.tsx`. */}
+      <SayIt said={said} onSaid={setSaid} revealed={state.revealed} />
 
       {!state.revealed && (
         <div

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Dictate } from '../components/Dictate';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -296,6 +297,7 @@ export function Exam() {
               placeholder="In class, closed book, one side of notes. Half multiple choice, one longer question."
               style={{ width: '100%', minHeight: 70, resize: 'vertical', lineHeight: 1.5 }}
             />
+            <Dictate compact current={about} onText={setAbout} label="Say it instead" />
           </>
         )}
 
