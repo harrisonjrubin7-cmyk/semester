@@ -8,6 +8,8 @@ import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
 import { WeekGrid } from '../components/WeekGrid';
+import { WeekDue } from '../components/WeekDue';
+import { PrintButton } from '../components/PrintButton';
 import { kindOf } from '../lib/kinds';
 import {
   DOW,
@@ -423,9 +425,12 @@ function WeekView() {
         >
           <ChevronLeft size={18} />
         </button>
+        {/* Marked so it survives the printer. A pinned-up week wants its
+            dates at the top of the page; the arrows either side of it do not
+            print, and should not. */}
         <button
           type="button"
-          className="bare"
+          className="bare wk-head"
           onClick={() => dispatch({ type: 'setCalDay', date: null })}
           style={{ width: 'auto', textAlign: 'center' }}
         >
@@ -458,9 +463,12 @@ function WeekView() {
         <>
           <WeekGrid days={days} now={minutesNow(now)} style={{ marginTop: 14 }} />
           <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 14, lineHeight: 1.5 }}>
-            Tap a date to open that day in full. Deadlines are not on this grid — they are a due
-            time rather than a span, and the month view is where they read best.
+            Tap a date to open that day in full. Deadlines are moments rather than spans, so they
+            are listed under the grid instead of drawn on it.
           </div>
+
+          <WeekDue start={start} classes={total} />
+          <PrintButton label="Print the week" style={{ marginTop: 14 }} />
         </>
       )}
       <div style={{ height: 22 }} />

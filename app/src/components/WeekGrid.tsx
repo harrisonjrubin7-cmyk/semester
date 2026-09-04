@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { CLASS_TINT, kindOf } from '../lib/kinds';
 import { DOW_INITIALS } from '../lib/date';
 import type { HourBlock } from './HourGrid';
+import { lanesOf } from '../lib/weekpage';
 
 /**
  * A week, by the hour — the timetable shape.
@@ -14,7 +15,11 @@ import type { HourBlock } from './HourGrid';
  *
  * At phone width a column is about forty pixels, so a block shows a short label
  * and nothing else. That is the honest trade: the week view is for shape, and
- * the day view is one tap away for detail.
+ * the day view is one tap away for detail. Two things at the same hour split
+ * that column between them, which at this width leaves each of them cramped —
+ * and cramped is what the day view is one tap away for. It is what the grid
+ * did before that was wrong: it drew them one on top of the other, so the one
+ * underneath was not merely small but absent.
  */
 
 export interface WeekDay {
@@ -47,7 +52,7 @@ export function WeekGrid({
   const col = `calc((100% - ${GUTTER}px) / ${days.length})`;
 
   return (
-    <div style={style}>
+    <div className="weekgrid" style={style}>
       {/* Day letters, with the date under, aligned to the columns below. */}
       <div style={{ display: 'flex', paddingLeft: GUTTER, marginBottom: 4 }}>
         {days.map((d) => (
@@ -130,18 +135,24 @@ export function WeekGrid({
           ),
         )}
 
-        {days.map((d, di) =>
-          d.blocks.map((b) => {
+        {days.map((d, di) => {
+          // Two things at eleven used to be drawn one on top of the other and
+          // neither could be read. See `lib/weekpage.ts`.
+          const lanes = lanesOf(d.blocks);
+          return d.blocks.map((b) => {
             const tint = b.kind === null ? CLASS_TINT : kindOf(b.kind).tint;
+            const { lane, of } = lanes[b.id] ?? { lane: 0, of: 1 };
+            const slot = `((${col} - 3px) / ${of})`;
             return (
               <div
                 key={`${di}-${b.id}`}
+                className="wg-block"
                 title={`${b.title} · ${b.meta}`}
                 style={{
                   position: 'absolute',
                   top: top(b.at) + 1,
-                  left: `calc(${GUTTER}px + ${di} * ${col} + 1px)`,
-                  width: `calc(${col} - 3px)`,
+                  left: `calc(${GUTTER}px + ${di} * ${col} + 1px + ${lane} * ${slot})`,
+                  width: `calc(${slot})`,
                   height: Math.max(15, (b.minutes / 60) * ROW - 3),
                   overflow: 'hidden',
                   padding: '2px 3px',
@@ -165,8 +176,8 @@ export function WeekGrid({
                 </span>
               </div>
             );
-          }),
-        )}
+          });
+        })}
 
         {now !== null &&
           days.some((d) => d.isToday) &&
@@ -174,6 +185,7 @@ export function WeekGrid({
           now <= hi * 60 && (
             <div
               aria-hidden
+              className="wg-now"
               style={{
                 position: 'absolute',
                 top: top(now),

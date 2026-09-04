@@ -381,6 +381,46 @@ a:hover {
     box-shadow: none !important;
   }
 
+  /* The week grid, on paper.
+
+     "Anything you press is noise" is right everywhere except here: the grid
+     draws its day headings as buttons, so the rule above printed a page of
+     hour labels with nothing in them. They print as plain headings instead.
+
+     The blocks are drawn on a dark panel with a coloured left edge. The panel
+     has to go — a page of dark rectangles is a page of toner — but the edge is
+     what tells one course from another, so it is kept and marked for exact
+     colour. A monochrome printer turns it into a grey bar, which still
+     distinguishes them. */
+  .weekgrid button {
+    display: block !important;
+    color: #111318 !important;
+  }
+  .weekgrid .wg-block {
+    background: none !important;
+    color: #111318 !important;
+    border-top: 1px solid #c8ccd4 !important;
+    border-right: 1px solid #c8ccd4 !important;
+    border-bottom: 1px solid #c8ccd4 !important;
+    border-left-width: 3px !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  /* A moment, printed onto a week. It was true when you pressed print and is
+     wrong by the time the page is warm. */
+  .weekgrid .wg-now {
+    display: none !important;
+  }
+  .weekgrid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* The week's dates, at the top of the page it is pinned up as. */
+  .wk-head {
+    display: block !important;
+    color: #111318 !important;
+  }
+
   @page {
     margin: 16mm 14mm;
   }
