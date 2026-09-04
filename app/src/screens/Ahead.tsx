@@ -6,6 +6,9 @@ import { PrintButton } from '../components/PrintButton';
 import { headline, pressure, showHours, studyAsked, week } from '../lib/ahead';
 import { askedLine, forecast } from '../lib/pace';
 import { basisLine } from '../lib/windows';
+import { due, isReading, plan, planLine, size, typicalExtent } from '../lib/reading';
+import { datedItems } from '../lib/select';
+import { DOW, decorateItem } from '../lib/date';
 
 /**
  * The next seven days, in hours, before they happen.
@@ -37,6 +40,20 @@ export function Ahead() {
   );
 
   const asked = useMemo(() => studyAsked(catalog), [catalog]);
+
+  // Readings due in the window, sized from your own pace and placed on days
+  // with room. Everything here is counted in `lib/reading.ts`.
+  const readings = useMemo(() => {
+    const items = datedItems(catalog, now);
+    const ahead = due(items, state.done, 7).map((i) => decorateItem(i, now));
+    const typical = typicalExtent(items.filter(isReading));
+    return plan({
+      readings: ahead.map((i) => size(i, state.spent, typical)),
+      days: w.days.map((d) => ({ date: d.date, promised: d.promised })),
+      windows: state.windows,
+      now,
+    });
+  }, [catalog, now, state.done, state.spent, state.windows, w.days]);
 
   // The half of the week the app could never count until it was told. Every
   // figure comes from work this student has timed; anything else is left out
@@ -140,6 +157,75 @@ export function Ahead() {
         Classes and commitments at the length they meet for; an appointment counted as an hour,
         because it has a start and no end. A dot marks a day with something due on it.
       </div>
+
+      {/*
+        Readings, placed. The rest of this screen counts hours; this is the one
+        part that says which evening. See `lib/reading.ts` — a reading that
+        fits nowhere is reported as not fitting rather than squeezed in, which
+        is the sentence an app that always finds room can never say.
+      */}
+      {(readings.placed.length > 0 || readings.unplaced.length > 0 || readings.unsized.length > 0) && (
+        <>
+          <SectionLabel>Reading, and where it goes</SectionLabel>
+          <div style={{ fontSize: 13, opacity: 0.75, lineHeight: 1.5, marginBottom: 8 }}>
+            {planLine(readings)}
+          </div>
+          {readings.placed.map((p) => (
+            <button
+              key={p.item.id}
+              type="button"
+              className="bare tappable"
+              onClick={() => dispatch({ type: 'openItem', id: p.item.id })}
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'baseline',
+                width: '100%',
+                padding: '10px 0',
+                borderBottom: '1px solid var(--app-line)',
+                textAlign: 'left',
+              }}
+            >
+              <span style={{ flex: 'none', width: 40, fontSize: 12, opacity: 0.6 }}>
+                {DOW[p.on.getDay()]}
+              </span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, lineHeight: 1.35 }}>
+                {p.item.title}
+                <span style={{ opacity: 0.5 }}> · {code(p.item.c)}</span>
+              </span>
+              <span style={{ flex: 'none', fontSize: 11.5, opacity: 0.55 }}>
+                {p.minutes >= 60 ? `${Math.round((p.minutes / 60) * 10) / 10}h` : `${p.minutes}m`}
+              </span>
+            </button>
+          ))}
+          {readings.unplaced.map((s) => (
+            <div
+              key={s.item.id}
+              style={{
+                display: 'flex',
+                gap: 12,
+                alignItems: 'baseline',
+                padding: '10px 0',
+                borderBottom: '1px solid var(--app-line)',
+              }}
+            >
+              <span style={{ flex: 'none', width: 40, fontSize: 12, color: 'var(--app-warn)' }}>
+                —
+              </span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, lineHeight: 1.35, opacity: 0.75 }}>
+                {s.item.title}
+                <span style={{ opacity: 0.6 }}> · due {s.item.dueShort}, and no day has room</span>
+              </span>
+            </div>
+          ))}
+          {readings.unsized.length > 0 && (
+            <div style={{ fontSize: 11.5, opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+              {readings.unsized.length} could not be sized — the app has not seen you time a
+              reading in that course yet, and it will not invent one.
+            </div>
+          )}
+        </>
+      )}
 
       {w.due.length > 0 && (
         <>
