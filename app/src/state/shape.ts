@@ -29,6 +29,7 @@ import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
+import { readApplications, type Application, type Stage } from '../lib/apply';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
@@ -89,6 +90,13 @@ export interface Persisted {
    */
   timers: Timer[];
   alarms: Alarm[];
+  /**
+   * Internships, jobs, research posts — the other deadline set. See
+   * `lib/apply.ts`. Here rather than in a spreadsheet because those deadlines
+   * land on the same days as coursework, and until both were in one place
+   * nothing could say so.
+   */
+  applications: Application[];
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
@@ -417,6 +425,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   commitments: [],
   timers: [],
   alarms: [],
+  applications: [],
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
@@ -543,6 +552,7 @@ export function loadPersisted(): Persisted {
       commitments: saved.commitments ?? [],
       timers: saved.timers ?? [],
       alarms: saved.alarms ?? [],
+      applications: readApplications(saved.applications),
       feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
@@ -628,6 +638,7 @@ export function pickPersisted(state: State): Persisted {
     commitments: state.commitments,
     timers: state.timers,
     alarms: state.alarms,
+    applications: state.applications,
     feedOrder: state.feedOrder,
     tabs: state.tabs,
     yours: state.yours,
@@ -692,6 +703,10 @@ export type Action =
   | { type: 'addAlarm'; label: string; at: number; days: number[] }
   | { type: 'patchAlarm'; id: string; patch: Partial<Alarm> }
   | { type: 'removeAlarm'; id: string }
+  | { type: 'addApplication'; patch: Partial<Application> }
+  | { type: 'patchApplication'; id: string; patch: Partial<Application> }
+  | { type: 'moveApplication'; id: string; stage: Stage }
+  | { type: 'removeApplication'; id: string }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }

@@ -356,6 +356,15 @@ export const DESTINATIONS: Destination[] = [
     root: 'mine',
   },
   {
+    screen: 'applying',
+    label: 'Applications',
+    short: 'Apply',
+    blurb: 'Internships, jobs and research posts — the deadlines that land on the same days as your coursework.',
+    keywords: 'internship internships job jobs application applications apply applied recruiting recruitment career careers offer interview interviews resume cv cover letter fellowship scholarship grad school research assistant ra summer analyst deadline pipeline tracker handshake linkedin networking coffee chat referral',
+    group: 'Yours',
+    root: 'mine',
+  },
+  {
     screen: 'proof',
     label: 'Check the writing',
     short: 'Check',

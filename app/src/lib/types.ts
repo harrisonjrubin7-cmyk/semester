@@ -444,6 +444,7 @@ export type Screen =
   | 'account'
   | 'clocks'
   | 'proof'
+  | 'applying'
   | 'cloud';
 
 export type StudyMode =

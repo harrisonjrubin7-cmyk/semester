@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useStore } from '../state/store';
 import { WorstDay } from '../components/Clashes';
 import { TimerLine } from '../components/TimerLine';
+import { ApplyingSoon } from '../components/Applying';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
@@ -713,6 +714,7 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   // can have that without a second setting.
   clash: WorstDay,
   timers: TimerLine,
+  applying: ApplyingSoon,
 };
 
 function TodayFeed() {

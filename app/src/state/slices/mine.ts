@@ -11,6 +11,7 @@
 
 import { newId } from '../../lib/files';
 import { newAlarm, newTimer } from '../../lib/clocks';
+import { moveTo, newApplication } from '../../lib/apply';
 import { tidy } from '../../lib/windows';
 import type { Action, State } from '../shape';
 
@@ -115,6 +116,34 @@ export function mine(state: State, action: Action): State | null {
 
     case 'removeAlarm':
       return { ...state, alarms: state.alarms.filter((a) => a.id !== action.id) };
+
+    // Applications. A stage change goes through `moveTo` rather than a patch,
+    // because the history is the point: overwriting loses the one thing worth
+    // knowing later, which is that this was sent in September.
+    case 'addApplication':
+      return {
+        ...state,
+        applications: [newApplication(action.patch, Date.now()), ...state.applications],
+      };
+
+    case 'patchApplication':
+      return {
+        ...state,
+        applications: state.applications.map((a) =>
+          a.id === action.id ? { ...a, ...action.patch } : a,
+        ),
+      };
+
+    case 'moveApplication':
+      return {
+        ...state,
+        applications: state.applications.map((a) =>
+          a.id === action.id ? moveTo(a, action.stage, Date.now()) : a,
+        ),
+      };
+
+    case 'removeApplication':
+      return { ...state, applications: state.applications.filter((a) => a.id !== action.id) };
 
     // The hours you actually work in. See `lib/windows.ts` — these make every
     // hour figure in the app true rather than nominal.

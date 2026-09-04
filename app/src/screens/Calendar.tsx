@@ -1,6 +1,7 @@
 import { useStore } from '../state/store';
 import { DeadlineRow } from '../components/DeadlineRow';
 import { MarkClass } from '../components/MarkClass';
+import { ApplyingOn } from '../components/Applying';
 import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -250,6 +251,10 @@ function DayView() {
           </div>
         </>
       )}
+
+      {/* Recruiting deadlines on the same day as the coursework they collide
+          with, which is the whole reason they are in this app. */}
+      <ApplyingOn day={day} />
 
       {due.length > 0 && (
         <>

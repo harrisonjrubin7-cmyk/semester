@@ -14,6 +14,7 @@ import { useMemo } from 'react';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
+import { asItems } from '../lib/apply';
 import { adviceFor, clashes, whenLine, worstAhead, type Clash } from '../lib/clash';
 
 function useClashes(): Clash[] {
@@ -23,13 +24,20 @@ function useClashes(): Clash[] {
       clashes(
         // Ticked work is not a clash. What counts as done is the store's
         // business, so it is filtered here rather than inside `lib/clash.ts`.
-        datedItems(catalog, now).filter((i) => !state.done[i.id]),
+        //
+        // Applications come in alongside coursework because a day with three
+        // assignments and a first-round application is a harder day than one
+        // with three assignments, and until they were the same shape the
+        // detector could only see half of the Friday. They carry no estimate,
+        // so each counts as one of the things a heavy day says it could not
+        // weigh — see `asItems`.
+        [...datedItems(catalog, now).filter((i) => !state.done[i.id]), ...asItems(state.applications, now)],
         state.spent,
         state.commitments,
         courseCode,
         state.dayBudget,
       ),
-    [catalog, now, state.done, state.spent, state.commitments, courseCode, state.dayBudget],
+    [catalog, now, state.done, state.spent, state.commitments, state.applications, courseCode, state.dayBudget],
   );
 }
 

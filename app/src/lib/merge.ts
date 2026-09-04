@@ -118,6 +118,10 @@ export const STRATEGY: Record<string, Strategy> = {
   // it is set on the device meant to do the ringing.
   timers: 'mine',
   alarms: 'mine',
+  // Unlike the clocks: an application is a fact about your term, not about a
+  // device, and two devices adding two different ones should end with both.
+  // Ids are generated per application, so a union cannot duplicate one.
+  applications: 'union',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',
