@@ -52,6 +52,7 @@ import { Runway } from './screens/Runway';
 import { Announce } from './screens/Announce';
 import { Costs } from './screens/Costs';
 import { Worked } from './screens/Worked';
+import { Gap } from './screens/Gap';
 import { Groupwork } from './screens/Groupwork';
 import { Meals } from './screens/Meals';
 import { Sources } from './screens/Sources';
@@ -193,6 +194,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Books, fees and what came back', title: 'What this term cost' };
     case 'worked':
       return { kicker: 'Four months of your own evidence', title: 'What worked' };
+    case 'gap':
+      return { kicker: 'One thumb, and the walk taken off', title: 'Between classes' };
     case 'groupwork':
       return { kicker: 'Who has what, and by when', title: 'Group work' };
     case 'meals':
@@ -469,6 +472,8 @@ function CurrentScreen() {
       return <Costs />;
     case 'worked':
       return <Worked />;
+    case 'gap':
+      return <Gap />;
     case 'groupwork':
       return <Groupwork />;
     case 'meals':

@@ -579,6 +579,8 @@ export type Action =
   | { type: 'startDrill'; unit: number | null }
   | { type: 'flip' }
   | { type: 'markCard'; got: boolean; key: string }
+  /** An answer recorded against a card, with no drill run around it. */
+  | { type: 'recordCard'; got: boolean; key: string }
   | { type: 'redrill' }
   | { type: 'startQuiz'; quiz: QuizQuestion[] }
   | { type: 'pickAnswer'; index: number }

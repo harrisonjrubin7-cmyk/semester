@@ -26,6 +26,11 @@ export const SECTIONS: FeedSection[] = [
     label: 'What changed',
     blurb: 'Anything that moved while you were not looking — another device, a feed, an import.',
   },
+  {
+    id: 'gap',
+    label: 'Between classes',
+    blurb: 'A gap you could fill, with the walk to your next class taken off it.',
+  },
   { id: 'next', label: 'Next class', blurb: 'The countdown, and anything overdue.' },
   { id: 'due', label: 'Due today', blurb: 'The checklist, with the headline that counts down.' },
   {

@@ -52,6 +52,19 @@ export function study(state: State, action: Action): State | null {
       };
     }
 
+    // The same record, without the run around it. `markCard` also advances
+    // the drill's position and score, which the between-classes mode does not
+    // have and must not move: a gap run would otherwise skip you forward
+    // through a sitting-down drill you had left half finished.
+    case 'recordCard':
+      return {
+        ...state,
+        reviews: {
+          ...state.reviews,
+          [action.key]: score(state.reviews[action.key], action.got, Date.now()),
+        },
+      };
+
     case 'redrill':
       return { ...state, drillIdx: 0, drillGot: 0, revealed: false };
 

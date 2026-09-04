@@ -394,6 +394,7 @@ export type Screen =
   | 'guide'
   | 'quiz'
   | 'drill'
+  | 'gap'
   | 'lesson'
   | 'mine'
   | 'note'
