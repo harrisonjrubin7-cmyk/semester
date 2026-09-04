@@ -76,6 +76,11 @@ export const SECTIONS: FeedSection[] = [
   { id: 'tasks', label: 'Your own tasks', blurb: 'Things you added that are not from a syllabus.' },
   { id: 'rail', label: 'Today’s rail', blurb: 'The day hour by hour.' },
   {
+    id: 'behind',
+    label: 'When the week does not fit',
+    blurb: 'Offered only when the arithmetic says so. Nothing on an ordinary week.',
+  },
+  {
     id: 'walks',
     label: 'Getting between them',
     blurb: 'The walk between two buildings, and whether the gap covers it.',

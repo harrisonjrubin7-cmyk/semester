@@ -30,6 +30,7 @@ import { line, pressing, standing } from '../lib/registrar';
 import { HowLong } from '../components/HowLong';
 import { DropBy } from '../components/DropBy';
 import { Walks } from '../components/Walks';
+import { BehindOffer } from '../components/BehindOffer';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
 import { GapOffer } from './Gap';
 import { HomeWalk } from '../components/HomeWalk';
@@ -708,6 +709,7 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   tasks: Feed_tasks,
   rail: Feed_rail,
   walks: Feed_walks,
+  behind: BehindOffer,
   since: Feed_since,
   gap: GapOffer,
   home: HomeWalk,

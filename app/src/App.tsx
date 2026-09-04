@@ -34,6 +34,7 @@ const Clocks = lazy(() => import('./screens/Clocks').then((m) => ({ default: m.C
 const Proof = lazy(() => import('./screens/Proof').then((m) => ({ default: m.Proof })));
 const Applying = lazy(() => import('./screens/Applying').then((m) => ({ default: m.Applying })));
 const Tonight = lazy(() => import('./screens/Tonight').then((m) => ({ default: m.Tonight })));
+const Behind = lazy(() => import('./screens/Behind').then((m) => ({ default: m.Behind })));
 const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
 const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
@@ -248,6 +249,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'The other deadline set', title: 'Applications' };
     case 'tonight':
       return { kicker: 'Where the hours go', title: 'Tonight' };
+    case 'behind':
+      return { kicker: 'Counted, not felt', title: 'When you are behind' };
     case 'brief':
       return { kicker: 'Counted, then read', title: 'Your day' };
     case 'essay':
@@ -545,6 +548,8 @@ function CurrentScreen() {
       return <Applying />;
     case 'tonight':
       return <Tonight />;
+    case 'behind':
+      return <Behind />;
     case 'brief':
       return <Brief />;
     case 'essay':

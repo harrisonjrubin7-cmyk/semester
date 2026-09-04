@@ -446,6 +446,7 @@ export type Screen =
   | 'proof'
   | 'applying'
   | 'tonight'
+  | 'behind'
   | 'cloud';
 
 export type StudyMode =
