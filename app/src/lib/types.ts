@@ -484,7 +484,16 @@ export interface Lesson {
   cues: LessonCue[];
 }
 
-export type NavMode = 'tabs' | 'feed';
+/**
+ * How the app is entered.
+ *
+ * `tabs` is the bar; `feed` is one scrolling day; `springboard` is a home
+ * screen of icons. Three genuinely different habits rather than three skins —
+ * the bar suits somebody who lives in four screens, the springboard somebody
+ * who has forty-six and would rather see them than remember which shelf they
+ * are on.
+ */
+export type NavMode = 'tabs' | 'feed' | 'springboard';
 
 /** A class that repeats every week, from the syllabus meeting pattern. */
 export interface RecurringBlock {

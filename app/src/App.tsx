@@ -88,6 +88,7 @@ const Weekly = lazy(() => import('./screens/Weekly').then((m) => ({ default: m.W
 const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work })));
 const Worked = lazy(() => import('./screens/Worked').then((m) => ({ default: m.Worked })));
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
+const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
@@ -165,7 +166,10 @@ function useHeader(): { kicker: string; title: string } {
 
   switch (state.screen) {
     case 'home':
-      return { kicker: today, title: state.nav === 'feed' ? 'Everything' : 'Today' };
+      return {
+        kicker: today,
+        title: state.nav === 'feed' ? 'Everything' : state.nav === 'springboard' ? 'Semester' : 'Today',
+      };
     case 'courses':
       return { kicker: load, title: 'Courses' };
     case 'course':
@@ -506,7 +510,10 @@ function CurrentScreen() {
   const { state } = useStore();
   switch (state.screen) {
     case 'home':
-      return <Today />;
+      // The Home layout choice, from Settings. The springboard is a way in
+      // rather than a different app: every icon goes to the same screen the
+      // tab bar would have.
+      return state.nav === 'springboard' ? <Springboard /> : <Today />;
     case 'courses':
       return <Courses />;
     case 'course':
@@ -772,6 +779,8 @@ export default function App() {
   // opening a course guide left Back as the only exit — five taps from a
   // flashcard to the calendar. It now stays put everywhere except the screens
   // that genuinely need the whole display: a running drill, a lesson, a deck.
+  // Not in springboard mode: its dock is the bar, and two of them would be
+  // eleven icons across the bottom of a phone.
   const showTabs = state.nav === 'tabs' && !FULLSCREEN.includes(state.screen) && !wide;
   const showFab = state.nav === 'feed' && state.screen === 'home' && !wide;
 

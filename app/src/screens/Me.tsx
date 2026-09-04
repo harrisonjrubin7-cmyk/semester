@@ -725,6 +725,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         options={[
           { id: 'tabs', label: 'Tab bar' },
           { id: 'feed', label: 'One feed' },
+          { id: 'springboard', label: 'Home screen' },
         ]}
         value={state.nav}
         onChange={(nav) => dispatch({ type: 'setNav', nav })}
@@ -732,6 +733,13 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
 
       {/* Only in tab-bar mode: in feed mode there is no bar to arrange, and
           offering the setting anyway would be a control that does nothing. */}
+      {state.nav === 'springboard' && (
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45, textWrap: 'pretty' }}>
+          Three pages of icons with a dock that does not move, folders that open in place, and a
+          search that filters to everything at once. Every icon goes to the same screen the tab bar
+          would have — it is a way in, not a different app.
+        </div>
+      )}
       {state.nav === 'tabs' && <TabChooser />}
 
       <YourCourses />
