@@ -220,6 +220,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'worked',
+    label: 'What worked',
+    blurb: 'The end of a term, read back from your own evidence — and silent where the evidence is thin.',
+    keywords: 'what worked end of term semester review retrospective looking back reflection how did it go study habits pattern patterns evidence december finals over improve next term learn about myself',
+    group: 'Upkeep',
+    root: 'home',
+  },
+  {
     screen: 'weekly',
     label: 'Weekly report',
     blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',

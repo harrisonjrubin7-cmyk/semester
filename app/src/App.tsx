@@ -51,6 +51,7 @@ import { Registrar } from './screens/Registrar';
 import { Runway } from './screens/Runway';
 import { Announce } from './screens/Announce';
 import { Costs } from './screens/Costs';
+import { Worked } from './screens/Worked';
 import { Sources } from './screens/Sources';
 import { scaleOf, tokensFor } from './lib/look';
 import { AccountScreen } from './screens/Account';
@@ -188,6 +189,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'The email that moves a date', title: 'An announcement' };
     case 'costs':
       return { kicker: 'Books, fees and what came back', title: 'What this term cost' };
+    case 'worked':
+      return { kicker: 'Four months of your own evidence', title: 'What worked' };
     case 'runway':
       return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
     case 'weekly':
@@ -458,6 +461,8 @@ function CurrentScreen() {
       return <Announce />;
     case 'costs':
       return <Costs />;
+    case 'worked':
+      return <Worked />;
     case 'runway':
       return <Runway />;
     case 'weekly':

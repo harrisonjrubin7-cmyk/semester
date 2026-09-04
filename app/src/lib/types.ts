@@ -412,6 +412,7 @@ export type Screen =
   | 'ahead'
   | 'announce'
   | 'costs'
+  | 'worked'
   | 'runway'
   | 'weekly'
   | 'registrar'
