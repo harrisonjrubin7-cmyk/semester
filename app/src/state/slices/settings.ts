@@ -126,6 +126,27 @@ export function settings(state: State, action: Action): State | null {
      * coursework, which is the point of gating on capabilities rather than
      * forking the app per school.
      */
+    /*
+     * The only path in the app that deliberately drops local coursework.
+     *
+     * Reached from one button, on a dialogue that states what it replaces and
+     * saves a backup file first. Settings survive: somebody choosing their
+     * account's semester has not asked to have their accent colour changed.
+     */
+    case 'wipeLocalForAdopt':
+      return {
+        ...state,
+        courses: [],
+        notes: [],
+        tasks: [],
+        appointments: [],
+        sittings: [],
+        done: {},
+        tickedAt: {},
+        started: {},
+        reviews: {},
+      };
+
     case 'setSchool':
       return state.schoolId === action.id ? state : { ...state, schoolId: action.id };
 

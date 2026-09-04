@@ -70,6 +70,13 @@ export function AccountScreen() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 6 }}>
             {account.email}
           </div>
+          {account.via && (
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 3 }}>
+              {/* Which button they pressed, which is what somebody needs to
+                  know when signing in on a second device. */}
+              Through {account.via}.
+            </div>
+          )}
           <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
             {sync.status === 'syncing' && 'Catching up with your account…'}
             {sync.status === 'synced' &&
@@ -153,7 +160,7 @@ export function AccountScreen() {
             marginTop: 20,
           }}
         >
-          Sign out
+          Sign out (keeps data on this device)
         </button>
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
@@ -229,15 +236,28 @@ export function AccountScreen() {
           type="button"
           className="btn btn-secondary"
           disabled={busy}
+          onClick={() => void run(() => signInWith('azure'))}
+          style={{ flex: 1, height: 42, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        >
+          Microsoft
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={busy}
           onClick={() => void run(() => signInWith('apple'))}
           style={{ flex: 1, height: 42, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Apple
         </button>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
-        Google and Apple work once they are switched on for the project — until then they answer
-        with a provider error, which is the truth rather than a broken button.
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45, textWrap: 'pretty' }}>
+        Any Google or Microsoft account works — there is no check on which university the address
+        belongs to. Email and a password is kept as a third way in because some universities block
+        third-party sign-in outright, and being locked out of the only option is not a good enough
+        reason to be locked out of the app. Each provider works once it is switched on for the
+        project; until then it answers with a provider error, which is the truth rather than a
+        button that looks broken.
       </div>
 
       <div style={{ display: 'flex', gap: 14, marginTop: 18 }}>

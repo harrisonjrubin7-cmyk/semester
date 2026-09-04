@@ -938,6 +938,16 @@ export type Action =
   | { type: 'clearNotifs' }
   | { type: 'toggleStarted'; id: string }
   | { type: 'setSchool'; id: string }
+  /**
+   * Clear this device's own rows so the account's copy is what is left.
+   *
+   * Only ever dispatched by the first-sign-in chooser, and only for the option
+   * that says out loud that it replaces what is here — with a backup file
+   * written first. See `lib/adopt.ts`. It clears the coursework and leaves the
+   * settings, because "use the account's semester" is not a request to have
+   * your colours changed.
+   */
+  | { type: 'wipeLocalForAdopt' }
   | { type: 'onbNext' }
   | { type: 'restartOnboarding' }
   | { type: 'finishOnboarding' }

@@ -101,6 +101,7 @@ import { QuickAdd } from './components/QuickAdd';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
 import { Tapped } from './components/Tapped';
+import { Adopting } from './components/Adopting';
 import { forget } from './lib/scrollback';
 import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
@@ -707,7 +708,7 @@ function Rail() {
 }
 
 export default function App() {
-  const { state, dispatch, saveTrouble } = useStore();
+  const { state, dispatch, saveTrouble, asking, settle } = useStore();
   const wide = useMedia(DESKTOP);
 
   /**
@@ -817,6 +818,8 @@ export default function App() {
         <Tapped />
         {/* Offers the last removal back, from wherever it happened. */}
         <Undone />
+        {/* The one question a first sign-in asks, and only when it is real. */}
+        {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
         <Rail />
         <div className="device device-pane">
@@ -839,6 +842,7 @@ export default function App() {
       <PushTop />
       <Tapped />
       <Undone />
+      {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       <Header />
       {trouble}

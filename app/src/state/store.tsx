@@ -46,6 +46,7 @@ import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
 import { resolveSchool } from '../data/schools';
+import { countRows, decide, type Choice, type Sides } from '../lib/adopt';
 import type { School } from '../lib/school';
 // Aliased: an effect below has its own local `said` for a save error.
 import { said as refreshSaid } from '../lib/refresh';
@@ -143,6 +144,15 @@ interface Store {
    * See `lib/school.ts` — screens ask what a school has, never which it is.
    */
   school: School;
+  /**
+   * The first-sign-in question, or null.
+   *
+   * On the store rather than on a screen because it has to be answerable from
+   * wherever somebody happened to be when the sign-in came back. See
+   * `lib/adopt.ts` and `components/Adopting.tsx`.
+   */
+  asking: { sides: Sides; say: string } | null;
+  settle: (choice: Choice, backup: string | null) => void;
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -219,6 +229,32 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * then a reload took the lot with nothing having suggested a problem.
    */
   const [saveTrouble, setSaveTrouble] = useState('');
+
+  /**
+   * The first-sign-in question, while it is waiting to be answered.
+   *
+   * Held here rather than on the persisted state: it is about this moment, and
+   * a half-answered question surviving a reload would be worse than being
+   * asked again.
+   */
+  /*
+   * The current state, for the callbacks that must not re-create on it.
+   *
+   * `refresh` counts this device's rows, and `settle` writes them to a backup
+   * file — both need the state as it is *now*. Depending on it directly would
+   * give `refresh` a new identity on every dispatch, and the effect that calls
+   * it on sign-in would then re-pull the account on every keystroke.
+   */
+  const latest = useRef(state);
+  useEffect(() => {
+    latest.current = state;
+  });
+
+  const [asking, setAsking] = useState<{
+    sides: Sides;
+    say: string;
+    remote: Awaited<ReturnType<typeof pull>>;
+  } | null>(null);
 
   useEffect(() => {
     const result = save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value));
@@ -325,6 +361,34 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const remote = await pull(account.id);
       const localStamp = Number(localStorage.getItem(SYNCED_KEY) ?? 0);
       const hasRemote = remote.state !== null || remote.courses.length > 0;
+
+      /*
+       * A first sign-in with a semester on both sides is the one moment this
+       * feature can ruin a term, so it asks instead of deciding.
+       *
+       * Only on a *first* one — `localStamp` is zero until this device has
+       * synced once, and after that the ordinary newest-wins path is right and
+       * a dialogue every time would be intolerable. See `lib/adopt.ts`.
+       */
+      if (hasRemote && localStamp === 0) {
+        const here = countRows(pickPersisted(latest.current));
+        const there = countRows({
+          ...(remote.state as Record<string, unknown>),
+          courses: remote.courses,
+        });
+        const both: Sides = {
+          cloud: there.rows,
+          local: here.rows,
+          cloudCourses: there.courses,
+          localCourses: here.courses,
+        };
+        if (decide(both).do === 'ask') {
+          setAsking({ sides: both, say: decide(both).say, remote });
+          setSync({ status: 'synced', at: Date.now(), error: '' });
+          return refreshSaid({ ...base, took: false }, Date.now());
+        }
+      }
+
       const take = hasRemote && remote.updated > localStamp;
 
       if (take) {
@@ -538,9 +602,62 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    */
   const school = useMemo(() => resolveSchool(state.schoolId, null), [state.schoolId]);
 
+  /**
+   * Acting on the answer, and writing the file before either overwrite.
+   *
+   * The backup is what is on the device right now, saved to the student's
+   * downloads before anything replaces it. It is written first and awaited by
+   * nothing — a browser that refuses the download must not stop somebody
+   * getting on with their term, and the two options that need it both say so
+   * on the button.
+   */
+  const settle = useCallback(
+    (choice: Choice, backup: string | null) => {
+      if (!asking) return;
+      const { remote } = asking;
+      if (backup) {
+        try {
+          const blob = new Blob([JSON.stringify(pickPersisted(latest.current), null, 2)], {
+            type: 'application/json',
+          });
+          const url = globalThis.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = backup;
+          a.click();
+          setTimeout(() => globalThis.URL.revokeObjectURL(url), 30_000);
+        } catch {
+          // A browser that will not save a file is not a reason to lose the
+          // choice; the two destructive options are still the student's.
+        }
+      }
+
+      // `merge` and `cloud` both hydrate — the difference is that a merge keeps
+      // this device's rows because `hydrate`'s merge is a union, while `cloud`
+      // clears them first so the account's copy is what is left.
+      if (choice === 'device') {
+        // Nothing to take. The push effect sends this device up on its next
+        // run, which is what makes it the account's copy too.
+        localStorage.setItem(SYNCED_KEY, String(Date.now()));
+      } else {
+        if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
+        dispatch({
+          type: 'hydrate',
+          persisted: {
+            ...(remote.state as Partial<Persisted>),
+            courses: remote.courses.map((c) => c.data as CourseModule),
+          },
+        });
+        localStorage.setItem(SYNCED_KEY, String(remote.updated));
+      }
+      setAsking(null);
+    },
+    [asking],
+  );
+
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, school }),
-    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, school],
+    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, school, asking, settle }),
+    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, school, asking, settle],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

@@ -53,7 +53,26 @@ export function cloud(): Promise<SupabaseClient> {
   }
   client ??= import('@supabase/supabase-js').then((mod) =>
     mod.createClient(URL, KEY, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        /*
+         * PKCE, and a storage key of our own.
+         *
+         * PKCE because this is a static site: there is no server to hold a
+         * client secret, so the code-for-token exchange has to be proved by the
+         * browser that started it. The default implicit flow puts the token in
+         * the URL fragment, where it lands in history and in any analytics that
+         * reads the address bar.
+         *
+         * The key is named because the default is derived from the project ref,
+         * and two builds of this app pointed at one project would otherwise
+         * share a session slot and sign each other out.
+         */
+        flowType: 'pkce',
+        storageKey: 'semester.auth',
+      },
     }),
   );
   return client;
@@ -81,11 +100,35 @@ export function appUrl(): string {
 export interface Account {
   id: string;
   email: string;
+  /**
+   * How they signed in, in words. "Google", "Microsoft", or "an email address
+   * and password".
+   *
+   * Carried on the account rather than looked up from the session, because the
+   * store keeps the account and drops the session — and "signed in as
+   * you@gmail.com" does not tell somebody which button they pressed, which is
+   * exactly what they need to know when signing in on a second device.
+   */
+  via: string;
 }
 
 export function accountOf(session: Session | null): Account | null {
   if (!session?.user) return null;
-  return { id: session.user.id, email: session.user.email ?? '' };
+  return { id: session.user.id, email: session.user.email ?? '', via: providerOf(session) };
+}
+
+/**
+ * Which provider a session came through, for the account screen to say.
+ *
+ * "Signed in as you@gmail.com" does not tell somebody whether they used
+ * Google or typed a password, and that is exactly what they need to know when
+ * signing in on a second device.
+ */
+export function providerOf(session: Session | null): string {
+  const raw = session?.user?.app_metadata?.provider;
+  if (typeof raw !== 'string' || !raw) return '';
+  if (raw === 'email') return 'an email address and password';
+  return PROVIDER_LABEL[raw as Provider] ?? raw;
 }
 
 export async function currentSession(): Promise<Session | null> {
@@ -138,10 +181,39 @@ export async function signIn(email: string, password: string): Promise<void> {
 }
 
 /** Google or Apple, when they are switched on in the Supabase dashboard. */
-export async function signInWith(provider: 'google' | 'apple'): Promise<void> {
+/**
+ * The providers a student might actually have.
+ *
+ * `azure` is Microsoft, which is what most universities issue — and the
+ * registration must accept "any organizational directory and personal
+ * Microsoft accounts", or a student at another university and anyone with an
+ * outlook.com address are both locked out. That is the single most common way
+ * this is set up wrong.
+ *
+ * Email and password stay as a third way in, because some universities block
+ * third-party OAuth apps outright and a student whose only account is blocked
+ * would otherwise have no way in at all.
+ *
+ * No email domain is ever checked. Any Google or Microsoft account is valid.
+ */
+export type Provider = 'google' | 'azure' | 'apple';
+
+/** What to call a provider on a button, and in "signed in with". */
+export const PROVIDER_LABEL: Record<Provider, string> = {
+  google: 'Google',
+  azure: 'Microsoft',
+  apple: 'Apple',
+};
+
+export async function signInWith(provider: Provider): Promise<void> {
   const { error } = await (await cloud()).auth.signInWithOAuth({
     provider,
-    options: { redirectTo: appUrl() },
+    options: {
+      redirectTo: appUrl(),
+      // Microsoft returns no email at all without these, and an account with
+      // no email is one the student cannot recognise as theirs.
+      ...(provider === 'azure' ? { scopes: 'email openid profile' } : {}),
+    },
   });
   if (error) throw new Error(error.message);
 }
