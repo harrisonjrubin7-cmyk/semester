@@ -97,6 +97,7 @@ import { Keys } from './components/Keys';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
+import { Undone } from './components/Undone';
 import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
@@ -765,6 +766,8 @@ export default function App() {
         <Ringing />
         {/* Keeps the reminder queue fed. Draws nothing. */}
         <PushTop />
+        {/* Offers the last removal back, from wherever it happened. */}
+        <Undone />
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
         <Rail />
         <div className="device device-pane">
@@ -785,6 +788,7 @@ export default function App() {
       <Fresh />
       <Ringing />
       <PushTop />
+      <Undone />
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       <Header />
       {trouble}

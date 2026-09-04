@@ -22,6 +22,11 @@
 
 /** Minutes past midnight, or null when the wording holds no clock time. */
 export function readDue(text: string): number | null {
+  // Typed as a string and not always one in practice. A course syncing in from
+  // another device — or from a build before this field existed — can arrive
+  // with it missing, and this is called from the Header, so a `.trim()` on
+  // undefined took the whole app down rather than one deadline's clock.
+  if (typeof text !== 'string') return null;
   const s = text.trim();
   if (!s) return null;
 

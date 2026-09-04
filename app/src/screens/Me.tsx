@@ -27,7 +27,9 @@ import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { DESTINATIONS, destinationsIn, type Group } from '../lib/nav';
 
-import type { Screen } from '../lib/types';
+import type { CourseModule, Screen } from '../lib/types';
+import { cardKey } from '../lib/review';
+import { TypeToConfirm } from '../components/TypeToConfirm';
 
 /**
  * The shelves, in the order they read: what you study, what you make with it,
@@ -95,6 +97,77 @@ function Destination({
       </span>
       <ChevronRight size={16} />
     </button>
+  );
+}
+
+/**
+ * One course in the list, with the one question the app still asks.
+ *
+ * Removing a course is the single thing here that an undo cannot fix — it takes
+ * the guide, the units, the cards and every answer recorded against them — so
+ * this is where `TypeToConfirm` earns its place. Everything else in the app
+ * removes immediately and offers the toast in `Undone.tsx` instead.
+ *
+ * The row owns its own asking state rather than `Me` owning a "which course is
+ * being confirmed" field, because a row is exactly the scope the question has.
+ */
+function CourseRow({ module: c }: { module: CourseModule }) {
+  const { state, dispatch } = useStore();
+  const [asking, setAsking] = useState(false);
+
+  const cards = c.guide.units.reduce((n, u) => n + u.cards.length, 0);
+  const answered = c.guide.units.reduce(
+    (n, u) => n + u.cards.filter((card) => state.reviews[cardKey(c.course.id, card.q)]).length,
+    0,
+  );
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        padding: '13px 0',
+        borderBottom: '1px solid var(--app-line)',
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{c.course.code}</div>
+        <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}>
+          {c.guide.units.length} units · {c.items.length} deadlines · from {c.course.source}
+        </div>
+      </div>
+      <button
+        type="button"
+        className="bare"
+        onClick={() => setAsking(true)}
+        style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+      >
+        REMOVE
+      </button>
+
+      {asking && (
+        <TypeToConfirm
+          title={`Remove ${c.course.code}`}
+          what={[
+            `${c.guide.units.length} units and ${cards} cards go with it.`,
+            `${c.items.length} deadlines from this syllabus go with it.`,
+            answered > 0
+              ? `${answered} ${answered === 1 ? 'card you have answered' : 'cards you have answered'} — that history goes too.`
+              : 'You have not answered any of its cards yet.',
+            'Importing the syllabus again brings the course back, but not the answers.',
+          ]}
+          want={c.course.code}
+          describe="the course code"
+          confirmLabel="Remove it"
+          onConfirm={() => {
+            setAsking(false);
+            dispatch({ type: 'removeCourse', id: c.course.id });
+          }}
+          onCancel={() => setAsking(false)}
+        />
+      )}
+    </div>
   );
 }
 
@@ -804,31 +877,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
         onChange={() => dispatch({ type: 'setSample', on: !state.sample })}
       />
       {state.courses.map((c) => (
-        <div
-          key={c.course.id}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            padding: '13px 0',
-            borderBottom: '1px solid var(--app-line)',
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{c.course.code}</div>
-            <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}>
-              {c.guide.units.length} units · {c.items.length} deadlines · from {c.course.source}
-            </div>
-          </div>
-          <button
-            type="button"
-            className="bare"
-            onClick={() => dispatch({ type: 'removeCourse', id: c.course.id })}
-            style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
-          >
-            REMOVE
-          </button>
-        </div>
+        <CourseRow key={c.course.id} module={c} />
       ))}
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Sources</SectionLabel>

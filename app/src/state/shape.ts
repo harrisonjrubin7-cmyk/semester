@@ -37,6 +37,7 @@ import { COMMON_SCALE, readRequirements, readTaken, type Requirement, type Scale
 import { readLetters, readPeople, readVisits, type Letter, type Person, type Visit } from '../lib/letters';
 import { readAnswers, type Answer, type Sure } from '../lib/sure';
 import { readContract, readFloor, readRest, type Contract, type Floor, type Rest } from '../lib/rest';
+import type { Taken as Undone } from '../lib/undo';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
@@ -342,6 +343,14 @@ export interface Persisted {
 }
 
 export interface Ephemeral {
+  /**
+   * The last destructive thing, for as long as the toast is up.
+   *
+   * Ephemeral on purpose: an undo restored onto a copy that has synced and
+   * moved on is worse than no undo, and an offer to take back something from
+   * last Tuesday is not an offer anybody wants. See `lib/undo.ts`.
+   */
+  undone: Undone | null;
   /** Whether the one-line capture box is open. See `lib/capture.ts`. */
   quickAdd: boolean;
   screen: Screen;
@@ -551,6 +560,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     // Ephemeral on purpose: a capture box left open is not a state worth
     // restoring, and reopening the app into a modal is a way to lose people.
     quickAdd: false,
+    undone: null,
     screen: 'home',
     history: [],
     courseId: 'core',
@@ -844,6 +854,8 @@ export type Action =
   | { type: 'addRest'; patch: Partial<Rest> }
   | { type: 'dropRest'; id: string }
   | { type: 'setContract'; hours: number }
+  | { type: 'undo' }
+  | { type: 'forgetUndo' }
   | { type: 'quickAdd'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }

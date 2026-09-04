@@ -69,6 +69,15 @@ describe('the edges of a clock', () => {
     expect(readDue('')).toBeNull();
     expect(readDue('   ')).toBeNull();
   });
+
+  it('survives no wording at all, which the type says cannot happen', () => {
+    // A course syncing in from another device, or from a build before this
+    // field existed, arrives without it. This is called from the Header, so
+    // the alternative to returning null here is a blank app.
+    expect(readDue(undefined as never)).toBeNull();
+    expect(readDue(null as never)).toBeNull();
+    expect(dueMinutes(undefined as never)).toBe(NO_TIME);
+  });
 });
 
 describe('sorting a day', () => {

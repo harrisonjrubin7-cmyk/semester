@@ -21,6 +21,7 @@
  */
 
 import type { Action, State } from './shape';
+import { snapshot, tookSomething, undoableFor } from '../lib/undo';
 import { library } from './slices/library';
 import { mine } from './slices/mine';
 import { navigate } from './slices/navigate';
@@ -37,10 +38,34 @@ import { study } from './slices/study';
  */
 const SLICES = [navigate, study, schedule, mine, notes, papers, library, settings];
 
+/**
+ * The slices, plus one thing they do not do.
+ *
+ * Undo is handled here rather than in a slice because it is a property of
+ * *every* destructive action rather than of any one of them, and putting a
+ * snapshot line in twenty-two cases is twenty-two places to forget it. See
+ * `lib/undo.ts` — the fields an action can damage are named there, and only
+ * those are kept, so undoing a deleted note does not also undo the box you
+ * ticked in between.
+ */
 export function reducer(state: State, action: Action): State {
+  if (action.type === 'undo') {
+    if (!state.undone) return state;
+    return { ...state, ...state.undone.was, undone: null };
+  }
+  if (action.type === 'forgetUndo') {
+    return state.undone ? { ...state, undone: null } : state;
+  }
+
+  const undoable = undoableFor(action.type);
+  const before = undoable ? snapshot(state, undoable, Date.now()) : null;
+
   for (const slice of SLICES) {
     const next = slice(state, action);
-    if (next !== null) return next;
+    if (next === null) continue;
+    // Only where the action actually took something. A Remove pressed on an id
+    // that is already gone should not put a toast up offering to undo nothing.
+    return before && tookSomething(before, next) ? { ...next, undone: before } : next;
   }
   return state;
 }

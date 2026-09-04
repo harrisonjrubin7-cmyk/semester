@@ -29,14 +29,30 @@ describe('every action is handled somewhere', () => {
     return [...union.matchAll(/\btype: '(\w+)'/g)].map((m) => m[1]);
   };
 
+  /**
+   * Two places, because there are two places.
+   *
+   * Almost everything is a `case` in a slice. Undo is not: it is a property of
+   * every destructive action rather than of any one of them, so it is handled
+   * in `reducer.ts` above the loop. Reading only the slices would report those
+   * as unhandled and reading only for `case` would miss them, so this reads
+   * both — the point of the test is that nothing falls through, not that
+   * everything is written the same way.
+   */
   const handled = (): string[] => {
     const dir = join(here, 'slices');
-    return readdirSync(dir)
+    const inSlices = readdirSync(dir)
       .filter((f) => f.endsWith('.ts') && !f.endsWith('.test.ts'))
       .flatMap((f) => [
         ...readFileSync(join(dir, f), 'utf8').matchAll(/^ {4}case '(\w+)':/gm),
       ])
       .map((m) => m[1]);
+    const above = [
+      ...readFileSync(join(here, 'reducer.ts'), 'utf8').matchAll(
+        /action\.type === '(\w+)'/g,
+      ),
+    ].map((m) => m[1]);
+    return [...inSlices, ...above];
   };
 
   it('read both lists, so the rest of this means something', () => {
@@ -283,6 +299,87 @@ describe('drilling', () => {
     });
     const once = reducer(started, { type: 'pickAnswer', index: 0 });
     expect(reducer(once, { type: 'pickAnswer', index: 0 })).toBe(once);
+  });
+});
+
+describe('taking it back', () => {
+  const twoNotes = (): State => {
+    let s = reducer(blank(), { type: 'keepNote', title: 'One', body: '', courseId: null });
+    return reducer(s, { type: 'keepNote', title: 'Two', body: '', courseId: null });
+  };
+
+  it('offers the last removal back, in words', () => {
+    const s = twoNotes();
+    const gone = reducer(s, { type: 'deleteNote', id: s.notes[0].id });
+    expect(gone.notes).toHaveLength(1);
+    expect(gone.undone?.label).toBe('Note deleted');
+  });
+
+  it('puts it back', () => {
+    const s = twoNotes();
+    const gone = reducer(s, { type: 'deleteNote', id: s.notes[0].id });
+    const back = reducer(gone, { type: 'undo' });
+    expect(back.notes.map((n) => n.title).sort()).toEqual(['One', 'Two']);
+    expect(back.undone).toBeNull();
+  });
+
+  it('restores the fields the action touched and nothing else', () => {
+    // Undoing a deleted note must not also undo the box you ticked in between.
+    const s = twoNotes();
+    const gone = reducer(s, { type: 'deleteNote', id: s.notes[0].id });
+    const ticked = reducer(gone, { type: 'toggleDone', id: 'e1' });
+    const back = reducer(ticked, { type: 'undo' });
+    expect(back.notes).toHaveLength(2);
+    expect(back.done.e1).toBe(true);
+  });
+
+  it('offers nothing for an action that only edits', () => {
+    // An edit leaves the thing there to edit back.
+    const s = twoNotes();
+    expect(reducer(s, { type: 'toggleDone', id: 'e1' }).undone).toBeNull();
+  });
+
+  it('offers nothing when the removal removed nothing', () => {
+    // A Remove pressed on an id that is already gone should not put a toast up
+    // offering to undo nothing.
+    const s = twoNotes();
+    expect(reducer(s, { type: 'deleteNote', id: 'never-existed' }).undone).toBeNull();
+  });
+
+  it('holds one step, not a history', () => {
+    const s = twoNotes();
+    const first = reducer(s, { type: 'deleteNote', id: s.notes[0].id });
+    const second = reducer(first, { type: 'deleteNote', id: first.notes[0].id });
+    const back = reducer(second, { type: 'undo' });
+    expect(back.notes).toHaveLength(1);
+    expect(reducer(back, { type: 'undo' })).toBe(back);
+  });
+
+  it('does nothing at all when there is nothing to take back', () => {
+    const s = blank();
+    expect(reducer(s, { type: 'undo' })).toBe(s);
+    expect(reducer(s, { type: 'forgetUndo' })).toBe(s);
+  });
+
+  it('lets the offer be dropped once it has expired', () => {
+    const s = twoNotes();
+    const gone = reducer(s, { type: 'deleteNote', id: s.notes[0].id });
+    expect(reducer(gone, { type: 'forgetUndo' }).undone).toBeNull();
+  });
+
+  it('does not offer a removed course back, because that one asks first', () => {
+    // Removing a course takes its guide, its cards and every answer against
+    // them — a different order of loss from a deleted row.
+    let s = reducer(blank(), {
+      type: 'addCourse',
+      module: {
+        course: { id: 'econ', code: 'ECON', title: 'e', term: '2026FA' },
+        items: [],
+        schedule: [],
+        guide: { code: 'ECON', units: [] },
+      } as never,
+    });
+    expect(reducer(s, { type: 'removeCourse', id: 'econ' }).undone).toBeNull();
   });
 });
 
