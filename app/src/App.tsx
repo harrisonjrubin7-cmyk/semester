@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { useStore } from './state/store';
 import {
   Bell,
@@ -10,51 +10,77 @@ import {
 } from './components/Icons';
 import { Onboarding } from './screens/Onboarding';
 import { Today } from './screens/Today';
-import { CourseDetail, Courses, ItemDetail } from './screens/Courses';
-import { Calendar, EventDetail } from './screens/Calendar';
-import { Me, Notifications, Search, Settings } from './screens/Me';
-import { Import } from './screens/Import';
-import { Study } from './screens/Study';
-import { Guide } from './screens/Guide';
-import { Drill, Quiz } from './screens/Drill';
-import { Mine, NoteEditor } from './screens/Mine';
-import { LessonPlayer } from './screens/Lesson';
-import { AddMaterial } from './screens/Update';
-import { Connect } from './screens/Connect';
-import { Ask } from './screens/Ask';
-import { Work } from './screens/Work';
-import { Grades } from './screens/Grades';
-import { Maps } from './screens/Maps';
-import { Mail } from './screens/Mail';
-import { Export } from './screens/Export';
-import { Yes } from './screens/Yes';
-import { Draw } from './screens/Draw';
-import { Solve } from './screens/Solve';
-import { EditCourse } from './screens/EditCourse';
-import { Analyse } from './screens/Analyse';
-import { Classmates } from './screens/Classmates';
-import { Activities } from './screens/Activities';
-import { Brief } from './screens/Brief';
-import { Essay } from './screens/Essay';
-import { Deck } from './screens/Deck';
-import { Exam } from './screens/Exam';
-import { CheckDates } from './screens/CheckDates';
-import { Ahead } from './screens/Ahead';
-import { Weekly } from './screens/Weekly';
-import { Registrar } from './screens/Registrar';
-import { Runway } from './screens/Runway';
-import { Announce } from './screens/Announce';
-import { Costs } from './screens/Costs';
-import { Worked } from './screens/Worked';
-import { Gap } from './screens/Gap';
-import { Groupwork } from './screens/Groupwork';
-import { Meals } from './screens/Meals';
-import { Housing } from './screens/Housing';
-import { Sources } from './screens/Sources';
 import { scaleOf, tokensFor } from './lib/look';
-import { AccountScreen } from './screens/Account';
-import { Cloud } from './screens/Cloud';
-import { SlideDeck } from './screens/Slides';
+
+/**
+ * Every screen but the first, fetched when it is opened.
+ *
+ * All forty-six used to be imported statically, which put every one of them
+ * — and everything they pull in — into one 1,047 kB chunk that had to arrive
+ * before anything painted. Nobody opens forty-six screens. They open Today.
+ *
+ * The heavy leaves are the ones nobody loads on a normal day: Draw brings
+ * cytoscape at 435 kB, the guide brings KaTeX at 259 kB, the importer brings
+ * a PDF reader at 431 kB. Those now arrive on the tap that needs them, and
+ * the service worker keeps them for next time.
+ *
+ * Today and Onboarding stay eager: one is the default screen and the other is
+ * the first thing a new account sees, so making either wait would move the
+ * delay rather than remove it.
+ */
+const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ default: m.AccountScreen })));
+const Activities = lazy(() => import('./screens/Activities').then((m) => ({ default: m.Activities })));
+const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
+const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
+const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
+const Announce = lazy(() => import('./screens/Announce').then((m) => ({ default: m.Announce })));
+const Ask = lazy(() => import('./screens/Ask').then((m) => ({ default: m.Ask })));
+const Brief = lazy(() => import('./screens/Brief').then((m) => ({ default: m.Brief })));
+const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
+const CheckDates = lazy(() => import('./screens/CheckDates').then((m) => ({ default: m.CheckDates })));
+const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
+const Cloud = lazy(() => import('./screens/Cloud').then((m) => ({ default: m.Cloud })));
+const Connect = lazy(() => import('./screens/Connect').then((m) => ({ default: m.Connect })));
+const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Costs })));
+const CourseDetail = lazy(() => import('./screens/Courses').then((m) => ({ default: m.CourseDetail })));
+const Courses = lazy(() => import('./screens/Courses').then((m) => ({ default: m.Courses })));
+const Deck = lazy(() => import('./screens/Deck').then((m) => ({ default: m.Deck })));
+const Draw = lazy(() => import('./screens/Draw').then((m) => ({ default: m.Draw })));
+const Drill = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Drill })));
+const EditCourse = lazy(() => import('./screens/EditCourse').then((m) => ({ default: m.EditCourse })));
+const Essay = lazy(() => import('./screens/Essay').then((m) => ({ default: m.Essay })));
+const EventDetail = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.EventDetail })));
+const Exam = lazy(() => import('./screens/Exam').then((m) => ({ default: m.Exam })));
+const Export = lazy(() => import('./screens/Export').then((m) => ({ default: m.Export })));
+const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap })));
+const Grades = lazy(() => import('./screens/Grades').then((m) => ({ default: m.Grades })));
+const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ default: m.Groupwork })));
+const Guide = lazy(() => import('./screens/Guide').then((m) => ({ default: m.Guide })));
+const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
+const Import = lazy(() => import('./screens/Import').then((m) => ({ default: m.Import })));
+const ItemDetail = lazy(() => import('./screens/Courses').then((m) => ({ default: m.ItemDetail })));
+const LessonPlayer = lazy(() => import('./screens/Lesson').then((m) => ({ default: m.LessonPlayer })));
+const Mail = lazy(() => import('./screens/Mail').then((m) => ({ default: m.Mail })));
+const Maps = lazy(() => import('./screens/Maps').then((m) => ({ default: m.Maps })));
+const Me = lazy(() => import('./screens/Me').then((m) => ({ default: m.Me })));
+const Meals = lazy(() => import('./screens/Meals').then((m) => ({ default: m.Meals })));
+const Mine = lazy(() => import('./screens/Mine').then((m) => ({ default: m.Mine })));
+const NoteEditor = lazy(() => import('./screens/Mine').then((m) => ({ default: m.NoteEditor })));
+const Notifications = lazy(() => import('./screens/Me').then((m) => ({ default: m.Notifications })));
+const Quiz = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Quiz })));
+const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
+const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
+const Search = lazy(() => import('./screens/Me').then((m) => ({ default: m.Search })));
+const Settings = lazy(() => import('./screens/Me').then((m) => ({ default: m.Settings })));
+const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
+const Solve = lazy(() => import('./screens/Solve').then((m) => ({ default: m.Solve })));
+const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
+const Study = lazy(() => import('./screens/Study').then((m) => ({ default: m.Study })));
+const Weekly = lazy(() => import('./screens/Weekly').then((m) => ({ default: m.Weekly })));
+const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work })));
+const Worked = lazy(() => import('./screens/Worked').then((m) => ({ default: m.Worked })));
+const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
+
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
 import { litTab, tabLabel } from './lib/tabbar';
@@ -65,6 +91,37 @@ import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import type { Screen } from './lib/types';
+
+/**
+ * What fills the column while a screen's chunk is in flight.
+ *
+ * Not a spinner. A spinner says "something is happening" and nothing else; a
+ * skeleton in the shape the screen is about to take means the layout does not
+ * jump when it arrives. It is deliberately faint — most of the time it is on
+ * screen for under a frame, and something that flashes brightly for 30ms is
+ * worse than something that flashes dimly.
+ *
+ * It appears once per screen per session. React holds the module after the
+ * first import, so the second visit to a screen renders straight away.
+ */
+function Loading() {
+  return (
+    <div style={{ padding: 18 }} aria-hidden="true">
+      {[62, 30, 96, 96].map((h, i) => (
+        <div
+          key={i}
+          style={{
+            height: h,
+            marginTop: i === 0 ? 0 : 12,
+            borderRadius: 'var(--r-md)',
+            background: 'var(--app-hero)',
+            opacity: 0.55,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 /**
  * The screens that keep the whole display.
@@ -659,7 +716,9 @@ export default function App() {
           <Header />
           {trouble}
           <main className="scrollarea" key={state.screen}>
-            <CurrentScreen />
+            <Suspense fallback={<Loading />}>
+              <CurrentScreen />
+            </Suspense>
           </main>
         </div>
       </div>
@@ -672,7 +731,9 @@ export default function App() {
       <Header />
       {trouble}
       <main className="scrollarea" key={state.screen}>
-        <CurrentScreen />
+        <Suspense fallback={<Loading />}>
+          <CurrentScreen />
+        </Suspense>
       </main>
       {showTabs && <TabBar />}
       {showFab && (
