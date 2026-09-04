@@ -123,6 +123,100 @@ export function needFor(s: Standing, target: number): number | null {
   return ((target - s.earned - s.extraCredit) / s.remaining) * 100;
 }
 
+/**
+ * What a target grade would take, said in a sentence.
+ *
+ * `needFor` gives a number and the number alone is not the answer. 104% is
+ * arithmetically correct and means "not happening"; -12% is correct and means
+ * "already yours"; and both are meaningless if the syllabus weights the
+ * student entered do not add up to a whole course. Each of those is a
+ * different thing to do about the same figure, so each gets its own verdict.
+ */
+export type Reach = 'settled' | 'secured' | 'ordinary' | 'hard' | 'unreachable' | 'unknown';
+
+export interface Need {
+  target: number;
+  label: string;
+  /** What everything left has to average. Null when nothing is left. */
+  need: number | null;
+  reach: Reach;
+  /** One line, in the second person. */
+  says: string;
+}
+
+/**
+ * Above this, a required average is not a plan.
+ *
+ * 97 rather than 100: needing to average 98 across every remaining piece of
+ * work is technically possible and is not a thing to build a term around, and
+ * an app that says "you need 98%" as though it were advice is not being
+ * straight with anybody.
+ */
+const HARD = 90;
+const OUT_OF_REACH = 97;
+
+export function reachFor(s: Standing, target: number, label = ''): Need {
+  const base: Omit<Need, 'reach' | 'says'> = { target, label, need: needFor(s, target) };
+
+  if (s.counted === 0 && s.remaining > 0) {
+    return {
+      ...base,
+      reach: 'unknown',
+      says: `Nothing is graded yet, so the honest answer is ${target}% on everything.`,
+    };
+  }
+
+  if (base.need === null) {
+    return {
+      ...base,
+      reach: 'settled',
+      says: 'Everything is graded — there is nothing left to change it.',
+    };
+  }
+
+  const need = base.need;
+  const rounded = Math.round(need * 10) / 10;
+
+  if (need <= 0) {
+    return {
+      ...base,
+      reach: 'secured',
+      says: `Already yours, whatever happens to the remaining ${Math.round(s.remaining)}%.`,
+    };
+  }
+  if (need > OUT_OF_REACH) {
+    return {
+      ...base,
+      reach: 'unreachable',
+      says: `Would need ${rounded}% on everything left, which is not a plan.`,
+    };
+  }
+  return {
+    ...base,
+    reach: need >= HARD ? 'hard' : 'ordinary',
+    says: `${rounded}% on everything left.`,
+  };
+}
+
+/** Every band, with its verdict. Highest first, as the letters read. */
+export function reaches(s: Standing): Need[] {
+  return TARGETS.map((t) => reachFor(s, t.at, t.label));
+}
+
+/**
+ * The caveat that has to travel with all of it, or empty.
+ *
+ * The weights come off a syllabus a model read, and a syllabus that lists
+ * eight categories adding to 95 is common. Every figure above is then a ratio
+ * of the wrong denominator — still useful for comparing bands against each
+ * other, and not a number to tell anybody.
+ */
+export function needCaveat(s: Standing): string {
+  if (!s.incomplete) return '';
+  const total = Math.round(s.counted + s.remaining);
+  return `These assume the weights add to 100%, and yours add to ${total}%. Fix the weights above and every figure here becomes real.`;
+}
+
 /** The storage key for one course's category. */
 export function key(courseId: string, index: number): string {
   return `${courseId}:${index}`;

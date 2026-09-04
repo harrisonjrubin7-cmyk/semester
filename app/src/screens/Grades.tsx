@@ -2,7 +2,7 @@ import { useStore } from '../state/store';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
-import { TARGETS, key, needFor, standing } from '../lib/grades';
+import { key, needCaveat, needFor, reaches, standing } from '../lib/grades';
 import { against, forCourse, trend, trendLine } from '../lib/sitting';
 
 /**
@@ -59,12 +59,14 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                   Plus {s.extraCredit.toFixed(1)} points of extra credit.
                 </div>
               )}
-              {s.incomplete && (
+              {needCaveat(s) ? (
                 <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 1.45 }}>
-                  The weights in this syllabus do not add to 100, so treat these as indicative.
-                  Rows the app could not read a weight from are marked below.
+                  {/* Names the number the weights actually add to. "Do not add
+                      to 100" leaves the student to work out by how much, from
+                      a table they cannot easily sum in their head. */}
+                  {needCaveat(s)} Rows the app could not read a weight from are marked below.
                 </div>
-              )}
+              ) : null}
             </Blueprint>
 
             {s.rows.map((r, i) => (
@@ -122,11 +124,13 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 >
                   To finish with, you need
                 </div>
-                {TARGETS.map((t) => {
-                  const need = needFor(s, t.at);
-                  if (need === null) return null;
-                  const impossible = need > 100;
-                  const done = need <= 0;
+                {reaches(s).map((t) => {
+                  if (t.need === null) return null;
+                  // `reachFor` decides what the number means; this only draws
+                  // it. The old test here was `need > 100`, which showed a
+                  // required average of 98.5% as an ordinary target — it is
+                  // arithmetically available and it is not a plan.
+                  const impossible = t.reach === 'unreachable';
                   return (
                     <div
                       key={t.label}
@@ -141,14 +145,18 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                     >
                       <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15px * var(--text-scale, 1))' }}>
                         {t.label}
-                        <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}> · {t.at}%</span>
+                        <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}> · {t.target}%</span>
                       </span>
-                      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
-                        {done
-                          ? 'already yours'
-                          : impossible
-                            ? `${Math.round(need)}% — out of reach`
-                            : `${Math.round(need)}% on the rest`}
+                      <span
+                        style={{
+                          fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                          textAlign: 'right',
+                          maxWidth: '62%',
+                          lineHeight: 1.4,
+                          color: t.reach === 'hard' ? 'var(--app-warn)' : undefined,
+                        }}
+                      >
+                        {t.says}
                       </span>
                     </div>
                   );
