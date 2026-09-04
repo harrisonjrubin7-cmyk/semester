@@ -7,7 +7,11 @@ import { PrintButton } from '../components/PrintButton';
 import { datedItems } from '../lib/select';
 import { cardKey } from '../lib/review';
 import { forCourse } from '../lib/sitting';
+import { CAMPUS_LINKS } from '../data/campus';
+import { longLabel } from '../lib/date';
 import {
+  bookBy,
+  bookingLate,
   examsAhead,
   headline,
   paperLine,
@@ -89,6 +93,8 @@ export function Runway() {
 
   const code = (id: string) => catalog.byId[id]?.code ?? id;
   const worst = weakest(r);
+  const book = bookBy(exam, state.accessLeadDays);
+  const accessUrl = state.linkUrls.access || CAMPUS_LINKS.find((l) => l.id === 'access')?.url || '';
 
   return (
     <div style={{ padding: 18 }}>
@@ -140,6 +146,52 @@ export function Runway() {
           </div>
         ) : null}
       </Blueprint>
+
+      {/*
+        A testing-centre booking has a lead time, and counting business days
+        backwards over a weekend is the arithmetic somebody gets wrong at
+        eleven at night. Silent for everybody who has not set one.
+      */}
+      {book && (
+        <Blueprint style={{ padding: '13px 14px', marginTop: 10 }}>
+          <div className="kicker">Student Access</div>
+          <div
+            style={{
+              fontSize: 14,
+              lineHeight: 1.45,
+              marginTop: 6,
+              color: bookingLate(book, now) ? 'var(--app-warn)' : undefined,
+            }}
+          >
+            {bookingLate(book, now)
+              ? `The ${state.accessLeadDays}-business-day window for a testing-centre booking closed on ${longLabel(book)}.`
+              : `Book the testing centre by ${longLabel(book)} — ${state.accessLeadDays} business days out.`}
+          </div>
+          {accessUrl ? (
+            <a
+              href={accessUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-secondary btn-block"
+              style={{
+                height: 38,
+                marginTop: 9,
+                fontSize: 12.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textDecoration: 'none',
+              }}
+            >
+              Open Student Access →
+            </a>
+          ) : null}
+          <div style={{ fontSize: 11, opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+            Weekends only — the app has no holiday calendar and will not invent one, so a lead
+            time crossing a public holiday is a day short.
+          </div>
+        </Blueprint>
+      )}
 
       <SectionLabel>Where you stand</SectionLabel>
       <div style={{ fontSize: 14, lineHeight: 1.5 }}>{standing(r)}</div>

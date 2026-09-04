@@ -67,6 +67,34 @@ export const CAMPUS_LINKS: CampusLink[] = [
     note: 'The class search — what is offered, when it meets, what is still open. Copy a schedule out of it and paste it into Add a course.',
   },
   {
+    id: 'cbord',
+    name: 'Meal plan & Commodore Cash',
+    // get.cbord.com is behind single sign-on and publishes no API a student
+    // can use, so the app links to the balance page and holds the numbers you
+    // read off it. What it adds is the arithmetic the site does not do.
+    url: 'https://get.cbord.com/vanderbilt/full/funds_home.php',
+    hint: '',
+    note: 'Swipes, Commodore Cash and meal money. Log the balances under Meal plan and the app works out what they are a day, and when they run out at the rate you are actually eating.',
+  },
+  {
+    id: 'starrez',
+    name: 'Housing portal',
+    // Deliberately the portal root. The address this was taken from carried a
+    // session path and a ?UrlToken= — one specific student's login. Everyone
+    // else tapping it would have been sending somebody else's token to the
+    // university, and StarRez resolves the signed-in student anyway.
+    url: 'https://vanderbilt.starrezhousing.com/StarRezPortalX/',
+    hint: '',
+    note: 'Room assignment, housing selection, roommate groups and move-out. Its dates are the kind that cost money — put them under Term deadlines and the app will count them down.',
+  },
+  {
+    id: 'access',
+    name: 'Student Access',
+    url: 'https://augusta.accessiblelearning.com/Vanderbilt/dashboard/Default.aspx',
+    hint: '',
+    note: 'Accommodation letters and testing-centre bookings. A booking has a lead time, so the exam runway counts it back from the exam rather than from the day you remember.',
+  },
+  {
     id: 'tophat',
     name: 'Top Hat',
     // app.tophat.com/e/ is the join-by-code entry. It takes you to the course

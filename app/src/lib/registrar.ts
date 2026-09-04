@@ -116,6 +116,18 @@ export const LANDMARKS: Landmark[] = [
     kind: 'exams',
   },
   {
+    id: 'housing',
+    label: 'Housing selection opens',
+    cost: 'Assigned by lottery number and by hour. The good rooms go the first morning.',
+    kind: 'window',
+  },
+  {
+    id: 'moveout',
+    label: 'Move-out',
+    cost: 'A day you cannot be late for, and one worth booking a car before everybody else does.',
+    kind: 'deadline',
+  },
+  {
     id: 'evals',
     label: 'Course evaluations close',
     cost: 'Some schools hold grades back until yours are in.',
@@ -309,6 +321,8 @@ const HINTS: { id: string; words: RegExp }[] = [
   { id: 'add-deadline', words: /last day to add|add deadline|open enrollment ends/i },
   { id: 'registration', words: /registration|enroll(ment)? (opens|begins)/i },
   { id: 'reading-days', words: /reading day/i },
+  { id: 'housing', words: /housing (selection|lottery|application|sign-?up)|room selection/i },
+  { id: 'moveout', words: /move[- ]?out|halls close|residence halls close/i },
   { id: 'finals', words: /final exam|examination period|finals/i },
   { id: 'break', words: /break|recess|holiday|no classes/i },
   { id: 'evals', words: /evaluation/i },

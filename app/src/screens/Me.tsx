@@ -726,6 +726,32 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
       {/* The one setting that changes an arithmetic rather than a look. */}
       <WorkWindows />
 
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+        Testing-centre lead time
+      </SectionLabel>
+      <div style={{ fontSize: 12.5, opacity: 0.65, lineHeight: 1.5, marginBottom: 9 }}>
+        If you book exams through Student Access, its lead time is stated in business days and
+        counting those backwards over a weekend is easy to get wrong. Set it here and the exam
+        runway does it. Leave it at zero if you do not use one.
+      </div>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <input
+          className="input"
+          type="number"
+          min={0}
+          max={30}
+          value={state.accessLeadDays}
+          aria-label="Business days before an exam"
+          onChange={(e) => dispatch({ type: 'setAccessLead', days: Number(e.target.value) })}
+          style={{ width: 90, flex: 'none' }}
+        />
+        <span style={{ fontSize: 12.5, opacity: 0.6 }}>
+          {state.accessLeadDays === 0
+            ? 'not used'
+            : `business days before an exam`}
+        </span>
+      </div>
+
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Tell me when</SectionLabel>
       <Reminders />
       {NOTIF_DEFS.map((n) => (

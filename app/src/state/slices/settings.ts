@@ -57,6 +57,9 @@ export function settings(state: State, action: Action): State | null {
       return { ...state, spent: [...state.spent.filter((s) => s.id !== action.id), row] };
     }
 
+    case 'setAccessLead':
+      return { ...state, accessLeadDays: Math.max(0, Math.min(30, Math.round(action.days))) };
+
     case 'toggleSaved':
       return { ...state, saved: { ...state.saved, [action.id]: !state.saved[action.id] } };
 

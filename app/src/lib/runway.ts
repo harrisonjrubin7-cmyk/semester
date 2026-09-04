@@ -238,3 +238,42 @@ export function examsAhead(items: DatedItem[], done: Record<string, boolean>): D
 export function courseOf(exam: DatedItem): CourseId {
   return exam.c;
 }
+
+/**
+ * N business days before a date.
+ *
+ * Testing centres state their lead time in business days — "requests must be
+ * in five business days before the exam" — and counting those backwards over
+ * a weekend is exactly the arithmetic somebody gets wrong at eleven at night.
+ * Weekends only; the app has no holiday calendar and will not invent one, so
+ * a lead time that crosses a public holiday is a day short and the screen
+ * says as much.
+ */
+export function businessDaysBefore(date: Date, days: number): Date {
+  const out = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  let left = days;
+  while (left > 0) {
+    out.setDate(out.getDate() - 1);
+    const dow = out.getDay();
+    if (dow !== 0 && dow !== 6) left -= 1;
+  }
+  return out;
+}
+
+/**
+ * When a testing-centre booking has to be in, given the lead time.
+ *
+ * Returns null when no lead time is set, which is the state for everybody who
+ * does not use one — this is not a thing to ask every student about.
+ */
+export function bookBy(exam: DatedItem, leadDays: number): Date | null {
+  if (leadDays <= 0) return null;
+  return businessDaysBefore(exam.date, leadDays);
+}
+
+/** Whether the booking window has already closed. */
+export function bookingLate(by: Date | null, now: Date): boolean {
+  if (!by) return false;
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return by < today;
+}

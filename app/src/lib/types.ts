@@ -422,6 +422,7 @@ export type Screen =
   | 'costs'
   | 'worked'
   | 'groupwork'
+  | 'meals'
   | 'runway'
   | 'weekly'
   | 'registrar'

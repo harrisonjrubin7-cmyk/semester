@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   bandFor,
+  bookBy,
+  bookingLate,
   examsAhead,
   headline,
   isExam,
@@ -248,5 +250,43 @@ describe('choosing a runway', () => {
   it('leaves out one already ticked', () => {
     const items = [item({ id: 'soon', daysAway: 6 })];
     expect(examsAhead(items, { soon: true })).toEqual([]);
+  });
+});
+
+describe('a testing-centre booking', () => {
+  it('counts business days back, stepping over the weekend', () => {
+    // Thursday 24 September 2026. Five business days back is the 17th, not
+    // the 19th — which is the arithmetic somebody gets wrong at eleven at
+    // night.
+    const exam = item({ date: new Date(2026, 8, 24) });
+    expect(bookBy(exam, 5)?.getDate()).toBe(17);
+  });
+
+  it('lands on a weekday even for a Monday exam', () => {
+    // Monday 21 September; one business day back is Friday the 18th.
+    const exam = item({ date: new Date(2026, 8, 21) });
+    const by = bookBy(exam, 1);
+    expect(by?.getDate()).toBe(18);
+    expect(by?.getDay()).not.toBe(0);
+    expect(by?.getDay()).not.toBe(6);
+  });
+
+  it('says nothing for somebody who does not use one', () => {
+    expect(bookBy(item({}), 0)).toBeNull();
+    expect(bookingLate(null, NOW)).toBe(false);
+  });
+
+  it('knows when the window has closed', () => {
+    const soon = item({ date: new Date(2026, 8, 4) });
+    expect(bookingLate(bookBy(soon, 5), NOW)).toBe(true);
+    const later = item({ date: new Date(2026, 9, 30) });
+    expect(bookingLate(bookBy(later, 5), NOW)).toBe(false);
+  });
+
+  it('counts weekends only, and the screen says so', () => {
+    // No holiday calendar, so a lead time crossing one is a day short — a
+    // limitation the app states rather than papers over.
+    const exam = item({ date: new Date(2026, 10, 30) }); // Mon 30 Nov
+    expect(bookBy(exam, 3)?.getDate()).toBe(25); // Wed 25 Nov, not the 27th
   });
 });

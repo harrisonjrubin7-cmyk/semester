@@ -52,6 +52,7 @@ export const STRATEGY: Record<string, Strategy> = {
   spent: 'union',
   windows: 'union',
   costs: 'union',
+  balances: 'union',
   feeds: 'union',
   feedEvents: 'union',
   extraLinks: 'union',
@@ -87,6 +88,7 @@ export const STRATEGY: Record<string, Strategy> = {
   seenOnboarding: 'theirs',
   cleared: 'theirs',
   waysOpen: 'theirs',
+  accessLeadDays: 'theirs',
   // Where you have been lately, newest first. Interleaving two devices'
   // histories would make it a list of nowhere in particular.
   recent: 'theirs',

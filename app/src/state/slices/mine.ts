@@ -115,6 +115,13 @@ export function mine(state: State, action: Action): State | null {
     case 'dropCost':
       return { ...state, costs: state.costs.filter((c) => c.id !== action.id) };
 
+    // Meal-plan readings. Logged rather than overwritten — see `lib/meals.ts`.
+    case 'logBalance':
+      return { ...state, balances: [...state.balances, { ...action.balance, id: newId() }] };
+
+    case 'dropBalance':
+      return { ...state, balances: state.balances.filter((b) => b.id !== action.id) };
+
     case 'addPlace':
       return {
         ...state,

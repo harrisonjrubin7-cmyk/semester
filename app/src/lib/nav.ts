@@ -220,6 +220,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'meals',
+    label: 'Meal plan',
+    blurb: 'Swipes and Commodore Cash, with what they are a day and the week they run out.',
+    keywords: 'meal meals plan swipes swipe commodore cash dining dollars money balance cbord get food eat eating board plan munchie mart declined out of run out',
+    group: 'Campus',
+    root: 'me',
+  },
+  {
     screen: 'runway',
     label: 'Exam runway',
     blurb: 'The weeks before an exam, counted backwards from it — and what stands in the way.',

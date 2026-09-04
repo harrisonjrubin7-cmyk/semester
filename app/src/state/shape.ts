@@ -36,6 +36,7 @@ import type { Found, TermDate } from '../lib/registrar';
 import type { Spent } from '../lib/pace';
 import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
+import type { Balance } from '../lib/meals';
 import { LEGACY_TERM } from '../lib/term';
 import { readLook, type Look } from '../lib/look';
 
@@ -124,6 +125,24 @@ export interface Persisted {
    * `lib/cost.ts`.
    */
   costs: Cost[];
+  /**
+   * Meal-plan balances, as read off CBORD GET.
+   *
+   * Logged rather than overwritten: one balance is a fact about today and
+   * says nothing about eating, and two a few days apart say everything. See
+   * `lib/meals.ts`.
+   */
+  balances: Balance[];
+  /**
+   * Testing-centre lead time, in business days. Zero means not used.
+   *
+   * Student Access states a lead time for a booking — "five business days
+   * before the exam" — and counting those backwards over a weekend is the
+   * arithmetic somebody gets wrong at eleven at night. The exam runway does
+   * it. Zero for everybody who does not use one; this is not a thing to ask
+   * every student about.
+   */
+  accessLeadDays: number;
   /**
    * When each deadline was ticked, epoch ms.
    *
@@ -341,6 +360,8 @@ export const DEFAULT_PERSISTED: Persisted = {
   spent: [],
   windows: [],
   costs: [],
+  balances: [],
+  accessLeadDays: 0,
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -451,6 +472,8 @@ export function loadPersisted(): Persisted {
       spent: saved.spent ?? [],
       windows: saved.windows ?? [],
       costs: saved.costs ?? [],
+      balances: saved.balances ?? [],
+      accessLeadDays: saved.accessLeadDays ?? 0,
       tickedAt: saved.tickedAt ?? {},
       ...readLook({
         accent: saved.accent,
@@ -505,6 +528,8 @@ export function pickPersisted(state: State): Persisted {
     spent: state.spent,
     windows: state.windows,
     costs: state.costs,
+    balances: state.balances,
+    accessLeadDays: state.accessLeadDays,
     tickedAt: state.tickedAt,
     accent: state.accent,
     textSize: state.textSize,
@@ -621,6 +646,9 @@ export type Action =
   | { type: 'addCost'; cost: Omit<Cost, 'id' | 'at'> }
   | { type: 'patchCost'; id: string; patch: Partial<Cost> }
   | { type: 'dropCost'; id: string }
+  | { type: 'setAccessLead'; days: number }
+  | { type: 'logBalance'; balance: Omit<Balance, 'id'> }
+  | { type: 'dropBalance'; id: string }
   | { type: 'setTermDate'; id: string; iso: string; until?: string }
   | { type: 'addTermDate'; label: string; iso: string; until?: string }
   | { type: 'dropTermDate'; id: string }
