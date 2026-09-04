@@ -35,6 +35,7 @@ import { readReturned, readWindows, type RegradeWindow, type Returned } from '..
 import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
 import { COMMON_SCALE, readRequirements, readTaken, type Requirement, type Scale, type Taken } from '../lib/degree';
 import { readLetters, readPeople, readVisits, type Letter, type Person, type Visit } from '../lib/letters';
+import { readAnswers, type Answer, type Sure } from '../lib/sure';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
@@ -141,6 +142,12 @@ export interface Persisted {
   people: Person[];
   visits: Visit[];
   letters: Letter[];
+  /**
+   * Every answer with how sure you were. See `lib/sure.ts` — a lucky guess and
+   * a settled fact look identical to the scheduler otherwise, and so do a
+   * confident miss and a shrug.
+   */
+  answers: Answer[];
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
@@ -482,6 +489,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   people: [],
   visits: [],
   letters: [],
+  answers: [],
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
@@ -621,6 +629,7 @@ export function loadPersisted(): Persisted {
       people: readPeople(saved.people),
       visits: readVisits(saved.visits),
       letters: readLetters(saved.letters),
+      answers: readAnswers(saved.answers),
       scale:
         saved.scale && typeof saved.scale === 'object' && Object.keys(saved.scale).length > 0
           ? (saved.scale as Scale)
@@ -720,6 +729,7 @@ export function pickPersisted(state: State): Persisted {
     people: state.people,
     visits: state.visits,
     letters: state.letters,
+    answers: state.answers,
     scale: state.scale,
     feedOrder: state.feedOrder,
     tabs: state.tabs,
@@ -840,7 +850,7 @@ export type Action =
   | { type: 'setLoadStep'; step: number }
   | { type: 'startDrill'; unit: number | null }
   | { type: 'flip' }
-  | { type: 'markCard'; got: boolean; key: string }
+  | { type: 'markCard'; got: boolean; key: string; sure?: Sure; courseId?: string }
   /** An answer recorded against a card, with no drill run around it. */
   | { type: 'recordCard'; got: boolean; key: string }
   | { type: 'redrill' }

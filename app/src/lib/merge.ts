@@ -143,6 +143,10 @@ export const STRATEGY: Record<string, Strategy> = {
   people: 'union',
   visits: 'union',
   letters: 'union',
+  // A log rather than a list of things with stable ids: two devices drilling
+  // produce two disjoint runs and both are real. Deduplicated by nothing,
+  // because two answers to the same card at different moments are two answers.
+  answers: 'union',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',

@@ -219,3 +219,31 @@ describe('tallying by course', () => {
     expect(tallyBy(reviews, [deck('econ', ['q'])])).toEqual({});
   });
 });
+
+describe('a right answer the student says they guessed at', () => {
+  const NOW = 1_788_000_000_000;
+  const DAY = 86_400_000;
+
+  it('earns the streak but not the runway', () => {
+    // Letting a guess start a six-day interval is how a card disappears until
+    // the week of the exam. `lib/sure.ts` decides this; `score` only obeys.
+    let card = score(undefined, true, NOW);
+    card = score(card, true, NOW + DAY);
+    expect(card.interval).toBe(6);
+
+    let guessed = score(undefined, true, NOW);
+    guessed = score(guessed, true, NOW + DAY, true);
+    expect(guessed.streak).toBe(2);
+    expect(guessed.interval).toBe(1);
+  });
+
+  it('does not grow the ease either', () => {
+    const settled = score(score(undefined, true, NOW), true, NOW + DAY);
+    const guessed = score(score(undefined, true, NOW), true, NOW + DAY, true);
+    expect(guessed.ease).toBeLessThan(settled.ease);
+  });
+
+  it('changes nothing about a wrong answer', () => {
+    expect(score(undefined, false, NOW, true)).toEqual(score(undefined, false, NOW));
+  });
+});

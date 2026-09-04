@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { allCards } from '../data/catalog';
 import { useStore } from '../state/store';
+import { SURES, beliefs, calibration, calibrationLine } from '../lib/sure';
 import { SayIt } from '../components/SayIt';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -50,6 +51,10 @@ export function Drill() {
 
   if (finished) {
     const got = state.drillGot;
+    // A key back to its question, from the deck in hand. Cards from other
+    // courses cannot be resolved here and are left out rather than shown as a
+    // hash, which would be worse than saying nothing.
+    const cardText = (key: string) => pool.find((c) => c.key === key)?.q ?? '';
     const waiting = dueCount(
       pool.map((c) => c.key),
       state.reviews,
@@ -97,6 +102,41 @@ export function Drill() {
               Missed cards return in ten minutes. A card you get right three times running moves out
               to weeks.
             </div>
+          </Blueprint>
+
+          {/*
+            How well you know what you know.
+
+            Students are systematically overconfident about anything they have
+            reread, and being shown the gap is what breaks the reread habit.
+            Two facts about the same person, no grade and no target — see
+            `lib/sure.ts` for why a graded calibration destroys its own signal.
+          */}
+          <Blueprint plain style={{ padding: 14, marginTop: 14, textAlign: 'left' }}>
+            <div className="kicker">How sure you were</div>
+            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+              {calibrationLine(calibration(state.answers))}
+            </div>
+            {beliefs(state.answers).length > 0 ? (
+              <div
+                style={{
+                  fontSize: 'calc(12px * var(--text-scale, 1))',
+                  opacity: 0.7,
+                  marginTop: 8,
+                  lineHeight: 1.5,
+                  textWrap: 'pretty',
+                }}
+              >
+                {/* Named rather than counted. A wrong answer you were certain
+                    about is a belief, and it is the one thing in the whole log
+                    worth going back to on purpose. */}
+                {beliefs(state.answers)
+                  .slice(0, 3)
+                  .map((b) => cardText(b.key))
+                  .filter(Boolean)
+                  .join(' · ') || 'Those cards are in this course’s deck, marked to come back soon.'}
+              </div>
+            ) : null}
           </Blueprint>
 
           <div style={{ display: 'flex', gap: 8, marginTop: 22 }}>
@@ -228,24 +268,99 @@ export function Drill() {
 
       <div style={{ flex: 1, minHeight: 18 }} />
 
+      {/*
+        Two rows rather than two buttons.
+
+        To the scheduler a lucky guess and a settled fact were the same answer,
+        and so were a confident miss and a shrug. They are not remotely the
+        same: a wrong answer you were certain about is a *belief* and you will
+        carry it into the room, and a right answer you guessed at should not
+        start a three-day interval. See `lib/sure.ts`.
+
+        The confidence is optional at the level of the tap — "Got it" and
+        "Again" still work on their own — because a drill that demands two taps
+        per card is a drill people stop doing, and half a signal beats none.
+      */}
       {state.revealed && (
-        <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => dispatch({ type: 'markCard', got: false, key: card.key })}
-            style={{ flex: 1, height: 52, fontSize: 'calc(15px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        <div style={{ marginTop: 18 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => dispatch({ type: 'markCard', got: false, key: card.key })}
+              style={{ flex: 1, height: 52, fontSize: 'calc(15px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            >
+              Again
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => dispatch({ type: 'markCard', got: true, key: card.key })}
+              style={{ flex: 1, height: 52, fontSize: 'calc(15px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            >
+              Got it
+            </button>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              gap: 6,
+              marginTop: 9,
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
           >
-            Again
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => dispatch({ type: 'markCard', got: true, key: card.key })}
-            style={{ flex: 1, height: 52, fontSize: 'calc(15px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-          >
-            Got it
-          </button>
+            <span
+              style={{
+                fontSize: 'calc(11px * var(--text-scale, 1))',
+                opacity: 0.5,
+                fontFamily: 'var(--font-heading)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+              }}
+            >
+              Or say how sure
+            </span>
+            {SURES.map((s) => (
+              <button
+                key={`wrong-${s.id}`}
+                type="button"
+                className="bare tappable"
+                onClick={() =>
+                  dispatch({ type: 'markCard', got: false, key: card.key, sure: s.id, courseId: state.guideId })
+                }
+                style={{
+                  width: 'auto',
+                  padding: '6px 9px',
+                  borderRadius: 'var(--r-sm)',
+                  border: '1px solid var(--app-line)',
+                  fontSize: 'calc(10.5px * var(--text-scale, 1))',
+                  opacity: 0.85,
+                }}
+              >
+                ✗ {s.short}
+              </button>
+            ))}
+            {SURES.map((s) => (
+              <button
+                key={`right-${s.id}`}
+                type="button"
+                className="bare tappable"
+                onClick={() =>
+                  dispatch({ type: 'markCard', got: true, key: card.key, sure: s.id, courseId: state.guideId })
+                }
+                style={{
+                  width: 'auto',
+                  padding: '6px 9px',
+                  borderRadius: 'var(--r-sm)',
+                  border: '1px solid var(--app-accent)',
+                  fontSize: 'calc(10.5px * var(--text-scale, 1))',
+                }}
+              >
+                ✓ {s.short}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

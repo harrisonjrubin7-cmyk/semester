@@ -10,6 +10,7 @@
  */
 
 import { score } from '../../lib/review';
+import { handle, remember } from '../../lib/sure';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
 
@@ -40,6 +41,9 @@ export function study(state: State, action: Action): State | null {
       // The answer is recorded against the card, not just counted for this
       // run — which is the difference between a score and a study system.
       const now = Date.now();
+      // How sure the student said they were, where they said. `lib/sure.ts`
+      // decides what that means for the schedule; this only carries it.
+      const h = action.sure ? handle({ got: action.got, sure: action.sure }) : null;
       return {
         ...state,
         revealed: false,
@@ -47,8 +51,17 @@ export function study(state: State, action: Action): State | null {
         drillGot: state.drillGot + (action.got ? 1 : 0),
         reviews: {
           ...state.reviews,
-          [action.key]: score(state.reviews[action.key], action.got, now),
+          [action.key]: score(state.reviews[action.key], action.got, now, h?.soon ?? false),
         },
+        answers: action.sure
+          ? remember(state.answers, {
+              key: action.key,
+              courseId: action.courseId ?? '',
+              got: action.got,
+              sure: action.sure,
+              at: now,
+            })
+          : state.answers,
       };
     }
 

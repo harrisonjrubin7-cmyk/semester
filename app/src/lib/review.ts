@@ -80,7 +80,20 @@ export function emptyReview(now: number): CardReview {
  * comes back in the same sitting, which is the whole reason to say you missed
  * it.
  */
-export function score(prev: CardReview | undefined, got: boolean, now: number): CardReview {
+export function score(
+  prev: CardReview | undefined,
+  got: boolean,
+  now: number,
+  /**
+   * Cut the interval even though the answer was right.
+   *
+   * Set for a right answer the student said they guessed at. Letting a guess
+   * start a three-day interval is how a card disappears until the week of the
+   * exam — see `lib/sure.ts`, which decides this and hands it in rather than
+   * this file learning about confidence.
+   */
+  soon = false,
+): CardReview {
   const r = prev ?? emptyReview(now);
 
   if (!got) {
@@ -97,12 +110,15 @@ export function score(prev: CardReview | undefined, got: boolean, now: number): 
   }
 
   const streak = r.streak + 1;
-  const interval = streak === 1 ? 1 : streak === 2 ? 6 : Math.round(r.interval * r.ease);
+  const grown = streak === 1 ? 1 : streak === 2 ? 6 : Math.round(r.interval * r.ease);
+  // A guess that happened to be right earns the streak but not the runway: it
+  // comes back tomorrow rather than in a week, and the ease does not grow.
+  const interval = soon ? 1 : grown;
   return {
     right: r.right + 1,
     wrong: r.wrong,
     streak,
-    ease: Math.min(3.2, r.ease + 0.1),
+    ease: soon ? r.ease : Math.min(3.2, r.ease + 0.1),
     interval,
     seen: now,
     due: now + interval * DAY,
