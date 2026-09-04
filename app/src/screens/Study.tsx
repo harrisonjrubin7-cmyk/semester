@@ -1,5 +1,6 @@
 import { allCards } from '../data/catalog';
 import { useStore } from '../state/store';
+import { TermSwitch } from '../components/TermSwitch';
 import { FirstRun } from './FirstRun';
 import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
 import { modesFor } from '../lib/modes';
@@ -81,6 +82,13 @@ export function Study() {
         onChange={(next) => dispatch({ type: 'setStudyTab', tab: next })}
         style={{ margin: '16px 0 4px' }}
       />
+
+      {/*
+        Here as well as on Courses, because reading last semester's guide is
+        the main reason a finished term is kept at all — and Study is where a
+        person goes to read one.
+      */}
+      {tab === 'guides' && <TermSwitch />}
 
       {tab === 'ask' && (
         <>

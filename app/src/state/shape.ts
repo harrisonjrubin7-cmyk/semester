@@ -598,6 +598,8 @@ export type Action =
   | { type: 'applyRegistrar'; found: Found[] }
   | { type: 'setSample'; on: boolean }
   | { type: 'setTerm'; term: string }
+  /** Point the open course and guide at something this catalogue holds. */
+  | { type: 'settleCourse'; guideId?: CourseId; courseId?: CourseId }
   | { type: 'removalsPushed'; ids: CourseId[] }
   | { type: 'hydrate'; persisted: Partial<Persisted> };
 

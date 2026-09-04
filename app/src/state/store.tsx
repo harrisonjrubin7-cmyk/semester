@@ -89,6 +89,15 @@ interface Store {
   catalog: Catalog;
   /** Every term the account has a course in, newest first. */
   terms: Term[];
+  /**
+   * A course code, from any term.
+   *
+   * The catalogue holds one term, so `catalog.byId` returns nothing for a
+   * course from another — and a note filed against last semester's ECON then
+   * rendered its label as "undefined". Anything filed against a course needs
+   * this rather than the catalogue.
+   */
+  courseCode: (id: string) => string;
   account: Account | null;
   sync: { status: SyncStatus; at: number; error: string };
   /**
@@ -336,6 +345,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [allModules],
   );
 
+  const codes = useMemo(
+    () => Object.fromEntries(allModules.map((m) => [m.course.id, m.course.code])),
+    [allModules],
+  );
+  const courseCode = useCallback((id: string) => codes[id] ?? id.toUpperCase(), [codes]);
+
   /**
    * The catalogue is one term's worth.
    *
@@ -349,6 +364,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const wanted = allModules.filter((m) => (m.course.term ?? LEGACY_TERM) === state.term);
     return buildCatalog(wanted.length > 0 || terms.length === 0 ? wanted : allModules);
   }, [allModules, state.term, terms]);
+
+  /**
+   * Keep the open course and guide inside the catalogue.
+   *
+   * `guideId` starts life as 'econ' — a sample course id — and a term switch
+   * or a deletion can leave either pointer aimed at a course this catalogue
+   * does not hold. The guide screen then renders an empty guide and the
+   * course screen has nothing to read at all. One place fixes it.
+   */
+  useEffect(() => {
+    if (catalog.empty) return;
+    const first = catalog.courses[0].id;
+    const guideId = catalog.byId[state.guideId] ? undefined : first;
+    const courseId = catalog.byId[state.courseId] ? undefined : first;
+    if (guideId || courseId) dispatch({ type: 'settleCourse', guideId, courseId });
+  }, [catalog, state.guideId, state.courseId]);
 
   // Reminders. These toggles existed from the first build and did nothing —
   // no permission was ever asked for and no notification was ever shown. They
@@ -376,8 +407,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [catalog, state.notifs, state.appointments, state.registrar]);
 
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, account, sync, saveTrouble }),
-    [state, now, catalog, terms, account, sync, saveTrouble],
+    () => ({ state, dispatch, now, catalog, terms, courseCode, account, sync, saveTrouble }),
+    [state, now, catalog, terms, courseCode, account, sync, saveTrouble],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

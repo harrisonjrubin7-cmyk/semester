@@ -306,6 +306,9 @@ function LmsLink({ course }: { course: Course }) {
 export function CourseDetail() {
   const { state, dispatch, now, catalog } = useStore();
   const course = catalog.byId[state.courseId];
+  // The store settles this pointer after a term switch, but there is one
+  // render in between where it is still aimed at last semester.
+  if (!course) return null;
   const mine = split(
     datedItems(catalog, now).filter((i) => i.c === course.id),
     state.done,

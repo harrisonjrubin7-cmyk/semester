@@ -100,6 +100,18 @@ export function library(state: State, action: Action): State | null {
     case 'setTerm':
       return { ...state, term: action.term };
 
+    // Switching term, or deleting a course, can leave the open course and the
+    // open guide pointing at something the catalogue no longer holds. The
+    // store notices and says what to point at instead; doing it here rather
+    // than in the nine screens that read these ids is what keeps them all
+    // able to assume the id is good.
+    case 'settleCourse':
+      return {
+        ...state,
+        guideId: action.guideId ?? state.guideId,
+        courseId: action.courseId ?? state.courseId,
+      };
+
     case 'setSample':
       return { ...state, sample: action.on };
 

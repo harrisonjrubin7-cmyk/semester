@@ -29,8 +29,9 @@ export function TermSwitch() {
       />
       {isPast(current, now) ? (
         <div style={{ fontSize: 11.5, opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
-          A finished term. Its deadlines are out of Today and out of the hour arithmetic; its
-          guides, cards and notes are all still here.
+          A finished term. Its deadlines are out of Today, out of the hour arithmetic and out of
+          the weekly report; its guides, cards, notes and papers are all still here, and it is
+          still exportable. Nothing was deleted.
         </div>
       ) : null}
     </div>

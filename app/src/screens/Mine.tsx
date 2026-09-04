@@ -77,7 +77,7 @@ function CoursePicker({
 const inputStyle = { height: 40, fontSize: 14, marginTop: 8 } as const;
 
 function Tasks() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, courseCode } = useStore();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
@@ -218,7 +218,7 @@ function Tasks() {
                     </div>
                     <div style={{ fontSize: 11, opacity: 0.55, marginTop: 3 }}>
                       <span className="tag tag-neutral" style={{ marginRight: 6 }}>
-                        {t.courseId ? catalog.byId[t.courseId]?.code : 'Personal'}
+                        {t.courseId ? courseCode(t.courseId) : 'Personal'}
                       </span>
                       {t.date ? longLabel(isoToDate(t.date)) : 'No date'}
                       {t.time ? ` · ${t.time}` : ''}
@@ -443,7 +443,7 @@ function Appointments() {
 }
 
 function Notes() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, courseCode } = useStore();
   const notes = [...state.notes].sort((a, b) => b.updated - a.updated);
 
   return (
@@ -493,7 +493,7 @@ function Notes() {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {n.courseId ? `${catalog.byId[n.courseId]?.code} · ` : ''}
+                  {n.courseId ? `${courseCode(n.courseId)} · ` : ''}
                   {n.fileIds.length > 0 ? `${n.fileIds.length} file · ` : ''}
                   {n.body.slice(0, 60) || 'Empty'}
                 </span>

@@ -65,7 +65,7 @@ function courseTint(courses: Course[], id: CourseId | null): string {
 // ── Day ───────────────────────────────────────────────────────────────────
 
 function DayView() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog , courseCode } = useStore();
   const day = state.calDay ? isoToDate(state.calDay) : now;
   const isToday = sameDay(day, now);
   const source = state.calSource;
@@ -259,7 +259,7 @@ function DayView() {
               }}
             >
               <span className="tag tag-neutral">
-                {t.courseId ? catalog.byId[t.courseId]?.code : 'Personal'}
+                {t.courseId ? courseCode(t.courseId) : 'Personal'}
               </span>
               <span
                 style={{

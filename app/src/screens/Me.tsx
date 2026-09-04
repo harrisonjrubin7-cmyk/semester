@@ -95,7 +95,7 @@ function Destination({
 }
 
 export function Me() {
-  const { state, dispatch, now, catalog, account } = useStore();
+  const { state, dispatch, now, catalog, account , courseCode } = useStore();
   const ahead = upcomingItems(catalog, now);
   const bars = loadByCourse(catalog, now, state.done);
   const pace = learned(state.spent);
@@ -213,7 +213,7 @@ export function Me() {
               }}
             >
               <span className="tag tag-accent" style={{ flex: 'none' }}>
-                {catalog.byId[r.courseId]?.code ?? r.courseId}
+                {courseCode(r.courseId)}
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 13.5 }}>{r.kind}</span>
               <span style={{ flex: 'none', fontSize: 13.5 }}>{showSpan(r.minutes / 60)}</span>

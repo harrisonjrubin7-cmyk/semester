@@ -86,7 +86,7 @@ function NextClassCard() {
  * citation attached; this does not, and says so.
  */
 function YourTasks() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, courseCode } = useStore();
   const mine = tasksOn(state.tasks, now);
   const appts = appointmentsOn(state.appointments, now);
   if (mine.length === 0 && appts.length === 0) return null;
@@ -160,7 +160,7 @@ function YourTasks() {
               </div>
               {(t.time || t.courseId) && (
                 <div style={{ fontSize: 11, opacity: 0.55, marginTop: 2 }}>
-                  {t.courseId ? `${catalog.byId[t.courseId]?.code} · ` : ''}
+                  {t.courseId ? `${courseCode(t.courseId)} · ` : ''}
                   {t.time}
                 </div>
               )}
