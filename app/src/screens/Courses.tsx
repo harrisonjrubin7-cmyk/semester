@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { nameFor, renamed, tintFor } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
 import { DropBy } from '../components/DropBy';
 import { TermSwitch } from '../components/TermSwitch';
@@ -47,6 +48,7 @@ function CoursesTabs({
  */
 export function Courses() {
   const { state, dispatch, now, catalog } = useStore();
+  const tint = (id: string) => tintFor(state.yours, id);
   const ahead = upcomingItems(catalog, now);
   if (catalog.empty) return <FirstRun where="in your courses" />;
   const tab = state.coursesTab;
@@ -80,7 +82,16 @@ export function Courses() {
           <Blueprint
             key={c.id}
             onClick={() => dispatch({ type: 'openCourse', id: c.id })}
-            style={{ padding: '15px 16px', display: 'block' }}
+            style={{
+              padding: '15px 16px',
+              display: 'block',
+              // The colour is a stripe down the edge rather than a tint on the
+              // whole card: four tinted cards is a dashboard, and the whole point
+              // of the look is that it is not one. A course with no colour
+              // keeps the card exactly as it was.
+              borderLeft: tint(c.id) ? `3px solid ${tint(c.id)?.base}` : undefined,
+              paddingLeft: tint(c.id) ? 13 : 16,
+            }}
           >
             <div
               style={{
@@ -105,7 +116,9 @@ export function Courses() {
                 {c.meets}
               </div>
             </div>
-            <div style={{ fontSize: 15, lineHeight: 1.3, marginTop: 2 }}>{c.name}</div>
+            <div style={{ fontSize: 15, lineHeight: 1.3, marginTop: 2 }}>
+              {nameFor(c, state.yours)}
+            </div>
             <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>{c.prof}</div>
             <div
               style={{
@@ -316,7 +329,13 @@ export function CourseDetail() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 15, lineHeight: 1.3 }}>{course.name}</div>
+      <div style={{ fontSize: 15, lineHeight: 1.3 }}>{nameFor(course, state.yours)}</div>
+      {/* The syllabus name stays visible under a nickname. This screen is
+          where somebody checks what a course actually is — dropping the real
+          name here would make the rename a way to lose information. */}
+      {renamed(course, state.yours) ? (
+        <div style={{ fontSize: 12, opacity: 0.45, marginTop: 2 }}>{course.name}</div>
+      ) : null}
       <div style={{ fontSize: 13, opacity: 0.6, marginTop: 3 }}>
         {course.prof} · {course.email}
       </div>

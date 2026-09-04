@@ -17,6 +17,7 @@ import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox, Toggle } from '../components/ui';
 import { TabChooser } from '../components/TabChooser';
+import { YourCourses } from '../components/YourCourses';
 import { SEED_SUMMARY } from '../data/seed';
 import { Bell, ChevronRight } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
@@ -519,6 +520,8 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
       {/* Only in tab-bar mode: in feed mode there is no bar to arrange, and
           offering the setting anyway would be a control that does nothing. */}
       {state.nav === 'tabs' && <TabChooser />}
+
+      <YourCourses />
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Your Today</SectionLabel>
       <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>

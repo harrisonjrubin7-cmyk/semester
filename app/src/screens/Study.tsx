@@ -9,6 +9,7 @@ import { Meter, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { nextExam, tonightPlan } from '../lib/select';
 import { destinationsIn } from '../lib/nav';
+import { tintFor } from '../lib/yours';
 
 /**
  * Study, in the shape Calendar and Mine already use.
@@ -160,7 +161,20 @@ export function Study() {
             extras: extraFigures(catalog.extraFigures[c.id] ?? [], mine),
           }).filter((m) => m.ready);
           return (
-            <Blueprint key={c.id} style={{ padding: '14px 15px', display: 'block' }}>
+            <Blueprint
+              key={c.id}
+              style={{
+                padding: '14px 15px',
+                display: 'block',
+                // The same stripe as the Courses list, for the same reason:
+                // this is the other screen where four codes have to be told
+                // apart at a glance.
+                borderLeft: tintFor(state.yours, c.id)
+                  ? `3px solid ${tintFor(state.yours, c.id)?.base}`
+                  : undefined,
+                paddingLeft: tintFor(state.yours, c.id) ? 12 : 15,
+              }}
+            >
               <button
                 type="button"
                 className="bare tappable"

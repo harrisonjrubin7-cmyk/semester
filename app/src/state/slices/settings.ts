@@ -38,6 +38,16 @@ export function settings(state: State, action: Action): State | null {
     case 'setTabs':
       return { ...state, tabs: readTabs(action.tabs) };
 
+    // Both computed by `lib/yours.ts` and stored as given: unlike the tab
+    // bar, a wrong value here costs a wrong colour, not a phone with no
+    // navigation, and `arrange` already tolerates an order naming courses
+    // that are gone.
+    case 'setYours':
+      return { ...state, yours: action.yours };
+
+    case 'setCourseOrder':
+      return { ...state, courseOrder: action.order };
+
     case 'toggleFeedSection':
       return {
         ...state,

@@ -86,6 +86,13 @@ export const STRATEGY: Record<string, Strategy> = {
   // Same reasoning, and one more: unioning two bars would overflow it, and
   // the overflow would be silently trimmed by whichever device read it next.
   tabs: 'theirs',
+  // Per course, not wholesale: two devices renaming two different courses
+  // should end with both names, and `theirs` would keep one device's whole
+  // set and drop the other's.
+  yours: 'ticks',
+  // An arrangement, like feedOrder — merging two would produce an order
+  // neither device chose.
+  courseOrder: 'theirs',
   nav: 'theirs',
   sample: 'theirs',
   term: 'theirs',

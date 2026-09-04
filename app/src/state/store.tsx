@@ -20,6 +20,7 @@ import {
 } from 'react';
 import type { CourseModule, Screen } from '../lib/types';
 import { buildCatalog, type Catalog } from '../data/catalog';
+import { arrange } from '../lib/yours';
 import { setSessionToken } from '../lib/claude';
 import {
   accountOf,
@@ -412,8 +413,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    */
   const catalog = useMemo(() => {
     const wanted = allModules.filter((m) => (m.course.term ?? LEGACY_TERM) === state.term);
-    return buildCatalog(wanted.length > 0 || terms.length === 0 ? wanted : allModules);
-  }, [allModules, state.term, terms]);
+    const showing = wanted.length > 0 || terms.length === 0 ? wanted : allModules;
+    // Sorted here and nowhere else. Every list of courses in the app — the
+    // Courses screen, the study picker, the filter chips, the week's colours —
+    // is derived from `catalog.modules`, so ordering at the source reaches all
+    // of them at once instead of being reapplied, and forgotten, in each.
+    return buildCatalog(arrange(showing, state.yours, state.courseOrder));
+  }, [allModules, state.term, terms, state.yours, state.courseOrder]);
 
   /**
    * Keep the open course and guide inside the catalogue.

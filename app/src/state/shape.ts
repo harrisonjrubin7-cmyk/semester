@@ -29,6 +29,7 @@ import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
+import type { YoursBy } from '../lib/yours';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
 import { type Reviews } from '../lib/review';
@@ -83,6 +84,15 @@ export interface Persisted {
    * by `lib/tabbar.ts` — a navigation bar cannot afford to render nothing.
    */
   tabs: Screen[];
+  /**
+   * What the student has said about each course — their name for it, a
+   * colour, whether it is pinned. A side table rather than an edit, because
+   * the sample courses cannot be edited and a re-import rewrites the rest.
+   * See `lib/yours.ts`.
+   */
+  yours: YoursBy;
+  /** The order they put their courses in. Ids not listed keep import order. */
+  courseOrder: CourseId[];
   /** The destinations you opened most recently, newest first. */
   recent: Screen[];
   /**
@@ -370,6 +380,8 @@ export const DEFAULT_PERSISTED: Persisted = {
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
+  yours: {},
+  courseOrder: [],
   recent: [],
   sittings: [],
   sources: [],
@@ -486,6 +498,8 @@ export function loadPersisted(): Persisted {
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
       // sync, or one entry long, and any of those renders a broken bar.
       tabs: readTabs(saved.tabs),
+      yours: saved.yours ?? {},
+      courseOrder: saved.courseOrder ?? [],
       recent: saved.recent ?? [],
       sittings: saved.sittings ?? [],
       sources: saved.sources ?? [],
@@ -543,6 +557,8 @@ export function pickPersisted(state: State): Persisted {
     commitments: state.commitments,
     feedOrder: state.feedOrder,
     tabs: state.tabs,
+    yours: state.yours,
+    courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
     recent: state.recent,
     sittings: state.sittings,
@@ -587,6 +603,8 @@ export type Action =
   | { type: 'removeCommitment'; id: string }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
+  | { type: 'setYours'; yours: YoursBy }
+  | { type: 'setCourseOrder'; order: CourseId[] }
   | { type: 'toggleFeedSection'; id: string }
   | { type: 'setLook'; look: Partial<Look> }
   | { type: 'setFilter'; filter: string }
