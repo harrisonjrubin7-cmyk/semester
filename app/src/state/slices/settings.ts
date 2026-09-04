@@ -14,6 +14,7 @@ import { readLook } from '../../lib/look';
 import { record } from '../../lib/pace';
 import { currentLook, type Action, type State } from '../shape';
 import { readTabs } from '../../lib/tabbar';
+import { readRules } from '../../lib/myrules';
 
 export function settings(state: State, action: Action): State | null {
   switch (action.type) {
@@ -42,6 +43,14 @@ export function settings(state: State, action: Action): State | null {
     // bar, a wrong value here costs a wrong colour, not a phone with no
     // navigation, and `arrange` already tolerates an order naming courses
     // that are gone.
+    case 'setMyRules':
+      return { ...state, myRules: readRules(action.rules) };
+
+    case 'setMyName':
+      // Trimmed and capped here rather than in the field, so a name pasted in
+      // from somewhere else cannot arrive as a paragraph.
+      return { ...state, myName: action.name.trim().slice(0, 40) };
+
     case 'setYours':
       return { ...state, yours: action.yours };
 

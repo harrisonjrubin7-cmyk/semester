@@ -3,6 +3,7 @@ import {
   EVENING_SYSTEM,
   MORNING_SYSTEM,
   committedToday,
+  nameNote,
   dayKey,
   evening,
   eveningBrief,
@@ -225,5 +226,21 @@ describe('committedToday', () => {
 
   it('is zero when there is nothing', () => {
     expect(committedToday([], NOW)).toBe(0);
+  });
+});
+
+describe('whether the brief knows your name', () => {
+  it('tells the model to use it, sparingly', () => {
+    expect(nameNote('Harrison')).toMatch(/Address them as Harrison/);
+    expect(nameNote('  Harrison  ')).toContain('Harrison');
+    expect(nameNote('Harrison')).toMatch(/at most once/);
+  });
+
+  it('says plainly that there is no name rather than leaving a gap', () => {
+    // A model given a second-person report and no name will sometimes invent
+    // an address for it, and being called the wrong name by your own study
+    // app is a small and memorable thing to be annoyed by.
+    expect(nameNote('')).toMatch(/Do not invent one/);
+    expect(nameNote('   ')).toMatch(/Do not invent one/);
   });
 });

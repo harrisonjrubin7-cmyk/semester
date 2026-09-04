@@ -9,6 +9,7 @@ import { ask, configured, provider } from '../lib/claude';
 import {
   EVENING_SYSTEM,
   MORNING_SYSTEM,
+  nameNote,
   committedToday,
   evening,
   eveningBrief,
@@ -76,7 +77,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       await ask({
         signal: abort.current.signal,
         maxTokens: 500,
-        system: when === 'morning' ? MORNING_SYSTEM : EVENING_SYSTEM,
+        system: `${when === 'morning' ? MORNING_SYSTEM : EVENING_SYSTEM}\n· ${nameNote(state.myName)}`,
         messages: [
           {
             role: 'user',

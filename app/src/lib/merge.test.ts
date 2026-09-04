@@ -203,3 +203,26 @@ describe('the table', () => {
     expect(strategyFor('somethingAddedNextSemester')).toBe('union');
   });
 });
+
+describe('settings about the device rather than the person', () => {
+  it('keeps this device’s text size and spacing whatever the account says', () => {
+    // A phone at arm's length and a laptop at desk distance want different
+    // answers. Syncing one over the other is a setting that appears to
+    // un-set itself every time the other device is opened.
+    const here = { textSize: 'largest', density: 'roomy', accent: 'jade' };
+    const there = { textSize: 'compact', density: 'tight', accent: 'brass' };
+    const out = mergePersisted(here, there);
+    expect(out.textSize).toBe('largest');
+    expect(out.density).toBe('roomy');
+    // Taste still syncs — it is about the person.
+    expect(out.accent).toBe('brass');
+  });
+
+  it('is a strategy, not an omission', () => {
+    // A field simply left out of the table falls through to `union`, which
+    // for two strings means the remote wins — the opposite of what is wanted.
+    expect(strategyFor('textSize')).toBe('mine');
+    expect(strategyFor('density')).toBe('mine');
+    expect(strategyFor('somethingNobodyListed')).toBe('union');
+  });
+});

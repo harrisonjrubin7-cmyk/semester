@@ -35,6 +35,7 @@ import {
 import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
 import { dueReminders, fire } from '../lib/notify';
+import { myReminders } from '../lib/myrules';
 import { datedItems, railFor } from '../lib/select';
 import { save, trouble } from '../lib/keep';
 import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
@@ -445,10 +446,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (catalog.empty) return;
     const check = () => {
+      const at = new Date();
+      const items = datedItems(catalog, at);
       fire(
-        dueReminders(new Date(), state.notifs, {
-          items: datedItems(catalog, new Date()),
-          classes: railFor(catalog, new Date(), state.appointments).map((b) => ({
+        dueReminders(at, state.notifs, {
+          items,
+          classes: railFor(catalog, at, state.appointments).map((b) => ({
             label: b.title,
             at: b.at,
             where: b.meta,
@@ -456,11 +459,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           registrar: state.registrar,
         }),
       );
+      // The student's own rules, fired through the same `fire` — which keeps
+      // the seen list, so a custom reminder is subject to the same "once" as
+      // every built-in one. They add and never subtract: see `lib/myrules.ts`.
+      fire(
+        myReminders(at, state.myRules, items).map((f) => ({
+          id: f.id,
+          rule: 'today' as const,
+          title: f.title,
+          body: f.body,
+        })),
+      );
     };
     check();
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
-  }, [catalog, state.notifs, state.appointments, state.registrar]);
+  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules]);
 
   // The number on the installed icon: things due today and not ticked. In the
   // provider rather than on Today, because the count has to be right whatever

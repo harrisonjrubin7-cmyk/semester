@@ -22,7 +22,7 @@
  * to forever.
  */
 
-export type Strategy = 'union' | 'theirs' | 'ticks' | 'latest';
+export type Strategy = 'union' | 'theirs' | 'ticks' | 'latest' | 'mine';
 
 /**
  * How each field of the store is merged when another device's copy arrives.
@@ -34,6 +34,13 @@ export type Strategy = 'union' | 'theirs' | 'ticks' | 'latest';
  * - `latest` — a map of id to a record that carries its own timestamp. Same
  *   union of keys, but where both hold a key the newer record wins rather
  *   than whichever synced last.
+ * - `mine` — a setting about *this device* rather than about the person. It
+ *   is stored and it syncs to the account, but an incoming copy never
+ *   overrides the one here. Text size and spacing are the whole category: a
+ *   phone at arm's length and a laptop at desk distance want different
+ *   answers, and having one push its answer onto the other is a setting that
+ *   appears to un-set itself every time the other device is opened.
+ *
  * - `theirs` — a setting or a single value. The copy that synced later wins,
  *   which is what "I changed it on my laptop" should mean.
  */
@@ -74,12 +81,14 @@ export const STRATEGY: Record<string, Strategy> = {
   reviews: 'latest',
 
   // Settings and single values: the last device to touch them is right.
+  // Taste: the same everywhere, because it is about the person.
   accent: 'theirs',
-  textSize: 'theirs',
   ground: 'theirs',
-  density: 'theirs',
   corners: 'theirs',
   typeface: 'theirs',
+  // Ergonomics: about the screen in front of you, not about you. See `mine`.
+  textSize: 'mine',
+  density: 'mine',
   // An arrangement rather than a list you add to — merging two orderings
   // would produce an order neither device chose.
   feedOrder: 'theirs',
@@ -90,6 +99,10 @@ export const STRATEGY: Record<string, Strategy> = {
   // should end with both names, and `theirs` would keep one device's whole
   // set and drop the other's.
   yours: 'ticks',
+  // An arrangement of rules the student wrote, not a list of things they
+  // collect — merging two devices' would produce a set neither asked for.
+  myRules: 'theirs',
+  myName: 'theirs',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',
@@ -241,6 +254,11 @@ export function mergePersisted<T extends object>(local: T, remote: NoInfer<Parti
         break;
       case 'latest':
         out[field] = isMap(mine) && isMap(theirs) ? latest(mine, theirs) : theirs;
+        break;
+      case 'mine':
+        // Left exactly as it was. The remote copy is not read at all — which
+        // is the point, and is why this is a strategy rather than an omission
+        // from the loop: an omitted field would fall through to `union`.
         break;
       default:
         out[field] = theirs;

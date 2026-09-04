@@ -30,6 +30,7 @@ import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
+import { readRules, type MyRule } from '../lib/myrules';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
 import { type Reviews } from '../lib/review';
@@ -91,6 +92,13 @@ export interface Persisted {
    * See `lib/yours.ts`.
    */
   yours: YoursBy;
+  /** Reminder rules the student wrote. See `lib/myrules.ts`. */
+  myRules: MyRule[];
+  /**
+   * What to call them. Empty until they say, and never guessed at from an
+   * email address — a name is a thing you ask for, not derive.
+   */
+  myName: string;
   /** The order they put their courses in. Ids not listed keep import order. */
   courseOrder: CourseId[];
   /** The destinations you opened most recently, newest first. */
@@ -391,6 +399,8 @@ export const DEFAULT_PERSISTED: Persisted = {
   visited: {},
   yours: {},
   courseOrder: [],
+  myRules: [],
+  myName: '',
   recent: [],
   sittings: [],
   sources: [],
@@ -508,6 +518,8 @@ export function loadPersisted(): Persisted {
       // sync, or one entry long, and any of those renders a broken bar.
       tabs: readTabs(saved.tabs),
       yours: saved.yours ?? {},
+      myRules: readRules(saved.myRules),
+      myName: typeof saved.myName === 'string' ? saved.myName : '',
       courseOrder: saved.courseOrder ?? [],
       recent: saved.recent ?? [],
       // Seeded from `recent` for anybody upgrading: without this the app
@@ -574,6 +586,8 @@ export function pickPersisted(state: State): Persisted {
     feedOrder: state.feedOrder,
     tabs: state.tabs,
     yours: state.yours,
+    myRules: state.myRules,
+    myName: state.myName,
     courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
     recent: state.recent,
@@ -621,6 +635,8 @@ export type Action =
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }
+  | { type: 'setMyRules'; rules: MyRule[] }
+  | { type: 'setMyName'; name: string }
   | { type: 'setCourseOrder'; order: CourseId[] }
   | { type: 'toggleFeedSection'; id: string }
   | { type: 'setLook'; look: Partial<Look> }

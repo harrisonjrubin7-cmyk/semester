@@ -18,6 +18,7 @@ import { Blueprint } from '../components/Blueprint';
 import { ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox, Toggle } from '../components/ui';
 import { TabChooser } from '../components/TabChooser';
 import { NotYetOpened } from '../components/NotYetOpened';
+import { MyRules } from '../components/MyRules';
 import { YourCourses } from '../components/YourCourses';
 import { SEED_SUMMARY } from '../data/seed';
 import { Bell, ChevronRight } from '../components/Icons';
@@ -508,7 +509,22 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
   // standalone screen still exists so search and a deep link can reach it.
   return (
     <div style={{ padding: bare ? 0 : 18 }}>
-      <SectionLabel style={{ margin: '0 0 6px' }}>Navigation</SectionLabel>
+      <SectionLabel style={{ margin: '0 0 6px' }}>Your name</SectionLabel>
+      <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 8, textWrap: 'pretty' }}>
+        Only used to address you in the app. Never sent anywhere, never guessed at from your
+        email, and leaving it blank costs nothing — the app just says "you".
+      </div>
+      <input
+        className="input"
+        value={state.myName}
+        maxLength={40}
+        placeholder="What should the app call you?"
+        aria-label="Your name"
+        onChange={(e) => dispatch({ type: 'setMyName', name: e.target.value })}
+        style={{ width: '100%', fontSize: 13.5 }}
+      />
+
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Navigation</SectionLabel>
       <div style={{ fontSize: 13, opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         Two structures, the same screens. The tab bar gives every thing a fixed home. The feed
         interleaves classes and deadlines in one scroll and slices it with a filter row.
@@ -776,6 +792,8 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
           onChange={() => dispatch({ type: 'toggleNotif', k: n.k })}
         />
       ))}
+
+      <MyRules />
 
       <PushSwitch />
 

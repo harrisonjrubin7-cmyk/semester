@@ -188,6 +188,21 @@ export const EVENING_SYSTEM = [
   '· Never restate a number differently from how it is given and never invent one.',
 ].join('\n');
 
+/**
+ * Their name, for the brief to use — or an instruction not to reach for one.
+ *
+ * A model given no name and a second-person report will sometimes invent an
+ * address for it, and being called the wrong name by your own study app is a
+ * small, memorable thing to be annoyed by. So the absence is stated rather
+ * than left for it to fill.
+ */
+export function nameNote(name: string): string {
+  const clean = name.trim();
+  return clean
+    ? `Address them as ${clean}, at most once, and only if it reads naturally.`
+    : 'You do not know their name. Do not invent one and do not use a placeholder.';
+}
+
 export function morningBrief(m: Morning, code: (id: string) => string): string {
   const lines = [
     `Due today, not yet done: ${
