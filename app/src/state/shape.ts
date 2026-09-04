@@ -56,6 +56,7 @@ import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
 import { readLook, type Look } from '../lib/look';
+import { readStarted } from '../lib/underway';
 
 /**
  * The prototype held everything in one component's state and lost it on reload.
@@ -321,6 +322,16 @@ export interface Persisted {
   notifs: Record<NotifKey, boolean>;
   picked: Record<string, boolean>;
   seenOnboarding: boolean;
+  /**
+   * Deadline id to when work on it began.
+   *
+   * A tick box has two positions and coursework has three — see
+   * `lib/underway.ts`. Separate from `done` rather than a third value on it,
+   * because "started" and "finished" are independent facts and collapsing them
+   * into one enum makes un-ticking a finished thing lose that it was ever
+   * started.
+   */
+  started: Record<string, number>;
   cleared: boolean;
   /** Things you added yourself — kept apart from anything a syllabus produced. */
   tasks: PersonalTask[];
@@ -416,7 +427,8 @@ export interface Ephemeral {
    */
   roomDraft: string;
   /** Which standing the Coming-up list is showing: ahead, missed or finished. */
-  dueTab: 'ahead' | 'overdue' | 'done';
+  /** `working` is a filter over the other three, not a fourth bucket. */
+  dueTab: 'ahead' | 'working' | 'overdue' | 'done';
   /**
    * What the Email screen should open already filled in.
    *
@@ -484,6 +496,7 @@ export const DEFAULT_PERSISTED: Persisted = {
     return a;
   }, {}),
   seenOnboarding: false,
+  started: {},
   cleared: false,
   tasks: [],
   appointments: [],
@@ -724,6 +737,7 @@ export function loadPersisted(): Persisted {
       residences: saved.residences ?? [],
       accessLeadDays: saved.accessLeadDays ?? 0,
       tickedAt: saved.tickedAt ?? {},
+      started: readStarted(saved.started),
       // Every field readLook knows about, handed straight through. Naming
       // them one by one here is how a new control gets added, saved, and then
       // silently dropped on the next reload.
@@ -805,6 +819,7 @@ export function pickPersisted(state: State): Persisted {
     residences: state.residences,
     accessLeadDays: state.accessLeadDays,
     tickedAt: state.tickedAt,
+    started: state.started,
     accent: state.accent,
     textSize: state.textSize,
     ground: state.ground,
@@ -908,6 +923,7 @@ export type Action =
   | { type: 'stepMonth'; delta: number }
   | { type: 'toggleUnit'; index: number }
   | { type: 'clearNotifs' }
+  | { type: 'toggleStarted'; id: string }
   | { type: 'onbNext' }
   | { type: 'restartOnboarding' }
   | { type: 'finishOnboarding' }
@@ -939,7 +955,7 @@ export type Action =
   | { type: 'clearPaperPreset' }
   | { type: 'writeRoomDraft'; text: string }
   | { type: 'clearRoomDraft' }
-  | { type: 'setDueTab'; tab: 'ahead' | 'overdue' | 'done' }
+  | { type: 'setDueTab'; tab: 'ahead' | 'working' | 'overdue' | 'done' }
   | {
       type: 'writeMail';
       purposeId: string;

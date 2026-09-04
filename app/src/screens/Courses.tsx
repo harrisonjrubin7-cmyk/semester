@@ -17,7 +17,8 @@ import { Grades } from './Grades';
 import { appleMapsUrl, directionsUrl, fromRoom, prefersApple } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
 import { DeadlineRow } from '../components/DeadlineRow';
-import { badge, overdueLine, split } from '../lib/standing';
+import { badge, overdueLine, split, standingOf } from '../lib/standing';
+import { isUnderway, openLine, underway, underwayLine } from '../lib/underway';
 import type { Course } from '../lib/types';
 
 /** The one switcher, so the three views cannot drift apart. */
@@ -185,20 +186,33 @@ function ComingUp() {
   const all = datedItems(catalog, now);
   const { ahead, overdue, done } = split(all, state.done);
   const tab = state.dueTab;
-  const list = tab === 'overdue' ? overdue : tab === 'done' ? done : ahead;
+  /*
+   * Working is a filter over the same deadlines, not a fourth bucket.
+   *
+   * A paper started and now overdue is both started and overdue, and moving it
+   * out of Overdue to make the partition tidy would hide a miss. So it can
+   * appear here and there at once — two true things about one paper. See
+   * `lib/underway.ts`.
+   */
+  const open = underway(all, state.started, state.done);
+  const list =
+    tab === 'overdue' ? overdue : tab === 'done' ? done : tab === 'working' ? open : ahead;
 
   const blurb =
     tab === 'overdue'
       ? overdueLine(overdue, (i) => catalog.byId[i.c]?.code ?? '')
       : tab === 'done'
         ? `${done.length} finished this semester. Tick one again to undo it.`
-        : 'Everything still ahead of you, nearest first, across every course.';
+        : tab === 'working'
+          ? underwayLine(all, state.started, state.done, now.getTime())
+          : 'Everything still ahead of you, nearest first, across every course.';
 
   return (
     <>
       <Segmented
         options={[
           { id: 'ahead', label: `Ahead${badge(ahead.length)}` },
+          { id: 'working', label: `Working${badge(open.length)}` },
           { id: 'overdue', label: `Overdue${badge(overdue.length)}` },
           { id: 'done', label: `Done${badge(done.length)}` },
         ]}
@@ -213,11 +227,20 @@ function ComingUp() {
             ? 'Nothing has gone by unticked.'
             : tab === 'done'
               ? 'Nothing ticked off yet. The box on any row does it.'
-              : 'Nothing left this semester.'}
+              : tab === 'working'
+                ? 'Nothing marked as started yet. Open a deadline and mark it, and it stays here until you tick it off.'
+                : 'Nothing left this semester.'}
         </div>
       )}
       {list.map((i) => (
-        <DeadlineRow key={i.id} item={i} tone={tab} />
+        <DeadlineRow
+          key={i.id}
+          item={i}
+          // On the Working tab a row's tone is whatever it actually is —
+          // an overdue thing shown here is still overdue, and colouring it
+          // as "ahead" would be the app telling a comfortable lie.
+          tone={tab === 'working' ? standingOf(i, state.done) : tab}
+        />
       ))}
       <div style={{ height: 22 }} />
     </>
@@ -327,10 +350,9 @@ export function CourseDetail() {
   // The store settles this pointer after a term switch, but there is one
   // render in between where it is still aimed at last semester.
   if (!course) return null;
-  const mine = split(
-    datedItems(catalog, now).filter((i) => i.c === course.id),
-    state.done,
-  );
+  const ours = datedItems(catalog, now).filter((i) => i.c === course.id);
+  const mine = split(ours, state.done);
+  const mineOpen = underway(ours, state.started, state.done);
 
   return (
     <div style={{ padding: 18 }}>
@@ -457,6 +479,21 @@ export function CourseDetail() {
         </tbody>
       </table>
 
+      {/*
+        * Above Still ahead, because it is the shorter list and the one that
+        * answers "what am I in the middle of for this course". The same
+        * deadlines still appear below in whichever section they belong to —
+        * this is a filter over them, not a fourth section they move into.
+        */}
+      {mineOpen.length > 0 && (
+        <>
+          <SectionLabel style={{ margin: '24px 0 6px' }}>In progress</SectionLabel>
+          {mineOpen.map((i) => (
+            <DeadlineRow key={i.id} item={i} tone={standingOf(i, state.done)} />
+          ))}
+        </>
+      )}
+
       <SectionLabel style={{ margin: '24px 0 6px' }}>Still ahead</SectionLabel>
       {mine.ahead.length === 0 && (
         <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.5, padding: '8px 0' }}>
@@ -507,6 +544,7 @@ export function ItemDetail() {
   const item = all.find((i) => i.id === state.itemId) ?? all[0];
   if (!item) return null;
   const done = !!state.done[item.id];
+  const going = isUnderway(item.id, state.started, state.done);
 
   return (
     <div style={{ padding: 18 }}>
@@ -606,7 +644,48 @@ export function ItemDetail() {
         {item.checked?.page ? ` · p. ${item.checked.page}` : ''}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+      {/*
+        * The middle state, which is where most coursework actually lives.
+        *
+        * Above the Done row rather than beside it, because they are not two
+        * halves of one choice: starting and finishing are independent, and a
+        * three-way segmented control would make un-ticking a finished thing
+        * lose that it was ever begun. Hidden once something is done — there is
+        * nothing useful to say about when you started a paper you handed in.
+        */}
+      {!done && (
+        <button
+          type="button"
+          className="btn btn-block"
+          aria-pressed={going}
+          onClick={() => dispatch({ type: 'toggleStarted', id: item.id })}
+          style={{
+            marginTop: 24,
+            height: 46,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            borderColor: going ? 'var(--app-accent)' : undefined,
+          }}
+        >
+          {going ? 'Not started after all' : 'I have started this'}
+        </button>
+      )}
+      {going && !done && (
+        <div
+          style={{
+            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            opacity: 0.6,
+            marginTop: 8,
+            lineHeight: 1.5,
+            textWrap: 'pretty',
+          }}
+        >
+          {openLine(item.id, state.started, now.getTime())}. It shows under Working in Coming up,
+          and carries a mark in every list until you tick it off.
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, marginTop: going && !done ? 14 : 24 }}>
         <button
           type="button"
           className="btn btn-primary"

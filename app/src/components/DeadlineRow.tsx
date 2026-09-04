@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useStore } from '../state/store';
 import { TickBox } from './ui';
 import { lateBy, type Standing } from '../lib/standing';
+import { isUnderway, openLine } from '../lib/underway';
 import type { DatedItem } from '../lib/types';
 
 /**
@@ -43,10 +44,16 @@ export function DeadlineRow({
   /** Overrides the right-hand marker; pass null to drop it. */
   trail?: ReactNode | null;
 }) {
-  const { state, dispatch, catalog } = useStore();
+  // `now` rather than `Date.now()`: the store's clock ticks once a minute, so
+  // "open 4 days" stays right without making the render impure.
+  const { state, dispatch, catalog, now } = useStore();
   const done = !!state.done[item.id];
   const late = tone === 'overdue';
   const style = state.feed;
+  // Shown in every list, not only on the Working tab: the whole value of the
+  // mark is knowing which of eleven things you have already opened, and that
+  // is a question asked while looking at Ahead.
+  const going = isUnderway(item.id, state.started, state.done);
   const tight = style === 'rows';
   const pad = tight ? '8px 0' : '13px 0';
 
@@ -109,6 +116,21 @@ export function DeadlineRow({
         <span className="tag tag-accent" style={{ flex: 'none' }}>
           {catalog.byId[item.c]?.code}
         </span>
+        {going && (
+          // A pip rather than a word: the row is already carrying a course
+          // code, a title, a date, a kind and a weight, and a sixth label
+          // would cost more than the fact is worth.
+          <span
+            aria-hidden
+            style={{
+              flex: 'none',
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: 'var(--app-accent)',
+            }}
+          />
+        )}
         <span style={{ flex: 1, minWidth: 0 }}>
           <span
             style={{
@@ -137,6 +159,7 @@ export function DeadlineRow({
               <>
                 {item.dueShort} · {item.kind}
                 {item.weight ? ` · ${item.weight}` : ''}
+                {going ? ` · ${openLine(item.id, state.started, now.getTime()).toLowerCase()}` : ''}
               </>
             )}
           </span>

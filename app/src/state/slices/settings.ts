@@ -18,6 +18,7 @@ import { readRules } from '../../lib/myrules';
 import { mark as markAttendance, readPolicy } from '../../lib/attend';
 import { readDrop } from '../../lib/drop';
 import { readSettings as readGeocode } from '../../lib/geocode';
+import { toggle as toggleStarted } from '../../lib/underway';
 
 export function settings(state: State, action: Action): State | null {
   switch (action.type) {
@@ -107,6 +108,18 @@ export function settings(state: State, action: Action): State | null {
       else delete tickedAt[action.id];
       return { ...state, done: { ...state.done, [action.id]: nowDone }, tickedAt };
     }
+
+    /*
+     * Marking something as started, or unmarking it.
+     *
+     * Not folded into `toggleDone` as a three-position enum: started and
+     * finished are independent facts, and collapsing them means un-ticking a
+     * finished thing loses that it was ever begun. The mark is a moment rather
+     * than a boolean so the list can say how long it has been open, which is
+     * the part that is actually useful. See `lib/underway.ts`.
+     */
+    case 'toggleStarted':
+      return { ...state, started: toggleStarted(action.id, state.started, Date.now()) };
 
     // How long a finished thing took. Recorded once per item — a second
     // report for the same id replaces the first rather than counting twice,

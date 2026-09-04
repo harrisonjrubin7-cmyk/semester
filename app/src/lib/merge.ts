@@ -68,6 +68,11 @@ export const STRATEGY: Record<string, Strategy> = {
   // Maps keyed by id, where each key is its own small decision.
   done: 'ticks',
   tickedAt: 'ticks',
+  // Same shape and the same reason: starting a paper on the laptop is still
+  // having started it, and a phone that syncs later must not un-start it.
+  // `ticks` keeps both sides' keys rather than letting one map replace the
+  // other wholesale.
+  started: 'ticks',
   saved: 'ticks',
   picked: 'ticks',
   grades: 'ticks',
