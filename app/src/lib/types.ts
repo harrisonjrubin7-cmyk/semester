@@ -443,6 +443,7 @@ export type Screen =
   | 'slides'
   | 'account'
   | 'clocks'
+  | 'proof'
   | 'cloud';
 
 export type StudyMode =

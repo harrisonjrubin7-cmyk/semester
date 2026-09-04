@@ -7,6 +7,7 @@ import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } 
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import type { CourseId } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
+import { CheckIt } from '../components/CheckIt';
 import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
 import { PrintButton } from '../components/PrintButton';
@@ -842,8 +843,14 @@ export function NoteEditor() {
         value={note.body}
         onChange={(e) => dispatch({ type: 'updateNote', id: note.id, patch: { body: e.target.value } })}
         placeholder="Write anything."
+        spellCheck
         style={{ minHeight: 260, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.55, marginTop: 12 }}
         aria-label="Note body"
+      />
+
+      <CheckIt
+        text={note.body}
+        onChange={(body) => dispatch({ type: 'updateNote', id: note.id, patch: { body } })}
       />
 
       <Dictate

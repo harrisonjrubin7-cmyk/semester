@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
+import { CheckIt } from '../components/CheckIt';
 import { ChipRow, SectionLabel } from '../components/ui';
 import { ask, configured, provider } from '../lib/claude';
 import { datedItems } from '../lib/select';
@@ -269,6 +270,7 @@ export function Mail() {
             className="input"
             value={body}
             onChange={(e) => setBody(e.target.value)}
+            spellCheck
             style={{
               width: '100%',
               minHeight: 260,
@@ -277,6 +279,9 @@ export function Mail() {
               lineHeight: 1.55,
             }}
           />
+          {/* Here rather than on a separate screen: the moment worth catching
+              a doubled word is the moment before Send. */}
+          <CheckIt text={body} onChange={setBody} label="Check it before you send" />
 
           {blanks > 0 && (
             <div

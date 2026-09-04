@@ -356,6 +356,15 @@ export const DESTINATIONS: Destination[] = [
     root: 'mine',
   },
   {
+    screen: 'proof',
+    label: 'Check the writing',
+    short: 'Check',
+    blurb: 'Spelling, grammar and punctuation read back to you — before somebody else reads it.',
+    keywords: 'spell check spelling spellcheck grammar grammar check proofread proofreading proof read punctuation typo typos writing editor edit check my writing mistakes errors comma apostrophe capitalisation capitalization word choice',
+    group: 'Make',
+    root: 'me',
+  },
+  {
     screen: 'clocks',
     label: 'Timers and alarms',
     short: 'Timers',
