@@ -36,6 +36,7 @@ import { readSettings as readGeocode, type Settings as Geocode } from '../lib/ge
 import { COMMON_SCALE, readRequirements, readTaken, type Requirement, type Scale, type Taken } from '../lib/degree';
 import { readLetters, readPeople, readVisits, type Letter, type Person, type Visit } from '../lib/letters';
 import { readAnswers, type Answer, type Sure } from '../lib/sure';
+import { readContract, readFloor, readRest, type Contract, type Floor, type Rest } from '../lib/rest';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
@@ -148,6 +149,14 @@ export interface Persisted {
    * confident miss and a shrug.
    */
   answers: Answer[];
+  /**
+   * The hours that are not available. See `lib/rest.ts` — rest that is not
+   * written down is the residual, and the residual is what gets eaten.
+   */
+  floor: Floor;
+  rest: Rest[];
+  /** How many hours a week you decided school gets. Zero means none set. */
+  contract: Contract;
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
@@ -490,6 +499,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   visits: [],
   letters: [],
   answers: [],
+  floor: { from: 23 * 60, to: 7 * 60, on: false },
+  rest: [],
+  contract: { hours: 0, at: 0 },
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
@@ -630,6 +642,9 @@ export function loadPersisted(): Persisted {
       visits: readVisits(saved.visits),
       letters: readLetters(saved.letters),
       answers: readAnswers(saved.answers),
+      floor: readFloor(saved.floor),
+      rest: readRest(saved.rest),
+      contract: readContract(saved.contract),
       scale:
         saved.scale && typeof saved.scale === 'object' && Object.keys(saved.scale).length > 0
           ? (saved.scale as Scale)
@@ -730,6 +745,9 @@ export function pickPersisted(state: State): Persisted {
     visits: state.visits,
     letters: state.letters,
     answers: state.answers,
+    floor: state.floor,
+    rest: state.rest,
+    contract: state.contract,
     scale: state.scale,
     feedOrder: state.feedOrder,
     tabs: state.tabs,
@@ -822,6 +840,10 @@ export type Action =
   | { type: 'addLetter'; patch: Partial<Letter> }
   | { type: 'patchLetter'; id: string; patch: Partial<Letter> }
   | { type: 'dropLetter'; id: string }
+  | { type: 'setFloor'; patch: Partial<Floor> }
+  | { type: 'addRest'; patch: Partial<Rest> }
+  | { type: 'dropRest'; id: string }
+  | { type: 'setContract'; hours: number }
   | { type: 'quickAdd'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }

@@ -16,6 +16,7 @@ import { mark, newProgress } from '../../lib/progress';
 import { newReturned } from '../../lib/returned';
 import { newRequirement, newTaken } from '../../lib/degree';
 import { newLetter, newPerson, newVisit } from '../../lib/letters';
+import { newRest, readFloor } from '../../lib/rest';
 import { tidy } from '../../lib/windows';
 import type { Action, State } from '../shape';
 
@@ -264,6 +265,23 @@ export function mine(state: State, action: Action): State | null {
 
     case 'dropLetter':
       return { ...state, letters: state.letters.filter((l) => l.id !== action.id) };
+
+    // The hours that are not available. Read back through `readFloor` so the
+    // bounds are enforced in one place rather than trusted to every caller.
+    case 'setFloor':
+      return { ...state, floor: readFloor({ ...state.floor, ...action.patch }) };
+
+    case 'addRest':
+      return { ...state, rest: [...state.rest, newRest(action.patch, Date.now())] };
+
+    case 'dropRest':
+      return { ...state, rest: state.rest.filter((r) => r.id !== action.id) };
+
+    case 'setContract':
+      return {
+        ...state,
+        contract: { hours: Math.max(0, Math.min(120, Math.round(action.hours))), at: Date.now() },
+      };
 
     case 'setRegradeWindow':
       return {

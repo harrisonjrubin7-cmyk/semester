@@ -147,6 +147,11 @@ export const STRATEGY: Record<string, Strategy> = {
   // produce two disjoint runs and both are real. Deduplicated by nothing,
   // because two answers to the same card at different moments are two answers.
   answers: 'union',
+  // About the person, not the device: a sleep floor set on a laptop is a sleep
+  // floor.
+  floor: 'theirs',
+  contract: 'theirs',
+  rest: 'union',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useStore } from '../state/store';
 import { ClashList, DayBudget } from '../components/Clashes';
 import { StartList } from '../components/StartToday';
+import { Capacity } from '../components/Capacity';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -71,6 +72,10 @@ export function Ahead() {
     <div style={{ padding: 18 }}>
       {/* Before the totals: somebody who opened this screen came to see the
           shape of the fortnight, and a day that will not fit is the shape. */}
+      {/* First, because a week that does not fit is not a scheduling problem
+          and everything below it is scheduling. */}
+      <Capacity />
+
       <ClashList />
       <DayBudget />
 
