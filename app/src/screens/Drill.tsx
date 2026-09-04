@@ -7,11 +7,14 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
 import { cardKey, dueCount, dueFirst } from '../lib/review';
+import { interleave, mixLine, worthMixing } from '../lib/interleave';
 import { useKeepAwake } from '../lib/awake';
+import { unitName } from '../lib/unit';
+import { Toggle } from '../components/ui';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch, now, catalog, courseCode } = useStore();
   const { guide } = useLive(state.guideId);
 
   // A drill has pauses in it while you try to remember, which is exactly what
@@ -23,7 +26,30 @@ export function Drill() {
   // inside each band. The run is fixed when it starts so answering a card does
   // not reshuffle the deck under your thumb.
   const pool = useMemo(() => {
-    const all = allCards(guide).map((c) => ({ ...c, key: cardKey(state.guideId, c.q) }));
+    /*
+     * Mixing pulls from every course, not from this one.
+     *
+     * Interleaving within a single guide would be a different word for
+     * shuffling units — the whole result is about having to work out *which
+     * kind* of question this is, and two units of one course are not different
+     * kinds. So the mixed deck is built across the catalogue and the unit
+     * filter is dropped, because a unit belongs to one course by definition.
+     */
+    if (state.drillMix) {
+      const every = catalog.modules.flatMap((m) =>
+        allCards(m.guide).map((c) => ({
+          ...c,
+          key: cardKey(m.course.id, c.q),
+          courseId: m.course.id,
+        })),
+      );
+      return interleave(dueFirst(every, state.reviews, now.getTime()), (c) => c.courseId);
+    }
+    const all = allCards(guide).map((c) => ({
+      ...c,
+      key: cardKey(state.guideId, c.q),
+      courseId: state.guideId,
+    }));
     const scoped = state.drillUnit === null ? all : all.filter((c) => c.ui === state.drillUnit);
     return dueFirst(scoped, state.reviews, now.getTime());
     // Deliberately NOT depending on `guide` or `state.reviews`. Both change on
@@ -31,7 +57,25 @@ export function Drill() {
     // your thumb mid-run skips cards and repeats others — a full pass of 68
     // recorded 34. The order is decided when the run starts and then held.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.guideId, state.drillUnit]);
+  }, [state.guideId, state.drillUnit, state.drillMix]);
+
+  /*
+   * Whether mixing is even on the table.
+   *
+   * Computed from the whole catalogue rather than from `pool`, because when
+   * mixing is off the pool is one course and would always say no — the switch
+   * would appear only once it was already on.
+   */
+  const canMix = useMemo(
+    () =>
+      worthMixing(
+        catalog.modules.flatMap((m) =>
+          m.guide.units.flatMap((u) => u.cards.map(() => ({ c: m.course.id }))),
+        ),
+        (x) => x.c,
+      ),
+    [catalog],
+  );
 
   // Cleared whenever the card changes, so the last card's answer cannot be
   // left sitting under the next question.
@@ -194,8 +238,34 @@ export function Drill() {
       </div>
 
       <div className="kicker" style={{ marginTop: 18 }}>
-        {card.unit}
+        {/* In a mixed run the course matters more than the unit — knowing
+            which subject you are in is half of what the card is testing, so
+            it is named rather than left to be inferred from the question. The
+            unit's number comes off: every course has a unit 0, and
+            `ECON 1020 · 0 · …` reads as three things when it is two. */}
+        {state.drillMix ? `${courseCode(card.courseId)} · ${unitName(card.unit)}` : card.unit}
       </div>
+
+      {canMix && (
+        <div style={{ marginTop: 10 }}>
+          <Toggle
+            label="Mix the courses"
+            on={state.drillMix}
+            onChange={() => dispatch({ type: 'mixCourses', on: !state.drillMix })}
+          />
+          <div
+            style={{
+              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              opacity: 0.55,
+              marginTop: 6,
+              lineHeight: 1.45,
+              textWrap: 'pretty',
+            }}
+          >
+            {mixLine(pool, (c) => c.courseId, state.drillMix)}
+          </div>
+        </div>
+      )}
 
       <button
         type="button"

@@ -24,6 +24,7 @@
 
 import type { Guide } from './types';
 import type { Deck, Slide } from './pptx';
+import { unitName } from './unit';
 
 export interface Kind {
   id: string;
@@ -99,7 +100,7 @@ export function fromUnit(guide: Guide, index: number): Deck {
   const unit = guide.units[index];
   if (!unit) return { title: guide.code, subtitle: guide.name, slides: [] };
 
-  const name = unit.name.replace(/^\d+(\/\d+)?\s*·\s*/, '');
+  const name = unitName(unit.name);
   const slides: Slide[] = [
     { title: name, bullets: [], note: `${guide.code} · ${unit.cards.length} things to know`, opening: true },
   ];

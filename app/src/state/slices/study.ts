@@ -16,6 +16,15 @@ import { push } from './navigate';
 
 export function study(state: State, action: Action): State | null {
   switch (action.type) {
+    /*
+     * Mix the courses in this run, or keep them one at a time.
+     *
+     * Resets the position: the deck is rebuilt in a different order, so
+     * staying at card 14 would land somewhere unrelated to where you were.
+     */
+    case 'mixCourses':
+      return state.drillMix === action.on ? state : { ...state, drillMix: action.on, drillIdx: 0 };
+
     case 'setMode':
       return { ...state, mode: action.mode };
 

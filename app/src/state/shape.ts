@@ -482,6 +482,14 @@ export interface Ephemeral {
   calYear: number;
   openUnit: number;
   drillUnit: number | null;
+  /**
+   * Whether a drill mixes courses instead of running one at a time.
+   *
+   * Ephemeral: it is a choice about the run you are about to do, and a setting
+   * that persisted would silently change what "Drill" means weeks later. See
+   * `lib/interleave.ts`.
+   */
+  drillMix: boolean;
   drillIdx: number;
   drillGot: number;
   revealed: boolean;
@@ -671,6 +679,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     calYear: now.getFullYear(),
     openUnit: 0,
     drillUnit: null,
+    drillMix: false,
     drillIdx: 0,
     drillGot: 0,
     revealed: false,
@@ -980,6 +989,7 @@ export type Action =
   | { type: 'toggleStarted'; id: string }
   | { type: 'setSchool'; id: string }
   | { type: 'showEverything'; on: boolean }
+  | { type: 'mixCourses'; on: boolean }
   /**
    * Clear this device's own rows so the account's copy is what is left.
    *
