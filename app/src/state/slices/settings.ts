@@ -147,6 +147,15 @@ export function settings(state: State, action: Action): State | null {
         reviews: {},
       };
 
+    /*
+     * Show the whole directory, or reveal it as the semester fills in.
+     *
+     * One tap, permanent, and it only ever adds. Nothing is un-revealed by
+     * switching it back off — `visited` sees to that.
+     */
+    case 'showEverything':
+      return state.showAll === action.on ? state : { ...state, showAll: action.on };
+
     case 'setSchool':
       return state.schoolId === action.id ? state : { ...state, schoolId: action.id };
 

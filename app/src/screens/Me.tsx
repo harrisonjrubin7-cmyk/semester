@@ -35,8 +35,9 @@ import { Bell, ChevronRight } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
-import { DESTINATIONS, destinationsFor, destinationsIn, type Group } from '../lib/nav';
+import { DESTINATIONS, destinationsIn, listed, type Group } from '../lib/nav';
 import { hiddenFor, schoolLine } from '../lib/school';
+import { countHidden, revealLine } from '../lib/reveal';
 import { bundledList } from '../data/schools';
 
 import type { CourseModule, Screen } from '../lib/types';
@@ -285,7 +286,7 @@ function HuePicker() {
 }
 
 export function Me() {
-  const { state, dispatch, now, catalog, account , courseCode, school } = useStore();
+  const { state, dispatch, now, catalog, account , courseCode, school, facts } = useStore();
   const ahead = upcomingItems(catalog, now);
   const bars = loadByCourse(catalog, now, state.done);
   const pace = learned(state.spent);
@@ -459,10 +460,11 @@ export function Me() {
         onChange={(next) => dispatch({ type: 'setMeGroup', group: next })}
       />
       {GROUPS.filter((g) => g === (state.meGroup as Group)).map((group) => {
-        // Filtered by what this school has: a screen with no equivalent here
-        // disappears rather than offering an empty state about somebody's
-        // university. See `lib/school.ts`.
-        const rows = destinationsFor(group, school.capabilities).filter(
+        // Two gates, and they are different things. `school.ts` hides what
+        // this university has no equivalent of — absent, not pending.
+        // `reveal.ts` hides what is real and not useful yet, and gives it back
+        // the moment there is something for it to work on.
+        const rows = listed(group, school.capabilities, facts, state.visited, state.showAll).filter(
           (d) => !HIDE_IN_ME.includes(d.screen),
         );
         if (rows.length === 0) return null;
@@ -694,7 +696,7 @@ function Reminders() {
 }
 
 export function Settings({ bare = false }: { bare?: boolean } = {}) {
-  const { state, dispatch, school } = useStore();
+  const { state, dispatch, school, facts } = useStore();
   const hidden = hiddenFor(school.capabilities);
 
   // `bare` when it is a tab of Me, which has already padded the page; the
@@ -1090,6 +1092,16 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
       <MyRules />
 
       <PushSwitch />
+
+      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>The directory</SectionLabel>
+      <Toggle
+        label="Show every screen straight away"
+        on={state.showAll}
+        onChange={() => dispatch({ type: 'showEverything', on: !state.showAll })}
+      />
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
+        {revealLine(countHidden(facts, state.visited, state.showAll), state.showAll)}
+      </div>
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Where you study</SectionLabel>
       <Segmented

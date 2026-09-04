@@ -47,6 +47,7 @@ import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
 import { resolveSchool } from '../data/schools';
 import { countRows, decide, type Choice, type Sides } from '../lib/adopt';
+import type { Facts } from '../lib/reveal';
 import type { School } from '../lib/school';
 // Aliased: an effect below has its own local `said` for a save error.
 import { said as refreshSaid } from '../lib/refresh';
@@ -144,6 +145,8 @@ interface Store {
    * See `lib/school.ts` — screens ask what a school has, never which it is.
    */
   school: School;
+  /** How far along the semester is, for what the directory lists. */
+  facts: Facts;
   /**
    * The first-sign-in question, or null.
    *
@@ -603,6 +606,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const school = useMemo(() => resolveSchool(state.schoolId, null), [state.schoolId]);
 
   /**
+   * How far along this semester is, for progressive disclosure.
+   *
+   * Facts about the coursework, never about how often the app has been opened
+   * — "you have used this five times" is not a reason to be shown anything.
+   * See `lib/reveal.ts`.
+   */
+  const facts = useMemo<Facts>(
+    () => ({
+      courses: catalog.courses.length,
+      hasExam: catalog.items.some((i) => /exam|midterm|final/i.test(`${i.kind} ${i.title}`)),
+      hasGrades: Object.keys(state.grades ?? {}).length > 0,
+      notes: state.notes.length,
+      sittings: state.sittings.length,
+      ownThings: state.tasks.length + state.appointments.length,
+      terms: terms.length || 1,
+      signedIn: Boolean(account),
+    }),
+    [catalog, state.grades, state.notes, state.sittings, state.tasks, state.appointments, terms, account],
+  );
+
+  /**
    * Acting on the answer, and writing the file before either overwrite.
    *
    * The backup is what is on the device right now, saved to the student's
@@ -656,8 +680,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, school, asking, settle }),
-    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, school, asking, settle],
+    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, school, facts, asking, settle }),
+    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, school, facts, asking, settle],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

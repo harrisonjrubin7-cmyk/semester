@@ -17,6 +17,7 @@
 
 import type { Screen } from './types';
 import { allowed, type Capabilities } from './school';
+import { showing, type Facts } from './reveal';
 
 /**
  * The shelves the directory is arranged on.
@@ -548,4 +549,23 @@ export function destinationsFor(group: Group, c: Capabilities): Destination[] {
 /** Every destination the app can offer this student, across all groups. */
 export function offered(c: Capabilities): Destination[] {
   return DESTINATIONS.filter((d) => allowed(d.screen, c));
+}
+
+/**
+ * The two gates together, which are different things.
+ *
+ * `allowed` is about the school — a meal plan screen at a university with no
+ * meal plan is absent, not pending, and no amount of using the app produces
+ * one. `showing` is about how far along somebody is — a real screen that is
+ * not useful yet. A destination has to pass both, and the order does not
+ * matter because neither can un-hide what the other hid.
+ */
+export function listed(
+  group: Group,
+  c: Capabilities,
+  facts: Facts,
+  visited: Record<string, boolean>,
+  showAll: boolean,
+): Destination[] {
+  return destinationsFor(group, c).filter((d) => showing(d.screen, facts, visited, showAll));
 }

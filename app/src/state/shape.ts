@@ -343,6 +343,14 @@ export interface Persisted {
    * asks which school this is, only what the school has.
    */
   schoolId: string;
+  /**
+   * Whether the directory lists every screen, or only what is useful yet.
+   *
+   * Default is to reveal as you go — see `lib/reveal.ts`. A screen you have
+   * opened never goes back, and search finds everything either way, so this is
+   * about a first morning rather than about permanently hiding anything.
+   */
+  showAll: boolean;
   /** The shape this copy was written in. See `lib/migrate.ts`. */
   schemaVersion: number;
   /**
@@ -522,6 +530,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   // Vanderbilt by default, because that is who this was built for and a fresh
   // install should be the app they already have. Changed in Settings.
   schoolId: 'vanderbilt',
+  showAll: false,
   schemaVersion: SCHEMA,
   started: {},
   cleared: false,
@@ -777,6 +786,7 @@ export function loadPersisted(): Persisted {
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
       schoolId: typeof saved.schoolId === 'string' ? saved.schoolId : DEFAULT_PERSISTED.schoolId,
+      showAll: saved.showAll === true,
       // Every field readLook knows about, handed straight through. Naming
       // them one by one here is how a new control gets added, saved, and then
       // silently dropped on the next reload.
@@ -860,6 +870,7 @@ export function pickPersisted(state: State): Persisted {
     tickedAt: state.tickedAt,
     started: state.started,
     schoolId: state.schoolId,
+    showAll: state.showAll,
     // Stamped on the way out, so the next build to read this knows what shape
     // it is in without having to guess from which fields are present.
     schemaVersion: SCHEMA,
@@ -968,6 +979,7 @@ export type Action =
   | { type: 'clearNotifs' }
   | { type: 'toggleStarted'; id: string }
   | { type: 'setSchool'; id: string }
+  | { type: 'showEverything'; on: boolean }
   /**
    * Clear this device's own rows so the account's copy is what is left.
    *

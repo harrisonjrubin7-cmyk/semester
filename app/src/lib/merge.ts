@@ -195,6 +195,10 @@ export const STRATEGY: Record<string, Strategy> = {
   // device to be told is the one that is right, because somebody transferring
   // sets it once and expects both phones to follow.
   schoolId: 'theirs',
+  // How much of the app somebody wants listed. A choice about them, so it
+  // follows them — and because it only ever adds, the worst a wrong guess does
+  // is show a screen they had not asked for yet.
+  showAll: 'theirs',
   cleared: 'theirs',
   waysOpen: 'theirs',
   accessLeadDays: 'theirs',
