@@ -1,4 +1,5 @@
 import type { DatedEvent, DatedItem, CampusEvent, Item } from './types';
+import { dueMinutes } from './duetime';
 
 /**
  * The year the app shipped configured for.
@@ -106,6 +107,10 @@ export function decorateItem(item: Item, now: Date): DatedItem {
     isToday: away === 0,
     isPast: away < 0,
     daysAway: away,
+    // The clock inside "Before class, 1:15p", where there is one. Untimed
+    // wordings sort to the end of their day rather than the start — see
+    // `lib/duetime.ts`.
+    dueAt: dueMinutes(item.dueTime),
   };
 }
 

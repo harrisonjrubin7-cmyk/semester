@@ -94,6 +94,14 @@ export interface DatedItem extends Item {
   isToday: boolean;
   isPast: boolean;
   daysAway: number;
+  /**
+   * Minutes past midnight, read out of `dueTime` where it holds a clock.
+   *
+   * `24 * 60` when the wording names no time — "In class" sorts after
+   * everything with an hour on it, because it is a thing you have all day to
+   * do something about. See `lib/duetime.ts`.
+   */
+  dueAt: number;
 }
 
 export interface StudyCard {

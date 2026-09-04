@@ -70,7 +70,17 @@ function DayView() {
   const isToday = sameDay(day, now);
   const source = state.calSource;
 
-  const rail = source === 'all' || source === 'classes' ? railFor(catalog, day, state.appointments, state.commitments) : [];
+  const rail =
+    source === 'all' || source === 'classes'
+      ? railFor(
+          catalog,
+          day,
+          state.appointments,
+          state.commitments,
+          // A deadline with an hour on it sits on the rail at that hour.
+          datedItems(catalog, day).filter((i) => !state.done[i.id]),
+        )
+      : [];
   const due = source === 'all' || source === 'deadlines'
     ? datedItems(catalog, now).filter((i) => sameDay(i.date, day))
     : [];

@@ -1,4 +1,4 @@
-import { blocksFor, classNote, type Catalog } from '../data/catalog';
+import { blocksFor, classNote, codeOf, type Catalog } from '../data/catalog';
 import { EVENTS } from '../data/events';
 import {
   dateToIso,
@@ -12,6 +12,7 @@ import {
 } from './date';
 import type { Reviews } from './review';
 import { blocksOn, type Commitment } from './activities';
+import { hasTime } from './duetime';
 import { liveGuide } from './live';
 import type {
   Appointment,
@@ -26,7 +27,12 @@ import type {
 
 /** Every deadline, dated against the current clock, soonest first. */
 export function datedItems(cat: Catalog, now: Date): DatedItem[] {
-  return cat.items.map((i) => decorateItem(i, now)).sort((a, b) => a.date.getTime() - b.date.getTime());
+  return cat.items
+    .map((i) => decorateItem(i, now))
+    // By day, then by the hour inside the day. The second half is new: a
+    // checklist used to put "In class" above "9:00 AM" because the order was
+    // whatever the syllabus happened to list. See `lib/duetime.ts`.
+    .sort((a, b) => a.date.getTime() - b.date.getTime() || a.dueAt - b.dueAt);
 }
 
 export function datedEvents(now: Date, include = true): DatedEvent[] {
@@ -301,6 +307,13 @@ export function railFor(
   date: Date,
   appointments: Appointment[],
   commitments: Commitment[] = [],
+  /**
+   * Deadlines falling on this day, so one with a real hour on it sits where
+   * it happens rather than in a list above the day. Only the ones whose
+   * wording names a time — "In class" is a thing you have all day for, and
+   * drawing it at midnight would be inventing an hour.
+   */
+  due: DatedItem[] = [],
 ): (Block & { mine?: boolean; kind?: string; minutes?: number })[] {
   const classes = blocksFor(cat, date);
   const mine = appointmentsOn(appointments, date).map((a) => ({
@@ -316,7 +329,21 @@ export function railFor(
   // draws them, and a Tuesday that already has practice on it should look
   // full before you agree to something else.
   const standing = blocksOn(commitments, date);
-  return [...classes, ...mine, ...standing].sort((a, b) => a.at - b.at);
+
+  const deadlines = due
+    .filter((i) => sameDay(i.date, date) && hasTime(i.dueTime))
+    .map((i) => ({
+      time: i.dueTime,
+      at: i.dueAt,
+      title: i.title,
+      meta: [codeOf(cat, i.c), i.kind].filter(Boolean).join(' · '),
+      c: i.c,
+      // Dimmer than a class, like office hours: it is a moment rather than a
+      // room you have to be in.
+      optional: true,
+    }));
+
+  return [...classes, ...mine, ...standing, ...deadlines].sort((a, b) => a.at - b.at);
 }
 
 /**

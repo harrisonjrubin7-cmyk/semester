@@ -482,7 +482,10 @@ function Feed_tasks() {
 /** One section of the Today feed, so its place in the order can be yours. */
 function Feed_rail() {
   const { state, now, catalog } = useStore();
-  const rail = railFor(catalog, now, state.appointments, state.commitments);
+  // Deadlines with a real hour on them belong on the rail where they happen,
+  // not only in a list above it. See `lib/duetime.ts`.
+  const due = datedItems(catalog, now).filter((i) => i.isToday && !state.done[i.id]);
+  const rail = railFor(catalog, now, state.appointments, state.commitments, due);
   const minutes = minutesNow(now);
   return (
     <>
