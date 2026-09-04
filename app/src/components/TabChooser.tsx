@@ -18,7 +18,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { TabGlyph } from './TabIcon';
-import { destinationsFor, type Group } from '../lib/nav';
+import { destinationsFor, saysFor, type Group } from '../lib/nav';
 import {
   MOST,
   MOST_CHOSEN,
@@ -241,7 +241,7 @@ export function TabChooser() {
                     type="button"
                     className="bare tappable"
                     onClick={() => tryToggle(d.screen)}
-                    title={d.blurb}
+                    title={saysFor(d, school.capabilities).blurb}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -258,7 +258,7 @@ export function TabChooser() {
                     {/* The directory's own label, not the short one: there is
                         room for it here, and "Fold in an announcement" is what
                         tells you what "Notices" will be. */}
-                    {d.label}
+                    {saysFor(d, school.capabilities).label}
                   </button>
                 ))}
               </div>

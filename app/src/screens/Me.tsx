@@ -35,7 +35,7 @@ import { Bell, ChevronRight } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
-import { DESTINATIONS, destinationsIn, listed, type Group } from '../lib/nav';
+import { DESTINATIONS, destinationsIn, listed, saysFor, type Group } from '../lib/nav';
 import { hiddenFor } from '../lib/school';
 import { SchoolPicker } from '../components/SchoolPicker';
 import { countHidden, revealLine } from '../lib/reveal';
@@ -75,7 +75,10 @@ function Destination({
   to: ReturnType<typeof destinationsIn>[number];
   account: { email: string } | null;
 }) {
-  const { dispatch } = useStore();
+  const { dispatch, school } = useStore();
+  // The directory in the school's own words. See `lib/nav.ts` — the meal row
+  // promised everyone "Commodore Cash" until this existed.
+  const said = saysFor(to, school.capabilities);
   return (
     <button
       type="button"
@@ -93,7 +96,7 @@ function Destination({
     >
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'calc(15.5px * var(--text-scale, 1))' }}>
-          {to.screen === 'account' && account ? 'Account · synced' : to.label}
+          {to.screen === 'account' && account ? 'Account · synced' : said.label}
         </span>
         <span
           style={{
@@ -105,7 +108,7 @@ function Destination({
             textWrap: 'pretty',
           }}
         >
-          {to.screen === 'account' && !account ? 'Not signed in — this device only.' : to.blurb}
+          {to.screen === 'account' && !account ? 'Not signed in — this device only.' : said.blurb}
         </span>
       </span>
       <ChevronRight size={16} />

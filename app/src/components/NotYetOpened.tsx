@@ -16,9 +16,10 @@ import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { TabGlyph } from './TabIcon';
 import { dayOf, offer, seenLine } from '../lib/unseen';
+import { saysFor } from '../lib/nav';
 
 export function NotYetOpened() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch, now, school } = useStore();
 
   const three = offer(state.visited, dayOf(now));
   if (three.length === 0) return null;
@@ -55,7 +56,7 @@ export function NotYetOpened() {
               <TabGlyph screen={d.screen} size={16} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{d.label}</span>
+              <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{saysFor(d, school.capabilities).label}</span>
               {/* The directory's own sentence, not a second one written for
                   here — two descriptions of the same screen would drift. */}
               <span
@@ -67,7 +68,7 @@ export function NotYetOpened() {
                   lineHeight: 1.4,
                 }}
               >
-                {d.blurb}
+                {saysFor(d, school.capabilities).blurb}
               </span>
             </span>
           </button>

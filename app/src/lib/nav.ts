@@ -16,7 +16,7 @@
  */
 
 import type { Screen } from './types';
-import { allowed, type Capabilities } from './school';
+import { allowed, cardName, lmsName, showsCash, showsSwipes, swipeUnit, type Capabilities } from './school';
 import { showing, type Facts } from './reveal';
 
 /**
@@ -248,7 +248,10 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'meals',
     label: 'Meal plan',
-    blurb: 'Swipes and Commodore Cash, with what they are a day and the week they run out.',
+    // Neutral, because this is the fallback for a school that has not named
+    // its card. `saysFor` writes the specific one — a Vanderbilt student still
+    // reads "Meal swipes and Commodore Cash".
+    blurb: 'What is on your plan, what it is a day, and the week it runs out.',
     keywords: 'meal meals plan swipes swipe commodore cash dining dollars money balance cbord get food eat eating board plan munchie mart declined out of run out',
     group: 'Campus',
     root: 'me',
@@ -333,7 +336,11 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'yes',
-    label: 'YES',
+    label: 'Registration',
+    // The bar keeps a generic eight characters whatever the school calls it —
+    // a registrar named "Student Center" would not fit, and truncating it in
+    // the bar would read as a bug. `saysFor` names it everywhere with room.
+    short: 'Register',
     blurb: 'Registration and class search — and paste your schedule straight back in.',
     keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section',
     group: 'Campus',
@@ -343,7 +350,7 @@ export const DESTINATIONS: Destination[] = [
     screen: 'classmates',
     label: 'Classmates',
     short: 'Class',
-    blurb: 'A room per class, for everyone at Vanderbilt taking it.',
+    blurb: 'A room per class, for everyone at your school taking it.',
     keywords: 'classmates classmate message messages chat talk group groups room people students friends study group discussion ask class peers social connect dm',
     group: 'Campus',
     root: 'courses',
@@ -447,7 +454,7 @@ export const DESTINATIONS: Destination[] = [
     screen: 'connect',
     label: 'Connect accounts',
     short: 'Connect',
-    blurb: 'Brightspace, Outlook, Google, Zoom, oneVU — calendars and links in.',
+    blurb: 'Your course site, Outlook, Google, Zoom — calendars and links in.',
     keywords: 'brightspace onevu myvu yes anchorlink outlook microsoft google zoom apple icloud ics feed subscribe claude anthropic api key sign in with claude tickets game football basketball commodores vucommodores instagram twitter x social',
     group: 'Yours',
     root: 'me',
@@ -568,4 +575,53 @@ export function listed(
   showAll: boolean,
 ): Destination[] {
   return destinationsFor(group, c).filter((d) => showing(d.screen, facts, visited, showAll));
+}
+
+/**
+ * A destination said the way this school says it.
+ *
+ * The directory used to promise "Swipes and Commodore Cash" to everyone and
+ * label the registration screen "YES" — Vanderbilt's word for its registrar —
+ * for a student at a university that has never heard of it. Both were the
+ * exact failure the capability model exists to prevent: not a screen that
+ * should have been hidden, but a screen whose *words* were somebody else's.
+ *
+ * Note what is not here: a check for which school this is. The table asks the
+ * capabilities what things are called, and Vanderbilt is the school whose
+ * answers happen to be Commodore Cash and YES.
+ */
+const SAYS: Partial<Record<Screen, (c: Capabilities) => { label?: string; blurb?: string }>> = {
+  meals: (c) => ({ blurb: mealsBlurb(c) }),
+  yes: (c) => ({ label: c.registrarName?.trim() || undefined }),
+  connect: (c) => ({
+    blurb: `${lmsName(c)}, Outlook, Google, Zoom — calendars and links in.`,
+  }),
+};
+
+function upper(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function mealsBlurb(c: Capabilities): string {
+  const swipes = showsSwipes(c);
+  const cash = showsCash(c);
+  if (swipes && cash) {
+    return `${upper(swipeUnit(c))} and ${cardName(c)}, with what they are a day and the week they run out.`;
+  }
+  if (swipes) {
+    return `${upper(swipeUnit(c))}, with what they are a day and the week they run out.`;
+  }
+  if (cash) {
+    return `${upper(cardName(c))}, with what it is a day and the week it runs out.`;
+  }
+  // Unreachable through the directory — `allowed` hides the screen entirely
+  // for a school with no plan — but a caller that asks anyway gets the honest
+  // generic rather than a sentence about swipes nobody has.
+  return 'What is on your plan, what it is a day, and the week it runs out.';
+}
+
+/** What to print for a destination, given where somebody studies. */
+export function saysFor(d: Destination, c: Capabilities): { label: string; blurb: string } {
+  const said = SAYS[d.screen]?.(c);
+  return { label: said?.label ?? d.label, blurb: said?.blurb ?? d.blurb };
 }

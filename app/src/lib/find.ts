@@ -19,7 +19,7 @@
 
 import type { Catalog } from '../data/catalog';
 import { datedItems } from './select';
-import { DESTINATIONS } from './nav';
+import { DESTINATIONS, saysFor } from './nav';
 import { allowed, type Capabilities } from './school';
 
 /**
@@ -206,8 +206,14 @@ export function findEverything(
   const screens: Hit[] = [];
   for (const d of DESTINATIONS) {
     if (!allowed(d.screen, caps)) continue;
-    const s = score(q, d.label, `${d.blurb} ${d.keywords}`);
-    if (s) screens.push({ kind: 'screen', screen: d.screen, title: d.label, sub: d.blurb, tag: 'Go to', score: s });
+    // Searched and shown in the school's own words, so typing "commodore
+    // cash" finds the meal screen and a student elsewhere is not offered a
+    // sentence about somebody else's campus card. The static keywords stay in
+    // the haystack either way — they cost nothing and they are how somebody
+    // who has heard the word finds the screen.
+    const { label, blurb } = saysFor(d, caps);
+    const s = score(q, label, `${blurb} ${d.blurb} ${d.keywords}`);
+    if (s) screens.push({ kind: 'screen', screen: d.screen, title: label, sub: blurb, tag: 'Go to', score: s });
   }
 
   const groups: HitGroup[] = [
