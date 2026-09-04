@@ -156,3 +156,38 @@ describe('registrar deadlines', () => {
     expect(out.filter((r) => r.rule === 'term')).toEqual([]);
   });
 });
+
+describe('the exam warning', () => {
+  const exam = (daysAway: number) =>
+    item({ id: 'x', daysAway, kind: 'Exam', title: 'Midterm 1', weight: '25%' });
+
+  it('fires at four weeks, where the runway starts', () => {
+    const out = dueReminders(THU, ALL, { items: [exam(28)], classes: [] });
+    expect(out.find((r) => r.rule === 'exam')?.title).toBe('Four weeks: Midterm 1');
+  });
+
+  it('fires again at one week', () => {
+    const out = dueReminders(THU, ALL, { items: [exam(7)], classes: [] });
+    expect(out.find((r) => r.rule === 'exam')?.title).toBe('One week: Midterm 1');
+  });
+
+  it('says nothing on the days between', () => {
+    for (const d of [27, 14, 8, 6]) {
+      const out = dueReminders(THU, ALL, { items: [exam(d)], classes: [] });
+      expect(out.filter((r) => r.rule === 'exam')).toEqual([]);
+    }
+  });
+
+  it('takes a heavy project as an exam, since the runway does', () => {
+    const project = item({ id: 'p', daysAway: 28, kind: 'Project', title: 'Case', weight: '30%' });
+    const out = dueReminders(THU, ALL, { items: [project], classes: [] });
+    expect(out.filter((r) => r.rule === 'exam')).toHaveLength(1);
+  });
+
+  it('leaves a problem set alone', () => {
+    const ps = item({ id: 'q', daysAway: 28, kind: 'Problem set', title: 'PS4', weight: '5%' });
+    expect(
+      dueReminders(THU, ALL, { items: [ps], classes: [] }).filter((r) => r.rule === 'exam'),
+    ).toEqual([]);
+  });
+});

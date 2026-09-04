@@ -19,6 +19,7 @@
 
 import type { NotifKey } from '../data/misc';
 import { daysTo, type TermDate } from './registrar';
+import { isExam } from './runway';
 import type { DatedItem } from './types';
 
 const SEEN_KEY = 'semester.notified';
@@ -150,13 +151,20 @@ export function dueReminders(
     }
   }
 
+  // At four weeks as well as at one. Four is where the runway starts, and the
+  // whole point of it is that the week to act is not the week before.
   if (on.exam) {
-    for (const i of src.items.filter((x) => x.daysAway === 7 && /exam|midterm|final/i.test(x.kind))) {
+    for (const i of src.items) {
+      if (i.daysAway !== 7 && i.daysAway !== 28) continue;
+      if (!isExam(i)) continue;
       out.push({
         id: `exam:${today}:${i.id}`,
         rule: 'exam',
-        title: `One week: ${i.title}`,
-        body: `${i.dueShort} · ${i.weight || i.kind}`,
+        title: i.daysAway === 7 ? `One week: ${i.title}` : `Four weeks: ${i.title}`,
+        body:
+          i.daysAway === 7
+            ? `${i.dueShort} · ${i.weight || i.kind}`
+            : 'Far enough out to find what you do not know. See the runway.',
       });
     }
   }

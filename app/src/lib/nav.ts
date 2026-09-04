@@ -196,6 +196,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'calendar',
   },
   {
+    screen: 'runway',
+    label: 'Exam runway',
+    blurb: 'The weeks before an exam, counted backwards from it — and what stands in the way.',
+    keywords: 'exam runway midterm final revision revise cram countdown prepare preparation study plan weeks before how long until ready readiness test',
+    group: 'Study',
+    root: 'study',
+  },
+  {
     screen: 'weekly',
     label: 'Weekly report',
     blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',

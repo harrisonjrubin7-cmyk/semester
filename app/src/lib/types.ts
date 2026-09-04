@@ -410,6 +410,7 @@ export type Screen =
   | 'exam'
   | 'check'
   | 'ahead'
+  | 'runway'
   | 'weekly'
   | 'registrar'
   | 'sources'
