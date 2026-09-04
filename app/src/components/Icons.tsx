@@ -99,3 +99,41 @@ export const CalendarIcon = svg(
     <path d="M8 13h3v3H8z" />
   </>,
 );
+
+/*
+ * The next three exist for the tab bar a student arranges themselves.
+ *
+ * Forty-two screens can go in that bar and fourteen of them have an icon of
+ * their own. The rest borrow one of these — one per shelf in `lib/nav.ts` —
+ * so a chosen tab shows which part of the app it came from rather than a
+ * placeholder square. The label underneath still says which screen it is;
+ * the glyph is only there to make the bar readable at a glance.
+ */
+
+/** Make — a pen nib. Everything on that shelf produces something. */
+export const MakeIcon = svg(
+  <>
+    <path d="M4 20.5 5 16 16.5 4.5l3 3L8 19z" />
+    <path d="m14.5 6.5 3 3" />
+  </>,
+);
+
+/** Upkeep — sliders. The shelf you go to when something needs correcting. */
+export const UpkeepIcon = svg(
+  <>
+    <path d="M4 7h16M4 12h16M4 17h16" />
+    <circle cx="9" cy="7" r="2" />
+    <circle cx="15" cy="12" r="2" />
+    <circle cx="8" cy="17" r="2" />
+  </>,
+);
+
+/** Campus — a building with windows. */
+export const CampusIcon = svg(
+  <>
+    <path d="M4 21V9l8-5 8 5v12" />
+    <path d="M3 21h18" />
+    <path d="M9 21v-5h6v5" />
+    <path d="M9 11.5h2M13 11.5h2" />
+  </>,
+);

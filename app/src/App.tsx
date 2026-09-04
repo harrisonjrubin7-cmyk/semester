@@ -2,17 +2,11 @@ import { useEffect } from 'react';
 import { useStore } from './state/store';
 import {
   Bell,
-  CalendarIcon,
-  MapIcon,
   Check,
   ChevronLeft,
-  CoursesIcon,
   Person,
   Plus,
   Search as SearchIcon,
-  StudyIcon,
-  TodayIcon,
-  NotesIcon,
 } from './components/Icons';
 import { Onboarding } from './screens/Onboarding';
 import { Today } from './screens/Today';
@@ -63,6 +57,8 @@ import { Cloud } from './screens/Cloud';
 import { SlideDeck } from './screens/Slides';
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
+import { litTab, tabLabel } from './lib/tabbar';
+import { TabGlyph } from './components/TabIcon';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import type { Screen } from './lib/types';
@@ -323,25 +319,18 @@ function Header() {
   );
 }
 
-const TABS: { id: Screen; label: string; Icon: typeof TodayIcon }[] = [
-  { id: 'home', label: 'Today', Icon: TodayIcon },
-  { id: 'courses', label: 'Courses', Icon: CoursesIcon },
-  { id: 'study', label: 'Study', Icon: StudyIcon },
-  { id: 'calendar', label: 'Calendar', Icon: CalendarIcon },
-  // Seven fits at 402px, and a map is one of the two or three things a person
-  // opens the app for while walking. It was two taps down under Calendar.
-  { id: 'maps', label: 'Map', Icon: MapIcon },
-  { id: 'mine', label: 'Mine', Icon: NotesIcon },
-  { id: 'me', label: 'Me', Icon: Person },
-];
-
 function TabBar() {
   const { state, dispatch } = useStore();
-  const here = rootOf(state.screen);
+  // The seven that shipped are still the default; this is whichever seven the
+  // student arranged. `litTab` rather than `rootOf` because a chosen bar can
+  // hold a screen and the tab it files under at the same time.
+  const tabs = state.tabs;
+  const here = litTab(state.screen, tabs);
 
   return (
     <nav className="safe-bottom app-tabs">
-      {TABS.map(({ id, label, Icon }) => {
+      {tabs.map((id) => {
+        const label = tabLabel(id);
         // Lit for the screen itself and for everything nested under it, so a
         // flashcard three levels deep still shows you are inside Study.
         const on = here === id;
@@ -364,13 +353,15 @@ function TabBar() {
               fontFamily: 'var(--font-heading)',
             }}
           >
-            <Icon size={19} />
+            <TabGlyph screen={id} size={19} />
             {/* Seven tabs across 402px leaves about 57px each, and "CALENDAR"
                 at the old tracking was wider than that — it would have wrapped
                 to two lines and made the bar taller on every screen. Tighter
                 and a shade smaller keeps real words rather than abbreviating
                 them, and nowrap makes a future overflow visible rather than
-                silently restacking. */}
+                silently restacking. `tabLabel` is what keeps a chosen screen
+                inside that budget: the directory's own "Fold in an
+                announcement" would not go here, so it has a short name. */}
             <span
               style={{
                 fontSize: 9,
@@ -512,17 +503,23 @@ function CurrentScreen() {
  */
 function Rail() {
   const { state, dispatch } = useStore();
-  const here = rootOf(state.screen);
+  const tabs = state.tabs;
+  const here = litTab(state.screen, tabs);
   // Taken from the one list of places, so the rail cannot drift out of step
   // with what Me and search know about.
   const extras = ['ask', 'import', 'account', 'connect', 'cloud', 'settings']
     .map((s) => destination(s as Screen))
-    .filter((d): d is NonNullable<typeof d> => Boolean(d));
+    .filter((d): d is NonNullable<typeof d> => Boolean(d))
+    // Not twice. Four of these six can now be put in the bar, and the rail
+    // draws the bar above this list — so without the filter, a student who
+    // put Ask Claude in their bar would find it in the rail twice.
+    .filter((d) => !tabs.includes(d.screen));
 
   return (
     <nav className="rail">
       <div className="rail-mark chrome-text">Semester</div>
-      {TABS.map(({ id, label, Icon }) => {
+      {tabs.map((id) => {
+        const label = tabLabel(id);
         const on = here === id;
         return (
           <button
@@ -537,7 +534,7 @@ function Rail() {
               boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
             }}
           >
-            <Icon size={18} />
+            <TabGlyph screen={id} size={18} />
             <span>{label}</span>
           </button>
         );

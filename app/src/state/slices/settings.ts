@@ -13,6 +13,7 @@
 import { readLook } from '../../lib/look';
 import { record } from '../../lib/pace';
 import { currentLook, type Action, type State } from '../shape';
+import { readTabs } from '../../lib/tabbar';
 
 export function settings(state: State, action: Action): State | null {
   switch (action.type) {
@@ -29,6 +30,13 @@ export function settings(state: State, action: Action): State | null {
 
     case 'setFeedOrder':
       return { ...state, feedOrder: action.order };
+
+    // The arithmetic — what is allowed in, how many fit, what cannot be
+    // removed — is in `lib/tabbar.ts` and tested there. The caller passes the
+    // list it worked out; this re-reads it anyway, because the reducer is
+    // the last place that can stop a bar with nothing in it being stored.
+    case 'setTabs':
+      return { ...state, tabs: readTabs(action.tabs) };
 
     case 'toggleFeedSection':
       return {

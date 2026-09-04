@@ -28,6 +28,7 @@ import type {
 import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
+import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
 import { type Reviews } from '../lib/review';
@@ -77,6 +78,11 @@ export interface Persisted {
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
+  /**
+   * The screens in the bottom bar, in order. Validated on the way in and out
+   * by `lib/tabbar.ts` — a navigation bar cannot afford to render nothing.
+   */
+  tabs: Screen[];
   /** The destinations you opened most recently, newest first. */
   recent: Screen[];
   /**
@@ -363,6 +369,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   commitments: [],
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
+  tabs: DEFAULT_TABS,
   recent: [],
   sittings: [],
   sources: [],
@@ -476,6 +483,9 @@ export function loadPersisted(): Persisted {
       commitments: saved.commitments ?? [],
       feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
+      // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
+      // sync, or one entry long, and any of those renders a broken bar.
+      tabs: readTabs(saved.tabs),
       recent: saved.recent ?? [],
       sittings: saved.sittings ?? [],
       sources: saved.sources ?? [],
@@ -532,6 +542,7 @@ export function pickPersisted(state: State): Persisted {
     places: state.places,
     commitments: state.commitments,
     feedOrder: state.feedOrder,
+    tabs: state.tabs,
     feedHidden: state.feedHidden,
     recent: state.recent,
     sittings: state.sittings,
@@ -575,6 +586,7 @@ export type Action =
   | { type: 'patchCommitment'; id: string; patch: Partial<Commitment> }
   | { type: 'removeCommitment'; id: string }
   | { type: 'setFeedOrder'; order: string[] }
+  | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'toggleFeedSection'; id: string }
   | { type: 'setLook'; look: Partial<Look> }
   | { type: 'setFilter'; filter: string }

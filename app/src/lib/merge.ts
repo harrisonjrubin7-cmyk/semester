@@ -83,6 +83,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // An arrangement rather than a list you add to — merging two orderings
   // would produce an order neither device chose.
   feedOrder: 'theirs',
+  // Same reasoning, and one more: unioning two bars would overflow it, and
+  // the overflow would be silently trimmed by whichever device read it next.
+  tabs: 'theirs',
   nav: 'theirs',
   sample: 'theirs',
   term: 'theirs',

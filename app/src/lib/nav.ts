@@ -37,6 +37,17 @@ export type Group = 'Study' | 'Make' | 'Semester' | 'Upkeep' | 'Campus' | 'Yours
 export interface Destination {
   screen: Screen;
   label: string;
+  /**
+   * The name for the bottom bar, where there is room for about nine
+   * characters and no room for a sentence.
+   *
+   * The directory can afford "Fold in an announcement", which says what you
+   * would come here to do; a 57px tab cannot, and abbreviating at render time
+   * would produce "Fold in an…". Set only where the label is too long — the
+   * label is used as-is otherwise, so this does not have to be maintained for
+   * every screen. See `lib/tabbar.ts`.
+   */
+  short?: string;
   /** One line, in the second person, saying what you would come here to do. */
   blurb: string;
   /** Words a person might search for that are not in the label or the blurb. */
@@ -90,6 +101,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'ask',
     label: 'Ask Claude',
+    short: 'Ask',
     blurb: 'A question about this course, answered with its guide in hand.',
     keywords: 'ai chat explain help tutor claude',
     group: 'Study',
@@ -98,6 +110,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'work',
     label: 'Work on it',
+    short: 'Work',
     blurb: 'Paste an assignment and get it broken down — rubric, plan, dates, what to ask.',
     keywords: 'assignment essay paper homework problem set instructions rubric deadline draft feedback outline plan generate write',
     group: 'Study',
@@ -106,6 +119,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'update',
     label: 'Add a reading',
+    short: 'Material',
     blurb: 'New material into a course — and every study mode picks it up.',
     keywords: 'reading add material update new chapter article handout slides lecture notes supplement extra pdf paste attach cards quiz guide refresh keep current course content',
     group: 'Study',
@@ -114,6 +128,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'analyse',
     label: 'Analyse data',
+    short: 'Analyse',
     blurb: 'A CSV in, and the statistics out — computed here, then explained.',
     keywords: 'data analysis statistics stats csv spreadsheet excel mean median average standard deviation sd variance correlation regression ols slope r squared scatter histogram quartile summary descriptive dataset numbers analyse analyze',
     group: 'Study',
@@ -130,6 +145,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'solve',
     label: 'Work the problem',
+    short: 'Solve',
     blurb: 'The method, worked on other numbers — and your own attempt checked.',
     keywords: 'math maths solve problem set equation calculate algebra derivative statistics elasticity growth rate percentage formula step working check answer wrong show me how practice arithmetic quantitative',
     group: 'Study',
@@ -138,6 +154,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'exam',
     label: 'Practice paper',
+    short: 'Paper',
     blurb: 'A paper with a shape, a total and a clock — sat, then marked against a key.',
     keywords: 'practice test exam quiz paper mock midterm final past paper questions multiple choice short answer essay question mark marking key revision revise study test generator sit timed',
     group: 'Study',
@@ -146,6 +163,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'deck',
     label: 'Make a deck',
+    short: 'Deck',
     blurb: 'A real PowerPoint file — from a unit you have, or from a brief.',
     keywords: 'slides slideshow deck powerpoint pptx keynote google slides presentation present talk pitch briefing bullets speaker notes export slide',
     group: 'Make',
@@ -170,6 +188,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'import',
     label: 'Add a course',
+    short: 'Import',
     blurb: 'Upload a syllabus and get the course back, checked before you keep it.',
     keywords: 'new syllabus pdf upload generate create import',
     group: 'Upkeep',
@@ -182,6 +201,7 @@ export const DESTINATIONS: Destination[] = [
     // nothing.
     screen: 'edit',
     label: 'Edit the course',
+    short: 'Edit',
     blurb: 'A syllabus is a first draft — fix dates, weightings, rooms and the AI policy.',
     keywords: 'edit change fix correct course syllabus date moved weighting grading room professor email meets credits delete deadline add assignment ai policy allowed banned rules',
     group: 'Upkeep',
@@ -190,6 +210,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'registrar',
     label: 'Term deadlines',
+    short: 'Dates',
     blurb: 'Add/drop, withdrawal, registration — the dates your registrar sets, not a syllabus.',
     keywords: 'registrar term deadline add drop withdraw withdrawal pass fail audit registration enrol enroll academic calendar reading days finals exam period evaluations grades posted last day university school important dates w transcript',
     group: 'Semester',
@@ -198,6 +219,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'announce',
     label: 'Fold in an announcement',
+    short: 'Notices',
     blurb: 'Paste the email that moved a deadline, and take the changes one at a time.',
     keywords: 'announcement announce email post update moved change changed cancelled canceled postponed rescheduled deadline date shift new due date brightspace canvas notice message professor said class email paste',
     group: 'Upkeep',
@@ -206,6 +228,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'costs',
     label: 'What this term cost',
+    short: 'Costs',
     blurb: 'Books, fees and access codes, with what came back — and what the same course cost last time.',
     keywords: 'cost costs money price prices textbook textbooks book books buy rent rental sell back buyback bookstore fee fees access code clicker supplies spend spending budget expense expenses receipt total how much',
     group: 'Campus',
@@ -214,6 +237,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'groupwork',
     label: 'Group work',
+    short: 'Group',
     blurb: 'The shared list for a group project — who has which part, and whether it lands.',
     keywords: 'group groups project team partner partners case study shared checklist divide split parts sections who is doing what deliverable presentation together collaborate classmates group chat assignment split up',
     group: 'Campus',
@@ -238,6 +262,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'runway',
     label: 'Exam runway',
+    short: 'Runway',
     blurb: 'The weeks before an exam, counted backwards from it — and what stands in the way.',
     keywords: 'exam runway midterm final revision revise cram countdown prepare preparation study plan weeks before how long until ready readiness test',
     group: 'Study',
@@ -246,6 +271,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'worked',
     label: 'What worked',
+    short: 'Worked',
     blurb: 'The end of a term, read back from your own evidence — and silent where the evidence is thin.',
     keywords: 'what worked end of term semester review retrospective looking back reflection how did it go study habits pattern patterns evidence december finals over improve next term learn about myself',
     group: 'Upkeep',
@@ -254,6 +280,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'weekly',
     label: 'Weekly report',
+    short: 'Weekly',
     blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',
     keywords: 'weekly week report review recap summary sunday end of week retrospective what happened how did the week go progress last week next week',
     group: 'Upkeep',
@@ -262,6 +289,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'ahead',
     label: 'The week ahead',
+    short: 'Ahead',
     blurb: 'The next seven days in hours — what is promised, what is due, where the room is.',
     keywords: 'week ahead next seven days forecast load hours busy workload plan planning free time capacity schedule how much time commitments heaviest day room',
     group: 'Upkeep',
@@ -270,6 +298,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'check',
     label: 'Check the dates',
+    short: 'Check',
     blurb: 'Your syllabus dates against what the LMS calendar says today.',
     keywords: 'check dates changed moved deadline reconcile compare diff brightspace calendar feed ics syllabus out of date wrong date updated rescheduled verify audit',
     group: 'Upkeep',
@@ -286,6 +315,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'maps',
     label: 'Getting there',
+    short: 'Map',
     blurb: 'A map you can search — campus or the whole city — and directions to anywhere.',
     keywords: 'map maps directions route walk drive transit bus navigate campus nashville where building room address google apple search find location openstreetmap nearby',
     group: 'Campus',
@@ -310,6 +340,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'classmates',
     label: 'Classmates',
+    short: 'Class',
     blurb: 'A room per class, for everyone at Vanderbilt taking it.',
     keywords: 'classmates classmate message messages chat talk group groups room people students friends study group discussion ask class peers social connect dm',
     group: 'Campus',
@@ -318,6 +349,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'activities',
     label: 'Activities',
+    short: 'Clubs',
     blurb: 'Clubs, a job, research, a chapter, a team — and what the week really costs.',
     keywords: 'extracurricular extracurriculars activity activities club clubs organization organisation org research lab job work shift employment fraternity sorority greek chapter rush intramural im club sport varsity athletics team practice volunteer service music theatre arts anchorlink involvement commitment hours load',
     group: 'Campus',
@@ -350,6 +382,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'connect',
     label: 'Connect accounts',
+    short: 'Connect',
     blurb: 'Brightspace, Outlook, Google, Zoom, oneVU — calendars and links in.',
     keywords: 'brightspace onevu myvu yes anchorlink outlook microsoft google zoom apple icloud ics feed subscribe claude anthropic api key sign in with claude tickets game football basketball commodores vucommodores instagram twitter x social',
     group: 'Yours',
@@ -358,6 +391,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'cloud',
     label: 'Files & mail',
+    short: 'Cloud',
     blurb: 'Pull a reading out of Drive or OneDrive; turn announcements into cards.',
     keywords: 'gmail email drive onedrive sharepoint documents attachments send tasks',
     group: 'Yours',
@@ -366,6 +400,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'export',
     label: 'Take it with you',
+    short: 'Export',
     blurb: 'Download everything, or push it to Drive or OneDrive.',
     keywords: 'export download backup save csv ics markdown json zip archive google drive onedrive transfer migrate leave copy print spreadsheet excel calendar import restore',
     group: 'Yours',
