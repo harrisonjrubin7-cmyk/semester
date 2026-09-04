@@ -1,34 +1,79 @@
 import { describe, expect, it } from 'vitest';
 import {
   cleanHandle,
+  codeOf,
   eligible,
   explain,
   handleProblem,
   initials,
   normaliseCode,
+  proves,
+  roomKey,
   roomsFor,
   termLabel,
   termOf,
   whenSaid,
 } from './classmates';
+import { NO_SCHOOL, type School } from './school';
+
+const vu: School = { ...NO_SCHOOL, id: 'vanderbilt', name: 'Vanderbilt', emailDomains: ['vanderbilt.edu'] };
+const unlisted: School = { ...NO_SCHOOL, id: 'rice-university', name: 'Rice University' };
 
 describe('eligible', () => {
-  it('accepts a Vanderbilt address whatever its case', () => {
-    expect(eligible('a.b@vanderbilt.edu')).toBe(true);
-    expect(eligible('A.B@Vanderbilt.EDU')).toBe(true);
+  it('accepts an address at a domain the school lists, whatever its case', () => {
+    expect(eligible('a.b@vanderbilt.edu', vu)).toBe(true);
+    expect(eligible('A.B@Vanderbilt.EDU', vu)).toBe(true);
+    expect(eligible('me@mail.vanderbilt.edu', vu)).toBe(true);
   });
 
   it('rejects everything else, including a lookalike', () => {
-    expect(eligible('a@gmail.com')).toBe(false);
+    expect(eligible('a@gmail.com', vu)).toBe(false);
     // The classic: a domain that merely ends with the right letters.
-    expect(eligible('a@notvanderbilt.edu')).toBe(false);
-    expect(eligible('a@vanderbilt.edu.attacker.com')).toBe(false);
+    expect(eligible('a@notvanderbilt.edu', vu)).toBe(false);
+    expect(eligible('a@vanderbilt.edu.attacker.com', vu)).toBe(false);
+  });
+
+  it('admits any confirmed address at a school that lists none', () => {
+    // The alternative is refusing the whole feature to every university but
+    // one, which is what this used to do.
+    expect(eligible('a@gmail.com', unlisted)).toBe(true);
+    expect(eligible('a@rice.edu', unlisted)).toBe(true);
+  });
+
+  it('says on the screen which of the two is happening', () => {
+    expect(proves(vu)).toContain('vanderbilt.edu');
+    expect(proves(unlisted).toLowerCase()).toContain('no confirmed address domain');
+    // Neither may claim it proves an enrolment. Nothing here can read a
+    // registrar, and a room that implies a roster is the lie that matters.
+    for (const said of [proves(vu), proves(unlisted), proves(null)]) {
+      expect(said).toMatch(/say they are in|does not prove/i);
+    }
   });
 
   it('is false for nothing rather than throwing', () => {
-    expect(eligible(undefined)).toBe(false);
-    expect(eligible(null)).toBe(false);
-    expect(eligible('')).toBe(false);
+    expect(eligible(undefined, vu)).toBe(false);
+    expect(eligible(null, vu)).toBe(false);
+    expect(eligible('', vu)).toBe(false);
+  });
+});
+
+describe('a room belongs to a school', () => {
+  it('puts the school in the key', () => {
+    // Without this, four universities' ECON 1020 become one room the moment
+    // the domain gate comes off — a change that generalises the app by making
+    // it worse.
+    expect(roomKey('vanderbilt', 'econ1020')).toBe('vanderbilt/ECON 1020');
+    expect(roomKey('rice-university', 'ECON 1020')).toBe('rice-university/ECON 1020');
+    expect(roomKey('vanderbilt', 'ECON 1020')).not.toBe(roomKey('rice-university', 'ECON 1020'));
+  });
+
+  it('reads the course back out for the screen', () => {
+    expect(codeOf('vanderbilt/ECON 1020')).toBe('ECON 1020');
+    expect(codeOf('ECON 1020')).toBe('ECON 1020');
+  });
+
+  it('refuses a key for something that is not a course code', () => {
+    expect(roomKey('vanderbilt', 'Reading group')).toBe('');
   });
 });
 
@@ -143,30 +188,36 @@ describe('roomsFor', () => {
   it('offers your courses, marking the ones you are in', () => {
     // Offered rather than joined: being in a room tells other people you take
     // that class, which should be a thing you did.
-    expect(roomsFor(['ECON 1020', 'psci1104'], ['ECON 1020'])).toEqual([
-      { code: 'ECON 1020', joined: true },
-      { code: 'PSCI 1104', joined: false },
+    expect(roomsFor(['ECON 1020', 'psci1104'], ['vanderbilt/ECON 1020'], 'vanderbilt')).toEqual([
+      { key: 'vanderbilt/ECON 1020', code: 'ECON 1020', joined: true },
+      { key: 'vanderbilt/PSCI 1104', code: 'PSCI 1104', joined: false },
     ]);
   });
 
   it('keeps a room you joined that no course matches', () => {
-    const rooms = roomsFor(['ECON 1020'], ['BUS 1600']);
-    expect(rooms).toContainEqual({ code: 'BUS 1600', joined: true });
+    const rooms = roomsFor(['ECON 1020'], ['vanderbilt/BUS 1600'], 'vanderbilt');
+    expect(rooms).toContainEqual({ key: 'vanderbilt/BUS 1600', code: 'BUS 1600', joined: true });
+  });
+
+  it('does not mark you joined from another school’s room of the same name', () => {
+    // The failure the key exists to stop, seen from the client.
+    const rooms = roomsFor(['ECON 1020'], ['rice-university/ECON 1020'], 'vanderbilt');
+    expect(rooms.find((r) => r.key === 'vanderbilt/ECON 1020')?.joined).toBe(false);
   });
 
   it('does not list the same class twice', () => {
-    expect(roomsFor(['ECON 1020', 'econ 1020'], [])).toHaveLength(1);
+    expect(roomsFor(['ECON 1020', 'econ 1020'], [], 'vanderbilt')).toHaveLength(1);
   });
 
   it('drops a course whose code cannot be read', () => {
-    expect(roomsFor(['Reading group'], [])).toEqual([]);
+    expect(roomsFor(['Reading group'], [], 'vanderbilt')).toEqual([]);
   });
 });
 
 describe('explain', () => {
   it('turns a policy refusal into the thing it almost always means', () => {
     const said = explain('new row violates row-level security policy for table "messages"');
-    expect(said).toContain('vanderbilt.edu');
+    expect(said).toContain('not confirmed');
     expect(said).toContain('joined that class');
   });
 
