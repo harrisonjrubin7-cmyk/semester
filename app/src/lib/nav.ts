@@ -356,6 +356,15 @@ export const DESTINATIONS: Destination[] = [
     root: 'mine',
   },
   {
+    screen: 'degree',
+    label: 'The degree',
+    short: 'Degree',
+    blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
+    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
+    group: 'Upkeep',
+    root: 'me',
+  },
+  {
     screen: 'behind',
     label: 'When you are behind',
     short: 'Behind',

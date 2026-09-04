@@ -14,6 +14,7 @@ import { newAlarm, newTimer } from '../../lib/clocks';
 import { moveTo, newApplication } from '../../lib/apply';
 import { mark, newProgress } from '../../lib/progress';
 import { newReturned } from '../../lib/returned';
+import { newRequirement, newTaken } from '../../lib/degree';
 import { tidy } from '../../lib/windows';
 import type { Action, State } from '../shape';
 
@@ -190,6 +191,40 @@ export function mine(state: State, action: Action): State | null {
 
     case 'unmarkReturned':
       return { ...state, returned: state.returned.filter((r) => r.id !== action.id) };
+
+    // The degree, as the student recorded it. Nothing here is a template: see
+    // `lib/degree.ts` for why the app refuses to ship one.
+    case 'addRequirement':
+      return {
+        ...state,
+        requirements: [...state.requirements, newRequirement(action.patch, Date.now())],
+      };
+
+    case 'patchRequirement':
+      return {
+        ...state,
+        requirements: state.requirements.map((r) =>
+          r.id === action.id ? { ...r, ...action.patch } : r,
+        ),
+      };
+
+    case 'dropRequirement':
+      return { ...state, requirements: state.requirements.filter((r) => r.id !== action.id) };
+
+    case 'addTaken':
+      return { ...state, taken: [...state.taken, newTaken(action.patch, Date.now())] };
+
+    case 'patchTaken':
+      return {
+        ...state,
+        taken: state.taken.map((c) => (c.id === action.id ? { ...c, ...action.patch } : c)),
+      };
+
+    case 'dropTaken':
+      return { ...state, taken: state.taken.filter((c) => c.id !== action.id) };
+
+    case 'setScale':
+      return { ...state, scale: action.scale };
 
     case 'setRegradeWindow':
       return {

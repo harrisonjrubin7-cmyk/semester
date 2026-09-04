@@ -33,6 +33,7 @@ import { readApplications, type Application, type Stage } from '../lib/apply';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
 import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
+import { COMMON_SCALE, readRequirements, readTaken, type Requirement, type Scale, type Taken } from '../lib/degree';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
@@ -121,6 +122,16 @@ export interface Persisted {
    * nothing leaves the device.
    */
   geocode: Geocode;
+  /**
+   * The degree, as *you* recorded it — see `lib/degree.ts`. There is no
+   * built-in list of requirements and there will not be one: they are specific
+   * to a university, a college and a catalogue year, and a confidently wrong
+   * one is found out in a final year when nothing can be done.
+   */
+  requirements: Requirement[];
+  taken: Taken[];
+  /** Letter grades to points. Entered, because plus and minus values differ. */
+  scale: Scale;
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
@@ -456,6 +467,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   returned: [],
   regradeWindows: {},
   geocode: { on: false, reverseOn: false, service: 'nominatim' },
+  requirements: [],
+  taken: [],
+  scale: { ...COMMON_SCALE },
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
@@ -590,6 +604,12 @@ export function loadPersisted(): Persisted {
       returned: readReturned(saved.returned),
       regradeWindows: readWindows(saved.regradeWindows),
       geocode: readGeocode(saved.geocode),
+      requirements: readRequirements(saved.requirements),
+      taken: readTaken(saved.taken),
+      scale:
+        saved.scale && typeof saved.scale === 'object' && Object.keys(saved.scale).length > 0
+          ? (saved.scale as Scale)
+          : { ...COMMON_SCALE },
       feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
@@ -680,6 +700,9 @@ export function pickPersisted(state: State): Persisted {
     returned: state.returned,
     regradeWindows: state.regradeWindows,
     geocode: state.geocode,
+    requirements: state.requirements,
+    taken: state.taken,
+    scale: state.scale,
     feedOrder: state.feedOrder,
     tabs: state.tabs,
     yours: state.yours,
@@ -756,6 +779,13 @@ export type Action =
   | { type: 'unmarkReturned'; id: string }
   | { type: 'setRegradeWindow'; courseId: string; window: RegradeWindow }
   | { type: 'setGeocode'; patch: Partial<Geocode> }
+  | { type: 'addRequirement'; patch: Partial<Requirement> }
+  | { type: 'patchRequirement'; id: string; patch: Partial<Requirement> }
+  | { type: 'dropRequirement'; id: string }
+  | { type: 'addTaken'; patch: Partial<Taken> }
+  | { type: 'patchTaken'; id: string; patch: Partial<Taken> }
+  | { type: 'dropTaken'; id: string }
+  | { type: 'setScale'; scale: Scale }
   | { type: 'quickAdd'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }

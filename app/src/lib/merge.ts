@@ -132,6 +132,12 @@ export const STRATEGY: Record<string, Strategy> = {
   // A consent, and consent given on one device is consent given. `theirs`
   // rather than `mine` so turning it off anywhere turns it off everywhere.
   geocode: 'theirs',
+  // Four years of transcript, not one term's. Losing a row here is losing work
+  // that cannot be re-imported from anywhere.
+  requirements: 'union',
+  taken: 'union',
+  // A grading scale is one table about one university, not a list to add to.
+  scale: 'theirs',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',
