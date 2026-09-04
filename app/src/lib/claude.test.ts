@@ -223,3 +223,66 @@ describe('what actually goes on the wire', () => {
     expect(chunks.join('')).toBe('{"items":[]}');
   });
 });
+
+describe('a tool the model wants to use', () => {
+  const toolStart = (id: string, name: string) => ({
+    type: 'content_block_start',
+    content_block: { type: 'tool_use', id, name, input: {} },
+  });
+  const args = (partial_json: string) => ({
+    type: 'content_block_delta',
+    delta: { type: 'input_json_delta', partial_json },
+  });
+  const blockStop = { type: 'content_block_stop' };
+
+  it('reassembles arguments that arrive in pieces', async () => {
+    // The JSON streams as fragments; parsing before the block closes gets a
+    // syntax error on half an object.
+    catchRequest([
+      said('Ticking that off.'),
+      toolStart('toolu_1', 'tick_deadline'),
+      args('{"id":"eco'),
+      args('n-ps4","title":"Pro'),
+      args('blem Set 4"}'),
+      blockStop,
+    ]);
+
+    const calls: unknown[] = [];
+    await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'done with PS4' }],
+      tools: [
+        {
+          name: 'tick_deadline',
+          description: 'x',
+          input_schema: { type: 'object', properties: {} },
+        },
+      ],
+      onToolUse: (c) => calls.push(c),
+    });
+
+    expect(calls).toEqual([
+      { id: 'toolu_1', name: 'tick_deadline', input: { id: 'econ-ps4', title: 'Problem Set 4' } },
+    ]);
+    expect((sent!.body.tools as unknown[]).length).toBe(1);
+  });
+
+  it('drops a call whose arguments did not survive the stream', async () => {
+    // Acting on a half-read instruction is the one outcome worse than not
+    // acting at all.
+    catchRequest([toolStart('toolu_2', 'tick_deadline'), args('{"id":"eco'), blockStop]);
+    const calls: unknown[] = [];
+    await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      onToolUse: (c) => calls.push(c),
+    });
+    expect(calls).toEqual([]);
+  });
+
+  it('sends no tools when none were offered', async () => {
+    catchRequest([said('ok')]);
+    await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(sent!.body).not.toHaveProperty('tools');
+  });
+});

@@ -287,6 +287,16 @@ interface AskOptions {
   /** Told about each citation as it arrives. */
   onCitation?: (c: Citation) => void;
   /**
+   * Tools the model may propose using.
+   *
+   * Proposals only. Nothing here executes anything — `ask` collects the calls
+   * and hands them back, and the screen decides what to show and what to ask
+   * before any of it touches the student's semester. See `lib/tools.ts`.
+   */
+  tools?: ToolSpec[];
+  /** Told about each tool the model wants to use, once its arguments are whole. */
+  onToolUse?: (call: ToolCall) => void;
+  /**
    * Cache the system prompt.
    *
    * Worth it wherever the same large block of course material opens every
@@ -326,6 +336,22 @@ type Block =
       title?: string;
       citations?: { enabled: true };
     };
+
+/** A tool as the API is told about it. */
+export interface ToolSpec {
+  name: string;
+  description: string;
+  input_schema: { type: 'object'; properties: Record<string, unknown>; required?: string[] };
+  /** Guarantees the arguments validate against the schema. */
+  strict?: boolean;
+}
+
+/** A tool the model wants to use, with the arguments it chose. */
+export interface ToolCall {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+}
 
 /**
  * A citation as the wire sends it.
@@ -465,6 +491,7 @@ export async function ask(options: AskOptions): Promise<string> {
           : options.system,
         stream: true,
         ...(options.think ? { thinking: { type: 'adaptive' } } : {}),
+        ...(options.tools?.length ? { tools: options.tools } : {}),
         messages: withAttachments(options.messages, options.images, options.docs, options.cite),
       }),
     });
@@ -489,6 +516,15 @@ export async function ask(options: AskOptions): Promise<string> {
   let buffer = '';
   let text = '';
 
+  /**
+   * The tool call currently arriving.
+   *
+   * Arguments stream in as fragments of JSON across many events, so a call is
+   * only whole at `content_block_stop`. Parsing early gets a syntax error on
+   * half an object; handing a half-parsed one to a screen would be worse.
+   */
+  let building: { id: string; name: string; json: string } | null = null;
+
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -503,8 +539,38 @@ export async function ask(options: AskOptions): Promise<string> {
       try {
         const event = JSON.parse(payload) as {
           type: string;
-          delta?: { type?: string; text?: string; citation?: RawCitation };
+          content_block?: { type?: string; id?: string; name?: string };
+          delta?: {
+            type?: string;
+            text?: string;
+            citation?: RawCitation;
+            partial_json?: string;
+          };
         };
+
+        if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use') {
+          building = {
+            id: event.content_block.id ?? '',
+            name: event.content_block.name ?? '',
+            json: '',
+          };
+        }
+        if (event.type === 'content_block_delta' && typeof event.delta?.partial_json === 'string') {
+          if (building) building.json += event.delta.partial_json;
+        }
+        if (event.type === 'content_block_stop' && building) {
+          const done = building;
+          building = null;
+          try {
+            // Never string-match a serialised tool input: escaping varies.
+            const input = done.json ? (JSON.parse(done.json) as Record<string, unknown>) : {};
+            if (done.name) options.onToolUse?.({ id: done.id, name: done.name, input });
+          } catch {
+            // Arguments that did not survive the stream. Dropping the call is
+            // right: acting on a half-read instruction is the one outcome
+            // worse than not acting.
+          }
+        }
         if (event.type === 'content_block_delta' && event.delta?.text) {
           text += event.delta.text;
           options.onText?.(event.delta.text);

@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { proposalsLine, readProposal, TOOLS, type Proposal } from '../lib/tools';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -30,14 +31,35 @@ export function Ask() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [made, setMade] = useState(0);
+  /**
+   * What Claude has offered to do, waiting on a tap.
+   *
+   * Cleared at the start of every question: an offer from three turns ago is
+   * an offer about a state of the world that has moved on.
+   */
+  const [proposals, setProposals] = useState<Proposal[]>([]);
   const abort = useRef<AbortController | null>(null);
+
+  /**
+   * The deadlines this course still has, with their ids.
+   *
+   * The ids go into the prompt because a tool call has to name one — and
+   * every id that comes back is checked against this same list before it
+   * becomes a button, so an invented one produces nothing. See `lib/tools.ts`.
+   */
+  const dueNow = useMemo(
+    () =>
+      datedItems(catalog, now)
+        .filter((i) => i.c === courseId && !i.isPast)
+        .slice(0, 6)
+        .map((i) => ({ id: i.id, title: i.title, mon: i.mon, day: i.day, weight: i.weight })),
+    [catalog, now, courseId],
+  );
 
   // The course, compressed enough to send and specific enough to be useful.
   const context = useMemo(() => {
-    const due = datedItems(catalog, now)
-      .filter((i) => i.c === courseId && !i.isPast)
-      .slice(0, 6)
-      .map((i) => `- ${i.title} · ${i.mon} ${i.day} · ${i.weight}`)
+    const due = dueNow
+      .map((i) => `- [${i.id}] ${i.title} · ${i.mon} ${i.day} · ${i.weight}`)
       .join('\n');
     const units = guide.units
       .map(
@@ -47,13 +69,16 @@ export function Ask() {
       )
       .join('\n');
     return `${guide.code} — ${guide.name}\n${guide.blurb}\n\nUpcoming:\n${due || '- nothing left'}\n\nUnits:\n${units}`;
-  }, [guide, courseId, now]);
+  }, [guide, dueNow]);
 
   const system =
     'You are helping a Vanderbilt undergraduate study one specific course. ' +
     'The course guide below is the material they are being examined on — prefer it over general knowledge, ' +
     'and say so when the guide does not cover something. Be specific: numbers, names, mechanisms. ' +
-    'Short paragraphs, no filler, no restating the question.\n\n' +
+    'Short paragraphs, no filler, no restating the question. ' +
+    'Each deadline below carries its id in brackets; use those ids when a tool needs one, ' +
+    'and never invent one. Offer a tool only when the student has actually asked for the thing ' +
+    'it does — an unasked-for offer is noise they have to dismiss.\n\n' +
     context;
 
   const send = async (text: string) => {
@@ -63,6 +88,7 @@ export function Ask() {
     setDraft('');
     setStreaming('');
     setError('');
+    setProposals([]);
     setBusy(true);
     abort.current = new AbortController();
     let sofar = '';
@@ -77,6 +103,14 @@ export function Ask() {
         // whole thing. A short course will not reach the minimum cacheable
         // length and simply will not cache, which costs nothing.
         cache: true,
+        // Proposals only. `readProposal` re-checks every argument against
+        // what the app actually holds, and nothing runs until it is tapped.
+        // See `lib/tools.ts`.
+        tools: TOOLS,
+        onToolUse: (call) => {
+          const p = readProposal(call, { deadlines: dueNow });
+          if (p) setProposals((was) => (was.some((q) => q.id === p.id) ? was : [...was, p]));
+        },
         signal: abort.current.signal,
         onText: (chunk) => {
           sofar += chunk;
@@ -400,6 +434,52 @@ export function Ask() {
           </div>
         )}
       </div>
+
+      {/* What it has offered to do. Nothing here has happened: each line says
+          exactly what its button will change, and the button is the only
+          thing that changes it. See `lib/tools.ts`. */}
+      {proposals.length > 0 && !busy && (
+        <div
+          style={{
+            marginTop: 14,
+            padding: '11px 13px',
+            borderRadius: 'var(--r-md)',
+            border: '1px solid var(--app-line)',
+            background: 'var(--app-panel)',
+          }}
+        >
+          <div className="kicker">{proposalsLine(proposals)}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 9 }}>
+            {proposals.map((p) => (
+              <div key={p.id} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, lineHeight: 1.4 }}>
+                  {p.said}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    dispatch(p.action);
+                    setProposals((was) => was.filter((q) => q.id !== p.id));
+                  }}
+                  style={{ flex: 'none', height: 34, fontSize: 12 }}
+                >
+                  {p.verb}
+                </button>
+                <button
+                  type="button"
+                  className="bare"
+                  aria-label={`Dismiss: ${p.said}`}
+                  onClick={() => setProposals((was) => was.filter((q) => q.id !== p.id))}
+                  style={{ flex: 'none', width: 22, opacity: 0.4, fontSize: 14 }}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && (
         <div
