@@ -70,7 +70,13 @@ export function settings(state: State, action: Action): State | null {
     // report for the same id replaces the first rather than counting twice,
     // so tapping the wrong bucket is a fixable mistake.
     case 'timeSpent': {
-      const row = record(action.id, action.courseId, action.kind, action.bucketId, Date.now());
+      const row = record(
+        action.id,
+        action.courseId,
+        action.kind,
+        action.minutes ?? action.bucketId ?? '',
+        Date.now(),
+      );
       if (!row) return state;
       return { ...state, spent: [...state.spent.filter((s) => s.id !== action.id), row] };
     }

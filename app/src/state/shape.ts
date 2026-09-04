@@ -684,7 +684,15 @@ export type Action =
   | { type: 'addCourse'; module: CourseModule }
   | { type: 'replaceCourse'; module: CourseModule }
   | { type: 'removeCourse'; id: CourseId }
-  | { type: 'timeSpent'; id: string; courseId: string; kind: string; bucketId: string }
+  | {
+      type: 'timeSpent';
+      id: string;
+      courseId: string;
+      kind: string;
+      /** A tapped bucket, or measured minutes from a timed session. */
+      bucketId?: string;
+      minutes?: number;
+    }
   | { type: 'addWindow'; window: Omit<Window, 'id'> }
   | { type: 'patchWindow'; id: string; patch: Partial<Window> }
   | { type: 'dropWindow'; id: string }

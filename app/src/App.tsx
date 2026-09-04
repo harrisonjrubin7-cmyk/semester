@@ -59,6 +59,7 @@ import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
 import { litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
+import { Running } from './components/Running';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import type { Screen } from './lib/types';
@@ -271,7 +272,10 @@ function Header() {
       </div>
 
       {showActions && (
-        <div style={{ display: 'flex', gap: 2, flex: 'none' }}>
+        <div style={{ display: 'flex', gap: 2, flex: 'none', alignItems: 'center' }}>
+          {/* Before the icons, because it is the only thing here that is
+              counting. Renders nothing at all unless a timer is running. */}
+          <Running />
           <button
             type="button"
             className="btn btn-ghost btn-icon"

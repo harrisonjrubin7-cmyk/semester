@@ -178,17 +178,30 @@ export function askAbout(spent: Spent[], id: string, courseId: string, kind: str
   return spent.filter((s) => s.courseId === courseId && s.kind === k).length < 5;
 }
 
-/** A record, from a tapped bucket. Returns null for a bucket that is not one. */
+/**
+ * A record, from a tapped bucket or a measured session.
+ *
+ * A bucket id becomes its bucket's minutes; a number is taken as measured.
+ * The two are the same shape on purpose — `estimate` takes a median and does
+ * not care where a figure came from, so a term with some timed sessions and
+ * some tapped buckets is better served than one with either alone.
+ *
+ * Returns null for a bucket that is not one, and for a measured figure that
+ * is not a positive finite number of minutes. A stopped clock, a device whose
+ * time moved backwards, or a hand-edited store all arrive here, and any of
+ * them would sit in the median for the rest of the term.
+ */
 export function record(
   id: string,
   courseId: string,
   kind: string,
-  bucketId: string,
+  from: string | number,
   at: number,
 ): Spent | null {
-  const b = bucket(bucketId);
-  if (!b) return null;
-  return { id, courseId, kind: normalKind(kind), minutes: b.minutes, at };
+  const minutes =
+    typeof from === 'number' ? from : bucket(from)?.minutes;
+  if (typeof minutes !== 'number' || !Number.isFinite(minutes) || minutes <= 0) return null;
+  return { id, courseId, kind: normalKind(kind), minutes: Math.round(minutes), at };
 }
 
 /**

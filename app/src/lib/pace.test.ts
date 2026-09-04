@@ -234,3 +234,35 @@ describe('saying a span', () => {
     expect(showSpan(0)).toBe('no time');
   });
 });
+
+describe('a measured session, not a tapped bucket', () => {
+  it('records the minutes it was given', () => {
+    // The timer in `lib/session.ts` measures rather than guesses, and lands in
+    // the same list, so a median can be drawn from both.
+    expect(record('econ-ps1', 'econ', 'Problem set', 73, 1_000)).toEqual({
+      id: 'econ-ps1',
+      courseId: 'econ',
+      kind: normalKind('Problem set'),
+      minutes: 73,
+      at: 1_000,
+    });
+  });
+
+  it('rounds to a whole minute', () => {
+    expect(record('x', 'econ', 'Reading', 12.6, 1)?.minutes).toBe(13);
+  });
+
+  it('refuses a figure that would sit in the median for the rest of the term', () => {
+    // A stopped clock, a device whose time moved backwards, a hand-edited
+    // store. All arrive here looking like a number.
+    expect(record('x', 'econ', 'Reading', 0, 1)).toBeNull();
+    expect(record('x', 'econ', 'Reading', -30, 1)).toBeNull();
+    expect(record('x', 'econ', 'Reading', Number.NaN, 1)).toBeNull();
+    expect(record('x', 'econ', 'Reading', Number.POSITIVE_INFINITY, 1)).toBeNull();
+  });
+
+  it('still takes a bucket id', () => {
+    expect(record('x', 'econ', 'Reading', 'hour', 1)?.minutes).toBe(60);
+    expect(record('x', 'econ', 'Reading', 'nonesuch', 1)).toBeNull();
+  });
+});

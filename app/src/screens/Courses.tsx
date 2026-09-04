@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { nameFor, renamed, tintFor } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
+import { Timer } from '../components/Timer';
 import { DropBy } from '../components/DropBy';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
@@ -604,7 +605,14 @@ export function ItemDetail() {
           Study
         </button>
       </div>
-      {done && <HowLong id={item.id} courseId={item.c} kind={item.kind} />}
+      {/* Before it is ticked, a clock you can start. After, the question you
+          can answer in one tap. The same measurement either way, and neither
+          appears once this piece of work has a time against it. */}
+      {done ? (
+        <HowLong id={item.id} courseId={item.c} kind={item.kind} />
+      ) : (
+        <Timer id={item.id} courseId={item.c} kind={item.kind} title={item.title} />
+      )}
       <div style={{ height: 22 }} />
     </div>
   );
