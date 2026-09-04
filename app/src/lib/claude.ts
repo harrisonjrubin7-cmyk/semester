@@ -297,6 +297,18 @@ interface AskOptions {
   /** Told about each tool the model wants to use, once its arguments are whole. */
   onToolUse?: (call: ToolCall) => void;
   /**
+   * Constrain the shape of the reply.
+   *
+   * The alternative — asking for JSON in a prompt and finding it in prose —
+   * works and has a defensive parser behind it, but it fails in the one way
+   * that is hardest to see: a reply that is *nearly* the right shape.
+   *
+   * Incompatible with `cite`. A request carrying both is refused by the API,
+   * so the syllabus extractor keeps its parser and its citations, and this is
+   * for the paths that have no document to cite.
+   */
+  format?: { type: 'json_schema'; schema: Record<string, unknown> };
+  /**
    * Cache the system prompt.
    *
    * Worth it wherever the same large block of course material opens every
@@ -336,6 +348,17 @@ type Block =
       title?: string;
       citations?: { enabled: true };
     };
+
+/**
+ * Whether a route has already told us it will not take a constrained shape.
+ *
+ * Set once, for the session, when a request carrying `output_config` comes
+ * back rejected. Everything downstream already parses JSON out of prose, so
+ * the retry costs one round trip and then behaves exactly as the app did
+ * before structured outputs existed — rather than a feature that fails on
+ * every call against a gateway that does not pass the parameter through.
+ */
+let structuredRefused = false;
 
 /** A tool as the API is told about it. */
 export interface ToolSpec {
@@ -492,6 +515,11 @@ export async function ask(options: AskOptions): Promise<string> {
         stream: true,
         ...(options.think ? { thinking: { type: 'adaptive' } } : {}),
         ...(options.tools?.length ? { tools: options.tools } : {}),
+        // Never both: the API refuses a request that asks for citations and a
+        // constrained shape at once, and the citations are worth more.
+        ...(options.format && !options.cite && !structuredRefused
+          ? { output_config: { format: options.format } }
+          : {}),
         messages: withAttachments(options.messages, options.images, options.docs, options.cite),
       }),
     });
@@ -508,6 +536,15 @@ export async function ask(options: AskOptions): Promise<string> {
     } catch {
       /* keep the status */
     }
+    // A route that will not take a constrained shape says so with a 400
+    // naming the parameter. Remember it and try once more without — the
+    // callers all parse JSON out of prose anyway, so the only cost is a round
+    // trip, and the alternative is a feature that fails on every call.
+    if (res.status === 400 && options.format && !structuredRefused && /output_config|format/i.test(detail)) {
+      structuredRefused = true;
+      return ask(options);
+    }
+
     throw new Error(explainAskError(taking, res.status, detail));
   }
 
@@ -611,6 +648,28 @@ export async function makeCards(
     signal,
     maxTokens: 2000,
     cache: true,
+    // The one path with no document to cite, so nothing is given up by
+    // constraining the shape. The parser below stays either way: it is what
+    // runs when a gateway will not pass the parameter through.
+    format: {
+      type: 'json_schema',
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['cards'],
+        properties: {
+          cards: {
+            type: 'array',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              required: ['q', 'a'],
+              properties: { q: { type: 'string' }, a: { type: 'string' } },
+            },
+          },
+        },
+      },
+    },
     system:
       'You write study cards for a university student, from material they give you. ' +
       'Reply with JSON only: {"cards":[{"q":"…","a":"…"}]}. ' +

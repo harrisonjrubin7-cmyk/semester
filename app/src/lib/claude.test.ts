@@ -286,3 +286,57 @@ describe('a tool the model wants to use', () => {
     expect(sent!.body).not.toHaveProperty('tools');
   });
 });
+
+describe('a constrained reply shape', () => {
+  const schema = {
+    type: 'json_schema' as const,
+    schema: { type: 'object', properties: { cards: { type: 'array' } } },
+  };
+
+  it('is asked for when there is nothing to cite', async () => {
+    catchRequest([said('{"cards":[]}')]);
+    await ask({ system: 's', messages: [{ role: 'user', content: 'q' }], format: schema });
+    expect(sent!.body.output_config).toEqual({ format: schema });
+  });
+
+  it('gives way to citations, which are worth more', async () => {
+    // A request carrying both is refused outright, so the choice has to be
+    // made before it is sent rather than discovered as an error.
+    catchRequest([said('ok')]);
+    await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      format: schema,
+      cite: true,
+      docs: [{ mediaType: 'application/pdf', data: 'x' }],
+    });
+    expect(sent!.body).not.toHaveProperty('output_config');
+  });
+
+  it('drops it for the session when a route refuses it, and still answers', async () => {
+    // A gateway that will not pass the parameter through would otherwise fail
+    // every call. One round trip, then it behaves as it did before.
+    let attempt = 0;
+    vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+      attempt += 1;
+      sent = { url: String(url), body: JSON.parse(String(init.body)) };
+      if (attempt === 1) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ error: { message: 'output_config: unsupported' } }), {
+            status: 400,
+          }),
+        );
+      }
+      return Promise.resolve(stream([said('{"cards":[]}')]));
+    });
+
+    const text = await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      format: schema,
+    });
+    expect(attempt).toBe(2);
+    expect(text).toBe('{"cards":[]}');
+    expect(sent!.body).not.toHaveProperty('output_config');
+  });
+});
