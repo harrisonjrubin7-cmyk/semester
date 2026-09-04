@@ -507,8 +507,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // screen you left the app on — and it is the count you can act on, never a
   // tally of notifications. See `lib/device.ts`.
   useEffect(() => {
-    badge(itemsDueToday(catalog, now).filter((i) => !state.done[i.id]).length);
-  }, [catalog, now, state.done]);
+    // "None" means none, including the one on the installed icon — that is
+    // the badge people actually mean when they say they want them off.
+    // "Everything" and "Only what is due" are the same number here: the icon
+    // has only ever carried a count you can act on today, never a tally.
+    badge(
+      state.badges === 'none'
+        ? 0
+        : itemsDueToday(catalog, now).filter((i) => !state.done[i.id]).length,
+    );
+  }, [catalog, now, state.done, state.badges]);
 
   const value = useMemo(
     () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh }),

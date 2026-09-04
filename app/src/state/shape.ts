@@ -296,7 +296,17 @@ export interface Persisted {
   ground: string;
   density: string;
   corners: string;
+  /** The heading face. The body face is separate — see `bodyface`. */
   typeface: string;
+  bodyface: string;
+  lineHeight: string;
+  readingWidth: string;
+  iconShape: string;
+  labels: string;
+  badges: string;
+  feed: string;
+  /** A dragged accent hue, 0–360, or -1 for "use the named accent". */
+  hue: number;
   /**
    * Whether the ten ways to study stay unrolled on a guide.
    *
@@ -541,6 +551,14 @@ export const DEFAULT_PERSISTED: Persisted = {
   density: 'comfortable',
   corners: 'drawn',
   typeface: 'condensed',
+  bodyface: 'barlow',
+  lineHeight: 'normal',
+  readingWidth: 'normal',
+  iconShape: 'none',
+  labels: 'on',
+  badges: 'due',
+  feed: 'cards',
+  hue: -1,
 };
 
 /** The look, gathered off the state it is spread across. */
@@ -552,6 +570,14 @@ export function currentLook(state: Persisted): Look {
     density: state.density,
     corners: state.corners,
     typeface: state.typeface,
+    bodyface: state.bodyface,
+    lineHeight: state.lineHeight,
+    readingWidth: state.readingWidth,
+    iconShape: state.iconShape,
+    labels: state.labels,
+    badges: state.badges,
+    feed: state.feed,
+    hue: state.hue,
   };
 }
 
@@ -698,14 +724,10 @@ export function loadPersisted(): Persisted {
       residences: saved.residences ?? [],
       accessLeadDays: saved.accessLeadDays ?? 0,
       tickedAt: saved.tickedAt ?? {},
-      ...readLook({
-        accent: saved.accent,
-        textSize: saved.textSize,
-        ground: saved.ground,
-        density: saved.density,
-        corners: saved.corners,
-        typeface: saved.typeface,
-      }),
+      // Every field readLook knows about, handed straight through. Naming
+      // them one by one here is how a new control gets added, saved, and then
+      // silently dropped on the next reload.
+      ...readLook(saved as Look),
     };
   } catch {
     // A private window, or storage disabled. Run with defaults.
@@ -789,6 +811,14 @@ export function pickPersisted(state: State): Persisted {
     density: state.density,
     corners: state.corners,
     typeface: state.typeface,
+    bodyface: state.bodyface,
+    lineHeight: state.lineHeight,
+    readingWidth: state.readingWidth,
+    iconShape: state.iconShape,
+    labels: state.labels,
+    badges: state.badges,
+    feed: state.feed,
+    hue: state.hue,
   };
 }
 

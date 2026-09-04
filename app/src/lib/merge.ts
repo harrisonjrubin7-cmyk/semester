@@ -86,9 +86,27 @@ export const STRATEGY: Record<string, Strategy> = {
   ground: 'theirs',
   corners: 'theirs',
   typeface: 'theirs',
+  iconShape: 'theirs',
+  // The accent hue travels with the accent it replaces, or the two would
+  // disagree about what colour the app is.
+  hue: 'theirs',
+  // A body face is chosen for how it reads, which is a fact about the person
+  // rather than about the screen — somebody who picked Hyperlegible because
+  // reading is tiring wants it on the laptop too.
+  bodyface: 'theirs',
+  // How you want your day drawn, and how loudly the app may claim your
+  // attention. Both about you.
+  feed: 'theirs',
+  badges: 'theirs',
   // Ergonomics: about the screen in front of you, not about you. See `mine`.
   textSize: 'mine',
   density: 'mine',
+  // The same three-way split as textSize. A comfortable measure on a laptop is
+  // not one on a phone, and tab labels are height a small screen wants back
+  // and a large one does not.
+  lineHeight: 'mine',
+  readingWidth: 'mine',
+  labels: 'mine',
   // An arrangement rather than a list you add to — merging two orderings
   // would produce an order neither device chose.
   feedOrder: 'theirs',

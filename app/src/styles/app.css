@@ -156,6 +156,10 @@ a:hover {
   color: var(--app-fg);
   font-family: var(--font-body);
   font-size: 15px;
+  /* Set once here so every screen inherits it. Components that need a tighter
+     line for their own reason still override locally; what this fixes is the
+     hundred places that were relying on the browser default. */
+  line-height: var(--line-height, 1.55);
   overflow: hidden;
   isolation: isolate;
 }
@@ -794,4 +798,27 @@ a:hover {
 .leaflet-popup-content {
   margin: 9px 12px;
   font-size: 13px;
+}
+
+
+/*
+ * The measure, on the screens that are actually read.
+ *
+ * Not applied globally: a list of deadlines is scanned, not read, and capping
+ * it at 66 characters would leave a column of white space beside every row on
+ * a laptop for no gain. Long-form screens opt in by adding `prose` to their
+ * container. `none` — the "Full" setting — resolves to no cap at all.
+ */
+.prose {
+  max-width: var(--reading-width, 66ch);
+}
+
+/*
+ * The shape behind a tab or list glyph.
+ *
+ * `--icon-radius` is 0 for "None", which with no background paints nothing —
+ * so the shape only appears where a background is also set.
+ */
+.iconshape {
+  border-radius: var(--icon-radius, 0);
 }

@@ -30,7 +30,10 @@ export function Guide() {
   const here = modeInfo(modes, state.mode);
 
   return (
-    <div style={{ padding: 18 }}>
+    // `prose` caps the measure at whatever "Reading width" is set to. The
+    // guide is the longest thing in the app, so it is the screen the setting
+    // exists for.
+    <div className="prose" style={{ padding: 18 }}>
       {/* The field guide opens with its own masthead carrying both of these,
           so repeating them above it just pushes the document down. */}
       {state.mode !== 'field' && (

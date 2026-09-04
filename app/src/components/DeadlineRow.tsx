@@ -17,6 +17,18 @@ import type { DatedItem } from '../lib/types';
  * It lives here rather than in a screen because the calendar and the course
  * page were each drawing their own version of this row, and each one had
  * quietly forgotten to show whether the thing was done.
+ *
+ * ## Three ways of drawing it
+ *
+ * `state.feed` is Cards, Compact rows, or Timeline — three genuinely different
+ * readings of the same day rather than three skins. Cards separate things and
+ * are easiest to tap; rows fit roughly twice as much on a screen, which matters
+ * on a heavy Tuesday; the timeline puts everything on one vertical line in due
+ * order, which is the only one of the three that shows the *gaps*.
+ *
+ * The choice is applied here, once, rather than in each screen — the calendar
+ * and the course page use this row too, and a setting that only worked on Today
+ * would be a setting people report as broken.
  */
 export function DeadlineRow({
   item,
@@ -34,6 +46,9 @@ export function DeadlineRow({
   const { state, dispatch, catalog } = useStore();
   const done = !!state.done[item.id];
   const late = tone === 'overdue';
+  const style = state.feed;
+  const tight = style === 'rows';
+  const pad = tight ? '8px 0' : '13px 0';
 
   const marker =
     trail === undefined ? (late ? lateBy(item) : item.daysAway === 0 ? 'today' : `${item.daysAway}d`) : trail;
@@ -44,7 +59,27 @@ export function DeadlineRow({
         display: 'flex',
         gap: 10,
         alignItems: 'center',
-        borderBottom: '1px solid var(--app-line)',
+        // Cards get their own edge and a gap; rows and the timeline share one
+        // hairline, which is what lets twice as many fit.
+        ...(style === 'cards'
+          ? {
+              background: 'var(--app-panel)',
+              border: '1px solid var(--app-line)',
+              borderRadius: 'var(--r-md)',
+              padding: '0 12px',
+              marginBottom: 8,
+            }
+          : { borderBottom: '1px solid var(--app-line)' }),
+        ...(style === 'timeline'
+          ? {
+              // The line itself, drawn as a left border on every row so it is
+              // continuous down the list without a wrapper element that each
+              // caller would have to remember to add.
+              borderLeft: '2px solid var(--app-line)',
+              marginLeft: 7,
+              paddingLeft: 12,
+            }
+          : {}),
       }}
     >
       <button
@@ -52,7 +87,7 @@ export function DeadlineRow({
         className="bare tappable"
         onClick={() => dispatch({ type: 'toggleDone', id: item.id })}
         aria-label={done ? `Mark ${item.title} not done` : `Mark ${item.title} done`}
-        style={{ flex: 'none', padding: '13px 2px 13px 0', width: 30 }}
+        style={{ flex: 'none', padding: tight ? '8px 2px 8px 0' : '13px 2px 13px 0', width: 30 }}
       >
         <TickBox on={done} />
       </button>
@@ -66,7 +101,7 @@ export function DeadlineRow({
           display: 'flex',
           gap: 10,
           alignItems: 'center',
-          padding: '13px 0',
+          padding: pad,
           textAlign: 'left',
           opacity: done ? 0.45 : 1,
         }}
@@ -85,7 +120,19 @@ export function DeadlineRow({
           >
             {item.title}
           </span>
-          <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+          <span
+            style={{
+              display: 'block',
+              fontSize: 'calc(11px * var(--text-scale, 1))',
+              opacity: 0.55,
+              marginTop: tight ? 0 : 2,
+              // On one line in compact rows. Dropped entirely would be a
+              // deadline with no date on it, which is not "compact".
+              whiteSpace: tight ? 'nowrap' : undefined,
+              overflow: tight ? 'hidden' : undefined,
+              textOverflow: tight ? 'ellipsis' : undefined,
+            }}
+          >
             {meta ?? (
               <>
                 {item.dueShort} · {item.kind}

@@ -132,7 +132,7 @@ export function Essay() {
   const title = purpose.trim() || `${u.label}${audience.trim() ? ` · ${audience.trim()}` : ''}`;
 
   return (
-    <div style={{ padding: 18 }}>
+    <div className="prose" style={{ padding: 18 }}>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         A real draft, for the writing that is not coursework — the cover letter, the club
         newsletter, the scholarship statement, the memo. For a class, the project file under

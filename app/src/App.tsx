@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { useStore } from './state/store';
+import { currentLook } from './state/shape';
 import {
   Bell,
   Check,
@@ -10,7 +11,7 @@ import {
 } from './components/Icons';
 import { Onboarding } from './screens/Onboarding';
 import { Today } from './screens/Today';
-import { scaleOf, tokensFor } from './lib/look';
+import { scaleOf, tokensFor, type Look } from './lib/look';
 
 /**
  * Every screen but the first, fetched when it is opened.
@@ -428,6 +429,7 @@ function TabBar() {
   // hold a screen and the tab it files under at the same time.
   const tabs = state.tabs;
   const here = litTab(state.screen, tabs);
+  const labelled = state.labels !== 'off';
 
   return (
     <nav className="safe-bottom app-tabs">
@@ -441,6 +443,7 @@ function TabBar() {
             key={id}
             type="button"
             className="bare"
+            aria-label={labelled ? undefined : label}
             onClick={() => {
               // Tapping the tab you are already on goes to the top. That is
               // what every phone does, and it is the only way back up a long
@@ -466,7 +469,7 @@ function TabBar() {
               fontFamily: 'var(--font-heading)',
             }}
           >
-            <TabGlyph screen={id} size={19} />
+            <TabGlyph screen={id} size={labelled ? 19 : 23} />
             {/* Seven tabs across 402px leaves about 57px each, and "CALENDAR"
                 at the old tracking was wider than that — it would have wrapped
                 to two lines and made the bar taller on every screen. Tighter
@@ -474,17 +477,23 @@ function TabBar() {
                 them, and nowrap makes a future overflow visible rather than
                 silently restacking. `tabLabel` is what keeps a chosen screen
                 inside that budget: the directory's own "Fold in an
-                announcement" would not go here, so it has a short name. */}
-            <span
-              style={{
-                fontSize: 'calc(9px * var(--text-scale, 1))',
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {label}
-            </span>
+                announcement" would not go here, so it has a short name.
+
+                With labels off the glyph grows to take some of the room back
+                and the name moves to `aria-label`, so the bar is quieter on
+                screen and unchanged to a screen reader. */}
+            {labelled ? (
+              <span
+                style={{
+                  fontSize: 'calc(9px * var(--text-scale, 1))',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {label}
+              </span>
+            ) : null}
           </button>
         );
       })}
@@ -632,6 +641,9 @@ function Rail() {
   const { state, dispatch } = useStore();
   const tabs = state.tabs;
   const here = litTab(state.screen, tabs);
+  // The rail keeps its labels whatever the tab bar does: it is a wide-screen
+  // sidebar with room for words, and the setting exists to buy height back on
+  // a phone, which the rail is not on.
   // Taken from the one list of places, so the rail cannot drift out of step
   // with what Me and search know about.
   const extras = ['ask', 'import', 'account', 'connect', 'cloud', 'settings']
@@ -713,15 +725,24 @@ export default function App() {
    * new panel colour has landed and the new text colour has not, which on a
    * light ground would be a flash of white text on white.
    */
+  /*
+   * The look, serialised, as the dependency.
+   *
+   * This effect used to name five fields in its body and six in its dependency
+   * array, which is the same bug the localStorage save had and for the same
+   * reason: adding a control means editing two lists, and forgetting one gives
+   * you a setting that changes on screen, does nothing, and offers no clue why.
+   * Body face, line spacing, reading width, icon shape and the accent hue were
+   * all added and all silently did nothing until this was driven in a browser.
+   *
+   * `currentLook` is the one list. Depending on its serialised form means the
+   * effect runs when the look changes and not on every unrelated dispatch.
+   */
+  const lookKey = JSON.stringify(currentLook(state));
+
   useEffect(() => {
     const root = document.documentElement;
-    const tokens = tokensFor({
-      accent: state.accent,
-      ground: state.ground,
-      corners: state.corners,
-      typeface: state.typeface,
-      density: state.density,
-    });
+    const tokens = tokensFor(JSON.parse(lookKey) as Look);
     for (const [name, value] of Object.entries(tokens)) root.style.setProperty(name, value);
     const scale = scaleOf(state.textSize);
     root.style.fontSize = `${16 * scale}px`;
@@ -736,7 +757,7 @@ export default function App() {
     // form controls — from this, and a light theme with a dark scrollbar is
     // the tell that a theme was only half done.
     root.style.colorScheme = state.ground === 'parchment' ? 'light' : 'dark';
-  }, [state.accent, state.textSize, state.ground, state.corners, state.typeface, state.density]);
+  }, [lookKey, state.textSize, state.ground]);
 
   if (state.screen === 'onboarding') {
     return (

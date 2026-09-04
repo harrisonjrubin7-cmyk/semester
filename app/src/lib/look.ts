@@ -303,6 +303,222 @@ export function typefaceOf(id: string | undefined) {
   return TYPEFACES.find((t) => t.id === id) ?? TYPEFACES[0];
 }
 
+/**
+ * The body face, chosen separately from the heading face.
+ *
+ * These were one control, which meant somebody who wanted the drawing-office
+ * headings had to accept Barlow for every paragraph, and somebody who found
+ * Barlow hard to read had to give up the headings to escape it. They are
+ * different jobs: a heading is glanced at, a paragraph is read for ten minutes.
+ *
+ * Atkinson Hyperlegible is here because it exists for exactly this — it was
+ * designed at the Braille Institute to keep characters apart for low vision,
+ * and it is the single most useful thing this list can offer somebody who is
+ * struggling. It is not buried under an "accessibility" heading, because a
+ * font somebody finds easier to read is just a font they prefer.
+ */
+export const BODYFACES = [
+  {
+    id: 'barlow',
+    label: 'Barlow',
+    blurb: 'The original. Narrow, even, and quiet at small sizes.',
+    body: 'Barlow, system-ui, sans-serif',
+  },
+  {
+    id: 'system',
+    label: 'System',
+    blurb: 'Whatever your device uses everywhere else. The safest choice.',
+    body: 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+  },
+  {
+    id: 'hyperlegible',
+    label: 'Hyperlegible',
+    blurb: 'Atkinson Hyperlegible. Built to keep letters apart — try it if reading is tiring.',
+    body: '"Atkinson Hyperlegible", system-ui, sans-serif',
+  },
+  {
+    id: 'serif',
+    label: 'Serif',
+    blurb: 'Georgia. Longer readings feel less like a screen.',
+    body: 'Georgia, "Times New Roman", serif',
+  },
+  {
+    id: 'mono',
+    label: 'Mono',
+    blurb: 'Monospaced throughout. Every character the same width.',
+    body: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace',
+  },
+];
+
+export function bodyfaceOf(id: string | undefined) {
+  return BODYFACES.find((b) => b.id === id) ?? BODYFACES[0];
+}
+
+/**
+ * How far apart the lines sit.
+ *
+ * Separate from text size on purpose. Making the type bigger and making it
+ * airier are two different complaints — "I cannot see this" and "this is a
+ * wall" — and one slider for both means neither is fixed properly.
+ */
+export const LINE_HEIGHTS = [
+  { id: 'tight', label: 'Tight', value: 1.35, blurb: 'More on screen at once.' },
+  { id: 'normal', label: 'Normal', value: 1.55, blurb: 'The default.' },
+  { id: 'airy', label: 'Airy', value: 1.75, blurb: 'Easier to keep your place in a long reading.' },
+  { id: 'loose', label: 'Loose', value: 1.95, blurb: 'As open as it goes.' },
+];
+
+export function lineHeightOf(id: string | undefined): number {
+  return LINE_HEIGHTS.find((l) => l.id === id)?.value ?? 1.55;
+}
+
+/**
+ * How wide a paragraph is allowed to get.
+ *
+ * Only on the long-form screens — a guide, a note, a reading. Typographers put
+ * the comfortable measure at 45–75 characters and the reason is mechanical
+ * rather than aesthetic: past that, the eye loses the start of the next line on
+ * the return sweep. On a laptop the app's column is well past it.
+ *
+ * "Full" is kept because somebody with a small window and large type will hit
+ * the limit before the measure matters, and a cap that makes their screen
+ * narrower for no gain is a cap they want off.
+ */
+export const READING_WIDTHS = [
+  { id: 'narrow', label: 'Narrow', ch: 52, blurb: 'About 52 characters. Book-like.' },
+  { id: 'normal', label: 'Normal', ch: 66, blurb: 'About 66 characters — the usual comfortable measure.' },
+  { id: 'wide', label: 'Wide', ch: 82, blurb: 'Longer lines, less scrolling.' },
+  { id: 'full', label: 'Full', ch: 0, blurb: 'No limit — use the whole column.' },
+];
+
+export function readingWidthOf(id: string | undefined): number {
+  const found = READING_WIDTHS.find((w) => w.id === id);
+  return found ? found.ch : 66;
+}
+
+/** The shape behind a tab or list icon. Cosmetic, and asked for often. */
+export const ICON_SHAPES = [
+  { id: 'none', label: 'None', radius: -1, blurb: 'Just the glyph.' },
+  { id: 'round', label: 'Round', radius: 50, blurb: 'A circle behind it.' },
+  { id: 'squircle', label: 'Squircle', radius: 30, blurb: 'Rounded square, like an app icon.' },
+  { id: 'square', label: 'Square', radius: 6, blurb: 'Barely rounded.' },
+];
+
+export function iconShapeOf(id: string | undefined) {
+  return ICON_SHAPES.find((i) => i.id === id) ?? ICON_SHAPES[0];
+}
+
+/** Whether the tab bar spells its tabs out. */
+export const LABELS = [
+  { id: 'on', label: 'Show labels', blurb: 'Words under every icon.' },
+  { id: 'off', label: 'Icons only', blurb: 'Quieter, and taller screens. Learn the icons first.' },
+];
+
+/**
+ * How much the app is allowed to shout with a number.
+ *
+ * A badge is a claim on attention, and an app that puts one on everything has
+ * made them all mean nothing. "Only what is due" is the honest middle: a count
+ * you can act on today, not a tally of everything unread.
+ */
+export const BADGES = [
+  { id: 'due', label: 'Only what is due', blurb: 'A count you can act on today.' },
+  { id: 'all', label: 'Everything', blurb: 'Every list that has something in it.' },
+  { id: 'none', label: 'None', blurb: 'No numbers anywhere.' },
+];
+
+/**
+ * How the feed on Today is drawn.
+ *
+ * Three genuinely different readings of the same day, not three skins. Cards
+ * separate things and are easiest to tap; rows fit roughly twice as much on a
+ * screen, which matters on a heavy Tuesday; the timeline puts everything on one
+ * vertical line in time order, which is the only one that shows the *gaps*.
+ */
+export const FEEDS = [
+  { id: 'cards', label: 'Cards', blurb: 'Separated, roomy, easiest to tap.' },
+  { id: 'rows', label: 'Compact rows', blurb: 'About twice as much on a screen.' },
+  { id: 'timeline', label: 'Timeline', blurb: 'One line down the day. Shows the gaps as well as the work.' },
+];
+
+export function feedStyleOf(id: string | undefined): string {
+  return FEEDS.find((f) => f.id === id)?.id ?? 'cards';
+}
+
+// ── Contrast, checked rather than promised ──────────────────────────────
+
+/** Relative luminance, per WCAG 2.1. */
+function luminance(hex: string): number {
+  const clean = hex.replace('#', '');
+  const full = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
+  const channel = (i: number) => {
+    const v = parseInt(full.slice(i * 2, i * 2 + 2), 16) / 255;
+    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * channel(0) + 0.7152 * channel(1) + 0.0722 * channel(2);
+}
+
+/**
+ * The contrast ratio between two colours, 1 to 21.
+ *
+ * This exists because the accent is now a hue somebody can drag, and a hue
+ * picker without a contrast readout is a way to let people make their own app
+ * unreadable and then wonder why. Better to show the number as it moves.
+ */
+export function contrast(a: string, b: string): number {
+  const la = luminance(a);
+  const lb = luminance(b);
+  const ratio = (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  return Math.round(ratio * 100) / 100;
+}
+
+/** What a ratio means, in words rather than a standard's number. */
+export function contrastVerdict(ratio: number): { ok: boolean; label: string } {
+  if (ratio >= 7) return { ok: true, label: 'Easy to read' };
+  if (ratio >= 4.5) return { ok: true, label: 'Readable' };
+  if (ratio >= 3) return { ok: false, label: 'Hard work at small sizes' };
+  return { ok: false, label: 'Too faint to read' };
+}
+
+/** One hue at one lightness, as a hex. */
+export function hueToHex(deg: number, lum: number, sat = 0.42): string {
+  const h = ((deg % 360) + 360) % 360;
+  const c = (1 - Math.abs(2 * lum - 1)) * sat;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = lum - c / 2;
+  const [r, g, b] =
+    h < 60 ? [c, x, 0] :
+    h < 120 ? [x, c, 0] :
+    h < 180 ? [0, c, x] :
+    h < 240 ? [0, x, c] :
+    h < 300 ? [x, 0, c] : [c, 0, x];
+  const hex = (v: number) => Math.round((v + m) * 255).toString(16).padStart(2, '0');
+  return `#${hex(r)}${hex(g)}${hex(b)}`;
+}
+
+/**
+ * A whole accent from one hue.
+ *
+ * All four shades, not just the main one. `shade` in particular is not a
+ * nicety — section labels are set in it, and a pale metal at 12px on parchment
+ * is a heading nobody can read. Deriving it from the same hue is what keeps a
+ * dragged colour as usable as a chosen one, and `contrast()` is what proves it
+ * on screen while the slider moves.
+ */
+export function accentFromHue(deg: number, light: boolean): Accent {
+  const h = ((deg % 360) + 360) % 360;
+  return {
+    id: 'hue',
+    label: `Hue ${Math.round(h)}°`,
+    base: hueToHex(h, light ? 0.42 : 0.7),
+    bright: hueToHex(h, light ? 0.55 : 0.84),
+    deep: hueToHex(h, light ? 0.32 : 0.56),
+    // Dark on a light ground, light on a dark one — the reverse of `base`,
+    // because this is the one that has to be legible as small text.
+    shade: hueToHex(h, light ? 0.28 : 0.78),
+  };
+}
+
 // ── The whole thing, as tokens ───────────────────────────────────────────
 
 export interface Look {
@@ -311,7 +527,23 @@ export interface Look {
   ground?: string;
   density?: string;
   corners?: string;
+  /** The heading face. The body face is chosen separately — see `bodyface`. */
   typeface?: string;
+  bodyface?: string;
+  lineHeight?: string;
+  readingWidth?: string;
+  iconShape?: string;
+  labels?: string;
+  badges?: string;
+  feed?: string;
+  /**
+   * A hue for the accent, 0–360, or -1 for "use the named accent".
+   *
+   * Kept alongside `accent` rather than replacing it: the named accents are
+   * chosen colours with a ground behind them, and somebody who has picked
+   * Copper should not lose it the moment they open the hue slider to look.
+   */
+  hue?: number;
 }
 
 /** `rgba()` from a hex and an alpha, so one ink colour makes three strengths. */
@@ -339,8 +571,19 @@ export function fade(hex: string, alpha: number): string {
  * new text colour has not.
  */
 export function tokensFor(look: Look): Record<string, string> {
-  const a = accent(look.accent);
+  const named = accent(look.accent);
   const g = ground(look.ground);
+  /*
+   * A dragged hue beats the named accent, and only while it is set.
+   *
+   * Overlaid rather than replacing, so opening the hue slider to look at it
+   * and closing it again leaves somebody's chosen Copper where it was. -1 is
+   * "none set"; 0 would be red.
+   */
+  const a =
+    typeof look.hue === 'number' && look.hue >= 0
+      ? accentFromHue(look.hue, g.light)
+      : named;
   const [void_, bg, panel, hero, raise] = g.ramp;
   const [sm, md, lg] = cornersOf(look.corners);
   const face = typefaceOf(look.typeface);
@@ -389,6 +632,18 @@ export function tokensFor(look: Look): Record<string, string> {
 
     '--font-heading': face.heading,
     '--font-heading-weight': face.weight,
+    // The body face is its own choice. It was fixed in CSS before this, which
+    // meant the typeface picker changed headings only and somebody who found
+    // the body text hard to read had nothing to change.
+    '--font-body': bodyfaceOf(look.bodyface).body,
+    '--line-height': String(lineHeightOf(look.lineHeight)),
+    // Zero means no cap. Used only by the long-form screens.
+    '--reading-width': readingWidthOf(look.readingWidth)
+      ? `${readingWidthOf(look.readingWidth)}ch`
+      : 'none',
+    '--icon-radius': iconShapeOf(look.iconShape).radius < 0
+      ? '0'
+      : `${iconShapeOf(look.iconShape).radius}%`,
     '--density': String(d),
 
     // The brushed-metal gradient is the one token that cannot simply be
@@ -420,6 +675,15 @@ export function readLook(saved: Look | undefined): Required<Look> {
     density: DENSITIES.find((d) => d.id === saved?.density)?.id ?? 'comfortable',
     corners: CORNERS.find((c) => c.id === saved?.corners)?.id ?? 'drawn',
     typeface: typefaceOf(saved?.typeface).id,
+    bodyface: bodyfaceOf(saved?.bodyface).id,
+    lineHeight: LINE_HEIGHTS.find((l) => l.id === saved?.lineHeight)?.id ?? 'normal',
+    readingWidth: READING_WIDTHS.find((w) => w.id === saved?.readingWidth)?.id ?? 'normal',
+    iconShape: iconShapeOf(saved?.iconShape).id,
+    labels: LABELS.find((l) => l.id === saved?.labels)?.id ?? 'on',
+    badges: BADGES.find((b) => b.id === saved?.badges)?.id ?? 'due',
+    feed: feedStyleOf(saved?.feed),
+    // -1 rather than 0, because 0 is red.
+    hue: typeof saved?.hue === 'number' && saved.hue >= 0 && saved.hue <= 360 ? saved.hue : -1,
   };
 }
 
