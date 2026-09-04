@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ScanIsbn } from '../components/ScanIsbn';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -213,6 +214,11 @@ export function Costs() {
         onChange={(e) => setWhat(e.target.value)}
         style={{ width: '100%', marginBottom: 8 }}
       />
+
+      {/* The one field a camera can fill in. The app still refuses to fetch a
+          price — see the note at the foot of this screen — because that is a
+          different question with a different answer. */}
+      <ScanIsbn onFound={(isbn) => setWhat((was) => (was.trim() ? `${was} · ${isbn}` : isbn))} />
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <input
