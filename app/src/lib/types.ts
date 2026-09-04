@@ -437,6 +437,7 @@ export type Screen =
   | 'meals'
   | 'housing'
   | 'runway'
+  | 'privacy'
   | 'weekly'
   | 'registrar'
   | 'sources'

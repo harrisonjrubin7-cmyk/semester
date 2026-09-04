@@ -67,6 +67,23 @@ export interface HitGroup {
  * everything else worth matching but not worth ranking highly. Returns 0 for
  * no match, and the caller drops those.
  */
+/**
+ * Words nobody is searching by.
+ *
+ * "delete my account" failed the every-word test because no screen's keywords
+ * contain "my" — which is true of every possessive and article somebody puts in
+ * a sentence. Requiring them makes the loose match useless for exactly the
+ * queries it exists to serve.
+ *
+ * Deliberately short. A long stop list starts throwing away words that carry
+ * meaning, and "work" or "check" are screens here.
+ */
+const FILLER = new Set([
+  'a', 'an', 'the', 'my', 'me', 'i', 'is', 'are', 'was', 'to', 'of', 'in', 'on',
+  'for', 'at', 'and', 'or', 'do', 'does', 'did', 'can', 'how', 'where', 'what',
+  'when', 'it', 'this', 'that',
+]);
+
 function score(q: string, name: string, body = ''): number {
   const n = name.toLowerCase();
   if (n === q) return 100;
@@ -75,6 +92,28 @@ function score(q: string, name: string, body = ''): number {
   if (new RegExp(`\\b${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(n)) return 60;
   if (n.includes(q)) return 40;
   if (body.toLowerCase().includes(q)) return 20;
+
+  /*
+   * Every word, in any order, as a last resort.
+   *
+   * Until this, the whole query had to appear as one run of characters — so
+   * "delete my account" found nothing while "delete account" found the page
+   * whose button is literally labelled Delete my account. People type
+   * sentences, and the words they put between the useful ones are not a reason
+   * to be told there are no results.
+   *
+   * Scored below every direct match so it never outranks one, and only for a
+   * query of more than one word, since a single word has already been tried
+   * against both halves above.
+   */
+  const words = q.split(/\s+/).filter((w) => w && !FILLER.has(w));
+  // Whenever the filtered words are not simply the query again — so a
+  // multi-word query gets this, and so does "where are my grades", which comes
+  // down to the single word "grades" that the direct checks above never saw.
+  if (words.length > 0 && (words.length > 1 || words[0] !== q)) {
+    const all = `${n} ${body.toLowerCase()}`;
+    if (words.every((w) => all.includes(w))) return 10;
+  }
   return 0;
 }
 

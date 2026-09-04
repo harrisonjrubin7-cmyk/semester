@@ -412,6 +412,49 @@ export async function saveQueue(
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Delete every row belonging to this account.
+ *
+ * Not a flag, not an archive. `on delete cascade` in the schema means removing
+ * the auth user takes everything with it — but a browser holding an anon key
+ * cannot delete an auth user, and it should not be able to. So this deletes the
+ * rows it owns, which row-level security already scopes to exactly this
+ * account, and then signs out.
+ *
+ * ## What it does not touch
+ *
+ * This device's own copy. Somebody deleting their account has asked to be off
+ * the server, not to lose their semester — and the two are separate on purpose,
+ * with Erase from this device as its own deliberate action. Saying so plainly
+ * is the difference between a button people can press and one they will not.
+ *
+ * The tables are named rather than discovered, so a table added later and
+ * forgotten here leaves rows behind. `privacy.test.ts` is what catches that:
+ * the page claims every row goes, and the claim is checked against this list.
+ */
+export const OWNED_TABLES = ['push_queue', 'push_devices', 'courses', 'state'];
+
+export async function deleteEverything(): Promise<string> {
+  const db = await cloud();
+  const { data } = await db.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) throw new Error('Sign in first — there is no account to delete.');
+
+  const failed: string[] = [];
+  for (const table of OWNED_TABLES) {
+    const { error } = await db.from(table).delete().eq('user_id', userId);
+    // A table this project does not have is not a failure — a build without
+    // reminders has no queue to empty. Anything else is reported rather than
+    // swallowed, because "deleted" is a promise.
+    if (error && !/does not exist|schema cache/i.test(error.message)) failed.push(table);
+  }
+  await db.auth.signOut();
+  if (failed.length > 0) {
+    return `Signed out, and most of your account is gone — but ${failed.join(' and ')} could not be removed. Email ${'harrisonjrubin7@gmail.com'} and it will be done by hand.`;
+  }
+  return 'Your account is empty and you are signed out. This device still has its own copy — Erase from this device removes that.';
+}
+
 /** Switching reminders off deletes what was waiting to be sent. */
 export async function wipeQueue(): Promise<void> {
   const db = await cloud();

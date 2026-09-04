@@ -89,6 +89,7 @@ const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work 
 const Worked = lazy(() => import('./screens/Worked').then((m) => ({ default: m.Worked })));
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
+const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
@@ -514,6 +515,8 @@ function CurrentScreen() {
       // rather than a different app: every icon goes to the same screen the
       // tab bar would have.
       return state.nav === 'springboard' ? <Springboard /> : <Today />;
+    case 'privacy':
+      return <Privacy />;
     case 'courses':
       return <Courses />;
     case 'course':

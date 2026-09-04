@@ -461,6 +461,15 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
+    screen: 'privacy',
+    label: 'Your data',
+    short: 'Data',
+    blurb: 'What is stored, where it goes, and how to delete all of it.',
+    keywords: 'privacy policy data gdpr delete account remove erase retention what is stored where api key anthropic sent transmitted analytics tracking rights legal terms security row level',
+    group: 'Yours',
+    root: 'me',
+  },
+  {
     screen: 'export',
     label: 'Take it with you',
     short: 'Export',
