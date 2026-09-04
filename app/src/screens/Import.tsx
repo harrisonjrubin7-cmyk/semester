@@ -7,6 +7,7 @@ import { troubleOf, useTrouble } from '../lib/trouble';
 import { gather } from '../lib/bundle';
 import { extractText, type Extracted } from '../lib/extract';
 import { generateCourse, type GenerationResult } from '../lib/generate';
+import { packSummary, provenance, readPack } from '../lib/handoff';
 import { configured, provider } from '../lib/claude';
 import { readTerm } from '../lib/term';
 import {
@@ -39,6 +40,7 @@ export function Import() {
   const [result, setResult] = useState<GenerationResult | null>(null);
   const input = useRef<HTMLInputElement>(null);
   const abort = useRef<AbortController | null>(null);
+  const shared = useRef<HTMLInputElement>(null);
 
   // A syllabus shared in from Brightspace or Mail arrives here already
   // chosen. Runs once: `takeShared` deletes as it reads, so a second pass
@@ -94,6 +96,40 @@ export function Import() {
   // which is what somebody importing in September means, and is changeable
   // before it is saved because August imports of a spring course happen.
   const term = readTerm(state.term);
+
+  /**
+   * A shared course, opened.
+   *
+   * It lands in `result` like a generated one, so the review, the diff
+   * against a course you already have, and the confirm are all the same
+   * code. The provenance sentence rides in the notes list the preview
+   * already shows, which is where the reasons a generated course was
+   * adjusted appear — the right place for "this came from someone else".
+   */
+  const openShared = async (file: File | null) => {
+    if (!file) return;
+    trouble.clear();
+    setResult(null);
+    setBusy('Opening it…');
+    try {
+      const opened = readPack(await file.text());
+      if (!opened.module) {
+        trouble.wrong(opened.trouble);
+        return;
+      }
+      // Slot 0 is the preview's kicker — short, uppercase, the same shape a
+      // generated course gets. The provenance is prose and belongs in the
+      // list under it.
+      setResult({
+        module: opened.module,
+        notes: [packSummary(opened), provenance(opened)],
+      });
+    } catch (e) {
+      trouble.failed(e, () => void openShared(file));
+    } finally {
+      setBusy('');
+    }
+  };
 
   const build = async () => {
     if (files.length === 0) return;
@@ -184,6 +220,38 @@ export function Import() {
         style={{ height: 46, fontSize: 12, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 16 }}
       >
         {busy ? busy : 'Choose files — PDF, Word, text, or a zip of them'}
+      </button>
+
+      {/* The other door in. A course somebody has already generated arrives
+          as a file and needs no upload and no request — but it goes through
+          exactly the same review as a course generated here, including the
+          diff against a course you already hold, because a shared course can
+          be from a different section with different dates. */}
+      <input
+        ref={shared}
+        type="file"
+        accept="application/json,.json"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          void openShared(e.target.files?.[0] ?? null);
+          e.target.value = '';
+        }}
+      />
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={() => shared.current?.click()}
+        disabled={busy !== ''}
+        style={{
+          fontSize: 12.5,
+          opacity: 0.65,
+          marginTop: 10,
+          width: 'auto',
+          padding: '6px 0',
+          textAlign: 'left',
+        }}
+      >
+        …or open a course somebody shared with you
       </button>
 
       {files.map((f) => (

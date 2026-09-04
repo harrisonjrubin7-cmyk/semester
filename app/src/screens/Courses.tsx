@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { nameFor, renamed, tintFor } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
 import { Timer } from '../components/Timer';
+import { ShareCourse } from '../components/ShareCourse';
 import { DropBy } from '../components/DropBy';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
@@ -419,6 +420,10 @@ export function CourseDetail() {
       ) : null}
 
       <LmsLink course={course} />
+
+      {/* Renders nothing for a sample course: everybody with the app already
+          has those four. */}
+      <ShareCourse courseId={course.id} />
 
       {/* Silent unless the app has a reason. See `lib/officehours.ts`. */}
       <DropBy courseId={course.id} />

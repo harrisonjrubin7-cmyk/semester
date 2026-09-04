@@ -189,8 +189,12 @@ export function goLine(gap: Gap): string {
  * timetable and wrong in a sentence about walking to a building. Everything
  * after the divider is who, not where.
  */
-export function roomOf(meta: string): string {
-  return meta.split('·')[0].trim();
+export function roomOf(meta: string | undefined): string {
+  // Guarded because a block can now arrive from another person's device via
+  // a shared course, and a `meta` that is absent used to take the Gap screen
+  // down with it — an unhandled throw inside a `useMemo`, so a blank page
+  // rather than a missing room.
+  return meta ? meta.split('·')[0].trim() : '';
 }
 
 /**

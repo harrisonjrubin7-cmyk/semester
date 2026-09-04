@@ -215,3 +215,13 @@ describe('what it says', () => {
     expect(leftOf(g, 60 * 60_000)).toBe(0);
   });
 });
+
+describe('a room out of a block that came from somewhere else', () => {
+  it('is empty rather than a thrown error', () => {
+    // A shared course carries its meeting pattern from another person's
+    // device. A block with no `meta` used to reach this inside a `useMemo`
+    // and take the whole Gap screen down as a blank page.
+    expect(roomOf(undefined)).toBe('');
+    expect(roomOf('')).toBe('');
+  });
+});
