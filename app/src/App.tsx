@@ -91,6 +91,7 @@ import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
 import { Ringing } from './components/Ringing';
+import { PushTop } from './components/PushTop';
 import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
@@ -730,6 +731,8 @@ export default function App() {
         {/* Like Keys: mounted once so a timer set on one screen still
             rings on another. Renders nothing until something goes off. */}
         <Ringing />
+        {/* Keeps the reminder queue fed. Draws nothing. */}
+        <PushTop />
         <Rail />
         <div className="device device-pane">
           <Header />
@@ -748,6 +751,7 @@ export default function App() {
     <div className="device">
       <Fresh />
       <Ringing />
+      <PushTop />
       <Header />
       {trouble}
       <main className="scrollarea" key={state.screen}>

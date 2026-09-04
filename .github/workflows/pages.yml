@@ -61,6 +61,7 @@ jobs:
         env:
           URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
           KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
+          VAPID: ${{ vars.VITE_VAPID_PUBLIC_KEY || secrets.VITE_VAPID_PUBLIC_KEY }}
         run: |
           # Notices and warnings surface as run annotations, which are visible
           # without opening the log — and readable through the API, so a
@@ -74,6 +75,16 @@ jobs:
           # export only happens when there is something to export.
           [ -n "$URL" ] && echo "VITE_SUPABASE_URL=$URL" >> "$GITHUB_ENV"
           [ -n "$KEY" ] && echo "VITE_SUPABASE_KEY=$KEY" >> "$GITHUB_ENV"
+          # The push key is the *public* half of the VAPID pair and is meant to
+          # be compiled into the page. The private half authorises sending and
+          # belongs only in the Edge Function's secrets — if it is ever set as
+          # a repository variable, rotate it.
+          if [ -n "$VAPID" ]; then
+            echo "::notice title=Reminders::Push key present (${#VAPID} chars) — this build can deliver reminders with the app shut."
+          else
+            echo "::notice title=Reminders::No VITE_VAPID_PUBLIC_KEY, so the push switch under Me will say the build carries no key."
+          fi
+          [ -n "$VAPID" ] && echo "VITE_VAPID_PUBLIC_KEY=$VAPID" >> "$GITHUB_ENV"
           true
 
       - name: Build

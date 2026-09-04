@@ -54,6 +54,41 @@ semester nor write into it. Thirteen checks; a clean run prints
 `ALL CHECKS PASSED`, and it rolls everything back. The merge itself happens on
 the device and is covered by `app/src/lib/merge.test.ts`.
 
+### Optional · Reminders with the app shut
+
+The app can already put a notification on screen while it is open, which is the
+one moment you did not need one. This is the other half, and it needs three
+things beyond the tables above.
+
+1. **Make a key pair,** once: `npx web-push generate-vapid-keys`.
+2. **The public half** goes in `app/.env.local` as `VITE_VAPID_PUBLIC_KEY`, and
+   into the deploy as a repository variable alongside the Supabase two. It is
+   meant to be visible — it is what a browser signs its subscription against.
+   Without it the switch under Me says so plainly rather than sitting there
+   doing nothing.
+3. **The private half never leaves the server.** `supabase secrets set
+   VAPID_PRIVATE_KEY=…` and `VAPID_SUBJECT=mailto:you@example.com`. It is what
+   authorises sending to your subscribers, so it belongs in the function's
+   secrets and nowhere else — not in `.env.local`, not in a build variable, not
+   in the repo.
+
+Then the table and the sender: SQL Editor → paste
+[`supabase/push.sql`](supabase/push.sql) → Run, then `supabase functions deploy
+push --no-verify-jwt` and the `cron.schedule` call in the header of
+[`supabase/functions/push/index.ts`](supabase/functions/push/index.ts).
+`--no-verify-jwt` is right for this one and wrong for the Claude function: the
+scheduler calls it, not a browser, and it authenticates with its own
+`CRON_SECRET`. Without that secret set it refuses every request, so a
+half-finished deploy is closed rather than open.
+
+**The server does no arithmetic.** The app works out what is worth saying and
+queues a week of "a time and two strings"; the function delivers them and knows
+nothing about semesters. A server that computed due dates would keep a second
+copy of the rules and drift from the app within a term, and the drift would
+show up as a reminder about a deadline that had moved. The queue is rebuilt
+whenever the app is opened and more than twelve hours have passed — without
+that it emptied after seven days while the switch still said "on".
+
 ### Optional · Classmates
 
 Rooms per class, for people with a confirmed university address. SQL Editor →

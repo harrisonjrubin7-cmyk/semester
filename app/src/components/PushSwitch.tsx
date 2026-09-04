@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
-import { canPush, enrol, enrolled, leave, PUSH_NOTE, queueFor } from '../lib/push';
+import { canPush, enrol, enrolled, leave, markRefilled, PUSH_NOTE, queueFor } from '../lib/push';
 import { dropDevice, saveDevice, saveQueue, wipeQueue } from '../lib/cloud';
 import { railFor, datedItems } from '../lib/select';
 
@@ -57,11 +57,12 @@ export function PushSwitch() {
       registrar: state.registrar,
     }));
     await saveQueue(queue);
+    markRefilled(Date.now());
     setOn(true);
     setSaid(
       queue.length > 0
         ? `On. ${queue.length} ${queue.length === 1 ? 'reminder' : 'reminders'} queued for the next week.`
-        : 'On. Nothing to send this week — it will queue as things come up.',
+        : 'On. Nothing to send this week. The queue is rebuilt whenever you open the app, so anything new gets picked up.',
     );
     setBusy(false);
   };

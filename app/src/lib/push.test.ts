@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { canPush, enrolmentOf, keyBytes, queueFor } from './push';
+import { REFILL_HOURS, canPush, enrolmentOf, keyBytes, needsRefill, queueFor } from './push';
 import type { NotifKey } from '../data/misc';
 import type { DatedItem } from './types';
 
@@ -113,5 +113,32 @@ describe('queueing the week', () => {
   it('does not queue the same reminder twice', () => {
     const ids = queueFor(NOW, ALL_ON, railEveryDay).map((r) => r.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe('keeping the queue fed', () => {
+  const HOUR = 3_600_000;
+  const NOW = 1_788_000_000_000;
+
+  it('refills when it never has', () => {
+    expect(needsRefill(0, NOW)).toBe(true);
+    expect(needsRefill(Number.NaN, NOW)).toBe(true);
+  });
+
+  it('leaves it alone until the interval has passed', () => {
+    expect(needsRefill(NOW - 1 * HOUR, NOW)).toBe(false);
+    expect(needsRefill(NOW - REFILL_HOURS * HOUR, NOW)).toBe(true);
+  });
+
+  it('refills when the clock has gone backwards', () => {
+    // A device whose time was wrong and got corrected would otherwise never
+    // refill again — the switch would say "on" and deliver nothing.
+    expect(needsRefill(NOW + 5 * HOUR, NOW)).toBe(true);
+  });
+
+  it('keeps a horizon several days deep on a device opened once a day', () => {
+    // The bug this exists for: the queue held a week, was written once at the
+    // moment the switch was turned on, and was empty seven days later.
+    expect(REFILL_HOURS).toBeLessThanOrEqual(24);
   });
 });

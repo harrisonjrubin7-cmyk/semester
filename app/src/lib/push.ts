@@ -172,3 +172,45 @@ export function queueFor(
  */
 export const PUSH_NOTE =
   'Reminders are worked out on this device and queued for the next week, so they can arrive when the app is closed. That means the text of each one — a deadline title and its course — is stored on the server until it is sent, and deleted afterwards. Switching this off deletes the queue.';
+
+/**
+ * How often the queue is rebuilt.
+ *
+ * The queue holds a week, and it was written once — at the moment the switch
+ * was turned on. Seven days later it was empty, no reminder ever arrived
+ * again, and the switch still said "on": a feature that stops working without
+ * saying so, which is the worst failure a reminder can have. Twelve hours
+ * keeps a horizon of at least six days on any device opened even once a day,
+ * and costs one write.
+ */
+export const REFILL_HOURS = 12;
+
+/** Where the last refill is remembered. Per device, because it is a device fact. */
+export const REFILL_KEY = 'semester.push.filled';
+
+export function needsRefill(lastAt: number, now: number, hours = REFILL_HOURS): boolean {
+  if (!Number.isFinite(lastAt) || lastAt <= 0) return true;
+  // A clock that has gone backwards — a device whose time was wrong and got
+  // corrected — would otherwise never refill again.
+  if (lastAt > now) return true;
+  return now - lastAt >= hours * 3_600_000;
+}
+
+/** When this device last rebuilt the queue. Zero when it never has. */
+export function lastRefill(): number {
+  try {
+    const raw = localStorage.getItem(REFILL_KEY);
+    const n = raw ? Number(raw) : 0;
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function markRefilled(at: number): void {
+  try {
+    localStorage.setItem(REFILL_KEY, String(at));
+  } catch {
+    // Storage off. It refills every open instead, which is wasteful and works.
+  }
+}
