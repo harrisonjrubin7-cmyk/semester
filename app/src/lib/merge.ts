@@ -122,6 +122,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // device, and two devices adding two different ones should end with both.
   // Ids are generated per application, so a union cannot duplicate one.
   applications: 'union',
+  // Each record carries its own `updated`, so two devices reading the same
+  // chapter keep the later position rather than whichever synced last.
+  progress: 'latest',
   // An arrangement, like feedOrder — merging two would produce an order
   // neither device chose.
   courseOrder: 'theirs',

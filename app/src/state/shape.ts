@@ -30,6 +30,7 @@ import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
 import { readApplications, type Application, type Stage } from '../lib/apply';
+import { readProgress, type Progress, type Unit } from '../lib/progress';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
@@ -97,6 +98,12 @@ export interface Persisted {
    * nothing could say so.
    */
   applications: Application[];
+  /**
+   * Where you are inside a reading, keyed by the deadline it belongs to. See
+   * `lib/progress.ts` — a checkbox is a terrible instrument for a two-hundred
+   * page book, and a page number is one somebody already has in front of them.
+   */
+  progress: Record<string, Progress>;
   /** The order of the sections on Today, and which are switched off. */
   feedOrder: string[];
   feedHidden: Record<string, boolean>;
@@ -426,6 +433,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   timers: [],
   alarms: [],
   applications: [],
+  progress: {},
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
@@ -553,6 +561,7 @@ export function loadPersisted(): Persisted {
       timers: saved.timers ?? [],
       alarms: saved.alarms ?? [],
       applications: readApplications(saved.applications),
+      progress: readProgress(saved.progress),
       feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
@@ -639,6 +648,7 @@ export function pickPersisted(state: State): Persisted {
     timers: state.timers,
     alarms: state.alarms,
     applications: state.applications,
+    progress: state.progress,
     feedOrder: state.feedOrder,
     tabs: state.tabs,
     yours: state.yours,
@@ -707,6 +717,9 @@ export type Action =
   | { type: 'patchApplication'; id: string; patch: Partial<Application> }
   | { type: 'moveApplication'; id: string; stage: Stage }
   | { type: 'removeApplication'; id: string }
+  | { type: 'setReadingLength'; id: string; unit: Unit; total: number }
+  | { type: 'markReading'; id: string; done: number }
+  | { type: 'clearReading'; id: string }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }

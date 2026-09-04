@@ -12,6 +12,7 @@
 import { newId } from '../../lib/files';
 import { newAlarm, newTimer } from '../../lib/clocks';
 import { moveTo, newApplication } from '../../lib/apply';
+import { mark, newProgress } from '../../lib/progress';
 import { tidy } from '../../lib/windows';
 import type { Action, State } from '../shape';
 
@@ -144,6 +145,31 @@ export function mine(state: State, action: Action): State | null {
 
     case 'removeApplication':
       return { ...state, applications: state.applications.filter((a) => a.id !== action.id) };
+
+    // Reading progress. Keyed by the deadline, so a re-imported syllabus that
+    // keeps its item ids keeps the pages you had read against them.
+    case 'setReadingLength': {
+      const had = state.progress[action.id];
+      const next = had
+        ? { ...had, unit: action.unit, total: Math.max(0, Math.round(action.total)), updated: Date.now() }
+        : newProgress(action.id, action.unit, action.total, Date.now());
+      return { ...state, progress: { ...state.progress, [action.id]: next } };
+    }
+
+    case 'markReading': {
+      const had =
+        state.progress[action.id] ?? newProgress(action.id, 'pages', 0, Date.now());
+      return {
+        ...state,
+        progress: { ...state.progress, [action.id]: mark(had, action.done, Date.now()) },
+      };
+    }
+
+    case 'clearReading': {
+      const next = { ...state.progress };
+      delete next[action.id];
+      return { ...state, progress: next };
+    }
 
     // The hours you actually work in. See `lib/windows.ts` — these make every
     // hour figure in the app true rather than nominal.

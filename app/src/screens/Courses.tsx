@@ -9,6 +9,7 @@ import { DropBy } from '../components/DropBy';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
+import { ReadingProgress } from '../components/ReadingProgress';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { Grades } from './Grades';
@@ -565,6 +566,10 @@ export function ItemDetail() {
       >
         {item.detail}
       </div>
+
+      {/* Only renders for a reading. A problem set is done or it is not, and
+          a page number for one is a field nobody can fill in. */}
+      <ReadingProgress item={item} />
 
       <SectionLabel style={{ margin: '22px 0 8px' }}>Straight from the syllabus</SectionLabel>
       <div
