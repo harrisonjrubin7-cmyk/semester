@@ -17,6 +17,7 @@ import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox, Toggle } from '../components/ui';
 import { TabChooser } from '../components/TabChooser';
+import { NotYetOpened } from '../components/NotYetOpened';
 import { YourCourses } from '../components/YourCourses';
 import { SEED_SUMMARY } from '../data/seed';
 import { Bell, ChevronRight } from '../components/Icons';
@@ -25,8 +26,6 @@ import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { DESTINATIONS, destinationsIn, type Group } from '../lib/nav';
 
-/** Already on the tab bar, so a Lately row for one would be a wasted line. */
-const TAB_SCREENS: Screen[] = ['home', 'courses', 'study', 'calendar', 'maps', 'mine', 'me'];
 import type { Screen } from '../lib/types';
 
 /**
@@ -124,7 +123,10 @@ export function Me() {
     .filter((screen) => !HIDE_IN_ME.includes(screen))
     .map((screen) => DESTINATIONS.find((d) => d.screen === screen))
     .filter((d): d is (typeof DESTINATIONS)[number] => Boolean(d))
-    .filter((d) => !TAB_SCREENS.includes(d.screen))
+    // Already on the bar is one tap, so a Lately row for it is noise. Read
+    // from the student's own bar rather than a copy of the shipped seven,
+    // which stopped being the answer when the bar became theirs to arrange.
+    .filter((d) => !state.tabs.includes(d.screen))
     .slice(0, 4);
 
   return (
@@ -260,6 +262,9 @@ export function Me() {
           <div style={{ height: 20 }} />
         </>
       )}
+
+      {/* Silent for anybody who has been round the app. See `lib/unseen.ts`. */}
+      <NotYetOpened />
 
       <ChipRow
         options={GROUPS}

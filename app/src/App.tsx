@@ -60,6 +60,7 @@ import { destination, rootOf } from './lib/nav';
 import { litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
+import { Keys } from './components/Keys';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import type { Screen } from './lib/types';
@@ -640,6 +641,9 @@ export default function App() {
   if (wide) {
     return (
       <div className="desk">
+        {/* Mounted once, at the top, so a shortcut cannot work on one screen
+            and not another. Renders nothing unless the sheet is open. */}
+        <Keys />
         <Rail />
         <div className="device device-pane">
           <Header />

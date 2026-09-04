@@ -96,6 +96,14 @@ export interface Persisted {
   /** The destinations you opened most recently, newest first. */
   recent: Screen[];
   /**
+   * Every screen ever opened, so the app can say what has not been.
+   *
+   * Separate from `recent`, which keeps twelve — a screen opened once in
+   * August and not since falls off that list and would then be offered back
+   * as though it were new. See `lib/unseen.ts`.
+   */
+  visited: Record<string, boolean>;
+  /**
    * Practice papers you have sat.
    *
    * Capped, and the cap is real rather than cautious: a sitting keeps its
@@ -380,6 +388,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   feedOrder: DEFAULT_ORDER,
   feedHidden: {},
   tabs: DEFAULT_TABS,
+  visited: {},
   yours: {},
   courseOrder: [],
   recent: [],
@@ -501,6 +510,13 @@ export function loadPersisted(): Persisted {
       yours: saved.yours ?? {},
       courseOrder: saved.courseOrder ?? [],
       recent: saved.recent ?? [],
+      // Seeded from `recent` for anybody upgrading: without this the app
+      // would tell somebody who has used it all term that they have never
+      // opened Today, which is both wrong and the sort of wrong that makes
+      // the rest of the sentence untrustworthy.
+      visited:
+        saved.visited ??
+        Object.fromEntries((saved.recent ?? []).map((s: Screen) => [s, true])),
       sittings: saved.sittings ?? [],
       sources: saved.sources ?? [],
       registrar: saved.registrar ?? [],
@@ -561,6 +577,7 @@ export function pickPersisted(state: State): Persisted {
     courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
     recent: state.recent,
+    visited: state.visited,
     sittings: state.sittings,
     sources: state.sources,
     registrar: state.registrar,

@@ -34,7 +34,16 @@ export function push(state: State, screen: Screen): State {
   // to stay reachable backwards or it becomes a dead end.
   const resets = ROOTS.includes(screen) && (state.nav === 'tabs' || screen === 'home');
   const history = resets ? [] : [...state.history, state.screen];
-  return { ...state, screen, history, recent: remember(state.recent, screen) };
+  return {
+    ...state,
+    screen,
+    history,
+    recent: remember(state.recent, screen),
+    // Written on the way in rather than counted: how many times somebody
+    // opened the map is not the app's business, and whether they ever did is
+    // the only part that makes a difference to what it offers them.
+    visited: state.visited[screen] ? state.visited : { ...state.visited, [screen]: true },
+  };
 }
 
 export function navigate(state: State, action: Action): State | null {
