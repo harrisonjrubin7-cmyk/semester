@@ -45,6 +45,8 @@ import { SHARE_FLAG } from '../lib/shared';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
+// Aliased: an effect below has its own local `said` for a save error.
+import { said as refreshSaid } from '../lib/refresh';
 import {
   ROOTS,
   STORAGE_KEY,
@@ -124,6 +126,13 @@ interface Store {
    * is true.
    */
   saveTrouble: string;
+  /**
+   * Check the account now, and get back a sentence saying what came of it.
+   *
+   * Used by the pull-down gesture and by "Sync now". Safe to call signed out —
+   * it says so rather than pretending to be up to date.
+   */
+  refresh: () => Promise<string>;
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -277,46 +286,63 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // On sign-in, whichever copy is newer wins — and the app says which.
-  useEffect(() => {
+  /**
+   * Check the account for a newer copy, and say plainly what came of it.
+   *
+   * This used to be the body of an effect that ran once, on sign-in, and never
+   * again while the app was open. Somebody who imports a syllabus on their
+   * laptop and then looks at their phone saw yesterday's app with no way to
+   * ask it to look — and leaving a tab open for a week is how most people use
+   * this. It is a callable now so the pull-down gesture and the effect are the
+   * same code rather than two that drift.
+   *
+   * It returns a sentence rather than nothing, because a refresh that finds
+   * nothing and a refresh that failed look identical otherwise. See
+   * `lib/refresh.ts`.
+   *
+   * What it will not do is overwrite local data with an empty account.
+   * `hasRemote` is what stops a signed-in device with a blank account from
+   * hydrating a semester's work away.
+   */
+  const refresh = useCallback(async (): Promise<string> => {
+    const base = { cloud: cloudConfigured, signedIn: Boolean(account), took: false, courses: 0, error: '', at: 0 };
     if (!account) {
       if (cloudConfigured) setSync({ status: 'signed-out', at: 0, error: '' });
-      return;
+      return refreshSaid(base, Date.now());
     }
-    let live = true;
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
-    void (async () => {
-      try {
-        const remote = await pull(account.id);
-        if (!live) return;
-        const localStamp = Number(localStorage.getItem(SYNCED_KEY) ?? 0);
-        const hasRemote = remote.state !== null || remote.courses.length > 0;
+    try {
+      const remote = await pull(account.id);
+      const localStamp = Number(localStorage.getItem(SYNCED_KEY) ?? 0);
+      const hasRemote = remote.state !== null || remote.courses.length > 0;
+      const take = hasRemote && remote.updated > localStamp;
 
-        if (hasRemote && remote.updated > localStamp) {
-          dispatch({
-            type: 'hydrate',
-            persisted: {
-              ...(remote.state as Partial<Persisted>),
-              courses: remote.courses.map((c) => c.data as CourseModule),
-            },
-          });
-          localStorage.setItem(SYNCED_KEY, String(remote.updated));
-        }
-        if (live) setSync({ status: 'synced', at: Date.now(), error: '' });
-      } catch (e) {
-        if (live) {
-          setSync({
-            status: 'error',
-            at: 0,
-            error: explainSyncError(e instanceof Error ? e.message : String(e)),
-          });
-        }
+      if (take) {
+        dispatch({
+          type: 'hydrate',
+          persisted: {
+            ...(remote.state as Partial<Persisted>),
+            courses: remote.courses.map((c) => c.data as CourseModule),
+          },
+        });
+        localStorage.setItem(SYNCED_KEY, String(remote.updated));
       }
-    })();
-    return () => {
-      live = false;
-    };
+      setSync({ status: 'synced', at: Date.now(), error: '' });
+      return refreshSaid(
+        { ...base, took: take, courses: take ? remote.courses.length : 0, at: take ? remote.updated : 0 },
+        Date.now(),
+      );
+    } catch (e) {
+      const error = explainSyncError(e instanceof Error ? e.message : String(e));
+      setSync({ status: 'error', at: 0, error });
+      return refreshSaid({ ...base, error }, Date.now());
+    }
   }, [account]);
+
+  // On sign-in, whichever copy is newer wins — and the app says which.
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   /**
    * Every later change goes up, once things stop moving.
@@ -485,8 +511,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [catalog, now, state.done]);
 
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble }),
-    [state, now, catalog, terms, courseCode, account, sync, saveTrouble],
+    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh }),
+    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

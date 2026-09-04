@@ -14,11 +14,13 @@ import { cloudConfigured, sendReset, signIn, signInWith, signOut, signUp } from 
  * student who just wants to read tonight's cards.
  */
 export function AccountScreen() {
-  const { state, account, sync } = useStore();
+  const { state, account, sync, refresh } = useStore();
   const [mode, setMode] = useState<'in' | 'up'>('in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [checked, setChecked] = useState('');
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
 
@@ -76,6 +78,40 @@ export function AccountScreen() {
               <span style={{ whiteSpace: 'pre-wrap' }}>Sync failed. {sync.error}</span>
             )}
           </div>
+          {/* The same check the pull-down gesture makes, for a laptop, which
+              has no pull-down. It answers in a sentence rather than leaving a
+              spinner to be interpreted — see `lib/refresh.ts`. */}
+          <button
+            type="button"
+            className="btn btn-block"
+            disabled={checking}
+            onClick={() => {
+              setChecking(true);
+              setChecked('');
+              void refresh().then((line) => {
+                setChecking(false);
+                setChecked(line);
+              });
+            }}
+            style={{ marginTop: 14 }}
+          >
+            {checking ? 'Checking…' : 'Check now'}
+          </button>
+          {checked && (
+            <div
+              role="status"
+              aria-live="polite"
+              style={{
+                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                opacity: 0.8,
+                marginTop: 9,
+                lineHeight: 1.5,
+                textWrap: 'pretty',
+              }}
+            >
+              {checked}
+            </div>
+          )}
         </Blueprint>
 
         <SectionLabel>What syncs</SectionLabel>
