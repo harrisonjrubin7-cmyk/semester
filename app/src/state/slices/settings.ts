@@ -46,6 +46,9 @@ export function settings(state: State, action: Action): State | null {
       return { ...state, mySchools, schoolId };
     }
 
+    case 'countScreens':
+      return { ...state, countScreens: action.on };
+
     case 'setCutoffs': {
       const next = { ...state.gradeSystems };
       if (action.system) next[action.courseId] = action.system;

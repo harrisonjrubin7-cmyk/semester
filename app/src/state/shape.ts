@@ -111,6 +111,15 @@ export interface Persisted {
    */
   mySchools: School[];
   /**
+   * Whether the app keeps a count of which screens get opened.
+   *
+   * On by default and switchable off. The counts themselves are not in here —
+   * they live in their own storage key, outside everything that syncs, which
+   * is the whole point of them. See `lib/usage.ts`. This flag is a choice
+   * about the person rather than the device, so it follows them.
+   */
+  countScreens: boolean;
+  /**
    * Places you named, so a coordinate can mean something.
    *
    * The app never geocodes — there is no free way to turn a position into a
@@ -582,6 +591,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   grades: {},
   gradeSystems: {},
   mySchools: [],
+  countScreens: true,
   places: [],
   commitments: [],
   timers: [],
@@ -759,6 +769,7 @@ export function loadPersisted(): Persisted {
       mySchools: Array.isArray(saved.mySchools)
         ? saved.mySchools.map(readSchool).filter((s) => s.id && s.name)
         : [],
+      countScreens: saved.countScreens !== false,
       places: saved.places ?? [],
       commitments: saved.commitments ?? [],
       timers: saved.timers ?? [],
@@ -863,6 +874,7 @@ export function pickPersisted(state: State): Persisted {
     grades: state.grades,
     gradeSystems: state.gradeSystems,
     mySchools: state.mySchools,
+    countScreens: state.countScreens,
     places: state.places,
     commitments: state.commitments,
     timers: state.timers,
@@ -952,6 +964,7 @@ export type Action =
   // and then wants to be handed a list to pick from.
   | { type: 'addSchool'; school: School }
   | { type: 'forgetSchool'; id: string }
+  | { type: 'countScreens'; on: boolean }
   | { type: 'addPlace'; place: Omit<SavedPlace, 'id' | 'created'> }
   | { type: 'removePlace'; id: string }
   | { type: 'addCommitment'; commitment: Omit<Commitment, 'id' | 'created'> }

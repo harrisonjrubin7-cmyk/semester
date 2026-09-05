@@ -26,9 +26,31 @@ import { KEEP, LOG_KEY, dump, dumpName, read } from '../lib/diagnose';
 import { SCHEMA, migrationLine } from '../lib/migrate';
 import { migrationReport } from '../state/shape';
 import { cloudConfigured, deleteEverything } from '../lib/cloud';
+import { Toggle } from '../components/ui';
+import { DESTINATIONS } from '../lib/nav';
+import {
+  USAGE_KEY,
+  neverOpened,
+  read as readUsage,
+  top,
+  total,
+  unusedLine,
+  usageLine,
+  type Counts,
+} from '../lib/usage';
 
 export function Privacy() {
-  const { account } = useStore();
+  const { account, state, dispatch } = useStore();
+  // Read once on mount: the counts live outside React state on purpose, and a
+  // page that re-read them on every render would show its own opening being
+  // counted while somebody was looking at it.
+  const [counts, setCounts] = useState<Counts>(() => {
+    try {
+      return readUsage(localStorage.getItem(USAGE_KEY));
+    } catch {
+      return {};
+    }
+  });
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
@@ -73,6 +95,71 @@ export function Privacy() {
           </div>
         </div>
       ))}
+
+      {/*
+        The counting, and what it has actually counted.
+
+        Shown rather than described. Somebody deciding whether to leave this on
+        can read the numbers it holds, which is a better answer than any
+        sentence about them — and the list of screens never opened is the thing
+        the counting is for from their side of it.
+      */}
+      <SectionLabel style={{ margin: '22px 0 5px' }}>Counting screen opens</SectionLabel>
+      <Toggle
+        label="Count which screens I open"
+        on={state.countScreens}
+        onChange={() => dispatch({ type: 'countScreens', on: !state.countScreens })}
+      />
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.55, marginTop: 8, textWrap: 'pretty' }}>
+        {usageLine(state.countScreens, counts)}
+      </div>
+      {total(counts) > 0 && (
+        <div style={{ marginTop: 10 }}>
+          {top(counts).map((t) => (
+            <div
+              key={t.screen}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                padding: '5px 0',
+                borderBottom: '1px solid var(--app-line-soft)',
+              }}
+            >
+              <span>{DESTINATIONS.find((d) => d.screen === t.screen)?.label ?? t.screen}</span>
+              <span style={{ opacity: 0.6, fontVariantNumeric: 'tabular-nums' }}>{t.n}</span>
+            </div>
+          ))}
+          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginTop: 8, textWrap: 'pretty' }}>
+            {unusedLine(neverOpened(counts, DESTINATIONS.map((d) => d.screen as string)).length, DESTINATIONS.length)}
+          </div>
+          <button
+            type="button"
+            className="bare tappable"
+            onClick={() => {
+              try {
+                localStorage.removeItem(USAGE_KEY);
+              } catch {
+                // Nothing to clear if storage is unavailable.
+              }
+              setCounts({});
+            }}
+            style={{
+              width: 'auto',
+              padding: '6px 10px',
+              marginTop: 10,
+              borderRadius: 'var(--r-sm)',
+              border: '1px solid var(--app-line)',
+              fontSize: 'calc(11px * var(--text-scale, 1))',
+              fontFamily: 'var(--font-heading)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Forget the counts
+          </button>
+        </div>
+      )}
 
       <SectionLabel style={{ margin: '22px 0 5px' }}>If something is wrong</SectionLabel>
       <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 1.6, textWrap: 'pretty' }}>

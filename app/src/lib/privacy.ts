@@ -85,6 +85,11 @@ export const CLAIMS: Claim[] = [
       'Delete my account, in Settings, removes every row belonging to you: courses, deadlines, notes, grades, cards, reminders, the lot. It cascades in the database rather than marking things hidden. This device’s own copy is separate — signing out leaves it alone, and Erase from this device removes it.',
   },
   {
+    heading: 'Which screens you open',
+    body:
+      'The app keeps a count of how many times each of its screens has been opened, in this device’s own storage, under the key “semester.usage”. It is a number per screen — not when, not in what order, not how long. It is not uploaded, it is not in the sync payload, and nobody but you can read it; what it is for is the count on this page of how many screens you never open, so you can decide whether to hide the rest. Switch it off on this page and nothing is counted.',
+  },
+  {
     heading: 'Who can see your rows',
     body:
       'Only you. Every table is protected by row-level security keyed to your account, which is enforced by the database rather than by the app asking politely. A shared practice paper is the one exception and it is deliberate: you generate a link, and anyone with the link can open that one paper.',

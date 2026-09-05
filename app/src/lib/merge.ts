@@ -142,6 +142,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // collect — merging two devices' would produce a set neither asked for.
   myRules: 'theirs',
   myName: 'theirs',
+  // A choice about whether the app counts anything, so it follows the person.
+  // The counts it governs never sync at all — see `lib/usage.ts`.
+  countScreens: 'theirs',
   // A mark on a class is a fact about a day, and two devices marking two
   // different days should end with both. Keyed by course and date inside
   // `readLog`, so a duplicate cannot become a second absence.

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CLAIMS, NEVER_SYNCED, SUPPORT, SYNCED_FIELDS, region } from './privacy';
+import { USAGE_KEY } from './usage';
 import { DEFAULT_PERSISTED, initialEphemeral, pickPersisted, type State } from '../state/shape';
 
 /**
@@ -73,6 +74,22 @@ describe('how it is written', () => {
       expect(c.body.length, c.heading).toBeGreaterThan(80);
       expect(c.heading.length, c.heading).toBeGreaterThan(4);
     }
+  });
+
+  it('names the storage the screen counts live in, so it can be checked', () => {
+    // A disclosure that says "we collect anonymous usage data" tells nobody
+    // anything they can act on. Naming the key means they can go and look.
+    const counting = CLAIMS.find((c) => c.heading.toLowerCase().includes('screens you open'));
+    expect(counting?.body).toContain(USAGE_KEY);
+    expect(counting?.body).toContain('not uploaded');
+  });
+
+  it('keeps those counts out of everything that syncs', () => {
+    // The claim above is only true while this is. `pickPersisted` is what the
+    // push sends, so a count that appeared in it would make the page a lie.
+    const sent = JSON.stringify(pickPersisted(state()));
+    expect(sent).not.toContain(USAGE_KEY);
+    expect(Object.keys(pickPersisted(state()))).not.toContain('usage');
   });
 
   it('offers a person rather than a form', () => {

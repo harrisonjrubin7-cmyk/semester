@@ -46,6 +46,7 @@ import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
 import { resolveSchool } from '../data/schools';
+import { USAGE_KEY, note as noteUsage, read as readUsage } from '../lib/usage';
 import { countRows, decide, type Choice, type Sides } from '../lib/adopt';
 import type { Facts } from '../lib/reveal';
 import type { School } from '../lib/school';
@@ -211,6 +212,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
 
+
+  /*
+   * A count per screen, on this device and nowhere else.
+   *
+   * Written straight to its own storage key rather than through the reducer,
+   * because it is deliberately outside everything that syncs — see
+   * `lib/usage.ts` for why that is a decision rather than an omission. Keyed
+   * on the screen alone, so navigating back to a screen already on the stack
+   * counts once per arrival and never per render.
+   */
+  useEffect(() => {
+    if (!state.countScreens || !state.screen) return;
+    try {
+      const now = noteUsage(readUsage(localStorage.getItem(USAGE_KEY)), state.screen);
+      localStorage.setItem(USAGE_KEY, JSON.stringify(now));
+    } catch {
+      // A private window, or storage full. Losing a count matters to nobody,
+      // and the save that does matter reports its own trouble below.
+    }
+  }, [state.screen, state.countScreens]);
 
   // Serialise once per dispatch — `state` is one object that changes identity
   // when the reducer runs, so this is not per-render work.
