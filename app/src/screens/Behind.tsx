@@ -30,6 +30,7 @@ import { datedItems } from '../lib/select';
 import { WAKING_HOURS, hoursOn } from '../lib/windows';
 import { behindLine, howBehind, moves, movesLine, triage, type Step } from '../lib/behind';
 import type { Screen } from '../lib/types';
+import { misses, missesLine } from '../lib/misses';
 
 const GROUPS: { where: Step['where']; label: string; note: string }[] = [
   {
@@ -47,7 +48,7 @@ const GROUPS: { where: Step['where']; label: string; note: string }[] = [
 ];
 
 export function Behind() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, courseCode } = useStore();
   if (catalog.empty) return <FirstRun where="to sort out a bad week" />;
 
   // The hours are the student's own, from their work windows. Where they have
@@ -60,6 +61,13 @@ export function Behind() {
   const items = datedItems(catalog, now);
   const b = howBehind(items, state.done, state.spent, week);
   const steps = triage(items, state.done, state.spent, week);
+  const attendance = misses(
+    catalog.courses.map((c) => c.id),
+    state.attendPolicy,
+    state.attendance,
+    courseCode,
+    now,
+  );
 
   return (
     <div style={{ padding: 18 }}>
@@ -77,6 +85,51 @@ export function Behind() {
           {behindLine(b)}
         </div>
       </Blueprint>
+
+      {/*
+        Before the deadlines, because a percentage already gone outranks a
+        busy Thursday even though the Thursday is sooner — see `lib/misses.ts`
+        for why these are their own group rather than rows in the list below.
+      */}
+      {attendance.length > 0 && (
+        <div>
+          <SectionLabel style={{ margin: '22px 0 8px' }}>Turning up</SectionLabel>
+          <div
+            style={{
+              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              opacity: 0.55,
+              marginBottom: 9,
+              lineHeight: 1.5,
+              textWrap: 'pretty',
+            }}
+          >
+            {missesLine(attendance)}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {attendance.map((m) => (
+              <button
+                key={`${m.kind}-${m.courseId}`}
+                type="button"
+                className="bare tappable"
+                onClick={() => dispatch({ type: 'openCourse', id: m.courseId })}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '12px 13px',
+                  border: '1px solid var(--app-line)',
+                  borderRadius: 'var(--r-sm)',
+                  fontSize: 'calc(13px * var(--text-scale, 1))',
+                  lineHeight: 1.5,
+                  textWrap: 'pretty',
+                }}
+              >
+                {m.says}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {GROUPS.map(({ where, label, note }) => {
         const group = steps.filter((s) => s.where === where);
