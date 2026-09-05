@@ -864,7 +864,23 @@ export function initialEphemeral(now: Date): Ephemeral {
   };
 }
 
+/**
+ * What the database read at boot, if it read anything.
+ *
+ * `loadPersisted` is called synchronously by the reducer's initialiser, and
+ * IndexedDB cannot answer synchronously. So the boot in `main.tsx` reads it
+ * first, leaves the answer here, and the initialiser finds it already waiting.
+ * Nothing about the shape of what is returned changes; only where it came
+ * from. See `state/persist/`.
+ */
+let primed: Persisted | null = null;
+
+export function primePersisted(state: Persisted | null): void {
+  primed = state;
+}
+
 export function loadPersisted(): Persisted {
+  if (primed) return primed;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_PERSISTED };

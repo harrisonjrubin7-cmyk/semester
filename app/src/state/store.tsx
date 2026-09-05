@@ -39,6 +39,12 @@ import { atRiskToday } from '../lib/atrisk';
 import { myReminders } from '../lib/myrules';
 import { datedItems, railFor } from '../lib/select';
 import { save, trouble } from '../lib/keep';
+import { CHECK_EVERY_MS, room, roomLine } from '../lib/quota';
+import {
+  available as dbAvailable,
+  load as loadFromDb,
+  persist as persistToDb,
+} from './persist';
 import { backupOf } from '../lib/export';
 import { countsOf, takeDaily } from '../lib/snapshots';
 import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
@@ -290,7 +296,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // screen, survived nothing, and gave no hint why. Depending on the
   // serialised result means anything pickPersisted returns is persisted, and
   // the two lists cannot drift apart because there is only one.
-  const persisted = useMemo(() => JSON.stringify(pickPersisted(state)), [state]);
+  const picked = useMemo(() => pickPersisted(state), [state]);
+  /**
+   * The same thing as a string, for the localStorage path only.
+   *
+   * On the database path it is never built. Serialising the whole account on
+   * every change is half of what this move is removing, and the diffing writer
+   * compares references rather than text.
+   */
+  const persisted = useMemo(() => (dbAvailable() ? '' : JSON.stringify(picked)), [picked]);
+  /** What was last written to localStorage, so an unchanged store is not rewritten. */
+  const wrote = useRef('');
+  /** When the browser was last asked how much room is left. */
+  const checkedRoom = useRef(0);
 
   /**
    * Whether the last save worked, and what it cost.
@@ -329,6 +347,40 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   } | null>(null);
 
   useEffect(() => {
+    /*
+     * Two paths, and only one of them can lose anything.
+     *
+     * On IndexedDB the write is a diff: ticking one box writes one row, it
+     * happens a quarter of a second after the last change, and it is
+     * asynchronous, so nothing here blocks a render. There is no shedding,
+     * because there is no 5MB ceiling to shed against.
+     *
+     * The localStorage path is what a device with no usable database still
+     * gets, unchanged — including `lib/keep.ts` throwing away old practice
+     * papers to make room, which is the behaviour this whole change exists to
+     * stop being normal. See `state/persist/`.
+     */
+    if (dbAvailable()) {
+      persistToDb(picked);
+      // Occasionally, because the number moves slowly and a warning somebody
+      // sees every day is one they stop reading. Nothing is shed on this path
+      // — this is a warning while there is still room to act on it, which is
+      // the whole difference from what localStorage forced. See `lib/quota.ts`.
+      const now = Date.now();
+      if (now - checkedRoom.current > CHECK_EVERY_MS) {
+        checkedRoom.current = now;
+        void room().then((r) => {
+          const said = roomLine(r);
+          setSaveTrouble((was) => (was === said ? was : said));
+        });
+      }
+      tellOtherTabs();
+      return;
+    }
+    // Unchanged text means nothing to write, which is what the string dep used
+    // to give for free before the database path took the dep over.
+    if (persisted === wrote.current) return;
+    wrote.current = persisted;
     const result = save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value));
     const said = trouble(result);
     // Only when it changes: setting the same string every dispatch would
@@ -339,7 +391,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // fact is sent; the disk stays the single copy both tabs agree on. See
     // `lib/tabs.ts`.
     tellOtherTabs();
-  }, [persisted]);
+  }, [picked, persisted]);
 
   /**
    * Take what another tab wrote.
@@ -348,7 +400,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * so the merge, the removed-course guard and everything else that already
    * decides how two copies reconcile applies unchanged.
    */
-  useEffect(() => onOtherTab(() => dispatch({ type: 'hydrate', persisted: loadPersisted() })), []);
+  /*
+   * Another tab of this app changed something.
+   *
+   * Re-read rather than guess. On the database path the read is asynchronous,
+   * so this waits for it; on the old path `loadPersisted` still answers
+   * straight away. Either way what arrives goes through `hydrate`, which
+   * merges — a second tab is another device as far as the merge is concerned.
+   */
+  useEffect(
+    () =>
+      onOtherTab(() => {
+        if (!dbAvailable()) {
+          dispatch({ type: 'hydrate', persisted: loadPersisted() });
+          return;
+        }
+        void loadFromDb().then((fresh) => {
+          if (fresh) dispatch({ type: 'hydrate', persisted: fresh });
+        });
+      }),
+    [],
+  );
 
   // ── The account copy ────────────────────────────────────────────────────
   const [account, setAccount] = useState<Account | null>(null);

@@ -7,6 +7,8 @@ import { askToPersist } from './lib/device';
 import { StoreProvider } from './state/store';
 import { AIProvider } from './ai/store';
 import { completeAuth } from './lib/connect';
+import { load as loadFromDb, prime as primeDb } from './state/persist';
+import { primePersisted } from './state/shape';
 
 /**
  * A sign-in comes back as a redirect to this same page. Redeem the code before
@@ -26,6 +28,23 @@ completeAuth()
   .catch(() => {
     sessionStorage.setItem('semester.oauth.note', 'That sign-in did not finish.');
   })
+  // The account comes out of IndexedDB now, and IndexedDB cannot answer
+  // synchronously — so it is read here, before anything mounts, and left where
+  // the reducer's initialiser will find it already waiting. Nothing renders
+  // against a half-loaded store, which is what would send somebody who has
+  // used this for a month back through onboarding.
+  //
+  // A device that will not open a database gets null, and the app falls
+  // straight back to the localStorage path it has always had. See
+  // `state/persist/`.
+  .then(() => loadFromDb().catch(() => null))
+  .then((state) => {
+    primePersisted(state);
+    // The first diff has to be against what was just read, or the first write
+    // would rewrite every record in the account.
+    if (state) primeDb(state);
+  })
+  .catch(() => primePersisted(null))
   .finally(() => {
     // The worker is what makes this installable as its own window, and what
     // keeps a lesson playable with no signal. Only in a build: in dev it would
