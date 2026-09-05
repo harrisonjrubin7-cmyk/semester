@@ -168,7 +168,14 @@ const FULLSCREEN: Screen[] = ['drill', 'quiz', 'guess', 'lesson', 'slides', 'onb
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
   const { state, now, catalog } = useStore();
-  const guide = catalog.guides[state.guideId];
+  // Not `guide.code`. Opening a study screen by its own URL — which is the
+  // point of having URLs — arrives with no course chosen, and the four study
+  // kickers below then read a field off `undefined` and take the whole app
+  // down before the screen renders. The screens themselves already survive
+  // this: `useLive` falls back to an empty guide. The header did not.
+  const code = catalog.guides[state.guideId]?.code ?? '';
+  // A kicker of " · study guide" is a bug on show. Drop the empty half.
+  const about = (what: string) => (code ? `${code} · ${what}` : what);
   const exam = nextExam(catalog, now);
 
   const today = `${DOW[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`;
@@ -201,13 +208,13 @@ function useHeader(): { kicker: string; title: string } {
         title: 'Study',
       };
     case 'guide':
-      return { kicker: `${guide.code} · study guide`, title: 'Guide' };
+      return { kicker: about('study guide'), title: 'Guide' };
     case 'drill':
-      return { kicker: guide.code, title: 'Drill' };
+      return { kicker: code, title: 'Drill' };
     case 'guess':
-      return { kicker: `${guide.code} · before you read`, title: 'Guess first' };
+      return { kicker: about('before you read'), title: 'Guess first' };
     case 'quiz':
-      return { kicker: `${guide.code} · multiple choice`, title: 'Quiz' };
+      return { kicker: about('multiple choice'), title: 'Quiz' };
     case 'calendar': {
       const source =
         state.calSource === 'all'
@@ -259,15 +266,15 @@ function useHeader(): { kicker: string; title: string } {
     case 'note':
       return { kicker: 'Note', title: 'Editing' };
     case 'lesson':
-      return { kicker: `${guide.code} · lesson`, title: 'Watch' };
+      return { kicker: about('lesson'), title: 'Watch' };
     case 'update':
-      return { kicker: `${guide.code} · into every study mode`, title: 'Add a reading' };
+      return { kicker: about('into every study mode'), title: 'Add a reading' };
     case 'connect':
       return { kicker: 'Accounts and calendars', title: 'Connect' };
     case 'ask':
-      return { kicker: `${guide.code} · with the guide`, title: 'Ask Claude' };
+      return { kicker: about('with the guide'), title: 'Ask Claude' };
     case 'work':
-      return { kicker: `${guide.code} · assignments`, title: 'Work on it' };
+      return { kicker: about('assignments'), title: 'Work on it' };
     case 'grades':
       return { kicker: 'Weights from your syllabi', title: 'Grades' };
     case 'maps':
@@ -279,9 +286,9 @@ function useHeader(): { kicker: string; title: string } {
     case 'yes':
       return { kicker: 'Registration, and the road back', title: 'YES' };
     case 'draw':
-      return { kicker: `${guide.code} · as a picture`, title: 'Draw it' };
+      return { kicker: about('as a picture'), title: 'Draw it' };
     case 'solve':
-      return { kicker: `${guide.code} · step by step`, title: 'Work the problem' };
+      return { kicker: about('step by step'), title: 'Work the problem' };
     case 'edit':
       return { kicker: 'A syllabus is a first draft', title: 'Edit the course' };
     case 'analyse':
@@ -343,7 +350,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'cloud':
       return { kicker: 'Files, mail and your calendar', title: 'Your accounts' };
     case 'slides':
-      return { kicker: `${guide.code} · deck`, title: 'Slides' };
+      return { kicker: about('deck'), title: 'Slides' };
     case 'import':
       return { kicker: 'Syllabus in, course out', title: 'New course' };
     default:
