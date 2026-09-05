@@ -107,6 +107,7 @@ const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
+import { ShellBody } from './components/shell/ShellBody';
 import { litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
@@ -946,7 +947,9 @@ export default function App() {
           {trouble}
           <ScrollArea screen={state.screen} key={state.screen}>
             <Suspense fallback={<Loading />}>
-              <CurrentScreen />
+              <ShellBody screen={state.screen}>
+                <CurrentScreen />
+              </ShellBody>
             </Suspense>
           </ScrollArea>
         </div>
@@ -979,7 +982,9 @@ export default function App() {
       {trouble}
       <ScrollArea screen={state.screen} key={state.screen}>
         <Suspense fallback={<Loading />}>
-          <CurrentScreen />
+          <ShellBody screen={state.screen}>
+            <CurrentScreen />
+          </ShellBody>
         </Suspense>
       </ScrollArea>
       {showTabs && <TabBar />}

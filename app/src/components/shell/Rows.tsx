@@ -1,6 +1,6 @@
 import { useId, type CSSProperties, type ReactNode } from 'react';
 import { ChevronRight } from '../Icons';
-import { useGrouped } from './useShell';
+import { ExemptProvider, useGrouped } from './useShell';
 import { Blueprint } from '../Blueprint';
 import { SectionLabel } from '../ui';
 
@@ -38,9 +38,6 @@ import { SectionLabel } from '../ui';
 
 /** How far the row label sits from the panel's own edge. */
 const SIDE = 15;
-
-/** How far the panel sits from the edge of the screen, so the inset reads. */
-const OUTSIDE = 16;
 
 /** The smallest a row may be before density and text size grow it. */
 export const ROW_HEIGHT = 44;
@@ -114,7 +111,16 @@ export function Group({
   return (
     <section
       aria-labelledby={header ? id : undefined}
-      style={{ margin: `0 ${OUTSIDE}px calc(16px * var(--density, 1))`, ...style }}
+      /*
+       * No horizontal margin of its own.
+       *
+       * Every screen already sets its own page padding, and a panel that also
+       * pushed outwards would either double the gutter or need a negative
+       * margin tuned to whichever padding that screen happened to choose.
+       * Insetting within the page's own gutter is one pixel different from
+       * the phone's settings app and survives all fifty screens.
+       */
+      style={{ margin: `0 0 calc(16px * var(--density, 1))`, ...style }}
     >
       {header ? (
         <h2
@@ -509,6 +515,13 @@ export function CustomRow({ children }: { children: ReactNode }) {
  */
 export function FullBleed({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   const grouped = useGrouped();
+  // Not a marker: everything below this draws itself as it always has, so a
+  // guide keeps its reading width, a flashcard keeps its frame and the
+  // calendar keeps its grid. The page around it is still grouped.
   if (!grouped) return <>{children}</>;
-  return <div style={{ padding: `0 ${OUTSIDE}px`, ...style }}>{children}</div>;
+  return (
+    <ExemptProvider value>
+      <div style={style}>{children}</div>
+    </ExemptProvider>
+  );
 }

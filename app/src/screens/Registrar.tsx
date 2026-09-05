@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Group, ItemRow } from '../components/shell/Rows';
 import { CloseTerm } from '../components/CloseTerm';
 import { TermSwitch } from '../components/TermSwitch';
 import { Blueprint } from '../components/Blueprint';
@@ -148,29 +149,22 @@ export function Registrar() {
       </Blueprint>
 
       {coming.length > 0 && (
-        <>
-          <SectionLabel>Still to come</SectionLabel>
+        // Through the shared row rather than a hand-drawn one, so this list
+        // follows the layout setting. See `components/shell/Rows.tsx`.
+        <Group header="Still to come" framed={false}>
           {coming.slice(0, 4).map((d) => (
-            <div
+            <ItemRow
               key={`up-${d.id}`}
-              style={{
-                display: 'flex',
-                gap: 10,
-                alignItems: 'baseline',
-                padding: '9px 0',
-                borderBottom: '1px solid var(--app-line)',
-              }}
-            >
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{d.label}</span>
-              <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6 }}>
-                {longLabel(isoToDate(d.iso))}
-              </span>
-              <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.8, minWidth: 62, textAlign: 'right' }}>
-                {line(d, now)}
-              </span>
-            </div>
+              title={d.label}
+              meta={longLabel(isoToDate(d.iso))}
+              trailing={
+                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.8 }}>
+                  {line(d, now)}
+                </span>
+              }
+            />
           ))}
-        </>
+        </Group>
       )}
 
       <Segmented
