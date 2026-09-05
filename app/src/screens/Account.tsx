@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { StorageRoom } from '../components/StorageRoom';
+import { syncLine } from '../lib/merge';
 import { SectionLabel } from '../components/ui';
 import { cloudConfigured, sendReset, signIn, signInWith, signOut, signUp } from '../lib/cloud';
 
@@ -85,6 +86,19 @@ export function AccountScreen() {
               <span style={{ whiteSpace: 'pre-wrap' }}>Sync failed. {sync.error}</span>
             )}
           </div>
+          {/*
+            What the last sync actually did, which was never reported.
+
+            The decisions were always being made — a `theirs` field replaced
+            silently, a `union` field combined — and nothing anywhere said so.
+            See `lib/merge.ts`.
+          */}
+          {state.lastSync ? (
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
+              {syncLine(state.lastSync.notes)}
+            </div>
+          ) : null}
+
           {/* The same check the pull-down gesture makes, for a laptop, which
               has no pull-down. It answers in a sentence rather than leaving a
               spinner to be interpreted — see `lib/refresh.ts`. */}

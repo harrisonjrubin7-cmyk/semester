@@ -62,6 +62,14 @@ export function reducer(state: State, action: Action): State {
   if (action.type === 'say') {
     return { ...state, said: action.said, saidAt: action.at };
   }
+  // The sync banner, dismissed. Kept beside `say` because it is the same
+  // shape of thing: a cross-cutting notice rather than one area's business.
+  if (action.type === 'forgetSyncNote') {
+    // Marked as told rather than emptied: the banner is a one-time
+    // announcement, and the Account screen still has to be able to say what
+    // the last sync did afterwards.
+    return state.lastSync ? { ...state, lastSync: { ...state.lastSync, told: true } } : state;
+  }
 
   const undoable = undoableFor(action.type);
   const before = undoable ? snapshot(state, undoable, Date.now()) : null;

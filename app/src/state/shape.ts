@@ -60,6 +60,7 @@ import { readStarted } from '../lib/underway';
 import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
 import { readOverrides, type GradeSystem } from '../lib/cutoffs';
 import { readPretested } from '../lib/pretest';
+import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
 
 /**
@@ -128,6 +129,15 @@ export interface Persisted {
    * nothing may punish it. See `lib/pretest.ts`.
    */
   pretested: Record<string, number>;
+  /**
+   * What the last sync did, so it can be said rather than guessed at.
+   *
+   * `mine` rather than the `latest` the plan named: what this device last
+   * merged is a fact about this device, and `latest` expects a map of records
+   * carrying their own timestamps, which this is not — it would have compared
+   * `at` against `notes` and produced nonsense. See `lib/merge.ts`.
+   */
+  lastSync: { at: number; notes: MergeNote[]; told?: boolean } | null;
   /**
    * Places you named, so a coordinate can mean something.
    *
@@ -620,6 +630,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   mySchools: [],
   countScreens: true,
   pretested: {},
+  lastSync: null,
   places: [],
   commitments: [],
   timers: [],
@@ -805,6 +816,7 @@ export function loadPersisted(): Persisted {
         : [],
       countScreens: saved.countScreens !== false,
       pretested: readPretested(saved.pretested),
+      lastSync: readLastSync(saved.lastSync),
       places: saved.places ?? [],
       commitments: saved.commitments ?? [],
       timers: saved.timers ?? [],
@@ -911,6 +923,7 @@ export function pickPersisted(state: State): Persisted {
     mySchools: state.mySchools,
     countScreens: state.countScreens,
     pretested: state.pretested,
+    lastSync: state.lastSync,
     places: state.places,
     commitments: state.commitments,
     timers: state.timers,
@@ -1005,6 +1018,7 @@ export type Action =
   // from Date.now() inside the reducer, like every other timestamped action.
   | { type: 'guessFirst'; courseId: string; unit: number }
   | { type: 'say'; said: string; at: number }
+  | { type: 'forgetSyncNote' }
   | { type: 'guessShow' }
   | { type: 'guessNext'; right: boolean }
   | { type: 'guessDone'; courseId: string; unit: number; at: number }
@@ -1197,6 +1211,6 @@ export type Action =
   /** Point the open course and guide at something this catalogue holds. */
   | { type: 'settleCourse'; guideId?: CourseId; courseId?: CourseId }
   | { type: 'removalsPushed'; ids: CourseId[] }
-  | { type: 'hydrate'; persisted: Partial<Persisted> };
+  | { type: 'hydrate'; persisted: Partial<Persisted>; at?: number };
 
 export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];

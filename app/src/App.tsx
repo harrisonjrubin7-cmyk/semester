@@ -11,6 +11,7 @@ import {
 } from './components/Icons';
 import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
+import { Replaced } from './components/Replaced';
 import { usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
 import { ground, resolveGround, scaleOf, tokensFor, type Look } from './lib/look';
@@ -879,7 +880,8 @@ export default function App() {
         {/* Notices what goes wrong, on this device only. Draws nothing. */}
         <Watching />
         {/* Offers the last removal back, from wherever it happened. */}
-        <Undone />
+        <Replaced />
+      <Undone />
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
@@ -914,6 +916,7 @@ export default function App() {
       <PushTop />
       <Tapped />
       <Watching />
+      <Replaced />
       <Undone />
       {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}

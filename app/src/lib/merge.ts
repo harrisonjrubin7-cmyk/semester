@@ -145,6 +145,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // A choice about whether the app counts anything, so it follows the person.
   // The counts it governs never sync at all — see `lib/usage.ts`.
   countScreens: 'theirs',
+  // What this device last merged is a fact about this device. See the note on
+  // the field in `state/shape.ts` for why the plan's `latest` would not work.
+  lastSync: 'mine',
   // Which units were guessed at before reading. Two devices pre-testing two
   // different units should end with both, and a pretest is never un-done.
   pretested: 'ticks',
@@ -341,7 +344,114 @@ function isMap(value: unknown): value is Record<string, unknown> {
  * device, which is a second way the wholesale spread lost data.
  */
 export function mergePersisted<T extends object>(local: T, remote: NoInfer<Partial<T>>): T {
+  return withNotes(local, remote).merged;
+}
+
+/**
+ * What a sync did, field by field.
+ *
+ * The decisions were always being made and never reported. When `theirs` wins
+ * on a setting the local value is gone with no notice at all — which is
+ * defensible for a setting and indefensible as a silence, because the person
+ * whose value was replaced is the one who cannot tell it happened.
+ *
+ * Observing only. Nothing here changes what the merge does.
+ */
+export type Outcome = 'kept-local' | 'took-remote' | 'combined' | 'no-change';
+
+export interface MergeNote {
+  /** The store field, e.g. `grades`. */
+  key: string;
+  strategy: Strategy;
+  outcome: Outcome;
+  /** Rows or fields affected. Zero when nothing moved. */
+  changed: number;
+  /** What to call it on a screen. */
+  label: string;
+  /**
+   * Whether the value this device held was the shipped default.
+   *
+   * A first sync replacing a default with a real choice is the sync working,
+   * and a new device that announced that would open on a banner about its own
+   * setup. Computed here, where the pre-merge value is in hand — nothing
+   * downstream has it any more.
+   */
+  wasDefault: boolean;
+}
+
+/**
+ * Names for the fields worth naming.
+ *
+ * Only the ones somebody would recognise. Anything absent falls back to the
+ * field name, which is honest — a note about `regradeWindows` is better than
+ * no note, and better than a name invented at render time.
+ */
+const LABELS: Record<string, string> = {
+  courses: 'Courses',
+  notes: 'Notes',
+  tasks: 'Your tasks',
+  appointments: 'Appointments',
+  grades: 'Grades',
+  gradeSystems: 'Grading cutoffs',
+  done: 'What you have ticked off',
+  reviews: 'Study card history',
+  sittings: 'Practice papers',
+  attendance: 'Attendance',
+  spent: 'Timings',
+  ground: 'Theme',
+  accent: 'Accent',
+  typeface: 'Typeface',
+  dayBudget: 'Hours in a day',
+  contract: 'Your rules',
+  floor: 'Sleep window',
+  scale: 'Grade scale',
+  nav: 'Home layout',
+  tabs: 'The tab bar',
+  schoolId: 'Where you study',
+  mySchools: 'Schools you added',
+};
+
+export function labelFor(key: string): string {
+  return LABELS[key] ?? key;
+}
+
+/** How many keys of a map differ between two copies. */
+function movedKeys(before: unknown, after: unknown): number {
+  if (!isMap(before) || !isMap(after)) return before === after ? 0 : 1;
+  let n = 0;
+  for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+    if (JSON.stringify(before[key]) !== JSON.stringify(after[key])) n += 1;
+  }
+  return n;
+}
+
+/** How many entries of a list differ, by id where there is one. */
+function movedRows(before: unknown, after: unknown): number {
+  if (!Array.isArray(before) || !Array.isArray(after)) return before === after ? 0 : 1;
+  const byId = (list: unknown[]) => {
+    const m = new Map<string, string>();
+    for (const row of list) {
+      const id = idOf(row);
+      m.set(id ?? JSON.stringify(row), JSON.stringify(row));
+    }
+    return m;
+  };
+  const a = byId(before);
+  const b = byId(after);
+  let n = 0;
+  for (const [id, value] of b) if (a.get(id) !== value) n += 1;
+  return n;
+}
+
+/** The merge, and a note per field it touched. */
+export function withNotes<T extends object>(
+  local: T,
+  remote: NoInfer<Partial<T>>,
+  /** The shipped defaults, so a note can say whether anything was really lost. */
+  defaults?: NoInfer<Partial<T>>,
+): { merged: T; notes: MergeNote[] } {
   const out: Record<string, unknown> = { ...(local as Record<string, unknown>) };
+  const notes: MergeNote[] = [];
 
   for (const [field, theirs] of Object.entries(remote)) {
     if (theirs === undefined) continue;
@@ -365,7 +475,100 @@ export function mergePersisted<T extends object>(local: T, remote: NoInfer<Parti
       default:
         out[field] = theirs;
     }
+
+    const strategy = strategyFor(field);
+    const after = out[field];
+    const same = JSON.stringify(mine) === JSON.stringify(after);
+    const changed =
+      strategy === 'union'
+        ? movedRows(mine, after)
+        : strategy === 'ticks' || strategy === 'latest'
+          ? movedKeys(mine, after)
+          : same
+            ? 0
+            : 1;
+    const outcome: Outcome =
+      strategy === 'mine'
+        ? // Reported even when identical: "this device kept its own" is the
+          // fact, and it is the same fact either way.
+          'kept-local'
+        : same
+          ? 'no-change'
+          : strategy === 'union' || strategy === 'ticks' || strategy === 'latest'
+            ? 'combined'
+            : 'took-remote';
+    const wasDefault =
+      defaults !== undefined &&
+      JSON.stringify((defaults as Record<string, unknown>)[field]) === JSON.stringify(mine);
+    notes.push({ key: field, strategy, outcome, changed, label: labelFor(field), wasDefault });
   }
 
-  return out as T;
+  return { merged: out as T, notes };
+}
+
+/**
+ * The notes worth putting in front of somebody.
+ *
+ * Everything that did nothing is dropped: a sync that reports "no change" for
+ * sixty fields is a sync report nobody reads twice. `kept-local` is dropped
+ * too — that this device kept its own text size is not news.
+ */
+export function worthSaying(notes: MergeNote[]): MergeNote[] {
+  return notes
+    .filter((n) => n.changed > 0 && n.outcome !== 'kept-local')
+    .sort((a, b) => b.changed - a.changed || a.label.localeCompare(b.label));
+}
+
+/** What the Account screen says under the last-sync time, or empty. */
+export function syncLine(notes: MergeNote[]): string {
+  const said = worthSaying(notes);
+  if (said.length === 0) return 'Nothing came back that this device did not already have.';
+  const names = said.slice(0, 3).map((n) => n.label.toLowerCase());
+  const more = said.length - names.length;
+  const list =
+    names.length === 1
+      ? names[0]
+      : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  return `${list}${more > 0 ? `, and ${more} more,` : ''} updated from another device.`;
+}
+
+/**
+ * The ones where the other device's copy replaced this one's, or empty.
+ *
+ * These are the notes that need saying out loud rather than being available to
+ * read: a setting merged by `theirs` is gone here without a trace, and the
+ * person it happened to is the one who cannot tell.
+ */
+export function replaced(notes: MergeNote[]): MergeNote[] {
+  return notes.filter((n) => n.outcome === 'took-remote' && n.changed > 0 && !n.wasDefault);
+}
+
+/** What the banner says. Empty when there is nothing that was replaced. */
+export function replacedLine(notes: MergeNote[]): string {
+  const gone = replaced(notes);
+  if (gone.length === 0) return '';
+  const names = gone.map((n) => n.label.toLowerCase());
+  const list =
+    names.length === 1
+      ? names[0]
+      : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+  return `Your ${list} ${gone.length === 1 ? 'was' : 'were'} replaced by settings from another device.`;
+}
+
+/** A stored sync report, made safe to render. */
+export function readLastSync(raw: unknown): { at: number; notes: MergeNote[]; told?: boolean } | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.at !== 'number' || !Number.isFinite(r.at)) return null;
+  const notes = Array.isArray(r.notes)
+    ? r.notes.filter(
+        (n): n is MergeNote =>
+          Boolean(n) &&
+          typeof n === 'object' &&
+          typeof (n as MergeNote).key === 'string' &&
+          typeof (n as MergeNote).label === 'string' &&
+          typeof (n as MergeNote).changed === 'number',
+      )
+    : [];
+  return { at: r.at, notes, told: r.told === true };
 }

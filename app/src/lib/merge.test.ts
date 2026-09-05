@@ -2,7 +2,19 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { STRATEGY, latest, mergePersisted, strategyFor, ticks, union } from './merge';
+import {
+  STRATEGY,
+  labelFor,
+  latest,
+  mergePersisted,
+  replacedLine,
+  strategyFor,
+  syncLine,
+  ticks,
+  union,
+  withNotes,
+  worthSaying,
+} from './merge';
 
 /**
  * The scenarios here are the ones that used to lose data, written as two
@@ -232,5 +244,104 @@ describe('settings about the device rather than the person', () => {
     expect(strategyFor('textSize')).toBe('mine');
     expect(strategyFor('density')).toBe('mine');
     expect(strategyFor('somethingNobodyListed')).toBe('union');
+  });
+});
+
+describe('what a sync did, reported', () => {
+  const base = { ground: 'ink', notes: [] as { id: string; title: string }[], grades: {} as Record<string, string>, textSize: 'normal' };
+
+  it('observes without changing anything', () => {
+    // The whole discipline of this: the notes are a second return value, not
+    // a second behaviour.
+    const local = { ...base, ground: 'ink' };
+    const remote = { ground: 'fog' };
+    expect(withNotes(local, remote).merged).toEqual(mergePersisted(local, remote));
+  });
+
+  it('says when the other device replaced a setting', () => {
+    const n = withNotes({ ...base }, { ground: 'fog' }).notes.find((x) => x.key === 'ground');
+    expect(n?.outcome).toBe('took-remote');
+    expect(n?.changed).toBe(1);
+    expect(n?.label).toBe('Theme');
+  });
+
+  it('says nothing happened when the two agreed', () => {
+    const n = withNotes({ ...base }, { ground: 'ink' }).notes.find((x) => x.key === 'ground');
+    expect(n?.outcome).toBe('no-change');
+    expect(n?.changed).toBe(0);
+  });
+
+  it('counts the rows a union actually brought in', () => {
+    const local = { ...base, notes: [{ id: 'a', title: 'A' }] };
+    const remote = { notes: [{ id: 'a', title: 'A' }, { id: 'b', title: 'B' }] };
+    const n = withNotes(local, remote).notes.find((x) => x.key === 'notes');
+    expect(n?.outcome).toBe('combined');
+    expect(n?.changed).toBe(1);
+  });
+
+  it('counts the keys a map merge moved', () => {
+    const local = { ...base, grades: { 'econ:0': '88' } };
+    const remote = { grades: { 'econ:0': '88', 'psci:1': '91' } };
+    expect(withNotes(local, remote).notes.find((x) => x.key === 'grades')?.changed).toBe(1);
+  });
+
+  it('reports a device keeping its own, and does not put it on a screen', () => {
+    // "This device kept its own text size" is the fact and it is not news.
+    const notes = withNotes({ ...base }, { textSize: 'largest' }).notes;
+    expect(notes.find((n) => n.key === 'textSize')?.outcome).toBe('kept-local');
+    expect(worthSaying(notes).map((n) => n.key)).not.toContain('textSize');
+  });
+
+  it('drops everything that did nothing, so the report is readable', () => {
+    const notes = withNotes({ ...base }, { ground: 'ink', textSize: 'normal' }).notes;
+    expect(worthSaying(notes)).toEqual([]);
+  });
+});
+
+describe('what the two places say', () => {
+  const note = (key: string, outcome: 'took-remote' | 'combined', changed = 1) => ({
+    key,
+    strategy: 'theirs' as const,
+    outcome,
+    changed,
+    label: labelFor(key),
+    wasDefault: false,
+  });
+
+  it('names what came from where, in words', () => {
+    const said = syncLine([note('grades', 'combined', 3), note('courses', 'combined', 1)]);
+    expect(said).toContain('grades');
+    expect(said).toContain('courses');
+    expect(said).toContain('another device');
+  });
+
+  it('says so plainly when nothing came back', () => {
+    expect(syncLine([])).toContain('did not already have');
+  });
+
+  it('does not list twelve things', () => {
+    const many = ['grades', 'courses', 'notes', 'tasks', 'appointments'].map((k) => note(k, 'combined'));
+    expect(syncLine(many)).toContain('and 2 more');
+  });
+
+  it('says nothing about a default being filled in for the first time', () => {
+    // A fresh device has defaults, and a first sync replacing one with a real
+    // choice is the sync working — not something to open a banner about.
+    const fresh = { ...note('ground', 'took-remote' as const), wasDefault: true };
+    expect(replacedLine([fresh])).toBe('');
+  });
+
+  it('speaks up only for a value that was replaced', () => {
+    // A combined list lost nothing. A setting overwritten by `theirs` did,
+    // and the person it happened to is the one who cannot tell.
+    expect(replacedLine([note('grades', 'combined', 5)])).toBe('');
+    expect(replacedLine([note('ground', 'took-remote')])).toContain('theme');
+    expect(replacedLine([note('ground', 'took-remote')])).toContain('replaced');
+  });
+
+  it('reads as a list when more than one was replaced', () => {
+    const said = replacedLine([note('ground', 'took-remote'), note('dayBudget', 'took-remote')]);
+    expect(said).toContain('theme and hours in a day');
+    expect(said).toContain('were replaced');
   });
 });

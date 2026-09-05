@@ -10,10 +10,10 @@
  */
 
 import { newId } from '../../lib/files';
-import { mergePersisted } from '../../lib/merge';
+import { withNotes } from '../../lib/merge';
 import { LANDMARKS, apply, sheet } from '../../lib/registrar';
 import type { CampusLink, FeedSource } from '../../lib/types';
-import type { Action, State } from '../shape';
+import { DEFAULT_PERSISTED, type Action, type State } from '../shape';
 
 export function library(state: State, action: Action): State | null {
   switch (action.type) {
@@ -200,7 +200,10 @@ export function library(state: State, action: Action): State | null {
     // you add to keep both sides, ticked boxes keep both ticks, settings take
     // the copy that synced later.
     case 'hydrate': {
-      const merged = mergePersisted(state, action.persisted);
+      const { merged: mergedRaw, notes } = withNotes(state, action.persisted, DEFAULT_PERSISTED);
+      // Recorded on every hydrate, including the one another tab triggers —
+      // what came in is what came in, whichever door it used.
+      const merged = { ...mergedRaw, lastSync: { at: action.at ?? Date.now(), notes } };
       // A course deleted here but not yet deleted from the account would
       // otherwise arrive back in the union and look like it un-deleted itself.
       return state.removedCourses.length === 0
