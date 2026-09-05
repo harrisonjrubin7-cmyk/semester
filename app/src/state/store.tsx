@@ -44,6 +44,7 @@ import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
 import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
+import { isSettingsPage } from '../lib/settings';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
@@ -88,6 +89,17 @@ function screenFromUrl(): Screen | null {
     // explicitly. Only for a real share: `?screen=import` typed by hand is
     // still refused, the same as any other non-root.
     if (asked === 'import' && params.get(SHARE_FLAG) === '1') return 'import' as Screen;
+    // The settings pages are addressable too. They are not roots — a tab
+    // cannot open one — but they are leaves with a heading, a Back and no way
+    // to strand anybody, which is the actual reason roots were the rule. A
+    // link to the appearance page is a reasonable thing for a help page or a
+    // shortcut to hold. See `lib/settings.ts`, which is also what the index
+    // and the search read.
+    // The index itself, and every page under it. `settings` is not a root —
+    // no tab lands on it — but it is the one screen a link most obviously
+    // wants, and refusing it while allowing its children would be strange.
+    if (asked === 'settings') return asked;
+    if (asked && isSettingsPage(asked)) return asked;
     return null;
   } catch {
     return null;

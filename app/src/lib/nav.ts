@@ -517,6 +517,16 @@ const NESTED: Partial<Record<Screen, Screen>> = {
   slides: 'study',
   note: 'mine',
   search: 'home',
+  // Every settings page lives under Me, the same as settings itself, so the
+  // tab bar does not change out from under somebody two taps deep in it.
+  setLook: 'me',
+  setNav: 'me',
+  setAlerts: 'me',
+  setCourses: 'me',
+  setGrading: 'me',
+  setWorkload: 'me',
+  setStorage: 'me',
+  setAbout: 'me',
 };
 
 const BY_SCREEN = new Map(DESTINATIONS.map((d) => [d.screen, d]));

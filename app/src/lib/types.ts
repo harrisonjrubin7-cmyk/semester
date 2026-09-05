@@ -451,7 +451,17 @@ export type Screen =
   | 'behind'
   | 'degree'
   | 'people'
-  | 'cloud';
+  | 'cloud'
+  // The settings pages. Real screens rather than a sub-mode of one, so Back,
+  // the recent list and a deep link all work the way they do everywhere else.
+  | 'setLook'
+  | 'setNav'
+  | 'setAlerts'
+  | 'setCourses'
+  | 'setGrading'
+  | 'setWorkload'
+  | 'setStorage'
+  | 'setAbout';
 
 export type StudyMode =
   | 'cards'

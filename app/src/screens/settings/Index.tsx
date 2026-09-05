@@ -1,0 +1,130 @@
+import { useState } from 'react';
+import { useStore } from '../../state/store';
+import { NavRow, SettingsGroup } from '../../components/settings/Rows';
+import { SETTINGS, SEARCH_PLACEHOLDER, findSetting, markLooking, nothingFound } from '../../lib/settings';
+import type { Screen } from '../../lib/types';
+
+/**
+ * Settings, as an index.
+ *
+ * Nothing lives at this level but rows. That is the whole change: the screen
+ * used to be thirty sections in one scroll, and finding one of them meant
+ * going past all the others with nothing telling you when you had gone too
+ * far. Now each row names a page and says what is on it, and the list fits on
+ * a phone without scrolling past About.
+ *
+ * The rows come from `lib/settings.ts`, which is also what the search below
+ * matches against and what decides which pages a link may open — one list, so
+ * a page cannot be findable and unreachable at the same time.
+ */
+export function SettingsIndex() {
+  const { state, dispatch, account, sync, school } = useStore();
+  const [query, setQuery] = useState('');
+
+  const found = findSetting(query);
+  const searching = query.trim().length >= 2;
+
+  // The word that matched travels with the jump, so the page that opens can
+  // light the group it was found in rather than making somebody look again.
+  const go = (screen: Screen, matched: string) => {
+    markLooking(matched);
+    dispatch({ type: 'go', screen });
+    setQuery('');
+  };
+
+  const standing =
+    sync.status === 'synced'
+      ? 'Synced'
+      : sync.status === 'signed-out'
+        ? 'Not signed in'
+        : sync.status === 'syncing'
+          ? 'Syncing'
+          : sync.status === 'error'
+            ? 'Sync trouble'
+            : 'On this device only';
+
+  return (
+    <div>
+      <div style={{ padding: '0 16px calc(14px * var(--density, 1))' }}>
+        <input
+          className="input"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={SEARCH_PLACEHOLDER}
+          aria-label={SEARCH_PLACEHOLDER}
+          style={{ width: '100%', height: 40, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+        />
+      </div>
+
+      {searching ? (
+        <nav aria-label="Settings search results">
+          {found.length === 0 ? (
+            <div
+              style={{
+                margin: '0 16px',
+                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                opacity: 0.6,
+                lineHeight: 1.5,
+                textWrap: 'pretty',
+              }}
+            >
+              {nothingFound(query)}
+            </div>
+          ) : (
+            <SettingsGroup header={`${found.length} ${found.length === 1 ? 'match' : 'matches'}`}>
+              {found.map((f) => (
+                <NavRow
+                  key={f.row.screen}
+                  label={f.row.label}
+                  sub={f.section}
+                  value={f.matched === f.row.label ? undefined : f.matched}
+                  onClick={() => go(f.row.screen, f.matched)}
+                />
+              ))}
+            </SettingsGroup>
+          )}
+        </nav>
+      ) : (
+        <nav aria-label="Settings">
+          <SettingsGroup>
+            <NavRow
+              tall
+              label={state.myName.trim() || 'Your account'}
+              sub={school.name}
+              value={standing}
+              onClick={() => dispatch({ type: 'go', screen: 'account' })}
+            />
+          </SettingsGroup>
+
+          {SETTINGS.map((section) => (
+            <SettingsGroup
+              key={section.header}
+              header={section.header}
+              footer={
+                section.header === 'Privacy and data'
+                  ? account
+                    ? 'Everything here is per device except what syncs, which Your data lists.'
+                    : 'Everything here stays on this device. Signing in is optional.'
+                  : section.footer
+              }
+            >
+              {section.rows.map((row) => (
+                // One line each. What a page holds is in `lib/settings.ts`
+                // and is what search matches on, but printing it under every
+                // row is what pushed About off the bottom of a phone — and an
+                // index that scrolls is the screen this replaced with an
+                // extra tap in front of it.
+                <NavRow
+                  key={row.screen}
+                  label={row.label}
+                  onClick={() => dispatch({ type: 'go', screen: row.screen })}
+                />
+              ))}
+            </SettingsGroup>
+          ))}
+        </nav>
+      )}
+    </div>
+  );
+}

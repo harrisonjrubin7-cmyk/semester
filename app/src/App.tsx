@@ -84,6 +84,16 @@ const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ defaul
 const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
 const Search = lazy(() => import('./screens/Me').then((m) => ({ default: m.Search })));
 const Settings = lazy(() => import('./screens/Me').then((m) => ({ default: m.Settings })));
+// The settings pages. Lazy like every other screen: somebody who never opens
+// settings should not download the colour picker.
+const SettingsLook = lazy(() => import('./screens/settings/Look').then((m) => ({ default: m.SettingsLook })));
+const SettingsNav = lazy(() => import('./screens/settings/Nav').then((m) => ({ default: m.SettingsNav })));
+const SettingsAlerts = lazy(() => import('./screens/settings/Alerts').then((m) => ({ default: m.SettingsAlerts })));
+const SettingsCourses = lazy(() => import('./screens/settings/Courses').then((m) => ({ default: m.SettingsCourses })));
+const SettingsGrading = lazy(() => import('./screens/settings/Grading').then((m) => ({ default: m.SettingsGrading })));
+const SettingsWorkload = lazy(() => import('./screens/settings/Workload').then((m) => ({ default: m.SettingsWorkload })));
+const SettingsStorage = lazy(() => import('./screens/settings/Storage').then((m) => ({ default: m.SettingsStorage })));
+const SettingsAbout = lazy(() => import('./screens/settings/About').then((m) => ({ default: m.SettingsAbout })));
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
 const Solve = lazy(() => import('./screens/Solve').then((m) => ({ default: m.Solve })));
 const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
@@ -225,6 +235,24 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Today', title: 'Alerts' };
     case 'settings':
       return { kicker: 'Preferences', title: 'Settings' };
+    // The settings pages carry their own heading inside the page, so the bar
+    // above says where they sit rather than repeating the title underneath.
+    case 'setLook':
+      return { kicker: 'Settings', title: 'Appearance' };
+    case 'setNav':
+      return { kicker: 'Settings', title: 'Navigation' };
+    case 'setAlerts':
+      return { kicker: 'Settings', title: 'Alerts' };
+    case 'setCourses':
+      return { kicker: 'Settings', title: 'Courses' };
+    case 'setGrading':
+      return { kicker: 'Settings', title: 'Grading' };
+    case 'setWorkload':
+      return { kicker: 'Settings', title: 'Workload' };
+    case 'setStorage':
+      return { kicker: 'Settings', title: 'Storage' };
+    case 'setAbout':
+      return { kicker: 'Settings', title: 'About' };
     case 'mine':
       return { kicker: 'Yours, not the syllabus', title: 'Mine' };
     case 'note':
@@ -569,6 +597,22 @@ function CurrentScreen() {
       return <Notifications />;
     case 'settings':
       return <Settings />;
+    case 'setLook':
+      return <SettingsLook />;
+    case 'setNav':
+      return <SettingsNav />;
+    case 'setAlerts':
+      return <SettingsAlerts />;
+    case 'setCourses':
+      return <SettingsCourses />;
+    case 'setGrading':
+      return <SettingsGrading />;
+    case 'setWorkload':
+      return <SettingsWorkload />;
+    case 'setStorage':
+      return <SettingsStorage />;
+    case 'setAbout':
+      return <SettingsAbout />;
     case 'mine':
       return <Mine />;
     case 'note':
