@@ -1246,6 +1246,7 @@ export type Action =
   /** Point the open course and guide at something this catalogue holds. */
   | { type: 'settleCourse'; guideId?: CourseId; courseId?: CourseId }
   | { type: 'removalsPushed'; ids: CourseId[] }
-  | { type: 'hydrate'; persisted: Partial<Persisted>; at?: number };
+  | { type: 'hydrate'; persisted: Partial<Persisted>; at?: number }
+  | { type: 'restore'; persisted: Partial<Persisted> };
 
 export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];

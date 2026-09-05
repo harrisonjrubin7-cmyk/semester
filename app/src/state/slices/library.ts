@@ -13,7 +13,7 @@ import { newId } from '../../lib/files';
 import { withNotes } from '../../lib/merge';
 import { LANDMARKS, apply, sheet } from '../../lib/registrar';
 import type { CampusLink, FeedSource } from '../../lib/types';
-import { DEFAULT_PERSISTED, type Action, type State } from '../shape';
+import { DEFAULT_PERSISTED, type Action, type Persisted, type State } from '../shape';
 
 export function library(state: State, action: Action): State | null {
   switch (action.type) {
@@ -212,6 +212,46 @@ export function library(state: State, action: Action): State | null {
             ...merged,
             courses: merged.courses.filter((c) => !state.removedCourses.includes(c.course.id)),
           };
+    }
+
+    /**
+     * Going back to a copy: the only action in the app that replaces.
+     *
+     * `hydrate` merges, and it has to — it is the sync path, and two devices
+     * each writing a note offline must both keep their note. But merging is
+     * exactly wrong for a restore. Going back to yesterday's copy has to be
+     * able to *remove* the thing that was added by mistake this morning, and a
+     * union can only ever add. Restoring through `hydrate` produced a state
+     * containing both yesterday and today, which is neither, and quietly did
+     * nothing about the mistake somebody was trying to undo. The Export
+     * screen's "Replace and restore" has been saying "this replaces rather
+     * than merging" while calling `hydrate`; this is what makes that true.
+     *
+     * Only the keys actually present are replaced. A copy taken before a
+     * feature existed carries no key for it, and emptying settings somebody
+     * never chose to revert would be its own kind of data loss.
+     *
+     * Nothing here is a safety net on its own — the caller takes a snapshot of
+     * the current state first, so this is undoable. See `lib/snapshots.ts`.
+     */
+    case 'restore': {
+      const incoming = Object.fromEntries(
+        Object.entries(action.persisted).filter(([, v]) => v !== undefined && v !== null),
+      ) as Partial<Persisted>;
+      return {
+        ...state,
+        ...incoming,
+        // A course deleted here is still deleted: the list of what this device
+        // removed is about the account, not about which copy is on screen, and
+        // resurrecting one through a restore would then push it back up.
+        ...(state.removedCourses.length > 0 && incoming.courses
+          ? {
+              courses: incoming.courses.filter(
+                (c) => !state.removedCourses.includes(c.course.id),
+              ),
+            }
+          : {}),
+      };
     }
 
     default:

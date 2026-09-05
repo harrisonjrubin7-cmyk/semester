@@ -20,6 +20,7 @@ import type { Catalog } from '../data/catalog';
 import type { Appointment, DatedItem, Note, PersonalTask } from './types';
 import { standingOf, type DoneMap } from './standing';
 import { NO_TIME } from './duetime';
+import type { State } from '../state/shape';
 
 // ── CSV ──────────────────────────────────────────────────────────────────
 
@@ -352,7 +353,14 @@ export interface Restore {
   data: Record<string, unknown>;
 }
 
-const SECTIONS: { key: string; label: string; array: boolean }[] = [
+/**
+ * The parts of an account a backup carries, and what to call each one.
+ *
+ * Exported because `lib/snapshots.ts` counts the same things to say what a
+ * restore would change. One list, so a section added to a backup is
+ * automatically a section a restore warns you about.
+ */
+export const BACKUP_SECTIONS: { key: string; label: string; array: boolean }[] = [
   { key: 'courses', label: 'courses', array: true },
   { key: 'updates', label: 'added readings', array: true },
   { key: 'notes', label: 'notes', array: true },
@@ -387,7 +395,7 @@ export function readBackup(text: string): Restore {
 
   const data: Record<string, unknown> = {};
   const parts: string[] = [];
-  for (const section of SECTIONS) {
+  for (const section of BACKUP_SECTIONS) {
     const value = obj[section.key];
     if (value === undefined || value === null) continue;
     const ok = section.array
@@ -416,4 +424,41 @@ export function backupDate(text: string): string {
   } catch {
     return '';
   }
+}
+
+// ── The account as data ───────────────────────────────────────────────────
+
+/**
+ * Everything a backup carries, and nothing else.
+ *
+ * Built by naming what goes in rather than by removing what should not, so a
+ * field added to the store later cannot leak into an exported file by
+ * accident. Tokens and API keys are not here and never will be.
+ *
+ * It lives here rather than on the Export screen because two things now write
+ * it: the file somebody downloads, and the rolling snapshots in
+ * `lib/snapshots.ts`. One definition, so a snapshot can never turn out to hold
+ * less than the backup a person thought they were taking.
+ */
+export function backupOf(state: State) {
+  return {
+    format: 'semester.backup.v1',
+    exported: new Date().toISOString(),
+    courses: state.courses,
+    updates: state.updates,
+    notes: state.notes,
+    tasks: state.tasks,
+    appointments: state.appointments,
+    grades: state.grades,
+    places: state.places,
+    reviews: state.reviews,
+    done: state.done,
+    saved: state.saved,
+    // The addresses only. A feed's token is a credential and a backup that
+    // carries credentials is a liability, not a safety net.
+    feeds: state.feeds.map((f) => ({ id: f.id, name: f.name, url: f.url })),
+    linkUrls: state.linkUrls,
+    extraLinks: state.extraLinks,
+    sample: state.sample,
+  };
 }

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { backupOf } from '../lib/export';
+import { takeSnapshot } from '../lib/snapshots';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
@@ -173,6 +175,12 @@ export function Import() {
 
   const save = () => {
     if (!result) return;
+    // A copy of the account first, because this is the change most worth
+    // being able to undo an hour later: a model read a PDF and is about to
+    // rewrite a course, and a re-import that got the weights wrong is not
+    // something anybody notices until the grade projection looks strange.
+    // Not awaited — the import must happen whether or not the copy did.
+    void takeSnapshot('import', backupOf(state) as unknown as Record<string, unknown>);
     // Replacing rather than adding, when it is the same course, and with the
     // surviving items keeping the ids their ticks are filed under — otherwise
     // a re-import silently un-ticks everything already done.

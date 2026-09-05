@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { backupOf } from '../lib/export';
+import { takeSnapshot } from '../lib/snapshots';
 import { readTerm } from '../lib/term';
 import { ARCHIVED_LINE, asTaken, closing, isArchived, nextTerm, offerLine, readyLine } from '../lib/rollover';
 
@@ -117,6 +119,11 @@ export function CloseTerm() {
           type="button"
           className="btn btn-primary"
           onClick={() => {
+            // Closing a term rewrites the transcript and empties the switcher.
+            // Nothing is deleted, but "nothing is deleted" is easier to
+            // believe when there is a copy of five seconds ago to check it
+            // against. Not awaited: the close happens either way.
+            void takeSnapshot('close', backupOf(state) as unknown as Record<string, unknown>);
             dispatch({
               type: 'closeTerm',
               term,

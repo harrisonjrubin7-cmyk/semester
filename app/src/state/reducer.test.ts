@@ -213,6 +213,72 @@ describe('courses and the account', () => {
   });
 });
 
+describe('going back to a copy', () => {
+  const module = (id: string) =>
+    ({
+      course: { id, code: id.toUpperCase(), title: id, term: '2026FA' },
+      items: [],
+      schedule: [],
+      guide: { code: id.toUpperCase(), units: [] },
+    }) as never;
+
+  const note = (id: string, title: string) => ({
+    id,
+    title,
+    body: '',
+    created: 1,
+    updated: 1,
+    courseId: null,
+    fileIds: [],
+  });
+
+  it('takes away what was added since, which merging cannot', () => {
+    // The whole point. Going back to yesterday has to be able to remove this
+    // morning's mistake, and a union can only ever add — restoring through
+    // `hydrate` produced a state holding both days, which is neither.
+    const s = { ...blank(), notes: [note('a', 'Yesterday'), note('b', 'This morning')] };
+    const back = reducer(s, { type: 'restore', persisted: { notes: [note('a', 'Yesterday')] } });
+    expect(back.notes.map((n) => n.id)).toEqual(['a']);
+  });
+
+  it('is the difference between restore and sync', () => {
+    // Same input, two actions, deliberately opposite answers. Sync must keep
+    // both devices' notes; a restore must not.
+    const s = { ...blank(), notes: [note('a', 'Yesterday'), note('b', 'This morning')] };
+    const synced = reducer(s, { type: 'hydrate', persisted: { notes: [note('a', 'Yesterday')] } });
+    expect(synced.notes).toHaveLength(2);
+  });
+
+  it('leaves alone anything the copy does not carry', () => {
+    // A copy taken before a feature existed has no key for it, and emptying
+    // settings nobody chose to revert is its own kind of data loss.
+    const s = reducer(blank(), {
+      type: 'addTask',
+      task: { title: 'Laundry', date: '', time: '', courseId: null, note: '' } as never,
+    });
+    const back = reducer(s, { type: 'restore', persisted: { notes: [] } });
+    expect(back.tasks).toHaveLength(1);
+  });
+
+  it('still does not un-delete a course whose deletion has not synced', () => {
+    // The removal list is about the account, not about which copy is on
+    // screen: resurrecting one here would push it straight back up.
+    let s = reducer(blank(), { type: 'addCourse', module: module('econ') });
+    s = reducer(s, { type: 'removeCourse', id: 'econ' });
+    const back = reducer(s, { type: 'restore', persisted: { courses: [module('econ')] } });
+    expect(back.courses).toHaveLength(0);
+  });
+
+  it('ignores a null where a list should be, rather than blanking it', () => {
+    const s = { ...blank(), notes: [note('a', 'Kept')] };
+    const back = reducer(s, {
+      type: 'restore',
+      persisted: { notes: null as never, tasks: undefined },
+    });
+    expect(back.notes).toHaveLength(1);
+  });
+});
+
 describe('your own things', () => {
   it('keeps a note without leaving the screen', () => {
     const s = reducer(blank(), { type: 'keepNote', title: 'Week plan', body: 'x', courseId: null });

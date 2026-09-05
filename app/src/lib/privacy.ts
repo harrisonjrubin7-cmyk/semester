@@ -65,6 +65,11 @@ export const CLAIMS: Claim[] = [
       'Your Anthropic API key, if you have set one. It is not in the database, not in the sync payload, and not in any log — it is read from this device’s storage and sent only to Anthropic when you ask a question. Files you attach to notes also stay put: a lecture deck can be tens of megabytes, and uploading it on a phone plan is not a choice the app should make for you.',
   },
   {
+    heading: 'The app keeps its own copies, on this device',
+    body:
+      'Once a day, and before anything that rewrites a lot at once — an import, a bulk change, closing a term — the app saves a copy of your account so a bad five minutes can be undone. They are kept for a week, in this browser’s storage, on this device only. They are never uploaded, never synced, and not in your export. You can see all of them, and delete any of them, under Take it with you.',
+  },
+  {
     heading: 'What the AI features send, and to whom',
     body:
       'Asking a question, generating a study guide from a syllabus, or drafting an essay sends that text to Anthropic to be answered. It is sent when you press the button and not before. Anthropic’s own terms govern what happens to it there. Nothing is sent to anyone else, and there is no third-party analytics in this app.',

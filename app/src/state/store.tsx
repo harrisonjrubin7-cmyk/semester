@@ -38,6 +38,8 @@ import { dueReminders, fire } from '../lib/notify';
 import { myReminders } from '../lib/myrules';
 import { datedItems, railFor } from '../lib/select';
 import { save, trouble } from '../lib/keep';
+import { backupOf } from '../lib/export';
+import { countsOf, takeDaily } from '../lib/snapshots';
 import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
 import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
@@ -644,6 +646,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         : itemsDueToday(catalog, now).filter((i) => !state.done[i.id]).length,
     );
   }, [catalog, now, state.done, state.badges]);
+
+  /*
+   * One copy of the account per day, taken by the app rather than remembered
+   * by the person.
+   *
+   * Once, on the first render of a session, and only if today has not had one.
+   * Not on every dispatch: a snapshot on every keystroke would be a write
+   * storm and a week of history that spans four hours. The copy is of the
+   * state as it stands when the app opens — before the day's mistakes rather
+   * than after them, which is the whole point.
+   *
+   * Deliberately not awaited and deliberately unable to fail loudly:
+   * `takeSnapshot` swallows its own errors and returns null, because a device
+   * that will not store history must still be a device that runs the app.
+   */
+  useEffect(() => {
+    // Nothing to protect yet. Measured across everything a backup carries
+    // rather than by counting courses: somebody running on the bundled sample
+    // semester has no rows in `courses` at all, and their ticks, notes and
+    // grades are exactly as much their own work as an imported course is.
+    const mine = backupOf(latest.current) as unknown as Record<string, unknown>;
+    if (Object.values(countsOf(mine)).every((n) => n === 0)) return;
+    void takeDaily(mine);
+  }, []);
 
   /*
    * The bundled profile is the fallback, not the loser.

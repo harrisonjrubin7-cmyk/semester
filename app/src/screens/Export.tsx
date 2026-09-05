@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
+import { Snapshots } from '../components/Snapshots';
 import { SectionLabel, TickBox } from '../components/ui';
 import { PROVIDERS, tokens, type ProviderId } from '../lib/connect';
 import { datedItems } from '../lib/select';
 import {
   ALARMS,
   appointmentEvents,
+  backupOf,
   coursesMarkdown,
   deadlineCsv,
   deadlineEvents,
@@ -303,6 +305,10 @@ export function Export() {
         </div>
       ) : null}
 
+      <div style={{ marginTop: 22 }}>
+        <Snapshots />
+      </div>
+
       <SectionLabel>Bring one back</SectionLabel>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
         A backup file from this app, from any device. An export nobody can import is a museum
@@ -363,7 +369,7 @@ export function Export() {
               type="button"
               className="btn btn-primary"
               onClick={() => {
-                dispatch({ type: 'hydrate', persisted: offered.data as never });
+                dispatch({ type: 'restore', persisted: offered.data as never });
                 setOffered(null);
                 setDone('Restored. Everything in the file is in place.');
               }}
@@ -387,32 +393,4 @@ export function Export() {
       <div style={{ height: 26 }} />
     </div>
   );
-}
-
-/**
- * The account as data.
- *
- * Built by naming what goes in rather than by removing what should not, so a
- * field added to the store later cannot leak into an exported file by
- * accident. Tokens and API keys are not here and never will be.
- */
-function backupOf(state: ReturnType<typeof useStore>['state']) {
-  return {
-    format: 'semester.backup.v1',
-    exported: new Date().toISOString(),
-    courses: state.courses,
-    updates: state.updates,
-    notes: state.notes,
-    tasks: state.tasks,
-    appointments: state.appointments,
-    grades: state.grades,
-    places: state.places,
-    reviews: state.reviews,
-    done: state.done,
-    saved: state.saved,
-    feeds: state.feeds.map((f) => ({ id: f.id, name: f.name, url: f.url })),
-    linkUrls: state.linkUrls,
-    extraLinks: state.extraLinks,
-    sample: state.sample,
-  };
 }
