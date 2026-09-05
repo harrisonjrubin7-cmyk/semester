@@ -1,6 +1,6 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, NavRow, SettingsGroup } from '../../components/settings/Rows';
+import { CustomRow, NavRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { Cutoffs } from '../../components/Cutoffs';
 import { Attendance } from '../../components/Attendance';
@@ -35,7 +35,7 @@ export function SettingsGrading() {
       {(lit) => (
         <>
           {catalog.courses.map((c) => (
-            <SettingsGroup
+            <Group
               key={c.id}
               header={c.code}
               lit={lights(`grades grading scale cutoffs letter gpa attendance absences ${c.code} ${c.name}`, lit)}
@@ -46,10 +46,10 @@ export function SettingsGrading() {
               <CustomRow>
                 <Attendance courseId={c.id} />
               </CustomRow>
-            </SettingsGroup>
+            </Group>
           ))}
 
-          <SettingsGroup
+          <Group
             header="Dropped pieces"
             footer="These stay on the grade rows themselves, next to the category they belong to. Which two problem sets are dropped is only answerable beside the problem sets."
             lit={lights('drop dropped lowest pieces individual scores', lit)}
@@ -59,7 +59,7 @@ export function SettingsGrading() {
               sub="Type scores, and set drops per category"
               onClick={() => dispatch({ type: 'go', screen: 'grades' })}
             />
-          </SettingsGroup>
+          </Group>
         </>
       )}
     </SettingsPage>

@@ -1,6 +1,6 @@
 import { useId, type CSSProperties, type ReactNode } from 'react';
 import { ChevronRight } from '../Icons';
-import { ExemptProvider, useGrouped } from './useShell';
+import { ForcedProvider, useGrouped } from './useShell';
 import { Blueprint } from '../Blueprint';
 import { SectionLabel } from '../ui';
 
@@ -69,11 +69,20 @@ export function Group({
   footer,
   children,
   framed = true,
+  lit = false,
   style,
 }: {
   header?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
+  /**
+   * Briefly outlined, after a search sent somebody to this group.
+   *
+   * Only settings uses it today, and only in the grouped layout, where there
+   * is a panel edge to outline. In the drawn layout there is nothing to draw
+   * it on and it is ignored rather than invented.
+   */
+  lit?: boolean;
   /**
    * Whether `plain` draws a frame around this at all.
    *
@@ -142,8 +151,9 @@ export function Group({
           // The `corners` look key, not a fixed radius: somebody who chose
           // square corners chose them for the whole app.
           borderRadius: 'var(--r-lg)',
-          border: '1px solid var(--app-line-soft)',
+          border: `1px solid ${lit ? 'var(--app-accent)' : 'var(--app-line-soft)'}`,
           overflow: 'hidden',
+          transition: 'border-color 220ms ease',
         }}
       >
         {children}
@@ -520,8 +530,8 @@ export function FullBleed({ children, style }: { children: ReactNode; style?: CS
   // calendar keeps its grid. The page around it is still grouped.
   if (!grouped) return <>{children}</>;
   return (
-    <ExemptProvider value>
+    <ForcedProvider value="plain">
       <div style={style}>{children}</div>
-    </ExemptProvider>
+    </ForcedProvider>
   );
 }

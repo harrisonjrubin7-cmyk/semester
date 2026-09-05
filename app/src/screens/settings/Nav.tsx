@@ -1,6 +1,6 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, SettingsGroup } from '../../components/settings/Rows';
+import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { SectionLabel, Segmented, TickBox, Toggle } from '../../components/ui';
 import { countHidden, revealLine } from '../../lib/reveal';
@@ -25,7 +25,7 @@ export function SettingsNav() {
     >
       {(lit) => (
         <>
-          <SettingsGroup
+          <Group
             header="Structure"
             footer="The tab bar gives every thing a fixed home. One feed interleaves classes and deadlines in a single scroll. The home screen is three pages of icons."
             lit={lights('tabs tab bar navigation nav feed home screen springboard icons layout structure', lit)}
@@ -57,9 +57,9 @@ export function SettingsNav() {
               )}
               {state.nav === 'tabs' && <TabChooser />}
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="What Today shows"
             footer="Turn a section off and it is gone from Today, not from the app — everything it held is still on the screen it belongs to."
             lit={lights('today sections order rearrange move up down feed hide show', lit)}
@@ -126,9 +126,9 @@ export function SettingsNav() {
                 );
               })}
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="The directory"
             lit={lights('directory everything list screens hidden show all', lit)}
           >
@@ -143,7 +143,7 @@ export function SettingsNav() {
                 {revealLine(countHidden(facts, state.visited, state.showAll), state.showAll)}
               </div>
             </CustomRow>
-          </SettingsGroup>
+          </Group>
         </>
       )}
     </SettingsPage>

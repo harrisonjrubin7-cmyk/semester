@@ -1,6 +1,6 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, SettingsGroup } from '../../components/settings/Rows';
+import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { SectionLabel, Toggle } from '../../components/ui';
 import { MyRules } from '../../components/MyRules';
@@ -27,7 +27,7 @@ export function SettingsAlerts() {
     >
       {(lit) => (
         <>
-          <SettingsGroup
+          <Group
             header="How far ahead"
             lit={lights('lead days ahead early warning notice registration access', lit)}
           >
@@ -58,9 +58,9 @@ export function SettingsAlerts() {
                 </span>
               </div>
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="Tell me when"
             footer="These are checked while the app is open. Reminders that arrive with it closed need the switch below."
             lit={lights('notifications alerts tell me when reminders notify due', lit)}
@@ -81,7 +81,7 @@ export function SettingsAlerts() {
 
               <PushSwitch />
             </CustomRow>
-          </SettingsGroup>
+          </Group>
         </>
       )}
     </SettingsPage>

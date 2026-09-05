@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '../state/store';
+import { Group, ItemRow } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -140,20 +141,15 @@ export function Worked() {
           {nothing || 'Nothing stood out far enough above the noise to be worth saying.'}
         </div>
       ) : (
-        <>
-          <SectionLabel>What the term shows</SectionLabel>
+        <Group header="What the term shows" framed={false}>
           {found.map((f) => (
-            <div
+            <ItemRow
               key={f.said}
-              style={{ padding: '12px 0', borderBottom: '1px solid var(--app-line)' }}
-            >
-              <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>{f.said}</div>
-              <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5 }}>
-                from {f.from} observation{f.from === 1 ? '' : 's'}
-              </div>
-            </div>
+              title={f.said}
+              meta={`from ${f.from} observation${f.from === 1 ? '' : 's'}`}
+            />
           ))}
-        </>
+        </Group>
       )}
 
       <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>

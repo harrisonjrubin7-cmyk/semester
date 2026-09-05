@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, NavRow, SettingsGroup, ValueRow } from '../../components/settings/Rows';
+import { CustomRow, NavRow, Group, ValueRow } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { Snapshots } from '../../components/Snapshots';
 import { formatBytes, totalSize } from '../../lib/files';
@@ -57,7 +57,7 @@ export function SettingsStorage() {
     >
       {(lit) => (
         <>
-          <SettingsGroup
+          <Group
             header="Space used"
             footer={
               saveTrouble ||
@@ -77,18 +77,18 @@ export function SettingsStorage() {
                 value={`${formatBytes(quota.used)} of ${formatBytes(quota.total)}`}
               />
             ) : null}
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="Going back"
             lit={lights('backup copies snapshot restore undo yesterday recover', lit)}
           >
             <CustomRow>
               <Snapshots />
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="Taking it elsewhere"
             footer="A copy on this device survives a mistake. A file you have downloaded survives the device."
             lit={lights('export download backup file zip json csv restore take it with you', lit)}
@@ -98,7 +98,7 @@ export function SettingsStorage() {
               sub="Download everything, or restore from a file"
               onClick={() => dispatch({ type: 'go', screen: 'export' })}
             />
-          </SettingsGroup>
+          </Group>
         </>
       )}
     </SettingsPage>

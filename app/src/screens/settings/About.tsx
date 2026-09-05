@@ -1,6 +1,6 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, SettingsGroup, ValueRow } from '../../components/settings/Rows';
+import { CustomRow, Group, ValueRow } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { SectionLabel } from '../../components/ui';
 import { SOURCES } from '../../data/misc';
@@ -25,7 +25,7 @@ export function SettingsAbout() {
     >
       {(lit) => (
         <>
-          <SettingsGroup header="Where the numbers come from" lit={lights('sources data where from figures citations', lit)}>
+          <Group header="Where the numbers come from" lit={lights('sources data where from figures citations', lit)}>
             <CustomRow>
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Sources</SectionLabel>
               {SOURCES.map((s) => (
@@ -47,9 +47,9 @@ export function SettingsAbout() {
                 </div>
               ))}
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="Getting your bearings"
             footer="The tour is the four screens shown on a first run. Replaying it changes nothing and deletes nothing."
             lit={lights('tour onboarding replay restart walkthrough intro help', lit)}
@@ -70,15 +70,15 @@ export function SettingsAbout() {
                 Replay onboarding
               </button>
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="Saying something is wrong"
             footer={`Write to ${SUPPORT}. A bug report that names the screen and what you expected is worth ten that say it is broken.`}
             lit={lights('support contact email feedback bug report help problem', lit)}
           >
             <ValueRow label="Where to write" value={SUPPORT} />
-          </SettingsGroup>
+          </Group>
         </>
       )}
     </SettingsPage>

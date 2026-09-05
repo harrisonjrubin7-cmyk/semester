@@ -1,5 +1,5 @@
 import { SettingsPage } from './Page';
-import { CustomRow, SettingsGroup } from '../../components/settings/Rows';
+import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { WorkWindows } from '../../components/WorkWindows';
 import { Capacity } from '../../components/Capacity';
@@ -22,7 +22,7 @@ export function SettingsWorkload() {
     >
       {(lit) => (
         <>
-          <SettingsGroup
+          <Group
             header="When you work"
             footer="Used to work backwards from a deadline. Hours you have not claimed are hours the app will not plan into."
             lit={lights('work windows hours when you work morning evening night schedule', lit)}
@@ -30,25 +30,25 @@ export function SettingsWorkload() {
             <CustomRow>
               <WorkWindows />
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="How much a day holds"
             lit={lights('day budget hours a day workload capacity how long time', lit)}
           >
             <CustomRow>
               <DayBudget />
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="What the term is worth"
             lit={lights('contract term credits load capacity week busy', lit)}
           >
             <CustomRow>
               <Capacity />
             </CustomRow>
-          </SettingsGroup>
+          </Group>
         </>
       )}
     </SettingsPage>

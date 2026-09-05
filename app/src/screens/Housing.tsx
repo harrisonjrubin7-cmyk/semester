@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Group, ItemRow } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
@@ -235,33 +236,24 @@ export function Housing() {
       )}
 
       {mine && (
-        <>
-          <SectionLabel>On file</SectionLabel>
-          <div
-            style={{
-              display: 'flex',
-              gap: 10,
-              alignItems: 'baseline',
-              padding: '9px 0',
-              borderBottom: '1px solid var(--app-line)',
-            }}
-          >
-            <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))' }}>
-              {homeLine(mine)}
-              {mine.moveOut ? ` · out ${mine.moveOut}` : ''}
-              {mine.hoursAfterLastExam ? ` · ${mine.hoursAfterLastExam} hrs after the last exam` : ''}
-            </span>
-            <button
-              type="button"
-              className="bare"
-              aria-label="Remove this room"
-              onClick={() => dispatch({ type: 'dropResidence', id: mine.id })}
-              style={{ flex: 'none', width: 24, opacity: 0.4, fontSize: 'calc(14px * var(--text-scale, 1))' }}
-            >
-              ×
-            </button>
-          </div>
-        </>
+        <Group header="On file" framed={false}>
+          <ItemRow
+            title={`${homeLine(mine)}${mine.moveOut ? ` · out ${mine.moveOut}` : ''}${
+              mine.hoursAfterLastExam ? ` · ${mine.hoursAfterLastExam} hrs after the last exam` : ''
+            }`}
+            trailing={
+              <button
+                type="button"
+                className="bare"
+                aria-label="Remove this room"
+                onClick={() => dispatch({ type: 'dropResidence', id: mine.id })}
+                style={{ width: 24, opacity: 0.4, fontSize: 'calc(14px * var(--text-scale, 1))' }}
+              >
+                ×
+              </button>
+            }
+          />
+        </Group>
       )}
 
       <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>

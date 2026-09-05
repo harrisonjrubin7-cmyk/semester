@@ -1,6 +1,6 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, SettingsGroup } from '../../components/settings/Rows';
+import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { SectionLabel, Toggle } from '../../components/ui';
 import { YourCourses } from '../../components/YourCourses';
@@ -29,7 +29,7 @@ export function SettingsCourses() {
     >
       {(lit) => (
         <>
-          <SettingsGroup
+          <Group
             header="You"
             footer="Your name is only used to address you in the app. It is never sent anywhere and never guessed at from your email."
             lit={lights('name your name called address me', lit)}
@@ -50,9 +50,9 @@ export function SettingsCourses() {
                 style={{ width: '100%', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
               />
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="Where you study"
             lit={lights('school university college campus where you study switch', lit)}
           >
@@ -73,9 +73,9 @@ export function SettingsCourses() {
                 </div>
               )}
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="This term"
             lit={lights('courses course remove delete order rearrange sample data demo example import', lit)}
           >
@@ -93,7 +93,7 @@ export function SettingsCourses() {
                 <CourseRow key={c.course.id} module={c} />
               ))}
             </CustomRow>
-          </SettingsGroup>
+          </Group>
         </>
       )}
     </SettingsPage>

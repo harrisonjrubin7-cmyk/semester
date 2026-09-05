@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ScanIsbn } from '../components/ScanIsbn';
 import { useStore } from '../state/store';
+import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
@@ -95,17 +96,15 @@ export function Costs() {
       </Blueprint>
 
       {catalog.courses.length > 0 && (
-        <>
-          <SectionLabel>By course</SectionLabel>
+          <Group header="By course" framed={false}>
           {catalog.courses.map((c) => {
             const theirs = forCourse(mine, c.id);
             const sum = theirs.reduce((n, x) => n + x.cents, 0);
             const before = lastTime(state.costs, courseCode, c.id, state.term);
             return (
-              <div
-                key={c.id}
-                style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}
-              >
+              // Through the shared section rather than a hand-drawn hairline,
+              // so this list follows the layout setting.
+              <CustomRow key={c.id}>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
                   <span className="tag tag-accent" style={{ flex: 'none' }}>
                     {c.code}
@@ -185,10 +184,10 @@ export function Costs() {
                     </button>
                   </div>
                 ))}
-              </div>
+              </CustomRow>
             );
           })}
-        </>
+          </Group>
       )}
 
       <SectionLabel>Add something</SectionLabel>

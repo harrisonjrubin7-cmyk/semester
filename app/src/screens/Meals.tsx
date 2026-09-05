@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
@@ -187,19 +188,10 @@ export function Meals() {
       )}
 
       {mine.length > 0 && (
-        <>
-          <SectionLabel>What you have logged</SectionLabel>
+        <Group header="What you have logged" framed={false}>
           {mine.map((r) => (
-            <div
-              key={r.id}
-              style={{
-                display: 'flex',
-                gap: 10,
-                alignItems: 'baseline',
-                padding: '9px 0',
-                borderBottom: '1px solid var(--app-line)',
-              }}
-            >
+            <CustomRow key={r.id}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))' }}>
                 {new Date(r.at).toLocaleDateString()}
               </span>
@@ -216,9 +208,10 @@ export function Meals() {
               >
                 ×
               </button>
-            </div>
+              </div>
+            </CustomRow>
           ))}
-        </>
+        </Group>
       )}
 
       <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>

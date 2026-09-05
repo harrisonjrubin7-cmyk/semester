@@ -1,6 +1,6 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, SettingsGroup } from '../../components/settings/Rows';
+import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { ShellPicker } from '../../components/ShellPicker';
 import { SectionLabel, Segmented, Toggle } from '../../components/ui';
@@ -149,7 +149,7 @@ export function SettingsLook() {
     >
       {(lit) => (
         <>
-          <SettingsGroup
+          <Group
             header="Colour"
             footer="The accent being a metal rather than a colour is most of why the app looks drawn instead of like a dashboard."
             lit={lights('accent ground colour color dark light theme mode parchment fog ink paper device', lit)}
@@ -283,9 +283,9 @@ export function SettingsLook() {
                 </div>
               )}
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="Type"
             footer="Text size and line spacing move everything on every screen, including the tab bar. Nothing here is fixed in pixels."
             lit={lights('font fonts typeface heading body text size larger bigger smaller line height spacing reading width', lit)}
@@ -389,9 +389,9 @@ export function SettingsLook() {
 
               {/* The one setting that changes an arithmetic rather than a look. */}
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="Layout"
             footer="The drawn layout is the app as it is. Grouped arranges every screen the way a phone's own settings do. Nothing is hidden either way."
             lit={lights('layout shell grouped drawn inset list rows panel arrangement', lit)}
@@ -399,9 +399,9 @@ export function SettingsLook() {
             <CustomRow>
               <ShellPicker />
             </CustomRow>
-          </SettingsGroup>
+          </Group>
 
-          <SettingsGroup
+          <Group
             header="Shape and spacing"
             footer="How much fits on a screen, and how hard the edges are."
             lit={lights('corners rounded square spacing density icon shape badges tab bar labels feed style', lit)}
@@ -472,7 +472,7 @@ export function SettingsLook() {
                 {FEEDS.find((f) => f.id === state.feed)?.blurb}
               </div>
             </CustomRow>
-          </SettingsGroup>
+          </Group>
         </>
       )}
     </SettingsPage>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useStore } from '../../state/store';
-import { NavRow, SettingsGroup } from '../../components/settings/Rows';
+import { NavRow, Group } from '../../components/shell/Rows';
 import { SETTINGS, SEARCH_PLACEHOLDER, findSetting, markLooking, nothingFound } from '../../lib/settings';
 import type { Screen } from '../../lib/types';
+import { ForcedProvider } from '../../components/shell/useShell';
 
 /**
  * Settings, as an index.
@@ -44,6 +45,9 @@ export function SettingsIndex() {
             : 'On this device only';
 
   return (
+    // Always grouped, for the reason in `Page.tsx`: an index is findable
+    // because every row looks like every other row.
+    <ForcedProvider value="grouped">
     <div>
       <div style={{ padding: '0 16px calc(14px * var(--density, 1))' }}>
         <input
@@ -58,11 +62,10 @@ export function SettingsIndex() {
       </div>
 
       {searching ? (
-        <nav aria-label="Settings search results">
+        <nav aria-label="Settings search results" style={{ padding: '0 16px' }}>
           {found.length === 0 ? (
             <div
               style={{
-                margin: '0 16px',
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 opacity: 0.6,
                 lineHeight: 1.5,
@@ -72,7 +75,7 @@ export function SettingsIndex() {
               {nothingFound(query)}
             </div>
           ) : (
-            <SettingsGroup header={`${found.length} ${found.length === 1 ? 'match' : 'matches'}`}>
+            <Group header={`${found.length} ${found.length === 1 ? 'match' : 'matches'}`}>
               {found.map((f) => (
                 <NavRow
                   key={f.row.screen}
@@ -82,12 +85,12 @@ export function SettingsIndex() {
                   onClick={() => go(f.row.screen, f.matched)}
                 />
               ))}
-            </SettingsGroup>
+            </Group>
           )}
         </nav>
       ) : (
-        <nav aria-label="Settings">
-          <SettingsGroup>
+        <nav aria-label="Settings" style={{ padding: '0 16px' }}>
+          <Group>
             <NavRow
               tall
               label={state.myName.trim() || 'Your account'}
@@ -95,10 +98,10 @@ export function SettingsIndex() {
               value={standing}
               onClick={() => dispatch({ type: 'go', screen: 'account' })}
             />
-          </SettingsGroup>
+          </Group>
 
           {SETTINGS.map((section) => (
-            <SettingsGroup
+            <Group
               key={section.header}
               header={section.header}
               footer={
@@ -121,10 +124,11 @@ export function SettingsIndex() {
                   onClick={() => dispatch({ type: 'go', screen: row.screen })}
                 />
               ))}
-            </SettingsGroup>
+            </Group>
           ))}
         </nav>
       )}
     </div>
+    </ForcedProvider>
   );
 }

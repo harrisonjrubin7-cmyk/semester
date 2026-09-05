@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { HIGHLIGHT_MS, sectionOf, takeLooking } from '../../lib/settings';
+import { ForcedProvider } from '../../components/shell/useShell';
 import type { Screen } from '../../lib/types';
 
 /**
@@ -49,6 +50,15 @@ export function SettingsPage({
   }, []);
 
   return (
+    /*
+     * Always grouped, whatever the app-wide layout is.
+     *
+     * Settings is an index of rows and was rebuilt as one before the layout
+     * setting existed. It does not become a run of loose sections because
+     * somebody prefers drawn cards on their course screens — the thing that
+     * makes an index findable is that every row looks like every other row.
+     */
+    <ForcedProvider value="grouped">
     <main style={{ paddingBottom: 'calc(24px * var(--density, 1))' }}>
       <div style={{ padding: '0 16px calc(12px * var(--density, 1))' }}>
         <div
@@ -95,7 +105,11 @@ export function SettingsPage({
           </p>
         ) : null}
       </div>
-      {children(lit)}
+      {/* The gutter the groups inset within. `Group` has no margin of its
+          own — every screen supplies its own page padding, and this is
+          settings' — so this is what makes the panels read as inset. */}
+      <div style={{ padding: '0 16px' }}>{children(lit)}</div>
     </main>
+    </ForcedProvider>
   );
 }
