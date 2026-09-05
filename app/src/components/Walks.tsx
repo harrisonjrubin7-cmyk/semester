@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useRowStyle } from './shell/useShell';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { railFor } from '../lib/select';
@@ -19,6 +20,7 @@ import { daySummary, hopLine, hops, tight } from '../lib/rooms';
  */
 export function Walks({ date }: { date?: Date }) {
   const { state, dispatch, now, catalog } = useStore();
+  const row = useRowStyle(9);
   const day = date ?? now;
 
   const list = useMemo(
@@ -44,8 +46,7 @@ export function Walks({ date }: { date?: Date }) {
             display: 'flex',
             gap: 10,
             alignItems: 'baseline',
-            padding: '9px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...row,
             opacity: h.known ? 1 : 0.6,
           }}
         >

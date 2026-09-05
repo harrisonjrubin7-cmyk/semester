@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Group, ItemRow } from '../components/shell/Rows';
 import { CloseTerm } from '../components/CloseTerm';
 import { TermSwitch } from '../components/TermSwitch';
@@ -32,6 +33,7 @@ import { SEMESTER_YEAR, isoToDate, longLabel } from '../lib/date';
  */
 export function Registrar() {
   const { state, dispatch, now } = useStore();
+  const rowEleven = useRowStyle(11);
   const [tab, setTab] = useState<'dates' | 'paste'>('dates');
   const [text, setText] = useState('');
   const [found, setFound] = useState<Found[] | null>(null);
@@ -63,8 +65,7 @@ export function Registrar() {
       <div
         key={d.id}
         style={{
-          padding: '11px 0',
-          borderBottom: '1px solid var(--app-line)',
+          ...rowEleven,
           opacity: where === 'past' ? 0.5 : 1,
         }}
       >

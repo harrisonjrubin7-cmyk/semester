@@ -1,5 +1,6 @@
 import { allCards } from '../data/catalog';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { TermSwitch } from '../components/TermSwitch';
 import { FirstRun } from './FirstRun';
 import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
@@ -25,6 +26,7 @@ import { tintFor } from '../lib/yours';
  */
 export function Study() {
   const { state, dispatch, now, catalog } = useStore();
+  const rowTwelve = useRowStyle(12);
   const exam = nextExam(catalog, now);
   const plan = tonightPlan(catalog, state.updates, state.reviews);
   if (catalog.empty) return <FirstRun where="to study" />;
@@ -300,8 +302,7 @@ export function Study() {
             display: 'flex',
             gap: 12,
             alignItems: 'center',
-            padding: '12px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...rowTwelve,
           }}
         >
           <span

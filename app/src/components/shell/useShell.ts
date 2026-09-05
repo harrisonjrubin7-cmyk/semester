@@ -50,7 +50,24 @@ export function useGrouped(): boolean {
 }
 
 /** How far a row's label sits from the panel's own edge. Matches `Rows.tsx`. */
-const SIDE = 15;
+export const SIDE = 15;
+
+/**
+ * True inside something that has already stepped in from the panel edge.
+ *
+ * A screen may hand a whole block of its own markup to one `CustomRow`, which
+ * insets it once. A shared component inside that block — a toggle, a rule, a
+ * course row — has no way of knowing this, and if it insets itself as well its
+ * label lands 15px right of the section heading above it. Seen on the alerts
+ * settings page: headings at x=32, every toggle at x=47.
+ *
+ * So the inset is claimed rather than assumed. Whatever draws it says so, and
+ * anything nested inside takes the vertical padding and the hairline but not a
+ * second step in.
+ */
+const Inset = createContext(false);
+
+export const InsetProvider = Inset.Provider;
 
 /**
  * The hairline between rows, inset to start under the label.
@@ -67,6 +84,16 @@ const DIVIDER: CSSProperties = {
 };
 
 /**
+ * The same hairline for a row already inside the inset, so it runs the full
+ * width of its container — which is where the label starts there.
+ */
+const NESTED_DIVIDER: CSSProperties = {
+  ...DIVIDER,
+  backgroundPosition: '0 100%',
+  backgroundSize: '100% 1px',
+};
+
+/**
  * The padding and hairline a row wears, for a screen that draws its own.
  *
  * Some rows in this app are a `<button>` with a flex layout inside it, and the
@@ -75,12 +102,24 @@ const DIVIDER: CSSProperties = {
  * would stop being tappable — a real regression for a layout choice. This
  * gives the same two values to spread into the button's own style instead.
  *
- * `pad` is the vertical padding the drawn layout had, so plain does not shift.
+ * `pad` is the padding the drawn layout had, so plain does not shift. A number
+ * is the vertical padding of a row that sits flush; a string is the whole
+ * shorthand, for the few rows that were already inset by a pixel or two.
  */
-export function useRowStyle(pad = 11, line = true): CSSProperties {
+export function useRowStyle(pad: number | string = 11, line = true): CSSProperties {
   const grouped = useGrouped();
+  const inside = useContext(Inset);
+  const plain = typeof pad === 'number' ? `${pad}px 0` : pad;
+  const side = inside ? 0 : SIDE;
+
+  let edge: CSSProperties = {};
+  if (line) {
+    if (!grouped) edge = { borderBottom: '1px solid var(--app-line)' };
+    else edge = inside ? NESTED_DIVIDER : DIVIDER;
+  }
+
   return {
-    padding: grouped ? `calc(12px * var(--density, 1)) ${SIDE}px` : `${pad}px 0`,
-    ...(line ? (grouped ? DIVIDER : { borderBottom: '1px solid var(--app-line)' }) : {}),
+    padding: grouped ? `calc(12px * var(--density, 1)) ${side}px` : plain,
+    ...edge,
   };
 }

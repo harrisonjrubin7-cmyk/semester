@@ -1,6 +1,6 @@
 import { useId, type CSSProperties, type ReactNode } from 'react';
 import { ChevronRight } from '../Icons';
-import { ForcedProvider, useGrouped } from './useShell';
+import { ForcedProvider, InsetProvider, SIDE, useGrouped } from './useShell';
 import { Blueprint } from '../Blueprint';
 import { SectionLabel } from '../ui';
 
@@ -35,9 +35,6 @@ import { SectionLabel } from '../ui';
  * thing. This is the one deliberate departure, it is confined to one mode, and
  * `plain` keeps the marks exactly as they are.
  */
-
-/** How far the row label sits from the panel's own edge. */
-const SIDE = 15;
 
 /** The smallest a row may be before density and text size grow it. */
 export const ROW_HEIGHT = 44;
@@ -537,7 +534,10 @@ export function CustomRow({
         ...(line ? (grouped ? DIVIDER : { borderBottom: '1px solid var(--app-line)' }) : {}),
       }}
     >
-      {children}
+      {/* This row has already stepped in from the panel edge. A shared
+          component in `children` that insets itself as well would sit 15px
+          right of the heading above it, so it is told not to. */}
+      <InsetProvider value={grouped}>{children}</InsetProvider>
     </div>
   );
 }

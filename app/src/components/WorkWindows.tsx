@@ -1,4 +1,5 @@
 import { useStore } from '../state/store';
+import { useRowStyle } from './shell/useShell';
 import { SectionLabel } from './ui';
 import { SUGGESTED, daysLine, hoursAWeek, spanLine, tidy } from '../lib/windows';
 
@@ -33,6 +34,7 @@ const fromField = (v: string) => {
  */
 export function WorkWindows() {
   const { state, dispatch } = useStore();
+  const row = useRowStyle(11);
   const windows = state.windows;
 
   return (
@@ -48,8 +50,7 @@ export function WorkWindows() {
         <div
           key={w.id}
           style={{
-            padding: '11px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...row,
           }}
         >
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

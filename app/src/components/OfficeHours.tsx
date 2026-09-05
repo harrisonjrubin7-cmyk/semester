@@ -1,4 +1,5 @@
 import { useStore } from '../state/store';
+import { useRowStyle } from './shell/useShell';
 import { SectionLabel } from './ui';
 import { isOfficeHours, nextSitting, whenLine } from '../lib/officehours';
 
@@ -13,6 +14,7 @@ import { isOfficeHours, nextSitting, whenLine } from '../lib/officehours';
  */
 export function OfficeHours({ courseId }: { courseId: string }) {
   const { state, dispatch, now, catalog } = useStore();
+  const row = useRowStyle(9);
   const mod = catalog.modules.find((m) => m.course.id === courseId);
   const hours = (mod?.schedule ?? []).filter(isOfficeHours);
   const yours = state.courses.some((c) => c.course.id === courseId);
@@ -51,8 +53,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
             display: 'flex',
             gap: 10,
             alignItems: 'baseline',
-            padding: '9px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...row,
           }}
         >
           <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>

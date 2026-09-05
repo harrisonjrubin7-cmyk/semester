@@ -32,6 +32,7 @@ export function Ahead() {
   // The padding and hairline a row wears in whichever layout is on. Spread
   // into the row's own style so a button row stays one tap target.
   const rowStyle = useRowStyle(10);
+  const rowEleven = useRowStyle(11);
 
   const w = useMemo(
     () =>
@@ -259,8 +260,7 @@ export function Ahead() {
                 gap: 12,
                 alignItems: 'baseline',
                 width: '100%',
-                padding: '11px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...rowEleven,
                 textAlign: 'left',
               }}
             >

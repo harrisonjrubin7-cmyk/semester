@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { TickBox } from './ui';
 import { lateBy, type Standing } from '../lib/standing';
 import { isUnderway, openLine } from '../lib/underway';
+import { useRowStyle } from './shell/useShell';
 import type { DatedItem } from '../lib/types';
 
 /**
@@ -47,6 +48,9 @@ export function DeadlineRow({
   // `now` rather than `Date.now()`: the store's clock ticks once a minute, so
   // "open 4 days" stays right without making the render impure.
   const { state, dispatch, catalog, now } = useStore();
+  // Only the row and timeline styles take it. A card already has its own edge
+  // and inset, and a card inside a grouped panel would be a card in a card.
+  const row = useRowStyle(0);
   const done = !!state.done[item.id];
   const late = tone === 'overdue';
   const style = state.feed;
@@ -76,7 +80,7 @@ export function DeadlineRow({
               padding: '0 12px',
               marginBottom: 8,
             }
-          : { borderBottom: '1px solid var(--app-line)' }),
+          : row),
         ...(style === 'timeline'
           ? {
               // The line itself, drawn as a left border on every row so it is

@@ -57,6 +57,8 @@ export function Groupwork() {
   const { state, dispatch, now, account, catalog } = useStore();
   // Spread rather than wrapped, so a button row stays one tap target.
   const rowStyle = useRowStyle(12);
+  const rowNine = useRowStyle(9);
+  const rowTen = useRowStyle(10);
 
   const [code, setCode] = useState(
     catalog.byId[state.courseId]?.code ?? catalog.courses[0]?.code ?? '',
@@ -284,8 +286,7 @@ export function Groupwork() {
                 display: 'flex',
                 gap: 10,
                 alignItems: 'baseline',
-                padding: '9px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...rowNine,
               }}
             >
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
@@ -358,8 +359,7 @@ export function Groupwork() {
                     display: 'flex',
                     gap: 10,
                     alignItems: 'baseline',
-                    padding: '10px 0',
-                    borderBottom: '1px solid var(--app-line)',
+                    ...rowTen,
                   }}
                 >
                   <button

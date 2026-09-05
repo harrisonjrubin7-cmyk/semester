@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { learned, showSpan } from '../lib/pace';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
@@ -48,6 +49,7 @@ function Destination({
   account: { email: string } | null;
 }) {
   const { dispatch, school } = useStore();
+  const rowThirteen = useRowStyle(13);
   // The directory in the school's own words. See `lib/nav.ts` — the meal row
   // promised everyone "Commodore Cash" until this existed.
   const said = saysFor(to, school.capabilities);
@@ -61,9 +63,8 @@ function Destination({
         alignItems: 'center',
         gap: 12,
         width: '100%',
-        padding: '13px 0',
-        borderBottom: '1px solid var(--app-line)',
         textAlign: 'left',
+        ...rowThirteen,
       }}
     >
       <span style={{ flex: 1, minWidth: 0 }}>
@@ -101,6 +102,7 @@ function Destination({
  */
 export function CourseRow({ module: c }: { module: CourseModule }) {
   const { state, dispatch } = useStore();
+  const rowThirteen = useRowStyle(13);
   const [asking, setAsking] = useState(false);
 
   const cards = c.guide.units.reduce((n, u) => n + u.cards.length, 0);
@@ -115,8 +117,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        padding: '13px 0',
-        borderBottom: '1px solid var(--app-line)',
+        ...rowThirteen,
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -161,6 +162,8 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
 
 export function Me() {
   const { state, dispatch, now, catalog, account , courseCode, school, facts } = useStore();
+  const rowNine = useRowStyle(9);
+  const rowTen = useRowStyle(10);
   const ahead = upcomingItems(catalog, now);
   const bars = loadByCourse(catalog, now, state.done);
   const pace = learned(state.spent);
@@ -240,7 +243,7 @@ export function Me() {
       {/* An empty section headed "Load by course" is worse than no section. */}
       {bars.length > 0 && <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Load by course</SectionLabel>}
       {bars.map((b) => (
-        <div key={b.code} style={{ padding: '10px 0', borderBottom: '1px solid var(--app-line)' }}>
+        <div key={b.code} style={rowTen}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{b.code}</div>
             <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55 }}>{b.n} left</div>
@@ -270,8 +273,7 @@ export function Me() {
                 display: 'flex',
                 gap: 10,
                 alignItems: 'baseline',
-                padding: '9px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...rowNine,
               }}
             >
               <span className="tag tag-accent" style={{ flex: 'none' }}>
@@ -361,6 +363,7 @@ export function Me() {
  */
 export function Search() {
   const { state, dispatch, now, catalog, school } = useStore();
+  const rowTwelve = useRowStyle(12);
   const groups = findEverything(catalog, now, state.query, state.notes, state.tasks, school.capabilities);
   const total = countHits(groups);
   const typed = state.query.trim().length > 0;
@@ -414,9 +417,8 @@ export function Search() {
                 display: 'flex',
                 gap: 10,
                 alignItems: 'center',
-                padding: '12px 0',
-                borderBottom: '1px solid var(--app-line)',
                 textAlign: 'left',
+                ...rowTwelve,
               }}
             >
               <span className={hit.kind === 'screen' ? 'tag tag-outline' : 'tag tag-accent'}>

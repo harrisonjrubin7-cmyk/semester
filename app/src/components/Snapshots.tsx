@@ -4,6 +4,7 @@ import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from './ui';
 import { backupOf } from '../lib/export';
 import { formatBytes } from '../lib/files';
+import { useRowStyle } from './shell/useShell';
 import {
   LOCAL_LINE,
   NONE_LINE,
@@ -35,6 +36,7 @@ import {
  */
 export function Snapshots() {
   const { state, dispatch, now } = useStore();
+  const row = useRowStyle('9px 2px');
   const [list, setList] = useState<Snapshot[] | null>(null);
   const [picked, setPicked] = useState<Snapshot | null>(null);
   const [busy, setBusy] = useState(false);
@@ -105,10 +107,9 @@ export function Snapshots() {
                 gap: 10,
                 width: '100%',
                 minHeight: 44,
-                padding: '9px 2px',
                 background: 'transparent',
                 border: 'none',
-                borderBottom: '1px solid var(--app-line)',
+                ...row,
                 color: 'inherit',
                 textAlign: 'left',
                 cursor: 'pointer',

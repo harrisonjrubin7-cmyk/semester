@@ -30,6 +30,7 @@ import {
   whyNot,
 } from '../lib/tabbar';
 import type { Screen } from '../lib/types';
+import { useRowStyle } from './shell/useShell';
 
 const SHELVES: Group[] = ['Semester', 'Study', 'Make', 'Campus', 'Upkeep', 'Yours'];
 
@@ -94,6 +95,7 @@ function Preview({ tabs }: { tabs: Screen[] }) {
 
 export function TabChooser() {
   const { state, dispatch, school } = useStore();
+  const row = useRowStyle(0);
   const tabs = state.tabs;
   const chosen = tabs.filter((s) => s !== PINNED);
   const [refused, setRefused] = useState('');
@@ -140,7 +142,7 @@ export function TabChooser() {
               display: 'flex',
               gap: 8,
               alignItems: 'center',
-              borderBottom: '1px solid var(--app-line)',
+              ...row,
             }}
           >
             <div style={{ flex: 'none', width: 26, opacity: 0.5, display: 'flex' }}>

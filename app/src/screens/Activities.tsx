@@ -452,6 +452,7 @@ const LINKS = [
 
 function FindThings() {
   const { dispatch } = useStore();
+  const rowFlush = useRowStyle(0);
   const [text, setText] = useState('');
   const found = useMemo(() => readInvolvement(text), [text]);
   const [taken, setTaken] = useState<string[]>([]);
@@ -523,7 +524,7 @@ function FindThings() {
                   display: 'flex',
                   gap: 10,
                   alignItems: 'center',
-                  borderBottom: '1px solid var(--app-line)',
+                  ...rowFlush,
                   padding: '11px 0',
                 }}
               >

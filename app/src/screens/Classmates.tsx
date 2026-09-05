@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
@@ -52,6 +53,7 @@ import { codeIn } from '../lib/exam';
  */
 export function Classmates() {
   const { account, catalog } = useStore();
+  const rowFlush = useRowStyle(0);
   const term = termOf();
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -190,7 +192,7 @@ export function Classmates() {
             display: 'flex',
             gap: 10,
             alignItems: 'center',
-            borderBottom: '1px solid var(--app-line)',
+            ...rowFlush,
           }}
         >
           <button

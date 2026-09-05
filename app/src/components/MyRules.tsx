@@ -21,6 +21,7 @@ import {
   editRule,
   ruleLine,
 } from '../lib/myrules';
+import { useRowStyle } from './shell/useShell';
 
 /** The leads people actually use. A free number field invites 0 and 365. */
 const LEADS = [0, 1, 2, 3, 5, 7, 10, 14, MOST_DAYS];
@@ -32,6 +33,7 @@ const hourLabel = (h: number) => `${h % 12 === 0 ? 12 : h % 12}${h < 12 ? 'am' :
 
 export function MyRules() {
   const { state, dispatch, catalog, courseCode } = useStore();
+  const row = useRowStyle(11);
   const rules = state.myRules;
 
   const set = (next: typeof rules) => dispatch({ type: 'setMyRules', rules: next });
@@ -53,8 +55,7 @@ export function MyRules() {
         <div
           key={r.id}
           style={{
-            padding: '11px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...row,
           }}
         >
           <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>

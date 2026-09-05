@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { backupOf } from '../lib/export';
 import { takeSnapshot } from '../lib/snapshots';
 import { Blueprint } from '../components/Blueprint';
@@ -35,6 +36,7 @@ import { arrivedByShare, forgetShare, takeShared } from '../lib/shared';
  */
 export function Import() {
   const { state, dispatch, say } = useStore();
+  const rowEleven = useRowStyle(11);
   const [files, setFiles] = useState<Extracted[]>([]);
   const [hint, setHint] = useState('');
   const [busy, setBusy] = useState('');
@@ -276,8 +278,7 @@ export function Import() {
             display: 'flex',
             gap: 10,
             alignItems: 'baseline',
-            padding: '11px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...rowEleven,
           }}
         >
           <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -480,6 +481,7 @@ function Preview({
   onSave: () => void;
   replacing?: boolean;
 }) {
+  const rowTen = useRowStyle(10);
   const { module: m, notes } = result;
   const [summary, ...warnings] = notes;
 
@@ -527,7 +529,7 @@ function Preview({
 
       <SectionLabel>The dates it found</SectionLabel>
       {m.items.slice(0, 8).map((i) => (
-        <div key={i.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--app-line)' }}>
+        <div key={i.id} style={rowTen}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
             <span
               style={{

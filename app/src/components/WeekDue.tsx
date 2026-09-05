@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useRowStyle } from './shell/useShell';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
@@ -21,6 +22,7 @@ import { hasTime } from '../lib/duetime';
  */
 export function WeekDue({ start, classes }: { start: Date; classes: number }) {
   const { state, now, catalog, courseCode } = useStore();
+  const row = useRowStyle(8);
 
   const days = useMemo(
     () => dueByDay(datedItems(catalog, now), start),
@@ -41,8 +43,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
             display: 'flex',
             gap: 12,
             alignItems: 'baseline',
-            padding: '8px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...row,
             minHeight: 26,
           }}
         >

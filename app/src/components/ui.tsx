@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { ChevronRight } from './Icons';
+import { useRowStyle } from './shell/useShell';
 
 /** The uppercase rule that opens a section. */
 /**
@@ -149,6 +150,9 @@ export function DateRow({
   meta: string;
   onClick?: () => void;
 }) {
+  // Spread rather than wrapped: the whole button is the tap target, and
+  // `CustomRow` would put the padding outside it.
+  const row = useRowStyle(12);
   return (
     <button
       type="button"
@@ -158,8 +162,7 @@ export function DateRow({
         display: 'flex',
         gap: 12,
         alignItems: 'center',
-        padding: '12px 0',
-        borderBottom: '1px solid var(--app-line)',
+        ...row,
       }}
     >
       <div style={{ width: 46, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}>
@@ -205,6 +208,7 @@ export function Toggle({
   label: string;
   onChange: () => void;
 }) {
+  const row = useRowStyle(13);
   return (
     <button
       type="button"
@@ -216,8 +220,7 @@ export function Toggle({
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        padding: '13px 0',
-        borderBottom: '1px solid var(--app-line)',
+        ...row,
       }}
     >
       <span style={{ flex: 1, fontSize: 'calc(14px * var(--text-scale, 1))' }}>{label}</span>

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { WorstDay } from '../components/Clashes';
 import { TimerLine } from '../components/TimerLine';
 import { ApplyingSoon } from '../components/Applying';
@@ -99,6 +100,7 @@ function NextClassCard() {
  */
 function YourTasks() {
   const { state, dispatch, now, courseCode } = useStore();
+  const rowTen = useRowStyle(10);
   const mine = tasksOn(state.tasks, now);
   const appts = appointmentsOn(state.appointments, now);
   if (mine.length === 0 && appts.length === 0) return null;
@@ -143,8 +145,7 @@ function YourTasks() {
               display: 'flex',
               gap: 12,
               alignItems: 'flex-start',
-              padding: '10px 0',
-              borderBottom: '1px solid var(--app-line)',
+              ...rowTen,
             }}
           >
             <button
@@ -757,6 +758,7 @@ function TodayFeed() {
  */
 function DoneToday() {
   const { state, dispatch, now, catalog } = useStore();
+  const rowTwelve = useRowStyle(12);
   const done = datedItems(catalog, now).filter((i) => state.done[i.id]);
   const cards = tally(state.reviews);
 
@@ -807,9 +809,8 @@ function DoneToday() {
                 display: 'flex',
                 gap: 12,
                 alignItems: 'center',
-                padding: '12px 0',
-                borderBottom: '1px solid var(--app-line)',
                 textAlign: 'left',
+                ...rowTwelve,
               }}
             >
               <span className="tag tag-accent" style={{ flex: 'none' }}>
@@ -891,6 +892,7 @@ function HoursToday() {
 /** Nav mode 1B — one chronological scroll, sliced by the chip row. */
 function FeedHome() {
   const { state, dispatch, now, catalog } = useStore();
+  const rowThirteen = useRowStyle(13);
   const entries = filterFeed(catalog, feed(catalog, now, state.done), state.filter as FeedFilter);
 
   return (
@@ -926,8 +928,7 @@ function FeedHome() {
                 display: 'flex',
                 gap: 12,
                 alignItems: 'flex-start',
-                padding: '13px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...rowThirteen,
                 cursor: f.itemId ? 'pointer' : 'default',
               }}
             >

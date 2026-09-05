@@ -1,4 +1,5 @@
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
@@ -26,6 +27,9 @@ import { ScoreField } from '../components/ScoreField';
  */
 export function Grades({ bare = false }: { bare?: boolean } = {}) {
   const { state, dispatch, catalog, school } = useStore();
+  // The hairline this row wears, in whichever layout is on. Spread rather
+  // than wrapped so the row keeps its own insides. See `useRowStyle`.
+  const rowFlush = useRowStyle(0);
   if (catalog.empty) return <FirstRun where="to track grades" />;
 
   return (
@@ -121,7 +125,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
             </Blueprint>
 
             {s.rows.map((r, i) => (
-              <div key={r.what} style={{ borderBottom: '1px solid var(--app-line)' }}>
+              <div key={r.what} style={rowFlush}>
               <div
                 style={{
                   display: 'flex',

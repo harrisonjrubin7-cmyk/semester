@@ -26,9 +26,11 @@ import {
   yoursNote,
   yoursOf,
 } from '../lib/yours';
+import { useRowStyle } from './shell/useShell';
 
 export function YourCourses() {
   const { state, dispatch, catalog } = useStore();
+  const row = useRowStyle(0);
   const [open, setOpen] = useState('');
 
   if (catalog.courses.length === 0) return null;
@@ -59,7 +61,7 @@ export function YourCourses() {
         const isOpen = open === c.id;
 
         return (
-          <div key={c.id} style={{ borderBottom: '1px solid var(--app-line)' }}>
+          <div key={c.id} style={row}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button
                 type="button"

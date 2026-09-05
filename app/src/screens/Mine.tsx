@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
@@ -446,6 +447,7 @@ function Appointments() {
 
 function Notes() {
   const { state, dispatch, courseCode } = useStore();
+  const rowThirteen = useRowStyle(13);
   const notes = [...state.notes].sort((a, b) => b.updated - a.updated);
 
   return (
@@ -476,8 +478,7 @@ function Notes() {
                 display: 'flex',
                 gap: 12,
                 alignItems: 'center',
-                padding: '13px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...rowThirteen,
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
@@ -656,6 +657,7 @@ export function Mine() {
  */
 function Places() {
   const { state, dispatch } = useStore();
+  const rowTwelve = useRowStyle(12);
   const [fix, setFix] = useState<Fix | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -774,8 +776,7 @@ function Places() {
                 display: 'flex',
                 gap: 12,
                 alignItems: 'center',
-                padding: '12px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...rowTwelve,
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
