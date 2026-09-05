@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
 import { EmptyState } from '../components/ui';
 import { Blueprint } from '../components/Blueprint';
@@ -37,6 +38,9 @@ import {
  */
 export function Runway() {
   const { state, dispatch, now, catalog } = useStore();
+  // See `useRowStyle`: spread rather than wrapped, so a button row stays
+  // one tap target.
+  const rowStyle = useRowStyle(10);
 
   const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
   const exams = useMemo(() => examsAhead(items, state.done), [items, state.done]);
@@ -246,8 +250,7 @@ export function Runway() {
               display: 'flex',
               gap: 10,
               alignItems: 'baseline',
-              padding: '10px 0',
-              borderBottom: '1px solid var(--app-line)',
+              ...rowStyle,
               opacity: u.cards === 0 ? 0.5 : 1,
             }}
           >
@@ -285,9 +288,8 @@ export function Runway() {
                 gap: 12,
                 alignItems: 'baseline',
                 width: '100%',
-                padding: '10px 0',
-                borderBottom: '1px solid var(--app-line)',
                 textAlign: 'left',
+                ...rowStyle,
               }}
             >
               <span

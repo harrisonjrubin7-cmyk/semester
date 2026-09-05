@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -29,6 +30,8 @@ import type { FeedEvent } from '../lib/types';
  */
 export function CheckDates() {
   const { state, dispatch, now, catalog } = useStore();
+  // Spread rather than wrapped, so a button row stays one tap target.
+  const rowStyle = useRowStyle(10);
 
   const [source, setSource] = useState<'feed' | 'paste'>(
     state.feedEvents.length > 0 ? 'feed' : 'paste',
@@ -219,8 +222,7 @@ export function CheckDates() {
                     display: 'flex',
                     gap: 12,
                     alignItems: 'baseline',
-                    padding: '10px 0',
-                    borderBottom: '1px solid var(--app-line)',
+                    ...rowStyle,
                   }}
                 >
                   <span
@@ -263,9 +265,8 @@ export function CheckDates() {
                     gap: 12,
                     alignItems: 'baseline',
                     width: '100%',
-                    padding: '10px 0',
-                    borderBottom: '1px solid var(--app-line)',
                     textAlign: 'left',
+                    ...rowStyle,
                   }}
                 >
                   <span

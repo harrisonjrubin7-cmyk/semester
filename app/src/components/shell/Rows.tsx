@@ -499,16 +499,47 @@ export function DestructiveRow({ label, onClick }: { label: string; onClick: () 
 }
 
 /**
- * Anything that is not a row, inside a group.
+ * A row whose insides the screen draws itself.
  *
- * A colour grid, a chip row, a chart — controls that are not a label with
- * something on the right. They sit inside the panel so the page still reads as
- * one thing.
+ * The workhorse of the conversion, and the reason most screens can move
+ * without their drawn layout shifting by a pixel. `ItemRow` puts the meta line
+ * *under* the title; nearly every list in this app puts it *beside* the title,
+ * in a flex row with two or three columns of its own. Forcing those into
+ * `ItemRow` would change how they look in the layout that is meant to be
+ * unchanged.
+ *
+ * So this takes the screen's own markup and supplies only the two things that
+ * differ between layouts: the padding and the hairline. Plain gets exactly the
+ * border the screen drew by hand; grouped gets the inset one and the panel
+ * around it from `Group`.
+ *
+ * Also the home for anything that is not a row at all — a colour grid, a chip
+ * row, a chart — so it sits inside the panel and the page reads as one thing.
  */
-export function CustomRow({ children }: { children: ReactNode }) {
+export function CustomRow({
+  children,
+  pad = 11,
+  line = true,
+}: {
+  children: ReactNode;
+  /** The vertical padding the drawn layout had. Grouped uses its own. */
+  pad?: number;
+  /** False for the last row in a group, or one that draws its own edge. */
+  line?: boolean;
+}) {
   const grouped = useGrouped();
-  if (!grouped) return <>{children}</>;
-  return <div style={{ padding: `calc(12px * var(--density, 1)) ${SIDE}px`, ...DIVIDER }}>{children}</div>;
+  return (
+    <div
+      style={{
+        padding: grouped
+          ? `calc(12px * var(--density, 1)) ${SIDE}px`
+          : `${pad}px 0`,
+        ...(line ? (grouped ? DIVIDER : { borderBottom: '1px solid var(--app-line)' }) : {}),
+      }}
+    >
+      {children}
+    </div>
+  );
 }
 
 /**

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
@@ -164,6 +165,7 @@ export function Activities() {
 
 function Row({ commitment }: { commitment: Commitment }) {
   const { dispatch } = useStore();
+  const rowStyle = useRowStyle(0);
   const kind = activityKind(commitment.kind);
   const when =
     commitment.at === null
@@ -178,8 +180,8 @@ function Row({ commitment }: { commitment: Commitment }) {
         display: 'flex',
         gap: 10,
         alignItems: 'center',
-        borderBottom: '1px solid var(--app-line)',
         opacity: commitment.active ? 1 : 0.5,
+        ...rowStyle,
       }}
     >
       <button

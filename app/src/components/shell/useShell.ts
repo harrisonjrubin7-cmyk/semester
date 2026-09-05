@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type CSSProperties } from 'react';
 import { useStore } from '../../state/store';
 
 export type Shell = 'plain' | 'grouped';
@@ -47,4 +47,40 @@ export function useShell(): Shell {
 /** True when the grouped layout is on here. Reads better than a compare. */
 export function useGrouped(): boolean {
   return useShell() === 'grouped';
+}
+
+/** How far a row's label sits from the panel's own edge. Matches `Rows.tsx`. */
+const SIDE = 15;
+
+/**
+ * The hairline between rows, inset to start under the label.
+ *
+ * A background rather than a border: a border paints outside the padding box,
+ * so nothing inside a row can cover its left end. Decorative, and invisible to
+ * a screen reader either way.
+ */
+const DIVIDER: CSSProperties = {
+  backgroundImage: 'linear-gradient(var(--app-line-soft), var(--app-line-soft))',
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: `${SIDE}px 100%`,
+  backgroundSize: `calc(100% - ${SIDE}px) 1px`,
+};
+
+/**
+ * The padding and hairline a row wears, for a screen that draws its own.
+ *
+ * Some rows in this app are a `<button>` with a flex layout inside it, and the
+ * whole button is the tap target. Wrapping one in `CustomRow` would put the
+ * padding outside the button, so the top and bottom few pixels of the row
+ * would stop being tappable — a real regression for a layout choice. This
+ * gives the same two values to spread into the button's own style instead.
+ *
+ * `pad` is the vertical padding the drawn layout had, so plain does not shift.
+ */
+export function useRowStyle(pad = 11, line = true): CSSProperties {
+  const grouped = useGrouped();
+  return {
+    padding: grouped ? `calc(12px * var(--density, 1)) ${SIDE}px` : `${pad}px 0`,
+    ...(line ? (grouped ? DIVIDER : { borderBottom: '1px solid var(--app-line)' }) : {}),
+  };
 }

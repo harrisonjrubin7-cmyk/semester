@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import {
   MODELS,
   checkKey,
@@ -41,6 +42,7 @@ const GROUPS = ['Campus', 'Books', 'Tickets', 'Social', 'Yours'] as const;
 
 function CampusLinks() {
   const { state, dispatch } = useStore();
+  const rowTwelve = useRowStyle(12);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
   const [adding, setAdding] = useState(false);
@@ -91,7 +93,7 @@ function CampusLinks() {
           return (
             <div
               key={link.id}
-              style={{ borderBottom: '1px solid var(--app-line)', padding: '12px 0' }}
+              style={rowTwelve}
             >
               <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
                 {url ? (
@@ -301,6 +303,7 @@ function CampusLinks() {
  * that took five minutes to upload.
  */
 function ClaudeAccount() {
+  const rowTwelve = useRowStyle(12);
   const [config, setConfig] = useState(settings());
   const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; detail: string } | null>(null);
@@ -424,8 +427,7 @@ function ClaudeAccount() {
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              padding: '12px 0',
-              borderBottom: '1px solid var(--app-line)',
+              ...rowTwelve,
               textAlign: 'left',
             }}
           >
@@ -448,6 +450,8 @@ function ClaudeAccount() {
 
 export function Connect() {
   const { state, dispatch, catalog } = useStore();
+  const rowTen = useRowStyle(10);
+  const rowEleven = useRowStyle(11);
   const [busy, setBusy] = useState<string>('');
   // A sign-in comes back as a page load, so whatever main.tsx left behind is
   // read once, on the way in.
@@ -818,8 +822,7 @@ export function Connect() {
                 display: 'flex',
                 gap: 10,
                 alignItems: 'baseline',
-                padding: '10px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...rowTen,
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
@@ -861,8 +864,7 @@ export function Connect() {
                 display: 'flex',
                 gap: 10,
                 alignItems: 'baseline',
-                padding: '11px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...rowEleven,
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>

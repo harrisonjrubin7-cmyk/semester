@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { ClashList, DayBudget } from '../components/Clashes';
 import { StartList } from '../components/StartToday';
 import { Capacity } from '../components/Capacity';
@@ -28,6 +29,9 @@ import { DOW, decorateItem } from '../lib/date';
  */
 export function Ahead() {
   const { state, dispatch, now, catalog } = useStore();
+  // The padding and hairline a row wears in whichever layout is on. Spread
+  // into the row's own style so a button row stays one tap target.
+  const rowStyle = useRowStyle(10);
 
   const w = useMemo(
     () =>
@@ -197,9 +201,8 @@ export function Ahead() {
                 gap: 12,
                 alignItems: 'baseline',
                 width: '100%',
-                padding: '10px 0',
-                borderBottom: '1px solid var(--app-line)',
                 textAlign: 'left',
+                ...rowStyle,
               }}
             >
               <span style={{ flex: 'none', width: 40, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}>
@@ -221,8 +224,7 @@ export function Ahead() {
                 display: 'flex',
                 gap: 12,
                 alignItems: 'baseline',
-                padding: '10px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...rowStyle,
               }}
             >
               <span style={{ flex: 'none', width: 40, fontSize: 'calc(12px * var(--text-scale, 1))', color: 'var(--app-warn)' }}>

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Snapshots } from '../components/Snapshots';
 import { SectionLabel, TickBox } from '../components/ui';
@@ -74,6 +75,9 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
  */
 export function Export() {
   const { state, dispatch, now, catalog } = useStore();
+  // No padding in the drawn layout, because the row's own content supplies
+  // it there. Grouped adds its own. See `useRowStyle`.
+  const rowStyle = useRowStyle(0);
   const [picked, setPicked] = useState<Record<PartId, boolean>>({
     courses: true,
     deadlines: true,
@@ -224,7 +228,7 @@ export function Export() {
             display: 'flex',
             gap: 11,
             alignItems: 'center',
-            borderBottom: '1px solid var(--app-line)',
+            ...rowStyle,
           }}
         >
           <button

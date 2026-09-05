@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, TickBox } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
@@ -47,6 +48,7 @@ const LINKS = [
  */
 export function Yes() {
   const { state, dispatch, catalog } = useStore();
+  const rowStyle = useRowStyle(0);
   const [text, setText] = useState('');
   const [take, setTake] = useState<Record<string, boolean>>({});
   const [added, setAdded] = useState('');
@@ -129,7 +131,7 @@ export function Yes() {
                   display: 'flex',
                   gap: 11,
                   alignItems: 'flex-start',
-                  borderBottom: '1px solid var(--app-line)',
+                  ...rowStyle,
                 }}
               >
                 <button

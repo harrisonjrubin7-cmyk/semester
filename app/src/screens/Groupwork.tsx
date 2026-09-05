@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import {
@@ -54,6 +55,8 @@ const asPart = (p: PartRow): Part => ({
  */
 export function Groupwork() {
   const { state, dispatch, now, account, catalog } = useStore();
+  // Spread rather than wrapped, so a button row stays one tap target.
+  const rowStyle = useRowStyle(12);
 
   const [code, setCode] = useState(
     catalog.byId[state.courseId]?.code ?? catalog.courses[0]?.code ?? '',
@@ -179,8 +182,7 @@ export function Groupwork() {
                   display: 'block',
                   width: '100%',
                   textAlign: 'left',
-                  padding: '12px 0',
-                  borderBottom: '1px solid var(--app-line)',
+                  ...rowStyle,
                 }}
               >
                 <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.35 }}>{g.name}</span>

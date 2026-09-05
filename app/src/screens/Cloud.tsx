@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { addressIn } from '../lib/mail';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, SectionLabel } from '../components/ui';
@@ -42,6 +43,7 @@ type Tab = (typeof TABS)[number];
  */
 export function Cloud() {
   const { state, dispatch, now, catalog } = useStore();
+  const rowStyle = useRowStyle(11);
   const live = tokens();
   const available = (Object.keys(PROVIDERS) as ProviderId[]).filter(
     (id) => live[id] && PROVIDERS[id].calendar,
@@ -268,7 +270,7 @@ export function Cloud() {
             List recent files
           </button>
           {files.map((f) => (
-            <div key={f.id} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
+            <div key={f.id} style={rowStyle}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
                 <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {f.name}

@@ -190,7 +190,7 @@ export function Meals() {
       {mine.length > 0 && (
         <Group header="What you have logged" framed={false}>
           {mine.map((r) => (
-            <CustomRow key={r.id}>
+            <CustomRow key={r.id} pad={9}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))' }}>
                 {new Date(r.at).toLocaleDateString()}
