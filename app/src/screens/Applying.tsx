@@ -19,6 +19,7 @@
 
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Suggested } from '../components/Suggested';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import {
@@ -111,6 +112,9 @@ export function Applying() {
           </p>
         )
       ) : null}
+      {/* Suggested, never added. See `components/Suggested.tsx`. */}
+      <Suggested />
+
     </div>
   );
 }

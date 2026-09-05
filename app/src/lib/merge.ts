@@ -151,6 +151,10 @@ export const STRATEGY: Record<string, Strategy> = {
   // Which units were guessed at before reading. Two devices pre-testing two
   // different units should end with both, and a pretest is never un-done.
   pretested: 'ticks',
+  // Who you are and what you want suggested. A fact about the person, and
+  // dismissals should follow them rather than be re-offered on a second
+  // device.
+  wanted: 'theirs',
   // A mark on a class is a fact about a day, and two devices marking two
   // different days should end with both. Keyed by course and date inside
   // `readLog`, so a duplicate cannot become a second absence.

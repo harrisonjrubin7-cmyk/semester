@@ -46,6 +46,17 @@ export function settings(state: State, action: Action): State | null {
       return { ...state, mySchools, schoolId };
     }
 
+    case 'setWanted':
+      return { ...state, wanted: { ...state.wanted, ...action.patch } };
+
+    case 'dismissProgramme':
+      return state.wanted.dismissed.includes(action.id)
+        ? state
+        : {
+            ...state,
+            wanted: { ...state.wanted, dismissed: [...state.wanted.dismissed, action.id] },
+          };
+
     case 'countScreens':
       return { ...state, countScreens: action.on };
 

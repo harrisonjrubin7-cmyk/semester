@@ -61,6 +61,7 @@ import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
 import { readOverrides, type GradeSystem } from '../lib/cutoffs';
 import { readPretested } from '../lib/pretest';
 import type { PostMortem } from '../lib/postmortem';
+import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
 
@@ -130,6 +131,14 @@ export interface Persisted {
    * nothing may punish it. See `lib/pretest.ts`.
    */
   pretested: Record<string, number>;
+  /**
+   * What to suggest from the shipped list of programmes, and what not to.
+   *
+   * Empty in every field is the honest starting state and shows everything
+   * opening soon. See `lib/suggest.ts` — none of this produces a deadline;
+   * it only decides what is worth hearing about.
+   */
+  wanted: Wanted;
   /**
    * What the last sync did, so it can be said rather than guessed at.
    *
@@ -631,6 +640,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   mySchools: [],
   countScreens: true,
   pretested: {},
+  wanted: NOTHING_WANTED,
   lastSync: null,
   places: [],
   commitments: [],
@@ -817,6 +827,7 @@ export function loadPersisted(): Persisted {
         : [],
       countScreens: saved.countScreens !== false,
       pretested: readPretested(saved.pretested),
+      wanted: readWanted(saved.wanted),
       lastSync: readLastSync(saved.lastSync),
       places: saved.places ?? [],
       commitments: saved.commitments ?? [],
@@ -924,6 +935,7 @@ export function pickPersisted(state: State): Persisted {
     mySchools: state.mySchools,
     countScreens: state.countScreens,
     pretested: state.pretested,
+    wanted: state.wanted,
     lastSync: state.lastSync,
     places: state.places,
     commitments: state.commitments,
@@ -1020,6 +1032,8 @@ export type Action =
   | { type: 'guessFirst'; courseId: string; unit: number }
   | { type: 'say'; said: string; at: number }
   | { type: 'forgetSyncNote' }
+  | { type: 'setWanted'; patch: Partial<Wanted> }
+  | { type: 'dismissProgramme'; id: string }
   | { type: 'postMortem'; id: string; mortem: PostMortem; keys: string[] }
   | { type: 'guessShow' }
   | { type: 'guessNext'; right: boolean }
