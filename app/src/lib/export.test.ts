@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ALARMS,
   appointmentEvents,
   backupDate,
   readBackup,
@@ -14,7 +15,9 @@ import {
   toCsv,
   toIcs,
 } from './export';
-import type { Appointment, DatedItem, Note } from './types';
+import { parseIcs } from './ics';
+import { NO_TIME } from './duetime';
+import type { Appointment, Course, DatedItem, Note } from './types';
 
 const item = (over: Partial<DatedItem> = {}): DatedItem =>
   ({
@@ -25,6 +28,7 @@ const item = (over: Partial<DatedItem> = {}): DatedItem =>
     month: 8,
     day: 14,
     dueTime: '11:59p',
+    dueAt: 23 * 60 + 59,
     where: 'Brightspace',
     weight: '15%',
     date: new Date(2026, 8, 14),
@@ -100,6 +104,25 @@ describe('fold', () => {
     // Unfolding puts it back exactly.
     expect(lines.map((l, i) => (i ? l.slice(1) : l)).join('')).toBe(`SUMMARY:${'x'.repeat(200)}`);
   });
+
+  it('counts octets rather than characters', () => {
+    // The limit is bytes. An em dash is one character and three of them, so
+    // counting characters sails straight past 75 and produces a line Outlook
+    // has historically refused.
+    const long = `SUMMARY:${'—'.repeat(60)}`;
+    for (const line of fold(long).split('\r\n')) {
+      expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(75);
+    }
+  });
+
+  it('never splits a character across the fold', () => {
+    // Half of a multi-byte character on each side of a line break is mojibake
+    // at best and a refused import at worst.
+    const long = `SUMMARY:${'é'.repeat(80)}`;
+    const folded = fold(long);
+    expect(folded).not.toContain('�');
+    expect(folded.replace(/\r\n /g, '')).toBe(long);
+  });
 });
 
 describe('toIcs', () => {
@@ -111,13 +134,41 @@ describe('toIcs', () => {
     expect(ics).toContain('VERSION:2.0');
   });
 
-  it('writes a deadline as an all-day entry, with the stated time in the title', () => {
-    // The syllabus says "11:59p"; that is not a timestamp in a timezone, and
-    // inventing one would put a confident wrong time in a calendar.
-    expect(ics).toContain('DTSTART;VALUE=DATE:20260914');
-    expect(ics).toContain('DTEND;VALUE=DATE:20260915');
+  it('is a feed rather than an invitation, and asks not to be polled to death', () => {
+    // Without METHOD:PUBLISH a mail client offers to RSVP to a problem set.
+    expect(ics).toContain('METHOD:PUBLISH');
+    expect(ics).toContain('REFRESH-INTERVAL;VALUE=DURATION:PT4H');
+  });
+
+  it('puts a deadline at the hour the syllabus stated', () => {
+    // This used to be all-day for everything. The app now reads the hour out
+    // of the due text, and an all-day banner for something due at 11:59p
+    // sorts above the day's classes and gives no runway.
+    expect(ics).toContain('DTSTART:20260914T235900');
     expect(ics).toContain('due 11:59p');
-    expect(ics).not.toContain('DTSTART:20260914T');
+    expect(ics).not.toContain('DTSTART;VALUE=DATE:20260914');
+  });
+
+  it('leaves a deadline with no stated hour all-day rather than at midnight', () => {
+    // Midnight is wrong twice: some clients show it on the previous evening,
+    // and it asserts a time nobody wrote.
+    const vague = toIcs(deadlineEvents([item({ dueAt: NO_TIME, dueTime: 'In class' })], code));
+    expect(vague).toContain('DTSTART;VALUE=DATE:20260914');
+    expect(vague).toContain('DTEND;VALUE=DATE:20260915');
+    expect(vague).not.toContain('DTSTART:20260914T');
+  });
+
+  it('writes an alarm per reminder, and none when none was asked for', () => {
+    const withAlarms = toIcs(deadlineEvents([item()], code, ALARMS));
+    expect(withAlarms.match(/BEGIN:VALARM/g)).toHaveLength(2);
+    expect(withAlarms).toContain('TRIGGER:-PT960M');
+    expect(withAlarms).toContain('TRIGGER:-PT60M');
+    expect(ics).not.toContain('VALARM');
+  });
+
+  it('reminds the evening before and an hour before', () => {
+    // One is for starting it, the other for submitting it.
+    expect(ALARMS).toEqual([960, 60]);
   });
 
   it('gives every event a unique id', () => {
@@ -127,10 +178,33 @@ describe('toIcs', () => {
     expect(two).toContain('UID:item-other@semester.app');
   });
 
+  it('keeps a UID stable when the deadline moves', () => {
+    // The whole update-rather-than-duplicate story. A UID with the date in it
+    // leaves the old deadline sitting beside the new one.
+    const uid = (s: string) => /^UID:(.+)$/m.exec(s)?.[1];
+    const moved = toIcs(deadlineEvents([item({ date: new Date(2026, 8, 21), day: 21 })], code));
+    expect(uid(moved)).toBe(uid(ics));
+  });
+
   it('produces a valid empty calendar rather than nothing', () => {
     const empty = toIcs([]);
     expect(empty).toContain('BEGIN:VCALENDAR');
     expect(empty).not.toContain('BEGIN:VEVENT');
+  });
+
+  it('round-trips through the parser this app reads Brightspace with', () => {
+    // The strongest check available without a calendar client: the parser
+    // already trusted for a real feed reads what this writes.
+    const read = parseIcs(
+      [{ id: 'econ', code: 'ECON 1020', name: 'Principles' } as Course],
+      toIcs(deadlineEvents([item()], code, ALARMS)),
+    );
+    expect(read.events).toHaveLength(1);
+    expect(read.events[0].date).toBe('2026-09-14');
+    expect(read.events[0].courseId).toBe('econ');
+    // Including the comma in "Essay 2, final draft", which is syntax in the
+    // format and would otherwise split one event into two properties.
+    expect(read.events[0].title).toContain('Essay 2, final draft');
   });
 });
 

@@ -5,6 +5,7 @@ import { SectionLabel, TickBox } from '../components/ui';
 import { PROVIDERS, tokens, type ProviderId } from '../lib/connect';
 import { datedItems } from '../lib/select';
 import {
+  ALARMS,
   appointmentEvents,
   coursesMarkdown,
   deadlineCsv,
@@ -35,7 +36,8 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
   {
     id: 'calendar',
     label: 'Calendar',
-    blurb: 'Deadlines and your own appointments, for any calendar app.',
+    blurb:
+      'Deadlines and appointments, with a reminder the evening before and an hour before each.',
     format: 'ICS',
   },
   { id: 'notes', label: 'Notes', blurb: 'Everything you wrote, including transcripts and email drafts.', format: 'Markdown' },
@@ -111,7 +113,7 @@ export function Export() {
       out.push({
         name: `${stem}.ics`,
         body: toIcs(
-          [...deadlineEvents(items, code), ...appointmentEvents(state.appointments)],
+          [...deadlineEvents(items, code, ALARMS), ...appointmentEvents(state.appointments)],
           'Semester',
         ),
         mime: 'text/calendar',

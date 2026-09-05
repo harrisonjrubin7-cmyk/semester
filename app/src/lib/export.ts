@@ -19,6 +19,7 @@
 import type { Catalog } from '../data/catalog';
 import type { Appointment, DatedItem, Note, PersonalTask } from './types';
 import { standingOf, type DoneMap } from './standing';
+import { NO_TIME } from './duetime';
 
 // ── CSV ──────────────────────────────────────────────────────────────────
 
@@ -133,17 +134,32 @@ export function icsText(value: string): string {
  *
  * Google and Apple both forgive an unfolded line; Outlook has historically not,
  * and an import that half-works is harder to debug than one that fails.
+ *
+ * Counted in octets, not characters, and never splitting one. The limit is
+ * bytes: this app's own calendar name carries an em dash, a course title can
+ * carry an accent, and a note title can carry an emoji — sliced by character
+ * count those sail past 75 bytes, and slicing mid-character produces a line
+ * an importer reads as mojibake or refuses outright.
  */
 export function fold(line: string): string {
-  if (line.length <= 75) return line;
-  const out: string[] = [line.slice(0, 75)];
-  let rest = line.slice(75);
-  while (rest.length > 74) {
-    out.push(` ${rest.slice(0, 74)}`);
-    rest = rest.slice(74);
+  const bytes = (s: string) => new TextEncoder().encode(s).length;
+  if (bytes(line) <= 75) return line;
+
+  const out: string[] = [];
+  let current = '';
+  let limit = 75;
+  for (const ch of line) {
+    if (bytes(current + ch) > limit) {
+      out.push(current);
+      current = ch;
+      // Continuation lines carry a leading space, which costs one of the 75.
+      limit = 74;
+    } else {
+      current += ch;
+    }
   }
-  if (rest) out.push(` ${rest}`);
-  return out.join('\r\n');
+  out.push(current);
+  return out.join('\r\n ');
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -158,17 +174,44 @@ export interface IcsEvent {
   /** Minutes past midnight. Omit for an all-day entry. */
   at?: number;
   minutes?: number;
+  /**
+   * Minutes before the start, for a `VALARM` each. Empty or omitted for none.
+   *
+   * This is the part that makes a calendar file worth more than a list: the
+   * reminder fires on a lock screen and a watch without this app being open,
+   * without a push key, without a notification permission, and for the
+   * majority of people who never turn notifications on.
+   */
+  alarms?: number[];
 }
+
+/**
+ * How far ahead of a deadline the calendar's own alarm fires.
+ *
+ * Two, deliberately: the evening before is when something can still be
+ * started, and an hour before is when it can still be submitted. More than two
+ * and a calendar app starts to feel like the app it was meant to replace.
+ */
+export const ALARMS = [16 * 60, 60];
 
 /**
  * A calendar file.
  *
- * Deadlines go in as all-day entries rather than timed ones, and that is a
- * decision rather than laziness: this app dates a deadline to the day because
- * that is what a syllabus states, and "11:59 PM" as written in a PDF is not a
- * timestamp in a timezone. Inventing 23:59 local for it would put a
- * confident-looking wrong time in someone's calendar. The stated time goes in
- * the title instead, where it is read rather than relied on.
+ * A deadline goes in at the hour the syllabus actually stated, and as an
+ * all-day entry when it stated none. That is a change: this used to write
+ * every deadline as all-day, on the grounds that "11:59 PM" in a PDF is not a
+ * timestamp in a timezone and inventing one would put a confident-looking
+ * wrong time in someone's calendar. The first half of that is still true — a
+ * deadline with no stated hour is still all-day rather than midnight, because
+ * midnight is wrong twice, showing on the previous evening in some clients and
+ * asserting a time nobody wrote. What changed is that the app now reads the
+ * hour out of the due text (`lib/duetime.ts`) and marks the ones it could not
+ * read, so an hour that *was* written down is no longer thrown away. An
+ * all-day banner for something due at 11:59 PM is its own wrong answer: it
+ * sorts above the day's classes and gives no runway.
+ *
+ * `METHOD:PUBLISH` marks this as a feed rather than an invitation, which stops
+ * a mail client offering to RSVP to a problem set.
  */
 export function toIcs(events: IcsEvent[], name = 'Semester'): string {
   const now = new Date();
@@ -181,7 +224,13 @@ export function toIcs(events: IcsEvent[], name = 'Semester'): string {
     'VERSION:2.0',
     'PRODID:-//Semester//EN',
     'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
     `X-WR-CALNAME:${icsText(name)}`,
+    // Ask a subscribing client not to hammer this. A deadline that moves is
+    // not urgent to the minute, and a feed polled every minute is one an
+    // operator eventually blocks.
+    'X-PUBLISHED-TTL:PT4H',
+    'REFRESH-INTERVAL;VALUE=DURATION:PT4H',
   ];
 
   for (const e of events) {
@@ -201,6 +250,15 @@ export function toIcs(events: IcsEvent[], name = 'Semester'): string {
     lines.push(`SUMMARY:${icsText(e.summary)}`);
     if (e.description) lines.push(`DESCRIPTION:${icsText(e.description)}`);
     if (e.location) lines.push(`LOCATION:${icsText(e.location)}`);
+    for (const minutes of e.alarms ?? []) {
+      lines.push(
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        `DESCRIPTION:${icsText(e.summary)}`,
+        `TRIGGER:-PT${Math.max(0, Math.round(minutes))}M`,
+        'END:VALARM',
+      );
+    }
     lines.push('END:VEVENT');
   }
 
@@ -208,12 +266,30 @@ export function toIcs(events: IcsEvent[], name = 'Semester'): string {
   return `${lines.map(fold).join('\r\n')}\r\n`;
 }
 
-export function deadlineEvents(items: DatedItem[], code: (id: string) => string): IcsEvent[] {
+/**
+ * Deadlines as calendar entries.
+ *
+ * The `uid` is the item's own id and carries no date in it, which is what
+ * makes a deadline that moves *update* the entry already in someone's calendar
+ * instead of appearing beside the old one. Get that wrong and re-importing
+ * leaves a student with two of everything and no way to tell which is real.
+ */
+export function deadlineEvents(
+  items: DatedItem[],
+  code: (id: string) => string,
+  alarms: number[] = [],
+): IcsEvent[] {
   return items.map((i) => ({
     uid: `item-${i.id}`,
     summary: `${code(i.c)}: ${i.title}${i.dueTime ? ` (due ${i.dueTime})` : ''}`,
     description: [i.kind, i.weight, i.where].filter(Boolean).join(' · '),
     date: i.date,
+    // `NO_TIME` is what `lib/duetime.ts` returns when the syllabus named no
+    // hour. Those stay all-day; the rest get the hour that was written down,
+    // and half an hour of it, because a calendar wants a duration.
+    at: i.dueAt >= NO_TIME ? undefined : i.dueAt,
+    minutes: 30,
+    alarms,
   }));
 }
 
