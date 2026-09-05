@@ -8,6 +8,7 @@ import { download } from '../lib/deliver';
 import { allCards } from '../data/catalog';
 import { datedItems } from '../lib/select';
 import { tallyBy } from '../lib/review';
+import { calibrate, calibrationLine, guessLine } from '../lib/worth';
 import { readTerm } from '../lib/term';
 import { basis, document as asDocument, findings, nothingLine, type TermInput } from '../lib/worked';
 
@@ -61,6 +62,14 @@ export function Worked() {
   }, [catalog, now, state.done, state.tickedAt, state.reviews, state.sittings, state.spent, courseCode]);
 
   const found = findings(input);
+  // Only reports that carry a guess made before the work started — the app's
+  // own estimate is the median of these very reports, so scoring that against
+  // them measures nothing. See `lib/worth.ts`.
+  const guesses = state.spent
+    .filter((s) => typeof s.guess === 'number')
+    .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes, at: s.at }));
+  const bias = calibrate(guesses);
+  const said = guessLine(guesses, bias);
   const label = readTerm(state.term).label;
   const nothing = nothingLine(input);
 
@@ -82,6 +91,29 @@ export function Worked() {
           {basis(input)}
         </div>
       </Blueprint>
+
+      {/*
+        How wrong your own guesses have been, which is a different finding from
+        everything below and does not go through `findings`.
+
+        It is here rather than only behind the scenes because the correction is
+        already applied to every start date in the app — see `lib/worth.ts` —
+        and a number quietly adjusted is a number nobody can check. Silent
+        below five recent guesses.
+      */}
+      {said ? (
+        <>
+          <SectionLabel style={{ margin: '22px 0 6px' }}>Your own estimates</SectionLabel>
+          <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>
+            {said}
+          </div>
+          {calibrationLine(bias) ? (
+            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+              {calibrationLine(bias)}
+            </div>
+          ) : null}
+        </>
+      ) : null}
 
       {found.length === 0 ? (
         <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 16, lineHeight: 1.55 }}>

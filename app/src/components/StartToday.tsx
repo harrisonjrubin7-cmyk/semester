@@ -17,14 +17,15 @@ import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { beginNow, plan, planLine } from '../lib/start';
-import { calibrate } from '../lib/worth';
+import { adjustedLine, calibrate } from '../lib/worth';
 
 export function StartToday() {
   const { state, dispatch, now, catalog } = useStore();
   const bias = calibrate(
     state.spent
       .filter((s) => typeof s.guess === 'number')
-      .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes })),
+      // `at` so the window is the recent ten rather than the whole term.
+      .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes, at: s.at })),
   );
   const p = plan({
     items: datedItems(catalog, now),
@@ -94,6 +95,24 @@ export function StartToday() {
           </button>
         ))}
       </div>
+      {/*
+        The correction is applied to every start date above; without this,
+        nothing anywhere said so. A number silently moved is a number nobody
+        can check. See `lib/worth.ts`.
+      */}
+      {adjustedLine(bias) ? (
+        <div
+          style={{
+            fontSize: 'calc(11px * var(--text-scale, 1))',
+            opacity: 0.5,
+            marginTop: 8,
+            lineHeight: 1.45,
+            textWrap: 'pretty',
+          }}
+        >
+          {adjustedLine(bias)}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -114,7 +133,8 @@ export function StartList() {
   const bias = calibrate(
     state.spent
       .filter((s) => typeof s.guess === 'number')
-      .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes })),
+      // `at` so the window is the recent ten rather than the whole term.
+      .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes, at: s.at })),
   );
   const p = plan({
     items: datedItems(catalog, now),
@@ -143,6 +163,19 @@ export function StartList() {
       >
         {planLine(p, state.windows)}
       </div>
+      {adjustedLine(bias) ? (
+        <div
+          style={{
+            fontSize: 'calc(11px * var(--text-scale, 1))',
+            opacity: 0.5,
+            marginBottom: 9,
+            lineHeight: 1.45,
+            textWrap: 'pretty',
+          }}
+        >
+          {adjustedLine(bias)}
+        </div>
+      ) : null}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         {p.starts.map((s) => (
           <button

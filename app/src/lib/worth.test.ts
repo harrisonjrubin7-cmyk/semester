@@ -4,7 +4,10 @@ import {
   FLOOR,
   UNSURE,
   bestBuys,
+  adjustedLine,
   calibrate,
+  calibrateFor,
+  guessLine,
   calibrationLine,
   corrected,
   eveningLine,
@@ -119,8 +122,8 @@ describe('how wrong your own guesses have been', () => {
 
   it('measures the guess against what it took', () => {
     // "I thought two hours, it was three and a half."
-    const four = [1, 2, 3, 4].map(() => guessed(120, 210));
-    expect(calibrate(four)?.ratio).toBe(1.75);
+    const five = [1, 2, 3, 4, 5].map(() => guessed(120, 210));
+    expect(calibrate(five)?.ratio).toBe(1.75);
   });
 
   it('does not compare a prediction against the evidence it was made from', () => {
@@ -303,5 +306,82 @@ describe('what the evening’s list says at the top', () => {
 
   it('has something to say about an empty evening', () => {
     expect(eveningLine([], 6)).toBe('Nothing outstanding to weigh up.');
+  });
+});
+
+describe('the calibration window, and what it is allowed to say', () => {
+  const rep = (guess: number, minutes: number, at: number) => ({ guess, minutes, at });
+
+  it('is silent below five reports rather than showing a noisy number', () => {
+    const four = [1, 2, 3, 4].map((n) => rep(60, 120, n));
+    expect(calibrate(four)).toBeNull();
+    expect(adjustedLine(calibrate(four))).toBe('');
+    expect(guessLine(four, calibrate(four))).toBe('');
+  });
+
+  it('looks at the recent ten, not the whole term', () => {
+    // Somebody who started the term wildly optimistic and has since got the
+    // measure of it should not still be told they are wildly optimistic.
+    const early = Array.from({ length: 10 }, (_, i) => rep(60, 240, i));
+    const lately = Array.from({ length: 10 }, (_, i) => rep(60, 66, 100 + i));
+    expect(calibrate([...early, ...lately])?.ratio).toBe(1.1);
+    expect(calibrate(early)?.ratio).toBe(4);
+  });
+
+  it('keeps reports with no timestamp rather than dropping them', () => {
+    // An older store wrote no `at`, and those reports are still evidence.
+    const old = [1, 2, 3, 4, 5].map(() => ({ guess: 60, minutes: 90 }));
+    expect(calibrate(old)?.from).toBe(5);
+  });
+
+  it('measures one course on its own', () => {
+    // Somebody can have the measure of their problem sets and be consistently
+    // wrong about their essays; one number across both hides exactly that.
+    const mixed = [
+      ...Array.from({ length: 5 }, (_, i) => ({ guess: 60, minutes: 60, at: i, c: 'econ' })),
+      ...Array.from({ length: 5 }, (_, i) => ({ guess: 60, minutes: 180, at: i, c: 'psci' })),
+    ];
+    const of = (r: { c: string }) => r.c;
+    expect(calibrateFor(mixed, of, 'econ')?.ratio).toBe(1);
+    expect(calibrateFor(mixed, of, 'psci')?.ratio).toBe(3);
+    expect(calibrateFor(mixed, of)?.ratio).toBe(2);
+  });
+
+  it('says nothing for a course with too little of its own', () => {
+    // Rather than borrowing the overall figure and calling it that course's.
+    const mixed = [
+      ...Array.from({ length: 2 }, (_, i) => ({ guess: 60, minutes: 60, at: i, c: 'econ' })),
+      ...Array.from({ length: 8 }, (_, i) => ({ guess: 60, minutes: 180, at: i, c: 'psci' })),
+    ];
+    expect(calibrateFor(mixed, (r) => r.c, 'econ')).toBeNull();
+  });
+});
+
+describe('saying that a number has been adjusted', () => {
+  const many = (guess: number, minutes: number) =>
+    Array.from({ length: 6 }, (_, i) => ({ guess, minutes, at: i }));
+
+  it('says so where an adjusted number is shown', () => {
+    const said = adjustedLine(calibrate(many(60, 120)));
+    expect(said).toContain('Adjusted for how long things actually take you');
+    expect(said).toContain('100% longer');
+  });
+
+  it('says nothing when the bias is too small to be a finding', () => {
+    // A five per cent error announced every week trains people to ignore the
+    // sentence for the week it says forty.
+    expect(adjustedLine(calibrate(many(60, 63)))).toBe('');
+  });
+
+  it('reads the other way round when work takes less than you think', () => {
+    expect(adjustedLine(calibrate(many(120, 60)))).toContain('less');
+  });
+
+  it('puts the gap in hours and a ratio, as a person would say it', () => {
+    const reports = many(120, 200);
+    const said = guessLine(reports, calibrate(reports));
+    expect(said).toContain('You estimate 2 hours');
+    expect(said).toContain('You take about 3.5 hours');
+    expect(said).toContain('ratio of 1.67');
   });
 });
