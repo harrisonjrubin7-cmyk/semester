@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESTINATIONS, saysFor } from './nav';
+import { DESTINATIONS, lately, saysFor } from './nav';
 import { NO_SCHOOL, type Capabilities } from './school';
 import { BUNDLED } from '../data/schools';
 
@@ -108,5 +108,43 @@ describe('the bar stays short whatever a registrar is called', () => {
     const yes = DESTINATIONS.find((d) => d.screen === 'yes')!;
     expect(yes.short).toBeDefined();
     expect((yes.short as string).length).toBeLessThanOrEqual(9);
+  });
+});
+
+describe('the places you keep going back to', () => {
+  const caps = vanderbilt;
+
+  it('lists the most recent first', () => {
+    expect(lately(['grades', 'runway', 'essay'], [], caps).map((d) => d.screen)).toEqual([
+      'grades',
+      'runway',
+      'essay',
+    ]);
+  });
+
+  it('leaves out whatever this layout already puts one tap away', () => {
+    // The tab bar and the springboard's dock hold different screens, which is
+    // why the bar is a parameter rather than a constant.
+    expect(lately(['grades', 'runway'], ['grades'], caps).map((d) => d.screen)).toEqual(['runway']);
+  });
+
+  it('leaves out a screen this school has no equivalent of', () => {
+    // Visited before somebody changed school. It must not come back in
+    // through this door when the directory has already dropped it.
+    expect(lately(['meals', 'grades'], [], nowhere).map((d) => d.screen)).toEqual(['grades']);
+    expect(lately(['meals', 'grades'], [], caps).map((d) => d.screen)).toContain('meals');
+  });
+
+  it('drops anything that is not a place in the app', () => {
+    expect(lately(['grades', 'nonsense'], [], caps).map((d) => d.screen)).toEqual(['grades']);
+  });
+
+  it('never lists the same screen twice', () => {
+    expect(lately(['grades', 'grades', 'runway'], [], caps)).toHaveLength(2);
+  });
+
+  it('stops at four, because a list of twelve is the directory again', () => {
+    const many = ['grades', 'runway', 'essay', 'deck', 'exam', 'costs'];
+    expect(lately(many, [], caps)).toHaveLength(4);
   });
 });

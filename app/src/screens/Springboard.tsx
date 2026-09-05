@@ -22,6 +22,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { TabGlyph } from '../components/TabIcon';
 import { dockFor, labelFor, matches, pagesFor, searchable, type Folder } from '../lib/springboard';
+import { lately } from '../lib/nav';
 import type { Screen } from '../lib/types';
 
 const ICON = 58;
@@ -154,6 +155,10 @@ export function Springboard() {
   const here = pages[Math.min(page, pages.length - 1)];
 
   const due = catalog.items.filter((i) => !state.done[i.id]).length;
+  // Against the dock rather than the tab bar: this layout's own navigation is
+  // the dock, and a shortcut to something already one tap away is noise. Same
+  // rule as the Me screen, from the same place. See `lib/nav.ts`.
+  const recent = lately(state.recent, dock, school.capabilities);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: '10px 14px 0' }}>
@@ -214,6 +219,27 @@ export function Springboard() {
                   : `${due} ${due === 1 ? 'thing' : 'things'} still to do`}
               </span>
             </button>
+          )}
+
+          {/*
+            The four you keep coming back to, on the first page only.
+
+            A launcher is a grid of forty-six things arranged by category, and
+            a category is the thing nobody remembers. Repeating this on every
+            page would be four icons of chrome on each; the first page is where
+            somebody lands.
+          */}
+          {page === 0 && recent.length > 0 && (
+            <div style={{ marginBottom: 18 }}>
+              <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))', marginBottom: 8 }}>
+                Lately
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}>
+                {recent.map((d) => (
+                  <Icon key={d.screen} screen={d.screen} onOpen={open} />
+                ))}
+              </div>
+            </div>
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}>

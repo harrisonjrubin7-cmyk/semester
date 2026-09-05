@@ -625,3 +625,39 @@ export function saysFor(d: Destination, c: Capabilities): { label: string; blurb
   const said = SAYS[d.screen]?.(c);
   return { label: said?.label ?? d.label, blurb: said?.blurb ?? d.blurb };
 }
+
+/**
+ * The handful of places somebody actually keeps going back to.
+ *
+ * Recency above taxonomy. Five shelves fixed "which heading was that under",
+ * and somebody still had to remember which shelf; the app already knows what
+ * they revisit, and four rows of it costs nothing.
+ *
+ * `onBar` is whatever this layout's own navigation already offers — the tab
+ * bar, or the springboard's dock. A shortcut to something that is one tap away
+ * is noise, and the two layouts have different bars, which is why it is a
+ * parameter rather than a constant.
+ *
+ * Capability-gated like everything else: a screen visited before somebody
+ * changed school must not come back through this door.
+ */
+export function lately(
+  recent: string[],
+  onBar: string[],
+  c: Capabilities,
+  hide: string[] = [],
+  limit = 4,
+): Destination[] {
+  const out: Destination[] = [];
+  const seen = new Set<string>();
+  for (const screen of recent) {
+    if (seen.has(screen) || onBar.includes(screen) || hide.includes(screen)) continue;
+    if (!allowed(screen, c)) continue;
+    const d = DESTINATIONS.find((x) => x.screen === screen);
+    if (!d) continue;
+    seen.add(screen);
+    out.push(d);
+    if (out.length >= limit) break;
+  }
+  return out;
+}

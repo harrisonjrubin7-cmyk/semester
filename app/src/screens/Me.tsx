@@ -37,7 +37,7 @@ import { Bell, ChevronRight } from '../components/Icons';
 import { NOTIFICATIONS, NOTIF_DEFS, SOURCES } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
-import { DESTINATIONS, destinationsIn, listed, saysFor, type Group } from '../lib/nav';
+import { DESTINATIONS, destinationsIn, lately, listed, saysFor, type Group } from '../lib/nav';
 import { hiddenFor } from '../lib/school';
 import { SchoolPicker } from '../components/SchoolPicker';
 import { usePrefersDark } from '../lib/prefers';
@@ -312,17 +312,11 @@ export function Me() {
 
   const tab = state.meTab;
 
-  // The four most recent destinations that are in the directory and not
-  // already a tab — a tab is one tap, so listing it here would be noise.
-  const recent = state.recent
-    .filter((screen) => !HIDE_IN_ME.includes(screen))
-    .map((screen) => DESTINATIONS.find((d) => d.screen === screen))
-    .filter((d): d is (typeof DESTINATIONS)[number] => Boolean(d))
-    // Already on the bar is one tap, so a Lately row for it is noise. Read
-    // from the student's own bar rather than a copy of the shipped seven,
-    // which stopped being the answer when the bar became theirs to arrange.
-    .filter((d) => !state.tabs.includes(d.screen))
-    .slice(0, 4);
+  // The rule lives in `lib/nav.ts` so the springboard applies exactly the same
+  // one against its own dock. It also gates on the school, which this did not:
+  // a screen visited before somebody changed university could come back here
+  // after the directory had already dropped it.
+  const recent = lately(state.recent, state.tabs, school.capabilities, HIDE_IN_ME);
 
   return (
     <div style={{ padding: 18 }}>
