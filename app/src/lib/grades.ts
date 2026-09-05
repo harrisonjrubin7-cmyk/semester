@@ -106,12 +106,19 @@ export function asWeights(
   return read.map((r) => (r.points === null ? null : (r.points / total) * 100));
 }
 
-/** A score as a person types it: "88", "88%", "17/20", "0.88". */
+/**
+ * A score as a person types it: "88", "88%", "17/20", "17 out of 20", "0.88".
+ *
+ * Not letters. Those need to know the course's cutoffs, which this does not
+ * have and should not — see `lib/score.ts`, which knows both.
+ */
 export function readScore(text: string): number | null {
   const s = text.trim();
   if (!s) return null;
 
-  const fraction = s.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  // "17 out of 20" and "17 of 20" are how people say a fraction out loud, and
+  // how a rubric in a PDF writes one. Same meaning as the slash.
+  const fraction = s.match(/^(\d+(?:\.\d+)?)\s*(?:\/|\s+out\s+of\s+|\s+of\s+)\s*(\d+(?:\.\d+)?)$/i);
   if (fraction) {
     const bottom = Number(fraction[2]);
     if (bottom === 0) return null;

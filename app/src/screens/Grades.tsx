@@ -9,6 +9,7 @@ import { against, forCourse, trend, trendLine } from '../lib/sitting';
 import { projectGrade, projectionLine } from '../lib/worth';
 import { NO_CUTOFFS, letterFor, systemFor, targetsOf } from '../lib/cutoffs';
 import { Cutoffs } from '../components/Cutoffs';
+import { ScoreField } from '../components/ScoreField';
 
 /**
  * What you have, and what the rest has to be.
@@ -30,8 +31,8 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
   return (
     <div style={{ padding: bare ? 0 : 18 }}>
       <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
-        Weights come from each syllabus. Put in what you have so far — a percentage, or something
-        like 17/20 — and the rest is arithmetic.
+        Weights come from each syllabus. Put in what you have so far — a percentage, 17/20, 17 out
+        of 20, or the letter you were given — and the rest is arithmetic.
       </div>
 
       {catalog.courses.map((c) => {
@@ -41,7 +42,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
         const policy = state.attendPolicy[c.id] ?? NO_POLICY;
         // What earns an A here, and whether the app actually knows or is
         // assuming. See `lib/cutoffs.ts` — the two must not look alike.
-        const { system } = systemFor(c.id, state.gradeSystems, school);
+        const { system, source } = systemFor(c.id, state.gradeSystems, school);
         const targets = targetsOf(system);
         const t = tally(state.attendance, c.id);
         const s = standing(c, state.grades, {
@@ -145,16 +146,12 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                     {r.weight === null ? ' · not weighted' : r.extra ? ' · extra credit' : ''}
                   </div>
                 </div>
-                <input
-                  className="input"
-                  inputMode="decimal"
-                  placeholder="—"
+                <ScoreField
                   value={state.grades[key(c.id, i)] ?? ''}
-                  onChange={(e) =>
-                    dispatch({ type: 'setGrade', key: key(c.id, i), value: e.target.value })
-                  }
-                  aria-label={`Your score for ${r.what} in ${c.code}`}
-                  style={{ width: 84, flex: 'none', height: 38, fontSize: 'calc(14px * var(--text-scale, 1))', textAlign: 'center' }}
+                  onChange={(value) => dispatch({ type: 'setGrade', key: key(c.id, i), value })}
+                  system={system}
+                  assumed={source === 'assumed'}
+                  label={`Your score for ${r.what} in ${c.code}`}
                 />
               </div>
               {/* The attendance row is appended by `standing` past the end of
