@@ -155,6 +155,10 @@ export const STRATEGY: Record<string, Strategy> = {
   // dismissals should follow them rather than be re-offered on a second
   // device.
   wanted: 'theirs',
+  // Closing a term on one device is closing it. Two devices closing two
+  // different terms should end with both closed, which is what a union of
+  // plain strings does.
+  archivedTerms: 'union',
   // A mark on a class is a fact about a day, and two devices marking two
   // different days should end with both. Keyed by course and date inside
   // `readLog`, so a duplicate cannot become a second absence.

@@ -140,6 +140,16 @@ export interface Persisted {
    */
   wanted: Wanted;
   /**
+   * Terms that have been closed out.
+   *
+   * The only new state a term rollover needs. Terms themselves are derived
+   * from the courses rather than stored — a course has carried `course.term`
+   * since terms existed — so there is nothing to migrate, and an empty list
+   * here is exactly what every store written before this already meant. See
+   * `lib/rollover.ts`.
+   */
+  archivedTerms: string[];
+  /**
    * What the last sync did, so it can be said rather than guessed at.
    *
    * `mine` rather than the `latest` the plan named: what this device last
@@ -641,6 +651,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   countScreens: true,
   pretested: {},
   wanted: NOTHING_WANTED,
+  archivedTerms: [],
   lastSync: null,
   places: [],
   commitments: [],
@@ -828,6 +839,9 @@ export function loadPersisted(): Persisted {
       countScreens: saved.countScreens !== false,
       pretested: readPretested(saved.pretested),
       wanted: readWanted(saved.wanted),
+      archivedTerms: Array.isArray(saved.archivedTerms)
+        ? saved.archivedTerms.filter((t): t is string => typeof t === 'string')
+        : [],
       lastSync: readLastSync(saved.lastSync),
       places: saved.places ?? [],
       commitments: saved.commitments ?? [],
@@ -936,6 +950,7 @@ export function pickPersisted(state: State): Persisted {
     countScreens: state.countScreens,
     pretested: state.pretested,
     wanted: state.wanted,
+    archivedTerms: state.archivedTerms,
     lastSync: state.lastSync,
     places: state.places,
     commitments: state.commitments,
@@ -1034,6 +1049,10 @@ export type Action =
   | { type: 'forgetSyncNote' }
   | { type: 'setWanted'; patch: Partial<Wanted> }
   | { type: 'dismissProgramme'; id: string }
+  // Closes a term: files its courses into the record, marks it archived, and
+  // moves to the next one. `taken` is built by the screen, which has the
+  // catalogue and the typed grades; the reducer has neither.
+  | { type: 'closeTerm'; term: string; taken: Taken[]; next: string }
   | { type: 'postMortem'; id: string; mortem: PostMortem; keys: string[] }
   | { type: 'guessShow' }
   | { type: 'guessNext'; right: boolean }

@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { CloseTerm } from '../components/CloseTerm';
+import { TermSwitch } from '../components/TermSwitch';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import {
@@ -286,6 +288,13 @@ export function Registrar() {
         </>
       )}
       <div style={{ height: 26 }} />
+      {/* Beside the close-out, so a term filed by mistake is one tap back
+          rather than a hunt through another screen. Absent until there is
+          more than one term. */}
+      <TermSwitch />
+      {/* The end-of-term five minutes. See `lib/rollover.ts`. */}
+      <CloseTerm />
+
     </div>
   );
 }

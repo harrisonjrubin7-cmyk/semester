@@ -524,9 +524,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [state.sample, seed, state.courses],
   );
 
+  /*
+   * Every term worth switching between.
+   *
+   * Derived from the courses, plus the one currently open and any that have
+   * been closed out. Without those two, closing a term left somebody in a
+   * Spring with no courses in it and no switcher — because a switcher of one
+   * hides itself — and therefore no way back to the Autumn they had just
+   * filed. See `lib/rollover.ts`.
+   */
   const terms = useMemo(
-    () => sortTerms(allModules.map((m) => m.course.term ?? LEGACY_TERM)),
-    [allModules],
+    () =>
+      sortTerms([
+        ...allModules.map((m) => m.course.term ?? LEGACY_TERM),
+        ...state.archivedTerms,
+        state.term,
+      ]),
+    [allModules, state.archivedTerms, state.term],
   );
 
   const codes = useMemo(
@@ -543,16 +557,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * what it always assumed it was seeing. A term nobody has a course in falls
    * back to showing everything rather than an empty app, which is the state a
    * saved `term` from a deleted semester would otherwise leave somebody in.
+   *
+   * That fallback stops once a term has been closed out. Somebody who has
+   * closed one has said what their terms are, and an empty new term is the
+   * point of closing the old one — falling back there put the whole of last
+   * semester back on the screen, which is the opposite of what the button
+   * says it does. See `lib/rollover.ts`.
    */
   const catalog = useMemo(() => {
     const wanted = allModules.filter((m) => (m.course.term ?? LEGACY_TERM) === state.term);
-    const showing = wanted.length > 0 || terms.length === 0 ? wanted : allModules;
+    const stale = terms.length === 0 || state.archivedTerms.length === 0;
+    const showing = wanted.length > 0 || !stale ? wanted : allModules;
     // Sorted here and nowhere else. Every list of courses in the app — the
     // Courses screen, the study picker, the filter chips, the week's colours —
     // is derived from `catalog.modules`, so ordering at the source reaches all
     // of them at once instead of being reapplied, and forgotten, in each.
     return buildCatalog(arrange(showing, state.yours, state.courseOrder));
-  }, [allModules, state.term, terms, state.yours, state.courseOrder]);
+  }, [allModules, state.term, terms, state.archivedTerms, state.yours, state.courseOrder]);
 
   /**
    * Keep the open course and guide inside the catalogue.

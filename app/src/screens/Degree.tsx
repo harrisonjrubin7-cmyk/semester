@@ -87,10 +87,29 @@ function WhatIsLeft() {
 
   if (list.length === 0) {
     return (
-      <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.55, textWrap: 'pretty' }}>
-        Nothing recorded yet. Add your requirements under Requirements — one row per line of
-        your audit — and the courses you have taken under Taken.
-      </p>
+      <>
+        <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.55, textWrap: 'pretty' }}>
+          Nothing recorded yet. Add your requirements under Requirements — one row per line of
+          your audit — and the courses you have taken under Taken.
+        </p>
+        {/*
+          The cumulative figure still shows.
+
+          Requirements are one thing and a transcript is another: somebody who
+          has closed out two terms has a real GPA across them, and hiding it
+          behind an audit they have not typed yet meant the whole point of
+          closing a term was invisible. See `lib/rollover.ts`.
+        */}
+        {h.done > 0 ? (
+          <>
+            <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
+            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, textWrap: 'pretty' }}>
+              {h.done} hours finished
+              {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
+            </div>
+          </>
+        ) : null}
+      </>
     );
   }
 

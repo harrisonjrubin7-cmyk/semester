@@ -46,6 +46,20 @@ export function settings(state: State, action: Action): State | null {
       return { ...state, mySchools, schoolId };
     }
 
+    case 'closeTerm': {
+      // Rows replace any earlier close of the same term rather than doubling
+      // it, which is what re-closing a term to fill in a late grade does.
+      const ids = new Set(action.taken.map((t) => t.id));
+      return {
+        ...state,
+        taken: [...state.taken.filter((t) => !ids.has(t.id)), ...action.taken],
+        archivedTerms: state.archivedTerms.includes(action.term)
+          ? state.archivedTerms
+          : [...state.archivedTerms, action.term],
+        term: action.next,
+      };
+    }
+
     case 'setWanted':
       return { ...state, wanted: { ...state.wanted, ...action.patch } };
 
