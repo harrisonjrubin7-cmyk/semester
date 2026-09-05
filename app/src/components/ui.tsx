@@ -279,8 +279,11 @@ export function TickBox({ on, size = 20 }: { on: boolean; size?: number }) {
 
 /** A progress bar in brushed metal. */
 export function Meter({ pct, height = 6 }: { pct: number; height?: number }) {
+  // Named so Windows High Contrast can give it an edge: forced colours drop
+  // both of these backgrounds, and a bar drawn only in colour disappears
+  // entirely. See `styles/app.css`.
   return (
-    <div style={{ height, background: 'var(--app-track)' }}>
+    <div className="meter" style={{ height, background: 'var(--app-track)' }}>
       <div
         style={{
           height: '100%',

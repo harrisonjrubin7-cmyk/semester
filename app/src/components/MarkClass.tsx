@@ -41,7 +41,7 @@ export function MarkClass({
   /** Whether the class has begun. Nothing to record before it has. */
   started: boolean;
 }) {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode, say } = useStore();
   const now = markOn(state.attendance, courseId, date);
 
   if (!started) return null;
@@ -58,14 +58,15 @@ export function MarkClass({
             // Tapping the mark it already has clears it. A log with no way
             // back is a log mistakes accumulate in, and the mistake here
             // costs a percentage of somebody's grade.
-            onClick={() =>
-              dispatch({
-                type: 'markAttendance',
-                courseId,
-                date,
-                mark: on ? null : c.mark,
-              })
-            }
+            onClick={() => {
+              dispatch({ type: 'markAttendance', courseId, date, mark: on ? null : c.mark });
+              // The tick that appears here is the only confirmation there is.
+              say(
+                on
+                  ? `Cleared ${courseCode(courseId)} on ${date}.`
+                  : `${courseCode(courseId)} on ${date} marked ${c.label.toLowerCase()}.`,
+              );
+            }}
             aria-pressed={on}
             aria-label={`${courseCode(courseId)} on ${date}: ${on ? `clear ${c.label}` : c.label}`}
             style={{

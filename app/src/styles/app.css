@@ -144,6 +144,56 @@ a:hover {
    402px column — the prototype's artboard width — so the layout is never
    stretched past what it was designed for. */
 
+/*
+ * Present to a screen reader, absent to everything else.
+ *
+ * `display: none` and `visibility: hidden` both remove an element from the
+ * accessibility tree as well as from the page, which is the opposite of what a
+ * hidden label is for. This is the clip-rect idiom because it is the one that
+ * keeps the element in the tree.
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/*
+ * The skip link: invisible until tabbed to, then a real, visible target.
+ *
+ * Not `.sr-only` plus a focus override, because a link that stays clipped when
+ * focused is worse than none — a sighted keyboard user cannot see where their
+ * focus went.
+ */
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--app-accent);
+  background: var(--app-panel);
+  color: var(--app-ink);
+  font-family: var(--font-heading);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible,
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 .device {
   height: 100%;
   margin: 0 auto;
@@ -702,6 +752,41 @@ a:hover {
   scroll-margin-top: 96px;
   scroll-margin-bottom: 84px;
 }
+
+/*
+ * Windows High Contrast, where the user's chosen colours replace the page's.
+ *
+ * The browser forces text and backgrounds to system colours and drops every
+ * custom one, which is what the mode is for. What it does not do on its own is
+ * keep a border that was drawn in a colour it just discarded, so a UI made of
+ * hairlines loses every edge and becomes one undivided sheet of text. These
+ * put the structure back in the system's own palette.
+ */
+@media (forced-colors: active) {
+  .device .blueprint,
+  .device .input,
+  .device .btn,
+  .device .app-tabs,
+  .device .app-header,
+  .device .tappable {
+    border: 1px solid CanvasText;
+  }
+
+  .device :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+
+  /* A meter drawn as a coloured bar is a shape with no text in it, so it
+     survives only if it is given an edge of its own. */
+  .device .meter,
+  .device .meter > * {
+    border: 1px solid CanvasText;
+    forced-color-adjust: none;
+  }
+}
+
 .device ::selection {
   background: rgba(212, 217, 226, 0.26);
 }

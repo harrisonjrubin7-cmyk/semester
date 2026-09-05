@@ -88,7 +88,7 @@ export function Clocks() {
 }
 
 function Timers() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, say } = useStore();
   const [text, setText] = useState('');
   const [label, setLabel] = useState('');
   const [refused, setRefused] = useState('');
@@ -97,6 +97,7 @@ function Timers() {
 
   const start = (seconds: number, name = label) => {
     dispatch({ type: 'addTimer', label: name, seconds, at: Date.now() });
+    say(`${name.trim() || 'Timer'} started, ${Math.round(seconds / 60)} minutes.`);
     setText('');
     setLabel('');
     setRefused('');
@@ -216,7 +217,7 @@ function Timers() {
 }
 
 function TimerRow({ t, at }: { t: Timer; at: number }) {
-  const { dispatch } = useStore();
+  const { dispatch, say } = useStore();
   // Two clocks, deliberately. `at` is the reading this frame was drawn from,
   // handed down from `useNow`, and is only ever used to put a remainder on the
   // screen — safe, because a running timer redraws every second.
@@ -276,7 +277,14 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
         </Small>
         <Small onClick={() => swap((now) => stretch(t, 60, now))}>+1 min</Small>
         <Small onClick={() => swap(() => reset(t))}>Reset</Small>
-        <Small onClick={() => dispatch({ type: 'removeTimer', id: t.id })}>Clear</Small>
+        <Small
+          onClick={() => {
+            dispatch({ type: 'removeTimer', id: t.id });
+            say(`${t.label || 'Timer'} cleared.`);
+          }}
+        >
+          Clear
+        </Small>
       </div>
     </Blueprint>
   );

@@ -230,6 +230,25 @@ export function ground(id: string | undefined): Ground {
   return GROUNDS.find((g) => g.id === id) ?? GROUNDS[0];
 }
 
+/**
+ * The ground that means "whichever one matches the rest of my device".
+ *
+ * Not a ground itself — it resolves to one. Kept out of `GROUNDS` so nothing
+ * that renders a swatch has to know about it, and so `ground('device')` cannot
+ * quietly return a palette nobody chose.
+ */
+export const MATCH_DEVICE = 'device';
+
+/** Ink after dark, Parchment in daylight. The two the app started with. */
+export const DEVICE_DARK = 'ink';
+export const DEVICE_LIGHT = 'parchment';
+
+/** A stored ground id turned into one that names a real palette. */
+export function resolveGround(id: string | undefined, prefersDark: boolean): string {
+  if (id !== MATCH_DEVICE) return id ?? GROUNDS[0].id;
+  return prefersDark ? DEVICE_DARK : DEVICE_LIGHT;
+}
+
 // ── Spacing, corners, type ───────────────────────────────────────────────
 
 export const DENSITIES = [
@@ -570,7 +589,29 @@ export function fade(hex: string, alpha: number): string {
  * ground switch atomic: no frame where the new panel colour has landed and the
  * new text colour has not.
  */
-export function tokensFor(look: Look): Record<string, string> {
+/**
+ * The floor "Increase contrast" puts under the quiet parts of the interface.
+ *
+ * This app is built out of very low-alpha hairlines and dimmed text, which is
+ * the look and is also invisible to somebody who has turned that setting on.
+ * Raising the alphas is the whole fix — no layout moves, no colour changes
+ * hue, and the app is the same app with its edges and its secondary text
+ * brought up to where they can be read.
+ *
+ * It lives here rather than in a media query in the stylesheet because these
+ * tokens are written as inline styles on the root element, so a `:root` rule
+ * in CSS would never win.
+ */
+const LOUD = {
+  dim: 0.9,
+  faint: 0.76,
+  line: 0.34,
+  lineSoft: 0.2,
+  track: 0.24,
+  lineTop: 0.24,
+};
+
+export function tokensFor(look: Look, moreContrast = false): Record<string, string> {
   const named = accent(look.accent);
   const g = ground(look.ground);
   /*
@@ -601,8 +642,8 @@ export function tokensFor(look: Look): Record<string, string> {
     '--app-raise': raise,
 
     '--app-fg': g.fg,
-    '--app-dim': fade(g.fg, g.dimAlpha),
-    '--app-faint': fade(g.fg, g.faintAlpha),
+    '--app-dim': fade(g.fg, moreContrast ? Math.max(g.dimAlpha, LOUD.dim) : g.dimAlpha),
+    '--app-faint': fade(g.fg, moreContrast ? Math.max(g.faintAlpha, LOUD.faint) : g.faintAlpha),
 
     // On a light ground the accent has to darken to stay legible as text —
     // the same metal, three steps down — and the wash has to be mixed from
@@ -621,10 +662,14 @@ export function tokensFor(look: Look): Record<string, string> {
     // `lib/contrast.test.ts` now holds all hundred combinations to it.
     '--app-accent-fill': g.light ? a.shade : a.base,
 
-    '--app-line': `rgba(${edge}, ${g.light ? 0.16 : 0.11})`,
-    '--app-line-top': g.light ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.07)',
-    '--app-line-soft': `rgba(${edge}, ${g.light ? 0.09 : 0.06})`,
-    '--app-track': `rgba(${edge}, ${g.light ? 0.12 : 0.09})`,
+    '--app-line': `rgba(${edge}, ${moreContrast ? LOUD.line : g.light ? 0.16 : 0.11})`,
+    '--app-line-top': moreContrast
+      ? `rgba(${g.light ? '0, 0, 0' : '255, 255, 255'}, ${LOUD.lineTop})`
+      : g.light
+        ? 'rgba(0, 0, 0, 0.06)'
+        : 'rgba(255, 255, 255, 0.07)',
+    '--app-line-soft': `rgba(${edge}, ${moreContrast ? LOUD.lineSoft : g.light ? 0.09 : 0.06})`,
+    '--app-track': `rgba(${edge}, ${moreContrast ? LOUD.track : g.light ? 0.12 : 0.09})`,
 
     '--r-sm': `${sm}px`,
     '--r-md': `${md}px`,
@@ -671,7 +716,10 @@ export function readLook(saved: Look | undefined): Required<Look> {
   return {
     accent: accent(saved?.accent).id,
     textSize: SIZES.find((s) => s.id === saved?.textSize)?.id ?? 'normal',
-    ground: ground(saved?.ground).id,
+    // `MATCH_DEVICE` is not in `GROUNDS`, so it has to be allowed through
+    // explicitly — `ground()` would fall it back to Ink and the setting could
+    // never be stored at all.
+    ground: saved?.ground === MATCH_DEVICE ? MATCH_DEVICE : ground(saved?.ground).id,
     density: DENSITIES.find((d) => d.id === saved?.density)?.id ?? 'comfortable',
     corners: CORNERS.find((c) => c.id === saved?.corners)?.id ?? 'drawn',
     typeface: typefaceOf(saved?.typeface).id,

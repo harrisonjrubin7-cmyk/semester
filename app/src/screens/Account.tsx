@@ -181,46 +181,72 @@ export function AccountScreen() {
         laptop. The app works without one — this only decides whether it follows you.
       </div>
 
-      <input
-        className="input"
-        type="email"
-        autoComplete="email"
-        placeholder="you@vanderbilt.edu"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 16 }}
-        aria-label="Email"
-      />
-      <input
-        className="input"
-        type="password"
-        autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
-        placeholder={mode === 'in' ? 'Password' : 'Password — at least 8 characters'}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 }}
-        aria-label="Password"
-      />
+      {/*
+        A real form, with labels tied to inputs by id.
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
-        disabled={busy || !email.trim() || password.length < 8}
-        onClick={() =>
+        Two inputs with `aria-label` and no `<form>` around them is a shape a
+        password manager does not recognise: 1Password and iCloud Keychain look
+        for a submittable form with named fields, so filling this had to be done
+        by hand. It also means Enter submits and an iOS keyboard shows Go.
+
+        The labels are visually hidden rather than absent — the placeholder says
+        the same words, and a placeholder disappears the moment somebody starts
+        typing, which is exactly when a label is needed.
+      */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (busy || !email.trim() || password.length < 8) return;
           void run(() =>
             mode === 'in' ? signIn(email.trim(), password) : signUp(email.trim(), password),
-          )
-        }
-        style={{
-          height: 50,
-          fontSize: 'calc(15px * var(--text-scale, 1))',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: 14,
+          );
         }}
       >
-        {busy ? 'Working…' : mode === 'in' ? 'Sign in' : 'Create the account'}
-      </button>
+        <label className="sr-only" htmlFor="account-email">
+          Email
+        </label>
+        <input
+          className="input"
+          id="account-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          placeholder="you@vanderbilt.edu"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 16 }}
+        />
+        <label className="sr-only" htmlFor="account-password">
+          Password
+        </label>
+        <input
+          className="input"
+          id="account-password"
+          name="password"
+          type="password"
+          autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
+          placeholder={mode === 'in' ? 'Password' : 'Password — at least 8 characters'}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 }}
+        />
+
+        <button
+          type="submit"
+          className="btn btn-primary btn-block"
+          disabled={busy || !email.trim() || password.length < 8}
+          style={{
+            height: 50,
+            fontSize: 'calc(15px * var(--text-scale, 1))',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            marginTop: 14,
+          }}
+        >
+          {busy ? 'Working…' : mode === 'in' ? 'Sign in' : 'Create the account'}
+        </button>
+      </form>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
         <button

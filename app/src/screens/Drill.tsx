@@ -14,7 +14,7 @@ import { Toggle } from '../components/ui';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
-  const { state, dispatch, now, catalog, courseCode } = useStore();
+  const { state, dispatch, now, catalog, courseCode, say } = useStore();
   const { guide } = useLive(state.guideId);
 
   // A drill has pauses in it while you try to remember, which is exactly what
@@ -357,7 +357,10 @@ export function Drill() {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => dispatch({ type: 'markCard', got: false, key: card.key })}
+              onClick={() => {
+                dispatch({ type: 'markCard', got: false, key: card.key });
+                say('Marked again. Next card.');
+              }}
               style={{ flex: 1, height: 52, fontSize: 'calc(15px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Again
@@ -365,7 +368,10 @@ export function Drill() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => dispatch({ type: 'markCard', got: true, key: card.key })}
+              onClick={() => {
+                dispatch({ type: 'markCard', got: true, key: card.key });
+                say('Marked got it. Next card.');
+              }}
               style={{ flex: 1, height: 52, fontSize: 'calc(15px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Got it
@@ -397,7 +403,10 @@ export function Drill() {
                 type="button"
                 className="bare tappable"
                 onClick={() =>
-                  dispatch({ type: 'markCard', got: false, key: card.key, sure: s.id, courseId: state.guideId })
+                  {
+                    dispatch({ type: 'markCard', got: false, key: card.key, sure: s.id, courseId: state.guideId });
+                    say(`Marked wrong, ${s.short.toLowerCase()}. Next card.`);
+                  }
                 }
                 style={{
                   width: 'auto',
@@ -417,7 +426,10 @@ export function Drill() {
                 type="button"
                 className="bare tappable"
                 onClick={() =>
-                  dispatch({ type: 'markCard', got: true, key: card.key, sure: s.id, courseId: state.guideId })
+                  {
+                    dispatch({ type: 'markCard', got: true, key: card.key, sure: s.id, courseId: state.guideId });
+                    say(`Marked right, ${s.short.toLowerCase()}. Next card.`);
+                  }
                 }
                 style={{
                   width: 'auto',

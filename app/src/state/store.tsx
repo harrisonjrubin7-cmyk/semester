@@ -139,6 +139,14 @@ interface Store {
    */
   refresh: () => Promise<string>;
   /**
+   * Announce one outcome to the app's live region.
+   *
+   * For things somebody would otherwise have to look at the screen to
+   * confirm — a card marked, an absence recorded, a sync finished. Not for
+   * edits. See `components/Said.tsx`.
+   */
+  say: (said: string) => void;
+  /**
    * Where this student studies, and therefore what the app offers.
    *
    * Resolved once here rather than looked up per screen, so the directory,
@@ -703,9 +711,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [asking],
   );
 
+  const say = useCallback(
+    (said: string) => dispatch({ type: 'say', said, at: Date.now() }),
+    [dispatch],
+  );
+
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, school, facts, asking, settle }),
-    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, school, facts, asking, settle],
+    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle }),
+    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, say, school, facts, asking, settle],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

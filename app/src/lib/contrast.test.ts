@@ -10,7 +10,7 @@ import {
   rgbOf,
   type Check,
 } from './contrast';
-import { ACCENTS, GROUNDS, tokensFor } from './look';
+import { ACCENTS, GROUNDS, readLook, tokensFor } from './look';
 
 describe('the arithmetic', () => {
   it('reads both hex forms', () => {
@@ -138,3 +138,45 @@ describe('every combination the app will wear', () => {
     expect(failures).toEqual([]);
   });
 });
+
+describe('“Increase contrast”, which cannot be done in a media query', () => {
+  it('raises the hairlines and the dimmed text', () => {
+    // The tokens are written as inline styles on the root element, so a
+    // `:root` rule inside `@media (prefers-contrast: more)` would be
+    // overridden by the value this function produced. It has to happen here.
+    for (const g of GROUNDS) {
+      const look = readLook({ ground: g.id } as Parameters<typeof readLook>[0]);
+      const plain = tokensFor(look);
+      const loud = tokensFor(look, true);
+      for (const token of ['--app-dim', '--app-faint', '--app-line', '--app-line-soft', '--app-track']) {
+        expect(alphaOf(loud[token]), `${g.id} ${token}`).toBeGreaterThan(alphaOf(plain[token]));
+      }
+    }
+  });
+
+  it('changes nothing else', () => {
+    // Not a different theme — the same theme, readable. A ground that changed
+    // colour under this setting would be a second design to maintain.
+    const base = readLook(undefined);
+    const plain = tokensFor(base);
+    const loud = tokensFor(base, true);
+    const moved = new Set([
+      '--app-dim',
+      '--app-faint',
+      '--app-line',
+      '--app-line-top',
+      '--app-line-soft',
+      '--app-track',
+    ]);
+    for (const [name, value] of Object.entries(plain)) {
+      if (moved.has(name)) continue;
+      expect(loud[name], name).toBe(value);
+    }
+  });
+});
+
+/** The alpha out of an `rgba(...)`, for the comparison above. */
+function alphaOf(token: string): number {
+  const m = /rgba?\([^)]*?,\s*([0-9.]+)\s*\)$/.exec(token.trim());
+  return m ? Number(m[1]) : 1;
+}

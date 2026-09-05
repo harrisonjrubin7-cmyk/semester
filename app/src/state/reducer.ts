@@ -56,6 +56,12 @@ export function reducer(state: State, action: Action): State {
   if (action.type === 'forgetUndo') {
     return state.undone ? { ...state, undone: null } : state;
   }
+  // Also here rather than in a slice, and for the same reason: what gets
+  // announced is a property of outcomes across the whole app, not of any one
+  // area of it. See `components/Said.tsx`.
+  if (action.type === 'say') {
+    return { ...state, said: action.said, saidAt: action.at };
+  }
 
   const undoable = undoableFor(action.type);
   const before = undoable ? snapshot(state, undoable, Date.now()) : null;

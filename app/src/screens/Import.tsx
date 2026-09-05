@@ -32,7 +32,7 @@ import { arrivedByShare, forgetShare, takeShared } from '../lib/shared';
  * deadlines and a topic list; the readings are where the cards come from.
  */
 export function Import() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, say } = useStore();
   const [files, setFiles] = useState<Extracted[]>([]);
   const [hint, setHint] = useState('');
   const [busy, setBusy] = useState('');
@@ -189,6 +189,13 @@ export function Import() {
       course: { ...result.module.course, term: result.module.course.term ?? term.id },
     };
     dispatch({ type: 'addCourse', module: filed });
+    // The screen changes underneath, which is no confirmation at all if you
+    // are not looking at it.
+    say(
+      `${filed.course.code} imported. ${filed.items.length} dated ${
+        filed.items.length === 1 ? 'obligation' : 'obligations'
+      }.`,
+    );
     dispatch({ type: 'openCourse', id: filed.course.id });
   };
 

@@ -107,7 +107,7 @@ export function ScrollArea({ screen, children }: { screen: string; children: Rea
   }, [screen]);
 
   return (
-    <main className="scrollarea" ref={box}>
+    <main id="main" className="scrollarea" ref={box}>
       {/* Inside, at the top, so it pushes the screen down the way a pulled
           sheet of paper would. It owns the gesture; this owns the element. */}
       <PullDown area={box} />

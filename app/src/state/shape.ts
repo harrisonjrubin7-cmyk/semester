@@ -532,6 +532,19 @@ export interface Ephemeral {
   drillIdx: number;
   drillGot: number;
   revealed: boolean;
+  /**
+   * One sentence for the app's live region, or empty.
+   *
+   * Ephemeral, and set only for outcomes somebody would otherwise have to look
+   * at the screen to confirm: a card marked, an absence recorded, a course
+   * imported, a sync finished. Not for edits — a grade field that saves on
+   * every keystroke has no outcome to announce, only typing.
+   *
+   * Carries a `saidAt` so two identical announcements in a row are still two
+   * announcements. A live region ignores a text node that has not changed.
+   */
+  said: string;
+  saidAt: number;
   /** The unit a guess-first run is on, and how far through it is. */
   guessUnit: number;
   guessIdx: number;
@@ -731,6 +744,8 @@ export function initialEphemeral(now: Date): Ephemeral {
     drillIdx: 0,
     drillGot: 0,
     revealed: false,
+    said: '',
+    saidAt: 0,
     guessUnit: 0,
     guessIdx: 0,
     guessRight: 0,
@@ -989,6 +1004,7 @@ export type Action =
   // Opens a guess-first run on one unit. `at` is passed in rather than read
   // from Date.now() inside the reducer, like every other timestamped action.
   | { type: 'guessFirst'; courseId: string; unit: number }
+  | { type: 'say'; said: string; at: number }
   | { type: 'guessShow' }
   | { type: 'guessNext'; right: boolean }
   | { type: 'guessDone'; courseId: string; unit: number; at: number }

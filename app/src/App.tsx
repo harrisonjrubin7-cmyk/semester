@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useRef } from 'react';
 import { useStore } from './state/store';
 import { currentLook } from './state/shape';
 import {
@@ -10,8 +10,10 @@ import {
   Search as SearchIcon,
 } from './components/Icons';
 import { Onboarding } from './screens/Onboarding';
+import { Said } from './components/Said';
+import { usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
-import { scaleOf, tokensFor, type Look } from './lib/look';
+import { ground, resolveGround, scaleOf, tokensFor, type Look } from './lib/look';
 
 /**
  * Every screen but the first, fetched when it is opened.
@@ -332,6 +334,21 @@ function Header() {
   const showActions = state.screen !== 'search';
   const atRoot = rootOf(state.screen) === state.screen;
 
+  /*
+   * Move focus into the new screen's heading whenever the screen changes.
+   *
+   * Not on the first render — focusing a heading on load steals the focus a
+   * browser gives the document and scrolls a restored position back to the
+   * top. Only on a change, which is the case that strands somebody.
+   */
+  const heading = useRef<HTMLHeadingElement>(null);
+  const wasOn = useRef(state.screen);
+  useEffect(() => {
+    if (wasOn.current === state.screen) return;
+    wasOn.current = state.screen;
+    heading.current?.focus({ preventScroll: true });
+  }, [state.screen]);
+
   return (
     // A real <header>, and the screen's name is the page's <h1>. Both were
     // styled divs, so a screen reader had no landmarks past <main> and no
@@ -352,9 +369,21 @@ function Header() {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div className="kicker">{kicker}</div>
+        {/*
+          Focus lands here when the screen changes.
+
+          Without it, pressing a tab button leaves focus on the button: a
+          screen reader goes on describing the nav while the whole page behind
+          it has been replaced, and a keyboard user's next Tab continues
+          through the bar rather than into what they just opened. `tabIndex={-1}`
+          makes it focusable by script without adding it to the tab order.
+        */}
         <h1
+          ref={heading}
+          tabIndex={-1}
           className="chrome-text"
           style={{
+            outline: 'none',
             fontSize: 'calc(23px * var(--text-scale, 1))',
             lineHeight: 1.15,
             overflow: 'hidden',
@@ -442,7 +471,7 @@ function TabBar() {
   const labelled = state.labels !== 'off';
 
   return (
-    <nav className="safe-bottom app-tabs">
+    <nav className="safe-bottom app-tabs" aria-label="Sections">
       {tabs.map((id) => {
         const label = tabLabel(id);
         // Lit for the screen itself and for everything nested under it, so a
@@ -672,7 +701,7 @@ function Rail() {
     .filter((d) => !tabs.includes(d.screen));
 
   return (
-    <nav className="rail">
+    <nav className="rail" aria-label="Sections">
       <div className="rail-mark chrome-text">Semester</div>
       {tabs.map((id) => {
         const label = tabLabel(id);
@@ -755,11 +784,19 @@ export default function App() {
    * `currentLook` is the one list. Depending on its serialised form means the
    * effect runs when the look changes and not on every unrelated dispatch.
    */
-  const lookKey = JSON.stringify(currentLook(state));
+  // "Match my device" is not a palette, it is an instruction — resolved here,
+  // once, so everything downstream sees a ground that names real colours. See
+  // `lib/look.ts`.
+  const prefersDark = usePrefersDark();
+  const moreContrast = usePrefersContrast();
+  const lookKey = JSON.stringify({
+    ...currentLook(state),
+    ground: resolveGround(state.ground, prefersDark),
+  });
 
   useEffect(() => {
     const root = document.documentElement;
-    const tokens = tokensFor(JSON.parse(lookKey) as Look);
+    const tokens = tokensFor(JSON.parse(lookKey) as Look, moreContrast);
     for (const [name, value] of Object.entries(tokens)) root.style.setProperty(name, value);
     const scale = scaleOf(state.textSize);
     root.style.fontSize = `${16 * scale}px`;
@@ -773,8 +810,12 @@ export default function App() {
     // The browser paints its own chrome — the scrollbar, the overscroll edge,
     // form controls — from this, and a light theme with a dark scrollbar is
     // the tell that a theme was only half done.
-    root.style.colorScheme = state.ground === 'parchment' ? 'light' : 'dark';
-  }, [lookKey, state.textSize, state.ground]);
+    //
+    // Read from the ground itself rather than from a hardcoded name: it said
+    // `=== 'parchment'`, so Paper and Fog — both light — got a dark scrollbar
+    // and a dark overscroll edge.
+    root.style.colorScheme = ground(JSON.parse(lookKey).ground).light ? 'light' : 'dark';
+  }, [lookKey, state.textSize, moreContrast]);
 
   if (state.screen === 'onboarding') {
     return (
@@ -823,6 +864,7 @@ export default function App() {
     return (
       <div className="desk">
         <Fresh />
+        <Said />
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
             and not another. Renders nothing unless the sheet is open. */}
         <Keys />
@@ -857,7 +899,17 @@ export default function App() {
 
   return (
     <div className="device">
+      {/*
+        The first focusable thing on the page, and invisible until it has
+        focus. With fifty screens behind a header and a tab bar, a keyboard
+        user's only route into the content was to tab through the whole of
+        both, on every screen, every time.
+      */}
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <Fresh />
+      <Said />
       <Ringing />
       <PushTop />
       <Tapped />

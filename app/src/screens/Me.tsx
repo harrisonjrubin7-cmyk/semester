@@ -12,6 +12,8 @@ import {
   DENSITIES,
   FEEDS,
   GROUNDS,
+  MATCH_DEVICE,
+  resolveGround,
   ICON_SHAPES,
   LABELS,
   LINE_HEIGHTS,
@@ -38,6 +40,7 @@ import { countHits, findEverything, type Hit } from '../lib/find';
 import { DESTINATIONS, destinationsIn, listed, saysFor, type Group } from '../lib/nav';
 import { hiddenFor } from '../lib/school';
 import { SchoolPicker } from '../components/SchoolPicker';
+import { usePrefersDark } from '../lib/prefers';
 import { countHidden, revealLine } from '../lib/reveal';
 
 import type { CourseModule, Screen } from '../lib/types';
@@ -206,8 +209,9 @@ function CourseRow({ module: c }: { module: CourseModule }) {
  */
 function HuePicker() {
   const { state, dispatch } = useStore();
+  const prefersDark = usePrefersDark();
   const on = state.hue >= 0;
-  const g = groundOf(state.ground);
+  const g = groundOf(resolveGround(state.ground, prefersDark));
   const derived = accentFromHue(on ? state.hue : 210, g.light);
   // The second entry of the ramp is `--app-bg`, which is the surface a section
   // label actually sits on.
@@ -701,6 +705,7 @@ function Reminders() {
 export function Settings({ bare = false }: { bare?: boolean } = {}) {
   const { state, dispatch, school, facts } = useStore();
   const hidden = hiddenFor(school.capabilities);
+  const prefersDark = usePrefersDark();
 
   // `bare` when it is a tab of Me, which has already padded the page; the
   // standalone screen still exists so search and a deep link can reach it.
@@ -851,6 +856,40 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
       </div>
 
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>The ground</SectionLabel>
+      {/*
+        Above the forty-two, because it is the answer for most people and
+        because a device on a light-and-dark schedule otherwise means coming
+        back here twice a day, which nobody does — they pick one and squint for
+        half of it. See `lib/look.ts`.
+      */}
+      <button
+        type="button"
+        className="bare tappable"
+        aria-pressed={state.ground === MATCH_DEVICE}
+        onClick={() => dispatch({ type: 'setLook', look: { ground: MATCH_DEVICE } })}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 11,
+          textAlign: 'left',
+          padding: '10px 11px',
+          marginBottom: 7,
+          borderRadius: 'var(--r-sm)',
+          border: `1px solid ${state.ground === MATCH_DEVICE ? 'var(--app-accent)' : 'var(--app-line)'}`,
+          background: state.ground === MATCH_DEVICE ? 'var(--app-accent-wash)' : 'transparent',
+        }}
+      >
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
+            Match my device
+          </span>
+          <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+            {`Ink after dark, Parchment in daylight. Following your device now: ${
+              prefersDark ? 'dark' : 'light'
+            }.`}
+          </span>
+        </span>
+      </button>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         {GROUNDS.map((g) => {
           const on = state.ground === g.id;
@@ -893,7 +932,7 @@ export function Settings({ bare = false }: { bare?: boolean } = {}) {
           );
         })}
       </div>
-      {groundOf(state.ground).light && (
+      {groundOf(resolveGround(state.ground, prefersDark)).light && (
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
           On a light ground the brushed-metal type inverts to a dark sweep, so display headings
           keep their lustre instead of disappearing.
