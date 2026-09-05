@@ -32,6 +32,8 @@
  * no countdown, and says that is why.
  */
 
+import { readMortem, type PostMortem } from './postmortem';
+
 /** One piece of work, back. */
 export interface Returned {
   /** The deadline it belongs to. */
@@ -46,6 +48,13 @@ export interface Returned {
   note: string;
   /** Whether you have raised it. Stops the countdown without hiding the row. */
   raised: boolean;
+  /**
+   * Where the marks went, if it was ever filled in.
+   *
+   * Optional and stays optional. The record exists to start the regrade
+   * countdown; this is an offer beside it. See `lib/postmortem.ts`.
+   */
+  mortem?: PostMortem;
 }
 
 /** How long a course allows, as its syllabus states it. */
@@ -187,6 +196,7 @@ export function readReturned(raw: unknown): Returned[] {
       score: typeof r.score === 'string' ? r.score : '',
       note: typeof r.note === 'string' ? r.note : '',
       raised: r.raised === true,
+      mortem: readMortem((r as { mortem?: unknown }).mortem),
     }))
     // Newest back first, which is the order somebody looking at this expects.
     .sort((a, b) => b.at - a.at);

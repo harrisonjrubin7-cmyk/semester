@@ -9,6 +9,7 @@ import { allCards } from '../data/catalog';
 import { datedItems } from '../lib/select';
 import { tallyBy } from '../lib/review';
 import { calibrate, calibrationLine, guessLine } from '../lib/worth';
+import { pattern } from '../lib/postmortem';
 import { readTerm } from '../lib/term';
 import { basis, document as asDocument, findings, nothingLine, type TermInput } from '../lib/worked';
 
@@ -70,6 +71,9 @@ export function Worked() {
     .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes, at: s.at }));
   const bias = calibrate(guesses);
   const said = guessLine(guesses, bias);
+  const marks = pattern(
+    state.returned.map((r) => r.mortem).filter((m): m is NonNullable<typeof m> => Boolean(m)),
+  );
   const label = readTerm(state.term).label;
   const nothing = nothingLine(input);
 
@@ -112,6 +116,22 @@ export function Worked() {
               {calibrationLine(bias)}
             </div>
           ) : null}
+        </>
+      ) : null}
+
+      {/*
+        Where the marks actually went, across the term.
+
+        Separate from the estimates above and from `findings` below, because it
+        rests on something the student typed rather than on anything the app
+        measured. Silent under two post-mortems: one paper is one morning.
+      */}
+      {marks ? (
+        <>
+          <SectionLabel style={{ margin: '22px 0 6px' }}>Where the marks went</SectionLabel>
+          <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>
+            {marks}
+          </div>
         </>
       ) : null}
 

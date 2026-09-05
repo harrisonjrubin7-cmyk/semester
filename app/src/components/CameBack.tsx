@@ -15,6 +15,7 @@
 import { useStore } from '../state/store';
 import { NO_WINDOW, windowLine, windowSummary } from '../lib/returned';
 import type { DatedItem } from '../lib/types';
+import { PostMortem } from './PostMortem';
 
 export function CameBack({ item }: { item: DatedItem }) {
   const { state, dispatch, now, catalog } = useStore();
@@ -97,6 +98,11 @@ export function CameBack({ item }: { item: DatedItem }) {
           {record.raised ? 'Raised' : 'I have raised it'}
         </button>
       </div>
+
+      {/* Beside the record rather than in front of it: what starts the
+          regrade clock is the record, and that matters more than this. See
+          `lib/postmortem.ts`. */}
+      <PostMortem record={record} courseId={item.c} />
 
       <textarea
         className="input"

@@ -18,6 +18,7 @@ import { newRequirement, newTaken } from '../../lib/degree';
 import { newLetter, newPerson, newVisit } from '../../lib/letters';
 import { newRest, readFloor } from '../../lib/rest';
 import { tidy } from '../../lib/windows';
+import { resurface } from '../../lib/postmortem';
 import type { Action, State } from '../shape';
 
 export function mine(state: State, action: Action): State | null {
@@ -189,6 +190,22 @@ export function mine(state: State, action: Action): State | null {
       return {
         ...state,
         returned: state.returned.map((r) => (r.id === action.id ? { ...r, ...action.patch } : r)),
+      };
+
+    /*
+     * The post-mortem, stored and acted on in one move.
+     *
+     * `keys` are worked out by the screen, which has the guide in hand; the
+     * reducer has no way to turn a unit index into card keys. Brought forward
+     * rather than marked wrong — see `lib/postmortem.ts`.
+     */
+    case 'postMortem':
+      return {
+        ...state,
+        returned: state.returned.map((r) =>
+          r.id === action.id ? { ...r, mortem: action.mortem } : r,
+        ),
+        reviews: resurface(state.reviews, action.keys, action.mortem.at),
       };
 
     case 'unmarkReturned':

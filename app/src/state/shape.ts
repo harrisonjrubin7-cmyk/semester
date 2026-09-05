@@ -60,6 +60,7 @@ import { readStarted } from '../lib/underway';
 import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
 import { readOverrides, type GradeSystem } from '../lib/cutoffs';
 import { readPretested } from '../lib/pretest';
+import type { PostMortem } from '../lib/postmortem';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
 
@@ -1019,6 +1020,7 @@ export type Action =
   | { type: 'guessFirst'; courseId: string; unit: number }
   | { type: 'say'; said: string; at: number }
   | { type: 'forgetSyncNote' }
+  | { type: 'postMortem'; id: string; mortem: PostMortem; keys: string[] }
   | { type: 'guessShow' }
   | { type: 'guessNext'; right: boolean }
   | { type: 'guessDone'; courseId: string; unit: number; at: number }
