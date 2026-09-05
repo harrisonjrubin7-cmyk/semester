@@ -1,6 +1,7 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
 import { CustomRow, Group, ValueRow } from '../../components/shell/Rows';
+import { useRowStyle } from '../../components/shell/useShell';
 import { lights } from '../../lib/settings';
 import { SectionLabel } from '../../components/ui';
 import { SOURCES } from '../../data/misc';
@@ -16,6 +17,7 @@ import { SUPPORT } from '../../lib/privacy';
  */
 export function SettingsAbout() {
   const { dispatch } = useStore();
+  const row = useRowStyle(13);
 
   return (
     <SettingsPage
@@ -35,8 +37,7 @@ export function SettingsAbout() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 12,
-                    padding: '13px 0',
-                    borderBottom: '1px solid var(--app-line)',
+                    ...row,
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>

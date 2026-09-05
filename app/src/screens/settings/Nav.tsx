@@ -1,6 +1,7 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
 import { CustomRow, Group } from '../../components/shell/Rows';
+import { useRowStyle } from '../../components/shell/useShell';
 import { lights } from '../../lib/settings';
 import { SectionLabel, Segmented, TickBox, Toggle } from '../../components/ui';
 import { countHidden, revealLine } from '../../lib/reveal';
@@ -16,6 +17,7 @@ import { SECTIONS, move, ordered } from '../../lib/feed';
  */
 export function SettingsNav() {
   const { state, dispatch, facts } = useStore();
+  const row = useRowStyle(0);
 
   return (
     <SettingsPage
@@ -81,7 +83,7 @@ export function SettingsNav() {
                       display: 'flex',
                       gap: 8,
                       alignItems: 'center',
-                      borderBottom: '1px solid var(--app-line)',
+                      ...row,
                     }}
                   >
                     <button
