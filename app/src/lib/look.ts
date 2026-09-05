@@ -464,6 +464,39 @@ export function feedStyleOf(id: string | undefined): string {
   return FEEDS.find((f) => f.id === id)?.id ?? 'cards';
 }
 
+/**
+ * Two ways of laying out every screen in the app.
+ *
+ * `plain` is what this app has always looked like: framed cards with
+ * registration marks, headings with air around them, rows that belong to the
+ * screen that drew them. `grouped` is the inset-list arrangement people know
+ * from a phone's own settings — one rounded container per section, hairlines
+ * between rows, the explanation under the group rather than inside a row.
+ *
+ * Neither is a skin. They are different readings of the same screens, in the
+ * same way `feed` is three readings of the same day, and a screen shows every
+ * control it shows today in both.
+ *
+ * `plain` is the default and stays the default. Nobody's app changes until
+ * they choose otherwise.
+ */
+export const SHELLS = [
+  {
+    id: 'plain',
+    label: 'Drawn',
+    blurb: 'Framed cards with registration marks, and room between them. The app as it is.',
+  },
+  {
+    id: 'grouped',
+    label: 'Grouped',
+    blurb: 'One inset panel per section, with hairlines between the rows. What a phone’s own settings look like.',
+  },
+];
+
+export function shellOf(id: string | undefined): string {
+  return SHELLS.find((s) => s.id === id)?.id ?? 'plain';
+}
+
 // ── Contrast, checked rather than promised ──────────────────────────────
 
 /** Relative luminance, per WCAG 2.1. */
@@ -555,6 +588,8 @@ export interface Look {
   labels?: string;
   badges?: string;
   feed?: string;
+  /** Which of the two layouts every screen is drawn in. See `SHELLS`. */
+  shell?: string;
   /**
    * A hue for the accent, 0–360, or -1 for "use the named accent".
    *
@@ -730,6 +765,7 @@ export function readLook(saved: Look | undefined): Required<Look> {
     labels: LABELS.find((l) => l.id === saved?.labels)?.id ?? 'on',
     badges: BADGES.find((b) => b.id === saved?.badges)?.id ?? 'due',
     feed: feedStyleOf(saved?.feed),
+    shell: shellOf(saved?.shell),
     // -1 rather than 0, because 0 is red.
     hue: typeof saved?.hue === 'number' && saved.hue >= 0 && saved.hue <= 360 ? saved.hue : -1,
   };

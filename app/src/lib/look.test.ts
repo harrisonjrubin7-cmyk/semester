@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ACCENTS,
+  SHELLS,
   CORNERS,
   DENSITIES,
   GROUNDS,
@@ -199,5 +200,29 @@ describe('lookLine', () => {
     expect(lookLine({ typeface: 'condensed', corners: 'drawn' })).not.toContain('Drawn');
     expect(lookLine({ typeface: 'mono', corners: 'round' })).toContain('Mono');
     expect(lookLine({ typeface: 'mono', corners: 'round' })).toContain('Round');
+  });
+});
+
+describe('the two layouts', () => {
+  it('defaults to drawn, so nobody’s app changes until they choose', () => {
+    expect(readLook(undefined).shell).toBe('plain');
+    expect(readLook({}).shell).toBe('plain');
+  });
+
+  it('keeps a choice it recognises', () => {
+    expect(readLook({ shell: 'grouped' }).shell).toBe('grouped');
+  });
+
+  it('falls back rather than rendering something that does not exist', () => {
+    expect(readLook({ shell: 'nonsense' }).shell).toBe('plain');
+  });
+
+  it('offers exactly two, each with a name and a reason', () => {
+    expect(SHELLS.map((s) => s.id)).toEqual(['plain', 'grouped']);
+    for (const s of SHELLS) {
+      expect(s.label.length).toBeGreaterThan(2);
+      expect(s.blurb.length).toBeGreaterThan(20);
+      expect(s.blurb).not.toContain('!');
+    }
   });
 });

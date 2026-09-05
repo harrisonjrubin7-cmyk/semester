@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { useGrouped } from './shell/useShell';
 
 /**
  * The wireframe frame every card, figure and primary object wears in the
@@ -30,7 +31,17 @@ export function Blueprint({
    */
   plain?: boolean;
 }) {
-  const marks = plain ? null : (
+  /*
+   * The grouped layout drops the registration marks.
+   *
+   * The Industry system's rule, stated four lines above, is that a framed
+   * element never drops them — and that rule is right for the layout it was
+   * written for. An inset panel with crosses in its corners is neither thing.
+   * This is the one deliberate departure from it, it lives in one mode, and
+   * the drawn layout keeps every mark exactly where it was.
+   */
+  const grouped = useGrouped();
+  const marks = plain || grouped ? null : (
     <>
       <i className="corner tl" />
       <i className="corner tr" />
@@ -44,7 +55,7 @@ export function Blueprint({
       <button
         type="button"
         onClick={onClick}
-        className={`blueprint bare tappable${className ? ` ${className}` : ''}`}
+        className={`blueprint bare tappable${grouped ? ' grouped' : ''}${className ? ` ${className}` : ''}`}
         style={style}
       >
         {marks}
@@ -54,7 +65,7 @@ export function Blueprint({
   }
 
   return (
-    <div className={`blueprint${className ? ` ${className}` : ''}`} style={style}>
+    <div className={`blueprint${grouped ? ' grouped' : ''}${className ? ` ${className}` : ''}`} style={style}>
       {marks}
       {children}
     </div>

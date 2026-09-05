@@ -388,6 +388,8 @@ export interface Persisted {
   labels: string;
   badges: string;
   feed: string;
+  /** `plain` or `grouped`. Which layout every screen is drawn in. */
+  shell: string;
   /** A dragged accent hue, 0–360, or -1 for "use the named accent". */
   hue: number;
   /**
@@ -709,6 +711,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   labels: 'on',
   badges: 'due',
   feed: 'cards',
+  shell: 'plain',
   hue: -1,
 };
 
@@ -728,6 +731,7 @@ export function currentLook(state: Persisted): Look {
     labels: state.labels,
     badges: state.badges,
     feed: state.feed,
+    shell: state.shell,
     hue: state.hue,
   };
 }
@@ -1014,6 +1018,7 @@ export function pickPersisted(state: State): Persisted {
     labels: state.labels,
     badges: state.badges,
     feed: state.feed,
+    shell: state.shell,
     hue: state.hue,
   };
 }

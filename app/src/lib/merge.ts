@@ -109,6 +109,7 @@ export const STRATEGY: Record<string, Strategy> = {
   // How you want your day drawn, and how loudly the app may claim your
   // attention. Both about you.
   feed: 'theirs',
+  shell: 'theirs',
   badges: 'theirs',
   // Ergonomics: about the screen in front of you, not about you. See `mine`.
   textSize: 'mine',

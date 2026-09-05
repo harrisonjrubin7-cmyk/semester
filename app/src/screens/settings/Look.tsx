@@ -2,6 +2,7 @@ import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
 import { CustomRow, SettingsGroup } from '../../components/settings/Rows';
 import { lights } from '../../lib/settings';
+import { ShellPicker } from '../../components/ShellPicker';
 import { SectionLabel, Segmented, Toggle } from '../../components/ui';
 import { usePrefersDark } from '../../lib/prefers';
 import {
@@ -387,6 +388,16 @@ export function SettingsLook() {
               </div>
 
               {/* The one setting that changes an arithmetic rather than a look. */}
+            </CustomRow>
+          </SettingsGroup>
+
+          <SettingsGroup
+            header="Layout"
+            footer="The drawn layout is the app as it is. Grouped arranges every screen the way a phone's own settings do. Nothing is hidden either way."
+            lit={lights('layout shell grouped drawn inset list rows panel arrangement', lit)}
+          >
+            <CustomRow>
+              <ShellPicker />
             </CustomRow>
           </SettingsGroup>
 

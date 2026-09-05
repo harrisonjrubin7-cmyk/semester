@@ -690,6 +690,22 @@ a:hover {
   box-shadow: 0 1px 0 var(--app-line-top) inset, var(--lift-1);
   transition: border-color var(--fast), box-shadow var(--fast), transform var(--fast);
 }
+/*
+ * The grouped layout's panel.
+ *
+ * The same object with its jewellery off: no lift, no inner highlight, no
+ * gradient — an inset panel reads as a surface the rows sit on rather than as
+ * a card standing above the page. It keeps the app's own line colour and the
+ * `corners` radius, so Parchment still looks like Parchment.
+ */
+.device .blueprint.grouped {
+  background: var(--app-panel);
+  box-shadow: none;
+  border-radius: var(--r-lg);
+}
+.device button.blueprint.grouped:hover {
+  box-shadow: none;
+}
 .device button.blueprint:hover {
   border-color: rgba(236, 238, 242, 0.2);
   box-shadow: 0 1px 0 var(--app-line-top) inset, var(--lift-2);
