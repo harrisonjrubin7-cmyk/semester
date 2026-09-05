@@ -156,7 +156,16 @@ function DayView() {
           body={
             source === 'all'
               ? 'No classes, no deadlines, no events. A genuinely free day.'
-              : 'Nothing from this source. Try another filter.'
+              : 'Nothing from this source. There may be something under another one.'
+          }
+          // A free day is a fact and there is nothing to do about it. An empty
+          // filter is a question — is the day free, or am I looking through a
+          // narrow slot? — and the answer is one tap away, so offer it here
+          // rather than telling somebody to go and find the control.
+          action={
+            source === 'all'
+              ? undefined
+              : { label: 'Show everything', onClick: () => dispatch({ type: 'setCalSource', source: 'all' }) }
           }
         />
       )}
@@ -783,7 +792,18 @@ function SemesterView() {
   if (dates.length === 0) {
     return (
       <div style={{ padding: 18 }}>
-        <EmptyState title="Nothing to plot." body="Try another source filter." />
+        {/* Only the filtered case reaches here. A calendar with nothing on it
+            at all is caught further up by the screen's own empty state, which
+            offers "Add your first course" — so there is no unfiltered branch
+            to write, and writing one would be writing dead copy. */}
+        <EmptyState
+          title="Nothing to plot."
+          body="Nothing from this source across the whole semester."
+          action={{
+            label: 'Show everything',
+            onClick: () => dispatch({ type: 'setCalSource', source: 'all' }),
+          }}
+        />
       </div>
     );
   }
@@ -1030,7 +1050,17 @@ function CampusList() {
             body={
               state.evFilter === 'Saved'
                 ? 'Hit save on a game and it lands on your Today rail.'
-                : 'Try another filter — the season may have moved on.'
+                : 'Nothing under this filter — the season may have moved on.'
+            }
+            // Both roads lead back to All: from Saved, to find something worth
+            // saving; from a kind with nothing in it, to see what there is.
+            action={
+              state.evFilter === 'All'
+                ? undefined
+                : {
+                    label: state.evFilter === 'Saved' ? 'Browse what is on' : 'Show everything',
+                    onClick: () => dispatch({ type: 'setEvFilter', filter: 'All' }),
+                  }
             }
           />
         )}
