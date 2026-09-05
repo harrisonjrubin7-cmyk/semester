@@ -55,6 +55,41 @@ export function navigate(state: State, action: Action): State | null {
     case 'go':
       return push(state, action.screen);
 
+    /**
+     * The browser went somewhere, so the app follows it there.
+     *
+     * No `push`: the entry already exists, and pushing another would mean
+     * Back stopped working the second time somebody pressed it. The internal
+     * stack is popped when the landing is a step backwards, so the in-app
+     * chevron and the browser button keep saying the same thing.
+     */
+    case 'landed': {
+      if (action.screen === state.screen && !action.id && !action.mode) return state;
+      const back = state.history[state.history.length - 1] === action.screen;
+      const field = action.id
+        ? {
+            course: 'courseId',
+            edit: 'courseId',
+            grades: 'courseId',
+            item: 'itemId',
+            event: 'eventId',
+            guide: 'guideId',
+            drill: 'guideId',
+            quiz: 'guideId',
+            lesson: 'guideId',
+            slides: 'guideId',
+            note: 'noteId',
+          }[action.screen as string]
+        : undefined;
+      return {
+        ...state,
+        screen: action.screen,
+        history: back ? state.history.slice(0, -1) : state.history,
+        ...(field ? { [field]: action.id } : {}),
+        ...(action.mode ? { mode: action.mode } : {}),
+      };
+    }
+
     case 'back': {
       const history = [...state.history];
       const prev = history.pop();

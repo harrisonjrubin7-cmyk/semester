@@ -1247,6 +1247,15 @@ export type Action =
   | { type: 'settleCourse'; guideId?: CourseId; courseId?: CourseId }
   | { type: 'removalsPushed'; ids: CourseId[] }
   | { type: 'hydrate'; persisted: Partial<Persisted>; at?: number }
-  | { type: 'restore'; persisted: Partial<Persisted> };
+  | { type: 'restore'; persisted: Partial<Persisted> }
+  /**
+   * The browser moved, so the app follows.
+   *
+   * Distinct from `go` because `go` pushes a history entry and this one is
+   * the answer to somebody having already used one. Dispatching `go` here
+   * would push an entry for the entry they just went back past, and Back
+   * would stop working the second time. See `lib/route.ts`.
+   */
+  | { type: 'landed'; screen: Screen; id?: string; mode?: StudyMode };
 
 export const ROOTS: Screen[] = ['home', 'courses', 'study', 'calendar', 'mine', 'me'];

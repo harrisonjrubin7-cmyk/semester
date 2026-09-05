@@ -45,6 +45,7 @@ import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
 import { isSettingsPage } from '../lib/settings';
+import { NAMED, fromHash, replaces, same, toHash, type Route } from '../lib/route';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
@@ -204,13 +205,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const [state, dispatch] = useReducer(reducer, undefined, () => {
     const persisted = loadPersisted();
-    return {
-      ...persisted,
-      ...initialEphemeral(startedAt.current),
-      screen: persisted.seenOnboarding
-        ? (screenFromUrl() ?? ('home' as Screen))
-        : ('onboarding' as Screen),
-    };
+    const ephemeral = initialEphemeral(startedAt.current);
+    if (!persisted.seenOnboarding) {
+      return { ...persisted, ...ephemeral, screen: 'onboarding' as Screen };
+    }
+    /*
+     * A refresh, a bookmark, or a link somebody sent.
+     *
+     * The hash wins, because it is the more specific of the two and it is the
+     * one this build writes. `?screen=` is still honoured underneath it: an
+     * installed app's shortcuts and the share target were built against it,
+     * and they are out in the world on people's home screens.
+     */
+    const landed = fromHash(window.location.hash);
+    if (landed) {
+      const field = NAMED[landed.screen];
+      return {
+        ...persisted,
+        ...ephemeral,
+        screen: landed.screen,
+        ...(field && landed.id ? { [field]: landed.id } : {}),
+        ...(landed.mode ? { mode: landed.mode } : {}),
+      };
+    }
+    return { ...persisted, ...ephemeral, screen: screenFromUrl() ?? ('home' as Screen) };
   });
 
   // Re-render on the minute so "in 1 hr 19 min" and "Today" stay correct
@@ -658,6 +676,68 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         : itemsDueToday(catalog, now).filter((i) => !state.done[i.id]).length,
     );
   }, [catalog, now, state.done, state.badges]);
+
+  /*
+   * The address bar follows the app, and the app follows the address bar.
+   *
+   * Every screen had the same URL, which costs the four things anybody expects
+   * of a browser: Back and Forward, a refresh that lands where you were, a
+   * bookmark of the thing rather than of the app, and a link somebody can
+   * send. `lib/route.ts` has the shape and says why it is a hash.
+   *
+   * Writing is the easy half: whenever the route changes, push an entry —
+   * except when only the study mode moved, which is the same place read a
+   * different way and would otherwise make Back walk somebody through every
+   * mode they tried.
+   */
+  // Read during render rather than inside the memo, so the dependency is the
+  // one field that actually matters rather than all five of them.
+  const named = NAMED[state.screen];
+  const routeId = named && typeof state[named] === 'string' ? (state[named] as string) : '';
+  const route = useMemo<Route>(
+    () => ({
+      screen: state.screen,
+      id: routeId,
+      ...(state.screen === 'guide' ? { mode: state.mode } : {}),
+    }),
+    [state.screen, routeId, state.mode],
+  );
+  const shown = useRef<Route | null>(null);
+
+  useEffect(() => {
+    if (same(shown.current, route)) return;
+    const url = toHash(route);
+    try {
+      if (replaces(shown.current, route)) window.history.replaceState(null, '', url);
+      else window.history.pushState(null, '', url);
+    } catch {
+      // A sandboxed frame refuses to write history. The app still works; it
+      // just does not get an address, which is the thing being added rather
+      // than a thing being taken away.
+    }
+    shown.current = route;
+  }, [route]);
+
+  /*
+   * And the other way: Back, Forward, or a hash typed by hand.
+   *
+   * `landed` rather than `go`, because the entry already exists — pushing
+   * another would mean Back stopped working the second time it was pressed.
+   */
+  useEffect(() => {
+    const moved = () => {
+      const asked = fromHash(window.location.hash);
+      if (!asked || same(asked, shown.current)) return;
+      shown.current = asked;
+      dispatch({ type: 'landed', screen: asked.screen, id: asked.id, mode: asked.mode });
+    };
+    window.addEventListener('popstate', moved);
+    window.addEventListener('hashchange', moved);
+    return () => {
+      window.removeEventListener('popstate', moved);
+      window.removeEventListener('hashchange', moved);
+    };
+  }, []);
 
   /*
    * One copy of the account per day, taken by the app rather than remembered

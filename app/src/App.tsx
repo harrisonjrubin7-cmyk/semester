@@ -388,7 +388,18 @@ function Header() {
         <button
           type="button"
           className="btn btn-ghost btn-icon"
-          onClick={() => dispatch({ type: 'back' })}
+          onClick={() => {
+            // The browser's history, not the app's. Every navigation now
+            // writes an entry, so going back any other way would leave the
+            // address bar pointing at a screen nobody is on — and pressing
+            // the browser's own Back afterwards would return to the screen
+            // this button had just left. One stack, two buttons.
+            try {
+              window.history.back();
+            } catch {
+              dispatch({ type: 'back' });
+            }
+          }}
           aria-label="Back"
           style={{ marginLeft: -8, flex: 'none' }}
         >
