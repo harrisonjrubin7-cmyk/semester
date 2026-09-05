@@ -145,6 +145,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // A choice about whether the app counts anything, so it follows the person.
   // The counts it governs never sync at all — see `lib/usage.ts`.
   countScreens: 'theirs',
+  // Which units were guessed at before reading. Two devices pre-testing two
+  // different units should end with both, and a pretest is never un-done.
+  pretested: 'ticks',
   // A mark on a class is a fact about a day, and two devices marking two
   // different days should end with both. Keyed by course and date inside
   // `readLog`, so a duplicate cannot become a second absence.

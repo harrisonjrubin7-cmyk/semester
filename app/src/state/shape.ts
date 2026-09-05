@@ -59,6 +59,7 @@ import { readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
 import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
 import { readOverrides, type GradeSystem } from '../lib/cutoffs';
+import { readPretested } from '../lib/pretest';
 import { readSchool, type School } from '../lib/school';
 
 /**
@@ -119,6 +120,14 @@ export interface Persisted {
    * about the person rather than the device, so it follows them.
    */
   countScreens: boolean;
+  /**
+   * Units somebody has guessed at before reading, and when.
+   *
+   * Keyed `courseId:unit`. The *only* thing a pretest records: guesses
+   * themselves are never scored, because being wrong is the mechanism and
+   * nothing may punish it. See `lib/pretest.ts`.
+   */
+  pretested: Record<string, number>;
   /**
    * Places you named, so a coordinate can mean something.
    *
@@ -523,6 +532,11 @@ export interface Ephemeral {
   drillIdx: number;
   drillGot: number;
   revealed: boolean;
+  /** The unit a guess-first run is on, and how far through it is. */
+  guessUnit: number;
+  guessIdx: number;
+  guessRight: number;
+  guessSaid: boolean;
   quiz: QuizQuestion[];
   quizIdx: number;
   quizPicked: number | null;
@@ -592,6 +606,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   gradeSystems: {},
   mySchools: [],
   countScreens: true,
+  pretested: {},
   places: [],
   commitments: [],
   timers: [],
@@ -716,6 +731,10 @@ export function initialEphemeral(now: Date): Ephemeral {
     drillIdx: 0,
     drillGot: 0,
     revealed: false,
+    guessUnit: 0,
+    guessIdx: 0,
+    guessRight: 0,
+    guessSaid: false,
     quiz: [],
     quizIdx: 0,
     quizPicked: null,
@@ -770,6 +789,7 @@ export function loadPersisted(): Persisted {
         ? saved.mySchools.map(readSchool).filter((s) => s.id && s.name)
         : [],
       countScreens: saved.countScreens !== false,
+      pretested: readPretested(saved.pretested),
       places: saved.places ?? [],
       commitments: saved.commitments ?? [],
       timers: saved.timers ?? [],
@@ -875,6 +895,7 @@ export function pickPersisted(state: State): Persisted {
     gradeSystems: state.gradeSystems,
     mySchools: state.mySchools,
     countScreens: state.countScreens,
+    pretested: state.pretested,
     places: state.places,
     commitments: state.commitments,
     timers: state.timers,
@@ -965,6 +986,12 @@ export type Action =
   | { type: 'addSchool'; school: School }
   | { type: 'forgetSchool'; id: string }
   | { type: 'countScreens'; on: boolean }
+  // Opens a guess-first run on one unit. `at` is passed in rather than read
+  // from Date.now() inside the reducer, like every other timestamped action.
+  | { type: 'guessFirst'; courseId: string; unit: number }
+  | { type: 'guessShow' }
+  | { type: 'guessNext'; right: boolean }
+  | { type: 'guessDone'; courseId: string; unit: number; at: number }
   | { type: 'addPlace'; place: Omit<SavedPlace, 'id' | 'created'> }
   | { type: 'removePlace'; id: string }
   | { type: 'addCommitment'; commitment: Omit<Commitment, 'id' | 'created'> }

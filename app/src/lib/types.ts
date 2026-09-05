@@ -405,6 +405,7 @@ export type Screen =
   | 'guide'
   | 'quiz'
   | 'drill'
+  | 'guess'
   | 'gap'
   | 'lesson'
   | 'mine'

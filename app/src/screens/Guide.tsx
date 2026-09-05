@@ -8,6 +8,7 @@ import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
 import { ChipRow, Meter, SectionLabel } from '../components/ui';
 import { ModePicker } from '../components/ModePicker';
 import { modeInfo, modesFor } from '../lib/modes';
+import { worthGuessing } from '../lib/pretest';
 import { FieldGuide } from './Field';
 import { ChevronRight, Plus } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
@@ -174,8 +175,8 @@ export function Guide() {
 
           <SectionLabel>Units</SectionLabel>
           {guide.units.map((u, i) => (
+            <div key={u.name}>
             <button
-              key={u.name}
               type="button"
               className="bare tappable"
               onClick={() => dispatch({ type: 'startDrill', unit: i })}
@@ -219,6 +220,33 @@ export function Guide() {
                 {u.cards.length} cards
               </span>
             </button>
+            {/*
+              Offered only on units nobody has touched — see `lib/pretest.ts`.
+              On a unit already drilled this would not be a guess, it would be
+              a quiz with the wrong label on it.
+            */}
+            {worthGuessing(state.guideId, i, u.cards, state.reviews, state.pretested) && (
+              <button
+                type="button"
+                className="bare tappable"
+                onClick={() => dispatch({ type: 'guessFirst', courseId: state.guideId, unit: i })}
+                style={{
+                  width: 'auto',
+                  padding: '5px 9px',
+                  margin: '0 0 12px 38px',
+                  borderRadius: 'var(--r-sm)',
+                  border: '1px solid var(--app-line)',
+                  fontSize: 'calc(10.5px * var(--text-scale, 1))',
+                  fontFamily: 'var(--font-heading)',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  opacity: 0.75,
+                }}
+              >
+                Guess first
+              </button>
+            )}
+            </div>
           ))}
 
           {guide.selfTest && (

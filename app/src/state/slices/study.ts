@@ -11,6 +11,7 @@
 
 import { score } from '../../lib/review';
 import { handle, remember } from '../../lib/sure';
+import { unitKey } from '../../lib/pretest';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
 
@@ -22,6 +23,38 @@ export function study(state: State, action: Action): State | null {
      * Resets the position: the deck is rebuilt in a different order, so
      * staying at card 14 would land somewhere unrelated to where you were.
      */
+    case 'guessFirst':
+      return {
+        ...state,
+        screen: 'guess',
+        guideId: action.courseId as State['guideId'],
+        guessUnit: action.unit,
+        guessIdx: 0,
+        guessRight: 0,
+        guessSaid: false,
+      };
+
+    case 'guessShow':
+      return state.guessSaid ? state : { ...state, guessSaid: true };
+
+    case 'guessNext':
+      // Counted for the sentence at the end and nowhere else: this goes
+      // nowhere near `reviews` or `answers`, because being wrong is the
+      // mechanism here and nothing may punish it. See `lib/pretest.ts`.
+      return {
+        ...state,
+        guessIdx: state.guessIdx + 1,
+        guessSaid: false,
+        guessRight: state.guessRight + (action.right ? 1 : 0),
+      };
+
+    case 'guessDone':
+      return {
+        ...state,
+        screen: 'guide',
+        pretested: { ...state.pretested, [unitKey(action.courseId, action.unit)]: action.at },
+      };
+
     case 'mixCourses':
       return state.drillMix === action.on ? state : { ...state, drillMix: action.on, drillIdx: 0 };
 

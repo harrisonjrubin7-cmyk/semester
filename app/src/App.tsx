@@ -55,6 +55,7 @@ const Courses = lazy(() => import('./screens/Courses').then((m) => ({ default: m
 const Deck = lazy(() => import('./screens/Deck').then((m) => ({ default: m.Deck })));
 const Draw = lazy(() => import('./screens/Draw').then((m) => ({ default: m.Draw })));
 const Drill = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Drill })));
+const Guess = lazy(() => import('./screens/Guess').then((m) => ({ default: m.Guess })));
 const EditCourse = lazy(() => import('./screens/EditCourse').then((m) => ({ default: m.EditCourse })));
 const Essay = lazy(() => import('./screens/Essay').then((m) => ({ default: m.Essay })));
 const EventDetail = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.EventDetail })));
@@ -148,7 +149,7 @@ function Loading() {
  * A drill is one card at a time and a tab bar under it invites a mis-tap; a
  * lesson and a deck are playback. Everything else keeps the bar.
  */
-const FULLSCREEN: Screen[] = ['drill', 'quiz', 'lesson', 'slides', 'onboarding'];
+const FULLSCREEN: Screen[] = ['drill', 'quiz', 'guess', 'lesson', 'slides', 'onboarding'];
 
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
@@ -189,6 +190,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: `${guide.code} · study guide`, title: 'Guide' };
     case 'drill':
       return { kicker: guide.code, title: 'Drill' };
+    case 'guess':
+      return { kicker: `${guide.code} · before you read`, title: 'Guess first' };
     case 'quiz':
       return { kicker: `${guide.code} · multiple choice`, title: 'Quiz' };
     case 'calendar': {
@@ -548,6 +551,8 @@ function CurrentScreen() {
       return <Guide />;
     case 'drill':
       return <Drill />;
+    case 'guess':
+      return <Guess />;
     case 'quiz':
       return <Quiz />;
     case 'lesson':
