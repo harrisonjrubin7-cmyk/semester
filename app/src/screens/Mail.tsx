@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useDraft } from '../lib/draft.hook';
+import { DraftNote } from '../components/DraftNote';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
@@ -55,7 +57,11 @@ export function Mail() {
   const [facts, setFacts] = useState('');
   const [incoming, setIncoming] = useState(seed?.incoming ?? '');
   const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
+  // The drafted email, which is then edited by hand before it is sent —
+  // the most expensive text on this screen and the easiest to lose.
+  const bodyField = useDraft('mail', 'body');
+  const body = bodyField.value;
+  const setBody = bodyField.set;
   const [app, setApp] = useState<MailApp>('gmail');
   const [busy, setBusy] = useState(false);
   const trouble = useTrouble();
@@ -279,6 +285,7 @@ export function Mail() {
               lineHeight: 1.55,
             }}
           />
+          <DraftNote field={bodyField} />
           {/* Here rather than on a separate screen: the moment worth catching
               a doubled word is the moment before Send. */}
           <CheckIt text={body} onChange={setBody} label="Check it before you send" />

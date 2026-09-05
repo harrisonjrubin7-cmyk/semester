@@ -67,7 +67,7 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'The app keeps its own copies, on this device',
     body:
-      'Once a day, and before anything that rewrites a lot at once — an import, a bulk change, closing a term — the app saves a copy of your account so a bad five minutes can be undone. They are kept for a week, in this browser’s storage, on this device only. They are never uploaded, never synced, and not in your export. You can see all of them, and delete any of them, under Take it with you.',
+      'Once a day, and before anything that rewrites a lot at once — an import, a bulk change, closing a term — the app saves a copy of your account so a bad five minutes can be undone. They are kept for a week, in this browser’s storage, on this device only. Long text you are part way through writing is kept the same way, so leaving a screen does not lose it, and dropped after a fortnight. Neither is ever uploaded, neither is synced, and neither is in your export. You can see every copy, and delete any of them, under Take it with you.',
   },
   {
     heading: 'What the AI features send, and to whom',

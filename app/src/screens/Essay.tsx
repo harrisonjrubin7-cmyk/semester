@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useDraft } from '../lib/draft.hook';
+import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -58,7 +60,11 @@ export function Essay() {
   const [sources, setSources] = useState('');
   const [lengthId, setLengthId] = useState('standard');
   const [voiceId, setVoiceId] = useState('plain');
-  const [out, setOut] = useState('');
+  // What came back, and then what was edited into it. Kept, because a draft
+  // somebody has worked over is worth more than the one they were given.
+  const outField = useDraft('essay', 'out');
+  const out = outField.value;
+  const setOut = outField.set;
   const [busy, setBusy] = useState(false);
   const trouble = useTrouble();
   const [kept, setKept] = useState(false);
@@ -366,6 +372,7 @@ export function Essay() {
           >
             {draft}
           </div>
+          <DraftNote field={outField} />
 
           <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 1.55 }}>
             {count} words against {aim}.{' '}

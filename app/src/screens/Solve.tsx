@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useDraft } from '../lib/draft.hook';
+import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -35,7 +37,9 @@ export function Solve() {
 
   const [aid, setAid] = useState(APPROACHES[0].id);
   const [problem, setProblem] = useState('');
-  const [work, setWork] = useState('');
+  const workField = useDraft('solve', 'work');
+  const work = workField.value;
+  const setWork = workField.set;
   const [expected, setExpected] = useState('');
   const [out, setOut] = useState('');
   const [busy, setBusy] = useState('');
@@ -206,6 +210,7 @@ export function Solve() {
             placeholder="Your working, as far as you got. Rough is fine."
             style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.55 }}
           />
+          <DraftNote field={workField} />
         </>
       )}
 

@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useDraft } from '../lib/draft.hook';
+import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
@@ -46,7 +48,12 @@ export function Work() {
   const [tab, setTab] = useState<Tab>('plan');
   const [instructions, setInstructions] = useState('');
   const [plan, setPlan] = useState<Breakdown | null>(null);
-  const [draft, setDraft] = useState('');
+  // The longest thing anybody types into this app that is not a note, and
+  // until now the easiest to lose: held in component state and gone on a
+  // tapped Back. See `lib/draft.ts`.
+  const draftField = useDraft('work', 'draft');
+  const draft = draftField.value;
+  const setDraft = draftField.set;
   const [feedback, setFeedback] = useState('');
   const [prompt, setPrompt] = useState('');
   const [output, setOutput] = useState('');
@@ -235,6 +242,7 @@ export function Work() {
             style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, resize: 'vertical' }}
             aria-label="Your draft"
           />
+          <DraftNote field={draftField} />
           <button
             type="button"
             className="btn btn-primary btn-block"

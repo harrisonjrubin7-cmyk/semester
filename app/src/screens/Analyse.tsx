@@ -1,5 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useDraft } from '../lib/draft.hook';
+import { DraftNote } from '../components/DraftNote';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -40,7 +42,9 @@ export function Analyse() {
   const { state, catalog } = useStore();
   const { guide } = useLive(state.guideId);
 
-  const [text, setText] = useState('');
+  const textField = useDraft('analyse', 'text');
+  const text = textField.value;
+  const setText = textField.set;
   const [name, setName] = useState('');
   const [xi, setXi] = useState(0);
   const [yi, setYi] = useState(1);
@@ -197,6 +201,7 @@ export function Analyse() {
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
         }}
       />
+      <DraftNote field={textField} />
       {table.rows.length > 0 && (
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6 }}>
           {name ? `${name} · ` : ''}
