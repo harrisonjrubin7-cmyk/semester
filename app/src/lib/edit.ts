@@ -15,6 +15,7 @@
  * mutate what they were handed, because the store compares by identity.
  */
 
+import { isPlace } from './maps';
 import type { CourseModule, GradeRow, Item, RecurringBlock } from './types';
 
 /** A new id that will not collide with the generator's or the sample's. */
@@ -169,7 +170,11 @@ export function gaps(module: CourseModule): string[] {
   const c = module.course;
   if (!c.prof.trim()) out.push('no professor');
   if (!c.email.trim()) out.push('no email to write to');
+  // Two different gaps, and only one of them is an empty field. A room that
+  // says "Section 9:05" looks filled in and is the more misleading of the two,
+  // because the app cannot offer directions from it either and nothing said so.
   if (!c.room.trim()) out.push('no room, so no directions');
+  else if (!isPlace(c.room)) out.push(`"${c.room.trim()}" is not a place, so no directions`);
   if (c.grading.length === 0) out.push('no grading, so Grades cannot work');
   if (module.items.length === 0) out.push('no deadlines');
   if (module.schedule.length === 0) out.push('no meeting times, so it is on no calendar');

@@ -17,7 +17,10 @@ const econ: CourseModule = {
     prof: 'Dr. John Stromme',
     email: 'john.stromme@vanderbilt.edu',
     meets: 'MWF · 9:05–9:55a',
-    room: 'Section 9:05',
+    // The syllabus names a section here, not a building — so the room is
+    // genuinely unknown and is left empty. It used to read 'Section 9:05',
+    // which the map turned into directions to a place that does not exist.
+    room: '',
     credits: '3 credits',
     source: 'Econ1020_2026_Fall.pdf',
     grading: [

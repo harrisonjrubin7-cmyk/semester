@@ -14,7 +14,7 @@ import { CameBack } from '../components/CameBack';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { Grades } from './Grades';
-import { appleMapsUrl, directionsUrl, fromRoom, prefersApple } from '../lib/maps';
+import { appleMapsUrl, directionsUrl, fromRoom, prefersApple, type Destination } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
 import { DeadlineRow } from '../components/DeadlineRow';
 import { badge, overdueLine, split, standingOf } from '../lib/standing';
@@ -370,12 +370,12 @@ export function CourseDetail() {
         <span className="tag tag-outline">{course.meets}</span>
         {/* The room is the one detail here you might need to act on, so it is
             a link to directions rather than a label to read and retype. */}
-        {course.room ? (
+        {course.room && fromRoom(course.room) ? (
           <a
             href={
               prefersApple()
-                ? appleMapsUrl(fromRoom(course.room))
-                : directionsUrl(fromRoom(course.room))
+                ? appleMapsUrl(fromRoom(course.room) as Destination)
+                : directionsUrl(fromRoom(course.room) as Destination)
             }
             target="_blank"
             rel="noreferrer"

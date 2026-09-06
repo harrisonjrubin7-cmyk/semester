@@ -1,23 +1,67 @@
 import { describe, expect, it } from 'vitest';
-import { appleMapsUrl, directionsUrl, fromRoom, placeUrl } from './maps';
+import { appleMapsUrl, directionsUrl, fromRoom, isPlace, placeUrl } from './maps';
 
 describe('fromRoom', () => {
   it('drops the room number, which no map service knows about', () => {
-    expect(fromRoom('Alumni Hall 201').query).toBe(
+    expect(fromRoom('Alumni Hall 201')?.query).toBe(
       'Alumni Hall, Vanderbilt University, Nashville, TN',
     );
   });
 
   it('drops a lettered room too', () => {
-    expect(fromRoom('Garland 162A').query).toBe('Garland, Vanderbilt University, Nashville, TN');
+    expect(fromRoom('Garland 162A')?.query).toBe('Garland, Vanderbilt University, Nashville, TN');
   });
 
   it('keeps a building that has no number', () => {
-    expect(fromRoom('Garland').query).toBe('Garland, Vanderbilt University, Nashville, TN');
+    expect(fromRoom('Garland')?.query).toBe('Garland, Vanderbilt University, Nashville, TN');
   });
 
-  it('never returns an empty search, whatever the syllabus said', () => {
-    expect(fromRoom('205').query).toContain('205');
+  // This used to assert the opposite — that a search was always produced,
+  // "whatever the syllabus said". That is the bug: a bare 205 is not a place,
+  // and a confident search for one lands somewhere wrong.
+  it('returns nothing for a room that names nowhere', () => {
+    expect(fromRoom('205')).toBeNull();
+    expect(fromRoom('Section 9:05')).toBeNull();
+  });
+});
+
+describe('isPlace', () => {
+  it('accepts buildings, however they are named', () => {
+    for (const r of ['Garland', 'Alumni Hall 201', "The Wond'ry", 'E. Bronson Ingram', 'Buttrick 101']) {
+      expect(isPlace(r), r).toBe(true);
+    }
+  });
+
+  it('refuses a clock time left in the room field', () => {
+    // The one from the sample semester, which offered directions to
+    // "Section 9:05, Vanderbilt University".
+    expect(isPlace('Section 9:05')).toBe(false);
+    expect(isPlace('9:05a')).toBe(false);
+    expect(isPlace('MWF 14:30')).toBe(false);
+  });
+
+  it('refuses a section number', () => {
+    for (const r of ['Section 9', 'Sec. 03', 'Sect 2']) expect(isPlace(r), r).toBe(false);
+  });
+
+  it('refuses meeting days on their own', () => {
+    for (const r of ['MWF', 'TR', 'tth', 'M']) expect(isPlace(r), r).toBe(false);
+  });
+
+  it('refuses a delivery mode', () => {
+    for (const r of ['Online', 'Zoom', 'Remote', 'Asynchronous', 'Hybrid']) {
+      expect(isPlace(r), r).toBe(false);
+    }
+  });
+
+  it('refuses a room not yet decided', () => {
+    for (const r of ['TBA', 'TBD', 'N/A', 'None', 'Unknown']) expect(isPlace(r), r).toBe(false);
+  });
+
+  it('refuses a bare number and an empty string', () => {
+    expect(isPlace('205')).toBe(false);
+    expect(isPlace('')).toBe(false);
+    expect(isPlace('  ')).toBe(false);
   });
 });
 

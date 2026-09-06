@@ -73,20 +73,23 @@ export function Maps() {
   const apple = prefersApple();
 
   const today = now.getDay();
+  // A row only appears where the room names somewhere a map could find. See
+  // `isPlace`: "Section 9:05" is what a parser leaves in a room field, and
+  // directions to it are worse than no directions at all.
   const classes: Row[] = catalog.modules.flatMap((m) =>
     (m.schedule ?? [])
       .filter((s) => s.days.includes(today))
-      .map((s) => ({
-        key: `${m.course.id}-${s.at}`,
-        label: `${m.course.code} · ${s.time}`,
-        where: m.course.room || s.meta,
-        dest: fromRoom(m.course.room || s.meta),
-      })),
+      .flatMap((s) => {
+        const where = m.course.room || s.meta;
+        const dest = fromRoom(where);
+        return dest ? [{ key: `${m.course.id}-${s.at}`, label: `${m.course.code} \u00b7 ${s.time}`, where, dest }] : [];
+      }),
   );
 
-  const rooms: Row[] = catalog.courses
-    .filter((c) => c.room)
-    .map((c) => ({ key: c.id, label: c.code, where: c.room, dest: fromRoom(c.room) }));
+  const rooms: Row[] = catalog.courses.flatMap((c) => {
+    const dest = fromRoom(c.room);
+    return dest ? [{ key: c.id, label: c.code, where: c.room, dest }] : [];
+  });
 
   const saved: Row[] = state.places.map((p) => ({
     key: p.id,

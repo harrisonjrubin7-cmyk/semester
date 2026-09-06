@@ -42,14 +42,61 @@ export interface Destination {
 }
 
 /**
- * A room becomes something a map can find.
+ * Wordings that are in the room field and are not rooms.
+ *
+ * A syllabus writes its meeting details in prose, and a parser reading one
+ * files whatever sat in the room-shaped position. In the sample semester that
+ * was "Section 9:05" for ECON 1020, and the app dutifully offered walking
+ * directions to *"Section 9:05, Vanderbilt University"* — a search that lands
+ * somewhere, confidently, and nowhere near a lecture.
+ *
+ * That is worse than having no room at all. No room says "I do not know"; a
+ * wrong one says "go here", and it is believed, and somebody follows it.
+ *
+ * Each pattern below is a thing seen in the room slot rather than a guess:
+ * a clock time, a section number, a run of meeting days, a delivery mode, or
+ * an admission that the room is not yet decided.
+ */
+const NOT_A_PLACE: RegExp[] = [
+  /\d{1,2}:\d{2}/,                       // a clock time — "9:05", "14:30"
+  /\bsect?(ion)?\b\s*\.?\s*\d/i,         // "Section 9", "Sec. 03", "Sect 2"
+  /^\s*(m|t|w|r|f|s|u|mw|tr|mwf|tth|mtwrf)\s*$/i, // meeting days on their own
+  /\b(online|remote|virtual|zoom|teams|asynchronous|async|hybrid)\b/i,
+  /\b(tba|tbd|tbc|n\/?a|none|unknown)\b/i,
+  /^\s*\d+\s*$/,                         // a bare number: a room with no building
+];
+
+/**
+ * Whether this room string names somewhere a map could take you.
+ *
+ * Deliberately a rejector rather than a matcher. Campus buildings are named
+ * anything at all — "Buttrick", "The Wond'ry", "E. Bronson Ingram" — so a rule
+ * that tried to recognise a building would refuse real ones constantly. What
+ * can be recognised is the handful of things that are definitely *not* a
+ * building, and everything else is taken at its word.
+ */
+export function isPlace(room: string): boolean {
+  const r = room.trim();
+  if (r.length < 2) return false;
+  return !NOT_A_PLACE.some((re) => re.test(r));
+}
+
+/**
+ * A room becomes something a map can find, or nothing at all.
  *
  * "Alumni Hall 201" on its own lands in the wrong state; the building plus the
  * university plus the city is what makes it unambiguous. The room number is
  * dropped because no map service knows about rooms and including it only makes
  * the search worse.
+ *
+ * `null` when the string is not a place. Callers offer no directions rather
+ * than confident directions to nowhere — see `isPlace`.
  */
-export function fromRoom(room: string, campus = 'Vanderbilt University, Nashville, TN'): Destination {
+export function fromRoom(
+  room: string,
+  campus = 'Vanderbilt University, Nashville, TN',
+): Destination | null {
+  if (!isPlace(room)) return null;
   const building = room.replace(/\s+\d+[A-Za-z]?$/, '').trim();
   return { query: `${building || room}, ${campus}` };
 }
