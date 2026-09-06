@@ -32,6 +32,12 @@ export function mine(state: State, action: Action): State | null {
         ],
       };
 
+    case 'editTask':
+      return {
+        ...state,
+        tasks: state.tasks.map((t) => (t.id === action.id ? { ...t, ...action.patch } : t)),
+      };
+
     case 'toggleTask':
       return {
         ...state,

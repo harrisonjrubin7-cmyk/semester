@@ -199,11 +199,19 @@ function useHeader(): { kicker: string; title: string } {
       };
     case 'courses':
       return { kicker: load, title: 'Courses' };
-    case 'course':
-      return { kicker: 'Course', title: catalog.byId[state.courseId].code };
+    case 'course': {
+      // Optional, for the same reason `code` above is. A course id can outlive
+      // the course: a link somebody shared, a bookmark to a course since
+      // deleted, an id from an archived term. Every one of those rendered a
+      // blank white screen, because the header threw before the screen it sits
+      // above ever ran — and a header that can take the app down is a header
+      // that must not assume anything is loaded.
+      const open = catalog.byId[state.courseId];
+      return { kicker: 'Course', title: open?.code ?? 'Not found' };
+    }
     case 'item': {
       const item = datedItems(catalog, now).find((i) => i.id === state.itemId);
-      return { kicker: item ? catalog.byId[item.c].code : 'Item', title: item?.kind ?? 'Item' };
+      return { kicker: item ? (catalog.byId[item.c]?.code ?? 'Item') : 'Item', title: item?.kind ?? 'Item' };
     }
     case 'study':
       return {

@@ -1238,6 +1238,17 @@ export type Action =
     }
   | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
+  /**
+   * Change a task after it exists.
+   *
+   * A task could be added, ticked and deleted, and nothing else — so a date
+   * typed wrong, a paper that moved a week, or a step in a plan that needs to
+   * land on a different evening all had the same remedy: delete it and type it
+   * again, losing whether it was done and when it was made. Everything else
+   * the app holds has been editable since it existed; this was the one thing
+   * that was not.
+   */
+  | { type: 'editTask'; id: string; patch: Partial<Omit<PersonalTask, 'id' | 'created'>> }
   | { type: 'toggleTask'; id: string }
   | { type: 'deleteTask'; id: string }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }

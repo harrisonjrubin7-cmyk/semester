@@ -465,3 +465,54 @@ describe('the look', () => {
     expect(s.typeface).toBe(DEFAULT_PERSISTED.typeface);
   });
 });
+
+describe('editTask', () => {
+  const withTask = () =>
+    reducer(blank(), {
+      type: 'addTask',
+      task: { title: 'Draft the paper', date: '2026-09-20', time: '', note: 'Step', courseId: 'econ' },
+    });
+
+  it('changes what it is told to and nothing else', () => {
+    const s = withTask();
+    const before = s.tasks[0];
+    const after = reducer(s, { type: 'editTask', id: before.id, patch: { date: '2026-09-27' } }).tasks[0];
+    expect(after.date).toBe('2026-09-27');
+    expect(after.title).toBe('Draft the paper');
+    expect(after.courseId).toBe('econ');
+    expect(after.note).toBe('Step');
+  });
+
+  it('keeps the id, when it was made, and whether it is done', () => {
+    // The whole reason this action exists: the old remedy was delete and
+    // retype, which threw all three away.
+    let s = withTask();
+    const before = s.tasks[0];
+    s = reducer(s, { type: 'toggleTask', id: before.id });
+    const after = reducer(s, { type: 'editTask', id: before.id, patch: { title: 'Rewritten' } }).tasks[0];
+    expect(after.id).toBe(before.id);
+    expect(after.created).toBe(before.created);
+    expect(after.done).toBe(true);
+  });
+
+  it('sends a task to Someday when the date is cleared', () => {
+    const s = withTask();
+    const after = reducer(s, { type: 'editTask', id: s.tasks[0].id, patch: { date: null } }).tasks[0];
+    expect(after.date).toBeNull();
+  });
+
+  it('leaves the other tasks alone', () => {
+    let s = withTask();
+    s = reducer(s, {
+      type: 'addTask',
+      task: { title: 'Laundry', date: null, time: '', note: '', courseId: null },
+    });
+    const out = reducer(s, { type: 'editTask', id: s.tasks[0].id, patch: { title: 'Changed' } });
+    expect(out.tasks.map((t) => t.title)).toEqual(['Changed', 'Laundry']);
+  });
+
+  it('does nothing at all for an id that is not there', () => {
+    const s = withTask();
+    expect(reducer(s, { type: 'editTask', id: 'gone', patch: { title: 'x' } }).tasks).toEqual(s.tasks);
+  });
+});

@@ -276,6 +276,18 @@ export interface PersonalTask {
   created: number;
   /** Filed against a course, or null when it is nothing to do with school. */
   courseId: CourseId | null;
+  /**
+   * The deadline this task was made in service of, when something made it.
+   *
+   * Only set by the plan-a-deadline panel — see `components/BreakItUp.tsx` —
+   * and only so that panel can tell whether it has already been used. Matching
+   * on the title instead was the first attempt and it was wrong the moment
+   * tasks became editable: renaming a step made the panel forget it had made
+   * one, and offer to make five more.
+   *
+   * Optional because every task written before this existed has none.
+   */
+  from?: string;
 }
 
 /** Something with a time and a place, on the day's rail alongside classes. */

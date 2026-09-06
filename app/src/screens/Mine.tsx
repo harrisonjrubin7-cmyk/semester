@@ -6,7 +6,7 @@ import { EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
-import type { CourseId } from '../lib/types';
+import type { CourseId, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 import { CheckIt } from '../components/CheckIt';
 import { FindPlace } from '../components/FindPlace';
@@ -79,8 +79,173 @@ function CoursePicker({
 
 const inputStyle = { height: 40, fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 } as const;
 
+/**
+ * One task, and the way to change it.
+ *
+ * A task could be added, ticked and deleted, and nothing else. So a date typed
+ * wrong, a paper that moved a week, or a step in a plan that needs to land on
+ * a different evening all had the same remedy — delete it and type it again,
+ * throwing away whether it was done and when it was made. Every other thing
+ * this app holds has been editable since it existed. This was the exception,
+ * and it was the one people touch most.
+ *
+ * Editing is behind a press rather than always on, and saved explicitly. A
+ * list of tasks that is also a page of live inputs is a page where a stray tap
+ * lands in a field and a stray keystroke changes something, and the tick box —
+ * the thing this screen is mostly for — becomes harder to hit.
+ */
+function TaskRow({ task: t }: { task: PersonalTask }) {
+  const { dispatch, courseCode } = useStore();
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(t.title);
+  const [date, setDate] = useState(t.date ?? '');
+  const [time, setTime] = useState(t.time);
+
+  const save = () => {
+    if (!title.trim()) return;
+    dispatch({
+      type: 'editTask',
+      id: t.id,
+      // `date` is nullable on purpose: clearing the field moves a task to
+      // Someday rather than leaving it stranded on an empty string, which no
+      // group would have matched and which would have made it disappear.
+      patch: { title: title.trim(), date: date || null, time: time.trim() },
+    });
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <Blueprint style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+        <input
+          className="input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          aria-label="What the task is"
+          // eslint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus
+          style={{ height: 40, fontSize: 'calc(14px * var(--text-scale, 1))', width: '100%' }}
+        />
+        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <input
+            className="input"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            aria-label="The day it is for"
+            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+          />
+          <input
+            className="input"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            placeholder="6:30 PM"
+            aria-label="What time, in your own words"
+            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={save}
+            disabled={!title.trim()}
+            style={{ width: 'auto', padding: '0 16px', height: 38, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            className="bare"
+            onClick={() => setEditing(false)}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}
+          >
+            Cancel
+          </button>
+          <div style={{ flex: 1 }} />
+          <button
+            type="button"
+            className="bare"
+            onClick={() => dispatch({ type: 'deleteTask', id: t.id })}
+            aria-label={`Delete ${t.title}`}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5 }}
+          >
+            Delete
+          </button>
+        </div>
+        {/* Where it came from, when something put it here. A step in a plan
+            found three weeks later says what it is for. */}
+        {t.note ? (
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
+            {t.note}
+          </div>
+        ) : null}
+      </Blueprint>
+    );
+  }
+
+  return (
+    <Blueprint
+      style={{
+        display: 'flex',
+        gap: 12,
+        padding: '12px 14px',
+        alignItems: 'flex-start',
+        background: t.done ? 'transparent' : 'var(--app-panel)',
+      }}
+    >
+      <button
+        type="button"
+        className="bare"
+        onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+        aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
+        style={{ width: 20, flex: 'none', marginTop: 2 }}
+      >
+        <TickBox on={t.done} />
+      </button>
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={() => {
+          // Re-seeded on open rather than kept in sync: the fields are a draft
+          // of the task, and a draft that follows the task while you are
+          // typing in it is a draft that fights you.
+          setTitle(t.title);
+          setDate(t.date ?? '');
+          setTime(t.time);
+          setEditing(true);
+        }}
+        aria-label={`Edit ${t.title}`}
+        style={{ flex: 1, minWidth: 0, textAlign: 'left', opacity: t.done ? 0.42 : 1, padding: 0 }}
+      >
+        <span
+          style={{
+            display: 'block',
+            fontSize: 'calc(15px * var(--text-scale, 1))',
+            lineHeight: 1.3,
+            textDecoration: t.done ? 'line-through' : 'none',
+          }}
+        >
+          {t.title}
+        </span>
+        <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 3 }}>
+          <span className="tag tag-neutral" style={{ marginRight: 6 }}>
+            {t.courseId ? courseCode(t.courseId) : 'Personal'}
+          </span>
+          {t.date ? longLabel(isoToDate(t.date)) : 'No date'}
+          {t.time ? ` \u00b7 ${t.time}` : ''}
+        </span>
+      </button>
+    </Blueprint>
+  );
+}
+
 function Tasks() {
-  const { state, dispatch, now, courseCode } = useStore();
+  const { state, dispatch, now } = useStore();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
@@ -190,53 +355,7 @@ function Tasks() {
             <SectionLabel>{g.label}</SectionLabel>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {g.tasks.map((t) => (
-                <Blueprint
-                  key={t.id}
-                  style={{
-                    display: 'flex',
-                    gap: 12,
-                    padding: '12px 14px',
-                    alignItems: 'flex-start',
-                    background: t.done ? 'transparent' : 'var(--app-panel)',
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="bare"
-                    onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
-                    aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
-                    style={{ width: 20, flex: 'none', marginTop: 2 }}
-                  >
-                    <TickBox on={t.done} />
-                  </button>
-                  <div style={{ flex: 1, minWidth: 0, opacity: t.done ? 0.42 : 1 }}>
-                    <div
-                      style={{
-                        fontSize: 'calc(15px * var(--text-scale, 1))',
-                        lineHeight: 1.3,
-                        textDecoration: t.done ? 'line-through' : 'none',
-                      }}
-                    >
-                      {t.title}
-                    </div>
-                    <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 3 }}>
-                      <span className="tag tag-neutral" style={{ marginRight: 6 }}>
-                        {t.courseId ? courseCode(t.courseId) : 'Personal'}
-                      </span>
-                      {t.date ? longLabel(isoToDate(t.date)) : 'No date'}
-                      {t.time ? ` · ${t.time}` : ''}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={() => dispatch({ type: 'deleteTask', id: t.id })}
-                    aria-label={`Delete ${t.title}`}
-                    style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
-                  >
-                    Del
-                  </button>
-                </Blueprint>
+                <TaskRow key={t.id} task={t} />
               ))}
             </div>
           </div>

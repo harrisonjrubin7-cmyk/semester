@@ -26,8 +26,10 @@ export function BreakItUp({ item }: { item: DatedItem }) {
   const { state, dispatch, now, say } = useStore();
   const [shown, setShown] = useState(false);
 
+  // `from` is the reliable half; the title prefix is how tasks made before
+  // that field existed are still recognised.
   const prefix = `${item.title} — `;
-  const already = state.tasks.filter((t) => t.title.startsWith(prefix));
+  const already = state.tasks.filter((t) => t.from === item.id || (!t.from && t.title.startsWith(prefix)));
   const done = !!state.done[item.id];
   const steps = planFor(item.kind, item.date, now);
 
@@ -127,6 +129,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
                   // the task list three weeks later says what it is for.
                   note: `Step towards ${item.title}, due ${item.dueShort}.`,
                   courseId: item.c,
+                  from: item.id,
                 },
               });
             }
