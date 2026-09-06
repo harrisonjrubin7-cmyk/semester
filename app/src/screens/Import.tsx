@@ -4,7 +4,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { backupOf } from '../lib/export';
 import { takeSnapshot } from '../lib/snapshots';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { SectionLabel, TickBox } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { troubleOf, useTrouble } from '../lib/trouble';
 import { gather } from '../lib/bundle';
@@ -42,6 +42,21 @@ export function Import() {
   const [busy, setBusy] = useState('');
   const trouble = useTrouble();
   const [result, setResult] = useState<GenerationResult | null>(null);
+  /**
+   * Dates the person has taken off the import, before it happens.
+   *
+   * A syllabus is prose and a parser reading one will occasionally file the
+   * professor's office hours as a deadline, or split one assignment into two.
+   * Until now the only answers to that were to accept it and delete the row
+   * afterwards — inside the course, where the quote that would tell you which
+   * row was wrong is no longer beside it — or to abandon the import. Neither
+   * is review. This is: untick it here, where the sentence it came from is
+   * still on screen, and it is never added.
+   *
+   * Kept as the exception rather than the selection, so it empties itself
+   * whenever a new result arrives and the default is always "take all of it".
+   */
+  const [dropped, setDropped] = useState<Set<string>>(new Set());
   const input = useRef<HTMLInputElement>(null);
   const abort = useRef<AbortController | null>(null);
   const shared = useRef<HTMLInputElement>(null);
@@ -114,6 +129,7 @@ export function Import() {
     if (!file) return;
     trouble.clear();
     setResult(null);
+    setDropped(new Set());
     setBusy('Opening it…');
     try {
       const opened = readPack(await file.text());
@@ -124,6 +140,7 @@ export function Import() {
       // Slot 0 is the preview's kicker — short, uppercase, the same shape a
       // generated course gets. The provenance is prose and belongs in the
       // list under it.
+      setDropped(new Set());
       setResult({
         module: opened.module,
         notes: [packSummary(opened), provenance(opened)],
@@ -139,6 +156,7 @@ export function Import() {
     if (files.length === 0) return;
     trouble.clear();
     setResult(null);
+    setDropped(new Set());
     setBusy('Reading the syllabus…');
     abort.current = new AbortController();
     try {
@@ -146,6 +164,7 @@ export function Import() {
         { documents: files, hint, year: term.year },
         abort.current.signal,
       );
+      setDropped(new Set());
       setResult(built);
     } catch (e) {
       // The extracted text is still held, so a second run costs the upload
@@ -183,11 +202,17 @@ export function Import() {
     // something anybody notices until the grade projection looks strange.
     // Not awaited — the import must happen whether or not the copy did.
     void takeSnapshot('import', backupOf(state) as unknown as Record<string, unknown>);
+    // What the person actually approved. Dropping a date here drops it before
+    // it is ever a row in the course, so nothing has to be tidied up after.
+    const reviewed = {
+      ...result.module,
+      items: result.module.items.filter((i) => !dropped.has(i.id)),
+    };
     // Replacing rather than adding, when it is the same course, and with the
     // surviving items keeping the ids their ticks are filed under — otherwise
     // a re-import silently un-ticks everything already done.
     if (existing) {
-      const merged = keepIds(existing, result.module);
+      const merged = keepIds(existing, reviewed);
       dispatch({ type: 'replaceCourse', module: merged });
       dispatch({ type: 'openCourse', id: merged.course.id });
       return;
@@ -195,8 +220,8 @@ export function Import() {
     // Stamped with the term it was imported into, so its dates resolve to the
     // right year and it does not follow you into next semester.
     const filed = {
-      ...result.module,
-      course: { ...result.module.course, term: result.module.course.term ?? term.id },
+      ...reviewed,
+      course: { ...reviewed.course, term: reviewed.course.term ?? term.id },
     };
     dispatch({ type: 'addCourse', module: filed });
     // The screen changes underneath, which is no confirmation at all if you
@@ -362,7 +387,22 @@ export function Import() {
           code={result.module.course.code}
         />
       ) : null}
-      {result && <Preview result={result} onSave={save} replacing={Boolean(existing)} />}
+      {result && (
+        <Preview
+          result={result}
+          onSave={save}
+          replacing={Boolean(existing)}
+          dropped={dropped}
+          onToggle={(id) =>
+            setDropped((was) => {
+              const next = new Set(was);
+              if (next.has(id)) next.delete(id);
+              else next.add(id);
+              return next;
+            })
+          }
+        />
+      )}
       <div style={{ height: 22 }} />
     </div>
   );
@@ -476,14 +516,20 @@ function Preview({
   result,
   onSave,
   replacing = false,
+  dropped,
+  onToggle,
 }: {
   result: GenerationResult;
   onSave: () => void;
   replacing?: boolean;
+  /** Dates taken off the import. See the state in `Import`. */
+  dropped: Set<string>;
+  onToggle: (id: string) => void;
 }) {
   const rowTen = useRowStyle(10);
   const { module: m, notes } = result;
   const [summary, ...warnings] = notes;
+  const keeping = m.items.filter((i) => !dropped.has(i.id)).length;
 
   return (
     <>
@@ -528,34 +574,78 @@ function Preview({
       )}
 
       <SectionLabel>The dates it found</SectionLabel>
-      {m.items.slice(0, 8).map((i) => (
-        <div key={i.id} style={rowTen}>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-            <span
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(12px * var(--text-scale, 1))',
-                opacity: 0.55,
-                width: 54,
-                flex: 'none',
-              }}
-            >
-              {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i.month]} {i.day}
+      {/*
+        All of them, and each one refusable.
+
+        This showed the first eight and then asked you to accept thirty. The
+        eight were the reassuring part and the other twenty-two were the ones
+        with the mistakes in, because a parser goes wrong further down a
+        syllabus than it does at the top.
+
+        Untick anything wrong here rather than deleting it from the course
+        later. Here, the sentence it was read out of is still next to it, which
+        is the only thing that tells you whether it is wrong.
+      */}
+      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 4, lineHeight: 1.5 }}>
+        {m.items.length} found
+        {dropped.size > 0 ? ` \u00b7 ${dropped.size} taken off \u00b7 ${keeping} will be added` : ' \u00b7 untick anything the syllabus does not say'}
+      </div>
+      {m.items.map((i) => {
+        const off = dropped.has(i.id);
+        return (
+          <button
+            key={i.id}
+            type="button"
+            className="bare tappable"
+            onClick={() => onToggle(i.id)}
+            aria-pressed={!off}
+            aria-label={off ? `Put ${i.title} back` : `Take ${i.title} off this import`}
+            style={{ ...rowTen, width: '100%', textAlign: 'left', display: 'block', opacity: off ? 0.4 : 1 }}
+          >
+            <span style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+              <span style={{ flex: 'none', alignSelf: 'center' }}>
+                <TickBox on={!off} size={18} />
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 'calc(12px * var(--text-scale, 1))',
+                  opacity: 0.55,
+                  width: 54,
+                  flex: 'none',
+                }}
+              >
+                {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i.month]} {i.day}
+              </span>
+              <span
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  fontSize: 'calc(14px * var(--text-scale, 1))',
+                  lineHeight: 1.3,
+                  textDecoration: off ? 'line-through' : 'none',
+                }}
+              >
+                {i.title}
+              </span>
             </span>
-            <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{i.title}</span>
-          </div>
-          {i.quote && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 4, lineHeight: 1.45, paddingLeft: 64 }}>
-              “{i.quote}”
-            </div>
-          )}
-        </div>
-      ))}
-      {m.items.length > 8 && (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8 }}>
-          and {m.items.length - 8} more
-        </div>
-      )}
+            {i.quote && (
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  opacity: 0.5,
+                  marginTop: 4,
+                  lineHeight: 1.45,
+                  paddingLeft: 92,
+                }}
+              >
+                “{i.quote}”
+              </span>
+            )}
+          </button>
+        );
+      })}
 
       <SectionLabel>The first unit</SectionLabel>
       <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))' }}>{m.guide.units[0]?.name}</div>
@@ -578,12 +668,19 @@ function Preview({
           marginTop: 18,
         }}
       >
-        {replacing ? `Replace ${m.course.code}` : `Add ${m.course.code} to my semester`}
+        {/* The count on the button, because it is the number that changed
+            and the button is what commits it. */}
+        {replacing
+          ? `Replace ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`
+          : `Add ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`}
       </button>
       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
         {replacing
           ? 'The changes above are what this replaces. Your ticks and your drill history stay where they are.'
           : 'You can add readings to it later, and everything you add flows into the cards, the quiz and the slides at once.'}
+        {dropped.size > 0
+          ? ` The ${dropped.size} you took off ${dropped.size === 1 ? 'is' : 'are'} not added at all — re-import the syllabus to get ${dropped.size === 1 ? 'it' : 'them'} back.`
+          : ''}
       </div>
     </>
   );
