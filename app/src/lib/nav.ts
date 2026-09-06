@@ -483,6 +483,15 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
+    screen: 'help',
+    label: 'How this works',
+    short: 'Guide',
+    blurb: 'Every screen in the app, what it is for, and what it will not do.',
+    keywords: 'help guide manual how do i what does documentation tour onboarding explain instructions getting started first time shortcuts keyboard reference handbook',
+    group: 'Yours',
+    root: 'me',
+  },
+  {
     screen: 'data',
     label: 'Your data and how it is running',
     short: 'Your data',

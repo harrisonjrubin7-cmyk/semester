@@ -214,6 +214,35 @@ export function Onboarding() {
         </div>
       )}
 
+      {/*
+        The way in to the rest of it, on the last step.
+
+        The guide's first two sections and this tour cover the same ground, and
+        this covers it better: it knows whether any courses are loaded and says
+        something different when they are. Replacing it with generated prose
+        would have cost that to gain a consistency nobody would notice. What
+        was missing was a way from here to the guide, which is this — and
+        `restartOnboarding`, on the guide, is the way back.
+      */}
+      {state.onb === 3 && (
+        <button
+          type="button"
+          className="bare tappable"
+          onClick={() => dispatch({ type: 'go', screen: 'help' })}
+          style={{
+            marginTop: 18,
+            textAlign: 'left',
+            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            opacity: 0.6,
+            lineHeight: 1.45,
+            textDecoration: 'underline',
+            textUnderlineOffset: 3,
+          }}
+        >
+          Or read what every screen does first
+        </button>
+      )}
+
       <div style={{ flex: 1, minHeight: 24 }} />
 
       <button

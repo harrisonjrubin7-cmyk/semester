@@ -140,6 +140,21 @@ export function Keys() {
         ))}
       </div>
 
+      {/* The sheet is the shortcuts; the guide is everything else. `?` opens
+          this because that is what people press first, and the way on is one
+          tap rather than a second thing to know about. */}
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => {
+          setOpen(false);
+          dispatch({ type: 'go', screen: 'help' });
+        }}
+        style={{ height: 38, marginTop: 12, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+      >
+        How the rest of it works
+      </button>
+
       <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
         Nothing fires while you are typing, and anything with ⌘ or Ctrl stays the browser's.
         {state.nav === 'feed' ? ' The screens are the same ones the feed filter reaches.' : ''}
