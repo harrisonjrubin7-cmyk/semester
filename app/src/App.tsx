@@ -109,6 +109,7 @@ const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
+import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
 import { litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
@@ -372,8 +373,32 @@ function useHeader(): { kicker: string; title: string } {
 }
 
 function Header() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const { kicker, title } = useHeader();
+  /*
+   * The course this screen sits inside, when it sits inside one.
+   *
+   * The header has always printed it — standing on Midterm 2 the kicker reads
+   * ECON 1020 — and it was not pressable, so the only way up was Back, which
+   * retraces how you arrived rather than going up. Somebody who opened a
+   * deadline from Today and then wanted the course had to return to Today and
+   * start again. See `lib/parent.ts` for why this is one level and not a
+   * breadcrumb trail.
+   *
+   * The link says the course code rather than the kicker. The kicker describes
+   * the screen you are standing on — "Weights from your syllabi", "PSCI 1104 ·
+   * study guide" — so labelling a link to the course with it was a link whose
+   * words did not match where it went.
+   */
+  const upTo = (() => {
+    if (state.screen === 'course' || !insideCourse(state.screen)) return null;
+    if (state.screen === 'item') {
+      const item = datedItems(catalog, now).find((i) => i.id === state.itemId);
+      return catalog.byId[item?.c ?? ''] ?? null;
+    }
+    const field = courseFieldFor(state.screen);
+    return catalog.byId[field === 'guideId' ? state.guideId : state.courseId] ?? null;
+  })();
   // Back appears whenever there is somewhere to go back to, which in feed mode
   // includes the root screens the tab bar would otherwise have covered.
   const canGoBack = state.history.length > 0;
@@ -429,7 +454,32 @@ function Header() {
       )}
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="kicker">{kicker}</div>
+        {upTo ? (
+          <button
+            type="button"
+            className="bare kicker"
+            onClick={() => dispatch({ type: 'openCourse', id: upTo.id })}
+            aria-label={`Up to ${upTo.code}`}
+            style={{
+              width: 'auto',
+              padding: 0,
+              textAlign: 'left',
+              // A dotted underline in the text's own colour, rather than an
+              // accent. The kicker is the quietest thing in the header and
+              // recolouring it would make a navigation aid louder than the
+              // screen's own name — but the first attempt used the hairline
+              // colour, which on a phone is invisible, and an affordance
+              // nobody can see is not an affordance.
+              textDecoration: 'underline dotted',
+              textUnderlineOffset: 3,
+              textDecorationColor: 'currentColor',
+            }}
+          >
+            {upTo.code}
+          </button>
+        ) : (
+          <div className="kicker">{kicker}</div>
+        )}
         {/*
           Focus lands here when the screen changes.
 
