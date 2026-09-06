@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:zones": "TZ=America/Chicago vitest run && TZ=Pacific/Kiritimati vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0",

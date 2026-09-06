@@ -56,6 +56,31 @@ jobs:
         working-directory: app
         run: npm test
 
+      # The same suite again, in two other timezones.
+      #
+      # This step exists because of a bug it would have caught. Outlook returns
+      # every calendar start as a UTC instant, so an all-day event on the 20th
+      # arrives as midnight UTC on the 20th — and the app read the day back
+      # with local getters, which in Nashville is seven in the evening on the
+      # 19th. Reading week showed a day early for everyone west of Greenwich,
+      # and this suite was green the whole time, because a runner's clock is
+      # UTC and UTC is the one timezone where that bug is invisible.
+      #
+      # Two zones rather than a matrix, for the same reason there is one Node
+      # version here: the checkout and the install are the expensive parts and
+      # this reuses both. Chicago is where the app is actually used and sits
+      # behind UTC; Kiritimati is UTC+14, the furthest ahead any clock gets.
+      # A date that survives both, and UTC above, has little room left to be
+      # off by one.
+      #
+      # It is a separate step rather than a replacement for the one above, so
+      # that a failure here names itself: green Test and red this means the
+      # code is timezone-dependent, which is a different bug from a broken
+      # test and wants a different fix.
+      - name: Test in other timezones
+        working-directory: app
+        run: npm run test:zones
+
       - name: Build
         working-directory: app
         run: npm run build
