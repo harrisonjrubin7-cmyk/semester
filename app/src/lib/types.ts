@@ -412,6 +412,7 @@ export type Screen =
   | 'note'
   | 'update'
   | 'connect'
+  | 'links'
   | 'ask'
   | 'work'
   | 'grades'

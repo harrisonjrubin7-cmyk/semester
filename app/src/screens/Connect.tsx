@@ -12,7 +12,6 @@ import {
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';
-import { CAMPUS_LINKS } from '../data/campus';
 import {
   PROVIDERS,
   beginAuth,
@@ -24,7 +23,7 @@ import {
   type ProviderId,
   type RemoteFile,
 } from '../lib/connect';
-import type { CampusLink, FeedSource } from '../lib/types';
+import type { FeedSource } from '../lib/types';
 
 /**
  * The campus systems the app links out to rather than reads.
@@ -38,237 +37,6 @@ import type { CampusLink, FeedSource } from '../lib/types';
  * myVU starts empty on purpose. Where it opens differs between people and
  * devices, and a confident wrong link is worse than a field that asks.
  */
-const GROUPS = ['Campus', 'Books', 'Tickets', 'Social', 'Yours'] as const;
-
-function CampusLinks() {
-  const { state, dispatch } = useStore();
-  const rowTwelve = useRowStyle(12);
-  const [editing, setEditing] = useState<string | null>(null);
-  const [draft, setDraft] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newUrl, setNewUrl] = useState('');
-
-  // Links you add yourself land under "Yours" rather than among the defaults,
-  // so which addresses the app guessed and which you chose stays obvious.
-  const links: CampusLink[] = [
-    ...CAMPUS_LINKS,
-    ...state.extraLinks.map((l) => ({ ...l, group: 'Yours' as const })),
-  ];
-  const addressOf = (link: CampusLink) => state.linkUrls[link.id] ?? link.url;
-
-  const host = (url: string) => {
-    try {
-      return new URL(url).host.replace(/^www\./, '');
-    } catch {
-      return url;
-    }
-  };
-
-  const save = (id: string) => {
-    // A bare "yes.vanderbilt.edu" is what people paste; make it a real address
-    // rather than refusing it.
-    const url = draft.trim();
-    dispatch({ type: 'setLinkUrl', id, url: url && !/^https?:\/\//i.test(url) ? `https://${url}` : url });
-    setEditing(null);
-  };
-
-  return (
-    <>
-      {/*
-        Grouped rather than one flat list. Eleven links under a single
-        heading reads as a dump; Campus, Tickets and Social are three
-        different errands and you are only ever on one of them.
-      */}
-      {GROUPS.map((group) => {
-        const inGroup = links.filter((l) => (l.group ?? 'Campus') === group);
-        if (inGroup.length === 0) return null;
-        return (
-          <div key={group}>
-            <SectionLabel>{group}</SectionLabel>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {inGroup.map((link) => {
-          const url = addressOf(link);
-          const open = editing === link.id;
-          return (
-            <div
-              key={link.id}
-              style={rowTwelve}
-            >
-              <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                {url ? (
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="bare"
-                    style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
-                  >
-                    <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
-                      {link.name}
-                    </span>
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
-                        opacity: 0.5,
-                        fontFamily: 'var(--font-heading)',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        marginTop: 2,
-                      }}
-                    >
-                      {host(url)}
-                    </span>
-                  </a>
-                ) : (
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
-                      {link.name}
-                    </span>
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
-                        opacity: 0.5,
-                        fontFamily: 'var(--font-heading)',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        marginTop: 2,
-                      }}
-                    >
-                      No address yet
-                    </span>
-                  </span>
-                )}
-                <button
-                  type="button"
-                  className="bare"
-                  onClick={() => {
-                    setDraft(url);
-                    setEditing(open ? null : link.id);
-                  }}
-                  style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
-                >
-                  {open ? 'CANCEL' : url ? 'EDIT' : 'ADD'}
-                </button>
-                {state.extraLinks.some((l) => l.id === link.id) && !open && (
-                  <button
-                    type="button"
-                    className="bare"
-                    onClick={() => dispatch({ type: 'removeLink', id: link.id })}
-                    style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
-                  >
-                    REMOVE
-                  </button>
-                )}
-              </div>
-
-              {open && (
-                <>
-                  <input
-                    className="input"
-                    value={draft}
-                    placeholder={link.hint || 'https://…'}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && save(link.id)}
-                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
-                    aria-label={`${link.name} address`}
-                  />
-                  {link.note && (
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
-                      {link.note}
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => save(link.id)}
-                    style={{
-                      marginTop: 9,
-                      fontSize: 'calc(11px * var(--text-scale, 1))',
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Save
-                  </button>
-                </>
-              )}
-            </div>
-          );
-        })}
-            </div>
-          </div>
-        );
-      })}
-
-      {adding ? (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 12 }}>
-          <div className="kicker">Your own link</div>
-          <input
-            className="input"
-            placeholder="What it is — Commodore Card, the gym"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 9 }}
-          />
-          <input
-            className="input"
-            placeholder="https://…"
-            value={newUrl}
-            onChange={(e) => setNewUrl(e.target.value)}
-            style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 8 }}
-          />
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setAdding(false)}
-              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={!newName.trim() || !newUrl.trim()}
-              onClick={() => {
-                const url = newUrl.trim();
-                dispatch({
-                  type: 'addLink',
-                  name: newName,
-                  url: /^https?:\/\//i.test(url) ? url : `https://${url}`,
-                });
-                setNewName('');
-                setNewUrl('');
-                setAdding(false);
-              }}
-              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-            >
-              Add it
-            </button>
-          </div>
-        </Blueprint>
-      ) : (
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => setAdding(true)}
-          style={{ height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
-        >
-          Add a link of your own
-        </button>
-      )}
-
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
-        These open the system itself — the app on a phone that recognises the address, the site
-        otherwise. None of them expose an API a student can use alone, so the app links out rather
-        than pretending to read them. Correct any address here and the correction is what sticks.
-      </div>
-    </>
-  );
-}
 
 /**
  * The Connect screen.
@@ -900,13 +668,20 @@ export function Connect() {
         </>
       )}
       {/*
-        Campus links sit last on purpose. They used to be the first thing on
-        the screen, directly under a paragraph promising to bring calendars in
-        — so the section that delivers that promise was below a list of
-        bookmarks, and the page opened by answering a question nobody had
-        asked. Connecting comes first; shortcuts come after.
+        The links moved out to a screen of their own — see `screens/Links.tsx`.
+        A row is left here rather than nothing at all: this is where they were
+        for a year, and somebody who comes looking should be told where they
+        went rather than concluding they were deleted.
       */}
-      <CampusLinks />
+      <SectionLabel>Links</SectionLabel>
+      <button
+        type="button"
+        className="btn btn-secondary btn-block"
+        onClick={() => dispatch({ type: 'go', screen: 'links' })}
+        style={{ height: 44 }}
+      >
+        Campus, books, tickets and your own
+      </button>
 
       <div style={{ height: 22 }} />
     </div>

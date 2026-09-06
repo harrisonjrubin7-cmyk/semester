@@ -52,6 +52,7 @@ const CheckDates = lazy(() => import('./screens/CheckDates').then((m) => ({ defa
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
 const Cloud = lazy(() => import('./screens/Cloud').then((m) => ({ default: m.Cloud })));
 const Connect = lazy(() => import('./screens/Connect').then((m) => ({ default: m.Connect })));
+const Links = lazy(() => import('./screens/Links').then((m) => ({ default: m.Links })));
 const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Costs })));
 const CourseDetail = lazy(() => import('./screens/Courses').then((m) => ({ default: m.CourseDetail })));
 const Courses = lazy(() => import('./screens/Courses').then((m) => ({ default: m.Courses })));
@@ -271,6 +272,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: about('into every study mode'), title: 'Add a reading' };
     case 'connect':
       return { kicker: 'Accounts and calendars', title: 'Connect' };
+    case 'links':
+      return { kicker: 'Everywhere you go', title: 'Links' };
     case 'ask':
       return { kicker: about('with the guide'), title: 'Ask Claude' };
     case 'work':
@@ -654,6 +657,8 @@ function CurrentScreen() {
       return <AddMaterial />;
     case 'connect':
       return <Connect />;
+    case 'links':
+      return <Links />;
     case 'ask':
       return <Ask />;
     case 'work':
