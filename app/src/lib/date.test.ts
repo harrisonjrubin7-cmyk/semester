@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { dateToIso, daysBetween, dueLabel, isoToDate, sameDay, startOfDay } from './date';
+import {
+  dateToIso,
+  daysBetween,
+  dueLabel,
+  isoToDate,
+  sameDay,
+  shiftIso,
+  startOfDay,
+} from './date';
 
 /**
  * Dates are where a study app quietly ruins somebody's week. Every case here is
@@ -90,5 +98,32 @@ describe('dueLabel', () => {
 
   it('falls back to a dated label further out', () => {
     expect(dueLabel(new Date(2026, 8, 15), now, '1:15p')).toContain('Sep');
+  });
+});
+
+describe('shiftIso', () => {
+  it('moves a day forward and back', () => {
+    expect(shiftIso('2026-09-06', 1)).toBe('2026-09-07');
+    expect(shiftIso('2026-09-06', -1)).toBe('2026-09-05');
+    expect(shiftIso('2026-09-06', 0)).toBe('2026-09-06');
+  });
+
+  it('lets the calendar decide what a month end means', () => {
+    expect(shiftIso('2026-09-30', 1)).toBe('2026-10-01');
+    expect(shiftIso('2026-10-01', -1)).toBe('2026-09-30');
+    expect(shiftIso('2026-12-31', 1)).toBe('2027-01-01');
+    expect(shiftIso('2027-01-01', -1)).toBe('2026-12-31');
+  });
+
+  it('does not invent a 29th of February in a common year', () => {
+    expect(shiftIso('2026-02-28', 1)).toBe('2026-03-01');
+    // And does not skip one in a leap year.
+    expect(shiftIso('2028-02-28', 1)).toBe('2028-02-29');
+  });
+
+  it('is its own inverse', () => {
+    for (const iso of ['2026-01-31', '2026-02-28', '2026-11-30', '2026-12-31']) {
+      expect(shiftIso(shiftIso(iso, 7), -7)).toBe(iso);
+    }
   });
 });

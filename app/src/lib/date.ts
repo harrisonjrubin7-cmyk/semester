@@ -48,6 +48,20 @@ export function isoToDate(iso: string): Date {
   return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
+/**
+ * The same date, `days` later — or earlier, for a negative number.
+ *
+ * Done by round-tripping through a Date rather than by arithmetic on the
+ * string, so month ends, leap days and the year boundary are the calendar's
+ * problem and not this function's. Adding a day to 2026-02-28 has exactly one
+ * right answer and it is not 2026-02-29.
+ */
+export function shiftIso(iso: string, days: number): string {
+  const d = isoToDate(iso);
+  d.setDate(d.getDate() + days);
+  return dateToIso(d);
+}
+
 /** Midnight on the day `d` falls in — the unit every comparison here works in. */
 export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());

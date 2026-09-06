@@ -6,7 +6,7 @@ import { ApplyingOn } from '../components/Applying';
 import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, EmptyState, SectionLabel, Segmented } from '../components/ui';
+import { ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
@@ -25,9 +25,9 @@ import {
   minutesNow,
   monthGrid,
   sameDay,
+  shiftIso,
 } from '../lib/date';
 import {
-  appointmentsOn,
   datedEvents,
   datedItems,
   feedEventsOn,
@@ -35,7 +35,7 @@ import {
   itemsOn,
   railFor,
 } from '../lib/select';
-import type { Course, CourseId, DatedEvent, DatedItem, EventKind } from '../lib/types';
+import type { Course, CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
 
 /**
  * The calendar has two independent axes.
@@ -71,7 +71,7 @@ function courseTint(courses: Course[], id: CourseId | null): string {
 // ── Day ───────────────────────────────────────────────────────────────────
 
 function DayView() {
-  const { state, dispatch, now, catalog , courseCode } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const day = state.calDay ? isoToDate(state.calDay) : now;
   const isToday = sameDay(day, now);
   const source = state.calSource;
@@ -93,7 +93,6 @@ function DayView() {
   const events = source === 'all' || source === 'campus'
     ? datedEvents(now, state.sample).filter((e) => sameDay(e.date, day))
     : [];
-  const tasks = source === 'all' || source === 'deadlines' ? appointmentsOn([], day) : [];
   const myTasks = source === 'all' || source === 'deadlines'
     ? state.tasks.filter((t) => t.date === dateToIso(day))
     : [];
@@ -286,30 +285,7 @@ function DayView() {
         <>
           <SectionLabel>Yours</SectionLabel>
           {myTasks.map((t) => (
-            <div
-              key={t.id}
-              style={{
-                display: 'flex',
-                gap: 10,
-                alignItems: 'center',
-                padding: '12px 0',
-                borderBottom: '1px solid var(--app-line)',
-                opacity: t.done ? 0.45 : 1,
-              }}
-            >
-              <span className="tag tag-neutral">
-                {t.courseId ? courseCode(t.courseId) : 'Personal'}
-              </span>
-              <span
-                style={{
-                  flex: 1,
-                  fontSize: 'calc(14px * var(--text-scale, 1))',
-                  textDecoration: t.done ? 'line-through' : 'none',
-                }}
-              >
-                {t.title}
-              </span>
-            </div>
+            <DayTask key={t.id} task={t} />
           ))}
         </>
       )}
@@ -385,11 +361,114 @@ function DayView() {
         </>
       )}
 
-      {tasks.length > 0 && null}
       <div style={{ height: 22 }} />
     </div>
   );
 }
+
+/**
+ * One of your own tasks on a day, and the two things you want to do to it.
+ *
+ * This row used to be a `<div>` — the only inert thing on a day where every
+ * other row is a button. You could see that a task was on Tuesday and do
+ * nothing about it: not tick it, not move it. Both are exactly what somebody
+ * looking at a day is there to do.
+ *
+ * ## A day at a time, rather than a drag
+ *
+ * Dragging a task onto another cell is the obvious gesture and it is the wrong
+ * one here. HTML drag events do not fire on touch, so it would be a
+ * desktop-only feature in a thumb-first app, and a drag that lands is a change
+ * with no confirmation — this app previews everything it changes. Two arrows
+ * do the same job: they say which direction, they work with a thumb, and
+ * pressing the other one puts it back.
+ *
+ * Only *your* tasks move. A syllabus deadline is a fact the professor stated,
+ * and a calendar that let you slide one to a more convenient evening would be
+ * quietly rewriting the thing the whole app exists to be right about.
+ */
+function DayTask({ task: t }: { task: PersonalTask }) {
+  const { dispatch, courseCode, say } = useStore();
+  if (!t.date) return null;
+
+  const move = (days: number) => {
+    const to = shiftIso(t.date ?? '', days);
+    dispatch({ type: 'editTask', id: t.id, patch: { date: to } });
+    say(`${t.title} moved to ${longLabel(isoToDate(to))}.`);
+  };
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 10,
+        alignItems: 'center',
+        padding: '8px 0',
+        borderBottom: '1px solid var(--app-line)',
+        opacity: t.done ? 0.45 : 1,
+      }}
+    >
+      <button
+        type="button"
+        className="bare"
+        onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
+        aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
+        style={{ width: 20, flex: 'none' }}
+      >
+        <TickBox on={t.done} />
+      </button>
+      <span className="tag tag-neutral" style={{ flex: 'none' }}>
+        {t.courseId ? courseCode(t.courseId) : 'Personal'}
+      </span>
+      <span
+        style={{
+          flex: 1,
+          minWidth: 0,
+          fontSize: 'calc(14px * var(--text-scale, 1))',
+          textDecoration: t.done ? 'line-through' : 'none',
+        }}
+      >
+        {t.title}
+      </span>
+      {/* Hidden once it is done. Moving something you have finished is not a
+          thing anybody means to do, and two more targets beside a ticked row
+          is two more ways to mis-tap. */}
+      {!t.done && (
+        <span style={{ display: 'flex', gap: 2, flex: 'none' }}>
+          <button
+            type="button"
+            className="bare tappable"
+            onClick={() => move(-1)}
+            aria-label={`Move ${t.title} a day earlier`}
+            style={arrow}
+          >
+            &minus;1d
+          </button>
+          <button
+            type="button"
+            className="bare tappable"
+            onClick={() => move(1)}
+            aria-label={`Move ${t.title} a day later`}
+            style={arrow}
+          >
+            +1d
+          </button>
+        </span>
+      )}
+    </div>
+  );
+}
+
+const arrow = {
+  width: 'auto',
+  padding: '6px 7px',
+  fontFamily: 'var(--font-heading)',
+  fontSize: 'calc(11px * var(--text-scale, 1))',
+  letterSpacing: '0.06em',
+  opacity: 0.55,
+} as const;
+
+// ── Week ──
 
 // ── Week ──────────────────────────────────────────────────────────────────
 
