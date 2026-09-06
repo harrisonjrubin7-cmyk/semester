@@ -1,5 +1,5 @@
 /**
- * The ten ways through a course, described.
+ * The eleven ways through a course, described.
  *
  * They used to be ten one-word chips in a row that scrolled sideways. On a
  * phone about four were visible, so six ways of studying existed and were
@@ -15,6 +15,7 @@
 
 import type { Catalog } from '../data/catalog';
 import { allCards } from '../data/catalog';
+import { distinctAnswers } from './quiz';
 import type { CourseId, Guide, StudyMode } from './types';
 
 export interface ModeInfo {
@@ -42,6 +43,10 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInfo[] {
   const { guide, lessons, figures, extras } = src;
   const cards = allCards(guide).length;
+  // What the quiz can actually field, which is not the same as how many cards
+  // there are: answers that clip to the same text are one option. See
+  // `lib/quiz.ts`.
+  const options = distinctAnswers(guide);
   const units = guide.units.length;
   const lessonCount = Object.keys(lessons).length;
   const figureCount = Object.keys(figures).length + extras.length;
@@ -101,9 +106,10 @@ export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInf
       id: 'quiz',
       label: 'Quiz',
       blurb: 'Multiple choice, marked as you go, wrong answers drawn from the guide.',
-      count: cards >= 4 ? plural(cards, 'card') + ' in play' : 'Needs 4 cards',
-      ready: cards >= 4,
-      missing: 'A quiz needs at least four cards to make plausible wrong answers.',
+      count: options >= 4 ? plural(cards, 'card') + ' in play' : 'Needs 4 answers',
+      ready: options >= 4,
+      missing:
+        'A quiz needs four different answers to make plausible wrong options, and this course does not have them yet.',
     },
     {
       id: 'figures',
