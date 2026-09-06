@@ -26,6 +26,22 @@ import type {
   PersonalTask,
 } from './types';
 
+/*
+ * A note on `cat.byId[…]`, which appears throughout.
+ *
+ * Every item in a catalogue comes from a module in that catalogue, so its
+ * course is normally right there. "Normally" is doing work: a module arrives
+ * from sync, from a restored backup, or from a course file somebody shared,
+ * and nothing on the way in checks that each item's `c` names its own course.
+ * One that does not used to throw here — and because this file feeds the Today
+ * screen, the result was a white page on the app's home tab, from data that
+ * had synced in perfectly quietly.
+ *
+ * So course lookups go through `codeOf`, which falls back rather than throws.
+ * An orphaned deadline showing its bare id is a visible oddity somebody can
+ * report; a blank screen is not.
+ */
+
 /** Every deadline, dated against the current clock, soonest first. */
 export function datedItems(cat: Catalog, now: Date): DatedItem[] {
   return cat.items
@@ -136,7 +152,7 @@ export function feed(cat: Catalog, now: Date, done: Record<string, boolean>): Fe
       c: b.c,
       top: 'Today',
       bottom: b.time,
-      code: b.c ? cat.byId[b.c].code : 'Campus',
+      code: b.c ? codeOf(cat, b.c) : 'Campus',
       kind: b.optional ? 'Optional' : b.canceled ? 'Canceled' : 'Class',
       title: b.title,
       meta: b.meta,
@@ -154,7 +170,7 @@ export function feed(cat: Catalog, now: Date, done: Record<string, boolean>): Fe
         c: it.c,
         top: it.isToday ? 'Due' : it.dow,
         bottom: it.isToday ? it.dueTime.split(',')[0] : `${it.mon} ${it.day}`,
-        code: cat.byId[it.c].code,
+        code: codeOf(cat, it.c),
         kind: it.kind,
         title: it.title,
         meta: `${it.dueTime} · ${it.where}`,
@@ -198,7 +214,7 @@ export function nextExam(cat: Catalog, now: Date) {
   return {
     item: exam,
     days: daysBetween(now, exam.date),
-    code: cat.byId[exam.c].code,
+    code: codeOf(cat, exam.c),
   };
 }
 
@@ -222,9 +238,9 @@ export function searchItems(cat: Catalog, now: Date, query: string): DatedItem[]
       i.kind,
       i.where,
       i.detail,
-      course.code,
-      course.name,
-      course.prof,
+      course?.code,
+      course?.name,
+      course?.prof,
       i.dueShort,
       i.mon,
       i.dow,
