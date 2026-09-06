@@ -7,6 +7,8 @@ import { extractText } from '../lib/extract';
 import { guess, KIND_LABEL, SURE, type Verdict as Told } from '../lib/classify';
 import { hashOf, type Intake } from '../lib/intake';
 import { harvest } from '../lib/harvest';
+import { describe as houseOf, styleFor } from '../lib/house';
+import { findGaps } from '../lib/gaps';
 import { diff, type Change, type ChangeSet, type Held } from '../lib/changeset';
 import { adopt } from '../lib/adoptpieces';
 import { ReviewSheet } from '../components/ReviewSheet';
@@ -92,6 +94,17 @@ export function AddMaterial() {
     !files.length &&
     shotCards.length === 0 &&
     readCards.length === 0;
+
+  /**
+   * What this course is still missing.
+   *
+   * Recomputed on every render, which means after every import — it is a pure
+   * function of the course and costs nothing. See `lib/gaps.ts`.
+   */
+  const gaps = useMemo(() => {
+    const module_ = catalog.moduleById[courseId];
+    return module_ ? findGaps(module_, updates) : [];
+  }, [catalog.moduleById, courseId, updates]);
 
   /** What the model is told about the course, so it files things correctly. */
   const context = `${guide.code} — ${guide.name}\nUnits:\n${guide.units
@@ -184,7 +197,9 @@ export function AddMaterial() {
       // once from being eleven requests.
       const verdict = first.confidence >= SURE ? first : await classifyWith(item, first);
       setTold(verdict);
-      const got = await harvest(item, verdict.kind, context);
+      // What this course's own cards look like, so a new one does not stand
+      // out among them. See `lib/house.ts`.
+      const got = await harvest(item, verdict.kind, context, styleFor(houseOf(guide, updates)));
       setSaidOf(got.says);
       setDroppedBy(got.dropped);
       setSet(diff(got.pieces, held()));
@@ -244,6 +259,32 @@ export function AddMaterial() {
     setArrived(null);
     setTold(null);
     dispatch({ type: 'back' });
+  };
+
+  /**
+   * Take an import back out — the material and the dates it added.
+   *
+   * One import wrote at most one `CourseUpdate` and at most one changed
+   * course, and `addedItems` on the update says which deadlines were its. So
+   * undoing is those two writes reversed rather than a search for anything
+   * that looks like it came from that file.
+   *
+   * What this does not yet restore is a row the import *replaced* — a
+   * deadline whose date was overwritten by an accepted conflict. `adopt`
+   * already returns the old rows under `provenance.replaced`; they are not
+   * stored anywhere yet, so undoing a replacement removes the new row without
+   * putting the old one back. Said here rather than left to be discovered.
+   */
+  const undoImport = (u: (typeof updates)[number]) => {
+    dispatch({ type: 'deleteUpdate', id: u.id });
+    const module_ = state.courses.find((c) => c.course.id === courseId);
+    const added = u.addedItems ?? [];
+    if (module_ && added.length > 0) {
+      dispatch({
+        type: 'replaceCourse',
+        module: { ...module_, items: module_.items.filter((i) => !added.includes(i.id)) },
+      });
+    }
   };
 
   const save = () => {
@@ -752,6 +793,51 @@ export function AddMaterial() {
 
       <Rework courseId={courseId} guide={guide} updates={updates} />
 
+      {/*
+        What is still missing, after everything above.
+        Every other screen shows what is there; this is the only one that says
+        what is not, and the difference matters most in the week before an exam
+        when "I have imported everything" and "I have material for everything"
+        feel identical. No score and no progress bar: a bar invites filling the
+        bar, and the point is the one unit that will be on the exam.
+      */}
+      {gaps.length > 0 && (
+        <>
+          <SectionLabel>Still missing from {guide.code}</SectionLabel>
+          {gaps.map((g) => (
+            <div
+              key={g.says}
+              style={{
+                display: 'flex',
+                gap: 'var(--sp-5)',
+                alignItems: 'baseline',
+                padding: '10px 0',
+                borderBottom: '1px solid var(--app-line)',
+              }}
+            >
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal)' }}>
+                {g.says}
+              </span>
+              <button
+                type="button"
+                className="bare tappable"
+                onClick={() => dispatch({ type: 'go', screen: g.action.screen })}
+                style={{
+                  width: 'auto',
+                  flex: 'none',
+                  fontSize: 'var(--type-xs)',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  opacity: 0.6,
+                }}
+              >
+                {g.action.label}
+              </button>
+            </div>
+          ))}
+        </>
+      )}
+
       {updates.length > 0 && (
         <>
           <SectionLabel>Already added</SectionLabel>
@@ -784,12 +870,18 @@ export function AddMaterial() {
                     : 'Own unit'}
                   {u.cards.length > 0 && ` · ${u.cards.length} cards`}
                   {u.fileIds.length > 0 && ` · ${u.fileIds.length} files`}
+                  {/* Where it came from, on the thing itself. "From Session 7
+                      slides, 12 Oct" is the difference between material you
+                      can check and material that simply appeared. */}
+                  {u.source && ` · from ${u.source}`}
+                  {u.created > 0 &&
+                    `, ${new Date(u.created).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`}
                 </span>
               </span>
               <button
                 type="button"
                 className="bare"
-                onClick={() => dispatch({ type: 'deleteUpdate', id: u.id })}
+                onClick={() => undoImport(u)}
                 style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE

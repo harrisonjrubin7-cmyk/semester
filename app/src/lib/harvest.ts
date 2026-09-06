@@ -175,6 +175,14 @@ export async function harvest(
   item: Intake,
   kind: Kind,
   context: string,
+  /**
+   * How this course already writes, from `lib/house.ts`.
+   *
+   * Passed in rather than derived here so the generator stays a pure function
+   * of what it is told, and so a screen can show the student the samples it is
+   * matching against before it spends anything.
+   */
+  style: string,
   signal?: AbortSignal,
 ): Promise<Harvest> {
   const at = Date.now();
@@ -191,6 +199,7 @@ export async function harvest(
       `This material has been identified as ${kind}. ${wants(kind)}\n\n` +
       'Reply with JSON only, with a "says" field of one sentence saying what you made of it, ' +
       'plus the fields named above and no others.\n\n' +
+      `${style}\n\n` +
       'Rules that matter more than completeness:\n' +
       '- Everything comes from the text in front of you. Do not complete a half-stated idea from ' +
       'general knowledge, and leave out anything the material only alludes to.\n' +
