@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { canPush, enrol, enrolled, leave, markRefilled, PUSH_NOTE, queueFor } from '../lib/push';
+import { atRiskToday } from '../lib/atrisk';
 import { dropDevice, saveDevice, saveQueue, wipeQueue } from '../lib/cloud';
 import { railFor, datedItems } from '../lib/select';
 
@@ -20,7 +21,7 @@ const VAPID = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined) ?? '
  * lives on the account, and there is nowhere to put it otherwise.
  */
 export function PushSwitch() {
-  const { state, catalog, now, account } = useStore();
+  const { state, catalog, now, account, courseCode } = useStore();
   const [on, setOn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
@@ -55,6 +56,13 @@ export function PushSwitch() {
         .filter((b) => !b.optional && !b.canceled)
         .map((b) => ({ label: b.title, at: b.at, where: b.meta })),
       registrar: state.registrar,
+      // Before the class, not after the absence. See `lib/atrisk.ts`.
+      atRisk: atRiskToday(
+        railFor(catalog, d, state.appointments, state.commitments),
+        state.attendance,
+        state.attendPolicy,
+        courseCode,
+      ),
     }));
     await saveQueue(queue);
     markRefilled(Date.now());

@@ -73,9 +73,58 @@ interface Source {
   classes: { label: string; at: number; where: string }[];
   /** The university's own dates, if the student has filled any in. */
   registrar?: TermDate[];
+  /**
+   * Classes today in a course whose absence allowance is nearly or already
+   * gone. Worked out by the caller with `lib/attend.ts`, not here: the absence
+   * arithmetic has one implementation and this file is not going to become a
+   * second one.
+   */
+  atRisk?: AtRisk[];
+}
+
+/** A class meeting worth a warning, and why it is worth one. */
+export interface AtRisk {
+  code: string;
+  /** Minutes from midnight, matching `classes`. */
+  at: number;
+  /** How it reads on a clock — "1:15". */
+  clock: string;
+  /** Absences left before the penalty starts. 0 means it has already begun. */
+  left: number;
+  /** What one more costs, in points of the final grade. */
+  costs: number;
+}
+
+/** How long before the class the warning is worth having. */
+export const ATTEND_LEAD = 45;
+
+/**
+ * The hours a reminder will not be sent in.
+ *
+ * The attendance nudge cannot land here anyway — a class at 4am is not a
+ * class — but the rule is written down rather than left to that coincidence,
+ * because the coincidence is not something a future rule can rely on.
+ */
+export function inSleep(minutes: number, floor: { from: number; to: number }): boolean {
+  // A window that wraps midnight is two windows.
+  return floor.from > floor.to
+    ? minutes >= floor.from || minutes < floor.to
+    : minutes >= floor.from && minutes < floor.to;
 }
 
 const day = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+
+/**
+ * The Sunday that starts this week, as an id.
+ *
+ * The attendance nudge fires once per course per week rather than before every
+ * meeting: three warnings in a week about the same absence is not three times
+ * the help, it is the reason people turn reminders off.
+ */
+const week = (d: Date) => {
+  const s = new Date(d.getFullYear(), d.getMonth(), d.getDate() - d.getDay());
+  return `${s.getFullYear()}-${s.getMonth()}-${s.getDate()}`;
+};
 
 /**
  * Everything that should have fired by `now` today, given the rules that are
@@ -90,6 +139,27 @@ export function dueReminders(
   const today = day(now);
   const minutes = now.getHours() * 60 + now.getMinutes();
   const todays = src.items.filter((i) => i.isToday);
+
+  // Before the class rather than after the absence. Everything that decides
+  // *whether* to warn happened in `lib/attend.ts` and arrived in `atRisk`;
+  // what is decided here is only when to say it and how it reads.
+  if (on.attend) {
+    for (const r of src.atRisk ?? []) {
+      const away = r.at - minutes;
+      if (away <= 0 || away > ATTEND_LEAD) continue;
+      out.push({
+        id: `attend:${week(now)}:${r.code}`,
+        rule: 'attend',
+        title: `${r.code} at ${r.clock}`,
+        body:
+          r.left > 0
+            ? `${r.left === 1 ? 'One absence' : `${r.left} absences`} left before the penalty.`
+            : r.costs > 0
+              ? `Past the allowance. Another costs ${r.costs}% of the final grade.`
+              : 'Past the allowance already.',
+      });
+    }
+  }
 
   if (on.class) {
     for (const c of src.classes) {

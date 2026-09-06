@@ -4,10 +4,10 @@ import type { DatedItem } from './types';
 import type { NotifKey } from '../data/misc';
 
 const ALL: Record<NotifKey, boolean> = {
-  class: true, today: true, two: true, free: true, sun: true, exam: true, term: true,
+  class: true, today: true, two: true, free: true, sun: true, exam: true, term: true, attend: true,
 };
 const NONE: Record<NotifKey, boolean> = {
-  class: false, today: false, two: false, free: false, sun: false, exam: false, term: false,
+  class: false, today: false, two: false, free: false, sun: false, exam: false, term: false, attend: false,
 };
 
 const item = (over: Partial<DatedItem>): DatedItem =>
@@ -150,7 +150,7 @@ describe('registrar deadlines', () => {
   });
 
   it('is silent when the rule is off', () => {
-    const out = dueReminders(THU, { ...ALL, term: false }, {
+    const out = dueReminders(THU, { ...ALL, term: false, attend: false }, {
       items: [], classes: [], registrar: sheet,
     });
     expect(out.filter((r) => r.rule === 'term')).toEqual([]);

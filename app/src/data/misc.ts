@@ -19,6 +19,7 @@ export const NOTIF_DEFS = [
   { k: 'sun', label: 'Sunday night: your weekly report' },
   { k: 'exam', label: 'Exam in one week' },
   { k: 'term', label: 'A registrar deadline a week out' },
+  { k: 'attend', label: 'Before a class you cannot afford to miss' },
 ] as const;
 
 export type NotifKey = (typeof NOTIF_DEFS)[number]['k'];
@@ -34,6 +35,11 @@ export const DEFAULT_NOTIFS: Record<NotifKey, boolean> = {
   // money rather than points, and somebody who has not filled the dates in
   // gets nothing from it anyway.
   term: true,
+  // On for the same reason. It cannot fire for a course with no attendance
+  // policy or with absences to spare, so for most people it is silent, and
+  // for the one person on their last absence it is the warning that arrives
+  // before the class rather than the arithmetic that explains it afterwards.
+  attend: true,
 };
 
 /** The morning batch. A demonstration of the alert style, not a live feed. */

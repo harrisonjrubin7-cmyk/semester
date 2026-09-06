@@ -20,11 +20,12 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../state/store';
 import { enrolled, lastRefill, markRefilled, needsRefill, queueFor } from '../lib/push';
+import { atRiskToday } from '../lib/atrisk';
 import { saveQueue } from '../lib/cloud';
 import { datedItems, railFor } from '../lib/select';
 
 export function PushTop() {
-  const { state, catalog, now, account } = useStore();
+  const { state, catalog, now, account, courseCode } = useStore();
   // Once per mount, not once per render: `now` ticks every thirty seconds and
   // the effect's other dependencies change whenever anything is ticked off.
   const tried = useRef(false);
@@ -43,6 +44,12 @@ export function PushTop() {
             .filter((b) => !b.optional && !b.canceled)
             .map((b) => ({ label: b.title, at: b.at, where: b.meta })),
           registrar: state.registrar,
+          atRisk: atRiskToday(
+            railFor(catalog, d, state.appointments, state.commitments),
+            state.attendance,
+            state.attendPolicy,
+            courseCode,
+          ),
         }));
         await saveQueue(queue);
         markRefilled(Date.now());
@@ -52,7 +59,7 @@ export function PushTop() {
         // twelve hours after a failure.
       }
     })();
-  }, [account, catalog, now, state.notifs, state.done, state.appointments, state.commitments, state.registrar]);
+  }, [account, catalog, now, state.notifs, state.done, state.appointments, state.commitments, state.registrar, state.attendance, state.attendPolicy, courseCode]);
 
   return null;
 }

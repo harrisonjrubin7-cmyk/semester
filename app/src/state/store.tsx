@@ -35,6 +35,7 @@ import {
 import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
 import { dueReminders, fire } from '../lib/notify';
+import { atRiskToday } from '../lib/atrisk';
 import { myReminders } from '../lib/myrules';
 import { datedItems, railFor } from '../lib/select';
 import { save, trouble } from '../lib/keep';
@@ -642,6 +643,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             where: b.meta,
           })),
           registrar: state.registrar,
+          atRisk: atRiskToday(
+            railFor(catalog, at, state.appointments),
+            state.attendance,
+            state.attendPolicy,
+            courseCode,
+          ),
         }),
       );
       // The student's own rules, fired through the same `fire` — which keeps
@@ -659,7 +666,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     check();
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
-  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules]);
+  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, courseCode]);
 
   // The number on the installed icon: things due today and not ticked. In the
   // provider rather than on Today, because the count has to be right whatever
