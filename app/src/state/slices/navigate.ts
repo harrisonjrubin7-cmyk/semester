@@ -193,6 +193,12 @@ export function navigate(state: State, action: Action): State | null {
           courseId: action.courseId ?? '',
           to: action.to ?? '',
           incoming: action.incoming ?? '',
+          // Carried so an email opened from a deadline arrives with that
+          // deadline already named. Naming the assignment and its date is
+          // most of what turns a vague email into an answerable one, and
+          // re-picking it from a list of thirty-eight is the step at which
+          // people gave up.
+          itemId: action.itemId ?? '',
         },
       };
 

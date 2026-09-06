@@ -4,7 +4,6 @@ import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
-import { Blueprint } from '../components/Blueprint';
 import { CheckIt } from '../components/CheckIt';
 import { ChipRow, SectionLabel } from '../components/ui';
 import { ask, configured, provider } from '../lib/claude';
@@ -51,7 +50,7 @@ export function Mail() {
     seed?.courseId || (catalog.courses[0]?.id ?? ''),
   );
   const [pid, setPid] = useState(seed?.purposeId ?? PURPOSES[0].id);
-  const [itemId, setItemId] = useState('');
+  const [itemId, setItemId] = useState(seed?.itemId ?? '');
   const [to, setTo] = useState(seed?.to ?? '');
   const [from, setFrom] = useState('');
   const [facts, setFacts] = useState('');
@@ -128,24 +127,23 @@ export function Mail() {
 
   const blanks = (body.match(/\[[^\]]+\]/g) ?? []).length;
 
-  if (!configured()) {
-    return (
-      <div style={{ padding: 18 }}>
-        <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
-          <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
-            Sign in to use the shared key, or add your own under Ask Claude → Settings. The
-            addresses below come from your syllabi and work without it.
-          </div>
-        </Blueprint>
-        {course?.email ? (
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 14, opacity: 0.7 }}>
-            {course.prof} — {course.email}
-          </div>
-        ) : null}
-      </div>
-    );
-  }
+  /*
+   * No key is a missing convenience, not a locked door.
+   *
+   * This screen used to stop here and show an address. But the hard parts of
+   * an unsent email are knowing who it goes to, what you are actually asking
+   * for, and which deadline it is about — and this screen answers all three
+   * with no model involved. Only the first draft needs one. Turning the whole
+   * thing off meant a student who never set a key, or whose key had run out,
+   * or who had come here from an overdue deadline at midnight, was shown a
+   * professor's address and told to go and write it somewhere else.
+   *
+   * So the notice moved down beside the button it is actually about, and
+   * everything else stays usable: pick the purpose, name the deadline, write
+   * it yourself, open it in your mail app with the address and subject filled
+   * in.
+   */
+  const canDraft = configured();
 
   return (
     <div style={{ padding: 18 }}>
@@ -254,21 +252,37 @@ export function Mail() {
         type="button"
         className="btn btn-primary btn-block"
         onClick={() => void write()}
-        disabled={busy}
+        disabled={busy || !canDraft}
         style={{ height: 46, marginTop: 16, letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {busy ? 'Writing…' : body ? 'Write it again' : 'Draft it'}
       </button>
 
+      {!canDraft && (
+        <div
+          style={{
+            fontSize: 'calc(12px * var(--text-scale, 1))',
+            opacity: 0.65,
+            marginTop: 10,
+            lineHeight: 1.5,
+            textWrap: 'pretty',
+          }}
+        >
+          Drafting it for you needs {provider()} — sign in to use the shared key, or add your own
+          under <strong>Ask Claude &rarr; Settings</strong>. Everything else here works without one:
+          write it below and open it in your mail app with the address and subject already filled in.
+        </div>
+      )}
+
       <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
 
-      {(subject || body) && (
+      {(subject || body || !canDraft) && (
         <>
           <SectionLabel>The draft — yours to change</SectionLabel>
           <input
             className="input"
             value={subject}
-            placeholder="Subject"
+            placeholder={fallbackSubject(p, ctx)}
             onChange={(e) => setSubject(e.target.value)}
             style={{ width: '100%' }}
           />
@@ -318,7 +332,7 @@ export function Mail() {
           />
           <a
             className="btn btn-primary btn-block"
-            href={composeUrl(app, { to: address, subject, body })}
+            href={composeUrl(app, { to: address, subject: subject || fallbackSubject(p, ctx), body })}
             target="_blank"
             rel="noreferrer"
             style={{

@@ -12,6 +12,7 @@ import { FirstRun } from './FirstRun';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { CameBack } from '../components/CameBack';
 import { BreakItUp } from '../components/BreakItUp';
+import { AskForTime } from '../components/AskForTime';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { Grades } from './Grades';
@@ -618,6 +619,10 @@ export function ItemDetail() {
       {/* A ten-page paper is one row here and a fortnight of work. This is
           the only place the gap between those two facts is visible. */}
       <BreakItUp item={item} />
+
+      {/* Only when there is time to ask about and something to ask about it
+          for. See `canAskForTime`. */}
+      <AskForTime item={item} />
 
       <SectionLabel style={{ margin: '22px 0 8px' }}>Straight from the syllabus</SectionLabel>
       <div

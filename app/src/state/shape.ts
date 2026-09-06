@@ -546,7 +546,14 @@ export interface Ephemeral {
    * Set by whoever sent you there — a course page knows the professor, a
    * message in the Mail tab knows what you are replying to — and read once.
    */
-  mailSeed: { purposeId: string; courseId: CourseId | ''; to: string; incoming: string } | null;
+  mailSeed: {
+    purposeId: string;
+    courseId: CourseId | '';
+    to: string;
+    incoming: string;
+    /** The deadline the email is about, when it was opened from one. */
+    itemId: string;
+  } | null;
   studyTab: 'guides' | 'tonight' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
@@ -1216,6 +1223,7 @@ export type Action =
       type: 'writeMail';
       purposeId: string;
       courseId?: CourseId | '';
+      itemId?: string;
       to?: string;
       incoming?: string;
     }

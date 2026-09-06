@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  LATE_ENOUGH,
   addressIn,
   brief,
+  canAskForTime,
   composeUrl,
   fallbackSubject,
   parseDraft,
@@ -167,5 +169,42 @@ describe('fallbackSubject', () => {
   it('copes with no course and no deadline', () => {
     const subject = fallbackSubject(purpose('meeting'), ctx({ course: null }));
     expect(subject).toBe('a meeting');
+  });
+});
+
+describe('canAskForTime', () => {
+  const item = (over: Partial<{ kind: string; weight: string; daysAway: number }> = {}) => ({
+    kind: 'Essay',
+    weight: '20%',
+    daysAway: 0,
+    ...over,
+  });
+
+  it('offers on graded work that is late or nearly due', () => {
+    expect(canAskForTime(item({ daysAway: -3 }), false)).toBe(true);
+    expect(canAskForTime(item({ daysAway: 0 }), false)).toBe(true);
+    expect(canAskForTime(item({ daysAway: LATE_ENOUGH }), false)).toBe(true);
+  });
+
+  it('says nothing a week out, when the honest answer is to write it', () => {
+    expect(canAskForTime(item({ daysAway: LATE_ENOUGH + 1 }), false)).toBe(false);
+    expect(canAskForTime(item({ daysAway: 7 }), false)).toBe(false);
+  });
+
+  it('never offers an extension on an exam', () => {
+    // There is no extension on a closed-note midterm sat at a fixed hour, and
+    // a student who emailed to ask for one was told to by their own planner.
+    expect(canAskForTime(item({ kind: 'Midterm 2' }), false)).toBe(false);
+    expect(canAskForTime(item({ kind: 'Final Exam' }), false)).toBe(false);
+    expect(canAskForTime(item({ kind: 'Quiz 3' }), false)).toBe(false);
+  });
+
+  it('says nothing about a reading, which has nothing to extend', () => {
+    expect(canAskForTime(item({ weight: '' }), false)).toBe(false);
+    expect(canAskForTime(item({ weight: '  ' }), false)).toBe(false);
+  });
+
+  it('says nothing about work already handed in', () => {
+    expect(canAskForTime(item(), true)).toBe(false);
   });
 });

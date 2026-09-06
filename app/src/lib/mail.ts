@@ -23,6 +23,8 @@
 
 import type { Course, DatedItem } from './types';
 
+import { normalKind } from './pace';
+
 export interface Purpose {
   id: string;
   label: string;
@@ -309,3 +311,31 @@ export function fallbackSubject(p: Purpose, ctx: MailContext): string {
   const what = ctx.item?.title ?? p.label.replace(/^Ask (for |about )?/i, '');
   return [code, what].filter(Boolean).join(' — ');
 }
+
+/**
+ * Whether asking for more time is a thing that could be asked about this.
+ *
+ * Offering it on everything would make the offer meaningless, and offering it
+ * on the wrong things would be worse than meaningless: there is no extension
+ * on a closed-note midterm sat in a room at a fixed hour, and a student who
+ * emailed to ask for one has been told by their own planner to do something
+ * slightly embarrassing.
+ *
+ * So: something graded, not finished, and either late or close enough that
+ * knowing you will not make it is a real position to be in. A week out the
+ * honest answer is still to write the thing.
+ */
+export function canAskForTime(item: {
+  kind: string;
+  weight: string;
+  daysAway: number;
+}, done: boolean): boolean {
+  if (done) return false;
+  // No weight means a reading or a preparation note — nothing to extend.
+  if (!item.weight.trim()) return false;
+  if (normalKind(item.kind) === 'exam' || normalKind(item.kind) === 'quiz') return false;
+  return item.daysAway <= LATE_ENOUGH;
+}
+
+/** How close is close enough for the ask to be a real one. Days. */
+export const LATE_ENOUGH = 2;
