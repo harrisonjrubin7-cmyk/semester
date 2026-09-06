@@ -127,3 +127,52 @@ describe('shiftIso', () => {
     }
   });
 });
+
+/**
+ * A calendar day is one day, even when it is 23 or 25 hours long.
+ *
+ * `daysBetween` and `shiftIso` are load-bearing for every countdown in the
+ * app — "2 days late", "24d", "the exam is in three weeks" — and both are
+ * correct across a clock change only because of how they are written:
+ * `daysBetween` rounds rather than truncating, and `shiftIso` moves the date
+ * through a `Date` rather than adding milliseconds.
+ *
+ * Neither of those is obviously load-bearing to somebody tidying up later, so
+ * this says it out loud. Written with `Math.floor`, `daysBetween` would call
+ * the 8th and the 9th of March the same day, and the 20th of September and
+ * the 4th of October thirteen days apart instead of fourteen — inside this
+ * app's own Fall term, for anyone in Auckland.
+ *
+ * These assertions are trivially true in UTC, which has no clock changes, and
+ * only bite in a zone that does. CI runs the suite in America/Chicago for
+ * exactly that reason; see `.github/workflows/ci.yml`.
+ */
+describe('across a daylight-saving change', () => {
+  const springForward: [Date, Date] = [new Date(2026, 2, 8), new Date(2026, 2, 9)];
+  const overTheChange: [Date, Date] = [new Date(2026, 2, 1), new Date(2026, 2, 15)];
+  const southernSpring: [Date, Date] = [new Date(2026, 8, 20), new Date(2026, 9, 4)];
+
+  it('counts the short day as a whole day', () => {
+    expect(daysBetween(...springForward)).toBe(1);
+  });
+
+  it('counts a fortnight containing one as a fortnight', () => {
+    expect(daysBetween(...overTheChange)).toBe(14);
+    // The same shape in the southern hemisphere, where the change lands in
+    // the middle of this app's Fall semester rather than before it.
+    expect(daysBetween(...southernSpring)).toBe(14);
+  });
+
+  it('is symmetric across one', () => {
+    expect(daysBetween(springForward[1], springForward[0])).toBe(-1);
+  });
+
+  it('moves a date by whole days rather than by fixed hours', () => {
+    expect(shiftIso('2026-03-08', 1)).toBe('2026-03-09');
+    expect(shiftIso('2026-09-27', 1)).toBe('2026-09-28');
+    expect(shiftIso('2026-11-01', 1)).toBe('2026-11-02');
+    // And back again, which is where a millisecond-based shift would drift.
+    expect(shiftIso(shiftIso('2026-03-01', 14), -14)).toBe('2026-03-01');
+    expect(shiftIso(shiftIso('2026-09-20', 14), -14)).toBe('2026-09-20');
+  });
+});
