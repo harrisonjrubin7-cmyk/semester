@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
-import { CLASS_TINT, kindOf } from '../lib/kinds';
-import { DOW_INITIALS } from '../lib/date';
+import { CLASS_TINT, blockLabel, kindOf } from '../lib/kinds';
+import { DOW_INITIALS, clock } from '../lib/date';
 import type { HourBlock } from './HourGrid';
 import { lanesOf } from '../lib/weekpage';
 
@@ -148,6 +148,10 @@ export function WeekGrid({
                 key={`${di}-${b.id}`}
                 className="wg-block"
                 title={`${b.title} · ${b.meta}`}
+                // `title` is a tooltip and a mouse has to be over it. This is
+                // the same facts for somebody who is not using a mouse, plus
+                // the kind, which the tinted border carries and nothing else.
+                aria-label={blockLabel(b.title, b.kind, clock(b.at), b.meta, b.canceled)}
                 style={{
                   position: 'absolute',
                   top: top(b.at) + 1,

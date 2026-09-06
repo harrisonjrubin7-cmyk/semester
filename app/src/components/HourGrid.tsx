@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { CLASS_TINT, kindOf } from '../lib/kinds';
+import { CLASS_TINT, blockLabel, kindOf } from '../lib/kinds';
 
 /**
  * A day, by the hour.
@@ -168,6 +168,9 @@ export function HourGrid({
           <Tag
             key={b.id}
             {...(b.onClick ? { type: 'button' as const, onClick: b.onClick, className: 'bare' } : {})}
+            // The kind is a 2px tinted border and nothing else; cancelled is
+            // an opacity and a line-through. Neither survives being read out.
+            aria-label={blockLabel(b.title, b.kind, clock(b.at), b.meta, b.canceled)}
             style={{
               position: 'absolute',
               top: top(b.at) + 1,

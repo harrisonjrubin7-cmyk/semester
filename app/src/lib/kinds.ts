@@ -46,3 +46,32 @@ export function kindOf(id: string | undefined): KindDef {
 
 /** The colour a class gets — the app's own accent, so lessons read as the spine. */
 export const CLASS_TINT = 'var(--app-accent)';
+
+/**
+ * What a block on a grid is called out loud.
+ *
+ * The grids carry three facts in colour and shape alone: which kind of thing a
+ * block is (a 2px tinted border), whether it is cancelled (opacity and a
+ * line-through), and — on the week grid — very little else, because a block
+ * three hours wide on a phone has room for a word and a half.
+ *
+ * A tinted border is invisible to a screen reader and a line-through is
+ * announced by some and not others. So the kind and the cancellation are said
+ * in words here, and both grids use this rather than each writing their own
+ * and drifting.
+ */
+export function blockLabel(
+  title: string,
+  kind: string | null | undefined,
+  when: string,
+  meta = '',
+  canceled = false,
+): string {
+  // `null` is the app's way of saying "a class", which is the one kind that is
+  // not in `EVENT_KINDS` because it comes from a syllabus rather than a person.
+  const what = kind === null || kind === undefined ? 'Class' : kindOf(kind).label;
+  const bits = [title, what, when];
+  if (meta.trim()) bits.push(meta.trim());
+  if (canceled) bits.push('Cancelled');
+  return `${bits.join('. ')}.`;
+}
