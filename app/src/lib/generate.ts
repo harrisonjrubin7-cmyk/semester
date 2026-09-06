@@ -21,7 +21,7 @@
  */
 
 import { ask, type Citation, type Doc } from './claude';
-import type { Course, CourseModule, Item, RecurringBlock } from './types';
+import type { Course, CourseModule, GradeRow, Item, RecurringBlock } from './types';
 import { check, flatten, tally, worthCiting, type Checked } from './cite';
 
 export interface GenerationInput {
@@ -180,6 +180,34 @@ function validate(
   const id = slug(raw.course.id || raw.course.code);
   const source = input.documents[0]?.name ?? 'uploaded document';
 
+  /*
+   * The lists, taken as lists only when they are.
+   *
+   * The checks below are unforgiving about a month of 13 and were, until now,
+   * entirely trusting about *shape*: a model that answered `items` as an
+   * object, or `grading` as the sentence "40% exams, 60% papers", walked
+   * straight past them. Two of those threw a raw TypeError, so the student got
+   * "(raw.items ?? []).entries is not a function" where this file has careful
+   * wording for every other way a reply can be wrong. The third was worse,
+   * because nothing threw: the string was saved onto the course, and every
+   * screen that reads a weighting calls `.map` on it, so the Grades screen
+   * broke afterwards and went on breaking.
+   *
+   * A syllabus that states its weights in prose is the ordinary case that
+   * produces the third one, which makes it likelier than it looks.
+   */
+  const listOf = <T,>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
+  const rawItems = listOf<Partial<Item>>(raw.items);
+  const rawSchedule = listOf<RecurringBlock>(raw.schedule);
+  // Weights are rows of two strings or they are nothing. A half-formed row is
+  // dropped rather than rendered as "undefined — undefined".
+  const grading = listOf<Partial<GradeRow>>(raw.course.grading)
+    .filter((g) => g && typeof g.what === 'string' && typeof g.pct === 'string')
+    .map((g) => ({ what: g.what as string, pct: g.pct as string }));
+  if (raw.course.grading !== undefined && grading.length === 0) {
+    notes.push('The grade weightings did not come back in a usable shape, so none were kept.');
+  }
+
   const course: Course = {
     id,
     code: raw.course.code,
@@ -193,7 +221,7 @@ function validate(
     lms: typeof raw.course.lms === 'string' && /^https?:\/\//i.test(raw.course.lms)
       ? raw.course.lms
       : undefined,
-    grading: raw.course.grading ?? [],
+    grading,
   };
 
   // Deadlines: a date has to be real, and a quote has to be in the document.
@@ -209,7 +237,7 @@ function validate(
   const seen = new Set<string>();
   const items: Item[] = [];
 
-  for (const [n, it] of (raw.items ?? []).entries()) {
+  for (const [n, it] of rawItems.entries()) {
     const month = Number(it.month);
     const day = Number(it.day);
     if (!Number.isInteger(month) || month < 0 || month > 11 || !Number.isInteger(day) || day < 1 || day > 31) {
@@ -257,7 +285,7 @@ function validate(
 
   if (items.length === 0) notes.push('No dated work was found — check the schedule table came through.');
 
-  const schedule: RecurringBlock[] = (raw.schedule ?? [])
+  const schedule: RecurringBlock[] = rawSchedule
     .filter((b) => Array.isArray(b.days) && b.days.every((d) => d >= 0 && d <= 6))
     .map((b) => ({
       days: b.days,
