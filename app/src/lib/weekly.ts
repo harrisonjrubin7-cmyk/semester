@@ -32,6 +32,7 @@ import { decorateItem } from './date';
 import type { DoneMap } from './standing';
 import type { Sitting } from './sitting';
 import type { Reviews } from './review';
+import { insightLines, type Insight } from './insight';
 
 /** Sunday-to-Saturday is how a university week is spoken about. */
 export function weekStart(now: Date): Date {
@@ -240,6 +241,8 @@ export function document(
   a: Ahead,
   code: (id: string) => string,
   said: string,
+  /** What the app noticed, so a saved report keeps it. See `lib/insight.ts`. */
+  found: Insight[] = [],
 ): string {
   const lines = [`# Week of ${b.label}`, '', `## What happened`, '', behindLine(b)];
 
@@ -256,6 +259,10 @@ export function document(
       ...b.papers.map((p) => `- ${code(p.courseId)} — ${p.pct}% (${p.got}/${p.outOf})`),
     );
   }
+
+  // Before the week coming, because it is the part worth acting on and a
+  // saved report is read top to bottom.
+  if (found.length > 0) lines.push('', ...insightLines(found));
 
   lines.push('', '## The week coming', '', `${a.promised} hours already promised.`);
   if (a.due.length > 0) {

@@ -4,6 +4,7 @@ import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
+import { Insights } from '../components/Insights';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured, provider } from '../lib/claude';
 import {
@@ -185,6 +186,8 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
               {am.tasks.map((t) => row(t.title, t.date === null ? '' : t.date.slice(5)))}
             </>
           )}
+
+          <Insights most={1} />
 
           <SectionLabel>Behind that</SectionLabel>
           {am.overdue > 0
