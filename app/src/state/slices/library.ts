@@ -27,6 +27,37 @@ export function library(state: State, action: Action): State | null {
         removedCourses: state.removedCourses.filter((id) => id !== action.module.course.id),
       };
 
+    /**
+     * The shipped semester becomes the account's own.
+     *
+     * Written for the person this app was built for, whose real Fall 2026 *is*
+     * the four courses it ships with. For them the "sample" framing was not a
+     * safety rail, it was the app telling them their own semester was somebody
+     * else's — and, worse, a compiled-in course cannot be edited, shared, or
+     * given office hours, so their actual courses were the only ones in the
+     * app they could not change.
+     *
+     * Copying them into `courses` fixes all of that at once, and nothing is
+     * lost doing it: a course id is a slug of its code, so every tick, review,
+     * grade and note already filed against 'econ' stays filed against it.
+     *
+     * Ids already present are skipped rather than duplicated — pressing this
+     * twice, or on an account that imported ECON 1020 by hand, must not end up
+     * with two of it.
+     */
+    case 'adoptSeed': {
+      const have = new Set(state.courses.map((c) => c.course.id));
+      const taking = action.modules.filter((m) => !have.has(m.course.id));
+      return {
+        ...state,
+        sample: false,
+        courses: [...state.courses, ...taking],
+        removedCourses: state.removedCourses.filter(
+          (id) => !taking.some((m) => m.course.id === id),
+        ),
+      };
+    }
+
     case 'replaceCourse':
       return {
         ...state,

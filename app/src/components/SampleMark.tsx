@@ -1,34 +1,37 @@
 import { useStore } from '../state/store';
 
 /**
- * A standing note that these deadlines are not real.
+ * A standing note about where these four courses came from — and two ways out.
  *
- * The sample semester is the best thing about a first run — four whole courses
- * with real readings, real dates and 278 cards, so the app can be judged full
- * rather than empty. It is also four courses of dates that belong to somebody
- * else, and the only thing that said so was a toggle three taps down in
- * Settings.
+ * The app ships with a whole semester in it: four courses, real readings, real
+ * dates, 278 cards. For most people opening it that is a demonstration, and
+ * saying so matters — import one real syllabus alongside it and Today mixes
+ * your Thursday paper with somebody else's, with nothing distinguishing them.
  *
- * That is a genuinely dangerous gap. A student who imports one real syllabus
- * alongside the sample now has a Today screen mixing their Thursday paper with
- * a demonstration one, and nothing on the screen distinguishes them. Somebody
- * will eventually trust the wrong row.
+ * For one person it is not a demonstration at all. It is their actual Fall
+ * 2026, which is why those four courses and not four invented ones. Calling it
+ * "not your courses" told the person the app was built for that their own
+ * semester belonged to somebody else — and worse, a shipped course is compiled
+ * in rather than stored, so it cannot be edited, shared, or given office
+ * hours. Their real courses were the only ones in the app they could not
+ * change.
  *
- * So while the sample is on, every screen says so, and the way out is on the
- * same line as the words rather than three taps away.
+ * So this asks rather than asserts, and both answers are one tap:
  *
- * ## Not dismissible
+ *   **These are mine** copies them into the account as ordinary courses. They
+ *   become editable, shareable and updatable, and nothing is lost in the move
+ *   — a course id is a slug of its code, so every tick, review, grade and note
+ *   already filed against `econ` stays filed against it.
  *
- * Deliberately. A banner you can close is a banner people close, and then the
- * app is back to looking like their real semester. This is not a notice about
- * a feature; it is a statement about whether the data is true, and it stops
- * when the data does.
+ *   **Not mine** removes them, which is what somebody who was looking around
+ *   wants once they have their own syllabus in.
  *
- * It is small, quiet and out of the way — one line under the header — because
- * it has to be tolerable for as long as somebody wants to keep the sample.
+ * Either answer ends the question for good, which is why neither is a dismiss.
+ * A banner you can close is one people close, and then the app is back to
+ * looking like a real semester without having said which kind it is.
  */
 export function SampleMark() {
-  const { state, dispatch, say } = useStore();
+  const { state, dispatch, say, adopt } = useStore();
   if (!state.sample) return null;
 
   return (
@@ -36,7 +39,7 @@ export function SampleMark() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 10,
+        gap: 8,
         padding: '5px 16px',
         background: 'var(--app-hero)',
         borderBottom: '1px solid var(--app-line)',
@@ -44,33 +47,46 @@ export function SampleMark() {
         fontSize: 'calc(10.5px * var(--text-scale, 1))',
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
+        flexWrap: 'wrap',
       }}
     >
       <span aria-hidden="true" style={{ width: 5, height: 5, flex: 'none', background: 'var(--app-accent)' }} />
-      <span style={{ flex: 1, minWidth: 0, opacity: 0.8 }}>
-        Sample semester · not your courses
-      </span>
+      <span style={{ flex: 1, minWidth: 0, opacity: 0.8 }}>The semester this app ships with</span>
+      <button
+        type="button"
+        className="bare"
+        onClick={() => {
+          adopt();
+          say('Taken on. They are your courses now — editable like any you import.');
+        }}
+        style={link}
+      >
+        These are mine
+      </button>
+      <span aria-hidden="true" style={{ opacity: 0.3, flex: 'none' }}>·</span>
       <button
         type="button"
         className="bare"
         onClick={() => {
           dispatch({ type: 'setSample', on: false });
-          say('Sample semester switched off. Your own courses are what is left.');
+          say('Removed. Your own courses are what is left.');
         }}
-        style={{
-          flex: 'none',
-          width: 'auto',
-          padding: '2px 4px',
-          fontFamily: 'inherit',
-          fontSize: 'inherit',
-          letterSpacing: 'inherit',
-          textTransform: 'inherit',
-          textDecoration: 'underline',
-          opacity: 0.75,
-        }}
+        style={link}
       >
-        Switch it off
+        Not mine
       </button>
     </div>
   );
 }
+
+const link = {
+  flex: 'none',
+  width: 'auto',
+  padding: '2px 3px',
+  fontFamily: 'inherit',
+  fontSize: 'inherit',
+  letterSpacing: 'inherit',
+  textTransform: 'inherit',
+  textDecoration: 'underline',
+  opacity: 0.75,
+} as const;

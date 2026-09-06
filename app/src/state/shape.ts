@@ -1181,6 +1181,13 @@ export type Action =
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
+  /**
+   * Take the shipped semester on as your own courses.
+   *
+   * Carries the modules because the seed is loaded lazily in the store and the
+   * reducer has no way to reach it.
+   */
+  | { type: 'adoptSeed'; modules: CourseModule[] }
   | { type: 'keepSitting'; sitting: Omit<Sitting, 'id'> }
   | { type: 'dropSitting'; id: string }
   | { type: 'addSource'; source: NewSource }

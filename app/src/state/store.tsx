@@ -181,6 +181,13 @@ interface Store {
    */
   asking: { sides: Sides; say: string } | null;
   settle: (choice: Choice, backup: string | null) => void;
+  /**
+   * Take the semester the app ships with on as your own courses.
+   *
+   * On the store because the seed is loaded here and nowhere else. See the
+   * `adoptSeed` case in `state/slices/library.ts` for why it is worth doing.
+   */
+  adopt: () => void;
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -857,14 +864,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [asking],
   );
 
+  /**
+   * Take the shipped semester on as your own.
+   *
+   * Here rather than in a screen because `seed` is loaded lazily in this file
+   * and a screen has no way to reach it. Does nothing when there is nothing
+   * loaded, so a tap before the modules arrive is a no-op rather than an
+   * adoption of an empty list.
+   */
+  const adopt = useCallback(() => {
+    if (seed.length === 0) return;
+    dispatch({ type: 'adoptSeed', modules: seed });
+  }, [seed]);
+
   const say = useCallback(
     (said: string) => dispatch({ type: 'say', said, at: Date.now() }),
     [dispatch],
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle }),
-    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, say, school, facts, asking, settle],
+    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
+    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
