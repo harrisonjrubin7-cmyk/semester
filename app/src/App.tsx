@@ -934,7 +934,6 @@ export default function App() {
     return (
       <div className="desk">
         <Fresh />
-        <SampleMark />
         <Said />
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
             and not another. Renders nothing unless the sheet is open. */}
@@ -958,6 +957,10 @@ export default function App() {
         <Rail />
         <div className="device device-pane">
           <Header />
+          {/* Under the header rather than above it, and inside the pane rather
+              than beside it: `.desk` is a two-column grid, and a bare element
+              at its root takes the rail's column. */}
+          <SampleMark />
           {trouble}
           <ScrollArea screen={state.screen} key={state.screen}>
             <Suspense fallback={<Loading />}>
@@ -983,7 +986,6 @@ export default function App() {
         Skip to content
       </a>
       <Fresh />
-      <SampleMark />
       <Said />
       <Ringing />
       <PushTop />
@@ -994,6 +996,7 @@ export default function App() {
       {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       <Header />
+      <SampleMark />
       {trouble}
       <ScrollArea screen={state.screen} key={state.screen}>
         <Suspense fallback={<Loading />}>
