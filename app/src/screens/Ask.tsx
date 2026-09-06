@@ -6,6 +6,7 @@ import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { useLive } from '../lib/live';
 import { readMode, type Mode } from '../lib/mode';
+import { build as buildContext } from '../lib/context';
 import { build as guidebook } from '../lib/guidebook';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -55,6 +56,8 @@ export function Ask() {
   const [scoped, setScoped] = useState(true);
   /** What the last question was read as, shown beside the answer. */
   const [ran, setRan] = useState<Mode | null>(null);
+  /** Which of your records the last answer drew on. Shown, never asserted. */
+  const [used, setUsed] = useState<string[]>([]);
   /** The last question asked, so a failure can be tried again without retyping. */
   const abort = useRef<AbortController | null>(null);
 
@@ -113,7 +116,7 @@ export function Ask() {
    * rest on. A general question gets no guide and no instruction to prefer
    * one; that is the whole point of the mode existing.
    */
-  const systemFor = (mode: Mode): string => {
+  const systemFor = (mode: Mode, drawn: string): string => {
     const never =
       'Never describe a feature of this app that is not in the material below. If the app cannot ' +
       'do what is being asked, say so plainly and name the closest thing it can do. ' +
@@ -135,15 +138,14 @@ export function Ask() {
         'number the records do not support. ' +
         'Each deadline carries its id in brackets; use those ids when a tool needs one, and never ' +
         'invent one. Offer a tool only when the student has asked for the thing it does.\n\n' +
-        `${never}\n\n${scoped ? context : ''}`
+        `${never}\n\n${drawn}`
       );
     }
     return (
       'You are helping a university student. Answer the question they asked, well and directly — ' +
       'a concept, a piece of code, a piece of writing, a decision, whatever it is. Do not narrow ' +
       'it to their coursework and do not refuse because it is not about a course. ' +
-      `${never}` +
-      (scoped ? `\n\nFor context, one of their courses:\n\n${context}` : '')
+      `${never}\n\n${drawn}`
     );
   };
 
@@ -161,8 +163,19 @@ export function Ask() {
     try {
       const read = readMode(text);
       setRan(read.mode);
+      /*
+       * Assembled per question, by the one function allowed to decide it.
+       *
+       * The screen used to build its own context from the open guide, which
+       * meant the boundary on what leaves the device was wherever somebody
+       * last edited a template string. `lib/context.ts` is that decision in
+       * one readable place, with an allowlist, and it is the only thing that
+       * decides it. See its header.
+       */
+      const drawn = buildContext(text, read.mode, state, catalog, now, state.screen);
+      setUsed(drawn.used);
       const reply = await ask({
-        system: systemFor(read.mode),
+        system: systemFor(read.mode, drawn.text),
         messages: next,
         // Every question about this course opens with the same guide. Caching
         // is a prefix match, so the saving is real only because `context`
@@ -301,6 +314,8 @@ export function Ask() {
           marginTop: 'var(--sp-4)',
         }}
       >
+        {/* What it drew on, listed rather than claimed. An answer whose
+            basis is invisible is one nobody can weigh. */}
         {ran === 'app'
           ? 'Answered from this app’s own screens'
           : ran === 'grounded'
@@ -310,6 +325,7 @@ export function Ask() {
               : scoped
                 ? `${guide.code} is attached. Tap it again to ask about anything else.`
                 : 'No course attached. Ask anything.'}
+        {used.length > 0 && ran !== 'app' ? ` · ${used.join(', ')}` : ''}
       </div>
 
       {!configured(config) || showKey ? (
