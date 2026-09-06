@@ -57,7 +57,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
 
   return (
     <>
-      <SectionLabel>Worth dropping by</SectionLabel>
+      <SectionLabel>Office hours worth going to</SectionLabel>
       {reasons.map((r) => {
         const mod = catalog.modules.find((m) => m.course.id === r.courseId);
         const hours = (mod?.schedule ?? []).filter(isOfficeHours);

@@ -237,7 +237,7 @@ function useHeader(): { kicker: string; title: string } {
       };
     }
     case 'me':
-      return { kicker: load, title: 'Me' };
+      return { kicker: load, title: 'Progress' };
     case 'search':
       return { kicker: 'Anything in the app', title: 'Search' };
     case 'notifs':
@@ -263,7 +263,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'setAbout':
       return { kicker: 'Settings', title: 'About' };
     case 'mine':
-      return { kicker: 'Yours, not the syllabus', title: 'Mine' };
+      return { kicker: 'Yours, not the syllabus', title: 'Personal' };
     case 'note':
       return { kicker: 'Note', title: 'Editing' };
     case 'lesson':

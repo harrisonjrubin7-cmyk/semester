@@ -570,10 +570,10 @@ function Feed_rail() {
   const minutes = minutesNow(now);
   return (
     <>
-      <SectionLabel>Today’s rail</SectionLabel>
+      <SectionLabel>Today’s schedule</SectionLabel>
       {rail.length === 0 ? (
         <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.5, paddingBottom: 8 }}>
-          No classes today. The rail picks up again on your next teaching day.
+          No classes today. Your schedule picks up again on your next teaching day.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>

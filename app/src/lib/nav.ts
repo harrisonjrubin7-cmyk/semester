@@ -428,17 +428,22 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'mine',
-    label: 'Mine',
-    blurb: 'Your own tasks, appointments, notes and files.',
-    keywords: 'todo task appointment note file attachment personal',
+    // "Mine" said whose it was and not what it held. Everything in the app is
+    // yours; what makes this tab different is that you put it there yourself.
+    label: 'Personal',
+    blurb: 'Your own tasks, appointments, notes, places and files.',
+    keywords: 'mine personal todo task appointment note file attachment place own yours',
     group: 'Yours',
     root: 'mine',
   },
   {
     screen: 'me',
-    label: 'Me',
+    // "Me" was a profile screen's name on a screen that is mostly a progress
+    // report and a directory. It is the second thing it does that people come
+    // for, so the name says the first.
+    label: 'Progress',
     blurb: 'Your load at a glance, and everything else the app can do.',
-    keywords: 'profile more menu overview directory',
+    keywords: 'me progress profile load more menu overview directory settings everything',
     group: 'Yours',
     root: 'me',
   },

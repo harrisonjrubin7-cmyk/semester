@@ -192,7 +192,7 @@ function DayView() {
 
       {rail.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '0 0 12px' }}>The rail</SectionLabel>
+          <SectionLabel style={{ margin: '0 0 12px' }}>The schedule</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {rail.map((b, i) => (
               <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'stretch' }}>
