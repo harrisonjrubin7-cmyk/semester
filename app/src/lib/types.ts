@@ -349,6 +349,22 @@ export interface CourseUpdate {
   /** Files in IndexedDB. Images among them become figures. */
   fileIds: string[];
   created: number;
+  /**
+   * Where this came from, when it came through the import pipeline.
+   *
+   * `sourceHash` is what makes re-importing the same file produce nothing:
+   * `source` is a filename, and a professor re-posting the same deck as
+   * "Session 7 (updated).pptx" changes the filename and not a word of the
+   * material. Hashing the text is the only comparison that holds.
+   *
+   * `as` is what the classifier decided, kept so a piece can say why it has
+   * the shape it has. All three are absent on anything added by hand, which
+   * is most of what is here.
+   */
+  sourceHash?: string;
+  as?: string;
+  /** Ids of course items this same import added, so it can be undone whole. */
+  addedItems?: string[];
 }
 
 /**

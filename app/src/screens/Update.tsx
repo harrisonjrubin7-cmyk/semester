@@ -4,6 +4,12 @@ import { RecordButton } from '../components/RecordButton';
 import { Rework } from '../components/Rework';
 import { configured, provider, readMaterial, readShots } from '../lib/claude';
 import { extractText } from '../lib/extract';
+import { guess, KIND_LABEL, SURE, type Verdict as Told } from '../lib/classify';
+import { hashOf, type Intake } from '../lib/intake';
+import { harvest } from '../lib/harvest';
+import { diff, type Change, type ChangeSet, type Held } from '../lib/changeset';
+import { adopt } from '../lib/adoptpieces';
+import { ReviewSheet } from '../components/ReviewSheet';
 import type { ShotFile } from '../lib/shots';
 import type { StudyCard } from '../lib/types';
 import { useStore } from '../state/store';
@@ -61,6 +67,21 @@ export function AddMaterial() {
   const [readTerms, setReadTerms] = useState<Term[]>([]);
   const [readSummary, setReadSummary] = useState('');
   const [readError, setReadError] = useState('');
+
+  /*
+   * The one intake, and the review that follows it.
+   *
+   * `arrived` is what was read out of the file; `told` is what the classifier
+   * decided it is; `set` is what it would change about this course. Nothing
+   * is written while any of these are set — the sheet at the bottom is the
+   * only thing that writes, and only what has been ticked.
+   */
+  const [arrived, setArrived] = useState<Intake | null>(null);
+  const [told, setTold] = useState<Told | null>(null);
+  const [set, setSet] = useState<ChangeSet | null>(null);
+  const [saidOf, setSaidOf] = useState('');
+  const [droppedBy, setDroppedBy] = useState<string[]>([]);
+  const [looking, setLooking] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const parsed = useMemo(() => parseMaterial(text), [text]);
@@ -125,6 +146,106 @@ export function AddMaterial() {
     }
   };
 
+  /**
+   * What this course already holds, in the shape the comparison needs.
+   *
+   * `useLive` merges the syllabus module with everything added since, which is
+   * exactly what a new file has to be compared against — otherwise the second
+   * deck duplicates the first.
+   */
+  const held = (): Held => ({
+    guide,
+    items: catalog.moduleById[courseId]?.items ?? [],
+    updates,
+    grading: catalog.byId[courseId]?.grading ?? [],
+    // The hash, not the filename. A deck re-posted as "Session 7
+    // (updated).pptx" is the same material under a different name, and
+    // comparing names would call all of it new.
+    sources: updates.map((u) => u.sourceHash ?? '').filter(Boolean),
+  });
+
+  /**
+   * Read one file all the way to a change set, and write nothing.
+   *
+   * The three steps are separate on purpose: what it is, what is in it, and
+   * what that would change here. Each can be wrong in its own way and each is
+   * shown before the next one runs on it.
+   */
+  const look = async (item: Intake) => {
+    setLooking(true);
+    setReadError('');
+    setSet(null);
+    try {
+      const first = guess(item);
+      setTold(first);
+      setArrived(item);
+      // Below the threshold the free pass is not an answer, it is a guess.
+      // The model is asked only then, which is what keeps eleven files at
+      // once from being eleven requests.
+      const verdict = first.confidence >= SURE ? first : await classifyWith(item, first);
+      setTold(verdict);
+      const got = await harvest(item, verdict.kind, context);
+      setSaidOf(got.says);
+      setDroppedBy(got.dropped);
+      setSet(diff(got.pieces, held()));
+    } catch (e) {
+      setReadError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLooking(false);
+    }
+  };
+
+  /** The model's opinion, when the free one was not confident enough. */
+  const classifyWith = async (item: Intake, fallback: Told): Promise<Told> => {
+    if (!claudeReady) return fallback;
+    const { classify } = await import('../lib/classify');
+    return classify(item, context);
+  };
+
+  /**
+   * Write the ticked changes, and only those.
+   *
+   * One dispatch for the material and at most one for the course, so an import
+   * is one entry in the undo history rather than forty.
+   */
+  const applyChanges = (accepted: Change[]) => {
+    if (!arrived || !told) return;
+    const module_ = state.courses.find((c) => c.course.id === courseId) ?? null;
+    const out = adopt(accepted, module_ ?? catalog.moduleById[courseId] ?? null, {
+      source: arrived.name,
+      sourceHash: arrived.hash,
+      as: told.kind,
+      at: Date.now(),
+    });
+    if (out.update) dispatch({ type: 'addUpdate', update: { ...out.update, courseId } });
+
+    /*
+     * Dates and weights need the course itself, and a sample course is built
+     * into the app rather than stored.
+     *
+     * Announce already draws this line and says so on screen. Here the first
+     * version did not: an accepted deadline on a sample course was quietly
+     * dropped, and the only way to find out was to re-import the file and see
+     * it offered again. Saying it beats a silent no.
+     */
+    if (out.module && module_) {
+      dispatch({ type: 'replaceCourse', module: out.module });
+    } else if (out.module) {
+      setReadError(
+        `The cards and terms were added. The ${out.provenance.addedItems.length === 1 ? 'deadline' : 'deadlines'} could not be — ${guide.code} is one of the sample courses built into the app, so its dates cannot be changed. Make it yours from the course screen first.`,
+      );
+      setSet(null);
+      setArrived(null);
+      setTold(null);
+      return;
+    }
+
+    setSet(null);
+    setArrived(null);
+    setTold(null);
+    dispatch({ type: 'back' });
+  };
+
   const save = () => {
     dispatch({
       type: 'addUpdate',
@@ -152,6 +273,7 @@ export function AddMaterial() {
     const got = await gather(Array.from(list));
     const added: FileMeta[] = [];
     const unread: string[] = [];
+    const readable: Intake[] = [];
 
     for (const piece of got.files) {
       try {
@@ -178,6 +300,16 @@ export function AddMaterial() {
         const out = await extractText(piece.file);
         if (out.text.trim()) {
           setText((t) => (t ? `${t}\n\n${out.text}` : out.text));
+          readable.push({
+            name: out.name,
+            text: out.text,
+            words: out.words,
+            door: 'file',
+            hash: hashOf(out.text),
+            size: piece.file.size,
+            ...(out.pages ? { pages: out.pages } : {}),
+            ...(out.pdf ? { pdf: out.pdf } : {}),
+          });
         }
       } catch (e) {
         // One unreadable file must not lose the rest of the batch. Named,
@@ -187,6 +319,18 @@ export function AddMaterial() {
     }
 
     setFiles((f) => [...f, ...added]);
+
+    /*
+     * One file is a thing to read; several are a folder to attach.
+     *
+     * The review sheet compares one source against one course, and stacking
+     * three decks into one change set would produce a sheet nobody could
+     * reason about — which of the three said the midterm moved? So the
+     * pipeline runs on a single file and a batch keeps the old behaviour of
+     * landing in the box above.
+     */
+    if (readable.length === 1) void look(readable[0]);
+
     const notes = [
       got.skipped.length > 0
         ? `Left out: ${got.skipped.map((sk) => `${sk.name} (${sk.why})`).join('; ')}.`
@@ -311,6 +455,46 @@ export function AddMaterial() {
         onChange={(e) => setSource(e.target.value)}
         style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 }}
       />
+
+      {/*
+        What arrived, and what it was taken to be — before the change set
+        below is worth reading. The class decides which shape the material is
+        forced into, so a wrong one is cheapest to catch here.
+      */}
+      {told && arrived && (
+        <>
+          <SectionLabel>What you added</SectionLabel>
+          <Blueprint plain style={{ padding: '11px 13px' }}>
+            <div className="kicker">{arrived.name}</div>
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 4 }}>
+              {looking && !set
+                ? `Reading it — this looks like ${told.says || KIND_LABEL[told.kind]}.`
+                : `This is ${told.says || KIND_LABEL[told.kind]}${told.about ? ` — ${told.about}` : ''}.`}
+            </div>
+            {told.confidence < SURE && (
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-warn)', marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+                It is not sure about that. Check it before taking anything below.
+              </div>
+            )}
+            {told.because.length > 0 && (
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+                because: {told.because.map((b) => `“${b}”`).join(', ')}
+              </div>
+            )}
+          </Blueprint>
+        </>
+      )}
+
+      {set && arrived && (
+        <ReviewSheet
+          set={set}
+          says={saidOf}
+          dropped={droppedBy}
+          source={arrived.name}
+          course={guide.code}
+          onApply={applyChanges}
+        />
+      )}
 
       <SectionLabel>The material</SectionLabel>
       <textarea
