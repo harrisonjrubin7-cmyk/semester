@@ -32,7 +32,7 @@ import { decorateItem } from './date';
 import type { DoneMap } from './standing';
 import type { Sitting } from './sitting';
 import type { Reviews } from './review';
-import { insightLines, type Insight } from './insight';
+import { insightLines, type Insight } from '../insights/lines';
 
 /** Sunday-to-Saturday is how a university week is spoken about. */
 export function weekStart(now: Date): Date {

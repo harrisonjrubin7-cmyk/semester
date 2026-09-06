@@ -73,6 +73,12 @@ export interface Facts {
   attendPolicy: Record<string, import('../lib/attend').AttendPolicy>;
   answers: import('../lib/sure').Answer[];
   spent: import('../lib/pace').Spent[];
+  /** Deadlines with their live dates folded in — see `lib/select.ts`. */
+  dated: import('../lib/types').DatedItem[];
+  done: Record<string, boolean>;
+  sittings: import('../lib/sitting').Sitting[];
+  /** Card key to when it was last seen, for finding a course nobody has opened. */
+  reviews: Record<string, { seen: number }>;
   /** Card keys to the unit they belong to, for naming a weak topic. */
   unitOf: (courseId: string, key: string) => string;
   codeOf: (courseId: string) => string;

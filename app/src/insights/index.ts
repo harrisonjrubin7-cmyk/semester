@@ -1,6 +1,8 @@
 import { attendance } from './attendance';
 import { calibration } from './calibration';
 import { confident } from './confident';
+import { untouched, weakPapers } from './neglect';
+import { crowded, slipping } from './pressure';
 import { projection } from './projection';
 import type { Facts, Insight, Scope, Source } from './types';
 
@@ -20,7 +22,16 @@ export type { EvidenceRef, Facts, Insight, Kind, Scope, Source } from './types';
  * what lets it run offline and what makes a test of it worth writing.
  */
 
-const SOURCES: Source[] = [confident, projection, attendance, calibration];
+const SOURCES: Source[] = [
+  attendance,
+  slipping,
+  projection,
+  crowded,
+  weakPapers,
+  confident,
+  untouched,
+  calibration,
+];
 
 /**
  * Everything the data supports saying, best first.

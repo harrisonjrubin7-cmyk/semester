@@ -5,7 +5,8 @@ import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { Insights } from '../components/Insights';
-import { topInsights } from '../lib/insight';
+import { insights } from '../insights';
+import { factsFrom } from '../insights/facts';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured, provider } from '../lib/claude';
 import { download } from '../lib/deliver';
@@ -38,7 +39,7 @@ import {
  * be both wrong and the last one anybody read.
  */
 export function Weekly() {
-  const { state, dispatch, now, catalog, courseCode } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
 
   const [said, setSaid] = useState('');
   const [busy, setBusy] = useState(false);
@@ -91,17 +92,8 @@ export function Weekly() {
 
   // The same findings the screen shows, so a saved report is the report.
   const found = useMemo(
-    () =>
-      topInsights({
-        catalog,
-        now,
-        done: state.done,
-        spent: state.spent,
-        sittings: state.sittings,
-        reviews: state.reviews,
-        code: courseCode,
-      }),
-    [catalog, now, state.done, state.spent, state.sittings, state.reviews, courseCode],
+    () => insights(factsFrom(state, catalog, now)).slice(0, 3),
+    [state, catalog, now],
   );
 
   const title = `Week of ${back.label}`;

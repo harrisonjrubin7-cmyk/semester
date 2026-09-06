@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { SectionLabel } from './ui';
-import { MOST, topInsights, type Insight } from '../lib/insight';
+import { forScope, insights, type Insight, type Scope } from '../insights';
+import { factsFrom } from '../insights/facts';
 
 /**
  * What the app noticed, and the one thing to do about each.
@@ -25,25 +26,32 @@ import { MOST, topInsights, type Insight } from '../lib/insight';
  * reading their week is already in the frame of mind to act on it; a separate
  * Insights tab would be a place you go when you already know something is
  * wrong, which is exactly when you do not need to be told.
+ *
+ * ## One engine, since this file used to be a second one
+ *
+ * The arithmetic was in `lib/insight.ts` and is now in `src/insights/`, which
+ * `worked` also reads. Having both was not a duplication in the abstract: for
+ * a while the two ran side by side on the same screen, one saying "You
+ * estimate 1 hour 30, you take about 2 hours 35" and the other "You estimate
+ * 1.5 hours. You take about 2.5 hours. A ratio of 1.72." Two engines quoting
+ * one fact with different rounding is worse than either alone, because the
+ * reader has to work out which to believe.
  */
-export function Insights({ most = MOST, heading = 'What stands out' }: { most?: number; heading?: string }) {
-  const { state, dispatch, now, catalog, courseCode } = useStore();
+export function Insights({
+  most = 3,
+  heading = 'What stands out',
+  scope = 'all',
+}: {
+  most?: number;
+  heading?: string;
+  /** Which surface this is. `worked` takes everything; a brief takes the day. */
+  scope?: Scope | 'all';
+}) {
+  const { state, dispatch, now, catalog } = useStore();
 
   const found = useMemo(
-    () =>
-      topInsights(
-        {
-          catalog,
-          now,
-          done: state.done,
-          spent: state.spent,
-          sittings: state.sittings,
-          reviews: state.reviews,
-          code: courseCode,
-        },
-        most,
-      ),
-    [catalog, now, state.done, state.spent, state.sittings, state.reviews, courseCode, most],
+    () => forScope(insights(factsFrom(state, catalog, now)), scope, most),
+    [state, catalog, now, scope, most],
   );
 
   if (found.length === 0) return null;
@@ -53,7 +61,7 @@ export function Insights({ most = MOST, heading = 'What stands out' }: { most?: 
     // A course-bearing action has to set the course before the screen, or the
     // guide opens on whatever was last looked at — which is the course this
     // finding is telling you that you have been ignoring.
-    if (f.action.courseId) dispatch({ type: 'openGuide', id: f.action.courseId });
+    if (f.courseId) dispatch({ type: 'openGuide', id: f.courseId });
     dispatch({ type: 'go', screen: f.action.screen });
   };
 
@@ -71,7 +79,7 @@ export function Insights({ most = MOST, heading = 'What stands out' }: { most?: 
                 textWrap: 'pretty',
               }}
             >
-              {f.title}
+              {f.headline}
             </div>
             <div
               style={{
@@ -82,7 +90,7 @@ export function Insights({ most = MOST, heading = 'What stands out' }: { most?: 
                 textWrap: 'pretty',
               }}
             >
-              {f.body}
+              {f.detail}
             </div>
             <div
               style={{
@@ -122,7 +130,7 @@ export function Insights({ most = MOST, heading = 'What stands out' }: { most?: 
                   textWrap: 'pretty',
                 }}
               >
-                Based on {f.from}.
+                From {f.evidence.length} {f.evidence.length === 1 ? 'record' : 'records'}{f.confidence === 'tentative' ? ', so this may shift' : ''}.
               </span>
             </div>
           </Blueprint>

@@ -1,3 +1,4 @@
+import { calibrate } from '../lib/worth';
 import type { Facts, Insight, Source } from './types';
 
 /**
@@ -11,6 +12,21 @@ import type { Facts, Insight, Source } from './types';
  * It is stated as a ratio and a pair of times, never as a verdict. "You
  * estimate 2 hours. You take about 3 hours 20" is a fact about ten records.
  * "You underestimate" is a claim about a person.
+ */
+
+/**
+ * The ratio itself comes from `lib/worth.ts`, and that is the point.
+ *
+ * `calibrate()` is not a reporting function — the bias it returns is applied
+ * to every estimate the app shows, so it is already the app's official answer
+ * to "how far out are your guesses". Computing a second median here produced a
+ * second answer: for a while the Worked screen said "You estimate 1 hour 30,
+ * you take about 2 hours 35" from this file and "a ratio of 1.72" from that
+ * one, forty pixels apart. Same data, same fact, two roundings, and the reader
+ * left to work out which to believe.
+ *
+ * So this reads the ratio and adds what a ratio cannot carry: the two times in
+ * words, and the reports behind them as evidence you can open.
  */
 
 /** Five is where a median stops being one person's bad Tuesday. */
@@ -46,8 +62,11 @@ export const calibration: Source = {
 
     if (guessed.length < MINIMUM) return [];
 
-    const ratios = guessed.map((s) => s.minutes / (s.guess as number));
-    const ratio = median(ratios);
+    const c = calibrate(
+      guessed.map((s) => ({ guess: s.guess as number, minutes: s.minutes, at: s.at })),
+    );
+    if (!c) return [];
+    const ratio = c.ratio;
     const guess = median(guessed.map((s) => s.guess as number));
     const took = median(guessed.map((s) => s.minutes));
 

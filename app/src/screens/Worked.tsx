@@ -14,7 +14,7 @@ import { download } from '../lib/deliver';
 import { allCards } from '../data/catalog';
 import { datedItems } from '../lib/select';
 import { tallyBy } from '../lib/review';
-import { calibrate, calibrationLine, guessLine } from '../lib/worth';
+import { calibrate, calibrationLine } from '../lib/worth';
 import { pattern } from '../lib/postmortem';
 import { readTerm } from '../lib/term';
 import { basis, document as asDocument, findings, nothingLine, type TermInput } from '../lib/worked';
@@ -76,7 +76,6 @@ export function Worked() {
     .filter((s) => typeof s.guess === 'number')
     .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes, at: s.at }));
   const bias = calibrate(guesses);
-  const said = guessLine(guesses, bias);
   const marks = pattern(
     state.returned.map((r) => r.mortem).filter((m): m is NonNullable<typeof m> => Boolean(m)),
   );
@@ -146,17 +145,24 @@ export function Worked() {
             and a number quietly adjusted is a number nobody can check. Silent
             below five recent guesses.
           */}
-          {said ? (
+          {/*
+            What the correction does, not what it is.
+
+            This section used to restate the ratio — "You estimate 1.5 hours.
+            You take about 2.5 hours. A ratio of 1.72." — a few inches below
+            the insight card saying the same thing in different words and a
+            different rounding. Two statements of one fact is worse than
+            either, because the reader has to decide which to believe.
+
+            The card above states it; this says what the app does about it,
+            which is the half no card carries.
+          */}
+          {calibrationLine(bias) ? (
             <>
               <SectionLabel style={{ margin: '22px 0 6px' }}>Your own estimates</SectionLabel>
-              <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>
-                {said}
+              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, textWrap: 'pretty' }}>
+                {calibrationLine(bias)}
               </div>
-              {calibrationLine(bias) ? (
-                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
-                  {calibrationLine(bias)}
-                </div>
-              ) : null}
             </>
           ) : null}
 

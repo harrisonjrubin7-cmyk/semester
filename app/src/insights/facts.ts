@@ -1,4 +1,5 @@
 import { cardKey } from '../lib/review';
+import { datedItems } from '../lib/select';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
 import type { Facts } from './types';
@@ -45,6 +46,10 @@ export function factsFrom(state: State, catalog: Catalog, now: Date): Facts {
     attendPolicy: state.attendPolicy,
     answers: state.answers,
     spent: state.spent,
+    dated: datedItems(catalog, now),
+    done: state.done,
+    sittings: state.sittings,
+    reviews: state.reviews,
     unitOf: (courseId, key) => units.get(`${courseId}::${key}`) ?? '',
     codeOf: (courseId) => catalog.byId[courseId]?.code ?? courseId,
   };
