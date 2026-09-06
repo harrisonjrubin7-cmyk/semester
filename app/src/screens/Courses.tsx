@@ -11,6 +11,7 @@ import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { CameBack } from '../components/CameBack';
+import { BreakItUp } from '../components/BreakItUp';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { Grades } from './Grades';
@@ -613,6 +614,10 @@ export function ItemDetail() {
       {/* The regrade clock starts when a professor hands something back, which
           is a fact only the student knows — so it is one tap here. */}
       <CameBack item={item} />
+
+      {/* A ten-page paper is one row here and a fortnight of work. This is
+          the only place the gap between those two facts is visible. */}
+      <BreakItUp item={item} />
 
       <SectionLabel style={{ margin: '22px 0 8px' }}>Straight from the syllabus</SectionLabel>
       <div

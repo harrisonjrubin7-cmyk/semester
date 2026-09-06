@@ -54,6 +54,15 @@ const SHAPES: Record<string, string[]> = {
   response: ['Read it', 'Draft the response', 'Tighten and submit'],
   lab: ['Read the brief', 'Do the work', 'Write it up', 'Check and submit'],
   quiz: ['Review the units', 'Drill the weak ones', 'Last look'],
+  // Studying, not producing. Without this an exam fell to the generic run and
+  // was told to "finish and submit" a closed-note midterm sat in a room.
+  exam: [
+    'Work out what it covers',
+    'First pass through the units',
+    'Drill what is weak',
+    'Sit a practice paper',
+    'Last look',
+  ],
 };
 
 const GENERIC = ['Start it', 'Main pass', 'Finish and submit'];
