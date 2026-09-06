@@ -72,18 +72,51 @@ function clock(date: Date): string {
   return `${h}:${String(m).padStart(2, '0')}${suffix}`;
 }
 
-/** Which course a feed entry looks like it belongs to, by its code. */
+/**
+ * Whether `needle` appears in `haystack` as a word, not inside one.
+ *
+ * `\b` rather than a space test, so a code at the very start or end of a
+ * title, or up against a colon or a dash, still counts.
+ */
+function saysWord(haystack: string, needle: string): boolean {
+  if (!needle) return false;
+  const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\b${escaped}\\b`).test(haystack);
+}
+
+/**
+ * Which course a feed entry looks like it belongs to, by its code.
+ *
+ * Two passes, and they are deliberately not equally trusting.
+ *
+ * A full code — "BUS 1600", "ECON1020" — carries a number, so it cannot be an
+ * ordinary word and is matched however it is capitalised.
+ *
+ * A bare subject is a guess, and it used to be a bad one. The matcher
+ * uppercased the entry first and asked whether it contained the subject, which
+ * filed "Catch the bus to campus" against BUS 1600 and "3 apps to try" against
+ * a course called APPS. Uppercasing destroyed the one signal that separates a
+ * course code from an English word, which is that the code is written in
+ * capitals and the word is not. So the bare-subject pass reads the entry as it
+ * was written.
+ *
+ * A wrongly filed entry is worse than an unfiled one: it lands inside a
+ * course's own list looking like something the professor set. What is left
+ * unmatched is still on the calendar, just not attributed — which is the right
+ * way round for a guess.
+ */
 export function matchCourse(courses: Course[], text: string): string | null {
   const upper = text.toUpperCase();
   for (const c of courses) {
     const code = c.code.toUpperCase();
-    if (upper.includes(code) || upper.includes(code.replace(/\s+/g, ''))) return c.id;
+    if (saysWord(upper, code) || saysWord(upper, code.replace(/\s+/g, ''))) return c.id;
   }
-  // A bare subject code — "ECON" — is enough when only one course has it.
   for (const c of courses) {
     const subject = c.code.split(/\s+/)[0].toUpperCase();
     const others = courses.filter((o) => o.code.toUpperCase().startsWith(subject));
-    if (others.length === 1 && upper.includes(subject)) return c.id;
+    // Against `text`, not `upper`: a feed entry that means the course writes
+    // the subject in capitals.
+    if (others.length === 1 && saysWord(text, subject)) return c.id;
   }
   return null;
 }
