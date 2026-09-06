@@ -200,7 +200,7 @@ function ComingUp() {
 
   const blurb =
     tab === 'overdue'
-      ? overdueLine(overdue, (i) => catalog.byId[i.c]?.code ?? '')
+      ? overdueLine(overdue, (i) => catalog.byId[i.c]?.code ?? '', state.tone)
       : tab === 'done'
         ? `${done.length} finished this semester. Tick one again to undo it.`
         : tab === 'working'

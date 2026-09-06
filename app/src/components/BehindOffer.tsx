@@ -12,6 +12,7 @@
  */
 
 import { useStore } from '../state/store';
+import { catchUp } from '../lib/tone';
 import { datedItems } from '../lib/select';
 import { WAKING_HOURS, hoursOn } from '../lib/windows';
 import { behindLine, howBehind } from '../lib/behind';
@@ -65,7 +66,7 @@ export function BehindOffer() {
             lineHeight: 1.45,
           }}
         >
-          Sort out what still matters →
+          {catchUp(state.tone)} →
         </span>
       </button>
     </div>

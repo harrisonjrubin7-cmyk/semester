@@ -39,6 +39,7 @@ import { readAnswers, type Answer, type Sure } from '../lib/sure';
 import { readContract, readFloor, readRest, type Contract, type Floor, type Rest } from '../lib/rest';
 import type { Taken as Undone } from '../lib/undo';
 import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
+import { readTone, type Tone } from '../lib/tone';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
 import { readLog, readPolicy, type AttendPolicy, type Attended } from '../lib/attend';
@@ -386,6 +387,14 @@ export interface Persisted {
   readingWidth: string;
   iconShape: string;
   labels: string;
+  /**
+   * How the app phrases what it tells you. See `lib/tone.ts`.
+   *
+   * Saved and synced like any other preference. The figures are identical in
+   * all three tones — only the words around them change — so this can never
+   * make the app less accurate, only easier or harder to read at 1am.
+   */
+  tone: Tone;
   badges: string;
   feed: string;
   /** `plain` or `grouped`. Which layout every screen is drawn in. */
@@ -700,6 +709,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
+  tone: 'direct',
   ground: 'ink',
   density: 'comfortable',
   corners: 'drawn',
@@ -874,6 +884,7 @@ export function loadPersisted(): Persisted {
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
       // sync, or one entry long, and any of those renders a broken bar.
       tabs: readTabs(saved.tabs),
+      tone: readTone(saved.tone),
       yours: saved.yours ?? {},
       myRules: readRules(saved.myRules),
       myName: typeof saved.myName === 'string' ? saved.myName : '',
@@ -929,6 +940,7 @@ export function loadPersisted(): Persisted {
 export function pickPersisted(state: State): Persisted {
   return {
     nav: state.nav,
+    tone: state.tone,
     done: state.done,
     saved: state.saved,
     notifs: state.notifs,
@@ -1168,6 +1180,7 @@ export type Action =
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
   | { type: 'setMeGroup'; group: string }
+  | { type: 'setTone'; tone: Tone }
   | { type: 'keepSitting'; sitting: Omit<Sitting, 'id'> }
   | { type: 'dropSitting'; id: string }
   | { type: 'addSource'; source: NewSource }

@@ -383,7 +383,7 @@ function Feed_due() {
           textWrap: 'pretty',
         }}
       >
-        {punchline(left, today.length)}
+        {punchline(left, today.length, state.tone)}
       </div>
 
       {left === 0 && (

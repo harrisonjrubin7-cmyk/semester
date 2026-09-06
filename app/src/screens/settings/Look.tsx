@@ -1,6 +1,7 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, Group } from '../../components/shell/Rows';
+import { CustomRow, Group, SelectRow } from '../../components/shell/Rows';
+import { TONE_LABELS } from '../../lib/tone';
 import { lights } from '../../lib/settings';
 import { ShellPicker } from '../../components/ShellPicker';
 import { SectionLabel, Segmented, Toggle } from '../../components/ui';
@@ -399,6 +400,19 @@ export function SettingsLook() {
             <CustomRow>
               <ShellPicker />
             </CustomRow>
+          </Group>
+
+          <Group
+            header="How it talks to you"
+            footer="The figures are the same in all three — five overdue is five overdue. Only the words around them change."
+            lit={lights('tone voice wording supportive direct minimal phrasing language kind blunt', lit)}
+          >
+            <SelectRow
+              label="Tone"
+              value={state.tone}
+              options={TONE_LABELS.map((t) => ({ id: t.id, label: t.label, sub: t.blurb }))}
+              onChange={(tone) => dispatch({ type: 'setTone', tone })}
+            />
           </Group>
 
           <Group

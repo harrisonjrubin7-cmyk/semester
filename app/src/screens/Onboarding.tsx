@@ -1,4 +1,5 @@
 import { useStore } from '../state/store';
+import { askReminders, type Tone } from '../lib/tone';
 import { Blueprint } from '../components/Blueprint';
 import { Toggle } from '../components/ui';
 import { NOTIF_DEFS } from '../data/misc';
@@ -16,7 +17,7 @@ import { SchoolPicker } from '../components/SchoolPicker';
  * with a semester. Now it counts what is there, and when nothing is there it
  * says what will happen instead of pretending it already has.
  */
-function steps(cat: Catalog) {
+function steps(cat: Catalog, tone: Tone) {
   const n = cat.courses.length;
   const items = cat.items.length;
   const empty = n === 0;
@@ -54,7 +55,7 @@ function steps(cat: Catalog) {
     },
     {
       k: 'Step 4 of 4',
-      t: 'When should I bug you?',
+      t: askReminders(tone),
       b: 'Change any of this later. Nothing here is permanent.',
       cta: empty ? 'Get started' : 'Start the semester',
     },
@@ -64,7 +65,7 @@ function steps(cat: Catalog) {
 /** Four screens: the promise, what it read, where you study, and the alerts. */
 export function Onboarding() {
   const { state, dispatch, catalog } = useStore();
-  const all = steps(catalog);
+  const all = steps(catalog, state.tone);
   const step = all[state.onb] ?? all[0];
 
   return (

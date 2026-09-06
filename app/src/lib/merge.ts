@@ -113,6 +113,10 @@ export const STRATEGY: Record<string, Strategy> = {
   badges: 'theirs',
   // Ergonomics: about the screen in front of you, not about you. See `mine`.
   textSize: 'mine',
+  // `mine` like every other look setting: how this device phrases things is a
+  // fact about this device, and having a laptop quietly change a phone's tone
+  // is the kind of sync nobody asked for.
+  tone: 'mine',
   density: 'mine',
   /*
    * The shape this device writes, which is never the other device's business.

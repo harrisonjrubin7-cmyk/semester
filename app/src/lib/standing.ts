@@ -16,6 +16,7 @@
  * to call something missed while the person could still be typing it.
  */
 
+import { overdueLine as toneOverdue, type Tone } from './tone';
 import type { DatedItem } from './types';
 
 export type Standing = 'ahead' | 'overdue' | 'done';
@@ -78,13 +79,16 @@ export function lateBy(item: DatedItem): string {
  * counting, because "4 overdue" is a number and "the ECON problem set, 6 days
  * late" is a thing you can go and do.
  */
-export function overdueLine(overdue: DatedItem[], code: (item: DatedItem) => string): string {
-  if (overdue.length === 0) return 'Nothing missed. Keep it that way.';
+export function overdueLine(
+  overdue: DatedItem[],
+  code: (item: DatedItem) => string,
+  tone: Tone = 'direct',
+): string {
+  if (overdue.length === 0) return toneOverdue('', 0, tone);
   const worst = overdue[overdue.length - 1];
-  const rest = overdue.length - 1;
-  const one = `${code(worst)} ${worst.title} is ${lateBy(worst)}`;
-  if (rest === 0) return `${one}.`;
-  return `${one}, and ${rest} other${rest === 1 ? '' : 's'} went by.`;
+  // The oldest, named. Built here because only this file knows how to say
+  // "6 days late"; the frame around it is `lib/tone.ts`.
+  return toneOverdue(`${code(worst)} ${worst.title} is ${lateBy(worst)}`, overdue.length - 1, tone);
 }
 
 /** The count badge next to a filter chip — blank rather than a zero. */

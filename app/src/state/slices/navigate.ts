@@ -143,6 +143,9 @@ export function navigate(state: State, action: Action): State | null {
     case 'setMeGroup':
       return { ...state, meGroup: action.group };
 
+    case 'setTone':
+      return { ...state, tone: action.tone };
+
     case 'setDueTab':
       return { ...state, dueTab: action.tab };
 

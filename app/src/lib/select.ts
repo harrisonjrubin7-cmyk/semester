@@ -13,6 +13,7 @@ import {
 import type { Reviews } from './review';
 import { blocksOn, type Commitment } from './activities';
 import { hasTime } from './duetime';
+import { punchline as tonePunchline, type Tone } from './tone';
 import { liveGuide } from './live';
 import type {
   Appointment,
@@ -179,15 +180,15 @@ export function filterFeed(cat: Catalog, entries: FeedEntry[], filter: FeedFilte
   return entries.filter((e) => e.c && cat.short[e.c] === filter);
 }
 
-/** The Today headline — it counts down as you tick things off. */
-export function punchline(left: number, total: number): string {
-  // When the day was empty to begin with, the all-clear card below already says
-  // so — this line says something different rather than repeating it.
-  if (total === 0) return 'A clear day. Rare.';
-  if (left === 0) return 'Day cleared.';
-  if (left === 1) return 'One thing left. Finish it.';
-  if (left === 2) return 'Two left. Both before midnight.';
-  return `${left} things stand between you and done.`;
+/**
+ * The Today headline — it counts down as you tick things off.
+ *
+ * The words live in `lib/tone.ts` now, because they are the ones a student
+ * reads when they are behind and the phrasing is a setting. The counting is
+ * still here and is the same whatever tone is on.
+ */
+export function punchline(left: number, total: number, tone: Tone = 'direct'): string {
+  return tonePunchline(left, total, tone);
 }
 
 /** The next exam across all four courses — the Study screen's radar. */
