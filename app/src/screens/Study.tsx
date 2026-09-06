@@ -170,7 +170,7 @@ export function Study() {
             guide: g,
             lessons: catalog.lessons[c.id] ?? {},
             figures: mergeFigures(catalog.figures[c.id] ?? {}, mine),
-            extras: extraFigures(catalog.extraFigures[c.id] ?? [], mine),
+            extras: extraFigures(catalog.extraFigures[c.id] ?? [], mine, catalog.figures[c.id] ?? {}),
           }).filter((m) => m.ready);
 
           // Read rather than guessed: cards whose review has come round, this

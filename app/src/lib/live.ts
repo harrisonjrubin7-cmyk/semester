@@ -53,12 +53,26 @@ export function forCourse(updates: CourseUpdate[], id: CourseId): CourseUpdate[]
   return mine.length ? mine.sort((a, b) => a.created - b.created) : NO_UPDATES;
 }
 
+/**
+ * Whether an update still points at a unit that exists.
+ *
+ * A guide can get shorter. Re-import a syllabus after the professor trims the
+ * reading list and unit 5 is simply not there any more — but the update the
+ * student filed against it still says 5. Those used to be keyed into `added`
+ * at an index nothing rendered, so a photographed board or a posted reading
+ * disappeared from the app with nothing said. Losing somebody's own material
+ * quietly is worse than any of the shapes this file refuses.
+ */
+function attached(u: CourseUpdate, unitCount: number): boolean {
+  return u.unit !== null && u.unit >= 0 && u.unit < unitCount;
+}
+
 /** Cards a set of updates adds, keyed by the unit they extend. */
-function cardsByUnit(updates: CourseUpdate[]): Record<number, StudyCard[]> {
+function cardsByUnit(updates: CourseUpdate[], unitCount: number): Record<number, StudyCard[]> {
   const out: Record<number, StudyCard[]> = {};
   for (const u of updates) {
-    if (u.unit === null) continue;
-    (out[u.unit] ??= []).push(...u.cards);
+    if (!attached(u, unitCount)) continue;
+    (out[u.unit as number] ??= []).push(...u.cards);
   }
   return out;
 }
@@ -69,7 +83,7 @@ export function mergeGuide(guide: Guide, updates: CourseUpdate[]): LiveGuide {
     return { ...guide, added: {}, baseCards: base, firstAddedUnit: guide.units.length };
   }
 
-  const added = cardsByUnit(updates);
+  const added = cardsByUnit(updates, guide.units.length);
 
   const units: Unit[] = guide.units.map((u, i) => {
     const extra = added[i];
@@ -85,10 +99,11 @@ export function mergeGuide(guide: Guide, updates: CourseUpdate[]): LiveGuide {
   });
 
   // An update filed against no unit becomes a unit of its own, at the end,
-  // where a new reading actually belongs.
+  // where a new reading actually belongs — and so does one whose unit has
+  // since gone, which is materially the same situation.
   const firstAddedUnit = units.length;
   for (const u of updates) {
-    if (u.unit !== null) continue;
+    if (attached(u, guide.units.length)) continue;
     if (u.cards.length === 0) continue;
     units.push({ name: u.title || 'Added material', mastery: 0, cards: u.cards });
     added[units.length - 1] = u.cards;
@@ -159,26 +174,45 @@ export function mergeFigures(figures: FigureMap, updates: CourseUpdate[]): Figur
   return out;
 }
 
-export function extraFigures(extras: Figure[], updates: CourseUpdate[]): Figure[] {
+/**
+ * The images that did not become a unit's figure.
+ *
+ * Takes the figure map for the same reason `mergeFigures` builds one: the two
+ * have to agree about which image was used, and they did not. This skipped the
+ * first image of every unit-attached update on the assumption it had been
+ * taken as that unit's figure — but `mergeFigures` only takes it when the unit
+ * has none, so an update on a unit that already had a diagram, or a second
+ * update on the same unit, had its first image skipped here and never placed
+ * there. The comment beside that rule promised "yours goes to the extras", and
+ * it went nowhere.
+ *
+ * The accumulation below mirrors `mergeFigures` exactly, including the way one
+ * update can claim a unit and leave the next one to come here instead. Change
+ * one and change the other.
+ */
+export function extraFigures(
+  extras: Figure[],
+  updates: CourseUpdate[],
+  figures: FigureMap = {},
+): Figure[] {
+  const claimed = new Set(Object.keys(figures).map(Number));
   const mine: Figure[] = [];
+
   for (const u of updates) {
-    const skipFirst = u.unit !== null ? 1 : 0;
-    u.fileIds.slice(skipFirst).forEach((fileId, i) =>
+    // Whether this update's first image is about to become the unit's figure.
+    const takesFirst = u.unit !== null && Boolean(u.fileIds[0]) && !claimed.has(u.unit);
+    if (takesFirst) claimed.add(u.unit as number);
+
+    u.fileIds.slice(takesFirst ? 1 : 0).forEach((fileId, i) =>
       mine.push({
         type: 'image',
-        title: u.title ? `${u.title} (${i + 2})` : 'Added',
+        // Numbered from what is actually shown here, so an update whose first
+        // image also lands in the extras is not labelled "(2)" with no (1).
+        title: u.title ? `${u.title} (${i + (takesFirst ? 2 : 1)})` : 'Added',
         caption: u.source ? `Added — ${u.source}` : 'Added by you',
         fileId,
       }),
     );
-    if (u.unit === null && u.fileIds[0]) {
-      mine.push({
-        type: 'image',
-        title: u.title || 'Added',
-        caption: u.source ? `Added — ${u.source}` : 'Added by you',
-        fileId: u.fileIds[0],
-      });
-    }
   }
   return mine.length ? [...extras, ...mine] : extras;
 }
@@ -207,7 +241,7 @@ export function useLive(courseId: CourseId): Live {
     return {
       guide: applyReviews(mergeGuide(base, updates), courseId, state.reviews, Date.now()),
       figures: mergeFigures(catalog.figures[courseId] ?? {}, updates),
-      extras: extraFigures(catalog.extraFigures[courseId] ?? [], updates),
+      extras: extraFigures(catalog.extraFigures[courseId] ?? [], updates, catalog.figures[courseId] ?? {}),
       lessons: catalog.lessons[courseId] ?? {},
       updates,
       onUnit: (index: number) => updates.filter((u) => u.unit === index),
