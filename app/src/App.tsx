@@ -12,6 +12,7 @@ import {
 import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
+import { SampleMark } from './components/SampleMark';
 import { usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
 import { ground, resolveGround, scaleOf, tokensFor, type Look } from './lib/look';
@@ -933,6 +934,7 @@ export default function App() {
     return (
       <div className="desk">
         <Fresh />
+        <SampleMark />
         <Said />
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
             and not another. Renders nothing unless the sheet is open. */}
@@ -981,6 +983,7 @@ export default function App() {
         Skip to content
       </a>
       <Fresh />
+      <SampleMark />
       <Said />
       <Ringing />
       <PushTop />
