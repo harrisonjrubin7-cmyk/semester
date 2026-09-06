@@ -22,7 +22,7 @@
 
 /** What the app can actually do something with. */
 const READABLE =
-  /\.(pdf|docx?|txt|md|markdown|csv|tsv|rtf|png|jpe?g|webp|gif|heic|heif)$/i;
+  /\.(pdf|docx?|pptx?|txt|md|markdown|csv|tsv|rtf|png|jpe?g|webp|gif|heic|heif)$/i;
 
 /** Things a zip carries that are not files anybody meant to send. */
 const JUNK = /(^|\/)(__MACOSX\/|\.DS_Store$|Thumbs\.db$|\._)/i;
@@ -105,8 +105,8 @@ export function whySkipped(name: string, bytes: number): string | null {
     if (/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(name)) {
       return 'audio — record a lecture in the app instead, where it is transcribed live';
     }
-    if (/\.(pptx?|keynote|key)$/i.test(name)) {
-      return 'slides — export them as a PDF and they read perfectly';
+    if (/\.(keynote|key)$/i.test(name)) {
+      return 'a Keynote file — export it as a PDF or a .pptx and it reads';
     }
     return 'not a kind of file the app can read';
   }

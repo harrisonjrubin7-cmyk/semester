@@ -19,8 +19,15 @@ describe('readable', () => {
     }
   });
 
+  it('takes a slide deck, which it used to send away', () => {
+    // The commonest thing a professor posts. "Export it as a PDF" was true
+    // and was also a step nobody took, so the app read everything except the
+    // file it was handed most often. See `fromPptx` in `extract.ts`.
+    expect(readable('Session 7.pptx')).toBe(true);
+  });
+
   it('rejects what it cannot', () => {
-    for (const name of ['a.mp4', 'a.mp3', 'a.pptx', 'a.exe', 'a']) {
+    for (const name of ['a.mp4', 'a.mp3', 'a.key', 'a.exe', 'a']) {
       expect(readable(name)).toBe(false);
     }
   });
@@ -60,7 +67,7 @@ describe('whySkipped', () => {
     // different outcome.
     expect(whySkipped('lecture.mp4', 10)).toContain('neither audio nor video');
     expect(whySkipped('lecture.mp3', 10)).toContain('record a lecture in the app');
-    expect(whySkipped('deck.pptx', 10)).toContain('export them as a PDF');
+    expect(whySkipped('deck.key', 10)).toContain('export it as a PDF or a .pptx');
   });
 
   it('names the size when that is the problem', () => {

@@ -282,3 +282,107 @@ describe('HTML pages', () => {
     expect((await extractText(file('p.html', '<p>Sep&nbsp;4</p>'))).text).toBe('Sep 4');
   });
 });
+
+/**
+ * Slide decks.
+ *
+ * The file the spec's own example is about, and the one the app refused
+ * outright until now — "export them as a PDF" is true and is also a step
+ * nobody takes, so the commonest thing a professor posts was the one thing
+ * that could not be read.
+ *
+ * Built here as a real zip, like the .docx fixtures above, because what is
+ * worth testing is that it can open a PowerPoint file at all.
+ */
+describe('slide decks', () => {
+  /** `<a:t>` runs inside `<a:p>` paragraphs — how PowerPoint stores a slide. */
+  const slide = (...paras: string[]) =>
+    `<p:sld><p:cSld><p:spTree>${paras
+      .map((p) => `<a:p><a:r><a:t>${p}</a:t></a:r></a:p>`)
+      .join('')}</p:spTree></p:cSld></p:sld>`;
+
+  const deck = (slides: Record<number, string>, extra: Record<string, string> = {}) =>
+    file(
+      'Session 7.pptx',
+      zipSync({
+        '[Content_Types].xml': strToU8('<Types/>'),
+        ...Object.fromEntries(
+          Object.entries(slides).map(([n, xml]) => [`ppt/slides/slide${n}.xml`, strToU8(xml)]),
+        ),
+        ...Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, strToU8(v)])),
+      }),
+    );
+
+  it('reads the text off each slide', async () => {
+    const out = await extractText(deck({ 1: slide('Conjoint analysis', 'What buyers trade off') }));
+    expect(out.text).toContain('Conjoint analysis');
+    expect(out.text).toContain('What buyers trade off');
+  });
+
+  it('keeps the slide numbers, which are the only page reference a deck has', async () => {
+    const out = await extractText(deck({ 1: slide('Title'), 2: slide('Segmentation') }));
+    expect(out.pages).toEqual([
+      { page: 1, text: 'Title' },
+      { page: 2, text: 'Segmentation' },
+    ]);
+  });
+
+  it('numbers the slides in the flat text as well', async () => {
+    // Whatever reads this is being asked where something came from, so the
+    // number has to be in front of the text and not only in the metadata.
+    const out = await extractText(deck({ 1: slide('First'), 2: slide('Second') }));
+    expect(out.text).toBe('Slide 1\nFirst\n\nSlide 2\nSecond');
+  });
+
+  it('does not put slide 10 before slide 2', async () => {
+    /*
+     * Object keys sort as strings, so "slide10.xml" lands between "slide1" and
+     * "slide2" — which silently renumbers every deck over nine slides and puts
+     * the provenance on the wrong slide for the rest of the file.
+     */
+    const many = Object.fromEntries(
+      Array.from({ length: 12 }, (_, i) => [i + 1, slide(`Slide ${i + 1} body`)]),
+    );
+    const out = await extractText(deck(many));
+    expect(out.pages?.map((p) => p.page)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  });
+
+  it('keeps a title and its bullets as separate lines', async () => {
+    // One run-on sentence is the difference between a readable slide and a
+    // wall, and it is what a naive tag-strip produces.
+    const out = await extractText(deck({ 1: slide('Pricing', 'Cost-plus', 'Value-based') }));
+    expect(out.pages?.[0].text).toBe('Pricing\nCost-plus\nValue-based');
+  });
+
+  it('joins the runs PowerPoint splits a line into', async () => {
+    const split =
+      '<p:sld><a:p><a:r><a:t>Problem </a:t></a:r><a:r><a:t>Set 3</a:t></a:r></a:p></p:sld>';
+    expect((await extractText(deck({ 1: split }))).pages?.[0].text).toBe('Problem Set 3');
+  });
+
+  it('decodes an ampersand, as everywhere else', async () => {
+    expect((await extractText(deck({ 1: slide('Supply &amp; Demand') }))).pages?.[0].text).toBe(
+      'Supply & Demand',
+    );
+  });
+
+  it('says so when the zip holds no slides', async () => {
+    await expect(extractText(deck({}, { 'ppt/notes/notes1.xml': '<x/>' }))).rejects.toThrow(
+      /no slides inside/i,
+    );
+  });
+
+  it('tells somebody who renamed a .ppt what to do instead', async () => {
+    const broken = file('Session 7.pptx', 'this is an old .ppt, not a zip');
+    await expect(extractText(broken)).rejects.toThrow(/save it again as \.pptx|export the deck/i);
+    await expect(extractText(broken)).rejects.not.toThrow(/invalid zip data/i);
+  });
+
+  it('attaches no page list to a file that has no pages to speak of', async () => {
+    // A Word file and a pasted block know nothing about pages, and a made-up
+    // reference is worse than none.
+    expect((await extractText(file('a.txt', 'x'))).pages).toBeUndefined();
+    expect((await extractText(docx('<w:document><w:p><w:r><w:t>x</w:t></w:r></w:p></w:document>'))).pages)
+      .toBeUndefined();
+  });
+});

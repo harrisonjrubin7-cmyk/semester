@@ -134,11 +134,75 @@ async function fromDocx(file: File): Promise<string> {
   return entities(stripped).replace(/\n{3,}/g, '\n\n').trim();
 }
 
+/**
+ * Slide decks, the same way and for the same reason.
+ *
+ * A .pptx is a zip too, one XML per slide under `ppt/slides/`. The app used to
+ * refuse them outright — `bundle.ts` said "export them as a PDF and they read
+ * perfectly", which is true and is also a step nobody takes, so the commonest
+ * thing a professor posts was the one thing the app would not read.
+ *
+ * The slide numbers are kept rather than flattened away. They are the only
+ * page reference a deck has, and everything downstream that says where a card
+ * came from — "From Session 7 slides, slide 12" — needs them.
+ */
+export async function fromPptx(file: File): Promise<{ slide: number; text: string }[]> {
+  const { unzipSync, strFromU8 } = await import('fflate');
+  let zip: Record<string, Uint8Array>;
+  try {
+    zip = unzipSync(new Uint8Array(await file.arrayBuffer()));
+  } catch {
+    throw new Error(
+      `${file.name} could not be opened as a slide deck. If it is an older .ppt, open it and save it again as .pptx — or export the deck as a PDF.`,
+    );
+  }
+
+  // `slide10.xml` must not sort before `slide2.xml`, which is what plain
+  // string ordering does and what would silently renumber every deck over
+  // nine slides.
+  const names = Object.keys(zip)
+    .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
+    .sort((a, b) => Number(/(\d+)/.exec(a)![1]) - Number(/(\d+)/.exec(b)![1]));
+  if (names.length === 0) throw new Error('That .pptx has no slides inside it.');
+
+  const out: { slide: number; text: string }[] = [];
+  for (const n of names) {
+    const xml = strFromU8(zip[n]);
+    /*
+     * `<a:p>` is a paragraph and `<a:t>` is a run of text inside it. Breaking
+     * on the paragraph and joining the runs is the same shape as the Word
+     * path: a title and its bullets come out as lines rather than as one
+     * run-on sentence, which is the difference between a readable slide and a
+     * wall.
+     */
+    const text = xml
+      .replace(/<a:p[ >]/g, '\n<a:p ')
+      .replace(/<a:br\/>/g, '\n')
+      .replace(/<\/a:t>\s*<a:t[^>]*>/g, '')
+      .replace(/<[^>]+>/g, '')
+      .split('\n')
+      .map((l) => entities(l).trim())
+      .filter(Boolean)
+      .join('\n');
+    out.push({ slide: Number(/(\d+)/.exec(n)![1]), text });
+  }
+  return out;
+}
+
 export interface Extracted {
   name: string;
   text: string;
   /** Words, so the UI can say how much was read. */
   words: number;
+  /**
+   * Where each piece of the text came from, when the format says.
+   *
+   * A slide deck knows its slide numbers and a PDF knows its pages; a Word
+   * file and a pasted block know nothing. Present only where it is real,
+   * because a made-up page reference is worse than none — the whole point of
+   * carrying it is that somebody can go and check.
+   */
+  pages?: { page: number; text: string }[];
   /**
    * The file itself, base64, for a PDF small enough to send whole.
    *
@@ -182,6 +246,7 @@ export async function extractText(file: File): Promise<Extracted> {
   let text: string;
   /** The PDF itself, where it can go whole as well as flattened. */
   let original: string | undefined;
+  let pages: { page: number; text: string }[] | undefined;
 
   if (/\.pdf$/i.test(name) || file.type === 'application/pdf') {
     text = await fromPdf(file);
@@ -195,6 +260,12 @@ export async function extractText(file: File): Promise<Extracted> {
     }
   } else if (/\.docx$/i.test(name)) {
     text = await fromDocx(file);
+  } else if (/\.pptx$/i.test(name)) {
+    const slides = await fromPptx(file);
+    pages = slides.map((s) => ({ page: s.slide, text: s.text }));
+    // Numbered in the flat text as well. A model reading this is being asked
+    // where something came from, and the number has to be in front of it.
+    text = slides.map((s) => `Slide ${s.slide}\n${s.text}`).join('\n\n');
   } else if (/^text\//.test(file.type) || /\.(txt|md|markdown|csv|rtf|html?)$/i.test(name)) {
     text = await file.text();
     if (/\.html?$/i.test(name)) {
@@ -208,7 +279,7 @@ export async function extractText(file: File): Promise<Extracted> {
       ).replace(/\n{3,}/g, '\n\n');
     }
   } else {
-    throw new Error(`${name} is not a kind of file this can read — PDF, Word, or text.`);
+    throw new Error(`${name} is not a kind of file this can read — PDF, Word, slides, or text.`);
   }
 
   text = text.replace(/\r\n/g, '\n').replace(/[ \t]+\n/g, '\n').trim();
@@ -222,5 +293,6 @@ export async function extractText(file: File): Promise<Extracted> {
     text,
     words: text.split(/\s+/).length,
     ...(original ? { pdf: original } : {}),
+    ...(pages ? { pages } : {}),
   };
 }
