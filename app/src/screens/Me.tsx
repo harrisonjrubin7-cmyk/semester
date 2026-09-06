@@ -11,6 +11,7 @@ import { Bell } from '../components/Icons';
 import { NOTIFICATIONS } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
+import { openHit } from '../lib/openhit';
 import { destinationsIn, lately, listed, saysFor, type Group } from '../lib/nav';
 
 import type { CourseModule, Screen } from '../lib/types';
@@ -357,22 +358,10 @@ export function Search() {
   const total = countHits(groups);
   const typed = state.query.trim().length > 0;
 
-  const open = (hit: Hit) => {
-    switch (hit.kind) {
-      case 'item':
-        return dispatch({ type: 'openItem', id: hit.id });
-      case 'course':
-        return dispatch({ type: 'openCourse', id: hit.id });
-      case 'unit':
-        return dispatch({ type: 'openGuide', id: hit.courseId, mode: hit.mode, unit: hit.unit });
-      case 'note':
-        return dispatch({ type: 'openNote', id: hit.id });
-      case 'task':
-        return dispatch({ type: 'setMineTab', tab: 'tasks' }), dispatch({ type: 'go', screen: 'mine' });
-      case 'screen':
-        return dispatch({ type: 'go', screen: hit.screen });
-    }
-  };
+  // Shared with the search overlay rather than repeated. Two copies drift the
+  // first time a kind of hit is added, and a result that opens from one place
+  // and not the other reads as the app being broken. See `lib/openhit.ts`.
+  const open = (hit: Hit) => openHit(hit, dispatch);
 
   return (
     <div style={{ padding: 18 }}>

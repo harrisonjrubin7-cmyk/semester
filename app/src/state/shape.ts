@@ -554,6 +554,13 @@ export interface Ephemeral {
     /** The deadline the email is about, when it was opened from one. */
     itemId: string;
   } | null;
+  /**
+   * Whether the search overlay is up.
+   *
+   * Ephemeral, and deliberately: an app that reopens a search box because you
+   * had one open yesterday is an app that has misread what a search is for.
+   */
+  finder: boolean;
   studyTab: 'guides' | 'tonight' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
@@ -796,6 +803,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     roomDraft: '',
     dueTab: 'ahead',
     mailSeed: null,
+    finder: false,
     studyTab: 'guides',
     noteId: null,
     lessonUnit: 0,
@@ -1144,6 +1152,7 @@ export type Action =
   | { type: 'undo' }
   | { type: 'forgetUndo' }
   | { type: 'quickAdd'; open: boolean }
+  | { type: 'finder'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }

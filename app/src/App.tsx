@@ -117,6 +117,7 @@ import { Keys } from './components/Keys';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
+import { Command } from './components/Command';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
 import { Tapped } from './components/Tapped';
@@ -954,6 +955,7 @@ export default function App() {
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+      {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
         <Rail />
         <div className="device device-pane">
           <Header />
@@ -995,6 +997,7 @@ export default function App() {
       <Undone />
       {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+        {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
       <Header />
       <SampleMark />
       {trouble}

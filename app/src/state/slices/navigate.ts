@@ -52,6 +52,9 @@ export function navigate(state: State, action: Action): State | null {
     case 'quickAdd':
       return { ...state, quickAdd: action.open };
 
+    case 'finder':
+      return { ...state, finder: action.open };
+
     case 'go':
       return push(state, action.screen);
 

@@ -49,7 +49,9 @@ export function Keys() {
       }
       switch (hit.action) {
         case 'search':
-          dispatch({ type: 'go', screen: 'search' });
+          // An overlay rather than a screen: looking something up should not
+          // cost you the page you were reading. See `components/Command.tsx`.
+          dispatch({ type: 'finder', open: true });
           break;
         case 'capture':
           dispatch({ type: 'quickAdd', open: true });
