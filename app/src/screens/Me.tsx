@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import { useRowStyle } from '../components/shell/useShell';
+import { ForcedProvider, useRowStyle } from '../components/shell/useShell';
 import { learned, showSpan } from '../lib/pace';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, EmptyState, Meter, SectionLabel, Segmented } from '../components/ui';
+import { EmptyState, Meter, SectionLabel, Segmented } from '../components/ui';
 import { NotYetOpened } from '../components/NotYetOpened';
-import { Bell, ChevronRight } from '../components/Icons';
+import { Group as Panel, NavRow } from '../components/shell/Rows';
+import { Bell } from '../components/Icons';
 import { NOTIFICATIONS } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
@@ -49,43 +50,15 @@ function Destination({
   account: { email: string } | null;
 }) {
   const { dispatch, school } = useStore();
-  const rowThirteen = useRowStyle(13);
   // The directory in the school's own words. See `lib/nav.ts` — the meal row
   // promised everyone "Commodore Cash" until this existed.
   const said = saysFor(to, school.capabilities);
   return (
-    <button
-      type="button"
-      className="bare tappable"
+    <NavRow
+      label={to.screen === 'account' && account ? 'Account · synced' : said.label}
+      sub={to.screen === 'account' && !account ? 'Not signed in — this device only.' : said.blurb}
       onClick={() => dispatch({ type: 'go', screen: to.screen })}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        width: '100%',
-        textAlign: 'left',
-        ...rowThirteen,
-      }}
-    >
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'calc(15.5px * var(--text-scale, 1))' }}>
-          {to.screen === 'account' && account ? 'Account · synced' : said.label}
-        </span>
-        <span
-          style={{
-            display: 'block',
-            fontSize: 'calc(12px * var(--text-scale, 1))',
-            opacity: 0.55,
-            lineHeight: 1.4,
-            marginTop: 2,
-            textWrap: 'pretty',
-          }}
-        >
-          {to.screen === 'account' && !account ? 'Not signed in — this device only.' : said.blurb}
-        </span>
-      </span>
-      <ChevronRight size={16} />
-    </button>
+    />
   );
 }
 
@@ -311,42 +284,58 @@ export function Me() {
         Everything → Yours → row. Nobody remembers a shelf for the three
         things they actually revisit; the app already knows what those are.
       */}
-      {recent.length > 0 && (
-        <>
-          <SectionLabel style={{ margin: '4px 0 2px' }}>Lately</SectionLabel>
-          {recent.map((d) => (
-            <Destination key={d.screen} to={d} account={account} />
-          ))}
-          <div style={{ height: 20 }} />
-        </>
-      )}
+      {/*
+        Grouped, always, and every shelf at once.
 
-      {/* Silent for anybody who has been round the app. See `lib/unseen.ts`. */}
-      <NotYetOpened />
+        This was a chip row over one shelf at a time — six chips, and whichever
+        you were not on was hidden. That solved the wrong half of the problem.
+        The reason a long directory is hard is not that it is long; it is that
+        nothing tells you where one kind of thing stops and the next begins, so
+        a chip row traded "I cannot see the boundaries" for "I cannot see the
+        other five shelves", which is worse: you now have to guess a shelf
+        before you are allowed to look at it.
 
-      <ChipRow
-        options={GROUPS}
-        value={GROUPS.includes(state.meGroup as Group) ? (state.meGroup as Group) : GROUPS[0]}
-        onChange={(next) => dispatch({ type: 'setMeGroup', group: next })}
-      />
-      {GROUPS.filter((g) => g === (state.meGroup as Group)).map((group) => {
-        // Two gates, and they are different things. `school.ts` hides what
-        // this university has no equivalent of — absent, not pending.
-        // `reveal.ts` hides what is real and not useful yet, and gives it back
-        // the moment there is something for it to work on.
-        const rows = listed(group, school.capabilities, facts, state.visited, state.showAll).filter(
-          (d) => !HIDE_IN_ME.includes(d.screen),
-        );
-        if (rows.length === 0) return null;
-        return (
-          <div key={group}>
-            <div style={{ height: 6 }} />
-            {rows.map((d) => (
-              <Destination key={d.screen} to={d} account={account} />
-            ))}
-          </div>
-        );
-      })}
+        Drawn panels with headers give the boundaries without hiding anything,
+        which is exactly what the settings index does, and what iOS Settings
+        does. One scroll, six headed panels, no chip to get wrong. It is the
+        same set of rows either way — nothing has been dropped.
+
+        `ForcedProvider` for the same reason `Index.tsx` has one: a directory
+        is findable because every row looks like every other row, so it does
+        not follow the app-wide plain/grouped setting.
+      */}
+      <ForcedProvider value="grouped">
+        <nav aria-label="Everything" style={{ margin: '0 -18px' }}>
+          {recent.length > 0 && (
+            <Panel header="Lately">
+              {recent.map((d) => (
+                <Destination key={d.screen} to={d} account={account} />
+              ))}
+            </Panel>
+          )}
+
+          {/* Silent for anybody who has been round the app. See `lib/unseen.ts`. */}
+          <NotYetOpened />
+
+          {GROUPS.map((group) => {
+            // Two gates, and they are different things. `school.ts` hides what
+            // this university has no equivalent of — absent, not pending.
+            // `reveal.ts` hides what is real and not useful yet, and gives it
+            // back the moment there is something for it to work on.
+            const rows = listed(group, school.capabilities, facts, state.visited, state.showAll).filter(
+              (d) => !HIDE_IN_ME.includes(d.screen),
+            );
+            if (rows.length === 0) return null;
+            return (
+              <Panel key={group} header={group}>
+                {rows.map((d) => (
+                  <Destination key={d.screen} to={d} account={account} />
+                ))}
+              </Panel>
+            );
+          })}
+        </nav>
+      </ForcedProvider>
         </>
       )}
       <div style={{ height: 22 }} />
