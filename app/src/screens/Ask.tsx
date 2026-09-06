@@ -5,6 +5,8 @@ import { proposalsLine, readProposal, TOOLS, type Proposal } from '../lib/tools'
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { useLive } from '../lib/live';
+import { readMode, type Mode } from '../lib/mode';
+import { build as guidebook } from '../lib/guidebook';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { datedItems } from '../lib/select';
@@ -41,6 +43,18 @@ export function Ask() {
    * an offer about a state of the world that has moved on.
    */
   const [proposals, setProposals] = useState<Proposal[]>([]);
+
+  /*
+   * Whether the course context is attached at all.
+   *
+   * The screen used to require a course before it would answer anything,
+   * which made "explain price elasticity" a question you had to file under a
+   * subject first. It is a filter now: on, the guide goes with the question;
+   * off, it does not. Neither is a gate.
+   */
+  const [scoped, setScoped] = useState(true);
+  /** What the last question was read as, shown beside the answer. */
+  const [ran, setRan] = useState<Mode | null>(null);
   /** The last question asked, so a failure can be tried again without retyping. */
   const abort = useRef<AbortController | null>(null);
 
@@ -75,15 +89,63 @@ export function Ask() {
     return `${guide.code} — ${guide.name}\n${guide.blurb}\n\nUpcoming:\n${due || '- nothing left'}\n\nUnits:\n${units}`;
   }, [guide, dueNow]);
 
-  const system =
-    'You are helping a Vanderbilt undergraduate study one specific course. ' +
-    'The course guide below is the material they are being examined on — prefer it over general knowledge, ' +
-    'and say so when the guide does not cover something. Be specific: numbers, names, mechanisms. ' +
-    'Short paragraphs, no filler, no restating the question. ' +
-    'Each deadline below carries its id in brackets; use those ids when a tool needs one, ' +
-    'and never invent one. Offer a tool only when the student has actually asked for the thing ' +
-    'it does — an unasked-for offer is noise they have to dismiss.\n\n' +
-    context;
+  /**
+   * What the app itself can be said to do, for a question about the app.
+   *
+   * The registry and the generated guide, and nothing else. This is the
+   * boundary that stops an answer inventing a feature: a student told to
+   * "enable weekly digests in Settings" concludes the app is broken, and the
+   * only defence is that the answer can only name what the registry holds.
+   */
+  const appFacts = useMemo(() => {
+    const book = guidebook();
+    return book.sections
+      .filter((sec) => ['screens', 'settings', 'keys', 'wrong'].includes(sec.id))
+      .map((sec) => `## ${sec.title}\n${sec.body}`)
+      .join('\n\n');
+  }, []);
+
+  /**
+   * One system prompt per mode.
+   *
+   * The base is the same in all three — be specific, do not invent a feature —
+   * and what changes is what is attached and what the answer is expected to
+   * rest on. A general question gets no guide and no instruction to prefer
+   * one; that is the whole point of the mode existing.
+   */
+  const systemFor = (mode: Mode): string => {
+    const never =
+      'Never describe a feature of this app that is not in the material below. If the app cannot ' +
+      'do what is being asked, say so plainly and name the closest thing it can do. ' +
+      'Be specific: numbers, names, mechanisms. Short paragraphs, no filler, no restating the ' +
+      'question. No exclamation marks.';
+
+    if (mode === 'app') {
+      return (
+        'You are answering a question about the study app the student is using. Everything you ' +
+        'may say about it is below — the screens it has, its settings, its shortcuts. ' +
+        `${never}\n\n${appFacts}`
+      );
+    }
+    if (mode === 'grounded') {
+      return (
+        'You are answering a question about this student\'s own courses and records. Answer from ' +
+        'what is below and say which part you used. Where a number rests on part of the picture, ' +
+        'say how much of it — "3 of 8 quizzes graded, so this is partial". Do not estimate a ' +
+        'number the records do not support. ' +
+        'Each deadline carries its id in brackets; use those ids when a tool needs one, and never ' +
+        'invent one. Offer a tool only when the student has asked for the thing it does.\n\n' +
+        `${never}\n\n${scoped ? context : ''}`
+      );
+    }
+    return (
+      'You are helping a university student. Answer the question they asked, well and directly — ' +
+      'a concept, a piece of code, a piece of writing, a decision, whatever it is. Do not narrow ' +
+      'it to their coursework and do not refuse because it is not about a course. ' +
+      `${never}` +
+      (scoped ? `\n\nFor context, one of their courses:\n\n${context}` : '')
+    );
+  };
 
   const send = async (text: string) => {
     if (!text.trim() || busy) return;
@@ -97,8 +159,10 @@ export function Ask() {
     abort.current = new AbortController();
     let sofar = '';
     try {
+      const read = readMode(text);
+      setRan(read.mode);
       const reply = await ask({
-        system,
+        system: systemFor(read.mode),
         messages: next,
         // Every question about this course opens with the same guide. Caching
         // is a prefix match, so the saving is real only because `context`
@@ -182,16 +246,30 @@ export function Ask() {
 
   return (
     <div style={{ padding: 18 }}>
+      {/*
+        The course is a filter, not a gate.
+
+        Tapping the course you are already on turns the scope off, which is
+        how you ask something that has nothing to do with a course without
+        first having to file it under one.
+      */}
       <div className="chiprow">
         <div style={{ display: 'flex', gap: 6 }}>
           {catalog.courses.map((c) => {
-            const on = c.id === courseId;
+            const on = scoped && c.id === courseId;
             return (
               <button
                 key={c.id}
                 type="button"
                 className="btn"
-                onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: state.mode })}
+                onClick={() => {
+                  if (c.id === courseId) {
+                    setScoped(!scoped);
+                    return;
+                  }
+                  setScoped(true);
+                  dispatch({ type: 'openGuide', id: c.id, mode: state.mode });
+                }}
                 aria-pressed={on}
                 style={{
                   flex: 'none',
@@ -209,6 +287,29 @@ export function Ask() {
             );
           })}
         </div>
+      </div>
+
+      {/* What the last answer was drawn from. Never a mystery — an answer
+          whose basis is invisible is one nobody can weigh. */}
+      <div
+        style={{
+          fontFamily: 'var(--font-heading)',
+          fontSize: 'var(--type-xs)',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          opacity: 0.55,
+          marginTop: 'var(--sp-4)',
+        }}
+      >
+        {ran === 'app'
+          ? 'Answered from this app’s own screens'
+          : ran === 'grounded'
+            ? `Answered from your courses${scoped ? '' : ' — scope is off'}`
+            : ran === 'general'
+              ? `Answered generally${scoped ? `, with ${guide.code} attached` : ''}`
+              : scoped
+                ? `${guide.code} is attached. Tap it again to ask about anything else.`
+                : 'No course attached. Ask anything.'}
       </div>
 
       {!configured(config) || showKey ? (
@@ -508,7 +609,7 @@ export function Ask() {
         onKeyDown={(e) => {
           if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) void send(draft);
         }}
-        placeholder="Ask about this course, or paste a reading to turn into cards…"
+        placeholder="Ask anything — a concept, your own deadlines, or how this app works…"
         style={{ minHeight: 84, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 16 }}
         aria-label="Your question"
       />

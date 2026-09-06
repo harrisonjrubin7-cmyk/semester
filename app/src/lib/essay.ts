@@ -159,25 +159,20 @@ export function gate(args: {
     return { ok: false, why: 'Pick the course, so its recorded policy can be checked.' };
   }
 
-  const stance = args.stance ?? 'unstated';
-  if (stance === 'banned') {
-    return {
-      ok: false,
-      why: `${args.courseCode} is recorded as not permitting AI. This tool will not draft for it. The project file — headings, the question each section has to answer, and blanks — is what to use instead.`,
-    };
-  }
-  if (stance === 'limited') {
-    return {
-      ok: false,
-      why: `${args.courseCode} is recorded as permitting AI only in a limited way. "Limited" is not enough for a draft, because the limit is usually the drafting. Use the project file, or change the recorded policy if you have read the syllabus and it plainly allows this.`,
-    };
-  }
-  if (stance === 'unstated') {
-    return {
-      ok: false,
-      why: `Nothing is recorded about what ${args.courseCode} permits. Read the syllabus and record it under Edit the course. Until then the answer is no — an unread policy is not a permissive one.`,
-    };
-  }
+  /*
+   * The recorded stance no longer blocks anything.
+   *
+   * It used to: `banned` and `limited` refused outright, and `unstated` was
+   * read as a no on the principle that an unread policy is not a permissive
+   * one. The owner of this app has asked for that removed, and it is their
+   * call to make — the policy field is their own transcription of their own
+   * syllabus, so this is a guardrail somebody set for themselves and has
+   * since decided against.
+   *
+   * The stance is still recorded, still shown, and still one line away from
+   * gating again: put the refusals back here and nothing else changes. What
+   * it is not is a lock.
+   */
   if (!args.attested) {
     return {
       ok: false,
@@ -190,14 +185,16 @@ export function gate(args: {
 /** What a recorded stance means, in one line, for the settings screen. */
 export function stanceLine(s: Stance): string {
   switch (s) {
+    // Kept as a record of what the syllabus says. It no longer decides
+    // anything — see `gate` for why and for how to put that back.
     case 'banned':
-      return 'No AI. Nothing here will draft for this course.';
+      return 'The syllabus says no AI. Recorded, not enforced.';
     case 'limited':
-      return 'Allowed for some things only — this app treats that as no, for drafting.';
+      return 'The syllabus allows it for some things only. Recorded, not enforced.';
     case 'allowed':
       return 'Drafting permitted, per the syllabus.';
     default:
-      return 'Not recorded yet. Treated as no.';
+      return 'Not recorded.';
   }
 }
 

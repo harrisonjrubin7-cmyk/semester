@@ -39,30 +39,46 @@ describe('gate', () => {
     expect(g.why).toMatch(/allows/i);
   });
 
-  it('refuses coursework for a course recorded as banning AI', () => {
-    const g = gate({ useId: 'course', attested: true, courseCode: 'CORE 2500', stance: 'banned' });
-    expect(g.ok).toBe(false);
-    expect(g.why).toContain('CORE 2500');
-    expect(g.why).toMatch(/project file/i);
+  /*
+   * The recorded stance no longer refuses anything.
+   *
+   * These three used to assert the opposite: banned refused, limited refused,
+   * and an unrecorded policy refused on the principle that an unread policy is
+   * not a permissive one. The owner of this app asked for that removed. The
+   * field is their own transcription of their own syllabus, so it was a
+   * guardrail they set for themselves and have since decided against.
+   *
+   * Kept as tests rather than deleted, inverted, so that putting the gate back
+   * is a change these notice.
+   */
+  it('no longer refuses a course recorded as banning AI', () => {
+    expect(
+      gate({ useId: 'course', attested: true, courseCode: 'CORE 2500', stance: 'banned' }).ok,
+    ).toBe(true);
   });
 
-  it('treats a limited policy as a no, because the limit is usually the drafting', () => {
+  it('no longer refuses a limited policy', () => {
     expect(
       gate({ useId: 'course', attested: true, courseCode: 'BUS 1600', stance: 'limited' }).ok,
-    ).toBe(false);
+    ).toBe(true);
   });
 
-  it('treats an unrecorded policy as a no rather than a maybe', () => {
-    const g = gate({ useId: 'course', attested: true, courseCode: 'ECON 1020' });
-    expect(g.ok).toBe(false);
-    expect(g.why).toMatch(/not a permissive one/);
+  it('no longer refuses an unrecorded policy', () => {
+    expect(gate({ useId: 'course', attested: true, courseCode: 'ECON 1020' }).ok).toBe(true);
+  });
+
+  it('still records what the syllabus said, even though it does not act on it', () => {
+    // The record is the point of keeping the field: it is what the student
+    // read in their own syllabus, and it stays visible.
+    expect(stanceLine('banned')).toMatch(/Recorded, not enforced/);
+    expect(stanceLine('limited')).toMatch(/Recorded, not enforced/);
   });
 
   it('needs the course named before it can check anything', () => {
     expect(gate({ useId: 'course', attested: true }).ok).toBe(false);
   });
 
-  it('opens only for a course recorded as allowing it, and still asks per assignment', () => {
+  it('still asks per assignment, which is the one check that remains', () => {
     expect(
       gate({ useId: 'course', attested: false, courseCode: 'X 100', stance: 'allowed' }).ok,
     ).toBe(false);
