@@ -504,7 +504,23 @@ export async function pullCalendar(courses: Course[], id: ProviderId): Promise<F
         courses,
         e.id,
         e.subject || 'Untitled',
-        new Date(`${e.start.dateTime}${e.start.dateTime.endsWith('Z') ? '' : 'Z'}`),
+        /*
+         * An all-day event is a date, not an instant.
+         *
+         * Graph returns every start as a UTC timestamp, so an all-day event on
+         * the 20th arrives as midnight UTC on the 20th — and `toFeedEvent`
+         * reads the day back with local getters, which in Nashville is seven
+         * in the evening on the 19th. Reading week showed up a day early, and
+         * only for people west of Greenwich, which is why a UTC test runner
+         * never saw it.
+         *
+         * So an all-day event is parsed from its date alone, at local
+         * midnight, which is what Google's branch below already does with the
+         * `date` field Calendar sends for exactly this case.
+         */
+        e.isAllDay
+          ? new Date(`${e.start.dateTime.slice(0, 10)}T00:00:00`)
+          : new Date(`${e.start.dateTime}${e.start.dateTime.endsWith('Z') ? '' : 'Z'}`),
         e.isAllDay,
         e.location?.displayName ?? '',
         e.bodyPreview ?? '',
@@ -604,7 +620,12 @@ export async function listRemoteFiles(id: ProviderId): Promise<RemoteFile[]> {
       link: f.webViewLink,
       // A Google Doc has to be exported rather than downloaded; plain text is
       // what the card parser wants anyway.
-      download: f.mimeType.startsWith('application/vnd.google-apps')
+      // Optional, like `modifiedTime` beside it. Drive returns the fields it
+      // was asked for, but not always for every file — a shortcut, or one the
+      // account can see but not read metadata on — and an unguarded read here
+      // threw away the whole file list rather than one row of it. Absent means
+      // not a Google Doc, which is what the plain download URL is for.
+      download: f.mimeType?.startsWith('application/vnd.google-apps')
         ? `https://www.googleapis.com/drive/v3/files/${f.id}/export?mimeType=text/plain`
         : `https://www.googleapis.com/drive/v3/files/${f.id}?alt=media`,
       modified: f.modifiedTime?.slice(0, 10) ?? '',
