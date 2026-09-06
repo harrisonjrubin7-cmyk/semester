@@ -19,6 +19,7 @@
  * function, and why the app says all of this on the screen where a key is typed.
  */
 
+import type { Usage } from './spend';
 import type { StudyCard } from './types';
 
 import { DEFAULT_MODEL as OPENAI_DEFAULT, OPENAI_MODELS, askOpenAI } from './openai';
@@ -230,6 +231,14 @@ function explainNetworkError(taking: Route, e: unknown): Error {
   return new Error(`${said}\n\nNo connection. This is the one part of the app that needs one.`);
 }
 
+/** The usage block as the wire sends it. Every field is optional on the wire. */
+interface RawUsage {
+  input_tokens?: number;
+  output_tokens?: number;
+  cache_creation_input_tokens?: number;
+  cache_read_input_tokens?: number;
+}
+
 /** A photograph or screenshot, ready to send. */
 export interface Shot {
   /** "image/jpeg", "image/png", "image/webp" or "image/gif". */
@@ -296,6 +305,15 @@ interface AskOptions {
   tools?: ToolSpec[];
   /** Told about each tool the model wants to use, once its arguments are whole. */
   onToolUse?: (call: ToolCall) => void;
+  /**
+   * What the reply cost, in tokens, as the API reported it.
+   *
+   * Called once at the end, and not at all where nothing was reported — a
+   * proxy that strips the usage block, an aborted request, the OpenAI route.
+   * A caller that shows a meter has to be able to tell "nothing was spent"
+   * from "nothing was measured", so silence is the signal for the second.
+   */
+  onUsage?: (use: Usage) => void;
   /**
    * Constrain the shape of the reply.
    *
@@ -562,6 +580,28 @@ export async function ask(options: AskOptions): Promise<string> {
    */
   let building: { id: string; name: string; json: string } | null = null;
 
+  /**
+   * The usage counts, assembled from two events.
+   *
+   * `message_start` carries the input side — including how much was read from
+   * the cache, which is the number that says whether caching is working at
+   * all. `message_delta` carries the output count once generation has
+   * finished. Neither alone is the cost of a reply.
+   *
+   * Null until something reports, so a route that strips the block stays
+   * distinguishable from a reply that genuinely cost nothing.
+   */
+  let counted: Usage | null = null;
+  const count = (u: RawUsage | undefined) => {
+    if (!u) return;
+    counted = {
+      input: u.input_tokens ?? counted?.input ?? 0,
+      output: u.output_tokens ?? counted?.output ?? 0,
+      cacheWrite: u.cache_creation_input_tokens ?? counted?.cacheWrite ?? 0,
+      cacheRead: u.cache_read_input_tokens ?? counted?.cacheRead ?? 0,
+    };
+  };
+
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -576,6 +616,8 @@ export async function ask(options: AskOptions): Promise<string> {
       try {
         const event = JSON.parse(payload) as {
           type: string;
+          message?: { usage?: RawUsage };
+          usage?: RawUsage;
           content_block?: { type?: string; id?: string; name?: string };
           delta?: {
             type?: string;
@@ -584,6 +626,10 @@ export async function ask(options: AskOptions): Promise<string> {
             partial_json?: string;
           };
         };
+
+        // Input counts open the stream; output counts close it.
+        if (event.type === 'message_start') count(event.message?.usage);
+        if (event.type === 'message_delta') count(event.usage);
 
         if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use') {
           building = {
@@ -629,6 +675,7 @@ export async function ask(options: AskOptions): Promise<string> {
     }
   }
 
+  if (counted) options.onUsage?.(counted);
   return text;
 }
 

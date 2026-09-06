@@ -3,6 +3,9 @@ import { useStore } from '../state/store';
 import { Dictate } from '../components/Dictate';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
 import { currentLook } from '../state/shape';
+import { answerLocally, type Local } from '../lib/localask';
+import { clear as clearLog, load as loadLog, save as saveLog } from '../lib/chatlog';
+import { line as spendLine, monthStart, read as readSpend, record, since, total, money, RATES_READ } from '../lib/spend';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { useLive } from '../lib/live';
@@ -32,7 +35,16 @@ export function Ask() {
 
   const [config, setConfig] = useState(settings());
   const [showKey, setShowKey] = useState(!configured());
-  const [turns, setTurns] = useState<Turn[]>([]);
+  /**
+   * The conversation, restored if there was one.
+   *
+   * Asking something, tapping into a course to check a date and coming back
+   * used to lose the thread — which meant people asked one question and
+   * stopped, because the second question in a conversation is usually the
+   * good one. See `lib/chatlog.ts` for where it is kept and why not in the
+   * main store.
+   */
+  const [turns, setTurns] = useState<Turn[]>(() => loadLog()?.turns ?? []);
   const [draft, setDraft] = useState('');
   const [streaming, setStreaming] = useState('');
   const [busy, setBusy] = useState(false);
@@ -68,6 +80,18 @@ export function Ask() {
   const [ran, setRan] = useState<Mode | null>(null);
   /** Which of your records the last answer drew on. Shown, never asserted. */
   const [used, setUsed] = useState<string[]>([]);
+  /**
+   * What the app itself could say about the last question, with no request.
+   *
+   * Shown above the answer rather than instead of it. A question about a
+   * screen has an answer the registry already holds, and the offline path is
+   * worth having for the student on a train — but retrieval is retrieval, so
+   * it is presented as the screens whose own description matched, not as
+   * prose that reads like a verdict. See `lib/localask.ts`.
+   */
+  const [locally, setLocally] = useState<Local | null>(null);
+  /** What the asking has cost. Re-read after each answer. See `lib/spend.ts`. */
+  const [spend, setSpend] = useState(() => readSpend());
   /** The last question asked, so a failure can be tried again without retyping. */
   const abort = useRef<AbortController | null>(null);
 
@@ -105,6 +129,19 @@ export function Ask() {
     }),
     [dueNow, state, catalog],
   );
+
+  /*
+   * Written when the conversation changes, and only then.
+   *
+   * Not in a `useEffect` on every render: this is a localStorage write, and
+   * the transcript changes exactly twice per question. Called from the two
+   * places that change it, which is also the only way to be sure a save is
+   * not silently skipped by a dependency array somebody edits later.
+   */
+  const remember = (next: Turn[]) => {
+    setTurns(next);
+    saveLog({ turns: next, at: Date.now(), courseId });
+  };
 
   /** The lists a write can add a row to, snapshotted so an undo is exact. */
   const lists = (): Lists => ({
@@ -257,10 +294,32 @@ export function Ask() {
     );
   };
 
+  /**
+   * What the app can say about itself for this question, if anything.
+   *
+   * The threshold, not the mode, is what decides. See the note at the call
+   * site for why the mode reader is the wrong gate.
+   */
+  const localFor = (text: string, mode: Mode): Local | null => {
+    const found = answerLocally(text);
+    if (!found) return null;
+    if (mode === 'app') return found;
+    /*
+     * A word in common is not a question about a screen.
+     *
+     * The bar is the score alone, never "but a guide line matched" — a guide
+     * line will match almost any question with two ordinary words in it, and
+     * an escape hatch on the threshold is the threshold not existing.
+     * Three points is one question word landing on a screen's own label;
+     * half that is the least this should ever show unasked.
+     */
+    return (found.matches[0]?.score ?? 0) >= 1.5 ? found : null;
+  };
+
   const send = async (text: string) => {
     if (!text.trim() || busy) return;
     const next: Turn[] = [...turns, { role: 'user', content: text.trim() }];
-    setTurns(next);
+    remember(next);
     setDraft('');
     setStreaming('');
     trouble.clear();
@@ -271,6 +330,24 @@ export function Ask() {
     try {
       const read = readMode(text);
       setRan(read.mode);
+      /*
+       * The app's own answer first, on every question — not only on the ones
+       * the mode reader calls app questions.
+       *
+       * Gating it on `mode === 'app'` looked right and was wrong the first
+       * time it ran: "where is the meal plan" is read as a general question,
+       * because the app shape deliberately requires an operating verb, and so
+       * the offline path never fired on the plainest app question there is.
+       * The mode reader is tuned for what to *attach*, which is a different
+       * question from what the app can answer about itself.
+       *
+       * So it runs on everything and the bar moves instead. On a question the
+       * mode reader did call an app question, a list of candidates is useful
+       * even when the ranking is loose. On anything else only a strong match
+       * is worth showing, because "explain price elasticity" must not come
+       * back with a row about the Costs screen.
+       */
+      setLocally(localFor(text, read.mode));
       /*
        * Assembled per question, by the one function allowed to decide it.
        *
@@ -315,17 +392,24 @@ export function Ask() {
           setProposals((was) => (was.some((q) => q.id === p.id) ? was : [...was, p]));
         },
         signal: abort.current.signal,
+        // What it cost, as the API reported it. Silent where nothing was
+        // reported — a proxy that strips the block, the OpenAI route — so the
+        // meter can tell "free" from "not measured". See `lib/spend.ts`.
+        onUsage: (u) => {
+          record({ at: Date.now(), model: settings().model, from: 'ask', use: u });
+          setSpend(readSpend());
+        },
         onText: (chunk) => {
           sofar += chunk;
           setStreaming(sofar);
         },
       });
-      setTurns([...next, { role: 'assistant', content: reply }]);
+      remember([...next, { role: 'assistant', content: reply }]);
     } catch (e) {
       // Pressing Stop is a decision, not a failure. Keep what had arrived —
       // half an answer you asked to cut short is still worth reading.
       if (e instanceof DOMException && e.name === 'AbortError') {
-        if (sofar.trim()) setTurns([...next, { role: 'assistant', content: sofar }]);
+        if (sofar.trim()) remember([...next, { role: 'assistant', content: sofar }]);
       } else {
         // `send` here is the one from the render that failed, so it still
         // closes over the transcript as it was *before* this question was
@@ -624,14 +708,34 @@ export function Ask() {
           <div className="kicker">
             {guide.code} · {modelLabel()} · {routeLabel()}
           </div>
-          <button
-            type="button"
-            className="bare"
-            onClick={() => setShowKey(true)}
-            style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}
-          >
-            SETTINGS
-          </button>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
+            {turns.length > 0 && (
+              <button
+                type="button"
+                className="bare"
+                onClick={() => {
+                  remember([]);
+                  clearLog();
+                  setLocally(null);
+                  setProposals([]);
+                  setApplied([]);
+                  setRan(null);
+                  setUsed([]);
+                }}
+                style={{ flex: 'none', width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em' }}
+              >
+                NEW
+              </button>
+            )}
+            <button
+              type="button"
+              className="bare"
+              onClick={() => setShowKey(true)}
+              style={{ flex: 'none', width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em' }}
+            >
+              SETTINGS
+            </button>
+          </div>
         </div>
       )}
 
@@ -684,6 +788,49 @@ export function Ask() {
           </div>
         )}
       </div>
+
+      {/* What the app itself can say, with no request behind it.
+          Shown as the screens whose own description matched, not as a
+          sentence naming one — a student has no reason to doubt an app
+          describing itself, so a confident wrong answer here is the worst
+          kind. See `lib/localask.ts`. */}
+      {locally && (
+        <div style={{ marginTop: 14 }}>
+          <div className="kicker">From this app, with nothing sent</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 8 }}>
+            {locally.matches.map((m) => (
+              <Blueprint
+                key={m.screen}
+                onClick={() => dispatch({ type: 'go', screen: m.screen })}
+                style={{ padding: '10px 12px', textAlign: 'left' }}
+              >
+                <div style={{ fontSize: 'var(--type-sm)', fontFamily: 'var(--font-heading)' }}>
+                  {m.label}
+                  <span style={{ opacity: 0.45, fontFamily: 'var(--font-body)' }}> · {m.group}</span>
+                </div>
+                <div style={{ fontSize: 'var(--type-xs)', opacity: 0.7, lineHeight: 1.45, marginTop: 3, textWrap: 'pretty' }}>
+                  {m.blurb}
+                </div>
+              </Blueprint>
+            ))}
+            {locally.fromGuide.map((quoted) => (
+              <div
+                key={quoted}
+                style={{
+                  fontSize: 'var(--type-xs)',
+                  opacity: 0.7,
+                  lineHeight: 1.5,
+                  paddingLeft: 10,
+                  borderLeft: '2px solid var(--app-line)',
+                  textWrap: 'pretty',
+                }}
+              >
+                {quoted}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* What it has offered to do. Nothing here has happened: each line says
           exactly what its button will change, and the button is the only
@@ -822,6 +969,29 @@ export function Ask() {
       {/* Two lists, both written from what the code does rather than from
           what the feature was meant to do. The first stopped being true when
           `ask` widened past one course, which is exactly how these go wrong. */}
+      {/* What the asking has cost. A key typed into this app is billed to
+          the student's own card, and the app spent it silently until now.
+          Tokens are the fact; money is a conversion at published rates that
+          can go stale, which is why the rates and their date are named. */}
+      {spend.length > 0 && (
+        <>
+          <SectionLabel>What this has cost</SectionLabel>
+          <div style={{ fontSize: 'var(--type-sm)', lineHeight: 1.5, textWrap: 'pretty' }}>
+            {spendLine(since(spend, monthStart(now)))} this month.
+            <span style={{ opacity: 0.6 }}>
+              {' '}
+              {(() => {
+                const t = total(since(spend, monthStart(now)));
+                const unpriced = t.unpriced > 0 ? ` ${t.unpriced} of them were answered by a model with no rate here, so the total is short by those.` : '';
+                return `Tokens are counted by the API; the money is an estimate at list prices as at ${RATES_READ}, so treat it as a scale rather than a bill.${unpriced}`;
+              })()}
+            </span>
+            {' '}
+            <span style={{ opacity: 0.6 }}>All time: {money(total(spend).dollars)}.</span>
+          </div>
+        </>
+      )}
+
       <SectionLabel>What it can see</SectionLabel>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Your course codes and today’s date, always. For a question about your own records: the
