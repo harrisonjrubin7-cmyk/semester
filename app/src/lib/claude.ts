@@ -809,3 +809,69 @@ export async function readShots(
     return { cards: [], note: '' };
   }
 }
+
+/**
+ * Turn a reading into cards and terms.
+ *
+ * The sibling of `readShots`, for prose rather than photographs. Adding a
+ * reading to a course used to attach the file and, where it happened to be
+ * plain text, drop it in the box — where `lib/parse.ts` looked for things
+ * already shaped like a question and an answer. A journal article is not
+ * shaped like that, so the guide gained a file and nothing else: the screen
+ * said the material was added and every study format stayed exactly as it was.
+ *
+ * The refusals are the same ones the syllabus pipeline makes, and for the same
+ * reason — this material joins the guide the student revises from, so a card
+ * invented out of general knowledge is worse than a shorter deck.
+ */
+export async function readMaterial(
+  text: string,
+  context: string,
+  signal?: AbortSignal,
+): Promise<{ cards: StudyCard[]; terms: { t: string; d: string }[]; note: string }> {
+  const reply = await ask({
+    signal,
+    think: true,
+    maxTokens: 4000,
+    system:
+      'You are reading course material a university student has added to a study guide — a ' +
+      'reading, a handout, a set of lecture notes. Turn it into study material; do not invent.\n\n' +
+      'Reply with JSON only: {"note":"…","cards":[{"q":"…","a":"…"}],"terms":[{"t":"…","d":"…"}]}\n\n' +
+      '- note: what this material is, in one or two sentences. Say plainly if it is not course ' +
+      'material at all — and then return no cards.\n' +
+      '- cards: questions an exam could ask, answered in full prose with the specific numbers, ' +
+      'names, dates and steps the text actually gives. Not topic labels: "Know the GGL study" ' +
+      'is not a card. Between 0 and 25, however many the material genuinely supports.\n' +
+      '- terms: vocabulary this material defines, with the definition it gives. Between 0 and 20.\n' +
+      '- Everything must come from the text in front of you. Do not complete a half-stated idea ' +
+      'from general knowledge, and leave out anything the material only alludes to.',
+    messages: [
+      {
+        role: 'user',
+        content: `Course context:\n${context}\n\nThe material:\n\n${text.slice(0, 120_000)}`,
+      },
+    ],
+  });
+
+  const start = reply.indexOf('{');
+  const end = reply.lastIndexOf('}');
+  if (start === -1 || end === -1) return { cards: [], terms: [], note: '' };
+  try {
+    const parsed = JSON.parse(reply.slice(start, end + 1)) as {
+      cards?: StudyCard[];
+      terms?: { t?: string; d?: string }[];
+      note?: string;
+    };
+    return {
+      note: typeof parsed.note === 'string' ? parsed.note.trim() : '',
+      cards: (parsed.cards ?? [])
+        .filter((c) => typeof c?.q === 'string' && typeof c?.a === 'string' && c.q && c.a)
+        .map((c) => ({ q: c.q.trim(), a: c.a.trim() })),
+      terms: (parsed.terms ?? [])
+        .filter((t) => typeof t?.t === 'string' && typeof t?.d === 'string' && t.t && t.d)
+        .map((t) => ({ t: (t.t as string).trim(), d: (t.d as string).trim() })),
+    };
+  } catch {
+    return { cards: [], terms: [], note: '' };
+  }
+}

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ask, readCitation, withAttachments } from './claude';
+import { ask, readCitation, readMaterial, withAttachments } from './claude';
 
 const user = [{ role: 'user' as const, content: 'What is due first?' }];
 
@@ -338,5 +338,95 @@ describe('a constrained reply shape', () => {
     expect(attempt).toBe(2);
     expect(text).toBe('{"cards":[]}');
     expect(sent!.body).not.toHaveProperty('output_config');
+  });
+});
+
+/**
+ * Turning an attached reading into study material.
+ *
+ * The screen that calls this used to attach the file and stop there, so the
+ * guide gained a PDF and every study format carried on showing what it had
+ * before. What matters now is the same thing that matters everywhere else the
+ * model writes into a guide: nothing malformed reaches the deck, and a reply
+ * that is not what was asked for produces no cards rather than bad ones.
+ */
+describe('reading material into cards', () => {
+  const REPLY = {
+    note: 'Chapter 4 of Trounstine, on federal lending grades and local zoning.',
+    cards: [{ q: 'What did the HOLC grade?', a: 'It graded 239 cities between 1930 and 1960.' }],
+    terms: [{ t: 'Redlining', d: 'Marking a neighbourhood as too risky to lend into.' }],
+  };
+
+  it('sends the course and its units, so a card is filed where it belongs', async () => {
+    catchRequest([said(JSON.stringify(REPLY))]);
+    await readMaterial('The reading itself.', 'ECON 1020 — Micro\nUnits:\n1. Supply');
+    const asked = (sent!.body.messages as { content: string }[])[0].content;
+    expect(asked).toContain('ECON 1020');
+    expect(asked).toContain('1. Supply');
+    expect(asked).toContain('The reading itself.');
+  });
+
+  it('hands back the cards, the terms and what it made of the material', async () => {
+    catchRequest([said(JSON.stringify(REPLY))]);
+    const got = await readMaterial('x', 'ECON 1020');
+    expect(got.cards).toEqual(REPLY.cards);
+    expect(got.terms).toEqual(REPLY.terms);
+    expect(got.note).toBe(REPLY.note);
+  });
+
+  it('reads the JSON out of a reply that arrives wrapped in prose', async () => {
+    // Models preface and fence. The screen must not lose a whole reading to a
+    // sentence in front of the brace.
+    catchRequest([said('Here you are:\n```json\n' + JSON.stringify(REPLY) + '\n```\nHope that helps.')]);
+    expect((await readMaterial('x', 'c')).cards).toHaveLength(1);
+  });
+
+  it('adds nothing at all when the reply is not JSON', async () => {
+    // Better a guide that gained a file than a guide that gained nonsense.
+    catchRequest([said('I could not read that.')]);
+    expect(await readMaterial('x', 'c')).toEqual({ cards: [], terms: [], note: '' });
+  });
+
+  it('adds nothing when the JSON is cut off mid-stream', async () => {
+    catchRequest([said('{"cards":[{"q":"half a ques')]);
+    expect((await readMaterial('x', 'c')).cards).toEqual([]);
+  });
+
+  it('drops a half-written card rather than showing a blank side', async () => {
+    // A card with no answer is drilled, turned over, and shows nothing.
+    catchRequest([
+      said(
+        JSON.stringify({
+          cards: [
+            { q: 'Kept?', a: 'Yes.' },
+            { q: 'No answer' },
+            { q: '', a: 'No question' },
+            { a: 'Nor this' },
+          ],
+          terms: [{ t: 'Kept', d: 'Yes.' }, { t: 'No definition' }, { d: 'No term' }],
+        }),
+      ),
+    ]);
+    const got = await readMaterial('x', 'c');
+    expect(got.cards).toEqual([{ q: 'Kept?', a: 'Yes.' }]);
+    expect(got.terms).toEqual([{ t: 'Kept', d: 'Yes.' }]);
+  });
+
+  it('copes with a reply that answers with no cards and no terms', async () => {
+    // What it is told to do when the file is not course material at all.
+    catchRequest([said(JSON.stringify({ note: 'This is a receipt, not a reading.' }))]);
+    const got = await readMaterial('x', 'c');
+    expect(got.note).toBe('This is a receipt, not a reading.');
+    expect(got.cards).toEqual([]);
+    expect(got.terms).toEqual([]);
+  });
+
+  it('does not send a whole textbook, whatever was attached', async () => {
+    // A 400-page PDF read to text would be refused by the API, and the refusal
+    // would arrive as a failure rather than a shorter deck.
+    catchRequest([said('{}')]);
+    await readMaterial('x'.repeat(500_000), 'c');
+    const asked = (sent!.body.messages as { content: string }[])[0].content;
+    expect(asked.length).toBeLessThan(130_000);
   });
 });
