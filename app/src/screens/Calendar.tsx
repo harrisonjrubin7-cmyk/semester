@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useStore } from '../state/store';
 import { DeadlineRow } from '../components/DeadlineRow';
 import { MarkClass } from '../components/MarkClass';
@@ -13,6 +14,7 @@ import { WeekGrid } from '../components/WeekGrid';
 import { WeekDue } from '../components/WeekDue';
 import { PrintButton } from '../components/PrintButton';
 import { kindOf } from '../lib/kinds';
+import { dayLabel, monthLabel, moveBy } from '../lib/monthgrid';
 import {
   DOW,
   DOW_INITIALS,
@@ -520,6 +522,18 @@ function MonthView() {
   const { state, dispatch, now, catalog } = useStore();
   const { calYear, calMonth, calSource } = state;
   const cells = monthGrid(calYear, calMonth);
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  // The flat run of cells, cut into weeks, so each can be a row.
+  const weeks = Array.from({ length: Math.ceil(cells.length / 7) }, (_, w) =>
+    cells.slice(w * 7, w * 7 + 7),
+  );
+  /**
+   * The day focus should move to, once it exists.
+   *
+   * Set only by the arrow keys. Focusing on every render would take focus off
+   * whatever somebody was actually using every time the month redrew.
+   */
+  const [chasing, setChasing] = useState<number | null>(null);
 
   // What lands on each day of this month, per the current source filter.
   const marks: Record<number, { c: CourseId | null; kind: string; tint?: string }[]> = {};
@@ -602,6 +616,7 @@ function MonthView() {
 
       <div
         style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1, marginBottom: 6 }}
+        aria-hidden="true"
       >
         {DOW_INITIALS.map((d, i) => (
           <div
@@ -620,18 +635,58 @@ function MonthView() {
         ))}
       </div>
 
-      <Blueprint
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(7,1fr)',
-          gap: 1,
-          background: 'var(--app-line)',
-          padding: 1,
+      {/*
+        A grid, said out loud.
+
+        Forty-two buttons called "1", "2", "3" is what this was: no month, no
+        weekday, nothing about whether a day held anything, and Tab the only
+        way across it. Every fact the grid knew was carried by the colour of a
+        dot, which is precisely the channel that does not survive being read
+        aloud. `lib/monthgrid.ts` turns each cell into a sentence and the arrow
+        keys into movement.
+
+        One tab stop, not forty-two: only the selected day is reachable by Tab
+        and the arrows move from there, which is the roving-focus pattern every
+        date grid uses and the difference between a usable month and a wall.
+      */}
+      <Blueprint style={{ background: 'var(--app-line)', padding: 1 }}>
+      <div
+        role="grid"
+        aria-label={`${monthLabel(calYear, calMonth)}. Arrow keys move by day, Page Up and Page Down change month.`}
+        onKeyDown={(e) => {
+          const move = moveBy(e.key, selectedDay, daysInMonth, new Date(calYear, calMonth, 1).getDay());
+          if (!move) return;
+          e.preventDefault();
+          if (move.step) {
+            dispatch({ type: 'stepMonth', delta: move.step === 'next' ? 1 : -1 });
+            return;
+          }
+          if (move.day === null || move.day === selectedDay) return;
+          dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${move.day}` });
+          setChasing(move.day);
         }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1 }}
       >
-        {cells.map((d, i) => {
+        {/*
+          One row element per week. `display: contents` keeps the seven-column
+          layout exactly as it was while giving the grid the row structure ARIA
+          requires — a gridcell has to be inside a row, and forty-two cells
+          loose in a grid is not a table to a screen reader, it is a pile.
+        */}
+        {weeks.map((week, w) => (
+        <div key={w} role="row" style={{ display: 'contents' }}>
+        {week.map((d, i) => {
           if (d === null) {
-            return <div key={i} style={{ aspectRatio: '1', background: 'var(--app-bg)' }} />;
+            // Padding, not a day. Kept out of the reading order entirely rather
+            // than announced as an empty cell.
+            return (
+              <div
+                key={i}
+                role="gridcell"
+                aria-hidden="true"
+                style={{ aspectRatio: '1', background: 'var(--app-bg)' }}
+              />
+            );
           }
           const isToday = sameDay(now, new Date(calYear, calMonth, d));
           const isSelected = selectedDay === d;
@@ -641,6 +696,25 @@ function MonthView() {
               key={i}
               type="button"
               className="bare"
+              role="gridcell"
+              // The whole sentence, so the weekday, the standing and what is on
+              // the day all survive without the colour.
+              aria-label={dayLabel(new Date(calYear, calMonth, d), marks[d] ?? [], {
+                today: isToday,
+                selected: isSelected,
+              })}
+              aria-selected={isSelected}
+              {...(isToday ? { 'aria-current': 'date' as const } : {})}
+              tabIndex={isSelected ? 0 : -1}
+              ref={(node) => {
+                // Focus follows the arrow keys, but only when the arrow keys
+                // were what moved it — otherwise opening the month would steal
+                // focus from wherever somebody actually was.
+                if (node && chasing === d) {
+                  node.focus();
+                  setChasing(null);
+                }
+              }}
               onClick={() => dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${d}` })}
               style={{
                 aspectRatio: '1',
@@ -663,7 +737,7 @@ function MonthView() {
               >
                 {d}
               </span>
-              <span style={{ display: 'flex', gap: 2, height: 4 }}>
+              <span aria-hidden="true" style={{ display: 'flex', gap: 2, height: 4 }}>
                 {dots.map((m, k) => (
                   <span
                     key={k}
@@ -683,6 +757,9 @@ function MonthView() {
             </button>
           );
         })}
+        </div>
+        ))}
+      </div>
       </Blueprint>
 
       {/*
