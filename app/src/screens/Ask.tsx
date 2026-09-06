@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Dictate } from '../components/Dictate';
-import { proposalsLine, readProposal, TOOLS, type Proposal } from '../lib/tools';
+import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
+import { currentLook } from '../state/shape';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { useLive } from '../lib/live';
@@ -44,6 +45,15 @@ export function Ask() {
    * an offer about a state of the world that has moved on.
    */
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  /**
+   * What has been run, and how to take each one back.
+   *
+   * A proposal moves here on the tap rather than disappearing. The row stays
+   * on screen saying what changed, past tense, with an Undo beside it — and
+   * the `before` it carries is the snapshot the undo is computed against, so
+   * "every write is undoable" holds for the row that was actually written.
+   */
+  const [applied, setApplied] = useState<{ p: Proposal; before: Lists }[]>([]);
 
   /*
    * Whether the course context is attached at all.
@@ -76,6 +86,87 @@ export function Ask() {
         .map((i) => ({ id: i.id, title: i.title, mon: i.mon, day: i.day, weight: i.weight })),
     [catalog, now, courseId],
   );
+
+  /**
+   * What the app actually holds, for checking a tool call against reality.
+   *
+   * Assembled here and read in `readProposal`, which is the only place a call
+   * becomes a button. Nothing in it is sent anywhere — this is the app
+   * checking the model's arguments, not context going out. What goes out is
+   * `lib/context.ts` and only that.
+   */
+  const held: Known = useMemo(
+    () => ({
+      deadlines: dueNow.map((i) => ({ id: i.id, title: i.title })),
+      tasks: state.tasks.map((t) => ({ id: t.id, title: t.title, date: t.date })),
+      courses: catalog.courses.map((c) => ({ id: c.id, code: catalog.byId[c.id].code })),
+      attendance: state.attendance,
+      look: currentLook(state),
+    }),
+    [dueNow, state, catalog],
+  );
+
+  /** The lists a write can add a row to, snapshotted so an undo is exact. */
+  const lists = (): Lists => ({
+    tasks: state.tasks,
+    notes: state.notes,
+    sources: state.sources,
+    applications: state.applications,
+    timers: state.timers,
+  });
+
+  /**
+   * Run a proposal, and keep enough to take it back.
+   *
+   * A view proposal on the screen you are already looking at runs the moment
+   * it arrives, further down — nothing is kept by it, and a confirmation for
+   * "filter the list you are staring at" is friction with no safety in it.
+   * Everything else, including going somewhere else, waits for this.
+   */
+  const run = (p: Proposal) => {
+    const before = lists();
+    dispatch(p.action);
+    if (p.sort === 'view') {
+      const seed = p.search;
+      if (seed) dispatch({ type: 'setQuery', query: seed });
+    }
+    setProposals((was) => was.filter((q) => q.id !== p.id));
+    // A view keeps no row: you are on another screen now, and going back is
+    // the undo. Only writes leave something to take back.
+    if (p.sort === 'write') setApplied((was) => [...was, { p, before }]);
+  };
+
+  /**
+   * Take one back.
+   *
+   * `undoFor` compares the lists either side of the write, so an addition
+   * undoes to the row that actually appeared rather than the one with a
+   * matching title. When it returns nothing the write did not take, and the
+   * row says so instead of claiming a success.
+   */
+  const takeBack = (entry: { p: Proposal; before: Lists }) => {
+    const act = entry.p.undo ? undoFor(entry.p.undo, entry.before, lists()) : null;
+    if (act) {
+      dispatch(act);
+      /*
+       * And clear the app's own undo, which this would otherwise raise.
+       *
+       * Taking back an added task dispatches `deleteTask`, which is in
+       * `UNDOABLE` — so the global "Task deleted · UNDO" toast came up the
+       * instant you pressed Undo here. Two Undo buttons on screen at once,
+       * the second offering to undo the first, and the toast reads as though
+       * the undo had failed and was being offered again. Pressing it puts the
+       * task back, which is the opposite of what anybody wants at that point.
+       *
+       * The toast is right in general and wrong here: this removal *is* the
+       * undo, and a safety net under a safety net is a loop rather than a
+       * net. The row it belongs to disappears at the same moment, so nothing
+       * is left claiming an offer that no longer stands.
+       */
+      dispatch({ type: 'forgetUndo' });
+    }
+    setApplied((was) => was.filter((e) => e.p.id !== entry.p.id));
+  };
 
   // The course, compressed enough to send and specific enough to be useful.
   const context = useMemo(() => {
@@ -123,6 +214,23 @@ export function Ask() {
       'Be specific: numbers, names, mechanisms. Short paragraphs, no filler, no restating the ' +
       'question. No exclamation marks.';
 
+    /*
+     * What the tools are, said in the prompt as well as in the schema.
+     *
+     * The schema stops a bad call; this stops a bad *sentence*. Without it the
+     * honest failure — "I have removed that course for you" — reads exactly
+     * like a success, because nothing on screen contradicts it. Saying what
+     * there is no tool for is the half that matters.
+     */
+    const acting =
+      'You have a small set of tools. Nothing you call happens: each one becomes a line the ' +
+      'student reads with a button beside it, and they decide. So describe what you are ' +
+      'proposing in the future tense, never as done. ' +
+      'There is no tool that deletes anything, changes a grade, a dropped score or the grading ' +
+      'scale, or moves a date that came from a syllabus. When asked for one of those, say plainly ' +
+      'that you cannot and name the screen where they can do it themselves. Never say you have ' +
+      'done something you have not.';
+
     if (mode === 'app') {
       return (
         'You are answering a question about the study app the student is using. Everything you ' +
@@ -138,14 +246,14 @@ export function Ask() {
         'number the records do not support. ' +
         'Each deadline carries its id in brackets; use those ids when a tool needs one, and never ' +
         'invent one. Offer a tool only when the student has asked for the thing it does.\n\n' +
-        `${never}\n\n${drawn}`
+        `${acting}\n\n${never}\n\n${drawn}`
       );
     }
     return (
       'You are helping a university student. Answer the question they asked, well and directly — ' +
       'a concept, a piece of code, a piece of writing, a decision, whatever it is. Do not narrow ' +
       'it to their coursework and do not refuse because it is not about a course. ' +
-      `${never}\n\n${drawn}`
+      `${acting}\n\n${never}\n\n${drawn}`
     );
   };
 
@@ -189,8 +297,22 @@ export function Ask() {
         // See `lib/tools.ts`.
         tools: TOOLS,
         onToolUse: (call) => {
-          const p = readProposal(call, { deadlines: dueNow });
-          if (p) setProposals((was) => (was.some((q) => q.id === p.id) ? was : [...was, p]));
+          const p = readProposal(call, held);
+          if (!p) return;
+          /*
+           * A view change on the screen you are already looking at runs now.
+           *
+           * That is the one case where confirming costs something and protects
+           * nothing: you can see the filter land and you can see it go, and a
+           * card asking permission to narrow the list in front of you is pure
+           * friction. Going *somewhere else* is not that — it takes you off a
+           * half-read answer — so it stays a tap like everything else.
+           */
+          if (p.sort === 'view' && p.screen === state.screen) {
+            if (p.search) dispatch({ type: 'setQuery', query: p.search });
+            return;
+          }
+          setProposals((was) => (was.some((q) => q.id === p.id) ? was : [...was, p]));
         },
         signal: abort.current.signal,
         onText: (chunk) => {
@@ -586,10 +708,7 @@ export function Ask() {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => {
-                    dispatch(p.action);
-                    setProposals((was) => was.filter((q) => q.id !== p.id));
-                  }}
+                  onClick={() => run(p)}
                   style={{ flex: 'none', height: 34, fontSize: 'calc(12px * var(--text-scale, 1))' }}
                 >
                   {p.verb}
@@ -606,6 +725,44 @@ export function Ask() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* What has been done, and how to take it back.
+          Every row here changed something, says so in the past tense, and
+          keeps its Undo until the next question. See `lib/tools.ts`. */}
+      {applied.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 12 }}>
+          {applied.map((e) => (
+            <div key={e.p.id} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <span
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  lineHeight: 1.4,
+                  opacity: 0.75,
+                  textWrap: 'pretty',
+                }}
+              >
+                Done — {e.p.did}.
+              </span>
+              <button
+                type="button"
+                className="bare"
+                onClick={() => takeBack(e)}
+                style={{
+                  flex: 'none',
+                  width: 'auto',
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  letterSpacing: '0.1em',
+                  opacity: 0.7,
+                }}
+              >
+                UNDO
+              </button>
+            </div>
+          ))}
         </div>
       )}
 
@@ -662,11 +819,33 @@ export function Ask() {
         )}
       </div>
 
+      {/* Two lists, both written from what the code does rather than from
+          what the feature was meant to do. The first stopped being true when
+          `ask` widened past one course, which is exactly how these go wrong. */}
       <SectionLabel>What it can see</SectionLabel>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
-        This course’s guide — {guide.units.length} units, their cards and how well you know them —
-        and the deadlines still ahead. Not your notes, not your files, not the other courses.
-        Nothing is sent anywhere else, and nothing is stored beyond this conversation.
+        Your course codes and today’s date, always. For a question about your own records: the
+        deadlines in the window you asked about, and the grades, attendance and unit names for the
+        courses you named. Cards travel only when you name one course and ask about its material,
+        and then about four thousand characters of them.
+        <br />
+        <br />
+        Never, whatever is asked: your notes, your drafts, your files, anyone in People or Letters,
+        and no key or token of any kind. That list is one file — <code>lib/context.ts</code> — and
+        it is the only thing that decides what leaves this device.
+      </div>
+
+      <SectionLabel>What it can do</SectionLabel>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+        Offer to tick off a deadline, add or move one of your own tasks, mark you at a class, start
+        a timer, keep a note, add a source, track an application, change the accent, text size,
+        background or spacing, or take you to a screen. Nothing happens until you tap it, and
+        everything it changes has an Undo beside it.
+        <br />
+        <br />
+        It cannot delete anything, and it cannot touch a grade, a dropped score, the grading scale
+        or a date that came from a syllabus. There is no tool for any of those, so it cannot do
+        them by accident and cannot do them by being asked.
       </div>
       <div style={{ height: 22 }} />
     </div>
