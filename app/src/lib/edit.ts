@@ -180,3 +180,58 @@ export function gaps(module: CourseModule): string[] {
   if (module.schedule.length === 0) out.push('no meeting times, so it is on no calendar');
   return out;
 }
+
+/**
+ * A course with nothing in it yet, ready for the editor.
+ *
+ * Adding a course meant uploading a syllabus and having a model read it. That
+ * is the good path and it is not the only one somebody needs: a seminar whose
+ * syllabus is a paragraph in an email, a course added a week into term, a
+ * student with no key set, a model that is down. In all four the app's answer
+ * was that the course could not be added at all, which turns a planner into
+ * something that only works when everything else does.
+ *
+ * So there is a manual path, and it is the same editor an imported course is
+ * corrected in — one screen to learn, and anything typed here can later be
+ * filled out by importing the syllabus over it.
+ *
+ * The id is a slug of the code so it matches what an import of the same course
+ * would produce. That is what lets somebody type "ECON 1020" today, import the
+ * real syllabus next week, and have their ticks and grades still attached.
+ */
+export function blankCourse(code: string, term?: string): CourseModule {
+  const id = code
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .slice(0, 24) || `course${Date.now().toString(36).slice(-4)}`;
+
+  return {
+    course: {
+      id,
+      code: code.trim(),
+      name: '',
+      prof: '',
+      email: '',
+      meets: '',
+      room: '',
+      credits: '',
+      ...(term ? { term } : {}),
+      source: 'Added by hand',
+      // No weights until somebody states them. An invented "Exams 50%" would
+      // be read as fact by every grade screen in the app.
+      grading: [],
+    },
+    items: [],
+    schedule: [],
+    // An empty guide rather than none: every study screen reads `guide.units`
+    // and a course with no guide at all would be a null check in each of them.
+    guide: { code: code.trim(), name: '', blurb: '', source: '', mastery: 0, audio: false, units: [], terms: [] },
+    // The nightly time-box and the Cram heading. A course typed in by hand has
+    // said nothing about either, so these are the app's own defaults rather
+    // than a syllabus's — 45 minutes is the figure `handoff` falls back to for
+    // an imported course missing them, and matching it keeps the two paths
+    // producing the same course.
+    planMinutes: '45 min',
+    frameLabel: 'Exam frames',
+  };
+}

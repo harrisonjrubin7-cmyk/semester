@@ -22,6 +22,7 @@ import {
   type Diff,
 } from '../lib/rediff';
 import { arrivedByShare, forgetShare, takeShared } from '../lib/shared';
+import { blankCourse } from '../lib/edit';
 
 /**
  * Upload a syllabus, get a course.
@@ -296,6 +297,8 @@ export function Import() {
         …or open a course somebody shared with you
       </button>
 
+      <ByHand />
+
       {files.map((f) => (
         <div
           key={f.name}
@@ -405,6 +408,111 @@ export function Import() {
       )}
       <div style={{ height: 22 }} />
     </div>
+  );
+}
+
+/**
+ * Adding a course without a syllabus and without a model.
+ *
+ * Every way into this app went through an upload and a generation, which
+ * meant adding a course required three things that have nothing to do with
+ * having a course: a PDF, a working key, and Anthropic being up. A student
+ * who joined a seminar in week two, or whose professor mailed the schedule as
+ * a paragraph, or who simply never set a key, could not add it at all — the
+ * planner refused the thing it exists to do.
+ *
+ * This is one field and one button. What it makes is a real course, owned and
+ * editable, with the same id an import of that code would produce — so the
+ * syllabus can still be imported over it later and every tick and grade filed
+ * against it survives the upgrade.
+ */
+function ByHand() {
+  const { state, dispatch, say } = useStore();
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState('');
+  const term = readTerm(state.term);
+  const taken = state.courses.some(
+    (c) => c.course.id === blankCourse(code).course.id && code.trim() !== '',
+  );
+
+  const make = () => {
+    const clean = code.trim();
+    if (!clean || taken) return;
+    const module = blankCourse(clean, term.id);
+    dispatch({ type: 'addCourse', module });
+    say(`${clean} added. Fill in the rest here — nothing is required.`);
+    dispatch({ type: 'openCourse', id: module.course.id });
+    dispatch({ type: 'go', screen: 'edit' });
+  };
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={() => setOpen(true)}
+        style={{
+          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          opacity: 0.65,
+          marginTop: 4,
+          width: 'auto',
+          padding: '6px 0',
+          textAlign: 'left',
+        }}
+      >
+        …or add a course by hand, with no syllabus
+      </button>
+    );
+  }
+
+  return (
+    <Blueprint style={{ padding: 14, marginTop: 12 }}>
+      <SectionLabel>Add it by hand</SectionLabel>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+        <input
+          className="input"
+          autoFocus
+          placeholder="ECON 1020"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') make();
+          }}
+          style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))' }}
+        />
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={make}
+          disabled={code.trim() === '' || taken}
+          style={{
+            flex: 'none',
+            width: 'auto',
+            padding: '0 18px',
+            fontSize: 'calc(12px * var(--text-scale, 1))',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Add
+        </button>
+      </div>
+      <div
+        style={{
+          fontSize: 'calc(12px * var(--text-scale, 1))',
+          opacity: 0.65,
+          marginTop: 10,
+          lineHeight: 1.5,
+          textWrap: 'pretty',
+        }}
+      >
+        {taken
+          ? `You already have ${code.trim()}. Open it and edit it, or import its syllabus over the top.`
+          : `The code is all it needs. Everything else — the name, the professor, when it meets, what
+             is due — you fill in next, and you can import the syllabus over this later without
+             losing anything you have ticked off.`}
+      </div>
+    </Blueprint>
   );
 }
 

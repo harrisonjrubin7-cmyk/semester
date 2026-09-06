@@ -649,10 +649,24 @@ export const DEFAULT_PERSISTED: Persisted = {
   linkUrls: {},
   extraLinks: [],
   courses: [],
-  // A new account starts empty and is walked through its first syllabus. The
-  // sample is a button, not a default: nobody's first impression of the app
-  // should be somebody else's timetable.
-  sample: false,
+  /**
+   * A fresh install opens with the semester in it.
+   *
+   * This was `false`, on the reasoning that nobody's first impression should
+   * be somebody else's timetable. That reasoning is sound and the consequence
+   * was not: a genuinely new install — a cleared browser, a second device, a
+   * private window — opened completely empty, with four courses' worth of
+   * readings, dates and cards sitting in the build and nothing on screen.
+   *
+   * It is also wrong for the person this was written for, whose real Fall 2026
+   * *is* those four courses. For them an empty first run is not a clean slate,
+   * it is their semester missing.
+   *
+   * The banner is what makes this safe rather than presumptuous: it says
+   * where the courses came from and offers both answers — take them on, or
+   * remove them. See `components/SampleMark.tsx`.
+   */
+  sample: true,
   term: LEGACY_TERM,
   waysOpen: true,
   reviews: {},

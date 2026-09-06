@@ -38,21 +38,71 @@ import type { CourseModule } from '../lib/types';
  * the study plan and the overdue count while you were still typing it.
  */
 export function EditCourse() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, adopt } = useStore();
   const owned = state.courses.find((c) => c.course.id === state.courseId);
   const [draft, setDraft] = useState<CourseModule | null>(owned ?? null);
   const [saved, setSaved] = useState(false);
+  /**
+   * Which course the draft above is a draft *of*.
+   *
+   * The initialiser runs once, on the first render of this screen, which was
+   * fine while the only way to arrive was with the course already in hand.
+   * Two things now change the course underneath a mounted editor: taking the
+   * shipped semester on from the button below, and opening a second course
+   * without the screen unmounting in between. Both left the editor holding a
+   * stale draft — in the first case a permanently null one, so the screen went
+   * on refusing to edit a course the person had just adopted.
+   *
+   * Re-seeding during render rather than in an effect: an effect would paint
+   * one frame of the wrong course first, and this is the pattern React
+   * documents for state that has to follow something outside it.
+   */
+  const [draftOf, setDraftOf] = useState<string | undefined>(owned?.course.id);
+  if (owned && owned.course.id !== draftOf) {
+    setDraftOf(owned.course.id);
+    setDraft(owned);
+    setSaved(false);
+  }
 
+  /*
+   * A shipped course is compiled in, so there is nothing here to edit — but
+   * that is a fact about where it is stored, not a refusal, and the screen
+   * used to read as one. For the person the app was built for these four are
+   * their real semester, and "not editable" told them their own courses were
+   * off limits with no way out.
+   *
+   * One button is the way out. Taking the shipped semester on copies all four
+   * into the account as ordinary courses, keeping their ids — so every tick,
+   * grade and card already filed against them stays filed — and this screen
+   * is then editing the course the person asked to edit.
+   */
   if (!owned || !draft) {
     return (
       <div style={{ padding: 18 }}>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
-          <div className="kicker">Not editable</div>
+          <div className="kicker">Shipped with the app</div>
           <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
-            This is one of the four sample courses, which are built into the app rather than held
-            in your account. Your own courses — anything imported from a syllabus or added from
-            your YES schedule — can be changed here freely.
+            This course is built into the app rather than held in your account, which is why there
+            is nothing to change yet. Take the semester on and all four become yours — editable,
+            shareable, and keeping everything you have already ticked off.
           </div>
+          <button
+            type="button"
+            className="btn btn-primary btn-block"
+            onClick={() => {
+              adopt();
+              dispatch({ type: 'go', screen: 'edit' });
+            }}
+            style={{
+              height: 46,
+              marginTop: 14,
+              fontSize: 'calc(12px * var(--text-scale, 1))',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+            }}
+          >
+            Make these mine
+          </button>
         </Blueprint>
       </div>
     );

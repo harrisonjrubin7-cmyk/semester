@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addItem,
+  blankCourse,
   blankItem,
   dropItem,
   fromInputDate,
@@ -193,5 +194,32 @@ describe('withGrading', () => {
     expect(out.course.grading).toHaveLength(1);
     expect(out.course.code).toBe('ECON 1020');
     expect(out.items).toHaveLength(2);
+  });
+});
+
+describe('blankCourse', () => {
+  it('gives the same id an import of that code would', () => {
+    // This is the whole point of slugging rather than generating an id: type
+    // the course today, import the syllabus next week, keep every tick.
+    expect(blankCourse('ECON 1020').course.id).toBe('econ1020');
+    expect(blankCourse('  psci 1104 ').course.id).toBe('psci1104');
+  });
+
+  it('states no grade weights it was not told', () => {
+    // An invented "Exams 50%" would be read as fact by every grade screen.
+    expect(blankCourse('ECON 1020').course.grading).toEqual([]);
+  });
+
+  it('is complete enough for the screens that read a course', () => {
+    const made = blankCourse('CORE 2500', '2026FA');
+    expect(made.course.term).toBe('2026FA');
+    expect(made.guide.units).toEqual([]);
+    expect(made.schedule).toEqual([]);
+    expect(made.planMinutes).toBeTruthy();
+    expect(made.frameLabel).toBeTruthy();
+  });
+
+  it('still makes a course when the code is all punctuation', () => {
+    expect(blankCourse('???').course.id).toMatch(/^course/);
   });
 });
