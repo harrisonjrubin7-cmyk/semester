@@ -1,4 +1,5 @@
 import { allCards } from '../data/catalog';
+import { useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { TermSwitch } from '../components/TermSwitch';
@@ -9,6 +10,8 @@ import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { nextExam, tonightPlan } from '../lib/select';
+import { beside, nextStep, rest } from '../lib/nextstep';
+import { cardKey, dueCount } from '../lib/review';
 import { destinationsIn } from '../lib/nav';
 import { tintFor } from '../lib/yours';
 
@@ -26,6 +29,13 @@ import { tintFor } from '../lib/yours';
  */
 export function Study() {
   const { state, dispatch, now, catalog } = useStore();
+  /**
+   * Courses whose full list of ways has been asked for.
+   *
+   * Per course rather than one flag, and not persisted: opening the drawer is
+   * a thing you do to one card in one sitting, not a preference about the app.
+   */
+  const [openWays, setOpenWays] = useState<Record<string, boolean>>({});
   const rowTwelve = useRowStyle(12);
   const exam = nextExam(catalog, now);
   const plan = tonightPlan(catalog, state.updates, state.reviews);
@@ -162,6 +172,19 @@ export function Study() {
             figures: mergeFigures(catalog.figures[c.id] ?? {}, mine),
             extras: extraFigures(catalog.extraFigures[c.id] ?? [], mine),
           }).filter((m) => m.ready);
+
+          // Read rather than guessed: cards whose review has come round, this
+          // course's own next exam, and whether anything has been answered.
+          const keys = allCards(g).map((card) => cardKey(c.id, card.q));
+          const due = dueCount(keys, state.reviews, now.getTime());
+          const mine_exam = nextExam(catalog, now);
+          const step = nextStep({
+            ways,
+            guide: g,
+            due,
+            examIn: mine_exam && mine_exam.item.c === c.id ? mine_exam.days : null,
+            started: keys.some((k) => state.reviews[k]),
+          });
           return (
             <Blueprint
               key={c.id}
@@ -231,35 +254,92 @@ export function Study() {
               </div>
               </button>
 
+              {/*
+                One recommendation, then a few, then the rest.
+
+                This was eleven chips of identical weight, which made somebody
+                decide *how* to study before the app had helped them decide
+                *what* — and at 11pm the honest answer to "cards or slides or
+                cram" matters far less than starting. So the app answers first
+                and nothing is taken away: every mode is still one or two taps
+                off, in the same order. See `lib/nextstep.ts`.
+              */}
               <div
                 style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 6,
                   marginTop: 12,
                   paddingTop: 11,
                   borderTop: '1px solid var(--app-line)',
                 }}
               >
-                {ways.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    className="btn"
-                    title={m.blurb}
-                    onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: m.id })}
-                    style={{
-                      flex: 'none',
-                      padding: '5px 10px',
-                      fontSize: 'calc(11px * var(--text-scale, 1))',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      background: 'transparent',
-                    }}
-                  >
-                    {m.label}
-                  </button>
-                ))}
+                {step && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-block"
+                      onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: step.id })}
+                      style={{ height: 42, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                    >
+                      {step.label}
+                    </button>
+                    {/* The fact it rests on. A recommendation with no reason
+                        is an instruction, and an instruction from software
+                        about how to study is worth nothing. */}
+                    {step.why && (
+                      <div
+                        style={{
+                          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                          opacity: 0.55,
+                          marginTop: 6,
+                          lineHeight: 1.45,
+                          textWrap: 'pretty',
+                        }}
+                      >
+                        {step.why}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: step ? 10 : 0 }}>
+                  {(openWays[c.id] ? ways.filter((m) => m.id !== step?.id) : beside(ways, step)).map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className="btn"
+                      title={m.blurb}
+                      onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: m.id })}
+                      style={{
+                        flex: 'none',
+                        padding: '5px 10px',
+                        fontSize: 'calc(11px * var(--text-scale, 1))',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        background: 'transparent',
+                      }}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                  {rest(ways, step).length > 0 && !openWays[c.id] && (
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => setOpenWays((was) => ({ ...was, [c.id]: true }))}
+                      aria-expanded={false}
+                      style={{
+                        flex: 'none',
+                        padding: '5px 10px',
+                        fontSize: 'calc(11px * var(--text-scale, 1))',
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        background: 'transparent',
+                        opacity: 0.7,
+                      }}
+                    >
+                      All {ways.length} ways
+                    </button>
+                  )}
+                </div>
               </div>
             </Blueprint>
           );
