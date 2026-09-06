@@ -7,6 +7,9 @@ import { PrintButton } from '../components/PrintButton';
 import { Page } from '../components/Page';
 import { has } from '../lib/search';
 import { TermSwitch } from '../components/TermSwitch';
+import { InsightCards } from '../components/InsightCards';
+import { insights } from '../insights';
+import { factsFrom } from '../insights/facts';
 import { download } from '../lib/deliver';
 import { allCards } from '../data/catalog';
 import { datedItems } from '../lib/select';
@@ -77,6 +80,17 @@ export function Worked() {
   const marks = pattern(
     state.returned.map((r) => r.mortem).filter((m): m is NonNullable<typeof m> => Boolean(m)),
   );
+  /*
+   * Recomputed when the state it reads changes, and not otherwise.
+   *
+   * These screens must not lag, and the engine walks every card in every
+   * guide to work out which unit an answer belongs to.
+   */
+  const supported = useMemo(
+    () => insights(factsFrom(state, catalog, now)),
+    [state, catalog, now],
+  );
+
   const label = readTerm(state.term).label;
   const nothing = nothingLine(input);
 
@@ -92,6 +106,21 @@ export function Worked() {
       {(shown) => (
         <>
           <TermSwitch />
+
+      {/*
+        The engine's read of the term, above this screen's own.
+
+        `worked` is the deep read — the one surface that takes everything
+        rather than a handful — so it is where the engine lands first. It
+        computes nothing itself: every number below came from
+        `src/insights/`, which is a pure function of state.
+      */}
+      {supported.length > 0 && (
+        <>
+          <SectionLabel>What the records support</SectionLabel>
+          <InsightCards list={supported} />
+        </>
+      )}
 
           <Blueprint style={{ padding: '15px 16px', marginTop: 12 }}>
             <div className="kicker">{label}</div>
