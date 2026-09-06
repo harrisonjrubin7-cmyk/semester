@@ -47,7 +47,20 @@ async function loadPdfjs(): Promise<PdfLib> {
  */
 async function fromPdf(file: File): Promise<string> {
   const lib = await loadPdfjs();
-  const doc = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+  let doc: Awaited<ReturnType<PdfLib['getDocument']>['promise']>;
+  try {
+    doc = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+  } catch {
+    /*
+     * pdf.js says "Invalid PDF structure." and stops there, which tells a
+     * student nothing about what to do next. This file has careful wording for
+     * the two failures it already knew about — a file type it cannot read, and
+     * a scan that needs OCR — and a half-downloaded PDF deserves the same.
+     */
+    throw new Error(
+      `${file.name} could not be opened as a PDF. If it stopped part-way through downloading, fetch it again — or paste the text in by hand.`,
+    );
+  }
   const pages: string[] = [];
 
   for (let n = 1; n <= doc.numPages; n += 1) {
@@ -67,6 +80,30 @@ async function fromPdf(file: File): Promise<string> {
 }
 
 /**
+ * The handful of XML and HTML entities a syllabus actually contains.
+ *
+ * Shared by the Word and the HTML paths, which had drifted: Word decoded five
+ * of them and HTML decoded only `&nbsp;`, so "Supply &amp; Demand" — which is
+ * how half the unit titles in an economics syllabus are stored — reached the
+ * model with the entity still in it.
+ *
+ * The ampersand goes last, and that ordering is the whole point. A document
+ * writing the literal characters "&lt;" encodes them "&amp;lt;"; decoding the
+ * ampersand first leaves "&lt;", which the next pass turns into a tag where
+ * the professor had only written the name of one.
+ */
+function entities(text: string): string {
+  return text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&');
+}
+
+/**
  * Word files, without a library.
  *
  * A .docx is a zip whose document.xml holds the text. Rather than adding a
@@ -76,21 +113,25 @@ async function fromPdf(file: File): Promise<string> {
  */
 async function fromDocx(file: File): Promise<string> {
   const { unzipSync, strFromU8 } = await import('fflate');
-  const zip = unzipSync(new Uint8Array(await file.arrayBuffer()));
+  let zip: Record<string, Uint8Array>;
+  try {
+    zip = unzipSync(new Uint8Array(await file.arrayBuffer()));
+  } catch {
+    // "invalid zip data" is what the unzipper says, and the commonest cause is
+    // an older .doc that somebody renamed rather than re-saved — a .doc is not
+    // a zip at all, so there is nothing here to open.
+    throw new Error(
+      `${file.name} could not be opened as a Word file. If it is an older .doc, open it in Word and save it again as .docx — or paste the text in by hand.`,
+    );
+  }
   const entry = zip['word/document.xml'];
   if (!entry) throw new Error('That .docx has no document inside it.');
   const xml = strFromU8(entry);
-  return xml
+  const stripped = xml
     .replace(/<w:p[ >]/g, '\n<w:p ')
     .replace(/<w:tab\/>/g, '\t')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+    .replace(/<[^>]+>/g, '');
+  return entities(stripped).replace(/\n{3,}/g, '\n\n').trim();
 }
 
 export interface Extracted {
@@ -158,13 +199,13 @@ export async function extractText(file: File): Promise<Extracted> {
     text = await file.text();
     if (/\.html?$/i.test(name)) {
       // Keep the structure a syllabus page carries: headings and rows.
-      text = text
-        .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
-        .replace(/<\/(p|div|tr|h[1-6]|li)>/gi, '\n')
-        .replace(/<(br|td|th)[^>]*>/gi, ' ')
-        .replace(/<[^>]+>/g, '')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/\n{3,}/g, '\n\n');
+      text = entities(
+        text
+          .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
+          .replace(/<\/(p|div|tr|h[1-6]|li)>/gi, '\n')
+          .replace(/<(br|td|th)[^>]*>/gi, ' ')
+          .replace(/<[^>]+>/g, ''),
+      ).replace(/\n{3,}/g, '\n\n');
     }
   } else {
     throw new Error(`${name} is not a kind of file this can read — PDF, Word, or text.`);
