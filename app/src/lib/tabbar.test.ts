@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_TABS,
+  FEWEST,
   FEWEST_CHOSEN,
   MOST,
   MOST_CHOSEN,
@@ -18,8 +19,16 @@ import { DESTINATIONS } from './nav';
 import type { Screen } from './types';
 
 describe('the bar as it ships', () => {
-  it('is the length the layout was built for', () => {
-    expect(DEFAULT_TABS).toHaveLength(MOST);
+  it('fits the bar, and deliberately does not fill it', () => {
+    // This used to assert the default was exactly `MOST`, which encoded "the
+    // bar ships full". It ships with the four screens the app is for plus the
+    // way to everything else; Map and Personal are a tick away in Settings.
+    expect(DEFAULT_TABS.length).toBeLessThan(MOST);
+    expect(DEFAULT_TABS.length).toBeGreaterThanOrEqual(FEWEST);
+  });
+
+  it('is the four the app is for, and the way to the rest', () => {
+    expect(DEFAULT_TABS).toEqual(['home', 'courses', 'study', 'calendar', 'me']);
   });
 
   it('ends on Me, which is where the other thirty-odd screens live', () => {

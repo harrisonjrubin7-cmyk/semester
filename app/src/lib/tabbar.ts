@@ -24,16 +24,27 @@
 import { DESTINATIONS, destination, rootOf } from './nav';
 import type { Screen } from './types';
 
-/** The bar as it shipped. Still the answer for most people, so still default. */
-export const DEFAULT_TABS: Screen[] = [
-  'home',
-  'courses',
-  'study',
-  'calendar',
-  'maps',
-  'mine',
-  'me',
-];
+/**
+ * The bar a new account starts with.
+ *
+ * Five, not seven. The bar held Today, Courses, Study, Calendar, Map, Personal
+ * and Progress — and Map and Personal are both real screens that a new student
+ * has nothing in yet. On the first run they are two of seven tabs promising
+ * things that are empty, which makes the whole bar read as a menu of somebody
+ * else's app rather than a place to start.
+ *
+ * The four that are left are the four the app is for: what is today, what the
+ * courses are, how to study them, and when everything falls. Progress is the
+ * fifth and is the way to everything else — it holds the whole directory, so
+ * nothing is unreachable, only un-promoted.
+ *
+ * This is the *default*, not the maximum. The bar still takes up to seven and
+ * Map and Personal are one tap from Progress and one tick from being back in
+ * it — see Settings, Navigation. And because `tabs` is saved state, anybody
+ * who already has this app has their own bar already and sees no change at
+ * all: this is what a fresh install starts from.
+ */
+export const DEFAULT_TABS: Screen[] = ['home', 'courses', 'study', 'calendar', 'me'];
 
 /**
  * Seven, because seven is what fits.
