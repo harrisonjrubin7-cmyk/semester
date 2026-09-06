@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
+import { Page } from '../components/Page';
 import { SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
@@ -81,11 +82,15 @@ export function Announce() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
-        A calendar feed carries dates. The email that <em>changes</em> a date never reaches the app,
-        so the app can be a week out and say nothing. Paste it here instead.
-      </div>
+    <Page
+      bottom={26}
+      blurb={
+        <>
+          A calendar feed carries dates. The email that <em>changes</em> a date never reaches the
+          app, so the app can be a week out and say nothing. Paste it here instead.
+        </>
+      }
+    >
 
       <SectionLabel>Which course</SectionLabel>
       <select
@@ -229,7 +234,6 @@ export function Announce() {
         sentence it came from — anything it cannot quote is dropped before you see it. A moved
         deadline keeps its id, so a box you already ticked stays ticked.
       </div>
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }

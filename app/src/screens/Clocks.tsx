@@ -23,6 +23,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
+import { Page } from '../components/Page';
 import { SectionLabel, Segmented } from '../components/ui';
 import { chime } from '../lib/chime';
 import {
@@ -69,9 +70,10 @@ export function Clocks() {
   const [tab, setTab] = useState<'timers' | 'alarms'>('timers');
 
   return (
-    <div style={{ padding: 18 }}>
-      {/* No heading here: the app's own header already carries the kicker and
-          the title for every screen, and a second copy read as a bug. */}
+    // No heading here, and none from `<Page>` either: the app's own header
+    // carries the kicker and the title for every screen, and a second copy
+    // read as a bug. The shell owns the frame, not the name.
+    <Page>
       <Segmented
         options={[
           { id: 'timers', label: `Timers${state.timers.length ? ` (${state.timers.length})` : ''}` },
@@ -83,7 +85,7 @@ export function Clocks() {
       />
 
       {tab === 'timers' ? <Timers /> : <Alarms />}
-    </div>
+    </Page>
   );
 }
 

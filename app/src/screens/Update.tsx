@@ -9,6 +9,7 @@ import type { StudyCard } from '../lib/types';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
+import { Page } from '../components/Page';
 import { SectionLabel } from '../components/ui';
 import { addFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
@@ -197,21 +198,30 @@ export function AddMaterial() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
-      <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', lineHeight: 1.1 }}>
-        Something new for {guide.code}
-      </div>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, textWrap: 'pretty' }}>
-        A chapter, a handout, a lecture, a recording. Paste it, attach it, photograph it, or
-        record it — whatever reads as a question and an answer becomes cards, and the rest is kept
-        as the unit's notes.
-      </div>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.58, marginTop: 8, lineHeight: 1.5 }}>
-        The moment you save, Cards, Quiz, Read, Cram and the slides for this course all include
-        it. Nothing is regenerated and nothing you had is replaced — the new material is layered
-        over the syllabus the course was built from, and anything you add is listed at the bottom of
-        this screen where it can be taken out again.
-      </div>
+    /*
+      The 26px "Something new for ECON 1020" that stood here is gone, not
+      moved. The app's header already prints this screen's title, so the line
+      was the second heading on the page — the exact duplication `<Page>`
+      refuses to reintroduce. The course is named in the save button and in
+      the header's kicker, both of which were already saying it.
+    */
+    <Page
+      blurb={
+        <>
+          <p style={{ margin: 0 }}>
+            A chapter, a handout, a lecture, a recording. Paste it, attach it, photograph it, or
+            record it — whatever reads as a question and an answer becomes cards, and the rest is
+            kept as the unit's notes.
+          </p>
+          <p style={{ margin: 'var(--sp-4) 0 0' }}>
+            The moment you save, Cards, Quiz, Read, Cram and the slides for this course all
+            include it. Nothing is regenerated and nothing you had is replaced — the new material
+            is layered over the syllabus the course was built from, and anything you add is listed
+            at the bottom of this screen where it can be taken out again.
+          </p>
+        </>
+      }
+    >
 
       <SectionLabel>Which course</SectionLabel>
       <div className="chiprow">
@@ -604,7 +614,6 @@ export function AddMaterial() {
           ))}
         </>
       )}
-      <div style={{ height: 22 }} />
-    </div>
+    </Page>
   );
 }

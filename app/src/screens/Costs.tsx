@@ -3,6 +3,7 @@ import { ScanIsbn } from '../components/ScanIsbn';
 import { useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
+import { Page } from '../components/Page';
 import { SectionLabel } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
 import { CAMPUS_LINKS } from '../data/campus';
@@ -79,7 +80,7 @@ export function Costs() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <TermSwitch />
 
       <Blueprint style={{ padding: '15px 16px', marginTop: 12 }}>
@@ -306,7 +307,6 @@ export function Costs() {
         one shown confidently is worse than a blank field — so you type what you paid, and the app
         remembers it for the August when you are deciding again.
       </div>
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }

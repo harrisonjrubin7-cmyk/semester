@@ -5,6 +5,7 @@ import { ClashList, DayBudget } from '../components/Clashes';
 import { StartList } from '../components/StartToday';
 import { Capacity } from '../components/Capacity';
 import { Blueprint } from '../components/Blueprint';
+import { Page } from '../components/Page';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { headline, pressure, showHours, studyAsked, week } from '../lib/ahead';
@@ -74,7 +75,7 @@ export function Ahead() {
   const most = Math.max(1, ...w.days.map((d) => d.promised));
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       {/* Before the totals: somebody who opened this screen came to see the
           shape of the fortnight, and a day that will not fit is the shape. */}
       {/* First, because a week that does not fit is not a scheduling problem
@@ -334,7 +335,6 @@ export function Ahead() {
       </Blueprint>
 
       <PrintButton label="Print the week" style={{ marginTop: 14 }} />
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }

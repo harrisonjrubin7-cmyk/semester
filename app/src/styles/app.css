@@ -65,6 +65,64 @@
   --r-md: 6px;
   --r-lg: 10px;
 
+  /* ── The scales ───────────────────────────────────────────────────────────
+
+     Three sets of tokens for the three things every screen sets by hand:
+     type size, the gap between things, and how far apart the lines sit. They
+     are named after the job, not the number, so a screen asks for "the label
+     size" rather than choosing 11 or 11.5 by whichever neighbour it was
+     copied from.
+
+     Each one is pinned to the value already most common in the app, so
+     adopting a token changes the name of a number and not the number. They
+     do not collapse the app's whole range — see the note below the type
+     scale for what is left over and why.
+
+     Type. Every step keeps the calc(Npx * var(--text-scale)) form, because
+     that multiplier is what makes the text-size setting reach inline styles
+     at all; a token that dropped it would silently disable the setting
+     wherever it was adopted. See the note in App.tsx. */
+  --type-xs: calc(11px * var(--text-scale, 1)); /* labels, kickers, meta */
+  --type-sm: calc(12px * var(--text-scale, 1)); /* captions, second-rank prose */
+  --type-base: calc(13px * var(--text-scale, 1)); /* body */
+  --type-md: calc(14px * var(--text-scale, 1)); /* list rows, the thing you tap */
+  --type-lg: calc(15px * var(--text-scale, 1)); /* a card's own title */
+  --type-xl: calc(26px * var(--text-scale, 1)); /* the one heading on a screen */
+
+  /* Spacing.
+
+     Named --sp-*, not --space-*, and that is not a stylistic preference.
+     industry.css already defines --space-1 through --space-8 on a modular
+     scale (3.4, 6.8, 10.2, 13.6, 20.4, 27.2px) and spends them on every
+     button, card, row and paragraph in the design system underneath. This
+     sheet loads second, so declaring the same names here does not add a scale
+     — it silently retunes the whole system. It did: with --space-2 redefined
+     from 6.8px to 4px, `.btn-block { margin-top: var(--space-2) }` moved the
+     primary button on every screen in the app, which is how this was caught.
+
+     Seven steps rather than six: 10px is the third most common gap in the app
+     and folding it into 8 or 12 would move a hundred and fifty edges, which
+     the parity rule forbids. 14px is the largest value with no step — about a
+     hundred sites — and is the one real leftover. */
+  --sp-1: 2px;
+  --sp-2: 4px;
+  --sp-3: 6px;
+  --sp-4: 8px;
+  --sp-5: 10px;
+  --sp-6: 12px;
+  --sp-7: 16px;
+
+  /* Leading. Distinct from --line-height, which is the reader's own setting
+     and applies to the body; these are for a block that has to set its own —
+     a heading that must stay tight, a paragraph that must stay open.
+
+     No radius tokens here. There are already two scales — --r-sm/md/lg in
+     this sheet and --radius-sm/md/lg in industry.css — and the fix for two is
+     not a third. */
+  --leading-tight: 1.3;
+  --leading-normal: 1.45;
+  --leading-relaxed: 1.5;
+
   /* Elevation: a hairline, a close contact shadow, and a wide ambient one.
      One hard shadow reads as a sticker; three layers read as depth. */
   --lift-1: 0 1px 2px rgba(0, 0, 0, 0.4);
