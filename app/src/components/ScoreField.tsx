@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { useStore } from '../state/store';
 import { ACCEPTS, interpret, settled } from '../lib/score';
 import type { GradeSystem } from '../lib/cutoffs';
 
@@ -41,6 +42,7 @@ export function ScoreField({
   assumed?: boolean;
   label: string;
 }) {
+  const { say: announce } = useStore();
   const [touched, setTouched] = useState(false);
   const id = useId();
   const read = interpret(value, system, assumed);
@@ -67,6 +69,14 @@ export function ScoreField({
         onBlur={() => {
           const next = settled(value, system);
           if (next !== value) onChange(next);
+          // Said on the way out, not on the way in. The caption under the box
+          // already reads the mark back to somebody who can see it; a screen
+          // reader was told nothing at all, and the field rewrites itself on
+          // blur — so the one moment worth announcing is the moment the value
+          // stops being what was typed and becomes what was recorded.
+          if (!touched || !next.trim()) return;
+          const read = interpret(next, system, assumed);
+          announce(`${label}: ${next}${read.said ? `. ${read.said}` : ''}`);
         }}
         aria-label={label}
         aria-describedby={say ? id : undefined}
