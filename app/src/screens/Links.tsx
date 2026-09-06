@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
+import { Page } from '../components/Page';
+import { has } from '../lib/search';
 import { SectionLabel } from '../components/ui';
 import { Blueprint } from '../components/Blueprint';
 import { CAMPUS_LINKS } from '../data/campus';
@@ -60,199 +62,211 @@ export function Links() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
-      {/*
-        Grouped rather than one flat list. Eleven links under a single
-        heading reads as a dump; Campus, Tickets and Social are three
-        different errands and you are only ever on one of them.
-      */}
-      {GROUPS.map((group) => {
-        const inGroup = links.filter((l) => (l.group ?? 'Campus') === group);
-        if (inGroup.length === 0) return null;
-        return (
-          <div key={group}>
-            <SectionLabel>{group}</SectionLabel>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {inGroup.map((link) => {
-          const url = addressOf(link);
-          const open = editing === link.id;
-          return (
-            <div
-              key={link.id}
-              style={rowTwelve}
-            >
-              <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                {url ? (
-                  <a
-                    href={url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="bare"
-                    style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
-                  >
-                    <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
-                      {link.name}
-                    </span>
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
-                        opacity: 0.5,
-                        fontFamily: 'var(--font-heading)',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        marginTop: 2,
+    <Page
+      search={{
+        placeholder: 'Find a link',
+        select: () => links,
+        // The address as well as the name: people look for "brightspace"
+        // and people look for "the one on vanderbilt.edu that is not YES".
+        match: (l, q) => has(q, l.name, l.group, addressOf(l), host(addressOf(l))),
+      }}
+    >
+      {(shown) => (
+        <>
+          {/*
+            Grouped rather than one flat list. Eleven links under a single
+            heading reads as a dump; Campus, Tickets and Social are three
+            different errands and you are only ever on one of them.
+          */}
+          {GROUPS.map((group) => {
+            const inGroup = shown.filter((l) => (l.group ?? 'Campus') === group);
+            if (inGroup.length === 0) return null;
+            return (
+              <div key={group}>
+                <SectionLabel>{group}</SectionLabel>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {inGroup.map((link) => {
+              const url = addressOf(link);
+              const open = editing === link.id;
+              return (
+                <div
+                  key={link.id}
+                  style={rowTwelve}
+                >
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+                    {url ? (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bare"
+                        style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
+                          {link.name}
+                        </span>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: 'calc(11px * var(--text-scale, 1))',
+                            opacity: 0.5,
+                            fontFamily: 'var(--font-heading)',
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            marginTop: 2,
+                          }}
+                        >
+                          {host(url)}
+                        </span>
+                      </a>
+                    ) : (
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
+                          {link.name}
+                        </span>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: 'calc(11px * var(--text-scale, 1))',
+                            opacity: 0.5,
+                            fontFamily: 'var(--font-heading)',
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            marginTop: 2,
+                          }}
+                        >
+                          No address yet
+                        </span>
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      className="bare"
+                      onClick={() => {
+                        setDraft(url);
+                        setEditing(open ? null : link.id);
                       }}
+                      style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                     >
-                      {host(url)}
-                    </span>
-                  </a>
-                ) : (
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
-                      {link.name}
-                    </span>
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
-                        opacity: 0.5,
-                        fontFamily: 'var(--font-heading)',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        marginTop: 2,
-                      }}
-                    >
-                      No address yet
-                    </span>
-                  </span>
-                )}
+                      {open ? 'CANCEL' : url ? 'EDIT' : 'ADD'}
+                    </button>
+                    {state.extraLinks.some((l) => l.id === link.id) && !open && (
+                      <button
+                        type="button"
+                        className="bare"
+                        onClick={() => dispatch({ type: 'removeLink', id: link.id })}
+                        style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                      >
+                        REMOVE
+                      </button>
+                    )}
+                  </div>
+
+                  {open && (
+                    <>
+                      <input
+                        className="input"
+                        value={draft}
+                        placeholder={link.hint || 'https://…'}
+                        onChange={(e) => setDraft(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && save(link.id)}
+                        style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
+                        aria-label={`${link.name} address`}
+                      />
+                      {link.note && (
+                        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
+                          {link.note}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => save(link.id)}
+                        style={{
+                          marginTop: 9,
+                          fontSize: 'calc(11px * var(--text-scale, 1))',
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        Save
+                      </button>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+                </div>
+              </div>
+            );
+          })}
+
+          {adding ? (
+            <Blueprint style={{ padding: '13px 14px', marginTop: 12 }}>
+              <div className="kicker">Your own link</div>
+              <input
+                className="input"
+                placeholder="What it is — Commodore Card, the gym"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 9 }}
+              />
+              <input
+                className="input"
+                placeholder="https://…"
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 8 }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                 <button
                   type="button"
-                  className="bare"
-                  onClick={() => {
-                    setDraft(url);
-                    setEditing(open ? null : link.id);
-                  }}
-                  style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                  className="btn btn-secondary"
+                  onClick={() => setAdding(false)}
+                  style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
                 >
-                  {open ? 'CANCEL' : url ? 'EDIT' : 'ADD'}
+                  Cancel
                 </button>
-                {state.extraLinks.some((l) => l.id === link.id) && !open && (
-                  <button
-                    type="button"
-                    className="bare"
-                    onClick={() => dispatch({ type: 'removeLink', id: link.id })}
-                    style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
-                  >
-                    REMOVE
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={!newName.trim() || !newUrl.trim()}
+                  onClick={() => {
+                    const url = newUrl.trim();
+                    dispatch({
+                      type: 'addLink',
+                      name: newName,
+                      url: /^https?:\/\//i.test(url) ? url : `https://${url}`,
+                    });
+                    setNewName('');
+                    setNewUrl('');
+                    setAdding(false);
+                  }}
+                  style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                >
+                  Add it
+                </button>
               </div>
-
-              {open && (
-                <>
-                  <input
-                    className="input"
-                    value={draft}
-                    placeholder={link.hint || 'https://…'}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && save(link.id)}
-                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
-                    aria-label={`${link.name} address`}
-                  />
-                  {link.note && (
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
-                      {link.note}
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => save(link.id)}
-                    style={{
-                      marginTop: 9,
-                      fontSize: 'calc(11px * var(--text-scale, 1))',
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    Save
-                  </button>
-                </>
-              )}
-            </div>
-          );
-        })}
-            </div>
-          </div>
-        );
-      })}
-
-      {adding ? (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 12 }}>
-          <div className="kicker">Your own link</div>
-          <input
-            className="input"
-            placeholder="What it is — Commodore Card, the gym"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 9 }}
-          />
-          <input
-            className="input"
-            placeholder="https://…"
-            value={newUrl}
-            onChange={(e) => setNewUrl(e.target.value)}
-            style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 8 }}
-          />
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            </Blueprint>
+          ) : (
             <button
               type="button"
-              className="btn btn-secondary"
-              onClick={() => setAdding(false)}
-              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              className="btn btn-secondary btn-block"
+              onClick={() => setAdding(true)}
+              style={{ height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
             >
-              Cancel
+              Add a link of your own
             </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={!newName.trim() || !newUrl.trim()}
-              onClick={() => {
-                const url = newUrl.trim();
-                dispatch({
-                  type: 'addLink',
-                  name: newName,
-                  url: /^https?:\/\//i.test(url) ? url : `https://${url}`,
-                });
-                setNewName('');
-                setNewUrl('');
-                setAdding(false);
-              }}
-              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-            >
-              Add it
-            </button>
+          )}
+
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
+            These open the system itself — the app on a phone that recognises the address, the site
+            otherwise. None of them expose an API a student can use alone, so the app links out rather
+            than pretending to read them. Correct any address here and the correction is what sticks.
           </div>
-        </Blueprint>
-      ) : (
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => setAdding(true)}
-          style={{ height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
-        >
-          Add a link of your own
-        </button>
+        </>
       )}
-
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
-        These open the system itself — the app on a phone that recognises the address, the site
-        otherwise. None of them expose an API a student can use alone, so the app links out rather
-        than pretending to read them. Correct any address here and the correction is what sticks.
-      </div>
-      <div style={{ height: 22 }} />
-    </div>
+    </Page>
   );
 }
+

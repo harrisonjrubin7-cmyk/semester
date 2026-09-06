@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
+import { Page } from '../components/Page';
+import { has } from '../lib/search';
 import { EmptyState, SectionLabel, Segmented } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { download } from '../lib/deliver';
@@ -72,203 +74,223 @@ export function Sources() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
-        Nothing here invents a citation — every source is one you entered, kept exactly as you
-        wrote it. The tools that ask for your sources read from this list instead of asking again.
-      </div>
-
-      <SectionLabel>Course</SectionLabel>
-      <select
-        className="input"
-        value={courseId ?? ''}
-        onChange={(e) => {
-          setCourseId(e.target.value || null);
-          setFilter('');
-        }}
-        style={{ width: '100%' }}
-      >
-        <option value="">Everything</option>
-        {catalog.courses.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.code}
-          </option>
-        ))}
-      </select>
-
-      {names.length > 0 && (
+    <Page
+      bottom={26}
+      blurb="Nothing here invents a citation — every source is one you entered, kept exactly as you wrote it. The tools that ask for your sources read from this list instead of asking again."
+      search={{
+        placeholder: 'Find a source — author, title, what it is for',
+        select: () => list,
+        // The line as you typed it, plus what you said it was for and which
+        // project it belongs to. Searching a reading list by the author's
+        // name is what people do, and `raw` is where the name is.
+        match: (s, q) => has(q, s.raw, s.role, s.project),
+        // Named, because a source that is in the list but filed under
+        // another project looks identical to one that was never added, and
+        // the chips above are the difference.
+        empty: (q) =>
+          filter
+            ? `Nothing in “${filter}” matches “${q}”. Choose All above to search every project.`
+            : `No source matches “${q}”.`,
+      }}
+    >
+      {(shown) => (
         <>
-          <SectionLabel>Showing</SectionLabel>
-          <Segmented
-            options={[{ id: '', label: 'All' }, ...names.map((n) => ({ id: n, label: n }))]}
-            value={filter}
-            onChange={setFilter}
+          <SectionLabel>Course</SectionLabel>
+          <select
+            className="input"
+            value={courseId ?? ''}
+            onChange={(e) => {
+              setCourseId(e.target.value || null);
+              setFilter('');
+            }}
+            style={{ width: '100%' }}
+          >
+            <option value="">Everything</option>
+            {catalog.courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.code}
+              </option>
+            ))}
+          </select>
+
+          {names.length > 0 && (
+            <>
+              <SectionLabel>Showing</SectionLabel>
+              <Segmented
+                options={[{ id: '', label: 'All' }, ...names.map((n) => ({ id: n, label: n }))]}
+                value={filter}
+                onChange={setFilter}
+              />
+            </>
+          )}
+
+          <SectionLabel>Add a source</SectionLabel>
+          <textarea
+            className="input"
+            value={entry}
+            onChange={(e) => setEntry(e.target.value)}
+            placeholder="Paste it however you have it. One per line — a whole reading list goes in at once."
+            style={{ width: '100%', minHeight: 84, resize: 'vertical', lineHeight: 1.5 }}
           />
-        </>
-      )}
-
-      <SectionLabel>Add a source</SectionLabel>
-      <textarea
-        className="input"
-        value={entry}
-        onChange={(e) => setEntry(e.target.value)}
-        placeholder="Paste it however you have it. One per line — a whole reading list goes in at once."
-        style={{ width: '100%', minHeight: 84, resize: 'vertical', lineHeight: 1.5 }}
-      />
-      <input
-        className="input"
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-        placeholder="What is it for? — “the counter-case to the growth-machine story”"
-        style={{ width: '100%', marginTop: 8 }}
-      />
-      <input
-        className="input"
-        value={into}
-        onChange={(e) => setInto(e.target.value)}
-        placeholder="File it under a project, if you like"
-        style={{ width: '100%', marginTop: 8 }}
-        list="known-projects"
-      />
-      <datalist id="known-projects">
-        {names.map((n) => (
-          <option key={n} value={n} />
-        ))}
-      </datalist>
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
-        onClick={add}
-        disabled={!entry.trim()}
-        style={{ height: 44, marginTop: 10 }}
-      >
-        Keep it
-      </button>
-
-      {list.length > 0 && <SectionLabel>{heading}</SectionLabel>}
-      {list.length === 0 ? (
-        <EmptyState
-          inline
-          title="Nothing yet"
-          body="Paste the readings from a syllabus, or the four things you actually used for a paper. The second is the more useful list."
-        />
-      ) : (
-        <>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, lineHeight: 1.5 }}>
-            {completeness(list)}
-          </div>
-          {list.map((s) => {
-            const missing = gaps(s);
-            return (
-              <Blueprint key={s.id} style={{ padding: '12px 13px', marginBottom: 8 }}>
-                <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>{s.raw}</div>
-                {s.role.trim() ? (
-                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
-                    For: {s.role}
-                  </div>
-                ) : (
-                  <input
-                    className="input"
-                    defaultValue=""
-                    placeholder="What is it for?"
-                    onBlur={(e) =>
-                      e.target.value.trim() &&
-                      dispatch({
-                        type: 'patchSource',
-                        id: s.id,
-                        patch: { role: e.target.value.trim() },
-                      })
-                    }
-                    style={{ width: '100%', marginTop: 8, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
-                  />
-                )}
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 8,
-                    alignItems: 'center',
-                    marginTop: 8,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  {[s.author, s.year, s.title, s.project]
-                    .filter(Boolean)
-                    .map((bit) => (
-                      <span key={bit} className="tag tag-outline" style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))' }}>
-                        {bit}
-                      </span>
-                    ))}
-                  <span style={{ flex: 1 }} />
-                  <button
-                    type="button"
-                    className="bare"
-                    onClick={() => dispatch({ type: 'dropSource', id: s.id })}
-                    aria-label={`Remove ${s.raw.slice(0, 40)}`}
-                    style={{ padding: '6px 10px', opacity: 0.5, fontSize: 'calc(12px * var(--text-scale, 1))' }}
-                  >
-                    Remove
-                  </button>
-                </div>
-                {missing.length > 0 ? (
-                  <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 6, lineHeight: 1.4 }}>
-                    Missing {missing.join(', ')}. Kept as you wrote it either way.
-                  </div>
-                ) : null}
-              </Blueprint>
-            );
-          })}
-
-          <SectionLabel>Take it with you</SectionLabel>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() =>
-                download({
-                  name: `${heading.toLowerCase().replace(/[^\w]+/g, '-')}.bib`,
-                  body: toBibtex(list),
-                  mime: 'text/plain',
-                })
-              }
-              style={{ flex: 1, height: 42 }}
-            >
-              BibTeX
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() =>
-                download({
-                  name: `${heading.toLowerCase().replace(/[^\w]+/g, '-')}.md`,
-                  body: toMarkdown(list, heading),
-                  mime: 'text/markdown',
-                })
-              }
-              style={{ flex: 1, height: 42 }}
-            >
-              Reading list
-            </button>
-          </div>
+          <input
+            className="input"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            placeholder="What is it for? — “the counter-case to the growth-machine story”"
+            style={{ width: '100%', marginTop: 8 }}
+          />
+          <input
+            className="input"
+            value={into}
+            onChange={(e) => setInto(e.target.value)}
+            placeholder="File it under a project, if you like"
+            style={{ width: '100%', marginTop: 8 }}
+            list="known-projects"
+          />
+          <datalist id="known-projects">
+            {names.map((n) => (
+              <option key={n} value={n} />
+            ))}
+          </datalist>
           <button
             type="button"
-            className="btn btn-secondary btn-block"
-            onClick={() => {
-              void navigator.clipboard?.writeText(asLines(list));
-              setCopied(true);
-            }}
-            style={{ height: 42, marginTop: 8 }}
+            className="btn btn-primary btn-block"
+            onClick={add}
+            disabled={!entry.trim()}
+            style={{ height: 44, marginTop: 10 }}
           >
-            {copied ? 'Copied' : 'Copy for a drafting tool'}
+            Keep it
           </button>
-          <PrintButton label="Print the list" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
-            BibTeX is built from the fields you entered; anything the app does not have is left out
-            rather than guessed, and the line you typed always goes in as a note. Opens in Zotero
-            or Overleaf.
-          </div>
+
+          {shown.length > 0 && <SectionLabel>{heading}</SectionLabel>}
+          {/* `list`, not `shown`: this is the screen saying you have no sources at
+              all. A search that matched nothing is a different thing, and
+              `<Page>` says so itself — showing both was two answers to one
+              question, one of them wrong. */}
+          {list.length === 0 ? (
+            <EmptyState
+              inline
+              title="Nothing yet"
+              body="Paste the readings from a syllabus, or the four things you actually used for a paper. The second is the more useful list."
+            />
+          ) : (
+            <>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, lineHeight: 1.5 }}>
+                {completeness(shown)}
+              </div>
+              {shown.map((s) => {
+                const missing = gaps(s);
+                return (
+                  <Blueprint key={s.id} style={{ padding: '12px 13px', marginBottom: 8 }}>
+                    <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>{s.raw}</div>
+                    {s.role.trim() ? (
+                      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
+                        For: {s.role}
+                      </div>
+                    ) : (
+                      <input
+                        className="input"
+                        defaultValue=""
+                        placeholder="What is it for?"
+                        onBlur={(e) =>
+                          e.target.value.trim() &&
+                          dispatch({
+                            type: 'patchSource',
+                            id: s.id,
+                            patch: { role: e.target.value.trim() },
+                          })
+                        }
+                        style={{ width: '100%', marginTop: 8, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+                      />
+                    )}
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 8,
+                        alignItems: 'center',
+                        marginTop: 8,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      {[s.author, s.year, s.title, s.project]
+                        .filter(Boolean)
+                        .map((bit) => (
+                          <span key={bit} className="tag tag-outline" style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))' }}>
+                            {bit}
+                          </span>
+                        ))}
+                      <span style={{ flex: 1 }} />
+                      <button
+                        type="button"
+                        className="bare"
+                        onClick={() => dispatch({ type: 'dropSource', id: s.id })}
+                        aria-label={`Remove ${s.raw.slice(0, 40)}`}
+                        style={{ padding: '6px 10px', opacity: 0.5, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    {missing.length > 0 ? (
+                      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 6, lineHeight: 1.4 }}>
+                        Missing {missing.join(', ')}. Kept as you wrote it either way.
+                      </div>
+                    ) : null}
+                  </Blueprint>
+                );
+              })}
+
+              <SectionLabel>Take it with you</SectionLabel>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() =>
+                    download({
+                      name: `${heading.toLowerCase().replace(/[^\w]+/g, '-')}.bib`,
+                      body: toBibtex(shown),
+                      mime: 'text/plain',
+                    })
+                  }
+                  style={{ flex: 1, height: 42 }}
+                >
+                  BibTeX
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() =>
+                    download({
+                      name: `${heading.toLowerCase().replace(/[^\w]+/g, '-')}.md`,
+                      body: toMarkdown(shown, heading),
+                      mime: 'text/markdown',
+                    })
+                  }
+                  style={{ flex: 1, height: 42 }}
+                >
+                  Reading list
+                </button>
+              </div>
+              <button
+                type="button"
+                className="btn btn-secondary btn-block"
+                onClick={() => {
+                  void navigator.clipboard?.writeText(asLines(shown));
+                  setCopied(true);
+                }}
+                style={{ height: 42, marginTop: 8 }}
+              >
+                {copied ? 'Copied' : 'Copy for a drafting tool'}
+              </button>
+              <PrintButton label="Print the list" style={{ marginTop: 8 }} />
+              <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+                BibTeX is built from the fields you entered; anything the app does not have is left out
+                rather than guessed, and the line you typed always goes in as a note. Opens in Zotero
+                or Overleaf.
+              </div>
+            </>
+          )}
         </>
       )}
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }

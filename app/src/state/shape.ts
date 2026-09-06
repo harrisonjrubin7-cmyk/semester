@@ -561,6 +561,18 @@ export interface Ephemeral {
    * had one open yesterday is an app that has misread what a search is for.
    */
   finder: boolean;
+  /**
+   * What the overlay opens with, when a screen handed it a query.
+   *
+   * A page-level search that finds nothing offers the whole app, and the way
+   * out has to carry what was typed — otherwise "search everywhere for this"
+   * opens an empty box and asks for it again.
+   *
+   * Ephemeral for the same reason `finder` is, and one more: a search query is
+   * the most incidental thing a person types. Keeping it would sync what
+   * somebody was looking for at midnight to every device they own.
+   */
+  finderSeed: string;
   studyTab: 'guides' | 'tonight' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
@@ -804,6 +816,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     dueTab: 'ahead',
     mailSeed: null,
     finder: false,
+    finderSeed: '',
     studyTab: 'guides',
     noteId: null,
     lessonUnit: 0,
@@ -1152,7 +1165,7 @@ export type Action =
   | { type: 'undo' }
   | { type: 'forgetUndo' }
   | { type: 'quickAdd'; open: boolean }
-  | { type: 'finder'; open: boolean }
+  | { type: 'finder'; open: boolean; seed?: string }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }

@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
+import { Page } from '../components/Page';
+import { has } from '../lib/search';
 import { SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { DAYS } from '../lib/edit';
@@ -84,84 +86,98 @@ export function Activities() {
   const conflicts = useMemo(() => clashes(mine, classesOn), [mine, classesOn]);
 
   return (
-    <div style={{ padding: 18 }}>
-      <Segmented
-        options={[
-          { id: 'yours', label: 'Yours' },
-          { id: 'add', label: 'Add one' },
-          { id: 'find', label: 'Find things' },
-        ]}
-        value={tab}
-        onChange={setTab}
-        style={{ marginBottom: 16 }}
-      />
-
-      {tab === 'yours' && (
+    <Page
+      bottom={26}
+      search={{
+        placeholder: 'Find something you are in',
+        select: () => mine,
+        match: (c, q) => has(q, c.name, c.kind, c.note, c.where),
+      }}
+    >
+      {(shown) => (
         <>
-          <Blueprint style={{ padding: '14px 15px' }}>
-            <div className="kicker">Your week</div>
-            <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.55 }}>{loadLine(week)}</div>
-            <div
-              style={{
-                display: 'flex',
-                gap: 14,
-                marginTop: 12,
-                paddingTop: 11,
-                borderTop: '1px solid var(--app-line)',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                opacity: 0.65,
-              }}
-            >
-              <span>{showHours(week.classHours)} in class</span>
-              <span>{showHours(week.activityHours)} elsewhere</span>
-              <span>{mine.filter((c) => c.active).length} commitments</span>
-            </div>
-          </Blueprint>
+          <Segmented
+            options={[
+              { id: 'yours', label: 'Yours' },
+              { id: 'add', label: 'Add one' },
+              { id: 'find', label: 'Find things' },
+            ]}
+            value={tab}
+            onChange={setTab}
+            style={{ marginBottom: 16 }}
+          />
 
-          {conflicts.length > 0 && (
-            <div
-              style={{
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                marginTop: 12,
-                padding: '11px 13px',
-                borderRadius: 'var(--r-md)',
-                lineHeight: 1.5,
-                border: '1px solid var(--app-warn-line)',
-                background: 'var(--app-warn-wash)',
-              }}
-            >
-              {conflicts.map((clash, i) => (
-                <div key={i} style={{ marginBottom: i === conflicts.length - 1 ? 0 : 6 }}>
-                  <strong style={{ fontWeight: 600 }}>{clash.commitment.name}</strong> runs into{' '}
-                  {clash.classTitle} on {dayName(clash.day)}s.
+          {tab === 'yours' && (
+            <>
+              <Blueprint style={{ padding: '14px 15px' }}>
+                <div className="kicker">Your week</div>
+                <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.55 }}>{loadLine(week)}</div>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 14,
+                    marginTop: 12,
+                    paddingTop: 11,
+                    borderTop: '1px solid var(--app-line)',
+                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    opacity: 0.65,
+                  }}
+                >
+                  <span>{showHours(week.classHours)} in class</span>
+                  <span>{showHours(week.activityHours)} elsewhere</span>
+                  <span>{mine.filter((c) => c.active).length} commitments</span>
                 </div>
+              </Blueprint>
+
+              {conflicts.length > 0 && (
+                <div
+                  style={{
+                    fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                    marginTop: 12,
+                    padding: '11px 13px',
+                    borderRadius: 'var(--r-md)',
+                    lineHeight: 1.5,
+                    border: '1px solid var(--app-warn-line)',
+                    background: 'var(--app-warn-wash)',
+                  }}
+                >
+                  {conflicts.map((clash, i) => (
+                    <div key={i} style={{ marginBottom: i === conflicts.length - 1 ? 0 : 6 }}>
+                      <strong style={{ fontWeight: 600 }}>{clash.commitment.name}</strong> runs into{' '}
+                      {clash.classTitle} on {dayName(clash.day)}s.
+                    </div>
+                  ))}
+                  <div style={{ opacity: 0.75, marginTop: 8 }}>
+                    Said rather than prevented — leaving lecture early on match days is a real thing
+                    people do, and the app does not get to decide that.
+                  </div>
+                </div>
+              )}
+
+              <SectionLabel>What you are in</SectionLabel>
+              {/* `mine`, not `shown`: this says you belong to nothing at all,
+                  which is not the same as a filter that matched nothing —
+                  `<Page>` says that itself. */}
+              {mine.length === 0 && (
+                <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, padding: '14px 0', lineHeight: 1.5 }}>
+                  Nothing yet. Add a club, a job, a team or a lab and it appears on your day and week
+                  alongside your classes.
+                </div>
+              )}
+              {shown.map((c) => (
+                <Row key={c.id} commitment={c} />
               ))}
-              <div style={{ opacity: 0.75, marginTop: 8 }}>
-                Said rather than prevented — leaving lecture early on match days is a real thing
-                people do, and the app does not get to decide that.
-              </div>
-            </div>
+            </>
           )}
 
-          <SectionLabel>What you are in</SectionLabel>
-          {mine.length === 0 && (
-            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, padding: '14px 0', lineHeight: 1.5 }}>
-              Nothing yet. Add a club, a job, a team or a lab and it appears on your day and week
-              alongside your classes.
-            </div>
-          )}
-          {mine.map((c) => (
-            <Row key={c.id} commitment={c} />
-          ))}
+          {tab === 'add' && <AddOne onDone={() => setTab('yours')} />}
+          {tab === 'find' && <FindThings />}
         </>
       )}
-
-      {tab === 'add' && <AddOne onDone={() => setTab('yours')} />}
-      {tab === 'find' && <FindThings />}
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }
+
 
 function Row({ commitment }: { commitment: Commitment }) {
   const { dispatch } = useStore();

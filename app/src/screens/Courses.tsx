@@ -6,6 +6,8 @@ import { Timer } from '../components/Timer';
 import { ShareCourse } from '../components/ShareCourse';
 import { Attendance } from '../components/Attendance';
 import { DropBy } from '../components/DropBy';
+import { Page } from '../components/Page';
+import { has } from '../lib/search';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
@@ -63,117 +65,143 @@ export function Courses() {
 
   if (tab === 'grades') {
     return (
-      <div style={{ padding: '18px 18px 0' }}>
+      <Page bottom={0}>
         <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
         <Grades bare />
-      </div>
+      </Page>
     );
   }
 
   if (tab === 'due') {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
         <ComingUp />
-      </div>
+      </Page>
     );
   }
 
   return (
-    <div style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
-      {/* Absent until there is more than one term. See `components/TermSwitch`. */}
-      <TermSwitch />
-      {catalog.courses.map((c) => {
-        const next = ahead.find((i) => i.c === c.id);
-        return (
-          <Blueprint
-            key={c.id}
-            onClick={() => dispatch({ type: 'openCourse', id: c.id })}
+    /*
+      Three returns, three shells.
+
+      A "screen" in the registry is not always one component: this one has a
+      branch per tab, and two of them are somebody else's screen rendered
+      bare. Only the third is a list, so only the third declares an adapter —
+      the other two get the box and send what is typed to the whole app, which
+      is the honest answer for a grade table and for a deadline list that
+      already has its own three-way split.
+    */
+    <Page
+      style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+      search={{
+        placeholder: 'Find a course',
+        select: () => catalog.courses,
+        // The number as well as the name — "1020" is how people say a course
+        // out loud, and it is the half of the code they remember — and the
+        // professor and the room, because "the one in Buttrick" and "Stromme's"
+        // are the other two ways somebody names a course they are looking for.
+        match: (c, q) => has(q, c.code, c.name, c.prof, c.meets, c.room),
+      }}
+    >
+      {(shown) => (
+        <>
+          <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
+          {/* Absent until there is more than one term. See `components/TermSwitch`. */}
+          <TermSwitch />
+          {shown.map((c) => {
+            const next = ahead.find((i) => i.c === c.id);
+            return (
+              <Blueprint
+                key={c.id}
+                onClick={() => dispatch({ type: 'openCourse', id: c.id })}
+                style={{
+                  padding: '15px 16px',
+                  display: 'block',
+                  // The colour is a stripe down the edge rather than a tint on the
+                  // whole card: four tinted cards is a dashboard, and the whole point
+                  // of the look is that it is not one. A course with no colour
+                  // keeps the card exactly as it was.
+                  borderLeft: tint(c.id) ? `3px solid ${tint(c.id)?.base}` : undefined,
+                  paddingLeft: tint(c.id) ? 13 : 16,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                  }}
+                >
+                  <div className="chrome-text" style={{ fontSize: 'calc(22px * var(--text-scale, 1))' }}>
+                    {c.code}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-heading)',
+                      fontSize: 'calc(11px * var(--text-scale, 1))',
+                      letterSpacing: '0.12em',
+                      textTransform: 'uppercase',
+                      opacity: 0.55,
+                    }}
+                  >
+                    {c.meets}
+                  </div>
+                </div>
+                <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.3, marginTop: 2 }}>
+                  {nameFor(c, state.yours)}
+                </div>
+                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>{c.prof}</div>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 8,
+                    alignItems: 'center',
+                    marginTop: 12,
+                    paddingTop: 11,
+                    borderTop: '1px solid var(--app-line)',
+                  }}
+                >
+                  <span className="tag tag-accent">{next ? next.dueShort : 'Clear'}</span>
+                  <span
+                    style={{
+                      fontSize: 'calc(12px * var(--text-scale, 1))',
+                      opacity: 0.7,
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {next ? next.title : 'Nothing scheduled'}
+                  </span>
+                </div>
+              </Blueprint>
+            );
+          })}
+
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            onClick={() => dispatch({ type: 'go', screen: 'import' })}
             style={{
-              padding: '15px 16px',
-              display: 'block',
-              // The colour is a stripe down the edge rather than a tint on the
-              // whole card: four tinted cards is a dashboard, and the whole point
-              // of the look is that it is not one. A course with no colour
-              // keeps the card exactly as it was.
-              borderLeft: tint(c.id) ? `3px solid ${tint(c.id)?.base}` : undefined,
-              paddingLeft: tint(c.id) ? 13 : 16,
+              height: 46,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              marginTop: 6,
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                justifyContent: 'space-between',
-                gap: 10,
-              }}
-            >
-              <div className="chrome-text" style={{ fontSize: 'calc(22px * var(--text-scale, 1))' }}>
-                {c.code}
-              </div>
-              <div
-                style={{
-                  fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(11px * var(--text-scale, 1))',
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  opacity: 0.55,
-                }}
-              >
-                {c.meets}
-              </div>
-            </div>
-            <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.3, marginTop: 2 }}>
-              {nameFor(c, state.yours)}
-            </div>
-            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>{c.prof}</div>
-            <div
-              style={{
-                display: 'flex',
-                gap: 8,
-                alignItems: 'center',
-                marginTop: 12,
-                paddingTop: 11,
-                borderTop: '1px solid var(--app-line)',
-              }}
-            >
-              <span className="tag tag-accent">{next ? next.dueShort : 'Clear'}</span>
-              <span
-                style={{
-                  fontSize: 'calc(12px * var(--text-scale, 1))',
-                  opacity: 0.7,
-                  flex: 1,
-                  minWidth: 0,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {next ? next.title : 'Nothing scheduled'}
-              </span>
-            </div>
-          </Blueprint>
-        );
-      })}
-
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
-        onClick={() => dispatch({ type: 'go', screen: 'import' })}
-        style={{
-          height: 46,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: 6,
-        }}
-      >
-        + Add a course from a syllabus
-      </button>
-      <div style={{ height: 12 }} />
-    </div>
+            + Add a course from a syllabus
+          </button>
+          <div style={{ height: 12 }} />
+        </>
+      )}
+    </Page>
   );
 }
+
 
 /**
  * Coming up, overdue, done.

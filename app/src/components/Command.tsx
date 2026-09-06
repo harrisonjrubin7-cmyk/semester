@@ -39,7 +39,9 @@ const COLUMN = 620;
 
 export function Command({ onClose }: { onClose: () => void }) {
   const { state, dispatch, now, catalog, school } = useStore();
-  const [text, setText] = useState('');
+  // Seeded when a screen's own search escalated to here, so "search everywhere
+  // for this" arrives with the query rather than asking for it again.
+  const [text, setText] = useState(state.finderSeed);
   const [at, setAt] = useState(0);
   const box = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
