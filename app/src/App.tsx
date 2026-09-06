@@ -106,6 +106,7 @@ const Worked = lazy(() => import('./screens/Worked').then((m) => ({ default: m.W
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
+const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
@@ -661,6 +662,8 @@ function CurrentScreen() {
       return state.nav === 'springboard' ? <Springboard /> : <Today />;
     case 'privacy':
       return <Privacy />;
+    case 'data':
+      return <DataScreen />;
     case 'courses':
       return <Courses />;
     case 'course':

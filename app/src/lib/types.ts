@@ -417,6 +417,7 @@ export interface FeedEvent {
 }
 
 export type Screen =
+  | 'data'
   | 'onboarding'
   | 'home'
   | 'courses'
