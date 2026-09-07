@@ -83,6 +83,14 @@ export function SlideDeck() {
 
   const slide = slides[at];
 
+  /*
+   * No `<Page>` here, deliberately.
+   *
+   * A slideshow is one slide filling the height, advanced by arrow keys or a
+   * tap. The frame's search box would sit above the slide on every one of
+   * them, and `minHeight: '100%'` is doing work the frame does not know
+   * about. This screen is presented, not read.
+   */
   return (
     <div style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
       <div className="kicker">

@@ -394,6 +394,7 @@ export function Export() {
           the tokens for connected accounts are deliberately left out: a backup that carries your
           credentials is a liability, not a safety net.
         </div>
-      </Blueprint></Page>
+      </Blueprint>
+    </Page>
   );
 }

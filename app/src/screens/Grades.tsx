@@ -1,4 +1,5 @@
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -32,13 +33,15 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
   const rowFlush = useRowStyle(0);
   if (catalog.empty) return <FirstRun where="to track grades" />;
 
-  return (
-    <div style={{ padding: bare ? 0 : 18 }}>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
-        Weights come from each syllabus. Put in what you have so far — a percentage, 17/20, 17 out
-        of 20, or the letter you were given — and the rest is arithmetic.
-      </div>
+  const intro = (
+    <>
+      Weights come from each syllabus. Put in what you have so far — a percentage, 17/20, 17 out of
+      20, or the letter you were given — and the rest is arithmetic.
+    </>
+  );
 
+  const body = (
+    <>
       {catalog.courses.map((c) => {
         // Everything the projection now needs beyond the syllabus: the
         // absence penalty, attendance as a graded category, the individual
@@ -313,7 +316,31 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
         nothing is sent anywhere. A syllabus that drops your lowest score, curves, or rounds will
         not match exactly.
       </div>
-      <div style={{ height: 22 }} />
-    </div>
+    </>
   );
+
+  /*
+   * Two callers, one body.
+   *
+   * Standalone this is a screen and takes the app's frame: the padding, the
+   * search box, the space above the tab bar. Inside the Courses switcher it is
+   * a panel on somebody else's screen — that `<Page>` has already drawn the
+   * frame, and a second one would put a second search box on it, filtering
+   * nothing. See the note at the top of `components/Page.tsx`.
+   *
+   * The trailing spacer belongs to whoever owns the frame, which is why
+   * `Courses` passes `bottom={0}` and it is written by hand only here.
+   */
+  if (bare) {
+    return (
+      <div>
+        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
+          {intro}
+        </div>
+        {body}
+        <div style={{ height: 22 }} />
+      </div>
+    );
+  }
+  return <Page blurb={intro}>{body}</Page>;
 }

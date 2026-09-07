@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Dictate } from '../components/Dictate';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -186,7 +187,7 @@ export function Exam() {
 
   if (stage === 'setup') {
     return (
-      <div style={{ padding: 18 }}>
+      <Page bottom={26}>
         <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
           A paper with a shape, a total and a clock — not another round of cards. The marks and
           the timing are worked out here; only the questions come from anywhere else.
@@ -353,8 +354,7 @@ export function Exam() {
             no key at all.
           </div>
         )}
-        <div style={{ height: 26 }} />
-      </div>
+      </Page>
     );
   }
 
@@ -363,7 +363,7 @@ export function Exam() {
   const marking = stage === 'marking';
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       {/*
         Opaque, not the Blueprint's usual near-transparent gradient. A sticky
         bar you can read the page through is a sticky bar that makes both
@@ -739,7 +739,6 @@ export function Exam() {
           </div>
         </>
       )}
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }

@@ -339,7 +339,8 @@ export function Me() {
         </nav>
       </ForcedProvider>
         </>
-      )}</Page>
+      )}
+    </Page>
   );
 }
 
@@ -424,7 +425,8 @@ export function Search() {
           title="Search everything."
           body="Deadlines, courses, study units, your own notes and tasks — and the app's own screens, so you can type where you want to go instead of hunting for it."
         />
-      )}</Page>
+      )}
+    </Page>
   );
 }
 
@@ -493,7 +495,8 @@ export function Notifications() {
         }}
       >
         Clear all
-      </button></Page>
+      </button>
+    </Page>
   );
 }
 

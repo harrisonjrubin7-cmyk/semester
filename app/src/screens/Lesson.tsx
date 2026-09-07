@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { nowPlaying, playbackIs } from '../lib/device';
 import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -104,7 +105,7 @@ export function LessonPlayer() {
 
   if (!lesson) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">No lesson yet</div>
           <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
@@ -115,7 +116,7 @@ export function LessonPlayer() {
             <code style={{ fontSize: 'calc(12px * var(--text-scale, 1))' }}>python3 pipeline/lessons.py {state.guideId}</code>
           </div>
         </Blueprint>
-      </div>
+      </Page>
     );
   }
 
@@ -126,7 +127,7 @@ export function LessonPlayer() {
   const extraCard = showingExtra ? added[Math.min(extra - 1, added.length - 1)] : null;
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <div className="kicker">
         Unit {unit + 1} of {guide.units.length} · {lesson.len}
       </div>
@@ -380,7 +381,6 @@ export function LessonPlayer() {
           Next unit
         </button>
       </div>
-      <div style={{ height: 22 }} />
-    </div>
+    </Page>
   );
 }

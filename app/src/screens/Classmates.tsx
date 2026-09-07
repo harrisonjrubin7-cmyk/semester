@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -115,7 +116,7 @@ export function Classmates() {
 
   if (loaded && !profile) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <SectionLabel>What classmates should call you</SectionLabel>
         <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
           This is the only thing about you other people see, alongside the classes you share. Not
@@ -145,7 +146,7 @@ export function Classmates() {
           {busy ? 'Saving…' : 'That is me'}
         </button>
         {error ? <Problem>{error}</Problem> : null}
-      </div>
+      </Page>
     );
   }
 
@@ -172,7 +173,7 @@ export function Classmates() {
   );
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         {termLabel(term)}. A room is everybody who says they are in that class — a confirmed
         Vanderbilt address is what gets somebody in the door, and no app can read the registrar to
@@ -285,8 +286,7 @@ export function Classmates() {
         messages stop reaching this device — reports are recorded, but nobody is watching a queue,
         and it would be wrong to imply otherwise.
       </div>
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }
 
@@ -361,7 +361,7 @@ function Room({
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button type="button" className="btn btn-secondary" onClick={onBack} style={{ padding: '0 14px', height: 36 }}>
           ← Rooms
@@ -536,8 +536,7 @@ function Room({
       >
         Leave this room
       </button>
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }
 
@@ -573,12 +572,12 @@ function Blocked({ me }: { me: string }) {
 
 function Note({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
         <div className="kicker">{title}</div>
         <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>{children}</div>
       </Blueprint>
-    </div>
+    </Page>
   );
 }
 

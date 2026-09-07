@@ -74,6 +74,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
             like. Switch it off again in Settings.
           </div>
         </>
-      )}</Page>
+      )}
+    </Page>
   );
 }

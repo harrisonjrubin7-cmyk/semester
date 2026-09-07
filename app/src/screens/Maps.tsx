@@ -420,6 +420,7 @@ export function Maps() {
           Name a few places under Mine → Places and they appear on the map with exact coordinates,
           which route better than any search for a building name.
         </div>
-      )}</Page>
+      )}
+    </Page>
   );
 }

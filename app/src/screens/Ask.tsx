@@ -278,6 +278,7 @@ export function Ask() {
         a date that came from a syllabus. There is no tool for any of those, so it cannot do them by
         accident and cannot do them by being asked. It does not comment on how you are feeling: the
         app holds a timetable, not a person.
-      </div></Page>
+      </div>
+    </Page>
   );
 }

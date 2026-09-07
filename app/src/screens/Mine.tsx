@@ -1142,6 +1142,7 @@ export function NoteEditor() {
         }}
       >
         Delete note
-      </button></Page>
+      </button>
+    </Page>
   );
 }

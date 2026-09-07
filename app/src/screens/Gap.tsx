@@ -203,6 +203,14 @@ function Run({ win }: { win: Window }) {
     );
   }
 
+  /*
+   * No `<Page>` here, deliberately.
+   *
+   * This is the twenty minutes between two classes, timed: a bar counting the
+   * window down and one card at a time filling the rest of the height. A
+   * search box above it is a thing to look at instead of the card, which is
+   * the one thing this screen exists to stop.
+   */
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '78vh', padding: '0 16px' }}>
       {/* How much of the window is gone. A bar rather than a clock: a number

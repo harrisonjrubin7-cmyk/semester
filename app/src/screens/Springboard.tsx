@@ -160,6 +160,13 @@ export function Springboard() {
   // rule as the Me screen, from the same place. See `lib/nav.ts`.
   const recent = lately(state.recent, dock, school.capabilities);
 
+  /*
+   * No `<Page>` here, deliberately.
+   *
+   * This screen already is a search box — it is the launcher, and the field
+   * below is the only thing on it above the fold. The frame's box would be a
+   * second one, directly above, filtering a different thing.
+   */
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: '10px 14px 0' }}>
       <input

@@ -210,6 +210,7 @@ export function Draw() {
           </div>
         </>
       )}
-      {code ? <PrintButton label="Print the drawing" style={{ marginTop: 8 }} /> : null}</Page>
+      {code ? <PrintButton label="Print the drawing" style={{ marginTop: 8 }} /> : null}
+    </Page>
   );
 }

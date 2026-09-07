@@ -68,6 +68,13 @@ export function Onboarding() {
   const all = steps(catalog, state.tone);
   const step = all[state.onb] ?? all[0];
 
+  /*
+   * No `<Page>` here, deliberately.
+   *
+   * Onboarding runs outside the shell: no header, no tab bar, its own
+   * `safe-top` and its own padding, one step at a time. There is nothing to
+   * search yet — the app has no data until this finishes.
+   */
   return (
     <div
       className="safe-top"

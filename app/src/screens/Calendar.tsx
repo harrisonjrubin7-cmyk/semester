@@ -1350,7 +1350,8 @@ export function EventDetail() {
         >
           That day
         </button>
-      </div></Page>
+      </div>
+    </Page>
   );
 }
 

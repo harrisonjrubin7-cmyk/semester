@@ -351,7 +351,8 @@ export function Analyse() {
           ) : null}
         </>
       )}
-      {xSummary ? <PrintButton label="Print this analysis" style={{ marginTop: 12 }} /> : null}</Page>
+      {xSummary ? <PrintButton label="Print this analysis" style={{ marginTop: 12 }} /> : null}
+    </Page>
   );
 }
 

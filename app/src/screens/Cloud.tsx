@@ -421,6 +421,7 @@ export function Cloud() {
             {provider === 'google' ? 'Google Tasks' : 'Microsoft To Do'}
           </button>
         </>
-      )}</Page>
+      )}
+    </Page>
   );
 }

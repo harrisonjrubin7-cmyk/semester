@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
@@ -131,7 +132,7 @@ export function Work() {
 
   if (!configured()) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
           <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
@@ -139,12 +140,12 @@ export function Work() {
             else in the app works without it.
           </div>
         </Blueprint>
-      </div>
+      </Page>
     );
   }
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, textWrap: 'pretty' }}>
         Working on {guide.code}. Switch course from Study.
       </div>
@@ -365,8 +366,7 @@ export function Work() {
         Going through {routeLabel()}.
         Whatever you submit has to be your own work.
       </div>
-      <div style={{ height: 22 }} />
-    </div>
+    </Page>
   );
 }
 

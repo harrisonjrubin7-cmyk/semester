@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
@@ -138,7 +139,7 @@ export function Essay() {
   const title = purpose.trim() || `${u.label}${audience.trim() ? ` · ${audience.trim()}` : ''}`;
 
   return (
-    <div className="prose" style={{ padding: 18 }}>
+    <Page className="prose" bottom={26}>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         A real draft, for the writing that is not coursework — the cover letter, the club
         newsletter, the scholarship statement, the memo. For a class, the project file under
@@ -433,7 +434,6 @@ export function Essay() {
           </div>
         </>
       )}
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }

@@ -406,7 +406,8 @@ export function Import() {
             })
           }
         />
-      )}</Page>
+      )}
+    </Page>
   );
 }
 

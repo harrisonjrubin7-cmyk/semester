@@ -476,6 +476,7 @@ export function Groupwork() {
             remove anybody from a group but themselves.
           </div>
         </>
-      )}</Page>
+      )}
+    </Page>
   );
 }

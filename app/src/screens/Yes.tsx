@@ -215,7 +215,8 @@ export function Yes() {
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
           {catalog.courses.length} course{catalog.courses.length === 1 ? '' : 's'} loaded.
         </div>
-      )}</Page>
+      )}
+    </Page>
   );
 }
 

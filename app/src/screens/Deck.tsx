@@ -366,6 +366,7 @@ export function Deck() {
             on it — a slide read aloud is a slide nobody listens to.
           </div>
         </>
-      )}</Page>
+      )}
+    </Page>
   );
 }

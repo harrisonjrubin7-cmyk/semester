@@ -180,7 +180,8 @@ export function AccountScreen() {
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
-        </div></Page>
+        </div>
+      </Page>
     );
   }
 
@@ -335,6 +336,7 @@ export function AccountScreen() {
         account already holds a semester the two are merged rather than one replacing the other —
         you end up with both sides' courses, notes and ticked boxes.
       </div>
-      <StorageRoom /></Page>
+      <StorageRoom />
+    </Page>
   );
 }

@@ -682,6 +682,7 @@ export function Connect() {
         style={{ height: 44 }}
       >
         Campus, books, tickets and your own
-      </button></Page>
+      </button>
+    </Page>
   );
 }

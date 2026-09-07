@@ -417,6 +417,7 @@ export function Study() {
         </button>
       ))}
         </>
-      )}</Page>
+      )}
+    </Page>
   );
 }

@@ -206,6 +206,15 @@ export function Drill() {
     );
   }
 
+  /*
+   * No `<Page>` here, deliberately.
+   *
+   * Drilling is a card filling the height with a progress bar above it, and
+   * the branches around it — the empty state, the score at the end — belong to
+   * the same view. A frame on some of them and not the drill itself would move
+   * the card down by the height of a search box halfway through a deck, which
+   * is worse than the inconsistency it would be fixing.
+   */
   return (
     <div
       style={{

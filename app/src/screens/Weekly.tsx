@@ -309,6 +309,7 @@ export function Weekly() {
         {back.staleTicks > 0
           ? ` ${back.staleTicks} of these ${back.staleTicks === 1 ? 'was' : 'were'} ticked before the app started recording the moment, so ${back.staleTicks === 1 ? 'it counts' : 'they count'} to the week ${back.staleTicks === 1 ? 'it was' : 'they were'} due instead.`
           : ''}
-      </div></Page>
+      </div>
+    </Page>
   );
 }

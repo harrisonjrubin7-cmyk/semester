@@ -532,6 +532,7 @@ export function EditCourse() {
           Saved. The calendar, Grades, Today and every study mode are using it already. What you
           have ticked off and drilled is untouched.
         </div>
-      ) : null}</Page>
+      ) : null}
+    </Page>
   );
 }

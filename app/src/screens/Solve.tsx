@@ -266,6 +266,7 @@ export function Solve() {
           </button>
         </>
       )}
-      {out ? <PrintButton label="Print this" style={{ marginTop: 8 }} /> : null}</Page>
+      {out ? <PrintButton label="Print this" style={{ marginTop: 8 }} /> : null}
+    </Page>
   );
 }

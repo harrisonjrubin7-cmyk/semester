@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
@@ -120,8 +121,8 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
     </button>
   );
 
-  return (
-    <div style={{ padding: bare ? 0 : 18 }}>
+  const body = (
+    <>
       <Segmented
         options={[
           { id: 'morning', label: 'Start of day' },
@@ -326,7 +327,28 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       )}
 
       <PrintButton label="Print this report" style={{ marginTop: 12 }} />
-      <div style={{ height: 26 }} />
-    </div>
+    </>
   );
+
+  /*
+   * Two callers, one body.
+   *
+   * Standalone this is a screen and takes the app's frame: the padding, the
+   * search box, the space above the tab bar. On Today it is the "Report" tab
+   * inside somebody else's `<Page>`, and a second frame there would mean a
+   * second search box on the same screen, filtering nothing. See the note at
+   * the top of `components/Page.tsx`.
+   *
+   * The trailing spacer goes with the frame, so it is written by hand only on
+   * the embedded path.
+   */
+  if (bare) {
+    return (
+      <div>
+        {body}
+        <div style={{ height: 26 }} />
+      </div>
+    );
+  }
+  return <Page bottom={26}>{body}</Page>;
 }

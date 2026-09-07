@@ -379,6 +379,7 @@ export function Mail() {
             once more and send it yourself.
           </div>
         </>
-      )}</Page>
+      )}
+    </Page>
   );
 }

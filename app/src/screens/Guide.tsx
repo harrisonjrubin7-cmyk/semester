@@ -2,6 +2,7 @@ import { allCards, weakestUnit } from '../data/catalog';
 import { useMemo, useRef } from 'react';
 import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
@@ -34,7 +35,7 @@ export function Guide() {
     // `prose` caps the measure at whatever "Reading width" is set to. The
     // guide is the longest thing in the app, so it is the screen the setting
     // exists for.
-    <div className="prose" style={{ padding: 18 }}>
+    <Page className="prose">
       {/* The field guide opens with its own masthead carrying both of these,
           so repeating them above it just pushes the document down. */}
       {state.mode !== 'field' && (
@@ -512,8 +513,7 @@ export function Guide() {
       >
         Built from {guide.source}
       </div>
-      <div style={{ height: 22 }} />
-    </div>
+    </Page>
   );
 }
 

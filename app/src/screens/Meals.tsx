@@ -221,6 +221,7 @@ export function Meals() {
         app will not do. The app reports a rate and a date and stops; it has no idea whether you
         are eating out, at home, or skipping meals, and a nudge about any of those would be both
         wrong and none of its business.
-      </div></Page>
+      </div>
+    </Page>
   );
 }

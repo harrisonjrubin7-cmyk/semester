@@ -42,6 +42,14 @@ export function FieldGuide() {
     .filter(Boolean)
     .join(' · ');
 
+  /*
+   * No `<Page>` here, deliberately.
+   *
+   * This is not a screen. `Guide` renders it as one of its modes, inside the
+   * guide's own frame — a second one would double the padding and put a second
+   * search box under the first. See the note at the top of
+   * `components/Page.tsx`.
+   */
   return (
     <div style={{ marginTop: 18 }}>
       {/* ── Masthead ─────────────────────────────────────────────────── */}

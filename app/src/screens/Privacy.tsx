@@ -18,6 +18,7 @@
 
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { TypeToConfirm } from '../components/TypeToConfirm';
@@ -59,7 +60,7 @@ export function Privacy() {
   const where = region((import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? '');
 
   return (
-    <div className="prose" style={{ padding: 18 }}>
+    <Page className="prose" bottom={26}>
       <Blueprint style={{ padding: 16 }}>
         <div className="kicker">Your data</div>
         <div
@@ -283,8 +284,6 @@ export function Privacy() {
           onCancel={() => setAsking(false)}
         />
       )}
-
-      <div style={{ height: 26 }} />
-    </div>
+    </Page>
   );
 }

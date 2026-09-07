@@ -326,7 +326,8 @@ function TabHome() {
 
       {tab === 'hours' && <HoursToday />}
 
-      {tab === 'done' && <DoneToday />}</Page>
+      {tab === 'done' && <DoneToday />}
+    </Page>
   );
 }
 

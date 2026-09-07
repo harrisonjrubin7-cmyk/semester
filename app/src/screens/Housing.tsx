@@ -263,6 +263,7 @@ export function Housing() {
         app will not do. The address the portal hands you carries your own session token in it;
         the app keeps only the portal root, because a link with your token in it is a link that
         signs somebody else in as you.
-      </div></Page>
+      </div>
+    </Page>
   );
 }

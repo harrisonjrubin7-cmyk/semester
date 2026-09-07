@@ -297,6 +297,7 @@ export function CheckDates() {
             confident wrong match — a wrong match would send you to change a date that was right.
           </div>
         </>
-      )}</Page>
+      )}
+    </Page>
   );
 }

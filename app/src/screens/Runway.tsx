@@ -317,6 +317,7 @@ export function Runway() {
       <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
         Every number here is counted from your own drilling and your own deadlines. There is no
         readiness score and there will not be one — it would be believed, and the app cannot know.
-      </div></Page>
+      </div>
+    </Page>
   );
 }
