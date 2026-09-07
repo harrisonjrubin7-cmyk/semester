@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import type { Figure } from './types';
 import {
   KINDS,
   SYSTEM,
   brief,
+  figureSlide,
   fromUnit,
   holes,
   kind,
@@ -51,6 +53,72 @@ const plan = (over: Partial<Planned> = {}): Planned => ({
     { title: 'Two sovereigns', bullets: ['States', 'The union'], say: 'Neither delegates.' },
   ],
   ...over,
+});
+
+
+describe('a unit deck carries more than its cards', () => {
+  const table: Figure = {
+    type: 'bars',
+    title: 'Where the money went',
+    caption: 'Federal outlays',
+    unit: '% of outlays',
+    max: 100,
+    rows: [
+      { l: 'Social Security', v: 21 },
+      { l: 'Medicare', v: 14 },
+    ],
+  };
+
+  it('turns a table into the bullets a slide can hold', () => {
+    // `lib/pptx.ts` writes titles and bullets, no pictures — but a table is a
+    // label and a value, which is exactly what a bullet is.
+    expect(figureSlide(table)).toEqual({
+      title: 'Where the money went',
+      bullets: ['Social Security — 21 % of outlays', 'Medicare — 14 % of outlays'],
+      note: 'Federal outlays',
+    });
+  });
+
+  it('turns a process into numbered bullets', () => {
+    const got = figureSlide({
+      type: 'steps',
+      title: 'How a bill becomes law',
+      caption: 'The short version',
+      steps: [
+        { n: '1', t: 'Introduced', d: 'A member files it.' },
+        { n: '2', t: 'Committee', d: 'Where most stop.' },
+      ],
+    });
+    expect(got.bullets).toEqual([
+      '1. Introduced — A member files it.',
+      '2. Committee — Where most stop.',
+    ]);
+  });
+
+  it('says a diagram could not travel rather than shipping a blank slide', () => {
+    // Handing somebody a deck whose figures are silently missing is worse than
+    // one that names what it could not draw.
+    const got = figureSlide({ type: 'diagram', title: 'The market', caption: 'x', kind: 'supply-demand' });
+    expect(got.bullets[0]).toContain('supply demand');
+    expect(got.bullets[0]).toContain('Figures');
+  });
+
+  it('puts the figures and the prose in, after the cards and before Questions', () => {
+    const deck = fromUnit(guide(), 0, {
+      figures: [table],
+      notes: [{ title: 'Week 6 reading', text: 'Prose that never became a question.', from: 'Reading 7' }],
+    });
+    const titles = deck.slides.map((sl) => sl.title);
+    expect(titles).toContain('Where the money went');
+    expect(titles).toContain('Week 6 reading');
+    expect(titles.indexOf('Where the money went')).toBeLessThan(titles.indexOf('Week 6 reading'));
+    expect(titles.indexOf('Week 6 reading')).toBeLessThan(titles.lastIndexOf('Questions'));
+  });
+
+  it('is unchanged for a unit with neither, which is most of them', () => {
+    expect(fromUnit(guide(), 0, {})).toEqual(fromUnit(guide(), 0));
+    expect(fromUnit(guide(), 0, { figures: [], notes: [] })).toEqual(fromUnit(guide(), 0));
+  });
 });
 
 describe('fromUnit', () => {

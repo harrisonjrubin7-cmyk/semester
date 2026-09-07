@@ -266,9 +266,26 @@ function offered(u: CourseUpdate): Figure[] {
  * Now there is one pass, and the two exported functions are two readings of
  * its result. They cannot drift because there is nothing left to drift.
  */
-function place(base: FigureMap, updates: CourseUpdate[]): { map: FigureMap; extras: Figure[] } {
+function place(
+  base: FigureMap,
+  updates: CourseUpdate[],
+): { map: FigureMap; extras: Figure[]; perUnit: Record<number, Figure[]> } {
   const map: FigureMap = { ...base };
   const extras: Figure[] = [];
+  /*
+   * Every figure a unit can show, in order, including the ones that did not
+   * fit its one slot.
+   *
+   * The Figures tab has a rail for the overflow, so it never needed this. A
+   * deck does: a slideshow of a unit shows one figure and then ends, so a
+   * reading with three tables in it contributed one slide and quietly dropped
+   * two. Built here rather than derived in the screens, because "which figure
+   * claimed the slot" is decided here and nowhere else can know it.
+   */
+  const perUnit: Record<number, Figure[]> = {};
+  for (const [key, figure] of Object.entries(map)) {
+    if (figure) perUnit[Number(key)] = [figure];
+  }
 
   for (const u of updates) {
     const all = offered(u);
@@ -279,25 +296,30 @@ function place(base: FigureMap, updates: CourseUpdate[]): { map: FigureMap; extr
     const takesSlot = u.unit !== null && map[u.unit] === undefined;
     if (takesSlot) {
       const [first] = all;
-      map[u.unit as number] =
+      const placed =
         first.type === 'image'
           ? { ...first, title: u.title || 'Added' }
           : { ...first, caption: u.source ? `${first.caption} — ${u.source}` : first.caption };
+      map[u.unit as number] = placed;
+      perUnit[u.unit as number] = [placed];
     }
 
     // Numbered from what is actually shown on the rail, so an update whose
     // first figure went to the unit does not leave a "(2)" with no (1).
     all.slice(takesSlot ? 1 : 0).forEach((f, i) => {
       const n = i + (takesSlot ? 2 : 1);
-      extras.push(
+      const spare =
         f.type === 'image'
           ? { ...f, title: u.title ? `${u.title} (${n})` : 'Added' }
-          : { ...f, caption: u.source ? `${f.caption} — ${u.source}` : f.caption },
-      );
+          : { ...f, caption: u.source ? `${f.caption} — ${u.source}` : f.caption };
+      extras.push(spare);
+      // An overflow figure still belongs to the unit it was filed against,
+      // even though the Figures tab shows it on the shared rail.
+      if (u.unit !== null) (perUnit[u.unit] ??= []).push(spare);
     });
   }
 
-  return { map, extras };
+  return { map, extras, perUnit };
 }
 
 /**
@@ -329,6 +351,14 @@ export interface Live {
   updates: CourseUpdate[];
   /** Updates on one unit, for the "what's new here" strips. */
   onUnit: (index: number) => CourseUpdate[];
+  /**
+   * Every figure one unit can show, the claimed one first.
+   *
+   * `figures[i]` is the single figure the unit leads with; this is that plus
+   * anything else filed against the unit that the one slot could not hold. A
+   * deck wants all of them, a header wants the first.
+   */
+  figuresOn: (index: number) => Figure[];
 }
 
 /** Everything a study screen needs for one course, with your additions folded in. */
@@ -341,13 +371,18 @@ export function useLive(courseId: CourseId): Live {
 
   return useMemo(() => {
     const base = catalog.guides[courseId] ?? EMPTY_GUIDE;
+    const own = catalog.figures[courseId] ?? {};
+    // One pass, three readings of it — the map a unit leads with, the shared
+    // rail, and the per-unit lists a deck walks.
+    const placed = place(own, updates);
     return {
       guide: applyReviews(mergeGuide(base, updates), courseId, state.reviews, Date.now()),
-      figures: mergeFigures(catalog.figures[courseId] ?? {}, updates),
-      extras: extraFigures(catalog.extraFigures[courseId] ?? [], updates, catalog.figures[courseId] ?? {}),
+      figures: updates.length === 0 ? own : placed.map,
+      extras: extraFigures(catalog.extraFigures[courseId] ?? [], updates, own),
       lessons: catalog.lessons[courseId] ?? {},
       updates,
       onUnit: (index: number) => updates.filter((u) => u.unit === index),
+      figuresOn: (index: number) => placed.perUnit[index] ?? [],
     };
   }, [catalog, courseId, updates, state.reviews]);
 }

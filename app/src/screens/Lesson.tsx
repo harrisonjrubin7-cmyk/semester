@@ -9,7 +9,7 @@ import { SectionLabel } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
 import { asset } from '../lib/asset';
-import type { LessonCue } from '../lib/types';
+import type { Figure, LessonCue, StudyCard } from '../lib/types';
 
 const SPEEDS = [1, 1.25, 1.5];
 
@@ -26,9 +26,55 @@ function mmss(seconds: number): string {
  * resolution rather than a video of type. It costs a tenth of what a screen
  * recording would and stays sharp on any phone.
  */
+
+/**
+ * One thing added to a unit after its narration was recorded.
+ *
+ * A lesson is fixed audio with slides under it, so nothing added later can be
+ * read aloud without re-rendering the file. What it can do is play afterwards,
+ * clearly marked — which is the honest arrangement: the recording is not
+ * pretending to cover this.
+ */
+type Beat =
+  | { kind: 'card'; card: StudyCard }
+  | { kind: 'figure'; figure: Figure }
+  | { kind: 'note'; title: string; text: string; from: string };
+
+/** "two cards and a table" — so the count above it is not a bare number. */
+function describeBeats(beats: Beat[]): string {
+  const n = (kind: Beat['kind']) => beats.filter((b) => b.kind === kind).length;
+  const bits = [
+    n('card') && `${n('card')} ${n('card') === 1 ? 'card' : 'cards'}`,
+    n('figure') && `${n('figure')} ${n('figure') === 1 ? 'figure' : 'figures'}`,
+    n('note') && `${n('note')} ${n('note') === 1 ? 'note' : 'notes'}`,
+  ].filter(Boolean) as string[];
+  if (bits.length <= 1) return bits[0] ?? '';
+  return `${bits.slice(0, -1).join(', ')} and ${bits[bits.length - 1]}`;
+}
+
+/*
+ * The two type sizes a played-back beat uses, as objects rather than repeated
+ * inline — a card and a note are the same slide with different words in it.
+ */
+const BEAT_TITLE = {
+  fontFamily: 'var(--font-heading)',
+  fontSize: 'calc(22px * var(--text-scale, 1))',
+  lineHeight: 1.15,
+  marginTop: 'var(--sp-5)',
+  textWrap: 'pretty',
+} as const;
+
+const BEAT_BODY = {
+  fontSize: 'calc(14.5px * var(--text-scale, 1))',
+  lineHeight: 1.55,
+  opacity: 0.82,
+  marginTop: 'var(--sp-5)',
+  whiteSpace: 'pre-wrap',
+} as const;
+
 export function LessonPlayer() {
   const { state, dispatch } = useStore();
-  const { guide, lessons, figures, onUnit } = useLive(state.guideId);
+  const { guide, lessons, figures, onUnit, figuresOn } = useLive(state.guideId);
   const unit = state.lessonUnit;
   const lesson = lessons[unit];
 
@@ -49,8 +95,37 @@ export function LessonPlayer() {
     return i;
   }, [cues, time]);
 
-  const added = onUnit(unit).flatMap((u) => u.cards);
   const figure = figures[unit];
+  /*
+   * Everything added to this unit since the narration was recorded, as beats
+   * to step through after it ends.
+   *
+   * This was `flatMap((u) => u.cards)` — cards only. So a reading that brought
+   * a table, a process and two paragraphs of prose showed nothing here, and
+   * the lesson looked complete when a third of what the unit now holds was not
+   * in it. The figures are the ones the unit could not lead with, since the
+   * first is already on screen throughout.
+   */
+  const spare = figuresOn(unit).slice(figure ? 1 : 0);
+  const added = useMemo<Beat[]>(() => {
+    const out: Beat[] = [];
+    for (const up of onUnit(unit)) {
+      for (const card of up.cards) out.push({ kind: 'card', card });
+      if (up.body) {
+        out.push({
+          kind: 'note',
+          title: up.title || 'Added since',
+          text: up.body,
+          from: up.source || 'Added by you',
+        });
+      }
+    }
+    for (const f of spare) out.push({ kind: 'figure', figure: f });
+    return out;
+    // `onUnit` and `figuresOn` are stable for a given set of updates; the unit
+    // is what actually changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unit, onUnit, spare.length]);
 
   const seek = useCallback((seconds: number) => {
     const el = audioRef.current;
@@ -124,7 +199,7 @@ export function LessonPlayer() {
   const pct = lesson.seconds ? Math.min(100, (time / lesson.seconds) * 100) : 0;
   const finished = time >= lesson.seconds - 0.5;
   const showingExtra = finished && added.length > 0 && extra > 0;
-  const extraCard = showingExtra ? added[Math.min(extra - 1, added.length - 1)] : null;
+  const beat = showingExtra ? added[Math.min(extra - 1, added.length - 1)] : null;
 
   return (
     <Page>
@@ -145,25 +220,19 @@ export function LessonPlayer() {
           background: 'var(--app-hero)',
         }}
       >
-        {extraCard ? (
+        {beat ? (
           <>
             <div className="kicker" style={{ color: 'var(--app-accent)' }}>
               Added since this was recorded · {extra} of {added.length}
             </div>
-            <div
-              style={{
-                fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(22px * var(--text-scale, 1))',
-                lineHeight: 1.15,
-                marginTop: 'var(--sp-5)',
-                textWrap: 'pretty',
-              }}
-            >
-              {extraCard.q}
-            </div>
-            <div style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.55, opacity: 0.82, marginTop: 'var(--sp-5)' }}>
-              {extraCard.a}
-            </div>
+            {beat.kind === 'figure' ? (
+              <FigureCard figure={beat.figure} />
+            ) : (
+              <>
+                <div style={BEAT_TITLE}>{beat.kind === 'card' ? beat.card.q : beat.title}</div>
+                <div style={BEAT_BODY}>{beat.kind === 'card' ? beat.card.a : beat.text}</div>
+              </>
+            )}
           </>
         ) : (
           <>
@@ -316,9 +385,9 @@ export function LessonPlayer() {
             textWrap: 'pretty',
           }}
         >
-          {added.length} {added.length === 1 ? 'card was' : 'cards were'} added to this unit after
-          the narration was recorded. They play as slides at the end — re-render the lesson to have
-          them read aloud.
+          {added.length} {added.length === 1 ? 'thing was' : 'things were'} added to this unit
+          after the narration was recorded — {describeBeats(added)}. They play as slides at the end
+          — re-render the lesson to have them read aloud.
         </div>
       )}
 

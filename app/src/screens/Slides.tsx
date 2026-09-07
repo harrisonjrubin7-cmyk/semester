@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { Diagram } from '../components/Diagram';
+import { FigureCard } from '../components/FigureCard';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import type { Figure } from '../lib/types';
 
@@ -11,6 +11,8 @@ type Slide =
   | { kind: 'q'; text: string; n: number; of: number }
   | { kind: 'a'; q: string; text: string }
   | { kind: 'figure'; figure: Figure }
+  /** Prose from a reading that never became a question. */
+  | { kind: 'note'; title: string; text: string; from: string }
   | { kind: 'end'; title: string; sub: string };
 
 /**
@@ -25,9 +27,11 @@ type Slide =
  */
 export function SlideDeck() {
   const { state, dispatch } = useStore();
-  const { guide, figures } = useLive(state.guideId);
+  const { guide, figuresOn, onUnit } = useLive(state.guideId);
   const unitIndex = state.lessonUnit;
   const unit = guide.units[unitIndex];
+  const unitFigures = figuresOn(unitIndex);
+  const added = onUnit(unitIndex);
 
   const slides = useMemo<Slide[]>(() => {
     if (!unit) return [];
@@ -42,15 +46,36 @@ export function SlideDeck() {
       out.push({ kind: 'q', text: c.q, n: i + 1, of: unit.cards.length });
       out.push({ kind: 'a', q: c.q, text: c.a });
     });
-    const figure = figures[unitIndex];
-    if (figure) out.push({ kind: 'figure', figure });
+    /*
+     * Every figure the unit has, not just the one it leads with.
+     *
+     * This took `figures[unitIndex]` — the single figure a header shows — so a
+     * reading that brought three tables contributed one slide and dropped two
+     * with nothing said. A deck is the one place with room for all of them.
+     */
+    for (const figure of unitFigures) out.push({ kind: 'figure', figure });
+
+    // Prose a reading never split into questions. It is in Read and on the
+    // cram sheet; leaving it out of the deck made the deck the one format that
+    // did not have the whole unit in it.
+    for (const up of added) {
+      if (up.body) {
+        out.push({
+          kind: 'note',
+          title: up.title || 'Added since',
+          text: up.body,
+          from: up.source || 'Added by you',
+        });
+      }
+    }
+
     out.push({
       kind: 'end',
       title: 'End of the unit',
       sub: `${unit.cards.length} cards · ${unit.mastery}% mastered`,
     });
     return out;
-  }, [unit, unitIndex, guide.code, figures]);
+  }, [unit, guide.code, unitFigures, added]);
 
   const [at, setAt] = useState(0);
   const last = slides.length - 1;
@@ -181,19 +206,36 @@ export function SlideDeck() {
           </>
         )}
 
-        {slide.kind === 'figure' && (
+        {/*
+          The same card the Figures tab draws.
+
+          This used to draw a diagram and, for everything else, print the
+          caption — so a table of numbers appeared in the deck as one line of
+          italics with no numbers in it, and a process appeared as a sentence
+          about a process. `FigureCard` already knew how to draw all four, and
+          a second, worse renderer for the same union is exactly the thing that
+          drifts.
+        */}
+        {slide.kind === 'figure' && <FigureCard figure={slide.figure} unit="Figure" />}
+
+        {slide.kind === 'note' && (
           <>
-            <div className="kicker">Figure</div>
+            <div className="kicker">{slide.from}</div>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
-              {slide.figure.title}
+              {slide.title}
             </div>
-            {slide.figure.type === 'diagram' ? (
-              <Diagram kind={slide.figure.kind} />
-            ) : (
-              <div style={{ fontSize: 'var(--type-md)', opacity: 0.75, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
-                {slide.figure.caption}
-              </div>
-            )}
+            <div
+              style={{
+                fontSize: 'var(--type-md)',
+                opacity: 0.8,
+                marginTop: 'var(--sp-5)',
+                lineHeight: 'var(--leading-relaxed)',
+                whiteSpace: 'pre-wrap',
+                textWrap: 'pretty',
+              }}
+            >
+              {slide.text}
+            </div>
           </>
         )}
 

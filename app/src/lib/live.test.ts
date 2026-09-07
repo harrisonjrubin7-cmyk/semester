@@ -418,6 +418,39 @@ const withOwn: FigureMap = {
   0: { type: 'image', title: 'The guide’s own diagram', caption: '', fileId: 'guide-fig' },
 };
 
+describe('which figures belong to one unit', () => {
+  const table = (title: string): Figure => ({
+    type: 'bars', title, caption: 'c', unit: '%', max: 10,
+    rows: [{ l: 'A', v: 1 }, { l: 'B', v: 2 }],
+  });
+
+  /** What `useLive` exposes as `figuresOn`, without mounting a component. */
+  const on = (base: FigureMap, updates: CourseUpdate[], index: number) => {
+    const map = mergeFigures(base, updates);
+    const rail = extraFigures([], updates, base);
+    const lead = map[index];
+    // The screens ask `figuresOn`; this mirrors what it must return, so the
+    // assertion is about the arrangement rather than the implementation.
+    return { lead, rail };
+  };
+
+  it('gives a deck every figure, not just the one the unit leads with', () => {
+    // The bug: a slideshow showed `figures[unit]` and ended, so a reading with
+    // three tables in it contributed one slide and dropped two, silently.
+    const mine = [update({ cards: [], unit: 1, figures: [table('One'), table('Two'), table('Three')] })];
+    const { lead, rail } = on({}, mine, 1);
+    expect(lead).toMatchObject({ title: 'One' });
+    expect(rail.map((f) => f.title)).toEqual(['Two', 'Three']);
+  });
+
+  it("keeps the guide’s own leading, with yours behind it", () => {
+    const mine = [update({ cards: [], unit: 0, figures: [table('Mine')] })];
+    const { lead, rail } = on(withOwn, mine, 0);
+    expect(fileOf(lead)).toBe('guide-fig');
+    expect(rail.map((f) => f.title)).toEqual(['Mine']);
+  });
+});
+
 describe('extraFigures', () => {
   const withFigure: FigureMap = {
     0: { type: 'image', title: 'The guide’s own diagram', caption: '', fileId: 'guide-fig' },

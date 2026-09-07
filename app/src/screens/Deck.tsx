@@ -42,7 +42,7 @@ import { UseSources, appendTo } from '../components/UseSources';
  */
 export function Deck() {
   const { state, catalog, dispatch } = useStore();
-  const { guide } = useLive(state.guideId);
+  const { guide, figuresOn, onUnit } = useLive(state.guideId);
 
   const [source, setSource] = useState<'unit' | 'brief'>('unit');
   const [unit, setUnit] = useState(state.lessonUnit ?? 0);
@@ -61,7 +61,23 @@ export function Deck() {
   const [kept, setKept] = useState(false);
   const abort = useRef<AbortController | null>(null);
 
-  const unitDeck = useMemo(() => fromUnit(guide, unit), [guide, unit]);
+  const unitDeck = useMemo(
+    () =>
+      fromUnit(guide, unit, {
+        // The unit's figures and any prose a reading brought. Without these a
+        // deck handed in carried the cards and left the table the unit is
+        // about behind in the app.
+        figures: figuresOn(unit),
+        notes: onUnit(unit)
+          .filter((u) => u.body)
+          .map((u) => ({
+            title: u.title || 'Added since',
+            text: u.body,
+            from: u.source || 'Added by you',
+          })),
+      }),
+    [guide, unit, figuresOn, onUnit],
+  );
   const planned = plan ? toDeck(plan) : null;
   const file: DeckFile | null = source === 'unit' ? unitDeck : planned;
   const left = plan ? holes(plan) : [];

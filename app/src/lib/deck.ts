@@ -22,7 +22,7 @@
  * survivable, a slide with no title is not.
  */
 
-import type { Guide } from './types';
+import type { Figure, Guide } from './types';
 import type { Deck, Slide } from './pptx';
 import { unitName } from './unit';
 
@@ -96,7 +96,7 @@ export function kind(id: string): Kind {
  * document. The bullets on an answer slide are the answer's own sentences,
  * split, because a wall of text in 15pt is not a slide.
  */
-export function fromUnit(guide: Guide, index: number): Deck {
+export function fromUnit(guide: Guide, index: number, also: UnitExtras = {}): Deck {
   const unit = guide.units[index];
   if (!unit) return { title: guide.code, subtitle: guide.name, slides: [] };
 
@@ -110,8 +110,61 @@ export function fromUnit(guide: Guide, index: number): Deck {
     slides.push({ title: card.q, bullets: sentences(card.a), note: 'The answer' });
   });
 
+  // The unit's figures, and the prose a reading never turned into questions.
+  // Both were missing: a deck built from a unit had the cards and nothing
+  // else, so the table the unit is about did not come with it.
+  for (const figure of also.figures ?? []) slides.push(figureSlide(figure));
+  for (const note of also.notes ?? []) {
+    slides.push({ title: note.title, bullets: sentences(note.text), note: note.from });
+  }
+
   slides.push({ title: 'Questions', bullets: [], note: `${guide.code} · ${name}`, opening: true });
   return { title: name, subtitle: guide.code, slides };
+}
+
+/** What a unit holds besides its cards. Optional, so the old call still works. */
+export interface UnitExtras {
+  figures?: Figure[];
+  notes?: { title: string; text: string; from: string }[];
+}
+
+/**
+ * A figure, as far as a slide of bullets can carry it.
+ *
+ * A `.pptx` slide here is a title and lines of text — `lib/pptx.ts` writes no
+ * pictures — so a diagram cannot travel and says so rather than arriving as an
+ * empty slide with a caption. A table and a process can travel exactly: they
+ * are a label and a value, and a step and what happens, which is what a bullet
+ * is. Handing somebody a deck whose figures are silently missing is worse than
+ * handing them one that names what it could not draw.
+ */
+export function figureSlide(figure: Figure): Slide {
+  switch (figure.type) {
+    case 'bars':
+      return {
+        title: figure.title,
+        bullets: figure.rows.map((r) => `${r.l} — ${r.v} ${figure.unit}`),
+        note: figure.caption,
+      };
+    case 'steps':
+      return {
+        title: figure.title,
+        bullets: figure.steps.map((st) => `${st.n}. ${st.t} — ${st.d}`),
+        note: figure.caption,
+      };
+    case 'diagram':
+      return {
+        title: figure.title,
+        bullets: [`Drawn in the app — open ${figure.kind.replace(/-/g, ' ')} under Figures.`],
+        note: figure.caption,
+      };
+    case 'image':
+      return {
+        title: figure.title,
+        bullets: ['A picture you added. It is in the app under Figures.'],
+        note: figure.caption,
+      };
+  }
 }
 
 /**
