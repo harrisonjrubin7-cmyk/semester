@@ -50,10 +50,24 @@ const course = (over: Partial<CourseModule['course']> = {}): CourseModule => ({
       dueTime: '11:59pm',
       weight: '5',
       where: '',
+      detail: '',
+      quote: '',
+      source: 'econ.pdf',
     },
   ],
   schedule: [{ days: [1, 3, 5], at: 610, time: '10:10a', title: 'ECON 1020', meta: 'Calhoun 101' }],
-  guide: { title: 'ECON', units: [] },
+  guide: {
+    code: 'ECON 1020',
+    name: 'Principles of Macroeconomics',
+    blurb: '',
+    source: 'econ.pdf',
+    mastery: 0,
+    audio: false,
+    units: [],
+    terms: [],
+  },
+  planMinutes: '90',
+  frameLabel: 'Exam frames',
 });
 
 function state(over: Partial<Persisted> = {}): Persisted {

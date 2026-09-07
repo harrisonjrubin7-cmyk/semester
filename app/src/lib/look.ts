@@ -52,9 +52,9 @@ export interface Accent {
  * The `deep` step sets section labels and kickers — small uppercase text — and
  * six of these were under WCAG's 4.5:1 against the darker panels, Oxblood
  * worst at 3.23:1 on Graphite. They have been lightened by the smallest amount
- * that clears it. Nothing was chosen by eye: `lib/contrast.test.ts` holds all
- * hundred accent-and-ground combinations to the ratio, and the app has ten
- * grounds, so ninety-six of those pairings had never been looked at by anyone.
+ * that clears it. Nothing was chosen by eye: `lib/contrast.test.ts` holds every
+ * accent-and-ground combination to the ratio — eleven accents across twelve
+ * grounds, 132 pairings, all but a couple of which nobody has ever looked at.
  *
  * Metals and stones. The look depends on the accent not being a colour — a
  * saturated one turns a drawn interface into a dashboard — so every one of
@@ -67,6 +67,29 @@ export const ACCENTS: Accent[] = [
   { id: 'jade', label: 'Jade', base: '#a8ccbd', bright: '#d3e9e0', deep: '#7a9a8d', shade: '#3d5f52' },
   { id: 'slate', label: 'Slate', base: '#aebdd0', bright: '#d8e2ee', deep: '#8894a4', shade: '#445466' },
   { id: 'pewter', label: 'Pewter', base: '#b9b9bd', bright: '#e2e2e6', deep: '#929298', shade: '#55555a' },
+  /*
+   * Industry's blue, taken off its own ramp at the steps that pass.
+   *
+   * The system states `--color-accent: #5980a6` (accent-600) and that value
+   * fails as text: against Industry's own #f2f2f3 page it is 3.71:1, under the
+   * 4.5:1 a paragraph needs. Industry gets away with it because it spends the
+   * accent on fills and rules; this app puts `--app-accent` in text.
+   *
+   * So the hue is kept and every role moves to the ramp step that clears its
+   * requirement across all twelve grounds, not just Industry's own — the
+   * numbers below are the worst case over the whole set, measured by
+   * `contrast.test.ts`:
+   *
+   *   shade  accent-700  light grounds, all roles   4.93:1 (Fog)
+   *   deep   accent-500  dark grounds, small text   5.45:1 (Industry Dark)
+   *   base   accent-400  dark grounds, fills        7.81:1
+   *   bright accent-300  dark grounds, emphasis    10.58:1
+   *
+   * accent-600 sits between them and clears neither: 3.65:1 on the darkest
+   * ground and 3.24:1 on the lightest. It is the one step of this ramp the app
+   * cannot use, which is why the stated accent is the value not present here.
+   */
+  { id: 'industry', label: 'Industry', base: '#94bce3', bright: '#b5d9fd', deep: '#749dc4', shade: '#416180' },
   { id: 'oxblood', label: 'Oxblood', base: '#c99a9a', bright: '#e8cdcd', deep: '#ab8d8c', shade: '#6f3f3f' },
   { id: 'moss', label: 'Moss', base: '#b6c39b', bright: '#dde5c9', deep: '#8d9776', shade: '#4f5a37' },
   { id: 'ink', label: 'Indigo', base: '#a9aed6', bright: '#d5d8ee', deep: '#8d91b1', shade: '#454a72' },
@@ -103,10 +126,19 @@ export interface Ground {
   fg: string;
   dimAlpha: number;
   faintAlpha: number;
+  /**
+   * The corner style this ground was drawn for, when it has an opinion.
+   *
+   * A suggestion, not a lock. Industry's square corners are part of what makes
+   * it Industry, but `corners` is the reader's own setting and a ground must
+   * not overwrite a choice somebody made — so this is consulted only when they
+   * have never set one. See `resolveCorners`.
+   */
+  corners?: string;
 }
 
 /**
- * Nine grounds — six dark, three light.
+ * Twelve grounds — eight dark, four light.
  *
  * Ink is the original and stays the default. The rest are the ways a dark
  * screen can actually differ: how light it is, and which way the shadows lean.
@@ -117,9 +149,13 @@ export interface Ground {
  * still read as neutral at this darkness, and are there because a whole app in
  * one of them is a different room to sit in.
  *
- * The light three are ordered the same way. Parchment is warm; Paper is the
+ * The light four are ordered the same way. Parchment is warm; Paper is the
  * cooler, plainer one; Fog is grey enough that a phone in direct sun still
  * shows the panel edges, which a white ground does not.
+ *
+ * Industry and Industry Dark are the pair the design system arrived as, and
+ * the only two here that carry a `corners` opinion — everything else leaves
+ * that entirely to the reader.
  *
  * Every one of them defines every token — see `tokensFor`.
  */
@@ -214,6 +250,63 @@ export const GROUNDS: Ground[] = [
     dimAlpha: 0.68,
     faintAlpha: 0.47,
   },
+  /*
+   * Industry, as one ground among many.
+   *
+   * The design system is defined light-only: #f2f2f3 page, #1d1f20 text, one
+   * blue accent. Adopting it wholesale would flip every existing user to a
+   * light technical look and delete the theming system, so it arrives as a
+   * ground instead — its structure applies to all of them, its colour to this
+   * one.
+   *
+   * The ramp runs recessed to raised like every other ground here, which means
+   * it starts *below* Industry's page colour: `--color-surface` #e9e9ea is
+   * darker than `--color-bg` #f2f2f3, so the surface is the void step and the
+   * page sits above it. The upper steps come from Industry's own neutral ramp
+   * rather than being invented.
+   */
+  {
+    id: 'industry',
+    label: 'Industry',
+    blurb: 'The technical light ground — square, hairline-ruled, one blue.',
+    light: true,
+    ramp: ['#e7e7ea', '#f2f2f3', '#f5f5f8', '#fafafb', '#ffffff'],
+    fg: '#1d1f20',
+    /*
+     * Higher than the dark grounds', and it has to be. Industry's text is
+     * #1d1f20 on a #f5f5f8 panel — a very light panel, so a given alpha buys
+     * less separation here than the same alpha does on near-black. 0.45, the
+     * value the dark grounds use, measures 2.76:1 and fails the 3:1 a faint
+     * label needs; 0.52 measures 3.35:1.
+     */
+    dimAlpha: 0.66,
+    faintAlpha: 0.52,
+    corners: 'square',
+  },
+  /*
+   * The same system at night.
+   *
+   * Industry ships light-only, and a light-only default on a phone at 11pm is
+   * wrong — which is when this app is most used. So the relationships are kept
+   * and the lightness inverted: Industry's text colour becomes the ground, its
+   * page colour becomes the text, and the top of the ramp is its own
+   * neutral-900 and -800 rather than a grey picked to look about right.
+   *
+   * Not a tint of Ink. Ink is cooled near-black; Industry's neutrals are
+   * near-achromatic, and keeping that is what makes this read as the same
+   * system rather than as Ink with a different accent.
+   */
+  {
+    id: 'industry-dark',
+    label: 'Industry Dark',
+    blurb: 'The same square structure, inverted for a dark room.',
+    light: false,
+    ramp: ['#141516', '#1b1c1e', '#232426', '#2b2b2d', '#424244'],
+    fg: '#f2f2f3',
+    dimAlpha: 0.64,
+    faintAlpha: 0.42,
+    corners: 'square',
+  },
   {
     id: 'fog',
     label: 'Fog',
@@ -267,6 +360,35 @@ export const CORNERS = [
   { id: 'soft', label: 'Soft', radii: [6, 12, 18] },
   { id: 'round', label: 'Round', radii: [10, 18, 28] },
 ];
+
+/**
+ * "Whatever the ground was drawn for" — the same idea as `MATCH_DEVICE`, one
+ * setting down.
+ *
+ * Kept out of `CORNERS` for the same reason `MATCH_DEVICE` is kept out of
+ * `GROUNDS`: it is not a corner style, it resolves to one, and `cornersOf`
+ * must not be able to return radii for it.
+ *
+ * It is the default for a look that has never had corners set, which is the
+ * only way a ground's own opinion can ever apply. Somebody who has picked a
+ * style has `drawn` or `round` stored and keeps it through every ground —
+ * including the two that would rather be square.
+ */
+export const MATCH_GROUND = 'auto';
+
+/**
+ * A stored corner setting turned into one that names real radii.
+ *
+ * The ground is consulted only when nothing was chosen. Every ground but
+ * Industry and Industry Dark declines to have an opinion, so for the other ten
+ * this returns `drawn` — the value it has always returned.
+ */
+export function resolveCorners(id: string | undefined, groundId: string | undefined): string {
+  if (id !== MATCH_GROUND && id !== undefined) {
+    return CORNERS.find((c) => c.id === id)?.id ?? CORNERS[0].id;
+  }
+  return CORNERS.find((c) => c.id === ground(groundId).corners)?.id ?? CORNERS[0].id;
+}
 
 export function cornersOf(id: string | undefined): number[] {
   return CORNERS.find((c) => c.id === id)?.radii ?? CORNERS[0].radii;
@@ -661,7 +783,7 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
       ? accentFromHue(look.hue, g.light)
       : named;
   const [void_, bg, panel, hero, raise] = g.ramp;
-  const [sm, md, lg] = cornersOf(look.corners);
+  const [sm, md, lg] = cornersOf(resolveCorners(look.corners, look.ground));
   const face = typefaceOf(look.typeface);
   const d = densityOf(look.density);
 
@@ -756,7 +878,14 @@ export function readLook(saved: Look | undefined): Required<Look> {
     // never be stored at all.
     ground: saved?.ground === MATCH_DEVICE ? MATCH_DEVICE : ground(saved?.ground).id,
     density: DENSITIES.find((d) => d.id === saved?.density)?.id ?? 'comfortable',
-    corners: CORNERS.find((c) => c.id === saved?.corners)?.id ?? 'drawn',
+    // `MATCH_GROUND` is not in `CORNERS`, so like `MATCH_DEVICE` above it has
+    // to be allowed through explicitly. It is also the fallback, which is what
+    // makes it the state of a look nobody has set corners on — the only state
+    // in which a ground's own opinion is allowed to count.
+    corners:
+      saved?.corners === MATCH_GROUND
+        ? MATCH_GROUND
+        : (CORNERS.find((c) => c.id === saved?.corners)?.id ?? MATCH_GROUND),
     typeface: typefaceOf(saved?.typeface).id,
     bodyface: bodyfaceOf(saved?.bodyface).id,
     lineHeight: LINE_HEIGHTS.find((l) => l.id === saved?.lineHeight)?.id ?? 'normal',
@@ -776,7 +905,9 @@ export function lookLine(look: Look): string {
   const parts = [accent(look.accent).label, ground(look.ground).label];
   const face = typefaceOf(look.typeface);
   if (face.id !== TYPEFACES[0].id) parts.push(face.label);
-  const corners = CORNERS.find((c) => c.id === look.corners);
+  // Resolved, not raw: on Industry this line should say Square, because that
+  // is what the reader is looking at.
+  const corners = CORNERS.find((c) => c.id === resolveCorners(look.corners, look.ground));
   if (corners && corners.id !== CORNERS[0].id) parts.push(corners.label);
   return parts.join(' · ');
 }

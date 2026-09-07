@@ -72,11 +72,13 @@ describe('a colour blended over its background', () => {
 describe('every combination the app will wear', () => {
   const combos = GROUNDS.flatMap((g) => ACCENTS.map((a) => ({ g, a })));
 
-  it('is a hundred of them', () => {
-    // Ten accents and ten grounds. I had written "six grounds" in the
-    // proposal that led to this test and never counted them.
-    expect(combos).toHaveLength(100);
-    expect(GROUNDS.length * ACCENTS.length).toBe(100);
+  it('is a hundred and thirty-two of them', () => {
+    // Eleven accents and twelve grounds. I had written "six grounds" in the
+    // proposal that led to this test and never counted them, which is why the
+    // number is asserted rather than described: adding Industry and Industry
+    // Dark moved it from 100 to 132, and the arithmetic below is what said so.
+    expect(combos).toHaveLength(132);
+    expect(GROUNDS.length * ACCENTS.length).toBe(132);
   });
 
   /** The checks one pairing has to survive. */

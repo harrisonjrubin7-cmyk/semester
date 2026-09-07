@@ -237,7 +237,7 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 708,
+  type: 698,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 225,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */

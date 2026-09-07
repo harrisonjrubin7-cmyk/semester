@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
 import { CustomRow, Group, SelectRow } from '../../components/shell/Rows';
@@ -18,6 +19,7 @@ import {
   LABELS,
   LINE_HEIGHTS,
   MATCH_DEVICE,
+  MATCH_GROUND,
   READING_WIDTHS,
   accentFromHue,
   SIZES,
@@ -25,6 +27,7 @@ import {
   contrast,
   contrastVerdict,
   ground as groundOf,
+  resolveCorners,
   resolveGround,
 } from '../../lib/look';
 
@@ -45,6 +48,20 @@ import {
  * their own is allowed to have it; what they are not allowed is to have it
  * without being told.
  */
+/**
+ * The explanation under a control.
+ *
+ * One object rather than twelve identical inline ones — this screen is nothing
+ * but rows of a control and a sentence saying what it does, and the twelfth
+ * copy of the same four properties is where they start drifting apart.
+ */
+const HINT: CSSProperties = {
+  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+  opacity: 0.5,
+  marginTop: 'var(--sp-3)',
+  lineHeight: 'var(--leading-normal)',
+};
+
 function HuePicker() {
   const { state, dispatch } = useStore();
   const prefersDark = usePrefersDark();
@@ -119,7 +136,7 @@ function HuePicker() {
               {verdict.label}
             </span>
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={HINT}>
             Measured against the ground you are on, using the smallest thing the accent is
             ever set in — a section label. Nothing stops you keeping a faint one; this only
             makes sure you know.
@@ -278,7 +295,7 @@ export function SettingsLook() {
                 })}
               </div>
               {groundOf(resolveGround(state.ground, prefersDark)).light && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ ...HINT, marginTop: 'var(--sp-4)' }}>
                   On a light ground the brushed-metal type inverts to a dark sweep, so display headings
                   keep their lustre instead of disappearing.
                 </div>
@@ -316,7 +333,7 @@ export function SettingsLook() {
                   );
                 })}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={HINT}>
                 {TYPEFACES.find((t) => t.id === state.typeface)?.blurb}
               </div>
             </CustomRow>
@@ -345,7 +362,7 @@ export function SettingsLook() {
                   );
                 })}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={HINT}>
                 {BODYFACES.find((b) => b.id === state.bodyface)?.blurb}
               </div>
             </CustomRow>
@@ -356,7 +373,7 @@ export function SettingsLook() {
                 value={state.lineHeight}
                 onChange={(lineHeight) => dispatch({ type: 'setLook', look: { lineHeight } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={HINT}>
                 Separate from text size on purpose. “I cannot see this” and “this is a wall” are two
                 different complaints, and one control for both fixes neither properly.
               </div>
@@ -368,7 +385,7 @@ export function SettingsLook() {
                 value={state.readingWidth}
                 onChange={(readingWidth) => dispatch({ type: 'setLook', look: { readingWidth } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={HINT}>
                 {READING_WIDTHS.find((w) => w.id === state.readingWidth)?.blurb} Applies to the screens
                 that are read rather than scanned — a guide, an essay. The app’s column is already close to
                 the comfortable measure, so in practice this narrows it rather than widening it: past about
@@ -383,7 +400,7 @@ export function SettingsLook() {
                 value={state.textSize}
                 onChange={(textSize) => dispatch({ type: 'setLook', look: { textSize } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={HINT}>
                 Scales the text. Buttons and the tab bar keep their size on purpose — a tap target that
                 grew with the type would push the bar off the bottom of a phone.
               </div>
@@ -423,10 +440,24 @@ export function SettingsLook() {
             <CustomRow>
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Corners</SectionLabel>
               <Segmented
-                options={CORNERS.map((c) => ({ id: c.id, label: c.label }))}
+                options={[
+                  // First, and the default. Two of the twelve grounds were
+                  // drawn square and say so; the other ten decline to have an
+                  // opinion and this resolves to Drawn for them, which is what
+                  // it has always been.
+                  { id: MATCH_GROUND, label: 'Match' },
+                  ...CORNERS.map((c) => ({ id: c.id, label: c.label })),
+                ]}
                 value={state.corners}
                 onChange={(corners) => dispatch({ type: 'setLook', look: { corners } })}
               />
+              <div style={HINT}>
+                {state.corners === MATCH_GROUND
+                  ? `Following the ground — ${CORNERS.find(
+                      (c) => c.id === resolveCorners(state.corners, resolveGround(state.ground, prefersDark)),
+                    )?.label.toLowerCase()} on ${groundOf(resolveGround(state.ground, prefersDark)).label}.`
+                  : 'Your own choice, kept through every ground.'}
+              </div>
             </CustomRow>
             <CustomRow>
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Spacing</SectionLabel>
@@ -435,7 +466,7 @@ export function SettingsLook() {
                 value={state.density}
                 onChange={(density) => dispatch({ type: 'setLook', look: { density } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={HINT}>
                 Tightens the space around every section heading, which is the app’s vertical rhythm.
                 Tap targets do not shrink with it — a 30px button is a miss, and a miss costs more than
                 the line it saved.
@@ -456,7 +487,7 @@ export function SettingsLook() {
                 value={state.labels}
                 onChange={(labels) => dispatch({ type: 'setLook', look: { labels } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={HINT}>
                 {LABELS.find((l) => l.id === state.labels)?.blurb} The names stay for a screen reader
                 either way.
               </div>
@@ -468,7 +499,7 @@ export function SettingsLook() {
                 value={state.badges}
                 onChange={(badges) => dispatch({ type: 'setLook', look: { badges } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={HINT}>
                 {BADGES.find((b) => b.id === state.badges)?.blurb} A number is a claim on your attention,
                 and an app that puts one on everything has made them all mean nothing.
               </div>
@@ -482,7 +513,7 @@ export function SettingsLook() {
                 value={state.feed}
                 onChange={(feed) => dispatch({ type: 'setLook', look: { feed } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={HINT}>
                 {FEEDS.find((f) => f.id === state.feed)?.blurb}
               </div>
             </CustomRow>

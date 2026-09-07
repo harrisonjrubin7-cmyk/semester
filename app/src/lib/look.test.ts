@@ -9,6 +9,8 @@ import {
   TYPEFACES,
   accent,
   cornersOf,
+  MATCH_GROUND,
+  resolveCorners,
   densityOf,
   fade,
   ground,
@@ -177,7 +179,11 @@ describe('readLook', () => {
   it('fills in a look that was never saved', () => {
     const look = readLook(undefined);
     expect(look.ground).toBe('ink');
-    expect(look.corners).toBe('drawn');
+    // Not 'drawn'. A saved 'drawn' and a never-set corner setting have to stay
+    // distinguishable, or a ground can never suggest its own shape — and
+    // 'auto' on Ink renders as drawn anyway, so nothing moves for anyone.
+    expect(look.corners).toBe(MATCH_GROUND);
+    expect(resolveCorners(look.corners, look.ground)).toBe('drawn');
   });
 
   it('drops a value from a future version rather than writing it through', () => {
@@ -191,6 +197,33 @@ describe('readLook', () => {
   });
 });
 
+describe('a ground with an opinion about its corners', () => {
+  it('is followed only by somebody who never picked one', () => {
+    expect(resolveCorners(MATCH_GROUND, 'industry')).toBe('square');
+    expect(resolveCorners(MATCH_GROUND, 'industry-dark')).toBe('square');
+    // The whole point of the field: a chosen style survives the ground.
+    expect(resolveCorners('round', 'industry')).toBe('round');
+    expect(resolveCorners('drawn', 'industry')).toBe('drawn');
+  });
+
+  it('is drawn everywhere else, which is what it has always been', () => {
+    for (const g of GROUNDS.filter((x) => !x.id.startsWith('industry'))) {
+      expect(resolveCorners(MATCH_GROUND, g.id), g.id).toBe('drawn');
+    }
+  });
+
+  it('reaches the radii, not just the setting', () => {
+    expect(tokensFor({ ground: 'industry' })['--r-lg']).toBe('0px');
+    expect(tokensFor({ ground: 'industry', corners: 'round' })['--r-lg']).toBe('28px');
+    expect(tokensFor({ ground: 'parchment' })['--r-lg']).toBe('10px');
+  });
+
+  it('falls back to drawn for a ground that does not exist', () => {
+    expect(resolveCorners(MATCH_GROUND, 'hologram')).toBe('drawn');
+    expect(resolveCorners(MATCH_GROUND, undefined)).toBe('drawn');
+  });
+});
+
 describe('lookLine', () => {
   it('names the accent and the ground', () => {
     expect(lookLine({ accent: 'brass', ground: 'parchment' })).toBe('Brass · Parchment');
@@ -198,6 +231,9 @@ describe('lookLine', () => {
 
   it('mentions a typeface or corner only when it is not the default', () => {
     expect(lookLine({ typeface: 'condensed', corners: 'drawn' })).not.toContain('Drawn');
+    // And it says what is on screen, not what is stored: Industry resolves to
+    // square, so the settings row has to say Square.
+    expect(lookLine({ ground: 'industry', corners: MATCH_GROUND })).toContain('Square');
     expect(lookLine({ typeface: 'mono', corners: 'round' })).toContain('Mono');
     expect(lookLine({ typeface: 'mono', corners: 'round' })).toContain('Round');
   });
