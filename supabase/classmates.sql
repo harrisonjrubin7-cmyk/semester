@@ -253,6 +253,26 @@ create table if not exists public.messages (
 
 create index if not exists messages_by_room on public.messages (term, code, created_at desc);
 
+-- ── Covering the foreign keys ─────────────────────────────────────────────
+--
+-- An unindexed foreign key costs nothing on insert. The cost lands on the
+-- *parent*: to delete a row in `auth.users` or `messages`, Postgres has to
+-- prove nothing still references it, and without an index that proof is a
+-- sequential scan of the child table. Deleting one account would scan every
+-- message ever posted.
+--
+-- It is also the operation nobody notices is slow, because it only becomes
+-- slow once there is data — and then it is a timeout in a delete-my-account
+-- path rather than a page anybody complained about.
+--
+-- Each is the foreign key column alone. The read paths are already covered
+-- and neither of the existing indexes leads with these columns, so a
+-- composite here would duplicate one of them: `blocks_pkey` is (user_id,
+-- blocked), which is the shape the message read policy probes, and
+-- `messages_by_room` is (term, code, created_at desc), which is the room.
+create index if not exists blocks_blocked on public.blocks (blocked);
+create index if not exists messages_user on public.messages (user_id);
+
 alter table public.messages enable row level security;
 
 -- Reading is gated three ways: you are verified, you are in that class, and
@@ -299,6 +319,10 @@ create table if not exists public.reports (
   copy        text        not null default '',
   created_at  timestamptz not null default now()
 );
+
+create index if not exists reports_about on public.reports (about);
+create index if not exists reports_message on public.reports (message_id);
+create index if not exists reports_reporter on public.reports (reporter);
 
 alter table public.reports enable row level security;
 

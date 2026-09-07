@@ -126,15 +126,39 @@ Checked against the real account rather than an empty table: it still sees its
 four enrolments, its profile and its state row; a different signed-in user and
 an anonymous one see none of them.
 
-What is left is eight INFO notices, and they are a genuine trade rather than
-an oversight:
+The five unindexed foreign keys are now covered (migration
+`index_foreign_keys`): `blocks(blocked)`, `messages(user_id)`, and the three
+on `reports`. Each is the foreign key column alone — the read paths were
+already covered by `blocks_pkey` on (user_id, blocked) and `messages_by_room`
+on (term, code, created_at desc), and neither of those leads with a foreign
+key column, so a composite would have duplicated one of them.
 
-- **Five unindexed foreign keys** on `blocks`, `messages` and `reports`. Worth
-  adding before `messages` grows — deleting an account scans the child table
-  without one. Adding them today, on tables with no rows, would simply move
-  the count into the next bullet.
-- **Two unused indexes**, both on the push tables. Expected: the scheduler is
-  parked and nothing has queried them yet.
+What an unindexed foreign key costs is not the insert. It lands on the
+*parent*: deleting a row in `auth.users` has to prove nothing still references
+it, and without an index that proof is a sequential scan of the child table.
+Deleting one account would have scanned every message ever posted — and it is
+the operation nobody notices is slow, because it only becomes slow once there
+is data, and then it is a timeout in a delete-my-account path rather than a
+page somebody complained about.
+
+Checked with `enable_seqscan = off`, which asks the narrow question that
+matters on an empty table: is there an index path for the lookup a foreign key
+check performs? All five answered with a Bitmap Index Scan on the new index.
+
+**The count did not go down.** It was eight INFO notices before and it is
+eight now: the five unindexed-key notices became five unused-index ones,
+because an index nothing has queried yet reads to the linter as an index
+nothing needs. That is the trade, and it is worth making in this direction —
+an unindexed foreign key is a latent timeout, while an unused index on an
+empty table is the linter correctly observing that the feature has not shipped
+to anybody yet. Revisit after the classmates feature has real traffic; if any
+of these are still unused with messages in the table, they are genuinely dead
+and can go.
+
+The remaining three:
+
+- **Two unused indexes on the push tables** (`push_devices_user`,
+  `push_queue_due`), for the same reason: the scheduler is parked.
 - **Auth connection strategy** is a fixed 10 rather than a percentage. A
   dashboard setting, and it only matters if the instance is ever resized.
 
