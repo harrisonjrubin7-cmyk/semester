@@ -241,12 +241,19 @@ export const BUDGET = {
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 227,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 552,
+  space: 544,
   /** `padding: '11px 0'` and the like: two axes in one string. */
   shorthand: 563,
 };
 
 /*
+ * `space` went 552 → 546 while the chat surface was being built, which is the
+ * budget doing its job in the useful direction: the count now skips `0`, and
+ * the six it stops counting were `padding: 0` cancelling a default rather than
+ * six spacing decisions anybody made. The two the chat added — a 3px gap
+ * between the waiting dots, and the send button's clearance inside the
+ * composer — are drawing measurements and are inside the new number.
+ *
  * Set to what is there, not to what a grep said.
  *
  * The first numbers here were a few higher, because they came from a grep over
@@ -269,7 +276,11 @@ export function counts(dir: string): typeof BUDGET {
     for (const m of code.matchAll(/lineHeight: (\d+(?:\.\d+)?)(?![0-9.])/g)) if (!LEADING[m[1]]) leading += 1;
     const SPACING =
       /\b(?:gap|rowGap|columnGap|margin(?:Top|Bottom|Left|Right)|padding(?:Top|Bottom|Left|Right)?): (\d+)(?![0-9.])/g;
-    for (const m of code.matchAll(SPACING)) if (!SPACE[m[1]]) space += 1;
+    // `0` is not a spacing choice, it is the absence of one, and there is no
+    // step for it. Counting it as drift meant the budget crept up every time
+    // somebody wrote `padding: 0` to cancel a default, which is the opposite
+    // of what this watches for.
+    for (const m of code.matchAll(SPACING)) if (m[1] !== '0' && !SPACE[m[1]]) space += 1;
     shorthand += [...code.matchAll(/\b(?:margin|padding): '[^']*px[^']*'/g)].length;
   }
   return { type, leading, space, shorthand };

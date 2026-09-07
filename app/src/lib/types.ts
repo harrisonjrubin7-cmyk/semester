@@ -420,6 +420,7 @@ export type Screen =
   | 'data'
   | 'help'
   | 'everything'
+  | 'chat'
   | 'onboarding'
   | 'home'
   | 'courses'

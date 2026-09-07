@@ -109,6 +109,7 @@ const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
 const Help = lazy(() => import('./screens/Help').then((m) => ({ default: m.Help })));
 const Everything = lazy(() => import('./screens/Everything').then((m) => ({ default: m.Everything })));
+const Chat = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
@@ -132,6 +133,7 @@ import { forget } from './lib/scrollback';
 import { Fresh } from './components/Fresh';
 import { DESKTOP, useMedia } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
+import { provider } from './lib/claude';
 import type { Screen } from './lib/types';
 
 /**
@@ -371,6 +373,16 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: about('deck'), title: 'Slides' };
     case 'import':
       return { kicker: 'Syllabus in, course out', title: 'New course' };
+    /*
+     * Named, because the fallthrough below is not a default — it is a wrong
+     * answer given confidently. A screen missing from this switch gets
+     * "Today" and the date, so the full chat sat under a header announcing a
+     * screen the reader was not on. The kicker names what is answering
+     * rather than repeating the title, which is the one thing about this
+     * screen worth saying before you have asked anything.
+     */
+    case 'chat':
+      return { kicker: `${provider()} · this term`, title: 'Chat' };
     default:
       return { kicker: today, title: 'Today' };
   }
@@ -701,6 +713,8 @@ function CurrentScreen() {
       return <Help />;
     case 'everything':
       return <Everything />;
+    case 'chat':
+      return <Chat />;
     case 'courses':
       return <Courses />;
     case 'course':

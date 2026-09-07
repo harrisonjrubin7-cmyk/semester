@@ -584,6 +584,16 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
+    screen: 'chat',
+    label: 'Chat',
+    blurb: 'The assistant with the whole screen — for a conversation rather than a question.',
+    keywords:
+      'chat conversation talk assistant claude ai ask full screen thread threads history messages discuss back and forth',
+    group: 'Study',
+    taskTags: ['study', 'app'],
+    root: 'study',
+  },
+  {
     screen: 'everything',
     label: 'Everything',
     // Ten characters is one past what the bar holds. See `lib/tabbar.ts`.

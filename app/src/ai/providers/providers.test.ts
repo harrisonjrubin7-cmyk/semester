@@ -22,11 +22,14 @@ const catalog = buildCatalog([ECON, BUS]);
 /**
  * The screens that deliberately hand over nothing, and why.
  *
- * `people` is a rule rather than an omission — see the test below. The rest
- * are screens where the app holds nothing the assistant could use: a screen
- * that is one button, or one whose content is a third-party page.
+ * `people` is a rule rather than an omission — see the test below.
+ *
+ * `chat` is the assistant's own screen. A provider for it would hand the model
+ * a description of the conversation it is already holding, which is either
+ * nothing it does not know or the same text twice. "Looking at: Chat" is also
+ * the one context line that could never help an answer.
  */
-const EXPECTED_WITHOUT: string[] = ['people'];
+const EXPECTED_WITHOUT: string[] = ['chat', 'people'];
 const NOW = new Date(2026, 8, 15);
 
 const look = (over: Partial<State> = {}): Look => ({

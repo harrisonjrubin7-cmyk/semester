@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
-import { DESKTOP, useMedia } from '../lib/media';
+import { DESKTOP, TOUCH, useMedia } from '../lib/media';
 import { DESTINATIONS } from '../lib/nav';
 import { useConversation, provider } from './converse';
 import { AskSelection } from './AskAbout';
-import { Answer } from './Answer';
+import { Composer, sendHint } from './Composer';
+import { Question, Reply, Waiting } from './Turns';
 import { money } from '../lib/spend';
 import { Trouble } from '../components/Trouble';
 import { Blueprint } from '../components/Blueprint';
@@ -139,6 +140,7 @@ export function Assistant() {
   const ai = useAI();
   const seed = useSeed();
   const wide = useMedia(DESKTOP);
+  const touch = useMedia(TOUCH);
   const [corner, setCorner] = useState<Corner>(savedCorner);
   const [full, setFull] = useState(false);
   const [draft, setDraft] = useState('');
@@ -162,7 +164,6 @@ export function Assistant() {
   const [showing, setShowing] = useState(false);
 
   const sheet = useRef<HTMLDivElement | null>(null);
-  const box = useRef<HTMLTextAreaElement | null>(null);
   /** What had focus before the sheet opened, to give it back on close. */
   const cameFrom = useRef<HTMLElement | null>(null);
 
@@ -203,12 +204,17 @@ export function Assistant() {
     return () => window.removeEventListener('keydown', onKey);
   }, [ai]);
 
-  // Focus into the box when it opens, and back where it came from on close.
+  /*
+   * Remember what had focus, and give it back on close.
+   *
+   * Focusing *into* the box is the composer's own job now — it mounts with
+   * the sheet and focuses itself, which is one fewer thing that can race. The
+   * timeout that used to be here was working around the box not existing yet.
+   */
   useEffect(() => {
     if (ai.open) {
       cameFrom.current = document.activeElement as HTMLElement | null;
-      const id = window.setTimeout(() => box.current?.focus(), 30);
-      return () => window.clearTimeout(id);
+      return;
     }
     cameFrom.current?.focus?.();
     setFull(false);
@@ -339,7 +345,17 @@ export function Assistant() {
     <>
       {/* Select a sentence anywhere and ask about that instead of the page. */}
       <AskSelection />
-      {!ai.open && (
+      {/*
+        Not on the chat screen itself.
+
+        The button's whole job is to bring the assistant over what you are
+        looking at. On `/chat` you are looking at the assistant, so it offered
+        to open a sheet showing the same conversation on top of the same
+        conversation — and the sheet's header would have read "Looking at:
+        Chat". It also sat over the composer, which is the one control on that
+        screen that matters.
+      */}
+      {!ai.open && state.screen !== 'chat' && (
         <button
           type="button"
           ref={fab}
@@ -530,44 +546,32 @@ export function Assistant() {
             )}
 
             {/*
-              The two turns are shaped differently on purpose.
-              
-              A question is short, and it is yours: it sits in a bubble against
-              the panel, indented from the left so the eye can find where each
-              exchange begins. An answer is long and is the thing you came to
-              read, so it takes the full measure with no container around it.
-              Two bubbles facing each other looks like a messaging app and
-              wastes a third of the width on a phone, which is the width the
-              answer needed.
+              The same two components the full chat draws, from `Turns.tsx`.
+
+              Not a second implementation of them. The sheet and the chat are
+              two views of one conversation, and a turn that looked like one
+              thing on the sheet and another on the chat would make expanding
+              read as having gone somewhere else. The shapes and the reasons
+              for them are in that file's header.
             */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-7)' }}>
               {talk.turns.map((t, i) =>
                 t.role === 'user' ? (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <div
-                      style={{
-                        maxWidth: '86%',
-                        padding: 'var(--sp-4) var(--sp-6)',
-                        borderRadius: 'var(--r-lg)',
-                        background: 'var(--app-raise)',
-                        border: '1px solid var(--app-line)',
-                        fontSize: 'var(--type-sm)',
-                        lineHeight: 'var(--leading-relaxed)',
-                        whiteSpace: 'pre-wrap',
-                        textWrap: 'pretty',
-                      }}
-                    >
-                      {t.content}
-                    </div>
-                  </div>
+                  <Question
+                    key={i}
+                    text={t.content}
+                    onEdit={
+                      i === talk.turns.length - 2 && !talk.busy
+                        ? (next) => void talk.send(next, talk.turns.slice(0, i))
+                        : undefined
+                    }
+                  />
                 ) : (
-                  <div key={i} style={{ fontSize: 'var(--type-sm)' }}>
-                    <Answer text={t.content} />
-                    <Beneath
-                      text={t.content}
-                      onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
-                    />
-                  </div>
+                  <Reply
+                    key={i}
+                    text={t.content}
+                    onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
+                  />
                 ),
               )}
 
@@ -575,14 +579,7 @@ export function Assistant() {
                   sits blank for two seconds reads as one that did nothing. */}
               {talk.busy && (
                 <div style={{ fontSize: 'var(--type-sm)' }}>
-                  {talk.streaming ? (
-                    <Answer text={talk.streaming} />
-                  ) : (
-                    <div style={{ opacity: 0.55, display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
-                      <Pulse />
-                      {provider()} is reading your screen…
-                    </div>
-                  )}
+                  {talk.streaming ? <Reply text={talk.streaming} /> : <Waiting who={provider()} />}
                 </div>
               )}
             </div>
@@ -707,80 +704,50 @@ export function Assistant() {
 
           <div style={{ padding: '10px 16px', borderTop: '1px solid var(--app-line)' }}>
             {/*
-              One field with the send inside it, and the field grows with what
-              is in it.
-              
-              The button used to be a full-width bar under a fixed 58px box, so
-              a two-line question scrolled inside its own field while a large
-              button sat under it doing nothing. Enter sends and Shift+Enter
-              breaks the line, which is what every other box like this does —
-              and the placeholder says so, because a box that sends on Enter
-              without warning eats the first half of somebody's question.
+              The same box the full chat uses, from `Composer.tsx`.
+
+              This used to be its own textarea that grew by counting newlines,
+              which is wrong for the commonest case — a long question with no
+              newlines in it wraps to four lines and the count says one — and
+              it sent on Enter even on a phone, where there is no Shift+Enter
+              and so no way to type a second sentence. Both are fixed there,
+              once, for both surfaces.
             */}
-            <div style={{ position: 'relative' }}>
-              <textarea
-                ref={box}
-                className="input"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && !e.altKey) {
-                    e.preventDefault();
-                    if (!talk.busy && draft.trim()) ask();
-                  }
-                }}
-                rows={1}
-                placeholder={`Ask about ${assembled.label} — Enter sends, Shift+Enter for a new line`}
-                aria-label="Your question"
-                style={{
-                  margin: 0,
-                  minHeight: 44,
-                  // Grows to the text and then scrolls, so a pasted paragraph
-                  // does not push the conversation off the screen.
-                  height: `${Math.min(160, 44 + Math.max(0, draft.split('\n').length - 1) * 20 + (draft.length > 60 ? 20 : 0))}px`,
-                  paddingRight: 52,
-                  resize: 'none',
-                  fontSize: 'var(--type-sm)',
-                  lineHeight: 'var(--leading-relaxed)',
-                }}
-              />
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={talk.busy ? false : !draft.trim()}
-                onClick={() => (talk.busy ? talk.stop() : ask())}
-                aria-label={talk.busy ? 'Stop answering' : 'Send your question'}
-                style={{
-                  position: 'absolute',
-                  right: 6,
-                  bottom: 6,
-                  width: 34,
-                  height: 32,
-                  padding: 0,
-                  display: 'grid',
-                  placeItems: 'center',
-                  fontSize: 'var(--type-sm)',
-                }}
-              >
-                <span aria-hidden>{talk.busy ? '■' : '↑'}</span>
-              </button>
-            </div>
+            <Composer
+              value={draft}
+              onChange={setDraft}
+              onSend={ask}
+              onStop={talk.stop}
+              busy={talk.busy}
+              placeholder={`Ask about ${assembled.label} — ${sendHint(touch)}`}
+              autoFocus
+            />
 
             {talk.turns.length > 0 && !talk.busy && (
-              <button
-                type="button"
-                className="bare"
-                onClick={talk.clear}
-                style={{
-                  width: 'auto',
-                  marginTop: 'var(--sp-4)',
-                  fontSize: 'var(--type-xs)',
-                  letterSpacing: '0.1em',
-                  opacity: 0.55,
-                }}
-              >
-                START A NEW CONVERSATION
-              </button>
+              <div style={{ display: 'flex', gap: 'var(--sp-6)', marginTop: 'var(--sp-4)' }}>
+                <button
+                  type="button"
+                  className="bare"
+                  onClick={talk.clear}
+                  style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.55 }}
+                >
+                  START A NEW CONVERSATION
+                </button>
+                {/* The same conversation, with the page to itself. Not a
+                    handoff and nothing is copied — both surfaces read the one
+                    log in `converse.ts`, so this is a navigation. */}
+                <button
+                  type="button"
+                  className="bare"
+                  onClick={() => {
+                    ai.hide();
+                    dispatch({ type: 'go', screen: 'chat' });
+                  }}
+                  style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.55 }}
+                >
+                  OPEN FULL CHAT
+                </button>
+              </div>
             )}
             {/* The running cost, in the header's own row of small print.
                 Silent when nothing was measured — a zero would read as
@@ -796,68 +763,5 @@ export function Assistant() {
         </div>
       )}
     </>
-  );
-}
-
-/**
- * What you can do with an answer once it is there.
- *
- * Copy, because an answer worth keeping goes into a note or an email and
- * retyping it is what people actually do instead. Retry only on the last one:
- * regenerating an answer from the middle of a conversation would throw away
- * every turn after it, and a button that silently deletes four exchanges is
- * not a button.
- */
-function Beneath({ text, onRetry }: { text: string; onRetry?: () => void }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div style={{ display: 'flex', gap: 'var(--sp-6)', marginTop: 'var(--sp-3)' }}>
-      <button
-        type="button"
-        className="bare"
-        onClick={() => {
-          void navigator.clipboard
-            ?.writeText(text)
-            .then(() => setCopied(true))
-            // Silent: a clipboard refused by the browser is not something the
-            // student can act on, and the label simply does not change.
-            .catch(() => {});
-        }}
-        style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.5 }}
-      >
-        {copied ? 'COPIED' : 'COPY'}
-      </button>
-      {onRetry && (
-        <button
-          type="button"
-          className="bare"
-          onClick={onRetry}
-          style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.5 }}
-        >
-          ASK AGAIN
-        </button>
-      )}
-    </div>
-  );
-}
-
-/** Three dots, so the wait reads as work rather than as nothing happening. */
-function Pulse() {
-  return (
-    <span aria-hidden style={{ display: 'inline-flex', gap: 3 }}>
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          style={{
-            width: 4,
-            height: 4,
-            borderRadius: '50%',
-            background: 'var(--app-fg)',
-            opacity: 0.5,
-            animation: `aiPulse 1.1s ${i * 0.16}s infinite ease-in-out`,
-          }}
-        />
-      ))}
-    </span>
   );
 }

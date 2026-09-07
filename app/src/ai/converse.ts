@@ -1,17 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useStore } from '../state/store';
 import { ask, provider, settings, type Turn } from '../lib/claude';
 import { build as buildContext } from '../lib/context';
 import { build as guidebook } from '../lib/guidebook';
 import { readMode, type Mode } from '../lib/mode';
 import { answerLocally, type Local } from '../lib/localask';
-import { clear as clearLog, load as loadLog, save as saveLog } from '../lib/chatlog';
+import { clear as clearLog, save as saveLog } from '../lib/chatlog';
 import { monthStart, read as readSpend, record, since, total } from '../lib/spend';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
 import { currentLook } from '../state/shape';
 import { datedItems } from '../lib/select';
 import { useTrouble } from '../lib/trouble';
 import { useAI } from './store';
+import { flight, sender, setLive, useLive } from './live';
 
 /**
  * The conversation itself, once, for whoever is showing it.
@@ -23,10 +24,15 @@ import { useAI } from './store';
  * renders it; so does the older Ask screen, which is how there is one
  * assistant rather than two that disagree.
  *
- * It is a hook rather than a context because there is exactly one consumer at
- * a time and the state is genuinely local to whoever is showing the sheet.
- * The conversation survives across screens because it is written to
- * `lib/chatlog.ts`, not because it lives in a provider.
+ * It is a hook, but the state it reads is not the hook's. That distinction is
+ * the whole of `ai/live.ts` and it was a bug for a while: hook state belongs
+ * to the caller, so while this said "one conversation" the sheet and the full
+ * chat each quietly had their own. The turns, the request in flight and
+ * everything around them live in that module now, and this reads them.
+ *
+ * `lib/chatlog.ts` still persists the transcript, for coming back tomorrow.
+ * It is not what makes the two surfaces agree — a write on change is not a
+ * subscription, and a copy that has already mounted never hears it.
  */
 
 export interface Conversation {
@@ -118,25 +124,28 @@ export function useConversation(): Conversation {
   const ai = useAI();
   const trouble = useTrouble();
 
-  const [turns, setTurns] = useState<Turn[]>(() => loadLog()?.turns ?? []);
-  const [streaming, setStreaming] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState<Mode | null>(null);
-  const [used, setUsed] = useState<string[]>([]);
-  const [locally, setLocally] = useState<Local | null>(null);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [applied, setApplied] = useState<{ p: Proposal; before: Lists }[]>([]);
-  const [spend, setSpend] = useState(() => readSpend());
-  const abort = useRef<AbortController | null>(null);
-  /**
-   * The current `send`, for the retry to reach without capturing itself.
+  /*
+   * One conversation, not one per surface.
    *
-   * The retry closure needs to run the same question again, and writing
-   * `() => void send(text)` inside `send` has it read its own binding while
-   * that binding is still being initialised. It works by accident of hoisting
-   * and stops working the moment somebody reorders the file.
+   * This was nine `useState` calls, which meant the sheet and the full chat
+   * each had their own — two conversations wearing the same name, each
+   * seeded from the saved log at mount and deaf to the other from then on.
+   * `ai/live.ts` has the whole account of it. The setters below keep
+   * `useState`'s signature so everything downstream is unchanged.
    */
-  const sender = useRef<(text: string) => Promise<void>>(async () => {});
+  const live = useLive();
+  const { turns, streaming, busy, mode, used, locally, proposals, applied, spend } = live;
+  const setStreaming = (v: string) => setLive('streaming', v);
+  const setBusy = (v: boolean) => setLive('busy', v);
+  const setMode = (v: Mode | null) => setLive('mode', v);
+  const setUsed = (v: string[]) => setLive('used', v);
+  const setLocally = (v: Local | null) => setLive('locally', v);
+  const setProposals = (v: Proposal[] | ((was: Proposal[]) => Proposal[])) =>
+    setLive('proposals', v);
+  const setApplied = (
+    v: { p: Proposal; before: Lists }[] | ((was: { p: Proposal; before: Lists }[]) => { p: Proposal; before: Lists }[]),
+  ) => setLive('applied', v);
+  const setSpend = (v: ReturnType<typeof readSpend>) => setLive('spend', v);
 
   /**
    * What the app holds, for checking a tool call against reality.
@@ -180,7 +189,7 @@ export function useConversation(): Conversation {
   );
 
   const remember = useCallback((next: Turn[]) => {
-    setTurns(next);
+    setLive('turns', next);
     saveLog({ turns: next, at: Date.now(), courseId: null });
   }, []);
 
@@ -257,7 +266,7 @@ export function useConversation(): Conversation {
       trouble.clear();
       setProposals([]);
       setBusy(true);
-      abort.current = new AbortController();
+      flight.abort = new AbortController();
       let sofar = '';
       try {
         const read = readMode(text);
@@ -327,7 +336,7 @@ export function useConversation(): Conversation {
             record({ at: Date.now(), model: settings().model, from: state.screen, use: u });
             setSpend(readSpend());
           },
-          signal: abort.current.signal,
+          signal: flight.abort.signal,
           onText: (chunk) => {
             sofar += chunk;
             setStreaming(sofar);
@@ -339,7 +348,7 @@ export function useConversation(): Conversation {
         if (e instanceof DOMException && e.name === 'AbortError') {
           if (sofar.trim()) remember([...next, { role: 'assistant', content: sofar }]);
         } else {
-          trouble.failed(e, () => void sender.current(text));
+          trouble.failed(e, () => void sender.run(text));
         }
       } finally {
         setStreaming('');
@@ -358,7 +367,7 @@ export function useConversation(): Conversation {
    * somebody has pressed the button, which is long after this has run.
    */
   useEffect(() => {
-    sender.current = send;
+    sender.run = send;
   }, [send]);
 
   const run = useCallback(
@@ -423,7 +432,7 @@ export function useConversation(): Conversation {
             void send(asked, turns.slice(0, -2));
           },
     send,
-    stop: () => abort.current?.abort(),
+    stop: () => flight.abort?.abort(),
     run,
     takeBack,
     dismiss: (id: string) => setProposals((was) => was.filter((q) => q.id !== id)),

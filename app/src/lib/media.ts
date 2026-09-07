@@ -34,3 +34,14 @@ export function useMedia(query: string): boolean {
  * follows it live.
  */
 export const DESKTOP = '(min-width: 760px)';
+
+/**
+ * A touch keyboard rather than a hardware one.
+ *
+ * `pointer: coarse` is the honest signal available: it says the primary input
+ * is a finger, which is the same set of devices whose keyboard has no
+ * Shift+Enter. Width would be the wrong test — an iPad in Split View is narrow
+ * and has a hardware keyboard attached often enough to matter, and a phone
+ * held in landscape is wide and never does.
+ */
+export const TOUCH = '(pointer: coarse)';
