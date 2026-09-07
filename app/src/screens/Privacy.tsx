@@ -74,7 +74,7 @@ export function Privacy() {
         >
           What this app holds
         </div>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
           In plain language, and short enough to actually read.
           {where ? ` Your account, if you have one, is on ${where}.` : ''}
           {!cloudConfigured && ' This build has no account service at all — nothing can leave the device.'}
@@ -131,7 +131,7 @@ export function Privacy() {
               <span style={{ opacity: 0.6, fontVariantNumeric: 'tabular-nums' }}>{t.n}</span>
             </div>
           ))}
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginTop: 8, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 1.5, marginTop: 8, textWrap: 'pretty' }}>
             {unusedLine(neverOpened(counts, DESTINATIONS.map((d) => d.screen as string)).length, DESTINATIONS.length)}
           </div>
           <button
@@ -151,7 +151,7 @@ export function Privacy() {
               marginTop: 10,
               borderRadius: 'var(--r-sm)',
               border: '1px solid var(--app-line)',
-              fontSize: 'calc(11px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs)',
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
@@ -241,7 +241,7 @@ export function Privacy() {
               role="status"
               aria-live="polite"
               style={{
-                fontSize: 'calc(13px * var(--text-scale, 1))',
+                fontSize: 'var(--type-base)',
                 marginTop: 10,
                 lineHeight: 1.55,
                 textWrap: 'pretty',

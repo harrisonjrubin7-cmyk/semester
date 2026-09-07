@@ -116,7 +116,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
         textAlign: 'left',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{label}</span>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{label}</span>
       <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55 }}>{value}</span>
     </button>
   );
@@ -267,7 +267,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       >
         <span style={{ width: 6, height: 30, background: 'var(--chrome)', flex: 'none' }} />
         <span style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>
+          <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.3 }}>
             This week’s report
           </span>
           <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
@@ -282,7 +282,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       >
         <span style={{ width: 6, height: 30, background: 'var(--chrome)', flex: 'none' }} />
         <span style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>
+          <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.3 }}>
             The week ahead, in hours
           </span>
           <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
@@ -305,7 +305,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
           {said ? (
             <div
               style={{
-                fontSize: 'calc(14px * var(--text-scale, 1))',
+                fontSize: 'var(--type-md)',
                 lineHeight: 1.6,
                 whiteSpace: 'pre-wrap',
                 marginTop: 12,
@@ -319,7 +319,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
             </div>
           ) : null}
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
-          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             Every number above is counted from your own data. {provider()} only reads the counts — it is
             told never to restate one differently or invent one.
           </div>

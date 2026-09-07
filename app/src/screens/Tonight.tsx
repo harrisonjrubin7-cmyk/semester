@@ -67,14 +67,14 @@ export function Tonight() {
         <div className="kicker">Tonight</div>
         <div
           className="chrome-text"
-          style={{ marginTop: 5, fontSize: 'calc(14px * var(--text-scale, 1))', textWrap: 'pretty' }}
+          style={{ marginTop: 5, fontSize: 'var(--type-md)', textWrap: 'pretty' }}
         >
           {eveningLine(list, hours)}
         </div>
         {said ? (
           <div
             style={{
-              fontSize: 'calc(12px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm)',
               opacity: 0.72,
               marginTop: 8,
               lineHeight: 1.5,
@@ -100,7 +100,7 @@ export function Tonight() {
               padding: '9px 15px',
               borderRadius: 'var(--r-md)',
               border: `1px solid ${hours === h ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               fontVariantNumeric: 'tabular-nums',
             }}
           >
@@ -197,7 +197,7 @@ function Row({
         <span
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 'calc(15px * var(--text-scale, 1))',
+            fontSize: 'var(--type-lg)',
             opacity: 0.45,
             minWidth: 14,
           }}
@@ -232,7 +232,7 @@ function Row({
       {b.perHour !== null ? (
         <span
           style={{
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             opacity: 0.7,
             fontVariantNumeric: 'tabular-nums',
             whiteSpace: 'nowrap',

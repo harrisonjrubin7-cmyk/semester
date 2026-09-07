@@ -159,7 +159,7 @@ export function Activities() {
                   which is not the same as a filter that matched nothing —
                   `<Page>` says that itself. */}
               {mine.length === 0 && (
-                <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, padding: '14px 0', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '14px 0', lineHeight: 1.5 }}>
                   Nothing yet. Add a club, a job, a team or a lab and it appears on your day and week
                   alongside your classes.
                 </div>
@@ -237,7 +237,7 @@ function Row({ commitment }: { commitment: Commitment }) {
           href={commitment.url}
           target="_blank"
           rel="noreferrer"
-          style={{ flex: 'none', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.6, textDecoration: 'none' }}
+          style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.6, textDecoration: 'none' }}
         >
           OPEN
         </a>
@@ -247,7 +247,7 @@ function Row({ commitment }: { commitment: Commitment }) {
         className="bare"
         onClick={() => dispatch({ type: 'removeCommitment', id: commitment.id })}
         aria-label={`Remove ${commitment.name}`}
-        style={{ width: 26, flex: 'none', opacity: 0.45, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+        style={{ width: 26, flex: 'none', opacity: 0.45, fontSize: 'var(--type-lg)' }}
       >
         ×
       </button>
@@ -488,7 +488,7 @@ function FindThings() {
             }}
           >
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))' }}>{l.name}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-lg)' }}>{l.name}</span>
               <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                 {l.blurb}
               </span>
@@ -545,7 +545,7 @@ function FindThings() {
                 }}
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{f.name}</span>
+                  <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{f.name}</span>
                   <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                     {[activityKind(guessKind(f.name)).label, f.role].filter(Boolean).join(' · ')}
                   </span>
@@ -573,7 +573,7 @@ function FindThings() {
                     });
                     setTaken((t) => [...t, f.name]);
                   }}
-                  style={{ flex: 'none', padding: '0 14px', height: 34, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+                  style={{ flex: 'none', padding: '0 14px', height: 34, fontSize: 'var(--type-sm)' }}
                 >
                   {already ? 'Added' : 'Add'}
                 </button>

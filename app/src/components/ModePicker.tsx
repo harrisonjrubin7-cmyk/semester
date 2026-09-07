@@ -63,7 +63,7 @@ export function ModePicker({
               style={{
                 display: 'block',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(14px * var(--text-scale, 1))',
+                fontSize: 'var(--type-md)',
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
                 color: on ? 'var(--app-accent)' : 'var(--app-fg)',

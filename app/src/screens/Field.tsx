@@ -69,7 +69,7 @@ export function FieldGuide() {
         </div>
         <div
           style={{
-            fontSize: 'calc(14px * var(--text-scale, 1))',
+            fontSize: 'var(--type-md)',
             opacity: 0.75,
             lineHeight: 1.5,
             marginTop: 8,
@@ -93,7 +93,7 @@ export function FieldGuide() {
           {meta}
         </div>
         {guide.source && (
-          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 6 }}>From {guide.source}</div>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 6 }}>From {guide.source}</div>
         )}
       </Blueprint>
 
@@ -119,13 +119,13 @@ export function FieldGuide() {
               width: 24,
               flex: 'none',
               fontFamily: 'var(--font-heading)',
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               opacity: 0.4,
             }}
           >
             {String(i + 1).padStart(2, '0')}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{u.name}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{u.name}</span>
           <span
             style={{
               fontFamily: 'var(--font-heading)',
@@ -164,7 +164,7 @@ export function FieldGuide() {
             >
               <div
                 className="chrome-text"
-                style={{ fontSize: 'calc(26px * var(--text-scale, 1))', lineHeight: 1, flex: 'none', opacity: 0.55 }}
+                style={{ fontSize: 'var(--type-xl)', lineHeight: 1, flex: 'none', opacity: 0.55 }}
               >
                 {String(i + 1).padStart(2, '0')}
               </div>
@@ -210,7 +210,7 @@ export function FieldGuide() {
                 </div>
                 <div
                   style={{
-                    fontSize: 'calc(14px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-md)',
                     lineHeight: 1.6,
                     opacity: 0.85,
                     marginTop: 5,
@@ -342,7 +342,7 @@ export function FieldGuide() {
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15.5px * var(--text-scale, 1))' }}>{t.t}</div>
               <div
                 style={{
-                  fontSize: 'calc(13px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-base)',
                   opacity: 0.72,
                   lineHeight: 1.5,
                   marginTop: 2,
@@ -370,7 +370,7 @@ export function FieldGuide() {
                 <span
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 'calc(13px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-base)',
                     opacity: 0.4,
                     flex: 'none',
                     width: 20,
@@ -383,7 +383,7 @@ export function FieldGuide() {
                     style={{
                       display: 'block',
                       fontFamily: 'var(--font-heading)',
-                      fontSize: 'calc(15px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-lg)',
                       lineHeight: 1.25,
                     }}
                   >
@@ -413,7 +413,7 @@ export function FieldGuide() {
           marginTop: 30,
           paddingTop: 12,
           borderTop: '1px solid var(--app-line)',
-          fontSize: 'calc(11px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs)',
           opacity: 0.4,
           lineHeight: 1.5,
         }}

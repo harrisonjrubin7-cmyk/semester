@@ -19,7 +19,7 @@ export function ShellPicker() {
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
         Layout
       </SectionLabel>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         Two ways of arranging every screen. Neither hides anything — the same controls are on the
         same screens either way.
       </div>
@@ -47,7 +47,7 @@ export function ShellPicker() {
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(13px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-base)',
                   marginTop: 9,
                 }}
               >
@@ -56,7 +56,7 @@ export function ShellPicker() {
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs)',
                   opacity: 0.55,
                   marginTop: 3,
                   lineHeight: 1.4,

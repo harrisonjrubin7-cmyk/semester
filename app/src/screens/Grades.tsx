@@ -90,7 +90,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 </div>
               )}
               {s.extraCredit > 0 && (
-                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8 }}>
+                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 8 }}>
                   Plus {s.extraCredit.toFixed(1)} points of extra credit.
                 </div>
               )}
@@ -138,10 +138,10 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{r.what}</div>
+                  <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{r.what}</div>
                   <div
                     style={{
-                      fontSize: 'calc(11px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs)',
                       opacity: 0.5,
                       marginTop: 2,
                       fontFamily: 'var(--font-heading)',
@@ -176,7 +176,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
               <>
                 <div
                   style={{
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     opacity: 0.5,
                     margin: '14px 0 6px',
                     fontFamily: 'var(--font-heading)',
@@ -187,7 +187,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                   To finish with, you need
                 </div>
                 {targets.length === 0 && (
-                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 1.5, textWrap: 'pretty' }}>
                     {NO_CUTOFFS}
                   </div>
                 )}
@@ -210,9 +210,9 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                         opacity: impossible ? 0.45 : 1,
                       }}
                     >
-                      <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15px * var(--text-scale, 1))' }}>
+                      <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
                         {t.label}
-                        <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}> · {t.target}%</span>
+                        <span style={{ fontSize: 'var(--type-xs)', opacity: 0.5 }}> · {t.target}%</span>
                       </span>
                       <span
                         style={{
@@ -258,7 +258,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 <div style={{ marginTop: 16 }}>
                   <div
                     style={{
-                      fontSize: 'calc(11px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs)',
                       opacity: 0.5,
                       marginBottom: 6,
                       fontFamily: 'var(--font-heading)',
@@ -272,7 +272,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                     {trendLine(t, sat)}
                   </div>
                   {target !== null && t.papers > 0 ? (
-                    <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 5, lineHeight: 1.45 }}>
+                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 1.45 }}>
                       {against(t.average, target)}
                     </div>
                   ) : null}
@@ -334,7 +334,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
   if (bare) {
     return (
       <div>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
           {intro}
         </div>
         {body}

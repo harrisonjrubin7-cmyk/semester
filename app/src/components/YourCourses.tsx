@@ -47,7 +47,7 @@ export function YourCourses() {
       >
         Your courses, your way
       </SectionLabel>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         Call them what you call them, colour them so four codes are four things at a glance, and
         put the one you are living in this week at the top. The course code does not change —
         that is what a re-imported syllabus is matched on, and what a shared practice paper
@@ -73,7 +73,7 @@ export function YourCourses() {
                   flex: 'none',
                   width: 28,
                   padding: '12px 0',
-                  fontSize: 'calc(14px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-md)',
                   opacity: mine.pinned ? 1 : 0.28,
                   color: mine.pinned ? 'var(--app-accent)' : 'inherit',
                 }}
@@ -125,7 +125,7 @@ export function YourCourses() {
                   </span>
                 </span>
                 {note ? (
-                  <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 2 }}>
                     {note}
                   </span>
                 ) : null}
@@ -139,7 +139,7 @@ export function YourCourses() {
                   dispatch({ type: 'setCourseOrder', order: reorder(shown, c.id, -1) })
                 }
                 aria-label={`Move ${c.code} up`}
-                style={{ width: 24, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+                style={{ width: 24, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'var(--type-lg)' }}
               >
                 ↑
               </button>
@@ -153,7 +153,7 @@ export function YourCourses() {
                   width: 24,
                   flex: 'none',
                   opacity: i === shown.length - 1 ? 0.2 : 0.6,
-                  fontSize: 'calc(15px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-lg)',
                 }}
               >
                 ↓
@@ -178,7 +178,7 @@ export function YourCourses() {
                   style={{ width: '100%', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
                 />
                 {renamed(c, state.yours) ? (
-                  <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5 }}>
+                  <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 5 }}>
                     The syllabus calls it {c.name}. Clear the box to go back to that.
                   </div>
                 ) : null}

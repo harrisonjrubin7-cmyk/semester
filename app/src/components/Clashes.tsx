@@ -80,7 +80,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
       <span
         style={{
           display: 'block',
-          fontSize: 'calc(14px * var(--text-scale, 1))',
+          fontSize: 'var(--type-md)',
           marginTop: 4,
           lineHeight: 1.4,
           textWrap: 'pretty',
@@ -91,7 +91,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
       <span
         style={{
           display: 'block',
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.7,
           marginTop: 5,
           lineHeight: 1.45,
@@ -142,7 +142,7 @@ export function DayBudget() {
         alignItems: 'center',
         gap: 10,
         marginTop: 12,
-        fontSize: 'calc(12px * var(--text-scale, 1))',
+        fontSize: 'var(--type-sm)',
         opacity: 0.7,
       }}
     >

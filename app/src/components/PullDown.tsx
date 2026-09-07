@@ -130,7 +130,7 @@ export function PullDown({ area }: { area: React.RefObject<HTMLElement | null> }
         alignItems: 'center',
         justifyContent: 'center',
         padding: busy || result ? '9px 16px' : 0,
-        fontSize: 'calc(12px * var(--text-scale, 1))',
+        fontSize: 'var(--type-sm)',
         lineHeight: 1.4,
         textAlign: 'center',
         textWrap: 'pretty',

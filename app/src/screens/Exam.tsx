@@ -239,7 +239,7 @@ export function Exam() {
                   opacity: unavailable ? 0.4 : 1,
                 }}
               >
-                <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{f.label}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{f.label}</span>
                 <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                   {unavailable ? 'Needs written questions — a flashcard is not an argument.' : f.blurb}
                 </span>
@@ -250,7 +250,7 @@ export function Exam() {
 
         <Blueprint style={{ padding: '12px 14px', marginTop: 14 }}>
           <div className="kicker">The paper</div>
-          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 6, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 6, lineHeight: 1.5 }}>
             {[
               shape.counts.choice > 0 && `${shape.counts.choice} multiple choice`,
               shape.counts.short > 0 && `${shape.counts.short} short answer`,
@@ -259,7 +259,7 @@ export function Exam() {
               .filter(Boolean)
               .join(', ')}
           </div>
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 5 }}>
             {shape.points} marks · {shape.minutes} minutes
           </div>
         </Blueprint>
@@ -382,7 +382,7 @@ export function Exam() {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="kicker">{marking ? 'Marked' : 'Sitting'}</div>
-            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 3, lineHeight: 1.3 }}>{title}</div>
+            <div style={{ fontSize: 'var(--type-md)', marginTop: 3, lineHeight: 1.3 }}>{title}</div>
           </div>
           <div
             className="chrome-text"
@@ -409,7 +409,7 @@ export function Exam() {
                 {i + 1} · {q.points} {q.points === 1 ? 'mark' : 'marks'}
               </span>
               {q.from ? (
-                <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, flex: 1, minWidth: 0 }}>{q.from}</span>
+                <span style={{ fontSize: 'var(--type-xs)', opacity: 0.45, flex: 1, minWidth: 0 }}>{q.from}</span>
               ) : null}
               {marking ? (
                 <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', flex: 'none', opacity: 0.7 }}>
@@ -417,7 +417,7 @@ export function Exam() {
                 </span>
               ) : null}
             </div>
-            <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.4, marginTop: 5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4, marginTop: 5, textWrap: 'pretty' }}>
               {q.prompt}
             </div>
 
@@ -489,20 +489,20 @@ export function Exam() {
               <>
                 <Blueprint style={{ padding: '11px 13px', marginTop: 9 }}>
                   <div className="kicker">{q.kind === 'choice' ? 'Why' : 'The key'}</div>
-                  <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.55, marginTop: 5, textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.55, marginTop: 5, textWrap: 'pretty' }}>
                     {q.kind === 'choice'
                       ? q.why || `${letter(Number(q.answer))}. ${q.options[Number(q.answer)]}`
                       : q.answer}
                   </div>
                   {q.kind !== 'choice' && q.why ? (
-                    <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 7, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7, lineHeight: 1.5 }}>
                       {q.why}
                     </div>
                   ) : null}
                 </Blueprint>
 
                 {q.kind === 'choice' ? (
-                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 7 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7 }}>
                     {chosen === '' ? 'Left blank.' : right ? 'Right.' : 'Not this one.'}
                   </div>
                 ) : (
@@ -539,7 +539,7 @@ export function Exam() {
             <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6 }}>
               {marks.got} of {marks.outOf} marks
             </div>
-            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 9, lineHeight: 1.5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', marginTop: 9, lineHeight: 1.5, textWrap: 'pretty' }}>
               {verdict(marks)}
             </div>
           </Blueprint>

@@ -99,7 +99,7 @@ export function Group({
         {footer ? (
           <div
             style={{
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               opacity: 0.65,
               lineHeight: 1.5,
               marginBottom: 10,
@@ -134,7 +134,7 @@ export function Group({
           className="section-label"
           style={{
             margin: `0 0 calc(5px * var(--density, 1)) ${SIDE}px`,
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             fontWeight: 'inherit',
             opacity: 0.55,
           }}
@@ -224,7 +224,7 @@ function Row({
 function Label({ label, sub }: { label: ReactNode; sub?: ReactNode }) {
   return (
     <span style={{ flex: 1, minWidth: 0 }}>
-      <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+      <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.35 }}>
         {label}
       </span>
       {sub ? (
@@ -384,7 +384,7 @@ export function SelectRow<T extends string>({
         <span
           id={id}
           className="section-label"
-          style={{ flex: 1, fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}
+          style={{ flex: 1, fontSize: 'var(--type-xs)', opacity: 0.5 }}
         >
           {label}
         </span>
@@ -400,7 +400,7 @@ export function SelectRow<T extends string>({
               textAlign: 'center',
               color: 'var(--app-accent)',
               opacity: o.id === value ? 1 : 0,
-              fontSize: 'calc(14px * var(--text-scale, 1))',
+              fontSize: 'var(--type-md)',
             }}
           >
             ✓
@@ -444,7 +444,7 @@ export function SliderRow({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-        <label htmlFor={id} style={{ flex: 1, fontSize: 'calc(14px * var(--text-scale, 1))' }}>
+        <label htmlFor={id} style={{ flex: 1, fontSize: 'var(--type-md)' }}>
           {label}
         </label>
         {said ? <Value>{said}</Value> : null}
@@ -486,7 +486,7 @@ export function DestructiveRow({ label, onClick }: { label: string; onClick: () 
           flex: 1,
           textAlign: 'center',
           color: 'var(--app-warn)',
-          fontSize: 'calc(14px * var(--text-scale, 1))',
+          fontSize: 'var(--type-md)',
         }}
       >
         {label}

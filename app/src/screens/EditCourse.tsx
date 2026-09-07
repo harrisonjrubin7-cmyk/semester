@@ -82,7 +82,7 @@ export function EditCourse() {
       <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Shipped with the app</div>
-          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             This course is built into the app rather than held in your account, which is why there
             is nothing to change yet. Take the semester on and all four become yours — editable,
             shareable, and keeping everything you have already ticked off.
@@ -97,7 +97,7 @@ export function EditCourse() {
             style={{
               height: 46,
               marginTop: 14,
-              fontSize: 'calc(12px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
             }}
@@ -146,13 +146,13 @@ export function EditCourse() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Everything a syllabus states, changeable. Dates move, weightings get corrected, rooms
         change — none of that should mean re-importing the course and losing what you have drilled.
       </div>
 
       {missing.length > 0 && (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 1.5 }}>
           Currently: {missing.join(', ')}.
         </div>
       )}
@@ -199,7 +199,7 @@ export function EditCourse() {
       </div>
 
       <SectionLabel>What the syllabus says about AI</SectionLabel>
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
         Recorded here, and read by the drafting tool, which will not write for a course unless
         this says plainly that it may. Nothing recorded counts as no.
       </div>
@@ -281,7 +281,7 @@ export function EditCourse() {
               change(withGrading(draft, draft.course.grading.filter((_, n) => n !== i)))
             }
             aria-label={`Remove ${row.what || 'this row'}`}
-            style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+            style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
           >
             ×
           </button>
@@ -291,7 +291,7 @@ export function EditCourse() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => change(withGrading(draft, [...draft.course.grading, { what: '', pct: '' }]))}
-        style={{ height: 40, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+        style={{ height: 40, fontSize: 'var(--type-sm)' }}
       >
         + Add a grading row
       </button>
@@ -332,7 +332,7 @@ export function EditCourse() {
                   style={{
                     flex: 1,
                     padding: '6px 0',
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
@@ -385,7 +385,7 @@ export function EditCourse() {
               className="bare"
               onClick={() => change(withSchedule(draft, draft.schedule.filter((_, n) => n !== i)))}
               aria-label="Remove this meeting"
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>
@@ -404,7 +404,7 @@ export function EditCourse() {
               ]),
             )
           }
-          style={{ flex: 1, height: 40, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+          style={{ flex: 1, height: 40, fontSize: 'var(--type-sm)' }}
         >
           + Add a meeting
         </button>
@@ -431,7 +431,7 @@ export function EditCourse() {
               ]),
             )
           }
-          style={{ flex: 1, height: 40, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+          style={{ flex: 1, height: 40, fontSize: 'var(--type-sm)' }}
         >
           + Office hours
         </button>
@@ -496,7 +496,7 @@ export function EditCourse() {
               className="bare"
               onClick={() => change(dropItem(draft, i.id))}
               aria-label={`Remove ${i.title || 'this deadline'}`}
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>
@@ -507,7 +507,7 @@ export function EditCourse() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => change(addItem(draft, blankItem(draft.course.id, draft.items)))}
-        style={{ height: 40, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+        style={{ height: 40, fontSize: 'var(--type-sm)' }}
       >
         + Add a deadline
       </button>

@@ -98,7 +98,7 @@ export function Ahead() {
           {headline(w)}
         </div>
         {pressure(w) ? (
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
             {pressure(w)}
           </div>
         ) : null}
@@ -122,7 +122,7 @@ export function Ahead() {
                 flex: 'none',
                 width: 34,
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(13px * var(--text-scale, 1))',
+                fontSize: 'var(--type-base)',
                 opacity: 0.7,
               }}
             >
@@ -189,7 +189,7 @@ export function Ahead() {
       {(readings.placed.length > 0 || readings.unplaced.length > 0 || readings.unsized.length > 0) && (
         <>
           <SectionLabel>Reading, and where it goes</SectionLabel>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, marginBottom: 8 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.5, marginBottom: 8 }}>
             {planLine(readings)}
           </div>
           {readings.placed.map((p) => (
@@ -207,7 +207,7 @@ export function Ahead() {
                 ...rowStyle,
               }}
             >
-              <span style={{ flex: 'none', width: 40, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}>
+              <span style={{ flex: 'none', width: 40, fontSize: 'var(--type-sm)', opacity: 0.6 }}>
                 {DOW[p.on.getDay()]}
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
@@ -229,7 +229,7 @@ export function Ahead() {
                 ...rowStyle,
               }}
             >
-              <span style={{ flex: 'none', width: 40, fontSize: 'calc(12px * var(--text-scale, 1))', color: 'var(--app-warn)' }}>
+              <span style={{ flex: 'none', width: 40, fontSize: 'var(--type-sm)', color: 'var(--app-warn)' }}>
                 —
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35, opacity: 0.75 }}>
@@ -287,7 +287,7 @@ export function Ahead() {
 
       <SectionLabel>What is left over</SectionLabel>
       <Blueprint style={{ padding: '13px 14px' }}>
-        <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.4 }}>
+        <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4 }}>
           {w.shape.fromWindows
             ? `${showHours(w.spare)} left, of the ${showHours(w.shape.offered)} you work in.`
             : `${showHours(w.spare)} of waking time, after everything already promised.`}
@@ -304,7 +304,7 @@ export function Ahead() {
         {mine ? (
           <div
             style={{
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               marginTop: 9,
               paddingTop: 9,
               borderTop: '1px solid var(--app-line)',
@@ -314,7 +314,7 @@ export function Ahead() {
             {mine}
           </div>
         ) : null}
-        <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
           {basisLine(w.shape)} The coursework estimate is built only from work you have timed
           yourself — the app still invents nothing, and anything it has never seen the like of is
           counted as unknown rather than guessed at.

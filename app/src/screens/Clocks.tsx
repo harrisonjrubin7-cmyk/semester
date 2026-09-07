@@ -135,7 +135,7 @@ function Timers() {
               padding: '9px 14px',
               borderRadius: 'var(--r-md)',
               border: '1px solid var(--app-line)',
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               fontVariantNumeric: 'tabular-nums',
             }}
           >
@@ -181,7 +181,7 @@ function Timers() {
         <div
           role="status"
           style={{
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             marginTop: 7,
             color: 'var(--app-warn-ink, var(--app-fg))',
             opacity: 0.85,
@@ -303,7 +303,7 @@ function Small({ children, onClick }: { children: React.ReactNode; onClick: () =
         padding: '7px 12px',
         borderRadius: 'var(--r-sm)',
         border: '1px solid var(--app-line)',
-        fontSize: 'calc(12px * var(--text-scale, 1))',
+        fontSize: 'var(--type-sm)',
       }}
     >
       {children}
@@ -375,7 +375,7 @@ function Alarms() {
                 borderRadius: '50%',
                 border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-accent-fill)' : 'transparent',
-                fontSize: 'calc(12px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm)',
               }}
             >
               {letter}
@@ -421,7 +421,7 @@ function Alarms() {
                     </div>
                     <div
                       style={{
-                        fontSize: 'calc(12px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-sm)',
                         opacity: 0.62,
                         marginTop: 2,
                         textWrap: 'pretty',
@@ -505,7 +505,7 @@ function Alarms() {
             padding: '9px 14px',
             borderRadius: 'var(--r-md)',
             border: '1px solid var(--app-line)',
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
           }}
         >
           Let it notify me in the background

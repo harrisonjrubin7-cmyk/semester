@@ -132,7 +132,7 @@ export function Meals() {
       ) : null}
 
       <SectionLabel>Log what it says</SectionLabel>
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 9, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 9, lineHeight: 1.5 }}>
         Leave a field blank if your plan does not have it. Two readings a few days apart is what
         turns a balance into a rate.
       </div>
@@ -193,10 +193,10 @@ export function Meals() {
           {mine.map((r) => (
             <CustomRow key={r.id} pad={9}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))' }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
                 {new Date(r.at).toLocaleDateString()}
               </span>
-              <span style={{ flex: 'none', fontSize: 'calc(13px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ flex: 'none', fontSize: 'var(--type-base)', fontVariantNumeric: 'tabular-nums' }}>
                 {r.swipes >= 0 ? `${r.swipes} swipes` : '—'}
                 {r.cashCents > 0 ? ` · ${money(r.cashCents)}` : ''}
               </span>
@@ -205,7 +205,7 @@ export function Meals() {
                 className="bare"
                 aria-label="Remove this reading"
                 onClick={() => dispatch({ type: 'dropBalance', id: r.id })}
-                style={{ flex: 'none', width: 24, opacity: 0.4, fontSize: 'calc(14px * var(--text-scale, 1))' }}
+                style={{ flex: 'none', width: 24, opacity: 0.4, fontSize: 'var(--type-md)' }}
               >
                 ×
               </button>
@@ -215,7 +215,7 @@ export function Meals() {
         </Group>
       )}
 
-      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
         Nothing is fetched. The balance page is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The app reports a rate and a date and stops; it has no idea whether you

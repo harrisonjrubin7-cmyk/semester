@@ -38,7 +38,7 @@ export function AskForTime({ item }: { item: DatedItem }) {
       style={{
         width: 'auto',
         padding: '8px 0 2px',
-        fontSize: 'calc(12px * var(--text-scale, 1))',
+        fontSize: 'var(--type-sm)',
         opacity: 0.6,
         textAlign: 'left',
       }}

@@ -108,12 +108,12 @@ export function LessonPlayer() {
       <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">No lesson yet</div>
-          <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
+          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 8, lineHeight: 1.1 }}>
             {guide.units[unit]?.name ?? 'This unit'} has not been recorded
           </div>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 8, lineHeight: 1.5 }}>
             Lessons are rendered by the pipeline, one per unit:{' '}
-            <code style={{ fontSize: 'calc(12px * var(--text-scale, 1))' }}>python3 pipeline/lessons.py {state.guideId}</code>
+            <code style={{ fontSize: 'var(--type-sm)' }}>python3 pipeline/lessons.py {state.guideId}</code>
           </div>
         </Blueprint>
       </Page>
@@ -131,7 +131,7 @@ export function LessonPlayer() {
       <div className="kicker">
         Unit {unit + 1} of {guide.units.length} · {lesson.len}
       </div>
-      <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.3, marginTop: 3 }}>{lesson.title}</div>
+      <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.3, marginTop: 3 }}>{lesson.title}</div>
 
       {/* ── the slide ─────────────────────────────────────────────────── */}
       <Blueprint
@@ -200,7 +200,7 @@ export function LessonPlayer() {
                 {cue?.kind === 'a' && (
                   <div
                     style={{
-                      fontSize: 'calc(15px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-lg)',
                       lineHeight: 1.55,
                       marginTop: 12,
                       textWrap: 'pretty',
@@ -231,7 +231,7 @@ export function LessonPlayer() {
           display: 'flex',
           justifyContent: 'space-between',
           fontFamily: 'var(--font-heading)',
-          fontSize: 'calc(11px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
           opacity: 0.5,
           marginTop: 5,
@@ -262,7 +262,7 @@ export function LessonPlayer() {
           style={{
             flex: 1,
             height: 46,
-            fontSize: 'calc(14px * var(--text-scale, 1))',
+            fontSize: 'var(--type-md)',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
           }}
@@ -284,7 +284,7 @@ export function LessonPlayer() {
           type="button"
           className="btn btn-secondary"
           onClick={() => setSpeed(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
-          style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(12px * var(--text-scale, 1))', width: 54, flex: 'none' }}
+          style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-sm)', width: 54, flex: 'none' }}
         >
           {speed}×
         </button>
@@ -309,7 +309,7 @@ export function LessonPlayer() {
       {added.length > 0 && (
         <div
           style={{
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             opacity: 0.65,
             marginTop: 10,
             lineHeight: 1.45,
@@ -351,7 +351,7 @@ export function LessonPlayer() {
               width: 44,
               flex: 'none',
               fontFamily: 'var(--font-heading)',
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               color: i === index ? 'var(--app-accent)' : 'inherit',
             }}
           >
@@ -367,7 +367,7 @@ export function LessonPlayer() {
           className="btn btn-secondary"
           disabled={prevUnit === null}
           onClick={() => prevUnit !== null && dispatch({ type: 'openLesson', unit: prevUnit })}
-          style={{ flex: 1, height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+          style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', textTransform: 'uppercase', letterSpacing: '0.1em' }}
         >
           Previous unit
         </button>
@@ -376,7 +376,7 @@ export function LessonPlayer() {
           className="btn btn-secondary"
           disabled={nextUnit === null}
           onClick={() => nextUnit !== null && dispatch({ type: 'openLesson', unit: nextUnit })}
-          style={{ flex: 1, height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+          style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', textTransform: 'uppercase', letterSpacing: '0.1em' }}
         >
           Next unit
         </button>

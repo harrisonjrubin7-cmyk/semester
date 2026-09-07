@@ -35,7 +35,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         style={{
           width: 'auto',
           padding: '8px 0 2px',
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.6,
           textAlign: 'left',
         }}
@@ -60,7 +60,7 @@ export function CameBack({ item }: { item: DatedItem }) {
       <div className="kicker">Back on {new Date(record.at).toDateString().slice(4)}</div>
       <div
         style={{
-          fontSize: 'calc(13px * var(--text-scale, 1))',
+          fontSize: 'var(--type-base)',
           marginTop: 5,
           lineHeight: 1.45,
           textWrap: 'pretty',
@@ -92,7 +92,7 @@ export function CameBack({ item }: { item: DatedItem }) {
             padding: '9px 13px',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${record.raised ? 'var(--app-accent)' : 'var(--app-line)'}`,
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
           }}
         >
           {record.raised ? 'Raised' : 'I have raised it'}
@@ -118,7 +118,7 @@ export function CameBack({ item }: { item: DatedItem }) {
           minHeight: 56,
           marginTop: 8,
           resize: 'vertical',
-          fontSize: 'calc(13px * var(--text-scale, 1))',
+          fontSize: 'var(--type-base)',
           lineHeight: 1.5,
         }}
       />

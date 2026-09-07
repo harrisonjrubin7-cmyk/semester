@@ -85,7 +85,7 @@ export function Applying() {
         <div className="kicker">Where it stands</div>
         <div
           className="chrome-text"
-          style={{ marginTop: 5, fontSize: 'calc(14px * var(--text-scale, 1))', textWrap: 'pretty' }}
+          style={{ marginTop: 5, fontSize: 'var(--type-md)', textWrap: 'pretty' }}
         >
           {summary(state.applications, now)}
         </div>

@@ -175,7 +175,7 @@ export function Springboard() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search"
         aria-label="Search the app"
-        style={{ width: '100%', height: 38, marginBottom: 14, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+        style={{ width: '100%', height: 38, marginBottom: 14, fontSize: 'var(--type-base)' }}
       />
 
       {searching ? (

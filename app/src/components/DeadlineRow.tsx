@@ -174,7 +174,7 @@ export function DeadlineRow({
           <span
             style={{
               display: 'block',
-              fontSize: 'calc(14px * var(--text-scale, 1))',
+              fontSize: 'var(--type-md)',
               lineHeight: 1.3,
               textDecoration: done ? 'line-through' : 'none',
             }}
@@ -184,7 +184,7 @@ export function DeadlineRow({
           <span
             style={{
               display: 'block',
-              fontSize: 'calc(11px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs)',
               opacity: 0.55,
               marginTop: tight ? 0 : 2,
               // On one line in compact rows. Dropped entirely would be a
@@ -207,7 +207,7 @@ export function DeadlineRow({
           <span
             style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 'calc(11px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs)',
               flex: 'none',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',

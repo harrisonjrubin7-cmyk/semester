@@ -137,7 +137,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
               <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                 {option.blurb}
               </span>
@@ -182,7 +182,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>{m.what}</span>
             </div>
           ))}
-          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
             Counted here rather than by Claude, because dates are arithmetic.
           </div>
         </Blueprint>
@@ -239,7 +239,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
       ) : null}
 
       {error ? (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
           {error}
         </div>
       ) : null}
@@ -249,7 +249,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
           <SectionLabel>Your project file</SectionLabel>
           <div
             style={{
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               lineHeight: 1.6,
               whiteSpace: 'pre-wrap',
               padding: 14,
@@ -261,7 +261,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
             {document}
           </div>
 
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 1.5 }}>
             {left > 0
               ? `${left} blanks in square brackets — those are yours, and the file is not finished until none are left.`
               : 'No blanks left in it. Read it carefully: if it has written the argument rather than asking for it, that is not a file to hand in.'}

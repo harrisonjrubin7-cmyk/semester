@@ -130,7 +130,7 @@ export function Timer({
   if (ended.kind === 'ask') {
     return (
       <div style={{ padding: '9px 0 4px' }}>
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, marginBottom: 7, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginBottom: 7, lineHeight: 1.45 }}>
           That ran for {clockLine(ended.minutes)}, which is longer than the app will take on
           trust — a timer left running looks exactly like this. What was it really?
         </div>
@@ -144,7 +144,7 @@ export function Timer({
                 dispatch({ type: 'timeSpent', id, courseId, kind, bucketId: b.id });
                 setEnded({ kind: 'none' });
               }}
-              style={{ height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', padding: '0 10px', flex: 'none' }}
+              style={{ height: 32, fontSize: 'var(--type-sm)', padding: '0 10px', flex: 'none' }}
             >
               {b.label}
             </button>
@@ -153,7 +153,7 @@ export function Timer({
             type="button"
             className="bare"
             onClick={() => setEnded({ kind: 'none' })}
-            style={{ height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5, width: 'auto', padding: '0 8px' }}
+            style={{ height: 32, fontSize: 'var(--type-sm)', opacity: 0.5, width: 'auto', padding: '0 8px' }}
           >
             Forget it
           </button>
@@ -214,7 +214,7 @@ export function Timer({
           </div>
           <div
             style={{
-              fontSize: 'calc(11px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs)',
               opacity: 0.5,
               marginTop: 7,
               lineHeight: 1.45,
@@ -280,7 +280,7 @@ export function Timer({
           onClick={() =>
             setSitting(running(mine) ? hold(mine, Date.now()) : carryOn(mine, Date.now()))
           }
-          style={{ width: 'auto', padding: '0 10px', height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.75 }}
+          style={{ width: 'auto', padding: '0 10px', height: 32, fontSize: 'var(--type-sm)', opacity: 0.75 }}
         >
           {running(mine) ? 'Pause' : 'Carry on'}
         </button>
@@ -288,7 +288,7 @@ export function Timer({
           type="button"
           className="btn btn-primary"
           onClick={stop}
-          style={{ height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', paddingInline: 14, flex: 'none' }}
+          style={{ height: 32, fontSize: 'var(--type-sm)', paddingInline: 14, flex: 'none' }}
         >
           Stop
         </button>

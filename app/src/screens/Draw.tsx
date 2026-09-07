@@ -83,7 +83,7 @@ export function Draw() {
       <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings.
           </div>
         </Blueprint>
@@ -93,7 +93,7 @@ export function Draw() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Drawing for {guide.code}. The picture comes back as code, so every label is yours to change
         — and nothing is invented into it: an axis you gave no numbers for is labelled with the
         quantity, not with a plausible figure.
@@ -118,7 +118,7 @@ export function Draw() {
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
               <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2, lineHeight: 1.4 }}>
                 {option.blurb}
               </span>

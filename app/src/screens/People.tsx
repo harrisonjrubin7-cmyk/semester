@@ -171,7 +171,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(12px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-sm)',
                     opacity: 0.75,
                     marginTop: 5,
                     lineHeight: 1.45,
@@ -197,7 +197,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                       minHeight: 56,
                       marginTop: 6,
                       resize: 'vertical',
-                      fontSize: 'calc(13px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-base)',
                       lineHeight: 1.5,
                     }}
                   />
@@ -220,7 +220,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                         <div
                           key={v.id}
                           style={{
-                            fontSize: 'calc(12px * var(--text-scale, 1))',
+                            fontSize: 'var(--type-sm)',
                             lineHeight: 1.45,
                             opacity: 0.8,
                             textWrap: 'pretty',
@@ -346,7 +346,7 @@ function LettersTab() {
                     background: tight ? 'var(--app-warn-wash)' : undefined,
                   }}
                 >
-                  <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-md)', textWrap: 'pretty' }}>
                     {l.forWhat} — {nameOf(l.personId)}
                   </div>
                   <div
@@ -399,7 +399,7 @@ function LettersTab() {
                           padding: '6px 10px',
                           borderRadius: 'var(--r-sm)',
                           border: `1px solid ${l.stage === a.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-                          fontSize: 'calc(11px * var(--text-scale, 1))',
+                          fontSize: 'var(--type-xs)',
                         }}
                       >
                         {a.label}
@@ -423,7 +423,7 @@ function LettersTab() {
                       type="button"
                       className="bare"
                       onClick={() => dispatch({ type: 'dropLetter', id: l.id })}
-                      style={{ width: 'auto', padding: '6px 10px', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}
+                      style={{ width: 'auto', padding: '6px 10px', fontSize: 'var(--type-xs)', opacity: 0.5 }}
                     >
                       Remove
                     </button>
@@ -464,7 +464,7 @@ function Toggle({ on, label, onClick }: { on: boolean; label: string; onClick: (
         padding: '6px 10px',
         borderRadius: 'var(--r-sm)',
         border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
-        fontSize: 'calc(11px * var(--text-scale, 1))',
+        fontSize: 'var(--type-xs)',
       }}
     >
       {on ? `✓ ${label}` : label}

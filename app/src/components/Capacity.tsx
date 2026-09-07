@@ -50,7 +50,7 @@ export function Capacity() {
           borderRadius: 'var(--r-md)',
           border: `1px solid ${tight ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
           background: tight ? 'var(--app-warn-wash)' : 'transparent',
-          fontSize: 'calc(13px * var(--text-scale, 1))',
+          fontSize: 'var(--type-base)',
           lineHeight: 1.5,
           textWrap: 'pretty',
         }}
@@ -74,7 +74,7 @@ export function Capacity() {
           aria-label="Hours a week school gets"
           style={{ width: 72, height: 40, textAlign: 'center' }}
         />
-        <span style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, flex: 1, textWrap: 'pretty' }}>
+        <span style={{ fontSize: 'var(--type-sm)', opacity: 0.65, flex: 1, textWrap: 'pretty' }}>
           hours a week, decided by you. Without one the week is measured against whatever happens
           to be left, which is how a term reaches October before anybody notices it was overloaded
           in September.
@@ -92,7 +92,7 @@ export function Capacity() {
           padding: '9px 14px',
           borderRadius: 'var(--r-sm)',
           border: `1px solid ${state.floor.on ? 'var(--app-accent)' : 'var(--app-line)'}`,
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
         }}
       >
         {state.floor.on ? `On — ${clock(state.floor.from)} to ${clock(state.floor.to)}` : 'Off'}
@@ -133,7 +133,7 @@ function Bump({ label, onClick }: { label: string; onClick: () => void }) {
         padding: '7px 11px',
         borderRadius: 'var(--r-sm)',
         border: '1px solid var(--app-line)',
-        fontSize: 'calc(11px * var(--text-scale, 1))',
+        fontSize: 'var(--type-xs)',
       }}
     >
       {label}

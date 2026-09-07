@@ -158,7 +158,7 @@ export function RecordButton({
       )}
 
       {state === 'idle' && !liveSupported() && (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 10, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginBottom: 10, lineHeight: 1.45 }}>
           This browser has no speech recognition, so this records audio only. Chrome and Safari
           will write it down as it goes; Firefox will not.
         </div>
@@ -171,7 +171,7 @@ export function RecordButton({
           onClick={() => void start()}
           style={{
             height: 44,
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             display: 'flex',
@@ -229,7 +229,7 @@ export function RecordButton({
                   setState('recording');
                 }
               }}
-              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               {state === 'paused' ? 'Resume' : 'Pause'}
             </button>
@@ -238,7 +238,7 @@ export function RecordButton({
               className="btn btn-primary"
               disabled={state === 'saving'}
               onClick={() => void stop()}
-              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Stop and keep
             </button>
@@ -298,7 +298,7 @@ export function RecordButton({
               type="button"
               className="bare"
               onClick={() => setStamps((on) => !on)}
-              style={{ fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.08em', opacity: 0.65, width: 'auto' }}
+              style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.08em', opacity: 0.65, width: 'auto' }}
             >
               {stamps ? 'HIDE TIMES' : 'SHOW TIMES'}
             </button>
@@ -317,7 +317,7 @@ export function RecordButton({
                 .writeText(asText(paragraphs(segments), stamps))
                 .catch(() => setError('The browser would not give the app the clipboard.'));
             }}
-            style={{ height: 40, marginTop: 8, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 40, marginTop: 8, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Copy the transcript
           </button>
@@ -325,7 +325,7 @@ export function RecordButton({
       )}
 
       {saved && (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 10, lineHeight: 1.5 }}>
           Kept {saved.name} — {clockOf(saved.seconds)}, {formatBytes(saved.size)}. It plays from
           Mine → Files, and it stays on this device.
         </div>

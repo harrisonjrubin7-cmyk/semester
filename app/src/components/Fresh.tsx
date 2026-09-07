@@ -66,7 +66,7 @@ export function Fresh() {
         className="bare"
         onClick={() => setReady(false)}
         aria-label="Not now"
-        style={{ width: 'auto', flex: 'none', opacity: 0.5, fontSize: 'calc(12px * var(--text-scale, 1))', padding: '0 6px' }}
+        style={{ width: 'auto', flex: 'none', opacity: 0.5, fontSize: 'var(--type-sm)', padding: '0 6px' }}
       >
         Later
       </button>
@@ -74,7 +74,7 @@ export function Fresh() {
         type="button"
         className="btn btn-primary"
         onClick={() => window.location.reload()}
-        style={{ flex: 'none', height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', paddingInline: 14 }}
+        style={{ flex: 'none', height: 32, fontSize: 'var(--type-sm)', paddingInline: 14 }}
       >
         Reload
       </button>

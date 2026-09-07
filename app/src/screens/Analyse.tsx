@@ -159,7 +159,7 @@ export function Analyse() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Every number here is computed on this device by tested code, not guessed at by a model.
         {provider()} is given the finished statistics and asked what they mean — it never reads a column
         and reports a figure.
@@ -197,7 +197,7 @@ export function Analyse() {
           minHeight: 96,
           marginTop: 8,
           resize: 'vertical',
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           lineHeight: 1.5,
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
         }}

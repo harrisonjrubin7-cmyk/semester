@@ -71,12 +71,12 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
             <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
               <span className="tag tag-accent">{mod?.course.code ?? r.courseId}</span>
               {when ? (
-                <span style={{ flex: 1, textAlign: 'right', fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7 }}>
+                <span style={{ flex: 1, textAlign: 'right', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
                   {when}
                 </span>
               ) : null}
             </div>
-            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.4, marginTop: 7 }}>{r.said}</div>
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4, marginTop: 7 }}>{r.said}</div>
 
             {next ? (
               <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>

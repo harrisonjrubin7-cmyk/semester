@@ -108,7 +108,7 @@ export function Links() {
                         <span
                           style={{
                             display: 'block',
-                            fontSize: 'calc(11px * var(--text-scale, 1))',
+                            fontSize: 'var(--type-xs)',
                             opacity: 0.5,
                             fontFamily: 'var(--font-heading)',
                             letterSpacing: '0.1em',
@@ -127,7 +127,7 @@ export function Links() {
                         <span
                           style={{
                             display: 'block',
-                            fontSize: 'calc(11px * var(--text-scale, 1))',
+                            fontSize: 'var(--type-xs)',
                             opacity: 0.5,
                             fontFamily: 'var(--font-heading)',
                             letterSpacing: '0.1em',
@@ -146,7 +146,7 @@ export function Links() {
                         setDraft(url);
                         setEditing(open ? null : link.id);
                       }}
-                      style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                      style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                     >
                       {open ? 'CANCEL' : url ? 'EDIT' : 'ADD'}
                     </button>
@@ -155,7 +155,7 @@ export function Links() {
                         type="button"
                         className="bare"
                         onClick={() => dispatch({ type: 'removeLink', id: link.id })}
-                        style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                        style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                       >
                         REMOVE
                       </button>
@@ -184,7 +184,7 @@ export function Links() {
                         onClick={() => save(link.id)}
                         style={{
                           marginTop: 9,
-                          fontSize: 'calc(11px * var(--text-scale, 1))',
+                          fontSize: 'var(--type-xs)',
                           letterSpacing: '0.12em',
                           textTransform: 'uppercase',
                         }}
@@ -209,7 +209,7 @@ export function Links() {
                 placeholder="What it is — Commodore Card, the gym"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 9 }}
+                style={{ fontSize: 'var(--type-base)', marginTop: 9 }}
               />
               <input
                 className="input"
@@ -223,7 +223,7 @@ export function Links() {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setAdding(false)}
-                  style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                  style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
                 >
                   Cancel
                 </button>
@@ -242,7 +242,7 @@ export function Links() {
                     setNewUrl('');
                     setAdding(false);
                   }}
-                  style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                  style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
                 >
                   Add it
                 </button>
@@ -253,7 +253,7 @@ export function Links() {
               type="button"
               className="btn btn-secondary btn-block"
               onClick={() => setAdding(true)}
-              style={{ height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
+              style={{ height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
             >
               Add a link of your own
             </button>

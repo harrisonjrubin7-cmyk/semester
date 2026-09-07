@@ -115,13 +115,13 @@ export function Snapshots() {
                 cursor: 'pointer',
               }}
             >
-              <span style={{ fontSize: 'calc(13px * var(--text-scale, 1))' }}>
+              <span style={{ fontSize: 'var(--type-base)' }}>
                 {reasonLabel(s.reason)}
                 <span style={{ opacity: 0.55 }}> · {whenLine(s.at, now)}</span>
               </span>
               <span
                 style={{
-                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs)',
                   opacity: 0.45,
                   flex: 'none',
                   fontVariantNumeric: 'tabular-nums',
@@ -139,7 +139,7 @@ export function Snapshots() {
           <div className="kicker">
             {reasonLabel(picked.reason)} · {whenLine(picked.at, now)}
           </div>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', marginTop: 8, lineHeight: 1.5, textWrap: 'pretty' }}>
             {costLine(rows)}
           </div>
           {rows.length > 0 && (
@@ -151,7 +151,7 @@ export function Snapshots() {
               ))}
             </ul>
           )}
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 9, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 9, lineHeight: 1.5, textWrap: 'pretty' }}>
             {RESTORE_LINE}
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>

@@ -67,7 +67,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           ) : null}
           <div
             style={{
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               marginTop: 7,
               lineHeight: 1.5,
               textWrap: 'pretty',
@@ -112,7 +112,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
         style={{
           width: 'auto',
           padding: '8px 0',
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.6,
           textAlign: 'left',
         }}
@@ -163,7 +163,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
             placeholder="The rule in the syllabus's own words, so you can check it later"
             aria-label="The attendance rule as the syllabus words it"
             onChange={(e) => set({ note: e.target.value })}
-            style={{ width: '100%', marginTop: 8, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+            style={{ width: '100%', marginTop: 8, fontSize: 'var(--type-base)' }}
           />
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 7, lineHeight: 1.45 }}>
             A course can have both: some free absences with a penalty after, and attendance as a

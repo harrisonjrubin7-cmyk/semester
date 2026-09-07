@@ -462,7 +462,7 @@ export function Assistant() {
               className="bare"
               onClick={() => ai.hide()}
               aria-label="Close the assistant"
-              style={{ flex: 'none', width: 'auto', opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+              style={{ flex: 'none', width: 'auto', opacity: 0.5, fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>

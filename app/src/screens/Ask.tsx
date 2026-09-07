@@ -51,7 +51,7 @@ export function Ask() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', marginTop: 5 }}>
             Where the answers come from
           </div>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.78, lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
             {config.provider === 'openai'
               ? 'Two providers, so a lapsed account or an outage the night before a midterm does not stop the app working. Nothing above this setting knows which one answered.'
               : route() === 'shared'
@@ -77,7 +77,7 @@ export function Ask() {
                   style={{
                     flex: 1,
                     padding: '7px 11px',
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     background: on ? 'var(--chrome)' : 'transparent',
@@ -104,7 +104,7 @@ export function Ask() {
                 placeholder="sk-…"
                 value={config.openaiKey}
                 onChange={(e) => setConfig({ ...config, openaiKey: e.target.value })}
-                style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 10 }}
+                style={{ fontSize: 'var(--type-base)', marginTop: 10 }}
                 aria-label="OpenAI API key"
               />
               <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
@@ -119,7 +119,7 @@ export function Ask() {
                       aria-pressed={on}
                       style={{
                         padding: '5px 11px',
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs)',
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
                         background: on ? 'var(--chrome)' : 'transparent',
@@ -146,7 +146,7 @@ export function Ask() {
             placeholder="sk-ant-…"
             value={config.apiKey}
             onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
-            style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 12 }}
+            style={{ fontSize: 'var(--type-base)', marginTop: 12 }}
             aria-label="API key"
           />
           <input
@@ -154,7 +154,7 @@ export function Ask() {
             placeholder="https://your-proxy.example.com  (better)"
             value={config.proxy}
             onChange={(e) => setConfig({ ...config, proxy: e.target.value })}
-            style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 8 }}
+            style={{ fontSize: 'var(--type-base)', marginTop: 8 }}
             aria-label="Proxy URL"
           />
 
@@ -170,7 +170,7 @@ export function Ask() {
                   aria-pressed={on}
                   style={{
                     padding: '5px 11px',
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     background: on ? 'var(--chrome)' : 'transparent',
@@ -198,7 +198,7 @@ export function Ask() {
             }}
             style={{
               height: 44,
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginTop: 12,

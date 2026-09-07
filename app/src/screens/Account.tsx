@@ -45,10 +45,10 @@ export function AccountScreen() {
       <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Device only</div>
-          <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
+          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 8, lineHeight: 1.1 }}>
             This build has no account service
           </div>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
             Everything works, and everything stays on this device. To turn on accounts, set
             VITE_SUPABASE_URL and VITE_SUPABASE_KEY and redeploy — see SETUP.md.
           </div>
@@ -137,27 +137,27 @@ export function AccountScreen() {
         </Blueprint>
 
         <SectionLabel>What syncs</SectionLabel>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
           Your courses, everything you have added to them, your tasks, appointments, notes and
           connected calendars. Sign in on a laptop and the same semester is there.
         </div>
 
         <SectionLabel>What does not</SectionLabel>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
           Files you attach stay on the device that has them — a lecture deck can be tens of
           megabytes and uploading it on a phone plan is not a choice the app should make for you.
           The sample semester's audio ships with the app, so it plays anywhere.
         </div>
 
         <SectionLabel>How conflicts resolve</SectionLabel>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
           Nothing you added on one device is dropped because you added something on the other.
           Write a note on the laptop and another on your phone while it is offline, and you end up
           with both; tick one box here and a different one there, and both stay ticked. Settings
           are the exception, and deliberately so — your colours are whatever you last chose,
           wherever you chose it.
         </div>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty', marginTop: 8 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty', marginTop: 8 }}>
           What still does not merge is the same note edited on both: the later edit is the one that
           survives. The app would rather say so than pretend.
         </div>
@@ -169,7 +169,7 @@ export function AccountScreen() {
           onClick={() => void run(signOut)}
           style={{
             height: 44,
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             marginTop: 20,
@@ -190,7 +190,7 @@ export function AccountScreen() {
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         {mode === 'in' ? 'Pick up where you left off.' : 'One semester, every device.'}
       </div>
-      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
         An account keeps your courses, notes and progress in step between your phone and your
         laptop. The app works without one — this only decides whether it follows you.
       </div>
@@ -229,7 +229,7 @@ export function AccountScreen() {
           placeholder="you@vanderbilt.edu"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 16 }}
+          style={{ fontSize: 'var(--type-md)', marginTop: 16 }}
         />
         <label className="sr-only" htmlFor="account-password">
           Password
@@ -243,7 +243,7 @@ export function AccountScreen() {
           placeholder={mode === 'in' ? 'Password' : 'Password — at least 8 characters'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 }}
+          style={{ fontSize: 'var(--type-md)', marginTop: 8 }}
         />
 
         <button
@@ -252,7 +252,7 @@ export function AccountScreen() {
           disabled={busy || !email.trim() || password.length < 8}
           style={{
             height: 50,
-            fontSize: 'calc(15px * var(--text-scale, 1))',
+            fontSize: 'var(--type-lg)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             marginTop: 14,
@@ -268,7 +268,7 @@ export function AccountScreen() {
           className="btn btn-secondary"
           disabled={busy}
           onClick={() => void run(() => signInWith('google'))}
-          style={{ flex: 1, height: 42, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Google
         </button>
@@ -277,7 +277,7 @@ export function AccountScreen() {
           className="btn btn-secondary"
           disabled={busy}
           onClick={() => void run(() => signInWith('azure'))}
-          style={{ flex: 1, height: 42, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Microsoft
         </button>
@@ -286,7 +286,7 @@ export function AccountScreen() {
           className="btn btn-secondary"
           disabled={busy}
           onClick={() => void run(() => signInWith('apple'))}
-          style={{ flex: 1, height: 42, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Apple
         </button>
@@ -305,7 +305,7 @@ export function AccountScreen() {
           type="button"
           className="bare"
           onClick={() => setMode(mode === 'in' ? 'up' : 'in')}
-          style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, width: 'auto' }}
+          style={{ fontSize: 'var(--type-sm)', opacity: 0.7, width: 'auto' }}
         >
           {mode === 'in' ? 'Make an account' : 'I already have one'}
         </button>
@@ -314,7 +314,7 @@ export function AccountScreen() {
             type="button"
             className="bare"
             onClick={() => void run(() => sendReset(email.trim()))}
-            style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5, width: 'auto' }}
+            style={{ fontSize: 'var(--type-sm)', opacity: 0.5, width: 'auto' }}
           >
             Send a reset link
           </button>
@@ -322,10 +322,10 @@ export function AccountScreen() {
       </div>
 
       {note && (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.85, marginTop: 14, lineHeight: 1.5 }}>{note}</div>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.85, marginTop: 14, lineHeight: 1.5 }}>{note}</div>
       )}
       {error && (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', color: 'var(--app-accent)', marginTop: 14, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-accent)', marginTop: 14, lineHeight: 1.5 }}>
           {error}
         </div>
       )}

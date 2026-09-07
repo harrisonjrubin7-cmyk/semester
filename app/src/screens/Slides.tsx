@@ -78,7 +78,7 @@ export function SlideDeck() {
   }, [step]);
 
   if (!unit || slides.length === 0) {
-    return <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6 }}>Nothing to show here.</div>;
+    return <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6 }}>Nothing to show here.</div>;
   }
 
   const slide = slides[at];
@@ -149,7 +149,7 @@ export function SlideDeck() {
             >
               {slide.text}
             </div>
-            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.45, marginTop: 16 }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 16 }}>
               Answer it before you advance.
             </div>
           </>
@@ -190,7 +190,7 @@ export function SlideDeck() {
             {slide.figure.type === 'diagram' ? (
               <Diagram kind={slide.figure.kind} />
             ) : (
-              <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.75, marginTop: 10, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'var(--type-md)', opacity: 0.75, marginTop: 10, lineHeight: 1.5 }}>
                 {slide.figure.caption}
               </div>
             )}
@@ -202,7 +202,7 @@ export function SlideDeck() {
             <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08 }}>
               {slide.title}
             </div>
-            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8 }}>{slide.sub}</div>
+            <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8 }}>{slide.sub}</div>
             <button
               type="button"
               className="btn btn-primary"
@@ -211,7 +211,7 @@ export function SlideDeck() {
                 alignSelf: 'flex-start',
                 marginTop: 16,
                 height: 42,
-                fontSize: 'calc(12px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
               }}
@@ -251,7 +251,7 @@ export function SlideDeck() {
           type="button"
           className="btn btn-primary"
           onClick={() => (at === last ? dispatch({ type: 'back' }) : step(1))}
-          style={{ flex: 1, height: 46, fontSize: 'calc(13px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 46, fontSize: 'var(--type-base)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
         >
           {at === last ? 'Done' : 'Next'}
         </button>
@@ -272,7 +272,7 @@ export function SlideDeck() {
           className="btn btn-secondary"
           disabled={unitIndex === 0}
           onClick={() => dispatch({ type: 'openDeck', unit: unitIndex - 1 })}
-          style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Previous unit
         </button>
@@ -281,7 +281,7 @@ export function SlideDeck() {
           className="btn btn-secondary"
           disabled={unitIndex >= guide.units.length - 1}
           onClick={() => dispatch({ type: 'openDeck', unit: unitIndex + 1 })}
-          style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Next unit
         </button>

@@ -109,12 +109,12 @@ export function Rework({
       </button>
 
       {error ? (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 10, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 10, color: 'var(--app-warn)', lineHeight: 1.45 }}>
           {error}
         </div>
       ) : null}
       {done ? (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 10, opacity: 0.8, lineHeight: 1.5 }}>{done}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 10, opacity: 0.8, lineHeight: 1.5 }}>{done}</div>
       ) : null}
 
       {plan && cost && (
@@ -122,7 +122,7 @@ export function Rework({
           <div className="kicker">What it would cost you</div>
           <div
             style={{
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               marginTop: 7,
               lineHeight: 1.55,
               // The one thing worth a colour: something you drilled going away.
@@ -143,14 +143,14 @@ export function Rework({
             </div>
           )}
 
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 12, lineHeight: 1.5 }}>
             {cost.unitsBefore} units → {cost.unitsAfter}.{' '}
             {plan.guide.units.reduce((n, u) => n + u.cards.length, 0)} cards,{' '}
             {plan.guide.terms.length} terms.
           </div>
 
           {plan.notes.length > 0 && (
-            <ul style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.75, margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.55 }}>
+            <ul style={{ fontSize: 'var(--type-sm)', opacity: 0.75, margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.55 }}>
               {plan.notes.map((n, i) => (
                 <li key={i}>{n}</li>
               ))}

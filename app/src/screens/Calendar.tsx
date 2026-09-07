@@ -202,7 +202,7 @@ function DayView() {
                     flex: 'none',
                     textAlign: 'right',
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 'calc(14px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-md)',
                     paddingTop: 12,
                     opacity: 0.6,
                   }}
@@ -238,7 +238,7 @@ function DayView() {
                   >
                     {b.title}
                   </div>
-                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
                     {b.mine && (
                       <span className="tag tag-neutral" style={{ marginRight: 6 }}>
                         Yours
@@ -310,8 +310,8 @@ function DayView() {
             >
               <span className="tag tag-outline">{e.kind}</span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.25 }}>{e.title}</span>
-                <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{e.title}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
                   {e.time} · {e.where}
                 </span>
               </span>
@@ -341,17 +341,17 @@ function DayView() {
                     width: 54,
                     flex: 'none',
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 'calc(12px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-sm)',
                     opacity: 0.6,
                   }}
                 >
                   {e.time}
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.25 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>
                     {e.title}
                   </span>
-                  <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
                     {feed?.name ?? 'Calendar'}
                     {e.where ? ` · ${e.where}` : ''}
                   </span>
@@ -425,7 +425,7 @@ function DayTask({ task: t }: { task: PersonalTask }) {
         style={{
           flex: 1,
           minWidth: 0,
-          fontSize: 'calc(14px * var(--text-scale, 1))',
+          fontSize: 'var(--type-md)',
           textDecoration: t.done ? 'line-through' : 'none',
         }}
       >
@@ -464,7 +464,7 @@ const arrow = {
   width: 'auto',
   padding: '6px 7px',
   fontFamily: 'var(--font-heading)',
-  fontSize: 'calc(11px * var(--text-scale, 1))',
+  fontSize: 'var(--type-xs)',
   letterSpacing: '0.06em',
   opacity: 0.55,
 } as const;
@@ -810,7 +810,7 @@ function MonthView() {
               <span
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(15px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-lg)',
                   opacity: isToday || isSelected ? 1 : 0.8,
                   color: isToday ? 'var(--app-accent)' : 'var(--app-fg)',
                 }}
@@ -896,7 +896,7 @@ function MonthView() {
       ))}
 
       {selItems.length === 0 && (
-        <div style={{ padding: '12px 0 2px', fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.55 }}>
+        <div style={{ padding: '12px 0 2px', fontSize: 'var(--type-md)', opacity: 0.55 }}>
           Nothing due this day.
         </div>
       )}
@@ -917,7 +917,7 @@ function MonthView() {
           height: 42,
           textTransform: 'uppercase',
           letterSpacing: '0.1em',
-          fontSize: 'calc(11px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs)',
           marginTop: 14,
         }}
       >
@@ -985,7 +985,7 @@ function SemesterView() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 16, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 16, textWrap: 'pretty' }}>
         {items.length} deadlines and {events.length} events across {weeks.length} weeks. The bar is
         how loaded each week is; exams are marked.
       </div>
@@ -1069,7 +1069,7 @@ function SemesterView() {
                 </div>
 
                 {w.items.length > 0 && (
-                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.72, lineHeight: 1.35 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.72, lineHeight: 1.35 }}>
                     {w.items.slice(0, 3).map((it) => (
                       <button
                         key={it.id}
@@ -1092,7 +1092,7 @@ function SemesterView() {
                   <div
                     style={{
                       fontFamily: 'var(--font-heading)',
-                      fontSize: 'calc(11px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs)',
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
                       color: 'var(--app-accent)',
@@ -1154,7 +1154,7 @@ function CampusList() {
                   <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.5 }}>
                     {e.mon}
                   </div>
-                  <div style={{ fontSize: 'calc(26px * var(--text-scale, 1))' }}>{e.day}</div>
+                  <div style={{ fontSize: 'var(--type-xl)' }}>{e.day}</div>
                   <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.5 }}>
                     {e.dow}
                   </div>
@@ -1173,7 +1173,7 @@ function CampusList() {
                     </span>
                     <span
                       style={{
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs)',
                         opacity: 0.55,
                         fontFamily: 'var(--font-heading)',
                         letterSpacing: '0.1em',
@@ -1183,8 +1183,8 @@ function CampusList() {
                       {e.tag}
                     </span>
                   </div>
-                  <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{e.title}</div>
-                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>
+                  <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{e.title}</div>
+                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 2 }}>
                     {e.time} · {e.where}
                   </div>
                 </button>
@@ -1306,7 +1306,7 @@ export function EventDetail() {
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
               {event.dow} {event.mon} {event.day}
             </div>
-            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}>{event.time}</div>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>{event.time}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
           <div style={{ flex: 1, padding: '11px 0 11px 14px' }}>
@@ -1321,13 +1321,13 @@ export function EventDetail() {
       </Blueprint>
 
       <div
-        style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.55, marginTop: 18, opacity: 0.85, textWrap: 'pretty' }}
+        style={{ fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 18, opacity: 0.85, textWrap: 'pretty' }}
       >
         {event.detail}
       </div>
 
       <SectionLabel style={{ margin: '22px 0 6px' }}>Getting in</SectionLabel>
-      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.8 }}>{event.ticket}</div>
+      <div style={{ fontSize: 'var(--type-md)', opacity: 0.8 }}>{event.ticket}</div>
 
       <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
         <button

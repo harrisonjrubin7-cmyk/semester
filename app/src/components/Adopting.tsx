@@ -77,7 +77,7 @@ export function Adopting({
       </h2>
       <div
         style={{
-          fontSize: 'calc(13px * var(--text-scale, 1))',
+          fontSize: 'var(--type-base)',
           opacity: 0.75,
           marginTop: 10,
           lineHeight: 1.5,
@@ -110,7 +110,7 @@ export function Adopting({
                 style={{
                   display: 'block',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(15px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-lg)',
                 }}
               >
                 {o.label}
@@ -119,7 +119,7 @@ export function Adopting({
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(12px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm)',
                   opacity: 0.65,
                   marginTop: 3,
                   lineHeight: 1.45,

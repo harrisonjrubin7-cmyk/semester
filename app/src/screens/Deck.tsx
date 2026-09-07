@@ -136,7 +136,7 @@ export function Deck() {
 
       {source === 'unit' ? (
         <>
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
             No model in the loop and nothing invented — your own guide, rearranged. Question on one
             slide, answer on the next.
           </div>
@@ -181,7 +181,7 @@ export function Deck() {
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
-                  <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{option.label}</span>
+                  <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
                   <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                     {option.blurb}
                   </span>
@@ -310,7 +310,7 @@ export function Deck() {
           </div>
 
           {left.length > 0 && (
-            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 10, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 10, lineHeight: 1.5 }}>
               {left.length} {left.length === 1 ? 'blank' : 'blanks'} in square brackets. Those are
               the facts it would have had to invent — fill them before you present.
             </div>
@@ -361,7 +361,7 @@ export function Deck() {
             </div>
           )}
           <PrintButton label="Print the slides" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             The notes hold what you say over each slide, which is deliberately not what is written
             on it — a slide read aloud is a slide nobody listens to.
           </div>

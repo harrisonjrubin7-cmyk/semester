@@ -144,7 +144,7 @@ export function TypeToConfirm({
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
-        style={{ width: '100%', height: 46, marginTop: 8, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+        style={{ width: '100%', height: 46, marginTop: 8, fontSize: 'var(--type-lg)' }}
       />
 
       <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>

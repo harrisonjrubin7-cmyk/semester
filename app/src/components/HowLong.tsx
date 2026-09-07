@@ -40,7 +40,7 @@ export function HowLong({
             type="button"
             className="btn btn-secondary"
             onClick={() => dispatch({ type: 'timeSpent', id, courseId, kind, bucketId: b.id })}
-            style={{ height: 32, fontSize: 'calc(12px * var(--text-scale, 1))', padding: '0 10px', flex: 'none' }}
+            style={{ height: 32, fontSize: 'var(--type-sm)', padding: '0 10px', flex: 'none' }}
           >
             {b.label}
           </button>

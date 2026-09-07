@@ -31,7 +31,7 @@ export function Guess() {
 
   if (!unit || asked.length === 0) {
     return (
-      <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6 }}>
+      <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6 }}>
         Nothing to guess at in this unit.
       </div>
     );
@@ -105,7 +105,7 @@ export function Guess() {
             placeholder="What do you think?"
             aria-label={`Your guess at: ${card.q}`}
             rows={3}
-            style={{ marginTop: 14, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.5 }}
+            style={{ marginTop: 14, fontSize: 'var(--type-md)', lineHeight: 1.5 }}
           />
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45, textWrap: 'pretty' }}>
             {NUDGE}
@@ -123,7 +123,7 @@ export function Guess() {
         <>
           <Blueprint plain style={{ padding: 14, marginTop: 14 }}>
             <div className="kicker">The answer</div>
-            <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
               {card.a}
             </div>
           </Blueprint>

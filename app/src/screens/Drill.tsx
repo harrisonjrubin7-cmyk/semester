@@ -87,7 +87,7 @@ export function Drill() {
 
   if (pool.length === 0) {
     return (
-      <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6 }}>
+      <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6 }}>
         Nothing to drill in this unit yet.
       </div>
     );
@@ -121,7 +121,7 @@ export function Drill() {
           </div>
           <div
             style={{
-              fontSize: 'calc(14px * var(--text-scale, 1))',
+              fontSize: 'var(--type-md)',
               opacity: 0.65,
               marginTop: 8,
               maxWidth: '32ch',
@@ -137,12 +137,12 @@ export function Drill() {
               keeping no record of what was missed. Now it reads the schedule. */}
           <Blueprint plain style={{ padding: 14, marginTop: 26, textAlign: 'left' }}>
             <div className="kicker">What comes back</div>
-            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 6, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--type-md)', marginTop: 6, lineHeight: 1.5 }}>
               {waiting === 0
                 ? 'Nothing in this course is due right now. Come back tomorrow.'
                 : `${waiting} ${waiting === 1 ? 'card is' : 'cards are'} due again in ${guide.code}.`}
             </div>
-            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
               Missed cards return in ten minutes. A card you get right three times running moves out
               to weeks.
             </div>
@@ -158,13 +158,13 @@ export function Drill() {
           */}
           <Blueprint plain style={{ padding: 14, marginTop: 14, textAlign: 'left' }}>
             <div className="kicker">How sure you were</div>
-            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
               {calibrationLine(calibration(state.answers))}
             </div>
             {beliefs(state.answers).length > 0 ? (
               <div
                 style={{
-                  fontSize: 'calc(12px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm)',
                   opacity: 0.7,
                   marginTop: 8,
                   lineHeight: 1.5,
@@ -237,7 +237,7 @@ export function Drill() {
         <div
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             letterSpacing: '0.12em',
             opacity: 0.55,
           }}
@@ -298,7 +298,7 @@ export function Drill() {
         <span
           className="chrome-text"
           style={{
-            fontSize: 'calc(26px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xl)',
             lineHeight: 1.14,
             letterSpacing: '-0.01em',
             textWrap: 'pretty',
@@ -333,7 +333,7 @@ export function Drill() {
         <div
           style={{
             textAlign: 'center',
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             opacity: 0.45,
             marginTop: 12,
             fontFamily: 'var(--font-heading)',
@@ -370,7 +370,7 @@ export function Drill() {
                 dispatch({ type: 'markCard', got: false, key: card.key });
                 say('Marked again. Next card.');
               }}
-              style={{ flex: 1, height: 52, fontSize: 'calc(15px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 1, height: 52, fontSize: 'var(--type-lg)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Again
             </button>
@@ -381,7 +381,7 @@ export function Drill() {
                 dispatch({ type: 'markCard', got: true, key: card.key });
                 say('Marked got it. Next card.');
               }}
-              style={{ flex: 1, height: 52, fontSize: 'calc(15px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 1, height: 52, fontSize: 'var(--type-lg)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Got it
             </button>
@@ -397,7 +397,7 @@ export function Drill() {
           >
             <span
               style={{
-                fontSize: 'calc(11px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs)',
                 opacity: 0.5,
                 fontFamily: 'var(--font-heading)',
                 letterSpacing: '0.12em',
@@ -481,7 +481,7 @@ export function Quiz() {
           </div>
           <div
             style={{
-              fontSize: 'calc(14px * var(--text-scale, 1))',
+              fontSize: 'var(--type-md)',
               opacity: 0.65,
               marginTop: 8,
               maxWidth: '32ch',
@@ -515,7 +515,7 @@ export function Quiz() {
   }
 
   if (!current) {
-    return <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6 }}>Building the quiz…</div>;
+    return <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6 }}>Building the quiz…</div>;
   }
 
   const answered = state.quizPicked !== null;
@@ -535,7 +535,7 @@ export function Quiz() {
         <div
           style={{
             fontFamily: 'var(--font-heading)',
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             letterSpacing: '0.12em',
             opacity: 0.55,
           }}
@@ -593,14 +593,14 @@ export function Quiz() {
                   width: 16,
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(14px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-md)',
                   lineHeight: 1.35,
                   color: 'var(--app-accent)',
                 }}
               >
                 {reveal && o.ok ? '✓' : chosen ? '✕' : ''}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.4, textWrap: 'pretty' }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.4, textWrap: 'pretty' }}>
                 {o.text}
               </span>
             </button>
@@ -612,7 +612,7 @@ export function Quiz() {
         <>
           <Blueprint style={{ padding: '13px 14px', marginTop: 16 }}>
             <div className="kicker">In full</div>
-            <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
               {current.full}
             </div>
           </Blueprint>
@@ -622,7 +622,7 @@ export function Quiz() {
             onClick={() => dispatch({ type: 'nextQuestion' })}
             style={{
               height: 48,
-              fontSize: 'calc(15px * var(--text-scale, 1))',
+              fontSize: 'var(--type-lg)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginTop: 14,

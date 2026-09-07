@@ -184,7 +184,7 @@ export function Sources() {
                   <Blueprint key={s.id} style={{ padding: '12px 13px', marginBottom: 8 }}>
                     <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>{s.raw}</div>
                     {s.role.trim() ? (
-                      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
+                      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
                         For: {s.role}
                       </div>
                     ) : (
@@ -225,13 +225,13 @@ export function Sources() {
                         className="bare"
                         onClick={() => dispatch({ type: 'dropSource', id: s.id })}
                         aria-label={`Remove ${s.raw.slice(0, 40)}`}
-                        style={{ padding: '6px 10px', opacity: 0.5, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+                        style={{ padding: '6px 10px', opacity: 0.5, fontSize: 'var(--type-sm)' }}
                       >
                         Remove
                       </button>
                     </div>
                     {missing.length > 0 ? (
-                      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 6, lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 6, lineHeight: 1.4 }}>
                         Missing {missing.join(', ')}. Kept as you wrote it either way.
                       </div>
                     ) : null}
@@ -282,7 +282,7 @@ export function Sources() {
                 {copied ? 'Copied' : 'Copy for a drafting tool'}
               </button>
               <PrintButton label="Print the list" style={{ marginTop: 8 }} />
-              <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
                 BibTeX is built from the fields you entered; anything the app does not have is left out
                 rather than guessed, and the line you typed always goes in as a note. Opens in Zotero
                 or Overleaf.

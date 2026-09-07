@@ -135,7 +135,7 @@ export function Work() {
       <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings. Everything
             else in the app works without it.
           </div>
@@ -146,7 +146,7 @@ export function Work() {
 
   return (
     <Page>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, lineHeight: 1.45, textWrap: 'pretty' }}>
         Working on {guide.code}. Switch course from Study.
       </div>
 
@@ -198,7 +198,7 @@ export function Work() {
               type="button"
               className="btn btn-secondary"
               onClick={() => file.current?.click()}
-              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Upload
             </button>
@@ -213,7 +213,7 @@ export function Work() {
                   setPlan(await breakDown(instructions, context, unitNames, signal));
                 })
               }
-              style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               {busy ? 'Reading…' : 'Break it down'}
             </button>
@@ -258,7 +258,7 @@ export function Work() {
                 }, signal);
               })
             }
-            style={{ height: 44, marginTop: 10, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, marginTop: 10, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy ? 'Reading…' : 'Read it'}
           </button>
@@ -271,7 +271,7 @@ export function Work() {
                 className="btn btn-secondary btn-block"
                 onClick={() => keepAsNote(`Feedback · ${guide.code}`, feedback)}
                 disabled={kept}
-                style={{ height: 40, marginTop: 12, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ height: 40, marginTop: 12, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
               </button>
@@ -327,7 +327,7 @@ export function Work() {
                 });
               })
             }
-            style={{ height: 44, marginTop: 10, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, marginTop: 10, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy ? 'Working…' : 'Generate'}
           </button>
@@ -340,7 +340,7 @@ export function Work() {
                 className="btn btn-secondary btn-block"
                 onClick={() => keepAsNote(prompt.slice(0, 60), output)}
                 disabled={kept}
-                style={{ height: 40, marginTop: 12, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ height: 40, marginTop: 12, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
               </button>
@@ -354,7 +354,7 @@ export function Work() {
           type="button"
           className="btn btn-ghost btn-block"
           onClick={() => abort.current?.abort()}
-          style={{ height: 36, marginTop: 10, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+          style={{ height: 36, marginTop: 10, fontSize: 'var(--type-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
         >
           Stop
         </button>
@@ -362,7 +362,7 @@ export function Work() {
 
       <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
 
-      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.4, marginTop: 20, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.4, marginTop: 20, lineHeight: 1.45 }}>
         Going through {routeLabel()}.
         Whatever you submit has to be your own work.
       </div>
@@ -390,9 +390,9 @@ function PlanView({
 }) {
   const row = (label: string, body: string, key: string) => (
     <div key={key} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
-      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{label}</div>
+      <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{label}</div>
       {body && (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>{body}</div>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>{body}</div>
       )}
     </div>
   );
@@ -425,14 +425,14 @@ function PlanView({
           {plan.rubric.map((r, i) => (
             <div key={`r${i}`} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
               <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-                <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', flex: 1, minWidth: 0, lineHeight: 1.3 }}>
+                <div style={{ fontSize: 'var(--type-md)', flex: 1, minWidth: 0, lineHeight: 1.3 }}>
                   {r.criterion}
                 </div>
                 {r.weight && (
                   <div
                     style={{
                       fontFamily: 'var(--font-heading)',
-                      fontSize: 'calc(12px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-sm)',
                       color: 'var(--app-accent)',
                       flex: 'none',
                     }}
@@ -442,7 +442,7 @@ function PlanView({
                 )}
               </div>
               {r.means && (
-                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>
                   {r.means}
                 </div>
               )}
@@ -468,9 +468,9 @@ function PlanView({
                 {i + 1}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{s.do}</div>
+                <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{s.do}</div>
                 {s.why && (
-                  <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3, lineHeight: 1.45 }}>
                     {s.why}
                   </div>
                 )}
@@ -497,7 +497,7 @@ function PlanView({
             style={{
               height: 44,
               marginTop: 12,
-              fontSize: 'calc(12px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               display: 'flex',

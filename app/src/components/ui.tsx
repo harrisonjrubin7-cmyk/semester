@@ -29,7 +29,7 @@ export function SectionLabel({
       className="section-label"
       style={{
         margin: 'calc(26px * var(--density, 1)) 0 calc(12px * var(--density, 1))',
-        fontSize: 'calc(12px * var(--text-scale, 1))',
+        fontSize: 'var(--type-sm)',
         fontWeight: 'inherit',
         ...style,
       }}
@@ -75,7 +75,7 @@ export function ChipRow<T extends string>({
               style={{
                 flex: 'none',
                 padding: '5px 12px',
-                fontSize: 'calc(12px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 background: on ? 'var(--chrome)' : 'transparent',
@@ -119,7 +119,7 @@ export function Segmented<T extends string>({
             style={{
               flex: 1,
               padding: '9px 0',
-              fontSize: 'calc(12px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               background: on ? 'var(--chrome)' : 'transparent',
@@ -179,10 +179,10 @@ export function DateRow({
         <div style={{ fontSize: 'calc(24px * var(--text-scale, 1))' }}>{bottom}</div>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.25 }}>{title}</div>
+        <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{title}</div>
         <div
           style={{
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             opacity: 0.55,
             fontFamily: 'var(--font-heading)',
             letterSpacing: '0.1em',
@@ -223,7 +223,7 @@ export function Toggle({
         ...row,
       }}
     >
-      <span style={{ flex: 1, fontSize: 'calc(14px * var(--text-scale, 1))' }}>{label}</span>
+      <span style={{ flex: 1, fontSize: 'var(--type-md)' }}>{label}</span>
       <span
         style={{
           width: 42,
@@ -360,7 +360,7 @@ export function EmptyState({
       </div>
       <div
         style={{
-          fontSize: 'calc(13px * var(--text-scale, 1))',
+          fontSize: 'var(--type-base)',
           opacity: 0.6,
           marginTop: inline ? 5 : 6,
           textWrap: 'pretty',

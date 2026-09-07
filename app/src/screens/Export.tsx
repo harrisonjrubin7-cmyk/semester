@@ -216,7 +216,7 @@ export function Export() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Plain formats, chosen because other software reads them. Nothing here is a bundle only this
         app understands — that would be the same trap with extra steps.
       </div>
@@ -248,7 +248,7 @@ export function Export() {
                 {part.format}
               </span>
               {counts[part.id] > 0 && part.id !== 'backup' && (
-                <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45 }}>{counts[part.id]}</span>
+                <span style={{ fontSize: 'var(--type-xs)', opacity: 0.45 }}>{counts[part.id]}</span>
               )}
             </div>
             <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2, lineHeight: 1.4 }}>
@@ -292,7 +292,7 @@ export function Export() {
       ))}
 
       {clouds.length === 0 && (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 12, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 12, lineHeight: 1.5 }}>
           Connect Google or Microsoft under Me → Connect accounts and the zip can go straight to
           Drive or OneDrive. Drive is asked only for permission to touch files this app creates —
           it gains no right to read what is already there.
@@ -300,11 +300,11 @@ export function Export() {
       )}
 
       {done ? (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 14, lineHeight: 1.5, opacity: 0.85 }}>{done}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 1.5, opacity: 0.85 }}>{done}</div>
       ) : null}
       {error ? (
         <div
-          style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 14, lineHeight: 1.5, color: 'var(--app-warn)' }}
+          style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 1.5, color: 'var(--app-warn)' }}
         >
           {error}
         </div>
@@ -352,10 +352,10 @@ export function Export() {
       {offered && (
         <Blueprint style={{ padding: '13px 14px', marginTop: 10 }}>
           <div className="kicker">Ready to restore</div>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 7, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', marginTop: 7, lineHeight: 1.5 }}>
             {offered.parts.length > 0 ? offered.parts.join(', ') : 'an empty backup'}.
           </div>
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 8, lineHeight: 1.5 }}>
             This replaces what is on this device for each of those, rather than merging — merging
             two semesters produces duplicate courses sharing an id and no way to tell which
             deadline belonged to which. Anything the file does not cover is left alone.

@@ -60,7 +60,7 @@ function CoursePicker({
                 style={{
                   flex: 'none',
                   padding: '5px 11px',
-                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   background: on ? 'var(--chrome)' : 'transparent',
@@ -79,7 +79,7 @@ function CoursePicker({
   );
 }
 
-const inputStyle = { height: 40, fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 } as const;
+const inputStyle = { height: 40, fontSize: 'var(--type-md)', marginTop: 8 } as const;
 
 /**
  * One task, and the way to change it.
@@ -130,7 +130,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           aria-label="What the task is"
           // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
-          style={{ height: 40, fontSize: 'calc(14px * var(--text-scale, 1))', width: '100%' }}
+          style={{ height: 40, fontSize: 'var(--type-md)', width: '100%' }}
         />
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <input
@@ -139,7 +139,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             aria-label="The day it is for"
-            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
           />
           <input
             className="input"
@@ -147,7 +147,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             onChange={(e) => setTime(e.target.value)}
             placeholder="6:30 PM"
             aria-label="What time, in your own words"
-            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
           />
         </div>
         <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
@@ -156,7 +156,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             className="btn btn-primary"
             onClick={save}
             disabled={!title.trim()}
-            style={{ width: 'auto', padding: '0 16px', height: 38, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ width: 'auto', padding: '0 16px', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Save
           </button>
@@ -164,7 +164,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             type="button"
             className="bare"
             onClick={() => setEditing(false)}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6 }}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.6 }}
           >
             Cancel
           </button>
@@ -174,7 +174,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             className="bare"
             onClick={() => dispatch({ type: 'deleteTask', id: t.id })}
             aria-label={`Delete ${t.title}`}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5 }}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.5 }}
           >
             Delete
           </button>
@@ -227,14 +227,14 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(15px * var(--text-scale, 1))',
+            fontSize: 'var(--type-lg)',
             lineHeight: 1.3,
             textDecoration: t.done ? 'line-through' : 'none',
           }}
         >
           {t.title}
         </span>
-        <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 3 }}>
+        <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 3 }}>
           <span className="tag tag-neutral" style={{ marginRight: 6 }}>
             {t.courseId ? courseCode(t.courseId) : 'Personal'}
           </span>
@@ -299,7 +299,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="What needs doing?"
-            style={{ height: 42, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+            style={{ height: 42, fontSize: 'var(--type-lg)' }}
             aria-label="Task"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
@@ -420,7 +420,7 @@ function Appointments() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Dentist, advisor meeting, shift…"
-            style={{ height: 42, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+            style={{ height: 42, fontSize: 'var(--type-lg)' }}
             aria-label="Appointment"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
@@ -472,7 +472,7 @@ function Appointments() {
                 style={{
                   flex: 'none',
                   padding: '5px 10px',
-                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs)',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
                   background: kind === k.id ? 'var(--app-hero)' : 'transparent',
@@ -553,8 +553,8 @@ function Appointments() {
               </div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{a.title}</div>
-              <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>
+              <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</div>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 2 }}>
                 {[kindOf(a.kind).label, a.where].filter(Boolean).join(' · ')}
               </div>
             </div>
@@ -619,13 +619,13 @@ function Notes({ rows }: { rows?: Note[] }) {
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>
                   {n.title || 'Untitled note'}
                 </span>
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     opacity: 0.55,
                     marginTop: 3,
                     overflow: 'hidden',
@@ -713,7 +713,7 @@ function Files() {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 'calc(14px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-md)',
                         lineHeight: 1.25,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -725,7 +725,7 @@ function Files() {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs)',
                         opacity: 0.55,
                         marginTop: 2,
                         fontFamily: 'var(--font-heading)',
@@ -855,7 +855,7 @@ function Places() {
 
   return (
     <>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
         Name the places you actually go — the lecture hall, the library floor you like, your
         apartment. Nothing is looked up and nothing is sent anywhere: the app compares where you
         are to this list, on this device, and that is the whole of it.
@@ -866,7 +866,7 @@ function Places() {
         className="btn btn-secondary btn-block"
         disabled={busy || !locationSupported()}
         onClick={() => void locate()}
-        style={{ height: 44, marginTop: 14, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 44, marginTop: 14, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {busy ? 'Locating…' : locationSupported() ? 'Where am I?' : 'No location on this browser'}
       </button>
@@ -889,7 +889,7 @@ function Places() {
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="Alumni Hall, Central Library, home…"
                 aria-label="Name this place"
-                style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 12 }}
+                style={{ fontSize: 'var(--type-md)', marginTop: 12 }}
               />
               <button
                 type="button"
@@ -907,7 +907,7 @@ function Places() {
                   });
                   setLabel('');
                 }}
-                style={{ height: 42, marginTop: 8, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ height: 42, marginTop: 8, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 Save this spot
               </button>
@@ -955,7 +955,7 @@ function Places() {
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.25 }}>{place.label}</div>
+                <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{place.label}</div>
                 <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 2 }}>
                   {metres >= 0 ? `${far(metres)} away · ` : ''}
                   {place.radius} m across
@@ -965,7 +965,7 @@ function Places() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'removePlace', id: place.id })}
-                style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
               >
                 REMOVE
               </button>
@@ -991,7 +991,7 @@ export function NoteEditor() {
   }, [note?.fileIds.length]);
 
   if (!note) {
-    return <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6 }}>Note not found.</div>;
+    return <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6 }}>Note not found.</div>;
   }
 
   const attached = files.filter((f) => note.fileIds.includes(f.id));
@@ -1027,7 +1027,7 @@ export function NoteEditor() {
         onChange={(e) => dispatch({ type: 'updateNote', id: note.id, patch: { body: e.target.value } })}
         placeholder="Write anything."
         spellCheck
-        style={{ minHeight: 260, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.55, marginTop: 12 }}
+        style={{ minHeight: 260, fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 12 }}
         aria-label="Note body"
       />
 
@@ -1077,7 +1077,7 @@ export function NoteEditor() {
 
       <SectionLabel>Attachments</SectionLabel>
       {attached.length === 0 && (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 10 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, marginBottom: 10 }}>
           Nothing attached yet.
         </div>
       )}
@@ -1093,7 +1093,7 @@ export function NoteEditor() {
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(14px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-md)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -1101,7 +1101,7 @@ export function NoteEditor() {
               >
                 {f.name}
               </span>
-              <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55 }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
                 {formatBytes(f.size)}
               </span>
             </button>

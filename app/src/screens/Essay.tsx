@@ -168,7 +168,7 @@ export function Essay() {
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
               <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                 {option.blurb}
               </span>
@@ -198,7 +198,7 @@ export function Essay() {
           {course && (
             <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
               <div className="kicker">Recorded policy</div>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 5 }}>
+              <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, marginTop: 5 }}>
                 {course.ai?.note ??
                   'Nothing recorded. Read the syllabus and set it under Edit the course.'}
               </div>
@@ -362,7 +362,7 @@ export function Essay() {
           <SectionLabel>The draft</SectionLabel>
           <div
             style={{
-              fontSize: 'calc(14px * var(--text-scale, 1))',
+              fontSize: 'var(--type-md)',
               lineHeight: 1.65,
               whiteSpace: 'pre-wrap',
               padding: 14,
@@ -375,7 +375,7 @@ export function Essay() {
           </div>
           <DraftNote field={outField} />
 
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 1.55 }}>
             {count} words against {aim}.{' '}
             {left.length > 0
               ? `${left.length} ${left.length === 1 ? 'blank' : 'blanks'} left for you — fill every one before this goes anywhere.`
@@ -428,7 +428,7 @@ export function Essay() {
             </button>
           </div>
           <PrintButton label="Print it" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             The saved file carries a line at the bottom saying it was drafted and edited. Take it
             off if you like — it is there so that in a month you can still tell.
           </div>

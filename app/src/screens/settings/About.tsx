@@ -41,8 +41,8 @@ export function SettingsAbout() {
                   }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{s.label}</div>
-                    <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}>{s.meta}</div>
+                    <div style={{ fontSize: 'var(--type-md)' }}>{s.label}</div>
+                    <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5 }}>{s.meta}</div>
                   </div>
                   <span className="tag tag-outline">{s.state}</span>
                 </div>

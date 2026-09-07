@@ -56,7 +56,7 @@ export function Suggested() {
   return (
     <div style={{ marginTop: 22 }}>
       <div className="kicker">Worth knowing about</div>
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
         {NO_DATES}
       </div>
 
@@ -70,7 +70,7 @@ export function Suggested() {
           marginTop: 9,
           borderRadius: 'var(--r-sm)',
           border: '1px solid var(--app-line)',
-          fontSize: 'calc(11px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs)',
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
@@ -81,7 +81,7 @@ export function Suggested() {
 
       {open && (
         <div style={{ marginTop: 10 }}>
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7 }}>
             Which year are you in?
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 7 }}>
@@ -103,7 +103,7 @@ export function Suggested() {
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7, marginTop: 12 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 12 }}>
             What are you interested in? Leaving these alone shows everything.
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 7 }}>
@@ -138,16 +138,16 @@ export function Suggested() {
                 borderRadius: 'var(--r-sm)',
               }}
             >
-              <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>
+              <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.3 }}>
                 {p.role}
               </div>
-              <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 2 }}>
                 {p.org}
               </div>
               <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
                 {p.what}
               </div>
-              <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.4, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 6, lineHeight: 1.4, textWrap: 'pretty' }}>
                 {whenLine(p, now)}
               </div>
               <div style={{ display: 'flex', gap: 7, marginTop: 10, flexWrap: 'wrap' }}>

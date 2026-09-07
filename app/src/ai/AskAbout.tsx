@@ -172,7 +172,7 @@ export function AskSelection() {
         background: 'var(--chrome)',
         color: 'var(--chrome-ink)',
         fontFamily: 'var(--font-heading)',
-        fontSize: 'calc(12px * var(--text-scale, 1))',
+        fontSize: 'var(--type-sm)',
         letterSpacing: '0.06em',
         boxShadow: 'var(--glow)',
         cursor: 'pointer',

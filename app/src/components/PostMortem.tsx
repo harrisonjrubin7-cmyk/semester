@@ -52,7 +52,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
             marginTop: 7,
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             fontFamily: 'var(--font-heading)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',

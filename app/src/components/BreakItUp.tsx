@@ -44,7 +44,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
       <div
         style={{
           marginTop: 10,
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.6,
           lineHeight: 1.5,
         }}
@@ -67,7 +67,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
         style={{
           width: 'auto',
           padding: '8px 0 2px',
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.6,
           textAlign: 'left',
         }}
@@ -97,7 +97,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
             <span
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(11px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs)',
                 letterSpacing: '0.08em',
                 opacity: 0.55,
                 width: 46,
@@ -106,7 +106,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
             >
               {s.date.slice(5).replace('-', '/')}
             </span>
-            <span style={{ fontSize: 'calc(13px * var(--text-scale, 1))', flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 'var(--type-base)', flex: 1, minWidth: 0 }}>
               {s.title}
             </span>
           </div>
@@ -142,7 +142,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
             padding: '9px 13px',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-accent)',
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
           }}
         >
           Put these in my list
@@ -151,7 +151,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           type="button"
           className="bare"
           onClick={() => setShown(false)}
-          style={{ width: 'auto', padding: '9px 4px', fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5 }}
+          style={{ width: 'auto', padding: '9px 4px', fontSize: 'var(--type-sm)', opacity: 0.5 }}
         >
           Not now
         </button>

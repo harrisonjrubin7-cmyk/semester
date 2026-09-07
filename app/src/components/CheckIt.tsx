@@ -63,7 +63,7 @@ export function CheckIt({
         style={{
           width: 'auto',
           padding: '8px 0 2px',
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.6,
           textAlign: 'left',
         }}
@@ -161,7 +161,7 @@ export function CheckIt({
                 padding: '8px 13px',
                 borderRadius: 'var(--r-sm)',
                 border: '1px solid var(--app-line)',
-                fontSize: 'calc(12px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm)',
               }}
             >
               {asking ? 'Stop' : 'Read it again, more closely'}
@@ -237,7 +237,7 @@ function Row({
             padding: '4px 9px',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             whiteSpace: 'nowrap',
           }}
         >

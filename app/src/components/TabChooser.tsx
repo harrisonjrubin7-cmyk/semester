@@ -127,7 +127,7 @@ export function TabChooser() {
       >
         The bar
       </SectionLabel>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
         Which screens are one tap away. Up to {MOST}, because that is what fits across a phone —
         everything else stays here in Me, which is why Me itself does not move.
       </div>
@@ -148,7 +148,7 @@ export function TabChooser() {
             <div style={{ flex: 'none', width: 26, opacity: 0.5, display: 'flex' }}>
               <TabGlyph screen={id} size={16} />
             </div>
-            <div style={{ flex: 1, minWidth: 0, padding: '11px 0', fontSize: 'calc(14px * var(--text-scale, 1))' }}>
+            <div style={{ flex: 1, minWidth: 0, padding: '11px 0', fontSize: 'var(--type-md)' }}>
               {tabLabel(id)}
             </div>
             <button
@@ -157,7 +157,7 @@ export function TabChooser() {
               disabled={i === 0}
               onClick={() => set(moveTab(tabs, id, -1))}
               aria-label={`Move ${tabLabel(id)} left`}
-              style={{ width: 26, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+              style={{ width: 26, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'var(--type-lg)' }}
             >
               ↑
             </button>
@@ -171,7 +171,7 @@ export function TabChooser() {
                 width: 26,
                 flex: 'none',
                 opacity: i === chosen.length - 1 ? 0.2 : 0.6,
-                fontSize: 'calc(15px * var(--text-scale, 1))',
+                fontSize: 'var(--type-lg)',
               }}
             >
               ↓
@@ -181,7 +181,7 @@ export function TabChooser() {
               className="bare"
               onClick={() => tryToggle(id)}
               aria-label={`Take ${tabLabel(id)} out of the bar`}
-              style={{ width: 28, flex: 'none', opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+              style={{ width: 28, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>
@@ -220,13 +220,13 @@ export function TabChooser() {
         </div>
       ) : null}
 
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.5, marginTop: 12 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.5, marginTop: 12 }}>
         {chosen.length} of {MOST_CHOSEN} chosen
       </div>
 
       {hasRoom(tabs) ? (
         <>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, margin: '14px 0 4px', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, margin: '14px 0 4px', textWrap: 'pretty' }}>
             Add one:
           </div>
           {spare.map(({ group, items }) => (

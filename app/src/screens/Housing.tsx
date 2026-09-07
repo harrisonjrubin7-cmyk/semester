@@ -119,7 +119,7 @@ export function Housing() {
           {moveOutLine(moveOut, now)}
         </div>
         {packLine(exams, moveOut, now) ? (
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>
             {packLine(exams, moveOut, now)}
           </div>
         ) : null}
@@ -170,7 +170,7 @@ export function Housing() {
       ) : null}
 
       <SectionLabel>What it says</SectionLabel>
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 9, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 9, lineHeight: 1.5 }}>
         The building is the only field that matters. Give it a move-out date if housing named one,
         or the hours after your last exam if that is how they put it — the app will not do both.
       </div>
@@ -248,7 +248,7 @@ export function Housing() {
                 className="bare"
                 aria-label="Remove this room"
                 onClick={() => dispatch({ type: 'dropResidence', id: mine.id })}
-                style={{ width: 24, opacity: 0.4, fontSize: 'calc(14px * var(--text-scale, 1))' }}
+                style={{ width: 24, opacity: 0.4, fontSize: 'var(--type-md)' }}
               >
                 ×
               </button>
@@ -257,7 +257,7 @@ export function Housing() {
         </Group>
       )}
 
-      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
         Nothing is fetched. The housing portal is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The address the portal hands you carries your own session token in it;

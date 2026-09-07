@@ -36,7 +36,7 @@ export function SettingsCourses() {
           >
             <CustomRow>
               <SectionLabel style={{ margin: '0 0 6px' }}>Your name</SectionLabel>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 8, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 8, textWrap: 'pretty' }}>
                 Only used to address you in the app. Never sent anywhere, never guessed at from your
                 email, and leaving it blank costs nothing — the app just says "you".
               </div>

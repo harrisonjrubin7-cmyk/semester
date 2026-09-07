@@ -123,7 +123,7 @@ export function Runway() {
                 style={{
                   flex: 'none',
                   padding: '6px 11px',
-                  fontSize: 'calc(12px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm)',
                   background: on ? 'var(--chrome)' : 'transparent',
                   color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
                   borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
@@ -146,7 +146,7 @@ export function Runway() {
         >
           {headline(r)}
         </div>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
           {r.stage.label}. {r.stage.shape}
         </div>
         {r.daysAway > 0 ? (
@@ -166,7 +166,7 @@ export function Runway() {
           <div className="kicker">Student Access</div>
           <div
             style={{
-              fontSize: 'calc(14px * var(--text-scale, 1))',
+              fontSize: 'var(--type-md)',
               lineHeight: 1.45,
               marginTop: 6,
               color: bookingLate(book, now) ? 'var(--app-warn)' : undefined,
@@ -195,7 +195,7 @@ export function Runway() {
               Open Student Access →
             </a>
           ) : null}
-          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
             Weekends only — the app has no holiday calendar and will not invent one, so a lead
             time crossing a public holiday is a day short.
           </div>
@@ -203,8 +203,8 @@ export function Runway() {
       )}
 
       <SectionLabel>Where you stand</SectionLabel>
-      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.5 }}>{standing(r)}</div>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>{paperLine(r)}</div>
+      <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.5 }}>{standing(r)}</div>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>{paperLine(r)}</div>
 
       {worst ? (
         <button
@@ -220,11 +220,11 @@ export function Runway() {
           }
           style={{ height: 52, marginTop: 14, display: 'block', textAlign: 'center' }}
         >
-          <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.12em', opacity: 0.75 }}>
+          <span style={{ display: 'block', fontSize: 'var(--type-xs)', letterSpacing: '0.12em', opacity: 0.75 }}>
             {worst.seen === 0 ? 'NEVER OPENED' : 'FURTHEST BEHIND'}
           </span>
           {/* The unit's own name, which in most guides carries its number. */}
-          <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 2 }}>{worst.name}</span>
+          <span style={{ display: 'block', fontSize: 'var(--type-md)', marginTop: 2 }}>{worst.name}</span>
         </button>
       ) : null}
 
@@ -239,7 +239,7 @@ export function Runway() {
 
       <SectionLabel>Unit by unit</SectionLabel>
       {r.units.length === 0 ? (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, lineHeight: 1.5 }}>
           This course has no study guide yet, so there is nothing to count. Add the readings and
           the guide builds itself.
         </div>
@@ -259,7 +259,7 @@ export function Runway() {
             <span
               style={{
                 flex: 'none',
-                fontSize: 'calc(12px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm)',
                 opacity: u.seen === 0 ? 0.9 : 0.55,
                 color: u.seen === 0 && u.cards > 0 ? 'var(--app-warn)' : undefined,
                 fontVariantNumeric: 'tabular-nums',
@@ -314,7 +314,7 @@ export function Runway() {
       )}
 
       <PrintButton label="Print the runway" style={{ marginTop: 14 }} />
-      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
         Every number here is counted from your own drilling and your own deadlines. There is no
         readiness score and there will not be one — it would be believed, and the app cannot know.
       </div>

@@ -114,7 +114,7 @@ export function Solve() {
       <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings.
           </div>
         </Blueprint>
@@ -124,7 +124,7 @@ export function Solve() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Working on {guide.code}. It will not write the answer you are handing in — for a maths
         question the worked solution is the submitted work. It will teach the method on numbers
         that are not yours, and read your attempt and find the first step that is wrong.
@@ -149,7 +149,7 @@ export function Solve() {
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{option.label}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
               <span
                 style={{
                   display: 'block',
@@ -192,7 +192,7 @@ export function Solve() {
         className="btn btn-secondary btn-block"
         onClick={() => camera.current?.click()}
         disabled={!!busy}
-        style={{ height: 42, marginTop: 8, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.08em' }}
+        style={{ height: 42, marginTop: 8, fontSize: 'var(--type-sm)', letterSpacing: '0.08em' }}
       >
         {busy === 'Reading it…' ? 'Reading it…' : 'Photograph the problem'}
       </button>

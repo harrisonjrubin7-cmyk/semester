@@ -103,7 +103,7 @@ export function StartToday() {
       {adjustedLine(bias) ? (
         <div
           style={{
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             opacity: 0.5,
             marginTop: 8,
             lineHeight: 1.45,
@@ -154,7 +154,7 @@ export function StartList() {
       </SectionLabel>
       <div
         style={{
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.68,
           marginBottom: 9,
           lineHeight: 1.5,
@@ -166,7 +166,7 @@ export function StartList() {
       {adjustedLine(bias) ? (
         <div
           style={{
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             opacity: 0.5,
             marginBottom: 9,
             lineHeight: 1.45,
@@ -200,7 +200,7 @@ export function StartList() {
               <span
                 style={{
                   display: 'block',
-                  fontSize: 'calc(13px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-base)',
                   lineHeight: 1.35,
                   textWrap: 'pretty',
                 }}
@@ -238,7 +238,7 @@ export function StartList() {
       </div>
       <p
         style={{
-          fontSize: 'calc(11px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs)',
           opacity: 0.5,
           marginTop: 10,
           lineHeight: 1.5,

@@ -62,14 +62,14 @@ export function WorkWindows() {
               onChange={(e) =>
                 dispatch({ type: 'patchWindow', id: w.id, patch: { label: e.target.value } })
               }
-              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />
             <button
               type="button"
               className="bare"
               aria-label={`Remove ${w.label || 'this window'}`}
               onClick={() => dispatch({ type: 'dropWindow', id: w.id })}
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>
@@ -97,7 +97,7 @@ export function WorkWindows() {
                   style={{
                     flex: 1,
                     padding: '6px 0',
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                     borderColor: on ? 'var(--app-accent-deep)' : 'var(--app-line)',
                   }}
@@ -118,7 +118,7 @@ export function WorkWindows() {
                 const m = fromField(e.target.value);
                 if (m !== null) dispatch({ type: 'patchWindow', id: w.id, patch: { from: m } });
               }}
-              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />
             <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, flex: 'none' }}>to</span>
             <input
@@ -130,7 +130,7 @@ export function WorkWindows() {
                 const m = fromField(e.target.value);
                 if (m !== null) dispatch({ type: 'patchWindow', id: w.id, patch: { to: m } });
               }}
-              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />
           </div>
 
@@ -149,7 +149,7 @@ export function WorkWindows() {
             type="button"
             className="btn btn-secondary"
             onClick={() => dispatch({ type: 'addWindow', window: s })}
-            style={{ height: 34, fontSize: 'calc(12px * var(--text-scale, 1))', padding: '0 11px', flex: 'none' }}
+            style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
           >
             + {s.label}
           </button>
@@ -163,7 +163,7 @@ export function WorkWindows() {
               window: { label: '', days: [1, 2, 3, 4, 5], from: 9 * 60, to: 12 * 60 },
             })
           }
-          style={{ height: 34, fontSize: 'calc(12px * var(--text-scale, 1))', padding: '0 11px', flex: 'none' }}
+          style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
         >
           + One of your own
         </button>

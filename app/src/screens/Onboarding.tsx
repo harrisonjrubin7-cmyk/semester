@@ -141,7 +141,7 @@ export function Onboarding() {
               >
                 {c.code}
               </div>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, flex: 1 }}>{c.name}</div>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, flex: 1 }}>{c.name}</div>
             </div>
           ))}
         </Blueprint>
@@ -177,7 +177,7 @@ export function Onboarding() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div
                   style={{
-                    fontSize: 'calc(13px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-base)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -187,7 +187,7 @@ export function Onboarding() {
                 </div>
                 <div
                   style={{
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     opacity: 0.5,
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.08em',
@@ -266,7 +266,7 @@ export function Onboarding() {
         onClick={() => dispatch({ type: 'finishOnboarding' })}
         style={{
           height: 34,
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
           opacity: 0.55,

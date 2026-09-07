@@ -90,7 +90,7 @@ export function Dictate({
           paddingInline: compact ? 14 : undefined,
           width: compact ? 'auto' : undefined,
           marginTop: compact ? 8 : 10,
-          fontSize: 'calc(11px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           display: 'flex',
@@ -116,7 +116,7 @@ export function Dictate({
         </div>
       )}
       {error && (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', color: 'var(--app-accent)', marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-accent)', marginTop: 8, lineHeight: 1.45 }}>
           {error}
         </div>
       )}

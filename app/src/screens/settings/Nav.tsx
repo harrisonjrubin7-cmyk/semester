@@ -34,7 +34,7 @@ export function SettingsNav() {
           >
             <CustomRow>
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Navigation</SectionLabel>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
                 Two structures, the same screens. The tab bar gives every thing a fixed home. The feed
                 interleaves classes and deadlines in one scroll and slices it with a filter row.
               </div>
@@ -68,7 +68,7 @@ export function SettingsNav() {
           >
             <CustomRow>
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Your Today</SectionLabel>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
                 The right order is not the same for everyone. Somebody with a job and one class wants the
                 rail first; somebody with a paper due wants the checklist and would rather not scroll past
                 a countdown to a lecture they are already walking to.
@@ -96,7 +96,7 @@ export function SettingsNav() {
                       <TickBox on={on} />
                     </button>
                     <div style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : 0.5 }}>
-                      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{section?.label ?? id}</div>
+                      <div style={{ fontSize: 'var(--type-md)' }}>{section?.label ?? id}</div>
                       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>{section?.blurb}</div>
                     </div>
                     <button
@@ -105,7 +105,7 @@ export function SettingsNav() {
                       disabled={i === 0}
                       onClick={() => dispatch({ type: 'setFeedOrder', order: move(state.feedOrder, id, -1) })}
                       aria-label={`Move ${section?.label} up`}
-                      style={{ width: 26, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+                      style={{ width: 26, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'var(--type-lg)' }}
                     >
                       ↑
                     </button>
@@ -119,7 +119,7 @@ export function SettingsNav() {
                         width: 26,
                         flex: 'none',
                         opacity: i === all.length - 1 ? 0.2 : 0.6,
-                        fontSize: 'calc(15px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-lg)',
                       }}
                     >
                       ↓

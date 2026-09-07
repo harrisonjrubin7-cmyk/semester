@@ -72,7 +72,7 @@ export function Registrar() {
         }}
       >
         <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{d.label}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{d.label}</span>
           {set && (
             <span
               style={{
@@ -102,7 +102,7 @@ export function Registrar() {
             onChange={(e) =>
               dispatch({ type: 'setTermDate', id: d.id, iso: e.target.value, until: d.until })
             }
-            style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+            style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
           />
           {(d.kind === 'break' || d.kind === 'exams' || d.kind === 'window' || d.until) && (
             <>
@@ -115,7 +115,7 @@ export function Registrar() {
                 onChange={(e) =>
                   dispatch({ type: 'setTermDate', id: d.id, iso: d.iso, until: e.target.value })
                 }
-                style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+                style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
               />
             </>
           )}
@@ -124,7 +124,7 @@ export function Registrar() {
               type="button"
               className="btn btn-ghost"
               onClick={() => dispatch({ type: 'dropTermDate', id: d.id })}
-              style={{ flex: 'none', height: 36, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+              style={{ flex: 'none', height: 36, fontSize: 'var(--type-sm)' }}
             >
               Clear
             </button>
@@ -154,7 +154,7 @@ export function Registrar() {
         <div className="kicker">
           {done.done} of {done.of} filled in
         </div>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, marginTop: 7, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 7, lineHeight: 1.5 }}>
           Every other date in this app came off a syllabus. These come from your registrar, and
           they are the ones that cost money rather than points — a withdrawal deadline missed is a
           course you are graded on whatever happens next.
@@ -205,7 +205,7 @@ export function Registrar() {
       ) : (
         <>
           <SectionLabel>Paste your registrar's calendar</SectionLabel>
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
             Copy the academic calendar page and paste it here. Every row comes back for you to
             confirm — nothing is saved until you say so.
           </div>
@@ -218,7 +218,7 @@ export function Registrar() {
           />
 
           <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
-            <span style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, flex: 'none' }}>Year</span>
+            <span style={{ fontSize: 'var(--type-sm)', opacity: 0.6, flex: 'none' }}>Year</span>
             <input
               className="input"
               type="number"
@@ -248,7 +248,7 @@ export function Registrar() {
                 {found.length} {found.length === 1 ? 'date' : 'dates'} found
               </SectionLabel>
               {found.length === 0 ? (
-                <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5 }}>
                   Nothing in that had both a date and something to call it. Paste the rows
                   themselves rather than a link to them, or fill the dates in by hand.
                 </div>

@@ -103,7 +103,7 @@ export function SayIt({
         onClick={() => (on ? end() : begin())}
         style={{
           height: 36,
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           paddingInline: 16,
           display: 'flex',
           alignItems: 'center',
@@ -126,7 +126,7 @@ export function SayIt({
       {said ? (
         <div
           style={{
-            fontSize: 'calc(13px * var(--text-scale, 1))',
+            fontSize: 'var(--type-base)',
             opacity: 0.75,
             marginTop: 10,
             lineHeight: 1.5,
@@ -139,7 +139,7 @@ export function SayIt({
       ) : null}
 
       {error ? (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, textAlign: 'center' }}>{error}</div>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 8, textAlign: 'center' }}>{error}</div>
       ) : null}
     </div>
   );

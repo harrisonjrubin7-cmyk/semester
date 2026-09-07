@@ -79,7 +79,7 @@ export function WeekGrid({
             >
               {DOW_INITIALS[d.date.getDay()]}
             </span>
-            <span style={{ display: 'block', fontSize: 'calc(13px * var(--text-scale, 1))', opacity: d.isToday ? 1 : 0.75 }}>
+            <span style={{ display: 'block', fontSize: 'var(--type-base)', opacity: d.isToday ? 1 : 0.75 }}>
               {d.date.getDate()}
             </span>
           </button>

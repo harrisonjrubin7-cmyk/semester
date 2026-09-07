@@ -106,7 +106,7 @@ function ClaudeAccount() {
       <SectionLabel>Claude</SectionLabel>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>Your own Claude key</div>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
           There is no “sign in with Claude” — Anthropic publishes no consumer login for other apps,
           so a claude.ai Pro or Max subscription cannot be linked here by any app. What works is an
           API key from <strong>console.anthropic.com → API keys</strong>, which is billed
@@ -122,7 +122,7 @@ function ClaudeAccount() {
           value={config.apiKey}
           onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
           aria-label="Anthropic API key"
-          style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 12 }}
+          style={{ fontSize: 'var(--type-base)', marginTop: 12 }}
         />
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <button
@@ -130,7 +130,7 @@ function ClaudeAccount() {
             className="btn btn-primary"
             disabled={checking || !config.apiKey.trim()}
             onClick={() => void verify()}
-            style={{ flex: 1, height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {checking ? 'Checking…' : 'Check and save'}
           </button>
@@ -142,7 +142,7 @@ function ClaudeAccount() {
                 save({ ...config, apiKey: '' });
                 setResult(null);
               }}
-              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
             >
               Remove
             </button>
@@ -168,7 +168,7 @@ function ClaudeAccount() {
             marginTop: 12,
             paddingTop: 11,
             borderTop: '1px solid var(--app-line)',
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             opacity: 0.7,
             lineHeight: 1.45,
           }}
@@ -201,10 +201,10 @@ function ClaudeAccount() {
             }}
           >
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'calc(15px * var(--text-scale, 1))' }}>
+              <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
                 {m.label}
               </span>
-              <span style={{ display: 'block', fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 2 }}>
                 {m.note}
               </span>
             </span>
@@ -320,17 +320,17 @@ export function Connect() {
 
   return (
     <Page>
-      <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', lineHeight: 1.1 }}>
+      <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', lineHeight: 1.1 }}>
         Everything in one place
       </div>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 6, textWrap: 'pretty' }}>
         Brightspace, Outlook, Google and Zoom all publish calendars. Point the app at them and
         their dates sit on the same day rail as your classes — kept apart, and labelled.
       </div>
 
       {note && (
         <Blueprint style={{ padding: '12px 14px', marginTop: 14, background: 'var(--app-hero)' }}>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, textWrap: 'pretty' }}>{note}</div>
+          <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, textWrap: 'pretty' }}>{note}</div>
         </Blueprint>
       )}
 
@@ -344,7 +344,7 @@ export function Connect() {
             <span className="kicker" style={{ display: 'block' }}>
               Use what is connected
             </span>
-            <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3, marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.3, marginTop: 2 }}>
               Documents into a course, course mail, deadlines onto your real calendar
             </span>
           </span>
@@ -357,18 +357,18 @@ export function Connect() {
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
           Vanderbilt Brightspace
         </div>
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
           In Brightspace, open <strong>Calendar</strong>, click <strong>Subscribe</strong>, and copy
           the link it gives you. It already carries your access — no password, and nothing to
           install. Paste it below. Any other calendar link works here too, including a{' '}
-          <code style={{ fontSize: 'calc(11px * var(--text-scale, 1))' }}>webcal://</code> one from iCloud or Outlook.
+          <code style={{ fontSize: 'var(--type-xs)' }}>webcal://</code> one from iCloud or Outlook.
         </div>
         <input
           className="input"
           placeholder="https://brightspace.vanderbilt.edu/d2l/le/calendar/feed/user/feed.ics?token=…"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          style={{ fontSize: 'calc(12px * var(--text-scale, 1))', marginTop: 10 }}
+          style={{ fontSize: 'var(--type-sm)', marginTop: 10 }}
         />
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <button
@@ -376,7 +376,7 @@ export function Connect() {
             className="btn btn-primary"
             disabled={!url.trim() || busy === 'feed'}
             onClick={() => void subscribe('brightspace')}
-            style={{ flex: 1, height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy === 'feed' ? 'Reading…' : 'Subscribe'}
           </button>
@@ -384,7 +384,7 @@ export function Connect() {
             type="button"
             className="btn btn-secondary"
             onClick={() => fileInput.current?.click()}
-            style={{ flex: 1, height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Add an .ics file
           </button>
@@ -409,7 +409,7 @@ export function Connect() {
             style={{
               flex: 1,
               height: 40,
-              fontSize: 'calc(11px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               display: 'grid',
@@ -447,14 +447,14 @@ export function Connect() {
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{spec.name}</div>
                 {token && <span className="tag tag-accent">Connected</span>}
               </div>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, marginTop: 4 }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.5, marginTop: 4 }}>
                 {spec.blurb}
               </div>
 
               {!spec.clientId ? (
                 <div
                   style={{
-                    fontSize: 'calc(12px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-sm)',
                     opacity: 0.7,
                     lineHeight: 1.5,
                     marginTop: 10,
@@ -465,8 +465,8 @@ export function Connect() {
                   }}
                 >
                   No client ID yet. Register one at <strong>{spec.console}</strong>, allow{' '}
-                  <code style={{ fontSize: 'calc(11px * var(--text-scale, 1))' }}>{window.location.origin}</code> as the redirect,
-                  and put it in <code style={{ fontSize: 'calc(11px * var(--text-scale, 1))' }}>app/.env.local</code>. Until then,
+                  <code style={{ fontSize: 'var(--type-xs)' }}>{window.location.origin}</code> as the redirect,
+                  and put it in <code style={{ fontSize: 'var(--type-xs)' }}>app/.env.local</code>. Until then,
                   export a calendar from {spec.name} and add the .ics above — same dates, no setup.
                 </div>
               ) : (
@@ -477,7 +477,7 @@ export function Connect() {
                       className="btn btn-primary"
                       disabled={busy === id}
                       onClick={() => void connect(id)}
-                      style={{ flex: 1, height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                      style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
                     >
                       {busy === id ? 'Opening…' : `Sign in with ${spec.name}`}
                     </button>
@@ -514,7 +514,7 @@ export function Connect() {
                             .catch((e: unknown) => setNote(describe(e)))
                             .finally(() => setBusy(''));
                         }}
-                        style={{ fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                        style={{ fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
                       >
                         Pull calendar
                       </button>
@@ -525,7 +525,7 @@ export function Connect() {
                           className="btn btn-secondary"
                           disabled={busy !== ''}
                           onClick={() => void browse(id)}
-                          style={{ fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                          style={{ fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
                         >
                           {id === 'zoom' ? 'Recordings' : 'Recent files'}
                         </button>
@@ -537,7 +537,7 @@ export function Connect() {
                           forget(id);
                           setNote(`${spec.name} disconnected. The token is gone from this device.`);
                         }}
-                        style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}
+                        style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em' }}
                       >
                         DISCONNECT
                       </button>
@@ -573,7 +573,7 @@ export function Connect() {
               {spec.needsProxy && spec.clientId && (
                 <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 9 }}>
                   {spec.name}’s API refuses browser calls, so this one goes through the dev proxy
-                  (<code style={{ fontSize: 'calc(11px * var(--text-scale, 1))' }}>VITE_OAUTH_PROXY</code>).
+                  (<code style={{ fontSize: 'var(--type-xs)' }}>VITE_OAUTH_PROXY</code>).
                 </div>
               )}
             </Blueprint>
@@ -607,13 +607,13 @@ export function Connect() {
                 >
                   {f.name}
                 </span>
-                <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}>{f.modified}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5 }}>{f.modified}</span>
               </span>
               <a
                 href={f.link}
                 target="_blank"
                 rel="noreferrer"
-                style={{ fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', flex: 'none', opacity: 0.7 }}
+                style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', flex: 'none', opacity: 0.7 }}
               >
                 OPEN
               </a>
@@ -637,11 +637,11 @@ export function Connect() {
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{f.name}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{f.name}</span>
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     opacity: 0.55,
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
@@ -656,7 +656,7 @@ export function Connect() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'removeFeed', id: f.id })}
-                style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE
               </button>

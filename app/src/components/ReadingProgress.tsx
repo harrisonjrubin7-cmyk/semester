@@ -66,7 +66,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         style={{
           width: 'auto',
           padding: '8px 0 2px',
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.6,
           textAlign: 'left',
         }}
@@ -101,7 +101,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         borderRadius: 'var(--r-md)',
       }}
     >
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', textWrap: 'pretty' }}>
         {farLine(p)}
       </div>
 
@@ -123,7 +123,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
 
       <div
         style={{
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.72,
           lineHeight: 1.5,
           textWrap: 'pretty',
@@ -155,7 +155,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
             padding: '9px 14px',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
           }}
         >
           I am here now

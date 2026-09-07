@@ -90,7 +90,7 @@ export function Capture({
           style={{
             flex: 1,
             height: 42,
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             display: 'flex',
@@ -110,7 +110,7 @@ export function Capture({
           style={{
             flex: 1,
             height: 42,
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
           }}
@@ -179,7 +179,7 @@ export function Capture({
           {errors.map((e) => (
             <div
               key={e}
-              style={{ fontSize: 'calc(12px * var(--text-scale, 1))', color: 'var(--app-accent)', lineHeight: 1.45, marginTop: 2 }}
+              style={{ fontSize: 'var(--type-sm)', color: 'var(--app-accent)', lineHeight: 1.45, marginTop: 2 }}
             >
               {e}
             </div>

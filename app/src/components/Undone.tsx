@@ -100,7 +100,7 @@ export function Undone() {
         boxShadow: '0 8px 24px rgba(0, 0, 0, 0.28)',
       }}
     >
-      <span style={{ flex: 1, fontSize: 'calc(13px * var(--text-scale, 1))' }}>{took.label}</span>
+      <span style={{ flex: 1, fontSize: 'var(--type-base)' }}>{took.label}</span>
       <button
         type="button"
         className="btn"

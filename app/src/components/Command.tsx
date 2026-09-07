@@ -119,7 +119,7 @@ export function Command({ onClose }: { onClose: () => void }) {
           }}
           placeholder="A course, a topic, a deadline, a screen…"
           aria-label="Search everything"
-          style={{ flex: 1, height: 44, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+          style={{ flex: 1, height: 44, fontSize: 'var(--type-lg)' }}
         />
         <button
           type="button"
@@ -129,7 +129,7 @@ export function Command({ onClose }: { onClose: () => void }) {
             width: 'auto',
             flex: 'none',
             padding: '10px 4px',
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             letterSpacing: '0.12em',
             opacity: 0.6,
           }}
@@ -203,7 +203,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 'calc(14px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-md)',
                         lineHeight: 1.25,
                       }}
                     >
@@ -212,7 +212,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                     <span
                       style={{
                         display: 'block',
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs)',
                         opacity: 0.55,
                         lineHeight: 1.35,
                       }}
@@ -229,7 +229,7 @@ export function Command({ onClose }: { onClose: () => void }) {
         {text.trim() !== '' && total === 0 && (
           <div
             style={{
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               opacity: 0.6,
               marginTop: 22,
               lineHeight: 1.5,

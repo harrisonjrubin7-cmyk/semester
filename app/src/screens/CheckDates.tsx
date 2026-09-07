@@ -103,7 +103,7 @@ export function CheckDates() {
       />
 
       {source === 'feed' ? (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
           {state.feedEvents.length > 0 ? (
             <>
               {state.feedEvents.length} entries from the calendars you have connected. Add or
@@ -130,7 +130,7 @@ export function CheckDates() {
               resize: 'vertical',
               lineHeight: 1.4,
               fontFamily: 'ui-monospace, Menlo, monospace',
-              fontSize: 'calc(12px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm)',
             }}
           />
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
@@ -144,7 +144,7 @@ export function CheckDates() {
       )}
 
       {error ? (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
           {error}
         </div>
       ) : null}
@@ -173,7 +173,7 @@ export function CheckDates() {
                 return (
                   <Blueprint key={m.item.id} style={{ padding: '13px 14px', marginBottom: 9 }}>
                     <div className="kicker">{code(m.item.c)}</div>
-                    <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.3, marginTop: 4, textWrap: 'pretty' }}>
+                    <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.3, marginTop: 4, textWrap: 'pretty' }}>
                       {m.item.title}
                     </div>
                     <div
@@ -212,7 +212,7 @@ export function CheckDates() {
           {report.onlyThere.length > 0 && (
             <>
               <SectionLabel>In the feed, not in the app</SectionLabel>
-              <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
                 Either something added after the syllabus was written, or something the matcher
                 could not line up. Add anything real under Edit the course.
               </div>
@@ -251,7 +251,7 @@ export function CheckDates() {
           {report.onlyHere.length > 0 && (
             <>
               <SectionLabel>Here, with nothing in the feed</SectionLabel>
-              <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
                 Usually fine — plenty of syllabus work never appears on an LMS calendar. Worth a
                 look only if something you expected to see is on this list.
               </div>
@@ -291,7 +291,7 @@ export function CheckDates() {
           )}
 
           <PrintButton label="Print this comparison" style={{ marginTop: 14 }} />
-          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
             Titles are matched by how much they have in common, scoped to the course. Where a
             pairing is not clearly right it is reported as two separate lines rather than one
             confident wrong match — a wrong match would send you to change a date that was right.

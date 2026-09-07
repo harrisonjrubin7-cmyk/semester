@@ -78,7 +78,7 @@ export function Behind() {
           className="chrome-text"
           style={{
             marginTop: 6,
-            fontSize: 'calc(15px * var(--text-scale, 1))',
+            fontSize: 'var(--type-lg)',
             lineHeight: 1.45,
             textWrap: 'pretty',
           }}
@@ -120,7 +120,7 @@ export function Behind() {
                   padding: '12px 13px',
                   border: '1px solid var(--app-line)',
                   borderRadius: 'var(--r-sm)',
-                  fontSize: 'calc(13px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-base)',
                   lineHeight: 1.5,
                   textWrap: 'pretty',
                 }}
@@ -201,7 +201,7 @@ export function Behind() {
       <SectionLabel style={{ margin: '26px 0 8px' }}>Other moves</SectionLabel>
       <div
         style={{
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.7,
           marginBottom: 10,
           lineHeight: 1.5,

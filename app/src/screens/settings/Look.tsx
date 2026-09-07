@@ -157,7 +157,7 @@ export function SettingsLook() {
           >
             <CustomRow>
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>The accent</SectionLabel>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
                 All metals and stones. The accent being a metal rather than a colour is most of why the
                 app looks drawn instead of like a dashboard, so these change the shade and not that.
               </div>
@@ -177,7 +177,7 @@ export function SettingsLook() {
                         alignItems: 'center',
                         gap: 7,
                         padding: '7px 12px',
-                        fontSize: 'calc(12px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-sm)',
                         borderColor: on ? a.base : 'var(--app-line)',
                       }}
                     >
@@ -228,7 +228,7 @@ export function SettingsLook() {
                   <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
                     Match my device
                   </span>
-                  <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 2 }}>
                     {`Ink after dark, Parchment in daylight. Following your device now: ${
                       prefersDark ? 'dark' : 'light'
                     }.`}
@@ -268,7 +268,7 @@ export function SettingsLook() {
                         ))}
                       </span>
                       <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))' }}>{g.label}</span>
+                        <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{g.label}</span>
                         <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                           {g.blurb}
                         </span>
@@ -306,7 +306,7 @@ export function SettingsLook() {
                       style={{
                         flex: 'none',
                         padding: '7px 12px',
-                        fontSize: 'calc(13px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-base)',
                         fontFamily: t.heading,
                         borderColor: on ? 'var(--app-accent)' : 'var(--app-line)',
                       }}
@@ -335,7 +335,7 @@ export function SettingsLook() {
                       style={{
                         flex: 'none',
                         padding: '7px 12px',
-                        fontSize: 'calc(13px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-base)',
                         fontFamily: b.body,
                         borderColor: on ? 'var(--app-accent)' : 'var(--app-line)',
                       }}

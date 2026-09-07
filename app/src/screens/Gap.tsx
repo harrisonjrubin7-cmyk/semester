@@ -76,7 +76,7 @@ export function Gap() {
 
   if (!win) {
     return (
-      <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.55 }}>
+      <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6, lineHeight: 1.55 }}>
         Nothing to fill. This opens when there is a real gap before your next class — long enough
         to be worth starting something, short enough that sitting down for it would be a waste.
       </div>
@@ -166,7 +166,7 @@ function Run({ win }: { win: Window }) {
 
   if (deck.length === 0) {
     return (
-      <div style={{ padding: 18, fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.55 }}>
+      <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6, lineHeight: 1.55 }}>
         No cards yet. Import a syllabus and the app builds them out of it.
       </div>
     );
@@ -179,7 +179,7 @@ function Run({ win }: { win: Window }) {
           <div className="chrome-text" style={{ fontSize: 'calc(46px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             {runLine(idx, got)}
           </div>
-          <div style={{ fontSize: 'calc(15px * var(--text-scale, 1))', marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-lg)', marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
             {stopped
               ? goLine(win)
               : left === 0
@@ -195,7 +195,7 @@ function Run({ win }: { win: Window }) {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'home' })}
-          style={{ height: 60, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+          style={{ height: 60, fontSize: 'var(--type-lg)' }}
         >
           Done
         </button>
@@ -246,7 +246,7 @@ function Run({ win }: { win: Window }) {
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          fontSize: 'calc(11px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs)',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           opacity: 0.55,
@@ -269,7 +269,7 @@ function Run({ win }: { win: Window }) {
               }}
               style={{
                 width: 'auto',
-                fontSize: 'calc(11px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 opacity: aloud ? 1 : 0.5,
@@ -328,7 +328,7 @@ function Run({ win }: { win: Window }) {
             {card.a}
           </div>
         ) : (
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.4, letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.4, letterSpacing: '0.06em' }}>
             Tap anywhere to turn it over
           </div>
         )}
@@ -343,7 +343,7 @@ function Run({ win }: { win: Window }) {
               type="button"
               className="btn btn-secondary"
               onClick={() => answer(false)}
-              style={{ flex: 1, height: 76, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+              style={{ flex: 1, height: 76, fontSize: 'var(--type-lg)' }}
             >
               Again
             </button>
@@ -351,7 +351,7 @@ function Run({ win }: { win: Window }) {
               type="button"
               className="btn btn-primary"
               onClick={() => answer(true)}
-              style={{ flex: 1, height: 76, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+              style={{ flex: 1, height: 76, fontSize: 'var(--type-lg)' }}
             >
               Got it
             </button>
@@ -361,7 +361,7 @@ function Run({ win }: { win: Window }) {
             type="button"
             className="btn btn-secondary btn-block"
             onClick={() => setShown(true)}
-            style={{ height: 76, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+            style={{ height: 76, fontSize: 'var(--type-lg)' }}
           >
             Show
           </button>
@@ -371,7 +371,7 @@ function Run({ win }: { win: Window }) {
           type="button"
           className="bare"
           onClick={() => setStopped(true)}
-          style={{ width: '100%', height: 36, fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.45, marginTop: 4 }}
+          style={{ width: '100%', height: 36, fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 4 }}
         >
           Stop here
         </button>

@@ -18,7 +18,7 @@ export function DraftNote({ field }: { field: DraftField }) {
   return (
     <div
       style={{
-        fontSize: 'calc(11px * var(--text-scale, 1))',
+        fontSize: 'var(--type-xs)',
         opacity: field.said ? 0.75 : 0.45,
         marginTop: 6,
         lineHeight: 1.45,

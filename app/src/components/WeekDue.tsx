@@ -32,7 +32,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
   return (
     <>
       <SectionLabel>Due this week</SectionLabel>
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
         {weekLabel(start)} · {weekLine(days, classes)}
       </div>
 
@@ -52,7 +52,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
               flex: 'none',
               width: 46,
               fontFamily: 'var(--font-heading)',
-              fontSize: 'calc(11px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs)',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               opacity: d.items.length > 0 ? 0.8 : 0.35,
@@ -68,7 +68,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
                 <div
                   key={i.id}
                   style={{
-                    fontSize: 'calc(13px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-base)',
                     lineHeight: 1.4,
                     marginBottom: 3,
                     opacity: state.done[i.id] ? 0.45 : 1,

@@ -47,7 +47,7 @@ export function SchoolPicker() {
     borderRadius: 'var(--r-sm)',
     border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
     background: on ? 'var(--app-accent-wash)' : 'transparent',
-    fontSize: 'calc(12px * var(--text-scale, 1))',
+    fontSize: 'var(--type-sm)',
   });
 
   if (adding) {
@@ -60,7 +60,7 @@ export function SchoolPicker() {
           placeholder="The name of your university"
           aria-label="The name of your university"
           onChange={(e) => setName(e.target.value)}
-          style={{ height: 42, fontSize: 'calc(14px * var(--text-scale, 1))' }}
+          style={{ height: 42, fontSize: 'var(--type-md)' }}
         />
 
         {/* Offered before the form rather than after it. Without this you get
@@ -94,11 +94,11 @@ export function SchoolPicker() {
 
         {ASKS.map((a) => (
           <div key={a.id} style={{ marginTop: 14 }}>
-            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.4, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.4, textWrap: 'pretty' }}>
               {a.ask}
             </div>
             {a.note && (
-              <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, marginTop: 3, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 3, lineHeight: 1.4 }}>
                 {a.note}
               </div>
             )}
@@ -140,7 +140,7 @@ export function SchoolPicker() {
                 aria-label={a.ask}
                 inputMode={a.kind === 'url' ? 'url' : 'text'}
                 onChange={(e) => set(a.id, e.target.value)}
-                style={{ height: 38, marginTop: 7, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+                style={{ height: 38, marginTop: 7, fontSize: 'var(--type-base)' }}
               />
             )}
           </div>
@@ -189,7 +189,7 @@ export function SchoolPicker() {
         placeholder="Search for your school"
         aria-label="Search for your school"
         onChange={(e) => setQuery(e.target.value)}
-        style={{ height: 42, fontSize: 'calc(14px * var(--text-scale, 1))' }}
+        style={{ height: 42, fontSize: 'var(--type-md)' }}
       />
 
       {hint && hint.id !== state.schoolId && (
@@ -224,7 +224,7 @@ export function SchoolPicker() {
           />
         ))}
         {found.length === 0 && (
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, padding: '6px 0', lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, padding: '6px 0', lineHeight: 1.45 }}>
             Nothing here by that name. Add it — it takes about a minute, and every question is
             optional.
           </div>
@@ -239,7 +239,7 @@ export function SchoolPicker() {
             setName(query);
             setAdding(true);
           }}
-          style={{ ...chip(false), fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 'calc(11px * var(--text-scale, 1))' }}
+          style={{ ...chip(false), fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 'var(--type-xs)' }}
         >
           Mine is not listed
         </button>
@@ -248,7 +248,7 @@ export function SchoolPicker() {
             type="button"
             className="bare tappable"
             onClick={() => dispatch({ type: 'setSchool', id: '' })}
-            style={{ ...chip(false), fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.7 }}
+            style={{ ...chip(false), fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 'var(--type-xs)', opacity: 0.7 }}
           >
             Set no school
           </button>
@@ -308,7 +308,7 @@ function Row({
             padding: '8px 10px',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             opacity: 0.6,
             marginBottom: 7,
           }}

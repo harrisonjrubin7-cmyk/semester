@@ -76,7 +76,7 @@ export function Insights({
             <div
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(15px * var(--text-scale, 1))',
+                fontSize: 'var(--type-lg)',
                 lineHeight: 1.3,
                 textWrap: 'pretty',
               }}
@@ -85,7 +85,7 @@ export function Insights({
             </div>
             <div
               style={{
-                fontSize: 'calc(13px * var(--text-scale, 1))',
+                fontSize: 'var(--type-base)',
                 opacity: 0.75,
                 lineHeight: 1.5,
                 marginTop: 5,
@@ -157,7 +157,7 @@ export function Insights({
                   flex: 'none',
                   width: 'auto',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs)',
                   letterSpacing: '0.08em',
                   opacity: 0.55,
                 }}
@@ -169,7 +169,7 @@ export function Insights({
                 style={{
                   flex: 1,
                   minWidth: 0,
-                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs)',
                   opacity: 0.45,
                   lineHeight: 1.4,
                   textWrap: 'pretty',

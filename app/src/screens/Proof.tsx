@@ -40,7 +40,7 @@ export function Proof() {
           width: '100%',
           minHeight: 220,
           resize: 'vertical',
-          fontSize: 'calc(14px * var(--text-scale, 1))',
+          fontSize: 'var(--type-md)',
           lineHeight: 1.6,
         }}
       />
@@ -69,7 +69,7 @@ export function Proof() {
                   padding: '8px 13px',
                   borderRadius: 'var(--r-md)',
                   border: `1px solid ${courseId === c.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-                  fontSize: 'calc(12px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm)',
                 }}
               >
                 {c.code}

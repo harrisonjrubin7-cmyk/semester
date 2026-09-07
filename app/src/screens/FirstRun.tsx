@@ -23,7 +23,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
       >
         Start with a syllabus.
       </div>
-      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.72, marginTop: 8, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 8, lineHeight: 1.5, textWrap: 'pretty' }}>
         Upload the PDF your professor posted — the readings too, if you have them — and the app
         builds the course from it: every dated obligation with the sentence it came from, a study
         guide, cards, a quiz and slides.
@@ -45,7 +45,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
           <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>
             Add your first course
           </span>
-          <span style={{ display: 'block', fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 2 }}>
+          <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 2 }}>
             PDF, Word, or paste the text
           </span>
         </span>
@@ -60,7 +60,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
             onClick={() => dispatch({ type: 'setSample', on: true })}
             style={{
               height: 44,
-              fontSize: 'calc(12px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginTop: 12,

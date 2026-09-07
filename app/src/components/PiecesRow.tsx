@@ -64,7 +64,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
           width: '100%',
           minHeight: 60,
           resize: 'vertical',
-          fontSize: 'calc(13px * var(--text-scale, 1))',
+          fontSize: 'var(--type-base)',
           lineHeight: 1.5,
         }}
       />
@@ -87,7 +87,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
             onChange={(e) =>
               dispatch({ type: 'setDrop', key: gradeKey, drop: Number(e.target.value) || 0 })
             }
-            style={{ width: 54, height: 32, textAlign: 'center', fontSize: 'calc(13px * var(--text-scale, 1))' }}
+            style={{ width: 54, height: 32, textAlign: 'center', fontSize: 'var(--type-base)' }}
           />
         </label>
         <button
@@ -107,7 +107,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
       {scores.length > 0 ? (
         <div
           style={{
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             opacity: 0.75,
             marginTop: 7,
             lineHeight: 1.45,

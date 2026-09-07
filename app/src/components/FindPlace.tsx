@@ -255,7 +255,7 @@ export function FindPlace() {
                   padding: '8px 13px',
                   borderRadius: 'var(--r-sm)',
                   border: `1px solid ${g.service === s.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-                  fontSize: 'calc(12px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm)',
                 }}
               >
                 {s.label}
@@ -289,7 +289,7 @@ export function FindPlace() {
                 padding: '8px 13px',
                 borderRadius: 'var(--r-sm)',
                 border: `1px solid ${g.reverseOn ? 'var(--app-accent)' : 'var(--app-line)'}`,
-                fontSize: 'calc(12px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm)',
               }}
             >
               {g.reverseOn ? 'Naming where you are: on' : 'Also name where I am standing'}

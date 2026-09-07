@@ -243,7 +243,7 @@ export function Import() {
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         Upload it. Walk away.
       </div>
-      <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
         The syllabus gives the dates and how the grade is built. Add the readings and you get the
         study guide too — cards, terms and a self-test made from what they actually argue.
       </div>
@@ -261,7 +261,7 @@ export function Import() {
         className="btn btn-secondary btn-block"
         onClick={() => input.current?.click()}
         disabled={busy !== ''}
-        style={{ height: 46, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 16 }}
+        style={{ height: 46, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 16 }}
       >
         {busy ? busy : 'Choose files — PDF, Word, text, or a zip of them'}
       </button>
@@ -313,14 +313,14 @@ export function Import() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {f.name}
           </span>
-          <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, flex: 'none' }}>
+          <span style={{ fontSize: 'var(--type-xs)', opacity: 0.5, flex: 'none' }}>
             {f.words.toLocaleString()} words
           </span>
           <button
             type="button"
             className="bare"
             onClick={() => setFiles((list) => list.filter((x) => x.name !== f.name))}
-            style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+            style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
           >
             REMOVE
           </button>
@@ -345,7 +345,7 @@ export function Import() {
             onClick={() => void build()}
             style={{
               height: 50,
-              fontSize: 'calc(15px * var(--text-scale, 1))',
+              fontSize: 'var(--type-lg)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               marginTop: 14,
@@ -359,7 +359,7 @@ export function Import() {
               type="button"
               className="bare"
               onClick={() => abort.current?.abort()}
-              style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, letterSpacing: '0.1em', marginTop: 10 }}
+              style={{ fontSize: 'var(--type-xs)', opacity: 0.55, letterSpacing: '0.1em', marginTop: 10 }}
             >
               STOP
             </button>
@@ -368,7 +368,7 @@ export function Import() {
       )}
 
       {!configured() && (
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 12, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 12, lineHeight: 1.5, textWrap: 'pretty' }}>
           Building a course asks {provider()} to read the documents, which needs a key. Set one under{' '}
           <strong>Ask Claude → Settings</strong>, or sign in and use the shared one.
         </div>
@@ -478,7 +478,7 @@ function ByHand() {
           onKeyDown={(e) => {
             if (e.key === 'Enter') make();
           }}
-          style={{ flex: 1, minWidth: 0, fontSize: 'calc(14px * var(--text-scale, 1))' }}
+          style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)' }}
         />
         <button
           type="button"
@@ -489,7 +489,7 @@ function ByHand() {
             flex: 'none',
             width: 'auto',
             padding: '0 18px',
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
           }}
@@ -499,7 +499,7 @@ function ByHand() {
       </div>
       <div
         style={{
-          fontSize: 'calc(12px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm)',
           opacity: 0.65,
           marginTop: 10,
           lineHeight: 1.5,
@@ -556,11 +556,11 @@ function Rediff({
         <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 1.2, textWrap: 'pretty' }}>
           {rediffSummary(changes)}
         </div>
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 7, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7, lineHeight: 1.5 }}>
           {changes.same} unchanged. Saving replaces the course you have rather than adding a second
           copy of it.
         </div>
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
           {kept.lost === 0
             ? `Everything you have ticked off stays ticked${kept.kept > 0 ? ` — all ${kept.kept} of them` : ''}.`
             : `${kept.kept} of your ticks carry over; ${kept.lost} ${kept.lost === 1 ? 'belongs' : 'belong'} to a deadline this syllabus no longer has.`}
@@ -646,8 +646,8 @@ function Preview({
         <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.1 }}>
           {m.course.code}
         </div>
-        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 3 }}>{m.course.name}</div>
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-md)', marginTop: 3 }}>{m.course.name}</div>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
           {[m.course.prof, m.course.meets, m.course.room, m.course.credits]
             .filter(Boolean)
             .join(' · ')}
@@ -694,7 +694,7 @@ function Preview({
         later. Here, the sentence it was read out of is still next to it, which
         is the only thing that tells you whether it is wrong.
       */}
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 4, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 4, lineHeight: 1.5 }}>
         {m.items.length} found
         {dropped.size > 0 ? ` \u00b7 ${dropped.size} taken off \u00b7 ${keeping} will be added` : ' \u00b7 untick anything the syllabus does not say'}
       </div>
@@ -717,7 +717,7 @@ function Preview({
               <span
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(12px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm)',
                   opacity: 0.55,
                   width: 54,
                   flex: 'none',
@@ -729,7 +729,7 @@ function Preview({
                 style={{
                   flex: 1,
                   minWidth: 0,
-                  fontSize: 'calc(14px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-md)',
                   lineHeight: 1.3,
                   textDecoration: off ? 'line-through' : 'none',
                 }}
@@ -770,7 +770,7 @@ function Preview({
         onClick={onSave}
         style={{
           height: 50,
-          fontSize: 'calc(15px * var(--text-scale, 1))',
+          fontSize: 'var(--type-lg)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           marginTop: 18,

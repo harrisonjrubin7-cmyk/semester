@@ -146,7 +146,7 @@ export function Announce() {
 
       {done ? (
         <Blueprint style={{ padding: '13px 14px', marginTop: 14 }}>
-          <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.4 }}>Applied: {done}.</div>
+          <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4 }}>Applied: {done}.</div>
           <button
             type="button"
             className="btn btn-secondary btn-block"
@@ -164,7 +164,7 @@ export function Announce() {
             {found.length === 0 ? 'Nothing changed' : `${found.length} proposed`}
           </SectionLabel>
           {found.length === 0 ? (
-            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5 }}>
               Nothing in that changes a deadline — which is a perfectly ordinary answer for an
               announcement about a room, a reading or a reminder.
             </div>
@@ -188,7 +188,7 @@ export function Announce() {
                     background: taken[i] ? 'var(--app-accent-wash)' : 'transparent',
                   }}
                 >
-                  <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.35 }}>
                     {shown ? describe(c, shown) : ''}
                   </span>
                   {/* The sentence it rests on. This is the whole safety of it —
@@ -196,7 +196,7 @@ export function Announce() {
                   <span
                     style={{
                       display: 'block',
-                      fontSize: 'calc(12px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-sm)',
                       opacity: 0.6,
                       marginTop: 6,
                       paddingLeft: 9,
@@ -229,7 +229,7 @@ export function Announce() {
         </>
       )}
 
-      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
         {provider()} may only propose a date the announcement states, and every row quotes the
         sentence it came from — anything it cannot quote is dropped before you see it. A moved
         deadline keeps its id, so a box you already ticked stays ticked.

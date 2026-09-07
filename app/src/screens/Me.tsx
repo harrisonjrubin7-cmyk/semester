@@ -96,8 +96,8 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
       }}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{c.course.code}</div>
-        <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}>
+        <div style={{ fontSize: 'var(--type-md)' }}>{c.course.code}</div>
+        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5 }}>
           {c.guide.units.length} units · {c.items.length} deadlines · from {c.course.source}
         </div>
       </div>
@@ -105,7 +105,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
         type="button"
         className="bare"
         onClick={() => setAsking(true)}
-        style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+        style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
       >
         REMOVE
       </button>
@@ -221,7 +221,7 @@ export function Me() {
         <div key={b.code} style={rowTen}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{b.code}</div>
-            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55 }}>{b.n} left</div>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{b.n} left</div>
           </div>
           <div style={{ marginTop: 6 }}>
             <Meter pct={b.pct} />
@@ -256,12 +256,12 @@ export function Me() {
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{r.kind}</span>
               <span style={{ flex: 'none', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{showSpan(r.minutes / 60)}</span>
-              <span style={{ flex: 'none', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, minWidth: 46, textAlign: 'right' }}>
+              <span style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.45, minWidth: 46, textAlign: 'right' }}>
                 {r.from === 1 ? 'from 1' : `from ${r.from}`}
               </span>
             </div>
           ))}
-          <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
             The middle figure of what you reported, so one all-nighter does not move it. Tick
             something off and the app asks once — it stops asking a kind of work after five.
           </div>
@@ -370,7 +370,7 @@ export function Search() {
         value={state.query}
         onChange={(e) => dispatch({ type: 'setQuery', query: e.target.value })}
         placeholder="A course, a topic, a deadline, a screen…"
-        style={{ height: 44, fontSize: 'calc(15px * var(--text-scale, 1))' }}
+        style={{ height: 44, fontSize: 'var(--type-lg)' }}
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
         aria-label="Search everything"
@@ -403,8 +403,8 @@ export function Search() {
                 {hit.tag}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.25 }}>{hit.title}</span>
-                <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.35 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{hit.title}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, lineHeight: 1.35 }}>
                   {hit.sub}
                 </span>
               </span>
@@ -461,7 +461,7 @@ export function Notifications() {
             <span className="tag tag-accent">{n.code}</span>
             <span
               style={{
-                fontSize: 'calc(11px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs)',
                 opacity: 0.5,
                 fontFamily: 'var(--font-heading)',
                 letterSpacing: '0.1em',
@@ -480,7 +480,7 @@ export function Notifications() {
           >
             {n.title}
           </div>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 2 }}>{n.body}</div>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 2 }}>{n.body}</div>
         </Blueprint>
       ))}
       <button
@@ -532,7 +532,7 @@ export function Reminders() {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => void requestPermission().then(setPerm)}
-          style={{ height: 40, marginTop: 10, fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ height: 40, marginTop: 10, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Allow notifications
         </button>

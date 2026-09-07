@@ -84,7 +84,7 @@ export function ScoreField({
         style={{
           width: '100%',
           height: 38,
-          fontSize: 'calc(14px * var(--text-scale, 1))',
+          fontSize: 'var(--type-md)',
           textAlign: 'center',
         }}
       />

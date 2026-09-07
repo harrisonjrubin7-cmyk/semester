@@ -86,7 +86,7 @@ export function Yes() {
             }}
           >
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))' }}>{l.name}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-lg)' }}>{l.name}</span>
               <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
                 {l.blurb}
               </span>
@@ -110,7 +110,7 @@ export function Yes() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={'ECON 1020-01  Principles of Macroeconomics  MWF  9:10am-10:00am  Buttrick 101'}
-        style={{ width: '100%', minHeight: 130, resize: 'vertical', lineHeight: 1.5, fontSize: 'calc(13px * var(--text-scale, 1))' }}
+        style={{ width: '100%', minHeight: 130, resize: 'vertical', lineHeight: 1.5, fontSize: 'var(--type-base)' }}
       />
 
       {text.trim() && found.length === 0 && (
@@ -146,7 +146,7 @@ export function Yes() {
                 </button>
                 <div style={{ flex: 1, minWidth: 0, padding: '12px 0' }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-                    <span style={{ fontSize: 'calc(15px * var(--text-scale, 1))' }}>{c.code}</span>
+                    <span style={{ fontSize: 'var(--type-lg)' }}>{c.code}</span>
                     {already.has(c.code) && (
                       <span className="tag tag-neutral" style={{ flex: 'none' }}>
                         already here
@@ -191,7 +191,7 @@ export function Yes() {
       )}
 
       {added ? (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', marginTop: 14, lineHeight: 1.5, opacity: 0.85 }}>{added}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 1.5, opacity: 0.85 }}>{added}</div>
       ) : null}
 
       <SectionLabel>The other way</SectionLabel>

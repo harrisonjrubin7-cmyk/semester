@@ -174,7 +174,7 @@ export function Classmates() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         {termLabel(term)}. A room is everybody who says they are in that class — a confirmed
         Vanderbilt address is what gets somebody in the door, and no app can read the registrar to
         check the rest.
@@ -182,7 +182,7 @@ export function Classmates() {
 
       <SectionLabel>Your classes</SectionLabel>
       {offered.length === 0 && (
-        <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, padding: '10px 0' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '10px 0' }}>
           No courses yet. Add one from a syllabus, or type a code below.
         </div>
       )}
@@ -209,7 +209,7 @@ export function Classmates() {
               opacity: room.joined ? 1 : 0.6,
             }}
           >
-            <span style={{ display: 'block', fontSize: 'calc(15px * var(--text-scale, 1))' }}>{room.code}</span>
+            <span style={{ display: 'block', fontSize: 'var(--type-lg)' }}>{room.code}</span>
             <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
               {room.joined ? 'You are in this room' : 'Not in it yet'}
             </span>
@@ -229,7 +229,7 @@ export function Classmates() {
                   .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
                   .finally(() => setBusy(false));
               }}
-              style={{ flex: 'none', padding: '0 14px', height: 34, fontSize: 'calc(12px * var(--text-scale, 1))' }}
+              style={{ flex: 'none', padding: '0 14px', height: 34, fontSize: 'var(--type-sm)' }}
             >
               Join
             </button>
@@ -271,8 +271,8 @@ export function Classmates() {
 
       <SectionLabel>What other people see</SectionLabel>
       <Blueprint style={{ padding: '13px 14px' }}>
-        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>{profile?.handle}</div>
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-md)' }}>{profile?.handle}</div>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
           That name, and which of your classes they are also in. Not your email, not your other
           courses, not your notes, your grades or anything else in the app.
         </div>
@@ -366,7 +366,7 @@ function Room({
         <button type="button" className="btn btn-secondary" onClick={onBack} style={{ padding: '0 14px', height: 36 }}>
           ← Rooms
         </button>
-        <div style={{ flex: 1, minWidth: 0, fontSize: 'calc(15px * var(--text-scale, 1))' }}>{code}</div>
+        <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)' }}>{code}</div>
         <button
           type="button"
           className="bare"
@@ -408,7 +408,7 @@ function Room({
                   type="button"
                   className="bare"
                   onClick={() => void block(me, p.user_id).then(() => setMessages((m) => m.filter((x) => x.user_id !== p.user_id)))}
-                  style={{ width: 'auto', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}
+                  style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
                 >
                   BLOCK
                 </button>
@@ -420,7 +420,7 @@ function Room({
 
       <div style={{ marginTop: 14 }}>
         {messages.length === 0 && (
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.55, padding: '18px 0', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '18px 0', lineHeight: 1.5 }}>
             Nothing said yet. Somebody has to be first — a question about the reading is usually the
             easiest one.
           </div>
@@ -465,7 +465,7 @@ function Room({
                   </button>
                 )}
               </div>
-              <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 3, whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.5, marginTop: 3, whiteSpace: 'pre-wrap' }}>
                 {m.body}
               </div>
               {/*
@@ -523,7 +523,7 @@ function Room({
           Send
         </button>
       </div>
-      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
         Everybody in {code} can read this, and it is not private to a group of friends. Messages
         cannot be edited — delete and say it again.
       </div>
@@ -560,7 +560,7 @@ function Blocked({ me }: { me: string }) {
             type="button"
             className="bare"
             onClick={() => void unblock(me, id).then(() => setIds((x) => x.filter((y) => y !== id)))}
-            style={{ width: 'auto', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.6 }}
+            style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.6 }}
           >
             UNBLOCK
           </button>
@@ -575,7 +575,7 @@ function Note({ title, children }: { title: string; children: React.ReactNode })
     <Page>
       <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
         <div className="kicker">{title}</div>
-        <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>{children}</div>
+        <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>{children}</div>
       </Blueprint>
     </Page>
   );

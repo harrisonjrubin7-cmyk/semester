@@ -56,7 +56,7 @@ export function Study() {
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', lineHeight: 1.1 }}>
                 {exam.days === 1 ? 'day' : 'days'} to {exam.code} {exam.item.title}
               </div>
-              <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.7 }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7 }}>
                 {exam.item.mon} {exam.item.day} · {exam.item.dueTime} · {exam.item.weight}
               </div>
             </div>
@@ -66,7 +66,7 @@ export function Study() {
               marginTop: 12,
               paddingTop: 11,
               borderTop: '1px solid var(--app-line)',
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               opacity: 0.85,
               textWrap: 'pretty',
             }}
@@ -226,7 +226,7 @@ export function Study() {
                 <div
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     opacity: 0.55,
@@ -237,13 +237,13 @@ export function Study() {
                   {g.units.length} units · {cards} cards
                 </div>
               </div>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 2 }}>{g.blurb}</div>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 2 }}>{g.blurb}</div>
               <div style={{ marginTop: 11 }}>
                 <Meter pct={g.mastery} />
               </div>
               <div
                 style={{
-                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs)',
                   opacity: 0.5,
                   marginTop: 5,
                   fontFamily: 'var(--font-heading)',
@@ -312,7 +312,7 @@ export function Study() {
                       style={{
                         flex: 'none',
                         padding: '5px 10px',
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs)',
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
                         background: 'transparent',
@@ -330,7 +330,7 @@ export function Study() {
                       style={{
                         flex: 'none',
                         padding: '5px 10px',
-                        fontSize: 'calc(11px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs)',
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
                         background: 'transparent',
@@ -369,7 +369,7 @@ export function Study() {
       {tab === 'tonight' && (
         <>
       <SectionLabel style={{ margin: '20px 0 4px' }}>Tonight’s 25 minutes</SectionLabel>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 12, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 12, textWrap: 'pretty' }}>
         Your weakest unit in each course, and what’s on the next quiz — one short sitting rather
         than a plan you will not keep.
       </div>
@@ -391,18 +391,18 @@ export function Study() {
               width: 44,
               flex: 'none',
               fontFamily: 'var(--font-heading)',
-              fontSize: 'calc(15px * var(--text-scale, 1))',
+              fontSize: 'var(--type-lg)',
               opacity: 0.5,
             }}
           >
             {catalog.planMinutes[p.courseId]}
           </span>
           <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.25 }}>{p.unit.name}</span>
+            <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{p.unit.name}</span>
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(11px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs)',
                 opacity: 0.55,
                 fontFamily: 'var(--font-heading)',
                 letterSpacing: '0.1em',

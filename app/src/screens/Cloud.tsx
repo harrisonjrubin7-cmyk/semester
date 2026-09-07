@@ -80,7 +80,7 @@ export function Cloud() {
           <div className="chrome-text" style={{ fontSize: 'calc(25px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
             Connect an account first
           </div>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
             Microsoft 365 or Google. Then your syllabus in Drive, the announcements in your inbox
             and your real calendar are all reachable from here.
           </div>
@@ -88,7 +88,7 @@ export function Cloud() {
             type="button"
             className="btn btn-primary btn-block"
             onClick={() => dispatch({ type: 'go', screen: 'connect' })}
-            style={{ height: 44, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 14 }}
+            style={{ height: 44, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 14 }}
           >
             Connect accounts
           </button>
@@ -221,7 +221,7 @@ export function Cloud() {
                   style={{
                     flex: 'none',
                     padding: '5px 11px',
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     background: on ? 'var(--chrome)' : 'transparent',
@@ -239,10 +239,10 @@ export function Cloud() {
 
       <ChipRow options={[...TABS]} value={tab} onChange={(t) => setTab(t as Tab)} />
 
-      {busy && <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 14 }}>{busy}</div>}
+      {busy && <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 14 }}>{busy}</div>}
       {note && (
         <Blueprint style={{ padding: '12px 14px', marginTop: 14, background: 'var(--app-hero)' }}>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, textWrap: 'pretty' }}>{note}</div>
+          <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, textWrap: 'pretty' }}>{note}</div>
         </Blueprint>
       )}
       {error && (
@@ -253,7 +253,7 @@ export function Cloud() {
 
       {tab === 'Files' && (
         <>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.68, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.68, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
             Recent documents. Bring one in and whatever reads as a question and an answer becomes
             cards on a course; the rest is kept as notes.
           </div>
@@ -266,7 +266,7 @@ export function Cloud() {
                 setFiles(await listRemoteFiles(provider));
               })
             }
-            style={{ height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
+            style={{ height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
           >
             List recent files
           </button>
@@ -276,7 +276,7 @@ export function Cloud() {
                 <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {f.name}
                 </span>
-                <span style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, flex: 'none' }}>{f.modified}</span>
+                <span style={{ fontSize: 'var(--type-xs)', opacity: 0.45, flex: 'none' }}>{f.modified}</span>
               </div>
               <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
                 <button
@@ -284,7 +284,7 @@ export function Cloud() {
                   className="bare"
                   disabled={busy !== '' || !f.download}
                   onClick={() => void importFile(f)}
-                  style={{ fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', opacity: f.download ? 0.8 : 0.3, width: 'auto' }}
+                  style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: f.download ? 0.8 : 0.3, width: 'auto' }}
                 >
                   ADD TO A COURSE
                 </button>
@@ -292,7 +292,7 @@ export function Cloud() {
                   href={f.link}
                   target="_blank"
                   rel="noreferrer"
-                  style={{ fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', opacity: 0.5 }}
+                  style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.5 }}
                 >
                   OPEN
                 </a>
@@ -304,7 +304,7 @@ export function Cloud() {
 
       {tab === 'Mail' && (
         <>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.68, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.68, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
             Mail from the last six weeks that names one of your courses. Read-only — the app never
             sends anything as you.
           </div>
@@ -319,7 +319,7 @@ export function Cloud() {
                 if (found.length === 0) return 'Nothing in the last six weeks names a course.';
               })
             }
-            style={{ height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
+            style={{ height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
           >
             Find course mail
           </button>
@@ -340,7 +340,7 @@ export function Cloud() {
                   type="button"
                   className="bare"
                   onClick={() => keepMail(m)}
-                  style={{ fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', opacity: 0.8, width: 'auto' }}
+                  style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.8, width: 'auto' }}
                 >
                   KEEP AS MATERIAL
                 </button>
@@ -348,7 +348,7 @@ export function Cloud() {
                   type="button"
                   className="bare"
                   onClick={() => mailToTask(m)}
-                  style={{ fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', opacity: 0.8, width: 'auto' }}
+                  style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.8, width: 'auto' }}
                 >
                   MAKE A TASK
                 </button>
@@ -364,12 +364,12 @@ export function Cloud() {
                       incoming: `From: ${m.from}\nSubject: ${m.subject}\n\n${m.preview}`,
                     })
                   }
-                  style={{ fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', opacity: 0.8, width: 'auto' }}
+                  style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.8, width: 'auto' }}
                 >
                   DRAFT A REPLY
                 </button>
                 {m.link && (
-                  <a href={m.link} target="_blank" rel="noreferrer" style={{ fontSize: 'calc(11px * var(--text-scale, 1))', letterSpacing: '0.1em', opacity: 0.5 }}>
+                  <a href={m.link} target="_blank" rel="noreferrer" style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.5 }}>
                     OPEN
                   </a>
                 )}
@@ -381,7 +381,7 @@ export function Cloud() {
 
       {tab === 'Send out' && (
         <>
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.68, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.68, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
             Push what is in here out to the calendar and task list you already live in. Run these
             once; they add, they never delete, so running one twice makes duplicates.
           </div>
@@ -392,7 +392,7 @@ export function Cloud() {
             className="btn btn-secondary btn-block"
             disabled={busy !== ''}
             onClick={() => void sendDeadlines()}
-            style={{ height: 44, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Add {datedItems(catalog, now).filter((i) => !i.isPast).length} deadlines to{' '}
             {PROVIDERS[provider].name}
@@ -404,7 +404,7 @@ export function Cloud() {
             className="btn btn-secondary btn-block"
             disabled={busy !== ''}
             onClick={() => void sendWeek()}
-            style={{ height: 44, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Add the next seven days
           </button>
@@ -415,7 +415,7 @@ export function Cloud() {
             className="btn btn-secondary btn-block"
             disabled={busy !== '' || state.tasks.filter((t) => !t.done).length === 0}
             onClick={() => void sendTasks()}
-            style={{ height: 44, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Send {state.tasks.filter((t) => !t.done).length} unfinished to{' '}
             {provider === 'google' ? 'Google Tasks' : 'Microsoft To Do'}

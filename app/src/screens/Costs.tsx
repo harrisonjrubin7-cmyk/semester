@@ -92,7 +92,7 @@ export function Costs() {
           {line(t)}
         </div>
         {todo(t) ? (
-          <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>{todo(t)}</div>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>{todo(t)}</div>
         ) : null}
       </Blueprint>
 
@@ -118,7 +118,7 @@ export function Costs() {
                   <span
                     style={{
                       flex: 'none',
-                      fontSize: 'calc(14px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-md)',
                       fontVariantNumeric: 'tabular-nums',
                       opacity: theirs.length === 0 ? 0.4 : 1,
                     }}
@@ -146,7 +146,7 @@ export function Costs() {
                       borderLeft: '2px solid var(--app-line)',
                     }}
                   >
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
                       {x.what}
                       <span style={{ opacity: 0.5 }}>
                         {' · '}
@@ -155,7 +155,7 @@ export function Costs() {
                         {x.backCents > 0 ? ` · ${money(x.backCents)} back` : ''}
                       </span>
                     </span>
-                    <span style={{ flex: 'none', fontSize: 'calc(13px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>
+                    <span style={{ flex: 'none', fontSize: 'var(--type-base)', fontVariantNumeric: 'tabular-nums' }}>
                       {money(x.cents)}
                     </span>
                     {!x.rented && kindOf(x.kind).resellable && x.backCents === 0 ? (
@@ -169,7 +169,7 @@ export function Costs() {
                             dispatch({ type: 'patchCost', id: x.id, patch: { backCents: cents } });
                           }
                         }}
-                        style={{ flex: 'none', height: 28, fontSize: 'calc(11px * var(--text-scale, 1))', padding: '0 8px' }}
+                        style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', padding: '0 8px' }}
                       >
                         Sold
                       </button>
@@ -179,7 +179,7 @@ export function Costs() {
                       className="bare"
                       aria-label={`Remove ${x.what}`}
                       onClick={() => dispatch({ type: 'dropCost', id: x.id })}
-                      style={{ width: 24, flex: 'none', opacity: 0.45, fontSize: 'calc(14px * var(--text-scale, 1))' }}
+                      style={{ width: 24, flex: 'none', opacity: 0.45, fontSize: 'var(--type-md)' }}
                     >
                       ×
                     </button>
@@ -260,7 +260,7 @@ export function Costs() {
             borderRadius: 'var(--r-md)',
             border: `1px solid ${rented ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
             background: rented ? 'var(--app-accent-wash)' : 'transparent',
-            fontSize: 'calc(13px * var(--text-scale, 1))',
+            fontSize: 'var(--type-base)',
           }}
         >
           Rented — it goes back rather than being sold
@@ -302,7 +302,7 @@ export function Costs() {
         </a>
       ) : null}
 
-      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
         Nothing here is looked up. Prices differ by edition, by seller and by the week, and a wrong
         one shown confidently is worse than a blank field — so you type what you paid, and the app
         remembers it for the August when you are deciding again.

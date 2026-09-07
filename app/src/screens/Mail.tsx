@@ -148,7 +148,7 @@ export function Mail() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Drafts here, sends from your own mail app. Nothing leaves the app until you press send in
         Gmail or Outlook, and nothing about you goes in the draft unless you type it below.
       </div>
@@ -228,7 +228,7 @@ export function Mail() {
       )}
 
       <SectionLabel>In your own words</SectionLabel>
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 6, lineHeight: 1.45 }}>
         {p.asks} Anything factual in the draft has to come from here — the app will leave a blank
         rather than invent a reason for you.
       </div>
@@ -262,7 +262,7 @@ export function Mail() {
       {!canDraft && (
         <div
           style={{
-            fontSize: 'calc(12px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm)',
             opacity: 0.65,
             marginTop: 10,
             lineHeight: 1.5,

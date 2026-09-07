@@ -54,7 +54,7 @@ export function Trouble({
     >
       <div
         style={{
-          fontSize: 'calc(13px * var(--text-scale, 1))',
+          fontSize: 'var(--type-base)',
           lineHeight: 1.5,
           whiteSpace: 'pre-wrap',
           textWrap: 'pretty',

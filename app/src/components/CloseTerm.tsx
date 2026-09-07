@@ -31,7 +31,7 @@ export function CloseTerm() {
     return (
       <div style={{ marginTop: 18 }}>
         <div className="kicker">{readTerm(term).label}</div>
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
           {ARCHIVED_LINE}
         </div>
       </div>
@@ -42,7 +42,7 @@ export function CloseTerm() {
     return (
       <div style={{ marginTop: 18 }}>
         <div className="kicker">Closing the term</div>
-        <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
           {offerLine(rows, term)}
         </div>
         {rows.length > 0 && (
@@ -56,7 +56,7 @@ export function CloseTerm() {
               marginTop: 8,
               borderRadius: 'var(--r-sm)',
               border: '1px solid var(--app-line)',
-              fontSize: 'calc(11px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs)',
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
@@ -74,7 +74,7 @@ export function CloseTerm() {
   return (
     <div style={{ marginTop: 18 }}>
       <div className="kicker">Closing {readTerm(term).label}</div>
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.65, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
         The grade your registrar posted, as they wrote it — a letter, or whatever your school
         awards. Leave one blank if it has not come back yet.
       </div>
@@ -86,7 +86,7 @@ export function CloseTerm() {
               <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
                 {r.code}
               </span>
-              <span style={{ display: 'block', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 2 }}>
                 {r.hours > 0 ? `${r.hours} credit ${r.hours === 1 ? 'hour' : 'hours'}` : 'No credit hours stated'}
               </span>
             </span>
@@ -137,7 +137,7 @@ export function CloseTerm() {
           Close it
         </button>
       </div>
-      <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 8, lineHeight: 1.45, textWrap: 'pretty' }}>
         Then {after.label} is the term you are in, and it starts empty.
       </div>
     </div>

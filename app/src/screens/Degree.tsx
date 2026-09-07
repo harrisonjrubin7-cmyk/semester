@@ -127,7 +127,7 @@ function WhatIsLeft() {
         {h.done > 0 ? (
           <>
             <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
-            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, textWrap: 'pretty' }}>
               {h.done} hours finished
               {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
             </div>
@@ -146,7 +146,7 @@ function WhatIsLeft() {
             <SectionLabel style={{ margin: '0 0 6px' }}>{p}</SectionLabel>
             <div
               style={{
-                fontSize: 'calc(13px * var(--text-scale, 1))',
+                fontSize: 'var(--type-base)',
                 marginBottom: 9,
                 textWrap: 'pretty',
               }}
@@ -164,7 +164,7 @@ function WhatIsLeft() {
                     opacity: prog.met ? 0.62 : 1,
                   }}
                 >
-                  <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.35, textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.35, textWrap: 'pretty' }}>
                     {prog.req.name || 'Unnamed requirement'}
                   </div>
                   <div
@@ -200,7 +200,7 @@ function WhatIsLeft() {
       })}
 
       <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
-      <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, textWrap: 'pretty' }}>
         {h.done} hours finished
         {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
       </div>
@@ -333,7 +333,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
                 }}
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'calc(13px * var(--text-scale, 1))' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-base)' }}>
                     {c.code} {c.title ? `· ${c.title}` : ''}
                   </span>
                   <span
@@ -360,7 +360,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
                   className="bare"
                   onClick={() => dispatch({ type: 'dropTaken', id: c.id })}
                   aria-label={`Remove ${c.code}`}
-                  style={{ width: 'auto', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}
+                  style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
                 >
                   Remove
                 </button>
@@ -456,7 +456,7 @@ function Rules() {
           minHeight: 64,
           marginTop: 8,
           resize: 'vertical',
-          fontSize: 'calc(13px * var(--text-scale, 1))',
+          fontSize: 'var(--type-base)',
           lineHeight: 1.5,
         }}
       />
@@ -486,7 +486,7 @@ function Rules() {
                 }}
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'calc(13px * var(--text-scale, 1))', textWrap: 'pretty' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-base)', textWrap: 'pretty' }}>
                     {r.programme} · {r.name}
                   </span>
                   <span
@@ -506,7 +506,7 @@ function Rules() {
                   className="bare"
                   onClick={() => dispatch({ type: 'dropRequirement', id: r.id })}
                   aria-label={`Remove ${r.name}`}
-                  style={{ width: 'auto', fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5 }}
+                  style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
                 >
                   Remove
                 </button>

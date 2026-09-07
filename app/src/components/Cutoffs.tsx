@@ -65,7 +65,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             padding: '6px 10px',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
-            fontSize: 'calc(11px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs)',
             fontFamily: 'var(--font-heading)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
@@ -86,7 +86,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
               padding: '6px 10px',
               borderRadius: 'var(--r-sm)',
               border: '1px solid var(--app-line)',
-              fontSize: 'calc(11px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs)',
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
@@ -121,9 +121,9 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
                 onChange={(e) =>
                   setRows(rows.map((x, j) => (i === j ? { ...x, label: e.target.value } : x)))
                 }
-                style={{ width: 76, flex: 'none', height: 36, fontSize: 'calc(13px * var(--text-scale, 1))', textAlign: 'center' }}
+                style={{ width: 76, flex: 'none', height: 36, fontSize: 'var(--type-base)', textAlign: 'center' }}
               />
-              <span style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55 }}>
+              <span style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>
                 from
               </span>
               <input
@@ -134,9 +134,9 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
                 onChange={(e) =>
                   setRows(rows.map((x, j) => (i === j ? { ...x, min: e.target.value } : x)))
                 }
-                style={{ width: 76, flex: 'none', height: 36, fontSize: 'calc(13px * var(--text-scale, 1))', textAlign: 'center' }}
+                style={{ width: 76, flex: 'none', height: 36, fontSize: 'var(--type-base)', textAlign: 'center' }}
               />
-              <span style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55 }}>%</span>
+              <span style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>%</span>
             </div>
           ))}
           <button
@@ -151,7 +151,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             style={{
               height: 42,
               marginTop: 4,
-              fontSize: 'calc(13px * var(--text-scale, 1))',
+              fontSize: 'var(--type-base)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               opacity: typed === null ? 0.45 : 1,

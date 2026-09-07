@@ -423,7 +423,7 @@ export function AddMaterial() {
                 style={{
                   flex: 'none',
                   padding: '5px 11px',
-                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   background: on ? 'var(--chrome)' : 'transparent',
@@ -456,7 +456,7 @@ export function AddMaterial() {
           <span style={{ width: 26, flex: 'none', color: 'var(--app-accent)' }}>
             {unit === null ? '■' : '□'}
           </span>
-          <span style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}>A unit of its own, at the end</span>
+          <span style={{ fontSize: 'var(--type-md)' }}>A unit of its own, at the end</span>
         </button>
         {guide.units.map((u, i) => (
           <button
@@ -476,7 +476,7 @@ export function AddMaterial() {
             <span style={{ width: 26, flex: 'none', color: 'var(--app-accent)' }}>
               {unit === i ? '■' : '□'}
             </span>
-            <span style={{ fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{u.name}</span>
+            <span style={{ fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{u.name}</span>
           </button>
         ))}
       </div>
@@ -487,14 +487,14 @@ export function AddMaterial() {
         placeholder="Trounstine ch. 4"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        style={{ fontSize: 'calc(14px * var(--text-scale, 1))' }}
+        style={{ fontSize: 'var(--type-md)' }}
       />
       <input
         className="input"
         placeholder="Where it came from — Brightspace, Oct 8 lecture"
         value={source}
         onChange={(e) => setSource(e.target.value)}
-        style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8 }}
+        style={{ fontSize: 'var(--type-md)', marginTop: 8 }}
       />
 
       {/*
@@ -543,13 +543,13 @@ export function AddMaterial() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={'Q: What does the four-hurdle test ask first?\nA: Is there a plausible causal mechanism?\n\nOr paste the reading and keep it as notes.'}
-        style={{ minHeight: 190, fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5 }}
+        style={{ minHeight: 190, fontSize: 'var(--type-base)', lineHeight: 1.5 }}
         aria-label="New material"
       />
       <div
         style={{
           fontFamily: 'var(--font-heading)',
-          fontSize: 'calc(11px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           opacity: 0.6,
@@ -577,21 +577,21 @@ export function AddMaterial() {
                 style={{
                   height: 42,
                   marginTop: 12,
-                  fontSize: 'calc(12px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                 }}
               >
                 {studying ? 'Reading it…' : 'Make cards and terms from this'}
               </button>
-              <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
                 {provider()} reads what you pasted or attached and writes cards and definitions from
                 what is in it — nothing from general knowledge. Optional: the text is kept as the
                 unit's notes either way.
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
               Turning a reading into cards needs {provider()}. Sign in to use the shared key, or add
               your own under Connect → Claude. The text is still kept as the unit's notes.
             </div>
@@ -603,11 +603,11 @@ export function AddMaterial() {
         <Blueprint plain style={{ padding: '11px 13px', marginTop: 12 }}>
           <div className="kicker">What it read</div>
           {readSummary && (
-            <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 4 }}>
+            <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, marginTop: 4 }}>
               {readSummary}
             </div>
           )}
-          <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6 }}>
             {readCards.length} {readCards.length === 1 ? 'card' : 'cards'} and {readTerms.length}{' '}
             {readTerms.length === 1 ? 'term' : 'terms'} ready — they save with everything else below.
           </div>
@@ -632,16 +632,16 @@ export function AddMaterial() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 12 }}>
           {parsed.cards.slice(0, 3).map((c) => (
             <Blueprint key={c.q} style={{ padding: '11px 13px' }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15px * var(--text-scale, 1))', lineHeight: 1.2 }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 1.2 }}>
                 {c.q}
               </div>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.45, marginTop: 3 }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.45, marginTop: 3 }}>
                 {c.a}
               </div>
             </Blueprint>
           ))}
           {parsed.cards.length > 3 && (
-            <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55 }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>
               and {parsed.cards.length - 3} more
             </div>
           )}
@@ -671,7 +671,7 @@ export function AddMaterial() {
               style={{
                 height: 44,
                 marginTop: 12,
-                fontSize: 'calc(12px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
               }}
@@ -682,9 +682,9 @@ export function AddMaterial() {
           {readNote && (
             <Blueprint plain style={{ padding: '11px 13px', marginTop: 12 }}>
               <div className="kicker">What it saw</div>
-              <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 4 }}>{readNote}</div>
+              <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, marginTop: 4 }}>{readNote}</div>
               {shotCards.length > 0 && (
-                <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6 }}>
+                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6 }}>
                   {shotCards.length} {shotCards.length === 1 ? 'card' : 'cards'} ready — they save
                   with everything else below.
                 </div>
@@ -748,7 +748,7 @@ export function AddMaterial() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => fileInput.current?.click()}
-        style={{ height: 42, fontSize: 'calc(12px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {busy ? 'Reading…' : 'Attach slides, a PDF, a photo of the board, or a zip'}
       </button>
@@ -759,7 +759,7 @@ export function AddMaterial() {
             display: 'flex',
             justifyContent: 'space-between',
             gap: 10,
-            fontSize: 'calc(13px * var(--text-scale, 1))',
+            fontSize: 'var(--type-base)',
             padding: '9px 0',
             borderBottom: '1px solid var(--app-line)',
           }}
@@ -768,7 +768,7 @@ export function AddMaterial() {
           <span style={{ opacity: 0.5, flex: 'none' }}>{formatBytes(f.size)}</span>
         </div>
       ))}
-      <div style={{ fontSize: 'calc(12px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
         Images become figures for the unit. A PDF, a Word file or a text file is read into the box
         above as well as attached, so what is in it can become cards. Everything stays on this
         device.
@@ -781,7 +781,7 @@ export function AddMaterial() {
         onClick={save}
         style={{
           height: 50,
-          fontSize: 'calc(15px * var(--text-scale, 1))',
+          fontSize: 'var(--type-lg)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           marginTop: 16,
@@ -853,11 +853,11 @@ export function AddMaterial() {
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'calc(14px * var(--text-scale, 1))', lineHeight: 1.3 }}>{u.title}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{u.title}</span>
                 <span
                   style={{
                     display: 'block',
-                    fontSize: 'calc(11px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-xs)',
                     opacity: 0.55,
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
@@ -882,7 +882,7 @@ export function AddMaterial() {
                 type="button"
                 className="bare"
                 onClick={() => undoImport(u)}
-                style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE
               </button>
