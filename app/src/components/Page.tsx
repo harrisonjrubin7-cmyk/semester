@@ -89,7 +89,16 @@ export function Page<T>({
    * than one that says plainly where it is about to take you.
    */
   search?: SearchAdapter<T>;
-  children: ReactNode | ((shown: T[]) => ReactNode);
+  /**
+   * The screen's body, or a function of what survived the filter.
+   *
+   * The second argument is the settled query — empty while nobody is
+   * searching. Most screens do not need it: they render `shown` and the
+   * frame's own count and empty state say the rest. The Everything directory
+   * does, because it is four lists rather than one, and "nothing typed" and
+   * "typed something that matched everything" are different screens there.
+   */
+  children: ReactNode | ((shown: T[], query: string) => ReactNode);
   /**
    * Drop the side padding — for a screen that draws to its own edges: a
    * calendar grid, a map, a full-bleed reader.
@@ -338,7 +347,7 @@ export function Page<T>({
         </div>
       )}
 
-      {typeof children === 'function' ? children(shown) : children}
+      {typeof children === 'function' ? children(shown, query) : children}
 
       {/*
         After the screen, not instead of it.

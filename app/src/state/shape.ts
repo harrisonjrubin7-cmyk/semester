@@ -287,6 +287,21 @@ export interface Persisted {
    */
   visited: Record<string, boolean>;
   /**
+   * When each screen was last opened, to the day.
+   *
+   * `visited` answers "ever?" and that is all the app needed until the
+   * Everything directory wanted to say "three weeks ago" beside a row and to
+   * separate a screen nobody has opened from one abandoned in September.
+   *
+   * To the day, and not to the second, deliberately. The finer number is a
+   * record of somebody's evenings that no screen has a use for, and rounding
+   * it is the difference between a directory that knows what you have tried
+   * and a log of when you were awake. It never leaves the device — the same
+   * as everything else here — but that is not a reason to keep more of it
+   * than the feature needs.
+   */
+  lastOpened: Record<string, number>;
+  /**
    * Practice papers you have sat.
    *
    * Capped, and the cap is real rather than cautious: a sitting keeps its
@@ -727,6 +742,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   feedHidden: {},
   tabs: DEFAULT_TABS,
   visited: {},
+  lastOpened: {},
   yours: {},
   courseOrder: [],
   myRules: [],
@@ -951,6 +967,11 @@ export function loadPersisted(): Persisted {
       visited:
         saved.visited ??
         Object.fromEntries((saved.recent ?? []).map((s: Screen) => [s, true])),
+      // No seeding from `recent`, unlike `visited` above: `recent` carries no
+      // times, so any date invented here would be today's, and "opened
+      // today" beside a screen somebody last saw in August is worse than
+      // "opened at some point", which is what an empty entry says.
+      lastOpened: saved.lastOpened ?? {},
       sittings: saved.sittings ?? [],
       sources: saved.sources ?? [],
       registrar: saved.registrar ?? [],
@@ -1043,6 +1064,7 @@ export function pickPersisted(state: State): Persisted {
     feedHidden: state.feedHidden,
     recent: state.recent,
     visited: state.visited,
+    lastOpened: state.lastOpened,
     sittings: state.sittings,
     sources: state.sources,
     registrar: state.registrar,

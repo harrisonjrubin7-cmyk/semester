@@ -108,6 +108,7 @@ const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ de
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
 const Help = lazy(() => import('./screens/Help').then((m) => ({ default: m.Help })));
+const Everything = lazy(() => import('./screens/Everything').then((m) => ({ default: m.Everything })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
@@ -698,6 +699,8 @@ function CurrentScreen() {
       return <DataScreen />;
     case 'help':
       return <Help />;
+    case 'everything':
+      return <Everything />;
     case 'courses':
       return <Courses />;
     case 'course':

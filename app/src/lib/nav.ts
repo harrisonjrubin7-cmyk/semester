@@ -55,8 +55,52 @@ export interface Destination {
   /** Words a person might search for that are not in the label or the blurb. */
   keywords: string;
   group: Group;
+  /**
+   * What you would be trying to do, as against where the thing lives.
+   *
+   * `group` is a shelf and a screen sits on exactly one; a task is an
+   * intention and a screen can serve several. "Exam runway" is Study by
+   * shelf, and somebody reaching for it is planning a week, studying for
+   * something, or looking past this term depending on the week they are in.
+   *
+   * On the registry rather than in a list of its own, so that adding a screen
+   * without saying what it is for is a type error instead of a row that
+   * quietly never appears under any task.
+   */
+  taskTags: TaskTag[];
   /** The tab this lives under, so navigation stays oriented inside it. */
   root: Screen;
+}
+
+/**
+ * The intentions, in the order they are shown.
+ *
+ * Nine rather than the eight the brief suggested: every one of `help`,
+ * `settings`, `notifs` and the directory itself is about finding your way
+ * around the app rather than about the term, and filing them under "fix or
+ * change my data" would have put the guide next to the export.
+ *
+ * Written as pairs so the label is here and not in the screen — a tag with no
+ * heading is a section nobody can name, and a heading with no tag is an empty
+ * section that looks like a bug.
+ */
+export const TASKS = [
+  ['due', 'Keep track of what is due'],
+  ['study', 'Study for something'],
+  ['stand', 'Know where I stand'],
+  ['make', 'Write or make something'],
+  ['week', 'Plan my week'],
+  ['campus', 'Handle campus life'],
+  ['ahead', 'Look ahead past this term'],
+  ['data', 'Fix or change my data'],
+  ['app', 'Find your way around'],
+] as const;
+
+export type TaskTag = (typeof TASKS)[number][0];
+
+/** The heading for a tag, or the tag itself if somebody adds one loosely. */
+export function taskLabel(tag: TaskTag): string {
+  return TASKS.find(([id]) => id === tag)?.[1] ?? tag;
 }
 
 export const DESTINATIONS: Destination[] = [
@@ -66,6 +110,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'What is due, what is next, and tonight’s study plan.',
     keywords: 'now due soon next class plan agenda',
     group: 'Semester',
+    taskTags: ['due', 'week'],
     root: 'home',
   },
   {
@@ -74,6 +119,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A start-of-day and an end-of-day report — what is due, and what got done.',
     keywords: 'brief briefing report daily day start end morning evening summary recap review standup what is due what did i do plan wrap up',
     group: 'Semester',
+    taskTags: ['due', 'week'],
     root: 'home',
   },
   {
@@ -82,6 +128,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Every course, its deadlines, its grading and its professor.',
     keywords: 'class syllabus professor office hours grading credits',
     group: 'Semester',
+    taskTags: ['due', 'stand'],
     root: 'courses',
   },
   {
@@ -90,6 +137,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Classes and deadlines by day, month or the whole semester.',
     keywords: 'schedule month day week semester timetable events',
     group: 'Semester',
+    taskTags: ['due', 'week'],
     root: 'calendar',
   },
   {
@@ -98,6 +146,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Pick a course and a way through it — cards, read, watch, slides.',
     keywords: 'revise revision learn practice guide',
     group: 'Study',
+    taskTags: ['study'],
     root: 'study',
   },
   {
@@ -107,6 +156,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A question about this course, answered with its guide in hand.',
     keywords: 'ai chat explain help tutor claude',
     group: 'Study',
+    taskTags: ['study', 'app'],
     root: 'study',
   },
   {
@@ -116,6 +166,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Paste an assignment and get it broken down — rubric, plan, dates, what to ask.',
     keywords: 'assignment essay paper homework problem set instructions rubric deadline draft feedback outline plan generate write',
     group: 'Study',
+    taskTags: ['study', 'make'],
     root: 'study',
   },
   {
@@ -125,6 +176,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'New material into a course — and every study mode picks it up.',
     keywords: 'reading add material update new chapter article handout slides lecture notes supplement extra pdf paste attach cards quiz guide refresh keep current course content',
     group: 'Study',
+    taskTags: ['study', 'data'],
     root: 'study',
   },
   {
@@ -134,6 +186,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A CSV in, and the statistics out — computed here, then explained.',
     keywords: 'data analysis statistics stats csv spreadsheet excel mean median average standard deviation sd variance correlation regression ols slope r squared scatter histogram quartile summary descriptive dataset numbers analyse analyze',
     group: 'Study',
+    taskTags: ['make', 'study'],
     root: 'study',
   },
   {
@@ -142,6 +195,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A graph, a flow, a timeline or a matrix — drawn from what you describe.',
     keywords: 'diagram graph chart draw picture figure visual illustration flowchart curve supply demand axes timeline matrix payoff structure hierarchy causal mermaid svg sketch map model',
     group: 'Make',
+    taskTags: ['make'],
     root: 'study',
   },
   {
@@ -151,6 +205,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'The method, worked on other numbers — and your own attempt checked.',
     keywords: 'math maths solve problem set equation calculate algebra derivative statistics elasticity growth rate percentage formula step working check answer wrong show me how practice arithmetic quantitative',
     group: 'Study',
+    taskTags: ['study'],
     root: 'study',
   },
   {
@@ -160,6 +215,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A paper with a shape, a total and a clock — sat, then marked against a key.',
     keywords: 'practice test exam quiz paper mock midterm final past paper questions multiple choice short answer essay question mark marking key revision revise study test generator sit timed',
     group: 'Study',
+    taskTags: ['study', 'stand'],
     root: 'study',
   },
   {
@@ -169,6 +225,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A real PowerPoint file — from a unit you have, or from a brief.',
     keywords: 'slides slideshow deck powerpoint pptx keynote google slides presentation present talk pitch briefing bullets speaker notes export slide',
     group: 'Make',
+    taskTags: ['make'],
     root: 'study',
   },
   {
@@ -177,6 +234,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Every reading you have kept, with what each is for — and out as BibTeX.',
     keywords: 'source sources citation citations bibliography reference references reading list bibtex zotero overleaf works cited quote author year paper article book cite',
     group: 'Make',
+    taskTags: ['make', 'study'],
     root: 'study',
   },
   {
@@ -185,6 +243,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A real draft for a cover letter, a statement, a newsletter — not coursework.',
     keywords: 'essay write writing draft cover letter application internship job resume personal statement scholarship fellowship op-ed blog newsletter pitch memo prose compose generator',
     group: 'Make',
+    taskTags: ['make'],
     root: 'study',
   },
   {
@@ -194,6 +253,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Upload a syllabus and get the course back, checked before you keep it.',
     keywords: 'new syllabus pdf upload generate create import',
     group: 'Upkeep',
+    taskTags: ['data'],
     root: 'courses',
   },
   {
@@ -207,6 +267,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A syllabus is a first draft — fix dates, weightings, rooms and the AI policy.',
     keywords: 'edit change fix correct course syllabus date moved weighting grading room professor email meets credits delete deadline add assignment ai policy allowed banned rules',
     group: 'Upkeep',
+    taskTags: ['data'],
     root: 'courses',
   },
   {
@@ -216,6 +277,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Add/drop, withdrawal, registration — the dates your registrar sets, not a syllabus.',
     keywords: 'registrar term deadline add drop withdraw withdrawal pass fail audit registration enrol enroll academic calendar reading days finals exam period evaluations grades posted last day university school important dates w transcript',
     group: 'Semester',
+    taskTags: ['due', 'ahead'],
     root: 'calendar',
   },
   {
@@ -225,6 +287,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Paste the email that moved a deadline, and take the changes one at a time.',
     keywords: 'announcement announce email post update moved change changed cancelled canceled postponed rescheduled deadline date shift new due date brightspace canvas notice message professor said class email paste',
     group: 'Upkeep',
+    taskTags: ['due', 'data'],
     root: 'courses',
   },
   {
@@ -234,6 +297,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Books, fees and access codes, with what came back — and what the same course cost last time.',
     keywords: 'cost costs money price prices textbook textbooks book books buy rent rental sell back buyback bookstore fee fees access code clicker supplies spend spending budget expense expenses receipt total how much',
     group: 'Campus',
+    taskTags: ['campus', 'ahead'],
     root: 'courses',
   },
   {
@@ -243,6 +307,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'The shared list for a group project — who has which part, and whether it lands.',
     keywords: 'group groups project team partner partners case study shared checklist divide split parts sections who is doing what deliverable presentation together collaborate classmates group chat assignment split up',
     group: 'Campus',
+    taskTags: ['due', 'campus'],
     root: 'courses',
   },
   {
@@ -254,6 +319,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'What is on your plan, what it is a day, and the week it runs out.',
     keywords: 'meal meals plan swipes swipe commodore cash dining dollars money balance cbord get food eat eating board plan munchie mart declined out of run out',
     group: 'Campus',
+    taskTags: ['campus'],
     root: 'me',
   },
   {
@@ -262,6 +328,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Your room, and the move-out date counted from your last exam rather than left as a rule.',
     keywords: 'housing residence hall dorm dormitory room roommate starrez move out moveout move in movein assignment building live living address selection lottery timeslot storage checkout check out key keys',
     group: 'Campus',
+    taskTags: ['campus', 'ahead'],
     root: 'me',
   },
   {
@@ -271,6 +338,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'The weeks before an exam, counted backwards from it — and what stands in the way.',
     keywords: 'exam runway midterm final revision revise cram countdown prepare preparation study plan weeks before how long until ready readiness test',
     group: 'Study',
+    taskTags: ['study', 'week', 'ahead'],
     root: 'study',
   },
   {
@@ -280,6 +348,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'The end of a term, read back from your own evidence — and silent where the evidence is thin.',
     keywords: 'what worked end of term semester review retrospective looking back reflection how did it go study habits pattern patterns evidence december finals over improve next term learn about myself',
     group: 'Upkeep',
+    taskTags: ['stand', 'ahead'],
     root: 'home',
   },
   {
@@ -289,6 +358,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',
     keywords: 'weekly week report review recap summary sunday end of week retrospective what happened how did the week go progress last week next week',
     group: 'Upkeep',
+    taskTags: ['week', 'stand'],
     root: 'home',
   },
   {
@@ -298,6 +368,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'The next seven days in hours — what is promised, what is due, where the room is.',
     keywords: 'week ahead next seven days forecast load hours busy workload plan planning free time capacity schedule how much time commitments heaviest day room',
     group: 'Upkeep',
+    taskTags: ['week'],
     root: 'home',
   },
   {
@@ -307,6 +378,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Your syllabus dates against what the LMS calendar says today.',
     keywords: 'check dates changed moved deadline reconcile compare diff brightspace calendar feed ics syllabus out of date wrong date updated rescheduled verify audit',
     group: 'Upkeep',
+    taskTags: ['due', 'data'],
     root: 'courses',
   },
   {
@@ -315,6 +387,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'What you have so far, and what the rest has to average.',
     keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
     group: 'Upkeep',
+    taskTags: ['stand'],
     root: 'courses',
   },
   {
@@ -324,6 +397,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A map you can search — campus or the whole city — and directions to anywhere.',
     keywords: 'map maps directions route walk drive transit bus navigate campus nashville where building room address google apple search find location openstreetmap nearby',
     group: 'Campus',
+    taskTags: ['campus'],
     root: 'maps',
   },
   {
@@ -332,6 +406,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Draft the email you have been putting off — extension, question, meeting.',
     keywords: 'email mail write draft professor reply extension office hours absence recommendation letter follow up gmail outlook compose message send',
     group: 'Campus',
+    taskTags: ['campus', 'make'],
     root: 'courses',
   },
   {
@@ -344,6 +419,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Registration and class search — and paste your schedule straight back in.',
     keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section',
     group: 'Campus',
+    taskTags: ['ahead', 'campus'],
     root: 'courses',
   },
   {
@@ -353,6 +429,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A room per class, for everyone at your school taking it.',
     keywords: 'classmates classmate message messages chat talk group groups room people students friends study group discussion ask class peers social connect dm',
     group: 'Campus',
+    taskTags: ['campus', 'study'],
     root: 'courses',
   },
   {
@@ -362,6 +439,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Clubs, a job, research, a chapter, a team — and what the week really costs.',
     keywords: 'extracurricular extracurriculars activity activities club clubs organization organisation org research lab job work shift employment fraternity sorority greek chapter rush intramural im club sport varsity athletics team practice volunteer service music theatre arts anchorlink involvement commitment hours load',
     group: 'Campus',
+    taskTags: ['campus', 'week'],
     root: 'mine',
   },
   {
@@ -371,6 +449,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'The professors who will write about you, what you have actually talked about, and what you asked them for.',
     keywords: 'recommendation letter letters reference references professor mentor advisor office hours conversation relationship network networking grad school fellowship truman rhodes marshall boren scholarship internship referral thank you follow up',
     group: 'Yours',
+    taskTags: ['campus', 'ahead'],
     root: 'me',
   },
   {
@@ -380,6 +459,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
     keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
     group: 'Upkeep',
+    taskTags: ['ahead', 'stand'],
     root: 'me',
   },
   {
@@ -389,6 +469,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'What has gone by, what still fits, and the moves that are not working harder.',
     keywords: 'behind late overdue missed catch up caught up triage bad week overwhelmed stressed stress panic drowning too much falling behind help extension late policy recover crisis sick',
     group: 'Upkeep',
+    taskTags: ['due', 'week', 'stand'],
     root: 'home',
   },
   {
@@ -397,6 +478,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'How long you have, and where those hours buy the most against your grade.',
     keywords: 'tonight evening plan priority prioritise prioritize what should i do first order effort allocation worth it points per hour six hours study plan triage decide choose',
     group: 'Study',
+    taskTags: ['study', 'week'],
     root: 'home',
   },
   {
@@ -406,6 +488,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Internships, jobs and research posts — the deadlines that land on the same days as your coursework.',
     keywords: 'internship internships job jobs application applications apply applied recruiting recruitment career careers offer interview interviews resume cv cover letter fellowship scholarship grad school research assistant ra summer analyst deadline pipeline tracker handshake linkedin networking coffee chat referral',
     group: 'Yours',
+    taskTags: ['ahead', 'due'],
     root: 'mine',
   },
   {
@@ -415,6 +498,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Spelling, grammar and punctuation read back to you — before somebody else reads it.',
     keywords: 'spell check spelling spellcheck grammar grammar check proofread proofreading proof read punctuation typo typos writing editor edit check my writing mistakes errors comma apostrophe capitalisation capitalization word choice',
     group: 'Make',
+    taskTags: ['make'],
     root: 'me',
   },
   {
@@ -424,6 +508,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'A countdown for anything, and an alarm at a time. Nothing to do with your courses.',
     keywords: 'timer timers alarm alarms clock countdown stopwatch minutes egg kitchen wake up wake me nap ring ringing remind reminder pomodoro count down set a timer set an alarm snooze',
     group: 'Yours',
+    taskTags: ['week', 'study'],
     root: 'mine',
   },
   {
@@ -434,6 +519,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Your own tasks, appointments, notes, places and files.',
     keywords: 'mine personal todo task appointment note file attachment place own yours',
     group: 'Yours',
+    taskTags: ['due', 'week'],
     root: 'mine',
   },
   {
@@ -445,6 +531,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Your load at a glance, and everything else the app can do.',
     keywords: 'me progress profile load more menu overview directory settings everything',
     group: 'Yours',
+    taskTags: ['stand', 'app'],
     root: 'me',
   },
   {
@@ -453,6 +540,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Sign in so the same semester is on your phone and your laptop.',
     keywords: 'sign in log in register sync devices password email',
     group: 'Yours',
+    taskTags: ['data'],
     root: 'me',
   },
   {
@@ -462,6 +550,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Campus sites, the bookstore, tickets, and any address you add.',
     keywords: 'links bookmarks shortcuts campus yes anchorlink brightspace onevu myvu bookstore books tickets game football basketball commodores social instagram twitter x address url website site',
     group: 'Campus',
+    taskTags: ['campus'],
     root: 'me',
   },
   {
@@ -471,6 +560,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Your course site, Outlook, Google, Zoom — calendars and links in.',
     keywords: 'brightspace outlook microsoft google zoom apple icloud ics feed subscribe calendar claude anthropic api key sign in with claude',
     group: 'Yours',
+    taskTags: ['data'],
     root: 'me',
   },
   {
@@ -480,6 +570,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Pull a reading out of Drive or OneDrive; turn announcements into cards.',
     keywords: 'gmail email drive onedrive sharepoint documents attachments send tasks',
     group: 'Yours',
+    taskTags: ['data', 'study'],
     root: 'me',
   },
   {
@@ -489,6 +580,19 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Every screen in the app, what it is for, and what it will not do.',
     keywords: 'help guide manual how do i what does documentation tour onboarding explain instructions getting started first time shortcuts keyboard reference handbook',
     group: 'Yours',
+    taskTags: ['app'],
+    root: 'me',
+  },
+  {
+    screen: 'everything',
+    label: 'Everything',
+    // Ten characters is one past what the bar holds. See `lib/tabbar.ts`.
+    short: 'All of it',
+    blurb: 'Every screen in the app, what it does, and whether you have used it.',
+    keywords:
+      'everything all screens index directory list of features what can this app do capabilities map contents table of contents overview browse explore find a screen where is what is there tour inventory sitemap unused never opened shortcuts keys',
+    group: 'Yours',
+    taskTags: ['app'],
     root: 'me',
   },
   {
@@ -498,6 +602,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Every record the app holds, what it weighs, and how much room is left.',
     keywords: 'data storage space records size counts quota full disk memory how many database indexeddb localstorage diagnostics health inspect browse export backup usage',
     group: 'Yours',
+    taskTags: ['data'],
     root: 'me',
   },
   {
@@ -507,6 +612,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'What leaves this device, what it is used for, and how to delete all of it.',
     keywords: 'privacy policy data gdpr delete account remove erase retention what is stored where api key anthropic sent transmitted analytics tracking rights legal terms security row level',
     group: 'Yours',
+    taskTags: ['data'],
     root: 'me',
   },
   {
@@ -516,6 +622,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Download everything, or push it to Drive or OneDrive.',
     keywords: 'export download backup save csv ics markdown json zip archive google drive onedrive transfer migrate leave copy print spreadsheet excel calendar import restore',
     group: 'Yours',
+    taskTags: ['data'],
     root: 'me',
   },
   {
@@ -524,6 +631,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Navigation, alerts, which courses are loaded.',
     keywords: 'preferences options remove course sample notifications feed tab bar',
     group: 'Yours',
+    taskTags: ['data', 'app'],
     root: 'me',
   },
   {
@@ -532,6 +640,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'What the app would have poked you about.',
     keywords: 'notifications reminders',
     group: 'Yours',
+    taskTags: ['due', 'app'],
     root: 'me',
   },
 ];

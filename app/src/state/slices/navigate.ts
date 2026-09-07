@@ -44,7 +44,18 @@ export function push(state: State, screen: Screen): State {
     // opened the map is not the app's business, and whether they ever did is
     // the only part that makes a difference to what it offers them.
     visited: state.visited[screen] ? state.visited : { ...state.visited, [screen]: true },
+    // Rounded to the day it happened. See `lastOpened` in `state/shape.ts`
+    // for why the finer number is deliberately not kept, and why this is
+    // written on the way in rather than counted.
+    lastOpened: { ...state.lastOpened, [screen]: startOfDay(Date.now()) },
   };
+}
+
+/** Midnight local, so a screen opened twice in an evening records one day. */
+function startOfDay(at: number): number {
+  const d = new Date(at);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
 }
 
 export function navigate(state: State, action: Action): State | null {

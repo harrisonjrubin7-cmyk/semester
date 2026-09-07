@@ -61,6 +61,7 @@ describe('what happens when the app changes', () => {
       blurb: 'Added by a test.',
       keywords: 'test',
       group: 'Yours',
+      taskTags: ['app'],
       root: 'me',
     });
     try {

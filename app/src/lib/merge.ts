@@ -22,7 +22,7 @@
  * to forever.
  */
 
-export type Strategy = 'union' | 'theirs' | 'ticks' | 'latest' | 'mine';
+export type Strategy = 'union' | 'theirs' | 'ticks' | 'latest' | 'newer' | 'mine';
 
 /**
  * How each field of the store is merged when another device's copy arrives.
@@ -237,6 +237,10 @@ export const STRATEGY: Record<string, Strategy> = {
   // Not `theirs`: opening a screen on a laptop is still having opened it, and
   // a phone that syncs later should not un-see it.
   visited: 'ticks',
+  // The later of the two, per screen. A phone that syncs on Tuesday should not
+  // tell a laptop that Grades was last opened in August, and the union of two
+  // dates for one screen is not a date.
+  lastOpened: 'newer',
 };
 
 export function strategyFor(field: string): Strategy {
@@ -330,6 +334,29 @@ export function ticks(
   remote: Record<string, unknown>,
 ): Record<string, unknown> {
   return { ...local, ...remote };
+}
+
+/**
+ * Two maps of plain numbers, as one, keeping the larger per key.
+ *
+ * `ticks` would be wrong here and quietly so: it is `{...local, ...remote}`,
+ * so the remote copy wins every key it has — and for a date that means a
+ * laptop that has not been opened since August overwriting the phone's real
+ * answer with an older one. Booleans do not have that problem, which is why
+ * `visited` can use `ticks` and `lastOpened` cannot.
+ */
+export function newer(
+  local: Record<string, unknown>,
+  remote: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...local };
+  for (const [key, theirs] of Object.entries(remote)) {
+    const mine = out[key];
+    const a = typeof mine === 'number' ? mine : 0;
+    const b = typeof theirs === 'number' ? theirs : 0;
+    out[key] = Math.max(a, b);
+  }
+  return out;
 }
 
 /** Two maps of stamped records, as one, keeping the newer record per key. */
@@ -479,6 +506,9 @@ export function withNotes<T extends object>(
         break;
       case 'latest':
         out[field] = isMap(mine) && isMap(theirs) ? latest(mine, theirs) : theirs;
+        break;
+      case 'newer':
+        out[field] = isMap(mine) && isMap(theirs) ? newer(mine, theirs) : theirs;
         break;
       case 'mine':
         // Left exactly as it was. The remote copy is not read at all — which
