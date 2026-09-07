@@ -174,7 +174,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                     fontSize: 'var(--type-sm)',
                     opacity: 0.75,
                     marginTop: 5,
-                    lineHeight: 1.45,
+                    lineHeight: 'var(--leading-normal)',
                     textWrap: 'pretty',
                   }}
                 >
@@ -198,7 +198,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                       marginTop: 6,
                       resize: 'vertical',
                       fontSize: 'var(--type-base)',
-                      lineHeight: 1.5,
+                      lineHeight: 'var(--leading-relaxed)',
                     }}
                   />
                   <button
@@ -221,7 +221,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                           key={v.id}
                           style={{
                             fontSize: 'var(--type-sm)',
-                            lineHeight: 1.45,
+                            lineHeight: 'var(--leading-normal)',
                             opacity: 0.8,
                             textWrap: 'pretty',
                           }}
@@ -368,7 +368,7 @@ function LettersTab() {
                     style={{
                       fontSize: 'calc(12.5px * var(--text-scale, 1))',
                       marginTop: 7,
-                      lineHeight: 1.5,
+                      lineHeight: 'var(--leading-relaxed)',
                       textWrap: 'pretty',
                     }}
                   >

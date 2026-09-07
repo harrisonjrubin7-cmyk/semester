@@ -131,7 +131,7 @@ export function Worked() {
                 ? 'Nothing this term will support.'
                 : `${found.length} ${found.length === 1 ? 'thing' : 'things'} the term will support.`}
             </div>
-            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
               {basis(input)}
             </div>
           </Blueprint>
@@ -160,7 +160,7 @@ export function Worked() {
           {calibrationLine(bias) ? (
             <>
               <SectionLabel style={{ margin: '22px 0 6px' }}>Your own estimates</SectionLabel>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.5, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
                 {calibrationLine(bias)}
               </div>
             </>
@@ -176,7 +176,7 @@ export function Worked() {
           {marks ? (
             <>
               <SectionLabel style={{ margin: '22px 0 6px' }}>Where the marks went</SectionLabel>
-              <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.45, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 {marks}
               </div>
             </>
@@ -219,7 +219,7 @@ export function Worked() {
           </div>
           <PrintButton label="Print it" style={{ marginTop: 8 }} />
 
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 12, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 12, lineHeight: 'var(--leading-normal)' }}>
             Every line is counted from what this app recorded, and anything it could not support with
             enough observations was left out rather than softened. There is no score for the term, and
             no comparison with anybody else.

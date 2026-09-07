@@ -92,7 +92,7 @@ export function Costs() {
           {line(t)}
         </div>
         {todo(t) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>{todo(t)}</div>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>{todo(t)}</div>
         ) : null}
       </Blueprint>
 
@@ -268,7 +268,7 @@ export function Costs() {
       )}
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}
@@ -302,7 +302,7 @@ export function Costs() {
         </a>
       ) : null}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
         Nothing here is looked up. Prices differ by edition, by seller and by the week, and a wrong
         one shown confidently is worse than a blank field — so you type what you paid, and the app
         remembers it for the August when you are deciding again.

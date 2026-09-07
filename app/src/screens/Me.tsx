@@ -261,7 +261,7 @@ export function Me() {
               </span>
             </div>
           ))}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
             The middle figure of what you reported, so one all-nighter does not move it. Tick
             something off and the app asks once — it stops asking a kind of work after five.
           </div>
@@ -522,7 +522,7 @@ export function Reminders() {
 
   return (
     <div style={{ marginBottom: 12 }}>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {line} They arrive while the app is open or running in the background. Waking a phone whose
         browser is closed needs a push server, which this deployment does not have — so treat these
         as a nudge while you are working, not an alarm clock.

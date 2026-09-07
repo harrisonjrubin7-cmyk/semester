@@ -179,14 +179,14 @@ function Run({ win }: { win: Window }) {
           <div className="chrome-text" style={{ fontSize: 'calc(46px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             {runLine(idx, got)}
           </div>
-          <div style={{ fontSize: 'var(--type-lg)', marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-lg)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {stopped
               ? goLine(win)
               : left === 0
                 ? `That is the window. ${goLine(win)}`
                 : `${deck.length} cards was the lot. ${goLine(win)}`}
           </div>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 12, lineHeight: 'var(--leading-relaxed)' }}>
             Every answer is recorded against the card, the same as a sitting-down drill — what you
             missed comes back sooner and what you knew comes back later.
           </div>
@@ -418,10 +418,10 @@ export function GapOffer() {
       <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.35, marginTop: 5, textWrap: 'pretty' }}>
         {gapLine(win)}
       </div>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
         {budgetLine(cards, pace)} One thumb, no typing.
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
         {walkLine(win)}
       </div>
     </button>

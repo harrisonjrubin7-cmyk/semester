@@ -79,7 +79,7 @@ export function Behind() {
           style={{
             marginTop: 6,
             fontSize: 'var(--type-lg)',
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
         >
@@ -100,7 +100,7 @@ export function Behind() {
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.55,
               marginBottom: 9,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
           >
@@ -121,7 +121,7 @@ export function Behind() {
                   border: '1px solid var(--app-line)',
                   borderRadius: 'var(--r-sm)',
                   fontSize: 'var(--type-base)',
-                  lineHeight: 1.5,
+                  lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
               >
@@ -144,7 +144,7 @@ export function Behind() {
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   opacity: 0.55,
                   marginBottom: 9,
-                  lineHeight: 1.5,
+                  lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
               >
@@ -204,7 +204,7 @@ export function Behind() {
           fontSize: 'var(--type-sm)',
           opacity: 0.7,
           marginBottom: 10,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >
@@ -241,7 +241,7 @@ export function Behind() {
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 opacity: 0.62,
                 marginTop: 4,
-                lineHeight: 1.5,
+                lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
               }}
             >

@@ -51,7 +51,7 @@ export function Capacity() {
           border: `1px solid ${tight ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
           background: tight ? 'var(--app-warn-wash)' : 'transparent',
           fontSize: 'var(--type-base)',
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >
@@ -110,7 +110,7 @@ export function Capacity() {
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           opacity: 0.6,
           marginTop: 9,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >

@@ -46,7 +46,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           marginTop: 10,
           fontSize: 'var(--type-sm)',
           opacity: 0.6,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
         }}
       >
         Broken into {already.length} {already.length === 1 ? 'step' : 'steps'}
@@ -165,7 +165,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           opacity: 0.5,
           marginTop: 10,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >

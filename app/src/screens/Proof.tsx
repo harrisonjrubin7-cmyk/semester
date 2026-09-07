@@ -81,7 +81,7 @@ export function Proof() {
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.55,
               marginTop: 9,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
           >

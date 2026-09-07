@@ -171,7 +171,7 @@ export function SlideDeck() {
             <div
               style={{
                 fontSize: 'calc(17px * var(--text-scale, 1))',
-                lineHeight: 1.5,
+                lineHeight: 'var(--leading-relaxed)',
                 marginTop: 12,
                 textWrap: 'pretty',
               }}
@@ -190,7 +190,7 @@ export function SlideDeck() {
             {slide.figure.type === 'diagram' ? (
               <Diagram kind={slide.figure.kind} />
             ) : (
-              <div style={{ fontSize: 'var(--type-md)', opacity: 0.75, marginTop: 10, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'var(--type-md)', opacity: 0.75, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
                 {slide.figure.caption}
               </div>
             )}

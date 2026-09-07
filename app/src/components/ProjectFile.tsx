@@ -112,7 +112,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
 
   return (
     <>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         A document to write the thing <em>in</em> — headings, the question each section has to
         answer, your sources with a column for what each is for, the rubric as a checklist, and
         blanks where your claims go. Not the essay: that is the part with your name on it.
@@ -182,7 +182,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>{m.what}</span>
             </div>
           ))}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
             Counted here rather than by Claude, because dates are arithmetic.
           </div>
         </Blueprint>
@@ -194,7 +194,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         value={instructions}
         onChange={(e) => setInstructions(e.target.value)}
         placeholder="Paste them. The rubric especially — it becomes the checklist."
-        style={{ width: '100%', minHeight: 100, resize: 'vertical', lineHeight: 1.5 }}
+        style={{ width: '100%', minHeight: 100, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
 
       <SectionLabel>Your question, in your words</SectionLabel>
@@ -203,7 +203,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
         placeholder="Even roughly. It becomes the top of the document, for you to sharpen."
-        style={{ width: '100%', minHeight: 64, resize: 'vertical', lineHeight: 1.5 }}
+        style={{ width: '100%', minHeight: 64, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
 
       <SectionLabel>Your sources</SectionLabel>
@@ -212,13 +212,13 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         value={sources}
         onChange={(e) => setSources(e.target.value)}
         placeholder="One per line, however you have them written."
-        style={{ width: '100%', minHeight: 80, resize: 'vertical', lineHeight: 1.5 }}
+        style={{ width: '100%', minHeight: 80, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
       <UseSources
         courseId={courseId}
         onFill={(lines) => setSources((now) => appendTo(now, lines))}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
         Yours only. Nothing here will invent an author, a title or a page number — a made-up
         citation looks exactly like a real one, and it goes in under your name.
       </div>
@@ -239,7 +239,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
       ) : null}
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 12, color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       ) : null}
@@ -261,7 +261,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
             {document}
           </div>
 
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
             {left > 0
               ? `${left} blanks in square brackets — those are yours, and the file is not finished until none are left.`
               : 'No blanks left in it. Read it carefully: if it has written the argument rather than asking for it, that is not a file to hand in.'}
@@ -295,7 +295,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
             </button>
           </div>
           <PrintButton label="Print it" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
             Kept as a note it is editable in the app and comes out in an export. Saved as .md it
             opens in Word, Google Docs, Notion or anything else.
           </div>

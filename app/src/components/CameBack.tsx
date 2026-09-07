@@ -62,7 +62,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         style={{
           fontSize: 'var(--type-base)',
           marginTop: 5,
-          lineHeight: 1.45,
+          lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
       >
@@ -119,7 +119,7 @@ export function CameBack({ item }: { item: DatedItem }) {
           marginTop: 8,
           resize: 'vertical',
           fontSize: 'var(--type-base)',
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
         }}
       />
 
@@ -177,7 +177,7 @@ export function CameBack({ item }: { item: DatedItem }) {
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             opacity: 0.55,
             marginTop: 7,
-            lineHeight: 1.5,
+            lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
         >

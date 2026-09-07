@@ -71,7 +71,7 @@ export function FieldGuide() {
           style={{
             fontSize: 'var(--type-md)',
             opacity: 0.75,
-            lineHeight: 1.5,
+            lineHeight: 'var(--leading-relaxed)',
             marginTop: 8,
             textWrap: 'pretty',
           }}
@@ -125,7 +125,7 @@ export function FieldGuide() {
           >
             {String(i + 1).padStart(2, '0')}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{u.name}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{u.name}</span>
           <span
             style={{
               fontFamily: 'var(--font-heading)',
@@ -249,7 +249,7 @@ export function FieldGuide() {
                   style={{
                     fontSize: 'calc(13.5px * var(--text-scale, 1))',
                     opacity: 0.75,
-                    lineHeight: 1.5,
+                    lineHeight: 'var(--leading-relaxed)',
                     marginTop: 4,
                     textWrap: 'pretty',
                   }}
@@ -304,7 +304,7 @@ export function FieldGuide() {
                       <div
                         style={{
                           fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                          lineHeight: 1.5,
+                          lineHeight: 'var(--leading-relaxed)',
                           opacity: 0.85,
                           marginTop: 2,
                           textWrap: 'pretty',
@@ -344,7 +344,7 @@ export function FieldGuide() {
                 style={{
                   fontSize: 'var(--type-base)',
                   opacity: 0.72,
-                  lineHeight: 1.5,
+                  lineHeight: 'var(--leading-relaxed)',
                   marginTop: 2,
                   textWrap: 'pretty',
                 }}
@@ -360,7 +360,7 @@ export function FieldGuide() {
       {guide.selfTest && guide.selfTest.length > 0 && (
         <>
           <SectionLabel style={{ margin: '36px 0 6px' }}>Test yourself</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
             The guide’s own questions, written to be answered out loud. Answers are below each one —
             cover them, or use Cards if you would rather they were hidden.
           </div>
@@ -415,7 +415,7 @@ export function FieldGuide() {
           borderTop: '1px solid var(--app-line)',
           fontSize: 'var(--type-xs)',
           opacity: 0.4,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
         }}
       >
         End of {guide.code}. {guide.source ? `Built from ${guide.source}.` : ''} Anything you add to

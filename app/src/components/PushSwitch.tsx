@@ -98,12 +98,12 @@ export function PushSwitch() {
       </button>
 
       {(said || blocked) && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
           {blocked || said}
         </div>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>{PUSH_NOTE}</div>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>{PUSH_NOTE}</div>
     </div>
   );
 }

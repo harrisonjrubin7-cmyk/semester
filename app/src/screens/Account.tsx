@@ -48,7 +48,7 @@ export function AccountScreen() {
           <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 8, lineHeight: 1.1 }}>
             This build has no account service
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
             Everything works, and everything stays on this device. To turn on accounts, set
             VITE_SUPABASE_URL and VITE_SUPABASE_KEY and redeploy — see SETUP.md.
           </div>
@@ -79,7 +79,7 @@ export function AccountScreen() {
               Through {account.via}.
             </div>
           )}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
             {sync.status === 'syncing' && 'Catching up with your account…'}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
@@ -95,7 +95,7 @@ export function AccountScreen() {
             See `lib/merge.ts`.
           */}
           {state.lastSync ? (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
               {syncLine(state.lastSync.notes)}
             </div>
           ) : null}
@@ -127,7 +127,7 @@ export function AccountScreen() {
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 opacity: 0.8,
                 marginTop: 9,
-                lineHeight: 1.5,
+                lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
               }}
             >
@@ -177,7 +177,7 @@ export function AccountScreen() {
         >
           Sign out (keeps data on this device)
         </button>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
         </div>
@@ -190,7 +190,7 @@ export function AccountScreen() {
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         {mode === 'in' ? 'Pick up where you left off.' : 'One semester, every device.'}
       </div>
-      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         An account keeps your courses, notes and progress in step between your phone and your
         laptop. The app works without one — this only decides whether it follows you.
       </div>
@@ -291,7 +291,7 @@ export function AccountScreen() {
           Apple
         </button>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         Any Google or Microsoft account works — there is no check on which university the address
         belongs to. Email and a password is kept as a third way in because some universities block
         third-party sign-in outright, and being locked out of the only option is not a good enough
@@ -322,10 +322,10 @@ export function AccountScreen() {
       </div>
 
       {note && (
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.85, marginTop: 14, lineHeight: 1.5 }}>{note}</div>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.85, marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>{note}</div>
       )}
       {error && (
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-accent)', marginTop: 14, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-accent)', marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
           {error}
         </div>
       )}

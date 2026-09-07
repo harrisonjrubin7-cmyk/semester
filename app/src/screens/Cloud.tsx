@@ -80,7 +80,7 @@ export function Cloud() {
           <div className="chrome-text" style={{ fontSize: 'calc(25px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
             Connect an account first
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
             Microsoft 365 or Google. Then your syllabus in Drive, the announcements in your inbox
             and your real calendar are all reachable from here.
           </div>
@@ -242,18 +242,18 @@ export function Cloud() {
       {busy && <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 14 }}>{busy}</div>}
       {note && (
         <Blueprint style={{ padding: '12px 14px', marginTop: 14, background: 'var(--app-hero)' }}>
-          <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, textWrap: 'pretty' }}>{note}</div>
+          <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>{note}</div>
         </Blueprint>
       )}
       {error && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-accent)', marginTop: 14, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-accent)', marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       )}
 
       {tab === 'Files' && (
         <>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.68, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.68, marginTop: 14, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             Recent documents. Bring one in and whatever reads as a question and an answer becomes
             cards on a course; the rest is kept as notes.
           </div>
@@ -304,7 +304,7 @@ export function Cloud() {
 
       {tab === 'Mail' && (
         <>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.68, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.68, marginTop: 14, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             Mail from the last six weeks that names one of your courses. Read-only — the app never
             sends anything as you.
           </div>
@@ -332,7 +332,7 @@ export function Cloud() {
                 {m.subject}
               </div>
               <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 2 }}>{m.from}</div>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 7, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
                 {m.preview.slice(0, 220)}
               </div>
               <div style={{ display: 'flex', gap: 14, marginTop: 10 }}>
@@ -381,7 +381,7 @@ export function Cloud() {
 
       {tab === 'Send out' && (
         <>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.68, marginTop: 14, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.68, marginTop: 14, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             Push what is in here out to the calendar and task list you already live in. Run these
             once; they add, they never delete, so running one twice makes duplicates.
           </div>

@@ -65,7 +65,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
           minHeight: 60,
           resize: 'vertical',
           fontSize: 'var(--type-base)',
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
         }}
       />
       <div style={{ display: 'flex', gap: 9, alignItems: 'center', marginTop: 7, flexWrap: 'wrap' }}>
@@ -110,7 +110,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
             fontSize: 'var(--type-sm)',
             opacity: 0.75,
             marginTop: 7,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
         >

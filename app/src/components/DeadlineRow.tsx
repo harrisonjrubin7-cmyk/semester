@@ -175,7 +175,7 @@ export function DeadlineRow({
             style={{
               display: 'block',
               fontSize: 'var(--type-md)',
-              lineHeight: 1.3,
+              lineHeight: 'var(--leading-tight)',
               textDecoration: done ? 'line-through' : 'none',
             }}
           >

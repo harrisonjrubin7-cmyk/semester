@@ -77,7 +77,7 @@ export function Tonight() {
               fontSize: 'var(--type-sm)',
               opacity: 0.72,
               marginTop: 8,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
           >
@@ -124,7 +124,7 @@ export function Tonight() {
             marginTop: 20,
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             opacity: 0.6,
-            lineHeight: 1.5,
+            lineHeight: 'var(--leading-relaxed)',
           }}
         >
           Nothing due in the next week that is not already ticked off.

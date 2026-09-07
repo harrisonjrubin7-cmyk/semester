@@ -480,7 +480,7 @@ export function Assistant() {
                     border: '1px solid var(--app-line)',
                     background: 'var(--app-hero)',
                     fontSize: 'var(--type-xs)',
-                    lineHeight: 1.45,
+                    lineHeight: 'var(--leading-normal)',
                     whiteSpace: 'pre-wrap',
                     overflowX: 'auto',
                   }}
@@ -577,7 +577,7 @@ export function Assistant() {
                         {m.label}
                         <span style={{ opacity: 0.45, fontFamily: 'var(--font-body)' }}> · {m.group}</span>
                       </div>
-                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.7, lineHeight: 1.45, marginTop: 2 }}>
+                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.7, lineHeight: 'var(--leading-normal)', marginTop: 2 }}>
                         {m.blurb}
                       </div>
                     </Blueprint>
@@ -588,7 +588,7 @@ export function Assistant() {
                       style={{
                         fontSize: 'var(--type-xs)',
                         opacity: 0.7,
-                        lineHeight: 1.5,
+                        lineHeight: 'var(--leading-relaxed)',
                         paddingLeft: 9,
                         borderLeft: '2px solid var(--app-line)',
                       }}
@@ -679,7 +679,7 @@ export function Assistant() {
               onChange={(e) => setDraft(e.target.value)}
               placeholder={`Ask about ${assembled.label}, or anything else…`}
               aria-label="Your question"
-              style={{ minHeight: 58, fontSize: 'var(--type-sm)', lineHeight: 1.5 }}
+              style={{ minHeight: 58, fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}
             />
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
               <button

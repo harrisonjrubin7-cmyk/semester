@@ -166,7 +166,7 @@ function YourTasks() {
               <div
                 style={{
                   fontSize: 'var(--type-md)',
-                  lineHeight: 1.3,
+                  lineHeight: 'var(--leading-tight)',
                   textDecoration: t.done ? 'line-through' : 'none',
                 }}
               >
@@ -460,7 +460,7 @@ function Feed_due() {
                 <div
                   style={{
                     fontSize: 'var(--type-lg)',
-                    lineHeight: 1.3,
+                    lineHeight: 'var(--leading-tight)',
                     textDecoration: done ? 'line-through' : 'none',
                   }}
                 >
@@ -547,7 +547,7 @@ function Feed_since() {
       }}
     >
       <div className="kicker">{sinceLabel(lastSeen, now)}</div>
-      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
         {sinceLine(list)}
       </div>
     </div>
@@ -672,7 +672,7 @@ function Feed_registrar() {
           style={{ padding: '12px 14px', marginBottom: 8 }}
         >
           <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', lineHeight: 1.3 }}>{d.label}</span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{d.label}</span>
             <span
               style={{
                 flex: 'none',
@@ -684,7 +684,7 @@ function Feed_registrar() {
             </span>
           </div>
           {d.cost ? (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
               {d.cost}
             </div>
           ) : null}
@@ -731,7 +731,7 @@ function TodayFeed() {
 
   if (order.length === 0) {
     return (
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '20px 0', lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '20px 0', lineHeight: 'var(--leading-relaxed)' }}>
         Every section of Today is switched off. Turn one back on under Me → Settings.
       </div>
     );
@@ -781,7 +781,7 @@ function DoneToday() {
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-base)',
               opacity: 0.8,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
             }}
           >
             {cards.cards} cards answered, {cards.pct}% right — every one of those moved a unit's
@@ -791,7 +791,7 @@ function DoneToday() {
       </Blueprint>
 
       {done.length === 0 ? (
-        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', opacity: 0.55, lineHeight: 1.5 }}>
+        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', opacity: 0.55, lineHeight: 'var(--leading-relaxed)' }}>
           Nothing ticked off yet. Anything you finish shows up here, so a day leaves a trace rather
           than just emptying out.
         </div>
@@ -820,7 +820,7 @@ function DoneToday() {
                   style={{
                     display: 'block',
                     fontSize: 'var(--type-md)',
-                    lineHeight: 1.3,
+                    lineHeight: 'var(--leading-tight)',
                     textDecoration: 'line-through',
                     opacity: 0.7,
                   }}
@@ -854,13 +854,13 @@ function HoursToday() {
 
   return (
     <>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 6 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 6 }}>
         Classes from your syllabi, in the app's own colour. Anything you add is tinted by what it
         is for.
       </div>
       <KindKey />
       {blocks.length === 0 ? (
-        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', opacity: 0.55, lineHeight: 1.5 }}>
+        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', opacity: 0.55, lineHeight: 'var(--leading-relaxed)' }}>
           Nothing on today. Add something below and it appears on the grid.
         </div>
       ) : (
@@ -983,7 +983,7 @@ function FeedHome() {
                 <div
                   style={{
                     fontSize: 'var(--type-lg)',
-                    lineHeight: 1.3,
+                    lineHeight: 'var(--leading-tight)',
                     textDecoration: f.done || f.canceled ? 'line-through' : 'none',
                   }}
                 >

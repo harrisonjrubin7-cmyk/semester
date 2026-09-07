@@ -243,7 +243,7 @@ export function Import() {
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         Upload it. Walk away.
       </div>
-      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         The syllabus gives the dates and how the grade is built. Add the readings and you get the
         study guide too — cards, terms and a self-test made from what they actually argue.
       </div>
@@ -368,7 +368,7 @@ export function Import() {
       )}
 
       {!configured() && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 12, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 12, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           Building a course asks {provider()} to read the documents, which needs a key. Set one under{' '}
           <strong>Ask Claude → Settings</strong>, or sign in and use the shared one.
         </div>
@@ -502,7 +502,7 @@ function ByHand() {
           fontSize: 'var(--type-sm)',
           opacity: 0.65,
           marginTop: 10,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >
@@ -556,11 +556,11 @@ function Rediff({
         <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 1.2, textWrap: 'pretty' }}>
           {rediffSummary(changes)}
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
           {changes.same} unchanged. Saving replaces the course you have rather than adding a second
           copy of it.
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
           {kept.lost === 0
             ? `Everything you have ticked off stays ticked${kept.kept > 0 ? ` — all ${kept.kept} of them` : ''}.`
             : `${kept.kept} of your ticks carry over; ${kept.lost} ${kept.lost === 1 ? 'belongs' : 'belong'} to a deadline this syllabus no longer has.`}
@@ -647,7 +647,7 @@ function Preview({
           {m.course.code}
         </div>
         <div style={{ fontSize: 'var(--type-md)', marginTop: 3 }}>{m.course.name}</div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
           {[m.course.prof, m.course.meets, m.course.room, m.course.credits]
             .filter(Boolean)
             .join(' · ')}
@@ -673,7 +673,7 @@ function Preview({
           <SectionLabel>Worth knowing</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {warnings.map((w) => (
-              <div key={w} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.45, textWrap: 'pretty' }}>
+              <div key={w} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 · {w}
               </div>
             ))}
@@ -694,7 +694,7 @@ function Preview({
         later. Here, the sentence it was read out of is still next to it, which
         is the only thing that tells you whether it is wrong.
       */}
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 4, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 4, lineHeight: 'var(--leading-relaxed)' }}>
         {m.items.length} found
         {dropped.size > 0 ? ` \u00b7 ${dropped.size} taken off \u00b7 ${keeping} will be added` : ' \u00b7 untick anything the syllabus does not say'}
       </div>
@@ -730,7 +730,7 @@ function Preview({
                   flex: 1,
                   minWidth: 0,
                   fontSize: 'var(--type-md)',
-                  lineHeight: 1.3,
+                  lineHeight: 'var(--leading-tight)',
                   textDecoration: off ? 'line-through' : 'none',
                 }}
               >
@@ -744,7 +744,7 @@ function Preview({
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   opacity: 0.5,
                   marginTop: 4,
-                  lineHeight: 1.45,
+                  lineHeight: 'var(--leading-normal)',
                   paddingLeft: 92,
                 }}
               >
@@ -760,7 +760,7 @@ function Preview({
       {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c) => (
         <div key={c.q} style={{ marginTop: 8 }}>
           <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, lineHeight: 1.5, marginTop: 2 }}>{c.a}</div>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, lineHeight: 'var(--leading-relaxed)', marginTop: 2 }}>{c.a}</div>
         </div>
       ))}
 
@@ -782,7 +782,7 @@ function Preview({
           ? `Replace ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`
           : `Add ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`}
       </button>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
         {replacing
           ? 'The changes above are what this replaces. Your ticks and your drill history stay where they are.'
           : 'You can add readings to it later, and everything you add flows into the cards, the quiz and the slides at once.'}

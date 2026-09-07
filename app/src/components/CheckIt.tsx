@@ -139,7 +139,7 @@ export function CheckIt({
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           opacity: 0.55,
           marginTop: 13,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >
@@ -187,7 +187,7 @@ export function CheckIt({
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.7,
               marginTop: 9,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
           >
@@ -215,7 +215,7 @@ function Row({
         style={{
           flex: 1,
           fontSize: 'calc(12.5px * var(--text-scale, 1))',
-          lineHeight: 1.45,
+          lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
       >

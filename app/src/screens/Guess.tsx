@@ -79,7 +79,7 @@ export function Guess() {
       </div>
 
       {state.guessIdx === 0 && !state.guessSaid && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {invite(asked.length, unitName(unit.name))}
         </div>
       )}
@@ -105,9 +105,9 @@ export function Guess() {
             placeholder="What do you think?"
             aria-label={`Your guess at: ${card.q}`}
             rows={3}
-            style={{ marginTop: 14, fontSize: 'var(--type-md)', lineHeight: 1.5 }}
+            style={{ marginTop: 14, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {NUDGE}
           </div>
           <button
@@ -123,14 +123,14 @@ export function Guess() {
         <>
           <Blueprint plain style={{ padding: 14, marginTop: 14 }}>
             <div className="kicker">The answer</div>
-            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-relaxed)', marginTop: 6, textWrap: 'pretty' }}>
               {card.a}
             </div>
           </Blueprint>
           {said.trim() && (
             <Blueprint plain style={{ padding: 14, marginTop: 10 }}>
               <div className="kicker">What you said</div>
-              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.5, marginTop: 6, opacity: 0.8, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', marginTop: 6, opacity: 0.8, textWrap: 'pretty' }}>
                 {said}
               </div>
             </Blueprint>

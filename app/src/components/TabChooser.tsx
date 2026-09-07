@@ -212,7 +212,7 @@ export function TabChooser() {
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             marginTop: 4,
             color: 'var(--app-warn)',
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
         >

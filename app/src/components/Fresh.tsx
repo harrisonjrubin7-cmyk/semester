@@ -58,7 +58,7 @@ export function Fresh() {
         marginInline: 'auto',
       }}
     >
-      <span style={{ flex: 1, fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.45 }}>
+      <span style={{ flex: 1, fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-normal)' }}>
         A newer version of the app is ready.
       </span>
       <button

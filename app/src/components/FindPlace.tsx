@@ -232,7 +232,7 @@ export function FindPlace() {
                   fontSize: 'calc(12.5px * var(--text-scale, 1))',
                   opacity: 0.7,
                   marginTop: 11,
-                  lineHeight: 1.5,
+                  lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
               >
@@ -267,7 +267,7 @@ export function FindPlace() {
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.6,
               marginTop: 8,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
           >
@@ -299,7 +299,7 @@ export function FindPlace() {
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 opacity: 0.6,
                 marginTop: 8,
-                lineHeight: 1.5,
+                lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
               }}
             >

@@ -64,7 +64,7 @@ export function SettingsCourses() {
                   `components/SchoolPicker.tsx` — find it, add it, or skip. */}
               <SchoolPicker />
               {hidden.length > 0 && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                   {/* Named rather than counted. "3 screens are hidden" invites the
                       question this answers. */}
                   Hidden: {hidden.map((h) => DESTINATIONS.find((d) => d.screen === h)?.label ?? h).join(', ')}.

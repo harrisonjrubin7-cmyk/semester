@@ -119,7 +119,7 @@ function HuePicker() {
               {verdict.label}
             </span>
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
             Measured against the ground you are on, using the smallest thing the accent is
             ever set in — a section label. Nothing stops you keeping a faint one; this only
             makes sure you know.
@@ -278,7 +278,7 @@ export function SettingsLook() {
                 })}
               </div>
               {groundOf(resolveGround(state.ground, prefersDark)).light && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
                   On a light ground the brushed-metal type inverts to a dark sweep, so display headings
                   keep their lustre instead of disappearing.
                 </div>
@@ -316,7 +316,7 @@ export function SettingsLook() {
                   );
                 })}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 {TYPEFACES.find((t) => t.id === state.typeface)?.blurb}
               </div>
             </CustomRow>
@@ -345,7 +345,7 @@ export function SettingsLook() {
                   );
                 })}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 {BODYFACES.find((b) => b.id === state.bodyface)?.blurb}
               </div>
             </CustomRow>
@@ -356,7 +356,7 @@ export function SettingsLook() {
                 value={state.lineHeight}
                 onChange={(lineHeight) => dispatch({ type: 'setLook', look: { lineHeight } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 Separate from text size on purpose. “I cannot see this” and “this is a wall” are two
                 different complaints, and one control for both fixes neither properly.
               </div>
@@ -368,7 +368,7 @@ export function SettingsLook() {
                 value={state.readingWidth}
                 onChange={(readingWidth) => dispatch({ type: 'setLook', look: { readingWidth } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 {READING_WIDTHS.find((w) => w.id === state.readingWidth)?.blurb} Applies to the screens
                 that are read rather than scanned — a guide, an essay. The app’s column is already close to
                 the comfortable measure, so in practice this narrows it rather than widening it: past about
@@ -383,7 +383,7 @@ export function SettingsLook() {
                 value={state.textSize}
                 onChange={(textSize) => dispatch({ type: 'setLook', look: { textSize } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 Scales the text. Buttons and the tab bar keep their size on purpose — a tap target that
                 grew with the type would push the bar off the bottom of a phone.
               </div>
@@ -435,7 +435,7 @@ export function SettingsLook() {
                 value={state.density}
                 onChange={(density) => dispatch({ type: 'setLook', look: { density } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 Tightens the space around every section heading, which is the app’s vertical rhythm.
                 Tap targets do not shrink with it — a 30px button is a miss, and a miss costs more than
                 the line it saved.
@@ -456,7 +456,7 @@ export function SettingsLook() {
                 value={state.labels}
                 onChange={(labels) => dispatch({ type: 'setLook', look: { labels } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 {LABELS.find((l) => l.id === state.labels)?.blurb} The names stay for a screen reader
                 either way.
               </div>
@@ -468,7 +468,7 @@ export function SettingsLook() {
                 value={state.badges}
                 onChange={(badges) => dispatch({ type: 'setLook', look: { badges } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 {BADGES.find((b) => b.id === state.badges)?.blurb} A number is a claim on your attention,
                 and an app that puts one on everything has made them all mean nothing.
               </div>
@@ -482,7 +482,7 @@ export function SettingsLook() {
                 value={state.feed}
                 onChange={(feed) => dispatch({ type: 'setLook', look: { feed } })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 {FEEDS.find((f) => f.id === state.feed)?.blurb}
               </div>
             </CustomRow>

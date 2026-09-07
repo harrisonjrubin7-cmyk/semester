@@ -93,14 +93,14 @@ export function Drawing({ code, language }: { code: string; language: Language }
   if (failed) {
     return (
       <div>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
           {failed} The code is below — it is often one label away from working, and it is yours to
           edit.
         </div>
         <pre
           style={{
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            lineHeight: 1.5,
+            lineHeight: 'var(--leading-relaxed)',
             overflowX: 'auto',
             padding: 12,
             margin: 0,

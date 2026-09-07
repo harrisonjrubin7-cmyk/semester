@@ -56,7 +56,7 @@ export function Suggested() {
   return (
     <div style={{ marginTop: 22 }}>
       <div className="kicker">Worth knowing about</div>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {NO_DATES}
       </div>
 
@@ -124,7 +124,7 @@ export function Suggested() {
       )}
 
       {rows.length === 0 ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 12, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 12, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {emptyLine(want)}
         </div>
       ) : (
@@ -138,13 +138,13 @@ export function Suggested() {
                 borderRadius: 'var(--r-sm)',
               }}
             >
-              <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.3 }}>
+              <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
                 {p.role}
               </div>
               <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 2 }}>
                 {p.org}
               </div>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 {p.what}
               </div>
               <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 6, lineHeight: 1.4, textWrap: 'pretty' }}>

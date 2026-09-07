@@ -118,7 +118,7 @@ export function Classmates() {
     return (
       <Page>
         <SectionLabel>What classmates should call you</SectionLabel>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
           This is the only thing about you other people see, alongside the classes you share. Not
           your email, and it does not have to be your full name.
         </div>
@@ -174,7 +174,7 @@ export function Classmates() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {termLabel(term)}. A room is everybody who says they are in that class — a confirmed
         Vanderbilt address is what gets somebody in the door, and no app can read the registrar to
         check the rest.
@@ -272,7 +272,7 @@ export function Classmates() {
       <SectionLabel>What other people see</SectionLabel>
       <Blueprint style={{ padding: '13px 14px' }}>
         <div style={{ fontSize: 'var(--type-md)' }}>{profile?.handle}</div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
           That name, and which of your classes they are also in. Not your email, not your other
           courses, not your notes, your grades or anything else in the app.
         </div>
@@ -280,7 +280,7 @@ export function Classmates() {
 
       <Blocked me={account.id} />
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 18, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 18, lineHeight: 'var(--leading-relaxed)' }}>
         Leaving a room removes you from it and nothing you posted. Delete your own messages first if
         you want them gone. Blocking somebody is immediate and is enforced by the database, so their
         messages stop reaching this device — reports are recorded, but nobody is watching a queue,
@@ -379,7 +379,7 @@ function Room({
 
       {showPeople && (
         <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
             Everybody who says they are in {code} this term. Confirmed Vanderbilt addresses, not a
             roster — no app can read the registrar.
           </div>
@@ -420,7 +420,7 @@ function Room({
 
       <div style={{ marginTop: 14 }}>
         {messages.length === 0 && (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '18px 0', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '18px 0', lineHeight: 'var(--leading-relaxed)' }}>
             Nothing said yet. Somebody has to be first — a question about the reading is usually the
             easiest one.
           </div>
@@ -465,7 +465,7 @@ function Room({
                   </button>
                 )}
               </div>
-              <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.5, marginTop: 3, whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)', marginTop: 3, whiteSpace: 'pre-wrap' }}>
                 {m.body}
               </div>
               {/*
@@ -511,7 +511,7 @@ function Room({
             }
           }}
           placeholder={`Say something to ${code}`}
-          style={{ flex: 1, minWidth: 0, minHeight: 46, resize: 'vertical', lineHeight: 1.5 }}
+          style={{ flex: 1, minWidth: 0, minHeight: 46, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
         />
         <button
           type="button"
@@ -523,7 +523,7 @@ function Room({
           Send
         </button>
       </div>
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
         Everybody in {code} can read this, and it is not private to a group of friends. Messages
         cannot be edited — delete and say it again.
       </div>
@@ -549,7 +549,7 @@ function Blocked({ me }: { me: string }) {
   return (
     <>
       <SectionLabel>Blocked</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
         {ids.length} {ids.length === 1 ? 'person' : 'people'}. Their messages never reach this
         device. They are not told, and they cannot see that you blocked them.
       </div>
@@ -575,7 +575,7 @@ function Note({ title, children }: { title: string; children: React.ReactNode })
     <Page>
       <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
         <div className="kicker">{title}</div>
-        <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>{children}</div>
+        <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>{children}</div>
       </Blueprint>
     </Page>
   );
@@ -583,7 +583,7 @@ function Note({ title, children }: { title: string; children: React.ReactNode })
 
 function Problem({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 12, color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
       {children}
     </div>
   );

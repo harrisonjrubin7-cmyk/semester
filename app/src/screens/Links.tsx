@@ -102,7 +102,7 @@ export function Links() {
                         className="bare"
                         style={{ flex: 1, minWidth: 0, textDecoration: 'none', color: 'inherit' }}
                       >
-                        <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
+                        <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-tight)' }}>
                           {link.name}
                         </span>
                         <span
@@ -121,7 +121,7 @@ export function Links() {
                       </a>
                     ) : (
                       <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.3 }}>
+                        <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-tight)' }}>
                           {link.name}
                         </span>
                         <span
@@ -174,7 +174,7 @@ export function Links() {
                         aria-label={`${link.name} address`}
                       />
                       {link.note && (
-                        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
+                        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
                           {link.note}
                         </div>
                       )}
@@ -259,7 +259,7 @@ export function Links() {
             </button>
           )}
 
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 10, textWrap: 'pretty' }}>
             These open the system itself — the app on a phone that recognises the address, the site
             otherwise. None of them expose an API a student can use alone, so the app links out rather
             than pretending to read them. Correct any address here and the correction is what sticks.

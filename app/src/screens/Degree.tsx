@@ -127,7 +127,7 @@ function WhatIsLeft() {
         {h.done > 0 ? (
           <>
             <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
-            <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {h.done} hours finished
               {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
             </div>
@@ -200,7 +200,7 @@ function WhatIsLeft() {
       })}
 
       <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {h.done} hours finished
         {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
       </div>
@@ -211,7 +211,7 @@ function WhatIsLeft() {
           {/* Either they really are free electives, or a requirement has not
               been entered yet. Both are worth knowing and the app does not
               guess which. */}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {loose.map((c) => c.code).join(', ')}. Either these are free electives, or a
             requirement they satisfy has not been entered yet.
           </div>
@@ -457,7 +457,7 @@ function Rules() {
           marginTop: 8,
           resize: 'vertical',
           fontSize: 'var(--type-base)',
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
         }}
       />
       <button

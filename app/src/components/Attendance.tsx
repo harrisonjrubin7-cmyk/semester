@@ -69,7 +69,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
             style={{
               fontSize: 'var(--type-base)',
               marginTop: 7,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
           >
@@ -86,7 +86,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 opacity: 0.55,
                 marginTop: 7,
-                lineHeight: 1.45,
+                lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
               }}
             >
@@ -95,7 +95,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           ) : null}
         </div>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {/* Stated rather than assumed. The importer does not read attendance
               rules yet, so "nothing here" means nothing was entered — not
               that the syllabus is silent. */}
@@ -165,7 +165,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
             onChange={(e) => set({ note: e.target.value })}
             style={{ width: '100%', marginTop: 8, fontSize: 'var(--type-base)' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 7, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
             A course can have both: some free absences with a penalty after, and attendance as a
             weighted category. Leave what does not apply at zero.
           </div>

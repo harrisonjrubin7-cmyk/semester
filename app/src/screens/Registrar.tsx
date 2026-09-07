@@ -72,7 +72,7 @@ export function Registrar() {
         }}
       >
         <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{d.label}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{d.label}</span>
           {set && (
             <span
               style={{
@@ -88,7 +88,7 @@ export function Registrar() {
         </div>
 
         {d.cost ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 3, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
             {d.cost}
           </div>
         ) : null}
@@ -154,12 +154,12 @@ export function Registrar() {
         <div className="kicker">
           {done.done} of {done.of} filled in
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 7, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
           Every other date in this app came off a syllabus. These come from your registrar, and
           they are the ones that cost money rather than points — a withdrawal deadline missed is a
           course you are graded on whatever happens next.
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
           The app ships none of them. It cannot read a registrar, these dates differ by university
           and by year, and a wrong one that looks confident is worse than a blank one that asks.
         </div>
@@ -197,7 +197,7 @@ export function Registrar() {
       {tab === 'dates' ? (
         <>
           <SectionLabel>The dates worth knowing</SectionLabel>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginBottom: 4, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginBottom: 4, lineHeight: 'var(--leading-normal)' }}>
             Leave anything your university does not do. A blank row is a normal row.
           </div>
           {shown.map(row)}
@@ -205,7 +205,7 @@ export function Registrar() {
       ) : (
         <>
           <SectionLabel>Paste your registrar's calendar</SectionLabel>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-relaxed)' }}>
             Copy the academic calendar page and paste it here. Every row comes back for you to
             confirm — nothing is saved until you say so.
           </div>
@@ -214,7 +214,7 @@ export function Registrar() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder={'August 26 (Wednesday)  Classes begin\nOctober 23  Last day to drop a course without a W'}
-            style={{ width: '100%', minHeight: 140, resize: 'vertical', lineHeight: 1.5 }}
+            style={{ width: '100%', minHeight: 140, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
           />
 
           <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
@@ -237,7 +237,7 @@ export function Registrar() {
               Read it
             </button>
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
             A registrar's page usually runs across two years. The app never guesses which — set it
             here, and paste a spring page separately.
           </div>
@@ -248,7 +248,7 @@ export function Registrar() {
                 {found.length} {found.length === 1 ? 'date' : 'dates'} found
               </SectionLabel>
               {found.length === 0 ? (
-                <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
                   Nothing in that had both a date and something to call it. Paste the rows
                   themselves rather than a link to them, or fill the dates in by hand.
                 </div>

@@ -112,7 +112,7 @@ export function Timer({
 
   if (ended.kind === 'kept') {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, padding: '9px 0', lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, padding: '9px 0', lineHeight: 'var(--leading-normal)' }}>
         {clockLine(ended.minutes)} on this, recorded. The week ahead knows your pace a little
         better than it did.
       </div>
@@ -130,7 +130,7 @@ export function Timer({
   if (ended.kind === 'ask') {
     return (
       <div style={{ padding: '9px 0 4px' }}>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginBottom: 7, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginBottom: 7, lineHeight: 'var(--leading-normal)' }}>
           That ran for {clockLine(ended.minutes)}, which is longer than the app will take on
           trust — a timer left running looks exactly like this. What was it really?
         </div>
@@ -217,7 +217,7 @@ export function Timer({
               fontSize: 'var(--type-xs)',
               opacity: 0.5,
               marginTop: 7,
-              lineHeight: 1.45,
+              lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
             }}
           >

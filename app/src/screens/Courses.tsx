@@ -149,7 +149,7 @@ export function Courses() {
                     {c.meets}
                   </div>
                 </div>
-                <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.3, marginTop: 2 }}>
+                <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 2 }}>
                   {nameFor(c, state.yours)}
                 </div>
                 <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 2 }}>{c.prof}</div>
@@ -250,7 +250,7 @@ function ComingUp() {
         onChange={(t) => dispatch({ type: 'setDueTab', tab: t })}
         style={{ marginBottom: 12 }}
       />
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 4 }}>{blurb}</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 4 }}>{blurb}</div>
       {list.length === 0 && (
         <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', opacity: 0.55 }}>
           {tab === 'overdue'
@@ -347,7 +347,7 @@ function LmsLink({ course }: { course: Course }) {
             style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
             aria-label={`${course.code} Brightspace address`}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, marginTop: 7 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
             Open the course in Brightspace and copy the address from the bar. Grades and
             submissions need D2L’s Valence API, which only Vanderbilt can issue a key for — so
             this is a link, and the dates come from the calendar feed under Connect.
@@ -386,7 +386,7 @@ export function CourseDetail() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.3 }}>{nameFor(course, state.yours)}</div>
+      <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{nameFor(course, state.yours)}</div>
       {/* The syllabus name stays visible under a nickname. This screen is
           where somebody checks what a course actually is — dropping the real
           name here would make the rename a way to lose information. */}
@@ -658,7 +658,7 @@ export function ItemDetail() {
           borderLeft: '2px solid var(--app-accent)',
           padding: '2px 0 2px 14px',
           fontSize: 'var(--type-base)',
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           opacity: 0.75,
           fontStyle: 'italic',
         }}
@@ -714,7 +714,7 @@ export function ItemDetail() {
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             opacity: 0.6,
             marginTop: 8,
-            lineHeight: 1.5,
+            lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
         >

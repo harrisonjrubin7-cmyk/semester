@@ -114,7 +114,7 @@ export function Solve() {
       <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings.
           </div>
         </Blueprint>
@@ -124,7 +124,7 @@ export function Solve() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Working on {guide.code}. It will not write the answer you are handing in — for a maths
         question the worked solution is the submitted work. It will teach the method on numbers
         that are not yours, and read your attempt and find the first step that is wrong.
@@ -196,7 +196,7 @@ export function Solve() {
       >
         {busy === 'Reading it…' ? 'Reading it…' : 'Photograph the problem'}
       </button>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
         Anything the photo cannot show clearly comes back as [?] rather than a guess — a guessed
         exponent turns it into a different problem without telling you.
       </div>

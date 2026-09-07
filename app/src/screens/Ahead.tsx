@@ -98,7 +98,7 @@ export function Ahead() {
           {headline(w)}
         </div>
         {pressure(w) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
             {pressure(w)}
           </div>
         ) : null}
@@ -175,7 +175,7 @@ export function Ahead() {
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
         Classes and commitments at the length they meet for; an appointment counted as an hour,
         because it has a start and no end. A dot marks a day with something due on it.
       </div>
@@ -189,7 +189,7 @@ export function Ahead() {
       {(readings.placed.length > 0 || readings.unplaced.length > 0 || readings.unsized.length > 0) && (
         <>
           <SectionLabel>Reading, and where it goes</SectionLabel>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.5, marginBottom: 8 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginBottom: 8 }}>
             {planLine(readings)}
           </div>
           {readings.placed.map((p) => (
@@ -239,7 +239,7 @@ export function Ahead() {
             </div>
           ))}
           {readings.unsized.length > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
               {readings.unsized.length} could not be sized — the app has not seen you time a
               reading in that course yet, and it will not invent one.
             </div>
@@ -293,7 +293,7 @@ export function Ahead() {
             : `${showHours(w.spare)} of waking time, after everything already promised.`}
         </div>
         {asked.stated > 0 ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 7, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
             Your syllabi ask for about {showHours(asked.hours)} of study a week
             {asked.stated < asked.total
               ? ` — and that is only the ${asked.stated} of ${asked.total} courses that say so`
@@ -308,13 +308,13 @@ export function Ahead() {
               marginTop: 9,
               paddingTop: 9,
               borderTop: '1px solid var(--app-line)',
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
             }}
           >
             {mine}
           </div>
         ) : null}
-        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
           {basisLine(w.shape)} The coursework estimate is built only from work you have timed
           yourself — the app still invents nothing, and anything it has never seen the like of is
           counted as unknown rather than guessed at.

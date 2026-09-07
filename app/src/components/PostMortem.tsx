@@ -31,11 +31,11 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
     return (
       <div style={{ marginTop: 10 }}>
         {done ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.45, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {doneLine(done, units.map((u) => unitName(u.name)))}
           </div>
         ) : (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {OFFER}
           </div>
         )}

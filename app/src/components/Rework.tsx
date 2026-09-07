@@ -84,7 +84,7 @@ export function Rework({
   return (
     <>
       <SectionLabel>Rebuild the guide around this</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
         Everything you have added already shows up in every study format. This goes further and
         reorganises the guide itself — new material put in the unit it belongs to, units split or
         renamed where they have outgrown themselves, cards written from prose that never became
@@ -92,7 +92,7 @@ export function Rework({
       </div>
 
       {!owned && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
           This is one of the built-in sample courses, so its guide cannot be replaced. Your own
           courses can be.
         </div>
@@ -109,12 +109,12 @@ export function Rework({
       </button>
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 10, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 10, color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       ) : null}
       {done ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 10, opacity: 0.8, lineHeight: 1.5 }}>{done}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 10, opacity: 0.8, lineHeight: 'var(--leading-relaxed)' }}>{done}</div>
       ) : null}
 
       {plan && cost && (
@@ -133,7 +133,7 @@ export function Rework({
           </div>
 
           {cost.examples.length > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 10, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
               {cost.examples.map((e, i) => (
                 <div key={i} style={{ marginBottom: 6 }}>
                   <div style={{ textDecoration: 'line-through', opacity: 0.6 }}>{e.before}</div>
@@ -143,7 +143,7 @@ export function Rework({
             </div>
           )}
 
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 12, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 12, lineHeight: 'var(--leading-relaxed)' }}>
             {cost.unitsBefore} units → {cost.unitsAfter}.{' '}
             {plan.guide.units.reduce((n, u) => n + u.cards.length, 0)} cards,{' '}
             {plan.guide.terms.length} terms.

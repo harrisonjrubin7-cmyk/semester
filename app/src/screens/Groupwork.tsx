@@ -122,7 +122,7 @@ export function Groupwork() {
       <Page>
         <Blueprint style={{ padding: '15px 16px' }}>
           <div className="kicker">Sign in first</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
             A group is other people, so it needs an account. Everything else in the app works
             signed out.
           </div>
@@ -162,7 +162,7 @@ export function Groupwork() {
       </select>
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 12, color: 'var(--app-warn)', lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 12, color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       ) : null}
@@ -171,7 +171,7 @@ export function Groupwork() {
         <>
           <SectionLabel>Groups in {code}</SectionLabel>
           {groups.length === 0 ? (
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
               None yet. Whoever starts one is in it, and anybody else in the class can join.
             </div>
           ) : (
@@ -247,12 +247,12 @@ export function Groupwork() {
             >
               {open.name}
             </div>
-            <div style={{ fontSize: 'var(--type-md)', opacity: 0.8, marginTop: 8, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'var(--type-md)', opacity: 0.8, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
               {headline(s)}
             </div>
             {/* The sentence a group can argue with. See `lib/groupwork.ts`. */}
             {paceLine(asGroup(open), parts.map(asPart), now) ? (
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 7, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
                 {paceLine(asGroup(open), parts.map(asPart), now)}
               </div>
             ) : null}
@@ -339,7 +339,7 @@ export function Groupwork() {
           {unclaimed(parts.map(asPart)).length > 0 && (
             <>
               <SectionLabel>Nobody has these</SectionLabel>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 6, lineHeight: 'var(--leading-normal)' }}>
                 The list a group actually has to divide.
               </div>
             </>
@@ -347,7 +347,7 @@ export function Groupwork() {
 
           <SectionLabel>The parts</SectionLabel>
           {parts.length === 0 ? (
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
               Nothing on the list yet. Write down the sections and the group can divide them.
             </div>
           ) : (
@@ -470,7 +470,7 @@ export function Groupwork() {
             </div>
           )}
 
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
             Any member can claim a part, tick one or fix a title — group work does not survive a
             permission model where only the person who wrote a line may correct it. Nobody can
             remove anybody from a group but themselves.

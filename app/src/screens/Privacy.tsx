@@ -131,7 +131,7 @@ export function Privacy() {
               <span style={{ opacity: 0.6, fontVariantNumeric: 'tabular-nums' }}>{t.n}</span>
             </div>
           ))}
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 1.5, marginTop: 8, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginTop: 8, textWrap: 'pretty' }}>
             {unusedLine(neverOpened(counts, DESTINATIONS.map((d) => d.screen as string)).length, DESTINATIONS.length)}
           </div>
           <button
@@ -213,7 +213,7 @@ export function Privacy() {
         <div
           role="status"
           aria-live="polite"
-          style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}
+          style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}
         >
           {saved}
         </div>

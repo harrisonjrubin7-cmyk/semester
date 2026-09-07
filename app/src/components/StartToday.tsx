@@ -86,7 +86,7 @@ export function StartToday() {
                 display: 'block',
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 marginTop: 6,
-                lineHeight: 1.45,
+                lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
               }}
             >
@@ -106,7 +106,7 @@ export function StartToday() {
             fontSize: 'var(--type-xs)',
             opacity: 0.5,
             marginTop: 8,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
         >
@@ -157,7 +157,7 @@ export function StartList() {
           fontSize: 'var(--type-sm)',
           opacity: 0.68,
           marginBottom: 9,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >
@@ -169,7 +169,7 @@ export function StartList() {
             fontSize: 'var(--type-xs)',
             opacity: 0.5,
             marginBottom: 9,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
         >
@@ -241,7 +241,7 @@ export function StartList() {
           fontSize: 'var(--type-xs)',
           opacity: 0.5,
           marginTop: 10,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >

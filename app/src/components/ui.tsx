@@ -364,7 +364,7 @@ export function EmptyState({
           opacity: 0.6,
           marginTop: inline ? 5 : 6,
           textWrap: 'pretty',
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
         }}
       >
         {body}

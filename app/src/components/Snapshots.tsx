@@ -81,12 +81,12 @@ export function Snapshots() {
   return (
     <div>
       <SectionLabel>Go back a day</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10, textWrap: 'pretty' }}>
         {LOCAL_LINE}
       </div>
 
       {list === null ? null : list.length === 0 ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {NONE_LINE}
         </div>
       ) : (
@@ -139,7 +139,7 @@ export function Snapshots() {
           <div className="kicker">
             {reasonLabel(picked.reason)} · {whenLine(picked.at, now)}
           </div>
-          <div style={{ fontSize: 'var(--type-base)', marginTop: 8, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {costLine(rows)}
           </div>
           {rows.length > 0 && (
@@ -151,7 +151,7 @@ export function Snapshots() {
               ))}
             </ul>
           )}
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 9, lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {RESTORE_LINE}
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
@@ -211,7 +211,7 @@ export function Snapshots() {
       </button>
 
       {said ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 10, lineHeight: 1.5, opacity: 0.85, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 10, lineHeight: 'var(--leading-relaxed)', opacity: 0.85, textWrap: 'pretty' }}>
           {said}
         </div>
       ) : null}

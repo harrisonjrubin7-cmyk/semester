@@ -77,7 +77,7 @@ export function Insights({
               style={{
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'var(--type-lg)',
-                lineHeight: 1.3,
+                lineHeight: 'var(--leading-tight)',
                 textWrap: 'pretty',
               }}
             >
@@ -87,7 +87,7 @@ export function Insights({
               style={{
                 fontSize: 'var(--type-base)',
                 opacity: 0.75,
-                lineHeight: 1.5,
+                lineHeight: 'var(--leading-relaxed)',
                 marginTop: 5,
                 textWrap: 'pretty',
               }}

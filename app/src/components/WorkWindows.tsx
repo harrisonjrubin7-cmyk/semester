@@ -40,7 +40,7 @@ export function WorkWindows() {
   return (
     <>
       <SectionLabel>When you actually work</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
         The app counts a day as sixteen waking hours until you say otherwise, which is a default
         rather than a fact about you. Two or three windows here make every hour figure in the app
         true — the week ahead, the exam runway, what is left over.
@@ -170,7 +170,7 @@ export function WorkWindows() {
       </div>
 
       {windows.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
           {hoursAWeek(windows)} hours a week before anything is promised. Nothing is ever scheduled
           into a window — this only says how many hours are actually there.
         </div>

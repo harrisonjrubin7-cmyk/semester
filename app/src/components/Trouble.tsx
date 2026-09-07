@@ -55,7 +55,7 @@ export function Trouble({
       <div
         style={{
           fontSize: 'var(--type-base)',
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           whiteSpace: 'pre-wrap',
           textWrap: 'pretty',
         }}

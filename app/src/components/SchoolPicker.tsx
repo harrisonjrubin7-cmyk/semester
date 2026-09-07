@@ -87,7 +87,7 @@ export function SchoolPicker() {
           </div>
         )}
 
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, margin: '12px 0 4px', lineHeight: 1.45, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, margin: '12px 0 4px', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
           Every question below is optional. Anything left alone stays switched off, and nothing here
           is permanent.
         </div>
@@ -193,7 +193,7 @@ export function SchoolPicker() {
       />
 
       {hint && hint.id !== state.schoolId && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
           {/* Suggested from the address you signed in with. Never enforced —
               plenty of students sign in with a personal address, and plenty of
               people have one at a school they left. */}
@@ -224,7 +224,7 @@ export function SchoolPicker() {
           />
         ))}
         {found.length === 0 && (
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, padding: '6px 0', lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, padding: '6px 0', lineHeight: 'var(--leading-normal)' }}>
             Nothing here by that name. Add it — it takes about a minute, and every question is
             optional.
           </div>
@@ -255,7 +255,7 @@ export function SchoolPicker() {
         )}
       </div>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {state.schoolId === '' ? SKIP_LINE : schoolLine(school)}
       </div>
     </div>

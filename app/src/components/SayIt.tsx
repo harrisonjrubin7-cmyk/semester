@@ -86,7 +86,7 @@ export function SayIt({
         <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
           What you said
         </div>
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 5, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 5, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {said}
         </div>
         {/* No verdict. The three buttons below are the marking, and they are
@@ -129,7 +129,7 @@ export function SayIt({
             fontSize: 'var(--type-base)',
             opacity: 0.75,
             marginTop: 10,
-            lineHeight: 1.5,
+            lineHeight: 'var(--leading-relaxed)',
             textAlign: 'center',
             textWrap: 'pretty',
           }}

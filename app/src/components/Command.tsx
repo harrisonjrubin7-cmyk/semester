@@ -232,7 +232,7 @@ export function Command({ onClose }: { onClose: () => void }) {
               fontSize: 'var(--type-base)',
               opacity: 0.6,
               marginTop: 22,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
           >

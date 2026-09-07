@@ -31,7 +31,7 @@ export function NotYetOpened() {
       >
         Not opened yet
       </SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 10, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 10, lineHeight: 'var(--leading-normal)' }}>
         {seenLine(state.visited)} These three change each day.
       </div>
 

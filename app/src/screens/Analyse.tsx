@@ -159,7 +159,7 @@ export function Analyse() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Every number here is computed on this device by tested code, not guessed at by a model.
         {provider()} is given the finished statistics and asked what they mean — it never reads a column
         and reports a figure.
@@ -198,7 +198,7 @@ export function Analyse() {
           marginTop: 8,
           resize: 'vertical',
           fontSize: 'var(--type-sm)',
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
         }}
       />
@@ -314,7 +314,7 @@ export function Analyse() {
             {stat('R²', show(fit.r2))}
             {r === null ? null : stat('Pearson r', show(r))}
           </Blueprint>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
             Rows where either column was blank were dropped, not read as zero. No p-value: turning
             t into one needs the incomplete beta function, and an approximation that is wrong in
             the tail — exactly where a p-value is read — would be worse than a table.

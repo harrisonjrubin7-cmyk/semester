@@ -125,7 +125,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         style={{
           fontSize: 'var(--type-sm)',
           opacity: 0.72,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >
@@ -209,7 +209,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             opacity: 0.55,
             marginTop: 7,
-            lineHeight: 1.5,
+            lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
         >

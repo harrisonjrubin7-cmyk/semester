@@ -92,7 +92,7 @@ export function HomeWalk() {
           style={{
             fontSize: morning ? 12.5 : 14.5,
             opacity: morning ? 0.7 : 1,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             marginTop: morning ? 7 : 5,
             textWrap: 'pretty',
           }}

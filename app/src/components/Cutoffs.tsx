@@ -45,7 +45,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           opacity: 0.55,
-          lineHeight: 1.45,
+          lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
       >
@@ -104,7 +104,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.6,
-              lineHeight: 1.45,
+              lineHeight: 'var(--leading-normal)',
               marginBottom: 8,
               textWrap: 'pretty',
             }}

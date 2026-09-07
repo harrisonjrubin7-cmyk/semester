@@ -137,12 +137,12 @@ export function Drill() {
               keeping no record of what was missed. Now it reads the schedule. */}
           <Blueprint plain style={{ padding: 14, marginTop: 26, textAlign: 'left' }}>
             <div className="kicker">What comes back</div>
-            <div style={{ fontSize: 'var(--type-md)', marginTop: 6, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--type-md)', marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
               {waiting === 0
                 ? 'Nothing in this course is due right now. Come back tomorrow.'
                 : `${waiting} ${waiting === 1 ? 'card is' : 'cards are'} due again in ${guide.code}.`}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
               Missed cards return in ten minutes. A card you get right three times running moves out
               to weeks.
             </div>
@@ -158,7 +158,7 @@ export function Drill() {
           */}
           <Blueprint plain style={{ padding: 14, marginTop: 14, textAlign: 'left' }}>
             <div className="kicker">How sure you were</div>
-            <div style={{ fontSize: 'var(--type-base)', marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {calibrationLine(calibration(state.answers))}
             </div>
             {beliefs(state.answers).length > 0 ? (
@@ -167,7 +167,7 @@ export function Drill() {
                   fontSize: 'var(--type-sm)',
                   opacity: 0.7,
                   marginTop: 8,
-                  lineHeight: 1.5,
+                  lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
               >
@@ -267,7 +267,7 @@ export function Drill() {
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.55,
               marginTop: 6,
-              lineHeight: 1.45,
+              lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
             }}
           >
@@ -314,7 +314,7 @@ export function Drill() {
               paddingTop: 14,
               borderTop: '1px solid var(--app-line)',
               fontSize: 'calc(16px * var(--text-scale, 1))',
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
               display: 'block',
             }}
@@ -612,7 +612,7 @@ export function Quiz() {
         <>
           <Blueprint style={{ padding: '13px 14px', marginTop: 16 }}>
             <div className="kicker">In full</div>
-            <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
               {current.full}
             </div>
           </Blueprint>

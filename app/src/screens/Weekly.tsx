@@ -141,7 +141,7 @@ export function Weekly() {
         textAlign: 'left',
       }}
     >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{label}</span>
+      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{label}</span>
       <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55 }}>{right}</span>
     </button>
   );
@@ -157,7 +157,7 @@ export function Weekly() {
           {behindLine(back)}
         </div>
         {slippedLine(back) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
             {slippedLine(back)}
           </div>
         ) : null}
@@ -206,7 +206,7 @@ export function Weekly() {
           .
         </div>
         {forward.heaviest ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 6, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
             {forward.heaviest.name} carries most of it, at {showHours(forward.heaviest.promised)}
             {forward.freest && forward.freest !== forward.heaviest
               ? `; ${forward.freest.name} has the most room`
@@ -263,7 +263,7 @@ export function Weekly() {
             </div>
           ) : null}
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
             Every number above is counted from your own data. {provider()} reads the counts and is
             told not to score the week — a week with three classes, a shift and two ticked boxes is
             a normal week.
@@ -304,7 +304,7 @@ export function Weekly() {
         </button>
       </div>
       <PrintButton label="Print the week" style={{ marginTop: 8 }} />
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
         A deadline counts to the week you ticked it.
         {back.staleTicks > 0
           ? ` ${back.staleTicks} of these ${back.staleTicks === 1 ? 'was' : 'were'} ticked before the app started recording the moment, so ${back.staleTicks === 1 ? 'it counts' : 'they count'} to the week ${back.staleTicks === 1 ? 'it was' : 'they were'} due instead.`

@@ -95,13 +95,13 @@ export function Yes() {
           </Blueprint>
         </a>
       ))}
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 1.45, marginTop: 4 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 'var(--leading-normal)', marginTop: 4 }}>
         These open signed out and YES asks who you are — the app holds no student number, and the
         links carry none, because one student's id in a shared app would be sent by everybody.
       </div>
 
       <SectionLabel>Bring your schedule back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
         Open your enrolled classes in YES, select them, copy, and paste here. Nothing is read from
         the page — a browser will not let this app see a tab it does not own, and it should not.
       </div>
@@ -110,11 +110,11 @@ export function Yes() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={'ECON 1020-01  Principles of Macroeconomics  MWF  9:10am-10:00am  Buttrick 101'}
-        style={{ width: '100%', minHeight: 130, resize: 'vertical', lineHeight: 1.5, fontSize: 'var(--type-base)' }}
+        style={{ width: '100%', minHeight: 130, resize: 'vertical', lineHeight: 'var(--leading-relaxed)', fontSize: 'var(--type-base)' }}
       />
 
       {text.trim() && found.length === 0 && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
           Nothing in there looks like a class. A line has to carry a course number, the days it
           meets and a time — anything else is dropped rather than guessed at.
         </div>
@@ -183,7 +183,7 @@ export function Yes() {
           >
             Add them to the semester
           </button>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 9, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 9, lineHeight: 'var(--leading-normal)' }}>
             They arrive with their timetable and no deadlines. YES knows when your classes meet and
             nothing about when your essays are due — that comes from the syllabus.
           </div>
@@ -191,7 +191,7 @@ export function Yes() {
       )}
 
       {added ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 1.5, opacity: 0.85 }}>{added}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', opacity: 0.85 }}>{added}</div>
       ) : null}
 
       <SectionLabel>The other way</SectionLabel>
@@ -212,7 +212,7 @@ export function Yes() {
         Add a course from its syllabus
       </button>
       {catalog.courses.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
           {catalog.courses.length} course{catalog.courses.length === 1 ? '' : 's'} loaded.
         </div>
       )}

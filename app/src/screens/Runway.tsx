@@ -146,11 +146,11 @@ export function Runway() {
         >
           {headline(r)}
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
           {r.stage.label}. {r.stage.shape}
         </div>
         {r.daysAway > 0 ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 7, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
             {r.clearDays} of those days have nothing else standing on them.
           </div>
         ) : null}
@@ -167,7 +167,7 @@ export function Runway() {
           <div
             style={{
               fontSize: 'var(--type-md)',
-              lineHeight: 1.45,
+              lineHeight: 'var(--leading-normal)',
               marginTop: 6,
               color: bookingLate(book, now) ? 'var(--app-warn)' : undefined,
             }}
@@ -195,7 +195,7 @@ export function Runway() {
               Open Student Access →
             </a>
           ) : null}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
             Weekends only — the app has no holiday calendar and will not invent one, so a lead
             time crossing a public holiday is a day short.
           </div>
@@ -203,8 +203,8 @@ export function Runway() {
       )}
 
       <SectionLabel>Where you stand</SectionLabel>
-      <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.5 }}>{standing(r)}</div>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 6, lineHeight: 1.5 }}>{paperLine(r)}</div>
+      <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}>{standing(r)}</div>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>{paperLine(r)}</div>
 
       {worst ? (
         <button
@@ -239,7 +239,7 @@ export function Runway() {
 
       <SectionLabel>Unit by unit</SectionLabel>
       {r.units.length === 0 ? (
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)' }}>
           This course has no study guide yet, so there is nothing to count. Add the readings and
           the guide builds itself.
         </div>
@@ -314,7 +314,7 @@ export function Runway() {
       )}
 
       <PrintButton label="Print the runway" style={{ marginTop: 14 }} />
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
         Every number here is counted from your own drilling and your own deadlines. There is no
         readiness score and there will not be one — it would be believed, and the app cannot know.
       </div>

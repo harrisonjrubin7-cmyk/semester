@@ -582,7 +582,7 @@ function WeekView() {
       ) : (
         <>
           <WeekGrid days={days} now={minutesNow(now)} style={{ marginTop: 14 }} />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 14, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
             Tap a date to open that day in full. Deadlines are moments rather than spans, so they
             are listed under the grid instead of drawn on it.
           </div>

@@ -148,7 +148,7 @@ export function Mail() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Drafts here, sends from your own mail app. Nothing leaves the app until you press send in
         Gmail or Outlook, and nothing about you goes in the draft unless you type it below.
       </div>
@@ -162,7 +162,7 @@ export function Mail() {
           if (found) setPid(found.id);
         }}
       />
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 1.45 }}>{p.blurb}</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>{p.blurb}</div>
 
       {catalog.courses.length > 0 && (
         <>
@@ -222,13 +222,13 @@ export function Mail() {
             value={incoming}
             onChange={(e) => setIncoming(e.target.value)}
             placeholder="Paste it here."
-            style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.5 }}
+            style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
           />
         </>
       )}
 
       <SectionLabel>In your own words</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 6, lineHeight: 'var(--leading-normal)' }}>
         {p.asks} Anything factual in the draft has to come from here — the app will leave a blank
         rather than invent a reason for you.
       </div>
@@ -237,7 +237,7 @@ export function Mail() {
         value={facts}
         onChange={(e) => setFacts(e.target.value)}
         placeholder="Bullet points are fine. Nobody sees this but you."
-        style={{ width: '100%', minHeight: 90, resize: 'vertical', lineHeight: 1.5 }}
+        style={{ width: '100%', minHeight: 90, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
 
       <SectionLabel>Sign it</SectionLabel>
@@ -265,7 +265,7 @@ export function Mail() {
             fontSize: 'var(--type-sm)',
             opacity: 0.65,
             marginTop: 10,
-            lineHeight: 1.5,
+            lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
         >
@@ -312,7 +312,7 @@ export function Mail() {
                 marginTop: 10,
                 padding: '10px 12px',
                 borderRadius: 10,
-                lineHeight: 1.45,
+                lineHeight: 'var(--leading-normal)',
                 border: '1px solid var(--app-warn-line)',
                 background: 'var(--app-warn-wash)',
               }}
@@ -374,7 +374,7 @@ export function Mail() {
               Keep as note
             </button>
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
             The app cannot send this. It has your mail read-only, which is the point — read it
             once more and send it yourself.
           </div>

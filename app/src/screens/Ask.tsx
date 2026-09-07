@@ -30,7 +30,7 @@ export function Ask() {
 
   return (
     <Page>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.75, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         The assistant is on every screen now — the button in the corner, or{' '}
         <kbd style={{ padding: '1px 5px', border: '1px solid var(--app-line-top)', borderRadius: 'var(--r-sm)' }}>A</kbd>{' '}
         from anywhere. It sees what that screen is showing, so a question about
@@ -51,7 +51,7 @@ export function Ask() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', marginTop: 5 }}>
             Where the answers come from
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, lineHeight: 1.5, marginTop: 6, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, lineHeight: 'var(--leading-relaxed)', marginTop: 6, textWrap: 'pretty' }}>
             {config.provider === 'openai'
               ? 'Two providers, so a lapsed account or an outage the night before a midterm does not stop the app working. Nothing above this setting knows which one answered.'
               : route() === 'shared'
@@ -93,7 +93,7 @@ export function Ask() {
 
           {config.provider === 'openai' ? (
             <>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 1.5, marginTop: 10 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 10 }}>
                 There is no shared key on this side — the server function holds an Anthropic key
                 and nothing else. So this means your own OpenAI key, in this browser, where
                 anything running here can read it. It is billable and has no spend cap of its own.
@@ -234,7 +234,7 @@ export function Ask() {
       {month.asks > 0 && (
         <>
           <SectionLabel>What this has cost</SectionLabel>
-          <div style={{ fontSize: 'var(--type-sm)', lineHeight: 1.5, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             About {money(month.dollars)} this month, over {month.asks}{' '}
             {month.asks === 1 ? 'answer' : 'answers'}.{' '}
             <span style={{ opacity: 0.6 }}>
@@ -253,7 +253,7 @@ export function Ask() {
           the feature was meant to do. The first stopped being true once `ask`
           widened past one course, which is exactly how these go wrong. */}
       <SectionLabel>What it can see</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Your course codes and today’s date, always — and what the screen you are on says it is
         showing, after its own filters. For a question about your own records: the deadlines in the
         window you asked about, and the grades, attendance and unit names for the courses you named.
@@ -267,7 +267,7 @@ export function Ask() {
       </div>
 
       <SectionLabel>What it can do</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Offer to tick off a deadline, add or move one of your own tasks, mark you at a class, start a
         timer, keep a note, add a source, track or move an application, set your study budget, change
         the accent, text size, background or spacing, or take you to a screen. Nothing happens until

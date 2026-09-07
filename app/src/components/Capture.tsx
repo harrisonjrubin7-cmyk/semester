@@ -179,7 +179,7 @@ export function Capture({
           {errors.map((e) => (
             <div
               key={e}
-              style={{ fontSize: 'var(--type-sm)', color: 'var(--app-accent)', lineHeight: 1.45, marginTop: 2 }}
+              style={{ fontSize: 'var(--type-sm)', color: 'var(--app-accent)', lineHeight: 'var(--leading-normal)', marginTop: 2 }}
             >
               {e}
             </div>

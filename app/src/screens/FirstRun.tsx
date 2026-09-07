@@ -23,7 +23,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
       >
         Start with a syllabus.
       </div>
-      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 8, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 8, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Upload the PDF your professor posted — the readings too, if you have them — and the app
         builds the course from it: every dated obligation with the sentence it came from, a study
         guide, cards, a quiz and slides.
@@ -68,7 +68,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
           >
             Look at the sample semester
           </button>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.5, marginTop: 8 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-relaxed)', marginTop: 8 }}>
             {SEED_SUMMARY.courses} real courses — {SEED_SUMMARY.units} units, {SEED_SUMMARY.cards}{' '}
             cards and {SEED_SUMMARY.lessons} narrated lessons — to see what a finished one looks
             like. Switch it off again in Settings.

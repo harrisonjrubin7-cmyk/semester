@@ -35,7 +35,7 @@ export function Walks({ date }: { date?: Date }) {
   return (
     <>
       <SectionLabel>Getting between them</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.5, marginBottom: 8 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', marginBottom: 8 }}>
         {daySummary(list)}
       </div>
 
@@ -76,7 +76,7 @@ export function Walks({ date }: { date?: Date }) {
         </button>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
         {pressed.length > 0
           ? 'Measured between places you saved, at an unhurried eighty metres a minute — slow on purpose, since an estimate that says you will make it and is wrong costs more than one that says you will not.'
           : 'Measured between places you saved. The app never geocodes an address, so a building it has no place for gets no distance rather than a guessed one.'}

@@ -79,13 +79,13 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
             <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4, marginTop: 7 }}>{r.said}</div>
 
             {next ? (
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 {next.block.title}
                 {next.block.meta ? ` · ${next.block.meta}` : ''}
               </div>
             ) : yours ? (
               <>
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                   The app does not have this course's office hours. They are on the syllabus, and
                   they take a minute to add.
                 </div>

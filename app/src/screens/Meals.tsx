@@ -132,7 +132,7 @@ export function Meals() {
       ) : null}
 
       <SectionLabel>Log what it says</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 9, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 9, lineHeight: 'var(--leading-relaxed)' }}>
         Leave a field blank if your plan does not have it. Two readings a few days apart is what
         turns a balance into a rate.
       </div>
@@ -168,7 +168,7 @@ export function Meals() {
       </div>
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}
@@ -215,7 +215,7 @@ export function Meals() {
         </Group>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
         Nothing is fetched. The balance page is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The app reports a rate and a date and stops; it has no idea whether you

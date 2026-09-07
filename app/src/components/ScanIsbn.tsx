@@ -106,7 +106,7 @@ export function ScanIsbn({ onFound }: { onFound: (isbn: string) => void }) {
           >
             <track kind="captions" />
           </video>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
             {trouble ||
               'Hold the barcode still in frame. The number is read on this device and goes no further — the app does not look it up, because that would mean telling somebody else what you are studying.'}
           </div>

@@ -80,3 +80,51 @@ describe('the type scale', () => {
     }
   });
 });
+
+/**
+ * The same three questions about leading.
+ *
+ * `--leading-tight`, `--leading-normal` and `--leading-relaxed` are 1.3, 1.45
+ * and 1.5, and five hundred and twenty-three inline styles were writing those
+ * three numbers out. A bare number and the token compute to the same unitless
+ * line-height, so swapping them changed nothing on screen and everything about
+ * whether the three values can be moved together.
+ */
+const LEADING: Record<string, string> = {
+  '1.3': 'tight',
+  '1.45': 'normal',
+  '1.5': 'relaxed',
+};
+
+const NUMERIC = /lineHeight: (\d+(?:\.\d+)?)/g;
+
+function leadings() {
+  const hits: { path: string; n: string }[] = [];
+  for (const f of FILES) {
+    for (const m of f.text.matchAll(NUMERIC)) hits.push({ path: f.path, n: m[1] });
+  }
+  return hits;
+}
+
+describe('the leading scale', () => {
+  it('has no line height written as a number that a token already names', () => {
+    const wrong = leadings()
+      .filter((h) => LEADING[h.n])
+      .map((h) => `${h.path.split('/src/')[1]} — ${h.n} is var(--leading-${LEADING[h.n]})`);
+    expect([...new Set(wrong)]).toEqual([]);
+  });
+
+  /* The same budget, for the same reason: 1.55, 1.4, 1.35 and a tail below
+     them are a hundred-odd real decisions, and folding them into three steps
+     is a change to how every paragraph in the app sets. Not here. */
+  it('has not drifted further off it', () => {
+    expect(leadings().filter((h) => !LEADING[h.n]).length).toBeLessThanOrEqual(234);
+  });
+
+  it('still defines every token it claims to', () => {
+    const css = readFileSync(join(process.cwd(), 'src/styles/app.css'), 'utf8');
+    for (const [n, name] of Object.entries(LEADING)) {
+      expect(css).toContain(`--leading-${name}: ${n};`);
+    }
+  });
+});

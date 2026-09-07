@@ -147,7 +147,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
         style={{
           fontSize: 'var(--type-sm)',
           opacity: 0.6,
-          lineHeight: 1.45,
+          lineHeight: 'var(--leading-normal)',
           marginTop: 12,
           paddingTop: 10,
           borderTop: '1px solid var(--app-line)',

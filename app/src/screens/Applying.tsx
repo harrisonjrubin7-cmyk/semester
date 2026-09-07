@@ -193,7 +193,7 @@ function Row({ a }: { a: Application }) {
             background: 'var(--app-warn-wash)',
             border: '1px solid var(--app-warn-line)',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
         >
@@ -256,7 +256,7 @@ function Row({ a }: { a: Application }) {
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.55,
               marginTop: 11,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
           >
@@ -403,7 +403,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           opacity: 0.55,
           marginTop: 7,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >

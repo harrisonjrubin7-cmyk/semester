@@ -136,7 +136,7 @@ export function Activities() {
                     marginTop: 12,
                     padding: '11px 13px',
                     borderRadius: 'var(--r-md)',
-                    lineHeight: 1.5,
+                    lineHeight: 'var(--leading-relaxed)',
                     border: '1px solid var(--app-warn-line)',
                     background: 'var(--app-warn-wash)',
                   }}
@@ -159,7 +159,7 @@ export function Activities() {
                   which is not the same as a filter that matched nothing —
                   `<Page>` says that itself. */}
               {mine.length === 0 && (
-                <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '14px 0', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '14px 0', lineHeight: 'var(--leading-relaxed)' }}>
                   Nothing yet. Add a club, a job, a team or a lab and it appears on your day and week
                   alongside your classes.
                 </div>
@@ -390,7 +390,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
             placeholder="Hours a week"
             style={{ width: '100%' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
             Your figure, not a guess at one. It counts toward the week without being drawn on the
             grid, because there is no hour to draw it on.
           </div>
@@ -497,14 +497,14 @@ function FindThings() {
           </Blueprint>
         </a>
       ))}
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 1.45, marginTop: 4 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 'var(--leading-normal)', marginTop: 4 }}>
         No list of organisations is built into the app. There are several hundred and they turn
         over every year — a stale one would have you emailing a president who graduated in 2021.
         AnchorLink is the list, and it is always current.
       </div>
 
       <SectionLabel>Bring your involvement list back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
         Open your involvement page on AnchorLink, select it, copy, and paste here. Nothing is read
         from the page — a browser will not let this app see a tab it does not own, and it should
         not.
@@ -514,11 +514,11 @@ function FindThings() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={'Vanderbilt Political Review\nHabitat for Humanity'}
-        style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.5 }}
+        style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
 
       {text.trim() && found.length === 0 && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
           Nothing in there reads as an organisation name. Navigation, counts and links are dropped
           rather than filed as clubs.
         </div>
@@ -527,7 +527,7 @@ function FindThings() {
       {found.length > 0 && (
         <>
           <SectionLabel>Found {found.length} — check them</SectionLabel>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
             An involvement page has no reliable shape, so this is a loose read. The kind beside each
             is a guess from the name and you can change it after adding.
           </div>
@@ -580,7 +580,7 @@ function FindThings() {
               </div>
             );
           })}
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
             They arrive with no hours and no meeting time, because an involvement page carries
             neither. Open one under Yours to say when it meets and what it costs you.
           </div>

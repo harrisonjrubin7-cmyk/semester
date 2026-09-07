@@ -31,7 +31,7 @@ export function CloseTerm() {
     return (
       <div style={{ marginTop: 18 }}>
         <div className="kicker">{readTerm(term).label}</div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {ARCHIVED_LINE}
         </div>
       </div>
@@ -42,7 +42,7 @@ export function CloseTerm() {
     return (
       <div style={{ marginTop: 18 }}>
         <div className="kicker">Closing the term</div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {offerLine(rows, term)}
         </div>
         {rows.length > 0 && (
@@ -74,7 +74,7 @@ export function CloseTerm() {
   return (
     <div style={{ marginTop: 18 }}>
       <div className="kicker">Closing {readTerm(term).label}</div>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 6, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         The grade your registrar posted, as they wrote it — a letter, or whatever your school
         awards. Leave one blank if it has not come back yet.
       </div>
@@ -102,7 +102,7 @@ export function CloseTerm() {
         ))}
       </div>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 12, lineHeight: 1.45, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 12, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {readyLine(rows)}
       </div>
 
@@ -137,7 +137,7 @@ export function CloseTerm() {
           Close it
         </button>
       </div>
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 8, lineHeight: 1.45, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         Then {after.label} is the term you are in, and it starts empty.
       </div>
     </div>

@@ -70,7 +70,7 @@ export function RecordButton({
 
   if (!micSupported()) {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)' }}>
         This browser will not give the app a microphone. Safari and Chrome both will — and a page
         served over plain http never does, which is why this needs https.
       </div>
@@ -138,7 +138,7 @@ export function RecordButton({
             gap: 9,
             alignItems: 'flex-start',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             marginBottom: 10,
             cursor: 'pointer',
           }}
@@ -158,7 +158,7 @@ export function RecordButton({
       )}
 
       {state === 'idle' && !liveSupported() && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginBottom: 10, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginBottom: 10, lineHeight: 'var(--leading-normal)' }}>
           This browser has no speech recognition, so this records audio only. Chrome and Safari
           will write it down as it goes; Firefox will not.
         </div>
@@ -253,7 +253,7 @@ export function RecordButton({
                 maxHeight: 190,
                 overflowY: 'auto',
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                lineHeight: 1.5,
+                lineHeight: 'var(--leading-relaxed)',
               }}
             >
               {paragraphs(segments).slice(-6).map((seg) => (
@@ -275,7 +275,7 @@ export function RecordButton({
           )}
 
           {scribeNote && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', marginTop: 10, opacity: 0.7, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', marginTop: 10, opacity: 0.7, lineHeight: 'var(--leading-normal)' }}>
               {scribeNote}
             </div>
           )}
@@ -307,7 +307,7 @@ export function RecordButton({
             className="input"
             readOnly
             value={asText(paragraphs(segments), stamps)}
-            style={{ width: '100%', minHeight: 150, resize: 'vertical', lineHeight: 1.5 }}
+            style={{ width: '100%', minHeight: 150, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
           />
           <button
             type="button"
@@ -325,7 +325,7 @@ export function RecordButton({
       )}
 
       {saved && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
           Kept {saved.name} — {clockOf(saved.seconds)}, {formatBytes(saved.size)}. It plays from
           Mine → Files, and it stays on this device.
         </div>
@@ -337,7 +337,7 @@ export function RecordButton({
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-accent)',
             marginTop: 10,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             whiteSpace: 'pre-wrap',
           }}
         >

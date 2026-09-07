@@ -111,7 +111,7 @@ export function LessonPlayer() {
           <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 8, lineHeight: 1.1 }}>
             {guide.units[unit]?.name ?? 'This unit'} has not been recorded
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 8, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
             Lessons are rendered by the pipeline, one per unit:{' '}
             <code style={{ fontSize: 'var(--type-sm)' }}>python3 pipeline/lessons.py {state.guideId}</code>
           </div>
@@ -131,7 +131,7 @@ export function LessonPlayer() {
       <div className="kicker">
         Unit {unit + 1} of {guide.units.length} · {lesson.len}
       </div>
-      <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.3, marginTop: 3 }}>{lesson.title}</div>
+      <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 3 }}>{lesson.title}</div>
 
       {/* ── the slide ─────────────────────────────────────────────────── */}
       <Blueprint
@@ -312,7 +312,7 @@ export function LessonPlayer() {
             fontSize: 'var(--type-sm)',
             opacity: 0.65,
             marginTop: 10,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
         >

@@ -51,7 +51,7 @@ export function BehindOffer() {
             display: 'block',
             fontSize: 'calc(13.5px * var(--text-scale, 1))',
             marginTop: 4,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
         >
@@ -63,7 +63,7 @@ export function BehindOffer() {
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             opacity: 0.65,
             marginTop: 5,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
           }}
         >
           {catchUp(state.tone)} →

@@ -94,7 +94,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
           fontSize: 'var(--type-sm)',
           opacity: 0.7,
           marginTop: 5,
-          lineHeight: 1.45,
+          lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
       >

@@ -25,7 +25,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
     return (
       <>
         <SectionLabel style={{ margin: '22px 0 6px' }}>Office hours</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
           None recorded. They are on the syllabus, and having them here means the app can point at
           them in a week that is going badly.
         </div>
@@ -64,7 +64,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
         </div>
       ))}
       {next ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
           Next: {whenLine(next, now)}.
         </div>
       ) : null}

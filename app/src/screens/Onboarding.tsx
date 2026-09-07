@@ -114,7 +114,7 @@ export function Onboarding() {
       >
         {step.t}
       </div>
-      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.5, opacity: 0.72, maxWidth: '30ch' }}>
+      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', opacity: 0.72, maxWidth: '30ch' }}>
         {step.b}
       </div>
 
@@ -241,7 +241,7 @@ export function Onboarding() {
             textAlign: 'left',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             opacity: 0.6,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textDecoration: 'underline',
             textUnderlineOffset: 3,
           }}

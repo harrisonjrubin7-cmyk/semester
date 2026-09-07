@@ -84,7 +84,7 @@ export function StorageRoom() {
         </button>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 9, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 9, lineHeight: 'var(--leading-normal)' }}>
         Whether to grant this is the browser's decision, not the app's. Installing the app to your
         home screen is what most often changes the answer. Signing in is the other half: an account
         keeps a copy off this device entirely, which is the only thing that survives losing it.

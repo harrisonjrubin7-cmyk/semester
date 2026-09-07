@@ -82,7 +82,7 @@ export function EditCourse() {
       <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Shipped with the app</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
             This course is built into the app rather than held in your account, which is why there
             is nothing to change yet. Take the semester on and all four become yours — editable,
             shareable, and keeping everything you have already ticked off.
@@ -146,13 +146,13 @@ export function EditCourse() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Everything a syllabus states, changeable. Dates move, weightings get corrected, rooms
         change — none of that should mean re-importing the course and losing what you have drilled.
       </div>
 
       {missing.length > 0 && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
           Currently: {missing.join(', ')}.
         </div>
       )}
@@ -192,14 +192,14 @@ export function EditCourse() {
           ))}
         </select>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
         The term decides which year this course's dates fall in, and keeps last semester out of
         Today without deleting it. Courses added before this existed are filed under Fall 2026,
         which is what their dates are.
       </div>
 
       <SectionLabel>What the syllabus says about AI</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
         Recorded here, and read by the drafting tool, which will not write for a course unless
         this says plainly that it may. Nothing recorded counts as no.
       </div>
@@ -238,7 +238,7 @@ export function EditCourse() {
         onChange={(e) =>
           field({ ai: { stance: draft.course.ai?.stance ?? 'unstated', note: e.target.value } })
         }
-        style={{ width: '100%', minHeight: 70, resize: 'vertical', lineHeight: 1.5 }}
+        style={{ width: '100%', minHeight: 70, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
 
       <SectionLabel>How the grade is built</SectionLabel>
@@ -436,7 +436,7 @@ export function EditCourse() {
           + Office hours
         </button>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
         The time is written as it appears on screen, and the hour grid places a block by it — so
         "9:10a" and "2:45p" are understood and "morning" is not. Office hours sit dimmer on the
         rail than a class, and are what the app watches when it notices a course going badly.
@@ -522,13 +522,13 @@ export function EditCourse() {
         {dirty ? 'Save the changes' : saved ? 'Saved' : 'Nothing changed'}
       </button>
       {dirty ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
           Nothing is saved until you press that. A half-typed date would otherwise flow straight
           into the calendar and the overdue count while you were still typing it.
         </div>
       ) : null}
       {saved ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 10, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
           Saved. The calendar, Grades, Today and every study mode are using it already. What you
           have ticked off and drilled is untouched.
         </div>

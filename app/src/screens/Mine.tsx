@@ -182,7 +182,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         {/* Where it came from, when something put it here. A step in a plan
             found three weeks later says what it is for. */}
         {t.note ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
             {t.note}
           </div>
         ) : null}
@@ -228,7 +228,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           style={{
             display: 'block',
             fontSize: 'var(--type-lg)',
-            lineHeight: 1.3,
+            lineHeight: 'var(--leading-tight)',
             textDecoration: t.done ? 'line-through' : 'none',
           }}
         >
@@ -855,7 +855,7 @@ function Places() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Name the places you actually go — the lecture hall, the library floor you like, your
         apartment. Nothing is looked up and nothing is sent anywhere: the app compares where you
         are to this list, on this device, and that is the whole of it.
@@ -928,7 +928,7 @@ function Places() {
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-accent)',
             marginTop: 12,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             whiteSpace: 'pre-wrap',
           }}
         >

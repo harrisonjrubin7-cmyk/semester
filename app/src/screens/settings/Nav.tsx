@@ -51,7 +51,7 @@ export function SettingsNav() {
               {/* Only in tab-bar mode: in feed mode there is no bar to arrange, and
                   offering the setting anyway would be a control that does nothing. */}
               {state.nav === 'springboard' && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45, textWrap: 'pretty' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                   Three pages of icons with a dock that does not move, folders that open in place, and a
                   search that filters to everything at once. Every icon goes to the same screen the tab bar
                   would have — it is a way in, not a different app.
@@ -141,7 +141,7 @@ export function SettingsNav() {
                 on={state.showAll}
                 onChange={() => dispatch({ type: 'showEverything', on: !state.showAll })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 {revealLine(countHidden(facts, state.visited, state.showAll), state.showAll)}
               </div>
             </CustomRow>

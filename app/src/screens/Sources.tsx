@@ -130,7 +130,7 @@ export function Sources() {
             value={entry}
             onChange={(e) => setEntry(e.target.value)}
             placeholder="Paste it however you have it. One per line — a whole reading list goes in at once."
-            style={{ width: '100%', minHeight: 84, resize: 'vertical', lineHeight: 1.5 }}
+            style={{ width: '100%', minHeight: 84, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
           />
           <input
             className="input"
@@ -175,16 +175,16 @@ export function Sources() {
             />
           ) : (
             <>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, lineHeight: 'var(--leading-relaxed)' }}>
                 {completeness(shown)}
               </div>
               {shown.map((s) => {
                 const missing = gaps(s);
                 return (
                   <Blueprint key={s.id} style={{ padding: '12px 13px', marginBottom: 8 }}>
-                    <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.45, textWrap: 'pretty' }}>{s.raw}</div>
+                    <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>{s.raw}</div>
                     {s.role.trim() ? (
-                      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 6, lineHeight: 1.45 }}>
+                      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                         For: {s.role}
                       </div>
                     ) : (
@@ -282,7 +282,7 @@ export function Sources() {
                 {copied ? 'Copied' : 'Copy for a drafting tool'}
               </button>
               <PrintButton label="Print the list" style={{ marginTop: 8 }} />
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
                 BibTeX is built from the fields you entered; anything the app does not have is left out
                 rather than guessed, and the line you typed always goes in as a note. Opens in Zotero
                 or Overleaf.

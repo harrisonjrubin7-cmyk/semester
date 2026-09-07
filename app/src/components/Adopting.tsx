@@ -80,7 +80,7 @@ export function Adopting({
           fontSize: 'var(--type-base)',
           opacity: 0.75,
           marginTop: 10,
-          lineHeight: 1.5,
+          lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
       >
@@ -122,7 +122,7 @@ export function Adopting({
                   fontSize: 'var(--type-sm)',
                   opacity: 0.65,
                   marginTop: 3,
-                  lineHeight: 1.45,
+                  lineHeight: 'var(--leading-normal)',
                   textWrap: 'pretty',
                 }}
               >

@@ -116,7 +116,7 @@ export function Study() {
             the list from `lib/nav.ts` means the next one appears here the day
             it is added, without anybody remembering to come back.
           */}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, margin: '14px 0 2px', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
             Everything the app can do with a course, in one place.
           </div>
           {[...destinationsIn('Study'), ...destinationsIn('Make')]
@@ -291,7 +291,7 @@ export function Study() {
                           fontSize: 'calc(11.5px * var(--text-scale, 1))',
                           opacity: 0.55,
                           marginTop: 6,
-                          lineHeight: 1.45,
+                          lineHeight: 'var(--leading-normal)',
                           textWrap: 'pretty',
                         }}
                       >
@@ -358,7 +358,7 @@ export function Study() {
       >
         + Add a reading to a course
       </button>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
         A chapter, a handout, a lecture — paste or attach it and the cards, the quiz, the guide
         and the cram sheet all take it in.
       </div>

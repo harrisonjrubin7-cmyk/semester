@@ -106,7 +106,7 @@ function ClaudeAccount() {
       <SectionLabel>Claude</SectionLabel>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>Your own Claude key</div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
           There is no “sign in with Claude” — Anthropic publishes no consumer login for other apps,
           so a claude.ai Pro or Max subscription cannot be linked here by any app. What works is an
           API key from <strong>console.anthropic.com → API keys</strong>, which is billed
@@ -154,7 +154,7 @@ function ClaudeAccount() {
             style={{
               fontSize: 'calc(12.5px * var(--text-scale, 1))',
               marginTop: 10,
-              lineHeight: 1.5,
+              lineHeight: 'var(--leading-relaxed)',
               whiteSpace: 'pre-wrap',
               color: result.ok ? 'var(--app-fg)' : 'var(--app-accent)',
             }}
@@ -170,14 +170,14 @@ function ClaudeAccount() {
             borderTop: '1px solid var(--app-line)',
             fontSize: 'var(--type-sm)',
             opacity: 0.7,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
           }}
         >
           {routeLine}
         </div>
       </Blueprint>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 1.5, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         A key kept in a browser can be read by anything running in that browser. That is a real
         risk and the reason the shared key lives in a server function instead. If you would rather
         not hold one here, sign in and use the shared one, or run a proxy and put its address in
@@ -330,7 +330,7 @@ export function Connect() {
 
       {note && (
         <Blueprint style={{ padding: '12px 14px', marginTop: 14, background: 'var(--app-hero)' }}>
-          <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, textWrap: 'pretty' }}>{note}</div>
+          <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>{note}</div>
         </Blueprint>
       )}
 
@@ -344,7 +344,7 @@ export function Connect() {
             <span className="kicker" style={{ display: 'block' }}>
               Use what is connected
             </span>
-            <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.3, marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 2 }}>
               Documents into a course, course mail, deadlines onto your real calendar
             </span>
           </span>
@@ -357,7 +357,7 @@ export function Connect() {
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
           Vanderbilt Brightspace
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.5, marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
           In Brightspace, open <strong>Calendar</strong>, click <strong>Subscribe</strong>, and copy
           the link it gives you. It already carries your access — no password, and nothing to
           install. Paste it below. Any other calendar link works here too, including a{' '}
@@ -420,7 +420,7 @@ export function Connect() {
             Open Brightspace
           </a>
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 10, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 10, textWrap: 'pretty' }}>
           What a Brightspace account can and cannot give this app, plainly: the{' '}
           <strong>calendar feed</strong> carries every due date and needs nothing but the link.{' '}
           <strong>Grades, submissions and files</strong> live behind D2L’s Valence API, whose keys
@@ -447,7 +447,7 @@ export function Connect() {
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{spec.name}</div>
                 {token && <span className="tag tag-accent">Connected</span>}
               </div>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.5, marginTop: 4 }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 4 }}>
                 {spec.blurb}
               </div>
 
@@ -456,7 +456,7 @@ export function Connect() {
                   style={{
                     fontSize: 'var(--type-sm)',
                     opacity: 0.7,
-                    lineHeight: 1.5,
+                    lineHeight: 'var(--leading-relaxed)',
                     marginTop: 10,
                     paddingTop: 10,
                     borderTop: '1px solid var(--app-line)',
@@ -547,7 +547,7 @@ export function Connect() {
               )}
 
               {id === 'google' && spec.clientId && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5, marginTop: 9 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginTop: 9 }}>
                   Reading Gmail is a restricted scope: until the OAuth client passes Google's
                   review it works only for the test users listed in the console. Calendar, Drive
                   and Tasks are not restricted and work immediately.
@@ -559,7 +559,7 @@ export function Connect() {
                   style={{
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
                     opacity: 0.6,
-                    lineHeight: 1.5,
+                    lineHeight: 'var(--leading-relaxed)',
                     marginTop: 10,
                     paddingTop: 10,
                     borderTop: '1px solid var(--app-line)',
@@ -571,7 +571,7 @@ export function Connect() {
               )}
 
               {spec.needsProxy && spec.clientId && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 9 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 9 }}>
                   {spec.name}’s API refuses browser calls, so this one goes through the dev proxy
                   (<code style={{ fontSize: 'var(--type-xs)' }}>VITE_OAUTH_PROXY</code>).
                 </div>
@@ -599,7 +599,7 @@ export function Connect() {
                   style={{
                     display: 'block',
                     fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                    lineHeight: 1.3,
+                    lineHeight: 'var(--leading-tight)',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -662,7 +662,7 @@ export function Connect() {
               </button>
             </div>
           ))}
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.45, marginTop: 10 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 10 }}>
             Feed events show on the calendar under Campus, marked with where they came from. They
             never overwrite a deadline the syllabus stated.
           </div>

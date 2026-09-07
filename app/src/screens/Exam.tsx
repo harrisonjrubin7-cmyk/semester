@@ -188,7 +188,7 @@ export function Exam() {
   if (stage === 'setup') {
     return (
       <Page bottom={26}>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           A paper with a shape, a total and a clock — not another round of cards. The marks and
           the timing are worked out here; only the questions come from anywhere else.
         </div>
@@ -250,7 +250,7 @@ export function Exam() {
 
         <Blueprint style={{ padding: '12px 14px', marginTop: 14 }}>
           <div className="kicker">The paper</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 6, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
             {[
               shape.counts.choice > 0 && `${shape.counts.choice} multiple choice`,
               shape.counts.short > 0 && `${shape.counts.short} short answer`,
@@ -272,7 +272,7 @@ export function Exam() {
               value={material}
               onChange={(e) => setMaterial(e.target.value)}
               placeholder="Your notes, the readings, the lecture. Every question has to come from what is in here."
-              style={{ width: '100%', minHeight: 130, resize: 'vertical', lineHeight: 1.5 }}
+              style={{ width: '100%', minHeight: 130, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
             />
 
             <UseSources
@@ -296,7 +296,7 @@ export function Exam() {
               value={about}
               onChange={(e) => setAbout(e.target.value)}
               placeholder="In class, closed book, one side of notes. Half multiple choice, one longer question."
-              style={{ width: '100%', minHeight: 70, resize: 'vertical', lineHeight: 1.5 }}
+              style={{ width: '100%', minHeight: 70, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
             />
             <Dictate compact current={about} onText={setAbout} label="Say it instead" />
           </>
@@ -314,7 +314,7 @@ export function Exam() {
               placeholder="Paper code — leave empty for a new one"
               style={{ width: '100%', textTransform: 'uppercase' }}
             />
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
               Every paper drawn from cards has a code. Enter one to get the same questions back —
               after revising, or because somebody in your class read theirs out.
             </div>
@@ -332,7 +332,7 @@ export function Exam() {
             >
               Sit it
             </button>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
               Built from {guide.code}'s own cards — no key needed, nothing invented, works
               offline. Switch course from Study. For the same questions marked one at a time as
               you answer, the guide's Quiz mode is the other half of this.
@@ -349,7 +349,7 @@ export function Exam() {
             {busy ? 'Writing the paper…' : 'Write the paper'}
           </button>
         ) : (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 16, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 16, lineHeight: 'var(--leading-relaxed)' }}>
             Needs a key first — set one under Ask Claude → Settings. A paper from your cards needs
             no key at all.
           </div>
@@ -382,7 +382,7 @@ export function Exam() {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="kicker">{marking ? 'Marked' : 'Sitting'}</div>
-            <div style={{ fontSize: 'var(--type-md)', marginTop: 3, lineHeight: 1.3 }}>{title}</div>
+            <div style={{ fontSize: 'var(--type-md)', marginTop: 3, lineHeight: 'var(--leading-tight)' }}>{title}</div>
           </div>
           <div
             className="chrome-text"
@@ -392,7 +392,7 @@ export function Exam() {
           </div>
         </div>
         {!marking && left === 0 && (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
             Time is up. Nothing has been taken away from you — finish when you want to.
           </div>
         )}
@@ -479,7 +479,7 @@ export function Exam() {
                   width: '100%',
                   minHeight: q.kind === 'long' ? 150 : 84,
                   resize: 'vertical',
-                  lineHeight: 1.5,
+                  lineHeight: 'var(--leading-relaxed)',
                   marginTop: 9,
                 }}
               />
@@ -495,7 +495,7 @@ export function Exam() {
                       : q.answer}
                   </div>
                   {q.kind !== 'choice' && q.why ? (
-                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
                       {q.why}
                     </div>
                   ) : null}
@@ -539,7 +539,7 @@ export function Exam() {
             <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6 }}>
               {marks.got} of {marks.outOf} marks
             </div>
-            <div style={{ fontSize: 'var(--type-base)', marginTop: 9, lineHeight: 1.5, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {verdict(marks)}
             </div>
           </Blueprint>
@@ -605,7 +605,7 @@ export function Exam() {
               </button>
             )}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
             A kept result shows on Grades beside what the rest of the course has to average — as
             evidence about you, never folded into the projection. The missed questions become
             cards in {course?.code ?? 'this course'}, and the drill schedule takes them from there.
@@ -624,7 +624,7 @@ export function Exam() {
               >
                 {seedCode(seed)}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 Enter it on the setup screen to sit these exact questions again, or give it to
                 somebody in your class and compare marks on the same paper.
               </div>
@@ -659,7 +659,7 @@ export function Exam() {
                 Share it with the class
               </button>
               ) : (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
                   Sharing it into your class room needs an account — Me → Account. The code works
                   read aloud either way.
                 </div>
@@ -732,7 +732,7 @@ export function Exam() {
           >
             Finish and mark it
           </button>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
             {total(questions)} marks in {questions.length} questions. Multiple choice is marked
             here; the written ones you mark yourself against the key, which is the part that
             teaches.

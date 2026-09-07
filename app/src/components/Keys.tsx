@@ -155,7 +155,7 @@ export function Keys() {
         How the rest of it works
       </button>
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
         Nothing fires while you are typing, and anything with ⌘ or Ctrl stays the browser's.
         {state.nav === 'feed' ? ' The screens are the same ones the feed filter reaches.' : ''}
       </div>

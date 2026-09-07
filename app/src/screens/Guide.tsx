@@ -40,7 +40,7 @@ export function Guide() {
           so repeating them above it just pushes the document down. */}
       {state.mode !== 'field' && (
         <>
-          <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.3 }}>{guide.name}</div>
+          <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{guide.name}</div>
           <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 3 }}>{guide.blurb}</div>
         </>
       )}
@@ -121,7 +121,7 @@ export function Guide() {
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             opacity: 0.62,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             margin: '10px 0 2px',
             textWrap: 'pretty',
           }}
@@ -303,7 +303,7 @@ export function Guide() {
             style={{
               fontSize: 'var(--type-base)',
               opacity: 0.7,
-              lineHeight: 1.45,
+              lineHeight: 'var(--leading-normal)',
               marginTop: 4,
               textWrap: 'pretty',
             }}
@@ -344,7 +344,7 @@ export function Guide() {
           >
             Sit it as a timed paper
           </button>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 1.45 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
             The paper is the same questions with a clock, marks and a key at the end instead of
             after each one — closer to the real thing, and worse for learning a card you have
             just met.
@@ -422,7 +422,7 @@ export function Guide() {
                           <div
                             style={{
                               fontSize: 'var(--type-md)',
-                              lineHeight: 1.5,
+                              lineHeight: 'var(--leading-relaxed)',
                               opacity: 0.78,
                               marginTop: 3,
                               textWrap: 'pretty',
@@ -539,7 +539,7 @@ function Watch() {
         <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 8, lineHeight: 1.1 }}>
           Not recorded yet
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
           One narrated lesson per unit, rendered by the pipeline:{' '}
           <code style={{ fontSize: 'var(--type-sm)' }}>python3 pipeline/lessons.py {state.guideId}</code>
         </div>
@@ -835,7 +835,7 @@ function Documents() {
       </button>
 
       <div
-        style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 1.5, marginTop: 10, textWrap: 'pretty' }}
+        style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-relaxed)', marginTop: 10, textWrap: 'pretty' }}
       >
         {prebuilt ? (
           <>
@@ -861,7 +861,7 @@ function Documents() {
           {u.cards.map((c) => (
             <div key={c.q} style={{ marginTop: 8 }}>
               <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 1.5, marginTop: 2 }}>
+              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 'var(--leading-relaxed)', marginTop: 2 }}>
                 {c.a}
               </div>
             </div>
@@ -959,7 +959,7 @@ function Cases() {
                     <div
                       style={{
                         fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                        lineHeight: 1.5,
+                        lineHeight: 'var(--leading-relaxed)',
                         opacity: 0.8,
                         marginTop: 2,
                         textWrap: 'pretty',
@@ -973,7 +973,7 @@ function Cases() {
                   style={{
                     fontSize: 'var(--type-sm)',
                     opacity: 0.6,
-                    lineHeight: 1.45,
+                    lineHeight: 'var(--leading-normal)',
                     marginTop: 10,
                     paddingTop: 9,
                     borderTop: '1px solid var(--app-line)',
@@ -1007,7 +1007,7 @@ function Cases() {
             <div
               style={{
                 fontSize: 'var(--type-md)',
-                lineHeight: 1.5,
+                lineHeight: 'var(--leading-relaxed)',
                 opacity: 0.78,
                 marginTop: 4,
                 textWrap: 'pretty',
@@ -1042,7 +1042,7 @@ function Cram() {
                   style={{
                     fontSize: 'var(--type-base)',
                     opacity: 0.72,
-                    lineHeight: 1.45,
+                    lineHeight: 'var(--leading-normal)',
                     marginTop: 4,
                     textWrap: 'pretty',
                   }}
@@ -1059,7 +1059,7 @@ function Cram() {
       {guide.terms.map((t) => (
         <div key={t.t} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{t.t}</div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.72, lineHeight: 1.45, marginTop: 2 }}>{t.d}</div>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.72, lineHeight: 'var(--leading-normal)', marginTop: 2 }}>{t.d}</div>
         </div>
       ))}
 
@@ -1080,7 +1080,7 @@ function Cram() {
                   style={{
                     fontSize: 'var(--type-base)',
                     opacity: 0.75,
-                    lineHeight: 1.5,
+                    lineHeight: 'var(--leading-relaxed)',
                     marginTop: 4,
                     whiteSpace: 'pre-wrap',
                     textWrap: 'pretty',
@@ -1118,7 +1118,7 @@ function Cram() {
                 style={{
                   fontSize: 'calc(13.5px * var(--text-scale, 1))',
                   opacity: 0.78,
-                  lineHeight: 1.5,
+                  lineHeight: 'var(--leading-relaxed)',
                   marginTop: 6,
                   textWrap: 'pretty',
                 }}
@@ -1200,7 +1200,7 @@ function Listen() {
           style={{
             fontSize: 'var(--type-base)',
             opacity: 0.82,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             marginTop: 6,
             textWrap: 'pretty',
           }}
@@ -1242,7 +1242,7 @@ function Listen() {
             fontSize: 'var(--type-sm)',
             opacity: 0.65,
             marginTop: 10,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
         >
@@ -1279,7 +1279,7 @@ function Listen() {
           >
             {c.t}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{c.name}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{c.name}</span>
         </button>
       ))}
     </>

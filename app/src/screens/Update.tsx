@@ -476,7 +476,7 @@ export function AddMaterial() {
             <span style={{ width: 26, flex: 'none', color: 'var(--app-accent)' }}>
               {unit === i ? '■' : '□'}
             </span>
-            <span style={{ fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{u.name}</span>
+            <span style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{u.name}</span>
           </button>
         ))}
       </div>
@@ -543,7 +543,7 @@ export function AddMaterial() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder={'Q: What does the four-hurdle test ask first?\nA: Is there a plausible causal mechanism?\n\nOr paste the reading and keep it as notes.'}
-        style={{ minHeight: 190, fontSize: 'var(--type-base)', lineHeight: 1.5 }}
+        style={{ minHeight: 190, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)' }}
         aria-label="New material"
       />
       <div
@@ -584,14 +584,14 @@ export function AddMaterial() {
               >
                 {studying ? 'Reading it…' : 'Make cards and terms from this'}
               </button>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 6, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
                 {provider()} reads what you pasted or attached and writes cards and definitions from
                 what is in it — nothing from general knowledge. Optional: the text is kept as the
                 unit's notes either way.
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
               Turning a reading into cards needs {provider()}. Sign in to use the shared key, or add
               your own under Connect → Claude. The text is still kept as the unit's notes.
             </div>
@@ -603,7 +603,7 @@ export function AddMaterial() {
         <Blueprint plain style={{ padding: '11px 13px', marginTop: 12 }}>
           <div className="kicker">What it read</div>
           {readSummary && (
-            <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, marginTop: 4 }}>
+            <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 4 }}>
               {readSummary}
             </div>
           )}
@@ -620,7 +620,7 @@ export function AddMaterial() {
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-accent)',
             marginTop: 10,
-            lineHeight: 1.45,
+            lineHeight: 'var(--leading-normal)',
             whiteSpace: 'pre-wrap',
           }}
         >
@@ -635,7 +635,7 @@ export function AddMaterial() {
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 1.2 }}>
                 {c.q}
               </div>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.45, marginTop: 3 }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-normal)', marginTop: 3 }}>
                 {c.a}
               </div>
             </Blueprint>
@@ -657,7 +657,7 @@ export function AddMaterial() {
       <SectionLabel>Photograph it</SectionLabel>
       {claudeReady ? (
         <>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
             The board at the end of a lecture, a page of a textbook, a printed handout. Read into
             cards from what is actually written — anything unreadable is left out and said so.
           </div>
@@ -682,7 +682,7 @@ export function AddMaterial() {
           {readNote && (
             <Blueprint plain style={{ padding: '11px 13px', marginTop: 12 }}>
               <div className="kicker">What it saw</div>
-              <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.5, marginTop: 4 }}>{readNote}</div>
+              <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 4 }}>{readNote}</div>
               {shotCards.length > 0 && (
                 <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6 }}>
                   {shotCards.length} {shotCards.length === 1 ? 'card' : 'cards'} ready — they save
@@ -697,7 +697,7 @@ export function AddMaterial() {
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 color: 'var(--app-accent)',
                 marginTop: 10,
-                lineHeight: 1.45,
+                lineHeight: 'var(--leading-normal)',
                 whiteSpace: 'pre-wrap',
               }}
             >
@@ -706,7 +706,7 @@ export function AddMaterial() {
           )}
         </>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)' }}>
           Reading a photograph needs {provider()}. Sign in to use the shared key, or add your own under
           Connect → Claude. You can still attach the photo as a file below.
         </div>
@@ -717,7 +717,7 @@ export function AddMaterial() {
           into the box above, so what was said becomes material the same way a
           reading does. */}
       <SectionLabel>Record the lecture</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 1.5, marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
         Keeps the audio against this course, and can write it down as it goes. The transcript lands
         in the material box above, where it becomes cards, a quiz and a guide like anything else.
       </div>
@@ -768,7 +768,7 @@ export function AddMaterial() {
           <span style={{ opacity: 0.5, flex: 'none' }}>{formatBytes(f.size)}</span>
         </div>
       ))}
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
         Images become figures for the unit. A PDF, a Word file or a text file is read into the box
         above as well as attached, so what is in it can become cards. Everything stays on this
         device.
@@ -853,7 +853,7 @@ export function AddMaterial() {
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.3 }}>{u.title}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{u.title}</span>
                 <span
                   style={{
                     display: 'block',

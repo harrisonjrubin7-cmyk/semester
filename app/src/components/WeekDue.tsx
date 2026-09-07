@@ -32,7 +32,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
   return (
     <>
       <SectionLabel>Due this week</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 1.5 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-relaxed)' }}>
         {weekLabel(start)} · {weekLine(days, classes)}
       </div>
 

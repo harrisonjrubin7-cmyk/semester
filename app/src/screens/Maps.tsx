@@ -351,7 +351,7 @@ export function Maps() {
           if (found) setMode(found.id);
         }}
       />
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
         Directions open in the map app this phone already has — it knows where you are, it talks,
         and it works with the screen off.
       </div>
@@ -416,7 +416,7 @@ export function Maps() {
       </a>
 
       {saved.length === 0 && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 16, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 16, lineHeight: 'var(--leading-relaxed)' }}>
           Name a few places under Mine → Places and they appear on the map with exact coordinates,
           which route better than any search for a building name.
         </div>

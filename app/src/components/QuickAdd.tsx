@@ -122,7 +122,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
                 style={{
                   fontSize: 'calc(12.5px * var(--text-scale, 1))',
                   opacity: line.startsWith('No ') ? 0.55 : 0.85,
-                  lineHeight: 1.45,
+                  lineHeight: 'var(--leading-normal)',
                   textWrap: 'pretty',
                 }}
               >
@@ -133,7 +133,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
               style={{
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 marginTop: 4,
-                lineHeight: 1.45,
+                lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
               }}
             >
