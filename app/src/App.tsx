@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from 'react';
 import { useStore } from './state/store';
 import { currentLook } from './state/shape';
 import {
@@ -120,6 +120,7 @@ import { Keys } from './components/Keys';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
+import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
@@ -574,8 +575,38 @@ function Header() {
   );
 }
 
+/**
+ * The tab bar's real height, written to the root as `--tabbar-h`.
+ *
+ * Nothing else in the app needed to know it — the bar is a flex child and
+ * everything above it just takes the remaining space. The assistant's button
+ * is fixed to the viewport, so it does need to know, and the height is not a
+ * constant: the bar grows with the text-size and density settings, and a
+ * hard-coded number sits on top of it at the largest one.
+ */
+function useTabBarHeight(ref: React.RefObject<HTMLElement | null>) {
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const write = () => {
+      document.documentElement.style.setProperty('--tabbar-h', `${Math.round(node.getBoundingClientRect().height)}px`);
+    };
+    write();
+    const watch = new ResizeObserver(write);
+    watch.observe(node);
+    return () => {
+      watch.disconnect();
+      // Left set would strand the button above a bar that is no longer there
+      // — the fullscreen screens hide it entirely.
+      document.documentElement.style.removeProperty('--tabbar-h');
+    };
+  }, [ref]);
+}
+
 function TabBar() {
   const { state, dispatch } = useStore();
+  const bar = useRef<HTMLElement>(null);
+  useTabBarHeight(bar);
   // The seven that shipped are still the default; this is whichever seven the
   // student arranged. `litTab` rather than `rootOf` because a chosen bar can
   // hold a screen and the tab it files under at the same time.
@@ -584,7 +615,7 @@ function TabBar() {
   const labelled = state.labels !== 'off';
 
   return (
-    <nav className="safe-bottom app-tabs" aria-label="Sections">
+    <nav ref={bar} className="safe-bottom app-tabs" aria-label="Sections">
       {tabs.map((id) => {
         const label = tabLabel(id);
         // Lit for the screen itself and for everything nested under it, so a
@@ -1016,6 +1047,8 @@ export default function App() {
         {/* Offers the last removal back, from wherever it happened. */}
         <Replaced />
       <Undone />
+        {/* One assistant, in the shell rather than on a screen. See `ai/`. */}
+        <Assistant />
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
@@ -1059,6 +1092,8 @@ export default function App() {
       <Watching />
       <Replaced />
       <Undone />
+      {/* One assistant, in the shell rather than on a screen. See `ai/`. */}
+      <Assistant />
       {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
         {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}

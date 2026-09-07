@@ -5,6 +5,7 @@ import './styles/app.css';
 import App from './App';
 import { askToPersist } from './lib/device';
 import { StoreProvider } from './state/store';
+import { AIProvider } from './ai/store';
 import { completeAuth } from './lib/connect';
 
 /**
@@ -45,7 +46,12 @@ completeAuth()
     createRoot(document.getElementById('root')!).render(
       <StrictMode>
         <StoreProvider>
-          <App />
+          {/* The assistant's own state sits above the router, so it is one
+              thing across all fifty screens rather than a thing each screen
+              mounts. See `ai/store.tsx`. */}
+          <AIProvider>
+            <App />
+          </AIProvider>
         </StoreProvider>
       </StrictMode>,
     );

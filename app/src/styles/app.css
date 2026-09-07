@@ -604,6 +604,20 @@ a:hover {
   z-index: 3;
 }
 
+/*
+ * Room under every screen for the assistant's button.
+ *
+ * The button is fixed above the tab bar on all fifty screens, and a screen
+ * whose last element is a primary action put that action underneath it — on
+ * Costs, "Add it" sat directly behind it. Reserving the space here fixes it
+ * once for every screen rather than fifty times: the padding makes even a
+ * short screen scrollable by exactly the button's footprint, so anything at
+ * the bottom can always be brought clear of it.
+ */
+.scrollarea {
+  padding-bottom: 76px;
+}
+
 .app-tabs {
   flex: none;
   display: flex;
