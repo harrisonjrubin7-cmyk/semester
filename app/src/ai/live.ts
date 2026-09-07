@@ -236,6 +236,43 @@ export function openThread(id: string): void {
  * `turns` unconditionally and there is no "no conversation" state to fall
  * into. Deleting the last one leaves a fresh empty one rather than nothing.
  */
+/**
+ * Give a conversation a name of your own.
+ *
+ * Written to `name`, never to `title`. `title` is recomputed from the turns
+ * every time the conversation changes, so a name put there would survive
+ * until the next question and then silently revert — which is a worse failure
+ * than not offering the rename at all.
+ *
+ * An empty name is a name removed, not an empty title: the thread goes back
+ * to being called by its first question.
+ */
+export function renameThread(id: string, name: string): void {
+  const clean = name.replace(/\s+/g, ' ').trim().slice(0, 60);
+  const threads = live.threads.map((t) =>
+    t.id === id ? { ...t, ...(clean ? { name: clean } : { name: undefined }) } : t,
+  );
+  live = { ...live, threads };
+  saveThreads({ threads, openId: live.openId });
+  for (const fn of watchers) fn();
+}
+
+/**
+ * Keep this one.
+ *
+ * The list is capped at twelve and drops the oldest, which over a term is
+ * exactly the mechanism that would delete the conversation worth keeping.
+ * Pinning takes a thread out of that. `lib/threads.ts` does the rest.
+ */
+export function pinThread(id: string, pinned: boolean): void {
+  const threads = live.threads.map((t) =>
+    t.id === id ? { ...t, ...(pinned ? { pinned: true } : { pinned: undefined }) } : t,
+  );
+  live = { ...live, threads };
+  saveThreads({ threads, openId: live.openId });
+  for (const fn of watchers) fn();
+}
+
 export function dropThread(id: string): void {
   const rest = live.threads.filter((t) => t.id !== id);
   if (id !== live.openId) {

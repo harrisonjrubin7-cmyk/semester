@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Turn } from './claude';
-import { blank, fit, load, save, titleFor, MAX_THREADS, ROOM, type Thread } from './threads';
+import { blank, fit, load, save, titleFor, MAX_THREADS, ROOM, type Thread, nameOf, search, foundIn } from './threads';
 
 /**
  * Keeping more than one conversation, and the ways that loses one.
@@ -225,5 +225,124 @@ describe('blank threads', () => {
   it('get an id nothing else has', () => {
     const ids = new Set(Array.from({ length: 200 }, () => blank().id));
     expect(ids.size).toBe(200);
+  });
+});
+
+describe('a conversation you named yourself', () => {
+  const t = (over: Partial<Thread> = {}): Thread => ({
+    id: 'a', title: 'What is elasticity?', turns: [{ role: 'user', content: 'What is elasticity?' }],
+    at: 1, ...over,
+  });
+
+  it('is called what you called it', () => {
+    expect(nameOf(t({ name: 'Midterm plan' }))).toBe('Midterm plan');
+  });
+
+  it('falls back to the first question when it has no name', () => {
+    expect(nameOf(t())).toBe('What is elasticity?');
+  });
+
+  it('falls back when the name is only spaces, not to a blank row', () => {
+    expect(nameOf(t({ name: '   ' }))).toBe('What is elasticity?');
+  });
+
+  it('survives the title being recomputed, which is the whole reason it is a separate field', () => {
+    // `title` is rewritten from the turns on every change. A name written into
+    // it would last until the next question and then silently revert.
+    const named = { ...t({ name: 'Midterm plan' }), title: titleFor([{ role: 'user', content: 'A later question' }]) };
+    expect(nameOf(named)).toBe('Midterm plan');
+  });
+});
+
+describe('pinning', () => {
+  const big = (id: string, at: number, pinned = false): Thread => ({
+    id, title: id, at, pinned: pinned || undefined,
+    turns: [{ role: 'user', content: 'q' }, { role: 'assistant', content: 'x'.repeat(20_000) }],
+  });
+
+  it('keeps a thread the cap would otherwise drop', () => {
+    /*
+     * The point of pinning, and the thing it would be dishonest to offer
+     * without: the revision plan from week three is exactly the conversation
+     * a twelve-thread cap deletes in week eight.
+     */
+    const old = big('keep-me', 1, true);
+    const rest = Array.from({ length: MAX_THREADS + 4 }, (_, i) => big(`t${i}`, 100 + i));
+    const kept = fit([old, ...rest], 't0');
+    expect(kept.map((x) => x.id)).toContain('keep-me');
+  });
+
+  it('puts pinned threads first, and newest within each group', () => {
+    const list = [big('old-pin', 1, true), big('new', 300), big('older', 2)];
+    expect(fit(list, 'new').map((x) => x.id)).toEqual(['old-pin', 'new', 'older']);
+  });
+
+  it('does not promise more than it can keep', () => {
+    // Enough enormous pinned threads to exceed the whole budget still lose
+    // the oldest. A promise the code cannot keep is worse than a stated limit.
+    const many = Array.from({ length: 20 }, (_, i) => big(`p${i}`, i, true));
+    const kept = fit(many, 'p19');
+    expect(kept.length).toBeLessThan(many.length);
+    expect(kept.map((x) => x.id)).toContain('p19');
+  });
+});
+
+describe('searching the conversations', () => {
+  const t = (id: string, first: string, said = '', over: Partial<Thread> = {}): Thread => ({
+    id, title: first, at: Number(id.slice(1)) || 1,
+    turns: [{ role: 'user', content: first }, ...(said ? [{ role: 'assistant' as const, content: said }] : [])],
+    ...over,
+  });
+
+  const list = [
+    t('t3', 'What is elasticity?', 'Responsiveness of quantity to price.'),
+    t('t2', 'When is the BUS final?', 'December the ninth, at nine in the morning.'),
+    t('t1', 'New conversation', 'Something about redlining and the HOLC.'),
+  ];
+
+  it('matches what a thread is called', () => {
+    expect(search(list, 'elasticity').map((x) => x.id)).toEqual(['t3']);
+  });
+
+  it('matches what was said in it, which is usually why you are looking', () => {
+    expect(search(list, 'redlining').map((x) => x.id)).toEqual(['t1']);
+  });
+
+  it('matches a name you gave it', () => {
+    const named = [...list, t('t9', 'Untitled', '', { name: 'Midterm plan' })];
+    expect(search(named, 'midterm').map((x) => x.id)).toEqual(['t9']);
+  });
+
+  it('ignores case and spacing on both sides', () => {
+    expect(search(list, '  ELASTICITY ').map((x) => x.id)).toEqual(['t3']);
+  });
+
+  it('matches across a line break in the transcript', () => {
+    const wrapped = [t('t5', 'q', 'nine in\nthe morning')];
+    expect(search(wrapped, 'nine in the morning')).toHaveLength(1);
+  });
+
+  it('is every thread for an empty query, never none', () => {
+    expect(search(list, '')).toHaveLength(3);
+    expect(search(list, '   ')).toHaveLength(3);
+  });
+
+  it('puts pinned first among the matches, the same as with no query', () => {
+    // Same order typed and untyped, so searching does not make the reader
+    // re-find their bearings on every keystroke.
+    const pinned = [
+      ...list.map((x) => ({ ...x, turns: [...x.turns, { role: 'user' as const, content: 'about the exam' }] })),
+      t('t0', 'Oldest, and pinned', 'about the exam', { pinned: true }),
+    ];
+    expect(search(pinned, '')[0].id).toBe('t0');
+    const hits = search(pinned, 'about the exam');
+    expect(hits).toHaveLength(4);
+    expect(hits[0].id).toBe('t0');
+  });
+
+  it('says where a content match was found, but not a title one', () => {
+    expect(foundIn(list[2], 'redlining')).toContain('redlining');
+    expect(foundIn(list[0], 'elasticity')).toBe('');
+    expect(foundIn(list[0], '')).toBe('');
   });
 });

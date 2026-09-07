@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Thread } from '../lib/threads';
+import { foundIn, nameOf, search, type Thread } from '../lib/threads';
 
 /**
  * The list of conversations, and the way back into one.
@@ -33,6 +33,8 @@ export function Threads({
   onOpen,
   onDrop,
   onNew,
+  onRename,
+  onPin,
   now,
 }: {
   threads: Thread[];
@@ -40,10 +42,15 @@ export function Threads({
   onOpen: (id: string) => void;
   onDrop: (id: string) => void;
   onNew: () => void;
+  onRename: (id: string, name: string) => void;
+  onPin: (id: string, pinned: boolean) => void;
   /** Passed in rather than read, so a test can say what time it is. */
   now: number;
 }) {
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  /** The thread being renamed, and the name so far. */
+  const [naming, setNaming] = useState<{ id: string; text: string } | null>(null);
 
   /*
    * Any tap that is not on the confirm itself puts it back.
@@ -71,7 +78,9 @@ export function Threads({
     return () => window.removeEventListener('pointerdown', off, { capture: true });
   }, [confirming]);
 
-  const order = [...threads].sort((a, b) => b.at - a.at);
+  // Pinned first, then newest — the same order with a query and without, so
+  // typing does not make the reader re-find their bearings on every keystroke.
+  const order = search(threads, query);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -84,6 +93,21 @@ export function Threads({
         >
           + NEW CONVERSATION
         </button>
+        {/*
+          Shown once there is more than one to look through. A search box over a
+          list of one is furniture.
+        */}
+        {threads.length > 1 && (
+          <input
+            className="input"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search conversations"
+            aria-label="Search conversations"
+            style={{ marginTop: 'var(--sp-3)', height: 34, fontSize: 'var(--type-sm)' }}
+          />
+        )}
       </div>
 
       <ul
@@ -99,8 +123,44 @@ export function Threads({
           gap: 'var(--sp-2)',
         }}
       >
-        {order.map((t) => (
-          <li key={t.id} style={{ display: 'flex', alignItems: 'stretch', gap: 'var(--sp-2)' }}>
+        {order.map((t) => {
+          const found = foundIn(t, query);
+          return (
+          <li key={t.id} style={{ display: 'flex', flexDirection: 'column' }}>
+            {naming?.id === t.id ? (
+              /*
+                Renaming happens in the row, not in a dialog.
+
+                The thing being named is right there and stays visible, which
+                is the whole reason to rename it — you are looking at the list
+                to tell it apart from the others in the list.
+              */
+              <form
+                data-confirm=""
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  onRename(t.id, naming.text);
+                  setNaming(null);
+                }}
+                style={{ flex: 1, minWidth: 0, display: 'flex', gap: 'var(--sp-2)' }}
+              >
+                <input
+                  className="input"
+                  autoFocus
+                  value={naming.text}
+                  onChange={(e) => setNaming({ id: t.id, text: e.target.value })}
+                  onKeyDown={(e) => e.key === 'Escape' && setNaming(null)}
+                  // Empty is a name removed, not a blank row: it goes back to
+                  // being called by its first question.
+                  placeholder={t.title}
+                  aria-label={`Name for "${t.title}"`}
+                  style={{ flex: 1, minWidth: 0, height: 34, fontSize: 'var(--type-sm)' }}
+                />
+                <button type="submit" className="bare" data-confirm="" style={{ ...SIDE, opacity: 0.8 }}>
+                  ✓
+                </button>
+              </form>
+            ) : (
             <button
               type="button"
               className="bare"
@@ -119,68 +179,139 @@ export function Threads({
                 background: t.id === openId ? 'var(--app-accent-wash)' : 'transparent',
               }}
             >
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: 'var(--type-sm)',
-                  lineHeight: 'var(--leading-tight)',
-                  // One line, cut with an ellipsis. `titleFor` already cuts at
-                  // a word, and this is the second guard for a narrow panel.
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {t.turns.length === 0 ? 'New conversation' : t.title}
+              <span style={ONE_LINE}>
+                {t.pinned && (
+                  <span aria-label="Pinned" title="Pinned" style={{ opacity: 0.55 }}>
+                    ▪{' '}
+                  </span>
+                )}
+                {t.turns.length === 0 ? 'New conversation' : nameOf(t)}
               </span>
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: 'var(--type-xs)',
-                  opacity: 0.45,
-                  marginTop: 'var(--sp-1)',
-                }}
-              >
+              <span style={UNDER}>
                 {t.turns.length === 0 ? 'Nothing asked yet' : `${ago(t.at, now)} · ${count(t.turns.length)}`}
               </span>
+              {/*
+                Where the query was found, when it was not in the title.
+                Five rows all called "New conversation", one of which matched
+                on something said in the middle, is a list you open five times.
+              */}
+              {found && (
+                <span style={{ ...UNDER, opacity: 0.55, fontStyle: 'italic' }}>{found}</span>
+              )}
             </button>
 
-            {confirming === t.id ? (
-              <button
-                type="button"
-                className="bare"
-                // The one thing the disarm listener above skips. See its note.
-                data-confirm=""
-                onClick={() => {
-                  onDrop(t.id);
-                  setConfirming(null);
-                }}
-                // Named for what it deletes, so a screen reader hears which
-                // conversation is about to go rather than "delete, button".
-                aria-label={`Delete "${t.title}" for good`}
-                style={{ ...SIDE, opacity: 0.9, fontSize: 'var(--type-xs)', letterSpacing: '0.08em' }}
-              >
-                SURE?
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="bare"
-                // Also skipped, so arming does not immediately disarm itself.
-                data-confirm=""
-                onClick={() => setConfirming(t.id)}
-                aria-label={`Delete "${t.title}"`}
-                style={{ ...SIDE, opacity: 0.35 }}
-              >
-                ×
-              </button>
+            )}
+
+            {/*
+              The three things you can do to a conversation, under it rather
+              than beside it.
+
+              Beside it was the first version and it did not fit: three 40px
+              controls in a 232px panel left 84px for the title, so every row
+              read "Midter…" and the list stopped being a list you could tell
+              things apart in. A row is two lines already; a third of small
+              text costs less than the name of the thing.
+
+              Written out rather than behind a menu or a long-press: both of
+              those are gestures nobody finds, and there are only three.
+            */}
+            {naming?.id !== t.id && (
+              <div style={ACTIONS}>
+                <button
+                  type="button"
+                  className="bare"
+                  data-confirm=""
+                  onClick={() => onPin(t.id, !t.pinned)}
+                  aria-pressed={Boolean(t.pinned)}
+                  aria-label={t.pinned ? `Unpin "${nameOf(t)}"` : `Pin "${nameOf(t)}" so it is kept`}
+                  style={{ ...ACT, opacity: t.pinned ? 0.85 : 0.4 }}
+                >
+                  {t.pinned ? 'PINNED' : 'PIN'}
+                </button>
+                <button
+                  type="button"
+                  className="bare"
+                  data-confirm=""
+                  onClick={() => setNaming({ id: t.id, text: t.name ?? '' })}
+                  aria-label={`Rename "${nameOf(t)}"`}
+                  style={ACT}
+                >
+                  RENAME
+                </button>
+                {confirming === t.id ? (
+                  <button
+                    type="button"
+                    className="bare"
+                    // The one thing the disarm listener above skips. See its note.
+                    data-confirm=""
+                    onClick={() => {
+                      onDrop(t.id);
+                      setConfirming(null);
+                    }}
+                    // Named for what it deletes, so a screen reader hears which
+                    // conversation is about to go rather than "delete, button".
+                    aria-label={`Delete "${nameOf(t)}" for good`}
+                    style={{ ...ACT, opacity: 0.95 }}
+                  >
+                    SURE?
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="bare"
+                    // Also skipped, so arming does not immediately disarm itself.
+                    data-confirm=""
+                    onClick={() => setConfirming(t.id)}
+                    aria-label={`Delete "${nameOf(t)}"`}
+                    style={ACT}
+                  >
+                    DELETE
+                  </button>
+                )}
+              </div>
             )}
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );
 }
+
+const ONE_LINE = {
+  display: 'block',
+  fontSize: 'var(--type-sm)',
+  lineHeight: 'var(--leading-tight)',
+  // One line, cut with an ellipsis. `titleFor` already cuts at a word, and
+  // this is the second guard for a narrow panel.
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+} as const;
+
+const UNDER = {
+  display: 'block',
+  fontSize: 'var(--type-xs)',
+  opacity: 0.45,
+  marginTop: 'var(--sp-1)',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+} as const;
+
+/** The row of small controls under a conversation. */
+const ACTIONS = {
+  display: 'flex',
+  gap: 'var(--sp-4)',
+  padding: '0 var(--sp-5) var(--sp-3)',
+} as const;
+
+const ACT = {
+  fontSize: 'var(--type-xs)',
+  letterSpacing: '0.08em',
+  opacity: 0.4,
+  width: 'auto',
+} as const;
 
 const SIDE = {
   flex: 'none',

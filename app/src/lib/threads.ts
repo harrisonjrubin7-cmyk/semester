@@ -58,11 +58,30 @@ export const ROOM_ALL = 150_000;
 
 export interface Thread {
   id: string;
-  /** From the first question, not written by hand. */
+  /** From the first question, not written by hand. See `nameOf`. */
   title: string;
+  /**
+   * A name the reader typed, which beats the derived one.
+   *
+   * Separate from `title` rather than overwriting it, because `title` is
+   * recomputed from the turns on every change — a name written into it would
+   * survive exactly until the next question and then vanish, which is the
+   * worst way for a rename to fail. Absent on a thread nobody has named, which
+   * is almost all of them.
+   */
+  name?: string;
   turns: Turn[];
   /** When it was last added to, for ordering and for "3 days ago". */
   at: number;
+  /**
+   * Kept at the top, and kept at all.
+   *
+   * Pinning does two things and the second is the one that matters: a pinned
+   * thread is not dropped to make room. The revision plan worked out in week
+   * three is exactly the conversation the twelve-thread cap would quietly
+   * delete in week eight, and it is exactly the one worth keeping.
+   */
+  pinned?: boolean;
 }
 
 export interface Kept {
@@ -99,6 +118,11 @@ export function titleFor(turns: Turn[]): string {
   return `${space > 24 ? cut.slice(0, space) : cut}…`;
 }
 
+/** What a thread is called: the name if it has one, otherwise the question. */
+export function nameOf(t: Thread): string {
+  return t.name?.trim() || t.title;
+}
+
 export function blank(): Thread {
   return { id: newId(), title: 'New conversation', turns: [], at: Date.now() };
 }
@@ -118,7 +142,21 @@ function newId(): string {
  * oldest one.
  */
 export function fit(threads: Thread[], openId: string): Thread[] {
-  const order = [...threads].sort((a, b) => b.at - a.at);
+  /*
+   * Pinned first, then newest.
+   *
+   * The order here is the order things are kept in, not the order they are
+   * shown in, and that is the whole mechanism: what is considered first is
+   * what survives the cap. A pinned thread is a thread somebody said to keep,
+   * so it is considered before every unpinned one however old it is.
+   *
+   * It is still not unconditional. Pinning enough enormous conversations to
+   * exceed `ROOM_ALL` drops the oldest of them rather than the store failing
+   * to write — a promise the code cannot keep is worse than a limit it states.
+   */
+  const order = [...threads].sort(
+    (a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.at - a.at,
+  );
   const kept: Thread[] = [];
   let size = 0;
   for (const t of order) {
@@ -182,6 +220,8 @@ export function load(): Kept {
           turns: fitted.turns,
           at: typeof t.at === 'number' ? t.at : 0,
           title: '',
+          ...(typeof t.name === 'string' && t.name.trim() ? { name: t.name.trim() } : {}),
+          ...(t.pinned ? { pinned: true as const } : {}),
         };
       })
       .map((t) => ({ ...t, title: titleFor(t.turns) }));
@@ -247,3 +287,53 @@ export function clearAll(): void {
 
 /** Re-exported so a caller checking room has one place to read it from. */
 export { ROOM };
+
+/**
+ * The threads a query names, in the order they should be read.
+ *
+ * Matches what a thread is called *and* what was said in it, because the
+ * reason to search a conversation list is usually a half-remembered answer
+ * rather than a title nobody wrote. Pinned first and newest after, the same
+ * order the list is in when nothing is typed — a search that reorders the
+ * whole list makes the reader re-find their bearings on every keystroke.
+ *
+ * Case and spacing are ignored on both sides. A blank query is every thread,
+ * not none: an empty box means "no filter", never "no results".
+ */
+export function search(threads: Thread[], query: string): Thread[] {
+  const order = [...threads].sort(
+    (a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.at - a.at,
+  );
+  const q = flatten(query);
+  if (!q) return order;
+  return order.filter((t) => {
+    if (flatten(nameOf(t)).includes(q)) return true;
+    return t.turns.some((turn) => flatten(turn.content).includes(q));
+  });
+}
+
+/** Lower-cased and single-spaced, so a query matches across a line break. */
+function flatten(text: string): string {
+  return text.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+/**
+ * Where a query was found, for the row that matched on its content.
+ *
+ * A list of five rows all called "New conversation", one of which matched
+ * because of something said in the middle of it, is a list you have to open
+ * five times. This is the line under the title saying which one it was.
+ */
+export function foundIn(t: Thread, query: string): string {
+  const q = flatten(query);
+  if (!q || flatten(nameOf(t)).includes(q)) return '';
+  for (const turn of t.turns) {
+    const flat = flatten(turn.content);
+    const at = flat.indexOf(q);
+    if (at === -1) continue;
+    const from = Math.max(0, at - 24);
+    const cut = flat.slice(from, at + q.length + 40);
+    return `${from > 0 ? '…' : ''}${cut}${at + q.length + 40 < flat.length ? '…' : ''}`;
+  }
+  return '';
+}

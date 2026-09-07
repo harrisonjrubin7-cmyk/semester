@@ -12,7 +12,10 @@ import { currentLook } from '../state/shape';
 import { datedItems } from '../lib/select';
 import { useTrouble } from '../lib/trouble';
 import { useAI } from './store';
-import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive } from './live';
+import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
+  renameThread,
+  pinThread,
+} from './live';
 
 /**
  * The conversation itself, once, for whoever is showing it.
@@ -83,6 +86,10 @@ export interface Conversation {
   open: (id: string) => void;
   /** Delete one. Deleting the open one lands on the next newest. */
   drop: (id: string) => void;
+  /** Give one a name of your own. An empty name goes back to the question. */
+  rename: (id: string, name: string) => void;
+  /** Keep one at the top, and keep it from being dropped for room. */
+  pin: (id: string, pinned: boolean) => void;
 }
 
 export function useConversation(): Conversation {
@@ -408,6 +415,8 @@ export function useConversation(): Conversation {
       trouble.clear();
     },
     drop: dropThread,
+    rename: renameThread,
+    pin: pinThread,
   };
 }
 

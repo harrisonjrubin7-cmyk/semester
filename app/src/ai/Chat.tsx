@@ -51,6 +51,8 @@ export function Chat() {
     onOpen: talk.open,
     onDrop: talk.drop,
     onNew: talk.clear,
+    onRename: talk.rename,
+    onPin: talk.pin,
     // The store's `now` is a Date — it is the app's one clock, and every
     // screen reads the day off it. The list wants milliseconds.
     now: now.getTime(),
