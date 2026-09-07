@@ -159,8 +159,20 @@ The remaining three:
 
 - **Two unused indexes on the push tables** (`push_devices_user`,
   `push_queue_due`), for the same reason: the scheduler is parked.
-- **Auth connection strategy** is a fixed 10 rather than a percentage. A
-  dashboard setting, and it only matters if the instance is ever resized.
+- **Auth connection strategy** is a fixed 10 rather than a percentage, and it
+  is the lowest-value item on this list. The database allows 60 connections on
+  this tier, so Auth's 10 is already about a sixth of them — a sane share. The
+  finding is about what happens *later*: resize the instance to a tier with
+  more connections and Auth stays pinned at 10 instead of scaling with it. It
+  is a no-op until that day.
+
+  It is an Auth setting rather than SQL, so it cannot be changed from a
+  migration or from the MCP tools — same wall as leaked password protection.
+  The advisor's own remediation link is
+  <https://supabase.com/docs/guides/deployment/going-into-prod>; the dashboard
+  path is not recorded here because supabase.com is not reachable from the
+  environment these notes were written in, and a guessed menu path is worse
+  than none.
 
 ### The one that is left
 
