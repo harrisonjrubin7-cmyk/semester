@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { Produced } from './Produced';
 import { Blueprint } from './Blueprint';
 import { SectionLabel } from './ui';
 import { PrintButton } from './PrintButton';
@@ -247,19 +248,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
       {out && (
         <>
           <SectionLabel>Your project file</SectionLabel>
-          <div
-            style={{
-              fontSize: 'var(--type-base)',
-              lineHeight: 1.6,
-              whiteSpace: 'pre-wrap',
-              padding: 14,
-              borderRadius: 'var(--r-lg)',
-              border: '1px solid var(--app-line)',
-              background: 'var(--app-panel)',
-            }}
-          >
-            {document}
-          </div>
+          <Produced style={{ background: 'var(--app-panel)' }}>{document}</Produced>
 
           <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
             {left > 0

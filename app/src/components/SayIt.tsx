@@ -23,6 +23,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { Panel } from './Produced';
 import { dictate, dictationSupported } from '../lib/mic';
 
 export function SayIt({
@@ -75,14 +76,7 @@ export function SayIt({
   if (revealed) {
     if (!said) return null;
     return (
-      <div
-        style={{
-          marginTop: 'var(--sp-6)',
-          padding: '10px 12px',
-          borderRadius: 'var(--r-md)',
-          border: '1px solid var(--app-line)',
-        }}
-      >
+      <Panel style={{ marginTop: 'var(--sp-6)' }}>
         <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
           What you said
         </div>
@@ -91,7 +85,7 @@ export function SayIt({
         </div>
         {/* No verdict. The three buttons below are the marking, and they are
             honest because the student is the one pressing them. */}
-      </div>
+      </Panel>
     );
   }
 

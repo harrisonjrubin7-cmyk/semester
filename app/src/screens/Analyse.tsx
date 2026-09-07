@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { Produced } from '../components/Produced';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
@@ -334,20 +335,9 @@ export function Analyse() {
             {busy ? 'Reading them…' : 'What do these say?'}
           </button>
           {reading ? (
-            <div
-              style={{
-                fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                lineHeight: 1.65,
-                whiteSpace: 'pre-wrap',
-                marginTop: 'var(--sp-6)',
-                padding: 14,
-                borderRadius: 'var(--r-lg)',
-                border: '1px solid var(--app-line)',
-                background: 'var(--app-panel)',
-              }}
-            >
+            <Produced style={{ marginTop: 'var(--sp-6)', background: 'var(--app-panel)' }}>
               {reading}
-            </div>
+            </Produced>
           ) : null}
         </>
       )}

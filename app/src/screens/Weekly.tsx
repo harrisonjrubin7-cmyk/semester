@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { Produced } from '../components/Produced';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Trouble } from '../components/Trouble';
@@ -247,20 +248,9 @@ export function Weekly() {
             {busy ? 'Reading it…' : 'What should I make of this week?'}
           </button>
           {said ? (
-            <div
-              style={{
-                fontSize: 'var(--type-md)',
-                lineHeight: 1.6,
-                whiteSpace: 'pre-wrap',
-                marginTop: 'var(--sp-6)',
-                padding: 14,
-                borderRadius: 'var(--r-lg)',
-                border: '1px solid var(--app-line)',
-                background: 'var(--app-panel)',
-              }}
-            >
+            <Produced style={{ marginTop: 'var(--sp-6)', background: 'var(--app-panel)' }}>
               {said}
-            </div>
+            </Produced>
           ) : null}
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
           <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>

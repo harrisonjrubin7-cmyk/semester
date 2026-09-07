@@ -14,6 +14,7 @@
  */
 
 import { useState } from 'react';
+import { Panel } from './Produced';
 import { useStore } from '../state/store';
 import { extent, isReading } from '../lib/reading';
 import { SectionLabel } from './ui';
@@ -93,14 +94,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
   };
 
   return (
-    <div
-      style={{
-        marginTop: 'var(--sp-5)',
-        padding: '12px 13px',
-        border: '1px solid var(--app-line)',
-        borderRadius: 'var(--r-md)',
-      }}
-    >
+    <Panel style={{ marginTop: 'var(--sp-5)' }}>
       <div style={{ fontSize: 'var(--type-base)', textWrap: 'pretty' }}>
         {farLine(p)}
       </div>
@@ -236,7 +230,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
           Forget where I was
         </button>
       ) : null}
-    </div>
+    </Panel>
   );
 }
 

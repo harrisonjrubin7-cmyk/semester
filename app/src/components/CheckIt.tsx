@@ -16,6 +16,7 @@
  */
 
 import { useMemo, useRef, useState } from 'react';
+import { Panel } from './Produced';
 import { Trouble } from './Trouble';
 import { useTrouble } from '../lib/trouble';
 import { ask, configured } from '../lib/claude';
@@ -92,14 +93,7 @@ export function CheckIt({
   };
 
   return (
-    <div
-      style={{
-        marginTop: 'var(--sp-5)',
-        padding: '12px 13px',
-        border: '1px solid var(--app-line)',
-        borderRadius: 'var(--r-md)',
-      }}
-    >
+    <Panel style={{ marginTop: 'var(--sp-5)' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
         <span
           style={{
@@ -196,7 +190,7 @@ export function CheckIt({
           </p>
         )
       ) : null}
-    </div>
+    </Panel>
   );
 }
 

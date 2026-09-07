@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Produced } from '../components/Produced';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
@@ -243,19 +244,7 @@ export function Solve() {
       {out && (
         <>
           <SectionLabel>{a.label}</SectionLabel>
-          <div
-            style={{
-              fontSize: 'calc(13.5px * var(--text-scale, 1))',
-              lineHeight: 1.65,
-              whiteSpace: 'pre-wrap',
-              padding: 14,
-              borderRadius: 'var(--r-lg)',
-              border: '1px solid var(--app-line)',
-              background: 'var(--app-panel)',
-            }}
-          >
-            {out}
-          </div>
+          <Produced style={{ background: 'var(--app-panel)' }}>{out}</Produced>
           <button
             type="button"
             className="btn btn-secondary btn-block"

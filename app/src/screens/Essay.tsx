@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { Produced } from '../components/Produced';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
@@ -360,19 +361,7 @@ export function Essay() {
       {draft && (
         <>
           <SectionLabel>The draft</SectionLabel>
-          <div
-            style={{
-              fontSize: 'var(--type-md)',
-              lineHeight: 1.65,
-              whiteSpace: 'pre-wrap',
-              padding: 14,
-              borderRadius: 'var(--r-lg)',
-              border: '1px solid var(--app-line)',
-              background: 'var(--app-panel)',
-            }}
-          >
-            {draft}
-          </div>
+          <Produced style={{ background: 'var(--app-panel)' }}>{draft}</Produced>
           <DraftNote field={outField} />
 
           <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 1.55 }}>

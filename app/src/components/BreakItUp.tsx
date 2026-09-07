@@ -13,6 +13,7 @@
  */
 
 import { useState } from 'react';
+import { Panel } from './Produced';
 import { useStore } from '../state/store';
 import { planFor, planLine } from '../lib/steps';
 import type { DatedItem } from '../lib/types';
@@ -78,14 +79,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
   }
 
   return (
-    <div
-      style={{
-        marginTop: 'var(--sp-5)',
-        padding: '12px 13px',
-        border: '1px solid var(--app-line)',
-        borderRadius: 'var(--r-md)',
-      }}
-    >
+    <Panel style={{ marginTop: 'var(--sp-5)' }}>
       <div className="kicker">{planLine(steps, item.title)}</div>
 
       {/* Shown before they are made, because a plan somebody disagrees with is
@@ -172,6 +166,6 @@ export function BreakItUp({ item }: { item: DatedItem }) {
         Dates only. How long each step takes is your call — the app has no way to know, and a made-up
         hour figure per step would read as a schedule.
       </div>
-    </div>
+    </Panel>
   );
 }
