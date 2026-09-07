@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { useStore } from '../state/store';
 import type { SearchAdapter } from '../lib/search';
-import { holdBox } from '../lib/screenbox';
+import { holdBox, takeSeed } from '../lib/screenbox';
 
 /**
  * Whether we are already inside one of these.
@@ -162,8 +162,13 @@ export function Page<T>({
    * that should sync between somebody's devices.
    */
   useEffect(() => {
-    setTyped('');
-    setQuery('');
+    // Unless the screen you just arrived on was handed one. The whole-app
+    // search offers "12 sources match — search in Sources", and arriving on
+    // Sources with an empty box would be the offer not kept. See `takeSeed`
+    // in `lib/screenbox.ts` for why this is a hand-off and not state.
+    const seed = takeSeed();
+    setTyped(seed ?? '');
+    setQuery(seed ? seed.toLowerCase() : '');
   }, [state.screen]);
 
   /*

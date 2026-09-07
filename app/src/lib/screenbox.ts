@@ -69,3 +69,32 @@ export function focusBox(): boolean {
   el.select();
   return true;
 }
+
+/*
+ * A query handed to the screen you are about to arrive on.
+ *
+ * The whole-app search offers "12 sources match — search in Sources", and
+ * taking that offer has to do two things: navigate, and put the query in that
+ * screen's filter. The navigation is a dispatch; the query is not state.
+ *
+ * Not state, deliberately. `state/shape.ts` already explains why a search
+ * query is the last thing that should sync between somebody's devices, and a
+ * seed that lived in the store would also survive a reload — so a screen
+ * opened the next morning would come up filtered by something typed last
+ * night, with the missing rows unexplained. This is a single value handed
+ * from one screen to the next and consumed on arrival, which is what it
+ * actually is.
+ */
+let pending: string | null = null;
+
+/** Hand the next `<Page>` a query to open with. */
+export function seedBox(query: string): void {
+  pending = query.trim();
+}
+
+/** Take it, once. Null when nothing was handed over. */
+export function takeSeed(): string | null {
+  const q = pending;
+  pending = null;
+  return q;
+}

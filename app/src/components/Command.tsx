@@ -32,6 +32,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { countHits, findEverything } from '../lib/find';
+import { scopesFor } from '../lib/scoped';
 import { flatten, hitKey, openHit } from '../lib/openhit';
 
 /** How wide the search column gets, matching the app's own pane. */
@@ -50,10 +51,40 @@ export function Command({ onClose }: { onClose: () => void }) {
     box.current?.focus();
   }, []);
 
-  const groups = useMemo(
+  const found = useMemo(
     () => findEverything(catalog, now, text, state.notes, state.tasks, school.capabilities),
     [catalog, now, text, state.notes, state.tasks, school.capabilities],
   );
+
+  /*
+   * The collections this overlay does not list, offered as a place to look.
+   *
+   * Sources, applications, saved places and the rest are each a list of tens
+   * with a filter of its own. Inlining them would bury the deadlines and notes
+   * people are usually after; naming the screen without a number would be a
+   * guess. So: the count, and the query carried over. See `lib/scoped.ts`.
+   */
+  const groups = useMemo(() => {
+    const scopes = scopesFor(text, state);
+    if (scopes.length === 0) return found;
+    return [
+      ...found,
+      {
+        label: 'Look inside a screen',
+        hits: scopes.map((sc) => ({
+          kind: 'scope' as const,
+          screen: sc.screen,
+          query: text.trim(),
+          title: `Search “${text.trim()}” in ${sc.label}`,
+          sub: `${sc.said} match`,
+          tag: 'Filter',
+          // Below the real records, always. An offer to keep looking is worth
+          // less than a thing that has been found, however many matched.
+          score: 0,
+        })),
+      },
+    ];
+  }, [found, text, state]);
   const hits = flatten(groups);
   const total = countHits(groups);
   // Clamped rather than reset: the selection following the results down as
