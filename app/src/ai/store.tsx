@@ -69,6 +69,8 @@ interface AI {
    * provider having to know it exists. Returns the unregister.
    */
   register: (id: string, ctx: ScreenContext) => () => void;
+  /** Drop anything registered by a long press or a selection. */
+  forgetAbout: () => void;
 }
 
 const Ctx = createContext<AI | null>(null);
@@ -143,11 +145,20 @@ export function AIProvider({ children }: { children: ReactNode }) {
         .join('\n\n');
       return { screen, label, own: null, extra: registered, text: only, dropped: 0 };
     }
+    /*
+     * What was asked about goes first, not last.
+     *
+     * A long press on a deadline registers that deadline. Appending it after
+     * the whole screen put the specific thing at the bottom of eight hundred
+     * characters of list, which is the wrong way round twice over: it is what
+     * the question is about, and a context that has to be cut is cut from the
+     * end.
+     */
     const rendered = render(screen, label, own);
-    const withExtra = [rendered.text, ...registered.map((c) => render(screen, label, c).text)]
+    const text = [...registered.map((c) => render(screen, label, c).text), rendered.text]
       .filter(Boolean)
       .join('\n\n');
-    return { screen, label, own, extra: registered, text: withExtra, dropped: rendered.dropped };
+    return { screen, label, own, extra: registered, text, dropped: rendered.dropped };
   }, [screen]);
 
   const suggestions = useCallback(() => {
@@ -169,6 +180,25 @@ export function AIProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  /**
+   * Forget anything registered about one particular thing.
+   *
+   * `useAIContext` unregisters on unmount, which is right for a modal or an
+   * expanded row: the thing is gone, so its context should be. A long press
+   * has no such moment — the row it was about is still on screen when the
+   * sheet closes — so without this, holding one deadline and then asking a
+   * general question would answer with that deadline still attached, and the
+   * header would say so while the student had forgotten they ever held it.
+   *
+   * Cleared when the sheet closes, and again when it opens, because either
+   * end of that is a new question.
+   */
+  const forgetAbout = useCallback(() => {
+    for (const key of [...extra.current.keys()]) {
+      if (key.startsWith('about:')) extra.current.delete(key);
+    }
+  }, []);
+
   const value = useMemo<AI>(
     () => ({
       open,
@@ -176,13 +206,17 @@ export function AIProvider({ children }: { children: ReactNode }) {
         if (seed !== undefined) setSeeded(seed);
         setOpen(true);
       },
-      hide: () => setOpen(false),
+      hide: () => {
+        forgetAbout();
+        setOpen(false);
+      },
+      forgetAbout,
       look,
       screen,
       suggestions,
       register,
     }),
-    [open, look, screen, suggestions, register],
+    [open, look, screen, suggestions, register, forgetAbout],
   );
 
   return (

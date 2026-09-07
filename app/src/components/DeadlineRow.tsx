@@ -4,6 +4,7 @@ import { TickBox } from './ui';
 import { lateBy, type Standing } from '../lib/standing';
 import { isUnderway, openLine } from '../lib/underway';
 import { useRowStyle } from './shell/useShell';
+import { useAskAbout } from '../ai/AskAbout';
 import type { DatedItem } from '../lib/types';
 
 /**
@@ -64,8 +65,42 @@ export function DeadlineRow({
   const marker =
     trail === undefined ? (late ? lateBy(item) : item.daysAway === 0 ? 'today' : `${item.daysAway}d`) : trail;
 
+  /*
+   * Hold a deadline to ask about that one.
+   *
+   * The row is drawn by three screens and holds the only thing the assistant
+   * needs to be scoped to a single obligation: its id, its course, what it is
+   * worth and when it is due. Wired here rather than in each screen, for the
+   * same reason the row itself lives here — the calendar and the course page
+   * each had their own version of this and each had quietly forgotten a part.
+   */
+  const hold = useAskAbout(`deadline:${item.id}`, () => ({
+    context: {
+      summary: `One deadline: ${item.title} for ${catalog.byId[item.c]?.code ?? ''}, due ${item.dueShort}.`,
+      focus: {
+        id: item.id,
+        course: catalog.byId[item.c]?.code,
+        title: item.title,
+        due: item.dueShort,
+        inDays: item.daysAway,
+        weight: item.weight,
+        done,
+        started: going,
+      },
+      visible: [],
+      actions: ['tick_deadline', 'add_task', 'start_timer'],
+      suggestions: [
+        `How long will ${item.title} take?`,
+        'What does this one need from me?',
+        'Break this into steps I can do tonight.',
+      ],
+    },
+    seed: `About ${item.title}: `,
+  }));
+
   return (
     <div
+      {...hold}
       style={{
         display: 'flex',
         gap: 10,

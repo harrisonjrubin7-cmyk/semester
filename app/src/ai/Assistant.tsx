@@ -5,6 +5,7 @@ import { typing } from '../lib/keys';
 import { DESKTOP, useMedia } from '../lib/media';
 import { DESTINATIONS } from '../lib/nav';
 import { useConversation, provider } from './converse';
+import { AskSelection } from './AskAbout';
 import { money } from '../lib/spend';
 import { Trouble } from '../components/Trouble';
 import { Blueprint } from '../components/Blueprint';
@@ -328,6 +329,8 @@ export function Assistant() {
 
   return (
     <>
+      {/* Select a sentence anywhere and ask about that instead of the page. */}
+      <AskSelection />
       {!ai.open && (
         <button
           type="button"
@@ -438,8 +441,19 @@ export function Assistant() {
                 opacity: 0.65,
               }}
             >
-              Looking at: {assembled.label}
-              {assembled.own ? ` — ${assembled.own.summary.replace(/\.$/, '')}` : ' — nothing of its own'}
+              {/*
+                What it is actually about, which is not always the screen.
+                A long press on a deadline says "Looking at: that deadline";
+                saying "Looking at: Courses" while the question is scoped to
+                one row is the header telling the student something untrue
+                about their own question.
+              */}
+              Looking at:{' '}
+              {assembled.extra.length > 0
+                ? assembled.extra[0].summary.replace(/\.$/, '')
+                : `${assembled.label}${
+                    assembled.own ? ` — ${assembled.own.summary.replace(/\.$/, '')}` : ' — nothing of its own'
+                  }`}
               {' '}
               <span aria-hidden>{showing ? '▾' : '▸'}</span>
             </button>

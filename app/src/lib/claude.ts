@@ -212,6 +212,19 @@ export function explainAskError(taking: Route, status: number, detail: string): 
   if (status === 529 || status === 429) {
     return `${detail}\n\nThat is rate limiting rather than a mistake — wait a moment and ask again.`;
   }
+  /*
+   * Out of credit, which is not a broken key and must not read like one.
+   *
+   * The key-check button already said this properly and the live path did
+   * not, so somebody whose balance ran out mid-term got the API's raw
+   * sentence and no idea whether to replace the key or top it up. Those are
+   * very different afternoons.
+   */
+  if (status === 400 && /credit|balance|quota/i.test(detail)) {
+    return taking === 'shared'
+      ? `${detail}\n\nThe shared key has run out for this month. Add your own under Settings to carry on now.`
+      : `${detail}\n\nThe key works — the account behind it has no credit left. Top it up at console.anthropic.com under Billing; nothing needs replacing.`;
+  }
   return detail;
 }
 

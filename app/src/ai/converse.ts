@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { ask, provider, settings, type Turn } from '../lib/claude';
 import { build as buildContext } from '../lib/context';
@@ -73,6 +73,15 @@ export function useConversation(): Conversation {
   const [applied, setApplied] = useState<{ p: Proposal; before: Lists }[]>([]);
   const [spend, setSpend] = useState(() => readSpend());
   const abort = useRef<AbortController | null>(null);
+  /**
+   * The current `send`, for the retry to reach without capturing itself.
+   *
+   * The retry closure needs to run the same question again, and writing
+   * `() => void send(text)` inside `send` has it read its own binding while
+   * that binding is still being initialised. It works by accident of hoisting
+   * and stops working the moment somebody reorders the file.
+   */
+  const sender = useRef<(text: string) => Promise<void>>(async () => {});
 
   /**
    * What the app holds, for checking a tool call against reality.
@@ -208,7 +217,28 @@ export function useConversation(): Conversation {
       try {
         const read = readMode(text);
         setMode(read.mode);
-        setLocally(localFor(text, read.mode));
+        const local = localFor(text, read.mode);
+        setLocally(local);
+
+        /*
+         * Offline: say so, once, and keep whatever the app could answer itself.
+         *
+         * `navigator.onLine` is a weak signal — it says the device has a
+         * network interface, not that anything is reachable — so it is used
+         * only to skip a request that is certain to fail, never to decide
+         * that a working connection is broken. A false negative here costs a
+         * round trip; the false positive it avoids is a student on a train
+         * watching a spinner turn into "failed to fetch".
+         */
+        if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+          trouble.wrong(
+            local
+              ? 'No connection, so this is what the app can tell you about itself. Anything else needs one.'
+              : 'No connection. Questions about your own records and about the wider world both need one — only questions about this app can be answered offline.',
+          );
+          setBusy(false);
+          return;
+        }
 
         /*
          * The screen's own account, through the allowlist rather than around it.
@@ -264,7 +294,7 @@ export function useConversation(): Conversation {
         if (e instanceof DOMException && e.name === 'AbortError') {
           if (sofar.trim()) remember([...next, { role: 'assistant', content: sofar }]);
         } else {
-          trouble.failed(e, () => void send(text));
+          trouble.failed(e, () => void sender.current(text));
         }
       } finally {
         setStreaming('');
@@ -273,6 +303,18 @@ export function useConversation(): Conversation {
     },
     [busy, turns, remember, trouble, ai, state, catalog, now, systemFor, held, dispatch],
   );
+
+  /*
+   * Kept current after the render commits, not during it.
+   *
+   * Writing to a ref in the render body works and is wrong under a render
+   * React discards; the retry would then run a `send` closed over state that
+   * never shipped. Nothing reads it until a request has already failed and
+   * somebody has pressed the button, which is long after this has run.
+   */
+  useEffect(() => {
+    sender.current = send;
+  }, [send]);
 
   const run = useCallback(
     (p: Proposal) => {

@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { SectionLabel } from './ui';
 import { forScope, insights, type Insight, type Scope } from '../insights';
+import { useAI } from '../ai/store';
 import { factsFrom } from '../insights/facts';
 
 /**
@@ -48,6 +49,7 @@ export function Insights({
   scope?: Scope | 'all';
 }) {
   const { state, dispatch, now, catalog } = useStore();
+  const ai = useAI();
 
   const found = useMemo(
     () => forScope(insights(factsFrom(state, catalog, now)), scope, most),
@@ -119,6 +121,49 @@ export function Insights({
                   {f.action.label}
                 </button>
               )}
+              {/*
+                An insight is an assertion, so it carries the one row in the
+                app with an always-visible way to interrogate it. A long press
+                is right for a deadline, which is a fact; this is a claim, and
+                a claim you cannot question is one you either swallow whole or
+                ignore.
+              */}
+              <button
+                type="button"
+                className="bare"
+                onClick={() => {
+                  ai.forgetAbout();
+                  ai.register(`about:insight:${f.id}`, {
+                    summary: `One finding the app made: ${f.headline}`,
+                    focus: {
+                      finding: f.headline,
+                      detail: f.detail,
+                      restsOn: `${f.evidence.length} records`,
+                      confidence: f.confidence,
+                      ...(f.courseId ? { course: catalog.byId[f.courseId]?.code } : {}),
+                    },
+                    visible: [],
+                    actions: ['open_screen', 'add_task', 'start_timer'],
+                    suggestions: [
+                      'How sure is this?',
+                      'What would change it?',
+                      'What should I actually do about it?',
+                    ],
+                  });
+                  ai.show('About this: ');
+                }}
+                aria-label={`Ask about: ${f.headline}`}
+                style={{
+                  flex: 'none',
+                  width: 'auto',
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 'calc(11px * var(--text-scale, 1))',
+                  letterSpacing: '0.08em',
+                  opacity: 0.55,
+                }}
+              >
+                ASK
+              </button>
               {/* The receipt. Small, and never omitted. */}
               <span
                 style={{
