@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
-import { typing } from '../lib/keys';
 import { DESKTOP, useMedia } from '../lib/media';
 import { DESTINATIONS } from '../lib/nav';
 import { useConversation, provider } from './converse';
@@ -165,13 +164,17 @@ export function Assistant() {
   );
 
   /*
-   * `a` from anywhere, and Cmd/Ctrl+K.
+   * Cmd/Ctrl+K, and Escape while the sheet is up.
    *
-   * `a` was bound to "go to the Ask screen" and is rebound here, which is the
-   * right trade: the screen it went to is the thing this replaces, and a key
-   * that opens the assistant where you are beats one that navigates away from
-   * what you were asking about. `lib/keys.ts` deliberately ignores anything
-   * with a modifier, so Cmd+K is handled here rather than added there.
+   * Not `a`. That is in `lib/keys.ts` with every other single-letter shortcut,
+   * because for a while it was in both: this listener opened the sheet while
+   * that one navigated to the Ask screen, and pressing `a` did both. A key
+   * with two owners has no correct behaviour, and the `?` sheet — which reads
+   * that list — could only ever describe one of them.
+   *
+   * Cmd+K stays here. `lib/keys.ts` ignores anything carrying a modifier on
+   * principle, so adding it there would mean weakening the rule that keeps the
+   * app out of the browser's shortcuts.
    */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -185,10 +188,6 @@ export function Assistant() {
         e.preventDefault();
         ai.hide();
         return;
-      }
-      if (e.key.toLowerCase() === 'a' && !ai.open && !typing(e.target)) {
-        e.preventDefault();
-        ai.show();
       }
     };
     window.addEventListener('keydown', onKey);

@@ -36,7 +36,7 @@ export interface Shortcut {
   /** A screen to open, for the plain navigation ones. */
   screen?: Screen;
   /** A named action for the ones that are not navigation. */
-  action?: 'search' | 'back' | 'help' | 'timer' | 'capture';
+  action?: 'search' | 'back' | 'help' | 'timer' | 'capture' | 'assistant';
 }
 
 /**
@@ -52,10 +52,20 @@ export const SHORTCUTS: Shortcut[] = [
   { key: 's', does: 'Study', screen: 'study' },
   { key: 'k', does: 'The calendar', screen: 'calendar' },
   { key: 'm', does: 'Mine — your tasks, notes and files', screen: 'mine' },
-  { key: 'a', does: 'Ask Claude about this course', screen: 'ask' },
+  /*
+   * The assistant, not the Ask screen.
+   *
+   * It used to open `ask`, and for a while both were true: this navigated
+   * there while the assistant's own listener opened its sheet on the same
+   * key. So `a` took you off the screen you were looking at and then opened a
+   * panel that said "Looking at: Ask Claude" — the one thing the app-wide
+   * assistant exists to avoid. The sheet is the thing worth a key; the screen
+   * behind it is settings, and settings are somewhere you go on purpose.
+   */
+  { key: 'a', does: 'Ask about this screen', action: 'assistant' },
   { key: 'n', does: 'Add a course from a syllabus', screen: 'import' },
   { key: 'q', does: 'Add something in one line', action: 'capture' },
-  { key: '/', does: 'Search everything', action: 'search' },
+  { key: '/', does: 'Filter this screen, or search everything', action: 'search' },
   { key: 'escape', does: 'Back', action: 'back' },
   { key: '?', does: 'This list', action: 'help' },
 ];

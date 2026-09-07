@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { useStore } from '../state/store';
 import type { SearchAdapter } from '../lib/search';
+import { holdBox } from '../lib/screenbox';
 
 /**
  * Whether we are already inside one of these.
@@ -156,25 +157,26 @@ export function Page<T>({
     setQuery('');
   }, [state.screen]);
 
-  /* `/` reaches the box in front of you rather than the overlay, which is a
-     change from what it did — and the right one, since the box is now on
-     every screen and searching what you are looking at is the commoner
-     intention. The overlay is one press of Enter further on. Not while
-     typing somewhere else, and not while the overlay is already up. */
-  useEffect(() => {
-    if (state.finder) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
-      const on = document.activeElement;
-      if (on instanceof HTMLInputElement || on instanceof HTMLTextAreaElement) return;
-      if (on instanceof HTMLElement && on.isContentEditable) return;
-      e.preventDefault();
-      box.current?.focus();
-      box.current?.select();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [state.finder]);
+  /*
+   * `/` reaches the box in front of you rather than the overlay — but this is
+   * not where that is decided.
+   *
+   * It used to be: a `keydown` listener here, alongside the one in `lib/keys.ts`
+   * that opens the whole-app search on the same key. Neither stopped the other,
+   * so both ran, and what `/` did depended on which listener had been added
+   * first — on Grades it opened the overlay *and* navigated, on Courses it left
+   * the caret on `<body>`. One key with two owners has no correct behaviour.
+   *
+   * So the key stays bound in one place, and this hands that place the two
+   * things it cannot know: which box is on screen, and whether typing into it
+   * filters anything. See `lib/screenbox.ts`.
+   */
+  // `Boolean(search)` and not `search`: the adapter is a fresh object literal
+  // on every render of the screen above, so depending on it would release and
+  // re-claim the slot on every keystroke. Whether there is one is the only
+  // part that changes.
+  const filters = Boolean(search);
+  useEffect(() => holdBox({ input: box, filters }), [filters]);
 
   const all = search?.select();
   const shown = useMemo(

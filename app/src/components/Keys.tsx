@@ -16,12 +16,15 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { SHORTCUTS, keyLabel, shortcutFor } from '../lib/keys';
+import { focusBox } from '../lib/screenbox';
+import { useAI } from '../ai/store';
 import { DESKTOP, useMedia } from '../lib/media';
 import { useSitting } from '../lib/sitting.hook';
 import { hold, running } from '../lib/session';
 
 export function Keys() {
   const { state, dispatch } = useStore();
+  const ai = useAI();
   const wide = useMedia(DESKTOP);
   const [open, setOpen] = useState(false);
   const [sitting, setSitting] = useSitting();
@@ -49,9 +52,29 @@ export function Keys() {
       }
       switch (hit.action) {
         case 'search':
-          // An overlay rather than a screen: looking something up should not
-          // cost you the page you were reading. See `components/Command.tsx`.
-          dispatch({ type: 'finder', open: true });
+          /*
+           * The box in front of you first, the whole app second.
+           *
+           * Every screen now carries a filter box, but only the ones with a
+           * list of their own actually filter with it — see `<Page>`. So this
+           * asks: if the screen in front of you has a real filter, the caret
+           * goes there, because searching what you are looking at is the
+           * commoner intention and the overlay is one press of Enter further
+           * on. If it does not, focusing a box that filters nothing would be
+           * a worse answer than the overlay, which is what people meant.
+           *
+           * Both used to happen at once. See `lib/screenbox.ts`.
+           */
+          if (!focusBox()) {
+            // An overlay rather than a screen: looking something up should not
+            // cost you the page you were reading. See `components/Command.tsx`.
+            dispatch({ type: 'finder', open: true });
+          }
+          break;
+        case 'assistant':
+          // The sheet over the screen you are on, which is the whole point of
+          // it. `ai.show()` and not a navigation — see `lib/keys.ts`.
+          ai.show();
           break;
         case 'capture':
           dispatch({ type: 'quickAdd', open: true });
@@ -72,7 +95,7 @@ export function Keys() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [wide, open, dispatch, sitting, setSitting]);
+  }, [wide, open, dispatch, sitting, setSitting, ai]);
 
   // No effect to close it when the window narrows: the guard below already
   // hides it, and resetting the state in an effect would be a second render
