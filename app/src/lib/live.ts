@@ -212,7 +212,16 @@ export function applyReviews(
   guide: LiveGuide,
   courseId: CourseId,
   reviews: Reviews,
-  now: number,
+  /**
+   * Defaulted here rather than read at each call site.
+   *
+   * Mastery is measured against the clock — a card is cold because of how long
+   * it has been — so this genuinely depends on the time it is asked. Reading
+   * `Date.now()` in the callers meant doing it during render, which React's
+   * purity rule flags and is right to: the value belongs to the function that
+   * needs it, not to the component that happens to ask.
+   */
+  now: number = Date.now(),
 ): LiveGuide {
   if (guide.units.length === 0) return guide;
 
@@ -376,7 +385,7 @@ export function useLive(courseId: CourseId): Live {
     // rail, and the per-unit lists a deck walks.
     const placed = place(own, updates);
     return {
-      guide: applyReviews(mergeGuide(base, updates), courseId, state.reviews, Date.now()),
+      guide: applyReviews(mergeGuide(base, updates), courseId, state.reviews),
       figures: updates.length === 0 ? own : placed.map,
       extras: extraFigures(catalog.extraFigures[courseId] ?? [], updates, own),
       lessons: catalog.lessons[courseId] ?? {},
@@ -395,7 +404,7 @@ export function liveGuide(
   reviews: Reviews = {},
 ): LiveGuide {
   const merged = mergeGuide(cat.guides[courseId] ?? EMPTY_GUIDE, forCourse(updates, courseId));
-  return applyReviews(merged, courseId, reviews, Date.now());
+  return applyReviews(merged, courseId, reviews);
 }
 
 /**

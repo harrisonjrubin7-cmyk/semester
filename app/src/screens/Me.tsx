@@ -354,7 +354,7 @@ export function Me() {
 export function Search() {
   const { state, dispatch, now, catalog, school } = useStore();
   const rowTwelve = useRowStyle(12);
-  const groups = findEverything(catalog, now, state.query, state.notes, state.tasks, school.capabilities);
+  const groups = findEverything(catalog, now, state.query, state.notes, state.tasks, school.capabilities, state.updates);
   const total = countHits(groups);
   const typed = state.query.trim().length > 0;
 

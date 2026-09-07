@@ -2,6 +2,7 @@ import { budget, hasPolicy, tally } from './attend';
 import { standing } from './grades';
 import { datedItems } from './select';
 import type { Catalog } from '../data/catalog';
+import { liveGuide } from './live';
 import type { State } from '../state/shape';
 import type { Mode } from './mode';
 
@@ -261,7 +262,11 @@ export function build(
      * boundary if it is the only way through, so the guide comes through here
      * or not at all.
      */
-    const guide = catalog.guides[course.id];
+    // The guide as it stands, not as it was compiled. This read the module
+    // content, so the one file that decides what may leave was sending a guide
+    // with the reading you added last week missing from it — and the answer
+    // came back confidently built on everything except that reading.
+    const guide = liveGuide(catalog, course.id, state.updates, state.reviews);
     const aboutStudy = /\bstud|revis|unit|topic|cold|weak|know|understand|explain\b/i.test(question);
     if (guide && guide.units.length > 0 && aboutStudy) {
       parts.push(

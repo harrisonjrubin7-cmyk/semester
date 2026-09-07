@@ -1,4 +1,5 @@
 import type { Provide } from '../shape';
+import { guideNow } from '../shape';
 
 /**
  * The Make group — the screens that produce something.
@@ -12,7 +13,7 @@ import type { Provide } from '../shape';
 /** Draw it — a graph, a flow, a timeline, a matrix. */
 export const draw: Provide = (look) => {
   const course = look.catalog.byId[look.state.guideId];
-  const guide = look.catalog.guides[look.state.guideId];
+  const guide = guideNow(look, look.state.guideId);
   return {
     summary: course
       ? `Drawing a figure${guide ? ` from ${course.code}'s ${guide.units.length} units` : ''}.`
@@ -26,7 +27,7 @@ export const draw: Provide = (look) => {
 /** Make a deck — a real PowerPoint file, from a unit or a brief. */
 export const deck: Provide = (look) => {
   const course = look.catalog.byId[look.state.guideId];
-  const guide = look.catalog.guides[look.state.guideId];
+  const guide = guideNow(look, look.state.guideId);
   return {
     summary: course
       ? `Building a deck${guide ? ` from ${course.code} — ${guide.units.length} units to draw on` : ''}.`

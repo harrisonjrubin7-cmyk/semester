@@ -36,7 +36,8 @@ const ANY: Capabilities = {
   registrarUrl: 'https://example.invalid',
   orgPortalUrl: 'https://example.invalid',
 };
-import type { CourseId, Note, PersonalTask, Screen, StudyMode } from './types';
+import type { CourseId, CourseUpdate, Note, PersonalTask, Screen, StudyMode } from './types';
+import { liveGuide } from './live';
 
 export type Hit =
   | { kind: 'item'; id: string; title: string; sub: string; tag: string; score: number }
@@ -141,6 +142,15 @@ export function findEverything(
    * their university does not have.
    */
   caps: Capabilities = ANY,
+  /**
+   * Everything added since the courses were imported.
+   *
+   * Search read `cat.guides` — the modules as they were compiled — so a unit
+   * that arrived with a reading, and every card in it, was unfindable. Typing
+   * the name of the thing you added yesterday returned nothing, which reads as
+   * "it did not save".
+   */
+  updates: CourseUpdate[] = [],
 ): HitGroup[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -162,7 +172,10 @@ export function findEverything(
   // to search — the one thing a person is most likely to type the name of.
   const units: Hit[] = [];
   for (const c of cat.courses) {
-    const guide = cat.guides[c.id];
+    // The guide as it stands today, not as it was compiled. `liveGuide` is the
+    // same merge the study screens use, so a search hit and the screen it
+    // opens can never disagree about what is in a unit.
+    const guide = updates.length ? liveGuide(cat, c.id, updates) : cat.guides[c.id];
     if (!guide) continue;
     guide.units.forEach((u, index) => {
       const cards = u.cards.map((card) => `${card.q} ${card.a}`).join(' ');

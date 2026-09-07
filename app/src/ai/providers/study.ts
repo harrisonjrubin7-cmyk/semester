@@ -1,6 +1,7 @@
 import { datedItems } from '../../lib/select';
 import { cardKey, dueCount } from '../../lib/review';
 import type { Provide } from '../shape';
+import { guideNow } from '../shape';
 import { pct } from './core';
 
 /**
@@ -17,7 +18,7 @@ import { pct } from './core';
 /** The open course, with its guide, or nothing. */
 function open(look: Parameters<Provide>[0]) {
   const course = look.catalog.byId[look.state.guideId];
-  const guide = look.catalog.guides[look.state.guideId];
+  const guide = guideNow(look, look.state.guideId);
   return course && guide ? { course, guide } : null;
 }
 
@@ -139,8 +140,8 @@ export const runway: Provide = (look) => {
       date: i.dueShort,
       inDays: i.daysAway,
       weight: i.weight,
-      ...(catalog.guides[i.c]
-        ? { unitsToCover: catalog.guides[i.c].units.length, coldest: coldest(catalog.guides[i.c]) }
+      ...(guideNow(look, i.c)
+        ? { unitsToCover: guideNow(look, i.c)!.units.length, coldest: coldest(guideNow(look, i.c)!) }
         : {}),
     }));
   if (exams.length === 0) return null;
@@ -173,7 +174,7 @@ function coldest(guide: { units: { name: string; mastery: number }[] }): string 
 export const tonight: Provide = (look) => {
   const { state, catalog, now } = look;
   const rows = catalog.courses.map((c) => {
-    const guide = catalog.guides[c.id];
+    const guide = guideNow(look, c.id);
     // The same count the drill uses, from the same keys — a card is due when
     // it has never been seen or its interval has run out. See `lib/review.ts`.
     const ready = guide

@@ -4,6 +4,7 @@ import { datedItems } from '../../lib/select';
 import { forScope, insights } from '../../insights';
 import { factsFrom } from '../../insights/facts';
 import type { Provide, Look } from '../shape';
+import { guideNow } from '../shape';
 
 /**
  * What each screen tells the assistant it is showing.
@@ -194,7 +195,7 @@ export const calendar: Provide = (look) => {
  */
 export const study: Provide = (look) => {
   const { state, catalog } = look;
-  const guide = catalog.guides[state.guideId];
+  const guide = guideNow(look, state.guideId);
   const course = catalog.byId[state.guideId];
   if (!guide || !course) return null;
 

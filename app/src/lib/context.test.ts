@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PICK, build } from './context';
 import { DEFAULT_PERSISTED, type State } from '../state/shape';
 import { buildCatalog } from '../data/catalog';
+import type { CourseUpdate } from './types';
 import BUS from '../data/courses/bus';
 import ECON from '../data/courses/econ';
 
@@ -236,5 +237,38 @@ describe('what it says it used', () => {
     const general = build('explain elasticity', 'general', loaded(), catalog, NOW, 'ask');
     const grounded = build('how am I doing', 'grounded', loaded(), catalog, NOW, 'ask');
     expect(general.used.length).toBeLessThan(grounded.used.length);
+  });
+});
+
+describe('the guide that leaves is the guide as it stands', () => {
+  const reading: CourseUpdate = {
+    id: 'u1',
+    courseId: 'econ',
+    unit: null,
+    title: 'Redlining and the HOLC',
+    source: 'Reading 7',
+    body: '',
+    created: 1,
+    cards: [{ q: 'What did the HOLC grade?', a: 'It graded 239 cities between 1930 and 1960.' }],
+    terms: [],
+    fileIds: [],
+  };
+
+  const sent = (state: State) =>
+    build('what should I study for ECON 1020', 'grounded', state, catalog, NOW, 'study').text;
+
+  it('carries a unit that arrived with a reading', () => {
+    // This file reads the guide to decide what may leave, and it read the
+    // module content — so the answer came back built on everything except the
+    // reading added last week, with nothing on screen saying so.
+    const without = sent(loaded({ guideId: 'econ' }));
+    expect(without).not.toContain('Redlining and the HOLC');
+
+    const with_ = sent(loaded({ guideId: 'econ', updates: [reading] }));
+    expect(with_).toContain('Redlining and the HOLC');
+  });
+
+  it('still sends nothing when nothing was added', () => {
+    expect(sent(loaded({ guideId: 'econ', updates: [] }))).toBe(sent(loaded({ guideId: 'econ' })));
   });
 });

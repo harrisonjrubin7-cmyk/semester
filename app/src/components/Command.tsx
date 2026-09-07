@@ -52,7 +52,7 @@ export function Command({ onClose }: { onClose: () => void }) {
   }, []);
 
   const found = useMemo(
-    () => findEverything(catalog, now, text, state.notes, state.tasks, school.capabilities),
+    () => findEverything(catalog, now, text, state.notes, state.tasks, school.capabilities, state.updates),
     [catalog, now, text, state.notes, state.tasks, school.capabilities],
   );
 

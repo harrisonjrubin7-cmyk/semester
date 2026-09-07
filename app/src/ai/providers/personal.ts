@@ -1,6 +1,7 @@
 import { datedItems } from '../../lib/select';
 import { tally } from '../../lib/review';
 import type { Provide } from '../shape';
+import { guideNow } from '../shape';
 
 /**
  * The three screens the registry keeps outside its groups.
@@ -91,7 +92,7 @@ export const me: Provide = (look) => {
   const { state, catalog, now } = look;
   const t = tally(state.reviews);
   const rows = catalog.courses.map((c) => {
-    const guide = catalog.guides[c.id];
+    const guide = guideNow(look, c.id);
     const mastery = guide
       ? Math.round(guide.units.reduce((n, u) => n + u.mastery, 0) / Math.max(1, guide.units.length))
       : 0;

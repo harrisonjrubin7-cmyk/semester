@@ -1,6 +1,7 @@
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
 import type { Screen } from '../lib/types';
+import { liveGuide, type LiveGuide } from '../lib/live';
 
 /**
  * What a screen tells the assistant about what you are looking at.
@@ -55,6 +56,20 @@ export interface Look {
 }
 
 export type Provide = (look: Look) => ScreenContext | null;
+
+/**
+ * A course's guide as it stands now, not as it was compiled.
+ *
+ * Every provider here read `catalog.guides[id]` — the module content — so the
+ * assistant was given the guide as it shipped and knew nothing about the
+ * reading you added an hour ago. Asking "what did that reading say" got an
+ * answer built from everything except that reading, which is worse than not
+ * answering: it is confidently incomplete, and nothing on screen says so.
+ */
+export function guideNow(look: Look, courseId: string): LiveGuide | undefined {
+  if (!look.catalog.guides[courseId]) return undefined;
+  return liveGuide(look.catalog, courseId, look.state.updates, look.state.reviews);
+}
 
 /**
  * How much of a screen's context may travel, in characters.
