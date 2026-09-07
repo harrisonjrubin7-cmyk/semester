@@ -217,6 +217,40 @@ workflow passes `VITE_BASE` and nothing in the app reads a leading-slash path
 directly. If you deploy somewhere that serves from the root, drop `VITE_BASE`
 and it works unchanged.
 
+### The website that goes with it
+
+Three pages — a front door, the term, and the study side — live in
+`app/public/web/`. Vite copies `public/` through verbatim, so they deploy with
+everything else and land at `<base>/web/`. Nothing to configure, and no change
+to `pages.yml`.
+
+Same origin as the app, which is the whole point: one `localStorage`, one
+Supabase session. Sign in on either and the other already knows you.
+
+The app links to all three from **Connect → On a desktop**, at addresses
+derived from wherever the app is served (`app/src/lib/web.ts`), so they are
+right under any base.
+
+The other direction needs one note. Those three files are **generated
+bundles** — one line of minified HTML wrapping the real document as an escaped
+string — regenerated whole whenever the website changes. Its front door links
+back to the app; `app.html` and `study.html` did not, so a shared link to
+either left you with no way home but the address bar. Rather than edit a
+generated file, the build appends a small return link to the copies in
+`dist/`: `app/scripts/webback.mjs`, run by `npm run build`, with the work in
+`app/src/lib/webback.ts` and tests in `webback.test.ts`.
+
+So **regenerating the website loses nothing** — drop the new bundles in and the
+return link is re-applied on the next build. Two things worth knowing:
+
+- The added link computes the app's address from `location.pathname`, so it is
+  right on a fork or a local `vite preview`. The front door's own link home is
+  written out in full and points at this deployment; a fork should change it
+  wherever the website is generated.
+- It only appears in a built site. `npm run dev` serves `public/` directly, so
+  the website is there but the added link is not. Use `npm run build && npx
+  vite preview` to see it.
+
 ## 5 · The optional connectors
 
 None of these are needed to use the app; each is documented in

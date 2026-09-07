@@ -12,6 +12,7 @@ import {
 } from '../lib/claude';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { WEB_PAGES, webUrl } from '../lib/web';
 import { parseIcs } from '../lib/ics';
 import {
   PROVIDERS,
@@ -674,6 +675,37 @@ export function Connect() {
         for a year, and somebody who comes looking should be told where they
         went rather than concluding they were deleted.
       */}
+      {/*
+        The same term on a bigger screen.
+
+        Here rather than on the Links screen, which is for the university's
+        systems — this is not somewhere else to go, it is this, wider. And the
+        addresses are derived from wherever the app is served from, so these
+        work in development and under any deployment's base. See `lib/web.ts`.
+      */}
+      <SectionLabel>On a desktop</SectionLabel>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        {WEB_PAGES.map((page) => (
+          <a
+            key={page.id}
+            href={webUrl(page.id)}
+            // A new tab, not this one: the app is often installed, and
+            // navigating it away from itself is a thing you cannot undo with
+            // Back from a standalone window.
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-secondary btn-block"
+            style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            {page.label}
+          </a>
+        ))}
+      </div>
+      <div className="kicker" style={{ marginTop: 'var(--sp-4)', textTransform: 'none', letterSpacing: 0, opacity: 0.6 }}>
+        The same address, so the same sign-in and the same data — nothing to set
+        up, and the front door has a way back here.
+      </div>
+
       <SectionLabel>Links</SectionLabel>
       <button
         type="button"
