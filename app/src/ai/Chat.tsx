@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import { TOUCH, useMedia } from '../lib/media';
+import { DESKTOP, TOUCH, useMedia } from '../lib/media';
 import { useAI } from './store';
 import { useConversation, provider } from './converse';
 import { Composer, sendHint } from './Composer';
-import { Question, Reply, Waiting, useFollowing } from './Turns';
+import { Question, Reply, Waiting, Looked, useFollowing } from './Turns';
+import { Threads, ThreadsOver } from './Threads';
+import { Applied, Locally, Proposals } from './Actions';
+import { Trouble } from '../components/Trouble';
 
 /**
  * The assistant, full screen.
@@ -25,10 +28,13 @@ import { Question, Reply, Waiting, useFollowing } from './Turns';
  * chrome saying what is behind — because nothing is.
  */
 export function Chat() {
-  const { dispatch } = useStore();
+  const { dispatch, now } = useStore();
   const talk = useConversation();
   const touch = useMedia(TOUCH);
+  const wide = useMedia(DESKTOP);
   const [draft, setDraft] = useState('');
+  /** The history, when there is no room for it beside the conversation. */
+  const [listing, setListing] = useState(false);
 
   const { box, following, toEnd } = useFollowing([talk.turns.length, talk.streaming, talk.busy]);
 
@@ -39,9 +45,39 @@ export function Chat() {
   };
 
   const empty = talk.turns.length === 0 && !talk.busy;
+  const list = {
+    threads: talk.threads,
+    openId: talk.openId,
+    onOpen: talk.open,
+    onDrop: talk.drop,
+    onNew: talk.clear,
+    // The store's `now` is a Date — it is the app's one clock, and every
+    // screen reads the day off it. The list wants milliseconds.
+    now: now.getTime(),
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+    <div style={{ display: 'flex', height: '100%', minHeight: 0, position: 'relative' }}>
+      {/*
+        Beside the conversation where there is room, over it where there is
+        not. A 200px rail on a 430px phone leaves 230px for the answer, which
+        is narrower than the measure this whole layout exists to protect.
+      */}
+      {wide && (
+        <div
+          style={{
+            flex: 'none',
+            width: 232,
+            minHeight: 0,
+            borderRight: '1px solid var(--app-line)',
+          }}
+        >
+          <Threads {...list} />
+        </div>
+      )}
+      {listing && !wide && <ThreadsOver {...list} onClose={() => setListing(false)} />}
+
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div
         ref={box}
         /*
@@ -81,6 +117,39 @@ export function Chat() {
                   key={i}
                   text={t.content}
                   onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
+                  /*
+                   * The offers belong to the answer that made them, and sit
+                   * inside it rather than in a tray at the bottom.
+                   *
+                   * Only on the last one: a proposal is about the exchange it
+                   * came out of, and `talk.proposals` holds the current set
+                   * rather than a set per turn. Hanging them under an older
+                   * answer would put a live button under text that did not
+                   * produce it.
+                   */
+                  extra={
+                    i === talk.turns.length - 1 && !talk.busy ? (
+                      <>
+                        {talk.used.length > 0 && (
+                          <Looked
+                            said={`Read ${talk.used.length} ${talk.used.length === 1 ? 'part' : 'parts'} of your records`}
+                            detail={talk.used.join('\n')}
+                          />
+                        )}
+                        <Locally
+                          locally={talk.locally}
+                          onGo={(screen) => dispatch({ type: 'go', screen })}
+                        />
+                        <Proposals
+                          proposals={talk.proposals}
+                          line={talk.proposalsLine}
+                          onRun={talk.run}
+                          onDismiss={talk.dismiss}
+                        />
+                        <Applied applied={talk.applied} onTakeBack={talk.takeBack} />
+                      </>
+                    ) : undefined
+                  }
                 />
               ),
             )}
@@ -153,22 +222,34 @@ export function Chat() {
               type="button"
               className="bare"
               onClick={() => dispatch({ type: 'back' })}
-              style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.55 }}
+              style={QUIET}
             >
               ← BACK TO APP
             </button>
             <span style={{ flex: 1 }} />
-            {talk.turns.length > 0 && !talk.busy && (
+            {/* Only where the panel is not already showing the list. */}
+            {!wide && (
               <button
                 type="button"
                 className="bare"
-                onClick={talk.clear}
-                style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.55 }}
+                onClick={() => setListing(true)}
+                style={QUIET}
               >
-                NEW CHAT
+                {talk.threads.filter((t) => t.turns.length > 0).length > 1
+                  ? `${talk.threads.filter((t) => t.turns.length > 0).length} CONVERSATIONS`
+                  : 'CONVERSATIONS'}
+              </button>
+            )}
+            {talk.turns.length > 0 && !talk.busy && (
+              <button type="button" className="bare" onClick={talk.clear} style={QUIET}>
+                NEW
               </button>
             )}
           </div>
+          {/* A failed request, and the retry for it. The sheet has had this
+              since the assistant shipped; the chat did not, so a request that
+              failed on this surface said nothing at all. */}
+          <Trouble said={talk.said} onRetry={talk.again} busy={talk.busy} />
           {talk.cost.asks > 0 && (
             <div style={{ fontSize: 'var(--type-xs)', opacity: 0.4, marginTop: 'var(--sp-3)' }}>
               {talk.cost.asks} {talk.cost.asks === 1 ? 'answer' : 'answers'} this month. Estimated.
@@ -176,9 +257,18 @@ export function Chat() {
           )}
         </div>
       </div>
+      </div>
     </div>
   );
 }
+
+const QUIET = {
+  width: 'auto',
+  flex: 'none',
+  fontSize: 'var(--type-xs)',
+  letterSpacing: '0.1em',
+  opacity: 0.55,
+} as const;
 
 /**
  * The reading measure, and the reason for it.

@@ -9,7 +9,7 @@ import { Composer, sendHint } from './Composer';
 import { Question, Reply, Waiting } from './Turns';
 import { money } from '../lib/spend';
 import { Trouble } from '../components/Trouble';
-import { Blueprint } from '../components/Blueprint';
+import { Applied, Locally, Proposals } from './Actions';
 
 /**
  * The assistant, everywhere.
@@ -590,114 +590,23 @@ export function Assistant() {
               {talk.busy ? '' : talk.turns.at(-1)?.role === 'assistant' ? 'Answer ready.' : ''}
             </div>
 
-            {/* What the app itself can say, with no request behind it. */}
-            {talk.locally && (
-              <div style={{ marginTop: 'var(--sp-6)' }}>
-                <div className="kicker">From this app, with nothing sent</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
-                  {talk.locally.matches.map((m) => (
-                    <Blueprint
-                      key={m.screen}
-                      onClick={() => {
-                        dispatch({ type: 'go', screen: m.screen });
-                        ai.hide();
-                      }}
-                      style={{ padding: '9px 11px', textAlign: 'left' }}
-                    >
-                      <div style={{ fontSize: 'var(--type-sm)', fontFamily: 'var(--font-heading)' }}>
-                        {m.label}
-                        <span style={{ opacity: 0.45, fontFamily: 'var(--font-body)' }}> · {m.group}</span>
-                      </div>
-                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.7, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}>
-                        {m.blurb}
-                      </div>
-                    </Blueprint>
-                  ))}
-                  {talk.locally.fromGuide.map((quoted) => (
-                    <div
-                      key={quoted}
-                      style={{
-                        fontSize: 'var(--type-xs)',
-                        opacity: 0.7,
-                        lineHeight: 'var(--leading-relaxed)',
-                        paddingLeft: 9,
-                        borderLeft: '2px solid var(--app-line)',
-                      }}
-                    >
-                      {quoted}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/*
+              The offers, the undo, and what the app can say by itself — the
+              same components the full chat draws, from `Actions.tsx`.
 
-            {/* What it has offered to do. Nothing here has happened: each line
-                says exactly what its button will change. See `lib/tools.ts`. */}
-            {talk.proposals.length > 0 && !talk.busy && (
-              <div
-                style={{
-                  marginTop: 'var(--sp-6)',
-                  padding: '10px 12px',
-                  borderRadius: 'var(--r-md)',
-                  border: '1px solid var(--app-line)',
-                  background: 'var(--app-hero)',
-                }}
-              >
-                <div className="kicker">{talk.proposalsLine}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
-                  {talk.proposals.map((p) => (
-                    <div key={p.id} style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
-                      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-sm)', lineHeight: 1.4 }}>
-                        {p.said}
-                      </span>
-                      <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={() => talk.run(p)}
-                        // Named for the change, never "Confirm": a screen
-                        // reader hears what the button does, not that it does
-                        // something.
-                        aria-label={p.said}
-                        style={{ flex: 'none', height: 32, fontSize: 'var(--type-xs)' }}
-                      >
-                        {p.verb}
-                      </button>
-                      <button
-                        type="button"
-                        className="bare"
-                        aria-label={`Dismiss: ${p.said}`}
-                        onClick={() => talk.dismiss(p.id)}
-                        style={{ flex: 'none', width: 20, opacity: 0.4 }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* What has been done, and how to take it back. */}
-            {talk.applied.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
-                {talk.applied.map((e) => (
-                  <div key={e.p.id} style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
-                    <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-xs)', opacity: 0.75, lineHeight: 1.4 }}>
-                      Done — {e.p.did}.
-                    </span>
-                    <button
-                      type="button"
-                      className="bare"
-                      onClick={() => talk.takeBack(e)}
-                      aria-label={`Undo: ${e.p.did}`}
-                      style={{ flex: 'none', width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.7 }}
-                    >
-                      UNDO
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+              These used to be written out here, which is how the chat came to
+              have no action cards at all: the model would propose adding a
+              reminder, `talk.proposals` would fill, and the other surface
+              rendered none of it.
+            */}
+            <Locally locally={talk.locally} onGo={(screen) => { dispatch({ type: 'go', screen }); ai.hide(); }} />
+            <Proposals
+              proposals={talk.busy ? [] : talk.proposals}
+              line={talk.proposalsLine}
+              onRun={talk.run}
+              onDismiss={talk.dismiss}
+            />
+            <Applied applied={talk.applied} onTakeBack={talk.takeBack} />
 
             <Trouble said={talk.said} onRetry={talk.again} busy={talk.busy} />
           </div>
@@ -731,11 +640,15 @@ export function Assistant() {
                   onClick={talk.clear}
                   style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.55 }}
                 >
-                  START A NEW CONVERSATION
+                  NEW CONVERSATION
                 </button>
                 {/* The same conversation, with the page to itself. Not a
                     handoff and nothing is copied — both surfaces read the one
-                    log in `converse.ts`, so this is a navigation. */}
+                    conversation in `ai/live.ts`, so this is a navigation.
+
+                    The history lives there rather than here: a list of twelve
+                    conversations inside a panel sized to leave the screen
+                    behind it visible would fill the panel. */}
                 <button
                   type="button"
                   className="bare"

@@ -1,6 +1,18 @@
+// @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { flight, liveNow, resetLive, sender, setLive, watchLive } from './live';
+import {
+  dropThread,
+  flight,
+  keepTurns,
+  liveNow,
+  newThread,
+  openThread,
+  resetLive,
+  sender,
+  setLive,
+  watchLive,
+} from './live';
 
 /**
  * One conversation, and the way it stopped being one.
@@ -20,7 +32,10 @@ import { flight, liveNow, resetLive, sender, setLive, watchLive } from './live';
 
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
-beforeEach(resetLive);
+beforeEach(() => {
+  localStorage.clear();
+  resetLive();
+});
 
 describe('the conversation is shared, not copied', () => {
   it('answers every reader with the same object', () => {
@@ -87,6 +102,116 @@ describe('the conversation is shared, not copied', () => {
 
   it('starts the retry with something safe to call', async () => {
     await expect(sender.run('nothing has set this yet')).resolves.toBeUndefined();
+  });
+});
+
+describe('more than one conversation', () => {
+  it('keeps the old one when a new one starts', () => {
+    /*
+     * The whole point of threads. "New chat" used to empty the only
+     * transcript there was and delete its key, so a revision plan worked out
+     * on Sunday did not survive an unrelated question on Tuesday — and
+     * nothing warned anybody, because from the app's side nothing was lost.
+     */
+    keepTurns([{ role: 'user', content: 'Sunday plan' }]);
+    const first = liveNow().openId;
+    newThread();
+
+    expect(liveNow().turns).toEqual([]);
+    expect(liveNow().openId).not.toBe(first);
+    const old = liveNow().threads.find((t) => t.id === first);
+    expect(old?.turns).toEqual([{ role: 'user', content: 'Sunday plan' }]);
+    expect(old?.title).toBe('Sunday plan');
+  });
+
+  it('reuses an empty thread rather than stacking blank rows', () => {
+    // Pressing new twice should not leave two "New conversation" rows.
+    newThread();
+    const after = liveNow().openId;
+    newThread();
+    expect(liveNow().openId).toBe(after);
+    expect(liveNow().threads.filter((t) => t.turns.length === 0)).toHaveLength(1);
+  });
+
+  it('swaps the transcript when you switch, not just the title', () => {
+    // The failure this guards: `openId` moving while `turns` stays, which
+    // shows one conversation's name over another's text.
+    keepTurns([{ role: 'user', content: 'first' }]);
+    const a = liveNow().openId;
+    newThread();
+    keepTurns([{ role: 'user', content: 'second' }]);
+    const b = liveNow().openId;
+
+    openThread(a);
+    expect(liveNow().turns).toEqual([{ role: 'user', content: 'first' }]);
+    openThread(b);
+    expect(liveNow().turns).toEqual([{ role: 'user', content: 'second' }]);
+  });
+
+  it('leaves no proposal or undo behind when the thread changes', () => {
+    /*
+     * A proposal is an offer about one answer, and an undo belongs to the
+     * exchange that produced it. Carrying either across would put a live
+     * button under an answer that never asked for it — and, for `applied`, a
+     * working Undo for a change made in a conversation nobody is looking at.
+     */
+    keepTurns([{ role: 'user', content: 'first' }]);
+    const a = liveNow().openId;
+    newThread();
+    setLive('proposals', [{ id: 'p1' } as never]);
+    setLive('applied', [{ p: { id: 'p1' }, before: {} } as never]);
+    setLive('busy', true);
+    setLive('streaming', 'half');
+
+    openThread(a);
+    expect(liveNow().proposals).toEqual([]);
+    expect(liveNow().applied).toEqual([]);
+    expect(liveNow().busy).toBe(false);
+    expect(liveNow().streaming).toBe('');
+  });
+
+  it('lands somewhere when you delete the one you are in', () => {
+    // The surfaces render `turns` unconditionally: there is no "no
+    // conversation" state to fall into.
+    keepTurns([{ role: 'user', content: 'first' }]);
+    const a = liveNow().openId;
+    newThread();
+    keepTurns([{ role: 'user', content: 'second' }]);
+    const b = liveNow().openId;
+
+    dropThread(b);
+    expect(liveNow().openId).toBe(a);
+    expect(liveNow().turns).toEqual([{ role: 'user', content: 'first' }]);
+    expect(liveNow().threads.map((t) => t.id)).not.toContain(b);
+  });
+
+  it('leaves a fresh one when the last is deleted', () => {
+    keepTurns([{ role: 'user', content: 'only' }]);
+    dropThread(liveNow().openId);
+    expect(liveNow().threads).toHaveLength(1);
+    expect(liveNow().turns).toEqual([]);
+  });
+
+  it('deleting one you are not in leaves you where you are', () => {
+    keepTurns([{ role: 'user', content: 'first' }]);
+    const a = liveNow().openId;
+    newThread();
+    keepTurns([{ role: 'user', content: 'second' }]);
+    const b = liveNow().openId;
+
+    dropThread(a);
+    expect(liveNow().openId).toBe(b);
+    expect(liveNow().turns).toEqual([{ role: 'user', content: 'second' }]);
+  });
+
+  it('survives a reload', () => {
+    keepTurns([{ role: 'user', content: 'kept' }]);
+    newThread();
+    keepTurns([{ role: 'user', content: 'also kept' }]);
+    // `resetLive` re-reads the store, which is what a fresh page load does.
+    resetLive();
+    expect(liveNow().threads.filter((t) => t.turns.length > 0)).toHaveLength(2);
+    expect(liveNow().turns).toEqual([{ role: 'user', content: 'also kept' }]);
   });
 });
 

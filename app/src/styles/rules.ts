@@ -239,11 +239,11 @@ export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
   type: 708,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 227,
+  leading: 225,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 544,
+  space: 541,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 563,
+  shorthand: 561,
 };
 
 /*

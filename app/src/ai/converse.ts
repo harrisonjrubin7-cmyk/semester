@@ -3,16 +3,16 @@ import { useStore } from '../state/store';
 import { ask, provider, settings, type Turn } from '../lib/claude';
 import { build as buildContext } from '../lib/context';
 import { readMode, type Mode } from '../lib/mode';
+import type { Thread } from '../lib/threads';
 import { systemPrompt } from './prompt';
 import { answerLocally, type Local } from '../lib/localask';
-import { clear as clearLog, save as saveLog } from '../lib/chatlog';
 import { monthStart, read as readSpend, record, since, total } from '../lib/spend';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
 import { currentLook } from '../state/shape';
 import { datedItems } from '../lib/select';
 import { useTrouble } from '../lib/trouble';
 import { useAI } from './store';
-import { flight, sender, setLive, useLive } from './live';
+import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive } from './live';
 
 /**
  * The conversation itself, once, for whoever is showing it.
@@ -69,9 +69,18 @@ export interface Conversation {
   stop: () => void;
   run: (p: Proposal) => void;
   takeBack: (entry: { p: Proposal; before: Lists }) => void;
+  /** Start a new conversation, keeping the one you were in. */
   clear: () => void;
   /** Dismiss one offer without running it. */
   dismiss: (id: string) => void;
+  /** Every conversation, for the history list. See `lib/threads.ts`. */
+  threads: Thread[];
+  /** Which of them is on screen. */
+  openId: string;
+  /** Switch to one already in the list. */
+  open: (id: string) => void;
+  /** Delete one. Deleting the open one lands on the next newest. */
+  drop: (id: string) => void;
 }
 
 export function useConversation(): Conversation {
@@ -143,9 +152,17 @@ export function useConversation(): Conversation {
     [state],
   );
 
+  /*
+   * Every change to the transcript goes through the thread store.
+   *
+   * This used to write `turns` and then write a separate single-conversation
+   * key beside it. With threads there is one record and `keepTurns` updates
+   * the open thread inside it — the list's title and its "last touched" come
+   * off the same write, so a row cannot say one thing while the transcript
+   * says another.
+   */
   const remember = useCallback((next: Turn[]) => {
-    setLive('turns', next);
-    saveLog({ turns: next, at: Date.now(), courseId: null });
+    keepTurns(next);
   }, []);
 
   /**
@@ -365,16 +382,25 @@ export function useConversation(): Conversation {
     run,
     takeBack,
     dismiss: (id: string) => setProposals((was) => was.filter((q) => q.id !== id)),
+    /*
+     * A new conversation, not a deleted one.
+     *
+     * This emptied the only transcript there was and removed its key, which
+     * is why Sunday's revision plan did not survive Tuesday. It now starts a
+     * thread and leaves the old one in the list. `newThread` clears the
+     * proposals and the undo stack itself — see the note on `cleared`.
+     */
     clear: () => {
-      remember([]);
-      clearLog();
-      setLocally(null);
-      setProposals([]);
-      setApplied([]);
-      setMode(null);
-      setUsed([]);
+      newThread();
       trouble.clear();
     },
+    threads: live.threads,
+    openId: live.openId,
+    open: (id: string) => {
+      openThread(id);
+      trouble.clear();
+    },
+    drop: dropThread,
   };
 }
 

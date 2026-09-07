@@ -3,7 +3,7 @@ import type { Turn } from '../lib/claude';
 import type { Local } from '../lib/localask';
 import type { Mode } from '../lib/mode';
 import type { Lists, Proposal } from '../lib/tools';
-import { load as loadLog } from '../lib/chatlog';
+import { load as loadThreads, save as saveThreads, titleFor, blank, type Thread } from '../lib/threads';
 import { read as readSpend } from '../lib/spend';
 
 /**
@@ -47,6 +47,10 @@ import { read as readSpend } from '../lib/spend';
 
 export interface Live {
   turns: Turn[];
+  /** Every conversation, newest last touched first. See `lib/threads.ts`. */
+  threads: Thread[];
+  /** Which one `turns` belongs to. */
+  openId: string;
   /** The answer as it arrives, before it becomes a turn. */
   streaming: string;
   busy: boolean;
@@ -62,10 +66,14 @@ export interface Live {
 }
 
 function empty(): Live {
+  // Read once, at import, rather than once per mount — which is the
+  // difference between one conversation and several.
+  const kept = loadThreads();
+  const open = kept.threads.find((t) => t.id === kept.openId) ?? kept.threads[0];
   return {
-    // Seeded from the saved log once, at import, rather than once per mount —
-    // which is the difference between one conversation and several.
-    turns: loadLog()?.turns ?? [],
+    turns: open.turns,
+    threads: kept.threads,
+    openId: open.id,
     streaming: '',
     busy: false,
     mode: null,
@@ -132,9 +140,112 @@ export function setLive<K extends keyof Live>(
   for (const fn of watchers) fn();
 }
 
-/** Back to nothing. For tests, and for the app's own "new conversation". */
+/** Back to nothing. For tests, and for wiping every thread. */
 export function resetLive(): void {
   flight.abort = null;
   live = empty();
   for (const fn of watchers) fn();
+}
+
+/*
+ * ── Threads ───────────────────────────────────────────────────────────────
+ *
+ * The four things you can do to the set of conversations. All of them go
+ * through here rather than through `setLive`, because each has to keep three
+ * things in step that would otherwise drift: `turns` (what is on screen),
+ * `threads` (the list), and the store. A component that set `openId` and
+ * forgot `turns` would show one conversation's title over another's text.
+ */
+
+/**
+ * Write the open thread's turns back into the list, and persist.
+ *
+ * Called on every change to the transcript. `turns` is the working copy —
+ * it is what `send` appends to and what the surfaces render — and this is the
+ * point where it becomes part of the record.
+ */
+export function keepTurns(turns: Turn[]): void {
+  const at = Date.now();
+  const threads = live.threads.map((t) =>
+    t.id === live.openId ? { ...t, turns, at, title: titleFor(turns) } : t,
+  );
+  live = { ...live, turns, threads };
+  saveThreads({ threads, openId: live.openId });
+  for (const fn of watchers) fn();
+}
+
+/**
+ * Start a fresh conversation, keeping the one you were in.
+ *
+ * This is what "new chat" used to do by deleting everything. The old thread
+ * stays in the list, which is the entire point of the change: a revision plan
+ * worked out on Sunday survives an unrelated question on Tuesday.
+ *
+ * An empty thread is reused rather than stacked. Pressing new twice should
+ * not leave two blank rows, and `lib/threads.ts` drops unopened empties on
+ * save anyway — doing it here as well means the list looks right immediately
+ * rather than after a reload.
+ */
+export function newThread(): void {
+  const spare = live.threads.find((t) => t.turns.length === 0);
+  const thread = spare ?? blank();
+  const threads = spare ? live.threads : [thread, ...live.threads];
+  live = { ...live, ...cleared(), turns: [], threads, openId: thread.id };
+  saveThreads({ threads, openId: thread.id });
+  for (const fn of watchers) fn();
+}
+
+/** Switch to one already in the list. */
+export function openThread(id: string): void {
+  const thread = live.threads.find((t) => t.id === id);
+  if (!thread || id === live.openId) return;
+  live = { ...live, ...cleared(), turns: thread.turns, openId: id };
+  saveThreads({ threads: live.threads, openId: id });
+  for (const fn of watchers) fn();
+}
+
+/**
+ * Delete one, and land somewhere sensible.
+ *
+ * Deleting the open thread has to leave a thread open — the surfaces render
+ * `turns` unconditionally and there is no "no conversation" state to fall
+ * into. Deleting the last one leaves a fresh empty one rather than nothing.
+ */
+export function dropThread(id: string): void {
+  const rest = live.threads.filter((t) => t.id !== id);
+  if (id !== live.openId) {
+    live = { ...live, threads: rest };
+    saveThreads({ threads: rest, openId: live.openId });
+    for (const fn of watchers) fn();
+    return;
+  }
+  const next = [...rest].sort((a, b) => b.at - a.at)[0] ?? blank();
+  const threads = rest.length > 0 ? rest : [next];
+  live = { ...live, ...cleared(), turns: next.turns, threads, openId: next.id };
+  saveThreads({ threads, openId: next.id });
+  for (const fn of watchers) fn();
+}
+
+/**
+ * What does not travel between threads.
+ *
+ * A proposal is an offer about a specific answer, and an "undo" belongs to
+ * the exchange that produced it. Carrying either into a different
+ * conversation would put a button under an answer that never asked for it —
+ * and, in the case of `applied`, a working Undo for a change made in a
+ * thread the student is no longer looking at.
+ *
+ * `spend` is not here: it is the month's total across everything, not a
+ * property of one conversation.
+ */
+function cleared(): Pick<Live, 'streaming' | 'busy' | 'mode' | 'used' | 'locally' | 'proposals' | 'applied'> {
+  return {
+    streaming: '',
+    busy: false,
+    mode: null,
+    used: [],
+    locally: null,
+    proposals: [],
+    applied: [],
+  };
 }
