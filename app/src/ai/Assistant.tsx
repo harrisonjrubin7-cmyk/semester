@@ -4,6 +4,10 @@ import { useAI, useSeed } from './store';
 import { typing } from '../lib/keys';
 import { DESKTOP, useMedia } from '../lib/media';
 import { DESTINATIONS } from '../lib/nav';
+import { useConversation, provider } from './converse';
+import { money } from '../lib/spend';
+import { Trouble } from '../components/Trouble';
+import { Blueprint } from '../components/Blueprint';
 
 /**
  * The assistant, everywhere.
@@ -137,6 +141,14 @@ export function Assistant() {
   const [corner, setCorner] = useState<Corner>(savedCorner);
   const [full, setFull] = useState(false);
   const [draft, setDraft] = useState('');
+  /**
+   * The conversation, from the one place it lives.
+   *
+   * Not built here: `ai/converse.ts` holds the turns, the request, the
+   * proposals and the undo, so the sheet and the older Ask screen are two
+   * views of one assistant rather than two assistants. See its header.
+   */
+  const talk = useConversation();
   /** Whether the "what's included" panel is open. Nothing hidden, on request. */
   const [showing, setShowing] = useState(false);
 
@@ -470,28 +482,179 @@ export function Assistant() {
               </div>
             )}
 
-            {/* Stage one: the sheet, the context and the way in. The answering
-                itself lands here next, on the pieces `ask` already has. */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {ai.suggestions().map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setDraft(s)}
-                  style={{
-                    height: 'auto',
-                    padding: '10px 12px',
-                    textAlign: 'left',
-                    justifyContent: 'flex-start',
-                    fontSize: 'var(--type-sm)',
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {s}
-                </button>
+            {/* Nothing asked yet: what is worth asking here, from this
+                screen's own provider. */}
+            {talk.turns.length === 0 && !talk.streaming && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {ai.suggestions().map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => void talk.send(s)}
+                    style={{
+                      height: 'auto',
+                      padding: '10px 12px',
+                      textAlign: 'left',
+                      justifyContent: 'flex-start',
+                      fontSize: 'var(--type-sm)',
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {talk.turns.map((t, i) => (
+                <div key={i}>
+                  <div className="kicker" style={{ color: t.role === 'user' ? 'inherit' : 'var(--app-accent)' }}>
+                    {t.role === 'user' ? 'You' : provider()}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 'var(--type-sm)',
+                      lineHeight: 1.55,
+                      marginTop: 3,
+                      whiteSpace: 'pre-wrap',
+                      opacity: t.role === 'user' ? 0.72 : 1,
+                      textWrap: 'pretty',
+                    }}
+                  >
+                    {t.content}
+                  </div>
+                </div>
               ))}
+              {talk.streaming && (
+                <div>
+                  <div className="kicker" style={{ color: 'var(--app-accent)' }}>
+                    {provider()}
+                  </div>
+                  <div style={{ fontSize: 'var(--type-sm)', lineHeight: 1.55, marginTop: 3, whiteSpace: 'pre-wrap' }}>
+                    {talk.streaming}
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Announced once, on completion — not per token, which would
+                read every fragment of a paragraph out loud. */}
+            <div aria-live="polite" className="sr-only">
+              {talk.busy ? '' : talk.turns.at(-1)?.role === 'assistant' ? 'Answer ready.' : ''}
+            </div>
+
+            {/* What the app itself can say, with no request behind it. */}
+            {talk.locally && (
+              <div style={{ marginTop: 12 }}>
+                <div className="kicker">From this app, with nothing sent</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
+                  {talk.locally.matches.map((m) => (
+                    <Blueprint
+                      key={m.screen}
+                      onClick={() => {
+                        dispatch({ type: 'go', screen: m.screen });
+                        ai.hide();
+                      }}
+                      style={{ padding: '9px 11px', textAlign: 'left' }}
+                    >
+                      <div style={{ fontSize: 'var(--type-sm)', fontFamily: 'var(--font-heading)' }}>
+                        {m.label}
+                        <span style={{ opacity: 0.45, fontFamily: 'var(--font-body)' }}> · {m.group}</span>
+                      </div>
+                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.7, lineHeight: 1.45, marginTop: 2 }}>
+                        {m.blurb}
+                      </div>
+                    </Blueprint>
+                  ))}
+                  {talk.locally.fromGuide.map((quoted) => (
+                    <div
+                      key={quoted}
+                      style={{
+                        fontSize: 'var(--type-xs)',
+                        opacity: 0.7,
+                        lineHeight: 1.5,
+                        paddingLeft: 9,
+                        borderLeft: '2px solid var(--app-line)',
+                      }}
+                    >
+                      {quoted}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* What it has offered to do. Nothing here has happened: each line
+                says exactly what its button will change. See `lib/tools.ts`. */}
+            {talk.proposals.length > 0 && !talk.busy && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: '10px 12px',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--app-line)',
+                  background: 'var(--app-hero)',
+                }}
+              >
+                <div className="kicker">{talk.proposalsLine}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                  {talk.proposals.map((p) => (
+                    <div key={p.id} style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-sm)', lineHeight: 1.4 }}>
+                        {p.said}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={() => talk.run(p)}
+                        // Named for the change, never "Confirm": a screen
+                        // reader hears what the button does, not that it does
+                        // something.
+                        aria-label={p.said}
+                        style={{ flex: 'none', height: 32, fontSize: 'var(--type-xs)' }}
+                      >
+                        {p.verb}
+                      </button>
+                      <button
+                        type="button"
+                        className="bare"
+                        aria-label={`Dismiss: ${p.said}`}
+                        onClick={() => talk.dismiss(p.id)}
+                        style={{ flex: 'none', width: 20, opacity: 0.4 }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* What has been done, and how to take it back. */}
+            {talk.applied.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+                {talk.applied.map((e) => (
+                  <div key={e.p.id} style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
+                    <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-xs)', opacity: 0.75, lineHeight: 1.4 }}>
+                      Done — {e.p.did}.
+                    </span>
+                    <button
+                      type="button"
+                      className="bare"
+                      onClick={() => talk.takeBack(e)}
+                      aria-label={`Undo: ${e.p.did}`}
+                      style={{ flex: 'none', width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.7 }}
+                    >
+                      UNDO
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <Trouble said={talk.said} onRetry={talk.again} busy={talk.busy} />
           </div>
 
           <div style={{ padding: '10px 16px', borderTop: '1px solid var(--app-line)' }}>
@@ -508,19 +671,48 @@ export function Assistant() {
               <button
                 type="button"
                 className="btn btn-primary"
-                disabled={!draft.trim()}
+                disabled={talk.busy || !draft.trim()}
                 onClick={() => {
-                  // Until the answering lands here, the question goes where it
-                  // already works rather than nowhere. Deliberately temporary,
-                  // and deliberately not a second answering path.
-                  dispatch({ type: 'go', screen: 'ask' });
-                  ai.hide();
+                  const q = draft;
+                  setDraft('');
+                  void talk.send(q);
                 }}
                 style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
               >
-                Ask
+                {talk.busy ? 'Thinking…' : 'Ask'}
               </button>
+              {talk.busy ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={talk.stop}
+                  style={{ flex: 'none', height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                >
+                  Stop
+                </button>
+              ) : (
+                talk.turns.length > 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={talk.clear}
+                    style={{ flex: 'none', height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                  >
+                    New
+                  </button>
+                )
+              )}
             </div>
+            {/* The running cost, in the header's own row of small print.
+                Silent when nothing was measured — a zero would read as
+                "this was free". See `lib/spend.ts`. */}
+            {talk.cost.asks > 0 && (
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 6, lineHeight: 1.4 }}>
+                About {money(talk.cost.dollars)} this month, over {talk.cost.asks}{' '}
+                {talk.cost.asks === 1 ? 'answer' : 'answers'}
+                {talk.cost.unpriced > 0 ? ` (${talk.cost.unpriced} unpriced)` : ''}. Estimated.
+              </div>
+            )}
           </div>
         </div>
       )}

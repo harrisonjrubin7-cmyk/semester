@@ -195,6 +195,36 @@ describe('a grounded question', () => {
   });
 });
 
+describe('when the screen has already said it', () => {
+  it('does not send a course’s grades twice by two different routes', () => {
+    /*
+     * Found by reading a whole payload by eye. Asking "what do I need on the
+     * BUS final" from Grades sent BUS 1600's six components twice — once from
+     * the screen's provider and once from here.
+     *
+     * The wasted characters are the small half. The large half is that the
+     * two are computed differently: the provider passes the attendance extras
+     * the Grades screen passes, this file does not, and on a course whose
+     * syllabus weights attendance they give different running grades for one
+     * course with no way to choose between them.
+     */
+    const screenSaid = 'On screen: Grades (grades).\nBUS 1600 running 82%, 45% still to play for.';
+    const withScreen = build('how am I doing in BUS 1600', 'grounded', loaded(), catalog, NOW, 'grades', screenSaid);
+    const without = build('how am I doing in BUS 1600', 'grounded', loaded(), catalog, NOW, 'grades');
+    expect(without.text).toContain('BUS 1600 grades');
+    expect(withScreen.text).not.toContain('BUS 1600 grades —');
+    // And the screen's own account is still there.
+    expect(withScreen.text).toContain('BUS 1600 running 82%');
+  });
+
+  it('still sends a course the screen did not mention', () => {
+    const screenSaid = 'On screen: Grades (grades).\nBUS 1600 running 82%.';
+    const out = build('how am I doing', 'grounded', loaded(), catalog, NOW, 'grades', screenSaid);
+    expect(out.text).toContain('ECON 1020 grades');
+    expect(out.text).not.toContain('BUS 1600 grades —');
+  });
+});
+
 describe('what it says it used', () => {
   it('lists it, so an answer’s basis is checkable rather than asserted', () => {
     const out = build('how am I doing in BUS 1600', 'grounded', loaded(), catalog, NOW, 'ask');

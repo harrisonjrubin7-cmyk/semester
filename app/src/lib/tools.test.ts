@@ -28,6 +28,10 @@ const known: Known = {
     { id: 'econ:2026-09-10', courseId: 'econ' as CourseId, date: '2026-09-10', mark: 'present', at: 0 },
   ] as Attended[],
   look: { accent: 'brass', textSize: 'normal', ground: 'ink', density: 'comfortable' },
+  applications: [
+    { id: 'a1', org: 'Deloitte', role: 'Summer analyst', stage: 'sent', next: 'Follow up', nextBy: '' },
+  ],
+  dayBudget: 4,
 };
 
 const call = (name: string, input: Record<string, unknown>): ToolCall => ({
@@ -51,9 +55,12 @@ describe('what it is allowed to offer', () => {
       'add_source',
       'add_task',
       'mark_attendance',
+      'move_application',
       'move_task',
       'open_screen',
+      'set_day_budget',
       'set_look',
+      'set_next_step',
       'start_timer',
       'tick_deadline',
     ]);
@@ -74,6 +81,9 @@ describe('what it is allowed to offer', () => {
       read('add_note', { title: 'x', body: 'y', courseId: '' }),
       read('add_source', { raw: 'Smith 2020', courseId: '' }),
       read('add_application', { org: 'x', role: 'y', due: '' }),
+      read('set_day_budget', { hours: 6 }),
+      read('move_application', { org: 'Deloitte', stage: 'talking' }),
+      read('set_next_step', { org: 'Deloitte', next: 'Send the transcript', by: '' }),
       read('set_look', { field: 'textSize', value: 'large' }),
       read('open_screen', { screen: 'home', why: '', search: '' }),
     ].map((p) => p!.action.type);
@@ -98,6 +108,9 @@ describe('what it is allowed to offer', () => {
       read('add_note', { title: 'x', body: 'y', courseId: '' }),
       read('add_source', { raw: 'Smith 2020', courseId: '' }),
       read('add_application', { org: 'x', role: 'y', due: '' }),
+      read('set_day_budget', { hours: 6 }),
+      read('move_application', { org: 'Deloitte', stage: 'talking' }),
+      read('set_next_step', { org: 'Deloitte', next: 'Send the transcript', by: '' }),
       read('set_look', { field: 'textSize', value: 'large' }),
     ] as Proposal[]) {
       expect(p.sort, p.said).toBe('write');
@@ -350,6 +363,47 @@ describe('putting a write back', () => {
     expect(undoFor(p.undo!, empty as never, empty as never)).toEqual({
       type: 'setLook',
       look: { accent: 'brass' },
+    });
+  });
+});
+
+describe('the study budget', () => {
+  it('carries the number it is replacing, because every plan rests on it', () => {
+    const p = read('set_day_budget', { hours: 6 })!;
+    expect(p.said).toBe('Set your study budget to 6 hours a day, from 4');
+    expect(p.undo).toEqual({ how: 'inverse', action: { type: 'setDayBudget', hours: 4 } });
+  });
+
+  it('refuses a number nobody would mean', () => {
+    // Zero hours is not a budget and twenty is not a day.
+    expect(read('set_day_budget', { hours: 0 })).toBeNull();
+    expect(read('set_day_budget', { hours: 20 })).toBeNull();
+    // Already that: nothing to offer.
+    expect(read('set_day_budget', { hours: 4 })).toBeNull();
+  });
+});
+
+describe('applications', () => {
+  it('moves one that exists, by the organisation the student named', () => {
+    const p = read('move_application', { org: 'deloitte', stage: 'talking' })!;
+    expect(p.said).toBe('Move Summer analyst at Deloitte from Sent to Talking');
+    expect(p.action).toEqual({ type: 'moveApplication', id: 'a1', stage: 'talking' });
+  });
+
+  it('refuses one it does not hold, and a stage that is not one', () => {
+    expect(read('move_application', { org: 'Invented Ltd', stage: 'offer' })).toBeNull();
+    expect(read('move_application', { org: 'Deloitte', stage: 'ghosted' })).toBeNull();
+    // Already there.
+    expect(read('move_application', { org: 'Deloitte', stage: 'sent' })).toBeNull();
+  });
+
+  it('records a next step and can put the old one back', () => {
+    const p = read('set_next_step', { org: 'Deloitte', next: 'Send the transcript', by: '2026-10-01' })!;
+    expect(p.said).toContain('Send the transcript');
+    expect(p.said).toContain('October 1');
+    expect(p.undo).toEqual({
+      how: 'inverse',
+      action: { type: 'patchApplication', id: 'a1', patch: { next: 'Follow up', nextBy: '' } },
     });
   });
 });

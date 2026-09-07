@@ -59,6 +59,15 @@ const knownFrom = (s: State): Known => ({
   courses: [{ id: 'econ' as CourseId, code: 'ECON 1020' }],
   attendance: s.attendance,
   look: currentLook(s),
+  applications: s.applications.map((a) => ({
+    id: a.id,
+    org: a.org,
+    role: a.role,
+    stage: a.stage,
+    next: a.next,
+    nextBy: a.nextBy,
+  })),
+  dayBudget: s.dayBudget,
 });
 
 const known = knownFrom(start());
@@ -96,6 +105,7 @@ const TOUCHED = [
   'attendance',
   'done',
   'accent',
+  'dayBudget',
   'textSize',
   'ground',
   'density',
@@ -136,6 +146,7 @@ describe('every write, done and taken back', () => {
     ['add_application', { org: 'Deloitte', role: 'Summer analyst', due: '2026-11-01' }],
     ['set_look', { field: 'accent', value: 'jade' }],
     ['set_look', { field: 'textSize', value: 'large' }],
+    ['set_day_budget', { hours: 6 }],
   ];
 
   for (const [name, input] of CASES) {

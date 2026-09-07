@@ -46,6 +46,7 @@
  */
 
 import { ACCENTS, GROUNDS, SIZES, DENSITIES, type Look } from './look';
+import { STAGES, type Application, type Stage } from './apply';
 import type { ToolCall, ToolSpec } from './claude';
 import type { Action, Persisted } from '../state/shape';
 import type { Attended } from './attend';
@@ -76,6 +77,9 @@ const REACHABLE: Screen[] = [
   'data',
   'help',
 ];
+
+/** The stages an application can be in, as the app itself names them. */
+const STAGE_IDS = STAGES.map((s) => s.id);
 
 /** The look settings a tool may change: named, enumerable, and reversible. */
 const LOOK_FIELDS = ['accent', 'ground', 'textSize', 'density'] as const;
@@ -232,6 +236,50 @@ export const TOOLS: ToolSpec[] = [
     },
   },
   {
+    name: 'set_day_budget',
+    description:
+      'Change how many hours a day the student has told the app they have for study. Only when they say it — this number is what every plan on every screen is built from.',
+    strict: true,
+    input_schema: {
+      type: 'object',
+      properties: { hours: { type: 'number', description: 'Hours a day, 1 to 16.' } },
+      required: ['hours'],
+    },
+  },
+  {
+    name: 'move_application',
+    description:
+      'Move an application you are tracking to a different stage, when the student says it has moved.',
+    strict: true,
+    input_schema: {
+      type: 'object',
+      properties: {
+        org: { type: 'string', description: 'Which organisation, exactly as in the context.' },
+        stage: {
+          type: 'string',
+          enum: [...STAGE_IDS],
+          description: 'The stage it has moved to.',
+        },
+      },
+      required: ['org', 'stage'],
+    },
+  },
+  {
+    name: 'set_next_step',
+    description:
+      'Record the one thing to do next on an application, and when it is wanted by. Their own words, not yours.',
+    strict: true,
+    input_schema: {
+      type: 'object',
+      properties: {
+        org: { type: 'string', description: 'Which organisation, exactly as in the context.' },
+        next: { type: 'string', description: 'The one thing to do next.' },
+        by: { type: 'string', description: 'ISO date it is wanted by, or empty.' },
+      },
+      required: ['org', 'next', 'by'],
+    },
+  },
+  {
     name: 'open_screen',
     description:
       'Take the student to a screen in the app, when the answer to their question lives there. Prefer this over describing where to tap. Optionally narrow what they will find there with a filter or a search.',
@@ -319,6 +367,10 @@ export interface Known {
   courses: { id: CourseId; code: string }[];
   attendance: Attended[];
   look: Look;
+  /** What is being tracked, so a tool call can be matched to a real one. */
+  applications: Pick<Application, 'id' | 'org' | 'role' | 'stage' | 'next' | 'nextBy'>[];
+  /** Hours a day the student has said they have. */
+  dayBudget: number;
 }
 
 function str(input: Record<string, unknown>, key: string): string {
@@ -541,6 +593,66 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
       sort: 'write',
       action: { type: 'setLook', look: { [field]: value } },
       undo: { how: 'inverse', action: { type: 'setLook', look: { [field]: was } } },
+    };
+  }
+
+  if (call.name === 'set_day_budget') {
+    const hours = num(call.input, 'hours');
+    if (hours === null || hours < 1 || hours > 16) return null;
+    const whole = Math.round(hours * 2) / 2;
+    if (whole === known.dayBudget) return null;
+    return {
+      id,
+      said: `Set your study budget to ${whole} hours a day, from ${known.dayBudget}`,
+      did: `Your study budget is ${whole} hours a day`,
+      verb: 'Set it',
+      sort: 'write',
+      action: { type: 'setDayBudget', hours: whole },
+      // Every plan on every screen is built from this number, so the old one
+      // is carried rather than assumed to be the default.
+      undo: { how: 'inverse', action: { type: 'setDayBudget', hours: known.dayBudget } },
+    };
+  }
+
+  if (call.name === 'move_application') {
+    const org = str(call.input, 'org');
+    const stage = str(call.input, 'stage') as Stage;
+    const app = known.applications.find((a) => a.org.toLowerCase() === org.toLowerCase());
+    if (!app || !STAGE_IDS.includes(stage) || app.stage === stage) return null;
+    const named = STAGES.find((s) => s.id === stage)?.label ?? stage;
+    const was = STAGES.find((s) => s.id === app.stage)?.label ?? app.stage;
+    return {
+      id,
+      said: `Move ${app.role} at ${app.org} from ${was} to ${named}`,
+      did: `${app.role} at ${app.org} is at ${named}`,
+      verb: 'Move it',
+      sort: 'write',
+      action: { type: 'moveApplication', id: app.id, stage },
+      undo: { how: 'inverse', action: { type: 'moveApplication', id: app.id, stage: app.stage } },
+    };
+  }
+
+  if (call.name === 'set_next_step') {
+    const org = str(call.input, 'org');
+    const next = str(call.input, 'next');
+    const app = known.applications.find((a) => a.org.toLowerCase() === org.toLowerCase());
+    if (!app || !next) return null;
+    const by = iso(str(call.input, 'by'));
+    return {
+      id,
+      said: `On ${app.role} at ${app.org}, set the next step to "${next}"${by ? `, by ${day(by)}` : ''}`,
+      did: `The next step on ${app.org} is "${next}"`,
+      verb: 'Set it',
+      sort: 'write',
+      action: { type: 'patchApplication', id: app.id, patch: { next, nextBy: by } },
+      undo: {
+        how: 'inverse',
+        action: {
+          type: 'patchApplication',
+          id: app.id,
+          patch: { next: app.next, nextBy: app.nextBy },
+        },
+      },
     };
   }
 

@@ -48,6 +48,24 @@ export const PICK = {
     "Today's date and the active term.",
     'Course codes and titles. Not their contents.',
     'Which screen the question was asked from.',
+    /*
+     * What that screen says it is showing, from its own provider.
+     *
+     * The line that makes "what do I need on the BUS final" answerable
+     * without naming BUS. It is `always` rather than `onDemand` because the
+     * screen is the question's context whether or not the words say so —
+     * somebody looking at Grades and typing "how am I doing" means these
+     * grades.
+     *
+     * Bounded at about eight thousand characters by `ai/shape.ts`, which also
+     * writes into the text how many rows it had to drop, so an answer that
+     * counts from the list knows it was not given all of it. Every provider
+     * is a pure function of state and none of them may reach past the rules
+     * below — see `ai/providers/index.ts`, and the test there that seeds a
+     * note body, a person and a letter and asserts none of the fifty-four
+     * sends any of them.
+     */
+    'What the current screen says it is showing — its summary, its visible rows after filters, and what it is focused on.',
   ],
   onDemand: [
     'Deadlines in a window the question names — title, date, weight. Never the quote.',
@@ -122,6 +140,16 @@ export function build(
   catalog: Catalog,
   now: Date,
   screen: string,
+  /**
+   * What the screen says it is showing, already rendered and already capped.
+   *
+   * Passed in rather than assembled here, because a provider needs the whole
+   * store and this file is deliberately the only thing that decides what
+   * *leaves*. The split is: `ai/providers` decides what a screen is showing,
+   * this decides whether it may go. Both are needed and they are different
+   * questions.
+   */
+  onScreen = '',
 ): Built {
   const used: string[] = [];
   const parts: string[] = [];
@@ -131,6 +159,31 @@ export function build(
   parts.push(`Today is ${now.toDateString()}. The active term is ${state.term}.`);
   parts.push(`The student is on the "${screen}" screen.`);
   used.push("today's date", 'the active term', 'which screen you are on');
+
+  if (onScreen.trim()) {
+    parts.push(onScreen.trim());
+    used.push('what this screen is showing');
+  }
+
+  /**
+   * Whether the screen has already described this course.
+   *
+   * Found by reading a whole payload by eye, which is what that exercise is
+   * for: asking "what do I need on the BUS final" from Grades sent BUS 1600's
+   * six components twice — once from the screen's provider and once from the
+   * block below. Six hundred wasted characters is the small half.
+   *
+   * The large half is that the two are computed by different paths. The
+   * provider calls `standing` with the attendance extras the Grades screen
+   * passes; this file calls it without them. They agreed on the payload I
+   * read, and they will not agree on a course whose syllabus weights
+   * attendance — and then the model has two different running grades for one
+   * course and no way to choose.
+   *
+   * So the screen wins where it has spoken. It is the more specific of the
+   * two and it is what the student is looking at.
+   */
+  const already = (code: string) => onScreen.includes(code);
 
   if (catalog.courses.length > 0) {
     parts.push(
@@ -179,7 +232,7 @@ export function build(
     // the answer nothing and still costs a paragraph.
     const s = standing(full, state.grades, { pieces: state.pieces, drops: state.drops });
     const graded = s.rows.filter((r) => r.score !== null);
-    if (graded.length > 0) {
+    if (graded.length > 0 && !already(course.code)) {
       parts.push(
         `${course.code} grades — ${graded.length} of ${s.rows.length} components back, currently ${Math.round(s.current ?? 0)}%, ${Math.round(s.remaining)}% still ungraded:\n${s.rows
           .map((r) => `- ${r.what} · ${r.weight}%${r.score !== null ? ` · ${r.score}` : ' · not back'}`)
@@ -190,7 +243,7 @@ export function build(
 
     const policy = state.attendPolicy[course.id];
     const t = tally(state.attendance, course.id);
-    if (hasPolicy(policy) && t.marked > 0) {
+    if (hasPolicy(policy) && t.marked > 0 && !already(course.code)) {
       const b = budget(policy, t);
       parts.push(
         `${course.code} attendance — ${t.present} present, ${t.absent} absent, ${t.excused} excused across ${t.marked} marked. Policy allows ${policy.allowed}; ${b.left} left, ${b.cost} points lost so far.`,
