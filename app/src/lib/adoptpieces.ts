@@ -2,7 +2,7 @@ import { newId } from './files';
 import type { Change } from './changeset';
 import type { Where } from './harvest';
 import type { CourseModule } from './types';
-import type { CourseUpdate, Item, StudyCard, Term } from './types';
+import type { CaseFile, CourseUpdate, Example, Figure, Frame, Item, StudyCard, Term } from './types';
 
 /**
  * Turning accepted changes into the two writes the app already makes.
@@ -76,6 +76,14 @@ export function adopt(
 ): Adopted {
   const cards: StudyCard[] = [];
   const terms: Term[] = [];
+  // The five a pasted reading produces. Collected the same way as cards and
+  // terms, so an accepted figure reaches the update and a declined one does
+  // not — which is the whole point of routing paste through the sheet.
+  const figures: Figure[] = [];
+  const frames: Frame[] = [];
+  const selfTest: StudyCard[] = [];
+  const cases: CaseFile[] = [];
+  const examples: Example[] = [];
   let unitName = '';
   let body = '';
 
@@ -93,6 +101,21 @@ export function adopt(
         break;
       case 'term':
         terms.push(p.term);
+        break;
+      case 'figure':
+        figures.push(p.figure);
+        break;
+      case 'frame':
+        frames.push(p.frame);
+        break;
+      case 'selftest':
+        selfTest.push(p.card);
+        break;
+      case 'case':
+        cases.push(p.file);
+        break;
+      case 'example':
+        examples.push(p.example);
         break;
       case 'unit':
         unitName = p.name;
@@ -161,7 +184,13 @@ export function adopt(
     },
   };
 
-  if (cards.length > 0 || terms.length > 0 || body) {
+  const anyLong =
+    figures.length > 0 ||
+    frames.length > 0 ||
+    selfTest.length > 0 ||
+    cases.length > 0 ||
+    examples.length > 0;
+  if (cards.length > 0 || terms.length > 0 || body || anyLong) {
     out.update = {
       courseId: (module?.course.id ?? '') as CourseUpdate['courseId'],
       unit: unitIndex(module, unitName),
@@ -170,6 +199,11 @@ export function adopt(
       body,
       cards,
       terms,
+      figures,
+      frames,
+      selfTest,
+      cases,
+      examples,
       fileIds: [],
       // Provenance, written with the material rather than beside it: a record
       // of what an import did is only useful if it cannot drift from what the

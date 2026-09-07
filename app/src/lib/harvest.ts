@@ -2,7 +2,7 @@ import { ask } from './claude';
 import { flatten } from './cite';
 import type { Kind } from './classify';
 import { hashOf, type Intake } from './intake';
-import type { GradeRow, StudyCard, Term } from './types';
+import type { CaseFile, Example, Figure, Frame, GradeRow, StudyCard, Term } from './types';
 
 /**
  * Turning what arrived into the shapes the app already has.
@@ -60,7 +60,23 @@ export type Piece =
       hash: string;
     }
   | { what: 'grade'; row: GradeRow; quote?: string; where: Where; hash: string }
-  | { what: 'note'; title: string; body: string; why: string; where: Where; hash: string };
+  | { what: 'note'; title: string; body: string; why: string; where: Where; hash: string }
+  /*
+   * The five the pasted-material path produces.
+   *
+   * `harvest` does not make these — it reads files into the shapes a syllabus
+   * and a deck have. They are here because `Piece` is the vocabulary the
+   * review sheet speaks, and pasted material was the one door into this course
+   * that skipped the review entirely: it wrote a figure, a frame, a case and a
+   * worked example straight into the guide with nothing shown first. A piece
+   * kind that only one producer makes is a smaller price than a second review
+   * sheet, or than material that is never reviewed.
+   */
+  | { what: 'figure'; figure: Figure; where: Where; hash: string }
+  | { what: 'frame'; frame: Frame; where: Where; hash: string }
+  | { what: 'selftest'; card: StudyCard; where: Where; hash: string }
+  | { what: 'case'; file: CaseFile; where: Where; hash: string }
+  | { what: 'example'; example: Example; where: Where; hash: string };
 
 export interface Harvest {
   pieces: Piece[];

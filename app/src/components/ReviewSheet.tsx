@@ -52,6 +52,18 @@ function describe(change: Change): string {
       return `${p.row.what} — ${p.row.pct}`;
     case 'note':
       return p.title;
+    // The five a pasted reading produces. Named by the one field that
+    // identifies each, which is what the reader is deciding about.
+    case 'figure':
+      return `A figure: ${p.figure.title}`;
+    case 'frame':
+      return `An exam framing: ${p.frame.t}`;
+    case 'selftest':
+      return `To answer out loud: ${p.card.q}`;
+    case 'case':
+      return `A claim and its test: ${p.file.title}`;
+    case 'example':
+      return `A worked example: ${p.example.t}`;
   }
 }
 
@@ -61,6 +73,11 @@ function detail(change: Change): string {
   if (p.what === 'card') return p.card.a;
   if (p.what === 'note') return p.body;
   if (p.what === 'unit') return p.body;
+  if (p.what === 'frame') return p.frame.d;
+  if (p.what === 'selftest') return p.card.a;
+  if (p.what === 'case') return `${p.file.claim} → ${p.file.verdict}`;
+  if (p.what === 'example') return p.example.d;
+  if (p.what === 'figure') return p.figure.caption;
   return '';
 }
 

@@ -1,6 +1,6 @@
 import { flatten } from './cite';
 import type { Piece } from './harvest';
-import type { CourseUpdate, GradeRow, Guide, Item, StudyCard, Term } from './types';
+import type { CourseUpdate, Example, Figure, GradeRow, Guide, Item, StudyCard, Term } from './types';
 
 /**
  * What is actually new, and what the course already has.
@@ -84,6 +84,40 @@ export interface Held {
   grading: GradeRow[];
   /** Source hashes of every import already folded into this course. */
   sources: string[];
+  /**
+   * The course's worked examples.
+   *
+   * On the module rather than the guide, so it cannot be reached through
+   * `guide` and has to be handed over separately. Defaulted at the call sites
+   * that predate examples being addable.
+   */
+  examples?: Example[];
+  /** Every figure the course draws, for comparing an added one against. */
+  figures?: Figure[];
+}
+
+/** Every figure the course draws, unit figures and the shared rail alike. */
+function figuresHeld(held: Held): Figure[] {
+  return held.figures ?? [];
+}
+
+/** A figure's numbers, as a string, for comparing two of the same name. */
+function describeNumbers(f: Figure): string {
+  switch (f.type) {
+    case 'bars':
+      return f.rows.map((r) => `${r.l} ${r.v}${f.unit}`).join(', ');
+    case 'steps':
+      return f.steps.map((s) => `${s.n} ${s.t}`).join(', ');
+    case 'diagram':
+      return f.kind;
+    case 'image':
+      return f.fileId;
+  }
+}
+
+/** Whether two figures of the same name say the same thing. */
+function sameNumbers(a: Figure, b: Figure): boolean {
+  return a.type === b.type && describeNumbers(a) === describeNumbers(b);
 }
 
 /**
@@ -319,6 +353,93 @@ function judge(
         verdict: 'conflict',
         against: `${same.t} — ${same.d}`,
         because: 'You already have a different definition of this term.',
+      };
+    }
+
+    /*
+     * The five the pasted-material path produces.
+     *
+     * Judged on the one field that identifies each — a frame's framing, a
+     * case's title, a figure's title — because unlike a card there is no
+     * second passage to compare against. Sameness by title is coarser than the
+     * overlap the cards get, and it is the right coarseness: two figures
+     * called "Where the money went" are the same figure, and if their numbers
+     * differ that is a contradiction, not a second figure.
+     */
+    case 'figure': {
+      const same = (ctx.held.guide.units.length ? figuresHeld(ctx.held) : []).find(
+        (f) => flatten(f.title) === flatten(piece.figure.title),
+      );
+      if (!same) return { piece, verdict: 'new', because: 'No figure like this on the course.' };
+      if (sameNumbers(same, piece.figure)) {
+        return { piece, verdict: 'duplicate', against: same.title, because: 'Already drawn, the same way.' };
+      }
+      // The case the review sheet exists for: the slides say 25%, the guide
+      // says 30%. Never resolved quietly — one of them is what the exam uses.
+      return {
+        piece,
+        verdict: 'conflict',
+        against: `${same.title} — ${describeNumbers(same)}`,
+        because: `This figure has the same title and different figures: ${describeNumbers(piece.figure)}.`,
+      };
+    }
+
+    case 'frame': {
+      const same = (ctx.held.guide.frames ?? []).find((f) => flatten(f.t) === flatten(piece.frame.t));
+      if (!same) return { piece, verdict: 'new', because: 'Not on the cram sheet yet.' };
+      if (overlap(same.d, piece.frame.d) >= SAME) {
+        return { piece, verdict: 'duplicate', against: same.t, because: 'Already framed the same way.' };
+      }
+      return {
+        piece,
+        verdict: 'fuller',
+        against: `${same.t} — ${same.d}`,
+        because: 'A different account of the same framing.',
+      };
+    }
+
+    case 'selftest': {
+      // A question to answer out loud is a question, so it is compared against
+      // the cards as well as the guide's own self-test — a card and a
+      // self-test question that say the same thing are one thing twice.
+      const heldTests = ctx.held.guide.selfTest ?? [];
+      const near = [...heldTests.map((c) => c), ...ctx.cards.map((c) => c.card)].find(
+        (c) => overlap(c.q, piece.card.q) >= SAME && overlap(c.a, piece.card.a) >= SAME,
+      );
+      if (near) {
+        return { piece, verdict: 'duplicate', against: near.q, because: 'You are already asked this.' };
+      }
+      return { piece, verdict: 'new', because: 'Not among the questions you are asked.' };
+    }
+
+    case 'case': {
+      const same = (ctx.held.guide.cases ?? []).find(
+        (c) => flatten(c.title) === flatten(piece.file.title),
+      );
+      if (!same) return { piece, verdict: 'new', because: 'This pairing is not on the course.' };
+      if (overlap(same.verdict, piece.file.verdict) >= SAME) {
+        return { piece, verdict: 'duplicate', against: same.title, because: 'Already here, with the same verdict.' };
+      }
+      // Same claim, different finding. That is the thing to stop on.
+      return {
+        piece,
+        verdict: 'conflict',
+        against: `${same.title} — ${same.verdict}`,
+        because: `This says the test found: ${piece.file.verdict}`,
+      };
+    }
+
+    case 'example': {
+      const same = (ctx.held.examples ?? []).find((e) => flatten(e.t) === flatten(piece.example.t));
+      if (!same) return { piece, verdict: 'new', because: 'Not among the worked examples.' };
+      if (overlap(same.d, piece.example.d) >= SAME) {
+        return { piece, verdict: 'duplicate', against: same.t, because: 'Already worked the same way.' };
+      }
+      return {
+        piece,
+        verdict: 'fuller',
+        against: `${same.t} — ${same.d}`,
+        because: 'A different working of the same example.',
       };
     }
 

@@ -7,7 +7,8 @@ import { configured, provider, readMaterial, readShots } from '../lib/claude';
 import { extractText } from '../lib/extract';
 import { guess, KIND_LABEL, SURE, type Verdict as Told } from '../lib/classify';
 import { alreadyAdded, hashOf, materialHash, type Intake } from '../lib/intake';
-import { harvest } from '../lib/harvest';
+import { harvest, type Where } from '../lib/harvest';
+import { anything, piecesFrom, type Pasted } from '../lib/pasted';
 import { describe as houseOf, styleFor } from '../lib/house';
 import { findGaps } from '../lib/gaps';
 import { diff, type Change, type ChangeSet, type Held } from '../lib/changeset';
@@ -64,7 +65,7 @@ const HINT: CSSProperties = {
 export function AddMaterial() {
   const { state, dispatch, catalog } = useStore();
   const courseId = state.guideId;
-  const { guide, updates } = useLive(courseId);
+  const { guide, updates, figures, extras } = useLive(courseId);
 
   const claudeReady = configured();
   const [unit, setUnit] = useState<number | null>(state.updateUnit);
@@ -99,6 +100,14 @@ export function AddMaterial() {
   const [set, setSet] = useState<ChangeSet | null>(null);
   const [saidOf, setSaidOf] = useState('');
   const [droppedBy, setDroppedBy] = useState<string[]>([]);
+  /**
+   * Where a *pasted* set of changes came from.
+   *
+   * The file path carries this on `arrived` and `told`. Pasted text has no
+   * file and no classifier, so it says so plainly rather than borrowing a
+   * filename it does not have.
+   */
+  const [pastedAs, setPastedAs] = useState<Where | null>(null);
   const [looking, setLooking] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -221,6 +230,10 @@ export function AddMaterial() {
     // (updated).pptx" is the same material under a different name, and
     // comparing names would call all of it new.
     sources: updates.map((u) => u.sourceHash ?? '').filter(Boolean),
+    // Both merged, so a second copy of a figure or a worked example is
+    // recognised as a second copy rather than proposed as new.
+    examples: guide.examples,
+    figures: [...Object.values(figures).filter(Boolean), ...extras] as Figure[],
   });
 
   /**
@@ -270,15 +283,35 @@ export function AddMaterial() {
    * is one entry in the undo history rather than forty.
    */
   const applyChanges = (accepted: Change[]) => {
-    if (!arrived || !told) return;
+    // Either origin. A file brings a name, a hash and a classifier's verdict;
+    // a paste brings what the student typed above the box.
+    const where: Where | null =
+      arrived && told
+        ? { source: arrived.name, sourceHash: arrived.hash, as: told.kind, at: Date.now() }
+        : pastedAs;
+    if (!where) return;
     const module_ = state.courses.find((c) => c.course.id === courseId) ?? null;
-    const out = adopt(accepted, module_ ?? catalog.moduleById[courseId] ?? null, {
-      source: arrived.name,
-      sourceHash: arrived.hash,
-      as: told.kind,
-      at: Date.now(),
-    });
-    if (out.update) dispatch({ type: 'addUpdate', update: { ...out.update, courseId } });
+    const out = adopt(accepted, module_ ?? catalog.moduleById[courseId] ?? null, where);
+    if (out.update) {
+      dispatch({
+        type: 'addUpdate',
+        update: {
+          ...out.update,
+          courseId,
+          /*
+           * Files attached by hand carry no pieces of their own — they are the
+           * material itself, kept, not a claim about the course — so there is
+           * nothing to review about them and they ride along with whatever was
+           * accepted. `adopt` returns none because the file path stores its
+           * own separately.
+           */
+          fileIds: out.update.fileIds.length ? out.update.fileIds : files.map((f) => f.id),
+          // The unit chosen above the box, when the reader chose one. `adopt`
+          // can only infer a unit from a name that matches one the guide has.
+          unit: out.update.unit ?? unit,
+        },
+      });
+    }
 
     /*
      * Dates and weights need the course itself, and a sample course is built
@@ -298,12 +331,14 @@ export function AddMaterial() {
       setSet(null);
       setArrived(null);
       setTold(null);
+      setPastedAs(null);
       return;
     }
 
     setSet(null);
     setArrived(null);
     setTold(null);
+    setPastedAs(null);
     dispatch({ type: 'back' });
   };
 
@@ -333,31 +368,40 @@ export function AddMaterial() {
     }
   };
 
-  const save = () => {
-    // Nothing to do, and saying so beats a second copy appearing.
+  /**
+   * Show what pasting would change, and write nothing.
+   *
+   * This used to dispatch straight to the store. A file has been reviewed
+   * before it lands since the import pipeline existed, and pasted text — the
+   * door with *less* provenance, since a file at least has a name and a hash —
+   * had no review at all. Same diff, same sheet, same commit.
+   */
+  const review = () => {
     if (already) return;
-    dispatch({
-      type: 'addUpdate',
-      update: {
-        courseId,
-        unit,
-        title: title.trim() || (unit !== null ? 'Added material' : 'New reading'),
-        source: source.trim(),
-        body: parsed.body,
-        cards: [...parsed.cards, ...shotCards, ...readCards],
-        terms: [...parsed.terms, ...readTerms],
-        // The identity of what was pasted, so adding it again is recognised
-        // rather than repeated.
-        sourceHash: mine,
-        figures: readFigs,
-        frames: readLong.frames,
-        selfTest: readLong.selfTest,
-        cases: readLong.cases,
-        examples: readLong.examples,
-        fileIds: files.map((f) => f.id),
-      },
-    });
-    dispatch({ type: 'back' });
+    const where: Where = {
+      source: source.trim() || title.trim() || 'What you pasted',
+      sourceHash: mine,
+      // Not a classifier's verdict, because nothing classified it. `reading`
+      // is what pasted prose is, and the shape it is read into.
+      as: 'reading',
+      at: Date.now(),
+    };
+    const pasted: Pasted = {
+      cards: [...parsed.cards, ...shotCards, ...readCards],
+      terms: [...parsed.terms, ...readTerms],
+      figures: readFigs,
+      frames: readLong.frames,
+      selfTest: readLong.selfTest,
+      cases: readLong.cases,
+      examples: readLong.examples,
+      body: parsed.body,
+      title: title.trim() || (unit !== null ? 'Added material' : 'New reading'),
+      source: where.source,
+    };
+    if (!anything(pasted) && files.length === 0) return;
+
+    setPastedAs(where);
+    setSet(diff(piecesFrom(pasted, where), held()));
   };
 
   const pick = async (list: FileList | null) => {
@@ -455,7 +499,8 @@ export function AddMaterial() {
             kept as the unit's notes.
           </p>
           <p style={{ margin: 'var(--sp-4) 0 0' }}>
-            The moment you save, Cards, Quiz, Read, Cram and the slides for this course all
+            You see what it would change before anything is written. Accept it and Cards, Quiz,
+            Read, Cram and the slides for this course all
             include it. Nothing is regenerated and nothing you had is replaced — the new material
             is layered over the syllabus the course was built from, and anything you add is listed
             at the bottom of this screen where it can be taken out again.
@@ -512,7 +557,7 @@ export function AddMaterial() {
           <span style={{ width: 26, flex: 'none', color: 'var(--app-accent)' }}>
             {unit === null ? '■' : '□'}
           </span>
-          <span style={{ fontSize: 'var(--type-md)' }}>A unit of its own, at the end</span>
+          <span style={{ fontSize: 'var(--type-md)' }}>A unit of its own, placed by session</span>
         </button>
         {guide.units.map((u, i) => (
           <button
@@ -582,12 +627,12 @@ export function AddMaterial() {
         </>
       )}
 
-      {set && arrived && (
+      {set && (arrived || pastedAs) && (
         <ReviewSheet
           set={set}
-          says={saidOf}
-          dropped={droppedBy}
-          source={arrived.name}
+          says={arrived ? saidOf : readSummary}
+          dropped={arrived ? droppedBy : []}
+          source={arrived?.name ?? pastedAs?.source ?? 'what you pasted'}
           course={guide.code}
           onApply={applyChanges}
         />
@@ -882,7 +927,7 @@ export function AddMaterial() {
         type="button"
         className="btn btn-primary btn-block"
         disabled={empty || Boolean(already)}
-        onClick={save}
+        onClick={review}
         style={{
           height: 50,
           fontSize: 'var(--type-lg)',
@@ -892,7 +937,7 @@ export function AddMaterial() {
           opacity: empty || already ? 0.4 : 1,
         }}
       >
-        {already ? 'Already added' : `Add to ${guide.code}`}
+        {already ? 'Already added' : `Review and add to ${guide.code}`}
       </button>
 
       <Rework courseId={courseId} guide={guide} updates={updates} />
