@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { has } from '../lib/search';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { addressIn } from '../lib/mail';
@@ -205,7 +206,32 @@ export function Cloud() {
     });
 
   return (
-    <Page>
+    <Page
+      /*
+       * Both lists, one box. A listing from Drive is twenty or more files and
+       * a mail sweep is six weeks of subjects — two long lists that arrive
+       * without being asked for and are read by scanning for one name.
+       */
+      search={{
+        placeholder: 'Find a file or a message',
+        select: () => [
+          ...files.map((f) => ({ id: `f-${f.id}`, text: f.name })),
+          ...mail.map((m) => ({ id: `m-${m.id}`, text: `${m.subject} ${m.from ?? ''}` })),
+        ],
+        match: (r, q) => has(q, r.text),
+        empty: (q) => `Nothing listed here matches “${q}”.`,
+      }}
+    >
+      {(shown, query) => {
+        // Ids rather than the rows themselves, because the two lists render
+        // differently and the filter should not have to know how.
+        const kept = new Set(shown.map((r) => r.id));
+        // Named `shows`, not `keep`: this file already has a `keepMail`,
+        // which is the action that saves a message as a note.
+        const showsFile = (id: string) => !query || kept.has(`f-${id}`);
+        const showsMail = (id: string) => !query || kept.has(`m-${id}`);
+        return (
+    <>
       {available.length > 1 && (
         <div className="chiprow" style={{ marginBottom: 'var(--sp-6)' }}>
           <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
@@ -270,7 +296,7 @@ export function Cloud() {
           >
             List recent files
           </button>
-          {files.map((f) => (
+          {files.filter((f) => showsFile(f.id)).map((f) => (
             <div key={f.id} style={rowStyle}>
               <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
                 <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -323,7 +349,7 @@ export function Cloud() {
           >
             Find course mail
           </button>
-          {mail.map((m) => (
+          {mail.filter((m) => showsMail(m.id)).map((m) => (
             <Blueprint key={m.id} style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">
                 {m.courseId ? catalog.byId[m.courseId]?.code : 'Unmatched'} · {m.date}
@@ -422,6 +448,9 @@ export function Cloud() {
           </button>
         </>
       )}
+    </>
+        );
+      }}
     </Page>
   );
 }

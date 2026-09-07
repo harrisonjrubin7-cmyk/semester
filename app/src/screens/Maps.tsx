@@ -7,6 +7,7 @@ import { Blueprint } from '../components/Blueprint';
 import type { Pin } from '../components/LiveMap';
 import { ChipRow, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
+import { has } from '../lib/search';
 import {
   CENTRES,
   OSM_CREDIT,
@@ -199,7 +200,29 @@ export function Maps() {
   );
 
   return (
-    <Page>
+    <Page
+      /*
+       * One filter over three lists, because they are three lists of the same
+       * thing: a place with a name and a where. Somebody looking for Buttrick
+       * does not know whether it is under "today", "your places" or "every
+       * room", and having to guess is the reason a directory of forty rooms is
+       * hard to use at all.
+       */
+      search={{
+        placeholder: 'Find a place — a building, a room, a class',
+        select: () => [...classes, ...saved, ...rooms],
+        match: (r, q) => has(q, r.label, r.where),
+        empty: (q) => `No class, saved place or room matches “${q}”.`,
+      }}
+    >
+      {(shown, query) => {
+        // Filtering keeps the headings rather than flattening into one list:
+        // "where you are due today" and "every room this semester" are
+        // different answers, and a flat list of matches loses which is which.
+        const kept = new Set(shown.map((r) => r.key));
+        const only = (list: Row[]) => (query ? list.filter((r) => kept.has(r.key)) : list);
+        return (
+    <>
       <Segmented
         options={[
           { id: 'campus', label: 'Campus' },
@@ -356,24 +379,24 @@ export function Maps() {
         and it works with the screen off.
       </div>
 
-      {classes.length > 0 && (
+      {only(classes).length > 0 && (
         <>
           <SectionLabel>Where you are due today</SectionLabel>
-          {classes.map(row)}
+          {only(classes).map(row)}
         </>
       )}
 
-      {saved.length > 0 && (
+      {only(saved).length > 0 && (
         <>
           <SectionLabel>Your places</SectionLabel>
-          {saved.map(row)}
+          {only(saved).map(row)}
         </>
       )}
 
-      {rooms.length > 0 && (
+      {only(rooms).length > 0 && (
         <>
           <SectionLabel>Every room this semester</SectionLabel>
-          {rooms.map(row)}
+          {only(rooms).map(row)}
         </>
       )}
 
@@ -415,12 +438,15 @@ export function Maps() {
         </Blueprint>
       </a>
 
-      {saved.length === 0 && (
+      {saved.length === 0 && !query && (
         <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
           Name a few places under Mine → Places and they appear on the map with exact coordinates,
           which route better than any search for a building name.
         </div>
       )}
+    </>
+        );
+      }}
     </Page>
   );
 }

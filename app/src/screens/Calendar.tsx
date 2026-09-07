@@ -1232,7 +1232,24 @@ export function Calendar() {
   if (catalog.empty) return <FirstRun where="on the calendar" />;
 
   return (
-    <>
+    /*
+     * `wide`, and no filter of its own.
+     *
+     * This screen was the one that had neither a frame nor a search box: the
+     * `<Page>` further down this file belongs to `EventDetail`, which is how
+     * a count of the screens on the frame read Calendar as done. It was not.
+     *
+     * `wide` because the four views draw to their own edges and already carry
+     * their own padding — that is the nesting the note at the top of
+     * `components/Page.tsx` describes, and giving the frame the side padding
+     * too would indent a month grid inside an indent.
+     *
+     * No adapter because a calendar is a grid by date, not a list. Filtering
+     * it would empty days rather than shorten a list, and the box saying
+     * plainly that it searches the whole app is the honest answer here. See
+     * the note about screens with nothing of their own to filter.
+     */
+    <Page wide bottom={0}>
       <div style={{ padding: '14px 18px 0' }}>
         <Segmented
           options={[
@@ -1269,7 +1286,7 @@ export function Calendar() {
       ) : (
         <MonthView />
       )}
-    </>
+    </Page>
   );
 }
 
