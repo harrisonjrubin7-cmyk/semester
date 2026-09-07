@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { WorstDay } from '../components/Clashes';
 import { TimerLine } from '../components/TimerLine';
@@ -252,7 +253,7 @@ function TabHome() {
   const tab = state.homeTab;
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <Segmented
         options={[
           { id: 'today', label: 'Today' },
@@ -325,10 +326,7 @@ function TabHome() {
 
       {tab === 'hours' && <HoursToday />}
 
-      {tab === 'done' && <DoneToday />}
-
-      <div style={{ height: 26 }} />
-    </div>
+      {tab === 'done' && <DoneToday />}</Page>
   );
 }
 

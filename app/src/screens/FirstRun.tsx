@@ -1,4 +1,5 @@
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { ChevronRight, Plus } from '../components/Icons';
 import { SEED_SUMMARY } from '../data/seed';
@@ -14,7 +15,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
   const { state, dispatch } = useStore();
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <div className="kicker">Nothing {where} yet</div>
       <div
         className="chrome-text"
@@ -73,8 +74,6 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
             like. Switch it off again in Settings.
           </div>
         </>
-      )}
-      <div style={{ height: 22 }} />
-    </div>
+      )}</Page>
   );
 }

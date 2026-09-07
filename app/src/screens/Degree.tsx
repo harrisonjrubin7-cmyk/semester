@@ -21,6 +21,7 @@
 
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import {
@@ -42,7 +43,7 @@ export function Degree() {
   const [tab, setTab] = useState<'left' | 'taken' | 'rules'>('left');
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div className="kicker">Your arithmetic, not the registrar’s</div>
         <div
@@ -74,7 +75,7 @@ export function Degree() {
       {tab === 'left' ? <WhatIsLeft /> : null}
       {tab === 'taken' ? <Transcript /> : null}
       {tab === 'rules' ? <Rules /> : null}
-    </div>
+    </Page>
   );
 }
 

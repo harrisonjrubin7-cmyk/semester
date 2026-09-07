@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Page } from '../components/Page';
 import { useAI } from '../ai/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -28,7 +29,7 @@ export function Ask() {
   const month = total(since(spend, monthStart(new Date())));
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <div style={{ fontSize: 'var(--type-sm)', opacity: 0.75, lineHeight: 1.5, textWrap: 'pretty' }}>
         The assistant is on every screen now — the button in the corner, or{' '}
         <kbd style={{ padding: '1px 5px', border: '1px solid var(--app-line-top)', borderRadius: 'var(--r-sm)' }}>A</kbd>{' '}
@@ -277,8 +278,6 @@ export function Ask() {
         a date that came from a syllabus. There is no tool for any of those, so it cannot do them by
         accident and cannot do them by being asked. It does not comment on how you are feeling: the
         app holds a timetable, not a person.
-      </div>
-      <div style={{ height: 22 }} />
-    </div>
+      </div></Page>
   );
 }

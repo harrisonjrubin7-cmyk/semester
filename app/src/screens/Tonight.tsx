@@ -25,6 +25,7 @@
 
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -61,7 +62,7 @@ export function Tonight() {
   const said = calibrationLine(bias);
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div className="kicker">Tonight</div>
         <div
@@ -161,7 +162,7 @@ export function Tonight() {
         nothing towards a grade can still be the reading the seminar is about, which is why
         nothing here is dropped.
       </p>
-    </div>
+    </Page>
   );
 }
 

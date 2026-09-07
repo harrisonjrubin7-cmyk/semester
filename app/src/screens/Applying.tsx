@@ -17,8 +17,10 @@
  * of eight options in a dropdown.
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
+import { has } from '../lib/search';
 import { Suggested } from '../components/Suggested';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -51,8 +53,34 @@ export function Applying() {
     now,
   );
 
+  /*
+   * Which list the box filters: the one you are looking at.
+   *
+   * The screen has two lists and a form, and filtering the hidden one would
+   * be a box that appears to do nothing. On the Add tab there is nothing to
+   * filter at all, so no adapter goes in and the box searches the whole app —
+   * which is what `<Page>` does with a screen that declares none, and a
+   * better answer than a dead box.
+   */
+  const showing = useMemo(() => (tab === 'closed' ? closed : open), [tab, closed, open]);
+
   return (
-    <div style={{ padding: 18 }}>
+    <Page
+      search={
+        tab === 'add'
+          ? undefined
+          : {
+              placeholder: 'Find an application — organisation, role, next step',
+              select: () => showing,
+              // The next step is searchable because it is where the specifics
+              // live: "email Priya about the referral" is how somebody
+              // remembers which of these this is.
+              match: (a, q) => has(q, a.org, a.role, a.next, a.where, a.note),
+            }
+      }
+    >
+      {(shown) => (
+        <>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div className="kicker">Where it stands</div>
         <div
@@ -79,7 +107,7 @@ export function Applying() {
       {tab === 'open' ? (
         open.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {open.map((a) => (
+            {shown.map((a) => (
               <Row key={a.id} a={a} />
             ))}
           </div>
@@ -102,7 +130,7 @@ export function Applying() {
       {tab === 'closed' ? (
         closed.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {closed.map((a) => (
+            {shown.map((a) => (
               <Row key={a.id} a={a} />
             ))}
           </div>
@@ -115,7 +143,9 @@ export function Applying() {
       {/* Suggested, never added. See `components/Suggested.tsx`. */}
       <Suggested />
 
-    </div>
+    </>
+      )}
+    </Page>
   );
 }
 

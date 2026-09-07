@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { NUDGE, invite, pick, verdict } from '../lib/pretest';
@@ -41,7 +42,7 @@ export function Guess() {
 
   if (done) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <div className="kicker">Before you read it</div>
         <div
           className="chrome-text"
@@ -67,7 +68,7 @@ export function Guess() {
         >
           Now read the unit
         </button>
-      </div>
+      </Page>
     );
   }
 

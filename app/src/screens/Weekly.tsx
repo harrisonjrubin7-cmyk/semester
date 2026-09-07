@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
@@ -146,7 +147,7 @@ export function Weekly() {
   );
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <Blueprint style={{ padding: '15px 16px' }}>
         <div className="kicker">{back.label}</div>
         <div
@@ -308,8 +309,6 @@ export function Weekly() {
         {back.staleTicks > 0
           ? ` ${back.staleTicks} of these ${back.staleTicks === 1 ? 'was' : 'were'} ticked before the app started recording the moment, so ${back.staleTicks === 1 ? 'it counts' : 'they count'} to the week ${back.staleTicks === 1 ? 'it was' : 'they were'} due instead.`
           : ''}
-      </div>
-      <div style={{ height: 26 }} />
-    </div>
+      </div></Page>
   );
 }

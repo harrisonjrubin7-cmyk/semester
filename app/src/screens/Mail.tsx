@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { Trouble } from '../components/Trouble';
@@ -146,7 +147,7 @@ export function Mail() {
   const canDraft = configured();
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Drafts here, sends from your own mail app. Nothing leaves the app until you press send in
         Gmail or Outlook, and nothing about you goes in the draft unless you type it below.
@@ -378,8 +379,6 @@ export function Mail() {
             once more and send it yourself.
           </div>
         </>
-      )}
-      <div style={{ height: 26 }} />
-    </div>
+      )}</Page>
   );
 }

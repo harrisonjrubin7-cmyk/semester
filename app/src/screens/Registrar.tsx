@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
+import { has } from '../lib/search';
 import { useRowStyle } from '../components/shell/useShell';
 import { Group, ItemRow } from '../components/shell/Rows';
 import { CloseTerm } from '../components/CloseTerm';
@@ -133,7 +135,21 @@ export function Registrar() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page
+      search={
+        tab === 'dates'
+          ? {
+              placeholder: 'Find a date — add/drop, withdrawal, reading days',
+              select: () => rows,
+              // What it costs is searchable because that is often what is
+              // actually being looked for: "the one where it becomes a W".
+              match: (d, q) => has(q, d.label, d.iso, d.cost, d.kind),
+            }
+          : undefined
+      }
+    >
+      {(shown) => (
+        <>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div className="kicker">
           {done.done} of {done.of} filled in
@@ -184,7 +200,7 @@ export function Registrar() {
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginBottom: 4, lineHeight: 1.45 }}>
             Leave anything your university does not do. A blank row is a normal row.
           </div>
-          {rows.map(row)}
+          {shown.map(row)}
         </>
       ) : (
         <>
@@ -290,6 +306,8 @@ export function Registrar() {
       {/* The end-of-term five minutes. See `lib/rollover.ts`. */}
       <CloseTerm />
 
-    </div>
+    </>
+      )}
+    </Page>
   );
 }

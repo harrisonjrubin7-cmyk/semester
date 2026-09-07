@@ -14,6 +14,7 @@
 
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import {
@@ -33,7 +34,7 @@ export function People() {
   const [tab, setTab] = useState<'people' | 'letters'>('people');
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <Segmented
         options={[
           { id: 'people', label: `People${state.people.length ? ` (${state.people.length})` : ''}` },
@@ -44,7 +45,7 @@ export function People() {
         style={{ margin: '0 0 16px' }}
       />
       {tab === 'people' ? <PeopleTab /> : <LettersTab />}
-    </div>
+    </Page>
   );
 }
 

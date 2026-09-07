@@ -1,5 +1,6 @@
 import { Suspense, lazy, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
@@ -198,7 +199,7 @@ export function Maps() {
   );
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <Segmented
         options={[
           { id: 'campus', label: 'Campus' },
@@ -419,8 +420,6 @@ export function Maps() {
           Name a few places under Mine → Places and they appear on the map with exact coordinates,
           which route better than any search for a building name.
         </div>
-      )}
-      <div style={{ height: 22 }} />
-    </div>
+      )}</Page>
   );
 }

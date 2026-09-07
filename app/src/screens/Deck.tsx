@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -117,7 +118,7 @@ export function Deck() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         A real PowerPoint file, built here. It opens in PowerPoint, Keynote and Google Slides, and
         it comes out in the app's own palette rather than a template's.
@@ -365,8 +366,6 @@ export function Deck() {
             on it — a slide read aloud is a slide nobody listens to.
           </div>
         </>
-      )}
-      <div style={{ height: 26 }} />
-    </div>
+      )}</Page>
   );
 }

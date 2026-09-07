@@ -23,6 +23,7 @@
  */
 
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -70,7 +71,7 @@ export function Behind() {
   );
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <Blueprint style={{ padding: '15px 16px' }}>
         <div className="kicker">Where it actually stands</div>
         <div
@@ -249,6 +250,6 @@ export function Behind() {
           </button>
         ))}
       </div>
-    </div>
+    </Page>
   );
 }

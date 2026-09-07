@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Group, ItemRow } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -103,7 +104,7 @@ export function Housing() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <TermSwitch />
 
       <Blueprint style={{ padding: '15px 16px', marginTop: 12 }}>
@@ -262,8 +263,6 @@ export function Housing() {
         app will not do. The address the portal hands you carries your own session token in it;
         the app keeps only the portal root, because a link with your token in it is a link that
         signs somebody else in as you.
-      </div>
-      <div style={{ height: 26 }} />
-    </div>
+      </div></Page>
   );
 }

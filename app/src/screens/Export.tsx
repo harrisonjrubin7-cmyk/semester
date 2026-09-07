@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Snapshots } from '../components/Snapshots';
@@ -214,7 +215,7 @@ export function Export() {
   const clouds = (['google', 'microsoft'] as ProviderId[]).filter((id) => !!held[id]);
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Plain formats, chosen because other software reads them. Nothing here is a bundle only this
         app understands — that would be the same trap with extra steps.
@@ -393,8 +394,6 @@ export function Export() {
           the tokens for connected accounts are deliberately left out: a backup that carries your
           credentials is a liability, not a safety net.
         </div>
-      </Blueprint>
-      <div style={{ height: 26 }} />
-    </div>
+      </Blueprint></Page>
   );
 }

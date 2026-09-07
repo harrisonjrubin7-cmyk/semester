@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import {
   MODELS,
@@ -318,7 +319,7 @@ export function Connect() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', lineHeight: 1.1 }}>
         Everything in one place
       </div>
@@ -681,9 +682,6 @@ export function Connect() {
         style={{ height: 44 }}
       >
         Campus, books, tickets and your own
-      </button>
-
-      <div style={{ height: 22 }} />
-    </div>
+      </button></Page>
   );
 }

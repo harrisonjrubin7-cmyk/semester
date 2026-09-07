@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -90,7 +91,7 @@ export function Meals() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <TermSwitch />
 
       <Blueprint style={{ padding: '15px 16px', marginTop: 12 }}>
@@ -220,8 +221,6 @@ export function Meals() {
         app will not do. The app reports a rate and a date and stops; it has no idea whether you
         are eating out, at home, or skipping meals, and a nudge about any of those would be both
         wrong and none of its business.
-      </div>
-      <div style={{ height: 26 }} />
-    </div>
+      </div></Page>
   );
 }

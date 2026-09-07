@@ -13,6 +13,7 @@
 
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { CheckIt } from '../components/CheckIt';
 import { SectionLabel } from '../components/ui';
 import type { Stance } from '../lib/essay';
@@ -26,7 +27,7 @@ export function Proof() {
   const stance = (course?.ai?.stance ?? 'unstated') as Stance;
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <SectionLabel style={{ margin: '0 0 9px' }}>Paste it in</SectionLabel>
       <textarea
         className="input"
@@ -89,6 +90,6 @@ export function Proof() {
           </p>
         </>
       ) : null}
-    </div>
+    </Page>
   );
 }

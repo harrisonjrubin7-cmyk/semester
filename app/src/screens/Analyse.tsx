@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { useLive } from '../lib/live';
@@ -157,7 +158,7 @@ export function Analyse() {
   );
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Every number here is computed on this device by tested code, not guessed at by a model.
         {provider()} is given the finished statistics and asked what they mean — it never reads a column
@@ -350,9 +351,7 @@ export function Analyse() {
           ) : null}
         </>
       )}
-      {xSummary ? <PrintButton label="Print this analysis" style={{ marginTop: 12 }} /> : null}
-      <div style={{ height: 26 }} />
-    </div>
+      {xSummary ? <PrintButton label="Print this analysis" style={{ marginTop: 12 }} /> : null}</Page>
   );
 }
 

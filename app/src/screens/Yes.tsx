@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, TickBox } from '../components/ui';
@@ -71,7 +72,7 @@ export function Yes() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <SectionLabel>Go there</SectionLabel>
       {LINKS.map((l) => (
         <a key={l.id} href={l.url} target="_blank" rel="noreferrer" className="bare">
@@ -214,9 +215,7 @@ export function Yes() {
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 1.45 }}>
           {catalog.courses.length} course{catalog.courses.length === 1 ? '' : 's'} loaded.
         </div>
-      )}
-      <div style={{ height: 26 }} />
-    </div>
+      )}</Page>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -85,7 +86,7 @@ export function CheckDates() {
   const nothing = events.length === 0;
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Every deadline here was read off a syllabus once, before term started. This checks them
         against what your LMS calendar says today, and shows both dates before changing anything.
@@ -296,8 +297,6 @@ export function CheckDates() {
             confident wrong match — a wrong match would send you to change a date that was right.
           </div>
         </>
-      )}
-      <div style={{ height: 26 }} />
-    </div>
+      )}</Page>
   );
 }

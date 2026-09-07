@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { backupOf } from '../lib/export';
 import { takeSnapshot } from '../lib/snapshots';
@@ -238,7 +239,7 @@ export function Import() {
   const words = files.reduce((n, f) => n + f.words, 0);
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         Upload it. Walk away.
       </div>
@@ -405,9 +406,7 @@ export function Import() {
             })
           }
         />
-      )}
-      <div style={{ height: 22 }} />
-    </div>
+      )}</Page>
   );
 }
 

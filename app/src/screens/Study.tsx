@@ -1,6 +1,7 @@
 import { allCards } from '../data/catalog';
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { TermSwitch } from '../components/TermSwitch';
 import { FirstRun } from './FirstRun';
@@ -43,7 +44,7 @@ export function Study() {
   const tab = state.studyTab;
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       {exam && (
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Exam radar</div>
@@ -416,8 +417,6 @@ export function Study() {
         </button>
       ))}
         </>
-      )}
-      <div style={{ height: 22 }} />
-    </div>
+      )}</Page>
   );
 }
