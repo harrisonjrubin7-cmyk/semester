@@ -1070,3 +1070,14 @@ input[type='search'].input {
   -webkit-appearance: none;
   appearance: none;
 }
+
+/* The assistant's waiting indicator. Stilled for anybody who has asked for
+   less motion — three dots pulsing is decoration, and the sentence beside
+   them already says what is happening. */
+@keyframes aiPulse {
+  0%, 80%, 100% { opacity: 0.25; }
+  40% { opacity: 0.9; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*='aiPulse'] { animation: none !important; }
+}

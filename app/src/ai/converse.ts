@@ -48,8 +48,18 @@ export interface Conversation {
   /** This month's spend, as one line, or empty when nothing was measured. */
   cost: { asks: number; tokens: number; dollars: number; unpriced: number };
   said: string;
+  /** Try the failed request again — null when the failure was not that kind. */
   again: (() => void) | null;
-  send: (text: string) => Promise<void>;
+  /**
+   * The same question, answered again.
+   *
+   * Distinct from `again`, which is `lib/trouble.ts` offering a retry after a
+   * request that failed. This one runs after a request that succeeded and you
+   * did not like the answer — a different thing, and conflating them would put
+   * a retry button under an answer that was never going to be retried.
+   */
+  redo: (() => void) | null;
+  send: (text: string, from?: Turn[]) => Promise<void>;
   stop: () => void;
   run: (p: Proposal) => void;
   takeBack: (entry: { p: Proposal; before: Lists }) => void;
@@ -204,9 +214,21 @@ export function useConversation(): Conversation {
   );
 
   const send = useCallback(
-    async (text: string) => {
+    /*
+     * `from` is which conversation this question is being added to, and
+     * defaults to the one on screen.
+     *
+     * It exists for "ask again", which drops the answer it did not like and
+     * the question above it before asking again. Setting state and then
+     * calling `send` does not work: `send` closes over `turns` from the render
+     * it was created in, so the trimmed list is not the one it appends to and
+     * the question comes back twice. Passing the base is the fix, and the only
+     * caller that passes one is the retry.
+     */
+    async (text: string, from?: Turn[]) => {
       if (!text.trim() || busy) return;
-      const next: Turn[] = [...turns, { role: 'user', content: text.trim() }];
+      const base = from ?? turns;
+      const next: Turn[] = [...base, { role: 'user', content: text.trim() }];
       remember(next);
       setStreaming('');
       trouble.clear();
@@ -362,6 +384,21 @@ export function useConversation(): Conversation {
     cost: total(since(spend, monthStart(now))),
     said: trouble.said,
     again: trouble.again,
+    /*
+     * Drops the answer and asks the question again.
+     *
+     * The last user turn, not a stored "last question": if the turns were
+     * trimmed to fit the window, what is on screen is what the model will be
+     * sent, and asking again should mean the same conversation rather than a
+     * question lifted out of one it no longer has.
+     */
+    redo:
+      busy || turns.length < 2 || turns.at(-1)?.role !== 'assistant'
+        ? null
+        : () => {
+            const asked = turns.at(-2)?.content ?? '';
+            void send(asked, turns.slice(0, -2));
+          },
     send,
     stop: () => abort.current?.abort(),
     run,

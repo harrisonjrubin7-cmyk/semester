@@ -50,6 +50,7 @@ export type Provider = 'anthropic' | 'openai';
 export const MODELS = [
   { id: 'claude-opus-5', label: 'Opus 5', note: 'The best at explaining a hard idea.' },
   { id: 'claude-sonnet-5', label: 'Sonnet 5', note: 'Faster and cheaper. Fine for most asking.' },
+  { id: 'claude-fable-5-1', label: 'Fable 5.1', note: 'Quick and good at writing. Worth trying on a draft.' },
   { id: 'claude-haiku-4-5', label: 'Haiku 4.5', note: 'Cheapest. Good for turning notes into cards.' },
 ];
 

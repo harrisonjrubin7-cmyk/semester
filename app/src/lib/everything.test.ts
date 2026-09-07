@@ -188,6 +188,6 @@ describe('the promise', () => {
       taskTags: ['study'] as TaskTag[],
     };
     const rows = allRows([...DESTINATIONS, extra], says, []);
-    expect(rows.filter((r) => r.screen === 'somethingNew').length).toBeGreaterThanOrEqual(2);
+    expect(rows.filter((r) => (r.screen as string) === 'somethingNew').length).toBeGreaterThanOrEqual(2);
   });
 });

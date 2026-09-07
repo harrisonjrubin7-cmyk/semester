@@ -50,6 +50,11 @@ export const RATES: Record<string, { input: number; output: number }> = {
   'claude-opus-5': { input: 5, output: 25 },
   'claude-sonnet-5': { input: 2, output: 10 },
   'claude-haiku-4-5': { input: 1, output: 5 },
+  // Fable 5.1 is deliberately absent. Its list price is not something this
+  // file has read, and the rule above is the whole reason this table is safe
+  // to trust: a model with no rate here prices at zero and is counted in
+  // `unpriced`, so the screen says "3 unpriced" instead of quietly charging
+  // it at Sonnet's number. Add it when there is a published figure to add.
 };
 
 /** Published list prices as at this date. Say it; do not imply it is live. */

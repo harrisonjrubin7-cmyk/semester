@@ -5,6 +5,7 @@ import { DESKTOP, useMedia } from '../lib/media';
 import { DESTINATIONS } from '../lib/nav';
 import { useConversation, provider } from './converse';
 import { AskSelection } from './AskAbout';
+import { Answer } from './Answer';
 import { money } from '../lib/spend';
 import { Trouble } from '../components/Trouble';
 import { Blueprint } from '../components/Blueprint';
@@ -141,6 +142,14 @@ export function Assistant() {
   const [corner, setCorner] = useState<Corner>(savedCorner);
   const [full, setFull] = useState(false);
   const [draft, setDraft] = useState('');
+
+  // One place that empties the box and sends, because the send button and the
+  // Enter key must not drift into doing slightly different things.
+  const ask = () => {
+    const q = draft;
+    setDraft('');
+    void talk.send(q);
+  };
   /**
    * The conversation, from the one place it lives.
    *
@@ -520,34 +529,60 @@ export function Assistant() {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
-              {talk.turns.map((t, i) => (
-                <div key={i}>
-                  <div className="kicker" style={{ color: t.role === 'user' ? 'inherit' : 'var(--app-accent)' }}>
-                    {t.role === 'user' ? 'You' : provider()}
+            {/*
+              The two turns are shaped differently on purpose.
+              
+              A question is short, and it is yours: it sits in a bubble against
+              the panel, indented from the left so the eye can find where each
+              exchange begins. An answer is long and is the thing you came to
+              read, so it takes the full measure with no container around it.
+              Two bubbles facing each other looks like a messaging app and
+              wastes a third of the width on a phone, which is the width the
+              answer needed.
+            */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-7)' }}>
+              {talk.turns.map((t, i) =>
+                t.role === 'user' ? (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div
+                      style={{
+                        maxWidth: '86%',
+                        padding: 'var(--sp-4) var(--sp-6)',
+                        borderRadius: 'var(--r-lg)',
+                        background: 'var(--app-raise)',
+                        border: '1px solid var(--app-line)',
+                        fontSize: 'var(--type-sm)',
+                        lineHeight: 'var(--leading-relaxed)',
+                        whiteSpace: 'pre-wrap',
+                        textWrap: 'pretty',
+                      }}
+                    >
+                      {t.content}
+                    </div>
                   </div>
-                  <div
-                    style={{
-                      fontSize: 'var(--type-sm)',
-                      lineHeight: 1.55,
-                      marginTop: 3,
-                      whiteSpace: 'pre-wrap',
-                      opacity: t.role === 'user' ? 0.72 : 1,
-                      textWrap: 'pretty',
-                    }}
-                  >
-                    {t.content}
+                ) : (
+                  <div key={i} style={{ fontSize: 'var(--type-sm)' }}>
+                    <Answer text={t.content} />
+                    <Beneath
+                      text={t.content}
+                      onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
+                    />
                   </div>
-                </div>
-              ))}
-              {talk.streaming && (
-                <div>
-                  <div className="kicker" style={{ color: 'var(--app-accent)' }}>
-                    {provider()}
-                  </div>
-                  <div style={{ fontSize: 'var(--type-sm)', lineHeight: 1.55, marginTop: 3, whiteSpace: 'pre-wrap' }}>
-                    {talk.streaming}
-                  </div>
+                ),
+              )}
+
+              {/* Streaming, and before the first token arrives — a sheet that
+                  sits blank for two seconds reads as one that did nothing. */}
+              {talk.busy && (
+                <div style={{ fontSize: 'var(--type-sm)' }}>
+                  {talk.streaming ? (
+                    <Answer text={talk.streaming} />
+                  ) : (
+                    <div style={{ opacity: 0.55, display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
+                      <Pulse />
+                      {provider()} is reading your screen…
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -671,51 +706,82 @@ export function Assistant() {
           </div>
 
           <div style={{ padding: '10px 16px', borderTop: '1px solid var(--app-line)' }}>
-            <textarea
-              ref={box}
-              className="input"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder={`Ask about ${assembled.label}, or anything else…`}
-              aria-label="Your question"
-              style={{ minHeight: 58, fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}
-            />
-            <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
+            {/*
+              One field with the send inside it, and the field grows with what
+              is in it.
+              
+              The button used to be a full-width bar under a fixed 58px box, so
+              a two-line question scrolled inside its own field while a large
+              button sat under it doing nothing. Enter sends and Shift+Enter
+              breaks the line, which is what every other box like this does —
+              and the placeholder says so, because a box that sends on Enter
+              without warning eats the first half of somebody's question.
+            */}
+            <div style={{ position: 'relative' }}>
+              <textarea
+                ref={box}
+                className="input"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.altKey) {
+                    e.preventDefault();
+                    if (!talk.busy && draft.trim()) ask();
+                  }
+                }}
+                rows={1}
+                placeholder={`Ask about ${assembled.label} — Enter sends, Shift+Enter for a new line`}
+                aria-label="Your question"
+                style={{
+                  margin: 0,
+                  minHeight: 44,
+                  // Grows to the text and then scrolls, so a pasted paragraph
+                  // does not push the conversation off the screen.
+                  height: `${Math.min(160, 44 + Math.max(0, draft.split('\n').length - 1) * 20 + (draft.length > 60 ? 20 : 0))}px`,
+                  paddingRight: 52,
+                  resize: 'none',
+                  fontSize: 'var(--type-sm)',
+                  lineHeight: 'var(--leading-relaxed)',
+                }}
+              />
               <button
                 type="button"
                 className="btn btn-primary"
-                disabled={talk.busy || !draft.trim()}
-                onClick={() => {
-                  const q = draft;
-                  setDraft('');
-                  void talk.send(q);
+                disabled={talk.busy ? false : !draft.trim()}
+                onClick={() => (talk.busy ? talk.stop() : ask())}
+                aria-label={talk.busy ? 'Stop answering' : 'Send your question'}
+                style={{
+                  position: 'absolute',
+                  right: 6,
+                  bottom: 6,
+                  width: 34,
+                  height: 32,
+                  padding: 0,
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontSize: 'var(--type-sm)',
                 }}
-                style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
               >
-                {talk.busy ? 'Thinking…' : 'Ask'}
+                <span aria-hidden>{talk.busy ? '■' : '↑'}</span>
               </button>
-              {talk.busy ? (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={talk.stop}
-                  style={{ flex: 'none', height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
-                >
-                  Stop
-                </button>
-              ) : (
-                talk.turns.length > 0 && (
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={talk.clear}
-                    style={{ flex: 'none', height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
-                  >
-                    New
-                  </button>
-                )
-              )}
             </div>
+
+            {talk.turns.length > 0 && !talk.busy && (
+              <button
+                type="button"
+                className="bare"
+                onClick={talk.clear}
+                style={{
+                  width: 'auto',
+                  marginTop: 'var(--sp-4)',
+                  fontSize: 'var(--type-xs)',
+                  letterSpacing: '0.1em',
+                  opacity: 0.55,
+                }}
+              >
+                START A NEW CONVERSATION
+              </button>
+            )}
             {/* The running cost, in the header's own row of small print.
                 Silent when nothing was measured — a zero would read as
                 "this was free". See `lib/spend.ts`. */}
@@ -730,5 +796,68 @@ export function Assistant() {
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * What you can do with an answer once it is there.
+ *
+ * Copy, because an answer worth keeping goes into a note or an email and
+ * retyping it is what people actually do instead. Retry only on the last one:
+ * regenerating an answer from the middle of a conversation would throw away
+ * every turn after it, and a button that silently deletes four exchanges is
+ * not a button.
+ */
+function Beneath({ text, onRetry }: { text: string; onRetry?: () => void }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div style={{ display: 'flex', gap: 'var(--sp-6)', marginTop: 'var(--sp-3)' }}>
+      <button
+        type="button"
+        className="bare"
+        onClick={() => {
+          void navigator.clipboard
+            ?.writeText(text)
+            .then(() => setCopied(true))
+            // Silent: a clipboard refused by the browser is not something the
+            // student can act on, and the label simply does not change.
+            .catch(() => {});
+        }}
+        style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.5 }}
+      >
+        {copied ? 'COPIED' : 'COPY'}
+      </button>
+      {onRetry && (
+        <button
+          type="button"
+          className="bare"
+          onClick={onRetry}
+          style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.5 }}
+        >
+          ASK AGAIN
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Three dots, so the wait reads as work rather than as nothing happening. */
+function Pulse() {
+  return (
+    <span aria-hidden style={{ display: 'inline-flex', gap: 3 }}>
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          style={{
+            width: 4,
+            height: 4,
+            borderRadius: '50%',
+            background: 'var(--app-fg)',
+            opacity: 0.5,
+            animation: `aiPulse 1.1s ${i * 0.16}s infinite ease-in-out`,
+          }}
+        />
+      ))}
+    </span>
   );
 }

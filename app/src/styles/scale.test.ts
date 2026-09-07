@@ -170,10 +170,16 @@ describe('the spacing scale', () => {
     expect([...new Set(wrong)]).toEqual([]);
   });
 
-  /* 558 left, and they are real: 14, 7, 9, 18 and a tail, none of which is a
-     step. Folding them in is a change to the look, not a change of name. */
+  /* 559 left, and they are real: 14, 7, 9, 18 and a tail, none of which is a
+     step. Folding them in is a change to the look, not a change of name.
+     
+     It was 558. The one added is the assistant composer's `paddingRight: 52`,
+     which is the width of the send button sitting inside the field plus its
+     margins — a clearance, not a rhythm, and rounding it to a step would put
+     the caret under the button. Raising this number is meant to be visible in
+     a diff and to come with a sentence like this one. */
   it('has not drifted further off it', () => {
-    expect(spacings().filter((h) => !SP[h.n]).length).toBeLessThanOrEqual(558);
+    expect(spacings().filter((h) => !SP[h.n]).length).toBeLessThanOrEqual(559);
   });
 
   it('still multiplies every step by the density setting', () => {
