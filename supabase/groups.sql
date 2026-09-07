@@ -65,7 +65,7 @@ set search_path = ''
 as $$
   select exists (
     select 1 from public.group_members m
-    where m.group_id = want_group and m.user_id = auth.uid()
+    where m.group_id = want_group and m.user_id = (select auth.uid())
   );
 $$;
 
@@ -124,7 +124,7 @@ drop policy if exists "start a group in a class you are in" on public.groups;
 create policy "start a group in a class you are in" on public.groups
   for insert
   with check (
-    auth.uid() = created_by
+    (select auth.uid()) = created_by
     and private.verified_student()
     and private.in_class(term, code)
   );
@@ -140,7 +140,7 @@ create policy "members may edit their group" on public.groups
 drop policy if exists "only the starter may delete a group" on public.groups;
 create policy "only the starter may delete a group" on public.groups
   for delete
-  using (auth.uid() = created_by);
+  using ((select auth.uid()) = created_by);
 
 -- ── Membership ────────────────────────────────────────────────────────────
 
@@ -153,7 +153,7 @@ drop policy if exists "join a group yourself" on public.group_members;
 create policy "join a group yourself" on public.group_members
   for insert
   with check (
-    auth.uid() = user_id
+    (select auth.uid()) = user_id
     and private.verified_student()
     and private.group_in_my_class(group_id)
   );
@@ -163,7 +163,7 @@ create policy "join a group yourself" on public.group_members
 drop policy if exists "leave a group yourself" on public.group_members;
 create policy "leave a group yourself" on public.group_members
   for delete
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 -- ── The parts ─────────────────────────────────────────────────────────────
 
@@ -193,7 +193,7 @@ create policy "members read the parts" on public.group_tasks
 drop policy if exists "members add parts" on public.group_tasks;
 create policy "members add parts" on public.group_tasks
   for insert
-  with check (auth.uid() = created_by and private.in_group(group_id));
+  with check ((select auth.uid()) = created_by and private.in_group(group_id));
 
 -- Any member may claim a part, tick one, or correct a title. Group work does
 -- not survive a permission model where only the author of a line may fix it.

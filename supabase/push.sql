@@ -35,8 +35,8 @@ alter table public.push_devices enable row level security;
 drop policy if exists "own devices" on public.push_devices;
 create policy "own devices" on public.push_devices
   for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 -- What to say, and when. Written by the app whenever it syncs, deleted once
 -- sent. `id` is the reminder id from `lib/notify.ts`, which is unique per
@@ -64,8 +64,8 @@ alter table public.push_queue enable row level security;
 drop policy if exists "own queue" on public.push_queue;
 create policy "own queue" on public.push_queue
   for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 -- The sender runs with the service role, which bypasses the policies above.
 -- Nothing else needs to read another account's rows, and nothing else can.

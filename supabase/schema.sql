@@ -27,8 +27,8 @@ alter table public.courses enable row level security;
 drop policy if exists "courses are private" on public.courses;
 create policy "courses are private" on public.courses
   for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 -- ── Everything else ───────────────────────────────────────────────────────
 -- Ticked deadlines, your own tasks and notes, added course material, connected
@@ -46,8 +46,8 @@ alter table public.state enable row level security;
 drop policy if exists "state is private" on public.state;
 create policy "state is private" on public.state
   for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 -- ── Usage, for the shared Claude key ──────────────────────────────────────
 -- The Edge Function meters generation per account so one person cannot spend
@@ -69,7 +69,7 @@ alter table public.usage enable row level security;
 drop policy if exists "usage is readable by its owner" on public.usage;
 create policy "usage is readable by its owner" on public.usage
   for select
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 -- ── Keeping updated_at honest ─────────────────────────────────────────────
 -- Sync compares timestamps to decide which side is newer, so the timestamp has

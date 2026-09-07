@@ -104,6 +104,40 @@ Checked after, not assumed: every policy still evaluates for both `anon` and
 event trigger enabling RLS on a fresh table, and a row trigger moving
 `updated_at`.
 
+### Performance
+
+Every WARN is closed too (migrations `rls_initplan_and_policy_overlap` and
+`wrap_auth_uid_in_helpers`), leaving eight INFO notices.
+
+- **`auth.uid()` re-evaluated per row**, in fourteen policies. Written bare,
+  the planner treats it as a per-row expression and re-runs it for every row
+  scanned; wrapped in `(select ...)` it becomes an InitPlan, evaluated once
+  before the scan. `explain` on `enrollments` now shows
+  `Filter: (((InitPlan 1).col1 = user_id) OR private.classmate(user_id))`.
+- **Two permissive policies on the same SELECT**, on `enrollments` and on
+  `profiles`. Each carried a `for all` policy beside a `for select` one, and
+  permissive policies are ORed — so reading evaluated
+  `(uid = user_id) OR (uid = user_id OR classmate(user_id))`, whose left side
+  is contained in its right. The `for all` contributed nothing to reading and
+  cost a second pass over every row, including a second call into `classmate`.
+  Split into the three commands they were actually for.
+
+Checked against the real account rather than an empty table: it still sees its
+four enrolments, its profile and its state row; a different signed-in user and
+an anonymous one see none of them.
+
+What is left is eight INFO notices, and they are a genuine trade rather than
+an oversight:
+
+- **Five unindexed foreign keys** on `blocks`, `messages` and `reports`. Worth
+  adding before `messages` grows — deleting an account scans the child table
+  without one. Adding them today, on tables with no rows, would simply move
+  the count into the next bullet.
+- **Two unused indexes**, both on the push tables. Expected: the scheduler is
+  parked and nothing has queried them yet.
+- **Auth connection strategy** is a fixed 10 rather than a percentage. A
+  dashboard setting, and it only matters if the instance is ever resized.
+
 ### The one that is left
 
 **Leaked password protection** is off. It is an Auth setting rather than

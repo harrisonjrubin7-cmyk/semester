@@ -67,7 +67,7 @@ as $$
   select exists (
     select 1
     from auth.users u
-    where u.id = auth.uid()
+    where u.id = (select auth.uid())
       and u.email_confirmed_at is not null
       and lower(u.email) like '%@vanderbilt.edu'
   );
@@ -91,11 +91,35 @@ create table if not exists public.profiles (
 
 alter table public.profiles enable row level security;
 
+-- Three policies rather than one `for all`, and the reason is the SELECT.
+--
+-- `for all` covers reading too, so this sat alongside the read policy below
+-- and both were evaluated on every select — permissive policies are ORed:
+--
+--     ((select auth.uid()) = user_id)
+--     OR ((select auth.uid()) = user_id or private.classmate(user_id))
+--
+-- whose left side is contained in its right. It contributed nothing and cost
+-- a second pass over every row, including a second call into `classmate`.
+-- Named per command, reading is left to the policy that was already deciding
+-- it and the permission set is unchanged.
 drop policy if exists "profiles are yours to write" on public.profiles;
-create policy "profiles are yours to write" on public.profiles
-  for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id and private.verified_student());
+drop policy if exists "create your own profile" on public.profiles;
+drop policy if exists "edit your own profile" on public.profiles;
+drop policy if exists "delete your own profile" on public.profiles;
+
+create policy "create your own profile" on public.profiles
+  for insert
+  with check ((select auth.uid()) = user_id and private.verified_student());
+
+create policy "edit your own profile" on public.profiles
+  for update
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id and private.verified_student());
+
+create policy "delete your own profile" on public.profiles
+  for delete
+  using ((select auth.uid()) = user_id);
 
 -- ── Enrolments ────────────────────────────────────────────────────────────
 -- What you have told the app you are taking. `code` is normalised by the
@@ -128,7 +152,7 @@ as $$
     from public.enrollments mine
     join public.enrollments theirs
       on theirs.term = mine.term and theirs.code = mine.code
-    where mine.user_id = auth.uid()
+    where mine.user_id = (select auth.uid())
       and theirs.user_id = other
   );
 $$;
@@ -145,30 +169,54 @@ set search_path = ''
 as $$
   select exists (
     select 1 from public.enrollments e
-    where e.user_id = auth.uid() and e.term = want_term and e.code = want_code
+    where e.user_id = (select auth.uid()) and e.term = want_term and e.code = want_code
   );
 $$;
 
 revoke all on function private.in_class(text, text) from public;
 grant execute on function private.in_class(text, text) to anon, authenticated;
 
+-- Three policies rather than one `for all`, and the reason is the SELECT.
+--
+-- `for all` covers reading too, so this sat alongside the read policy below
+-- and both were evaluated on every select — permissive policies are ORed:
+--
+--     ((select auth.uid()) = user_id)
+--     OR ((select auth.uid()) = user_id or private.classmate(user_id))
+--
+-- whose left side is contained in its right. It contributed nothing and cost
+-- a second pass over every row, including a second call into `classmate`.
+-- Named per command, reading is left to the policy that was already deciding
+-- it and the permission set is unchanged.
 drop policy if exists "join and leave your own classes" on public.enrollments;
-create policy "join and leave your own classes" on public.enrollments
-  for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id and private.verified_student());
+drop policy if exists "join your own classes" on public.enrollments;
+drop policy if exists "change your own enrollment" on public.enrollments;
+drop policy if exists "leave your own classes" on public.enrollments;
+
+create policy "join your own classes" on public.enrollments
+  for insert
+  with check ((select auth.uid()) = user_id and private.verified_student());
+
+create policy "change your own enrollment" on public.enrollments
+  for update
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id and private.verified_student());
+
+create policy "leave your own classes" on public.enrollments
+  for delete
+  using ((select auth.uid()) = user_id);
 
 -- Separate from the policy above so that reading is wider than writing: you
 -- see the enrolments of people who share a class with you, and nobody else's.
 drop policy if exists "see who shares a class" on public.enrollments;
 create policy "see who shares a class" on public.enrollments
   for select
-  using (auth.uid() = user_id or private.classmate(user_id));
+  using ((select auth.uid()) = user_id or private.classmate(user_id));
 
 drop policy if exists "profiles are visible to classmates" on public.profiles;
 create policy "profiles are visible to classmates" on public.profiles
   for select
-  using (auth.uid() = user_id or private.classmate(user_id));
+  using ((select auth.uid()) = user_id or private.classmate(user_id));
 
 -- ── Blocking ──────────────────────────────────────────────────────────────
 -- Yours alone, and never visible to the person blocked.
@@ -186,8 +234,8 @@ alter table public.blocks enable row level security;
 drop policy if exists "blocks are yours alone" on public.blocks;
 create policy "blocks are yours alone" on public.blocks
   for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 -- ── Messages ──────────────────────────────────────────────────────────────
 -- One room per class per term. No editing: a message someone acted on should
@@ -218,7 +266,7 @@ create policy "read your classes" on public.messages
     and private.in_class(term, code)
     and not exists (
       select 1 from public.blocks b
-      where b.user_id = auth.uid() and b.blocked = messages.user_id
+      where b.user_id = (select auth.uid()) and b.blocked = messages.user_id
     )
   );
 
@@ -226,7 +274,7 @@ drop policy if exists "post to your classes as yourself" on public.messages;
 create policy "post to your classes as yourself" on public.messages
   for insert
   with check (
-    auth.uid() = user_id
+    (select auth.uid()) = user_id
     and private.verified_student()
     and private.in_class(term, code)
   );
@@ -234,7 +282,7 @@ create policy "post to your classes as yourself" on public.messages
 drop policy if exists "delete your own messages" on public.messages;
 create policy "delete your own messages" on public.messages
   for delete
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 -- ── Reports ───────────────────────────────────────────────────────────────
 -- Write-only from the app. Nobody reads these through the API; whoever runs
@@ -257,7 +305,7 @@ alter table public.reports enable row level security;
 drop policy if exists "anyone verified may report" on public.reports;
 create policy "anyone verified may report" on public.reports
   for insert
-  with check (auth.uid() = reporter and private.verified_student());
+  with check ((select auth.uid()) = reporter and private.verified_student());
 
 -- No select policy at all, which means no client can read this table.
 
