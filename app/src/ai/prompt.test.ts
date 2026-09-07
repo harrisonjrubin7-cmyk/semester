@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ACTING, BOUNDS } from './converse';
+import { ACTING, BOUNDS } from './prompt';
 import { TOOLS } from '../lib/tools';
 import { DESTINATIONS } from '../lib/nav';
 

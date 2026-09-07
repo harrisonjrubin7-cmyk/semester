@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useStore } from '../state/store';
 import { ask, provider, settings, type Turn } from '../lib/claude';
 import { build as buildContext } from '../lib/context';
-import { build as guidebook } from '../lib/guidebook';
 import { readMode, type Mode } from '../lib/mode';
+import { systemPrompt } from './prompt';
 import { answerLocally, type Local } from '../lib/localask';
 import { clear as clearLog, save as saveLog } from '../lib/chatlog';
 import { monthStart, read as readSpend, record, since, total } from '../lib/spend';
@@ -73,51 +73,6 @@ export interface Conversation {
   /** Dismiss one offer without running it. */
   dismiss: (id: string) => void;
 }
-
-/*
- * Two fragments of the prompt, at module level and exported.
- *
- * They are constants with no closure over anything, so rebuilding them on
- * every render was waste — and, more to the point, a promise this app makes
- * about what the assistant will not do cannot be checked while it is trapped
- * inside a hook. `converse.prompt.test.ts` reads them.
- */
-export const ACTING =
-  'You have a small set of tools. Nothing you call happens: each one becomes a line the ' +
-  'student reads with a button beside it, and they decide. So describe what you are ' +
-  'proposing in the future tense, never as done. ' +
-  'There is no tool that deletes anything, changes a grade, a dropped score or the grading ' +
-  'scale, or moves a date that came from a syllabus. When asked for one of those, say ' +
-  'plainly that you cannot and name the screen where they can do it themselves. Never say ' +
-  'you have done something you have not. ' +
-  /*
-   * Where "I cannot" is supposed to end.
-   *
-   * The tool set already makes sending impossible — there is nothing in
-   * it that mails, posts or shares, and a payload check confirms that.
-   * What was missing was the other half: a refusal that stops at "I
-   * cannot" leaves the student holding the same errand and one fewer
-   * idea about it. Every one of these has a screen, and `open_screen`
-   * can take them there in the same answer.
-   */
-  'You cannot send, post or share anything — there is no tool for it, and there will not ' +
-  'be one. When somebody asks you to send an email, use open_screen for "mail": that ' +
-  'screen drafts the email and they send it themselves from their own account. For a ' +
-  'cover letter, a personal statement or anything that is not coursework, "essay". For a ' +
-  'message to somebody in a class, "classmates". Say which one, and offer to open it.';
-
-/*
- * No inference about how somebody is feeling.
- *
- * The app holds a workload and a schedule, and those describe a term
- * rather than a person. An assistant that reads "three deadlines and
- * two absences" as burnout is guessing at a mental state from a
- * calendar, in a place with no way to be corrected.
- */
-export const BOUNDS =
-  'Answer about workload and schedule only. Do not infer or comment on how the student is ' +
-  'feeling, their health, or their state of mind — the app holds a timetable, not a person. ' +
-  'Where a number rests on part of the picture, say how much of it.';
 
 export function useConversation(): Conversation {
   const { state, dispatch, now, catalog } = useStore();
@@ -208,42 +163,16 @@ export function useConversation(): Conversation {
     return (found.matches[0]?.score ?? 0) >= 1.5 ? found : null;
   };
 
-  const systemFor = useCallback(
-    (read: Mode, drawn: string): string => {
-      const never =
-        'Never describe a feature of this app that is not in the material below. If the app cannot ' +
-        'do what is being asked, say so plainly and name the closest thing it can do. ' +
-        'Be specific: numbers, names, mechanisms. Short paragraphs, no filler, no restating the ' +
-        'question. No exclamation marks.';
-
-      if (read === 'app') {
-        const book = guidebook();
-        const facts = book.sections
-          .filter((sec) => ['screens', 'settings', 'keys', 'wrong'].includes(sec.id))
-          .map((sec) => `## ${sec.title}\n${sec.body}`)
-          .join('\n\n');
-        return (
-          'You are answering a question about the study app the student is using. Everything you ' +
-          `may say about it is below. ${never}\n\n${facts}`
-        );
-      }
-      if (read === 'grounded') {
-        return (
-          "You are answering a question about this student's own courses and records, and about " +
-          'the screen they are looking at. Answer from what is below and say which part you used. ' +
-          'Each deadline carries its id in brackets; use those ids when a tool needs one, and ' +
-          `never invent one.\n\n${BOUNDS}\n\n${ACTING}\n\n${never}\n\n${drawn}`
-        );
-      }
-      return (
-        'You are helping a university student. Answer the question they asked, well and directly — ' +
-        'a concept, a piece of code, a piece of writing, a decision, whatever it is. Do not narrow ' +
-        `it to their coursework and do not refuse because it is not about a course.\n\n` +
-        `${BOUNDS}\n\n${ACTING}\n\n${never}\n\n${drawn}`
-      );
-    },
-    [],
-  );
+  /*
+   * The prompt is built in `ai/prompt.ts`, not here.
+   *
+   * It was a `useCallback` with an empty dependency list — a pure function of
+   * its two arguments, wearing a hook's clothes and reachable only from a
+   * React render. Out there it can be printed, diffed and run: the voice
+   * check in `scripts/voice.mjs` sends the real prompt for the real ten
+   * questions, which was not possible while it lived in this closure.
+   */
+  const systemFor = systemPrompt;
 
   const send = useCallback(
     /*
