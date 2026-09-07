@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
+import { has } from '../lib/search';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
-import type { CourseId, PersonalTask } from '../lib/types';
+import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 import { CheckIt } from '../components/CheckIt';
 import { FindPlace } from '../components/FindPlace';
@@ -245,7 +246,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
   );
 }
 
-function Tasks() {
+function Tasks({ rows }: { rows?: PersonalTask[] }) {
   const { state, dispatch, now } = useStore();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -265,15 +266,24 @@ function Tasks() {
   };
 
   const today = dateToIso(now);
+  /*
+   * The rows the box left, or all of them when there is no box.
+   *
+   * The grouping into Today / Coming up / Someday happens after the filter,
+   * so a filtered list keeps its shape — three groups with fewer rows rather
+   * than one flat list, which is what somebody scanning for a task expects
+   * to still be looking at.
+   */
+  const mine = rows ?? state.tasks;
   const groups: { label: string; tasks: typeof state.tasks }[] = [
-    { label: 'Today', tasks: state.tasks.filter((t) => t.date === today) },
+    { label: 'Today', tasks: mine.filter((t) => t.date === today) },
     {
       label: 'Coming up',
-      tasks: state.tasks
+      tasks: mine
         .filter((t) => t.date && t.date > today)
         .sort((a, b) => (a.date! < b.date! ? -1 : 1)),
     },
-    { label: 'Someday', tasks: state.tasks.filter((t) => !t.date) },
+    { label: 'Someday', tasks: mine.filter((t) => !t.date) },
     {
       label: 'Overdue',
       tasks: state.tasks.filter((t) => t.date && t.date < today && !t.done),
@@ -565,10 +575,17 @@ function Appointments() {
   );
 }
 
-function Notes() {
+function Notes({ rows }: { rows?: Note[] }) {
   const { state, dispatch, courseCode } = useStore();
   const rowThirteen = useRowStyle(13);
-  const notes = [...state.notes].sort((a, b) => b.updated - a.updated);
+  const all = [...state.notes].sort((a, b) => b.updated - a.updated);
+  /*
+   * The filtered rows when the box has something in it, all of them when it
+   * does not — and `all` either way for the empty state, so filtering to
+   * nothing says "nothing matches" rather than "no notes yet". Those are
+   * different facts and the second one is alarming when it is not true.
+   */
+  const notes = rows ?? all;
 
   return (
     <div>
@@ -581,7 +598,7 @@ function Notes() {
         + New note
       </button>
 
-      {notes.length === 0 ? (
+      {all.length === 0 ? (
         <EmptyState
           title="No notes yet."
           body="Write anything — a lecture summary, a question for office hours — and attach files to it."
@@ -740,10 +757,46 @@ function Files() {
 }
 
 export function Mine() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, courseCode } = useStore();
+
+  /*
+   * One box, five tabs, and it filters whichever one you are looking at.
+   *
+   * Tasks and notes are the two that grow without limit — a term's worth of
+   * either is a scroll. Events, places and files are short by their nature
+   * and get no adapter, so the box on those tabs searches the whole app,
+   * which is what `<Page>` does with a screen that declares none.
+   *
+   * The notes adapter searches titles and bodies. That is a local filter and
+   * nothing about it leaves the device — worth saying because the assistant
+   * on the same screen deliberately cannot read a note body at all.
+   */
+  const tasks = useMemo(() => state.tasks, [state.tasks]);
+  const notes = useMemo(
+    () => [...state.notes].sort((a, b) => b.updated - a.updated),
+    [state.notes],
+  );
+
+  const search =
+    state.mineTab === 'tasks'
+      ? {
+          placeholder: 'Find a task',
+          select: () => tasks,
+          match: (t: PersonalTask, q: string) =>
+            has(q, t.title, t.note, t.time, t.date ?? '', t.courseId ? courseCode(t.courseId) : ''),
+        }
+      : state.mineTab === 'notes'
+        ? {
+            placeholder: 'Find a note — title or anything in it',
+            select: () => notes,
+            match: (n: Note, q: string) => has(q, n.title, n.body),
+          }
+        : undefined;
 
   return (
-    <Page>
+    <Page search={search as never}>
+      {(shown: unknown[]) => (
+        <>
       <Segmented
         options={[
           { id: 'tasks', label: 'Tasks' },
@@ -756,11 +809,13 @@ export function Mine() {
         onChange={(tab) => dispatch({ type: 'setMineTab', tab })}
         style={{ marginBottom: 16 }}
       />
-      {state.mineTab === 'tasks' && <Tasks />}
+      {state.mineTab === 'tasks' && <Tasks rows={shown as PersonalTask[]} />}
       {state.mineTab === 'appointments' && <Appointments />}
-      {state.mineTab === 'notes' && <Notes />}
+      {state.mineTab === 'notes' && <Notes rows={shown as Note[]} />}
       {state.mineTab === 'places' && <Places />}
       {state.mineTab === 'files' && <Files />}
+        </>
+      )}
     </Page>
   );
 }
