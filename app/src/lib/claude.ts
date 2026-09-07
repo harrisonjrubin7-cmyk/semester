@@ -173,6 +173,21 @@ export function provider(s = settings()): string {
 export interface Turn {
   role: 'user' | 'assistant';
   content: string;
+  /**
+   * An answer that stopped before it finished — Stop was pressed, or the
+   * connection went.
+   *
+   * Kept and still sent, because half an answer is context and deleting it
+   * would leave the next question hanging off nothing. What it must not do is
+   * arrive looking finished: a model given a truncated answer as though it
+   * were complete reasons from a conclusion that was never reached, and will
+   * happily build on the sentence that got cut in half.
+   *
+   * Never reaches the API as a field. `ask` rewrites these into the content —
+   * see `asSent` — so no caller can forget, and no unknown key is posted to an
+   * API that validates them.
+   */
+  incomplete?: boolean;
 }
 
 type Route = 'proxy' | 'shared' | 'own' | 'openai' | 'none';
@@ -444,6 +459,29 @@ export function readCitation(raw: RawCitation): Citation | null {
  * better to the model than the reverse, and for documents it is what the
  * documentation specifies.
  */
+/** How a stopped answer is described to the model, in the transcript itself. */
+export const CUT_OFF = '[This answer was stopped here and is unfinished.]';
+
+/**
+ * The transcript as the API may see it.
+ *
+ * Two jobs, and both are guarantees rather than conveniences. It strips
+ * `incomplete`, which is ours and would be an unknown field to an API that
+ * rejects them; and it says so in the content instead, so the truncation
+ * survives the strip rather than being silently dropped on the way out.
+ *
+ * Called inside `ask` rather than by each caller, because "remember to mark
+ * the stopped turn" is exactly the kind of thing four call sites do three ways.
+ */
+export function asSent(messages: Turn[]): Turn[] {
+  if (!messages.some((m) => m.incomplete)) return messages;
+  return messages.map(({ role, content, incomplete }) =>
+    incomplete && content.trim()
+      ? { role, content: `${content}\n\n${CUT_OFF}` }
+      : { role, content },
+  );
+}
+
 export function withAttachments(
   messages: Turn[],
   images: Shot[] | undefined,
@@ -505,7 +543,7 @@ export async function ask(options: AskOptions): Promise<string> {
       apiKey: s.openaiKey,
       model: s.openaiModel,
       system: options.system,
-      messages: options.messages,
+      messages: asSent(options.messages),
       maxTokens: options.maxTokens,
       images: options.images,
       onText: options.onText,
@@ -554,7 +592,7 @@ export async function ask(options: AskOptions): Promise<string> {
         ...(options.format && !options.cite && !structuredRefused
           ? { output_config: { format: options.format } }
           : {}),
-        messages: withAttachments(options.messages, options.images, options.docs, options.cite),
+        messages: withAttachments(asSent(options.messages), options.images, options.docs, options.cite),
       }),
     });
   } catch (e) {

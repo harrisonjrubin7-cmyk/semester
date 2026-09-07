@@ -53,22 +53,88 @@ export interface Kept {
 }
 
 /**
- * Keep only what fits, newest first, and never a dangling assistant turn.
+ * What a trim left behind.
  *
- * A transcript starting with an answer is one the API refuses — the first
- * message has to be from the user — so trimming from the front has to land on
- * a user turn. Dropping one extra turn is cheaper than a conversation that
- * cannot be resumed.
+ * `dropped` is how many turns are gone, so the screen can say so. A
+ * conversation that quietly forgets its middle is one where the model
+ * contradicts something you can still see three screens up, and the only
+ * explanation is one nobody is given.
  */
-export function trim(turns: Turn[]): Turn[] {
-  let kept = turns.slice(-TURNS);
-  let size = kept.reduce((n, t) => n + t.content.length, 0);
-  while (kept.length > 0 && size > ROOM) {
-    size -= kept[0].content.length;
-    kept = kept.slice(1);
+export interface Fitted {
+  turns: Turn[];
+  dropped: number;
+}
+
+const size = (turns: Turn[]) => turns.reduce((n, t) => n + t.content.length, 0);
+
+/**
+ * Keep the first exchange and the most recent turns, and drop the middle.
+ *
+ * This used to trim from the front: oldest first, until it fit. That loses the
+ * opening exchange, which in a long conversation is the one that set up
+ * everything after it — the course being discussed, the exam being planned
+ * for, the constraint that makes the rest make sense. Twenty turns later the
+ * model has the recent detail and none of the premise, and starts asking again
+ * for what it was told first.
+ *
+ * So the opening question and its answer are kept whatever else goes, and the
+ * gap is taken out of the middle, where the material is most likely to have
+ * been superseded by the turns that follow it.
+ *
+ * Two constraints hold throughout. The first message has to be from the user
+ * or the API refuses the request, which is why the head is a user turn and the
+ * tail is cut back to one. And the head is dropped too rather than kept alone
+ * when even it will not fit — a first exchange with nothing after it is not a
+ * conversation, it is the wrong half of one.
+ */
+export function fit(turns: Turn[]): Fitted {
+  const capped = turns.slice(-TURNS);
+  const lost = turns.length - capped.length;
+  if (size(capped) <= ROOM) return { turns: startsRight(capped), dropped: lost };
+
+  // The opening question and the answer to it, when there is one.
+  const opens = capped.findIndex((t) => t.role === 'user');
+  const head =
+    opens === -1
+      ? []
+      : capped.slice(opens, opens + (capped[opens + 1]?.role === 'assistant' ? 2 : 1));
+
+  // As much of the recent end as the rest of the room allows.
+  let tail: Turn[] = [];
+  for (let i = capped.length - 1; i > opens + head.length - 1; i -= 1) {
+    const next = [capped[i], ...tail];
+    if (size(head) + size(next) > ROOM) break;
+    tail = next;
   }
+  tail = startsRight(tail);
+
+  // Even the opening will not fit beside anything. Keep the recent end, which
+  // is the half a person is actually still talking about.
+  if (tail.length === 0) {
+    let only: Turn[] = [];
+    for (let i = capped.length - 1; i >= 0; i -= 1) {
+      const next = [capped[i], ...only];
+      if (size(next) > ROOM) break;
+      only = next;
+    }
+    const kept = startsRight(only);
+    return { turns: kept, dropped: turns.length - kept.length };
+  }
+
+  const kept = [...head, ...tail];
+  return { turns: kept, dropped: turns.length - kept.length };
+}
+
+/** A transcript the API will accept: it begins with a question. */
+function startsRight(turns: Turn[]): Turn[] {
+  let kept = turns;
   while (kept.length > 0 && kept[0].role !== 'user') kept = kept.slice(1);
   return kept;
+}
+
+/** The turns alone, for the callers that only ever wanted those. */
+export function trim(turns: Turn[]): Turn[] {
+  return fit(turns).turns;
 }
 
 export function save(kept: Kept): void {

@@ -37,6 +37,8 @@ import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, 
 
 export interface Conversation {
   turns: Turn[];
+  /** Turns dropped from the middle to stay inside the window. See `Dropped`. */
+  dropped: number;
   streaming: string;
   busy: boolean;
   /** What the last question was read as. Shown, never hidden. */
@@ -98,7 +100,7 @@ export function useConversation(): Conversation {
    * `useState`'s signature so everything downstream is unchanged.
    */
   const live = useLive();
-  const { turns, streaming, busy, mode, used, locally, proposals, applied, spend } = live;
+  const { turns, streaming, busy, mode, used, locally, proposals, applied, spend, dropped } = live;
   const setStreaming = (v: string) => setLive('streaming', v);
   const setBusy = (v: boolean) => setLive('busy', v);
   const setMode = (v: Mode | null) => setLive('mode', v);
@@ -292,7 +294,11 @@ export function useConversation(): Conversation {
       } catch (e) {
         // Pressing Stop is a decision, not a failure. Keep what had arrived.
         if (e instanceof DOMException && e.name === 'AbortError') {
-          if (sofar.trim()) remember([...next, { role: 'assistant', content: sofar }]);
+          // Kept, and marked. Half an answer is context worth having; half an
+          // answer that looks whole is a conclusion the model never reached.
+          if (sofar.trim()) {
+            remember([...next, { role: 'assistant', content: sofar, incomplete: true }]);
+          }
         } else {
           trouble.failed(e, () => void sender.run(text));
         }
@@ -360,6 +366,7 @@ export function useConversation(): Conversation {
     applied,
     proposalsLine: proposalsLine(proposals),
     cost: total(since(spend, monthStart(now))),
+    dropped,
     said: trouble.said,
     again: trouble.again,
     /*

@@ -5,6 +5,7 @@ import type { Mode } from '../lib/mode';
 import type { Lists, Proposal } from '../lib/tools';
 import { load as loadThreads, save as saveThreads, titleFor, blank, type Thread } from '../lib/threads';
 import { read as readSpend } from '../lib/spend';
+import { fit } from '../lib/chatlog';
 
 /**
  * The conversation, in one place, for every surface at once.
@@ -63,6 +64,16 @@ export interface Live {
   applied: { p: Proposal; before: Lists }[];
   /** The month's spend, re-read whenever a request reports usage. */
   spend: ReturnType<typeof readSpend>;
+  /**
+   * Turns dropped from the middle of the open conversation to keep it inside
+   * the window.
+   *
+   * On screen rather than silent. A conversation that quietly forgets its
+   * middle is one where the model contradicts something you can still scroll
+   * up and read, with no explanation offered — and the explanation is simple
+   * and worth giving.
+   */
+  dropped: number;
 }
 
 function empty(): Live {
@@ -82,6 +93,9 @@ function empty(): Live {
     proposals: [],
     applied: [],
     spend: readSpend(),
+    // What the load itself had to drop, so a long conversation says so the
+    // moment it is opened rather than after the next question.
+    dropped: kept.dropped ?? 0,
   };
 }
 
@@ -166,10 +180,21 @@ export function resetLive(): void {
  */
 export function keepTurns(turns: Turn[]): void {
   const at = Date.now();
+  /*
+   * Trimmed here, once, rather than on the way to disk.
+   *
+   * It used to be trimmed only by `save`, so what was on screen and what would
+   * be sent could differ — you could read a turn the model had already lost.
+   * Now the working copy is the kept copy, and `dropped` is what the screen
+   * says about the difference.
+   */
+  const fitted = fit(turns);
   const threads = live.threads.map((t) =>
-    t.id === live.openId ? { ...t, turns, at, title: titleFor(turns) } : t,
+    t.id === live.openId
+      ? { ...t, turns: fitted.turns, at, title: titleFor(fitted.turns) }
+      : t,
   );
-  live = { ...live, turns, threads };
+  live = { ...live, turns: fitted.turns, threads, dropped: fitted.dropped };
   saveThreads({ threads, openId: live.openId });
   for (const fn of watchers) fn();
 }

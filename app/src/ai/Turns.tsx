@@ -101,6 +101,33 @@ const BUBBLE = {
 } as const;
 
 /** An answer: full width, no container, and what you can do with it. */
+/**
+ * The line saying the middle of the conversation is gone.
+ *
+ * Shown where the gap is — at the top, under the opening exchange that was
+ * kept — rather than in a settings screen nobody opens. A model that has
+ * forgotten what you can still scroll up and read will contradict it, and the
+ * only thing worse than that happening is it happening unexplained.
+ */
+export function Dropped({ n }: { n: number }) {
+  if (n <= 0) return null;
+  return (
+    <div
+      className="kicker"
+      style={{
+        textTransform: 'none',
+        letterSpacing: 0,
+        opacity: 0.5,
+        textAlign: 'center',
+        lineHeight: 'var(--leading-relaxed)',
+      }}
+    >
+      {n} earlier {n === 1 ? 'turn is' : 'turns are'} no longer being sent — this conversation has
+      outgrown what fits. The first exchange and everything recent are still here.
+    </div>
+  );
+}
+
 export function Reply({
   text,
   incomplete,

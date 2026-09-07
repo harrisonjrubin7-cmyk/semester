@@ -1,5 +1,5 @@
 import type { Turn } from './claude';
-import { load as loadOne, clear as clearOne, trim, ROOM } from './chatlog';
+import { load as loadOne, clear as clearOne, fit as fitOne, trim, ROOM } from './chatlog';
 
 /**
  * More than one conversation, and the ability to go back to one.
@@ -69,6 +69,16 @@ export interface Kept {
   threads: Thread[];
   /** Which one is on screen. May name a thread that no longer exists. */
   openId: string;
+  /**
+   * Turns the load had to drop from the open thread to fit the window.
+   *
+   * Carried out of here because this is where it is known. The screen has to
+   * say a conversation lost its middle whether that happened on the last turn
+   * or three days ago when it was last written — a notice that only appears
+   * after the next question is a notice that appears too late to explain the
+   * answer that prompted it.
+   */
+  dropped?: number;
 }
 
 /**
@@ -154,21 +164,26 @@ export function load(): Kept {
     if (!raw) return fresh();
     const kept = JSON.parse(raw) as Kept;
     if (!Array.isArray(kept?.threads)) return fresh();
+    /** How much each thread lost on the way in, keyed by id. */
+    const lost: Record<string, number> = {};
     const threads = kept.threads
       .filter((t): t is Thread => Boolean(t) && typeof t.id === 'string' && Array.isArray(t.turns))
-      .map((t) => ({
-        id: t.id,
-        turns: trim(
-          t.turns.filter(
-            (x): x is Turn =>
-              Boolean(x) &&
-              (x.role === 'user' || x.role === 'assistant') &&
-              typeof x.content === 'string',
-          ),
-        ),
-        at: typeof t.at === 'number' ? t.at : 0,
-        title: '',
-      }))
+      .map((t) => {
+        const clean = t.turns.filter(
+          (x): x is Turn =>
+            Boolean(x) &&
+            (x.role === 'user' || x.role === 'assistant') &&
+            typeof x.content === 'string',
+        );
+        const fitted = fitOne(clean);
+        lost[t.id] = fitted.dropped;
+        return {
+          id: t.id,
+          turns: fitted.turns,
+          at: typeof t.at === 'number' ? t.at : 0,
+          title: '',
+        };
+      })
       .map((t) => ({ ...t, title: titleFor(t.turns) }));
 
     if (threads.length === 0) return fresh();
@@ -183,7 +198,7 @@ export function load(): Kept {
     const openId = threads.some((t) => t.id === kept.openId)
       ? kept.openId
       : [...threads].sort((a, b) => b.at - a.at)[0].id;
-    return { threads, openId };
+    return { threads, openId, dropped: lost[openId] ?? 0 };
   } catch {
     return fresh();
   }

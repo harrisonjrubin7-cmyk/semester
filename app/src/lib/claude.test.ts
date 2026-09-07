@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ask, readCitation, readMaterial, withAttachments } from './claude';
+import { ask, readCitation, readMaterial, withAttachments, asSent, CUT_OFF } from './claude';
 
 const user = [{ role: 'user' as const, content: 'What is due first?' }];
 
@@ -490,5 +490,39 @@ describe('reading material into cards', () => {
     await readMaterial('x'.repeat(500_000), 'c');
     const asked = (sent!.body.messages as { content: string }[])[0].content;
     expect(asked.length).toBeLessThan(130_000);
+  });
+});
+
+describe('a stopped answer, on the way back to the model', () => {
+  const cut = { role: 'assistant' as const, content: 'Half an ans', incomplete: true };
+  const whole = { role: 'assistant' as const, content: 'A whole answer.' };
+  const asked = { role: 'user' as const, content: 'A question.' };
+
+  it('says in the transcript that it was cut off', () => {
+    // Kept, because half an answer is context. Marked, because a model given a
+    // truncation as though it were complete builds on a sentence that stopped
+    // mid-clause.
+    const [, a] = asSent([asked, cut]);
+    expect(a.content).toBe(`Half an ans\n\n${CUT_OFF}`);
+  });
+
+  it('never posts the flag itself, which the API would reject', () => {
+    for (const m of asSent([asked, cut, asked])) {
+      expect(Object.keys(m).sort()).toEqual(['content', 'role']);
+    }
+  });
+
+  it('leaves a finished answer exactly as it is', () => {
+    expect(asSent([asked, whole])).toEqual([asked, whole]);
+  });
+
+  it('is the same array when nothing was stopped, so nothing is copied for free', () => {
+    const messages = [asked, whole];
+    expect(asSent(messages)).toBe(messages);
+  });
+
+  it('does not mark an empty one, which has nothing to be cut off', () => {
+    const [, a] = asSent([asked, { role: 'assistant', content: '  ', incomplete: true }]);
+    expect(a.content).toBe('  ');
   });
 });

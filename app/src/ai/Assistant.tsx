@@ -6,7 +6,7 @@ import { DESTINATIONS } from '../lib/nav';
 import { useConversation, provider } from './converse';
 import { AskSelection } from './AskAbout';
 import { Composer, sendHint } from './Composer';
-import { Question, Reply, Waiting } from './Turns';
+import { Dropped, Question, Reply, Waiting } from './Turns';
 import { money } from '../lib/spend';
 import { Trouble } from '../components/Trouble';
 import { Applied, Locally, Proposals } from './Actions';
@@ -555,6 +555,7 @@ export function Assistant() {
               for them are in that file's header.
             */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-7)' }}>
+              <Dropped n={talk.dropped} />
               {talk.turns.map((t, i) =>
                 t.role === 'user' ? (
                   <Question
@@ -570,6 +571,7 @@ export function Assistant() {
                   <Reply
                     key={i}
                     text={t.content}
+                    incomplete={t.incomplete}
                     onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
                   />
                 ),

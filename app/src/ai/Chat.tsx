@@ -4,7 +4,7 @@ import { DESKTOP, TOUCH, useMedia } from '../lib/media';
 import { useAI } from './store';
 import { useConversation, provider } from './converse';
 import { Composer, sendHint } from './Composer';
-import { Question, Reply, Waiting, Looked, useFollowing } from './Turns';
+import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
 import { Threads, ThreadsOver } from './Threads';
 import { Applied, Locally, Proposals } from './Actions';
 import { Trouble } from '../components/Trouble';
@@ -98,6 +98,7 @@ export function Chat() {
           {empty && <Opening onPick={(q) => ask(q)} />}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--sp-7) * 1.6)' }}>
+            <Dropped n={talk.dropped} />
             {talk.turns.map((t, i) =>
               t.role === 'user' ? (
                 <Question
@@ -116,6 +117,7 @@ export function Chat() {
                 <Reply
                   key={i}
                   text={t.content}
+                  incomplete={t.incomplete}
                   onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
                   /*
                    * The offers belong to the answer that made them, and sit
