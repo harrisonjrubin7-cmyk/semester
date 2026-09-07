@@ -26,9 +26,11 @@ import { useMemo } from 'react';
 import type { Catalog } from '../data/catalog';
 import { useStore } from '../state/store';
 import { cardKey, unitMastery, type Reviews } from './review';
+import { nameFor, sessionIn, slotFor, unitNumber } from './session.place';
 import type {
   CourseId,
   CourseUpdate,
+  Example,
   Figure,
   FigureMap,
   Guide,
@@ -42,8 +44,15 @@ export interface LiveGuide extends Guide {
   added: Record<number, StudyCard[]>;
   /** How many cards each unit had before anything was added. */
   baseCards: number[];
-  /** Index of the first unit that came from an update rather than the guide. */
-  firstAddedUnit: number;
+  /**
+   * Which units came from an update rather than the guide, by index.
+   *
+   * This was `firstAddedUnit`, a single index, which only worked while added
+   * units all went on the end. They are placed by session number now, so a
+   * Session 7 reading sits at index 4 with the guide's own units on both sides
+   * of it and there is no "first" to point at.
+   */
+  addedUnits: number[];
   /**
    * How much of the long form came from material added since.
    *
@@ -57,7 +66,9 @@ export interface LiveGuide extends Guide {
    * deliberately interleaved: a cram sheet that put your frames in a separate
    * box at the bottom would be a cram sheet you read the top of.
    */
-  addedLong: { frames: number; selfTest: number; cases: number };
+  addedLong: { frames: number; selfTest: number; cases: number; examples: number };
+  /** The module's worked examples with yours folded in. See `mergeGuide`. */
+  examples: Example[];
 }
 
 const NO_UPDATES: CourseUpdate[] = [];
@@ -91,15 +102,27 @@ function cardsByUnit(updates: CourseUpdate[], unitCount: number): Record<number,
   return out;
 }
 
-export function mergeGuide(guide: Guide, updates: CourseUpdate[]): LiveGuide {
+export function mergeGuide(
+  guide: Guide,
+  updates: CourseUpdate[],
+  /**
+   * The module's worked examples.
+   *
+   * Passed in rather than read off the guide because that is where they live —
+   * `CourseModule.examples`, not `Guide` — and this function is given a guide.
+   * Defaulted so every existing caller is unchanged.
+   */
+  base_examples: Example[] = [],
+): LiveGuide {
   const base = guide.units.map((u) => u.cards.length);
   if (updates.length === 0) {
     return {
       ...guide,
       added: {},
       baseCards: base,
-      firstAddedUnit: guide.units.length,
+      addedUnits: [],
       addedLong: NOTHING_ADDED,
+      examples: base_examples,
     };
   }
 
@@ -118,17 +141,45 @@ export function mergeGuide(guide: Guide, updates: CourseUpdate[]): LiveGuide {
     };
   });
 
-  // An update filed against no unit becomes a unit of its own, at the end,
-  // where a new reading actually belongs — and so does one whose unit has
-  // since gone, which is materially the same situation.
-  const firstAddedUnit = units.length;
+  /*
+   * An update filed against no unit becomes a unit of its own — and so does
+   * one whose unit has since gone, which is materially the same situation.
+   *
+   * Placed by the session it names rather than appended. "Session 7 slides"
+   * posted in week seven belongs after the guide's Session 7, not after unit
+   * 11 where six weeks of material it comes before would bury it. Nothing to
+   * read a number from still means the end, which is the old behaviour and the
+   * right answer when nothing is known. See `lib/session.place.ts`.
+   */
+  const numbered = guide.units.some((u) => unitNumber(u.name) !== null);
+  const addedUnits: number[] = [];
   for (const u of updates) {
     if (attached(u, guide.units.length)) continue;
     if (u.cards.length === 0) continue;
-    units.push({ name: u.title || 'Added material', mastery: 0, cards: u.cards });
-    added[units.length - 1] = u.cards;
-    base.push(0);
+    const n = sessionIn(u.title) ?? sessionIn(u.source);
+    const at = slotFor(units, n);
+    units.splice(at, 0, {
+      name: nameFor(u.title || 'Added material', n, numbered),
+      mastery: 0,
+      cards: u.cards,
+    });
+    base.splice(at, 0, 0);
+    // Everything at or after the insert shifted up by one, including units an
+    // earlier update in this same loop placed.
+    for (let i = 0; i < addedUnits.length; i += 1) {
+      if (addedUnits[i] >= at) addedUnits[i] += 1;
+    }
+    addedUnits.push(at);
+    // `added` is keyed by index, so its keys move too.
+    for (const key of Object.keys(added).map(Number).sort((a, b) => b - a)) {
+      if (key >= at) {
+        added[key + 1] = added[key];
+        delete added[key];
+      }
+    }
+    added[at] = u.cards;
   }
+  addedUnits.sort((a, b) => a - b);
 
   const terms = join(guide.terms, updates.flatMap((u) => u.terms), (t) => t.t);
 
@@ -144,6 +195,9 @@ export function mergeGuide(guide: Guide, updates: CourseUpdate[]): LiveGuide {
   const frames = join(guide.frames ?? [], updates.flatMap((u) => u.frames ?? []), (f) => f.t);
   const selfTest = join(guide.selfTest ?? [], updates.flatMap((u) => u.selfTest ?? []), (c) => c.q);
   const cases = join(guide.cases ?? [], updates.flatMap((u) => u.cases ?? []), (c) => c.title);
+  // Worked examples live on the module rather than the guide — the Cases tab
+  // renders both — so they are merged here and read through `examplesOn`.
+  const examples = join(base_examples, updates.flatMap((u) => u.examples ?? []), (e) => e.t);
 
   const mastery = units.length
     ? Math.round(units.reduce((n, u) => n + u.mastery * u.cards.length, 0) /
@@ -160,19 +214,21 @@ export function mergeGuide(guide: Guide, updates: CourseUpdate[]): LiveGuide {
     frames: frames.length ? frames : guide.frames,
     selfTest: selfTest.length ? selfTest : guide.selfTest,
     cases: cases.length ? cases : guide.cases,
+    examples,
     mastery,
     added,
     baseCards: base,
-    firstAddedUnit,
+    addedUnits,
     addedLong: {
       frames: frames.length - (guide.frames?.length ?? 0),
       selfTest: selfTest.length - (guide.selfTest?.length ?? 0),
       cases: cases.length - (guide.cases?.length ?? 0),
+      examples: examples.length - base_examples.length,
     },
   };
 }
 
-const NOTHING_ADDED = { frames: 0, selfTest: 0, cases: 0 };
+const NOTHING_ADDED = { frames: 0, selfTest: 0, cases: 0, examples: 0 };
 
 /**
  * The guide's own, then yours, minus anything already there.
@@ -385,7 +441,11 @@ export function useLive(courseId: CourseId): Live {
     // rail, and the per-unit lists a deck walks.
     const placed = place(own, updates);
     return {
-      guide: applyReviews(mergeGuide(base, updates), courseId, state.reviews),
+      guide: applyReviews(
+        mergeGuide(base, updates, catalog.examples[courseId] ?? []),
+        courseId,
+        state.reviews,
+      ),
       figures: updates.length === 0 ? own : placed.map,
       extras: extraFigures(catalog.extraFigures[courseId] ?? [], updates, own),
       lessons: catalog.lessons[courseId] ?? {},
@@ -403,7 +463,11 @@ export function liveGuide(
   updates: CourseUpdate[],
   reviews: Reviews = {},
 ): LiveGuide {
-  const merged = mergeGuide(cat.guides[courseId] ?? EMPTY_GUIDE, forCourse(updates, courseId));
+  const merged = mergeGuide(
+    cat.guides[courseId] ?? EMPTY_GUIDE,
+    forCourse(updates, courseId),
+    cat.examples[courseId] ?? [],
+  );
   return applyReviews(merged, courseId, reviews);
 }
 

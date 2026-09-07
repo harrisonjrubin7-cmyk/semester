@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { useMemo, useRef, useState } from 'react';
 import { Capture } from '../components/Capture';
 import { RecordButton } from '../components/RecordButton';
@@ -5,7 +6,7 @@ import { Rework } from '../components/Rework';
 import { configured, provider, readMaterial, readShots } from '../lib/claude';
 import { extractText } from '../lib/extract';
 import { guess, KIND_LABEL, SURE, type Verdict as Told } from '../lib/classify';
-import { hashOf, type Intake } from '../lib/intake';
+import { alreadyAdded, hashOf, materialHash, type Intake } from '../lib/intake';
 import { harvest } from '../lib/harvest';
 import { describe as houseOf, styleFor } from '../lib/house';
 import { findGaps } from '../lib/gaps';
@@ -25,7 +26,7 @@ import { describeParse, parseMaterial } from '../lib/parse';
 import type { CourseId, Figure, Term } from '../lib/types';
 
 /** No frames, no out-loud questions, no cases — the starting state and the reset. */
-const NO_PARTS: StudyParts = { frames: [], selfTest: [], cases: [] };
+const NO_PARTS: StudyParts = { frames: [], selfTest: [], cases: [], examples: [] };
 import { describeFigure } from '../lib/figure';
 import { describeStudyParts, type StudyParts } from '../lib/study';
 
@@ -52,6 +53,14 @@ const ENOUGH = 400;
  * Nothing is invented. Prose that does not split cleanly into a question and an
  * answer stays prose, because a made-up card gets drilled and believed.
  */
+/** The explanatory line under a control on this screen. */
+const HINT: CSSProperties = {
+  fontSize: 'var(--type-sm)',
+  opacity: 0.7,
+  lineHeight: 'var(--leading-relaxed)',
+  textWrap: 'pretty',
+};
+
 export function AddMaterial() {
   const { state, dispatch, catalog } = useStore();
   const courseId = state.guideId;
@@ -94,6 +103,20 @@ export function AddMaterial() {
   const fileInput = useRef<HTMLInputElement>(null);
 
   const parsed = useMemo(() => parseMaterial(text), [text]);
+
+  /*
+   * Whether this exact material is already in the course.
+   *
+   * The file path has always compared hashes — see `held()` below. The paste
+   * path did not, so pasting the same reading twice, which is what happens
+   * when you are not sure the first one saved, made two copies of it and
+   * doubled every count in the app.
+   */
+  const mine = useMemo(
+    () => materialHash([text, ...shotCards.map((c) => `${c.q} ${c.a}`), ...files.map((f) => f.name)]),
+    [text, shotCards, files],
+  );
+  const already = alreadyAdded(updates, courseId, mine);
   const empty =
     parsed.cards.length === 0 &&
     parsed.terms.length === 0 &&
@@ -159,7 +182,12 @@ export function AddMaterial() {
       setReadCards(got.cards);
       setReadTerms(got.terms);
       setReadFigs(got.figures);
-      const long = { frames: got.frames, selfTest: got.selfTest, cases: got.cases };
+      const long = {
+        frames: got.frames,
+        selfTest: got.selfTest,
+        cases: got.cases,
+        examples: got.examples,
+      };
       setReadLong(long);
       if (
         got.cards.length === 0 &&
@@ -306,6 +334,8 @@ export function AddMaterial() {
   };
 
   const save = () => {
+    // Nothing to do, and saying so beats a second copy appearing.
+    if (already) return;
     dispatch({
       type: 'addUpdate',
       update: {
@@ -316,10 +346,14 @@ export function AddMaterial() {
         body: parsed.body,
         cards: [...parsed.cards, ...shotCards, ...readCards],
         terms: [...parsed.terms, ...readTerms],
+        // The identity of what was pasted, so adding it again is recognised
+        // rather than repeated.
+        sourceHash: mine,
         figures: readFigs,
         frames: readLong.frames,
         selfTest: readLong.selfTest,
         cases: readLong.cases,
+        examples: readLong.examples,
         fileIds: files.map((f) => f.id),
       },
     });
@@ -830,21 +864,35 @@ export function AddMaterial() {
         device.
       </div>
 
+      {/*
+        Already here, so the button says so rather than making a second copy.
+        Told before the press, not after: a message that appears once the
+        damage is done is a receipt, not a guard.
+      */}
+      {already && (
+        <div style={{ ...HINT, marginTop: 'var(--sp-7)' }}>
+          You added this to {guide.code} already —{' '}
+          {already.title || 'an earlier import'}
+          {already.source ? ` from ${already.source}` : ''}, on{' '}
+          {new Date(already.created).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}.
+          Change something above to add it as a separate piece, or leave it — it is all still here.
+        </div>
+      )}
       <button
         type="button"
         className="btn btn-primary btn-block"
-        disabled={empty}
+        disabled={empty || Boolean(already)}
         onClick={save}
         style={{
           height: 50,
           fontSize: 'var(--type-lg)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          marginTop: 'var(--sp-7)',
-          opacity: empty ? 0.4 : 1,
+          marginTop: already ? 'var(--sp-4)' : 'var(--sp-7)',
+          opacity: empty || already ? 0.4 : 1,
         }}
       >
-        Add to {guide.code}
+        {already ? 'Already added' : `Add to ${guide.code}`}
       </button>
 
       <Rework courseId={courseId} guide={guide} updates={updates} />

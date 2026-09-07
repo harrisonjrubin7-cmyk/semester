@@ -96,8 +96,8 @@ describe('mergeGuide with nothing added', () => {
     expect(mergeGuide(guide(), []).baseCards).toEqual([2, 1]);
   });
 
-  it('puts the boundary for added units past the end', () => {
-    expect(mergeGuide(guide(), []).firstAddedUnit).toBe(2);
+  it('marks nothing as added when nothing was', () => {
+    expect(mergeGuide(guide(), []).addedUnits).toEqual([]);
   });
 });
 
@@ -159,7 +159,7 @@ describe('mergeGuide with material filed against no unit', () => {
   it('gives it a unit of its own at the end, named after the update', () => {
     const out = mergeGuide(guide(), [update({ unit: null, title: 'Posted reading' })]);
     expect(out.units.map((u) => u.name)).toEqual(['Supply', 'Demand', 'Posted reading']);
-    expect(out.firstAddedUnit).toBe(2);
+    expect(out.addedUnits).toEqual([2]);
   });
 
   it('names an untitled one rather than leaving a blank heading', () => {
@@ -199,7 +199,7 @@ describe('mergeGuide when the unit an update named has gone', () => {
   it('puts them in a unit of their own, like material filed against none', () => {
     const out = mergeGuide(shorter, [update({ unit: 5, title: 'Week 6 reading' })]);
     expect(out.units.map((u) => u.name)).toEqual(['Supply', 'Week 6 reading']);
-    expect(out.firstAddedUnit).toBe(1);
+    expect(out.addedUnits).toEqual([1]);
   });
 
   it('leaves nothing pointing past the end of the units', () => {
@@ -284,6 +284,124 @@ describe('mergeFigures', () => {
   });
 });
 
+describe('worked examples, the last thing that could not be added to', () => {
+  const own = [{ tag: 'Elasticity', t: 'The dining plan', d: 'Inelastic demand, in one place.' }];
+  const mine = { tag: 'Externalities', t: 'The reading’s own case', d: 'What it works through.' };
+
+  it('folds yours in beside the module’s', () => {
+    const g = mergeGuide(guide(), [update({ cards: [], examples: [mine] })], own);
+    expect(g.examples.map((e) => e.t)).toEqual(['The dining plan', 'The reading’s own case']);
+    expect(g.addedLong.examples).toBe(1);
+  });
+
+  it('keeps the module’s when there is nothing to add', () => {
+    expect(mergeGuide(guide(), [], own).examples).toEqual(own);
+    expect(mergeGuide(guide(), [update({ cards: [] })], own).examples).toEqual(own);
+  });
+
+  it('does not list one twice, because the tab keys on the title', () => {
+    const g = mergeGuide(guide(), [update({ cards: [], examples: [own[0]] })], own);
+    expect(g.examples).toHaveLength(1);
+    expect(g.addedLong.examples).toBe(0);
+  });
+
+  it('is an empty list, never undefined, so a count never reads NaN', () => {
+    expect(mergeGuide(guide(), []).examples).toEqual([]);
+  });
+});
+
+describe('where an added unit lands', () => {
+  const numbered = (): Guide =>
+    guide({
+      units: [
+        { name: '0 · How to actually pass this class', mastery: 50, cards: [card('a')] },
+        { name: '3 · Optimization', mastery: 50, cards: [card('b')] },
+        { name: '7 · Externalities', mastery: 50, cards: [card('c')] },
+      ],
+    });
+
+  const names = (g: Guide, ups: CourseUpdate[]) => mergeGuide(g, ups).units.map((u) => u.name);
+
+  it('sits by the session it names, not on the end', () => {
+    // The bug: "Session 4 slides" posted in week four went after unit 7, where
+    // three weeks of material it comes before buried it.
+    expect(names(numbered(), [update({ unit: null, title: 'Session 4 slides' })])).toEqual([
+      '0 · How to actually pass this class',
+      '3 · Optimization',
+      '4 · Session 4 slides',
+      '7 · Externalities',
+    ]);
+  });
+
+  it('lands behind the guide’s own unit for the same session', () => {
+    // The guide's is the lecture, yours is what you read afterwards.
+    expect(names(numbered(), [update({ unit: null, title: 'Session 3 reading' })])[2])
+      .toBe('3 · Session 3 reading');
+  });
+
+  it('reads the number out of the source when the title has none', () => {
+    expect(names(numbered(), [update({ unit: null, title: 'Posted', source: 'week 4 handout.pdf' })])[2])
+      .toBe('4 · Posted');
+  });
+
+  it('still goes on the end when nothing names a session', () => {
+    const out = names(numbered(), [update({ unit: null, title: 'Posted reading' })]);
+    expect(out[out.length - 1]).toBe('Posted reading');
+  });
+
+  it('keeps two readings for different sessions in order', () => {
+    expect(
+      names(numbered(), [
+        update({ id: 'a', unit: null, title: 'Session 8 reading' }),
+        update({ id: 'b', unit: null, title: 'Session 1 reading' }),
+      ]),
+    ).toEqual([
+      '0 · How to actually pass this class',
+      '1 · Session 1 reading',
+      '3 · Optimization',
+      '7 · Externalities',
+      '8 · Session 8 reading',
+    ]);
+  });
+
+  it('keeps the cards with the unit they were inserted in front of', () => {
+    /*
+     * The part most likely to be got wrong. `added` and `baseCards` are keyed
+     * by index, so inserting in the middle has to move every key at or past
+     * the insert — otherwise a unit's "what is new here" strip belongs to the
+     * unit below it and nobody can see why.
+     */
+    const out = mergeGuide(numbered(), [
+      update({ unit: null, title: 'Session 4 slides', cards: [card('mine')] }),
+    ]);
+    expect(out.addedUnits).toEqual([2]);
+    expect(out.added[2]?.map((c) => c.q)).toEqual(['mine']);
+    expect(out.units[2].cards.map((c) => c.q)).toEqual(['mine']);
+    // And the guide's own unit that moved down still has its own card.
+    expect(out.units[3].name).toBe('7 · Externalities');
+    expect(out.units[3].cards.map((c) => c.q)).toEqual(['c']);
+    expect(out.baseCards).toEqual([1, 1, 0, 1]);
+  });
+
+  it('shifts an earlier insert when a later one lands in front of it', () => {
+    const out = mergeGuide(numbered(), [
+      update({ id: 'a', unit: null, title: 'Session 8 reading', cards: [card('eight')] }),
+      update({ id: 'b', unit: null, title: 'Session 1 reading', cards: [card('one')] }),
+    ]);
+    expect(out.addedUnits).toEqual([1, 4]);
+    expect(out.added[1]?.map((c) => c.q)).toEqual(['one']);
+    expect(out.added[4]?.map((c) => c.q)).toEqual(['eight']);
+  });
+
+  it('leaves an unnumbered guide exactly as it was', () => {
+    expect(names(guide(), [update({ unit: null, title: 'Session 4 slides' })])).toEqual([
+      'Supply',
+      'Demand',
+      'Session 4 slides',
+    ]);
+  });
+});
+
 describe('the field guide and the cram sheet', () => {
   const long = (over: Partial<CourseUpdate> = {}) =>
     update({ cards: [], frames: [{ t: 'The efficiency question', d: 'Why the crossing is efficient.' }], ...over });
@@ -315,7 +433,7 @@ describe('the field guide and the cram sheet', () => {
     ]);
     expect(g.selfTest).toHaveLength(1);
     expect(g.cases).toHaveLength(1);
-    expect(g.addedLong).toEqual({ frames: 0, selfTest: 1, cases: 1 });
+    expect(g.addedLong).toEqual({ frames: 0, selfTest: 1, cases: 1, examples: 0 });
   });
 
   it('does not turn an absent section into an empty one', () => {
@@ -349,7 +467,7 @@ describe('the field guide and the cram sheet', () => {
   });
 
   it('counts nothing added when nothing was', () => {
-    expect(mergeGuide(guide(), []).addedLong).toEqual({ frames: 0, selfTest: 0, cases: 0 });
+    expect(mergeGuide(guide(), []).addedLong).toEqual({ frames: 0, selfTest: 0, cases: 0, examples: 0 });
   });
 });
 

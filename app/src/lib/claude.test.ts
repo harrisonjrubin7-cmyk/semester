@@ -444,6 +444,7 @@ describe('reading material into cards', () => {
       frames: [],
       selfTest: [],
       cases: [],
+      examples: [],
       note: '',
     });
   });

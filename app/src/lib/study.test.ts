@@ -93,12 +93,13 @@ describe('a whole reply', () => {
         frames: [{ t: 'A', d: 'B' }],
         selfTest: [{ q: 'Q', a: 'A' }, { q: 'Q2', a: 'A2' }],
         cases: [],
+        examples: [],
       }),
     ).toBe('1 exam frame · 2 to answer out loud');
   });
 
   it('says nothing at all when there is nothing, which is the common case', () => {
-    expect(describeStudyParts({ frames: [], selfTest: [], cases: [] })).toBe('');
+    expect(describeStudyParts({ frames: [], selfTest: [], cases: [], examples: [] })).toBe('');
   });
 });
 

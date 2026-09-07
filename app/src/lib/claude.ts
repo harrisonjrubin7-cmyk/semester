@@ -20,7 +20,7 @@
  */
 
 import type { Usage } from './spend';
-import type { CaseFile, Figure, Frame, StudyCard } from './types';
+import type { CaseFile, Example, Figure, Frame, StudyCard } from './types';
 import { FIGURE_SHAPES, readFigures } from './figure';
 import { STUDY_SHAPES, readStudyParts } from './study';
 
@@ -898,6 +898,7 @@ export async function readMaterial(
   frames: Frame[];
   selfTest: StudyCard[];
   cases: CaseFile[];
+  examples: Example[];
   note: string;
 }> {
   const reply = await ask({
@@ -910,7 +911,7 @@ export async function readMaterial(
       'You are reading course material a university student has added to a study guide — a ' +
       'reading, a handout, a set of lecture notes. Turn it into study material; do not invent.\n\n' +
       'Reply with JSON only: {"note":"…","cards":[{"q":"…","a":"…"}],"terms":[{"t":"…","d":"…"}],' +
-      '"figures":[…],"frames":[…],"selfTest":[…],"cases":[…]}\n\n' +
+      '"figures":[…],"frames":[…],"selfTest":[…],"cases":[…],"examples":[…]}\n\n' +
       '- note: what this material is, in one or two sentences. Say plainly if it is not course ' +
       'material at all — and then return no cards.\n' +
       '- cards: questions an exam could ask, answered in full prose with the specific numbers, ' +
@@ -940,6 +941,7 @@ export async function readMaterial(
       frames?: unknown;
       selfTest?: unknown;
       cases?: unknown;
+      examples?: unknown;
       note?: string;
     };
     return {
@@ -977,5 +979,6 @@ const NOTHING_READ = {
   frames: [] as Frame[],
   selfTest: [] as StudyCard[],
   cases: [] as CaseFile[],
+  examples: [] as Example[],
   note: '',
 };

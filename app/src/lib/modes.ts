@@ -16,7 +16,7 @@
 import type { Catalog } from '../data/catalog';
 import { allCards } from '../data/catalog';
 import { distinctAnswers } from './quiz';
-import type { CourseId, Guide, StudyMode } from './types';
+import type { CourseId, Guide, StudyMode, Example } from './types';
 
 export interface ModeInfo {
   id: StudyMode;
@@ -32,7 +32,15 @@ export interface ModeInfo {
 }
 
 interface Source {
+  /*
+   * Deliberately the plain `Guide` and a separate `examples`, not `LiveGuide`.
+   * Widening this would force every fixture that calls `modesFor` to build a
+   * whole merged guide to count a mode, which is a lot of ceremony to ask of a
+   * test about whether the Watch tab is empty.
+   */
   guide: Guide;
+  /** The module's worked examples with any added ones already folded in. */
+  examples?: Example[];
   lessons: Record<number, unknown>;
   figures: Record<number, unknown>;
   extras: unknown[];
@@ -56,7 +64,7 @@ export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInf
    * the first, so a pairing that arrived with a reading was on the screen and
    * absent from the number above it.
    */
-  const cases = (cat.examples[courseId] ?? []).length + (guide.cases?.length ?? 0);
+  const cases = (src.examples ?? cat.examples[courseId] ?? []).length + (guide.cases?.length ?? 0);
   const episodes = (cat.podcast[courseId]?.editions ?? []).length;
 
   return [

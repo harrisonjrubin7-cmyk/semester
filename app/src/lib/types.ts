@@ -377,6 +377,14 @@ export interface CourseUpdate {
   frames?: Frame[];
   selfTest?: StudyCard[];
   cases?: CaseFile[];
+  /**
+   * Worked examples — the concept pointed at something you can see.
+   *
+   * The Cases tab renders these beside the guide's claim-and-test pairings,
+   * and it read only the module's, so an example a reading brought was the one
+   * study format that still could not receive anything.
+   */
+  examples?: Example[];
   /** Files in IndexedDB. Images among them become figures. */
   fileIds: string[];
   created: number;

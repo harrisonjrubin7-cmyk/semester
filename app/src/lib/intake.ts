@@ -207,3 +207,40 @@ export async function intakeUrl(url: string, signal?: AbortSignal): Promise<Inta
     size: text.length,
   };
 }
+
+/**
+ * One hash for everything a hand-added piece of material is made of.
+ *
+ * The file path has had this since it existed — `held()` compares
+ * `sourceHash`, so re-posting a deck as "Session 7 (updated).pptx" is
+ * recognised as the same material under a different name. The paste path had
+ * nothing: pasting the same reading twice, which is what happens when you are
+ * not sure the first one saved, made two copies of it, and every count in the
+ * app doubled.
+ *
+ * Whitespace is collapsed before hashing because the same passage pasted from
+ * a PDF twice differs by line breaks and nothing else, and a de-duplication
+ * that a stray newline defeats is not one.
+ */
+export function materialHash(parts: (string | undefined)[]): string {
+  const text = parts
+    .filter((p): p is string => Boolean(p && p.trim()))
+    .map((p) => p.replace(/\s+/g, ' ').trim())
+    .join('\n');
+  return text ? hashOf(text) : '';
+}
+
+/**
+ * The earlier import of this same material, if there is one.
+ *
+ * Scoped to the course, because the same handout genuinely can belong to two
+ * of them, and because an update carries the course it was filed against.
+ */
+export function alreadyAdded<T extends { courseId: string; sourceHash?: string }>(
+  updates: T[],
+  courseId: string,
+  hash: string,
+): T | undefined {
+  if (!hash) return undefined;
+  return updates.find((u) => u.courseId === courseId && u.sourceHash === hash);
+}

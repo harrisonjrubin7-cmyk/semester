@@ -31,7 +31,7 @@
  * it is not a case, and it is dropped whole rather than rendered with a gap.
  */
 
-import type { CaseFile, Frame, StudyCard } from './types';
+import type { CaseFile, Example, Frame, StudyCard } from './types';
 
 /**
  * How many of each, at most.
@@ -41,7 +41,7 @@ import type { CaseFile, Frame, StudyCard } from './types';
  * exam, and a model asked for "frames" without a ceiling will produce one per
  * paragraph.
  */
-export const MOST = { frames: 6, tests: 8, cases: 3 };
+export const MOST = { frames: 6, tests: 8, cases: 3, examples: 4 };
 
 const SHORT = 120;
 const LONG = 400;
@@ -60,7 +60,12 @@ one: a stated claim, a study or episode that tested it, and what came of it. \
 "verdict":"What they found","lesson":"What it means for the course"} All six fields are required. \
 If the material does not name who tested the claim, there is no case — return none.
 
-Return an empty list for any of the three the material does not support, which is the common case. \
+examples: 0 to ${MOST.examples} worked examples — the concept pointed at something concrete the \
+material actually discusses. {"tag":"Elasticity","t":"Short title of the case","d":"What it is and \
+why the concept explains it."} Not an illustration you thought of: if the material does not work \
+the example, there is no example.
+
+Return an empty list for any of these the material does not support, which is the common case. \
 Never infer a frame from what an exam usually asks, a verdict from what is generally believed, or \
 a date the material does not give.`;
 
@@ -126,10 +131,27 @@ export function readCases(raw: unknown): CaseFile[] {
   return out;
 }
 
+/** Worked examples — a tag, a title and what it shows. */
+export function readExamples(raw: unknown): Example[] {
+  if (!Array.isArray(raw)) return [];
+  const out: Example[] = [];
+  for (const one of raw) {
+    if (!one || typeof one !== 'object') continue;
+    const e = one as { tag?: unknown; t?: unknown; d?: unknown };
+    const tag = text(e.tag, 40);
+    const t = text(e.t, SHORT);
+    const d = text(e.d, LONG);
+    if (tag && t && d) out.push({ tag, t, d });
+    if (out.length === MOST.examples) break;
+  }
+  return out;
+}
+
 export interface StudyParts {
   frames: Frame[];
   selfTest: StudyCard[];
   cases: CaseFile[];
+  examples: Example[];
 }
 
 /** All three out of one reply. */
@@ -137,11 +159,13 @@ export function readStudyParts(raw: {
   frames?: unknown;
   selfTest?: unknown;
   cases?: unknown;
+  examples?: unknown;
 }): StudyParts {
   return {
     frames: readFrames(raw.frames),
     selfTest: readSelfTest(raw.selfTest),
     cases: readCases(raw.cases),
+    examples: readExamples(raw.examples),
   };
 }
 
@@ -151,6 +175,7 @@ export function describeStudyParts(p: StudyParts): string {
     p.frames.length && `${p.frames.length} exam ${p.frames.length === 1 ? 'frame' : 'frames'}`,
     p.selfTest.length && `${p.selfTest.length} to answer out loud`,
     p.cases.length && `${p.cases.length} ${p.cases.length === 1 ? 'case' : 'cases'}`,
+    p.examples.length && `${p.examples.length} worked ${p.examples.length === 1 ? 'example' : 'examples'}`,
   ].filter(Boolean);
   return bits.join(' · ');
 }

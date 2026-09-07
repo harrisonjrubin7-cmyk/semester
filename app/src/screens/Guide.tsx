@@ -917,9 +917,12 @@ function Figures() {
 }
 
 function Cases() {
-  const { state, catalog } = useStore();
+  const { state } = useStore();
   const { guide } = useLive(state.guideId);
-  const examples = catalog.examples[state.guideId] ?? [];
+  // The merged list, not the module's. This read `catalog.examples`, so a
+  // worked example that arrived with a reading was the one thing the Cases tab
+  // still could not receive.
+  const examples = guide.examples;
 
   return (
     <>
@@ -928,6 +931,9 @@ function Cases() {
         an idea to a case you have not met before — this is the rep for that.
       </div>
 
+      {guide.addedLong.examples > 0 && (
+        <div style={SINCE}>{addedLine(guide.addedLong.examples, 'examples')}</div>
+      )}
       {guide.addedLong.cases > 0 && (
         <div style={SINCE}>{addedLine(guide.addedLong.cases, 'pairings')}</div>
       )}
