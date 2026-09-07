@@ -15,6 +15,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
+import { has } from '../lib/search';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import {
@@ -27,14 +28,39 @@ import {
   nextMove,
   notice,
   short,
+  type Person,
 } from '../lib/letters';
 
 export function People() {
-  const { state } = useStore();
+  const { state, catalog } = useStore();
   const [tab, setTab] = useState<'people' | 'letters'>('people');
 
+  /*
+   * Only the People tab. Letters are a handful and are already grouped by
+   * the person they are about, so a box there would filter a list that fits
+   * on one screen.
+   *
+   * The filter runs here and nothing about it leaves the device — which is
+   * worth saying on this screen in particular, because it is the one the
+   * assistant is refused entirely: `lib/context.ts` sends nothing from
+   * `people` under any circumstance, and there is no provider for it.
+   * Searching your own list of professors locally is a different thing from
+   * a model being told who they are.
+   */
+  const search =
+    tab === 'people'
+      ? {
+          placeholder: 'Find someone — name, role, course',
+          select: () => state.people,
+          match: (person: Person, q: string) =>
+            has(q, person.name, person.role, person.note, catalog.byId[person.courseId]?.code),
+        }
+      : undefined;
+
   return (
-    <Page>
+    <Page search={search as never}>
+      {(shown: unknown[]) => (
+        <>
       <Segmented
         options={[
           { id: 'people', label: `People${state.people.length ? ` (${state.people.length})` : ''}` },
@@ -44,13 +70,19 @@ export function People() {
         onChange={setTab}
         style={{ margin: '0 0 16px' }}
       />
-      {tab === 'people' ? <PeopleTab /> : <LettersTab />}
+      {tab === 'people' ? <PeopleTab rows={shown as Person[]} /> : <LettersTab />}
+        </>
+      )}
     </Page>
   );
 }
 
-function PeopleTab() {
+function PeopleTab({ rows }: { rows?: Person[] }) {
   const { state, dispatch, now, catalog } = useStore();
+  // The filtered list when the box has something in it, all of them when it
+  // does not. `state.people` stays the source for the empty state, so
+  // filtering to nothing says so rather than announcing there is nobody.
+  const people = rows ?? state.people;
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [open, setOpen] = useState<string | null>(null);
@@ -108,7 +140,7 @@ function PeopleTab() {
       ) : null}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 18 }}>
-        {state.people.map((p) => {
+        {people.map((p) => {
           const k = known(state.visits, p.id, now);
           const theirs = state.visits
             .filter((v) => v.personId === p.id)

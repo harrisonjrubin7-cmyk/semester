@@ -22,6 +22,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
+import { has } from '../lib/search';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import {
@@ -36,14 +37,34 @@ import {
   rollup,
   rollupLine,
   spare,
+  type Taken,
 } from '../lib/degree';
 
 export function Degree() {
   const { state } = useStore();
   const [tab, setTab] = useState<'left' | 'taken' | 'rules'>('left');
 
+  /*
+   * The transcript, which is the one list here that gets long.
+   *
+   * Four years of courses is the whole point of the tab, and "did I already
+   * take a stats course" is the question people come to it with. What is
+   * left and Requirements are both short by construction — a degree has a
+   * dozen requirements, not a hundred — so neither declares an adapter.
+   */
+  const search =
+    tab === 'taken'
+      ? {
+          placeholder: 'Find a course — code, title, term',
+          select: () => state.taken,
+          match: (c: Taken, q: string) => has(q, c.code, c.title, c.term, c.grade),
+        }
+      : undefined;
+
   return (
-    <Page>
+    <Page search={search as never}>
+      {(shown: unknown[]) => (
+        <>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div className="kicker">Your arithmetic, not the registrar’s</div>
         <div
@@ -73,8 +94,10 @@ export function Degree() {
       />
 
       {tab === 'left' ? <WhatIsLeft /> : null}
-      {tab === 'taken' ? <Transcript /> : null}
+      {tab === 'taken' ? <Transcript rows={shown as Taken[]} /> : null}
       {tab === 'rules' ? <Rules /> : null}
+        </>
+      )}
     </Page>
   );
 }
@@ -198,8 +221,12 @@ function WhatIsLeft() {
   );
 }
 
-function Transcript() {
+function Transcript({ rows }: { rows?: Taken[] }) {
   const { state, dispatch } = useStore();
+  // Filtered when the box has something in it. `state.taken` stays the
+  // source for the empty state, so filtering to nothing does not read as
+  // "you have taken no courses".
+  const taken = rows ?? state.taken;
   const [code, setCode] = useState('');
   const [title, setTitle] = useState('');
   const [term, setTerm] = useState('');
@@ -293,7 +320,7 @@ function Transcript() {
         <>
           <SectionLabel style={{ margin: '24px 0 8px' }}>Recorded</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-            {state.taken.map((c) => (
+            {taken.map((c) => (
               <div
                 key={c.id}
                 style={{
