@@ -78,12 +78,21 @@ create policy "usage is readable by its owner" on public.usage
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
+-- A fixed search_path, because without one the function resolves names
+-- against whatever the caller had set. Empty rather than `public`: the body
+-- calls only `now()`, which lives in pg_catalog and is always reachable.
+set search_path = ''
 as $$
 begin
   new.updated_at = now();
   return new;
 end;
 $$;
+
+-- Nothing calls this directly and nothing needs to: Postgres checks EXECUTE
+-- when a trigger is created, not each time it fires. The default grants were
+-- surface with no use behind them.
+revoke all on function public.touch_updated_at() from public, anon, authenticated;
 
 drop trigger if exists courses_touch on public.courses;
 create trigger courses_touch before insert or update on public.courses

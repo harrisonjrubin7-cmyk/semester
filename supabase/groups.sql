@@ -1,6 +1,7 @@
 -- Group work — the four-person case, as a thing the app can hold.
 --
--- Run this after classmates.sql, which it builds on: a group lives inside a
+-- Run this after classmates.sql, which creates the `private` schema these
+-- helpers live in and which this builds on: a group lives inside a
 -- class room, and the same three gates apply — you are verified, you are in
 -- that class, and a blocked person cannot reach you. Safe to run twice.
 --
@@ -55,12 +56,12 @@ alter table public.group_members enable row level security;
 
 -- Whether you are in a group. Security definer, so the policy on
 -- group_members does not have to read group_members and deadlock on itself.
-create or replace function public.in_group(want_group uuid)
+create or replace function private.in_group(want_group uuid)
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $$
   select exists (
     select 1 from public.group_members m
@@ -69,43 +70,63 @@ as $$
 $$;
 
 -- Which room a group is in, for the class-membership check.
-create or replace function public.group_room(want_group uuid)
+create or replace function private.group_room(want_group uuid)
 returns table (term text, code text)
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $$
   select g.term, g.code from public.groups g where g.id = want_group;
 $$;
 
-create or replace function public.group_in_my_class(want_group uuid)
+create or replace function private.group_in_my_class(want_group uuid)
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $$
   select exists (
     select 1 from public.groups g
-    where g.id = want_group and public.in_class(g.term, g.code)
+    where g.id = want_group and private.in_class(g.term, g.code)
   );
 $$;
+
+-- ── Who may call these ────────────────────────────────────────────────────
+--
+-- In `private` for the reason classmates.sql explains at length: PostgREST
+-- publishes what it can execute in `public`, so a helper there is also a URL.
+-- `group_room` is the one that would have mattered most — it answers "which
+-- class is group X in" for any id, which is an enumeration away from a map of
+-- who studies what.
+--
+-- This file previously had no grants at all, so all three inherited
+-- Supabase's default EXECUTE for anon and authenticated. Stated explicitly
+-- now, and both roles keep it because the policies below are `TO public`.
+
+revoke all on function private.in_group(uuid) from public;
+revoke all on function private.group_room(uuid) from public;
+revoke all on function private.group_in_my_class(uuid) from public;
+
+grant execute on function private.in_group(uuid) to anon, authenticated;
+grant execute on function private.group_room(uuid) to anon, authenticated;
+grant execute on function private.group_in_my_class(uuid) to anon, authenticated;
 
 -- A group is visible to the class it sits in, so somebody can find theirs and
 -- join it. Its tasks are not — those need membership.
 drop policy if exists "groups are visible to the class" on public.groups;
 create policy "groups are visible to the class" on public.groups
   for select
-  using (public.verified_student() and public.in_class(term, code));
+  using (private.verified_student() and private.in_class(term, code));
 
 drop policy if exists "start a group in a class you are in" on public.groups;
 create policy "start a group in a class you are in" on public.groups
   for insert
   with check (
     auth.uid() = created_by
-    and public.verified_student()
-    and public.in_class(term, code)
+    and private.verified_student()
+    and private.in_class(term, code)
   );
 
 -- Anyone in the group may set the name, the blurb and the date. A group whose
@@ -113,8 +134,8 @@ create policy "start a group in a class you are in" on public.groups
 drop policy if exists "members may edit their group" on public.groups;
 create policy "members may edit their group" on public.groups
   for update
-  using (public.in_group(id))
-  with check (public.in_group(id));
+  using (private.in_group(id))
+  with check (private.in_group(id));
 
 drop policy if exists "only the starter may delete a group" on public.groups;
 create policy "only the starter may delete a group" on public.groups
@@ -126,15 +147,15 @@ create policy "only the starter may delete a group" on public.groups
 drop policy if exists "see who is in a group in your class" on public.group_members;
 create policy "see who is in a group in your class" on public.group_members
   for select
-  using (public.verified_student() and public.group_in_my_class(group_id));
+  using (private.verified_student() and private.group_in_my_class(group_id));
 
 drop policy if exists "join a group yourself" on public.group_members;
 create policy "join a group yourself" on public.group_members
   for insert
   with check (
     auth.uid() = user_id
-    and public.verified_student()
-    and public.group_in_my_class(group_id)
+    and private.verified_student()
+    and private.group_in_my_class(group_id)
   );
 
 -- You leave; nobody removes you. A group that can eject a member is a group
@@ -167,25 +188,25 @@ alter table public.group_tasks enable row level security;
 drop policy if exists "members read the parts" on public.group_tasks;
 create policy "members read the parts" on public.group_tasks
   for select
-  using (public.in_group(group_id));
+  using (private.in_group(group_id));
 
 drop policy if exists "members add parts" on public.group_tasks;
 create policy "members add parts" on public.group_tasks
   for insert
-  with check (auth.uid() = created_by and public.in_group(group_id));
+  with check (auth.uid() = created_by and private.in_group(group_id));
 
 -- Any member may claim a part, tick one, or correct a title. Group work does
 -- not survive a permission model where only the author of a line may fix it.
 drop policy if exists "members change the parts" on public.group_tasks;
 create policy "members change the parts" on public.group_tasks
   for update
-  using (public.in_group(group_id))
-  with check (public.in_group(group_id));
+  using (private.in_group(group_id))
+  with check (private.in_group(group_id));
 
 drop policy if exists "members remove parts" on public.group_tasks;
 create policy "members remove parts" on public.group_tasks
   for delete
-  using (public.in_group(group_id));
+  using (private.in_group(group_id));
 
 -- ── Keeping updated_at honest ─────────────────────────────────────────────
 

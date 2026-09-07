@@ -86,11 +86,11 @@ do $$
 begin
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   perform pg_temp.check('a confirmed vanderbilt.edu address is a student',
-                        public.verified_student(), true);
+                        private.verified_student(), true);
 
   perform pg_temp.become('44444444-4444-4444-4444-444444444444');
   perform pg_temp.check('a confirmed address at another domain is not',
-                        public.verified_student(), false);
+                        private.verified_student(), false);
 end $$;
 
 -- ── Enrolling ─────────────────────────────────────────────────────────────

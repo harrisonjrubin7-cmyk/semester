@@ -29,16 +29,40 @@
 -- courses you and they share. Not your email, not your other courses, not your
 -- work.
 
+-- ── Where the helpers live ────────────────────────────────────────────────
+--
+-- `private`, not `public`, and the difference is not cosmetic. PostgREST
+-- publishes every function in `public` that anon or authenticated may execute,
+-- so a helper defined there is also a URL: `/rest/v1/rpc/classmate` took a
+-- user id and answered whether they shared a class with you, to anybody
+-- holding the publishable key.
+--
+-- The revokes below used to read `revoke all on function ... from public`,
+-- which looks like it closes that. It does not. Supabase ships default
+-- privileges granting EXECUTE on new functions in `public` to anon,
+-- authenticated and service_role, so the grant to anon is explicit — and
+-- revoking from the PUBLIC pseudo-role leaves an explicit grant alone. The
+-- revoke was aimed at the wrong grantee and had never done anything.
+--
+-- Both roles keep EXECUTE here, on purpose: every policy below is `TO public`,
+-- so the expression is evaluated for anon too, and taking the privilege away
+-- would turn "you see nothing" into "the query errors". What changes is that
+-- the schema is not published, so there is no endpoint to call.
+
+create schema if not exists private;
+revoke all on schema private from public;
+grant usage on schema private to anon, authenticated, service_role;
+
 -- ── Who is allowed in ─────────────────────────────────────────────────────
 -- Security definer because it reads auth.users, which no ordinary role may.
 -- It takes no argument and interpolates nothing, so there is nothing to inject.
 
-create or replace function public.verified_student()
+create or replace function private.verified_student()
 returns boolean
 language sql
 stable
 security definer
-set search_path = public, auth
+set search_path = ''
 as $$
   select exists (
     select 1
@@ -49,8 +73,8 @@ as $$
   );
 $$;
 
-revoke all on function public.verified_student() from public;
-grant execute on function public.verified_student() to authenticated;
+revoke all on function private.verified_student() from public;
+grant execute on function private.verified_student() to anon, authenticated;
 
 -- ── Profiles ──────────────────────────────────────────────────────────────
 -- A display name of your choosing. Deliberately not your real name by default
@@ -71,7 +95,7 @@ drop policy if exists "profiles are yours to write" on public.profiles;
 create policy "profiles are yours to write" on public.profiles
   for all
   using (auth.uid() = user_id)
-  with check (auth.uid() = user_id and public.verified_student());
+  with check (auth.uid() = user_id and private.verified_student());
 
 -- ── Enrolments ────────────────────────────────────────────────────────────
 -- What you have told the app you are taking. `code` is normalised by the
@@ -92,12 +116,12 @@ alter table public.enrollments enable row level security;
 
 -- Security definer so that reading one row does not have to consult the policy
 -- on the same table, which would recurse.
-create or replace function public.classmate(other uuid)
+create or replace function private.classmate(other uuid)
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $$
   select exists (
     select 1
@@ -109,15 +133,15 @@ as $$
   );
 $$;
 
-revoke all on function public.classmate(uuid) from public;
-grant execute on function public.classmate(uuid) to authenticated;
+revoke all on function private.classmate(uuid) from public;
+grant execute on function private.classmate(uuid) to anon, authenticated;
 
-create or replace function public.in_class(want_term text, want_code text)
+create or replace function private.in_class(want_term text, want_code text)
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $$
   select exists (
     select 1 from public.enrollments e
@@ -125,26 +149,26 @@ as $$
   );
 $$;
 
-revoke all on function public.in_class(text, text) from public;
-grant execute on function public.in_class(text, text) to authenticated;
+revoke all on function private.in_class(text, text) from public;
+grant execute on function private.in_class(text, text) to anon, authenticated;
 
 drop policy if exists "join and leave your own classes" on public.enrollments;
 create policy "join and leave your own classes" on public.enrollments
   for all
   using (auth.uid() = user_id)
-  with check (auth.uid() = user_id and public.verified_student());
+  with check (auth.uid() = user_id and private.verified_student());
 
 -- Separate from the policy above so that reading is wider than writing: you
 -- see the enrolments of people who share a class with you, and nobody else's.
 drop policy if exists "see who shares a class" on public.enrollments;
 create policy "see who shares a class" on public.enrollments
   for select
-  using (auth.uid() = user_id or public.classmate(user_id));
+  using (auth.uid() = user_id or private.classmate(user_id));
 
 drop policy if exists "profiles are visible to classmates" on public.profiles;
 create policy "profiles are visible to classmates" on public.profiles
   for select
-  using (auth.uid() = user_id or public.classmate(user_id));
+  using (auth.uid() = user_id or private.classmate(user_id));
 
 -- ── Blocking ──────────────────────────────────────────────────────────────
 -- Yours alone, and never visible to the person blocked.
@@ -190,8 +214,8 @@ drop policy if exists "read your classes" on public.messages;
 create policy "read your classes" on public.messages
   for select
   using (
-    public.verified_student()
-    and public.in_class(term, code)
+    private.verified_student()
+    and private.in_class(term, code)
     and not exists (
       select 1 from public.blocks b
       where b.user_id = auth.uid() and b.blocked = messages.user_id
@@ -203,8 +227,8 @@ create policy "post to your classes as yourself" on public.messages
   for insert
   with check (
     auth.uid() = user_id
-    and public.verified_student()
-    and public.in_class(term, code)
+    and private.verified_student()
+    and private.in_class(term, code)
   );
 
 drop policy if exists "delete your own messages" on public.messages;
@@ -233,7 +257,7 @@ alter table public.reports enable row level security;
 drop policy if exists "anyone verified may report" on public.reports;
 create policy "anyone verified may report" on public.reports
   for insert
-  with check (auth.uid() = reporter and public.verified_student());
+  with check (auth.uid() = reporter and private.verified_student());
 
 -- No select policy at all, which means no client can read this table.
 

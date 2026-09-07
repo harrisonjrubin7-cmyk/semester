@@ -56,6 +56,66 @@ This was checked by making the call by hand, exactly as the job would:
 which is `push`'s own first branch. pg_net reaches the function, the URL is
 right, the Vault read works. Only `CRON_SECRET` is missing.
 
+## Security advisor
+
+Nine of the ten findings are closed (migration
+`harden_security_definer_helpers`). One is left and it is a dashboard toggle —
+see below.
+
+### What the revokes were not doing
+
+`classmates.sql` ended each helper with `revoke all on function ... from
+public`, which reads like it locks anon out. It never did. Supabase ships
+default privileges granting EXECUTE on new functions in `public` to `anon`,
+`authenticated` and `service_role`, so the grant to anon is *explicit* — and
+revoking from the PUBLIC pseudo-role does not touch an explicit grant. The
+revoke was aimed at the wrong grantee, so `/rest/v1/rpc/classmate`,
+`/rpc/in_class` and `/rpc/verified_student` were callable by anyone holding
+the publishable key for as long as they had existed.
+
+`classmate` is the one that mattered: give it a user id and it answered
+whether that person shares a class with you.
+
+### What changed
+
+- **`classmate`, `in_class`, `verified_student`** moved to a `private` schema.
+  PostgREST publishes `public` and `graphql_public`, so the endpoints stopped
+  existing. The seven RLS policies built on them followed automatically —
+  a policy stores a function's OID, not its name, so not one was rewritten.
+  Both roles keep EXECUTE on purpose: every one of those policies is `TO
+  public`, so the expression is evaluated for anon too, and taking the
+  privilege away would turn "you see nothing" into "the query errors".
+- **`touch_updated_at`** had no `search_path` at all, so it resolved names
+  against whatever the caller had set. Now `''`; its body calls only `now()`.
+- **`touch_updated_at` and `rls_auto_enable`** lost their EXECUTE grants.
+  Neither needs one: Postgres checks that privilege when a trigger is created,
+  not each time it fires. `rls_auto_enable` is Supabase's own event-trigger
+  function and is not defined anywhere in this repo, so only the live grant
+  changed.
+- **`groups.sql`** got the same treatment ahead of time. It is not applied to
+  the live project, and it had no grants at all — so its three helpers would
+  have inherited the same default EXECUTE and appeared as three more
+  endpoints. `group_room` is the one worth noticing: it answers "which class
+  is group X in" for any id, an enumeration away from a map of who studies
+  what.
+
+Checked after, not assumed: every policy still evaluates for both `anon` and
+`authenticated` without erroring, and both trigger functions still fire — an
+event trigger enabling RLS on a fresh table, and a row trigger moving
+`updated_at`.
+
+### The one that is left
+
+**Leaked password protection** is off. It is an Auth setting rather than
+anything in SQL, so it cannot be changed from a migration or from the MCP
+tools — it needs the dashboard, under Authentication → Sign In / Providers.
+
+It is worth turning on rather than dismissing: this app signs people in with
+`signInWithPassword` and registers them with `signUp`, so students are
+choosing passwords here, and a password reused from a breached site is the
+realistic way in. The check is against HaveIBeenPwned at sign-up and
+password-change time.
+
 ## What is left, in order
 
 Three things, and none of them can be done from a coding session: two need
