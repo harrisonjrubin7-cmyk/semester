@@ -1,10 +1,9 @@
-import { NO_POLICY, budget, hasPolicy, pointsOff, rate, tally } from '../lib/attend';
-import { standing } from '../lib/grades';
-import { datedItems } from '../lib/select';
-import { forScope, insights } from '../insights';
-import { factsFrom } from '../insights/facts';
-import type { Provide, Look } from './shape';
-import type { Screen } from '../lib/types';
+import { NO_POLICY, pointsOff, rate, tally } from '../../lib/attend';
+import { standing } from '../../lib/grades';
+import { datedItems } from '../../lib/select';
+import { forScope, insights } from '../../insights';
+import { factsFrom } from '../../insights/facts';
+import type { Provide, Look } from '../shape';
 
 /**
  * What each screen tells the assistant it is showing.
@@ -66,7 +65,7 @@ function chipped(look: Look) {
  * this hands over — the same numbers, from the same function the screen
  * calls, so the two cannot drift.
  */
-const grades: Provide = (look) => {
+export const grades: Provide = (look) => {
   const { state, catalog } = look;
   /*
    * Every course, because that is what the screen shows.
@@ -149,7 +148,7 @@ const grades: Provide = (look) => {
  * different question on a month view and a day view, and the screen knows
  * which one is open.
  */
-const calendar: Provide = (look) => {
+export const calendar: Provide = (look) => {
   const { state, catalog, now } = look;
   const view = state.calView ?? 'month';
   const days = view === 'day' ? 1 : view === 'week' ? 7 : view === 'month' ? 31 : 200;
@@ -193,7 +192,7 @@ const calendar: Provide = (look) => {
  * is answered from which units are cold, and sending the cards themselves
  * would be sending the guide to answer a question about the guide's shape.
  */
-const study: Provide = (look) => {
+export const study: Provide = (look) => {
   const { state, catalog } = look;
   const guide = catalog.guides[state.guideId];
   const course = catalog.byId[state.guideId];
@@ -224,7 +223,7 @@ const study: Provide = (look) => {
  * The list screen and the one-course screen are the same registry entry, so
  * this reads which is showing rather than guessing from the route.
  */
-const courses: Provide = (look) => {
+export const courses: Provide = (look) => {
   const { state, catalog, now } = look;
   const list = chipped(look);
   if (list.length === 0) return null;
@@ -268,7 +267,7 @@ const courses: Provide = (look) => {
  * assistant reads the rendered ones rather than recomputing, so it cannot
  * quote a finding the student is not looking at.
  */
-const worked: Provide = (look) => {
+export const worked: Provide = (look) => {
   const { state, catalog, now } = look;
   const found = forScope(insights(factsFrom(state, catalog, now)), 'all', 8);
   if (found.length === 0) {
@@ -296,32 +295,4 @@ const worked: Provide = (look) => {
   };
 };
 
-/**
- * Every screen that has something to say, keyed the same way the registry is.
- *
- * A screen missing from here has no provider, which is a real answer: the
- * assistant falls back to what it knows globally and says on screen that this
- * screen told it nothing. Better than a provider that returns the word
- * "nothing" wrapped in a sentence.
- */
-export const PROVIDERS: Partial<Record<Screen, Provide>> = {
-  grades,
-  calendar,
-  study,
-  courses,
-  worked,
-};
-
-/** Whether this screen has anything of its own to say. */
-export function providerFor(screen: Screen): Provide | null {
-  return PROVIDERS[screen] ?? null;
-}
-
-/** Attendance in a sentence, for the providers that mention it. */
-export function attendanceLine(look: Look, courseId: string): string | null {
-  const policy = look.state.attendPolicy[courseId];
-  const t = tally(look.state.attendance, courseId);
-  if (!hasPolicy(policy) || t.marked === 0) return null;
-  const b = budget(policy, t);
-  return `${t.present} present, ${t.absent} absent of ${t.marked} marked; ${b.left} absences left.`;
-}
+export { chipped, pct };
