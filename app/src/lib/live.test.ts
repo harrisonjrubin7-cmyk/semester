@@ -284,6 +284,71 @@ describe('mergeFigures', () => {
   });
 });
 
+describe('a figure read out of the material', () => {
+  const table = (title = 'Outlays'): Figure => ({
+    type: 'bars',
+    title,
+    caption: 'Federal outlays',
+    unit: '%',
+    max: 100,
+    rows: [
+      { l: 'A', v: 21 },
+      { l: 'B', v: 14 },
+    ],
+  });
+
+  it('lands on the unit the reading was filed against', () => {
+    // The gap this closes: a reading with a table in it used to produce cards
+    // and terms and nothing else, so the Figures tab in week twelve showed
+    // exactly what it showed in week one.
+    const out = mergeFigures({}, [update({ unit: 1, figures: [table()] })]);
+    expect(out[1]).toMatchObject({ type: 'bars', title: 'Outlays' });
+  });
+
+  it('says where it came from, the way an added photograph does', () => {
+    const out = mergeFigures({}, [update({ unit: 1, figures: [table()], source: 'Reading 7' })]);
+    expect(out[1]?.caption).toBe('Federal outlays — Reading 7');
+  });
+
+  it('takes the unit ahead of a photograph on the same update', () => {
+    // A table the reading contains says more about the unit than a picture of
+    // the page it was printed on, and only one of them gets the slot.
+    const out = mergeFigures({}, [update({ unit: 1, figures: [table()], fileIds: ['photo'] })]);
+    expect(out[1]).toMatchObject({ type: 'bars' });
+    // And the photograph is not lost — it goes to the rail.
+    const rail = extraFigures([], [update({ unit: 1, figures: [table()], fileIds: ['photo'] })], {});
+    expect(rail.map(fileOf)).toEqual(['photo']);
+  });
+
+  it('still never displaces the guide’s own figure', () => {
+    const mine = [update({ unit: 0, figures: [table()] })];
+    expect(fileOf(mergeFigures(withOwn, mine)[0])).toBe('guide-fig');
+    expect(extraFigures([], mine, withOwn)).toHaveLength(1);
+  });
+
+  it('sends the second and third figures to the rail, in order', () => {
+    const mine = [update({ unit: 1, figures: [table('One'), table('Two'), table('Three')] })];
+    expect(mergeFigures({}, mine)[1]).toMatchObject({ title: 'One' });
+    expect(extraFigures([], mine, {}).map((f) => f.title)).toEqual(['Two', 'Three']);
+  });
+
+  it('goes nowhere but the rail when it was filed against no unit', () => {
+    const mine = [update({ unit: null, figures: [table()] })];
+    expect(mergeFigures({}, mine)).toEqual({});
+    expect(extraFigures([], mine, {}).map((f) => f.title)).toEqual(['Outlays']);
+  });
+
+  it('is absent on everything added before figures existed', () => {
+    // `figures` is optional, and the merge must not read undefined as empty
+    // by accident in one place and throw in another.
+    expect(mergeFigures({}, [update({ unit: 1, figures: undefined })])).toEqual({});
+  });
+});
+
+const withOwn: FigureMap = {
+  0: { type: 'image', title: 'The guide’s own diagram', caption: '', fileId: 'guide-fig' },
+};
+
 describe('extraFigures', () => {
   const withFigure: FigureMap = {
     0: { type: 'image', title: 'The guide’s own diagram', caption: '', fileId: 'guide-fig' },

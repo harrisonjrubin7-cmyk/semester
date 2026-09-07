@@ -153,67 +153,89 @@ export function applyReviews(
   return { ...guide, units, mastery };
 }
 
-/** Images you attached, as figures on the unit they were filed against. */
-export function mergeFigures(figures: FigureMap, updates: CourseUpdate[]): FigureMap {
-  if (updates.length === 0) return figures;
-  const out: FigureMap = { ...figures };
-  for (const u of updates) {
-    if (u.unit === null) continue;
-    const image = u.fileIds[0];
-    // A unit that already has a figure keeps it; yours goes to the extras, so
-    // the guide's own diagram is never displaced by a photo.
-    if (image && !out[u.unit]) {
-      out[u.unit] = {
-        type: 'image',
-        title: u.title || 'Added',
-        caption: u.source ? `Added — ${u.source}` : 'Added by you',
-        fileId: image,
-      };
-    }
-  }
-  return out;
+/**
+ * Everything one update contributes as figures, in the order it offers them.
+ *
+ * Figures read out of the material come first, then photographs. A table the
+ * reading actually contains says more about the unit than a picture of the
+ * page it was on, and only one of the two can have the unit's slot.
+ */
+function offered(u: CourseUpdate): Figure[] {
+  const read = u.figures ?? [];
+  const shots: Figure[] = u.fileIds.map((fileId) => ({
+    type: 'image',
+    title: u.title || 'Added',
+    caption: u.source ? `Added — ${u.source}` : 'Added by you',
+    fileId,
+  }));
+  return [...read, ...shots];
 }
 
 /**
- * The images that did not become a unit's figure.
+ * Where every added figure goes: one per unit, the rest to the extras rail.
  *
- * Takes the figure map for the same reason `mergeFigures` builds one: the two
- * have to agree about which image was used, and they did not. This skipped the
- * first image of every unit-attached update on the assumption it had been
- * taken as that unit's figure — but `mergeFigures` only takes it when the unit
- * has none, so an update on a unit that already had a diagram, or a second
- * update on the same unit, had its first image skipped here and never placed
- * there. The comment beside that rule promised "yours goes to the extras", and
- * it went nowhere.
+ * One function rather than two, and that is the point of it. `mergeFigures`
+ * and `extraFigures` used to decide this separately and disagreed — the rule
+ * "a unit that already has a figure keeps it, yours goes to the extras" was
+ * implemented once and only approximated in the other, so an update filed
+ * against a unit that already had a diagram had its first image skipped by
+ * both and rendered by neither. It went nowhere, silently, which for somebody
+ * else's photograph of a whiteboard is the worst way to lose it.
  *
- * The accumulation below mirrors `mergeFigures` exactly, including the way one
- * update can claim a unit and leave the next one to come here instead. Change
- * one and change the other.
+ * Now there is one pass, and the two exported functions are two readings of
+ * its result. They cannot drift because there is nothing left to drift.
  */
+function place(base: FigureMap, updates: CourseUpdate[]): { map: FigureMap; extras: Figure[] } {
+  const map: FigureMap = { ...base };
+  const extras: Figure[] = [];
+
+  for (const u of updates) {
+    const all = offered(u);
+    if (all.length === 0) continue;
+
+    // The guide's own figure is never displaced, and neither is one an earlier
+    // update already placed on this unit.
+    const takesSlot = u.unit !== null && map[u.unit] === undefined;
+    if (takesSlot) {
+      const [first] = all;
+      map[u.unit as number] =
+        first.type === 'image'
+          ? { ...first, title: u.title || 'Added' }
+          : { ...first, caption: u.source ? `${first.caption} — ${u.source}` : first.caption };
+    }
+
+    // Numbered from what is actually shown on the rail, so an update whose
+    // first figure went to the unit does not leave a "(2)" with no (1).
+    all.slice(takesSlot ? 1 : 0).forEach((f, i) => {
+      const n = i + (takesSlot ? 2 : 1);
+      extras.push(
+        f.type === 'image'
+          ? { ...f, title: u.title ? `${u.title} (${n})` : 'Added' }
+          : { ...f, caption: u.source ? `${f.caption} — ${u.source}` : f.caption },
+      );
+    });
+  }
+
+  return { map, extras };
+}
+
+/**
+ * The guide's figures with yours folded in — a table or a diagram read out of
+ * a reading, and photographs you attached.
+ */
+export function mergeFigures(figures: FigureMap, updates: CourseUpdate[]): FigureMap {
+  if (updates.length === 0) return figures;
+  return place(figures, updates).map;
+}
+
+/** The figures that did not become a unit's own. */
 export function extraFigures(
   extras: Figure[],
   updates: CourseUpdate[],
   figures: FigureMap = {},
 ): Figure[] {
-  const claimed = new Set(Object.keys(figures).map(Number));
-  const mine: Figure[] = [];
-
-  for (const u of updates) {
-    // Whether this update's first image is about to become the unit's figure.
-    const takesFirst = u.unit !== null && Boolean(u.fileIds[0]) && !claimed.has(u.unit);
-    if (takesFirst) claimed.add(u.unit as number);
-
-    u.fileIds.slice(takesFirst ? 1 : 0).forEach((fileId, i) =>
-      mine.push({
-        type: 'image',
-        // Numbered from what is actually shown here, so an update whose first
-        // image also lands in the extras is not labelled "(2)" with no (1).
-        title: u.title ? `${u.title} (${i + (takesFirst ? 2 : 1)})` : 'Added',
-        caption: u.source ? `Added — ${u.source}` : 'Added by you',
-        fileId,
-      }),
-    );
-  }
+  if (updates.length === 0) return extras;
+  const mine = place(figures, updates).extras;
   return mine.length ? [...extras, ...mine] : extras;
 }
 

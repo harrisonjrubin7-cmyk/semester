@@ -22,7 +22,8 @@ import { SectionLabel } from '../components/ui';
 import { addFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
 import { describeParse, parseMaterial } from '../lib/parse';
-import type { CourseId, Term } from '../lib/types';
+import type { CourseId, Figure, Term } from '../lib/types';
+import { describeFigure } from '../lib/figure';
 
 /** Handled by the camera path above, which can see them. */
 const IMAGE = /\.(png|jpe?g|webp|gif|heic|heif)$/i;
@@ -67,6 +68,7 @@ export function AddMaterial() {
   const [studying, setStudying] = useState(false);
   const [readCards, setReadCards] = useState<StudyCard[]>([]);
   const [readTerms, setReadTerms] = useState<Term[]>([]);
+  const [readFigs, setReadFigs] = useState<Figure[]>([]);
   const [readSummary, setReadSummary] = useState('');
   const [readError, setReadError] = useState('');
 
@@ -93,6 +95,7 @@ export function AddMaterial() {
     !parsed.body &&
     !files.length &&
     shotCards.length === 0 &&
+    readFigs.length === 0 &&
     readCards.length === 0;
 
   /**
@@ -149,7 +152,8 @@ export function AddMaterial() {
       setReadSummary(got.note);
       setReadCards(got.cards);
       setReadTerms(got.terms);
-      if (got.cards.length === 0 && got.terms.length === 0 && !got.note) {
+      setReadFigs(got.figures);
+      if (got.cards.length === 0 && got.terms.length === 0 && got.figures.length === 0 && !got.note) {
         setReadError('Nothing came back from that. It is still attached and kept as notes.');
       }
     } catch (e) {
@@ -298,6 +302,7 @@ export function AddMaterial() {
         body: parsed.body,
         cards: [...parsed.cards, ...shotCards, ...readCards],
         terms: [...parsed.terms, ...readTerms],
+        figures: readFigs,
         fileIds: files.map((f) => f.id),
       },
     });
@@ -599,7 +604,7 @@ export function AddMaterial() {
         </>
       )}
 
-      {(readSummary || readCards.length > 0 || readTerms.length > 0) && (
+      {(readSummary || readCards.length > 0 || readTerms.length > 0 || readFigs.length > 0) && (
         <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
           <div className="kicker">What it read</div>
           {readSummary && (
@@ -611,6 +616,28 @@ export function AddMaterial() {
             {readCards.length} {readCards.length === 1 ? 'card' : 'cards'} and {readTerms.length}{' '}
             {readTerms.length === 1 ? 'term' : 'terms'} ready — they save with everything else below.
           </div>
+          {/*
+            Named one by one rather than counted. A figure is the one thing
+            here that is drawn rather than read, so it is the one thing worth
+            checking against the reading before it joins the guide and starts
+            looking like something the course said.
+          */}
+          {readFigs.length > 0 && (
+            <div style={{ marginTop: 'var(--sp-3)' }}>
+              <div className="kicker">
+                {readFigs.length === 1 ? 'A figure' : `${readFigs.length} figures`}, in the guide’s own
+                formats
+              </div>
+              {readFigs.map((f, i) => (
+                <div
+                  key={i}
+                  style={{ fontSize: 'var(--type-sm)', opacity: 0.75, marginTop: 'var(--sp-2)' }}
+                >
+                  {describeFigure(f)}
+                </div>
+              ))}
+            </div>
+          )}
         </Blueprint>
       )}
 

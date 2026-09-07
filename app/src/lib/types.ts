@@ -180,24 +180,33 @@ export interface Step {
  * Diagrams that have to be drawn rather than tabulated — the curve pictures the
  * guides reproduce. Each name maps to a hand-drawn SVG in `components/Diagram`.
  */
-export type DiagramKind =
-  | 'supply-demand'
-  | 'price-ceiling'
-  | 'cost-curves'
-  | 'monopoly'
-  | 'externality'
-  | 'elasticity-along-demand'
-  | 'normal-curve'
-  | 'skew'
-  | 'validity-reliability'
-  | 'causal-diagrams'
-  | 'scatter-chocolate'
-  | 'perceptual-map'
-  | 'funnel'
-  | 'brand-pyramid'
-  | 'channel-levels'
-  | 'product-life-cycle'
-  | 'three-v';
+export const DIAGRAM_KINDS = [
+  'supply-demand',
+  'price-ceiling',
+  'cost-curves',
+  'monopoly',
+  'externality',
+  'elasticity-along-demand',
+  'normal-curve',
+  'skew',
+  'validity-reliability',
+  'causal-diagrams',
+  'scatter-chocolate',
+  'perceptual-map',
+  'funnel',
+  'brand-pyramid',
+  'channel-levels',
+  'product-life-cycle',
+  'three-v',
+] as const;
+
+/*
+ * A list first, then the type from it — rather than a union anything checking
+ * a value at runtime has to restate. `lib/figure.ts` has to reject a diagram
+ * name a model made up, and a hand-kept copy of these seventeen strings would
+ * be wrong the first time an eighteenth diagram is drawn.
+ */
+export type DiagramKind = (typeof DIAGRAM_KINDS)[number];
 
 export type Figure =
   | { type: 'bars'; title: string; caption: string; unit: string; max: number; rows: BarRow[] }
@@ -346,6 +355,16 @@ export interface CourseUpdate {
   body: string;
   cards: StudyCard[];
   terms: Term[];
+  /**
+   * Figures read out of the material — a table of numbers, a process, or one
+   * of the drawn diagrams.
+   *
+   * Not images: those come from `fileIds` below. These are the app's own
+   * figure formats, so a chart that arrives in a reading is displayed the way
+   * the guide's own charts are rather than as prose nobody looks at twice.
+   * Optional because everything added before this existed has none.
+   */
+  figures?: Figure[];
   /** Files in IndexedDB. Images among them become figures. */
   fileIds: string[];
   created: number;

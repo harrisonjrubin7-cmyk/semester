@@ -374,6 +374,59 @@ describe('reading material into cards', () => {
     expect(got.note).toBe(REPLY.note);
   });
 
+  it('carries a figure the reading actually contained', async () => {
+    // The gap this closed: a reading with a table in it produced cards and
+    // terms and nothing else, so the Figures tab never grew past week one.
+    catchRequest([
+      said(
+        JSON.stringify({
+          ...REPLY,
+          figures: [
+            {
+              type: 'bars',
+              title: 'Cities graded',
+              caption: 'HOLC, 1930-1960',
+              unit: 'cities',
+              max: 239,
+              rows: [
+                { l: 'Graded', v: 239 },
+                { l: 'Ungraded', v: 61 },
+              ],
+            },
+          ],
+        }),
+      ),
+    ]);
+    const got = await readMaterial('x', 'c');
+    expect(got.figures).toHaveLength(1);
+    expect(got.figures[0]).toMatchObject({ type: 'bars', title: 'Cities graded', max: 239 });
+  });
+
+  it('drops a figure it cannot draw without losing the cards beside it', async () => {
+    // A made-up diagram name is the failure mode with teeth: accepted, it
+    // renders as a blank card in the middle of a real guide.
+    catchRequest([
+      said(
+        JSON.stringify({
+          ...REPLY,
+          figures: [{ type: 'diagram', title: 'Phillips curve', caption: '', kind: 'phillips' }],
+        }),
+      ),
+    ]);
+    const got = await readMaterial('x', 'c');
+    expect(got.figures).toEqual([]);
+    expect(got.cards).toHaveLength(1);
+  });
+
+  it('asks for figures in the vocabulary the app can actually render', async () => {
+    catchRequest([said(JSON.stringify(REPLY))]);
+    await readMaterial('x', 'c');
+    const system = sent!.body.system as string;
+    expect(system).toContain('"type":"bars"');
+    expect(system).toContain('supply-demand');
+    expect(system).toContain('Return no figure rather than the nearest one.');
+  });
+
   it('reads the JSON out of a reply that arrives wrapped in prose', async () => {
     // Models preface and fence. The screen must not lose a whole reading to a
     // sentence in front of the brace.
@@ -384,7 +437,7 @@ describe('reading material into cards', () => {
   it('adds nothing at all when the reply is not JSON', async () => {
     // Better a guide that gained a file than a guide that gained nonsense.
     catchRequest([said('I could not read that.')]);
-    expect(await readMaterial('x', 'c')).toEqual({ cards: [], terms: [], note: '' });
+    expect(await readMaterial('x', 'c')).toEqual({ cards: [], terms: [], figures: [], note: '' });
   });
 
   it('adds nothing when the JSON is cut off mid-stream', async () => {
