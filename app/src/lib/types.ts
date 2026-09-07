@@ -365,6 +365,18 @@ export interface CourseUpdate {
    * Optional because everything added before this existed has none.
    */
   figures?: Figure[];
+  /**
+   * The long-form parts of a guide: the cram sheet's exam frames, the
+   * out-loud questions at the end of the field guide, and any claim-and-test
+   * pairing the material contains.
+   *
+   * Separate from `cards` because they are read as the guide's own voice
+   * rather than drilled — see `lib/study.ts`. Optional for the same reason
+   * `figures` is: everything added before they existed has none.
+   */
+  frames?: Frame[];
+  selfTest?: StudyCard[];
+  cases?: CaseFile[];
   /** Files in IndexedDB. Images among them become figures. */
   fileIds: string[];
   created: number;

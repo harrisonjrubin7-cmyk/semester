@@ -437,7 +437,15 @@ describe('reading material into cards', () => {
   it('adds nothing at all when the reply is not JSON', async () => {
     // Better a guide that gained a file than a guide that gained nonsense.
     catchRequest([said('I could not read that.')]);
-    expect(await readMaterial('x', 'c')).toEqual({ cards: [], terms: [], figures: [], note: '' });
+    expect(await readMaterial('x', 'c')).toEqual({
+      cards: [],
+      terms: [],
+      figures: [],
+      frames: [],
+      selfTest: [],
+      cases: [],
+      note: '',
+    });
   });
 
   it('adds nothing when the JSON is cut off mid-stream', async () => {

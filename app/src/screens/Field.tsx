@@ -4,6 +4,15 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { FigureCard } from '../components/FigureCard';
 import { SectionLabel } from '../components/ui';
+import { addedLine } from '../lib/study';
+
+/** The note under a heading saying part of what follows arrived later. */
+const SINCE = {
+  fontSize: 'var(--type-sm)',
+  opacity: 0.55,
+  lineHeight: 'var(--leading-relaxed)',
+  marginBottom: 'var(--sp-4)',
+} as const;
 
 /**
  * The field guide, presented as it was published.
@@ -38,6 +47,9 @@ export function FieldGuide() {
     `${cards} ${cards === 1 ? 'point' : 'points'}`,
     guide.terms.length ? `${guide.terms.length} terms` : '',
     guide.selfTest?.length ? `${guide.selfTest.length} self-test` : '',
+    guide.addedLong.frames + guide.addedLong.selfTest + guide.addedLong.cases
+      ? `${guide.addedLong.frames + guide.addedLong.selfTest + guide.addedLong.cases} added`
+      : '',
   ]
     .filter(Boolean)
     .join(' · ');
@@ -231,6 +243,9 @@ export function FieldGuide() {
           <SectionLabel style={{ margin: '36px 0 10px' }}>
             {catalog.frameLabels[state.guideId] ?? 'Frames'}
           </SectionLabel>
+          {guide.addedLong.frames > 0 && (
+            <div style={SINCE}>{addedLine(guide.addedLong.frames, 'framings')}</div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
             {guide.frames.map((f) => (
               <div
@@ -266,6 +281,9 @@ export function FieldGuide() {
       {guide.cases && guide.cases.length > 0 && (
         <>
           <SectionLabel style={{ margin: '36px 0 10px' }}>Case files</SectionLabel>
+          {guide.addedLong.cases > 0 && (
+            <div style={SINCE}>{addedLine(guide.addedLong.cases, 'pairings')}</div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
             {guide.cases.map((c) => (
               <Blueprint key={c.title} plain style={{ padding: '15px 15px' }}>
@@ -364,6 +382,11 @@ export function FieldGuide() {
             The guide’s own questions, written to be answered out loud. Answers are below each one —
             cover them, or use Cards if you would rather they were hidden.
           </div>
+          {guide.addedLong.selfTest > 0 && (
+            <div style={{ ...SINCE, marginBottom: 'var(--sp-5)' }}>
+              {addedLine(guide.addedLong.selfTest, 'questions')}
+            </div>
+          )}
           {guide.selfTest.map((c, i) => (
             <div key={c.q} style={{ padding: '13px 0', borderBottom: '1px solid var(--app-line)' }}>
               <div style={{ display: 'flex', gap: 11 }}>

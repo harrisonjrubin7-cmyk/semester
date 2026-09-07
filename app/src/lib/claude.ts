@@ -20,8 +20,9 @@
  */
 
 import type { Usage } from './spend';
-import type { Figure, StudyCard } from './types';
+import type { CaseFile, Figure, Frame, StudyCard } from './types';
 import { FIGURE_SHAPES, readFigures } from './figure';
+import { STUDY_SHAPES, readStudyParts } from './study';
 
 import { DEFAULT_MODEL as OPENAI_DEFAULT, OPENAI_MODELS, askOpenAI } from './openai';
 
@@ -894,6 +895,9 @@ export async function readMaterial(
   cards: StudyCard[];
   terms: { t: string; d: string }[];
   figures: Figure[];
+  frames: Frame[];
+  selfTest: StudyCard[];
+  cases: CaseFile[];
   note: string;
 }> {
   const reply = await ask({
@@ -901,12 +905,12 @@ export async function readMaterial(
     think: true,
     // Raised with figures: a table of twelve rows and a caption is a few
     // hundred tokens, and the ceiling used to be reached by cards alone.
-    maxTokens: 6000,
+    maxTokens: 8000,
     system:
       'You are reading course material a university student has added to a study guide — a ' +
       'reading, a handout, a set of lecture notes. Turn it into study material; do not invent.\n\n' +
       'Reply with JSON only: {"note":"…","cards":[{"q":"…","a":"…"}],"terms":[{"t":"…","d":"…"}],' +
-      '"figures":[…]}\n\n' +
+      '"figures":[…],"frames":[…],"selfTest":[…],"cases":[…]}\n\n' +
       '- note: what this material is, in one or two sentences. Say plainly if it is not course ' +
       'material at all — and then return no cards.\n' +
       '- cards: questions an exam could ask, answered in full prose with the specific numbers, ' +
@@ -914,6 +918,7 @@ export async function readMaterial(
       'is not a card. Between 0 and 25, however many the material genuinely supports.\n' +
       '- terms: vocabulary this material defines, with the definition it gives. Between 0 and 20.\n' +
       '- ' + FIGURE_SHAPES + '\n' +
+      '- ' + STUDY_SHAPES + '\n' +
       '- Everything must come from the text in front of you. Do not complete a half-stated idea ' +
       'from general knowledge, and leave out anything the material only alludes to.',
     messages: [
@@ -926,12 +931,15 @@ export async function readMaterial(
 
   const start = reply.indexOf('{');
   const end = reply.lastIndexOf('}');
-  if (start === -1 || end === -1) return { cards: [], terms: [], figures: [], note: '' };
+  if (start === -1 || end === -1) return { ...NOTHING_READ };
   try {
     const parsed = JSON.parse(reply.slice(start, end + 1)) as {
       cards?: StudyCard[];
       terms?: { t?: string; d?: string }[];
       figures?: unknown;
+      frames?: unknown;
+      selfTest?: unknown;
+      cases?: unknown;
       note?: string;
     };
     return {
@@ -945,8 +953,29 @@ export async function readMaterial(
       // Every check lives in `lib/figure.ts`, including the one that matters:
       // a figure that does not survive validation is dropped, never repaired.
       figures: readFigures(parsed.figures),
+      // The field guide and the cram sheet, which cards and terms never
+      // reached. Checked in `lib/study.ts`, on the same rule: dropped whole
+      // rather than rendered with a gap.
+      ...readStudyParts(parsed),
     };
   } catch {
-    return { cards: [], terms: [], figures: [], note: '' };
+    return { ...NOTHING_READ };
   }
 }
+
+/**
+ * What comes back when nothing could be read.
+ *
+ * One constant rather than the same literal at each early return — it grew a
+ * field twice in one week, and the second time only two of the three copies
+ * were updated.
+ */
+const NOTHING_READ = {
+  cards: [] as StudyCard[],
+  terms: [] as { t: string; d: string }[],
+  figures: [] as Figure[],
+  frames: [] as Frame[],
+  selfTest: [] as StudyCard[],
+  cases: [] as CaseFile[],
+  note: '',
+};

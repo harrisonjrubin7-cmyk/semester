@@ -50,7 +50,13 @@ export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInf
   const units = guide.units.length;
   const lessonCount = Object.keys(lessons).length;
   const figureCount = Object.keys(figures).length + extras.length;
-  const cases = (cat.examples[courseId] ?? []).length;
+  /*
+   * Both halves of what the Cases tab shows. It renders the catalogue's worked
+   * examples *and* the guide's claim-and-test pairings, but this counted only
+   * the first, so a pairing that arrived with a reading was on the screen and
+   * absent from the number above it.
+   */
+  const cases = (cat.examples[courseId] ?? []).length + (guide.cases?.length ?? 0);
   const episodes = (cat.podcast[courseId]?.editions ?? []).length;
 
   return [

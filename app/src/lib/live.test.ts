@@ -284,6 +284,75 @@ describe('mergeFigures', () => {
   });
 });
 
+describe('the field guide and the cram sheet', () => {
+  const long = (over: Partial<CourseUpdate> = {}) =>
+    update({ cards: [], frames: [{ t: 'The efficiency question', d: 'Why the crossing is efficient.' }], ...over });
+
+  it('gains the frames a reading brought, which is what a cram sheet is', () => {
+    // These three fields were the ones adding a reading could not touch, so
+    // the guide read in week twelve was the one written in week one.
+    const g = mergeGuide(guide({ frames: [{ t: 'Own frame', d: 'x' }] }), [long()]);
+    expect(g.frames?.map((f) => f.t)).toEqual(['Own frame', 'The efficiency question']);
+    expect(g.addedLong.frames).toBe(1);
+  });
+
+  it('gains out-loud questions and cases the same way', () => {
+    const g = mergeGuide(guide(), [
+      update({
+        cards: [],
+        selfTest: [{ q: 'Say the whole idea', a: 'Like this.' }],
+        cases: [
+          {
+            title: 'Did zoning follow the grades?',
+            when: '1930-1960',
+            claim: 'c',
+            test: 't',
+            verdict: 'v',
+            lesson: 'l',
+          },
+        ],
+      }),
+    ]);
+    expect(g.selfTest).toHaveLength(1);
+    expect(g.cases).toHaveLength(1);
+    expect(g.addedLong).toEqual({ frames: 0, selfTest: 1, cases: 1 });
+  });
+
+  it('does not turn an absent section into an empty one', () => {
+    // Three screens test `guide.frames && guide.frames.length`, and an empty
+    // array that reads as present is how a heading with nothing under it gets
+    // rendered.
+    const g = mergeGuide(guide(), [update({ cards: [] })]);
+    expect(g.frames).toBeUndefined();
+    expect(g.selfTest).toBeUndefined();
+    expect(g.cases).toBeUndefined();
+  });
+
+  it('never lets a repeat produce two React children with the same key', () => {
+    /*
+     * The bug this closes, which predates the frames: every one of these lists
+     * is rendered with its own text as the key — `key={f.t}`, `key={c.q}`,
+     * `key={t.t}`. A reading that restates a term the guide already defines
+     * made two children with one key, which React renders wrong and warns
+     * about in a console nobody has open. Adding the same reading twice was
+     * enough to do it.
+     */
+    const twice = [long({ id: 'a' }), long({ id: 'b' })];
+    const g = mergeGuide(guide({ terms: [{ t: 'Elasticity', d: 'The guide’s own.' }] }), [
+      ...twice,
+      update({ cards: [], terms: [{ t: 'Elasticity', d: 'A second definition.' }] }),
+    ]);
+    expect(g.frames).toHaveLength(1);
+    expect(new Set(g.terms.map((t) => t.t)).size).toBe(g.terms.length);
+    // And the guide's own definition is the one kept.
+    expect(g.terms.find((t) => t.t === 'Elasticity')?.d).toBe('The guide’s own.');
+  });
+
+  it('counts nothing added when nothing was', () => {
+    expect(mergeGuide(guide(), []).addedLong).toEqual({ frames: 0, selfTest: 0, cases: 0 });
+  });
+});
+
 describe('a figure read out of the material', () => {
   const table = (title = 'Outlays'): Figure => ({
     type: 'bars',

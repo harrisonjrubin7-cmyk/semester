@@ -44,6 +44,20 @@ export interface LiveGuide extends Guide {
   baseCards: number[];
   /** Index of the first unit that came from an update rather than the guide. */
   firstAddedUnit: number;
+  /**
+   * How much of the long form came from material added since.
+   *
+   * The frames, out-loud questions and cases themselves are already in
+   * `frames`, `selfTest` and `cases` above — a screen that just renders the
+   * guide needs to know nothing. These counts exist so the field guide and the
+   * cram sheet can *say* that part of what is on the page arrived later, which
+   * is worth knowing when you are deciding whether you have read this before.
+   *
+   * Counted rather than listed because the guide's own and yours are
+   * deliberately interleaved: a cram sheet that put your frames in a separate
+   * box at the bottom would be a cram sheet you read the top of.
+   */
+  addedLong: { frames: number; selfTest: number; cases: number };
 }
 
 const NO_UPDATES: CourseUpdate[] = [];
@@ -80,7 +94,13 @@ function cardsByUnit(updates: CourseUpdate[], unitCount: number): Record<number,
 export function mergeGuide(guide: Guide, updates: CourseUpdate[]): LiveGuide {
   const base = guide.units.map((u) => u.cards.length);
   if (updates.length === 0) {
-    return { ...guide, added: {}, baseCards: base, firstAddedUnit: guide.units.length };
+    return {
+      ...guide,
+      added: {},
+      baseCards: base,
+      firstAddedUnit: guide.units.length,
+      addedLong: NOTHING_ADDED,
+    };
   }
 
   const added = cardsByUnit(updates, guide.units.length);
@@ -110,13 +130,74 @@ export function mergeGuide(guide: Guide, updates: CourseUpdate[]): LiveGuide {
     base.push(0);
   }
 
-  const terms = [...guide.terms, ...updates.flatMap((u) => u.terms)];
+  const terms = join(guide.terms, updates.flatMap((u) => u.terms), (t) => t.t);
+
+  /*
+   * The long form: the cram sheet's frames, the out-loud questions at the end
+   * of the field guide, and any claim-and-test pairing. These used to be the
+   * three parts of a guide that adding a reading could not touch, so the field
+   * guide read in week twelve was the one written in week one.
+   *
+   * Appended rather than interleaved by unit, because none of the three is
+   * keyed to a unit — a frame is about the exam, not about section four.
+   */
+  const frames = join(guide.frames ?? [], updates.flatMap((u) => u.frames ?? []), (f) => f.t);
+  const selfTest = join(guide.selfTest ?? [], updates.flatMap((u) => u.selfTest ?? []), (c) => c.q);
+  const cases = join(guide.cases ?? [], updates.flatMap((u) => u.cases ?? []), (c) => c.title);
+
   const mastery = units.length
     ? Math.round(units.reduce((n, u) => n + u.mastery * u.cards.length, 0) /
         Math.max(1, units.reduce((n, u) => n + u.cards.length, 0)))
     : guide.mastery;
 
-  return { ...guide, units, terms, mastery, added, baseCards: base, firstAddedUnit };
+  return {
+    ...guide,
+    units,
+    terms,
+    // Left undefined when there are none, because three screens test
+    // `guide.frames && guide.frames.length` and an empty array that reads as
+    // present is how an empty section heading gets rendered.
+    frames: frames.length ? frames : guide.frames,
+    selfTest: selfTest.length ? selfTest : guide.selfTest,
+    cases: cases.length ? cases : guide.cases,
+    mastery,
+    added,
+    baseCards: base,
+    firstAddedUnit,
+    addedLong: {
+      frames: frames.length - (guide.frames?.length ?? 0),
+      selfTest: selfTest.length - (guide.selfTest?.length ?? 0),
+      cases: cases.length - (guide.cases?.length ?? 0),
+    },
+  };
+}
+
+const NOTHING_ADDED = { frames: 0, selfTest: 0, cases: 0 };
+
+/**
+ * The guide's own, then yours, minus anything already there.
+ *
+ * The de-duplication is not tidiness. Every one of these lists is rendered
+ * with its own text as the React key — `key={f.t}`, `key={c.q}`, `key={t.t}` —
+ * so a reading that restates a term the guide already defines produced two
+ * children with the same key, which React renders wrong and warns about in a
+ * console nobody has open. Re-adding the same reading twice, which the app
+ * otherwise handles cleanly, was enough to do it.
+ *
+ * The guide's own wins, and the comparison is on the identifying field alone:
+ * a second definition of "elasticity" is the same term, not a new one.
+ */
+function join<T>(mine: T[], theirs: T[], keyOf: (x: T) => string): T[] {
+  if (theirs.length === 0) return mine;
+  const seen = new Set(mine.map(keyOf));
+  const out = [...mine];
+  for (const one of theirs) {
+    const key = keyOf(one);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(one);
+  }
+  return out;
 }
 
 /**

@@ -23,7 +23,11 @@ import { addFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
 import { describeParse, parseMaterial } from '../lib/parse';
 import type { CourseId, Figure, Term } from '../lib/types';
+
+/** No frames, no out-loud questions, no cases — the starting state and the reset. */
+const NO_PARTS: StudyParts = { frames: [], selfTest: [], cases: [] };
 import { describeFigure } from '../lib/figure';
+import { describeStudyParts, type StudyParts } from '../lib/study';
 
 /** Handled by the camera path above, which can see them. */
 const IMAGE = /\.(png|jpe?g|webp|gif|heic|heif)$/i;
@@ -69,6 +73,7 @@ export function AddMaterial() {
   const [readCards, setReadCards] = useState<StudyCard[]>([]);
   const [readTerms, setReadTerms] = useState<Term[]>([]);
   const [readFigs, setReadFigs] = useState<Figure[]>([]);
+  const [readLong, setReadLong] = useState<StudyParts>(NO_PARTS);
   const [readSummary, setReadSummary] = useState('');
   const [readError, setReadError] = useState('');
 
@@ -96,6 +101,7 @@ export function AddMaterial() {
     !files.length &&
     shotCards.length === 0 &&
     readFigs.length === 0 &&
+    describeStudyParts(readLong) === '' &&
     readCards.length === 0;
 
   /**
@@ -153,7 +159,15 @@ export function AddMaterial() {
       setReadCards(got.cards);
       setReadTerms(got.terms);
       setReadFigs(got.figures);
-      if (got.cards.length === 0 && got.terms.length === 0 && got.figures.length === 0 && !got.note) {
+      const long = { frames: got.frames, selfTest: got.selfTest, cases: got.cases };
+      setReadLong(long);
+      if (
+        got.cards.length === 0 &&
+        got.terms.length === 0 &&
+        got.figures.length === 0 &&
+        describeStudyParts(long) === '' &&
+        !got.note
+      ) {
         setReadError('Nothing came back from that. It is still attached and kept as notes.');
       }
     } catch (e) {
@@ -303,6 +317,9 @@ export function AddMaterial() {
         cards: [...parsed.cards, ...shotCards, ...readCards],
         terms: [...parsed.terms, ...readTerms],
         figures: readFigs,
+        frames: readLong.frames,
+        selfTest: readLong.selfTest,
+        cases: readLong.cases,
         fileIds: files.map((f) => f.id),
       },
     });
@@ -604,7 +621,11 @@ export function AddMaterial() {
         </>
       )}
 
-      {(readSummary || readCards.length > 0 || readTerms.length > 0 || readFigs.length > 0) && (
+      {(readSummary ||
+        readCards.length > 0 ||
+        readTerms.length > 0 ||
+        readFigs.length > 0 ||
+        describeStudyParts(readLong) !== '') && (
         <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
           <div className="kicker">What it read</div>
           {readSummary && (
@@ -622,6 +643,14 @@ export function AddMaterial() {
             checking against the reading before it joins the guide and starts
             looking like something the course said.
           */}
+          {describeStudyParts(readLong) !== '' && (
+            <div style={{ marginTop: 'var(--sp-3)' }}>
+              <div className="kicker">For the field guide and the cram sheet</div>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.75, marginTop: 'var(--sp-2)' }}>
+                {describeStudyParts(readLong)}
+              </div>
+            </div>
+          )}
           {readFigs.length > 0 && (
             <div style={{ marginTop: 'var(--sp-3)' }}>
               <div className="kicker">

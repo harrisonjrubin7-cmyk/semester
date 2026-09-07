@@ -7,6 +7,7 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
 import { ChipRow, Meter, SectionLabel } from '../components/ui';
+import { addedLine } from '../lib/study';
 import { ModePicker } from '../components/ModePicker';
 import { modeInfo, modesFor } from '../lib/modes';
 import { worthGuessing } from '../lib/pretest';
@@ -15,6 +16,14 @@ import { ChevronRight, Plus } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
 import { buildQuiz } from '../lib/quiz';
 import { asset } from '../lib/asset';
+
+/** The note under a heading saying part of what follows arrived later. */
+const SINCE = {
+  fontSize: 'var(--type-sm)',
+  opacity: 0.55,
+  lineHeight: 'var(--leading-relaxed)',
+  marginBottom: 'var(--sp-4)',
+} as const;
 
 export function Guide() {
   const { state, dispatch, catalog } = useStore();
@@ -919,6 +928,9 @@ function Cases() {
         an idea to a case you have not met before — this is the rep for that.
       </div>
 
+      {guide.addedLong.cases > 0 && (
+        <div style={SINCE}>{addedLine(guide.addedLong.cases, 'pairings')}</div>
+      )}
       {guide.cases && guide.cases.length > 0 && (
         <>
           <SectionLabel>The debates, claim by claim</SectionLabel>
@@ -1032,6 +1044,9 @@ function Cram() {
       {guide.frames && guide.frames.length > 0 && (
         <>
           <SectionLabel>{catalog.frameLabels[state.guideId]}</SectionLabel>
+          {guide.addedLong.frames > 0 && (
+            <div style={SINCE}>{addedLine(guide.addedLong.frames, 'framings')}</div>
+          )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {guide.frames.map((f) => (
               <Blueprint key={f.t} plain style={{ padding: '13px 14px' }}>
@@ -1097,6 +1112,9 @@ function Cram() {
       {guide.selfTest && (
         <>
           <SectionLabel>Answer these out loud</SectionLabel>
+          {guide.addedLong.selfTest > 0 && (
+            <div style={SINCE}>{addedLine(guide.addedLong.selfTest, 'questions')}</div>
+          )}
           {guide.selfTest.map((c, i) => (
             <details
               key={c.q}
