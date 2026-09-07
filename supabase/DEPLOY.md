@@ -1,9 +1,9 @@
 # Deploying the backend
 
-Two Edge Functions and the SQL they read. Neither function needs the app
-redeployed — the browser calls them by URL — but neither does anything useful
-until its secrets are set, and both fail *closed* rather than open when they
-are missing.
+Two Edge Functions, the SQL they read, and a scheduler. Neither function needs
+the app redeployed — the browser calls them by URL — but neither does anything
+useful until its secrets are set, and both fail *closed* rather than open when
+they are missing.
 
 ## What is live
 
@@ -31,7 +31,36 @@ security on and own-row policies. The push tables were applied as the
 `push_devices_and_queue` migration; the SQL is `push.sql` in this directory and
 is idempotent, so re-running it is safe.
 
+## The scheduler
+
+`pg_cron` 1.6.4 and `pg_net` 0.20.4 are installed (migration
+`push_scheduler_extensions`). A job named `push` exists on `*/15 * * * *`,
+owned by `postgres` — the resolution the app queues reminders at; finer gains
+nothing, because a reminder is not a stopwatch.
+
+**The job is `active = false`.** It is parked rather than absent on purpose:
+everything about it is proven except the one thing that is not set yet.
+Leaving it running would fail every fifteen minutes and fill
+`cron.job_run_details` with an error meaning nothing except "the deploy is half
+finished".
+
+The bearer token is read out of Vault at run time rather than baked into the
+job body, so rotating it is one update to one row and the schedule is not
+touched. The secret was generated inside the database — it has never been
+through a chat window, a log, or a tool call.
+
+This was checked by making the call by hand, exactly as the job would:
+
+    503 "not configured"
+
+which is `push`'s own first branch. pg_net reaches the function, the URL is
+right, the Vault read works. Only `CRON_SECRET` is missing.
+
 ## What is left, in order
+
+Three things, and none of them can be done from a coding session: two need
+secrets that must not pass through one, and the third needs a GitHub Actions
+API path that agent proxies block.
 
 ### 1. The shared Claude key
 
@@ -51,35 +80,44 @@ Optional: `MONTHLY_CALL_LIMIT` (default 60 calls per account per month) and
 
 ### 2. Reminder keys
 
+The VAPID pair has to be generated where you can keep the private half:
+
     npx web-push generate-vapid-keys        # once; keep both halves
+
+Then, on Supabase:
+
     supabase secrets set VAPID_PUBLIC_KEY=…
     supabase secrets set VAPID_PRIVATE_KEY=…
     supabase secrets set VAPID_SUBJECT=mailto:you@example.com
-    supabase secrets set CRON_SECRET=…      # any long random string
 
-The **public** half also has to reach the browser, or the app cannot subscribe
-a device at all: set `VITE_VAPID_PUBLIC_KEY` as a repository variable and
-rebuild. The Pages workflow already reads it, and says so in the build log when
-it is absent. The private half never leaves Supabase.
+And `CRON_SECRET`, which already exists — read it out of Vault in the SQL
+editor and paste it in:
 
-### 3. The schedule
+    select decrypted_secret from vault.decrypted_secrets
+    where name = 'push_cron_secret';
 
-`pg_cron` and `pg_net` are available on the project but **not installed**, so
-nothing is calling `push` yet. Do this after `CRON_SECRET` exists — a job
-created before it would hit a 503 every fifteen minutes.
+    supabase secrets set CRON_SECRET=<that value>
 
-    create extension if not exists pg_cron;
-    create extension if not exists pg_net;
+It must match exactly. The job sends it as a bearer token and `push` compares
+the whole string; a trailing newline from a careless copy is a 401 every
+fifteen minutes.
 
-    select cron.schedule('push', '*/15 * * * *', $$
-      select net.http_post(
-        url := 'https://<project>.functions.supabase.co/push',
-        headers := jsonb_build_object(
-          'Authorization', 'Bearer ' || current_setting('app.cron_secret'))
-      );
-    $$);
+The **public** half of the VAPID pair also has to reach the browser, or the app
+cannot subscribe a device at all: set `VITE_VAPID_PUBLIC_KEY` as a repository
+variable and rebuild. The Pages workflow already reads it and says so in the
+build log either way. The private half never leaves Supabase.
 
-Fifteen minutes matches the resolution the app queues at; finer gains nothing.
+### 3. Turn the job on
+
+Only after `CRON_SECRET` is set, or it will 503 every fifteen minutes:
+
+    select cron.alter_job(
+      (select jobid from cron.job where jobname = 'push'),
+      active := true
+    );
+
+`update cron.job set active = true` does not work — the table is not writable
+directly, even as `postgres`. `cron.alter_job` is the supported path.
 
 ## Checking it worked
 
@@ -91,3 +129,32 @@ The app is the honest test, because it is the only caller.
 - **push** — turn reminders on under Me → Alerts, which writes a row to
   `push_devices`. A row appearing in `push_queue` and disappearing within
   fifteen minutes means the whole chain works.
+
+To watch the scheduler directly:
+
+    select status, return_message, start_time
+    from cron.job_run_details
+    where jobid = (select jobid from cron.job where jobname = 'push')
+    order by start_time desc limit 10;
+
+    select id, status_code, left(content, 200), created
+    from net._http_response order by id desc limit 10;
+
+A `status_code` of 200 is the whole chain working. 503 means a secret is
+missing on the function; 401 means `CRON_SECRET` does not match what is in
+Vault.
+
+## Rotating the cron secret
+
+One row, and the schedule is untouched:
+
+    select vault.update_secret(
+      (select id from vault.secrets where name = 'push_cron_secret'),
+      translate(encode(gen_random_bytes(32), 'base64'), '+/=', '-_'),
+      'push_cron_secret',
+      null,
+      null
+    );
+
+Then read it back with the query in step 2 and set `CRON_SECRET` to the new
+value. Between those two the job gets 401s, so do them together.
