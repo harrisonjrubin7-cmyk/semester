@@ -50,7 +50,7 @@ jobs:
 
       - name: Lint
         working-directory: app
-        run: npx oxlint src
+        run: npm run lint
 
       - name: Test
         working-directory: app

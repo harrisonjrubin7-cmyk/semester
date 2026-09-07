@@ -11,7 +11,16 @@ import { costOf, line, money, priced, tokens, total, type Spent, type Usage } fr
  * lie that costs more than the missing number.
  */
 
-const use = (over: Partial<Usage> = {}): Usage => ({
+/*
+ * `usage`, not `use`.
+ *
+ * `use` is a React hook name, and the hooks rule reads any call to it as a
+ * hook called outside a component — which made the whole lint step exit
+ * non-zero and hid its own failure under twenty warnings nobody was reading.
+ * The helper is a fixture builder; naming it after what it builds costs
+ * nothing and stops the linter being wrong about it.
+ */
+const usage = (over: Partial<Usage> = {}): Usage => ({
   input: 0,
   output: 0,
   cacheWrite: 0,
@@ -22,17 +31,17 @@ const use = (over: Partial<Usage> = {}): Usage => ({
 describe('what a reply cost', () => {
   it('prices input and output at the model’s own rates', () => {
     // Opus 5: $5 in, $25 out per million.
-    expect(costOf(use({ input: 1_000_000 }), 'claude-opus-5')).toBeCloseTo(5);
-    expect(costOf(use({ output: 1_000_000 }), 'claude-opus-5')).toBeCloseTo(25);
-    expect(costOf(use({ input: 1_000_000 }), 'claude-haiku-4-5')).toBeCloseTo(1);
+    expect(costOf(usage({ input: 1_000_000 }), 'claude-opus-5')).toBeCloseTo(5);
+    expect(costOf(usage({ output: 1_000_000 }), 'claude-opus-5')).toBeCloseTo(25);
+    expect(costOf(usage({ input: 1_000_000 }), 'claude-haiku-4-5')).toBeCloseTo(1);
   });
 
   it('charges more to write the cache and far less to read it', () => {
     // The whole reason the app caches a course guide: the second question
     // about a course costs a tenth of the first on its input side.
-    const write = costOf(use({ cacheWrite: 1_000_000 }), 'claude-opus-5');
-    const read = costOf(use({ cacheRead: 1_000_000 }), 'claude-opus-5');
-    const plain = costOf(use({ input: 1_000_000 }), 'claude-opus-5');
+    const write = costOf(usage({ cacheWrite: 1_000_000 }), 'claude-opus-5');
+    const read = costOf(usage({ cacheRead: 1_000_000 }), 'claude-opus-5');
+    const plain = costOf(usage({ input: 1_000_000 }), 'claude-opus-5');
     expect(write).toBeGreaterThan(plain);
     expect(read).toBeLessThan(plain / 5);
   });
@@ -40,7 +49,7 @@ describe('what a reply cost', () => {
   it('returns nothing for a model it has no rate for', () => {
     // Rather than the nearest one. A price invented from a neighbour is a
     // number that looks measured and is not.
-    expect(costOf(use({ input: 1_000_000 }), 'gpt-5')).toBe(0);
+    expect(costOf(usage({ input: 1_000_000 }), 'gpt-5')).toBe(0);
     expect(priced('gpt-5')).toBe(false);
     expect(priced('claude-opus-5')).toBe(true);
   });
@@ -51,7 +60,7 @@ describe('adding it up', () => {
     at: 0,
     model,
     from: 'ask',
-    use: use(u),
+    use: usage(u),
   });
 
   it('counts every kind of token, not just the billed-at-full ones', () => {
@@ -105,7 +114,7 @@ describe('saying it', () => {
 
   it('says how much came from the cache, when any did', () => {
     const said = line([
-      { at: 0, model: 'claude-opus-5', from: 'ask', use: use({ input: 200, output: 300, cacheRead: 4000 }) },
+      { at: 0, model: 'claude-opus-5', from: 'ask', use: usage({ input: 200, output: 300, cacheRead: 4000 }) },
     ]);
     expect(said).toContain('1 answer');
     expect(said).toContain('from cache');
