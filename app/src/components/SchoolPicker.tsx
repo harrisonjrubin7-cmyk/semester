@@ -66,8 +66,8 @@ export function SchoolPicker() {
         {/* Offered before the form rather than after it. Without this you get
             eleven versions of Ohio State, and the eleventh is the empty one. */}
         {dupes.length > 0 && (
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 6 }}>
+          <div style={{ marginTop: 'var(--sp-4)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 'var(--sp-3)' }}>
               Already here — use one of these instead?
             </div>
             {dupes.map((s) => (
@@ -79,7 +79,7 @@ export function SchoolPicker() {
                   dispatch({ type: 'setSchool', id: s.id });
                   setAdding(false);
                 }}
-                style={{ ...chip(false), marginRight: 6, marginBottom: 6 }}
+                style={{ ...chip(false), marginRight: 'var(--sp-3)', marginBottom: 'var(--sp-3)' }}
               >
                 {s.name}
               </button>
@@ -103,7 +103,7 @@ export function SchoolPicker() {
               </div>
             )}
             {a.kind === 'choice' && (
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 7 }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 7 }}>
                 {a.options.map((o) => (
                   <button
                     key={o.id}
@@ -118,7 +118,7 @@ export function SchoolPicker() {
               </div>
             )}
             {a.kind === 'yesno' && (
-              <div style={{ display: 'flex', gap: 6, marginTop: 7 }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 7 }}>
                 {['yes', 'no'].map((v) => (
                   <button
                     key={v}
@@ -146,7 +146,7 @@ export function SchoolPicker() {
           </div>
         ))}
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 18 }}>
           <button
             type="button"
             className="btn btn-secondary"
@@ -193,7 +193,7 @@ export function SchoolPicker() {
       />
 
       {hint && hint.id !== state.schoolId && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {/* Suggested from the address you signed in with. Never enforced —
               plenty of students sign in with a personal address, and plenty of
               people have one at a school they left. */}
@@ -209,7 +209,7 @@ export function SchoolPicker() {
         </div>
       )}
 
-      <div style={{ marginTop: 10 }}>
+      <div style={{ marginTop: 'var(--sp-5)' }}>
         {found.map((s: School) => (
           <Row
             key={s.id}
@@ -231,7 +231,7 @@ export function SchoolPicker() {
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)', flexWrap: 'wrap' }}>
         <button
           type="button"
           className="bare tappable"
@@ -255,7 +255,7 @@ export function SchoolPicker() {
         )}
       </div>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {state.schoolId === '' ? SKIP_LINE : schoolLine(school)}
       </div>
     </div>
@@ -274,7 +274,7 @@ function Row({
   onForget?: () => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
       <button
         type="button"
         className="bare tappable"
@@ -292,7 +292,7 @@ function Row({
       >
         <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{school.name}</div>
         {!school.verified && (
-          <div style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 2 }}>
+          <div style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
             {ADDED_LINE}
           </div>
         )}

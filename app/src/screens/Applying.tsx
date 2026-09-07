@@ -106,7 +106,7 @@ export function Applying() {
 
       {tab === 'open' ? (
         open.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {shown.map((a) => (
               <Row key={a.id} a={a} />
             ))}
@@ -129,7 +129,7 @@ export function Applying() {
 
       {tab === 'closed' ? (
         closed.length > 0 ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {shown.map((a) => (
               <Row key={a.id} a={a} />
             ))}
@@ -187,7 +187,7 @@ function Row({ a }: { a: Application }) {
       {a.next ? (
         <div
           style={{
-            marginTop: 8,
+            marginTop: 'var(--sp-4)',
             padding: '8px 10px',
             borderRadius: 'var(--r-sm)',
             background: 'var(--app-warn-wash)',
@@ -205,7 +205,7 @@ function Row({ a }: { a: Application }) {
       {open ? (
         <div style={{ marginTop: 11 }}>
           <div className="kicker">Move it</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
             {STAGES.map((s) => (
               <button
                 key={s.id}
@@ -226,7 +226,7 @@ function Row({ a }: { a: Application }) {
             ))}
           </div>
 
-          <div className="kicker" style={{ marginTop: 12 }}>
+          <div className="kicker" style={{ marginTop: 'var(--sp-6)' }}>
             The next thing you have to do
           </div>
           <input
@@ -238,7 +238,7 @@ function Row({ a }: { a: Application }) {
             placeholder="Email Priya about the referral"
             aria-label={`Next step for ${title(a)}`}
             spellCheck
-            style={{ width: '100%', height: 40, marginTop: 6 }}
+            style={{ width: '100%', height: 40, marginTop: 'var(--sp-3)' }}
           />
           <input
             className="input"
@@ -264,7 +264,7 @@ function Row({ a }: { a: Application }) {
             {quiet(a, now) ? ' — worth a nudge, though the app has no opinion about that' : ''}.
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
             {url ? (
               <a
                 className="bare tappable"
@@ -343,11 +343,11 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         onChange={(e) => setRole(e.target.value)}
         placeholder="What the post is"
         aria-label="What the post is"
-        style={{ width: '100%', height: 42, marginTop: 8 }}
+        style={{ width: '100%', height: 42, marginTop: 'var(--sp-4)' }}
       />
 
       <SectionLabel style={{ margin: '16px 0 8px' }}>What kind</SectionLabel>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
         {KINDS.map((k) => (
           <button
             key={k.id}
@@ -369,7 +369,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
       </div>
 
       <SectionLabel style={{ margin: '16px 0 8px' }}>When it closes</SectionLabel>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="input"
           type="date"
@@ -413,7 +413,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
       </div>
 
       <SectionLabel style={{ margin: '16px 0 8px' }}>Where it has got to</SectionLabel>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
         {STAGES.filter((s) => s.id !== 'closed').map((s) => (
           <button
             key={s.id}
@@ -440,7 +440,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         onChange={(e) => setUrl(e.target.value)}
         placeholder="Link to the posting — optional"
         aria-label="Link to the posting"
-        style={{ width: '100%', height: 42, marginTop: 16 }}
+        style={{ width: '100%', height: 42, marginTop: 'var(--sp-7)' }}
       />
 
       <button

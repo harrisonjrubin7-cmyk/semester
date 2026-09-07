@@ -70,7 +70,7 @@ export function Insights({
   return (
     <>
       <SectionLabel>{heading}</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {found.map((f) => (
           <Blueprint key={f.id} plain style={{ padding: '13px 14px' }}>
             <div
@@ -98,8 +98,8 @@ export function Insights({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
-                marginTop: 10,
+                gap: 'var(--sp-5)',
+                marginTop: 'var(--sp-5)',
                 flexWrap: 'wrap',
               }}
             >

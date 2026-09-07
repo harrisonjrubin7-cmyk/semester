@@ -128,3 +128,60 @@ describe('the leading scale', () => {
     }
   });
 });
+
+/**
+ * And the third: spacing.
+ *
+ * This one is not only about naming. `--sp-*` multiplies by `--density`, the
+ * Comfortable / Snug / Tight setting, and a margin written as a plain number
+ * is a margin that setting cannot reach. It reached 5.3% of the elements on
+ * screen before this; 27.3% after. So a number here that a step already names
+ * is not a synonym — it is a piece of the app opting out of a setting the user
+ * was offered.
+ */
+const SP: Record<string, string> = {
+  '2': '1',
+  '4': '2',
+  '6': '3',
+  '8': '4',
+  '10': '5',
+  '12': '6',
+  '16': '7',
+};
+
+const SPACING = new RegExp(
+  '\\b(gap|rowGap|columnGap|margin(?:Top|Bottom|Left|Right)|padding(?:Top|Bottom|Left|Right)?): (\\d+)(?![0-9.])',
+  'g',
+);
+
+function spacings() {
+  const hits: { path: string; prop: string; n: string }[] = [];
+  for (const f of FILES) {
+    for (const m of f.text.matchAll(SPACING)) hits.push({ path: f.path, prop: m[1], n: m[2] });
+  }
+  return hits;
+}
+
+describe('the spacing scale', () => {
+  it('has no gap or margin written as a number that a step already names', () => {
+    const wrong = spacings()
+      .filter((h) => SP[h.n])
+      .map((h) => `${h.path.split('/src/')[1]} — ${h.prop}: ${h.n} is var(--sp-${SP[h.n]})`);
+    expect([...new Set(wrong)]).toEqual([]);
+  });
+
+  /* 558 left, and they are real: 14, 7, 9, 18 and a tail, none of which is a
+     step. Folding them in is a change to the look, not a change of name. */
+  it('has not drifted further off it', () => {
+    expect(spacings().filter((h) => !SP[h.n]).length).toBeLessThanOrEqual(558);
+  });
+
+  it('still multiplies every step by the density setting', () => {
+    const css = readFileSync(join(process.cwd(), 'src/styles/app.css'), 'utf8');
+    for (const [px, step] of Object.entries(SP)) {
+      // The multiplier is the whole point: a step that lost it would look
+      // right and silently switch the setting off wherever it was used.
+      expect(css).toContain(`--sp-${step}: calc(${px}px * var(--density, 1))`);
+    }
+  });
+});

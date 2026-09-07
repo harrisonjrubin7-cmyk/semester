@@ -84,7 +84,7 @@ export function Rework({
   return (
     <>
       <SectionLabel>Rebuild the guide around this</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Everything you have added already shows up in every study format. This goes further and
         reorganises the guide itself — new material put in the unit it belongs to, units split or
         renamed where they have outgrown themselves, cards written from prose that never became
@@ -92,7 +92,7 @@ export function Rework({
       </div>
 
       {!owned && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
           This is one of the built-in sample courses, so its guide cannot be replaced. Your own
           courses can be.
         </div>
@@ -109,16 +109,16 @@ export function Rework({
       </button>
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 10, color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-5)', color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       ) : null}
       {done ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 10, opacity: 0.8, lineHeight: 'var(--leading-relaxed)' }}>{done}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-5)', opacity: 0.8, lineHeight: 'var(--leading-relaxed)' }}>{done}</div>
       ) : null}
 
       {plan && cost && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 12 }}>
+        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-6)' }}>
           <div className="kicker">What it would cost you</div>
           <div
             style={{
@@ -133,9 +133,9 @@ export function Rework({
           </div>
 
           {cost.examples.length > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
               {cost.examples.map((e, i) => (
-                <div key={i} style={{ marginBottom: 6 }}>
+                <div key={i} style={{ marginBottom: 'var(--sp-3)' }}>
                   <div style={{ textDecoration: 'line-through', opacity: 0.6 }}>{e.before}</div>
                   {e.after ? <div>→ {e.after}</div> : <div style={{ opacity: 0.6 }}>→ dropped</div>}
                 </div>
@@ -143,7 +143,7 @@ export function Rework({
             </div>
           )}
 
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 12, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
             {cost.unitsBefore} units → {cost.unitsAfter}.{' '}
             {plan.guide.units.reduce((n, u) => n + u.cards.length, 0)} cards,{' '}
             {plan.guide.terms.length} terms.
@@ -157,7 +157,7 @@ export function Rework({
             </ul>
           )}
 
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 'var(--sp-6)' }}>
             {plan.guide.units.map((u, i) => (
               <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.8, padding: '3px 0' }}>
                 {u.name} <span style={{ opacity: 0.5 }}>· {u.cards.length}</span>
@@ -165,7 +165,7 @@ export function Rework({
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
             <button
               type="button"
               className="btn btn-secondary"

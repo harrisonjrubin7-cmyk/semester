@@ -77,7 +77,7 @@ export function Behind() {
         <div
           className="chrome-text"
           style={{
-            marginTop: 6,
+            marginTop: 'var(--sp-3)',
             fontSize: 'var(--type-lg)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
@@ -106,7 +106,7 @@ export function Behind() {
           >
             {missesLine(attendance)}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
             {attendance.map((m) => (
               <button
                 key={`${m.kind}-${m.courseId}`}
@@ -151,7 +151,7 @@ export function Behind() {
                 {note}
               </div>
             ) : null}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
               {group.map((s) => (
                 <button
                   key={s.id}
@@ -203,7 +203,7 @@ export function Behind() {
         style={{
           fontSize: 'var(--type-sm)',
           opacity: 0.7,
-          marginBottom: 10,
+          marginBottom: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -240,7 +240,7 @@ export function Behind() {
                 display: 'block',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 opacity: 0.62,
-                marginTop: 4,
+                marginTop: 'var(--sp-2)',
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
               }}

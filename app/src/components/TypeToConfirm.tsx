@@ -102,7 +102,7 @@ export function TypeToConfirm({
         {title}
       </h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 'var(--sp-6)' }}>
         {what.map((line) => (
           <div
             key={line}
@@ -144,10 +144,10 @@ export function TypeToConfirm({
         autoCorrect="off"
         autoCapitalize="off"
         spellCheck={false}
-        style={{ width: '100%', height: 46, marginTop: 8, fontSize: 'var(--type-lg)' }}
+        style={{ width: '100%', height: 46, marginTop: 'var(--sp-4)', fontSize: 'var(--type-lg)' }}
       />
 
-      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-5)', marginTop: 'var(--sp-7)' }}>
         <button type="button" className="btn" onClick={onCancel} style={{ flex: 1, height: 44 }}>
           Keep it
         </button>

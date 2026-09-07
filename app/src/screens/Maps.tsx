@@ -180,7 +180,7 @@ export function Maps() {
       className="bare tappable"
       style={{
         display: 'flex',
-        gap: 12,
+        gap: 'var(--sp-6)',
         alignItems: 'center',
         padding: '13px 0',
         borderBottom: '1px solid var(--app-line)',
@@ -190,7 +190,7 @@ export function Maps() {
     >
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{item.label}</span>
-        <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+        <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
           {item.where}
         </span>
       </span>
@@ -214,7 +214,7 @@ export function Maps() {
           setHits([]);
           trouble.clear();
         }}
-        style={{ marginBottom: 12 }}
+        style={{ marginBottom: 'var(--sp-6)' }}
       />
 
       <form
@@ -222,7 +222,7 @@ export function Maps() {
           e.preventDefault();
           void search();
         }}
-        style={{ display: 'flex', gap: 8, marginBottom: 10 }}
+        style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}
       >
         <input
           className="input"
@@ -266,9 +266,9 @@ export function Maps() {
       <div
         style={{
           display: 'flex',
-          gap: 10,
+          gap: 'var(--sp-5)',
           alignItems: 'center',
-          marginTop: 8,
+          marginTop: 'var(--sp-4)',
           fontSize: 'var(--type-xs)',
           opacity: 0.5,
         }}
@@ -299,7 +299,7 @@ export function Maps() {
                 key={h.id}
                 style={{
                   display: 'flex',
-                  gap: 10,
+                  gap: 'var(--sp-5)',
                   alignItems: 'center',
                   borderBottom: '1px solid var(--app-line)',
                   background: picked?.id === h.id ? 'var(--app-accent-wash)' : 'transparent',
@@ -318,7 +318,7 @@ export function Maps() {
                   <span style={{ display: 'block', fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.25 }}>
                     {h.name}
                   </span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                     {[h.kind, h.detail, away === null ? '' : far(away)].filter(Boolean).join(' · ')}
                   </span>
                 </button>
@@ -351,7 +351,7 @@ export function Maps() {
           if (found) setMode(found.id);
         }}
       />
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         Directions open in the map app this phone already has — it knows where you are, it talks,
         and it works with the screen off.
       </div>
@@ -380,13 +380,13 @@ export function Maps() {
       <SectionLabel>The official maps</SectionLabel>
       <a href={CAMPUS_MAP} target="_blank" rel="noreferrer" className="bare">
         <Blueprint
-          style={{ padding: '14px 15px', display: 'flex', gap: 12, alignItems: 'center' }}
+          style={{ padding: '14px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
         >
           <span style={{ flex: 1, minWidth: 0 }}>
             <span className="kicker" style={{ display: 'block' }}>
               Campus
             </span>
-            <span style={{ display: 'block', fontSize: 'var(--type-md)', marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'var(--type-md)', marginTop: 'var(--sp-1)' }}>
               Vanderbilt's own map — buildings, entrances, parking
             </span>
           </span>
@@ -397,9 +397,9 @@ export function Maps() {
         <Blueprint
           style={{
             padding: '14px 15px',
-            marginTop: 10,
+            marginTop: 'var(--sp-5)',
             display: 'flex',
-            gap: 12,
+            gap: 'var(--sp-6)',
             alignItems: 'center',
           }}
         >
@@ -407,7 +407,7 @@ export function Maps() {
             <span className="kicker" style={{ display: 'block' }}>
               Nashville
             </span>
-            <span style={{ display: 'block', fontSize: 'var(--type-md)', marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'var(--type-md)', marginTop: 'var(--sp-1)' }}>
               The city and what surrounds it, in Google Maps
             </span>
           </span>
@@ -416,7 +416,7 @@ export function Maps() {
       </a>
 
       {saved.length === 0 && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 16, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
           Name a few places under Mine → Places and they appear on the map with exact coordinates,
           which route better than any search for a building name.
         </div>

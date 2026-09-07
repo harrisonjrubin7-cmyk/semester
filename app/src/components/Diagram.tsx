@@ -561,7 +561,7 @@ export function Diagram({ kind }: { kind: DiagramKind }) {
   const Drawing = DIAGRAMS[kind];
   if (!Drawing) return null;
   return (
-    <div style={{ marginTop: 12 }}>
+    <div style={{ marginTop: 'var(--sp-6)' }}>
       <Drawing />
     </div>
   );

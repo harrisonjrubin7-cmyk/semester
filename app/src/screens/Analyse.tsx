@@ -151,7 +151,7 @@ export function Analyse() {
   };
 
   const stat = (label: string, value: string) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', gap: 12 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', gap: 'var(--sp-6)' }}>
       <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>{label}</span>
       <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
@@ -195,7 +195,7 @@ export function Analyse() {
         style={{
           width: '100%',
           minHeight: 96,
-          marginTop: 8,
+          marginTop: 'var(--sp-4)',
           resize: 'vertical',
           fontSize: 'var(--type-sm)',
           lineHeight: 'var(--leading-relaxed)',
@@ -204,7 +204,7 @@ export function Analyse() {
       />
       <DraftNote field={textField} />
       {table.rows.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)' }}>
           {name ? `${name} · ` : ''}
           {table.rows.length} rows · {table.headers.length} columns · {numericCols.length} numeric
         </div>
@@ -264,7 +264,7 @@ export function Analyse() {
           </Blueprint>
 
           {bins.length > 1 && (
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 92, marginTop: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--sp-1)', height: 92, marginTop: 'var(--sp-6)' }}>
               {bins.map((b, i) => {
                 const tallest = Math.max(...bins.map((x) => x.count)) || 1;
                 return (
@@ -283,7 +283,7 @@ export function Analyse() {
             </div>
           )}
           {bins.length > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 4 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 'var(--sp-2)' }}>
               <span>{show(xSummary.min)}</span>
               <span>{show(xSummary.max)}</span>
             </div>
@@ -306,7 +306,7 @@ export function Analyse() {
             {table.headers[yi]} on {table.headers[xi]}
           </SectionLabel>
           <Scatter data={both} slope={fit.slope} intercept={fit.intercept} />
-          <Blueprint style={{ padding: '10px 14px', marginTop: 10 }}>
+          <Blueprint style={{ padding: '10px 14px', marginTop: 'var(--sp-5)' }}>
             {stat('pairs used', String(fit.n))}
             {stat('slope', `${show(fit.slope)}  (se ${show(fit.se)})`)}
             {stat('intercept', show(fit.intercept))}
@@ -314,7 +314,7 @@ export function Analyse() {
             {stat('R²', show(fit.r2))}
             {r === null ? null : stat('Pearson r', show(r))}
           </Blueprint>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Rows where either column was blank were dropped, not read as zero. No p-value: turning
             t into one needs the incomplete beta function, and an approximation that is wrong in
             the tail — exactly where a p-value is read — would be worse than a table.
@@ -329,7 +329,7 @@ export function Analyse() {
             className="btn btn-primary btn-block"
             onClick={() => void interpret()}
             disabled={busy}
-            style={{ height: 46, marginTop: 16, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy ? 'Reading them…' : 'What do these say?'}
           </button>
@@ -339,7 +339,7 @@ export function Analyse() {
                 fontSize: 'calc(13.5px * var(--text-scale, 1))',
                 lineHeight: 1.65,
                 whiteSpace: 'pre-wrap',
-                marginTop: 12,
+                marginTop: 'var(--sp-6)',
                 padding: 14,
                 borderRadius: 'var(--r-lg)',
                 border: '1px solid var(--app-line)',
@@ -351,7 +351,7 @@ export function Analyse() {
           ) : null}
         </>
       )}
-      {xSummary ? <PrintButton label="Print this analysis" style={{ marginTop: 12 }} /> : null}
+      {xSummary ? <PrintButton label="Print this analysis" style={{ marginTop: 'var(--sp-6)' }} /> : null}
     </Page>
   );
 }

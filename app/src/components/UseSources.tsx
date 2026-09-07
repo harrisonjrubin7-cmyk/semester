@@ -33,7 +33,7 @@ export function UseSources({
   if (kept.length === 0) return null;
 
   return (
-    <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+    <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', alignItems: 'center' }}>
       <button
         type="button"
         className="btn btn-secondary"

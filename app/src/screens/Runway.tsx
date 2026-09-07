@@ -110,7 +110,7 @@ export function Runway() {
       {exams.length > 1 && (
         // The next few. A runway more than a term away is "far" in every band,
         // so a chip for it is a chip that says nothing.
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-3)', overflowX: 'auto', marginBottom: 14 }}>
           {exams.slice(0, 6).map((e, i) => {
             const on = e.id === exam.id;
             return (
@@ -142,11 +142,11 @@ export function Runway() {
         </div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {headline(r)}
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           {r.stage.label}. {r.stage.shape}
         </div>
         {r.daysAway > 0 ? (
@@ -162,13 +162,13 @@ export function Runway() {
         eleven at night. Silent for everybody who has not set one.
       */}
       {book && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 10 }}>
+        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Student Access</div>
           <div
             style={{
               fontSize: 'var(--type-md)',
               lineHeight: 'var(--leading-normal)',
-              marginTop: 6,
+              marginTop: 'var(--sp-3)',
               color: bookingLate(book, now) ? 'var(--app-warn)' : undefined,
             }}
           >
@@ -195,7 +195,7 @@ export function Runway() {
               Open Student Access →
             </a>
           ) : null}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Weekends only — the app has no holiday calendar and will not invent one, so a lead
             time crossing a public holiday is a day short.
           </div>
@@ -204,7 +204,7 @@ export function Runway() {
 
       <SectionLabel>Where you stand</SectionLabel>
       <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}>{standing(r)}</div>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>{paperLine(r)}</div>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>{paperLine(r)}</div>
 
       {worst ? (
         <button
@@ -224,7 +224,7 @@ export function Runway() {
             {worst.seen === 0 ? 'NEVER OPENED' : 'FURTHEST BEHIND'}
           </span>
           {/* The unit's own name, which in most guides carries its number. */}
-          <span style={{ display: 'block', fontSize: 'var(--type-md)', marginTop: 2 }}>{worst.name}</span>
+          <span style={{ display: 'block', fontSize: 'var(--type-md)', marginTop: 'var(--sp-1)' }}>{worst.name}</span>
         </button>
       ) : null}
 
@@ -232,7 +232,7 @@ export function Runway() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => dispatch({ type: 'sitPaper', minutes: 30, formatId: 'mixed' })}
-        style={{ height: 44, marginTop: 8 }}
+        style={{ height: 44, marginTop: 'var(--sp-4)' }}
       >
         Sit a practice paper
       </button>
@@ -249,7 +249,7 @@ export function Runway() {
             key={u.name}
             style={{
               display: 'flex',
-              gap: 10,
+              gap: 'var(--sp-5)',
               alignItems: 'baseline',
               ...rowStyle,
               opacity: u.cards === 0 ? 0.5 : 1,
@@ -286,7 +286,7 @@ export function Runway() {
               onClick={() => dispatch({ type: 'openItem', id: i.id })}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 alignItems: 'baseline',
                 width: '100%',
                 textAlign: 'left',
@@ -314,7 +314,7 @@ export function Runway() {
       )}
 
       <PrintButton label="Print the runway" style={{ marginTop: 14 }} />
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         Every number here is counted from your own drilling and your own deadlines. There is no
         readiness score and there will not be one — it would be believed, and the app cannot know.
       </div>

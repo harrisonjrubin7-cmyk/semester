@@ -46,9 +46,9 @@ export function Study() {
   return (
     <Page>
       {exam && (
-        <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Exam radar</div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
             <div className="chrome-text" style={{ fontSize: 'calc(38px * var(--text-scale, 1))', lineHeight: 1 }}>
               {exam.days}
             </div>
@@ -63,7 +63,7 @@ export function Study() {
           </div>
           <div
             style={{
-              marginTop: 12,
+              marginTop: 'var(--sp-6)',
               paddingTop: 11,
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-base)',
@@ -127,9 +127,9 @@ export function Study() {
                 onClick={() => dispatch({ type: 'go', screen: d.screen })}
                 style={{
                   padding: '13px 15px',
-                  marginTop: 10,
+                  marginTop: 'var(--sp-5)',
                   display: 'flex',
-                  gap: 12,
+                  gap: 'var(--sp-6)',
                   alignItems: 'center',
                 }}
               >
@@ -212,7 +212,7 @@ export function Study() {
                   display: 'flex',
                   alignItems: 'baseline',
                   justifyContent: 'space-between',
-                  gap: 10,
+                  gap: 'var(--sp-5)',
                 }}
               >
                 {/* The code is the name of the thing and never wraps; the
@@ -237,7 +237,7 @@ export function Study() {
                   {g.units.length} units · {cards} cards
                 </div>
               </div>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 2 }}>{g.blurb}</div>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-1)' }}>{g.blurb}</div>
               <div style={{ marginTop: 11 }}>
                 <Meter pct={g.mastery} />
               </div>
@@ -267,7 +267,7 @@ export function Study() {
               */}
               <div
                 style={{
-                  marginTop: 12,
+                  marginTop: 'var(--sp-6)',
                   paddingTop: 11,
                   borderTop: '1px solid var(--app-line)',
                 }}
@@ -290,7 +290,7 @@ export function Study() {
                         style={{
                           fontSize: 'calc(11.5px * var(--text-scale, 1))',
                           opacity: 0.55,
-                          marginTop: 6,
+                          marginTop: 'var(--sp-3)',
                           lineHeight: 'var(--leading-normal)',
                           textWrap: 'pretty',
                         }}
@@ -301,7 +301,7 @@ export function Study() {
                   </>
                 )}
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: step ? 10 : 0 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: step ? 10 : 0 }}>
                   {(openWays[c.id] ? ways.filter((m) => m.id !== step?.id) : beside(ways, step)).map((m) => (
                     <button
                       key={m.id}
@@ -358,7 +358,7 @@ export function Study() {
       >
         + Add a reading to a course
       </button>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         A chapter, a handout, a lecture — paste or attach it and the cards, the quiz, the guide
         and the cram sheet all take it in.
       </div>
@@ -369,7 +369,7 @@ export function Study() {
       {tab === 'tonight' && (
         <>
       <SectionLabel style={{ margin: '20px 0 4px' }}>Tonight’s 25 minutes</SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 12, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-6)', textWrap: 'pretty' }}>
         Your weakest unit in each course, and what’s on the next quiz — one short sitting rather
         than a plan you will not keep.
       </div>
@@ -381,7 +381,7 @@ export function Study() {
           onClick={() => dispatch({ type: 'openGuide', id: p.courseId, mode: 'cards' })}
           style={{
             display: 'flex',
-            gap: 12,
+            gap: 'var(--sp-6)',
             alignItems: 'center',
             ...rowTwelve,
           }}
@@ -407,7 +407,7 @@ export function Study() {
                 fontFamily: 'var(--font-heading)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                marginTop: 2,
+                marginTop: 'var(--sp-1)',
               }}
             >
               {p.code} · {p.unit.mastery}% mastered

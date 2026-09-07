@@ -92,7 +92,7 @@ export function Undone() {
         zIndex: 80,
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        gap: 'var(--sp-6)',
         padding: '10px 12px',
         borderRadius: 10,
         background: 'var(--card)',

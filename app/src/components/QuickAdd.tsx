@@ -74,7 +74,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         padding: 18,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
         <span className="kicker" style={{ flex: 1 }}>
           One line
         </span>
@@ -107,7 +107,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         style={{
           width: '100%',
           height: 52,
-          marginTop: 10,
+          marginTop: 'var(--sp-5)',
           fontSize: 'calc(16px * var(--text-scale, 1))',
         }}
       />
@@ -132,7 +132,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
             <div
               style={{
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                marginTop: 4,
+                marginTop: 'var(--sp-2)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
               }}
@@ -148,7 +148,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
             disabled={!ready}
             style={{
               height: 46,
-              marginTop: 16,
+              marginTop: 'var(--sp-7)',
               textTransform: 'uppercase',
               letterSpacing: '0.09em',
             }}
@@ -161,7 +161,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             opacity: 0.6,
-            marginTop: 16,
+            marginTop: 'var(--sp-7)',
             lineHeight: 1.6,
             textWrap: 'pretty',
           }}

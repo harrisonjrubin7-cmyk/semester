@@ -69,7 +69,7 @@ export function Trouble({
           className="btn btn-secondary"
           onClick={onRetry}
           disabled={busy}
-          style={{ height: 38, marginTop: 10, fontSize: 'calc(12.5px * var(--text-scale, 1))', paddingInline: 18 }}
+          style={{ height: 38, marginTop: 'var(--sp-5)', fontSize: 'calc(12.5px * var(--text-scale, 1))', paddingInline: 18 }}
         >
           {busy ? 'Trying…' : label}
         </button>

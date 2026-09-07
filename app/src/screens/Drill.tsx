@@ -116,14 +116,14 @@ export function Drill() {
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
             {got}/{pool.length}
           </div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(24px * var(--text-scale, 1))', marginTop: 4 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(24px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
             {verdict}
           </div>
           <div
             style={{
               fontSize: 'var(--type-md)',
               opacity: 0.65,
-              marginTop: 8,
+              marginTop: 'var(--sp-4)',
               maxWidth: '32ch',
               marginInline: 'auto',
               textWrap: 'pretty',
@@ -137,12 +137,12 @@ export function Drill() {
               keeping no record of what was missed. Now it reads the schedule. */}
           <Blueprint plain style={{ padding: 14, marginTop: 26, textAlign: 'left' }}>
             <div className="kicker">What comes back</div>
-            <div style={{ fontSize: 'var(--type-md)', marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
               {waiting === 0
                 ? 'Nothing in this course is due right now. Come back tomorrow.'
                 : `${waiting} ${waiting === 1 ? 'card is' : 'cards are'} due again in ${guide.code}.`}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
               Missed cards return in ten minutes. A card you get right three times running moves out
               to weeks.
             </div>
@@ -158,7 +158,7 @@ export function Drill() {
           */}
           <Blueprint plain style={{ padding: 14, marginTop: 14, textAlign: 'left' }}>
             <div className="kicker">How sure you were</div>
-            <div style={{ fontSize: 'var(--type-base)', marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {calibrationLine(calibration(state.answers))}
             </div>
             {beliefs(state.answers).length > 0 ? (
@@ -166,7 +166,7 @@ export function Drill() {
                 style={{
                   fontSize: 'var(--type-sm)',
                   opacity: 0.7,
-                  marginTop: 8,
+                  marginTop: 'var(--sp-4)',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
@@ -183,7 +183,7 @@ export function Drill() {
             ) : null}
           </Blueprint>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 22 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 22 }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -224,7 +224,7 @@ export function Drill() {
         minHeight: 620,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
         <div style={{ flex: 1, height: 3, background: 'var(--app-track)' }}>
           <div
             style={{
@@ -256,7 +256,7 @@ export function Drill() {
       </div>
 
       {canMix && (
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 'var(--sp-5)' }}>
           <Toggle
             label="Mix the courses"
             on={state.drillMix}
@@ -266,7 +266,7 @@ export function Drill() {
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.55,
-              marginTop: 6,
+              marginTop: 'var(--sp-3)',
               lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
             }}
@@ -281,7 +281,7 @@ export function Drill() {
         className="blueprint bare"
         onClick={() => !state.revealed && dispatch({ type: 'flip' })}
         style={{
-          marginTop: 10,
+          marginTop: 'var(--sp-5)',
           padding: '24px 20px',
           minHeight: 250,
           display: 'flex',
@@ -310,7 +310,7 @@ export function Drill() {
         {state.revealed && (
           <span
             style={{
-              marginTop: 16,
+              marginTop: 'var(--sp-7)',
               paddingTop: 14,
               borderTop: '1px solid var(--app-line)',
               fontSize: 'calc(16px * var(--text-scale, 1))',
@@ -335,7 +335,7 @@ export function Drill() {
             textAlign: 'center',
             fontSize: 'var(--type-sm)',
             opacity: 0.45,
-            marginTop: 12,
+            marginTop: 'var(--sp-6)',
             fontFamily: 'var(--font-heading)',
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
@@ -362,7 +362,7 @@ export function Drill() {
       */}
       {state.revealed && (
         <div style={{ marginTop: 18 }}>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -389,7 +389,7 @@ export function Drill() {
           <div
             style={{
               display: 'flex',
-              gap: 6,
+              gap: 'var(--sp-3)',
               marginTop: 9,
               alignItems: 'center',
               flexWrap: 'wrap',
@@ -476,14 +476,14 @@ export function Quiz() {
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
             {score}/{n}
           </div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(24px * var(--text-scale, 1))', marginTop: 4 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(24px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
             {verdict}
           </div>
           <div
             style={{
               fontSize: 'var(--type-md)',
               opacity: 0.65,
-              marginTop: 8,
+              marginTop: 'var(--sp-4)',
               maxWidth: '32ch',
               marginInline: 'auto',
               textWrap: 'pretty',
@@ -491,7 +491,7 @@ export function Quiz() {
           >
             Ten questions pulled at random from {guide.code}. Re-run it and you get a different ten.
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 26 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 26 }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -522,7 +522,7 @@ export function Quiz() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
         <div style={{ flex: 1, height: 3, background: 'var(--app-track)' }}>
           <div
             style={{
@@ -553,14 +553,14 @@ export function Quiz() {
           fontSize: 'calc(24px * var(--text-scale, 1))',
           lineHeight: 1.16,
           letterSpacing: '-0.01em',
-          marginTop: 6,
+          marginTop: 'var(--sp-3)',
           textWrap: 'pretty',
         }}
       >
         {current.q}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 'var(--sp-7)' }}>
         {current.opts.map((o, i) => {
           const chosen = state.quizPicked === i;
           const reveal = answered;
@@ -573,7 +573,7 @@ export function Quiz() {
               disabled={answered}
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 'var(--sp-5)',
                 alignItems: 'flex-start',
                 padding: '12px 13px',
                 border: `1px solid ${
@@ -610,7 +610,7 @@ export function Quiz() {
 
       {answered && (
         <>
-          <Blueprint style={{ padding: '13px 14px', marginTop: 16 }}>
+          <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-7)' }}>
             <div className="kicker">In full</div>
             <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
               {current.full}

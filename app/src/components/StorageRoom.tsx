@@ -78,7 +78,7 @@ export function StorageRoom() {
           className="btn btn-secondary btn-block"
           onClick={() => void askAgain()}
           disabled={asking}
-          style={{ height: 40, marginTop: 10, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 40, marginTop: 'var(--sp-5)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
         >
           {asking ? 'Asking…' : 'Ask the browser to keep it'}
         </button>

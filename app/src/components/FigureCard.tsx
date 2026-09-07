@@ -34,17 +34,17 @@ function StoredImage({ fileId, alt }: { fileId: string; alt: string }) {
 
   if (missing) {
     return (
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 12 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-6)' }}>
         The file behind this figure is no longer on the device.
       </div>
     );
   }
-  if (!url) return <div style={{ height: 120, background: 'var(--app-track)', marginTop: 12 }} />;
+  if (!url) return <div style={{ height: 120, background: 'var(--app-track)', marginTop: 'var(--sp-6)' }} />;
   return (
     <img
       src={url}
       alt={alt}
-      style={{ width: '100%', display: 'block', marginTop: 12, border: '1px solid var(--app-line)' }}
+      style={{ width: '100%', display: 'block', marginTop: 'var(--sp-6)', border: '1px solid var(--app-line)' }}
     />
   );
 }
@@ -66,7 +66,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
       </div>
 
       {figure.type === 'bars' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 14 }}>
           {figure.rows.map((r) => (
             <div key={r.l}>
               <div
@@ -75,7 +75,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                   justifyContent: 'space-between',
                   alignItems: 'baseline',
                   fontSize: 'var(--type-sm)',
-                  gap: 10,
+                  gap: 'var(--sp-5)',
                 }}
               >
                 <span style={{ opacity: 0.75 }}>{r.l}</span>
@@ -99,9 +99,9 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
       )}
 
       {figure.type === 'steps' && (
-        <div style={{ display: 'flex', flexDirection: 'column', marginTop: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', marginTop: 'var(--sp-6)' }}>
           {figure.steps.map((s) => (
-            <div key={s.n + s.t} style={{ display: 'flex', gap: 12, alignItems: 'stretch' }}>
+            <div key={s.n + s.t} style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'stretch' }}>
               <div
                 style={{
                   width: 40,
@@ -118,7 +118,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
               >
                 {s.n}
               </div>
-              <div style={{ flex: 1, minWidth: 0, paddingBottom: 12 }}>
+              <div style={{ flex: 1, minWidth: 0, paddingBottom: 'var(--sp-6)' }}>
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.2 }}>
                   {s.t}
                 </div>
@@ -127,7 +127,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                     fontSize: 'var(--type-base)',
                     opacity: 0.72,
                     lineHeight: 1.4,
-                    marginTop: 2,
+                    marginTop: 'var(--sp-1)',
                     textWrap: 'pretty',
                   }}
                 >
@@ -148,8 +148,8 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
           fontSize: 'var(--type-sm)',
           opacity: 0.6,
           lineHeight: 'var(--leading-normal)',
-          marginTop: 12,
-          paddingTop: 10,
+          marginTop: 'var(--sp-6)',
+          paddingTop: 'var(--sp-5)',
           borderTop: '1px solid var(--app-line)',
           textWrap: 'pretty',
         }}

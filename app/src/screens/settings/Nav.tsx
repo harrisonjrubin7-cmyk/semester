@@ -34,7 +34,7 @@ export function SettingsNav() {
           >
             <CustomRow>
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Navigation</SectionLabel>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
                 Two structures, the same screens. The tab bar gives every thing a fixed home. The feed
                 interleaves classes and deadlines in one scroll and slices it with a filter row.
               </div>
@@ -51,7 +51,7 @@ export function SettingsNav() {
               {/* Only in tab-bar mode: in feed mode there is no bar to arrange, and
                   offering the setting anyway would be a control that does nothing. */}
               {state.nav === 'springboard' && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                   Three pages of icons with a dock that does not move, folders that open in place, and a
                   search that filters to everything at once. Every icon goes to the same screen the tab bar
                   would have — it is a way in, not a different app.
@@ -68,7 +68,7 @@ export function SettingsNav() {
           >
             <CustomRow>
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Your Today</SectionLabel>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
                 The right order is not the same for everyone. Somebody with a job and one class wants the
                 rail first; somebody with a paper due wants the checklist and would rather not scroll past
                 a countdown to a lecture they are already walking to.
@@ -81,7 +81,7 @@ export function SettingsNav() {
                     key={id}
                     style={{
                       display: 'flex',
-                      gap: 8,
+                      gap: 'var(--sp-4)',
                       alignItems: 'center',
                       ...row,
                     }}
@@ -97,7 +97,7 @@ export function SettingsNav() {
                     </button>
                     <div style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : 0.5 }}>
                       <div style={{ fontSize: 'var(--type-md)' }}>{section?.label ?? id}</div>
-                      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>{section?.blurb}</div>
+                      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>{section?.blurb}</div>
                     </div>
                     <button
                       type="button"
@@ -141,7 +141,7 @@ export function SettingsNav() {
                 on={state.showAll}
                 onChange={() => dispatch({ type: 'showEverything', on: !state.showAll })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 {revealLine(countHidden(facts, state.visited, state.showAll), state.showAll)}
               </div>
             </CustomRow>

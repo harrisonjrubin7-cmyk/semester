@@ -122,7 +122,7 @@ export function Groupwork() {
       <Page>
         <Blueprint style={{ padding: '15px 16px' }}>
           <div className="kicker">Sign in first</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
             A group is other people, so it needs an account. Everything else in the app works
             signed out.
           </div>
@@ -130,7 +130,7 @@ export function Groupwork() {
             type="button"
             className="btn btn-primary btn-block"
             onClick={() => dispatch({ type: 'go', screen: 'account' })}
-            style={{ height: 42, marginTop: 12 }}
+            style={{ height: 42, marginTop: 'var(--sp-6)' }}
           >
             Sign in
           </button>
@@ -162,7 +162,7 @@ export function Groupwork() {
       </select>
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 12, color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-6)', color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       ) : null}
@@ -199,7 +199,7 @@ export function Groupwork() {
           )}
 
           <SectionLabel>Start one</SectionLabel>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <input
               className="input"
               value={newName}
@@ -239,15 +239,15 @@ export function Groupwork() {
             ← All groups
           </button>
 
-          <Blueprint style={{ padding: '15px 16px', marginTop: 10 }}>
+          <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-5)' }}>
             <div className="kicker">{code}</div>
             <div
               className="chrome-text"
-              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 6, textWrap: 'pretty' }}
+              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
             >
               {open.name}
             </div>
-            <div style={{ fontSize: 'var(--type-md)', opacity: 0.8, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-md)', opacity: 0.8, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               {headline(s)}
             </div>
             {/* The sentence a group can argue with. See `lib/groupwork.ts`. */}
@@ -257,7 +257,7 @@ export function Groupwork() {
               </div>
             ) : null}
             {iAmIn && (
-              <div style={{ display: 'flex', gap: 8, marginTop: 11, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 11, alignItems: 'center' }}>
                 <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, flex: 'none' }}>Due</span>
                 <input
                   className="input"
@@ -285,7 +285,7 @@ export function Groupwork() {
               key={share.member.userId}
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 'var(--sp-5)',
                 alignItems: 'baseline',
                 ...rowNine,
               }}
@@ -302,7 +302,7 @@ export function Groupwork() {
             </div>
           ))}
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
             {iAmIn ? (
               <button
                 type="button"
@@ -339,7 +339,7 @@ export function Groupwork() {
           {unclaimed(parts.map(asPart)).length > 0 && (
             <>
               <SectionLabel>Nobody has these</SectionLabel>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 6, lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 The list a group actually has to divide.
               </div>
             </>
@@ -358,7 +358,7 @@ export function Groupwork() {
                   key={p.id}
                   style={{
                     display: 'flex',
-                    gap: 10,
+                    gap: 'var(--sp-5)',
                     alignItems: 'baseline',
                     ...rowTen,
                   }}
@@ -443,7 +443,7 @@ export function Groupwork() {
           )}
 
           {iAmIn && (
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
               <input
                 className="input"
                 value={newPart}

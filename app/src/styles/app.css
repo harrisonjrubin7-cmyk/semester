@@ -103,14 +103,33 @@
      Seven steps rather than six: 10px is the third most common gap in the app
      and folding it into 8 or 12 would move a hundred and fifty edges, which
      the parity rule forbids. 14px is the largest value with no step — about a
-     hundred sites — and is the one real leftover. */
-  --sp-1: 2px;
-  --sp-2: 4px;
-  --sp-3: 6px;
-  --sp-4: 8px;
-  --sp-5: 10px;
-  --sp-6: 12px;
-  --sp-7: 16px;
+     hundred sites — and is the one real leftover.
+
+     Each step multiplies by --density, which is what the Comfortable / Snug /
+     Tight setting sets, for the same reason the type steps multiply by
+     --text-scale: a token that dropped the multiplier would quietly disable
+     the setting wherever it was adopted.
+
+     It was disabled almost everywhere. Measured across all fifty-three
+     screens at Tight, 186 of 3,519 elements moved — 5.3% — and six screens
+     had not one. Grades: none of 205. Applying: one of 174. Calendar: one of
+     193. The multiplier worked; nothing was multiplying by it, because the
+     spacing was written as plain numbers in the screens.
+
+     With 1,233 of those numbers on these steps it is 960 of 3,519 — 27.3% —
+     and no screen is left at none. Page height at Tight moves up to 4.7%
+     where it moved up to 1.9%. At Comfortable the multiplier is 1, and the
+     height of all fifty-three screens is unchanged to the pixel: nobody on
+     the default is looking at a different app. What is left is genuinely off
+     these steps — 558 numbers, most of them 14, 7, 9 and 18, and 531 string
+     shorthands like '11px 0' that carry two axes at once. */
+  --sp-1: calc(2px * var(--density, 1));
+  --sp-2: calc(4px * var(--density, 1));
+  --sp-3: calc(6px * var(--density, 1));
+  --sp-4: calc(8px * var(--density, 1));
+  --sp-5: calc(10px * var(--density, 1));
+  --sp-6: calc(12px * var(--density, 1));
+  --sp-7: calc(16px * var(--density, 1));
 
   /* Leading. Distinct from --line-height, which is the reader's own setting
      and applies to the body; these are for a block that has to set its own —

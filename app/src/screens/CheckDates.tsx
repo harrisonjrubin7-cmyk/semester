@@ -103,7 +103,7 @@ export function CheckDates() {
       />
 
       {source === 'feed' ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
           {state.feedEvents.length > 0 ? (
             <>
               {state.feedEvents.length} entries from the calendars you have connected. Add or
@@ -133,7 +133,7 @@ export function CheckDates() {
               fontSize: 'var(--type-sm)',
             }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Read here in your browser and never sent anywhere. {events.length > 0
               ? `${events.length} entries read.`
               : pasted.trim()
@@ -144,22 +144,22 @@ export function CheckDates() {
       )}
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 12, color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-6)', color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       ) : null}
 
       {!nothing && (
         <>
-          <Blueprint style={{ padding: '15px 16px', marginTop: 16 }}>
+          <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-7)' }}>
             <div className="kicker">Against {events.length} calendar entries</div>
             <div
               className="chrome-text"
-              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 6, textWrap: 'pretty' }}
+              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
             >
               {summary(report)}
             </div>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               {report.agreed} matched and agreed · {report.onlyHere.length} here with no match in
               the feed
             </div>
@@ -173,13 +173,13 @@ export function CheckDates() {
                 return (
                   <Blueprint key={m.item.id} style={{ padding: '13px 14px', marginBottom: 9 }}>
                     <div className="kicker">{code(m.item.c)}</div>
-                    <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 4, textWrap: 'pretty' }}>
+                    <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)', textWrap: 'pretty' }}>
                       {m.item.title}
                     </div>
                     <div
                       style={{
                         display: 'flex',
-                        gap: 10,
+                        gap: 'var(--sp-5)',
                         alignItems: 'baseline',
                         marginTop: 9,
                         fontVariantNumeric: 'tabular-nums',
@@ -191,7 +191,7 @@ export function CheckDates() {
                       <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{m.now}</span>
                       <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55 }}>{movedLine(m)}</span>
                     </div>
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                       The feed calls it “{m.event.title}”.
                     </div>
                     <button
@@ -199,7 +199,7 @@ export function CheckDates() {
                       className="btn btn-secondary btn-block"
                       disabled={Boolean(done)}
                       onClick={() => apply(m)}
-                      style={{ height: 40, marginTop: 10 }}
+                      style={{ height: 40, marginTop: 'var(--sp-5)' }}
                     >
                       {done ? `Moved to ${done}` : 'Use the calendar’s date'}
                     </button>
@@ -212,7 +212,7 @@ export function CheckDates() {
           {report.onlyThere.length > 0 && (
             <>
               <SectionLabel>In the feed, not in the app</SectionLabel>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
                 Either something added after the syllabus was written, or something the matcher
                 could not line up. Add anything real under Edit the course.
               </div>
@@ -221,7 +221,7 @@ export function CheckDates() {
                   key={e.id}
                   style={{
                     display: 'flex',
-                    gap: 12,
+                    gap: 'var(--sp-6)',
                     alignItems: 'baseline',
                     ...rowStyle,
                   }}
@@ -251,7 +251,7 @@ export function CheckDates() {
           {report.onlyHere.length > 0 && (
             <>
               <SectionLabel>Here, with nothing in the feed</SectionLabel>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
                 Usually fine — plenty of syllabus work never appears on an LMS calendar. Worth a
                 look only if something you expected to see is on this list.
               </div>
@@ -263,7 +263,7 @@ export function CheckDates() {
                   onClick={() => dispatch({ type: 'openItem', id: i.id })}
                   style={{
                     display: 'flex',
-                    gap: 12,
+                    gap: 'var(--sp-6)',
                     alignItems: 'baseline',
                     width: '100%',
                     textAlign: 'left',
@@ -291,7 +291,7 @@ export function CheckDates() {
           )}
 
           <PrintButton label="Print this comparison" style={{ marginTop: 14 }} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Titles are matched by how much they have in common, scoped to the course. Where a
             pairing is not clearly right it is reported as two separate lines rather than one
             confident wrong match — a wrong match would send you to change a date that was right.

@@ -90,7 +90,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
 
   return (
     <>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
           className="input"
           value={name}
@@ -119,7 +119,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
         onChange={(e) => setRole(e.target.value)}
         placeholder="Professor, ECON 1020 — optional"
         aria-label="Their role"
-        style={{ width: '100%', height: 40, marginTop: 8 }}
+        style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
       />
 
       {state.people.length === 0 ? (
@@ -183,7 +183,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
               </button>
 
               {open === p.id ? (
-                <div style={{ marginTop: 12 }}>
+                <div style={{ marginTop: 'var(--sp-6)' }}>
                   <div className="kicker">After a conversation</div>
                   <textarea
                     className="input"
@@ -195,7 +195,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                     style={{
                       width: '100%',
                       minHeight: 56,
-                      marginTop: 6,
+                      marginTop: 'var(--sp-3)',
                       resize: 'vertical',
                       fontSize: 'var(--type-base)',
                       lineHeight: 'var(--leading-relaxed)',
@@ -209,13 +209,13 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                       dispatch({ type: 'addVisit', patch: { personId: p.id, what } });
                       setWhat('');
                     }}
-                    style={{ height: 40, marginTop: 8, textTransform: 'uppercase', letterSpacing: '0.09em' }}
+                    style={{ height: 40, marginTop: 'var(--sp-4)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
                   >
                     Record it
                   </button>
 
                   {theirs.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-6)' }}>
                       {theirs.map((v) => (
                         <div
                           key={v.id}
@@ -241,7 +241,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                     onClick={() => dispatch({ type: 'dropPerson', id: p.id })}
                     style={{
                       width: 'auto',
-                      marginTop: 12,
+                      marginTop: 'var(--sp-6)',
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
                       opacity: 0.5,
                     }}
@@ -278,7 +278,7 @@ function LettersTab() {
   return (
     <>
       <SectionLabel style={{ margin: '0 0 8px' }}>Ask for one</SectionLabel>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
         {state.people.map((p) => (
           <button
             key={p.id}
@@ -304,9 +304,9 @@ function LettersTab() {
         onChange={(e) => setForWhat(e.target.value)}
         placeholder="Truman Scholarship"
         aria-label="What the letter is for"
-        style={{ width: '100%', height: 42, marginTop: 10 }}
+        style={{ width: '100%', height: 42, marginTop: 'var(--sp-5)' }}
       />
-      <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="input"
           type="date"
@@ -375,7 +375,7 @@ function LettersTab() {
                     {nextMove(l, now)}
                   </div>
 
-                  <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
                     {ASKS.map((a) => (
                       <button
                         key={a.id}
@@ -406,7 +406,7 @@ function LettersTab() {
                       </button>
                     ))}
                   </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
                     <Toggle
                       on={l.sentMaterials}
                       label="Sent them what they need"

@@ -126,7 +126,7 @@ export function ApplyingOn({ day }: { day: Date }) {
                 display: 'block',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 opacity: 0.6,
-                marginTop: 2,
+                marginTop: 'var(--sp-1)',
               }}
             >
               {s.what === 'due' ? 'Application deadline' : title(s.application)}

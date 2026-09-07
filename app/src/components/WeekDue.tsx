@@ -32,7 +32,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
   return (
     <>
       <SectionLabel>Due this week</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
         {weekLabel(start)} · {weekLine(days, classes)}
       </div>
 
@@ -41,7 +41,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
           key={d.date.toISOString()}
           style={{
             display: 'flex',
-            gap: 12,
+            gap: 'var(--sp-6)',
             alignItems: 'baseline',
             ...row,
             minHeight: 26,

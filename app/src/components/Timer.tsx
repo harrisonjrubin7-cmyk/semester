@@ -134,7 +134,7 @@ export function Timer({
           That ran for {clockLine(ended.minutes)}, which is longer than the app will take on
           trust — a timer left running looks exactly like this. What was it really?
         </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
           {BUCKETS.map((b) => (
             <button
               key={b.id}
@@ -180,7 +180,7 @@ export function Timer({
       return (
         <div style={{ padding: '9px 0 4px' }}>
           <div className="kicker">How long do you think?</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 7 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 7 }}>
             {BUCKETS.map((b) => (
               <button
                 key={b.id}
@@ -242,7 +242,7 @@ export function Timer({
           Start working on this
         </button>
         {elsewhere ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
             {/* Said rather than prevented: the student may well have moved on
                 to this and forgotten the other one, and starting here should
                 not be blocked by a timer they have already abandoned. */}
@@ -267,7 +267,7 @@ export function Timer({
         background: 'var(--app-hero)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
         <div
           className="chrome-text"
           style={{ fontSize: 'calc(20px * var(--text-scale, 1))', flex: 1, fontVariantNumeric: 'tabular-nums' }}

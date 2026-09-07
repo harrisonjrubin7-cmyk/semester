@@ -129,7 +129,7 @@ export function FindPlace() {
             onClick={() => dispatch({ type: 'setGeocode', patch: { on: true } })}
             style={{
               height: 44,
-              marginTop: 10,
+              marginTop: 'var(--sp-5)',
               textTransform: 'uppercase',
               letterSpacing: '0.09em',
             }}
@@ -139,7 +139,7 @@ export function FindPlace() {
         </>
       ) : (
         <>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <input
               className="input"
               value={query}
@@ -266,7 +266,7 @@ export function FindPlace() {
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.6,
-              marginTop: 8,
+              marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -298,7 +298,7 @@ export function FindPlace() {
               style={{
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 opacity: 0.6,
-                marginTop: 8,
+                marginTop: 'var(--sp-4)',
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
               }}
@@ -331,7 +331,7 @@ export function FindPlace() {
             }
             style={{
               width: 'auto',
-              marginTop: 16,
+              marginTop: 'var(--sp-7)',
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.5,
             }}

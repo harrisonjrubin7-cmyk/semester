@@ -66,14 +66,14 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
               <div className="kicker">
                 {s.current === null ? 'Nothing graded yet' : `Across ${Math.round(s.counted)}% of the grade`}
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)', marginTop: 'var(--sp-3)' }}>
                 <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
                   {s.current === null ? '—' : `${Math.round(s.current)}%`}
                   {/* The letter beside the number, where the scale in force
                       has cutoffs to read it against. The line under the
                       targets below says whose cutoffs those are. */}
                   {s.current !== null && letterFor(s.current, system) ? (
-                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', opacity: 0.6, marginLeft: 8 }}>
+                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', opacity: 0.6, marginLeft: 'var(--sp-4)' }}>
                       {letterFor(s.current, system)}
                     </span>
                   ) : null}
@@ -85,12 +85,12 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 </div>
               </div>
               {s.current !== null && (
-                <div style={{ marginTop: 10 }}>
+                <div style={{ marginTop: 'var(--sp-5)' }}>
                   <Meter pct={Math.min(100, Math.round(s.current))} />
                 </div>
               )}
               {s.extraCredit > 0 && (
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 8 }}>
+                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-4)' }}>
                   Plus {s.extraCredit.toFixed(1)} points of extra credit.
                 </div>
               )}
@@ -103,7 +103,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 style={{
                   fontSize: 'calc(12.5px * var(--text-scale, 1))',
                   opacity: 0.78,
-                  marginTop: 10,
+                  marginTop: 'var(--sp-5)',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}
@@ -118,7 +118,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                 )}
               </div>
               {needCaveat(s) ? (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   {/* Names the number the weights actually add to. "Do not add
                       to 100" leaves the student to work out by how much, from
                       a table they cannot easily sum in their head. */}
@@ -132,7 +132,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
               <div
                 style={{
                   display: 'flex',
-                  gap: 12,
+                  gap: 'var(--sp-6)',
                   alignItems: 'center',
                   padding: '11px 0',
                 }}
@@ -143,7 +143,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                     style={{
                       fontSize: 'var(--type-xs)',
                       opacity: 0.5,
-                      marginTop: 2,
+                      marginTop: 'var(--sp-1)',
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
@@ -255,12 +255,12 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
               const t = trend(sat);
               const target = s.remaining > 0 && s.counted > 0 ? needFor(s, 90) : null;
               return (
-                <div style={{ marginTop: 16 }}>
+                <div style={{ marginTop: 'var(--sp-7)' }}>
                   <div
                     style={{
                       fontSize: 'var(--type-xs)',
                       opacity: 0.5,
-                      marginBottom: 6,
+                      marginBottom: 'var(--sp-3)',
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
@@ -276,7 +276,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                       {against(t.average, target)}
                     </div>
                   ) : null}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 9 }}>
                     {sat.slice(0, 6).map((paper) => (
                       <span
                         key={paper.id}
@@ -299,7 +299,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
                       type="button"
                       className="btn btn-secondary btn-block"
                       onClick={() => dispatch({ type: 'go', screen: 'exam' })}
-                      style={{ height: 40, marginTop: 10 }}
+                      style={{ height: 40, marginTop: 'var(--sp-5)' }}
                     >
                       Sit another
                     </button>

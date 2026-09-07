@@ -75,7 +75,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
             opacity: 0.7,
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            gap: 'var(--sp-3)',
           }}
         >
           Lowest dropped

@@ -421,7 +421,7 @@ export function Assistant() {
             />
           </button>
 
-          <div style={{ padding: '4px 16px 0', display: 'flex', alignItems: 'baseline', gap: 10 }}>
+          <div style={{ padding: '4px 16px 0', display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
             {/* What it can see, in the header, tappable to see exactly what.
                 Nothing hidden — an answer whose basis you cannot check is one
                 you either swallow or ignore. */}
@@ -474,8 +474,8 @@ export function Assistant() {
                 <div className="kicker">Exactly what goes with your question</div>
                 <pre
                   style={{
-                    marginTop: 6,
-                    padding: 10,
+                    marginTop: 'var(--sp-3)',
+                    padding: 'var(--sp-5)',
                     borderRadius: 'var(--r-sm)',
                     border: '1px solid var(--app-line)',
                     background: 'var(--app-hero)',
@@ -499,7 +499,7 @@ export function Assistant() {
             {/* Nothing asked yet: what is worth asking here, from this
                 screen's own provider. */}
             {talk.turns.length === 0 && !talk.streaming && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
                 {ai.suggestions().map((s) => (
                   <button
                     key={s}
@@ -521,7 +521,7 @@ export function Assistant() {
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
               {talk.turns.map((t, i) => (
                 <div key={i}>
                   <div className="kicker" style={{ color: t.role === 'user' ? 'inherit' : 'var(--app-accent)' }}>
@@ -561,9 +561,9 @@ export function Assistant() {
 
             {/* What the app itself can say, with no request behind it. */}
             {talk.locally && (
-              <div style={{ marginTop: 12 }}>
+              <div style={{ marginTop: 'var(--sp-6)' }}>
                 <div className="kicker">From this app, with nothing sent</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 6 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
                   {talk.locally.matches.map((m) => (
                     <Blueprint
                       key={m.screen}
@@ -577,7 +577,7 @@ export function Assistant() {
                         {m.label}
                         <span style={{ opacity: 0.45, fontFamily: 'var(--font-body)' }}> · {m.group}</span>
                       </div>
-                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.7, lineHeight: 'var(--leading-normal)', marginTop: 2 }}>
+                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.7, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}>
                         {m.blurb}
                       </div>
                     </Blueprint>
@@ -605,7 +605,7 @@ export function Assistant() {
             {talk.proposals.length > 0 && !talk.busy && (
               <div
                 style={{
-                  marginTop: 12,
+                  marginTop: 'var(--sp-6)',
                   padding: '10px 12px',
                   borderRadius: 'var(--r-md)',
                   border: '1px solid var(--app-line)',
@@ -613,7 +613,7 @@ export function Assistant() {
                 }}
               >
                 <div className="kicker">{talk.proposalsLine}</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
                   {talk.proposals.map((p) => (
                     <div key={p.id} style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
                       <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-sm)', lineHeight: 1.4 }}>
@@ -648,7 +648,7 @@ export function Assistant() {
 
             {/* What has been done, and how to take it back. */}
             {talk.applied.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
                 {talk.applied.map((e) => (
                   <div key={e.p.id} style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
                     <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-xs)', opacity: 0.75, lineHeight: 1.4 }}>
@@ -681,7 +681,7 @@ export function Assistant() {
               aria-label="Your question"
               style={{ minHeight: 58, fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}
             />
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
               <button
                 type="button"
                 className="btn btn-primary"
@@ -721,7 +721,7 @@ export function Assistant() {
                 Silent when nothing was measured — a zero would read as
                 "this was free". See `lib/spend.ts`. */}
             {talk.cost.asks > 0 && (
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 6, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
                 About {money(talk.cost.dollars)} this month, over {talk.cost.asks}{' '}
                 {talk.cost.asks === 1 ? 'answer' : 'answers'}
                 {talk.cost.unpriced > 0 ? ` (${talk.cost.unpriced} unpriced)` : ''}. Estimated.

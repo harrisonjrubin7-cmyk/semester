@@ -50,7 +50,7 @@ function NextClassCard() {
   if (!next) return null;
 
   return (
-    <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+    <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div className="kicker">Next class</div>
         <div
@@ -65,7 +65,7 @@ function NextClassCard() {
           {next.untilLabel}
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
         <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
           {next.block.time}
         </div>
@@ -80,7 +80,7 @@ function NextClassCard() {
       </div>
       <div
         style={{
-          marginTop: 12,
+          marginTop: 'var(--sp-6)',
           paddingTop: 11,
           borderTop: '1px solid var(--app-line)',
           fontSize: 'var(--type-base)',
@@ -138,13 +138,13 @@ function YourTasks() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {mine.map((t) => (
           <div
             key={t.id}
             style={{
               display: 'flex',
-              gap: 12,
+              gap: 'var(--sp-6)',
               alignItems: 'flex-start',
               ...rowTen,
             }}
@@ -173,7 +173,7 @@ function YourTasks() {
                 {t.title}
               </div>
               {(t.time || t.courseId) && (
-                <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 2 }}>
+                <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                   {t.courseId ? `${courseCode(t.courseId)} · ` : ''}
                   {t.time}
                 </div>
@@ -210,10 +210,10 @@ function OverdueBanner() {
       }}
       style={{
         display: 'flex',
-        gap: 10,
+        gap: 'var(--sp-5)',
         alignItems: 'center',
         width: '100%',
-        marginTop: 12,
+        marginTop: 'var(--sp-6)',
         padding: '11px 13px',
         borderRadius: 12,
         textAlign: 'left',
@@ -403,7 +403,7 @@ function Feed_due() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))' }}>
             {today.length === 0 ? 'Nothing due today.' : 'Nothing left today.'}
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 4 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 'var(--sp-2)' }}>
             {ahead[0]
               ? `Next up is ${ahead[0].title}, ${ahead[0].dueShort.toLowerCase()}.`
               : 'The semester is clear.'}
@@ -423,7 +423,7 @@ function Feed_due() {
                 background: done ? 'transparent' : 'var(--app-panel)',
               }}
             >
-            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'flex-start' }}>
               <button
                 type="button"
                 className="bare"
@@ -571,7 +571,7 @@ function Feed_rail() {
     <>
       <SectionLabel>Today’s schedule</SectionLabel>
       {rail.length === 0 ? (
-        <div style={{ fontSize: 'var(--type-md)', opacity: 0.5, paddingBottom: 8 }}>
+        <div style={{ fontSize: 'var(--type-md)', opacity: 0.5, paddingBottom: 'var(--sp-4)' }}>
           No classes today. Your schedule picks up again on your next teaching day.
         </div>
       ) : (
@@ -587,7 +587,7 @@ function Feed_rail() {
                     textAlign: 'right',
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'var(--type-md)',
-                    paddingTop: 12,
+                    paddingTop: 'var(--sp-6)',
                     opacity: 0.6,
                   }}
                 >
@@ -626,7 +626,7 @@ function Feed_rail() {
                   </div>
                   <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
                     {b.mine && (
-                      <span className="tag tag-neutral" style={{ marginRight: 6 }}>
+                      <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
                         Yours
                       </span>
                     )}
@@ -669,9 +669,9 @@ function Feed_registrar() {
         <Blueprint
           key={d.id}
           onClick={() => dispatch({ type: 'go', screen: 'registrar' })}
-          style={{ padding: '12px 14px', marginBottom: 8 }}
+          style={{ padding: '12px 14px', marginBottom: 'var(--sp-4)' }}
         >
-          <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
             <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{d.label}</span>
             <span
               style={{
@@ -765,7 +765,7 @@ function DoneToday() {
     <>
       <Blueprint style={{ padding: 15, background: 'var(--app-hero)' }}>
         <div className="kicker">Finished</div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)', marginTop: 'var(--sp-3)' }}>
           <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
             {done.length}
           </div>
@@ -776,7 +776,7 @@ function DoneToday() {
         {cards.cards > 0 && (
           <div
             style={{
-              marginTop: 12,
+              marginTop: 'var(--sp-6)',
               paddingTop: 11,
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-base)',
@@ -806,7 +806,7 @@ function DoneToday() {
               onClick={() => dispatch({ type: 'openItem', id: i.id })}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 alignItems: 'center',
                 textAlign: 'left',
                 ...rowTwelve,
@@ -827,7 +827,7 @@ function DoneToday() {
                 >
                   {i.title}
                 </span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 2 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
                   {i.dueShort} · {i.kind}
                 </span>
               </span>
@@ -854,7 +854,7 @@ function HoursToday() {
 
   return (
     <>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 6 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-3)' }}>
         Classes from your syllabi, in the app's own colour. Anything you add is tinted by what it
         is for.
       </div>
@@ -925,7 +925,7 @@ function FeedHome() {
               onClick={f.itemId ? () => dispatch({ type: 'openItem', id: f.itemId! }) : undefined}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 alignItems: 'flex-start',
                 ...rowThirteen,
                 cursor: f.itemId ? 'pointer' : 'default',
@@ -937,7 +937,7 @@ function FeedHome() {
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
                   lineHeight: 1.05,
-                  paddingTop: 2,
+                  paddingTop: 'var(--sp-1)',
                 }}
               >
                 <div
@@ -989,7 +989,7 @@ function FeedHome() {
                 >
                   {f.title}
                 </div>
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 2 }}>{f.meta}</div>
+                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>{f.meta}</div>
               </div>
             </button>
           ))}

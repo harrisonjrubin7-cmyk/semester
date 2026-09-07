@@ -57,14 +57,14 @@ export function Capacity() {
       >
         {verdict(needed, cap, state.contract)}
         {taken ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)' }}>
             {taken}
           </div>
         ) : null}
       </div>
 
       <SectionLabel style={{ margin: '22px 0 8px' }}>How many hours school gets</SectionLabel>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="input"
           inputMode="numeric"
@@ -98,7 +98,7 @@ export function Capacity() {
         {state.floor.on ? `On — ${clock(state.floor.from)} to ${clock(state.floor.to)}` : 'Off'}
       </button>
       {state.floor.on ? (
-        <div style={{ display: 'flex', gap: 8, marginTop: 9, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 9, flexWrap: 'wrap' }}>
           <Bump label="Start earlier" onClick={() => shift('from', -30)} />
           <Bump label="Start later" onClick={() => shift('from', 30)} />
           <Bump label="Lift earlier" onClick={() => shift('to', -30)} />

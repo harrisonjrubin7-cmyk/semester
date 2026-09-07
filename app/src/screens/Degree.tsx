@@ -69,7 +69,7 @@ export function Degree() {
         <div className="kicker">Your arithmetic, not the registrar’s</div>
         <div
           style={{
-            marginTop: 6,
+            marginTop: 'var(--sp-3)',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             lineHeight: 1.55,
             textWrap: 'pretty',
@@ -185,7 +185,7 @@ function WhatIsLeft() {
                       style={{
                         fontSize: 'calc(11.5px * var(--text-scale, 1))',
                         opacity: 0.5,
-                        marginTop: 4,
+                        marginTop: 'var(--sp-2)',
                         textWrap: 'pretty',
                       }}
                     >
@@ -247,7 +247,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
 
   return (
     <>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
           className="input"
           value={code}
@@ -265,7 +265,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
           style={{ flex: 1, height: 42 }}
         />
       </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
         <input
           className="input"
           value={term}
@@ -311,7 +311,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={add}
-        style={{ height: 44, marginTop: 12, textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        style={{ height: 44, marginTop: 'var(--sp-6)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
       >
         Add the course
       </button>
@@ -325,7 +325,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
                 key={c.id}
                 style={{
                   display: 'flex',
-                  gap: 10,
+                  gap: 'var(--sp-5)',
                   alignItems: 'baseline',
                   padding: '10px 13px',
                   borderRadius: 'var(--r-md)',
@@ -341,7 +341,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
                       display: 'block',
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
                       opacity: 0.6,
-                      marginTop: 2,
+                      marginTop: 'var(--sp-1)',
                       textWrap: 'pretty',
                     }}
                   >
@@ -399,7 +399,7 @@ function Rules() {
 
   return (
     <>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
           className="input"
           value={programme}
@@ -415,9 +415,9 @@ function Rules() {
         onChange={(e) => setName(e.target.value)}
         placeholder="Intermediate theory"
         aria-label="What the requirement is called"
-        style={{ width: '100%', height: 42, marginTop: 8 }}
+        style={{ width: '100%', height: 42, marginTop: 'var(--sp-4)' }}
       />
-      <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="input"
           inputMode="numeric"
@@ -454,7 +454,7 @@ function Rules() {
         style={{
           width: '100%',
           minHeight: 64,
-          marginTop: 8,
+          marginTop: 'var(--sp-4)',
           resize: 'vertical',
           fontSize: 'var(--type-base)',
           lineHeight: 'var(--leading-relaxed)',
@@ -464,7 +464,7 @@ function Rules() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={add}
-        style={{ height: 44, marginTop: 10, textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        style={{ height: 44, marginTop: 'var(--sp-5)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
       >
         Add the requirement
       </button>
@@ -478,7 +478,7 @@ function Rules() {
                 key={r.id}
                 style={{
                   display: 'flex',
-                  gap: 10,
+                  gap: 'var(--sp-5)',
                   alignItems: 'baseline',
                   padding: '10px 13px',
                   borderRadius: 'var(--r-md)',
@@ -494,7 +494,7 @@ function Rules() {
                       display: 'block',
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
                       opacity: 0.6,
-                      marginTop: 2,
+                      marginTop: 'var(--sp-1)',
                       textWrap: 'pretty',
                     }}
                   >

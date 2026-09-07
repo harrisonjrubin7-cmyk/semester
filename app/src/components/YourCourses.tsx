@@ -47,7 +47,7 @@ export function YourCourses() {
       >
         Your courses, your way
       </SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
         Call them what you call them, colour them so four codes are four things at a glance, and
         put the one you are living in this week at the top. The course code does not change —
         that is what a re-imported syllabus is matched on, and what a shared practice paper
@@ -62,7 +62,7 @@ export function YourCourses() {
 
         return (
           <div key={c.id} style={row}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
               <button
                 type="button"
                 className="bare tappable"
@@ -125,7 +125,7 @@ export function YourCourses() {
                   </span>
                 </span>
                 {note ? (
-                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-1)' }}>
                     {note}
                   </span>
                 ) : null}

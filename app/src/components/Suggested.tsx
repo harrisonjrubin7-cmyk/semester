@@ -56,7 +56,7 @@ export function Suggested() {
   return (
     <div style={{ marginTop: 22 }}>
       <div className="kicker">Worth knowing about</div>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {NO_DATES}
       </div>
 
@@ -80,11 +80,11 @@ export function Suggested() {
       </button>
 
       {open && (
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 'var(--sp-5)' }}>
           <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7 }}>
             Which year are you in?
           </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 7 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 7 }}>
             {YEARS.map((y) => (
               <button
                 key={y.id}
@@ -103,10 +103,10 @@ export function Suggested() {
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 12 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-6)' }}>
             What are you interested in? Leaving these alone shows everything.
           </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 7 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 7 }}>
             {FIELDS.map((f) => (
               <button
                 key={f}
@@ -124,11 +124,11 @@ export function Suggested() {
       )}
 
       {rows.length === 0 ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 12, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {emptyLine(want)}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
           {rows.map((p) => (
             <div
               key={p.id}
@@ -141,16 +141,16 @@ export function Suggested() {
               <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
                 {p.role}
               </div>
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 2 }}>
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                 {p.org}
               </div>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 {p.what}
               </div>
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 6, lineHeight: 1.4, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 1.4, textWrap: 'pretty' }}>
                 {whenLine(p, now)}
               </div>
-              <div style={{ display: 'flex', gap: 7, marginTop: 10, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 7, marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
                 <button
                   type="button"
                   className="bare tappable"

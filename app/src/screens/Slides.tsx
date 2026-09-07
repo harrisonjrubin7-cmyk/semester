@@ -97,7 +97,7 @@ export function SlideDeck() {
         {guide.code} · unit {unitIndex + 1} · slide {at + 1} of {slides.length}
       </div>
 
-      <div style={{ height: 3, background: 'var(--app-track)', marginTop: 8 }}>
+      <div style={{ height: 3, background: 'var(--app-track)', marginTop: 'var(--sp-4)' }}>
         <div
           style={{
             height: '100%',
@@ -126,7 +126,7 @@ export function SlideDeck() {
             <div className="kicker">{slide.sub}</div>
             <div
               className="chrome-text"
-              style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1.05, marginTop: 10, textWrap: 'pretty' }}
+              style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1.05, marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
             >
               {slide.title}
             </div>
@@ -143,13 +143,13 @@ export function SlideDeck() {
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'calc(25px * var(--text-scale, 1))',
                 lineHeight: 1.15,
-                marginTop: 12,
+                marginTop: 'var(--sp-6)',
                 textWrap: 'pretty',
               }}
             >
               {slide.text}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 16 }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 'var(--sp-7)' }}>
               Answer it before you advance.
             </div>
           </>
@@ -172,7 +172,7 @@ export function SlideDeck() {
               style={{
                 fontSize: 'calc(17px * var(--text-scale, 1))',
                 lineHeight: 'var(--leading-relaxed)',
-                marginTop: 12,
+                marginTop: 'var(--sp-6)',
                 textWrap: 'pretty',
               }}
             >
@@ -184,13 +184,13 @@ export function SlideDeck() {
         {slide.kind === 'figure' && (
           <>
             <div className="kicker">Figure</div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 4 }}>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
               {slide.figure.title}
             </div>
             {slide.figure.type === 'diagram' ? (
               <Diagram kind={slide.figure.kind} />
             ) : (
-              <div style={{ fontSize: 'var(--type-md)', opacity: 0.75, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'var(--type-md)', opacity: 0.75, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
                 {slide.figure.caption}
               </div>
             )}
@@ -202,14 +202,14 @@ export function SlideDeck() {
             <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08 }}>
               {slide.title}
             </div>
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8 }}>{slide.sub}</div>
+            <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)' }}>{slide.sub}</div>
             <button
               type="button"
               className="btn btn-primary"
               onClick={() => dispatch({ type: 'startDrill', unit: unitIndex })}
               style={{
                 alignSelf: 'flex-start',
-                marginTop: 16,
+                marginTop: 'var(--sp-7)',
                 height: 42,
                 fontSize: 'var(--type-sm)',
                 letterSpacing: '0.1em',
@@ -237,7 +237,7 @@ export function SlideDeck() {
         />
       </Blueprint>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
         <button
           type="button"
           className="btn btn-secondary btn-icon"
@@ -266,7 +266,7 @@ export function SlideDeck() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
         <button
           type="button"
           className="btn btn-secondary"

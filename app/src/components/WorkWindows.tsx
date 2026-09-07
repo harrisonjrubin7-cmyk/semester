@@ -40,7 +40,7 @@ export function WorkWindows() {
   return (
     <>
       <SectionLabel>When you actually work</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         The app counts a day as sixteen waking hours until you say otherwise, which is a default
         rather than a fact about you. Two or three windows here make every hour figure in the app
         true — the week ahead, the exam runway, what is left over.
@@ -53,7 +53,7 @@ export function WorkWindows() {
             ...row,
           }}
         >
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
             <input
               className="input"
               value={w.label}
@@ -75,7 +75,7 @@ export function WorkWindows() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-4)' }}>
             {DAYS.map((d, i) => {
               const on = w.days.includes(d.day);
               return (
@@ -108,7 +108,7 @@ export function WorkWindows() {
             })}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', alignItems: 'center' }}>
             <input
               className="input"
               type="time"
@@ -134,7 +134,7 @@ export function WorkWindows() {
             />
           </div>
 
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)' }}>
             {tidy(w)
               ? `${daysLine(w.days)} · ${spanLine(w)} · ${hoursAWeek([w])} hours a week`
               : 'Pick at least one day, and an end after the start. Counted as nothing until you do.'}
@@ -142,7 +142,7 @@ export function WorkWindows() {
         </div>
       ))}
 
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 'var(--sp-6)' }}>
         {SUGGESTED.filter((s) => !windows.some((w) => w.label === s.label)).map((s) => (
           <button
             key={s.label}
@@ -170,7 +170,7 @@ export function WorkWindows() {
       </div>
 
       {windows.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           {hoursAWeek(windows)} hours a week before anything is promised. Nothing is ever scheduled
           into a window — this only says how many hours are actually there.
         </div>

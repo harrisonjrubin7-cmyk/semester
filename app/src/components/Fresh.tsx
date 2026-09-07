@@ -48,7 +48,7 @@ export function Fresh() {
         zIndex: 70,
         display: 'flex',
         alignItems: 'center',
-        gap: 10,
+        gap: 'var(--sp-5)',
         padding: '10px 12px',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line-top)',

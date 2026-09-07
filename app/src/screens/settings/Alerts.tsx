@@ -40,7 +40,7 @@ export function SettingsAlerts() {
                 counting those backwards over a weekend is easy to get wrong. Set it here and the exam
                 runway does it. Leave it at zero if you do not use one.
               </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
                 <input
                   className="input"
                   type="number"

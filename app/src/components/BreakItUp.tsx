@@ -43,7 +43,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
     return (
       <div
         style={{
-          marginTop: 10,
+          marginTop: 'var(--sp-5)',
           fontSize: 'var(--type-sm)',
           opacity: 0.6,
           lineHeight: 'var(--leading-relaxed)',
@@ -80,7 +80,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
   return (
     <div
       style={{
-        marginTop: 10,
+        marginTop: 'var(--sp-5)',
         padding: '12px 13px',
         border: '1px solid var(--app-line)',
         borderRadius: 'var(--r-md)',
@@ -91,9 +91,9 @@ export function BreakItUp({ item }: { item: DatedItem }) {
       {/* Shown before they are made, because a plan somebody disagrees with is
           worse than none — and the way to disagree with this one is to not
           press the button, which costs nothing. */}
-      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 7 }}>
         {steps.map((s) => (
-          <div key={s.title} style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+          <div key={s.title} style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
             <span
               style={{
                 fontFamily: 'var(--font-heading)',
@@ -113,7 +113,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)', flexWrap: 'wrap' }}>
         <button
           type="button"
           className="bare tappable"
@@ -164,7 +164,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
           opacity: 0.5,
-          marginTop: 10,
+          marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}

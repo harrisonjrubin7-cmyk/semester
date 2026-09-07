@@ -111,7 +111,7 @@ export function Announce() {
         ))}
       </select>
       {!module_ && shown ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
           This is one of the sample courses, which are built into the app. Changes can be read out
           of an announcement but not saved against it.
         </div>
@@ -132,12 +132,12 @@ export function Announce() {
           className="btn btn-primary btn-block"
           onClick={() => void read()}
           disabled={busy || !text.trim()}
-          style={{ height: 46, marginTop: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ height: 46, marginTop: 'var(--sp-6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           {busy ? 'Reading it…' : 'What does this change?'}
         </button>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 12, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
           Needs a key first — set one under Ask Claude → Settings.
         </div>
       )}
@@ -198,7 +198,7 @@ export function Announce() {
                       display: 'block',
                       fontSize: 'var(--type-sm)',
                       opacity: 0.6,
-                      marginTop: 6,
+                      marginTop: 'var(--sp-3)',
                       paddingLeft: 9,
                       borderLeft: '2px solid var(--app-line)',
                       lineHeight: 'var(--leading-normal)',
@@ -215,12 +215,12 @@ export function Announce() {
                   className="btn btn-primary btn-block"
                   onClick={keep}
                   disabled={Object.values(taken).every((v) => !v)}
-                  style={{ height: 46, marginTop: 10 }}
+                  style={{ height: 46, marginTop: 'var(--sp-5)' }}
                 >
                   Apply the {Object.values(taken).filter(Boolean).length} ticked
                 </button>
               ) : (
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
                   Nothing to apply them to — this is a sample course.
                 </div>
               )}

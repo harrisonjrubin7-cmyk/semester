@@ -79,7 +79,7 @@ export function Adopting({
         style={{
           fontSize: 'var(--type-base)',
           opacity: 0.75,
-          marginTop: 10,
+          marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -87,7 +87,7 @@ export function Adopting({
         {say} Nothing has been changed yet.
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'var(--sp-7)' }}>
         {list.map((o) => {
           const on = picked === o.id;
           return (
@@ -137,7 +137,7 @@ export function Adopting({
         type="button"
         className="btn btn-primary btn-block"
         onClick={go}
-        style={{ marginTop: 16, height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ marginTop: 'var(--sp-7)', height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {picked === SAFEST ? 'Keep both' : 'Save a backup and go ahead'}
       </button>

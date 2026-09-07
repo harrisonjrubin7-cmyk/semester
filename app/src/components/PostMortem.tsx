@@ -29,7 +29,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
 
   if (!open) {
     return (
-      <div style={{ marginTop: 10 }}>
+      <div style={{ marginTop: 'var(--sp-5)' }}>
         {done ? (
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {doneLine(done, units.map((u) => unitName(u.name)))}
@@ -85,9 +85,9 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
   });
 
   return (
-    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--app-line)' }}>
+    <div style={{ marginTop: 'var(--sp-6)', paddingTop: 'var(--sp-6)', borderTop: '1px solid var(--app-line)' }}>
       <div className="kicker">Which topics did you lose points on?</div>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 'var(--sp-4)' }}>
         {units.map((u, i) => (
           <button
             key={u.name}
@@ -107,13 +107,13 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
         onChange={(e) => setDraft({ ...draft, other: e.target.value })}
         placeholder="Anything the units do not cover"
         aria-label="Anything the units do not cover"
-        style={{ height: 36, marginTop: 8, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+        style={{ height: 36, marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
       />
 
       <div className="kicker" style={{ marginTop: 14 }}>
         What kind of miss?
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)' }}>
         {KINDS.map((k) => (
           <button
             key={k.id}
@@ -124,14 +124,14 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
             style={{ ...chip(draft.kinds.includes(k.id)), textAlign: 'left', width: '100%' }}
           >
             <span style={{ display: 'block' }}>{k.label}</span>
-            <span style={{ display: 'block', fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
               {k.blurb}
             </span>
           </button>
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
         <button
           type="button"
           className="btn btn-secondary"

@@ -86,7 +86,7 @@ export function PushSwitch() {
   };
 
   return (
-    <div style={{ marginTop: 10 }}>
+    <div style={{ marginTop: 'var(--sp-5)' }}>
       <button
         type="button"
         className="btn btn-secondary btn-block"
@@ -98,12 +98,12 @@ export function PushSwitch() {
       </button>
 
       {(said || blocked) && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           {blocked || said}
         </div>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>{PUSH_NOTE}</div>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>{PUSH_NOTE}</div>
     </div>
   );
 }

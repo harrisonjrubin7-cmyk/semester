@@ -71,7 +71,7 @@ export function Registrar() {
           opacity: where === 'past' ? 0.5 : 1,
         }}
       >
-        <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
           <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{d.label}</span>
           {set && (
             <span
@@ -93,7 +93,7 @@ export function Registrar() {
           </div>
         ) : null}
 
-        <div style={{ display: 'flex', gap: 6, marginTop: 7, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 7, alignItems: 'center' }}>
           <input
             className="input"
             type="date"
@@ -159,7 +159,7 @@ export function Registrar() {
           they are the ones that cost money rather than points — a withdrawal deadline missed is a
           course you are graded on whatever happens next.
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           The app ships none of them. It cannot read a registrar, these dates differ by university
           and by year, and a wrong one that looks confident is worse than a blank one that asks.
         </div>
@@ -197,7 +197,7 @@ export function Registrar() {
       {tab === 'dates' ? (
         <>
           <SectionLabel>The dates worth knowing</SectionLabel>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginBottom: 4, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginBottom: 'var(--sp-2)', lineHeight: 'var(--leading-normal)' }}>
             Leave anything your university does not do. A blank row is a normal row.
           </div>
           {shown.map(row)}
@@ -205,7 +205,7 @@ export function Registrar() {
       ) : (
         <>
           <SectionLabel>Paste your registrar's calendar</SectionLabel>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             Copy the academic calendar page and paste it here. Every row comes back for you to
             confirm — nothing is saved until you say so.
           </div>
@@ -217,7 +217,7 @@ export function Registrar() {
             style={{ width: '100%', minHeight: 140, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
           />
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', alignItems: 'center' }}>
             <span style={{ fontSize: 'var(--type-sm)', opacity: 0.6, flex: 'none' }}>Year</span>
             <input
               className="input"
@@ -237,7 +237,7 @@ export function Registrar() {
               Read it
             </button>
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             A registrar's page usually runs across two years. The app never guesses which — set it
             here, and paste a spring page separately.
           </div>
@@ -262,12 +262,12 @@ export function Registrar() {
                     onClick={() => setTaken((was) => ({ ...was, [i]: !was[i] }))}
                     style={{
                       display: 'flex',
-                      gap: 10,
+                      gap: 'var(--sp-5)',
                       width: '100%',
                       textAlign: 'left',
                       alignItems: 'baseline',
                       padding: '10px 11px',
-                      marginBottom: 6,
+                      marginBottom: 'var(--sp-3)',
                       borderRadius: 'var(--r-md)',
                       border: `1px solid ${taken[i] ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                       background: taken[i] ? 'var(--app-accent-wash)' : 'transparent',
@@ -289,7 +289,7 @@ export function Registrar() {
                   type="button"
                   className="btn btn-primary btn-block"
                   onClick={keep}
-                  style={{ height: 46, marginTop: 10 }}
+                  style={{ height: 46, marginTop: 'var(--sp-5)' }}
                 >
                   Keep the {Object.values(taken).filter(Boolean).length} ticked
                 </button>

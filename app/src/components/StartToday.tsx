@@ -41,7 +41,7 @@ export function StartToday() {
   return (
     <div style={{ marginTop: 14 }}>
       <SectionLabel style={{ margin: '0 0 8px' }}>Begin today</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {list.map((s) => (
           <button
             key={s.id}
@@ -85,7 +85,7 @@ export function StartToday() {
               style={{
                 display: 'block',
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                marginTop: 6,
+                marginTop: 'var(--sp-3)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
               }}
@@ -105,7 +105,7 @@ export function StartToday() {
           style={{
             fontSize: 'var(--type-xs)',
             opacity: 0.5,
-            marginTop: 8,
+            marginTop: 'var(--sp-4)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
@@ -240,7 +240,7 @@ export function StartList() {
         style={{
           fontSize: 'var(--type-xs)',
           opacity: 0.5,
-          marginTop: 10,
+          marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}

@@ -136,7 +136,7 @@ export function Deck() {
 
       {source === 'unit' ? (
         <>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
             No model in the loop and nothing invented — your own guide, rearranged. Question on one
             slide, answer on the next.
           </div>
@@ -155,7 +155,7 @@ export function Deck() {
             ))}
           </select>
           {catalog.courses.length > 1 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 6 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 'var(--sp-3)' }}>
               Switch course from Study.
             </div>
           )}
@@ -182,7 +182,7 @@ export function Deck() {
                   }}
                 >
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                     {option.blurb}
                   </span>
                 </button>
@@ -212,7 +212,7 @@ export function Deck() {
             onFill={(lines) => setMaterial((now) => appendTo(now, lines))}
             label="readings"
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Anything not in here comes back as a blank in square brackets. A number invented on a
             slide is believed by a whole room at once.
           </div>
@@ -267,7 +267,7 @@ export function Deck() {
               {busy ? 'Planning it…' : plan ? 'Plan it again' : 'Plan the deck'}
             </button>
           ) : (
-            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 16, lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
               Needs a key first — set one under Ask Claude → Settings. Building a deck from a unit
               needs no key at all.
             </div>
@@ -280,7 +280,7 @@ export function Deck() {
       {file && file.slides.length > 0 && (
         <>
           <SectionLabel>{file.slides.length} slides</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
             {file.slides.map((slide, i) => (
               <Blueprint key={`${slide.title}-${i}`} style={{ padding: '11px 13px' }}>
                 <div className="kicker">
@@ -310,7 +310,7 @@ export function Deck() {
           </div>
 
           {left.length > 0 && (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
               {left.length} {left.length === 1 ? 'blank' : 'blanks'} in square brackets. Those are
               the facts it would have had to invent — fill them before you present.
             </div>
@@ -327,7 +327,7 @@ export function Deck() {
           </button>
 
           {plan && (
-            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -360,8 +360,8 @@ export function Deck() {
               </button>
             </div>
           )}
-          <PrintButton label="Print the slides" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+          <PrintButton label="Print the slides" style={{ marginTop: 'var(--sp-4)' }} />
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             The notes hold what you say over each slide, which is deliberately not what is written
             on it — a slide read aloud is a slide nobody listens to.
           </div>

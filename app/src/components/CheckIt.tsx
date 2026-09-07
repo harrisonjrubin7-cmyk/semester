@@ -94,13 +94,13 @@ export function CheckIt({
   return (
     <div
       style={{
-        marginTop: 10,
+        marginTop: 'var(--sp-5)',
         padding: '12px 13px',
         border: '1px solid var(--app-line)',
         borderRadius: 'var(--r-md)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
         <span
           style={{
             flex: 1,
@@ -170,7 +170,7 @@ export function CheckIt({
             {second ? (
               <div
                 style={{
-                  marginTop: 10,
+                  marginTop: 'var(--sp-5)',
                   fontSize: 'calc(12.5px * var(--text-scale, 1))',
                   lineHeight: 1.6,
                   whiteSpace: 'pre-wrap',

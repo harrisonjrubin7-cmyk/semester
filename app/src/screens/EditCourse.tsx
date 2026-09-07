@@ -80,9 +80,9 @@ export function EditCourse() {
   if (!owned || !draft) {
     return (
       <Page>
-        <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Shipped with the app</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
             This course is built into the app rather than held in your account, which is why there
             is nothing to change yet. Take the semester on and all four become yours — editable,
             shareable, and keeping everything you have already ticked off.
@@ -130,8 +130,8 @@ export function EditCourse() {
     onChange: (v: string) => void,
     placeholder = '',
   ) => (
-    <label style={{ display: 'block', marginBottom: 10 }}>
-      <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 4 }}>
+    <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
+      <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 'var(--sp-2)' }}>
         {label}
       </span>
       <input
@@ -152,7 +152,7 @@ export function EditCourse() {
       </div>
 
       {missing.length > 0 && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
           Currently: {missing.join(', ')}.
         </div>
       )}
@@ -167,7 +167,7 @@ export function EditCourse() {
       {text('Credits', draft.course.credits, (v) => field({ credits: v }), '3')}
 
       <SectionLabel>Which term</SectionLabel>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
           className="input"
           type="number"
@@ -192,18 +192,18 @@ export function EditCourse() {
           ))}
         </select>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         The term decides which year this course's dates fall in, and keeps last semester out of
         Today without deleting it. Courses added before this existed are filed under Fall 2026,
         which is what their dates are.
       </div>
 
       <SectionLabel>What the syllabus says about AI</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Recorded here, and read by the drafting tool, which will not write for a course unless
         this says plainly that it may. Nothing recorded counts as no.
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 10 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 'var(--sp-5)' }}>
         {STANCES.map((option) => {
           const on = (draft.course.ai?.stance ?? 'unstated') === option.id;
           return (
@@ -224,7 +224,7 @@ export function EditCourse() {
               }}
             >
               <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                 {stanceLine(option.id)}
               </span>
             </button>
@@ -243,7 +243,7 @@ export function EditCourse() {
 
       <SectionLabel>How the grade is built</SectionLabel>
       {draft.course.grading.map((row, i) => (
-        <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+        <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
           <input
             className="input"
             value={row.what}
@@ -296,7 +296,7 @@ export function EditCourse() {
         + Add a grading row
       </button>
       {note ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8 }}>{note}</div>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)' }}>{note}</div>
       ) : null}
 
       <SectionLabel>When it meets</SectionLabel>
@@ -341,7 +341,7 @@ export function EditCourse() {
               );
             })}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <input
               className="input"
               value={block.time}
@@ -392,7 +392,7 @@ export function EditCourse() {
           </div>
         </Blueprint>
       ))}
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <button
           type="button"
           className="btn btn-secondary"
@@ -436,7 +436,7 @@ export function EditCourse() {
           + Office hours
         </button>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         The time is written as it appears on screen, and the hour grid places a block by it — so
         "9:10a" and "2:45p" are understood and "morning" is not. Office hours sit dimmer on the
         rail than a class, and are what the app watches when it notices a course going badly.
@@ -450,9 +450,9 @@ export function EditCourse() {
             value={i.title}
             placeholder="What is due"
             onChange={(e) => change(patchItem(draft, i.id, { title: e.target.value }))}
-            style={{ width: '100%', marginBottom: 8 }}
+            style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
           />
-          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
             <input
               className="input"
               type="date"
@@ -471,7 +471,7 @@ export function EditCourse() {
               style={{ width: 92, flex: 'none' }}
             />
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <select
               className="input"
               value={KINDS.includes(i.kind) ? i.kind : KINDS[0]}
@@ -522,13 +522,13 @@ export function EditCourse() {
         {dirty ? 'Save the changes' : saved ? 'Saved' : 'Nothing changed'}
       </button>
       {dirty ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Nothing is saved until you press that. A half-typed date would otherwise flow straight
           into the calendar and the overdue count while you were still typing it.
         </div>
       ) : null}
       {saved ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           Saved. The calendar, Grades, Today and every study mode are using it already. What you
           have ticked off and drilled is untouched.
         </div>

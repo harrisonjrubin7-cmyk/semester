@@ -51,7 +51,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
           key={`${h.title}-${i}`}
           style={{
             display: 'flex',
-            gap: 10,
+            gap: 'var(--sp-5)',
             alignItems: 'baseline',
             ...row,
           }}
@@ -64,7 +64,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
         </div>
       ))}
       {next ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Next: {whenLine(next, now)}.
         </div>
       ) : null}

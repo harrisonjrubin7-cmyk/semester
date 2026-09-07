@@ -95,14 +95,14 @@ export function Group({
   if (!grouped) {
     return (
       <section aria-labelledby={header ? id : undefined} style={style}>
-        {header ? <SectionLabel style={{ marginBottom: 6 }}>{<span id={id}>{header}</span>}</SectionLabel> : null}
+        {header ? <SectionLabel style={{ marginBottom: 'var(--sp-3)' }}>{<span id={id}>{header}</span>}</SectionLabel> : null}
         {footer ? (
           <div
             style={{
               fontSize: 'var(--type-base)',
               opacity: 0.65,
               lineHeight: 'var(--leading-relaxed)',
-              marginBottom: 10,
+              marginBottom: 'var(--sp-5)',
               textWrap: 'pretty',
             }}
           >
@@ -194,7 +194,7 @@ function Row({
   const style: CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
+    gap: 'var(--sp-6)',
     width: '100%',
     // The minimum, not the height: text size and line height have to grow a
     // row rather than clip it.
@@ -233,7 +233,7 @@ function Label({ label, sub }: { label: ReactNode; sub?: ReactNode }) {
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             opacity: 0.55,
-            marginTop: 2,
+            marginTop: 'var(--sp-1)',
             lineHeight: 1.4,
           }}
         >
@@ -337,7 +337,7 @@ export function ToggleRow({
         style={{
           width: 42,
           height: 24,
-          padding: 2,
+          padding: 'var(--sp-1)',
           flex: 'none',
           borderRadius: 'var(--r-sm)',
           border: '1px solid var(--app-line)',
@@ -443,13 +443,13 @@ export function SliderRow({
         ...(grouped ? DIVIDER : { borderBottom: '1px solid var(--app-line)' }),
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
         <label htmlFor={id} style={{ flex: 1, fontSize: 'var(--type-md)' }}>
           {label}
         </label>
         {said ? <Value>{said}</Value> : null}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)', marginTop: 'var(--sp-4)' }}>
         <span style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.45, flex: 'none' }}>{low}</span>
         <input
           id={id}

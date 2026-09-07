@@ -108,7 +108,7 @@ export function Command({ onClose }: { onClose: () => void }) {
       {/* A column rather than the full width of a laptop. Everything else in
           the app sits in a pane about this wide, and a search that alone runs
           edge to edge reads as a different application having opened. */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '16px 18px 0', width: '100%', maxWidth: COLUMN, margin: '0 auto' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'center', padding: '16px 18px 0', width: '100%', maxWidth: COLUMN, margin: '0 auto' }}>
         <input
           ref={box}
           className="input"
@@ -186,7 +186,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                   onClick={() => go(i)}
                   style={{
                     display: 'flex',
-                    gap: 10,
+                    gap: 'var(--sp-5)',
                     alignItems: 'center',
                     textAlign: 'left',
                     width: '100%',

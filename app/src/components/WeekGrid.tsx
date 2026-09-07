@@ -54,7 +54,7 @@ export function WeekGrid({
   return (
     <div className="weekgrid" style={style}>
       {/* Day letters, with the date under, aligned to the columns below. */}
-      <div style={{ display: 'flex', paddingLeft: GUTTER, marginBottom: 4 }}>
+      <div style={{ display: 'flex', paddingLeft: GUTTER, marginBottom: 'var(--sp-2)' }}>
         {days.map((d) => (
           <button
             key={d.date.toISOString()}

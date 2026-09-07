@@ -108,7 +108,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       onClick={onClick}
       style={{
         display: 'flex',
-        gap: 12,
+        gap: 'var(--sp-6)',
         alignItems: 'baseline',
         width: '100%',
         padding: '10px 0',
@@ -134,7 +134,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
           setSaid('');
           trouble.clear();
         }}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 'var(--sp-7)' }}
       />
 
       <Blueprint style={{ padding: '15px 16px' }}>
@@ -143,7 +143,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
         </div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {when === 'morning' ? morningLine(am) : eveningLine(pm)}
         </div>
@@ -176,7 +176,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
             </>
           )}
           {committed > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)' }}>
               {showHours(committed)} of that is a commitment rather than a class.
             </div>
           )}
@@ -263,14 +263,14 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       <SectionLabel>Further out</SectionLabel>
       <Blueprint
         onClick={() => dispatch({ type: 'go', screen: 'weekly' })}
-        style={{ padding: '12px 14px', display: 'flex', gap: 12, alignItems: 'center' }}
+        style={{ padding: '12px 14px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
       >
         <span style={{ width: 6, height: 30, background: 'var(--chrome)', flex: 'none' }} />
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
             This week’s report
           </span>
-          <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+          <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
             What happened, what slipped, and what next week holds.
           </span>
         </span>
@@ -278,14 +278,14 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
       <div style={{ height: 8 }} />
       <Blueprint
         onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
-        style={{ padding: '12px 14px', display: 'flex', gap: 12, alignItems: 'center' }}
+        style={{ padding: '12px 14px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
       >
         <span style={{ width: 6, height: 30, background: 'var(--chrome)', flex: 'none' }} />
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
             The week ahead, in hours
           </span>
-          <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+          <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
             What is promised, what is due, and where the room is.
           </span>
         </span>
@@ -308,7 +308,7 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
                 fontSize: 'var(--type-md)',
                 lineHeight: 1.6,
                 whiteSpace: 'pre-wrap',
-                marginTop: 12,
+                marginTop: 'var(--sp-6)',
                 padding: 14,
                 borderRadius: 'var(--r-lg)',
                 border: '1px solid var(--app-line)',
@@ -319,14 +319,14 @@ export function Brief({ bare = false }: { bare?: boolean } = {}) {
             </div>
           ) : null}
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Every number above is counted from your own data. {provider()} only reads the counts — it is
             told never to restate one differently or invent one.
           </div>
         </>
       )}
 
-      <PrintButton label="Print this report" style={{ marginTop: 12 }} />
+      <PrintButton label="Print this report" style={{ marginTop: 'var(--sp-6)' }} />
     </>
   );
 

@@ -61,7 +61,7 @@ export function Privacy() {
 
   return (
     <Page className="prose" bottom={26}>
-      <Blueprint style={{ padding: 16 }}>
+      <Blueprint style={{ padding: 'var(--sp-7)' }}>
         <div className="kicker">Your data</div>
         <div
           className="chrome-text"
@@ -111,11 +111,11 @@ export function Privacy() {
         on={state.countScreens}
         onChange={() => dispatch({ type: 'countScreens', on: !state.countScreens })}
       />
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.55, marginTop: 8, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.55, marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
         {usageLine(state.countScreens, counts)}
       </div>
       {total(counts) > 0 && (
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 'var(--sp-5)' }}>
           {top(counts).map((t) => (
             <div
               key={t.screen}
@@ -131,7 +131,7 @@ export function Privacy() {
               <span style={{ opacity: 0.6, fontVariantNumeric: 'tabular-nums' }}>{t.n}</span>
             </div>
           ))}
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginTop: 8, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
             {unusedLine(neverOpened(counts, DESTINATIONS.map((d) => d.screen as string)).length, DESTINATIONS.length)}
           </div>
           <button
@@ -148,7 +148,7 @@ export function Privacy() {
             style={{
               width: 'auto',
               padding: '6px 10px',
-              marginTop: 10,
+              marginTop: 'var(--sp-5)',
               borderRadius: 'var(--r-sm)',
               border: '1px solid var(--app-line)',
               fontSize: 'var(--type-xs)',
@@ -205,7 +205,7 @@ export function Privacy() {
             setSaved('This browser would not save the file. Copy it from the console instead.');
           }
         }}
-        style={{ marginTop: 12, height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ marginTop: 'var(--sp-6)', height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         Export diagnostics
       </button>
@@ -213,7 +213,7 @@ export function Privacy() {
         <div
           role="status"
           aria-live="polite"
-          style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}
+          style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}
         >
           {saved}
         </div>
@@ -232,7 +232,7 @@ export function Privacy() {
             className="btn btn-block"
             disabled={busy}
             onClick={() => setAsking(true)}
-            style={{ marginTop: 12, height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ marginTop: 'var(--sp-6)', height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy ? 'Deleting…' : 'Delete my account'}
           </button>
@@ -242,7 +242,7 @@ export function Privacy() {
               aria-live="polite"
               style={{
                 fontSize: 'var(--type-base)',
-                marginTop: 10,
+                marginTop: 'var(--sp-5)',
                 lineHeight: 1.55,
                 textWrap: 'pretty',
               }}

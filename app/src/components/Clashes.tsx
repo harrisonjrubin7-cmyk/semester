@@ -81,7 +81,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
         style={{
           display: 'block',
           fontSize: 'var(--type-md)',
-          marginTop: 4,
+          marginTop: 'var(--sp-2)',
           lineHeight: 1.4,
           textWrap: 'pretty',
         }}
@@ -140,8 +140,8 @@ export function DayBudget() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 10,
-        marginTop: 12,
+        gap: 'var(--sp-5)',
+        marginTop: 'var(--sp-6)',
         fontSize: 'var(--type-sm)',
         opacity: 0.7,
       }}
@@ -149,7 +149,7 @@ export function DayBudget() {
       <span style={{ textWrap: 'pretty' }}>
         A day is heavy past {hours === 1 ? '1 hour' : `${hours} hours`} of coursework.
       </span>
-      <span style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
+      <span style={{ display: 'flex', gap: 'var(--sp-3)', marginLeft: 'auto' }}>
         <button
           type="button"
           className="bare tappable"
@@ -186,7 +186,7 @@ export function ClashList() {
       <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(8px * var(--density, 1))' }}>
         Worth seeing coming
       </SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {all.map((c, i) => (
           <Row
             key={`${c.date}:${c.kind}:${i}`}

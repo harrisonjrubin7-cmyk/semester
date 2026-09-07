@@ -91,7 +91,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        gap: 'var(--sp-6)',
         ...rowThirteen,
       }}
     >
@@ -179,14 +179,14 @@ export function Me() {
         ]}
         value={tab}
         onChange={(next) => dispatch({ type: 'setMeTab', tab: next })}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 'var(--sp-7)' }}
       />
 
       {tab === 'settings' && <Settings bare />}
 
       {tab === 'you' && (
         <>
-      <Blueprint style={{ padding: 16, display: 'flex' }}>
+      <Blueprint style={{ padding: 'var(--sp-7)', display: 'flex' }}>
         {stats.map((s, i) => (
           <div
             key={s.l}
@@ -206,7 +206,7 @@ export function Me() {
                 textTransform: 'uppercase',
                 opacity: 0.5,
                 fontFamily: 'var(--font-heading)',
-                marginTop: 4,
+                marginTop: 'var(--sp-2)',
               }}
             >
               {s.l}
@@ -223,7 +223,7 @@ export function Me() {
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{b.code}</div>
             <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{b.n} left</div>
           </div>
-          <div style={{ marginTop: 6 }}>
+          <div style={{ marginTop: 'var(--sp-3)' }}>
             <Meter pct={b.pct} />
           </div>
         </div>
@@ -246,7 +246,7 @@ export function Me() {
               key={`${r.courseId}-${r.kind}`}
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 'var(--sp-5)',
                 alignItems: 'baseline',
                 ...rowNine,
               }}
@@ -261,7 +261,7 @@ export function Me() {
               </span>
             </div>
           ))}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             The middle figure of what you reported, so one all-nighter does not move it. Tick
             something off and the app asks once — it stops asking a kind of work after five.
           </div>
@@ -377,7 +377,7 @@ export function Search() {
       />
 
       {typed && total > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)' }}>
           {total} {total === 1 ? 'result' : 'results'}
         </div>
       )}
@@ -393,7 +393,7 @@ export function Search() {
               onClick={() => open(hit)}
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 'var(--sp-5)',
                 alignItems: 'center',
                 textAlign: 'left',
                 ...rowTwelve,
@@ -453,11 +453,11 @@ export function Notifications() {
           plain
           style={{
             padding: '13px 14px',
-            marginBottom: 10,
+            marginBottom: 'var(--sp-5)',
             background: i < 2 ? 'var(--app-panel)' : 'transparent',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-4)' }}>
             <span className="tag tag-accent">{n.code}</span>
             <span
               style={{
@@ -475,12 +475,12 @@ export function Notifications() {
               fontFamily: 'var(--font-heading)',
               fontSize: 'calc(19px * var(--text-scale, 1))',
               lineHeight: 1.15,
-              marginTop: 8,
+              marginTop: 'var(--sp-4)',
             }}
           >
             {n.title}
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 2 }}>{n.body}</div>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-1)' }}>{n.body}</div>
         </Blueprint>
       ))}
       <button
@@ -491,7 +491,7 @@ export function Notifications() {
           height: 42,
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
-          marginTop: 8,
+          marginTop: 'var(--sp-4)',
         }}
       >
         Clear all
@@ -521,7 +521,7 @@ export function Reminders() {
           : 'These need permission before anything can be shown.';
 
   return (
-    <div style={{ marginBottom: 12 }}>
+    <div style={{ marginBottom: 'var(--sp-6)' }}>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {line} They arrive while the app is open or running in the background. Waking a phone whose
         browser is closed needs a push server, which this deployment does not have — so treat these
@@ -532,7 +532,7 @@ export function Reminders() {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => void requestPermission().then(setPerm)}
-          style={{ height: 40, marginTop: 10, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ height: 40, marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           Allow notifications
         </button>

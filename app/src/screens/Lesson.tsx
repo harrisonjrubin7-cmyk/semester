@@ -106,12 +106,12 @@ export function LessonPlayer() {
   if (!lesson) {
     return (
       <Page>
-        <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">No lesson yet</div>
-          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 8, lineHeight: 1.1 }}>
+          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
             {guide.units[unit]?.name ?? 'This unit'} has not been recorded
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             Lessons are rendered by the pipeline, one per unit:{' '}
             <code style={{ fontSize: 'var(--type-sm)' }}>python3 pipeline/lessons.py {state.guideId}</code>
           </div>
@@ -155,13 +155,13 @@ export function LessonPlayer() {
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'calc(22px * var(--text-scale, 1))',
                 lineHeight: 1.15,
-                marginTop: 10,
+                marginTop: 'var(--sp-5)',
                 textWrap: 'pretty',
               }}
             >
               {extraCard.q}
             </div>
-            <div style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.55, opacity: 0.82, marginTop: 10 }}>
+            <div style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.55, opacity: 0.82, marginTop: 'var(--sp-5)' }}>
               {extraCard.a}
             </div>
           </>
@@ -179,7 +179,7 @@ export function LessonPlayer() {
             {cue?.kind === 'title' || cue?.kind === 'close' ? (
               <div
                 className="chrome-text"
-                style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08, marginTop: 10, textWrap: 'pretty' }}
+                style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08, marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
               >
                 {cue.text}
               </div>
@@ -190,7 +190,7 @@ export function LessonPlayer() {
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'calc(22px * var(--text-scale, 1))',
                     lineHeight: 1.15,
-                    marginTop: 10,
+                    marginTop: 'var(--sp-5)',
                     textWrap: 'pretty',
                     opacity: cue?.kind === 'a' ? 0.55 : 1,
                   }}
@@ -202,7 +202,7 @@ export function LessonPlayer() {
                     style={{
                       fontSize: 'var(--type-lg)',
                       lineHeight: 1.55,
-                      marginTop: 12,
+                      marginTop: 'var(--sp-6)',
                       textWrap: 'pretty',
                     }}
                   >
@@ -217,7 +217,7 @@ export function LessonPlayer() {
 
       {/* ── transport ─────────────────────────────────────────────────── */}
       <div
-        style={{ height: 4, background: 'var(--app-track)', marginTop: 12, cursor: 'pointer' }}
+        style={{ height: 4, background: 'var(--app-track)', marginTop: 'var(--sp-6)', cursor: 'pointer' }}
         onClick={(e) => {
           const box = e.currentTarget.getBoundingClientRect();
           seek(((e.clientX - box.left) / box.width) * lesson.seconds);
@@ -241,7 +241,7 @@ export function LessonPlayer() {
         <span>{lesson.len}</span>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', marginTop: 'var(--sp-6)' }}>
         <button
           type="button"
           className="btn btn-secondary btn-icon"
@@ -311,7 +311,7 @@ export function LessonPlayer() {
           style={{
             fontSize: 'var(--type-sm)',
             opacity: 0.65,
-            marginTop: 10,
+            marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
@@ -338,7 +338,7 @@ export function LessonPlayer() {
           onClick={() => seek(c.at)}
           style={{
             display: 'flex',
-            gap: 12,
+            gap: 'var(--sp-6)',
             alignItems: 'baseline',
             padding: '10px 0',
             borderBottom: '1px solid var(--app-line)',
@@ -361,7 +361,7 @@ export function LessonPlayer() {
         </button>
       ))}
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 18 }}>
         <button
           type="button"
           className="btn btn-secondary"

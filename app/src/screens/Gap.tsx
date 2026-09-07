@@ -186,7 +186,7 @@ function Run({ win }: { win: Window }) {
                 ? `That is the window. ${goLine(win)}`
                 : `${deck.length} cards was the lot. ${goLine(win)}`}
           </div>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 12, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
             Every answer is recorded against the card, the same as a sitting-down drill — what you
             missed comes back sooner and what you knew comes back later.
           </div>
@@ -215,7 +215,7 @@ function Run({ win }: { win: Window }) {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '78vh', padding: '0 16px' }}>
       {/* How much of the window is gone. A bar rather than a clock: a number
           counting down is a thing you watch instead of the card. */}
-      <div style={{ position: 'relative', height: 3, marginTop: 4 }}>
+      <div style={{ position: 'relative', height: 3, marginTop: 'var(--sp-2)' }}>
         {/* The empty track has to read as empty. At full strength a 402px
             hairline looks like a bar that is already finished, so the track
             is dimmed and the fill is not. */}
@@ -254,7 +254,7 @@ function Run({ win }: { win: Window }) {
         }}
       >
         <span>{card.code}</span>
-        <span style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
+        <span style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'baseline' }}>
           {canSpeak() ? (
             <button
               type="button"
@@ -300,7 +300,7 @@ function Run({ win }: { win: Window }) {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          gap: 16,
+          gap: 'var(--sp-7)',
           cursor: shown ? 'default' : 'pointer',
         }}
       >
@@ -338,7 +338,7 @@ function Run({ win }: { win: Window }) {
           hand moving on the phone. */}
       <div style={{ paddingBottom: 18 }}>
         {shown ? (
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-5)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -371,7 +371,7 @@ function Run({ win }: { win: Window }) {
           type="button"
           className="bare"
           onClick={() => setStopped(true)}
-          style={{ width: '100%', height: 36, fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 4 }}
+          style={{ width: '100%', height: 36, fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 'var(--sp-2)' }}
         >
           Stop here
         </button>
@@ -418,7 +418,7 @@ export function GapOffer() {
       <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.35, marginTop: 5, textWrap: 'pretty' }}>
         {gapLine(win)}
       </div>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
         {budgetLine(cards, pace)} One thumb, no typing.
       </div>
       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>

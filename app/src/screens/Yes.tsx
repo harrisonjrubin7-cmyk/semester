@@ -81,13 +81,13 @@ export function Yes() {
               padding: '14px 15px',
               marginBottom: 9,
               display: 'flex',
-              gap: 12,
+              gap: 'var(--sp-6)',
               alignItems: 'center',
             }}
           >
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 'var(--type-lg)' }}>{l.name}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                 {l.blurb}
               </span>
             </span>
@@ -95,13 +95,13 @@ export function Yes() {
           </Blueprint>
         </a>
       ))}
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 'var(--leading-normal)', marginTop: 4 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-2)' }}>
         These open signed out and YES asks who you are — the app holds no student number, and the
         links carry none, because one student's id in a shared app would be sent by everybody.
       </div>
 
       <SectionLabel>Bring your schedule back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Open your enrolled classes in YES, select them, copy, and paste here. Nothing is read from
         the page — a browser will not let this app see a tab it does not own, and it should not.
       </div>
@@ -114,7 +114,7 @@ export function Yes() {
       />
 
       {text.trim() && found.length === 0 && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           Nothing in there looks like a class. A line has to carry a course number, the days it
           meets and a time — anything else is dropped rather than guessed at.
         </div>
@@ -145,7 +145,7 @@ export function Yes() {
                   <TickBox on={on} />
                 </button>
                 <div style={{ flex: 1, minWidth: 0, padding: '12px 0' }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+                  <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
                     <span style={{ fontSize: 'var(--type-lg)' }}>{c.code}</span>
                     {already.has(c.code) && (
                       <span className="tag tag-neutral" style={{ flex: 'none' }}>
@@ -154,7 +154,7 @@ export function Yes() {
                     )}
                   </div>
                   {c.title ? (
-                    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 2 }}>{c.title}</div>
+                    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-1)' }}>{c.title}</div>
                   ) : null}
                   {c.lines.map((line) => (
                     <div
@@ -207,12 +207,12 @@ export function Yes() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => dispatch({ type: 'go', screen: 'import' })}
-        style={{ height: 44, marginTop: 8 }}
+        style={{ height: 44, marginTop: 'var(--sp-4)' }}
       >
         Add a course from its syllabus
       </button>
       {catalog.courses.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           {catalog.courses.length} course{catalog.courses.length === 1 ? '' : 's'} loaded.
         </div>
       )}

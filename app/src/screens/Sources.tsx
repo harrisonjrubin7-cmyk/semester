@@ -137,14 +137,14 @@ export function Sources() {
             value={role}
             onChange={(e) => setRole(e.target.value)}
             placeholder="What is it for? — “the counter-case to the growth-machine story”"
-            style={{ width: '100%', marginTop: 8 }}
+            style={{ width: '100%', marginTop: 'var(--sp-4)' }}
           />
           <input
             className="input"
             value={into}
             onChange={(e) => setInto(e.target.value)}
             placeholder="File it under a project, if you like"
-            style={{ width: '100%', marginTop: 8 }}
+            style={{ width: '100%', marginTop: 'var(--sp-4)' }}
             list="known-projects"
           />
           <datalist id="known-projects">
@@ -157,7 +157,7 @@ export function Sources() {
             className="btn btn-primary btn-block"
             onClick={add}
             disabled={!entry.trim()}
-            style={{ height: 44, marginTop: 10 }}
+            style={{ height: 44, marginTop: 'var(--sp-5)' }}
           >
             Keep it
           </button>
@@ -175,16 +175,16 @@ export function Sources() {
             />
           ) : (
             <>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 10, lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
                 {completeness(shown)}
               </div>
               {shown.map((s) => {
                 const missing = gaps(s);
                 return (
-                  <Blueprint key={s.id} style={{ padding: '12px 13px', marginBottom: 8 }}>
+                  <Blueprint key={s.id} style={{ padding: '12px 13px', marginBottom: 'var(--sp-4)' }}>
                     <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>{s.raw}</div>
                     {s.role.trim() ? (
-                      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+                      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                         For: {s.role}
                       </div>
                     ) : (
@@ -200,15 +200,15 @@ export function Sources() {
                             patch: { role: e.target.value.trim() },
                           })
                         }
-                        style={{ width: '100%', marginTop: 8, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+                        style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
                       />
                     )}
                     <div
                       style={{
                         display: 'flex',
-                        gap: 8,
+                        gap: 'var(--sp-4)',
                         alignItems: 'center',
-                        marginTop: 8,
+                        marginTop: 'var(--sp-4)',
                         flexWrap: 'wrap',
                       }}
                     >
@@ -231,7 +231,7 @@ export function Sources() {
                       </button>
                     </div>
                     {missing.length > 0 ? (
-                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 6, lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
                         Missing {missing.join(', ')}. Kept as you wrote it either way.
                       </div>
                     ) : null}
@@ -240,7 +240,7 @@ export function Sources() {
               })}
 
               <SectionLabel>Take it with you</SectionLabel>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -277,12 +277,12 @@ export function Sources() {
                   void navigator.clipboard?.writeText(asLines(shown));
                   setCopied(true);
                 }}
-                style={{ height: 42, marginTop: 8 }}
+                style={{ height: 42, marginTop: 'var(--sp-4)' }}
               >
                 {copied ? 'Copied' : 'Copy for a drafting tool'}
               </button>
-              <PrintButton label="Print the list" style={{ marginTop: 8 }} />
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+              <PrintButton label="Print the list" style={{ marginTop: 'var(--sp-4)' }} />
+              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
                 BibTeX is built from the fields you entered; anything the app does not have is left out
                 rather than guessed, and the line you typed always goes in as a note. Opens in Zotero
                 or Overleaf.

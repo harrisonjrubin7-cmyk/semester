@@ -93,7 +93,7 @@ export function Links() {
                   key={link.id}
                   style={rowTwelve}
                 >
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+                  <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
                     {url ? (
                       <a
                         href={url}
@@ -113,7 +113,7 @@ export function Links() {
                             fontFamily: 'var(--font-heading)',
                             letterSpacing: '0.1em',
                             textTransform: 'uppercase',
-                            marginTop: 2,
+                            marginTop: 'var(--sp-1)',
                           }}
                         >
                           {host(url)}
@@ -132,7 +132,7 @@ export function Links() {
                             fontFamily: 'var(--font-heading)',
                             letterSpacing: '0.1em',
                             textTransform: 'uppercase',
-                            marginTop: 2,
+                            marginTop: 'var(--sp-1)',
                           }}
                         >
                           No address yet
@@ -202,7 +202,7 @@ export function Links() {
           })}
 
           {adding ? (
-            <Blueprint style={{ padding: '13px 14px', marginTop: 12 }}>
+            <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-6)' }}>
               <div className="kicker">Your own link</div>
               <input
                 className="input"
@@ -216,9 +216,9 @@ export function Links() {
                 placeholder="https://…"
                 value={newUrl}
                 onChange={(e) => setNewUrl(e.target.value)}
-                style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 8 }}
+                style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-4)' }}
               />
-              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
                 <button
                   type="button"
                   className="btn btn-secondary"
@@ -253,13 +253,13 @@ export function Links() {
               type="button"
               className="btn btn-secondary btn-block"
               onClick={() => setAdding(true)}
-              style={{ height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
+              style={{ height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 'var(--sp-6)' }}
             >
               Add a link of your own
             </button>
           )}
 
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 10, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
             These open the system itself — the app on a phone that recognises the address, the site
             otherwise. None of them expose an API a student can use alone, so the app links out rather
             than pretending to read them. Correct any address here and the correction is what sticks.

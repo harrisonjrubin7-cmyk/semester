@@ -36,7 +36,7 @@ export function SettingsCourses() {
           >
             <CustomRow>
               <SectionLabel style={{ margin: '0 0 6px' }}>Your name</SectionLabel>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 8, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-4)', textWrap: 'pretty' }}>
                 Only used to address you in the app. Never sent anywhere, never guessed at from your
                 email, and leaving it blank costs nothing — the app just says "you".
               </div>
@@ -64,7 +64,7 @@ export function SettingsCourses() {
                   `components/SchoolPicker.tsx` — find it, add it, or skip. */}
               <SchoolPicker />
               {hidden.length > 0 && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                   {/* Named rather than counted. "3 screens are hidden" invites the
                       question this answers. */}
                   Hidden: {hidden.map((h) => DESTINATIONS.find((d) => d.screen === h)?.label ?? h).join(', ')}.

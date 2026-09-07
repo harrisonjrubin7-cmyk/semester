@@ -95,7 +95,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
   return (
     <div
       style={{
-        marginTop: 10,
+        marginTop: 'var(--sp-5)',
         padding: '12px 13px',
         border: '1px solid var(--app-line)',
         borderRadius: 'var(--r-md)',
@@ -133,7 +133,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         {spread ? ` ${spread}` : ''}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 11, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 11, flexWrap: 'wrap' }}>
         <input
           className="input"
           inputMode="numeric"
@@ -165,7 +165,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
       <div className="kicker" style={{ marginTop: 13 }}>
         How much there is
       </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-3)', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="input"
           inputMode="numeric"

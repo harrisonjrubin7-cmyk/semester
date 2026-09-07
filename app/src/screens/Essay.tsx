@@ -169,7 +169,7 @@ export function Essay() {
               }}
             >
               <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                 {option.blurb}
               </span>
             </button>
@@ -196,7 +196,7 @@ export function Essay() {
             ))}
           </select>
           {course && (
-            <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
+            <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">Recorded policy</div>
               <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 5 }}>
                 {course.ai?.note ??
@@ -210,12 +210,12 @@ export function Essay() {
                     dispatch({ type: 'openGuide', id: course.id });
                     dispatch({ type: 'go', screen: 'edit' });
                   }}
-                  style={{ height: 38, marginTop: 10, width: '100%' }}
+                  style={{ height: 38, marginTop: 'var(--sp-5)', width: '100%' }}
                 >
                   {course.ai ? 'Change what is recorded' : 'Record the policy'}
                 </button>
               ) : (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   A sample course, so this is fixed. Your own courses record their own policy under
                   Edit the course.
                 </div>
@@ -229,7 +229,7 @@ export function Essay() {
         className="tappable"
         style={{
           display: 'flex',
-          gap: 10,
+          gap: 'var(--sp-5)',
           alignItems: 'flex-start',
           marginTop: 14,
           padding: '11px 12px',
@@ -241,7 +241,7 @@ export function Essay() {
           type="checkbox"
           checked={attested}
           onChange={(e) => setAttested(e.target.checked)}
-          style={{ marginTop: 2, flex: 'none', width: 18, height: 18 }}
+          style={{ marginTop: 'var(--sp-1)', flex: 'none', width: 18, height: 18 }}
         />
         <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)' }}>
           {u.coursework
@@ -255,7 +255,7 @@ export function Essay() {
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             lineHeight: 'var(--leading-relaxed)',
-            marginTop: 10,
+            marginTop: 'var(--sp-5)',
             padding: '11px 13px',
             borderRadius: 'var(--r-md)',
             border: '1px solid var(--app-line)',
@@ -293,7 +293,7 @@ export function Essay() {
         placeholder="Everything true about you it is allowed to say: what you have done, where, when, with whom, what came of it."
         style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         This list is the fence. Anything not on it comes back as a blank in square brackets rather
         than a guess — a letter that invents an internship reads exactly like one that does not.
       </div>
@@ -350,7 +350,7 @@ export function Essay() {
           {busy ? 'Drafting…' : out ? 'Draft it again' : 'Write the draft'}
         </button>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 16, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
           Needs a key first — set one under Ask Claude → Settings.
         </div>
       )}
@@ -375,7 +375,7 @@ export function Essay() {
           </div>
           <DraftNote field={outField} />
 
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 1.55 }}>
             {count} words against {aim}.{' '}
             {left.length > 0
               ? `${left.length} ${left.length === 1 ? 'blank' : 'blanks'} left for you — fill every one before this goes anywhere.`
@@ -385,7 +385,7 @@ export function Essay() {
           </div>
 
           {left.length > 0 && (
-            <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
+            <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">What it needs from you</div>
               {left.map((hole, i) => (
                 <div key={`${hole}-${i}`} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', padding: '4px 0', lineHeight: 'var(--leading-normal)' }}>
@@ -395,7 +395,7 @@ export function Essay() {
             </Blueprint>
           )}
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -427,8 +427,8 @@ export function Essay() {
               {kept ? 'Kept' : 'Keep as note'}
             </button>
           </div>
-          <PrintButton label="Print it" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+          <PrintButton label="Print it" style={{ marginTop: 'var(--sp-4)' }} />
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             The saved file carries a line at the bottom saying it was drafted and edited. Take it
             off if you like — it is there so that in a month you can still tell.
           </div>

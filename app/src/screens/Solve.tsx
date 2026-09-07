@@ -112,9 +112,9 @@ export function Solve() {
   if (!configured()) {
     return (
       <Page>
-        <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings.
           </div>
         </Blueprint>
@@ -155,7 +155,7 @@ export function Solve() {
                   display: 'block',
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   opacity: 0.55,
-                  marginTop: 2,
+                  marginTop: 'var(--sp-1)',
                   lineHeight: 1.4,
                 }}
               >
@@ -192,11 +192,11 @@ export function Solve() {
         className="btn btn-secondary btn-block"
         onClick={() => camera.current?.click()}
         disabled={!!busy}
-        style={{ height: 42, marginTop: 8, fontSize: 'var(--type-sm)', letterSpacing: '0.08em' }}
+        style={{ height: 42, marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm)', letterSpacing: '0.08em' }}
       >
         {busy === 'Reading it…' ? 'Reading it…' : 'Photograph the problem'}
       </button>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         Anything the photo cannot show clearly comes back as [?] rather than a guess — a guessed
         exponent turns it into a different problem without telling you.
       </div>
@@ -233,7 +233,7 @@ export function Solve() {
         className="btn btn-primary btn-block"
         onClick={() => void run()}
         disabled={!!busy || !problem.trim()}
-        style={{ height: 46, marginTop: 16, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {busy === 'Working…' ? 'Working…' : out ? 'Do it again' : a.label}
       </button>
@@ -260,13 +260,13 @@ export function Solve() {
             type="button"
             className="btn btn-secondary btn-block"
             onClick={() => void navigator.clipboard.writeText(out).catch(() => {})}
-            style={{ height: 42, marginTop: 8 }}
+            style={{ height: 42, marginTop: 'var(--sp-4)' }}
           >
             Copy
           </button>
         </>
       )}
-      {out ? <PrintButton label="Print this" style={{ marginTop: 8 }} /> : null}
+      {out ? <PrintButton label="Print this" style={{ marginTop: 'var(--sp-4)' }} /> : null}
     </Page>
   );
 }

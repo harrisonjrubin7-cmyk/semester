@@ -94,19 +94,19 @@ export function Meals() {
     <Page bottom={26}>
       <TermSwitch />
 
-      <Blueprint style={{ padding: '15px 16px', marginTop: 12 }}>
+      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.25, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.25, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {paceLine(latest, p)}
         </div>
         {cashLine(latest) ? (
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 8 }}>{cashLine(latest)}</div>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-4)' }}>{cashLine(latest)}</div>
         ) : null}
         {latest ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6 }}>{staleLine(latest, now)}</div>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)' }}>{staleLine(latest, now)}</div>
         ) : null}
       </Blueprint>
 
@@ -118,7 +118,7 @@ export function Meals() {
           className="btn btn-primary btn-block"
           style={{
             height: 46,
-            marginTop: 12,
+            marginTop: 'var(--sp-6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -137,7 +137,7 @@ export function Meals() {
         turns a balance into a rate.
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
         <input
           className="input"
           value={swipes}
@@ -168,7 +168,7 @@ export function Meals() {
       </div>
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}
@@ -182,7 +182,7 @@ export function Meals() {
           type="button"
           className="btn btn-ghost btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'registrar' })}
-          style={{ height: 38, marginTop: 8, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 38, marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
         >
           Set the term's last day, and the app can say what a balance is a day
         </button>
@@ -192,7 +192,7 @@ export function Meals() {
         <Group header="What you have logged" framed={false}>
           {mine.map((r) => (
             <CustomRow key={r.id} pad={9}>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
                 {new Date(r.at).toLocaleDateString()}
               </span>

@@ -20,7 +20,7 @@ export function DraftNote({ field }: { field: DraftField }) {
       style={{
         fontSize: 'var(--type-xs)',
         opacity: field.said ? 0.75 : 0.45,
-        marginTop: 6,
+        marginTop: 'var(--sp-3)',
         lineHeight: 'var(--leading-normal)',
         textWrap: 'pretty',
       }}

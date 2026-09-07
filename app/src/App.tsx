@@ -513,7 +513,7 @@ function Header() {
       </div>
 
       {showActions && (
-        <div style={{ display: 'flex', gap: 2, flex: 'none', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-1)', flex: 'none', alignItems: 'center' }}>
           {/* Before the icons, because it is the only thing here that is
               counting. Renders nothing at all unless a timer is running. */}
           <Running />

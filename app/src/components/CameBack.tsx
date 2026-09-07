@@ -50,7 +50,7 @@ export function CameBack({ item }: { item: DatedItem }) {
   return (
     <div
       style={{
-        marginTop: 10,
+        marginTop: 'var(--sp-5)',
         padding: '12px 13px',
         border: `1px solid ${window.days > 0 && !record.raised ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
         background: window.days > 0 && !record.raised ? 'var(--app-warn-wash)' : 'transparent',
@@ -69,7 +69,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         {open}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 11, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 11, flexWrap: 'wrap' }}>
         <input
           className="input"
           value={record.score}
@@ -116,7 +116,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         style={{
           width: '100%',
           minHeight: 56,
-          marginTop: 8,
+          marginTop: 'var(--sp-4)',
           resize: 'vertical',
           fontSize: 'var(--type-base)',
           lineHeight: 'var(--leading-relaxed)',
@@ -126,7 +126,7 @@ export function CameBack({ item }: { item: DatedItem }) {
       <div className="kicker" style={{ marginTop: 13 }}>
         {code}&rsquo;s window
       </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-3)', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="input"
           inputMode="numeric"

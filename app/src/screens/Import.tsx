@@ -243,7 +243,7 @@ export function Import() {
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         Upload it. Walk away.
       </div>
-      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         The syllabus gives the dates and how the grade is built. Add the readings and you get the
         study guide too — cards, terms and a self-test made from what they actually argue.
       </div>
@@ -261,7 +261,7 @@ export function Import() {
         className="btn btn-secondary btn-block"
         onClick={() => input.current?.click()}
         disabled={busy !== ''}
-        style={{ height: 46, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 16 }}
+        style={{ height: 46, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 'var(--sp-7)' }}
       >
         {busy ? busy : 'Choose files — PDF, Word, text, or a zip of them'}
       </button>
@@ -289,7 +289,7 @@ export function Import() {
         style={{
           fontSize: 'calc(12.5px * var(--text-scale, 1))',
           opacity: 0.65,
-          marginTop: 10,
+          marginTop: 'var(--sp-5)',
           width: 'auto',
           padding: '6px 0',
           textAlign: 'left',
@@ -305,7 +305,7 @@ export function Import() {
           key={f.name}
           style={{
             display: 'flex',
-            gap: 10,
+            gap: 'var(--sp-5)',
             alignItems: 'baseline',
             ...rowEleven,
           }}
@@ -359,7 +359,7 @@ export function Import() {
               type="button"
               className="bare"
               onClick={() => abort.current?.abort()}
-              style={{ fontSize: 'var(--type-xs)', opacity: 0.55, letterSpacing: '0.1em', marginTop: 10 }}
+              style={{ fontSize: 'var(--type-xs)', opacity: 0.55, letterSpacing: '0.1em', marginTop: 'var(--sp-5)' }}
             >
               STOP
             </button>
@@ -368,7 +368,7 @@ export function Import() {
       )}
 
       {!configured() && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 12, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           Building a course asks {provider()} to read the documents, which needs a key. Set one under{' '}
           <strong>Ask Claude → Settings</strong>, or sign in and use the shared one.
         </div>
@@ -454,7 +454,7 @@ function ByHand() {
         style={{
           fontSize: 'calc(12.5px * var(--text-scale, 1))',
           opacity: 0.65,
-          marginTop: 4,
+          marginTop: 'var(--sp-2)',
           width: 'auto',
           padding: '6px 0',
           textAlign: 'left',
@@ -466,9 +466,9 @@ function ByHand() {
   }
 
   return (
-    <Blueprint style={{ padding: 14, marginTop: 12 }}>
+    <Blueprint style={{ padding: 14, marginTop: 'var(--sp-6)' }}>
       <SectionLabel>Add it by hand</SectionLabel>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'stretch' }}>
         <input
           className="input"
           autoFocus
@@ -501,7 +501,7 @@ function ByHand() {
         style={{
           fontSize: 'var(--type-sm)',
           opacity: 0.65,
-          marginTop: 10,
+          marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -538,7 +538,7 @@ function Rediff({
       key={`${label}-${right}`}
       style={{
         display: 'flex',
-        gap: 12,
+        gap: 'var(--sp-6)',
         alignItems: 'baseline',
         padding: '9px 0',
         borderBottom: '1px solid var(--app-line-soft)',
@@ -560,7 +560,7 @@ function Rediff({
           {changes.same} unchanged. Saving replaces the course you have rather than adding a second
           copy of it.
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           {kept.lost === 0
             ? `Everything you have ticked off stays ticked${kept.kept > 0 ? ` — all ${kept.kept} of them` : ''}.`
             : `${kept.kept} of your ticks carry over; ${kept.lost} ${kept.lost === 1 ? 'belongs' : 'belong'} to a deadline this syllabus no longer has.`}
@@ -642,12 +642,12 @@ function Preview({
   return (
     <>
       <SectionLabel>What came back</SectionLabel>
-      <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+      <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
         <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.1 }}>
           {m.course.code}
         </div>
         <div style={{ fontSize: 'var(--type-md)', marginTop: 3 }}>{m.course.name}</div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           {[m.course.prof, m.course.meets, m.course.room, m.course.credits]
             .filter(Boolean)
             .join(' · ')}
@@ -659,8 +659,8 @@ function Preview({
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             opacity: 0.7,
-            marginTop: 12,
-            paddingTop: 10,
+            marginTop: 'var(--sp-6)',
+            paddingTop: 'var(--sp-5)',
             borderTop: '1px solid var(--app-line)',
           }}
         >
@@ -694,7 +694,7 @@ function Preview({
         later. Here, the sentence it was read out of is still next to it, which
         is the only thing that tells you whether it is wrong.
       */}
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 4, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-2)', lineHeight: 'var(--leading-relaxed)' }}>
         {m.items.length} found
         {dropped.size > 0 ? ` \u00b7 ${dropped.size} taken off \u00b7 ${keeping} will be added` : ' \u00b7 untick anything the syllabus does not say'}
       </div>
@@ -710,7 +710,7 @@ function Preview({
             aria-label={off ? `Put ${i.title} back` : `Take ${i.title} off this import`}
             style={{ ...rowTen, width: '100%', textAlign: 'left', display: 'block', opacity: off ? 0.4 : 1 }}
           >
-            <span style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+            <span style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span style={{ flex: 'none', alignSelf: 'center' }}>
                 <TickBox on={!off} size={18} />
               </span>
@@ -743,7 +743,7 @@ function Preview({
                   display: 'block',
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   opacity: 0.5,
-                  marginTop: 4,
+                  marginTop: 'var(--sp-2)',
                   lineHeight: 'var(--leading-normal)',
                   paddingLeft: 92,
                 }}
@@ -758,9 +758,9 @@ function Preview({
       <SectionLabel>The first unit</SectionLabel>
       <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))' }}>{m.guide.units[0]?.name}</div>
       {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c) => (
-        <div key={c.q} style={{ marginTop: 8 }}>
+        <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
           <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, lineHeight: 'var(--leading-relaxed)', marginTop: 2 }}>{c.a}</div>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>{c.a}</div>
         </div>
       ))}
 
@@ -782,7 +782,7 @@ function Preview({
           ? `Replace ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`
           : `Add ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`}
       </button>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
         {replacing
           ? 'The changes above are what this replaces. Your ticks and your drill history stay where they are.'
           : 'You can add readings to it later, and everything you add flows into the cards, the quiz and the slides at once.'}

@@ -123,7 +123,7 @@ function Timers() {
     <>
       <SectionLabel style={{ margin: '0 0 10px' }}>Set one</SectionLabel>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 12 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 'var(--sp-6)' }}>
         {PRESETS.map((m) => (
           <button
             key={m}
@@ -144,7 +144,7 @@ function Timers() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
           className="input"
           value={text}
@@ -175,7 +175,7 @@ function Timers() {
         onChange={(e) => setLabel(e.target.value)}
         placeholder="What it is for — optional"
         aria-label="What the timer is for"
-        style={{ width: '100%', height: 40, marginTop: 8 }}
+        style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
       />
       {refused ? (
         <div
@@ -237,7 +237,7 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
 
   return (
     <Blueprint style={{ padding: '13px 14px' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
         <span
           style={{
             fontSize: 'calc(28px * var(--text-scale, 1))',
@@ -339,7 +339,7 @@ function Alarms() {
     <>
       <SectionLabel style={{ margin: '0 0 10px' }}>Set one</SectionLabel>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
           className="input"
           type="time"
@@ -358,7 +358,7 @@ function Alarms() {
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 6, margin: '10px 0 0' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', margin: '10px 0 0' }}>
         {DAY_LETTERS.map((letter, d) => {
           const on = days.includes(d);
           return (
@@ -397,7 +397,7 @@ function Alarms() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={add}
-        style={{ height: 44, marginTop: 12, textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        style={{ height: 44, marginTop: 'var(--sp-6)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
       >
         Add alarm
       </button>
@@ -408,7 +408,7 @@ function Alarms() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
             {state.alarms.map((a) => (
               <Blueprint key={a.id} style={{ padding: '12px 14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-6)' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
@@ -423,7 +423,7 @@ function Alarms() {
                       style={{
                         fontSize: 'var(--type-sm)',
                         opacity: 0.62,
-                        marginTop: 2,
+                        marginTop: 'var(--sp-1)',
                         textWrap: 'pretty',
                       }}
                     >
@@ -501,7 +501,7 @@ function Alarms() {
           onClick={ask}
           style={{
             width: 'auto',
-            marginTop: 8,
+            marginTop: 'var(--sp-4)',
             padding: '9px 14px',
             borderRadius: 'var(--r-md)',
             border: '1px solid var(--app-line)',

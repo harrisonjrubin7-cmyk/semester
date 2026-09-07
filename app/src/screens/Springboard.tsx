@@ -37,7 +37,7 @@ function Icon({ screen, onOpen }: { screen: string; onOpen: (s: string) => void 
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: 6,
+        gap: 'var(--sp-3)',
         width: '100%',
         padding: 0,
       }}
@@ -91,7 +91,7 @@ function FolderTile({ folder, onOpen }: { folder: Folder; onOpen: (s: string) =>
         className="bare tappable"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: '100%', padding: 0 }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-3)', width: '100%', padding: 0 }}
       >
         <span
           className="iconshape"
@@ -124,7 +124,7 @@ function FolderTile({ folder, onOpen }: { folder: Folder; onOpen: (s: string) =>
             gridColumn: '1 / -1',
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 16,
+            gap: 'var(--sp-7)',
             padding: '14px 12px',
             margin: '4px 0 8px',
             background: 'var(--app-panel)',
@@ -180,7 +180,7 @@ export function Springboard() {
 
       {searching ? (
         <>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 'var(--sp-5)' }}>
             {found.length === 0
               ? 'Nothing here by that name.'
               : `${found.length} ${found.length === 1 ? 'place' : 'places'}`}
@@ -204,7 +204,7 @@ export function Springboard() {
                 width: '100%',
                 textAlign: 'left',
                 padding: '13px 14px',
-                marginBottom: 16,
+                marginBottom: 'var(--sp-7)',
                 background: 'var(--app-hero)',
                 border: '1px solid var(--app-line)',
                 borderRadius: 'var(--r-md)',
@@ -218,7 +218,7 @@ export function Springboard() {
                   display: 'block',
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'calc(17px * var(--text-scale, 1))',
-                  marginTop: 4,
+                  marginTop: 'var(--sp-2)',
                 }}
               >
                 {due === 0
@@ -238,7 +238,7 @@ export function Springboard() {
           */}
           {page === 0 && recent.length > 0 && (
             <div style={{ marginBottom: 18 }}>
-              <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))', marginBottom: 8 }}>
+              <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))', marginBottom: 'var(--sp-4)' }}>
                 Lately
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}>
@@ -263,7 +263,7 @@ export function Springboard() {
             <div
               role="tablist"
               aria-label="Pages"
-              style={{ display: 'flex', gap: 8, justifyContent: 'center', padding: '20px 0 8px' }}
+              style={{ display: 'flex', gap: 'var(--sp-4)', justifyContent: 'center', padding: '20px 0 8px' }}
             >
               {pages.map((_, i) => (
                 <button
@@ -298,7 +298,7 @@ export function Springboard() {
           gridTemplateColumns: `repeat(${Math.max(1, dock.length)}, 1fr)`,
           gap: 18,
           padding: '14px 12px',
-          marginBottom: 10,
+          marginBottom: 'var(--sp-5)',
           background: 'var(--app-panel)',
           border: '1px solid var(--app-line)',
           borderRadius: 'var(--r-lg)',

@@ -127,20 +127,20 @@ export function TabChooser() {
       >
         The bar
       </SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
         Which screens are one tap away. Up to {MOST}, because that is what fits across a phone —
         everything else stays here in Me, which is why Me itself does not move.
       </div>
 
       <Preview tabs={tabs} />
 
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 'var(--sp-6)' }}>
         {chosen.map((id, i) => (
           <div
             key={id}
             style={{
               display: 'flex',
-              gap: 8,
+              gap: 'var(--sp-4)',
               alignItems: 'center',
               ...row,
             }}
@@ -191,7 +191,7 @@ export function TabChooser() {
         <div
           style={{
             display: 'flex',
-            gap: 8,
+            gap: 'var(--sp-4)',
             alignItems: 'center',
             padding: '11px 0',
             opacity: 0.5,
@@ -210,7 +210,7 @@ export function TabChooser() {
           role="status"
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            marginTop: 4,
+            marginTop: 'var(--sp-2)',
             color: 'var(--app-warn)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
@@ -220,7 +220,7 @@ export function TabChooser() {
         </div>
       ) : null}
 
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.5, marginTop: 12 }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.5, marginTop: 'var(--sp-6)' }}>
         {chosen.length} of {MOST_CHOSEN} chosen
       </div>
 
@@ -247,7 +247,7 @@ export function TabChooser() {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 6,
+                      gap: 'var(--sp-3)',
                       padding: '8px 11px',
                       borderRadius: 'var(--r-sm)',
                       border: '1px solid var(--app-line)',
@@ -268,7 +268,7 @@ export function TabChooser() {
           ))}
         </>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 12, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', textWrap: 'pretty' }}>
           The bar is full. Take one out to put another in.
         </div>
       )}

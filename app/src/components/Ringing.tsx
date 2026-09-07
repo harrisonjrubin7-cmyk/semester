@@ -129,7 +129,7 @@ export function Ringing() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
+        gap: 'var(--sp-4)',
         padding: 24,
         textAlign: 'center',
       }}

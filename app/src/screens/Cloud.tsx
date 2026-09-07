@@ -75,12 +75,12 @@ export function Cloud() {
   if (available.length === 0) {
     return (
       <Page>
-        <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Nothing connected</div>
-          <div className="chrome-text" style={{ fontSize: 'calc(25px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
+          <div className="chrome-text" style={{ fontSize: 'calc(25px * var(--text-scale, 1))', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
             Connect an account first
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             Microsoft 365 or Google. Then your syllabus in Drive, the announcements in your inbox
             and your real calendar are all reachable from here.
           </div>
@@ -207,8 +207,8 @@ export function Cloud() {
   return (
     <Page>
       {available.length > 1 && (
-        <div className="chiprow" style={{ marginBottom: 12 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
+        <div className="chiprow" style={{ marginBottom: 'var(--sp-6)' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
             {available.map((id) => {
               const on = id === provider;
               return (
@@ -266,19 +266,19 @@ export function Cloud() {
                 setFiles(await listRemoteFiles(provider));
               })
             }
-            style={{ height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
+            style={{ height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 'var(--sp-6)' }}
           >
             List recent files
           </button>
           {files.map((f) => (
             <div key={f.id} style={rowStyle}>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
                 <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {f.name}
                 </span>
                 <span style={{ fontSize: 'var(--type-xs)', opacity: 0.45, flex: 'none' }}>{f.modified}</span>
               </div>
-              <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-6)', marginTop: 'var(--sp-3)' }}>
                 <button
                   type="button"
                   className="bare"
@@ -319,23 +319,23 @@ export function Cloud() {
                 if (found.length === 0) return 'Nothing in the last six weeks names a course.';
               })
             }
-            style={{ height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 12 }}
+            style={{ height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 'var(--sp-6)' }}
           >
             Find course mail
           </button>
           {mail.map((m) => (
-            <Blueprint key={m.id} style={{ padding: '13px 14px', marginTop: 10 }}>
+            <Blueprint key={m.id} style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">
                 {m.courseId ? catalog.byId[m.courseId]?.code : 'Unmatched'} · {m.date}
               </div>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))', marginTop: 4, lineHeight: 1.25 }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))', marginTop: 'var(--sp-2)', lineHeight: 1.25 }}>
                 {m.subject}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 2 }}>{m.from}</div>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-1)' }}>{m.from}</div>
               <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
                 {m.preview.slice(0, 220)}
               </div>
-              <div style={{ display: 'flex', gap: 14, marginTop: 10 }}>
+              <div style={{ display: 'flex', gap: 14, marginTop: 'var(--sp-5)' }}>
                 <button
                   type="button"
                   className="bare"

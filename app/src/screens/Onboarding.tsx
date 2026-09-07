@@ -86,7 +86,7 @@ export function Onboarding() {
         overflowY: 'auto',
       }}
     >
-      <div style={{ display: 'flex', gap: 6, marginBottom: 34 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', marginBottom: 34 }}>
         {all.map((_, i) => (
           <div key={i} style={{ height: 3, flex: 1, background: 'var(--app-line)' }}>
             <div
@@ -130,7 +130,7 @@ export function Onboarding() {
           }}
         >
           {catalog.courses.map((c) => (
-            <div key={c.id} style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            <div key={c.id} style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
               <div
                 style={{
                   fontFamily: 'var(--font-heading)',
@@ -148,14 +148,14 @@ export function Onboarding() {
       )}
 
       {state.onb === 1 && catalog.courses.length > 0 && (
-        <div style={{ marginTop: 30, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ marginTop: 30, display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
           {catalog.courses.map((c) => (
             <div
               key={c.id}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 border: '1px solid var(--app-line)',
                 padding: '12px 14px',
               }}

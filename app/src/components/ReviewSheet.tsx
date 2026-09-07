@@ -339,7 +339,7 @@ function Row({
           display: 'block',
           fontSize: 'var(--type-sm)',
           opacity: 0.6,
-          marginTop: 6,
+          marginTop: 'var(--sp-3)',
           lineHeight: 'var(--leading-normal)',
         }}
       >
@@ -354,7 +354,7 @@ function Row({
             display: 'block',
             fontSize: 'var(--type-sm)',
             opacity: 0.62,
-            marginTop: 6,
+            marginTop: 'var(--sp-3)',
             paddingLeft: 9,
             borderLeft: `2px solid ${conflict ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
             lineHeight: 'var(--leading-normal)',
@@ -373,7 +373,7 @@ function Row({
             fontSize: 'var(--type-xs)',
             letterSpacing: '0.06em',
             opacity: 0.5,
-            marginTop: 6,
+            marginTop: 'var(--sp-3)',
           }}
         >
           {page ? `SLIDE ${page}` : ''}

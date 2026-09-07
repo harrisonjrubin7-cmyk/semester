@@ -76,7 +76,7 @@ export function Tonight() {
             style={{
               fontSize: 'var(--type-sm)',
               opacity: 0.72,
-              marginTop: 8,
+              marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -112,7 +112,7 @@ export function Tonight() {
       {taken.length > 0 ? (
         <>
           <SectionLabel style={{ margin: '22px 0 8px' }}>In that time</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
             {taken.map((b, i) => (
               <Row key={b.id} b={b} n={i + 1} onOpen={() => dispatch({ type: 'openItem', id: b.id })} />
             ))}
@@ -140,7 +140,7 @@ export function Tonight() {
           </SectionLabel>
           {/* Shown rather than hidden. What did not fit is the half of the
               answer somebody has to make a decision about. */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, opacity: 0.62 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', opacity: 0.62 }}>
             {over.map((b) => (
               <Row key={b.id} b={b} n={0} onOpen={() => dispatch({ type: 'openItem', id: b.id })} />
             ))}

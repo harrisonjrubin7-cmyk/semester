@@ -53,7 +53,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           }}
         >
           {policy.allowed > 0 || policy.penaltyPer > 0 ? (
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
               <span
                 className="chrome-text"
                 style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1 }}
@@ -75,7 +75,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           >
             {said}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)' }}>
             {t.marked === 0
               ? 'Nothing marked yet. Mark a class from the day view.'
               : `${t.marked} ${t.marked === 1 ? 'class' : 'classes'} marked · ${t.present} went, ${t.absent} missed${t.excused ? `, ${t.excused} excused` : ''}`}
@@ -121,8 +121,8 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
       </button>
 
       {open && (
-        <div style={{ paddingBottom: 8 }}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ paddingBottom: 'var(--sp-4)' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
             <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7 }}>
               Absences allowed
               <input
@@ -131,7 +131,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
                 value={policy.allowed || ''}
                 placeholder="0"
                 onChange={(e) => set({ allowed: Number(e.target.value) || 0 })}
-                style={{ width: '100%', height: 38, marginTop: 4, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
               />
             </label>
             <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7 }}>
@@ -142,7 +142,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
                 value={policy.penaltyPer || ''}
                 placeholder="0"
                 onChange={(e) => set({ penaltyPer: Number(e.target.value) || 0 })}
-                style={{ width: '100%', height: 38, marginTop: 4, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
               />
             </label>
             <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7 }}>
@@ -153,7 +153,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
                 value={policy.worth || ''}
                 placeholder="0"
                 onChange={(e) => set({ worth: Number(e.target.value) || 0 })}
-                style={{ width: '100%', height: 38, marginTop: 4, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
+                style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
               />
             </label>
           </div>
@@ -163,7 +163,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
             placeholder="The rule in the syllabus's own words, so you can check it later"
             aria-label="The attendance rule as the syllabus words it"
             onChange={(e) => set({ note: e.target.value })}
-            style={{ width: '100%', marginTop: 8, fontSize: 'var(--type-base)' }}
+            style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'var(--type-base)' }}
           />
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
             A course can have both: some free absences with a penalty after, and attendance as a

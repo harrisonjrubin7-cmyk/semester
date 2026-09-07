@@ -242,7 +242,7 @@ export function Export() {
             <TickBox on={picked[part.id]} />
           </button>
           <div style={{ flex: 1, minWidth: 0, padding: '12px 0' }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
               <span style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))' }}>{part.label}</span>
               <span className="tag tag-neutral" style={{ flex: 'none' }}>
                 {part.format}
@@ -251,7 +251,7 @@ export function Export() {
                 <span style={{ fontSize: 'var(--type-xs)', opacity: 0.45 }}>{counts[part.id]}</span>
               )}
             </div>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2, lineHeight: 1.4 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
               {part.blurb}
             </div>
           </div>
@@ -273,7 +273,7 @@ export function Export() {
         className="btn btn-secondary btn-block"
         disabled={!!busy}
         onClick={saveSeparately}
-        style={{ height: 44, marginTop: 8 }}
+        style={{ height: 44, marginTop: 'var(--sp-4)' }}
       >
         Download as separate files
       </button>
@@ -285,14 +285,14 @@ export function Export() {
           className="btn btn-secondary btn-block"
           disabled={!!busy}
           onClick={() => push(id)}
-          style={{ height: 44, marginTop: 8 }}
+          style={{ height: 44, marginTop: 'var(--sp-4)' }}
         >
           {busy.startsWith('Sending') ? busy : `Save to ${PROVIDERS[id].name}`}
         </button>
       ))}
 
       {clouds.length === 0 && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 12, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
           Connect Google or Microsoft under Me → Connect accounts and the zip can go straight to
           Drive or OneDrive. Drive is asked only for permission to touch files this app creates —
           it gains no right to read what is already there.
@@ -315,7 +315,7 @@ export function Export() {
       </div>
 
       <SectionLabel>Bring one back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         A backup file from this app, from any device. An export nobody can import is a museum
         piece.
       </div>
@@ -350,18 +350,18 @@ export function Export() {
       </button>
 
       {offered && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 10 }}>
+        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Ready to restore</div>
           <div style={{ fontSize: 'var(--type-base)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
             {offered.parts.length > 0 ? offered.parts.join(', ') : 'an empty backup'}.
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             This replaces what is on this device for each of those, rather than merging — merging
             two semesters produces duplicate courses sharing an id and no way to tell which
             deadline belonged to which. Anything the file does not cover is left alone.
             Attachments are not in a backup; they are in the zip beside it.
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -388,7 +388,7 @@ export function Export() {
 
       <Blueprint style={{ padding: '13px 14px', marginTop: 18 }}>
         <div className="kicker">The backup file</div>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           It holds your courses, notes, tasks, appointments, grades, saved places and what you have
           ticked off — everything except the attachments, which are in the zip beside it. Keys and
           the tokens for connected accounts are deliberately left out: a backup that carries your

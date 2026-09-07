@@ -67,8 +67,8 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
         const when = whenLine(next, now);
 
         return (
-          <Blueprint key={r.courseId} style={{ padding: '13px 14px', marginBottom: 8 }}>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+          <Blueprint key={r.courseId} style={{ padding: '13px 14px', marginBottom: 'var(--sp-4)' }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
               <span className="tag tag-accent">{mod?.course.code ?? r.courseId}</span>
               {when ? (
                 <span style={{ flex: 1, textAlign: 'right', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
@@ -79,13 +79,13 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
             <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4, marginTop: 7 }}>{r.said}</div>
 
             {next ? (
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 {next.block.title}
                 {next.block.meta ? ` · ${next.block.meta}` : ''}
               </div>
             ) : yours ? (
               <>
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                   The app does not have this course's office hours. They are on the syllabus, and
                   they take a minute to add.
                 </div>
@@ -115,7 +115,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                     to: mod.course.email,
                   })
                 }
-                style={{ height: 36, marginTop: 6, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+                style={{ height: 36, marginTop: 'var(--sp-3)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
               >
                 Or write to {mod.course.prof || 'them'} first
               </button>

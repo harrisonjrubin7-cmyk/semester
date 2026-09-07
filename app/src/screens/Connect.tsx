@@ -122,9 +122,9 @@ function ClaudeAccount() {
           value={config.apiKey}
           onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
           aria-label="Anthropic API key"
-          style={{ fontSize: 'var(--type-base)', marginTop: 12 }}
+          style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-6)' }}
         />
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
           <button
             type="button"
             className="btn btn-primary"
@@ -153,7 +153,7 @@ function ClaudeAccount() {
           <div
             style={{
               fontSize: 'calc(12.5px * var(--text-scale, 1))',
-              marginTop: 10,
+              marginTop: 'var(--sp-5)',
               lineHeight: 'var(--leading-relaxed)',
               whiteSpace: 'pre-wrap',
               color: result.ok ? 'var(--app-fg)' : 'var(--app-accent)',
@@ -165,7 +165,7 @@ function ClaudeAccount() {
 
         <div
           style={{
-            marginTop: 12,
+            marginTop: 'var(--sp-6)',
             paddingTop: 11,
             borderTop: '1px solid var(--app-line)',
             fontSize: 'var(--type-sm)',
@@ -177,7 +177,7 @@ function ClaudeAccount() {
         </div>
       </Blueprint>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         A key kept in a browser can be read by anything running in that browser. That is a real
         risk and the reason the shared key lives in a server function instead. If you would rather
         not hold one here, sign in and use the shared one, or run a proxy and put its address in
@@ -195,7 +195,7 @@ function ClaudeAccount() {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 12,
+              gap: 'var(--sp-6)',
               ...rowTwelve,
               textAlign: 'left',
             }}
@@ -204,7 +204,7 @@ function ClaudeAccount() {
               <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
                 {m.label}
               </span>
-              <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                 {m.note}
               </span>
             </span>
@@ -323,7 +323,7 @@ export function Connect() {
       <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', lineHeight: 1.1 }}>
         Everything in one place
       </div>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 6, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
         Brightspace, Outlook, Google and Zoom all publish calendars. Point the app at them and
         their dates sit on the same day rail as your classes — kept apart, and labelled.
       </div>
@@ -337,14 +337,14 @@ export function Connect() {
       {Object.keys(live).length > 0 && (
         <Blueprint
           onClick={() => dispatch({ type: 'go', screen: 'cloud' })}
-          style={{ padding: '13px 15px', marginTop: 14, display: 'flex', gap: 12, alignItems: 'center' }}
+          style={{ padding: '13px 15px', marginTop: 14, display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
         >
           <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
           <span style={{ flex: 1, minWidth: 0 }}>
             <span className="kicker" style={{ display: 'block' }}>
               Use what is connected
             </span>
-            <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-1)' }}>
               Documents into a course, course mail, deadlines onto your real calendar
             </span>
           </span>
@@ -368,9 +368,9 @@ export function Connect() {
           placeholder="https://brightspace.vanderbilt.edu/d2l/le/calendar/feed/user/feed.ics?token=…"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          style={{ fontSize: 'var(--type-sm)', marginTop: 10 }}
+          style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-5)' }}
         />
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
           <button
             type="button"
             className="btn btn-primary"
@@ -400,7 +400,7 @@ export function Connect() {
             addIcsText(await file.text(), file.name.replace(/\.ics$/i, ''), '', 'ics');
           }}
         />
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
           <a
             href={state.linkUrls.brightspace || 'https://brightspace.vanderbilt.edu/d2l/home'}
             target="_blank"
@@ -420,7 +420,7 @@ export function Connect() {
             Open Brightspace
           </a>
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 10, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
           What a Brightspace account can and cannot give this app, plainly: the{' '}
           <strong>calendar feed</strong> carries every due date and needs nothing but the link.{' '}
           <strong>Grades, submissions and files</strong> live behind D2L’s Valence API, whose keys
@@ -442,12 +442,12 @@ export function Connect() {
           return (
             <Blueprint key={id} style={{ padding: '14px 15px' }}>
               <div
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}
               >
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{spec.name}</div>
                 {token && <span className="tag tag-accent">Connected</span>}
               </div>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 4 }}>
+              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
                 {spec.blurb}
               </div>
 
@@ -457,8 +457,8 @@ export function Connect() {
                     fontSize: 'var(--type-sm)',
                     opacity: 0.7,
                     lineHeight: 'var(--leading-relaxed)',
-                    marginTop: 10,
-                    paddingTop: 10,
+                    marginTop: 'var(--sp-5)',
+                    paddingTop: 'var(--sp-5)',
                     borderTop: '1px solid var(--app-line)',
                     textWrap: 'pretty',
                     overflowWrap: 'anywhere',
@@ -470,7 +470,7 @@ export function Connect() {
                   export a calendar from {spec.name} and add the .ics above — same dates, no setup.
                 </div>
               ) : (
-                <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)', flexWrap: 'wrap' }}>
                   {!token ? (
                     <button
                       type="button"
@@ -560,8 +560,8 @@ export function Connect() {
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
                     opacity: 0.6,
                     lineHeight: 'var(--leading-relaxed)',
-                    marginTop: 10,
-                    paddingTop: 10,
+                    marginTop: 'var(--sp-5)',
+                    paddingTop: 'var(--sp-5)',
                     borderTop: '1px solid var(--app-line)',
                     textWrap: 'pretty',
                   }}
@@ -589,7 +589,7 @@ export function Connect() {
               key={f.id}
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 'var(--sp-5)',
                 alignItems: 'baseline',
                 ...rowTen,
               }}
@@ -631,7 +631,7 @@ export function Connect() {
               key={f.id}
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 'var(--sp-5)',
                 alignItems: 'baseline',
                 ...rowEleven,
               }}
@@ -646,7 +646,7 @@ export function Connect() {
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
-                    marginTop: 2,
+                    marginTop: 'var(--sp-1)',
                   }}
                 >
                   {f.kind} · {f.status}
@@ -662,7 +662,7 @@ export function Connect() {
               </button>
             </div>
           ))}
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 10 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)' }}>
             Feed events show on the calendar under Campus, marked with where they came from. They
             never overwrite a deadline the syllabus stated.
           </div>

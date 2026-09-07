@@ -99,7 +99,7 @@ export function Keys() {
         boxShadow: '0 18px 40px rgba(0,0,0,0.4)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
         <div className="kicker" style={{ flex: 1 }}>
           Keys
         </div>
@@ -114,11 +114,11 @@ export function Keys() {
         </button>
       </div>
 
-      <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
         {SHORTCUTS.map((s) => (
           <div
             key={s.key}
-            style={{ display: 'flex', gap: 10, alignItems: 'baseline', padding: '4px 0' }}
+            style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline', padding: '4px 0' }}
           >
             <kbd
               style={{
@@ -150,12 +150,12 @@ export function Keys() {
           setOpen(false);
           dispatch({ type: 'go', screen: 'help' });
         }}
-        style={{ height: 38, marginTop: 12, fontSize: 'var(--type-sm)' }}
+        style={{ height: 38, marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)' }}
       >
         How the rest of it works
       </button>
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         Nothing fires while you are typing, and anything with ⌘ or Ctrl stays the browser's.
         {state.nav === 'feed' ? ' The screens are the same ones the feed filter reaches.' : ''}
       </div>

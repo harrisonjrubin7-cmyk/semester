@@ -139,7 +139,7 @@ export function RecordButton({
             alignItems: 'flex-start',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             lineHeight: 'var(--leading-normal)',
-            marginBottom: 10,
+            marginBottom: 'var(--sp-5)',
             cursor: 'pointer',
           }}
         >
@@ -147,7 +147,7 @@ export function RecordButton({
             type="checkbox"
             checked={wantText}
             onChange={(e) => setWantText(e.target.checked)}
-            style={{ marginTop: 2, flex: 'none' }}
+            style={{ marginTop: 'var(--sp-1)', flex: 'none' }}
           />
           <span style={{ opacity: 0.75 }}>
             Write it down as it goes. Live only — the recogniser has to hear the speech happening,
@@ -158,7 +158,7 @@ export function RecordButton({
       )}
 
       {state === 'idle' && !liveSupported() && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginBottom: 10, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           This browser has no speech recognition, so this records audio only. Chrome and Safari
           will write it down as it goes; Firefox will not.
         </div>
@@ -215,7 +215,7 @@ export function RecordButton({
               {state === 'saving' ? 'Saving…' : state === 'paused' ? 'Paused' : 'Recording'}
             </span>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -247,7 +247,7 @@ export function RecordButton({
           {wantText && (segments.length > 0 || interim) && (
             <div
               style={{
-                marginTop: 12,
+                marginTop: 'var(--sp-6)',
                 paddingTop: 11,
                 borderTop: '1px solid var(--app-line)',
                 maxHeight: 190,
@@ -275,7 +275,7 @@ export function RecordButton({
           )}
 
           {scribeNote && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', marginTop: 10, opacity: 0.7, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', marginTop: 'var(--sp-5)', opacity: 0.7, lineHeight: 'var(--leading-normal)' }}>
               {scribeNote}
             </div>
           )}
@@ -283,14 +283,14 @@ export function RecordButton({
       )}
 
       {saved && segments.length > 0 && (
-        <div style={{ marginTop: 12 }}>
+        <div style={{ marginTop: 'var(--sp-6)' }}>
           <div
             style={{
               display: 'flex',
               alignItems: 'baseline',
               justifyContent: 'space-between',
-              gap: 10,
-              marginBottom: 6,
+              gap: 'var(--sp-5)',
+              marginBottom: 'var(--sp-3)',
             }}
           >
             <span className="kicker">Transcript · {words(segments)} words</span>
@@ -317,7 +317,7 @@ export function RecordButton({
                 .writeText(asText(paragraphs(segments), stamps))
                 .catch(() => setError('The browser would not give the app the clipboard.'));
             }}
-            style={{ height: 40, marginTop: 8, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 40, marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Copy the transcript
           </button>
@@ -325,7 +325,7 @@ export function RecordButton({
       )}
 
       {saved && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
           Kept {saved.name} — {clockOf(saved.seconds)}, {formatBytes(saved.size)}. It plays from
           Mine → Files, and it stays on this device.
         </div>
@@ -336,7 +336,7 @@ export function RecordButton({
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-accent)',
-            marginTop: 10,
+            marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-normal)',
             whiteSpace: 'pre-wrap',
           }}

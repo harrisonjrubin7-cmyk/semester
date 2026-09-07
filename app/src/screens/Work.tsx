@@ -133,9 +133,9 @@ export function Work() {
   if (!configured()) {
     return (
       <Page>
-        <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings. Everything
             else in the app works without it.
           </div>
@@ -150,7 +150,7 @@ export function Work() {
         Working on {guide.code}. Switch course from Study.
       </div>
 
-      <div style={{ marginTop: 12 }}>
+      <div style={{ marginTop: 'var(--sp-6)' }}>
         <ChipRow
           options={TABS.map((t) => t.label)}
           value={TABS.find((t) => t.id === tab)?.label ?? 'Break it down'}
@@ -165,7 +165,7 @@ export function Work() {
       {tab === 'plan' && (
         <>
           <SectionLabel>The instructions</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             Paste them, or drop the file your professor posted. You get back what is being asked,
             how it is marked, a plan with dates, and the questions worth asking in office hours.
             You do not get the assignment written — that is yours to write.
@@ -193,7 +193,7 @@ export function Work() {
               e.target.value = '';
             }}
           />
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -219,7 +219,7 @@ export function Work() {
             </button>
           </div>
           {read && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8 }}>Read {read}</div>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)' }}>Read {read}</div>
           )}
 
           {plan && <PlanView plan={plan} saved={saved} onKeep={keepSteps} />}
@@ -230,7 +230,7 @@ export function Work() {
       {tab === 'draft' && (
         <>
           <SectionLabel>Your draft</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             Feedback against the rubric and the course material — what is working, what would move
             the grade most, and anything the guide does not support. Nothing is rewritten for you.
           </div>
@@ -258,7 +258,7 @@ export function Work() {
                 }, signal);
               })
             }
-            style={{ height: 44, marginTop: 10, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy ? 'Reading…' : 'Read it'}
           </button>
@@ -271,7 +271,7 @@ export function Work() {
                 className="btn btn-secondary btn-block"
                 onClick={() => keepAsNote(`Feedback · ${guide.code}`, feedback)}
                 disabled={kept}
-                style={{ height: 40, marginTop: 12, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ height: 40, marginTop: 'var(--sp-6)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
               </button>
@@ -286,7 +286,7 @@ export function Work() {
       {tab === 'ask' && (
         <>
           <SectionLabel>What do you need</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             A revision timetable, practice questions, a summary of a reading, an email to a
             professor, an outline of your own argument to react to. This one has {guide.code} in
             front of it, so answers are about your course.
@@ -327,7 +327,7 @@ export function Work() {
                 });
               })
             }
-            style={{ height: 44, marginTop: 10, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ height: 44, marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy ? 'Working…' : 'Generate'}
           </button>
@@ -340,7 +340,7 @@ export function Work() {
                 className="btn btn-secondary btn-block"
                 onClick={() => keepAsNote(prompt.slice(0, 60), output)}
                 disabled={kept}
-                style={{ height: 40, marginTop: 12, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ height: 40, marginTop: 'var(--sp-6)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
               </button>
@@ -354,7 +354,7 @@ export function Work() {
           type="button"
           className="btn btn-ghost btn-block"
           onClick={() => abort.current?.abort()}
-          style={{ height: 36, marginTop: 10, fontSize: 'var(--type-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+          style={{ height: 36, marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
         >
           Stop
         </button>
@@ -399,11 +399,11 @@ function PlanView({
 
   return (
     <>
-      <Blueprint style={{ padding: 15, marginTop: 16, background: 'var(--app-hero)' }}>
+      <Blueprint style={{ padding: 15, marginTop: 'var(--sp-7)', background: 'var(--app-hero)' }}>
         <div className="kicker">What this is</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {plan.title}
         </div>
@@ -424,7 +424,7 @@ function PlanView({
           <SectionLabel>How it is marked</SectionLabel>
           {plan.rubric.map((r, i) => (
             <div key={`r${i}`} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
                 <div style={{ fontSize: 'var(--type-md)', flex: 1, minWidth: 0, lineHeight: 'var(--leading-tight)' }}>
                   {r.criterion}
                 </div>
@@ -455,7 +455,7 @@ function PlanView({
         <>
           <SectionLabel>A way through it</SectionLabel>
           {plan.steps.map((s, i) => (
-            <div key={`s${i}`} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--app-line)' }}>
+            <div key={`s${i}`} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '12px 0', borderBottom: '1px solid var(--app-line)' }}>
               <div
                 style={{
                   width: 26,
@@ -496,14 +496,14 @@ function PlanView({
             onClick={onKeep}
             style={{
               height: 44,
-              marginTop: 12,
+              marginTop: 'var(--sp-6)',
               fontSize: 'var(--type-sm)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 8,
+              gap: 'var(--sp-4)',
             }}
           >
             {saved > 0 ? <Check size={14} /> : <Plus size={14} />}
@@ -529,7 +529,7 @@ function PlanView({
       {plan.unclear.length > 0 && (
         <>
           <SectionLabel>Worth asking about</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 4 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>
             The instructions do not settle these. Ask in office hours or on the discussion board —
             getting this right early is worth more than any amount of redrafting.
           </div>

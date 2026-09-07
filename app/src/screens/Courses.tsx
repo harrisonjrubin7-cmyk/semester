@@ -42,7 +42,7 @@ function CoursesTabs({
       ]}
       value={value}
       onChange={onChange}
-      style={{ marginBottom: 16 }}
+      style={{ marginBottom: 'var(--sp-7)' }}
     />
   );
 }
@@ -93,7 +93,7 @@ export function Courses() {
       already has its own three-way split.
     */
     <Page
-      style={{ display: 'flex', flexDirection: 'column', gap: 12 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}
       search={{
         placeholder: 'Find a course',
         select: () => catalog.courses,
@@ -131,7 +131,7 @@ export function Courses() {
                     display: 'flex',
                     alignItems: 'baseline',
                     justifyContent: 'space-between',
-                    gap: 10,
+                    gap: 'var(--sp-5)',
                   }}
                 >
                   <div className="chrome-text" style={{ fontSize: 'calc(22px * var(--text-scale, 1))' }}>
@@ -149,16 +149,16 @@ export function Courses() {
                     {c.meets}
                   </div>
                 </div>
-                <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 2 }}>
+                <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-1)' }}>
                   {nameFor(c, state.yours)}
                 </div>
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 2 }}>{c.prof}</div>
+                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>{c.prof}</div>
                 <div
                   style={{
                     display: 'flex',
-                    gap: 8,
+                    gap: 'var(--sp-4)',
                     alignItems: 'center',
-                    marginTop: 12,
+                    marginTop: 'var(--sp-6)',
                     paddingTop: 11,
                     borderTop: '1px solid var(--app-line)',
                   }}
@@ -190,7 +190,7 @@ export function Courses() {
               height: 46,
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              marginTop: 6,
+              marginTop: 'var(--sp-3)',
             }}
           >
             + Add a course from a syllabus
@@ -248,9 +248,9 @@ function ComingUp() {
         ]}
         value={tab}
         onChange={(t) => dispatch({ type: 'setDueTab', tab: t })}
-        style={{ marginBottom: 12 }}
+        style={{ marginBottom: 'var(--sp-6)' }}
       />
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 4 }}>{blurb}</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>{blurb}</div>
       {list.length === 0 && (
         <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', opacity: 0.55 }}>
           {tab === 'overdue'
@@ -296,8 +296,8 @@ function LmsLink({ course }: { course: Course }) {
   const [draft, setDraft] = useState(url);
 
   return (
-    <div style={{ marginTop: 10 }}>
-      <div style={{ display: 'flex', gap: 8 }}>
+    <div style={{ marginTop: 'var(--sp-5)' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         {url && (
           <a
             href={url}
@@ -391,12 +391,12 @@ export function CourseDetail() {
           where somebody checks what a course actually is — dropping the real
           name here would make the rename a way to lose information. */}
       {renamed(course, state.yours) ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 2 }}>{course.name}</div>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 'var(--sp-1)' }}>{course.name}</div>
       ) : null}
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 3 }}>
         {course.prof} · {course.email}
       </div>
-      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 'var(--sp-6)' }}>
         <span className="tag tag-outline">{course.meets}</span>
         {/* The room is the one detail here you might need to act on, so it is
             a link to directions rather than a label to read and retype. */}
@@ -426,7 +426,7 @@ export function CourseDetail() {
           height: 46,
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          marginTop: 16,
+          marginTop: 'var(--sp-7)',
         }}
       >
         Study this course
@@ -436,7 +436,7 @@ export function CourseDetail() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => dispatch({ type: 'openUpdate', courseId: course.id, unit: null })}
-        style={{ height: 44, marginTop: 8 }}
+        style={{ height: 44, marginTop: 'var(--sp-4)' }}
       >
         Add a reading to this course
       </button>
@@ -445,7 +445,7 @@ export function CourseDetail() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => dispatch({ type: 'go', screen: 'announce' })}
-        style={{ height: 44, marginTop: 8 }}
+        style={{ height: 44, marginTop: 'var(--sp-4)' }}
       >
         Fold in an announcement
       </button>
@@ -455,7 +455,7 @@ export function CourseDetail() {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'edit' })}
-          style={{ height: 44, marginTop: 8 }}
+          style={{ height: 44, marginTop: 'var(--sp-4)' }}
         >
           Edit this course
         </button>
@@ -468,7 +468,7 @@ export function CourseDetail() {
           onClick={() =>
             dispatch({ type: 'writeMail', purposeId: 'question', courseId: course.id })
           }
-          style={{ height: 44, marginTop: 8 }}
+          style={{ height: 44, marginTop: 'var(--sp-4)' }}
         >
           Email {course.prof || 'the professor'}
         </button>
@@ -578,7 +578,7 @@ export function ItemDetail() {
 
   return (
     <div style={{ padding: 18 }}>
-      <Blueprint style={{ padding: 16 }}>
+      <Blueprint style={{ padding: 'var(--sp-7)' }}>
         <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
           <span className="tag tag-accent">{catalog.byId[item.c].code}</span>
           <span
@@ -669,7 +669,7 @@ export function ItemDetail() {
         style={{
           fontSize: 'var(--type-xs)',
           opacity: 0.45,
-          marginTop: 8,
+          marginTop: 'var(--sp-4)',
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.08em',
         }}
@@ -713,7 +713,7 @@ export function ItemDetail() {
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             opacity: 0.6,
-            marginTop: 8,
+            marginTop: 'var(--sp-4)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -723,7 +723,7 @@ export function ItemDetail() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, marginTop: going && !done ? 14 : 24 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: going && !done ? 14 : 24 }}>
         <button
           type="button"
           className="btn btn-primary"

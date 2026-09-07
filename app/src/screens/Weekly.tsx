@@ -133,7 +133,7 @@ export function Weekly() {
       onClick={onClick}
       style={{
         display: 'flex',
-        gap: 12,
+        gap: 'var(--sp-6)',
         alignItems: 'baseline',
         width: '100%',
         padding: '10px 0',
@@ -152,12 +152,12 @@ export function Weekly() {
         <div className="kicker">{back.label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {behindLine(back)}
         </div>
         {slippedLine(back) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {slippedLine(back)}
           </div>
         ) : null}
@@ -206,7 +206,7 @@ export function Weekly() {
           .
         </div>
         {forward.heaviest ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
             {forward.heaviest.name} carries most of it, at {showHours(forward.heaviest.promised)}
             {forward.freest && forward.freest !== forward.heaviest
               ? `; ${forward.freest.name} has the most room`
@@ -218,7 +218,7 @@ export function Weekly() {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
-          style={{ height: 40, marginTop: 10 }}
+          style={{ height: 40, marginTop: 'var(--sp-5)' }}
         >
           Hour by hour
         </button>
@@ -252,7 +252,7 @@ export function Weekly() {
                 fontSize: 'var(--type-md)',
                 lineHeight: 1.6,
                 whiteSpace: 'pre-wrap',
-                marginTop: 12,
+                marginTop: 'var(--sp-6)',
                 padding: 14,
                 borderRadius: 'var(--r-lg)',
                 border: '1px solid var(--app-line)',
@@ -263,7 +263,7 @@ export function Weekly() {
             </div>
           ) : null}
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Every number above is counted from your own data. {provider()} reads the counts and is
             told not to score the week — a week with three classes, a shift and two ticked boxes is
             a normal week.
@@ -271,7 +271,7 @@ export function Weekly() {
         </>
       )}
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
         <button
           type="button"
           className="btn btn-secondary"
@@ -303,8 +303,8 @@ export function Weekly() {
           {kept ? 'Kept' : 'Keep as note'}
         </button>
       </div>
-      <PrintButton label="Print the week" style={{ marginTop: 8 }} />
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+      <PrintButton label="Print the week" style={{ marginTop: 'var(--sp-4)' }} />
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         A deadline counts to the week you ticked it.
         {back.staleTicks > 0
           ? ` ${back.staleTicks} of these ${back.staleTicks === 1 ? 'was' : 'were'} ticked before the app started recording the moment, so ${back.staleTicks === 1 ? 'it counts' : 'they count'} to the week ${back.staleTicks === 1 ? 'it was' : 'they were'} due instead.`

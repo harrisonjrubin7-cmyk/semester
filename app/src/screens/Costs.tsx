@@ -83,16 +83,16 @@ export function Costs() {
     <Page bottom={26}>
       <TermSwitch />
 
-      <Blueprint style={{ padding: '15px 16px', marginTop: 12 }}>
+      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {line(t)}
         </div>
         {todo(t) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>{todo(t)}</div>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>{todo(t)}</div>
         ) : null}
       </Blueprint>
 
@@ -106,7 +106,7 @@ export function Costs() {
               // Through the shared section rather than a hand-drawn hairline,
               // so this list follows the layout setting.
               <CustomRow key={c.id}>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'baseline' }}>
+                <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
                   <span className="tag tag-accent" style={{ flex: 'none' }}>
                     {c.code}
                   </span>
@@ -130,7 +130,7 @@ export function Costs() {
                 </div>
                 {/* The comparison worth having in August. */}
                 {before ? (
-                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 4 }}>
+                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-2)' }}>
                     {readTerm(before.term).label}: {money(before.cents)}
                   </div>
                 ) : null}
@@ -139,10 +139,10 @@ export function Costs() {
                     key={x.id}
                     style={{
                       display: 'flex',
-                      gap: 8,
+                      gap: 'var(--sp-4)',
                       alignItems: 'baseline',
                       marginTop: 7,
-                      paddingLeft: 10,
+                      paddingLeft: 'var(--sp-5)',
                       borderLeft: '2px solid var(--app-line)',
                     }}
                   >
@@ -197,7 +197,7 @@ export function Costs() {
         value={courseId}
         aria-label="Which course"
         onChange={(e) => setCourseId(e.target.value)}
-        style={{ width: '100%', marginBottom: 8 }}
+        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
       >
         {catalog.courses.map((c) => (
           <option key={c.id} value={c.id}>
@@ -212,7 +212,7 @@ export function Costs() {
         aria-label="What it was"
         placeholder="Mankiw, Principles of Macroeconomics, 9e"
         onChange={(e) => setWhat(e.target.value)}
-        style={{ width: '100%', marginBottom: 8 }}
+        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
       />
 
       {/* The one field a camera can fill in. The app still refuses to fetch a
@@ -220,7 +220,7 @@ export function Costs() {
           different question with a different answer. */}
       <ScanIsbn onFound={(isbn) => setWhat((was) => (was.trim() ? `${was} · ${isbn}` : isbn))} />
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
         <input
           className="input"
           value={amount}
@@ -256,7 +256,7 @@ export function Costs() {
             width: '100%',
             textAlign: 'left',
             padding: '9px 11px',
-            marginBottom: 8,
+            marginBottom: 'var(--sp-4)',
             borderRadius: 'var(--r-md)',
             border: `1px solid ${rented ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
             background: rented ? 'var(--app-accent-wash)' : 'transparent',
@@ -268,7 +268,7 @@ export function Costs() {
       )}
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}
@@ -291,7 +291,7 @@ export function Costs() {
           className="btn btn-secondary btn-block"
           style={{
             height: 42,
-            marginTop: 8,
+            marginTop: 'var(--sp-4)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

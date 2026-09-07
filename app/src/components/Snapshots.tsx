@@ -81,7 +81,7 @@ export function Snapshots() {
   return (
     <div>
       <SectionLabel>Go back a day</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
         {LOCAL_LINE}
       </div>
 
@@ -104,7 +104,7 @@ export function Snapshots() {
                 display: 'flex',
                 alignItems: 'baseline',
                 justifyContent: 'space-between',
-                gap: 10,
+                gap: 'var(--sp-5)',
                 width: '100%',
                 minHeight: 44,
                 background: 'transparent',
@@ -135,11 +135,11 @@ export function Snapshots() {
       )}
 
       {picked && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 10 }}>
+        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">
             {reasonLabel(picked.reason)} · {whenLine(picked.at, now)}
           </div>
-          <div style={{ fontSize: 'var(--type-base)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {costLine(rows)}
           </div>
           {rows.length > 0 && (
@@ -154,7 +154,7 @@ export function Snapshots() {
           <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {RESTORE_LINE}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -184,7 +184,7 @@ export function Snapshots() {
               });
             }}
             style={{
-              marginTop: 10,
+              marginTop: 'var(--sp-5)',
               minHeight: 32,
               background: 'transparent',
               border: 'none',
@@ -205,13 +205,13 @@ export function Snapshots() {
         className="btn btn-secondary btn-block"
         disabled={busy}
         onClick={() => void take()}
-        style={{ height: 44, marginTop: 12 }}
+        style={{ height: 44, marginTop: 'var(--sp-6)' }}
       >
         Take a copy now
       </button>
 
       {said ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 10, lineHeight: 'var(--leading-relaxed)', opacity: 0.85, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', opacity: 0.85, textWrap: 'pretty' }}>
           {said}
         </div>
       ) : null}

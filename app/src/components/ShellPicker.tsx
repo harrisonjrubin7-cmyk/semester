@@ -19,11 +19,11 @@ export function ShellPicker() {
       <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
         Layout
       </SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
         Two ways of arranging every screen. Neither hides anything — the same controls are on the
         same screens either way.
       </div>
-      <div style={{ display: 'flex', gap: 10 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-5)' }}>
         {SHELLS.map((s) => {
           const on = state.shell === s.id;
           return (
@@ -37,7 +37,7 @@ export function ShellPicker() {
                 flex: 1,
                 minWidth: 0,
                 textAlign: 'left',
-                padding: 10,
+                padding: 'var(--sp-5)',
                 borderRadius: 'var(--r-sm)',
                 border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
                 background: on ? 'var(--app-accent-wash)' : 'transparent',
@@ -109,8 +109,8 @@ function Preview({ grouped }: { grouped: boolean }) {
         <span
           style={{
             display: 'block',
-            marginTop: 6,
-            padding: 6,
+            marginTop: 'var(--sp-3)',
+            padding: 'var(--sp-3)',
             border: '1px solid var(--app-line)',
             borderRadius: 'var(--r-sm)',
           }}
@@ -123,7 +123,7 @@ function Preview({ grouped }: { grouped: boolean }) {
           style={{
             display: 'block',
             marginTop: 5,
-            padding: 6,
+            padding: 'var(--sp-3)',
             border: '1px solid var(--app-line)',
             borderRadius: 'var(--r-sm)',
           }}
@@ -150,7 +150,7 @@ function Preview({ grouped }: { grouped: boolean }) {
       <span
         style={{
           display: 'block',
-          marginTop: 6,
+          marginTop: 'var(--sp-3)',
           background: 'var(--app-panel)',
           borderRadius: 'var(--r-sm)',
           border: '1px solid var(--app-line-soft)',

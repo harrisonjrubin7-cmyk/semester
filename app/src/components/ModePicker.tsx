@@ -28,7 +28,7 @@ export function ModePicker({
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(148px, 1fr))',
-        gap: 8,
+        gap: 'var(--sp-4)',
       }}
     >
       {modes.map((m) => {

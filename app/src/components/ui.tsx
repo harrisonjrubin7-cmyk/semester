@@ -62,7 +62,7 @@ export function ChipRow<T extends string>({
 }) {
   return (
     <div className="chiprow" style={style}>
-      <div style={{ display: 'flex', gap: 6, paddingRight: 18 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', paddingRight: 18 }}>
         {options.map((o) => {
           const on = o === value;
           return (
@@ -106,7 +106,7 @@ export function Segmented<T extends string>({
   style?: CSSProperties;
 }) {
   return (
-    <div style={{ display: 'flex', gap: 6, ...style }}>
+    <div style={{ display: 'flex', gap: 'var(--sp-3)', ...style }}>
       {options.map((o) => {
         const on = o.id === value;
         return (
@@ -160,7 +160,7 @@ export function DateRow({
       onClick={onClick}
       style={{
         display: 'flex',
-        gap: 12,
+        gap: 'var(--sp-6)',
         alignItems: 'center',
         ...row,
       }}
@@ -187,7 +187,7 @@ export function DateRow({
             fontFamily: 'var(--font-heading)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            marginTop: 2,
+            marginTop: 'var(--sp-1)',
           }}
         >
           {meta}
@@ -219,7 +219,7 @@ export function Toggle({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 12,
+        gap: 'var(--sp-6)',
         ...row,
       }}
     >
@@ -228,7 +228,7 @@ export function Toggle({
         style={{
           width: 42,
           height: 24,
-          padding: 2,
+          padding: 'var(--sp-1)',
           border: '1px solid var(--app-line)',
           background: on ? 'var(--chrome)' : 'transparent',
           display: 'flex',
@@ -376,7 +376,7 @@ export function EmptyState({
           onClick={action.onClick}
           style={{
             height: 40,
-            marginTop: 12,
+            marginTop: 'var(--sp-6)',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             ...(inline ? { width: '100%' } : { paddingInline: 20 }),
           }}

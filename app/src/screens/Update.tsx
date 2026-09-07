@@ -410,7 +410,7 @@ export function AddMaterial() {
 
       <SectionLabel>Which course</SectionLabel>
       <div className="chiprow">
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
           {catalog.courses.map((c) => {
             const on = c.id === courseId;
             return (
@@ -446,7 +446,7 @@ export function AddMaterial() {
           onClick={() => setUnit(null)}
           style={{
             display: 'flex',
-            gap: 10,
+            gap: 'var(--sp-5)',
             padding: '11px 0',
             borderBottom: '1px solid var(--app-line)',
             textAlign: 'left',
@@ -466,7 +466,7 @@ export function AddMaterial() {
             onClick={() => setUnit(i)}
             style={{
               display: 'flex',
-              gap: 10,
+              gap: 'var(--sp-5)',
               padding: '11px 0',
               borderBottom: '1px solid var(--app-line)',
               textAlign: 'left',
@@ -494,7 +494,7 @@ export function AddMaterial() {
         placeholder="Where it came from — Brightspace, Oct 8 lecture"
         value={source}
         onChange={(e) => setSource(e.target.value)}
-        style={{ fontSize: 'var(--type-md)', marginTop: 8 }}
+        style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)' }}
       />
 
       {/*
@@ -507,18 +507,18 @@ export function AddMaterial() {
           <SectionLabel>What you added</SectionLabel>
           <Blueprint plain style={{ padding: '11px 13px' }}>
             <div className="kicker">{arrived.name}</div>
-            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 4 }}>
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)' }}>
               {looking && !set
                 ? `Reading it — this looks like ${told.says || KIND_LABEL[told.kind]}.`
                 : `This is ${told.says || KIND_LABEL[told.kind]}${told.about ? ` — ${told.about}` : ''}.`}
             </div>
             {told.confidence < SURE && (
-              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-warn)', marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-warn)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 It is not sure about that. Check it before taking anything below.
               </div>
             )}
             {told.because.length > 0 && (
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 because: {told.because.map((b) => `“${b}”`).join(', ')}
               </div>
             )}
@@ -553,7 +553,7 @@ export function AddMaterial() {
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           opacity: 0.6,
-          marginTop: 6,
+          marginTop: 'var(--sp-3)',
         }}
       >
         {describeParse(parsed)}
@@ -576,7 +576,7 @@ export function AddMaterial() {
                 onClick={() => void readInto()}
                 style={{
                   height: 42,
-                  marginTop: 12,
+                  marginTop: 'var(--sp-6)',
                   fontSize: 'var(--type-sm)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
@@ -584,14 +584,14 @@ export function AddMaterial() {
               >
                 {studying ? 'Reading it…' : 'Make cards and terms from this'}
               </button>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 {provider()} reads what you pasted or attached and writes cards and definitions from
                 what is in it — nothing from general knowledge. Optional: the text is kept as the
                 unit's notes either way.
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               Turning a reading into cards needs {provider()}. Sign in to use the shared key, or add
               your own under Connect → Claude. The text is still kept as the unit's notes.
             </div>
@@ -600,14 +600,14 @@ export function AddMaterial() {
       )}
 
       {(readSummary || readCards.length > 0 || readTerms.length > 0) && (
-        <Blueprint plain style={{ padding: '11px 13px', marginTop: 12 }}>
+        <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
           <div className="kicker">What it read</div>
           {readSummary && (
-            <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 4 }}>
+            <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
               {readSummary}
             </div>
           )}
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6 }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)' }}>
             {readCards.length} {readCards.length === 1 ? 'card' : 'cards'} and {readTerms.length}{' '}
             {readTerms.length === 1 ? 'term' : 'terms'} ready — they save with everything else below.
           </div>
@@ -619,7 +619,7 @@ export function AddMaterial() {
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-accent)',
-            marginTop: 10,
+            marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-normal)',
             whiteSpace: 'pre-wrap',
           }}
@@ -629,7 +629,7 @@ export function AddMaterial() {
       )}
 
       {parsed.cards.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 'var(--sp-6)' }}>
           {parsed.cards.slice(0, 3).map((c) => (
             <Blueprint key={c.q} style={{ padding: '11px 13px' }}>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 1.2 }}>
@@ -657,7 +657,7 @@ export function AddMaterial() {
       <SectionLabel>Photograph it</SectionLabel>
       {claudeReady ? (
         <>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             The board at the end of a lecture, a page of a textbook, a printed handout. Read into
             cards from what is actually written — anything unreadable is left out and said so.
           </div>
@@ -670,7 +670,7 @@ export function AddMaterial() {
               onClick={() => void readPhotos()}
               style={{
                 height: 44,
-                marginTop: 12,
+                marginTop: 'var(--sp-6)',
                 fontSize: 'var(--type-sm)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
@@ -680,11 +680,11 @@ export function AddMaterial() {
             </button>
           )}
           {readNote && (
-            <Blueprint plain style={{ padding: '11px 13px', marginTop: 12 }}>
+            <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
               <div className="kicker">What it saw</div>
-              <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 4 }}>{readNote}</div>
+              <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>{readNote}</div>
               {shotCards.length > 0 && (
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6 }}>
+                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)' }}>
                   {shotCards.length} {shotCards.length === 1 ? 'card' : 'cards'} ready — they save
                   with everything else below.
                 </div>
@@ -696,7 +696,7 @@ export function AddMaterial() {
               style={{
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 color: 'var(--app-accent)',
-                marginTop: 10,
+                marginTop: 'var(--sp-5)',
                 lineHeight: 'var(--leading-normal)',
                 whiteSpace: 'pre-wrap',
               }}
@@ -717,7 +717,7 @@ export function AddMaterial() {
           into the box above, so what was said becomes material the same way a
           reading does. */}
       <SectionLabel>Record the lecture</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Keeps the audio against this course, and can write it down as it goes. The transcript lands
         in the material box above, where it becomes cards, a quiz and a guide like anything else.
       </div>
@@ -758,7 +758,7 @@ export function AddMaterial() {
           style={{
             display: 'flex',
             justifyContent: 'space-between',
-            gap: 10,
+            gap: 'var(--sp-5)',
             fontSize: 'var(--type-base)',
             padding: '9px 0',
             borderBottom: '1px solid var(--app-line)',
@@ -768,7 +768,7 @@ export function AddMaterial() {
           <span style={{ opacity: 0.5, flex: 'none' }}>{formatBytes(f.size)}</span>
         </div>
       ))}
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         Images become figures for the unit. A PDF, a Word file or a text file is read into the box
         above as well as attached, so what is in it can become cards. Everything stays on this
         device.
@@ -784,7 +784,7 @@ export function AddMaterial() {
           fontSize: 'var(--type-lg)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          marginTop: 16,
+          marginTop: 'var(--sp-7)',
           opacity: empty ? 0.4 : 1,
         }}
       >
@@ -846,7 +846,7 @@ export function AddMaterial() {
               key={u.id}
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 'var(--sp-5)',
                 alignItems: 'baseline',
                 padding: '11px 0',
                 borderBottom: '1px solid var(--app-line)',
@@ -862,7 +862,7 @@ export function AddMaterial() {
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
-                    marginTop: 2,
+                    marginTop: 'var(--sp-1)',
                   }}
                 >
                   {u.unit !== null && guide.units[u.unit]

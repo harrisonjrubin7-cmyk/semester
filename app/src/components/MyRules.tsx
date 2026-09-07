@@ -45,7 +45,7 @@ export function MyRules() {
       >
         Your own reminders
       </SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 10, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
         The seven above are defaults. These are yours — a lead time you choose, on the kind of
         thing you choose, for one course or all of them. They add to the ones above rather than
         replacing any, so nothing here can make a reminder stop arriving.
@@ -82,7 +82,7 @@ export function MyRules() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: 7, marginTop: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 7, marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
             <select
               className="input"
               value={r.days}
@@ -147,12 +147,12 @@ export function MyRules() {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => set(addRule(rules))}
-          style={{ height: 42, marginTop: 12 }}
+          style={{ height: 42, marginTop: 'var(--sp-6)' }}
         >
           Add a reminder rule
         </button>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 12 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-6)' }}>
           {MOST_RULES} is the limit — past that nobody remembers what they asked for.
         </div>
       )}

@@ -118,7 +118,7 @@ export function Classmates() {
     return (
       <Page>
         <SectionLabel>What classmates should call you</SectionLabel>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
           This is the only thing about you other people see, alongside the classes you share. Not
           your email, and it does not have to be your full name.
         </div>
@@ -141,7 +141,7 @@ export function Classmates() {
               .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
               .finally(() => setBusy(false));
           }}
-          style={{ height: 46, marginTop: 12, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          style={{ height: 46, marginTop: 'var(--sp-6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
           {busy ? 'Saving…' : 'That is me'}
         </button>
@@ -191,7 +191,7 @@ export function Classmates() {
           key={room.code}
           style={{
             display: 'flex',
-            gap: 10,
+            gap: 'var(--sp-5)',
             alignItems: 'center',
             ...rowFlush,
           }}
@@ -210,7 +210,7 @@ export function Classmates() {
             }}
           >
             <span style={{ display: 'block', fontSize: 'var(--type-lg)' }}>{room.code}</span>
-            <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+            <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
               {room.joined ? 'You are in this room' : 'Not in it yet'}
             </span>
           </button>
@@ -238,7 +238,7 @@ export function Classmates() {
       ))}
 
       <SectionLabel>Another class</SectionLabel>
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
           className="input"
           value={adding}
@@ -272,7 +272,7 @@ export function Classmates() {
       <SectionLabel>What other people see</SectionLabel>
       <Blueprint style={{ padding: '13px 14px' }}>
         <div style={{ fontSize: 'var(--type-md)' }}>{profile?.handle}</div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           That name, and which of your classes they are also in. Not your email, not your other
           courses, not your notes, your grades or anything else in the app.
         </div>
@@ -362,7 +362,7 @@ function Room({
 
   return (
     <Page bottom={26}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
         <button type="button" className="btn btn-secondary" onClick={onBack} style={{ padding: '0 14px', height: 36 }}>
           ← Rooms
         </button>
@@ -378,8 +378,8 @@ function Room({
       </div>
 
       {showPeople && (
-        <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
+        <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Everybody who says they are in {code} this term. Confirmed Vanderbilt addresses, not a
             roster — no app can read the registrar.
           </div>
@@ -435,7 +435,7 @@ function Room({
                 borderBottom: '1px solid var(--app-line-soft)',
               }}
             >
-              <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
                 <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: mine ? 0.9 : 0.7 }}>{nameOf(m.user_id)}</span>
                 <span style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.4, flex: 1 }}>{whenSaid(m.created_at)}</span>
                 {mine ? (
@@ -486,7 +486,7 @@ function Room({
                       code: codeIn(m.body) ?? undefined,
                     });
                   }}
-                  style={{ height: 36, marginTop: 8, fontSize: 'calc(12.5px * var(--text-scale, 1))', width: 'auto', padding: '0 14px' }}
+                  style={{ height: 36, marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))', width: 'auto', padding: '0 14px' }}
                 >
                   Sit paper {codeIn(m.body)}
                 </button>
@@ -499,7 +499,7 @@ function Room({
 
       {error ? <Problem>{error}</Problem> : null}
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
         <textarea
           className="input"
           value={draft}
@@ -523,7 +523,7 @@ function Room({
           Send
         </button>
       </div>
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         Everybody in {code} can read this, and it is not private to a group of friends. Messages
         cannot be edited — delete and say it again.
       </div>
@@ -532,7 +532,7 @@ function Room({
         type="button"
         className="btn btn-secondary btn-block"
         onClick={onLeave}
-        style={{ height: 42, marginTop: 16 }}
+        style={{ height: 42, marginTop: 'var(--sp-7)' }}
       >
         Leave this room
       </button>
@@ -549,12 +549,12 @@ function Blocked({ me }: { me: string }) {
   return (
     <>
       <SectionLabel>Blocked</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         {ids.length} {ids.length === 1 ? 'person' : 'people'}. Their messages never reach this
         device. They are not told, and they cannot see that you blocked them.
       </div>
       {ids.map((id) => (
-        <div key={id} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '8px 0' }}>
+        <div key={id} style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'center', padding: '8px 0' }}>
           <span style={{ flex: 1, fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>Blocked account</span>
           <button
             type="button"
@@ -573,9 +573,9 @@ function Blocked({ me }: { me: string }) {
 function Note({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Page>
-      <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+      <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
         <div className="kicker">{title}</div>
-        <div style={{ fontSize: 'var(--type-md)', marginTop: 8, lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>{children}</div>
+        <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>{children}</div>
       </Blueprint>
     </Page>
   );
@@ -583,7 +583,7 @@ function Note({ title, children }: { title: string; children: React.ReactNode })
 
 function Problem({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 12, color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
+    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-6)', color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
       {children}
     </div>
   );

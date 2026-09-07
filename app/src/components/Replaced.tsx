@@ -52,7 +52,7 @@ export function Replaced() {
         border: '1px solid var(--app-line)',
         background: 'var(--app-panel)',
         display: 'flex',
-        gap: 10,
+        gap: 'var(--sp-5)',
         alignItems: 'flex-start',
       }}
     >

@@ -138,7 +138,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
               }}
             >
               <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                 {option.blurb}
               </span>
             </button>
@@ -164,10 +164,10 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
       )}
 
       {milestones.length > 0 && (
-        <Blueprint style={{ padding: '11px 13px', marginTop: 10 }}>
+        <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Working back from it</div>
           {milestones.map((m) => (
-            <div key={m.what} style={{ display: 'flex', gap: 10, padding: '5px 0' }}>
+            <div key={m.what} style={{ display: 'flex', gap: 'var(--sp-5)', padding: '5px 0' }}>
               <span
                 style={{
                   flex: 'none',
@@ -182,7 +182,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>{m.what}</span>
             </div>
           ))}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Counted here rather than by Claude, because dates are arithmetic.
           </div>
         </Blueprint>
@@ -218,7 +218,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         courseId={courseId}
         onFill={(lines) => setSources((now) => appendTo(now, lines))}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         Yours only. Nothing here will invent an author, a title or a page number — a made-up
         citation looks exactly like a real one, and it goes in under your name.
       </div>
@@ -228,18 +228,18 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         className="btn btn-primary btn-block"
         onClick={() => void make()}
         disabled={busy || !dueDate}
-        style={{ height: 46, marginTop: 16, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {busy ? 'Building it…' : out ? 'Build it again' : 'Build the project file'}
       </button>
       {!dueDate ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)' }}>
           Needs a due date — the schedule is the half of this that saves you.
         </div>
       ) : null}
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 12, color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-6)', color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       ) : null}
@@ -261,13 +261,13 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
             {document}
           </div>
 
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 10, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
             {left > 0
               ? `${left} blanks in square brackets — those are yours, and the file is not finished until none are left.`
               : 'No blanks left in it. Read it carefully: if it has written the argument rather than asking for it, that is not a file to hand in.'}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -294,8 +294,8 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
               {kept ? 'Kept' : 'Keep as note'}
             </button>
           </div>
-          <PrintButton label="Print it" style={{ marginTop: 8 }} />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+          <PrintButton label="Print it" style={{ marginTop: 'var(--sp-4)' }} />
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Kept as a note it is editable in the app and comes out in an export. Saved as .md it
             opens in Word, Google Docs, Notion or anything else.
           </div>

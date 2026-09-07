@@ -104,19 +104,19 @@ export function Activities() {
             ]}
             value={tab}
             onChange={setTab}
-            style={{ marginBottom: 16 }}
+            style={{ marginBottom: 'var(--sp-7)' }}
           />
 
           {tab === 'yours' && (
             <>
               <Blueprint style={{ padding: '14px 15px' }}>
                 <div className="kicker">Your week</div>
-                <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.55 }}>{loadLine(week)}</div>
+                <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 'var(--sp-4)', lineHeight: 1.55 }}>{loadLine(week)}</div>
                 <div
                   style={{
                     display: 'flex',
                     gap: 14,
-                    marginTop: 12,
+                    marginTop: 'var(--sp-6)',
                     paddingTop: 11,
                     borderTop: '1px solid var(--app-line)',
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -133,7 +133,7 @@ export function Activities() {
                 <div
                   style={{
                     fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                    marginTop: 12,
+                    marginTop: 'var(--sp-6)',
                     padding: '11px 13px',
                     borderRadius: 'var(--r-md)',
                     lineHeight: 'var(--leading-relaxed)',
@@ -147,7 +147,7 @@ export function Activities() {
                       {clash.classTitle} on {dayName(clash.day)}s.
                     </div>
                   ))}
-                  <div style={{ opacity: 0.75, marginTop: 8 }}>
+                  <div style={{ opacity: 0.75, marginTop: 'var(--sp-4)' }}>
                     Said rather than prevented — leaving lecture early on match days is a real thing
                     people do, and the app does not get to decide that.
                   </div>
@@ -194,7 +194,7 @@ function Row({ commitment }: { commitment: Commitment }) {
     <div
       style={{
         display: 'flex',
-        gap: 10,
+        gap: 'var(--sp-5)',
         alignItems: 'center',
         opacity: commitment.active ? 1 : 0.5,
         ...rowStyle,
@@ -216,7 +216,7 @@ function Row({ commitment }: { commitment: Commitment }) {
         <TickBox on={commitment.active} />
       </button>
       <div style={{ flex: 1, minWidth: 0, padding: '12px 0' }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
           <span
             style={{
               width: 8,
@@ -228,7 +228,7 @@ function Row({ commitment }: { commitment: Commitment }) {
           />
           <span style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', minWidth: 0 }}>{commitment.name}</span>
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
           {[kind.label, commitment.role, when, commitment.where].filter(Boolean).join(' · ')}
         </div>
       </div>
@@ -294,7 +294,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
       />
 
       <SectionLabel>What kind</SectionLabel>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
         {ACTIVITY_KINDS.map((k) => {
           const on = k.id === kind;
           return (
@@ -326,7 +326,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
         ]}
         value={fixed ? 'fixed' : 'loose'}
         onChange={(v) => setFixed(v === 'fixed')}
-        style={{ marginBottom: 10 }}
+        style={{ marginBottom: 'var(--sp-5)' }}
       />
 
       {fixed ? (
@@ -358,7 +358,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
               );
             })}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <input
               className="input"
               type="time"
@@ -376,7 +376,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
               style={{ width: 96, flex: 'none' }}
             />
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)' }}>
             Start time and how many minutes it runs. It goes on your day and week grids.
           </div>
         </>
@@ -390,7 +390,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
             placeholder="Hours a week"
             style={{ width: '100%' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Your figure, not a guess at one. It counts toward the week without being drawn on the
             grid, because there is no hour to draw it on.
           </div>
@@ -403,14 +403,14 @@ function AddOne({ onDone }: { onDone: () => void }) {
         value={role}
         onChange={(e) => setRole(e.target.value)}
         placeholder="Your role — member, treasurer, RA"
-        style={{ width: '100%', marginBottom: 8 }}
+        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
       />
       <input
         className="input"
         value={where}
         onChange={(e) => setWhere(e.target.value)}
         placeholder="Where it meets"
-        style={{ width: '100%', marginBottom: 8 }}
+        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
       />
       <input
         className="input"
@@ -443,7 +443,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
           });
           onDone();
         }}
-        style={{ height: 46, marginTop: 16, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         Add it
       </button>
@@ -483,13 +483,13 @@ function FindThings() {
               padding: '14px 15px',
               marginBottom: 9,
               display: 'flex',
-              gap: 12,
+              gap: 'var(--sp-6)',
               alignItems: 'center',
             }}
           >
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 'var(--type-lg)' }}>{l.name}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                 {l.blurb}
               </span>
             </span>
@@ -497,14 +497,14 @@ function FindThings() {
           </Blueprint>
         </a>
       ))}
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 'var(--leading-normal)', marginTop: 4 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-2)' }}>
         No list of organisations is built into the app. There are several hundred and they turn
         over every year — a stale one would have you emailing a president who graduated in 2021.
         AnchorLink is the list, and it is always current.
       </div>
 
       <SectionLabel>Bring your involvement list back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 10 }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Open your involvement page on AnchorLink, select it, copy, and paste here. Nothing is read
         from the page — a browser will not let this app see a tab it does not own, and it should
         not.
@@ -518,7 +518,7 @@ function FindThings() {
       />
 
       {text.trim() && found.length === 0 && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           Nothing in there reads as an organisation name. Navigation, counts and links are dropped
           rather than filed as clubs.
         </div>
@@ -527,7 +527,7 @@ function FindThings() {
       {found.length > 0 && (
         <>
           <SectionLabel>Found {found.length} — check them</SectionLabel>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             An involvement page has no reliable shape, so this is a loose read. The kind beside each
             is a guess from the name and you can change it after adding.
           </div>
@@ -538,7 +538,7 @@ function FindThings() {
                 key={f.name}
                 style={{
                   display: 'flex',
-                  gap: 10,
+                  gap: 'var(--sp-5)',
                   alignItems: 'center',
                   ...rowFlush,
                   padding: '11px 0',
@@ -546,7 +546,7 @@ function FindThings() {
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{f.name}</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 2 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                     {[activityKind(guessKind(f.name)).label, f.role].filter(Boolean).join(' · ')}
                   </span>
                 </span>
@@ -580,7 +580,7 @@ function FindThings() {
               </div>
             );
           })}
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             They arrive with no hours and no meeting time, because an involvement page carries
             neither. Open one under Yours to say when it meets and what it costs you.
           </div>

@@ -93,25 +93,25 @@ export function Ahead() {
         <div className="kicker">The next seven days</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {headline(w)}
         </div>
         {pressure(w) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {pressure(w)}
           </div>
         ) : null}
       </Blueprint>
 
       <SectionLabel>Day by day</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
         {w.days.map((d) => (
           <div
             key={d.date.toISOString()}
             style={{
               display: 'flex',
-              gap: 10,
+              gap: 'var(--sp-5)',
               alignItems: 'center',
               padding: '9px 0',
               borderBottom: '1px solid var(--app-line-soft)',
@@ -175,7 +175,7 @@ export function Ahead() {
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         Classes and commitments at the length they meet for; an appointment counted as an hour,
         because it has a start and no end. A dot marks a day with something due on it.
       </div>
@@ -189,7 +189,7 @@ export function Ahead() {
       {(readings.placed.length > 0 || readings.unplaced.length > 0 || readings.unsized.length > 0) && (
         <>
           <SectionLabel>Reading, and where it goes</SectionLabel>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginBottom: 8 }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-4)' }}>
             {planLine(readings)}
           </div>
           {readings.placed.map((p) => (
@@ -200,7 +200,7 @@ export function Ahead() {
               onClick={() => dispatch({ type: 'openItem', id: p.item.id })}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 alignItems: 'baseline',
                 width: '100%',
                 textAlign: 'left',
@@ -224,7 +224,7 @@ export function Ahead() {
               key={s.item.id}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 alignItems: 'baseline',
                 ...rowStyle,
               }}
@@ -239,7 +239,7 @@ export function Ahead() {
             </div>
           ))}
           {readings.unsized.length > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               {readings.unsized.length} could not be sized — the app has not seen you time a
               reading in that course yet, and it will not invent one.
             </div>
@@ -258,7 +258,7 @@ export function Ahead() {
               onClick={() => dispatch({ type: 'openItem', id: i.id })}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 alignItems: 'baseline',
                 width: '100%',
                 ...rowEleven,
@@ -314,7 +314,7 @@ export function Ahead() {
             {mine}
           </div>
         ) : null}
-        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {basisLine(w.shape)} The coursework estimate is built only from work you have timed
           yourself — the app still invents nothing, and anything it has never seen the like of is
           counted as unknown rather than guessed at.
@@ -327,7 +327,7 @@ export function Ahead() {
               dispatch({ type: 'setMeTab', tab: 'settings' });
               dispatch({ type: 'go', screen: 'me' });
             }}
-            style={{ height: 38, marginTop: 10, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+            style={{ height: 38, marginTop: 'var(--sp-5)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
           >
             Set the hours you actually work
           </button>

@@ -45,7 +45,7 @@ export function TimerLine() {
             style={{
               display: 'flex',
               alignItems: 'baseline',
-              gap: 10,
+              gap: 'var(--sp-5)',
               width: '100%',
               textAlign: 'left',
               padding: '10px 13px',

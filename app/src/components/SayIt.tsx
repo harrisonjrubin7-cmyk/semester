@@ -77,7 +77,7 @@ export function SayIt({
     return (
       <div
         style={{
-          marginTop: 12,
+          marginTop: 'var(--sp-6)',
           padding: '10px 12px',
           borderRadius: 'var(--r-md)',
           border: '1px solid var(--app-line)',
@@ -96,7 +96,7 @@ export function SayIt({
   }
 
   return (
-    <div style={{ marginTop: 12 }}>
+    <div style={{ marginTop: 'var(--sp-6)' }}>
       <button
         type="button"
         className={on ? 'btn btn-primary' : 'btn btn-secondary'}
@@ -107,7 +107,7 @@ export function SayIt({
           paddingInline: 16,
           display: 'flex',
           alignItems: 'center',
-          gap: 8,
+          gap: 'var(--sp-4)',
           marginInline: 'auto',
         }}
       >
@@ -128,7 +128,7 @@ export function SayIt({
           style={{
             fontSize: 'var(--type-base)',
             opacity: 0.75,
-            marginTop: 10,
+            marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-relaxed)',
             textAlign: 'center',
             textWrap: 'pretty',
@@ -139,7 +139,7 @@ export function SayIt({
       ) : null}
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 8, textAlign: 'center' }}>{error}</div>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-4)', textAlign: 'center' }}>{error}</div>
       ) : null}
     </div>
   );

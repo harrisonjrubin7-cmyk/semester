@@ -103,7 +103,7 @@ export function DeadlineRow({
       {...hold}
       style={{
         display: 'flex',
-        gap: 10,
+        gap: 'var(--sp-5)',
         alignItems: 'center',
         // Cards get their own edge and a gap; rows and the timeline share one
         // hairline, which is what lets twice as many fit.
@@ -113,7 +113,7 @@ export function DeadlineRow({
               border: '1px solid var(--app-line)',
               borderRadius: 'var(--r-md)',
               padding: '0 12px',
-              marginBottom: 8,
+              marginBottom: 'var(--sp-4)',
             }
           : row),
         ...(style === 'timeline'
@@ -123,7 +123,7 @@ export function DeadlineRow({
               // caller would have to remember to add.
               borderLeft: '2px solid var(--app-line)',
               marginLeft: 7,
-              paddingLeft: 12,
+              paddingLeft: 'var(--sp-6)',
             }
           : {}),
       }}
@@ -145,7 +145,7 @@ export function DeadlineRow({
           flex: 1,
           minWidth: 0,
           display: 'flex',
-          gap: 10,
+          gap: 'var(--sp-5)',
           alignItems: 'center',
           padding: pad,
           textAlign: 'left',

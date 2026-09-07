@@ -40,18 +40,18 @@ export function Ask() {
         type="button"
         className="btn btn-primary btn-block"
         onClick={() => ai.show()}
-        style={{ height: 44, marginTop: 12, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 44, marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         Open the assistant
       </button>
 
       {!configured(config) || showKey ? (
-        <Blueprint style={{ padding: 16, marginTop: 14 }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 14 }}>
           <div className="kicker">Setup</div>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', marginTop: 5 }}>
             Where the answers come from
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, lineHeight: 'var(--leading-relaxed)', marginTop: 6, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
             {config.provider === 'openai'
               ? 'Two providers, so a lapsed account or an outage the night before a midterm does not stop the app working. Nothing above this setting knows which one answered.'
               : route() === 'shared'
@@ -59,7 +59,7 @@ export function Ask() {
                 : 'A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed about it: anything running in this browser can read a key in this browser. Signing in uses the shared key instead, and a proxy you run is better still — the proxy field wins when both are filled in.'}
           </div>
 
-          <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-6)' }}>
             {(
               [
                 { id: 'anthropic', label: 'Claude' },
@@ -93,7 +93,7 @@ export function Ask() {
 
           {config.provider === 'openai' ? (
             <>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 10 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-5)' }}>
                 There is no shared key on this side — the server function holds an Anthropic key
                 and nothing else. So this means your own OpenAI key, in this browser, where
                 anything running here can read it. It is billable and has no spend cap of its own.
@@ -104,10 +104,10 @@ export function Ask() {
                 placeholder="sk-…"
                 value={config.openaiKey}
                 onChange={(e) => setConfig({ ...config, openaiKey: e.target.value })}
-                style={{ fontSize: 'var(--type-base)', marginTop: 10 }}
+                style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-5)' }}
                 aria-label="OpenAI API key"
               />
-              <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
                 {OPENAI_MODELS.map((m) => {
                   const on = config.openaiModel === m.id;
                   return (
@@ -132,7 +132,7 @@ export function Ask() {
                   );
                 })}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6 }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)' }}>
                 {OPENAI_MODELS.find((m) => m.id === config.openaiModel)?.note}
                 {' '}Extended thinking is Anthropic-only, so the screens that ask for it simply do
                 not get it here.
@@ -146,7 +146,7 @@ export function Ask() {
             placeholder="sk-ant-…"
             value={config.apiKey}
             onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
-            style={{ fontSize: 'var(--type-base)', marginTop: 12 }}
+            style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-6)' }}
             aria-label="API key"
           />
           <input
@@ -154,11 +154,11 @@ export function Ask() {
             placeholder="https://your-proxy.example.com  (better)"
             value={config.proxy}
             onChange={(e) => setConfig({ ...config, proxy: e.target.value })}
-            style={{ fontSize: 'var(--type-base)', marginTop: 8 }}
+            style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-4)' }}
             aria-label="Proxy URL"
           />
 
-          <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
             {MODELS.map((m) => {
               const on = config.model === m.id;
               return (
@@ -183,7 +183,7 @@ export function Ask() {
               );
             })}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)' }}>
             {MODELS.find((m) => m.id === config.model)?.note}
           </div>
             </>
@@ -201,7 +201,7 @@ export function Ask() {
               fontSize: 'var(--type-base)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              marginTop: 12,
+              marginTop: 'var(--sp-6)',
             }}
           >
             Save on this device

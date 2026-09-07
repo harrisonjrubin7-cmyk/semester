@@ -148,12 +148,12 @@ export function DataScreen() {
 
           <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
             <div className="kicker">How it is stored</div>
-            <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 4 }}>
+            <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
               {room?.backend === 'indexeddb'
                 ? 'Files are in IndexedDB; everything else is in localStorage under one key.'
                 : 'localStorage only — this browser has no IndexedDB, so files cannot be kept.'}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
               {room?.persisted === true
                 ? 'The browser has promised not to clear it to make room for other sites.'
                 : room?.persisted === false

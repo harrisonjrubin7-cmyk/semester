@@ -53,7 +53,7 @@ function One({ insight }: { insight: Insight }) {
           style={{
             fontSize: 'var(--type-base)',
             opacity: 0.72,
-            marginTop: 6,
+            marginTop: 'var(--sp-3)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}

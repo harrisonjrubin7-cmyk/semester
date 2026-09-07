@@ -45,8 +45,8 @@ function CoursePicker({
 }) {
   const { catalog } = useStore();
   return (
-    <div className="chiprow" style={{ marginTop: 10 }}>
-      <div style={{ display: 'flex', gap: 6 }}>
+    <div className="chiprow" style={{ marginTop: 'var(--sp-5)' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
         {[{ id: null, label: 'Personal' }, ...catalog.courses.map((c) => ({ id: c.id, label: c.code }))].map(
           (o) => {
             const on = value === o.id;
@@ -79,7 +79,7 @@ function CoursePicker({
   );
 }
 
-const inputStyle = { height: 40, fontSize: 'var(--type-md)', marginTop: 8 } as const;
+const inputStyle = { height: 40, fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)' } as const;
 
 /**
  * One task, and the way to change it.
@@ -132,7 +132,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           autoFocus
           style={{ height: 40, fontSize: 'var(--type-md)', width: '100%' }}
         />
-        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
           <input
             className="input"
             type="date"
@@ -150,7 +150,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
           />
         </div>
-        <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
           <button
             type="button"
             className="btn btn-primary"
@@ -182,7 +182,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         {/* Where it came from, when something put it here. A step in a plan
             found three weeks later says what it is for. */}
         {t.note ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             {t.note}
           </div>
         ) : null}
@@ -194,7 +194,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
     <Blueprint
       style={{
         display: 'flex',
-        gap: 12,
+        gap: 'var(--sp-6)',
         padding: '12px 14px',
         alignItems: 'flex-start',
         background: t.done ? 'transparent' : 'var(--app-panel)',
@@ -205,7 +205,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         className="bare"
         onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
         aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
-        style={{ width: 20, flex: 'none', marginTop: 2 }}
+        style={{ width: 20, flex: 'none', marginTop: 'var(--sp-1)' }}
       >
         <TickBox on={t.done} />
       </button>
@@ -235,7 +235,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           {t.title}
         </span>
         <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 3 }}>
-          <span className="tag tag-neutral" style={{ marginRight: 6 }}>
+          <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
             {t.courseId ? courseCode(t.courseId) : 'Personal'}
           </span>
           {t.date ? longLabel(isoToDate(t.date)) : 'No date'}
@@ -304,7 +304,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <input
               className="input"
               type="date"
@@ -323,7 +323,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
             />
           </div>
           <CoursePicker value={courseId} onChange={setCourseId} />
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -364,7 +364,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
         g.tasks.length === 0 ? null : (
           <div key={g.label}>
             <SectionLabel>{g.label}</SectionLabel>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
               {g.tasks.map((t) => (
                 <TaskRow key={t.id} task={t} />
               ))}
@@ -425,7 +425,7 @@ function Appointments() {
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
           />
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <input
               className="input"
               type="date"
@@ -458,8 +458,8 @@ function Appointments() {
             style={{
               display: 'flex',
               flexWrap: 'wrap',
-              gap: 6,
-              marginTop: 10,
+              gap: 'var(--sp-3)',
+              marginTop: 'var(--sp-5)',
             }}
           >
             {EVENT_KINDS.map((k) => (
@@ -479,7 +479,7 @@ function Appointments() {
                   borderColor: kind === k.id ? k.tint : 'var(--app-line)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 'var(--sp-3)',
                 }}
               >
                 <span style={{ width: 3, height: 10, background: k.tint, flex: 'none' }} />
@@ -488,7 +488,7 @@ function Appointments() {
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -525,7 +525,7 @@ function Appointments() {
         />
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 14 }}>
         {upcoming.map((a) => (
           <Blueprint
             key={a.id}
@@ -554,7 +554,7 @@ function Appointments() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</div>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 2 }}>
+              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
                 {[kindOf(a.kind).label, a.where].filter(Boolean).join(' · ')}
               </div>
             </div>
@@ -613,7 +613,7 @@ function Notes({ rows }: { rows?: Note[] }) {
               onClick={() => dispatch({ type: 'openNote', id: n.id })}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 alignItems: 'center',
                 ...rowThirteen,
               }}
@@ -699,11 +699,11 @@ function Files() {
           <SectionLabel>
             {files.length} {files.length === 1 ? 'file' : 'files'} · {formatBytes(total)}
           </SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
             {files.map((f) => {
               const usedBy = state.notes.filter((n) => n.fileIds.includes(f.id)).length;
               return (
-                <Blueprint key={f.id} style={{ display: 'flex', gap: 12, padding: '12px 14px' }}>
+                <Blueprint key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '12px 14px' }}>
                   <button
                     type="button"
                     className="bare"
@@ -727,7 +727,7 @@ function Files() {
                         display: 'block',
                         fontSize: 'var(--type-xs)',
                         opacity: 0.55,
-                        marginTop: 2,
+                        marginTop: 'var(--sp-1)',
                         fontFamily: 'var(--font-heading)',
                         letterSpacing: '0.08em',
                       }}
@@ -807,7 +807,7 @@ export function Mine() {
         ]}
         value={state.mineTab}
         onChange={(tab) => dispatch({ type: 'setMineTab', tab })}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 'var(--sp-7)' }}
       />
       {state.mineTab === 'tasks' && <Tasks rows={shown as PersonalTask[]} />}
       {state.mineTab === 'appointments' && <Appointments />}
@@ -872,12 +872,12 @@ function Places() {
       </button>
 
       {fix && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 12, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-6)', background: 'var(--app-hero)' }}>
           <div className="kicker">{at ? 'You are at' : 'Somewhere new'}</div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))', marginTop: 4 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
             {at ? at.label : 'Not a place you have named'}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 4 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-2)' }}>
             Accurate to about {far(fix.accuracy)}.
           </div>
 
@@ -889,7 +889,7 @@ function Places() {
                 onChange={(e) => setLabel(e.target.value)}
                 placeholder="Alumni Hall, Central Library, home…"
                 aria-label="Name this place"
-                style={{ fontSize: 'var(--type-md)', marginTop: 12 }}
+                style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-6)' }}
               />
               <button
                 type="button"
@@ -907,7 +907,7 @@ function Places() {
                   });
                   setLabel('');
                 }}
-                style={{ height: 42, marginTop: 8, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ height: 42, marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 Save this spot
               </button>
@@ -927,7 +927,7 @@ function Places() {
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-accent)',
-            marginTop: 12,
+            marginTop: 'var(--sp-6)',
             lineHeight: 'var(--leading-normal)',
             whiteSpace: 'pre-wrap',
           }}
@@ -949,14 +949,14 @@ function Places() {
               key={place.id}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 alignItems: 'center',
                 ...rowTwelve,
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{place.label}</div>
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 2 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
                   {metres >= 0 ? `${far(metres)} away · ` : ''}
                   {place.radius} m across
                 </div>
@@ -1027,7 +1027,7 @@ export function NoteEditor() {
         onChange={(e) => dispatch({ type: 'updateNote', id: note.id, patch: { body: e.target.value } })}
         placeholder="Write anything."
         spellCheck
-        style={{ minHeight: 260, fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 12 }}
+        style={{ minHeight: 260, fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 'var(--sp-6)' }}
         aria-label="Note body"
       />
 
@@ -1043,12 +1043,12 @@ export function NoteEditor() {
         current={note.body}
       />
 
-      <PrintButton label="Print this note" style={{ marginTop: 10 }} />
+      <PrintButton label="Print this note" style={{ marginTop: 'var(--sp-5)' }} />
 
       {/* Dictation is for talking to the page; this is for keeping the audio
           too — a seminar, a meeting with a TA, a thought on the walk home.
           Both write text; only this one leaves you a recording. */}
-      <div style={{ marginTop: 10 }}>
+      <div style={{ marginTop: 'var(--sp-5)' }}>
         <RecordButton
           courseId={note.courseId ?? null}
           label={note.title || 'note'}
@@ -1077,13 +1077,13 @@ export function NoteEditor() {
 
       <SectionLabel>Attachments</SectionLabel>
       {attached.length === 0 && (
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, marginBottom: 10 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, marginBottom: 'var(--sp-5)' }}>
           Nothing attached yet.
         </div>
       )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {attached.map((f) => (
-          <Blueprint key={f.id} style={{ display: 'flex', gap: 12, padding: '11px 13px' }}>
+          <Blueprint key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '11px 13px' }}>
             <button
               type="button"
               className="bare"
@@ -1121,7 +1121,7 @@ export function NoteEditor() {
         type="button"
         className="btn btn-secondary btn-block"
         onClick={() => input.current?.click()}
-        style={{ height: 44, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 12 }}
+        style={{ height: 44, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 'var(--sp-6)' }}
       >
         <Plus size={15} /> Attach a file
       </button>

@@ -121,17 +121,17 @@ export function Worked() {
         </>
       )}
 
-          <Blueprint style={{ padding: '15px 16px', marginTop: 12 }}>
+          <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
             <div className="kicker">{label}</div>
             <div
               className="chrome-text"
-              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 6, textWrap: 'pretty' }}
+              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.2, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
             >
               {found.length === 0
                 ? 'Nothing this term will support.'
                 : `${found.length} ${found.length === 1 ? 'thing' : 'things'} the term will support.`}
             </div>
-            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
               {basis(input)}
             </div>
           </Blueprint>
@@ -186,7 +186,7 @@ export function Worked() {
               say, which is a different sentence from a filter that matched
               nothing — `<Page>` writes that one. */}
           {found.length === 0 ? (
-            <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 16, lineHeight: 1.55 }}>
+            <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-7)', lineHeight: 1.55 }}>
               {nothing || 'Nothing stood out far enough above the noise to be worth saying.'}
             </div>
           ) : (
@@ -201,7 +201,7 @@ export function Worked() {
             </Group>
           )}
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-7)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -217,9 +217,9 @@ export function Worked() {
               Save it
             </button>
           </div>
-          <PrintButton label="Print it" style={{ marginTop: 8 }} />
+          <PrintButton label="Print it" style={{ marginTop: 'var(--sp-4)' }} />
 
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 12, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-normal)' }}>
             Every line is counted from what this app recorded, and anything it could not support with
             enough observations was left out rather than softened. There is no score for the term, and
             no comparison with anybody else.

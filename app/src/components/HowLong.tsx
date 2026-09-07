@@ -30,10 +30,10 @@ export function HowLong({
 
   return (
     <div style={{ padding: '9px 0 4px' }}>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 6, lineHeight: 1.4 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 'var(--sp-3)', lineHeight: 1.4 }}>
         How long did that take? It teaches the week ahead your own pace.
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
         {BUCKETS.map((b) => (
           <button
             key={b.id}

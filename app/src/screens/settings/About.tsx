@@ -36,7 +36,7 @@ export function SettingsAbout() {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 12,
+                    gap: 'var(--sp-6)',
                     ...row,
                   }}
                 >

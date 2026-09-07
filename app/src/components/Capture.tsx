@@ -81,7 +81,7 @@ export function Capture({
         }}
       />
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <button
           type="button"
           className="btn btn-secondary"
@@ -125,8 +125,8 @@ export function Capture({
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fill, minmax(72px, 1fr))',
-              gap: 8,
-              marginTop: 12,
+              gap: 'var(--sp-4)',
+              marginTop: 'var(--sp-6)',
             }}
           >
             {shots.map((s, i) => (
@@ -168,18 +168,18 @@ export function Capture({
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)' }}>
             {shots.length} of {MAX_SHOTS} · about {weigh(shots)} KB after resizing
           </div>
         </>
       )}
 
       {errors.length > 0 && (
-        <Blueprint plain style={{ padding: '10px 12px', marginTop: 10 }}>
+        <Blueprint plain style={{ padding: '10px 12px', marginTop: 'var(--sp-5)' }}>
           {errors.map((e) => (
             <div
               key={e}
-              style={{ fontSize: 'var(--type-sm)', color: 'var(--app-accent)', lineHeight: 'var(--leading-normal)', marginTop: 2 }}
+              style={{ fontSize: 'var(--type-sm)', color: 'var(--app-accent)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}
             >
               {e}
             </div>

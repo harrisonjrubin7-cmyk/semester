@@ -107,28 +107,28 @@ export function Housing() {
     <Page bottom={26}>
       <TermSwitch />
 
-      <Blueprint style={{ padding: '15px 16px', marginTop: 12 }}>
+      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.25, marginTop: 6, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.25, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {mine ? homeLine(mine) : 'No room on file yet.'}
         </div>
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           {moveOutLine(moveOut, now)}
         </div>
         {packLine(exams, moveOut, now) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 6, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
             {packLine(exams, moveOut, now)}
           </div>
         ) : null}
       </Blueprint>
 
       {mine && firstToday ? (
-        <Blueprint plain style={{ padding: '13px 14px', marginTop: 10 }}>
+        <Blueprint plain style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">The first walk of the day</div>
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {walk.known && walk.minutes > 0
               ? morningLine(mine, firstToday, state.places, clock)
               : hallSaved
@@ -156,7 +156,7 @@ export function Housing() {
           className="btn btn-primary btn-block"
           style={{
             height: 46,
-            marginTop: 12,
+            marginTop: 'var(--sp-6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -175,7 +175,7 @@ export function Housing() {
         or the hours after your last exam if that is how they put it — the app will not do both.
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
         <input
           className="input"
           value={hall}
@@ -194,7 +194,7 @@ export function Housing() {
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
         <input
           className="input"
           value={out}
@@ -215,7 +215,7 @@ export function Housing() {
       </div>
 
       {bad ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 8, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-warn)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {bad}
         </div>
       ) : null}
@@ -230,7 +230,7 @@ export function Housing() {
       </button>
 
       {!lastExam && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           No exams on any syllabus yet, so a move-out counted from your last one stays a rule
           rather than a date. Import a syllabus with a final on it and the app will do the sum.
         </div>

@@ -39,7 +39,7 @@ export function SampleMark() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        gap: 'var(--sp-4)',
         padding: '5px 16px',
         background: 'var(--app-hero)',
         borderBottom: '1px solid var(--app-line)',

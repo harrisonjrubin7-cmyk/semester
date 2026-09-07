@@ -31,11 +31,11 @@ export function NotYetOpened() {
       >
         Not opened yet
       </SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 10, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         {seenLine(state.visited)} These three change each day.
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {three.map((d) => (
           <button
             key={d.screen}
@@ -64,7 +64,7 @@ export function NotYetOpened() {
                   display: 'block',
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
                   opacity: 0.55,
-                  marginTop: 2,
+                  marginTop: 'var(--sp-1)',
                   lineHeight: 1.4,
                 }}
               >

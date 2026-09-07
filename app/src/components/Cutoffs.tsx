@@ -40,7 +40,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
   const typed = fromTyped(rows, system.gpaMax);
 
   return (
-    <div style={{ marginTop: 10 }}>
+    <div style={{ marginTop: 'var(--sp-5)' }}>
       <div
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -52,7 +52,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
         {sourceLine(source, school)}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
         <button
           type="button"
           className="bare tappable"
@@ -99,13 +99,13 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
       </div>
 
       {open && (
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 'var(--sp-5)' }}>
           <div
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
               opacity: 0.6,
               lineHeight: 'var(--leading-normal)',
-              marginBottom: 8,
+              marginBottom: 'var(--sp-4)',
               textWrap: 'pretty',
             }}
           >
@@ -113,7 +113,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             that band — a blank is not a zero.
           </div>
           {rows.map((r, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 7 }}>
+            <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', marginBottom: 7 }}>
               <input
                 className="input"
                 value={r.label}
@@ -150,7 +150,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             }}
             style={{
               height: 42,
-              marginTop: 4,
+              marginTop: 'var(--sp-2)',
               fontSize: 'var(--type-base)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',

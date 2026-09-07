@@ -46,11 +46,11 @@ export function Guess() {
         <div className="kicker">Before you read it</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.1, marginTop: 8, textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.1, marginTop: 'var(--sp-4)', textWrap: 'pretty' }}
         >
           {state.guessRight} of {asked.length}
         </div>
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 10, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 'var(--sp-5)', lineHeight: 1.55, textWrap: 'pretty' }}>
           {verdict(state.guessRight, asked.length)}
         </div>
         <button
@@ -79,7 +79,7 @@ export function Guess() {
       </div>
 
       {state.guessIdx === 0 && !state.guessSaid && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {invite(asked.length, unitName(unit.name))}
         </div>
       )}
@@ -89,7 +89,7 @@ export function Guess() {
         style={{
           fontSize: 'calc(24px * var(--text-scale, 1))',
           lineHeight: 1.16,
-          marginTop: 16,
+          marginTop: 'var(--sp-7)',
           textWrap: 'pretty',
         }}
       >
@@ -107,7 +107,7 @@ export function Guess() {
             rows={3}
             style={{ marginTop: 14, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {NUDGE}
           </div>
           <button
@@ -123,14 +123,14 @@ export function Guess() {
         <>
           <Blueprint plain style={{ padding: 14, marginTop: 14 }}>
             <div className="kicker">The answer</div>
-            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-relaxed)', marginTop: 6, textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
               {card.a}
             </div>
           </Blueprint>
           {said.trim() && (
-            <Blueprint plain style={{ padding: 14, marginTop: 10 }}>
+            <Blueprint plain style={{ padding: 14, marginTop: 'var(--sp-5)' }}>
               <div className="kicker">What you said</div>
-              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', marginTop: 6, opacity: 0.8, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-3)', opacity: 0.8, textWrap: 'pretty' }}>
                 {said}
               </div>
             </Blueprint>
@@ -143,7 +143,7 @@ export function Guess() {
             no judgement. It is two taps and it counts towards a sentence, not
             a score — see `lib/pretest.ts`.
           */}
-          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
             <button
               type="button"
               className="btn btn-secondary"

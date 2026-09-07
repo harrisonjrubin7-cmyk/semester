@@ -162,7 +162,7 @@ export function Mail() {
           if (found) setPid(found.id);
         }}
       />
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>{p.blurb}</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>{p.blurb}</div>
 
       {catalog.courses.length > 0 && (
         <>
@@ -228,7 +228,7 @@ export function Mail() {
       )}
 
       <SectionLabel>In your own words</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 6, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         {p.asks} Anything factual in the draft has to come from here — the app will leave a blank
         rather than invent a reason for you.
       </div>
@@ -254,7 +254,7 @@ export function Mail() {
         className="btn btn-primary btn-block"
         onClick={() => void write()}
         disabled={busy || !canDraft}
-        style={{ height: 46, marginTop: 16, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         {busy ? 'Writing…' : body ? 'Write it again' : 'Draft it'}
       </button>
@@ -264,7 +264,7 @@ export function Mail() {
           style={{
             fontSize: 'var(--type-sm)',
             opacity: 0.65,
-            marginTop: 10,
+            marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -295,7 +295,7 @@ export function Mail() {
             style={{
               width: '100%',
               minHeight: 260,
-              marginTop: 8,
+              marginTop: 'var(--sp-4)',
               resize: 'vertical',
               lineHeight: 1.55,
             }}
@@ -309,7 +309,7 @@ export function Mail() {
             <div
               style={{
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                marginTop: 10,
+                marginTop: 'var(--sp-5)',
                 padding: '10px 12px',
                 borderRadius: 10,
                 lineHeight: 'var(--leading-normal)',
@@ -338,7 +338,7 @@ export function Mail() {
             rel="noreferrer"
             style={{
               height: 46,
-              marginTop: 12,
+              marginTop: 'var(--sp-6)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -349,7 +349,7 @@ export function Mail() {
           >
             Open in {APPS.find((a) => a.id === app)?.label}
           </a>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
             <button
               type="button"
               className="btn btn-secondary"
@@ -374,7 +374,7 @@ export function Mail() {
               Keep as note
             </button>
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 10, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             The app cannot send this. It has your mail read-only, which is the point — read it
             once more and send it yourself.
           </div>

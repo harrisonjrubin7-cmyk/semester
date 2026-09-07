@@ -203,7 +203,7 @@ function DayView() {
                     textAlign: 'right',
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'var(--type-md)',
-                    paddingTop: 12,
+                    paddingTop: 'var(--sp-6)',
                     opacity: 0.6,
                   }}
                 >
@@ -240,7 +240,7 @@ function DayView() {
                   </div>
                   <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
                     {b.mine && (
-                      <span className="tag tag-neutral" style={{ marginRight: 6 }}>
+                      <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
                         Yours
                       </span>
                     )}
@@ -302,7 +302,7 @@ function DayView() {
               onClick={() => dispatch({ type: 'openEvent', id: e.id })}
               style={{
                 display: 'flex',
-                gap: 10,
+                gap: 'var(--sp-5)',
                 alignItems: 'center',
                 padding: '12px 0',
                 borderBottom: '1px solid var(--app-line)',
@@ -330,7 +330,7 @@ function DayView() {
                 key={e.id}
                 style={{
                   display: 'flex',
-                  gap: 10,
+                  gap: 'var(--sp-5)',
                   alignItems: 'center',
                   padding: '12px 0',
                   borderBottom: '1px solid var(--app-line)',
@@ -402,7 +402,7 @@ function DayTask({ task: t }: { task: PersonalTask }) {
     <div
       style={{
         display: 'flex',
-        gap: 10,
+        gap: 'var(--sp-5)',
         alignItems: 'center',
         padding: '8px 0',
         borderBottom: '1px solid var(--app-line)',
@@ -435,7 +435,7 @@ function DayTask({ task: t }: { task: PersonalTask }) {
           thing anybody means to do, and two more targets beside a ticked row
           is two more ways to mis-tap. */}
       {!t.done && (
-        <span style={{ display: 'flex', gap: 2, flex: 'none' }}>
+        <span style={{ display: 'flex', gap: 'var(--sp-1)', flex: 'none' }}>
           <button
             type="button"
             className="bare tappable"
@@ -521,7 +521,7 @@ function WeekView() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 10,
+          marginBottom: 'var(--sp-5)',
         }}
       >
         <button
@@ -667,7 +667,7 @@ function MonthView() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 12,
+          marginBottom: 'var(--sp-6)',
         }}
       >
         <button
@@ -695,7 +695,7 @@ function MonthView() {
       </div>
 
       <div
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1, marginBottom: 6 }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1, marginBottom: 'var(--sp-3)' }}
         aria-hidden="true"
       >
         {DOW_INITIALS.map((d, i) => (
@@ -817,7 +817,7 @@ function MonthView() {
               >
                 {d}
               </span>
-              <span aria-hidden="true" style={{ display: 'flex', gap: 2, height: 4 }}>
+              <span aria-hidden="true" style={{ display: 'flex', gap: 'var(--sp-1)', height: 4 }}>
                 {dots.map((m, k) => (
                   <span
                     key={k}
@@ -853,7 +853,7 @@ function MonthView() {
           display: 'flex',
           flexWrap: 'wrap',
           gap: '6px 14px',
-          marginTop: 10,
+          marginTop: 'var(--sp-5)',
           fontSize: 'calc(10.5px * var(--text-scale, 1))',
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.1em',
@@ -985,7 +985,7 @@ function SemesterView() {
 
   return (
     <div style={{ padding: 18 }}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 16, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
         {items.length} deadlines and {events.length} events across {weeks.length} weeks. The bar is
         how loaded each week is; exams are marked.
       </div>
@@ -999,7 +999,7 @@ function SemesterView() {
               key={i}
               style={{
                 display: 'flex',
-                gap: 12,
+                gap: 'var(--sp-6)',
                 alignItems: 'flex-start',
                 padding: '10px 0',
                 borderBottom: '1px solid var(--app-line)',
@@ -1028,8 +1028,8 @@ function SemesterView() {
                     gap: 3,
                     height: 8,
                     alignItems: 'stretch',
-                    marginTop: 4,
-                    marginBottom: 6,
+                    marginTop: 'var(--sp-2)',
+                    marginBottom: 'var(--sp-3)',
                   }}
                 >
                   {w.items.length === 0 && w.events.length === 0 ? (
@@ -1096,7 +1096,7 @@ function SemesterView() {
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
                       color: 'var(--app-accent)',
-                      marginTop: 4,
+                      marginTop: 'var(--sp-2)',
                     }}
                   >
                     {exams.length} exam{exams.length > 1 ? 's' : ''} this week
@@ -1133,11 +1133,11 @@ function CampusList() {
       </div>
 
       <div style={{ padding: '14px 18px' }}>
-        <div className="section-label" style={{ marginBottom: 12 }}>
+        <div className="section-label" style={{ marginBottom: 'var(--sp-6)' }}>
           {events.length} {events.length === 1 ? 'event' : 'events'}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
           {events.map((e) => {
             const saved = !!state.saved[e.id];
             return (
@@ -1165,7 +1165,7 @@ function CampusList() {
                   onClick={() => dispatch({ type: 'openEvent', id: e.id })}
                   style={{ flex: 1, minWidth: 0 }}
                 >
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 }}>
+                  <div style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'center', flexWrap: 'wrap', marginBottom: 'var(--sp-2)' }}>
                     <span
                       className={`tag ${e.kind === 'Athletics' ? 'tag-accent' : e.kind === 'University' ? 'tag-outline' : 'tag-neutral'}`}
                     >
@@ -1184,7 +1184,7 @@ function CampusList() {
                     </span>
                   </div>
                   <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{e.title}</div>
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 2 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
                     {e.time} · {e.where}
                   </div>
                 </button>
@@ -1282,7 +1282,7 @@ export function EventDetail() {
 
   return (
     <Page>
-      <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+      <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
         <div className="kicker">
           {event.kind} · {event.tag}
         </div>
@@ -1292,7 +1292,7 @@ export function EventDetail() {
             fontSize: 'calc(28px * var(--text-scale, 1))',
             lineHeight: 1.08,
             letterSpacing: '-0.01em',
-            marginTop: 8,
+            marginTop: 'var(--sp-4)',
             textWrap: 'pretty',
           }}
         >
@@ -1329,7 +1329,7 @@ export function EventDetail() {
       <SectionLabel style={{ margin: '22px 0 6px' }}>Getting in</SectionLabel>
       <div style={{ fontSize: 'var(--type-md)', opacity: 0.8 }}>{event.ticket}</div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 24 }}>
         <button
           type="button"
           className="btn btn-primary"

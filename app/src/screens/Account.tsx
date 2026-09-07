@@ -43,12 +43,12 @@ export function AccountScreen() {
   if (!cloudConfigured) {
     return (
       <Page>
-        <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Device only</div>
-          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 8, lineHeight: 1.1 }}>
+          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
             This build has no account service
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             Everything works, and everything stays on this device. To turn on accounts, set
             VITE_SUPABASE_URL and VITE_SUPABASE_KEY and redeploy — see SETUP.md.
           </div>
@@ -67,9 +67,9 @@ export function AccountScreen() {
 
     return (
       <Page>
-        <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
+        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Signed in</div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 6 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 'var(--sp-3)' }}>
             {account.email}
           </div>
           {account.via && (
@@ -79,7 +79,7 @@ export function AccountScreen() {
               Through {account.via}.
             </div>
           )}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 8, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {sync.status === 'syncing' && 'Catching up with your account…'}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
@@ -95,7 +95,7 @@ export function AccountScreen() {
             See `lib/merge.ts`.
           */}
           {state.lastSync ? (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
               {syncLine(state.lastSync.notes)}
             </div>
           ) : null}
@@ -157,7 +157,7 @@ export function AccountScreen() {
           are the exception, and deliberately so — your colours are whatever you last chose,
           wherever you chose it.
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty', marginTop: 8 }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty', marginTop: 'var(--sp-4)' }}>
           What still does not merge is the same note edited on both: the later edit is the one that
           survives. The app would rather say so than pretend.
         </div>
@@ -177,7 +177,7 @@ export function AccountScreen() {
         >
           Sign out (keeps data on this device)
         </button>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
         </div>
@@ -190,7 +190,7 @@ export function AccountScreen() {
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         {mode === 'in' ? 'Pick up where you left off.' : 'One semester, every device.'}
       </div>
-      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         An account keeps your courses, notes and progress in step between your phone and your
         laptop. The app works without one — this only decides whether it follows you.
       </div>
@@ -229,7 +229,7 @@ export function AccountScreen() {
           placeholder="you@vanderbilt.edu"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          style={{ fontSize: 'var(--type-md)', marginTop: 16 }}
+          style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-7)' }}
         />
         <label className="sr-only" htmlFor="account-password">
           Password
@@ -243,7 +243,7 @@ export function AccountScreen() {
           placeholder={mode === 'in' ? 'Password' : 'Password — at least 8 characters'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          style={{ fontSize: 'var(--type-md)', marginTop: 8 }}
+          style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)' }}
         />
 
         <button
@@ -262,7 +262,7 @@ export function AccountScreen() {
         </button>
       </form>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
         <button
           type="button"
           className="btn btn-secondary"
@@ -291,7 +291,7 @@ export function AccountScreen() {
           Apple
         </button>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         Any Google or Microsoft account works — there is no check on which university the address
         belongs to. Email and a password is kept as a third way in because some universities block
         third-party sign-in outright, and being locked out of the only option is not a good enough
