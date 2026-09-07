@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
@@ -742,7 +743,7 @@ export function Mine() {
   const { state, dispatch } = useStore();
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <Segmented
         options={[
           { id: 'tasks', label: 'Tasks' },
@@ -760,7 +761,7 @@ export function Mine() {
       {state.mineTab === 'notes' && <Notes />}
       {state.mineTab === 'places' && <Places />}
       {state.mineTab === 'files' && <Files />}
-    </div>
+    </Page>
   );
 }
 
@@ -950,7 +951,7 @@ export function NoteEditor() {
   };
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <input
         className="input"
         value={note.title}
@@ -1086,8 +1087,6 @@ export function NoteEditor() {
         }}
       >
         Delete note
-      </button>
-      <div style={{ height: 22 }} />
-    </div>
+      </button></Page>
   );
 }

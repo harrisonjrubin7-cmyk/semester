@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -118,7 +119,7 @@ export function Groupwork() {
 
   if (!account) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: '15px 16px' }}>
           <div className="kicker">Sign in first</div>
           <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
@@ -134,14 +135,14 @@ export function Groupwork() {
             Sign in
           </button>
         </Blueprint>
-      </div>
+      </Page>
     );
   }
 
   const s = open ? standing(asGroup(open), parts.map(asPart), now) : null;
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <SectionLabel>Which class</SectionLabel>
       <select
         className="input"
@@ -475,8 +476,6 @@ export function Groupwork() {
             remove anybody from a group but themselves.
           </div>
         </>
-      )}
-      <div style={{ height: 26 }} />
-    </div>
+      )}</Page>
   );
 }

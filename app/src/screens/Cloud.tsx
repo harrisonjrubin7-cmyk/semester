@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { addressIn } from '../lib/mail';
 import { Blueprint } from '../components/Blueprint';
@@ -73,7 +74,7 @@ export function Cloud() {
 
   if (available.length === 0) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Nothing connected</div>
           <div className="chrome-text" style={{ fontSize: 'calc(25px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
@@ -92,7 +93,7 @@ export function Cloud() {
             Connect accounts
           </button>
         </Blueprint>
-      </div>
+      </Page>
     );
   }
 
@@ -204,7 +205,7 @@ export function Cloud() {
     });
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       {available.length > 1 && (
         <div className="chiprow" style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', gap: 6 }}>
@@ -420,8 +421,6 @@ export function Cloud() {
             {provider === 'google' ? 'Google Tasks' : 'Microsoft To Do'}
           </button>
         </>
-      )}
-      <div style={{ height: 22 }} />
-    </div>
+      )}</Page>
   );
 }

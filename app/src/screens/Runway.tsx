@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
 import { EmptyState } from '../components/ui';
@@ -83,7 +84,7 @@ export function Runway() {
 
   if (!exam || !r) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: '15px 16px' }}>
           <EmptyState
             inline
@@ -95,7 +96,7 @@ export function Runway() {
             }}
           />
         </Blueprint>
-      </div>
+      </Page>
     );
   }
 
@@ -105,7 +106,7 @@ export function Runway() {
   const accessUrl = state.linkUrls.access || CAMPUS_LINKS.find((l) => l.id === 'access')?.url || '';
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       {exams.length > 1 && (
         // The next few. A runway more than a term away is "far" in every band,
         // so a chip for it is a chip that says nothing.
@@ -316,8 +317,6 @@ export function Runway() {
       <div style={{ fontSize: 'calc(11px * var(--text-scale, 1))', opacity: 0.45, marginTop: 10, lineHeight: 1.45 }}>
         Every number here is counted from your own drilling and your own deadlines. There is no
         readiness score and there will not be one — it would be believed, and the app cannot know.
-      </div>
-      <div style={{ height: 26 }} />
-    </div>
+      </div></Page>
   );
 }

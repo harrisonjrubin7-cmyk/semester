@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
@@ -110,19 +111,19 @@ export function Solve() {
 
   if (!configured()) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
           <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings.
           </div>
         </Blueprint>
-      </div>
+      </Page>
     );
   }
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Working on {guide.code}. It will not write the answer you are handing in — for a maths
         question the worked solution is the submitted work. It will teach the method on numbers
@@ -265,8 +266,6 @@ export function Solve() {
           </button>
         </>
       )}
-      {out ? <PrintButton label="Print this" style={{ marginTop: 8 }} /> : null}
-      <div style={{ height: 26 }} />
-    </div>
+      {out ? <PrintButton label="Print this" style={{ marginTop: 8 }} /> : null}</Page>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { ForcedProvider, useRowStyle } from '../components/shell/useShell';
 import { learned, showSpan } from '../lib/pace';
 import { permission, requestPermission, type Permission } from '../lib/notify';
@@ -163,7 +164,7 @@ export function Me() {
   const recent = lately(state.recent, state.tabs, school.capabilities, HIDE_IN_ME);
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       {/*
         Every other tab opens on a switcher and then one view. Me was the one
         long scroll in the app — a stats card, then a chart, then five headed
@@ -338,9 +339,7 @@ export function Me() {
         </nav>
       </ForcedProvider>
         </>
-      )}
-      <div style={{ height: 22 }} />
-    </div>
+      )}</Page>
   );
 }
 
@@ -364,7 +363,7 @@ export function Search() {
   const open = (hit: Hit) => openHit(hit, dispatch);
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <input
         className="input"
         value={state.query}
@@ -425,9 +424,7 @@ export function Search() {
           title="Search everything."
           body="Deadlines, courses, study units, your own notes and tasks — and the app's own screens, so you can type where you want to go instead of hunting for it."
         />
-      )}
-      <div style={{ height: 22 }} />
-    </div>
+      )}</Page>
   );
 }
 
@@ -436,18 +433,18 @@ export function Notifications() {
 
   if (state.cleared) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <EmptyState
           title="All caught up."
           body="We’ll poke you 24 hours before the next deadline."
           icon={<Bell size={18} />}
         />
-      </div>
+      </Page>
     );
   }
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       {NOTIFICATIONS.map((n, i) => (
         <Blueprint
           key={n.id}
@@ -496,9 +493,7 @@ export function Notifications() {
         }}
       >
         Clear all
-      </button>
-      <div style={{ height: 22 }} />
-    </div>
+      </button></Page>
   );
 }
 

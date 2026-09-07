@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { StorageRoom } from '../components/StorageRoom';
 import { syncLine } from '../lib/merge';
@@ -41,7 +42,7 @@ export function AccountScreen() {
 
   if (!cloudConfigured) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Device only</div>
           <div className="chrome-text" style={{ fontSize: 'calc(26px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.1 }}>
@@ -52,7 +53,7 @@ export function AccountScreen() {
             VITE_SUPABASE_URL and VITE_SUPABASE_KEY and redeploy — see SETUP.md.
           </div>
         </Blueprint>
-      </div>
+      </Page>
     );
   }
 
@@ -65,7 +66,7 @@ export function AccountScreen() {
     ].join(' · ');
 
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Signed in</div>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 6 }}>
@@ -179,14 +180,12 @@ export function AccountScreen() {
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 8, lineHeight: 1.45 }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
-        </div>
-        <div style={{ height: 22 }} />
-      </div>
+        </div></Page>
     );
   }
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         {mode === 'in' ? 'Pick up where you left off.' : 'One semester, every device.'}
       </div>
@@ -336,9 +335,6 @@ export function AccountScreen() {
         account already holds a semester the two are merged rather than one replacing the other —
         you end up with both sides' courses, notes and ticked boxes.
       </div>
-      <StorageRoom />
-
-      <div style={{ height: 22 }} />
-    </div>
+      <StorageRoom /></Page>
   );
 }

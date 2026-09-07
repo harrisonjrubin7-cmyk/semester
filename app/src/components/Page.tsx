@@ -1,6 +1,27 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react';
 import { useStore } from '../state/store';
 import type { SearchAdapter } from '../lib/search';
+
+/**
+ * Whether we are already inside one of these.
+ *
+ * A screen's sub-views open with the same wrapper the screen does —
+ * `Calendar.tsx` has `DayView`, `WeekView` and `MonthView`, each starting
+ * `<div style={{ padding: 18 }}>` — and converting those to `<Page>` puts a
+ * frame inside a frame: doubled padding, four search boxes on one screen,
+ * and two of them filtering lists nobody can see. It is easy to do, it type
+ * checks, and it looks almost right, so it says so instead.
+ */
+const Inside = createContext(false);
 
 /**
  * The frame every screen sits in.
@@ -94,6 +115,15 @@ export function Page<T>({
   bottom?: number;
 }) {
   const { state, dispatch } = useStore();
+  const nested = useContext(Inside);
+  if (nested && import.meta.env.DEV) {
+    // Not thrown: a warning is enough to find it, and throwing would take
+    // out a screen over a layout mistake.
+    console.warn(
+      '<Page> inside <Page>. A screen has one frame; its sub-views are parts of it, ' +
+        'not screens of their own. See the note in components/Page.tsx.',
+    );
+  }
   const [typed, setTyped] = useState('');
   const [query, setQuery] = useState('');
   const box = useRef<HTMLInputElement>(null);
@@ -164,6 +194,7 @@ export function Page<T>({
   const side = wide ? { padding: '0 18px' } : undefined;
 
   return (
+    <Inside.Provider value>
     <div className={className} style={{ padding: wide ? '0 0 0' : 18, ...style }}>
       {blurb !== undefined && (
         <div
@@ -340,5 +371,6 @@ export function Page<T>({
 
       <div style={{ height: bottom }} />
     </div>
+    </Inside.Provider>
   );
 }

@@ -1,5 +1,6 @@
 import { Suspense, lazy, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -79,19 +80,19 @@ export function Draw() {
 
   if (!configured()) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
           <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
             Sign in to use the shared key, or add your own under Ask Claude → Settings.
           </div>
         </Blueprint>
-      </div>
+      </Page>
     );
   }
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Drawing for {guide.code}. The picture comes back as code, so every label is yours to change
         — and nothing is invented into it: an axis you gave no numbers for is labelled with the
@@ -209,8 +210,6 @@ export function Draw() {
           </div>
         </>
       )}
-      {code ? <PrintButton label="Print the drawing" style={{ marginTop: 8 }} /> : null}
-      <div style={{ height: 26 }} />
-    </div>
+      {code ? <PrintButton label="Print the drawing" style={{ marginTop: 8 }} /> : null}</Page>
   );
 }

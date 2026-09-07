@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { STANCES, stanceLine } from '../lib/essay';
@@ -78,7 +79,7 @@ export function EditCourse() {
    */
   if (!owned || !draft) {
     return (
-      <div style={{ padding: 18 }}>
+      <Page>
         <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
           <div className="kicker">Shipped with the app</div>
           <div style={{ fontSize: 'calc(14px * var(--text-scale, 1))', marginTop: 8, lineHeight: 1.5, opacity: 0.8 }}>
@@ -104,7 +105,7 @@ export function EditCourse() {
             Make these mine
           </button>
         </Blueprint>
-      </div>
+      </Page>
     );
   }
 
@@ -144,7 +145,7 @@ export function EditCourse() {
   );
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page bottom={26}>
       <div style={{ fontSize: 'calc(13px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.5, textWrap: 'pretty' }}>
         Everything a syllabus states, changeable. Dates move, weightings get corrected, rooms
         change — none of that should mean re-importing the course and losing what you have drilled.
@@ -531,8 +532,6 @@ export function EditCourse() {
           Saved. The calendar, Grades, Today and every study mode are using it already. What you
           have ticked off and drilled is untouched.
         </div>
-      ) : null}
-      <div style={{ height: 26 }} />
-    </div>
+      ) : null}</Page>
   );
 }

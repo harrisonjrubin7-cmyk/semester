@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
 import { MarkClass } from '../components/MarkClass';
 import { ApplyingOn } from '../components/Applying';
@@ -1280,7 +1281,7 @@ export function EventDetail() {
   const saved = !!state.saved[event.id];
 
   return (
-    <div style={{ padding: 18 }}>
+    <Page>
       <Blueprint style={{ padding: 16, background: 'var(--app-hero)' }}>
         <div className="kicker">
           {event.kind} · {event.tag}
@@ -1349,9 +1350,7 @@ export function EventDetail() {
         >
           That day
         </button>
-      </div>
-      <div style={{ height: 22 }} />
-    </div>
+      </div></Page>
   );
 }
 
