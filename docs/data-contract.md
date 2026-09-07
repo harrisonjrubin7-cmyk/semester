@@ -232,6 +232,23 @@ plan rather than separately.
 
 ## 6. Open decisions, in the order they block things
 
+0. **`Sitting` is two different things**, found while writing the adapter and
+   worse than the `Term` collision. The contract's `Sitting` is a work session
+   — `startedAt`, `endedAt`, `focusMs`. The app's `Sitting` (`lib/sitting.ts`)
+   is a **marked practice paper**: `got`, `outOf`, `pct`, `code`, and `missed`
+   — the questions kept for the drill deck.
+
+   Mapping one onto the other fits `at` into `startedAt` and `minutes` into
+   `focusMs` and drops the marks, which takes the drill deck and the grade
+   projection with it. The rules say no screen loses a feature, so the adapter
+   leaves it unmapped and raises it here.
+
+   Two ways out: give the contract a `Paper` type for what the app actually
+   has, or decide practice papers are client-local and never sync. The app's
+   *other* `Sitting` — the live stopwatch in `lib/session.ts` — is the closer
+   match to the contract's type, but it is one in-flight timer rather than a
+   list of finished sessions, so there is nothing there to sync yet.
+
 1. **Origin** (§2.5) — same-origin desktop client, or two origins kept in
    sync? Answering this first may delete half of Phase 1. The plan already
    recommends same-origin.

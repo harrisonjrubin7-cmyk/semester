@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { fileURLToPath } from 'node:url'
 
 /**
  * The dev server doubles as the OAuth token proxy.
@@ -171,6 +172,17 @@ const appleToken = () => ({
 })
 
 export default defineConfig({
+  /*
+   * The shared data contract. See tsconfig.app.json for why it is aliased
+   * rather than copied into each client.
+   */
+  resolve: {
+    alias: {
+      '@semester/contract': fileURLToPath(
+        new URL('../packages/contract/src/index.ts', import.meta.url),
+      ),
+    },
+  },
   // GitHub Pages serves a project site from /<repo>/, not from the root. The
   // workflow sets VITE_BASE; everywhere else this stays '/' and nothing about
   // development changes.

@@ -20,7 +20,18 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /*
+     * The shared data contract, imported rather than copied.
+     *
+     * `packages/contract` is one module with two consumers — this app and the
+     * desktop client. A copy in each is exactly how the two shapes drifted
+     * apart in the first place, so it is aliased in rather than vendored.
+     */
+    "paths": {
+      "@semester/contract": ["../packages/contract/src/index.ts"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "../packages/contract/src"]
 }
