@@ -39,6 +39,7 @@ import { SectionLabel } from './ui';
 import { ALARMS, appointmentEvents, deadlineEvents, toIcs } from '../lib/export';
 import { datedItems } from '../lib/select';
 import { feedBase, publishFeed, readFeed, replaceFeed } from '../lib/cloud';
+import { qrSvg } from '../lib/qr';
 import {
   REPLACED_LINE,
   SHARE_WARNING,
@@ -155,6 +156,19 @@ export function Subscribe() {
             onFocus={(e) => e.currentTarget.select()}
             style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 'var(--type-xs)' }}
           />
+          {/*
+            For the phone sitting next to the laptop.
+
+            `dangerouslySetInnerHTML` because `qrSvg` returns markup this
+            project generated from a string it was handed — there is no user
+            HTML anywhere near it, and building four hundred React elements
+            for a 41×41 grid would cost a layout on every render.
+
+            Hidden from screen readers: it encodes the link that is already in
+            the field above, so announcing it would be the same information a
+            second time with no way to act on it.
+          */}
+          <div style={QR} aria-hidden="true" dangerouslySetInnerHTML={{ __html: qrSvg(webcalUrl(url)) }} />
           <p style={WARN}>{SHARE_WARNING}</p>
           {replaced && <p style={WARN}>{REPLACED_LINE}</p>}
         </>
@@ -195,6 +209,19 @@ const WARN = {
   fontSize: 'var(--type-xs)',
   lineHeight: 'var(--leading-normal)',
   opacity: 0.75,
+} as const;
+
+/** Big enough for a phone camera at arm's length, small enough not to dominate. */
+const QR = {
+  width: 148,
+  height: 148,
+  marginTop: 'var(--sp-4)',
+  // The code needs its own light ground whatever the app's is: a dark theme
+  // behind a transparent SVG would invert it, and an inverted code is one many
+  // scanners refuse.
+  background: '#fff',
+  padding: 'var(--sp-2)',
+  borderRadius: 'var(--r-sm)',
 } as const;
 
 const ACT = {

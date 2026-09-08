@@ -161,10 +161,21 @@ old link is the entire point of the button.
 
 **Two things are still missing, and neither is an oversight.**
 
-*No QR code.* This document asked for one and there is no QR encoder in the
-project — `lib/barcode.ts` reads ISBNs, it does not write QR — so it would mean
-a new dependency. That is a call worth making deliberately rather than in
-passing, and the link can be copied or mailed to a phone meanwhile.
+*~~No QR code.~~* There is one now: `app/src/lib/qr.ts`, byte mode at level M,
+versions 1 to 10. Written out rather than installed, for the reason
+`lib/pptx.ts` writes its own OOXML — but a QR is the one output here nobody can
+check by eye, so it is verified three ways: round-tripped through `jsqr`,
+compared against `qrcode-generator`, and painted by a real browser at its real
+148px and decoded back off the canvas. Both of those libraries are dev
+dependencies and neither ships.
+
+That verification earned its keep immediately. The first version placed the
+fifteen format bits least-significant first instead of most-significant, and
+the result was a code whose data, error correction, mask and *both* format
+copies were internally consistent and completely unreadable — eight wrong
+modules out of 441, every one of them in the format areas. Every check written
+against the encoder's own logic passed. It took an implementation sharing no
+line with it to say otherwise.
 
 *The signed-in path has not been driven in a browser.* The session that wrote it
 could reach neither a signed-in account nor `*.supabase.co`, and the project has
