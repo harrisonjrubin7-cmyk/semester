@@ -242,19 +242,167 @@ export function withPathFix(html: string): string {
   return html.slice(0, at) + PATH_SNIPPET + html.slice(at);
 }
 
+/**
+ * ## "NaNm left": the term page cannot read its own deadlines
+ *
+ * The countdown for something due today, verbatim out of `app.html`:
+ *
+ *     const hh = parseInt(it.time, 10) + (/PM/.test(it.time) && … ? 12 : 0);
+ *
+ * `it.time` is the deadline as the syllabus words it — "Before class, 1:15p",
+ * "In class", "Window is Sep 8–17". `parseInt` of any of those is `NaN`, which
+ * makes an Invalid Date, which makes `Math.max(0, NaN)` — `NaN`, not 0 — and
+ * the row reads "NaNm left".
+ *
+ * Of the thirteen wordings in the data the page carries, three survive that
+ * expression: `9:00–11:00 AM` and `3:00–5:00 PM` by luck, and `11:59 PM`
+ * because the hard-coded `, 59` in the next line happens to be its minutes.
+ * Nine produce `NaN`. `5:00p` is the worst of them — `/PM/` does not match a
+ * lowercase `p`, so it reads as five in the morning and counts down to a
+ * deadline twelve hours before the real one. Weighted by the items that carry
+ * each wording, 44 of 50 deadlines show `NaN` on the day they are due.
+ *
+ * ## Why this one is a source patch and not a shim
+ *
+ * The bad value is computed and rendered inside the bundle; nothing at a
+ * boundary can see it, and the only thing reachable afterwards is the text
+ * "NaNm left" in the DOM, which no longer knows which deadline it belongs to.
+ * Replacing that with "today" would hide the `NaN` and still lose the
+ * countdown — and would leave `5:00p` quietly wrong, because a wrong number
+ * has no marker to key off.
+ *
+ * So the expression itself is replaced, at build time, in `dist/`, anchored on
+ * a long literal. If a regeneration changes that code the anchor stops
+ * matching, nothing is patched, and the build says so — a repair that silently
+ * stops applying is the failure mode this whole file exists to avoid.
+ *
+ * The replacement calls a reader injected into the head, which is `readDue`
+ * from `lib/duetime.ts` written out as browser JavaScript. That duplication is
+ * real, and `webback.test.ts` holds it honest: the two must agree on every
+ * wording in the data, `readDue` being the one with the reasoning behind it.
+ */
+export const COUNTDOWN = 'semester-countdown';
+
+/**
+ * The expression to replace, exactly as it sits in the file.
+ *
+ * Long on purpose. A short anchor might match somewhere else in a bundle this
+ * size, and a build step that patches the wrong line is worse than one that
+ * patches nothing.
+ */
+export const BROKEN =
+  'const hh = parseInt(it.time, 10) + (/PM/.test(it.time) && parseInt(it.time, 10) !== 12 ? 12 : 0);' +
+  // A literal backslash-n: the real document is carried as an escaped string,
+  // so what looks like two lines in the page is one line in the file.
+  '\\n      ' +
+  'const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, 59);';
+
+/**
+ * What goes in its place: the real time, or nothing to count down to.
+ *
+ * Both lines, because the minutes are the other half of the bug. The page
+ * hard-codes `, 59` — right for `11:59 PM` and for nothing else, so even a
+ * deadline whose hour it read correctly was counted to the wrong minute.
+ *
+ * The two lines *after* this are untouched and still work: `target` is a Date
+ * and they subtract `now` from it. A wording holding no clock time returns
+ * early with "today", beside the page's own "tomorrow", rather than a
+ * countdown to a time nobody stated.
+ */
+export const MENDED =
+  "const at = window.__semesterDue(it.time); if (at === null) return 'today';" +
+  '\\n      ' +
+  'const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(),' +
+  ' Math.floor(at / 60), at % 60);';
+
+/** `readDue` from `lib/duetime.ts`, as browser JavaScript. Kept in step by test. */
+export const CLOCK_SNIPPET = `
+<script>/* ${COUNTDOWN} — added by scripts/webback.mjs, see the note there */
+window.__semesterDue = function (text) {
+  if (typeof text !== 'string') return null;
+  var s = text.trim();
+  if (!s) return null;
+  function clock(hour, mins, pm) {
+    if (hour < 1 || hour > 12 || mins > 59) return null;
+    var h = hour === 12 ? 0 : hour;
+    return (h + (pm ? 12 : 0)) * 60 + mins;
+  }
+  // Every clock-shaped thing, in order. A bare number is only a time when it
+  // carries a meridiem: 'Sep 8-17' is two dates and '1:15p' is a time.
+  var re = /(\\d{1,2})(?::(\\d{2}))?\\s*([ap])\\.?m?\\.?\\b/gi;
+  var found = [];
+  var m;
+  while ((m = re.exec(s)) !== null) {
+    found.push({ hour: Number(m[1]), mins: Number(m[2] || 0), pm: m[3].toLowerCase() === 'p' });
+  }
+  // A range whose first half states no meridiem: '3:00-5:00 PM'. The colon is
+  // required, so 'Sep 29 - Oct 8' is not mistaken for one.
+  var range = /(\\d{1,2}):(\\d{2})\\s*[-\\u2013\\u2014]\\s*(\\d{1,2})(?::(\\d{2}))?\\s*([ap])\\.?m?\\.?/i.exec(s);
+  if (range !== null) {
+    var hour = Number(range[1]);
+    var end = Number(range[3]);
+    var pm = range[5].toLowerCase() === 'p';
+    // The meridiem governs both halves, unless the range crosses noon —
+    // '11:00-1:00 PM' starts in the morning, because it has to.
+    return clock(hour, Number(range[2]), pm && hour <= end);
+  }
+  if (found.length === 0) {
+    // A lone H:MM with no meridiem, which a 24-hour syllabus can produce.
+    var bare = /\\b(\\d{1,2}):(\\d{2})\\b/.exec(s);
+    if (bare === null) return null;
+    if (Number(bare[1]) > 23 || Number(bare[2]) > 59) return null;
+    return Number(bare[1]) * 60 + Number(bare[2]);
+  }
+  return clock(found[0].hour, found[0].mins, found[0].pm);
+};
+</script>
+`;
+
+/**
+ * The page counting down from a time it can actually read, or unchanged.
+ *
+ * Unchanged in two cases that mean opposite things and are told apart by the
+ * caller: already done, and the anchor is gone. The second is what a
+ * regeneration looks like, and the build reports it.
+ */
+export function withCountdown(html: string): string {
+  if (html.includes(COUNTDOWN)) return html;
+  if (!html.includes(BROKEN)) return html;
+  const fixed = html.replace(BROKEN, MENDED);
+  const at = fixed.indexOf('</head>');
+  if (at === -1) return html;
+  return fixed.slice(0, at) + CLOCK_SNIPPET + fixed.slice(at);
+}
+
+/** What a page still needs, for a build that should say when a repair lapsed. */
+export function stillBroken(html: string): boolean {
+  return !html.includes(COUNTDOWN) && !html.includes(BROKEN);
+}
+
+export interface Applied {
+  /** Pages written. */
+  patched: string[];
+  /** Repairs that no longer match, which is what a regeneration looks like. */
+  lapsed: string[];
+}
+
 /** Applied to `dist/web/`, after Vite has copied `public/` into it. */
-export async function apply(dir: string): Promise<string[]> {
-  const done: string[] = [];
+export async function apply(dir: string): Promise<Applied> {
+  const patched: string[] = [];
+  const lapsed: string[] = [];
   for (const name of PAGES) {
     const file = join(dir, name);
     if (!existsSync(file)) continue;
     const before = await readFile(file, 'utf8');
-    const after = NEEDS_BACK.includes(name)
-      ? withBackLink(withPathFix(before))
-      : withPathFix(before);
+    let after = withPathFix(before);
+    if (NEEDS_BACK.includes(name)) after = withBackLink(after);
+    if (name === 'app.html') {
+      if (stillBroken(after)) lapsed.push(`${name}: the deadline countdown`);
+      after = withCountdown(after);
+    }
     if (after === before) continue;
     await writeFile(file, after);
-    done.push(name);
+    patched.push(name);
   }
-  return done;
+  return { patched, lapsed };
 }

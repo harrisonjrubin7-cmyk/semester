@@ -290,6 +290,57 @@ for them here:
 Both should be inlined or dropped by the generator. Sending them somewhere
 plausible here would turn a visible 404 into a silent wrong answer.
 
+#### "NaNm left" — the term page could not read its own deadlines
+
+A third repair, and the one worth understanding, because it is about the data
+rather than the plumbing. The countdown for anything due today read:
+
+```js
+const hh = parseInt(it.time, 10) + (/PM/.test(it.time) && … ? 12 : 0);
+const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, 59);
+```
+
+`it.time` is the deadline **as the syllabus words it** — that is deliberate and
+documented in `app/src/lib/duetime.ts`: "In class" and "Window is Sep 8–17" mean
+things no clock can hold, and rewriting them would lose the only wording you can
+check against the PDF. `parseInt` of any of those is `NaN`, which makes an
+Invalid Date, which makes `Math.max(0, NaN)` — `NaN`, not `0`.
+
+Of the thirteen wordings in the data the page carries, three survive:
+
+| Wording | Deadlines | The page read | Actually |
+| --- | --- | --- | --- |
+| `Before class, 1:15p` | 24 | `NaN` | 13:15 |
+| `11:59 PM` | 6 | 23:00 — right only because the next line hard-codes `, 59` | 23:59 |
+| `In class`, `Before class`, `` (blank) | 9 | `NaN` | no clock time |
+| `Before class, 2:45p`, `In class, 2:45p` | 6 | `NaN` | 14:45 |
+| `Window is …` | 2 | `NaN` | no clock time |
+| `Take-home posted 9a Sep 14` | 1 | `NaN` | 09:00 |
+| `5:00p` | 1 | **05:00** — `/PM/` does not match a lowercase `p` | 17:00 |
+| `9:00–11:00 AM`, `3:00–5:00 PM` | 2 | correct, by luck | 09:00, 15:00 |
+
+Weighted by items, **44 of 50 deadlines showed `NaN` on the day they were due**,
+and `5:00p` counted down to a deadline twelve hours before the real one — worse
+than `NaN`, because nothing about a plausible number looks wrong.
+
+This one is a **source patch**, not a shim: the bad value is computed and
+rendered inside the bundle, so nothing at a boundary can see it. `webback`
+replaces those two lines in `dist/`, anchored on a long literal, and injects a
+reader — `readDue` from `duetime.ts` written out as browser JavaScript. A
+wording with no clock time now returns "today", beside the page's own
+"tomorrow", instead of counting down to a time nobody stated.
+
+Two things keep that patch honest, and both are tests rather than intentions:
+
+- `webback.test.ts` reads the committed `app.html` and asserts the anchor still
+  matches **exactly once**. A regeneration that rewrites the countdown turns
+  `npm test` red, rather than the site quietly going back to `NaNm left`.
+- The injected reader is checked against `readDue` on every wording in the data.
+  They must agree; `readDue` is the one with the reasoning behind it.
+
+**Upstream, this is one line:** read the time out of the wording instead of
+`parseInt`-ing the front of it, and stop assuming the minutes are `59`.
+
 ## 5 · The optional connectors
 
 None of these are needed to use the app; each is documented in

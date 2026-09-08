@@ -1,15 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BROKEN,
+  CLOCK_SNIPPET,
+  COUNTDOWN,
   MARK,
+  MENDED,
   NEEDS_BACK,
   PAGES,
   PATHS,
   PATH_SNIPPET,
   SNIPPET,
   SOURCE_PREFIX,
+  stillBroken,
   withBackLink,
+  withCountdown,
   withPathFix,
 } from './webback';
+import { readDue } from './duetime';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const page = (body = '<div>the term</div>') => `<!DOCTYPE html><html><body>${body}</body></html>`;
 
@@ -163,5 +172,125 @@ describe('what the snippet does to a URL, run as the browser would run it', () =
     ]) {
       expect(fix(u), u).toBe(u);
     }
+  });
+});
+
+describe('the term page counting down to a deadline it can read', () => {
+  const page = (body: string) =>
+    `<!DOCTYPE html><html><head><title>Bundled Page</title></head><body>${body}</body></html>`;
+
+  it('replaces the expression that makes NaN, and injects the reader it calls', () => {
+    const out = withCountdown(page(`<script>${BROKEN}</script>`));
+    expect(out).not.toContain(BROKEN);
+    expect(out).toContain(MENDED);
+    expect(out).toContain(COUNTDOWN);
+    // The reader has to be defined before the bundle unpacks and runs.
+    expect(out.indexOf(COUNTDOWN)).toBeLessThan(out.indexOf(MENDED));
+  });
+
+  it('takes the minutes too, which were the other half of the bug', () => {
+    // The page hard-coded `, 59` — right for "11:59 PM" and nothing else. A
+    // patch that fixed only the hour would still count to the wrong minute.
+    expect(BROKEN).toContain('hh, 59');
+    expect(MENDED).toContain('at % 60');
+    expect(MENDED).toContain('Math.floor(at / 60)');
+  });
+
+  it('still hands the next line a Date, which it does not touch', () => {
+    // The two lines after the anchor subtract `now` from `target`. Leaving
+    // them alone is the point: the smaller the patch, the longer it survives.
+    expect(MENDED).toContain('const target = new Date(');
+    expect(MENDED).toContain("return 'today'");
+  });
+
+  it('is idempotent, so a second build does not patch a patched page', () => {
+    const once = withCountdown(page(`<script>${BROKEN}</script>`));
+    expect(withCountdown(once)).toBe(once);
+  });
+
+  it('changes nothing when the anchor is gone, and says the repair lapsed', () => {
+    // What a regenerated website looks like. Doing nothing is right; doing it
+    // silently is not, which is why the build warns on this.
+    const moved = page('<script>const hh = readTheTime(it.time);</script>');
+    expect(withCountdown(moved)).toBe(moved);
+    expect(stillBroken(moved)).toBe(true);
+  });
+
+  it('does not call a page it has already fixed broken', () => {
+    expect(stillBroken(withCountdown(page(`<script>${BROKEN}</script>`)))).toBe(false);
+  });
+
+  it('still matches the bundle that is actually committed', () => {
+    /*
+     * The one test here that can go red on its own, and the reason the others
+     * are worth anything. Every assertion above is about a fixture; this reads
+     * the real `app.html`. If a regeneration rewrites that countdown, this
+     * fails at the next `npm test` rather than the site quietly going back to
+     * "NaNm left" with a build warning nobody was watching for.
+     *
+     * Exactly once, because an anchor that matches twice is an anchor that is
+     * not specific enough to be patching either one on purpose.
+     */
+    const file = join(import.meta.dirname, '..', '..', 'public', 'web', 'app.html');
+    const html = readFileSync(file, 'utf8');
+    expect(html.split(BROKEN)).toHaveLength(2);
+  });
+});
+
+describe('the injected reader against readDue, which is the one with the reasoning', () => {
+  /** The snippet's own function, taken out of its script tag and run. */
+  const injected = (() => {
+    const js = CLOCK_SNIPPET.replace(/<\/?script>|\/\* .*? \*\//g, '');
+    const host: { __semesterDue?: (t: unknown) => number | null } = {};
+    new Function('window', js)(host);
+    return host.__semesterDue as (t: unknown) => number | null;
+  })();
+
+  /**
+   * Every wording in the four courses the term page carries, with how many
+   * deadlines use it. The counts are why this matters: the six that already
+   * worked are `11:59 PM`, and everything else is most of the semester.
+   */
+  const WORDINGS: [string, number][] = [
+    ['Before class, 1:15p', 24],
+    ['11:59 PM', 6],
+    ['In class', 5],
+    ['Before class, 2:45p', 5],
+    ['', 3],
+    ['Window is Sep 8–17', 1],
+    ['Window is Sep 29 – Oct 8', 1],
+    ['Take-home posted 9a Sep 14', 1],
+    ['In class, 2:45p', 1],
+    ['Before class', 1],
+    ['9:00–11:00 AM', 1],
+    ['5:00p', 1],
+    ['3:00–5:00 PM', 1],
+  ];
+
+  it.each(WORDINGS)('agrees with readDue on %j', (text) => {
+    expect(injected(text)).toBe(readDue(text));
+  });
+
+  it('reads the wording that broke it, rather than refusing it', () => {
+    // "Before class, 1:15p" is a quarter past one in the afternoon. The page's
+    // own parseInt made NaN of it, which is the whole bug.
+    expect(injected('Before class, 1:15p')).toBe(13 * 60 + 15);
+  });
+
+  it('reads a lowercase p as the afternoon', () => {
+    // The page tested /PM/, so `5:00p` counted down to five in the morning —
+    // a plausible-looking number twelve hours from the real deadline, which is
+    // worse than NaN because nothing about it looks wrong.
+    expect(injected('5:00p')).toBe(17 * 60);
+  });
+
+  it('says nothing rather than midnight when no clock time was stated', () => {
+    for (const t of ['In class', '', 'Before class', 'Window is Sep 8–17']) {
+      expect(injected(t), t).toBeNull();
+    }
+  });
+
+  it('is defensive about a value that is not a string, as readDue is', () => {
+    for (const t of [null, undefined, 7, {}]) expect(injected(t)).toBeNull();
   });
 });

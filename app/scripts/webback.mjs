@@ -24,6 +24,9 @@ const dir = join(here, '..', 'dist', 'web');
 if (!existsSync(dir)) {
   console.log('webback: no dist/web, nothing to do');
 } else {
-  const done = await apply(dir);
-  console.log(done.length ? `webback: repaired ${done.join(', ')}` : 'webback: already done');
+  const { patched, lapsed } = await apply(dir);
+  console.log(patched.length ? `webback: repaired ${patched.join(', ')}` : 'webback: already done');
+  // A repair that stops applying must say so. Silently doing nothing is how a
+  // regenerated website quietly gets its bugs back.
+  for (const one of lapsed) console.warn(`webback: NOTHING TO PATCH — ${one}. See SETUP.md.`);
 }
