@@ -115,6 +115,7 @@ import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
 import { settingsTitle } from './lib/settings';
 import { chromeFor, homeShape } from './lib/chrome';
+import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
 import { ShelfNav } from './components/nav/ShelfNav';
@@ -1148,9 +1149,14 @@ export default function App() {
           <ScrollArea screen={state.screen} key={state.screen}>
             <SoftTop />
             <Suspense fallback={<Loading />}>
-              <ShellBody screen={state.screen}>
-                <CurrentScreen />
-              </ShellBody>
+              {/* Keyed on the screen so moving on clears a failure. Inside
+                  the chrome, so a screen that falls over leaves you
+                  somewhere you can leave from. See `Boundary.tsx`. */}
+              <ScreenTrouble key={state.screen} onLeave={() => dispatch({ type: 'go', screen: 'home' })}>
+                <ShellBody screen={state.screen}>
+                  <CurrentScreen />
+                </ShellBody>
+              </ScreenTrouble>
             </Suspense>
             <SoftBar />
           </ScrollArea>
@@ -1191,9 +1197,13 @@ export default function App() {
       <ScrollArea screen={state.screen} key={state.screen}>
         <SoftTop />
         <Suspense fallback={<Loading />}>
-          <ShellBody screen={state.screen}>
-            <CurrentScreen />
-          </ShellBody>
+          {/* The same boundary as the wide layout above. Both, or a screen
+              that fails on a phone still takes the whole app with it. */}
+          <ScreenTrouble key={state.screen} onLeave={() => dispatch({ type: 'go', screen: 'home' })}>
+            <ShellBody screen={state.screen}>
+              <CurrentScreen />
+            </ShellBody>
+          </ScreenTrouble>
         </Suspense>
         <SoftBar />
       </ScrollArea>
