@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SCHEMA, STEPS, migrate, migrationLine, versionOf } from './migrate';
+import { directoryOf } from './look';
 
 describe('what version a stored copy is', () => {
   it('treats a missing marker as the first version', () => {
@@ -44,6 +45,46 @@ describe('moving forward', () => {
   it('says what it did', () => {
     expect(migrationLine(migrate({}))).toContain('version 1');
     expect(migrationLine(migrate({ schemaVersion: SCHEMA }))).toContain('Nothing to do');
+  });
+});
+
+describe('step 3: the directory nobody chose', () => {
+  /*
+   * `directory` shipped with `list` as its initial value and the state is
+   * written whole every save, so a stored `list` on a non-soft shell says
+   * nothing about what anybody wanted. Emptying it puts the copy back into
+   * "nobody has chosen", where the layout answers.
+   */
+  it('empties a list that was only ever the default', () => {
+    expect(migrate({ directory: 'list', shell: 'plain' }).state.directory).toBe('');
+    expect(migrate({ directory: 'list', shell: 'grouped' }).state.directory).toBe('');
+  });
+
+  it('keeps a list somebody had to ask for', () => {
+    // Soft's own answer is the tiles, so a stored list against it is a choice.
+    expect(migrate({ directory: 'list', shell: 'soft' }).state.directory).toBe('list');
+  });
+
+  it('never touches the tiles, under any shell', () => {
+    for (const shell of ['plain', 'grouped', 'soft']) {
+      expect(migrate({ directory: 'tiles', shell }).state.directory).toBe('tiles');
+    }
+  });
+
+  it('changes nothing on screen for the copies it empties', () => {
+    // The whole claim of emptying only the non-soft ones: the resolver gives
+    // back exactly what was stored, so the setting only starts differing if
+    // they go to soft.
+    for (const shell of ['plain', 'grouped']) {
+      const after = migrate({ directory: 'list', shell }).state;
+      expect(directoryOf(String(after.directory), shell)).toBe('list');
+    }
+  });
+
+  it('leaves the rest of the copy alone', () => {
+    const m = migrate({ directory: 'list', shell: 'plain', notes: ['a'], accent: 'copper' });
+    expect(m.state.notes).toEqual(['a']);
+    expect(m.state.accent).toBe('copper');
   });
 });
 

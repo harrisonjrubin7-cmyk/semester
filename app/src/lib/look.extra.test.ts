@@ -229,4 +229,29 @@ describe('the directory setting', () => {
     // soft who asked for the list keeps the list.
     expect(readLook({ directory: 'list', shell: 'soft' }).directory).toBe('list');
   });
+
+  /*
+   * The state this whole thing turns on. `readLook` used to resolve the
+   * shell's answer here, which spent the unchosen state on the way out of
+   * storage: the next save wrote `list` back as though it had been asked for,
+   * and switching to soft afterwards could no longer reach the tiles. It has
+   * to come back out empty, and stay empty until somebody chooses.
+   */
+  it('keeps "nobody has chosen" rather than resolving it into storage', () => {
+    expect(readLook({}).directory).toBe('');
+    expect(readLook({ shell: 'soft' }).directory).toBe('');
+    expect(readLook({ directory: 'nonsense', shell: 'soft' }).directory).toBe('');
+    expect(readLook(undefined).directory).toBe('');
+  });
+
+  it('gives soft the tiles until somebody says otherwise, and after that does not', () => {
+    // Nobody has chosen, so the layout answers — and it answers again every
+    // time it is asked, not once on the way out of storage.
+    expect(directoryOf('', 'soft')).toBe('tiles');
+    expect(directoryOf('', 'plain')).toBe('list');
+    expect(directoryOf('', 'grouped')).toBe('list');
+    // Then it is asked, and the layout is out of it.
+    expect(directoryOf('list', 'soft')).toBe('list');
+    expect(directoryOf('tiles', 'plain')).toBe('tiles');
+  });
 });

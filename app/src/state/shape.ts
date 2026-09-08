@@ -414,7 +414,14 @@ export interface Persisted {
   feed: string;
   /** `plain`, `grouped` or `soft`. Which layout every screen is drawn in. */
   shell: string;
-  /** `list` or `tiles`. How the directory of everything is drawn. */
+  /**
+   * `list` or `tiles`. How the directory of everything is drawn.
+   *
+   * Empty is the third state and the one that matters: nobody has chosen, so
+   * the layout answers — see `directoryOf` in `lib/look.ts`. Read it through
+   * that function rather than directly, or a soft account that has never
+   * opened this setting gets the list the empty string sorts to.
+   */
   directory: string;
   /**
    * How the tiles inside each shelf are arranged, where somebody has said.
@@ -798,7 +805,10 @@ export const DEFAULT_PERSISTED: Persisted = {
   badges: 'due',
   feed: 'cards',
   shell: 'plain',
-  directory: 'list',
+  // Not `list`. Writing a default in here made "never chosen" unreachable —
+  // the first save stamped `list` on everybody, and `directoryOf`'s soft
+  // fallback could never fire again for anyone who had opened the app once.
+  directory: '',
   groupOrder: '',
   hue: -1,
 };

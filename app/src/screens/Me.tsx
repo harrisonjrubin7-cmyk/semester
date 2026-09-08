@@ -15,6 +15,7 @@ import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
 import { GROUPS, destinationsIn, lately, listed, saysFor } from '../lib/nav';
 import { Launcher } from '../components/nav/Launcher';
+import { directoryOf } from '../lib/look';
 
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
@@ -322,17 +323,21 @@ export function Me() {
         It arrived gated on `shell === 'soft'`, which meant the only way to
         get the tiles was to accept a different set of colours, cards and
         type with them, and the only way to keep the drawn look was to give
-        the tiles up. Two good ideas soldered together. Anybody who was on
-        soft when this landed keeps the tiles — `readLook` reads the absent
-        key back as `tiles` for them, once — and everybody can now have
-        either with either.
+        the tiles up. Two good ideas soldered together, and unsoldering them
+        is what the setting is.
+
+        Read through `directoryOf` rather than off the state, because the
+        setting has three states and only two of them are choices. Empty is
+        nobody having chosen, and there the layout answers: soft draws the
+        tiles, which is the arrangement it was designed alongside. Choosing
+        either one ends that for good, in every layout.
 
         `Lately` and `NotYetOpened` go with the panels. Both are answers to
         "where was that", and the grid answers it by position instead — a
         Lately panel above a grid whose whole claim is that Data is always
         bottom-left would be arguing with the thing under it.
       */}
-      {state.directory === 'tiles' ? (
+      {directoryOf(state.directory, state.shell) === 'tiles' ? (
         <Launcher />
       ) : (
         <>

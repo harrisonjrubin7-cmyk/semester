@@ -771,14 +771,32 @@ export const DIRECTORIES = [
 ];
 
 /**
- * A directory style, read back.
+ * A directory style, resolved against the layout for anybody who has not
+ * chosen one.
  *
- * `undefined` is somebody who has never chosen, and what they were seeing
- * before this was a setting depended on their layout — soft got the tiles,
- * the other two got the list. So the shell decides the default, once, for a
- * stored look with no `directory` in it, and never again after they choose.
- * Reading it any other way would take the tiles away from everybody who had
- * them, which is not a migration, it is a regression with a note attached.
+ * Three states, not two. `list` and `tiles` are choices and are kept exactly
+ * as given, in every layout — somebody on soft who asked for the list keeps
+ * the list. Anything else, empty string included, is *nobody has chosen*, and
+ * then the shell answers: soft gets the tiles, the other two get the list.
+ *
+ * Soft is the layout the tiles were drawn for. Its cards, its light and its
+ * one-figure-per-screen heroes are the same idea as a grid of nine tiles each
+ * showing one figure, and a soft account landing on a column of fifty-five
+ * rows is being shown the one part of the app that did not come along. So the
+ * layout answers until the question is actually asked.
+ *
+ * ## Resolved here, on every read
+ *
+ * This used to resolve once, in `readLook`, on the way out of storage. That
+ * made it dead code: `pickPersisted` writes `directory` every save, so the
+ * first save stamped a literal `list` on accounts that had never opened the
+ * setting, and switching to soft afterwards could no longer reach this. The
+ * empty string is what makes the unchosen state storable, and resolving at
+ * the point of use is what makes it keep working after the shell changes.
+ *
+ * The setting is still a setting. Choosing on **Layout and navigation** stores
+ * `list` or `tiles`, and from then on the shell has no say — which is the
+ * whole reason the tiles stopped being `shell === 'soft'` in the first place.
  */
 export function directoryOf(id: string | undefined, shell?: string): string {
   const known = DIRECTORIES.find((d) => d.id === id)?.id;
@@ -1121,9 +1139,13 @@ export function readLook(saved: Look | undefined): Required<Look> {
     badges: BADGES.find((b) => b.id === saved?.badges)?.id ?? 'due',
     feed: feedStyleOf(saved?.feed),
     shell: shellOf(saved?.shell),
-    // Reads the shell, and only when nothing has been chosen — see
-    // `directoryOf`. This is the one place the two are allowed to meet.
-    directory: directoryOf(saved?.directory, shellOf(saved?.shell)),
+    // Kept unresolved on purpose, unlike every other key here. An unrecognised
+    // value falls back to empty rather than to a style, because empty is a
+    // state this one has — nobody has chosen — and resolving it here would
+    // spend it: the next save would write the resolved answer back as though
+    // it had been asked for. `directoryOf` does the resolving, at the two
+    // places that draw the directory. See its note.
+    directory: DIRECTORIES.find((d) => d.id === saved?.directory)?.id ?? '',
     // Not validated here: the names inside are screens and shelves, which
     // this file knows nothing about. `readOrder` checks them against the
     // registry every time it reads, so a stale string can only arrange
