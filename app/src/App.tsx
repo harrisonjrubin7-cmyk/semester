@@ -116,6 +116,7 @@ import { destination, rootOf } from './lib/nav';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
 import { SoftNav } from './components/soft/SoftNav';
+import { SoftBar, SoftTop } from './components/soft/SoftTop';
 import { litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { useSoft } from './components/shell/useShell';
 import { TabGlyph } from './components/TabIcon';
@@ -1101,11 +1102,13 @@ export default function App() {
           {trouble}
           {soft && <SoftNav />}
           <ScrollArea screen={state.screen} key={state.screen}>
+            <SoftTop />
             <Suspense fallback={<Loading />}>
               <ShellBody screen={state.screen}>
                 <CurrentScreen />
               </ShellBody>
             </Suspense>
+            <SoftBar />
           </ScrollArea>
         </div>
       </div>
@@ -1141,11 +1144,13 @@ export default function App() {
       {trouble}
       {soft && <SoftNav />}
       <ScrollArea screen={state.screen} key={state.screen}>
+        <SoftTop />
         <Suspense fallback={<Loading />}>
           <ShellBody screen={state.screen}>
             <CurrentScreen />
           </ShellBody>
         </Suspense>
+        <SoftBar />
       </ScrollArea>
       {showTabs && <TabBar />}
       {showFab && (
