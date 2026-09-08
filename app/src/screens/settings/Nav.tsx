@@ -7,7 +7,7 @@ import { SectionLabel, Segmented, TickBox, Toggle } from '../../components/ui';
 import { countHidden, revealLine } from '../../lib/reveal';
 import { TabChooser } from '../../components/TabChooser';
 import { LayoutPicker, NavPicker } from '../../components/Appearance';
-import { BADGES, FEEDS, LABELS } from '../../lib/look';
+import { BADGES, DIRECTORIES, FEEDS, LABELS } from '../../lib/look';
 import { SECTIONS, move, ordered } from '../../lib/feed';
 
 const HINT = {
@@ -193,9 +193,18 @@ export function SettingsNav() {
 
           <Group
             header="The directory"
-            footer="Everything lists every screen the app has, with a line saying what each is for. This decides whether it starts full or fills up as you go."
-            lit={lights('directory everything list screens hidden show all reveal', lit)}
+            footer="Everything lists every screen the app has. These decide how it is drawn, and whether it starts full or fills up as you go."
+            lit={lights('directory everything list tiles grid launcher shelves screens hidden show all reveal', lit)}
           >
+            <CustomRow>
+              <SectionLabel style={LABEL_STYLE}>Drawn as</SectionLabel>
+              <Segmented
+                options={DIRECTORIES.map((d) => ({ id: d.id, label: d.label }))}
+                value={state.directory}
+                onChange={(directory) => dispatch({ type: 'setLook', look: { directory } })}
+              />
+              <div style={HINT}>{DIRECTORIES.find((d) => d.id === state.directory)?.blurb}</div>
+            </CustomRow>
             <CustomRow>
               <Toggle
                 label="Show every screen straight away"

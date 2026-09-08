@@ -16,76 +16,18 @@
  */
 
 import { createElement } from 'react';
-import {
-  Bell,
-  CalendarIcon,
-  CampusIcon,
-  Check,
-  CoursesIcon,
-  MakeIcon,
-  MapIcon,
-  NotesIcon,
-  Person,
-  Search,
-  StudyIcon,
-  TodayIcon,
-  UpkeepIcon,
-} from './Icons';
-import { destination, type Group } from '../lib/nav';
+import { glyphFor } from './icons.pick';
 import type { Screen } from '../lib/types';
-
-type Glyph = typeof TodayIcon;
-
-/** Screens with an icon of their own, mostly because they shipped in the bar. */
-const OWN: Partial<Record<Screen, Glyph>> = {
-  home: TodayIcon,
-  courses: CoursesIcon,
-  study: StudyIcon,
-  calendar: CalendarIcon,
-  maps: MapIcon,
-  mine: NotesIcon,
-  me: Person,
-  notifs: Bell,
-  search: Search,
-};
-
-const SHELF: Record<Group, Glyph> = {
-  Semester: CalendarIcon,
-  Courses: CoursesIcon,
-  Study: StudyIcon,
-  Make: MakeIcon,
-  // Standing is where you find out how it is going, and the tick is the mark
-  // the app uses for a thing settled — a grade in, a week worked.
-  Standing: Check,
-  Campus: CampusIcon,
-  // Life is the term around the coursework, and Mine is the largest thing on
-  // it, so it lends its glyph the way Study and Make do.
-  Life: NotesIcon,
-  You: Person,
-  // Upkeep's glyph outlived Upkeep. Data is what that shelf actually held —
-  // the accounts, the copies, the export — so it keeps the wrench.
-  Data: UpkeepIcon,
-};
-
-function iconFor(screen: Screen): Glyph {
-  const own = OWN[screen];
-  if (own) return own;
-  const group = destination(screen)?.group;
-  // A screen that is in the bar but not in the directory should be
-  // impossible — `readTabs` drops those — so this last fallback is for a
-  // caller that got here another way, not for a state the app can reach.
-  return group ? SHELF[group] : NotesIcon;
-}
 
 /**
  * The glyph as an element — the only thing this file exports.
  *
- * `createElement` rather than `const Icon = iconFor(screen)` and `<Icon />`:
+ * `createElement` rather than `const Icon = glyphFor(screen)` and `<Icon />`:
  * every component here is a stable module-level reference, so the two are the
  * same at runtime, but the second reads to a linter as a component being
  * defined during render — which is a real bug in general and would be worth
  * the warning if it were true here.
  */
 export function TabGlyph({ screen, size = 17 }: { screen: Screen; size?: number }) {
-  return createElement(iconFor(screen), { size });
+  return createElement(glyphFor(screen), { size });
 }

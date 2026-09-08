@@ -741,6 +741,51 @@ export const SHELLS = [
   },
 ];
 
+/**
+ * How the directory of everything the app can do is drawn.
+ *
+ * Two readings of the same fifty-five rows. The list says what each screen is
+ * for, in words, in shelf order — the right shape for reading, and the wrong
+ * one for a place you come back to daily, because a column has no positions.
+ * The tiles have positions: bottom-left is Data whether or not Data has
+ * anything in it this week.
+ *
+ * A setting rather than a consequence of the layout. The tiles arrived gated
+ * on `shell === 'soft'`, so the only way to have them was to accept a
+ * different set of colours, cards and type along with them, and the only way
+ * to keep the drawn look was to give the tiles up. Two good ideas soldered
+ * together, and the same mistake the shelves made when they were a layout's
+ * side effect rather than a navigation.
+ */
+export const DIRECTORIES = [
+  {
+    id: 'list',
+    label: 'A list',
+    blurb: 'Every screen with the sentence saying what it is for, by shelf. Reads.',
+  },
+  {
+    id: 'tiles',
+    label: 'Tiles',
+    blurb: 'Nine tiles, one per shelf, each in the same place every time. Found by position.',
+  },
+];
+
+/**
+ * A directory style, read back.
+ *
+ * `undefined` is somebody who has never chosen, and what they were seeing
+ * before this was a setting depended on their layout — soft got the tiles,
+ * the other two got the list. So the shell decides the default, once, for a
+ * stored look with no `directory` in it, and never again after they choose.
+ * Reading it any other way would take the tiles away from everybody who had
+ * them, which is not a migration, it is a regression with a note attached.
+ */
+export function directoryOf(id: string | undefined, shell?: string): string {
+  const known = DIRECTORIES.find((d) => d.id === id)?.id;
+  if (known) return known;
+  return shell === 'soft' ? 'tiles' : 'list';
+}
+
 export function shellOf(id: string | undefined): string {
   return SHELLS.find((s) => s.id === id)?.id ?? 'plain';
 }
@@ -833,8 +878,18 @@ export interface Look {
   labels?: string;
   badges?: string;
   feed?: string;
-  /** Which of the two layouts every screen is drawn in. See `SHELLS`. */
+  /** Which of the three layouts every screen is drawn in. See `SHELLS`. */
   shell?: string;
+  /** Whether the directory of everything is a list or tiles. See `DIRECTORIES`. */
+  directory?: string;
+  /**
+   * How the tiles inside each shelf are arranged, where somebody has said.
+   *
+   * A serialised map — see `lib/launcher.ts`, which owns the format and the
+   * parsing. Here because arrangement is a preference like corners and
+   * density, and belongs with them rather than in a slice of its own.
+   */
+  groupOrder?: string;
   /**
    * A hue for the accent, 0–360, or -1 for "use the named accent".
    *
@@ -1066,6 +1121,14 @@ export function readLook(saved: Look | undefined): Required<Look> {
     badges: BADGES.find((b) => b.id === saved?.badges)?.id ?? 'due',
     feed: feedStyleOf(saved?.feed),
     shell: shellOf(saved?.shell),
+    // Reads the shell, and only when nothing has been chosen — see
+    // `directoryOf`. This is the one place the two are allowed to meet.
+    directory: directoryOf(saved?.directory, shellOf(saved?.shell)),
+    // Not validated here: the names inside are screens and shelves, which
+    // this file knows nothing about. `readOrder` checks them against the
+    // registry every time it reads, so a stale string can only arrange
+    // things oddly — never hide one.
+    groupOrder: typeof saved?.groupOrder === 'string' ? saved.groupOrder : '',
     // -1 rather than 0, because 0 is red.
     hue: typeof saved?.hue === 'number' && saved.hue >= 0 && saved.hue <= 360 ? saved.hue : -1,
   };

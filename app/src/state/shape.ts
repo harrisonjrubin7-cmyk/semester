@@ -412,8 +412,18 @@ export interface Persisted {
   tone: Tone;
   badges: string;
   feed: string;
-  /** `plain` or `grouped`. Which layout every screen is drawn in. */
+  /** `plain`, `grouped` or `soft`. Which layout every screen is drawn in. */
   shell: string;
+  /** `list` or `tiles`. How the directory of everything is drawn. */
+  directory: string;
+  /**
+   * How the tiles inside each shelf are arranged, where somebody has said.
+   *
+   * A look key like the rest of these, flat on the state like the rest of
+   * them, and serialised because that is what a look key holds — see
+   * `lib/launcher.ts`, which owns the format.
+   */
+  groupOrder: string;
   /** A dragged accent hue, 0–360, or -1 for "use the named accent". */
   hue: number;
   /**
@@ -778,6 +788,8 @@ export const DEFAULT_PERSISTED: Persisted = {
   badges: 'due',
   feed: 'cards',
   shell: 'plain',
+  directory: 'list',
+  groupOrder: '',
   hue: -1,
 };
 
@@ -798,6 +810,8 @@ export function currentLook(state: Persisted): Look {
     badges: state.badges,
     feed: state.feed,
     shell: state.shell,
+    directory: state.directory,
+    groupOrder: state.groupOrder,
     hue: state.hue,
   };
 }
@@ -1123,6 +1137,8 @@ export function pickPersisted(state: State): Persisted {
     badges: state.badges,
     feed: state.feed,
     shell: state.shell,
+    directory: state.directory,
+    groupOrder: state.groupOrder,
     hue: state.hue,
   };
 }

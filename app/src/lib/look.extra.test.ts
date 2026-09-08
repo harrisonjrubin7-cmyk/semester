@@ -1,22 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BADGES,
-  BODYFACES,
-  FEEDS,
-  ICON_SHAPES,
-  LABELS,
-  LINE_HEIGHTS,
-  READING_WIDTHS,
   accentFromHue,
+  BADGES,
   bodyfaceOf,
+  BODYFACES,
   contrast,
   contrastVerdict,
+  DIRECTORIES,
+  directoryOf,
+  FEEDS,
   feedStyleOf,
   hueToHex,
+  ICON_SHAPES,
   iconShapeOf,
+  LABELS,
+  LINE_HEIGHTS,
   lineHeightOf,
-  readLook,
+  READING_WIDTHS,
   readingWidthOf,
+  readLook,
   tokensFor,
 } from './look';
 
@@ -189,5 +191,42 @@ describe('the contrast check, which is why the slider is safe to offer', () => {
     for (const r of [1, 3, 4.5, 7, 21]) {
       expect(contrastVerdict(r).label).not.toMatch(/WCAG|AA|AAA|:1/);
     }
+  });
+});
+
+describe('the directory setting', () => {
+  it('offers exactly the two readings of the same rows', () => {
+    expect(DIRECTORIES.map((d) => d.id)).toEqual(['list', 'tiles']);
+    for (const d of DIRECTORIES) {
+      expect(d.label.length).toBeGreaterThan(0);
+      expect(d.blurb.length).toBeGreaterThan(10);
+    }
+  });
+
+  it('keeps whichever was chosen, whatever the layout is', () => {
+    for (const shell of ['plain', 'grouped', 'soft']) {
+      expect(directoryOf('list', shell)).toBe('list');
+      expect(directoryOf('tiles', shell)).toBe('tiles');
+    }
+  });
+
+  /*
+   * The tiles used to be drawn by `shell === 'soft'` and nothing else, so an
+   * account that had them has no `directory` key to read. Taking the tiles
+   * away from those accounts on upgrade would be a regression with a note
+   * attached, so the shell answers for them — once, until they choose.
+   */
+  it('gives an account that had the tiles the tiles, before it has chosen', () => {
+    expect(directoryOf(undefined, 'soft')).toBe('tiles');
+    expect(directoryOf(undefined, 'plain')).toBe('list');
+    expect(directoryOf(undefined, 'grouped')).toBe('list');
+    expect(directoryOf('nonsense', 'soft')).toBe('tiles');
+  });
+
+  it('is a look key like the rest, so it syncs and survives a reload', () => {
+    expect(readLook({ directory: 'tiles' }).directory).toBe('tiles');
+    // And the layout does not decide it once it has been set: somebody on
+    // soft who asked for the list keeps the list.
+    expect(readLook({ directory: 'list', shell: 'soft' }).directory).toBe('list');
   });
 });

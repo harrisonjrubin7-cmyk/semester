@@ -110,7 +110,17 @@ export const STRATEGY: Record<string, Strategy> = {
   // attention. Both about you.
   feed: 'theirs',
   shell: 'theirs',
+  // Whether the directory is a list or nine tiles. `theirs` for the same
+  // reason the shell is: somebody who has learned that Data is bottom-left
+  // has learned it, and finding a column of fifty-five rows on the laptop
+  // instead means learning the place twice.
+  directory: 'theirs',
   badges: 'theirs',
+  // An arrangement somebody made on purpose, and one they made once. It
+  // follows the account rather than the device for the same reason the shell
+  // does — having to drag the tiles back into place on the laptop is exactly
+  // the work the look keys exist to avoid.
+  groupOrder: 'theirs',
   // Ergonomics: about the screen in front of you, not about you. See `mine`.
   textSize: 'mine',
   // `mine` like every other look setting: how this device phrases things is a

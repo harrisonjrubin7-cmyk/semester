@@ -14,6 +14,7 @@ import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
 import { GROUPS, destinationsIn, lately, listed, saysFor } from '../lib/nav';
+import { Launcher } from '../components/nav/Launcher';
 
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
@@ -310,6 +311,31 @@ export function Me() {
         same reason and has stopped; a directory of the app that does not look
         like the app is one more thing that does not match.
       */}
+      {/*
+        Tiles or panels — a choice, not a consequence of the layout.
+
+        The two are the same fifty-five rows arranged two ways, and showing
+        both would be a directory with a directory on top of it. So one of
+        them is drawn, and which one is `state.directory`, chosen on **Layout
+        and navigation** beside everything else about the shape of the app.
+
+        It arrived gated on `shell === 'soft'`, which meant the only way to
+        get the tiles was to accept a different set of colours, cards and
+        type with them, and the only way to keep the drawn look was to give
+        the tiles up. Two good ideas soldered together. Anybody who was on
+        soft when this landed keeps the tiles — `readLook` reads the absent
+        key back as `tiles` for them, once — and everybody can now have
+        either with either.
+
+        `Lately` and `NotYetOpened` go with the panels. Both are answers to
+        "where was that", and the grid answers it by position instead — a
+        Lately panel above a grid whose whole claim is that Data is always
+        bottom-left would be arguing with the thing under it.
+      */}
+      {state.directory === 'tiles' ? (
+        <Launcher />
+      ) : (
+        <>
         <nav aria-label="Everything" style={{ margin: '0 -18px' }}>
           {recent.length > 0 && (
             <Panel header="Lately">
@@ -340,6 +366,8 @@ export function Me() {
             );
           })}
         </nav>
+        </>
+      )}
         </>
       )}
     </Page>
