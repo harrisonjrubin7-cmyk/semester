@@ -8,7 +8,7 @@
  * being a layout's side effect was not. So they are a navigation now, and
  * `nav === 'shelves'` is the only thing that draws them, in every layout.
  *
- * Row one is the nine shelves. Row two is the screens on the shelf you are
+ * Row one is the shelves. Row two is the screens on the shelf you are
  * standing on. Under both, the current screen's own sentence from the
  * registry — which is the cheapest discoverability the app can buy, because
  * fifty-five screens already carry a blurb that until now only the directory
@@ -24,7 +24,7 @@
  * The argument there is that a directory of forty-six names is a wall to
  * somebody who opened the app an hour ago. It is a good argument about a
  * directory. These rows are not a directory: they are the chrome you navigate
- * by, they show one shelf at a time rather than all nine, and a row that
+ * by, they show one shelf at a time rather than all of them, and a row that
  * changes length as the term goes on is a row whose positions cannot be
  * learned. Reveal still governs Everything, and search still finds
  * everything, so nothing that was discoverable stops being so.
@@ -52,10 +52,10 @@ export function ShelfNav() {
   /*
    * Bring the pill you are on into view.
    *
-   * Nine shelves do not fit 390px, so the row scrolls — and a row scrolled to
-   * the left while you stand on Data shows you nine pills, none of which is
-   * the one you are on. Without this the rows say where you can go and not
-   * where you are, which is half a navigation.
+   * The shelves do not fit 390px, so the row scrolls — and a row scrolled to
+   * the left while you stand on Data shows you every pill except the one you
+   * are standing on. Without this the rows say where you can go and not where
+   * you are, which is half a navigation.
    *
    * `nearest` rather than `center` so a pill already visible does not jump,
    * and `inline` only so selecting one never scrolls the page.
