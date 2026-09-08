@@ -115,7 +115,9 @@ import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
+import { SoftNav } from './components/soft/SoftNav';
 import { litRailTab, litTab, tabLabel } from './lib/tabbar';
+import { useSoft } from './components/shell/useShell';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
@@ -955,6 +957,8 @@ function Rail() {
 export default function App() {
   const { state, dispatch, saveTrouble, asking, settle } = useStore();
   const wide = useMedia(DESKTOP);
+  // The soft shell brings its own two-row navigation; the other two do not.
+  const soft = useSoft();
 
   /**
    * The whole look, written onto the document root.
@@ -1095,6 +1099,7 @@ export default function App() {
               at its root takes the rail's column. */}
           <SampleMark />
           {trouble}
+          {soft && <SoftNav />}
           <ScrollArea screen={state.screen} key={state.screen}>
             <Suspense fallback={<Loading />}>
               <ShellBody screen={state.screen}>
@@ -1134,6 +1139,7 @@ export default function App() {
       <Header />
       <SampleMark />
       {trouble}
+      {soft && <SoftNav />}
       <ScrollArea screen={state.screen} key={state.screen}>
         <Suspense fallback={<Loading />}>
           <ShellBody screen={state.screen}>
