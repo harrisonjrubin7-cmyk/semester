@@ -1004,7 +1004,11 @@ export function loadPersisted(): Persisted {
         saved.scale && typeof saved.scale === 'object' && Object.keys(saved.scale).length > 0
           ? (saved.scale as Scale)
           : { ...COMMON_SCALE },
-      feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
+      // Not `?? DEFAULT_ORDER`: that catches a missing order and passes a
+      // corrupted one straight through. `ordered` drops what it does not
+      // know and appends what is missing, so an empty list becomes the
+      // default anyway — see `lib/feed.ts`.
+      feedOrder: Array.isArray(saved.feedOrder) ? saved.feedOrder : DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
       // sync, or one entry long, and any of those renders a broken bar.
