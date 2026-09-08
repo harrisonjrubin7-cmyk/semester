@@ -45,6 +45,21 @@ const OUT = join(HERE, '..', 'shots');
 const PREFIX = '/semester';
 const PORT = 8791;
 
+/**
+ * How many shelves the registry declares.
+ *
+ * Read out of `lib/nav.ts` rather than written here as a number. It was
+ * written here as a number — nine — and a shelf folding into another made this
+ * script fail on a correct app, which is the failure mode that teaches people
+ * to ignore a check. The registry is the only thing that knows.
+ */
+async function shelfCount() {
+  const src = await readFile(join(HERE, '..', 'src', 'lib', 'nav.ts'), 'utf8');
+  const list = /export const GROUPS: Group\[\] = \[([^\]]*)\]/.exec(src);
+  if (!list) throw new Error('cannot find GROUPS in lib/nav.ts');
+  return [...list[1].matchAll(/'([^']+)'/g)].length;
+}
+
 /** The widths the acceptance list names. */
 const WIDTHS = [
   { w: 390, h: 844, name: 'phone' },
@@ -245,7 +260,10 @@ async function everyScreen(page, tag) {
   const shelves = await page.evaluate(() =>
     [...document.querySelectorAll('.shelf-nav-row [role="tab"]')].map((e) => e.innerText.trim()),
   );
-  if (shelves.length !== 9) problems.push(`${tag}: ${shelves.length} shelves, expected 9`);
+  const want = await shelfCount();
+  if (shelves.length !== want) {
+    problems.push(`${tag}: ${shelves.length} shelves, expected ${want}`);
+  }
   const seen = new Set();
   for (let s = 0; s < shelves.length; s++) {
     await page.evaluate((i) => document.querySelectorAll('.shelf-nav-row [role="tab"]')[i].click(), s);

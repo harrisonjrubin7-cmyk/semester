@@ -1,5 +1,5 @@
 /**
- * The launcher: nine dark tiles, one per shelf.
+ * The launcher: one dark tile per shelf, eight of them.
  *
  * The directory it stands in for is a good directory — grouped, every row
  * saying what it is for — and it is a column of fifty-five rows. That is the
@@ -8,9 +8,9 @@
  * somewhere between the second and the fortieth row, and it is somewhere
  * different next week when a shelf grows.
  *
- * Nine tiles have positions. Bottom-left is Data whether or not Data has
- * anything in it this week, which is the property a directory cannot have and
- * the reason this exists.
+ * Tiles have positions. Data is last whether or not Data has anything in it
+ * this week, which is the property a directory cannot have and the reason this
+ * exists.
  *
  * The directory is not replaced — it is the other half of a setting. This is
  * `directory: 'tiles'` and the list is `'list'`, chosen on **Layout and
@@ -42,7 +42,7 @@ import { Folder } from './Folder';
  * the thing worth reading first about that screen — Semester shows the next
  * class, Courses the term's progress, Study the cards due. Reusing it means
  * the launcher and the screen it opens can never disagree, and it means no
- * nine bespoke derivations were written for a grid of tiles.
+ * eight bespoke derivations were written for a grid of tiles.
  *
  * A shelf whose screens are all tools has no figure anywhere on it. Those get
  * how many screens are on the shelf, which is at least true.
