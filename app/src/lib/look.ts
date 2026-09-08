@@ -644,6 +644,11 @@ export const SHELLS = [
     label: 'Grouped',
     blurb: 'One inset panel per section, with hairlines between the rows. What a phone’s own settings look like.',
   },
+  {
+    id: 'soft',
+    label: 'Soft',
+    blurb: 'Cards lifted off the page, light from the top-left, and one figure per screen worth reading first.',
+  },
 ];
 
 export function shellOf(id: string | undefined): string {
@@ -881,6 +886,25 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
      * Nothing is ever identified by shadow alone. These are for depth, and
      * `.surface` in app.css carries a hairline underneath them.
      */
+    /*
+     * The dark tile's gradient, which is dark on every ground.
+     *
+     * The references give two near-black stops and mean them literally: the
+     * dark tile is the one deliberate piece of contrast on a bone page, and
+     * making it "dark relative to the ground" would turn it into a slightly
+     * darker grey on Ink — the same tile, saying nothing. So the stops are
+     * fixed on light grounds, and on dark ones they lift *above* the page
+     * instead, because a near-black tile on a near-black ground is invisible
+     * for the opposite reason. Either way the tile is the thing that differs
+     * from its surroundings, which is the only property that matters.
+     */
+    '--tile-top': g.light ? '#232320' : raise,
+    '--tile-bottom': g.light ? '#131311' : hero,
+    /** Glyphs on the dark tile: the accent's readable stop against it. */
+    '--tile-glyph': g.light ? a.base : a.bright,
+    /** Text on the dark tile, which is light on a light ground and vice versa. */
+    '--tile-ink': g.light ? '#f4f2ee' : g.fg,
+
     '--shadow-soft-out': g.light
       ? '-2px -2px 6px rgba(255, 255, 255, 0.7), 4px 6px 14px rgba(90, 84, 72, 0.14)'
       : '-2px -2px 6px rgba(255, 255, 255, 0.045), 4px 6px 14px rgba(0, 0, 0, 0.5)',

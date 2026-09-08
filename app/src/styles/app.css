@@ -1117,6 +1117,11 @@ input[type='search'].input {
  * stop on a light ground, which is the same decision made once upstream.
  */
 .pill-soft {
+  /* The padding lives here rather than on every caller. `scripts/styles.mjs`
+     counts inline `padding:` in TSX against a budget, which is the same rule
+     the handoff states as "every new pill is a class" — and it caught this
+     one on the first run. */
+  padding: calc(9px * var(--density, 1)) calc(16px * var(--density, 1));
   background: var(--app-panel);
   color: var(--app-fg);
   border: 1px solid var(--app-line);
@@ -1190,5 +1195,280 @@ input[type='search'].input {
   .pill-soft:disabled {
     color: GrayText;
     border-color: GrayText;
+  }
+}
+
+/*
+ * ── The soft shell's seven ───────────────────────────────────────────────
+ *
+ * Hero, stat, pill, step, light tile, dark tile, bottom bar. Every one is a
+ * class taking its colour from the per-ground tokens, so the same markup is
+ * correct on Bone, on Ink and on Parchment — rule 4 of the handoff, and the
+ * reason none of these is built on `.card`. `.card` paints
+ * `--color-surface`, a static #e9e9ea in industry.css that `tokensFor` never
+ * emits: a pale grey box on a near-black ground. That is almost certainly why
+ * it had no callers to extend.
+ */
+
+.soft-hero {
+  display: block;
+  width: 100%;
+  padding: calc(20px * var(--density, 1));
+  border-radius: var(--r-lg);
+}
+
+.soft-hero-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.soft-caps {
+  font-family: var(--font-heading);
+  font-size: calc(11px * var(--text-scale, 1));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.soft-caps-quiet {
+  color: var(--app-faint);
+}
+
+/* The one dominant numeral. Tight leading so a two-line hero does not sprawl. */
+.soft-figure {
+  font-family: var(--font-heading);
+  font-size: calc(44px * var(--text-scale, 1));
+  line-height: 1.02;
+  color: var(--app-fg);
+  margin-top: calc(10px * var(--density, 1));
+}
+
+/* Where a screen has no number, the hero carries a sentence at display size. */
+.soft-figure-said {
+  font-size: calc(23px * var(--text-scale, 1));
+  line-height: 1.2;
+}
+
+.soft-hero-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  margin-top: calc(14px * var(--density, 1));
+}
+
+.soft-delta {
+  font-family: var(--font-heading);
+  font-size: calc(13px * var(--text-scale, 1));
+  color: var(--app-accent);
+}
+
+.soft-stats {
+  display: grid;
+  gap: var(--sp-5);
+  grid-template-columns: repeat(var(--soft-stat-cols, 3), minmax(0, 1fr));
+}
+
+.soft-stat {
+  padding: calc(14px * var(--density, 1));
+  border-radius: var(--r-md);
+}
+
+.soft-stat-value {
+  font-family: var(--font-heading);
+  font-size: calc(22px * var(--text-scale, 1));
+  line-height: 1.1;
+  color: var(--app-fg);
+  margin-top: 4px;
+}
+
+/* A thin accent track. 3:1 against its groove is what `--app-accent-fill` is for. */
+.soft-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--app-track);
+  margin-top: calc(10px * var(--density, 1));
+  overflow: hidden;
+}
+
+.soft-track > i {
+  display: block;
+  height: 100%;
+  background: var(--app-accent-fill);
+}
+
+.soft-step {
+  display: flex;
+  gap: var(--sp-5);
+  padding: calc(16px * var(--density, 1));
+  border-radius: var(--r-md);
+}
+
+/* Solid ink square, white numeral. Square whatever the corner setting, because
+   a rounded numeral badge stops reading as a step and starts reading as a tag. */
+.soft-step-n {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  background: var(--app-fg);
+  color: var(--app-bg);
+  font-family: var(--font-heading);
+  font-size: calc(14px * var(--text-scale, 1));
+}
+
+.soft-step-head {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: calc(15px * var(--text-scale, 1));
+  color: var(--app-fg);
+}
+
+.soft-tile {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: calc(18px * var(--density, 1));
+  border-radius: var(--r-lg);
+}
+
+.soft-tile-glyph {
+  color: var(--app-accent);
+}
+
+.soft-tile-sub {
+  font-size: calc(12px * var(--text-scale, 1));
+  color: var(--app-dim);
+  margin-top: 3px;
+}
+
+/*
+ * The dark tile, and why its label sits outside it.
+ *
+ * The references put the name on the ground beneath the tile rather than
+ * inside it, which looks like a stylistic choice and is not: the tile holds a
+ * cluster of glyphs and one live value, and a name inside it would be a third
+ * kind of text competing with the number that is the point.
+ */
+.soft-dark {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: calc(16px * var(--density, 1));
+  border-radius: var(--r-lg);
+  background: linear-gradient(160deg, var(--tile-top), var(--tile-bottom));
+  border: 1px solid var(--app-line);
+  box-shadow: var(--shadow-soft-out);
+  color: var(--tile-ink);
+}
+
+.soft-dark-glyphs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--tile-glyph);
+}
+
+.soft-dark-rule {
+  height: 1px;
+  background: var(--app-line);
+  margin: calc(14px * var(--density, 1)) 0 calc(8px * var(--density, 1));
+}
+
+.soft-dark-value {
+  font-family: var(--font-heading);
+  font-size: calc(19px * var(--text-scale, 1));
+  color: var(--tile-ink);
+}
+
+.soft-bar {
+  /*
+   * Not pinned, yet.
+   *
+   * The handoff calls for a fixed bar. Fixed would cover the tab bar, and
+   * sticky pins against the scroll container rather than the viewport — with
+   * `bottom: var(--tabbar-h)` it still landed 150px high, because the
+   * container this sits in is not the one doing the scrolling. Chasing that
+   * means deciding what owns the bottom of a screen, which is what the
+   * two-row navigation decides. So it is a block at the foot of the content
+   * until that lands, rather than a bar that is nearly in the right place.
+   */
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: calc(12px * var(--density, 1));
+  background: var(--app-bg);
+  border-top: 1px solid var(--app-line);
+}
+
+.soft-bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.soft-bar-primary {
+  flex: 1;
+  padding: calc(13px * var(--density, 1));
+  border-radius: 999px;
+  background: var(--app-accent-fill);
+  color: var(--chrome-ink);
+  border: 1px solid var(--app-accent-fill);
+  font-family: var(--font-heading);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: calc(12px * var(--text-scale, 1));
+}
+
+.soft-bar-second {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+}
+
+/* Same floor as step 1: geometry, not colour, is what survives forced colours. */
+@media (prefers-contrast: more) {
+  .soft-hero,
+  .soft-stat,
+  .soft-step,
+  .soft-tile,
+  .soft-dark,
+  .soft-bar-second {
+    box-shadow: none;
+    border-color: var(--app-fg);
+  }
+}
+
+@media (forced-colors: active) {
+  .soft-hero,
+  .soft-stat,
+  .soft-step,
+  .soft-tile,
+  .soft-dark,
+  .soft-bar-primary,
+  .soft-bar-second {
+    box-shadow: none;
+    border: 1px solid CanvasText;
+  }
+
+  /* The gradient is discarded, so the tile would arrive as a bare rectangle. */
+  .soft-dark {
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .soft-bar-primary {
+    border-width: 3px;
+    font-weight: 700;
+  }
+
+  .soft-step-n {
+    border: 1px solid CanvasText;
   }
 }
