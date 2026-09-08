@@ -38,7 +38,7 @@ import { StartToday } from '../components/StartToday';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
 import { GapOffer } from './Gap';
 import { HomeWalk } from '../components/HomeWalk';
-import { Brief } from './Brief';
+import { Reports } from './Reports';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
 import { HourGrid } from '../components/HourGrid';
@@ -270,7 +270,7 @@ function TabHome() {
         style={{ margin: '0 0 16px' }}
       />
 
-      {tab === 'brief' && <Brief bare />}
+      {tab === 'brief' && <Reports bare />}
 
       {tab === 'today' && <TodayFeed />}
 

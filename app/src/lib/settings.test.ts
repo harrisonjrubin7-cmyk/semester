@@ -8,11 +8,20 @@ beforeEach(() => {
 });
 
 describe('the index', () => {
-  it('fits on a phone: four sections, ten rows', () => {
+  it('fits on a phone: four sections, eleven rows', () => {
     // The whole point of the change. An index that scrolls is the screen it
     // was meant to replace with an extra tap in front of it.
+    //
+    // Eleven, not ten. Ten was the count on the day this was written rather
+    // than a measurement, and the assistant's settings had to land somewhere
+    // real when the Ask tab became the conversation. The arithmetic: a row is
+    // ROW_HEIGHT (44px), a section header about 28, and the search box 40 —
+    // so 11 × 44 + 4 × 28 + 40 comes to 636, against roughly 700px of body on
+    // a 402 × 874 phone once the header and the tab bar are taken off. A
+    // twelfth row is where this genuinely starts to scroll, and the next one
+    // after that should merge two rows rather than raise this number again.
     expect(SETTINGS).toHaveLength(4);
-    expect(SETTINGS_SCREENS.length).toBeLessThanOrEqual(10);
+    expect(SETTINGS_SCREENS.length).toBeLessThanOrEqual(11);
   });
 
   it('names a screen exactly once', () => {

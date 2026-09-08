@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { foundIn, nameOf, search, startedOn, type Thread } from '../lib/threads';
+import { foundIn, grouped, nameOf, search, startedOn, type Thread } from '../lib/threads';
 import { destination } from '../lib/nav';
 import type { Screen } from '../lib/types';
 
@@ -96,6 +96,20 @@ export function Threads({
   // Pinned first, then newest — the same order with a query and without, so
   // typing does not make the reader re-find their bearings on every keystroke.
   const order = search(threads, query);
+  /*
+   * The same rows, under headings.
+   *
+   * Forty conversations sorted by time is a list you scroll rather than one
+   * you scan: every row says "3 days ago" in small grey text and none of them
+   * says where the boundary is. `grouped` puts pinned at the top and the rest
+   * under Today / Yesterday / Previous 7 days / Older, and leaves out any
+   * heading with nothing under it.
+   *
+   * Not while searching. A filtered list is already the answer to a question,
+   * and cutting six results into four headed sections of one or two makes it
+   * harder to read, not easier.
+   */
+  const sections = query.trim() ? [{ label: '', threads: order }] : grouped(order, now);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -138,7 +152,24 @@ export function Threads({
           gap: 'var(--sp-2)',
         }}
       >
-        {order.map((t) => {
+        {sections.flatMap((section) => [
+          section.label ? (
+            <li
+              key={`h:${section.label}`}
+              // A heading, not a row: it is not tappable and a screen reader
+              // should not offer it as one.
+              style={{
+                fontSize: 'var(--type-xs)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                opacity: 0.45,
+                padding: 'var(--sp-5) var(--sp-5) var(--sp-2)',
+              }}
+            >
+              {section.label}
+            </li>
+          ) : null,
+          ...section.threads.map((t) => {
           const found = foundIn(t, query);
           return (
           <li key={t.id} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -289,7 +320,8 @@ export function Threads({
             )}
           </li>
           );
-        })}
+        }),
+        ])}
 
         {/*
           The conversations that came out of the list.

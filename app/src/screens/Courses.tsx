@@ -20,6 +20,7 @@ import { BreakItUp } from '../components/BreakItUp';
 import { AskForTime } from '../components/AskForTime';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
+import { longLabel } from '../lib/date';
 import { Grades } from './Grades';
 import { appleMapsUrl, directionsUrl, fromRoom, prefersApple, type Destination } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
@@ -729,6 +730,29 @@ export function ItemDetail() {
             citations, and on one built from pasted text. */}
         {item.checked?.page ? ` · p. ${item.checked.page}` : ''}
       </div>
+
+      {/*
+        The date this used to be on, where somebody has moved it.
+
+        Right under the quote, because that is where the disagreement is: the
+        sentence says one day and the app is now showing another. A move that
+        left no trace here would be the app quietly overwriting the document it
+        is holding up as its evidence. See `moveItem` in
+        `state/slices/library.ts`.
+      */}
+      {item.movedFrom && (
+        <div
+          style={{
+            fontSize: 'var(--type-xs)',
+            opacity: 0.6,
+            marginTop: 'var(--sp-3)',
+            lineHeight: 'var(--leading-normal)',
+          }}
+        >
+          You moved this. The syllabus said{' '}
+          {longLabel(new Date(item.movedFrom.year ?? item.year ?? now.getFullYear(), item.movedFrom.month, item.movedFrom.day))}.
+        </div>
+      )}
 
       {/*
         * The middle state, which is where most coursework actually lives.

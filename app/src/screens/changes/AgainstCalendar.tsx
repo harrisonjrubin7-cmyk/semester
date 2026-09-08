@@ -1,18 +1,17 @@
 import { useMemo, useState } from 'react';
-import { useStore } from '../state/store';
-import { Page } from '../components/Page';
-import { useRowStyle } from '../components/shell/useShell';
-import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
-import { PrintButton } from '../components/PrintButton';
-import { datedItems } from '../lib/select';
-import { parseIcs } from '../lib/ics';
-import { asItemDate, compare, movedLine, summary, type Moved } from '../lib/reconcile';
-import { patchItem } from '../lib/edit';
-import type { FeedEvent } from '../lib/types';
+import { useStore } from '../../state/store';
+import { useRowStyle } from '../../components/shell/useShell';
+import { Blueprint } from '../../components/Blueprint';
+import { SectionLabel, Segmented } from '../../components/ui';
+import { PrintButton } from '../../components/PrintButton';
+import { datedItems } from '../../lib/select';
+import { parseIcs } from '../../lib/ics';
+import { asItemDate, compare, movedLine, summary, type Moved } from '../../lib/reconcile';
+import { patchItem } from '../../lib/edit';
+import type { FeedEvent } from '../../lib/types';
 
 /**
- * The app's dates, checked against the ones the LMS is showing today.
+ * The app's dates, checked against the ones a calendar is showing today.
  *
  * Every deadline here came out of a syllabus read once, before term started.
  * Syllabi move, and until now the app went on stating the old date with
@@ -28,8 +27,15 @@ import type { FeedEvent } from '../lib/types';
  * Nothing is applied automatically. Both dates are shown in full, the course
  * and the feed's own wording are shown beside them, and changing a date is one
  * deliberate tap per deadline.
+ *
+ * One of the two ways into `screens/Changes.tsx`. This was a screen called
+ * "Check the dates", next door to one called "Fold in an announcement", and
+ * the two were the same job with different post: something outside the app
+ * says a date moved, and the app takes it one row at a time. Which of them
+ * you want is decided by what you are holding — an email, or a calendar —
+ * which is a switch, not a second place to find.
  */
-export function CheckDates() {
+export function AgainstCalendar() {
   const { state, dispatch, now, catalog } = useStore();
   // Spread rather than wrapped, so a button row stays one tap target.
   const rowStyle = useRowStyle(10);
@@ -86,7 +92,7 @@ export function CheckDates() {
   const nothing = events.length === 0;
 
   return (
-    <Page bottom={26}>
+    <>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Every deadline here was read off a syllabus once, before term started. This checks them
         against what your LMS calendar says today, and shows both dates before changing anything.
@@ -298,6 +304,6 @@ export function CheckDates() {
           </div>
         </>
       )}
-    </Page>
+    </>
   );
 }

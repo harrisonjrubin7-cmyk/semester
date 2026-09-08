@@ -108,7 +108,7 @@ export const TASKS: { task: string; why: string; steps: Screen[] }[] = [
   {
     task: 'I want to know where I stand',
     why: 'Grades from your own entries and weights from the syllabus; nothing is fetched.',
-    steps: ['grades', 'behind', 'weekly'],
+    steps: ['grades', 'behind', 'brief'],
   },
   {
     task: 'I want to plan my week',
@@ -118,7 +118,7 @@ export const TASKS: { task: string; why: string; steps: Screen[] }[] = [
   {
     task: 'I want to fix bad import data',
     why: 'Every screen here shows the old and the new side by side before anything changes.',
-    steps: ['edit', 'check', 'announce', 'import'],
+    steps: ['edit', 'announce', 'import'],
   },
 ];
 

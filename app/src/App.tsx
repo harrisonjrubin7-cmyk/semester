@@ -45,11 +45,12 @@ const People = lazy(() => import('./screens/People').then((m) => ({ default: m.P
 const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
 const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
-const Announce = lazy(() => import('./screens/Announce').then((m) => ({ default: m.Announce })));
-const Ask = lazy(() => import('./screens/Ask').then((m) => ({ default: m.Ask })));
-const Brief = lazy(() => import('./screens/Brief').then((m) => ({ default: m.Brief })));
+const Changes = lazy(() => import('./screens/Changes').then((m) => ({ default: m.Changes })));
+// The Ask tab *is* the conversation. There is one component for it and one
+// destination — see the note at the top of `ai/Chat.tsx`.
+const Ask = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
+const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
 const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
-const CheckDates = lazy(() => import('./screens/CheckDates').then((m) => ({ default: m.CheckDates })));
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
 const Cloud = lazy(() => import('./screens/Cloud').then((m) => ({ default: m.Cloud })));
 const Connect = lazy(() => import('./screens/Connect').then((m) => ({ default: m.Connect })));
@@ -96,20 +97,18 @@ const SettingsGrading = lazy(() => import('./screens/settings/Grading').then((m)
 const SettingsWorkload = lazy(() => import('./screens/settings/Workload').then((m) => ({ default: m.SettingsWorkload })));
 const SettingsStorage = lazy(() => import('./screens/settings/Storage').then((m) => ({ default: m.SettingsStorage })));
 const SettingsAbout = lazy(() => import('./screens/settings/About').then((m) => ({ default: m.SettingsAbout })));
+const SettingsAssistant = lazy(() => import('./screens/settings/Assistant').then((m) => ({ default: m.SettingsAssistant })));
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
 const Solve = lazy(() => import('./screens/Solve').then((m) => ({ default: m.Solve })));
 const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
 const Study = lazy(() => import('./screens/Study').then((m) => ({ default: m.Study })));
-const Weekly = lazy(() => import('./screens/Weekly').then((m) => ({ default: m.Weekly })));
 const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work })));
-const Worked = lazy(() => import('./screens/Worked').then((m) => ({ default: m.Worked })));
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
 const Help = lazy(() => import('./screens/Help').then((m) => ({ default: m.Help })));
 const Everything = lazy(() => import('./screens/Everything').then((m) => ({ default: m.Everything })));
-const Chat = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
@@ -287,7 +286,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'links':
       return { kicker: 'Everywhere you go', title: 'Links' };
     case 'ask':
-      return { kicker: about('with the guide'), title: 'Ask Claude' };
+      return { kicker: `${provider()} · this term`, title: 'Ask Claude' };
     case 'work':
       return { kicker: about('assignments'), title: 'Work on it' };
     case 'grades':
@@ -327,23 +326,19 @@ function useHeader(): { kicker: string; title: string } {
     case 'people':
       return { kicker: 'Started late, invisibly', title: 'People and letters' };
     case 'brief':
-      return { kicker: 'Counted, then read', title: 'Your day' };
+      return { kicker: 'Counted, then read', title: 'Reports' };
     case 'essay':
       return { kicker: 'Everything but coursework', title: 'Draft it' };
     case 'deck':
       return { kicker: 'A real PowerPoint file', title: 'Make a deck' };
     case 'exam':
       return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
-    case 'check':
-      return { kicker: 'Syllabus against calendar', title: 'Check the dates' };
     case 'ahead':
       return { kicker: 'Counted, before it happens', title: 'The week ahead' };
     case 'announce':
-      return { kicker: 'The email that moves a date', title: 'An announcement' };
+      return { kicker: 'What moved, and what said so', title: 'A change to a date' };
     case 'costs':
       return { kicker: 'Books, fees and what came back', title: 'What this term cost' };
-    case 'worked':
-      return { kicker: 'Four months of your own evidence', title: 'What worked' };
     case 'gap':
       return { kicker: 'One thumb, and the walk taken off', title: 'Between classes' };
     case 'groupwork':
@@ -354,8 +349,6 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'The room, and the day you are out of it', title: 'Housing' };
     case 'runway':
       return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
-    case 'weekly':
-      return { kicker: 'What happened, and what is next', title: 'This week' };
     case 'registrar':
       return { kicker: 'The dates the university sets', title: 'Term deadlines' };
     case 'sources':
@@ -376,8 +369,6 @@ function useHeader(): { kicker: string; title: string } {
      * rather than repeating the title, which is the one thing about this
      * screen worth saying before you have asked anything.
      */
-    case 'chat':
-      return { kicker: `${provider()} · this term`, title: 'Chat' };
     default:
       return fallbackHeader(state.screen, today);
   }
@@ -739,8 +730,6 @@ function CurrentScreen() {
       return <Help />;
     case 'everything':
       return <Everything />;
-    case 'chat':
-      return <Chat />;
     case 'courses':
       return <Courses />;
     case 'course':
@@ -775,6 +764,8 @@ function CurrentScreen() {
       return <SettingsStorage />;
     case 'setAbout':
       return <SettingsAbout />;
+    case 'setAssistant':
+      return <SettingsAssistant />;
     case 'mine':
       return <Mine />;
     case 'note':
@@ -840,23 +831,19 @@ function CurrentScreen() {
     case 'people':
       return <People />;
     case 'brief':
-      return <Brief />;
+      return <Reports />;
     case 'essay':
       return <Essay />;
     case 'deck':
       return <Deck />;
     case 'exam':
       return <Exam />;
-    case 'check':
-      return <CheckDates />;
     case 'ahead':
       return <Ahead />;
     case 'announce':
-      return <Announce />;
+      return <Changes />;
     case 'costs':
       return <Costs />;
-    case 'worked':
-      return <Worked />;
     case 'gap':
       return <Gap />;
     case 'groupwork':
@@ -867,8 +854,6 @@ function CurrentScreen() {
       return <Housing />;
     case 'runway':
       return <Runway />;
-    case 'weekly':
-      return <Weekly />;
     case 'registrar':
       return <Registrar />;
     case 'sources':

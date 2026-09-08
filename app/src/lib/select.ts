@@ -331,7 +331,7 @@ export function railFor(
    * drawing it at midnight would be inventing an hour.
    */
   due: DatedItem[] = [],
-): (Block & { mine?: boolean; kind?: string; minutes?: number })[] {
+): (Block & { mine?: boolean; kind?: string; minutes?: number; from?: { kind: 'appointment' | 'item'; id: string } })[] {
   const classes = blocksFor(cat, date);
   const mine = appointmentsOn(appointments, date).map((a) => ({
     time: a.time,
@@ -341,6 +341,10 @@ export function railFor(
     c: null,
     mine: true,
     kind: a.kind ?? 'other',
+    // What this block *is*, so a grid can move it. The id below is built from
+    // the time and the title and is only unique within a day's render — good
+    // enough to draw with, useless for changing anything.
+    from: { kind: 'appointment' as const, id: a.id },
   }));
   // A club, a shift, a practice. They are on the day whether or not the app
   // draws them, and a Tuesday that already has practice on it should look
@@ -358,6 +362,7 @@ export function railFor(
       // Dimmer than a class, like office hours: it is a moment rather than a
       // room you have to be in.
       optional: true,
+      from: { kind: 'item' as const, id: i.id },
     }));
 
   return [...classes, ...mine, ...standing, ...deadlines].sort((a, b) => a.at - b.at);
@@ -375,9 +380,22 @@ export function hoursFor(
   date: Date,
   appointments: Appointment[],
   commitments: Commitment[] = [],
-): { id: string; title: string; meta: string; at: number; minutes: number; kind: string | null; canceled?: boolean }[] {
-  return railFor(cat, date, appointments, commitments).map((b, i) => ({
+  /** Deadlines with an hour on them, so the grid can draw and move them too. */
+  due: DatedItem[] = [],
+): {
+  id: string;
+  title: string;
+  meta: string;
+  at: number;
+  minutes: number;
+  kind: string | null;
+  canceled?: boolean;
+  /** The record this block was drawn from, where there is one that can move. */
+  from?: { kind: 'appointment' | 'item'; id: string };
+}[] {
+  return railFor(cat, date, appointments, commitments, due).map((b, i) => ({
     id: `${b.at}-${i}-${b.title}`,
+    ...(b.from ? { from: b.from } : {}),
     title: b.title,
     // A commitment states its own length; an appointment is a point in time
     // and gets fifty minutes rather than a duration nobody stated.

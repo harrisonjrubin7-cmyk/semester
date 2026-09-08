@@ -3,6 +3,7 @@ import { CLASS_TINT, blockLabel, kindOf } from '../lib/kinds';
 import { DOW_INITIALS, clock } from '../lib/date';
 import type { HourBlock } from './HourGrid';
 import { lanesOf } from '../lib/weekpage';
+import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
 
 /**
  * A week, by the hour — the timetable shape.
@@ -36,11 +37,26 @@ export function WeekGrid({
   days,
   now,
   style,
+  onMove,
+  onAddAt,
+  canMove,
 }: {
   days: WeekDay[];
   /** Minutes past midnight, drawn only across today's column. */
   now: number | null;
   style?: CSSProperties;
+  /**
+   * A block, dragged to another day *and* another hour.
+   *
+   * The week is the only view with both axes, so it is the only one where a
+   * drop moves two things at once — which is exactly what somebody rearranging
+   * a week is doing. `day` is the index into `days`, so the caller does not
+   * have to work back from a date it already handed in.
+   */
+  onMove?: (block: HourBlock, day: number, minutes: number) => void;
+  /** Two taps on an empty part of the week. */
+  onAddAt?: (day: number, minutes: number) => void;
+  canMove?: (block: HourBlock) => boolean;
 }) {
   const all = days.flatMap((d) => d.blocks);
   const starts = all.map((b) => b.at);
@@ -50,6 +66,15 @@ export function WeekGrid({
   const hours = Array.from({ length: hi - lo }, (_, i) => lo + i);
   const top = (m: number) => ((m - lo * 60) / 60) * ROW;
   const col = `calc((100% - ${GUTTER}px) / ${days.length})`;
+
+  const spec = { rowPx: ROW, gutterPx: GUTTER, startHour: lo, columns: days.length };
+  const drag = useDragToMove<{ block: HourBlock; day: number }>({
+    grid: spec,
+    disabled: !onMove,
+    onDrop: ({ payload, point }) => {
+      if (point) onMove?.(payload.block, point.column, point.minutes);
+    },
+  });
 
   return (
     <div className="weekgrid" style={style}>
@@ -86,7 +111,17 @@ export function WeekGrid({
         ))}
       </div>
 
-      <div style={{ position: 'relative', height: hours.length * ROW }}>
+      <div
+        {...gridAttrs('week', spec)}
+        onDoubleClick={(e) => {
+          if (!onAddAt) return;
+          if ((e.target as HTMLElement).closest('.wg-block')) return;
+          const rect = e.currentTarget.getBoundingClientRect();
+          const at = pointIn(spec, rect, e.clientX, e.clientY);
+          onAddAt(at.column, at.minutes);
+        }}
+        style={{ position: 'relative', height: hours.length * ROW }}
+      >
         {hours.map((h, i) => (
           <div
             key={h}
@@ -147,6 +182,9 @@ export function WeekGrid({
               <div
                 key={`${di}-${b.id}`}
                 className="wg-block"
+                {...(onMove && (canMove ? canMove(b) : true)
+                  ? drag.handlers({ block: b, day: di })
+                  : {})}
                 title={`${b.title} · ${b.meta}`}
                 // `title` is a tooltip and a mouse has to be over it. This is
                 // the same facts for somebody who is not using a mouse, plus
@@ -163,7 +201,12 @@ export function WeekGrid({
                   borderLeft: `2px solid ${tint}`,
                   borderRadius: 'var(--r-sm)',
                   background: 'var(--app-panel)',
-                  opacity: b.canceled ? 0.4 : 1,
+                  opacity:
+                    drag.held?.block.id === b.id && drag.held.day === di
+                      ? 0.35
+                      : b.canceled
+                        ? 0.4
+                        : 1,
                 }}
               >
                 <span

@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { DESKTOP, TOUCH, useMedia } from '../lib/media';
 import { useAI } from './store';
 import { useConversation, provider } from './converse';
+import { configured, modelLabel } from '../lib/claude';
 import { Composer, sendHint } from './Composer';
 import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
 import { Threads, ThreadsOver } from './Threads';
@@ -212,6 +213,13 @@ export function Chat() {
             onChange={setDraft}
             onSend={() => ask()}
             onStop={talk.stop}
+            onRecall={() => {
+              // The last thing *you* asked, not the last thing said.
+              for (let i = talk.turns.length - 1; i >= 0; i -= 1) {
+                if (talk.turns[i].role === 'user') return talk.turns[i].content;
+              }
+              return null;
+            }}
             busy={talk.busy}
             placeholder={sendHint(touch)}
             autoFocus={!touch}
@@ -231,6 +239,22 @@ export function Chat() {
               style={QUIET}
             >
               ← BACK TO APP
+            </button>
+            {/*
+              Where the key, the model and the cost went.
+
+              This tab used to *be* that form, which is the thing the rewrite
+              undid — but somebody who wants to change the model should not
+              have to guess that it is under Settings now, so the way there is
+              one tap from the conversation it changes.
+            */}
+            <button
+              type="button"
+              className="bare"
+              onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
+              style={QUIET}
+            >
+              {configured() ? modelLabel().toUpperCase() : 'SET A KEY'}
             </button>
             <span style={{ flex: 1 }} />
             {/* Only where the panel is not already showing the list. */}
@@ -321,7 +345,7 @@ function Opening({ onPick }: { onPick: (q: string) => void }) {
    * see rather than where you are, which is the thing that was actually
    * worth saying.
    */
-  const seen = ai.screen === 'chat' ? null : ai.look().label;
+  const seen = ai.screen === 'ask' ? null : ai.look().label;
 
   return (
     <div style={{ marginBottom: 'calc(var(--sp-7) * 1.6)' }}>

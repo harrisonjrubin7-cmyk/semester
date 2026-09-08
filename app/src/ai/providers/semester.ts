@@ -1,7 +1,8 @@
 import { datedItems } from '../../lib/select';
 import { daysTo, filled, sheet } from '../../lib/registrar';
 import type { Look, Provide } from '../shape';
-import { chipped } from './core';
+import { chipped, worked } from './core';
+import { weekly } from './upkeep';
 
 /**
  * The Semester group — what is happening and when.
@@ -60,9 +61,17 @@ export const home: Provide = (look) => {
   };
 };
 
-/** Your day — the same window, read as a report rather than a list. */
+/**
+ * The report — the same window as Today, read as a report rather than a list.
+ *
+ * Three grains behind one screen, so three readings behind one provider: an
+ * assistant told "you are looking at your day" while the term report is on
+ * screen is an assistant looking at the wrong thing. See `screens/Reports.tsx`.
+ */
 export const brief: Provide = (look) => {
   const { catalog, now } = look;
+  if (look.state.report === 'week') return weekly(look);
+  if (look.state.report === 'term') return worked(look);
   if (catalog.empty) return null;
   const rows = due(look, 2);
   const overdue = datedItems(catalog, now).filter((i) => i.isPast && !look.state.done[i.id]).length;

@@ -74,6 +74,22 @@ export interface Item {
    * none, and `decorateItem` falls back to the year the app shipped for.
    */
   year?: number;
+  /**
+   * Where this was before somebody moved it, when somebody has.
+   *
+   * The app's whole premise is that a deadline is the syllabus's rather than
+   * the app's — every item carries the sentence it came from and the page it
+   * was on. A student may still move one: a professor says it in class, an
+   * announcement lands, or the syllabus was simply wrong. What must not happen
+   * is the app quietly forgetting that it now disagrees with the document it
+   * is showing underneath.
+   *
+   * So a move keeps the old date and says so beside the quote. Optional
+   * because every item that has never been moved has none, which is almost all
+   * of them, and because a course imported before this existed has none
+   * either.
+   */
+  movedFrom?: { month: number; day: number; year?: number };
   /** Time of day, exactly as the syllabus words it. */
   dueTime: string;
   weight: string;
@@ -459,7 +475,6 @@ export type Screen =
   | 'data'
   | 'help'
   | 'everything'
-  | 'chat'
   | 'onboarding'
   | 'home'
   | 'courses'
@@ -501,17 +516,14 @@ export type Screen =
   | 'essay'
   | 'deck'
   | 'exam'
-  | 'check'
   | 'ahead'
   | 'announce'
   | 'costs'
-  | 'worked'
   | 'groupwork'
   | 'meals'
   | 'housing'
   | 'runway'
   | 'privacy'
-  | 'weekly'
   | 'registrar'
   | 'sources'
   | 'slides'
@@ -533,7 +545,19 @@ export type Screen =
   | 'setGrading'
   | 'setWorkload'
   | 'setStorage'
-  | 'setAbout';
+  | 'setAbout'
+  | 'setAssistant';
+
+/**
+ * The report's grain, and the post a changed date arrived in.
+ *
+ * Here rather than in `state/shape.ts` because they are not only state: a URL
+ * names one. Three screens merged into the report and two into the changes
+ * screen, and a link to a retired one has to say *which part* of its survivor
+ * it meant — `#/weekly` landing on today's report is the link not kept.
+ */
+export type ReportGrain = 'day' | 'week' | 'term';
+export type ChangeSource = 'told' | 'feed';
 
 export type StudyMode =
   | 'cards'

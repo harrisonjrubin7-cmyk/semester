@@ -1,11 +1,10 @@
 import { useRef, useState } from 'react';
-import { useStore } from '../state/store';
-import { Blueprint } from '../components/Blueprint';
-import { Page } from '../components/Page';
-import { SectionLabel } from '../components/ui';
-import { Trouble } from '../components/Trouble';
-import { useTrouble } from '../lib/trouble';
-import { ask, configured, provider } from '../lib/claude';
+import { useStore } from '../../state/store';
+import { Blueprint } from '../../components/Blueprint';
+import { SectionLabel } from '../../components/ui';
+import { Trouble } from '../../components/Trouble';
+import { useTrouble } from '../../lib/trouble';
+import { ask, configured, provider } from '../../lib/claude';
 import {
   SYSTEM,
   apply,
@@ -14,7 +13,7 @@ import {
   readChanges,
   summary,
   type Change,
-} from '../lib/announce';
+} from '../../lib/announce';
 
 /**
  * "The midterm has moved to the 8th."
@@ -27,9 +26,13 @@ import {
  * applied until it is ticked, and the machinery underneath is the same
  * comparison that already handles a re-imported syllabus — so a moved
  * deadline keeps its id, and the box you ticked stays ticked.
+ *
+ * One of the two ways into `screens/Changes.tsx`. The other reads the same
+ * kind of news off a calendar instead of out of a sentence.
  */
-export function Announce() {
+export function FromText() {
   const { state, dispatch, catalog } = useStore();
+
 
   const [courseId, setCourseId] = useState(state.courseId || catalog.courses[0]?.id || '');
   const [text, setText] = useState('');
@@ -82,15 +85,7 @@ export function Announce() {
   };
 
   return (
-    <Page
-      bottom={26}
-      blurb={
-        <>
-          A calendar feed carries dates. The email that <em>changes</em> a date never reaches the
-          app, so the app can be a week out and say nothing. Paste it here instead.
-        </>
-      }
-    >
+    <>
 
       <SectionLabel>Which course</SectionLabel>
       <select
@@ -138,7 +133,7 @@ export function Announce() {
         </button>
       ) : (
         <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
-          Needs a key first — set one under Ask Claude → Settings.
+          Needs a key first — set one under Settings → The assistant.
         </div>
       )}
 
@@ -234,6 +229,6 @@ export function Announce() {
         sentence it came from — anything it cannot quote is dropped before you see it. A moved
         deadline keeps its id, so a box you already ticked stays ticked.
       </div>
-    </Page>
+    </>
   );
 }

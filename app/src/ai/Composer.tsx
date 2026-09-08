@@ -26,6 +26,7 @@ export function Composer({
   onChange,
   onSend,
   onStop,
+  onRecall,
   busy,
   placeholder,
   autoFocus = false,
@@ -34,6 +35,16 @@ export function Composer({
   onChange: (next: string) => void;
   onSend: () => void;
   onStop: () => void;
+  /**
+   * Put the last question back in the box, for Up in an empty one.
+   *
+   * The terminal gesture, and the one people try in a chat box without being
+   * told: you asked something slightly wrong and want to fix three words of
+   * it rather than retype the sentence. Optional because the sheet has no
+   * conversation behind it worth recalling into a panel that is about to be
+   * dismissed.
+   */
+  onRecall?: () => string | null;
   busy: boolean;
   placeholder: string;
   autoFocus?: boolean;
@@ -67,6 +78,21 @@ export function Composer({
   }, [autoFocus]);
 
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    /*
+     * Up, in an empty box, brings back the last question.
+     *
+     * Only when the box is empty: in a box with anything in it Up moves the
+     * caret, and a key that jumps the caret to the top on a four-line
+     * question would be worse than not having this at all.
+     */
+    if (e.key === 'ArrowUp' && !value && onRecall && !busy) {
+      const last = onRecall();
+      if (last) {
+        e.preventDefault();
+        onChange(last);
+      }
+      return;
+    }
     if (e.key !== 'Enter' || e.shiftKey || e.altKey || touch) return;
     e.preventDefault();
     if (!busy && value.trim()) onSend();

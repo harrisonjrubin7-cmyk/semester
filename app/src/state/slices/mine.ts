@@ -38,6 +38,31 @@ export function mine(state: State, action: Action): State | null {
         tasks: state.tasks.map((t) => (t.id === action.id ? { ...t, ...action.patch } : t)),
       };
 
+    /*
+     * A task, dragged to another day.
+     *
+     * Separate from `editTask` so the undo table can name it: an ordinary
+     * edit is undone by editing it back, and a drag is the case where what it
+     * was before is precisely what nobody remembers. See `lib/undo.ts`.
+     */
+    case 'moveTask':
+      return {
+        ...state,
+        tasks: state.tasks.map((t) =>
+          t.id === action.id
+            ? { ...t, date: action.date, ...(action.time !== undefined ? { time: action.time } : {}) }
+            : t,
+        ),
+      };
+
+    case 'moveAppointment':
+      return {
+        ...state,
+        appointments: state.appointments.map((a) =>
+          a.id === action.id ? { ...a, date: action.date, at: action.at, time: action.time } : a,
+        ),
+      };
+
     case 'toggleTask':
       return {
         ...state,

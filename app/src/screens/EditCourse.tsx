@@ -92,10 +92,14 @@ export function EditCourse() {
           <button
             type="button"
             className="btn btn-primary btn-block"
-            onClick={() => {
-              adopt();
-              dispatch({ type: 'go', screen: 'edit' });
-            }}
+            /*
+             * No navigation. This *is* the edit screen: `adopt()` makes the
+             * course an owned one, `owned` becomes truthy on the next render
+             * and the editor below draws. Going to `edit` from `edit` pushed a
+             * history entry, so Back landed somebody back on the screen they
+             * had just pressed Back from.
+             */
+            onClick={adopt}
             style={{
               height: 46,
               marginTop: 14,

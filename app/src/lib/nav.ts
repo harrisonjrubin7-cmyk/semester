@@ -152,7 +152,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'home',
     label: 'Today',
-    blurb: 'What is due, what is next, and tonight’s study plan.',
+    blurb: 'What is due, what is next, and what is on today.',
     keywords: 'now due soon next class plan agenda',
     group: 'Semester',
     taskTags: ['due', 'week'],
@@ -160,11 +160,18 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'brief',
-    label: 'Your day',
-    blurb: 'A start-of-day and an end-of-day report — what is due, and what got done.',
-    keywords: 'brief briefing report daily day start end morning evening summary recap review standup what is due what did i do plan wrap up',
+    label: 'Reports',
+    short: 'Report',
+    blurb: 'The day, the week or the term, read back from what the app recorded.',
+    // Three screens' worth, because three screens merged into this one: a
+    // search for "weekly report" or "what worked" has to land somewhere, and
+    // the somewhere is now a grain of this rather than a screen of its own.
+    keywords:
+      'brief briefing report daily day start end morning evening summary recap review standup what is due what did i do plan wrap up ' +
+      'weekly week sunday end of week retrospective what happened how did the week go progress last week next week ' +
+      'what worked end of term semester reflection study habits pattern patterns evidence december finals over improve next term learn about myself',
     group: 'Semester',
-    taskTags: ['due', 'week'],
+    taskTags: ['due', 'week', 'stand', 'ahead'],
     root: 'home',
   },
   {
@@ -198,8 +205,12 @@ export const DESTINATIONS: Destination[] = [
     screen: 'ask',
     label: 'Ask Claude',
     short: 'Ask',
-    blurb: 'A question about this course, answered with its guide in hand.',
-    keywords: 'ai chat explain help tutor claude',
+    blurb: 'The conversation — your term in hand, and every thread you have had.',
+    // The full-screen chat was a destination of its own called "Chat", beside
+    // a tab called "Ask Claude" that opened a key form. One room, one door.
+    keywords:
+      'ai chat explain help tutor claude conversation talk assistant ask threads history messages ' +
+      'discuss back and forth question answer gpt chatgpt',
     group: 'Study',
     taskTags: ['study', 'app'],
     root: 'study',
@@ -327,10 +338,14 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'announce',
-    label: 'Fold in an announcement',
-    short: 'Notices',
-    blurb: 'Paste the email that moved a deadline, and take the changes one at a time.',
-    keywords: 'announcement announce email post update moved change changed cancelled canceled postponed rescheduled deadline date shift new due date brightspace canvas notice message professor said class email paste',
+    label: 'A change to a date',
+    short: 'Changes',
+    blurb: 'The email that moved a deadline, or the calendar that disagrees — taken one at a time.',
+    // Two screens' worth. "Check the dates" was its own destination and is a
+    // source of this one now, so its words have to keep landing somewhere.
+    keywords:
+      'announcement announce email post update moved change changed cancelled canceled postponed rescheduled deadline date shift new due date brightspace canvas notice message professor said class email paste ' +
+      'check dates verify compare reconcile lms ics calendar feed disagree wrong date out of date stale syllabus says different mismatch',
     group: 'Courses',
     taskTags: ['due', 'data'],
     root: 'courses',
@@ -387,26 +402,6 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
-    screen: 'worked',
-    label: 'What worked',
-    short: 'Worked',
-    blurb: 'The end of a term, read back from your own evidence — and silent where the evidence is thin.',
-    keywords: 'what worked end of term semester review retrospective looking back reflection how did it go study habits pattern patterns evidence december finals over improve next term learn about myself',
-    group: 'Standing',
-    taskTags: ['stand', 'ahead'],
-    root: 'home',
-  },
-  {
-    screen: 'weekly',
-    label: 'Weekly report',
-    short: 'Weekly',
-    blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',
-    keywords: 'weekly week report review recap summary sunday end of week retrospective what happened how did the week go progress last week next week',
-    group: 'Standing',
-    taskTags: ['week', 'stand'],
-    root: 'home',
-  },
-  {
     screen: 'ahead',
     label: 'The week ahead',
     short: 'Ahead',
@@ -415,16 +410,6 @@ export const DESTINATIONS: Destination[] = [
     group: 'Semester',
     taskTags: ['week'],
     root: 'home',
-  },
-  {
-    screen: 'check',
-    label: 'Check the dates',
-    short: 'Check',
-    blurb: 'Your syllabus dates against what the LMS calendar says today.',
-    keywords: 'check dates changed moved deadline reconcile compare diff brightspace calendar feed ics syllabus out of date wrong date updated rescheduled verify audit',
-    group: 'Standing',
-    taskTags: ['due', 'data'],
-    root: 'courses',
   },
   {
     screen: 'grades',
@@ -629,16 +614,6 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
-    screen: 'chat',
-    label: 'Chat',
-    blurb: 'The assistant with the whole screen — for a conversation rather than a question.',
-    keywords:
-      'chat conversation talk assistant claude ai ask full screen thread threads history messages discuss back and forth',
-    group: 'Study',
-    taskTags: ['study', 'app'],
-    root: 'study',
-  },
-  {
     screen: 'everything',
     label: 'Everything',
     // Ten characters is one past what the bar holds. See `lib/tabbar.ts`.
@@ -723,6 +698,7 @@ const NESTED: Partial<Record<Screen, Screen>> = {
   setWorkload: 'me',
   setStorage: 'me',
   setAbout: 'me',
+  setAssistant: 'me',
 };
 
 const BY_SCREEN = new Map(DESTINATIONS.map((d) => [d.screen, d]));

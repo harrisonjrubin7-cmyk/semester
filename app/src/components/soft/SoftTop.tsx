@@ -97,7 +97,13 @@ export function SoftBar() {
     <BottomBar
       status={top.bar.status}
       primary={top.bar.primary.label}
-      onPrimary={() => dispatch({ type: 'go', screen: top.bar!.primary.screen })}
+      onPrimary={() => {
+        // `also` first, so the screen paints with its switch already where the
+        // action promised — "Check the dates" must not land on the half about
+        // pasted emails. See `TopAction` in `lib/softtop.ts`.
+        if (top.bar!.primary.also) dispatch(top.bar!.primary.also);
+        dispatch({ type: 'go', screen: top.bar!.primary.screen });
+      }}
     />
   );
 }

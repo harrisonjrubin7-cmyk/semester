@@ -21,7 +21,7 @@
  */
 
 import type { Action, State } from './shape';
-import { snapshot, tookSomething, undoableFor } from '../lib/undo';
+import { changedSomething, snapshot, tookSomething, undoableFor } from '../lib/undo';
 import { library } from './slices/library';
 import { mine } from './slices/mine';
 import { navigate } from './slices/navigate';
@@ -83,9 +83,14 @@ export function reducer(state: State, action: Action): State {
   for (const slice of SLICES) {
     const next = slice(state, action);
     if (next === null) continue;
-    // Only where the action actually took something. A Remove pressed on an id
-    // that is already gone should not put a toast up offering to undo nothing.
-    return before && tookSomething(before, next) ? { ...next, undone: before } : next;
+    // Only where the action actually did something. A Remove pressed on an id
+    // that is already gone should not put a toast up offering to undo nothing,
+    // and neither should a move that landed a thing back where it was.
+    if (!before || !undoable) return next;
+    const did = undoable.onChange
+      ? changedSomething(before, state, next)
+      : tookSomething(before, next);
+    return did ? { ...next, undone: before } : next;
   }
   return state;
 }

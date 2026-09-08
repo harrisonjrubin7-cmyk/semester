@@ -14,6 +14,7 @@
 import type {
   Appointment,
   CampusLink,
+  ChangeSource,
   CourseId,
   CourseModule,
   CourseUpdate,
@@ -22,6 +23,7 @@ import type {
   NavMode,
   Note,
   PersonalTask,
+  ReportGrain,
   Screen,
   StudyMode,
 } from '../lib/types';
@@ -529,6 +531,23 @@ export interface Ephemeral {
   filter: string;
   evFilter: string;
   calTab: 'deadlines' | 'campus';
+  /**
+   * Which grain the report screen is showing — the day, the week, the term.
+   *
+   * A field rather than the screen's own state because it is addressed from
+   * outside: a Sunday reminder opens the week, and the day report's "this
+   * week" row switches grain rather than navigating. Not persisted, for the
+   * same reason `calView` is not — coming back tomorrow should open today.
+   */
+  report: ReportGrain;
+  /**
+   * Which post a change arrived in — an email, or a calendar.
+   *
+   * A field for the same reason the report's grain is one: the two used to be
+   * two screens, so the links that pointed at "Check the dates" have to be
+   * able to land on that half rather than on the other one.
+   */
+  changes: ChangeSource;
   /** Which schedule view the calendar is showing. */
   calView: 'day' | 'week' | 'month' | 'semester';
   /** Which sources the calendar is showing — combined, or one at a time. */
@@ -853,6 +872,8 @@ export function initialEphemeral(now: Date): Ephemeral {
     filter: 'All',
     evFilter: 'All',
     calTab: 'deadlines',
+    report: 'day',
+    changes: 'told',
     calView: 'month',
     calSource: 'all',
     calDay: null,
@@ -1309,6 +1330,19 @@ export type Action =
   | { type: 'pickAnswer'; index: number }
   | { type: 'nextQuestion' }
   | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }
+  | { type: 'setReport'; grain: ReportGrain }
+  | { type: 'setChanges'; source: ChangeSource }
+  /*
+   * The three things a drag on the calendar can move, one action each.
+   *
+   * Not `editTask` with a date in it: an edit is undoable by editing it back,
+   * which is why `lib/undo.ts` leaves edits alone — but a drag is a change
+   * whose *previous* value is exactly what nobody remembers. So a move is its
+   * own action, and its own action is what the undo table can name.
+   */
+  | { type: 'moveTask'; id: string; date: string; time?: string }
+  | { type: 'moveAppointment'; id: string; date: string; at: number; time: string }
+  | { type: 'moveItem'; courseId: CourseId; itemId: string; month: number; day: number; year: number }
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }

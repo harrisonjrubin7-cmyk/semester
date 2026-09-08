@@ -49,26 +49,8 @@ export const edit: Provide = (look) => {
   };
 };
 
-/** Fold in an announcement — an email that moved a deadline. */
-export const announce: Provide = (look) => {
-  const { catalog, now } = look;
-  const soon = datedItems(catalog, now)
-    .filter((i) => !i.isPast && i.daysAway <= 45)
-    .slice(0, 30)
-    .map((i) => ({ id: i.id, course: catalog.byId[i.c]?.code, title: i.title, due: i.dueShort }));
-  return {
-    summary: `Folding in an announcement. ${soon.length} dates in the next six weeks it could move. Nothing changes until the change set is accepted.`,
-    visible: soon,
-    actions: ['open_screen'],
-    suggestions: [
-      'Which deadline does this email move?',
-      'Does this change anything I have already ticked off?',
-    ],
-  };
-};
-
-/** Check the dates — the syllabus against what the LMS says today. */
-export const check: Provide = (look) => {
+/** The calendar half — the syllabus against what the LMS says today. */
+const check: Provide = (look) => {
   const { state, catalog } = look;
   return {
     summary: `Checking syllabus dates against the connected calendars. ${state.feeds.length} ${state.feeds.length === 1 ? 'feed' : 'feeds'} connected, ${state.feedEvents.length} events pulled. Nothing is applied without being shown first.`,
@@ -84,6 +66,28 @@ export const check: Provide = (look) => {
       'Why has this feed stopped syncing?',
     ],
     ...(catalog.empty ? {} : {}),
+  };
+};
+
+/** Fold in an announcement — an email that moved a deadline. */
+export const announce: Provide = (look) => {
+  const { catalog, now } = look;
+  // Two sources behind one screen — see `screens/Changes.tsx`. An assistant
+  // told "you are folding in an email" while the calendar comparison is on
+  // screen is an assistant looking at the wrong half.
+  if (look.state.changes === 'feed') return check(look);
+  const soon = datedItems(catalog, now)
+    .filter((i) => !i.isPast && i.daysAway <= 45)
+    .slice(0, 30)
+    .map((i) => ({ id: i.id, course: catalog.byId[i.c]?.code, title: i.title, due: i.dueShort }));
+  return {
+    summary: `Folding in an announcement. ${soon.length} dates in the next six weeks it could move. Nothing changes until the change set is accepted.`,
+    visible: soon,
+    actions: ['open_screen'],
+    suggestions: [
+      'Which deadline does this email move?',
+      'Does this change anything I have already ticked off?',
+    ],
   };
 };
 

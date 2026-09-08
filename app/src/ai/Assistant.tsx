@@ -349,13 +349,13 @@ export function Assistant() {
         Not on the chat screen itself.
 
         The button's whole job is to bring the assistant over what you are
-        looking at. On `/chat` you are looking at the assistant, so it offered
-        to open a sheet showing the same conversation on top of the same
-        conversation — and the sheet's header would have read "Looking at:
-        Chat". It also sat over the composer, which is the one control on that
-        screen that matters.
+        looking at. On the Ask tab you are looking at the assistant, so it
+        offered to open a sheet showing the same conversation on top of the
+        same conversation — and the sheet's header would have read "Looking
+        at: Ask Claude". It also sat over the composer, which is the one
+        control on that screen that matters.
       */}
-      {!ai.open && state.screen !== 'chat' && (
+      {!ai.open && state.screen !== 'ask' && (
         <button
           type="button"
           ref={fab}
@@ -648,7 +648,11 @@ export function Assistant() {
                     handoff and nothing is copied — both surfaces read the one
                     conversation in `ai/live.ts`, so this is a navigation.
 
-                    The history lives there rather than here: a list of twelve
+                    This is what the sheet is *for*, now that there is one
+                    destination: it is the way in from wherever you were
+                    standing, holding that screen's context, and the tab is
+                    where the conversation it started lives. The history is
+                    there rather than here because a list of twelve
                     conversations inside a panel sized to leave the screen
                     behind it visible would fill the panel. */}
                 <button
@@ -656,7 +660,7 @@ export function Assistant() {
                   className="bare"
                   onClick={() => {
                     ai.hide();
-                    dispatch({ type: 'go', screen: 'chat' });
+                    dispatch({ type: 'go', screen: 'ask' });
                   }}
                   style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.55 }}
                 >

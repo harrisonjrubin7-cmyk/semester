@@ -112,6 +112,14 @@ export const SETTINGS: SettingsSection[] = [
         keywords:
           'hours workload work day budget time contract capacity load week busy how long',
       },
+      {
+        screen: 'setAssistant',
+        label: 'The assistant',
+        short: 'Assistant',
+        holds: 'Which provider answers, which model, what it costs and what it sees',
+        keywords:
+          'claude ai assistant chat gpt chatgpt openai anthropic api key proxy model sonnet opus haiku provider cost spend money tokens billing what it can see privacy context',
+      },
     ],
   },
   {

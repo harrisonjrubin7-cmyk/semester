@@ -31,7 +31,7 @@
  */
 
 import type { Catalog } from '../data/catalog';
-import type { State } from '../state/shape';
+import type { Action, State } from '../state/shape';
 import type { DatedItem, Screen } from './types';
 import type { Capabilities } from './school';
 import { swipeUnit } from './school';
@@ -69,6 +69,17 @@ export interface TopStat {
 export interface TopAction {
   label: string;
   screen: Screen;
+  /**
+   * Set before the navigation, where the screen has more than one thing on it.
+   *
+   * A destination used to be one screen doing one thing, so a label and a
+   * screen name said everything. Two merges later some screens carry a switch
+   * — the report's grain, the source a changed date arrived in — and "Check
+   * the dates" landing on the half about pasted emails is the action not
+   * kept. Still no callback: this is an action object the registry describes
+   * and `SoftTop` dispatches.
+   */
+  also?: Action;
 }
 
 export interface TopBar {
@@ -221,7 +232,33 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
     }
 
-    case 'brief':
+    case 'brief': {
+      /*
+       * One screen, three spans — so three heroes.
+       *
+       * The report used to be three screens and the hero was written per
+       * screen. Now the grain is state, and a hero that ignored it would put
+       * today's count above the term's report. The spans stay what they were:
+       * the day is today, the week is the last seven days, the term is the
+       * term, and counting the term under all three would be the same number
+       * under three different questions.
+       */
+      const ticked = dated.filter((i) => state.done[i.id]);
+      if (state.report === 'week') {
+        const lastWeek = ticked.filter((i) => i.daysAway <= 0 && i.daysAway >= -7);
+        return {
+          hero: { label: 'This week', meta: 'Last seven days', figure: num(lastWeek.length), foot: 'ticked off' },
+          stats: term,
+          bar: { primary: { label: 'The week ahead', screen: 'ahead' } },
+        };
+      }
+      if (state.report === 'term') {
+        return {
+          hero: { label: 'What worked', meta: 'This term', figure: num(ticked.length), foot: 'ticked off so far' },
+          stats: term,
+          bar: { primary: { label: 'The week ahead', screen: 'ahead' } },
+        };
+      }
       return {
         hero: {
           label: 'Your day',
@@ -232,6 +269,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         stats: term,
         bar: { primary: { label: 'Plan tonight', screen: 'tonight' } },
       };
+    }
 
     case 'calendar':
       return {
@@ -242,7 +280,13 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: count(courses, 'course') + ' this term',
         },
         stats: term,
-        bar: { primary: { label: 'Check the dates', screen: 'check' } },
+        bar: {
+          primary: {
+            label: 'Check the dates',
+            screen: 'announce',
+            also: { type: 'setChanges', source: 'feed' },
+          },
+        },
       };
 
     case 'tonight': {
@@ -302,7 +346,11 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     }
 
     case 'registrar':
-      return holds('Term deadlines', state.registrar.length, 'date', { label: 'Check the dates', screen: 'check' });
+      return holds('Term deadlines', state.registrar.length, 'date', {
+        label: 'Check the dates',
+        screen: 'announce',
+        also: { type: 'setChanges', source: 'feed' },
+      });
 
     case 'import':
       return {
@@ -323,7 +371,10 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
 
     case 'announce':
-      return holds('Folded in', state.updates.length, 'addition', { label: 'Check the dates', screen: 'check' });
+      // Not "Check the dates" any more: that is this screen's other source, so
+      // the bar would offer the screen you are standing on. After a change is
+      // applied the next thing is the course it changed.
+      return holds('Folded in', state.updates.length, 'addition', { label: 'Edit the course', screen: 'edit' });
 
     // ── Study ─────────────────────────────────────────────────────────────
     case 'study': {
@@ -350,10 +401,9 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     }
 
     case 'ask':
-    case 'chat':
       return {
         hero: {
-          label: screen === 'ask' ? 'Ask Claude' : 'Chat',
+          label: 'Ask Claude',
           said: courses === 0 ? 'No course loaded, so answers come without a guide in hand.' : `Answering with ${count(courses, 'course')} in hand.`,
         },
         stats: term,
@@ -459,34 +509,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         bar: { primary: { label: 'Tonight', screen: 'tonight' } },
       };
     }
-
-    case 'worked':
-    case 'weekly': {
-      // Two screens, two spans: the weekly report is the last seven days and
-      // What worked is the term. Counting the term on both put the same
-      // number under two different questions.
-      const ticked = dated.filter((i) => state.done[i.id]);
-      const lastWeek = ticked.filter((i) => i.daysAway <= 0 && i.daysAway >= -7);
-      return {
-        hero:
-          screen === 'weekly'
-            ? { label: 'Weekly report', meta: 'Last seven days', figure: num(lastWeek.length), foot: 'ticked off' }
-            : { label: 'What worked', meta: 'This term', figure: num(ticked.length), foot: 'ticked off so far' },
-        stats: term,
-        bar: { primary: { label: 'The week ahead', screen: 'ahead' } },
-      };
-    }
-
-    case 'check':
-      return {
-        hero: {
-          label: 'Check the dates',
-          figure: num(catalog.items.length),
-          foot: 'syllabus dates to check against the LMS',
-        },
-        stats: term,
-        bar: { primary: { label: 'Connect accounts', screen: 'connect' } },
-      };
 
     // ── Campus ────────────────────────────────────────────────────────────
     case 'meals':

@@ -76,11 +76,14 @@ describe('a reminder about a day rather than a thing', () => {
     expect(landingFor(r.id)).toEqual({ screen: 'calendar' });
   });
 
-  it('puts the weekly report on the report', () => {
+  it('puts the Sunday reminder on the report, at the week', () => {
+    // The week used to be a screen of its own and is a grain of the report
+    // now. The screen name alone would land somebody on today's report,
+    // having told them the reminder was about the week.
     const sunday = new Date('2026-09-06T19:00:00');
     const [r] = dueReminders(sunday, { ...off(), sun: true } as Record<NotifKey, boolean>, { items: [], classes: [] });
     expect(r).toBeTruthy();
-    expect(landingFor(r.id)).toEqual({ screen: 'weekly' });
+    expect(landingFor(r.id)).toEqual({ screen: 'brief', grain: 'week' });
   });
 
   it('puts "3 due today" on home, which is where they are', () => {
@@ -112,7 +115,14 @@ describe('reading what a notification carried', () => {
   });
 
   it('takes a screen it knows', () => {
-    expect(landingFrom({ screen: 'weekly' })).toEqual({ screen: 'weekly' });
+    expect(landingFrom({ screen: 'brief' })).toEqual({ screen: 'brief' });
+  });
+
+  it('takes the grain beside the screen, and only one it knows', () => {
+    expect(landingFrom({ screen: 'brief', grain: 'week' })).toEqual({ screen: 'brief', grain: 'week' });
+    // A payload from a build that named a grain this one does not have opens
+    // the report rather than nothing.
+    expect(landingFrom({ screen: 'brief', grain: 'fortnight' })).toEqual({ screen: 'brief' });
   });
 
   it('refuses a screen it does not', () => {
@@ -135,7 +145,7 @@ describe('whether it is worth navigating at all', () => {
   });
 
   it('says yes for anywhere else', () => {
-    expect(worthGoing({ screen: 'weekly' } as never)).toBe(true);
+    expect(worthGoing({ screen: 'brief' } as never)).toBe(true);
     expect(worthGoing({ screen: 'item', item: 'x' } as never)).toBe(true);
   });
 });

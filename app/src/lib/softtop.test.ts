@@ -143,9 +143,18 @@ describe('an account with something in it', () => {
   });
 
   it('counts a finished deadline once, not once per list it appears in', () => {
-    // What worked summed today's done items and then the whole term's, so a
-    // thing ticked off this morning was counted twice.
-    expect(softTop('worked', input()).hero?.figure).toBe('0');
+    // The term report summed today's done items and then the whole term's, so
+    // a thing ticked off this morning was counted twice.
+    expect(softTop('brief', input({ report: 'term' })).hero?.figure).toBe('0');
+  });
+
+  it('reads the report’s grain, so the hero is about what is on screen', () => {
+    // Three screens merged into one with a grain switch. A hero that ignored
+    // the grain would put today's count above the term's report.
+    const hero = (report: State['report']) => softTop('brief', input({ report })).hero?.label;
+    expect(hero('day')).toBe('Your day');
+    expect(hero('week')).toBe('This week');
+    expect(hero('term')).toBe('What worked');
   });
 
   it('does not answer two different questions with the same hero', () => {
@@ -157,7 +166,6 @@ describe('an account with something in it', () => {
       return h ? [h.label, h.meta, h.figure, h.said, h.foot].join('|') : null;
     };
     expect(said('cloud')).not.toBe(said('connect'));
-    expect(said('worked')).not.toBe(said('weekly'));
   });
 
   it('tells Settings about its storage and its account, not about the term', () => {
