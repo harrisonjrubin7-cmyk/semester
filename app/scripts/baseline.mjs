@@ -147,7 +147,7 @@ const press = (page, text, notNav = true) =>
   page.evaluate(
     ([t, skipNav]) => {
       const el = [...document.querySelectorAll('button')]
-        .filter((e) => !skipNav || !e.closest('.soft-nav'))
+        .filter((e) => !skipNav || !e.closest('.shelf-nav'))
         .find((e) => (e.innerText || '').trim() === t);
       if (!el) return false;
       el.click();
@@ -156,34 +156,46 @@ const press = (page, text, notNav = true) =>
     [text, notNav],
   );
 
-/** Turn on the soft shell, and optionally a ground and the largest text. */
+/**
+ * Turn on the soft layout and the shelf navigation, and optionally a ground
+ * and the largest text.
+ *
+ * Two pages and three choices, not one switch. When this was written the soft
+ * layout drew its own rows and everything lived on one settings screen; the
+ * app has since split them — Layout holds how a screen is drawn and how you
+ * move between screens, Colour holds the ground and the type size — and made
+ * navigation a choice independent of layout. A run that picks only the layout
+ * gets no rows to walk and reaches one screen.
+ */
 async function set(page, { ground, largest } = {}) {
-  await page.goto(`${B}/?screen=setLook`, { waitUntil: 'domcontentloaded' });
+  /** Click the first button whose first line matches. */
+  const pick = (what, test) =>
+    page.evaluate(
+      (t) => {
+        const el = [...document.querySelectorAll('button')].find((e) =>
+          new RegExp(t).test((e.innerText || '').trim()),
+        );
+        if (!el) return false;
+        el.click();
+        return true;
+      },
+      test,
+    ).then((ok) => {
+      if (!ok) problems.push(`could not choose ${what}`);
+      return page.waitForTimeout(700);
+    });
+
+  await page.goto(`${B}/?screen=setNav`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1400);
-  const soft = await page.evaluate(() => {
-    const el = [...document.querySelectorAll('button')].find(
-      (e) => /^Soft\b/.test((e.innerText || '').trim()) && /Cards lifted/.test(e.innerText),
-    );
-    if (!el) return false;
-    el.click();
-    return true;
-  });
-  if (!soft) problems.push('could not switch to the soft shell');
-  await page.waitForTimeout(700);
-  if (ground) {
-    const ok = await page.evaluate((name) => {
-      const el = [...document.querySelectorAll('button')].find(
-        (e) => (e.innerText || '').trim().split('\n')[0] === name,
-      );
-      if (!el) return false;
-      el.click();
-      return true;
-    }, ground);
-    if (!ok) problems.push(`no ground called ${ground}`);
-    await page.waitForTimeout(700);
+  await pick('the soft layout', '^Soft\\b[\\s\\S]*Cards lifted');
+  await pick('the shelf navigation', '^Shelves\\b');
+
+  if (ground || largest) {
+    await page.goto(`${B}/?screen=setLook`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(1400);
+    if (ground) await pick(`the ${ground} ground`, `^${ground}(\\n|$)`);
+    if (largest) await pick('the largest text size', '^LARGEST$');
   }
-  if (largest && !(await press(page, 'LARGEST'))) problems.push('no LARGEST text size');
-  await page.waitForTimeout(700);
 }
 
 /** What one screen looks like, and whether anything about it is wrong. */
@@ -215,7 +227,7 @@ async function capture(page, name, tag) {
         (area ? area.scrollWidth > area.clientWidth + 1 : false),
       bar: !!bar,
       pinned,
-      said: !!document.querySelector('.soft-nav-said'),
+      said: !!document.querySelector('.shelf-nav-said'),
       // A hero with a dash in it is an empty hero with extra steps.
       emptyHero: hero ? /(^|·)\s*[—-]\s*(·|$)/.test(hero.innerText.replace(/\n/g, ' · ')) : false,
     };
@@ -231,24 +243,24 @@ async function capture(page, name, tag) {
 /** Walk both navigation rows, which is every screen the app has. */
 async function everyScreen(page, tag) {
   const shelves = await page.evaluate(() =>
-    [...document.querySelectorAll('.soft-nav-row [role="tab"]')].map((e) => e.innerText.trim()),
+    [...document.querySelectorAll('.shelf-nav-row [role="tab"]')].map((e) => e.innerText.trim()),
   );
   if (shelves.length !== 9) problems.push(`${tag}: ${shelves.length} shelves, expected 9`);
   const seen = new Set();
   for (let s = 0; s < shelves.length; s++) {
-    await page.evaluate((i) => document.querySelectorAll('.soft-nav-row [role="tab"]')[i].click(), s);
+    await page.evaluate((i) => document.querySelectorAll('.shelf-nav-row [role="tab"]')[i].click(), s);
     await page.waitForTimeout(550);
     const n = await page.evaluate(
-      () => document.querySelectorAll('.soft-nav-row')[1].querySelectorAll('button').length,
+      () => document.querySelectorAll('.shelf-nav-row')[1].querySelectorAll('button').length,
     );
     for (let i = 0; i < n; i++) {
       await page.evaluate(
-        (j) => document.querySelectorAll('.soft-nav-row')[1].querySelectorAll('button')[j].click(),
+        (j) => document.querySelectorAll('.shelf-nav-row')[1].querySelectorAll('button')[j].click(),
         i,
       );
       await page.waitForTimeout(500);
       const label = await page.evaluate(
-        () => document.querySelector('.soft-nav-row:nth-of-type(2) .is-on')?.innerText.trim() ?? '?',
+        () => document.querySelector('.shelf-nav-row:nth-of-type(2) .is-on')?.innerText.trim() ?? '?',
       );
       seen.add(label);
       await capture(page, label, `${tag}-${label.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`);
@@ -275,20 +287,20 @@ for (const ground of GROUNDS) {
     const { ctx, page } = await open(width);
     await set(page, { ground });
     const shelves = await page.evaluate(() =>
-      [...document.querySelectorAll('.soft-nav-row [role="tab"]')].map((e) => e.innerText.trim()),
+      [...document.querySelectorAll('.shelf-nav-row [role="tab"]')].map((e) => e.innerText.trim()),
     );
     for (let s = 0; s < shelves.length; s++) {
-      await page.evaluate((i) => document.querySelectorAll('.soft-nav-row [role="tab"]')[i].click(), s);
+      await page.evaluate((i) => document.querySelectorAll('.shelf-nav-row [role="tab"]')[i].click(), s);
       await page.waitForTimeout(450);
       const labels = await page.evaluate(() =>
-        [...document.querySelectorAll('.soft-nav-row')[1].querySelectorAll('button')].map((e) =>
+        [...document.querySelectorAll('.shelf-nav-row')[1].querySelectorAll('button')].map((e) =>
           e.innerText.trim(),
         ),
       );
       for (const [i, label] of labels.entries()) {
         if (!KEY.includes(label)) continue;
         await page.evaluate(
-          (j) => document.querySelectorAll('.soft-nav-row')[1].querySelectorAll('button')[j].click(),
+          (j) => document.querySelectorAll('.shelf-nav-row')[1].querySelectorAll('button')[j].click(),
           i,
         );
         await page.waitForTimeout(600);
