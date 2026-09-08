@@ -71,15 +71,56 @@ export function store(dbName: string, storeName: string, version = 1): Store {
 /**
  * A short id that sorts by when it was made.
  *
- * Time plus a little noise. Two records made in the same millisecond is not
- * something a person can do, but a restored backup landing on the same clock
- * tick is, and an id collision silently merges two things that were separate.
+ * Time, a counter, and some noise — in that order, so the string still sorts
+ * by when it was made.
  *
  * Written three times before this — `lib/files.ts`, `lib/snapshots.ts` and a
  * private one in `lib/threads.ts` with its own prefix and four characters of
  * noise instead of six. The prefix was the only real difference, so it is a
  * parameter, and there is one of these now.
+ *
+ * ## Why a counter as well as the noise
+ *
+ * The two ways two ids can collide are not the same problem and do not have
+ * the same answer.
+ *
+ * *In one tab*, a loop can make hundreds of records inside a single
+ * millisecond — importing a syllabus, restoring a backup, breaking a deadline
+ * into steps. Every one of those shares a timestamp, so the whole guarantee
+ * rested on the noise, and noise only ever gives you a probability: with six
+ * base36 characters, two hundred ids in one tick collide about once in a
+ * hundred thousand runs. Rare is not never, and `threads.test.ts` asks for
+ * never — it makes two hundred and expects two hundred. The counter makes
+ * that exact. Two ids from this module in the same millisecond cannot be
+ * equal, because the counter has moved.
+ *
+ * *Between tabs*, or when a backup made on another device is restored onto
+ * this one, there is no shared counter to lean on and the noise is the only
+ * defence. So it stays, at its full six characters — and it is drawn as a
+ * number rather than sliced out of one.
+ *
+ * `Math.random().toString(36).slice(2, 8)` was the obvious way and it does not
+ * keep its promise: the string it slices is only as long as the double needs,
+ * so a value like 0.5 renders as "0.i" and the six characters of noise are
+ * one. It is rare and it is silent, and the case it weakens is the one case
+ * the counter cannot help with. Taking a whole number below 36⁶ and padding
+ * it is the same six characters every time, uniformly.
+ *
+ * The counter wraps at 36³ and restarts at zero on reload, neither of which
+ * reopens the door: a wrap needs 46,656 records inside one millisecond, and a
+ * reload that lands in the same millisecond as the id before it is back to
+ * the between-tabs case, which is what the noise is for.
  */
+let made = 0;
+
+/** 36⁶, the number of six-character base36 strings there are. */
+const NOISE = 36 ** 6;
+
 export function newId(prefix = ''): string {
-  return `${prefix}${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  made = (made + 1) % 46_656;
+  const run = made.toString(36).padStart(3, '0');
+  const noise = Math.floor(Math.random() * NOISE)
+    .toString(36)
+    .padStart(6, '0');
+  return `${prefix}${Date.now().toString(36)}-${run}${noise}`;
 }
