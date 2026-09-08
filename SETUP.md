@@ -277,9 +277,7 @@ path as a literal and `app.html` builds its own at run time, so a search and
 replace would only catch half. Regenerating the website is safe; the repair is
 re-applied on the next build.
 
-**But it belongs upstream.** Wherever these three pages are generated, no
-emitted URL should carry an `app/public/` prefix — it is a repository path, not
-a served one.
+It belongs upstream; see [the list below](#what-has-to-change-in-the-generator).
 
 #### The other fourteen files, which the shim could never have reached
 
@@ -369,8 +367,56 @@ Two things keep that patch honest, and both are tests rather than intentions:
 - The injected reader is checked against `readDue` on every wording in the data.
   They must agree; `readDue` is the one with the reasoning behind it.
 
-**Upstream, this is one line:** read the time out of the wording instead of
-`parseInt`-ing the front of it, and stop assuming the minutes are `59`.
+Upstream this is one line; see [the list below](#what-has-to-change-in-the-generator).
+
+#### What has to change in the generator
+
+Everything above is a **repair applied at build time to `dist/`**, because the
+thing that produces these three pages is not in this repository. Neither is the
+website's source: `docs/data-contract.md` §0 records the search, by name and by
+content. The bundles arrived as a zip of three built HTML files and a README.
+
+So this section is the handover. Each item is a defect in whatever emits the
+bundles, and each has a repair here that becomes dead weight the moment it is
+fixed properly.
+
+| # | In the generated page | What it should emit | Repaired here by |
+| --- | --- | --- | --- |
+| 1 | `app/public/…` in a URL | the path alone — Vite publishes the *contents* of `public/`, so the prefix is a repository path and never part of a URL | `PATH_SNIPPET`, a runtime shim |
+| 2 | `_ds/industry-ec2ca40c-…/styles.css`, `_ds_bundle.js` | inline the stylesheet, as the pages already inline the rest of their CSS, or emit a path relative to the deployed page — not one into the design-system source tree | the two real files copied out of `project/_ds/` |
+| 3 | twelve `icons/*.svg` as `mask-image` | ship the files beside the page, or inline them as `data:` URIs | generated from `app/src/components/icons.data.ts` |
+| 4 | `parseInt(it.time, 10)`, then `new Date(…, hh, 59)` | read the time out of the wording, and take the minutes from it instead of assuming `59` | `BROKEN` → `MENDED`, a source patch |
+| 5 | `const BASE = 'https://harrisonjrubin7-cmyk.github.io/semester'` in `study.html`, and `window.open('https://harrisonjrubin7-cmyk.github.io/semester/#/home')` in `index.html` | derive the base from `location.pathname`, the way the injected return link does | **nothing yet — see below** |
+
+**Item 5 is the one nothing here repairs**, and it is worth knowing what that
+costs. `study.html` sets an `<audio>` element's `src` to `BASE + l.file`, so a
+fork, a renamed repository or a local `vite preview` streams from *this*
+deployment or not at all; the front door's "open the app" button goes to this
+deployment from anywhere. On the real site both work, which is exactly why it is
+easy to miss. It is left alone because it is the one item where the shim would
+be guessing — `location.pathname` is right for a fork and wrong for a page
+deliberately pointing somebody at the hosted app — so it wants a decision rather
+than a patch.
+
+Two things make these safe to leave until then. The committed bundles are
+untouched — byte for byte as they arrived — so **regenerating the website loses
+nothing**, and every repair is re-applied on the next build. And where a repair
+depends on matching a literal, a test asserts the literal is still there, so a
+regeneration that fixes item 4 upstream turns `npm test` red rather than
+silently reverting the site. Red there means "delete the patch", not "something
+broke".
+
+Finally, the bundles answer a question `docs/data-contract.md` §0 was still
+holding open. It listed the `semweb:*` keys among the things no file in the
+repository mentioned; the bundles carry them, and they are the website's half of
+the mapping table that section could not fill. §0 now records this, and the
+names are:
+
+| Page | Keys it reads and writes |
+| --- | --- |
+| `index.html` | `semweb:cloud:v1` |
+| `app.html` | `semweb:v1`, `semweb:custom:v1`, `semweb:grades:v1`, `semweb:places:v1` |
+| `study.html` | `semweb:study:v1`, `semweb:custom:v1` |
 
 ## 5 · The optional connectors
 

@@ -1,11 +1,21 @@
 /**
- * Give the website's inner pages a way back to the app.
+ * Everything this repository has to repair in the website before it ships.
  *
  * The website is three pages built elsewhere and dropped into `public/web/` as
- * self-contained bundles. Its front door links back to the app; `app.html` and
- * `study.html` do not — they link to each other and nowhere else — so somebody
- * who lands on the term or the study side from a shared link has no way home
- * except the address bar.
+ * self-contained bundles. The generator that emits them is not in this
+ * repository — `docs/data-contract.md` §0 records the search — so none of what
+ * follows can be fixed at the source from here. Each one is a build step, and
+ * each is dead weight the day the generator is fixed. SETUP.md §4 carries that
+ * handover list; the four repairs, in the order they appear below, are:
+ *
+ * 1. **A way back to the app.** The front door links home; `app.html` and
+ *    `study.html` link only to each other, so somebody landing on the term or
+ *    the study side from a shared link has no way home but the address bar.
+ * 2. **Paths into the repository's own source tree**, which cost the study page
+ *    every one of its units.
+ * 3. **A countdown that could not read a deadline**, which showed "NaNm left".
+ * 4. **Files the pages ask for and nothing published** — the design system, and
+ *    twelve icons drawn as CSS masks.
  *
  * ## Why this runs at build time rather than being edited into the files
  *
@@ -16,17 +26,19 @@
  * just stops being there.
  *
  * So the committed bundles stay exactly as they arrived, byte for byte, and
- * this appends to the copies in `dist/`. Regenerating the website loses
- * nothing, and the return link is code in this repository that can be read and
- * tested rather than a string somebody remembered to paste.
+ * this works on the copies in `dist/`. Regenerating the website loses nothing,
+ * and every repair is code in this repository that can be read and tested
+ * rather than a string somebody remembered to paste.
  *
  * ## Why the address is computed in the browser
  *
  * The front door's own link home is written out in full —
  * `https://…github.io/semester/#/home` — which is right for exactly one
- * deployment. The snippet below reads `location.pathname` instead and cuts
- * everything from `/web/` onwards, so it is right under any base: a fork, a
- * local `vite preview`, a repository somebody renamed.
+ * deployment, and `study.html` streams its audio from the same hard-coded
+ * `BASE`. Neither is repaired here; both are item 5 on SETUP.md's list. The
+ * snippet below reads `location.pathname` instead and cuts everything from
+ * `/web/` onwards, so what this file *does* add is right under any base: a
+ * fork, a local `vite preview`, a repository somebody renamed.
  *
  * The element re-attaches itself on a `MutationObserver`, because the bundler
  * replaces the document as it unpacks and would otherwise take the link with
