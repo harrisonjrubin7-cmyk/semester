@@ -76,7 +76,12 @@ export function ScoreField({
           // stops being what was typed and becomes what was recorded.
           if (!touched || !next.trim()) return;
           const read = interpret(next, system, assumed);
-          announce(`${label}: ${next}${read.said ? `. ${read.said}` : ''}`);
+          // "Grade saved · …", which is the shape the change strip sets: a
+          // short label and the detail it introduces. The label is also the
+          // part that was missing from the announcement — "Your score for
+          // the midterm in ECON 1020: 91" said what the number is and never
+          // said that it had been kept.
+          announce(`Grade saved · ${label}: ${next}${read.said ? `. ${read.said}` : ''}`);
         }}
         aria-label={label}
         aria-describedby={say ? id : undefined}

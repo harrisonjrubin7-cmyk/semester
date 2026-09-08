@@ -127,8 +127,11 @@ export function BreakItUp({ item }: { item: DatedItem }) {
                 },
               });
             }
+            // `mine` is where the steps actually are, and you are not on it
+            // — you are on whatever screen the deadline was showing.
             say(
-              `${steps.length} steps added to your list, the first on ${steps[0].date.slice(5)}. Edit or delete them like any other.`,
+              `Steps added · ${steps.length} on your list, the first on ${steps[0].date.slice(5)}. Edit or delete them like any other.`,
+              'mine',
             );
           }}
           style={{

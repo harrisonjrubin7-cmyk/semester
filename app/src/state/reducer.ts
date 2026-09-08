@@ -60,7 +60,13 @@ export function reducer(state: State, action: Action): State {
   // announced is a property of outcomes across the whole app, not of any one
   // area of it. See `components/Said.tsx`.
   if (action.type === 'say') {
-    return { ...state, said: action.said, saidAt: action.at };
+    return { ...state, said: action.said, saidAt: action.at, saidTo: action.to ?? null };
+  }
+  // Five seconds later. The sentence goes rather than a flag being set: the
+  // live region has long since announced it, and a sentence kept around after
+  // its strip is down is a thing for somebody to wonder about later.
+  if (action.type === 'forgetSaid') {
+    return state.said ? { ...state, said: '', saidTo: null } : state;
   }
   // The sync banner, dismissed. Kept beside `say` because it is the same
   // shape of thing: a cross-cutting notice rather than one area's business.

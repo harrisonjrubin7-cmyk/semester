@@ -395,7 +395,7 @@ function DayTask({ task: t }: { task: PersonalTask }) {
   const move = (days: number) => {
     const to = shiftIso(t.date ?? '', days);
     dispatch({ type: 'editTask', id: t.id, patch: { date: to } });
-    say(`${t.title} moved to ${longLabel(isoToDate(to))}.`);
+    say(`Moved · ${t.title} to ${longLabel(isoToDate(to))}.`, 'mine');
   };
 
   return (

@@ -1069,7 +1069,6 @@ export default function App() {
     return (
       <div className="desk">
         <Fresh />
-        <Said />
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
             and not another. Renders nothing unless the sheet is open. */}
         <Keys />
@@ -1095,6 +1094,13 @@ export default function App() {
         <Rail />
         <div className="device device-pane">
           <Header />
+          {/* Under the header, not above it: the change strip covers the
+              screen's own name otherwise, and "moved to Friday" means a
+              different thing on Calendar than it does on Today. Inside the
+              pane rather than beside it for the same reason `SampleMark` is —
+              `.desk` is a two-column grid and a bare child takes the rail's
+              column. */}
+          <Said />
           {/* Under the header rather than above it, and inside the pane rather
               than beside it: `.desk` is a two-column grid, and a bare element
               at its root takes the rail's column. */}
@@ -1127,7 +1133,6 @@ export default function App() {
         Skip to content
       </a>
       <Fresh />
-      <Said />
       <Ringing />
       <PushTop />
       <Tapped />
@@ -1140,6 +1145,8 @@ export default function App() {
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
         {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
       <Header />
+      {/* Under the header. See the note at the wide layout's copy. */}
+      <Said />
       <SampleMark />
       {trouble}
       {soft && <SoftNav />}

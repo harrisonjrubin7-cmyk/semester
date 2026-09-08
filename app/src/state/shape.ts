@@ -635,6 +635,16 @@ export interface Ephemeral {
    */
   said: string;
   saidAt: number;
+  /**
+   * The screen the last announcement is about, where there is one.
+   *
+   * So the change strip can be tapped through to the record it names — "moved
+   * to Friday" is worth a good deal more when the thing that moved is one tap
+   * away. Optional because most outcomes are already on the screen you are
+   * looking at, and a strip that navigates somewhere you already are is a
+   * strip that punishes you for reading it.
+   */
+  saidTo: Screen | null;
   /** The unit a guess-first run is on, and how far through it is. */
   guessUnit: number;
   guessIdx: number;
@@ -860,6 +870,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     drillGot: 0,
     revealed: false,
     said: '',
+    saidTo: null,
     saidAt: 0,
     guessUnit: 0,
     guessIdx: 0,
@@ -1153,7 +1164,14 @@ export type Action =
   // Opens a guess-first run on one unit. `at` is passed in rather than read
   // from Date.now() inside the reducer, like every other timestamped action.
   | { type: 'guessFirst'; courseId: string; unit: number }
-  | { type: 'say'; said: string; at: number }
+  // `to` widens the existing action rather than adding a second one: the
+  // strip and the live region are one announcement, and two actions would be
+  // two things to keep in step. See `components/Said.tsx`.
+  | { type: 'say'; said: string; at: number; to?: Screen }
+  // The change strip's clock, run the way the undo toast's is: the component
+  // sets a timeout and dispatches this, so what is on screen stays a fact
+  // about the state rather than a boolean hidden inside a component.
+  | { type: 'forgetSaid' }
   | { type: 'forgetSyncNote' }
   | { type: 'setWanted'; patch: Partial<Wanted> }
   | { type: 'dismissProgramme'; id: string }
