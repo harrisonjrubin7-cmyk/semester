@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { HIGHLIGHT_MS, sectionOf, takeLooking } from '../../lib/settings';
+import { HIGHLIGHT_MS, pageTitle, sectionOf, takeLooking } from '../../lib/settings';
 import type { Screen } from '../../lib/types';
 
 /**
@@ -22,17 +22,27 @@ import type { Screen } from '../../lib/types';
  * somebody skip straight to the controls instead of through the list that got
  * them here.
  */
+/**
+ * @param screen Which page this is. Its *name* comes from `lib/settings.ts`
+ *   rather than from a prop, because a page's name was in three places —
+ *   that registry, a `title` each page passed here, and a switch in
+ *   `App.tsx` — and had already drifted: the index and the header bar
+ *   disagreed with the heading on the page they opened. One list names it,
+ *   and renaming a page is one edit.
+ * @param blurb The sentence under the heading. Stays a prop: it is prose
+ *   written for this page and read only here, unlike the name, which four
+ *   other things need.
+ */
 export function SettingsPage({
   screen,
-  title,
   blurb,
   children,
 }: {
   screen: Screen;
-  title: string;
   blurb?: string;
   children: (lit: string) => ReactNode;
 }) {
+  const title = pageTitle(screen);
   const heading = useRef<HTMLHeadingElement>(null);
   // Taken during the first render rather than in an effect, so the group is
   // already lit on the frame the page appears on instead of flashing plain

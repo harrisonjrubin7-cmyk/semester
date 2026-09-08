@@ -163,7 +163,6 @@ export function SettingsLook() {
   return (
     <SettingsPage
       screen="setLook"
-      title="Appearance"
       blurb="Ten grounds and seven metals, and none of them changes what anything does. Pick what you can read for four hours."
     >
       {(lit) => (

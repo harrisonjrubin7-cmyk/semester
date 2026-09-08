@@ -113,6 +113,7 @@ const Chat = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
+import { settingsTitle } from './lib/settings';
 import { chromeFor, homeShape } from './lib/chrome';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
@@ -253,24 +254,26 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Today', title: 'Alerts' };
     case 'settings':
       return { kicker: 'Preferences', title: 'Settings' };
-    // The settings pages carry their own heading inside the page, so the bar
-    // above says where they sit rather than repeating the title underneath.
+    /*
+     * The settings pages, named from the one list that names them.
+     *
+     * This was eight `case`s with the titles written out again, and they had
+     * already drifted: the bar said "Appearance" and "Navigation" over pages
+     * that call themselves "Colour and type" and "Layout and navigation",
+     * because renaming a page meant editing `lib/settings.ts`, the page
+     * itself, and this — and two out of three is what actually happens.
+     * `settingsTitle` reads the registry, so there is one name and a rename
+     * is one edit.
+     */
     case 'setLook':
-      return { kicker: 'Settings', title: 'Appearance' };
     case 'setNav':
-      return { kicker: 'Settings', title: 'Navigation' };
     case 'setAlerts':
-      return { kicker: 'Settings', title: 'Alerts' };
     case 'setCourses':
-      return { kicker: 'Settings', title: 'Courses' };
     case 'setGrading':
-      return { kicker: 'Settings', title: 'Grading' };
     case 'setWorkload':
-      return { kicker: 'Settings', title: 'Workload' };
     case 'setStorage':
-      return { kicker: 'Settings', title: 'Storage' };
     case 'setAbout':
-      return { kicker: 'Settings', title: 'About' };
+      return { kicker: 'Settings', title: settingsTitle(state.screen) };
     case 'mine':
       return { kicker: 'Yours, not the syllabus', title: 'Personal' };
     case 'note':
@@ -376,8 +379,33 @@ function useHeader(): { kicker: string; title: string } {
     case 'chat':
       return { kicker: `${provider()} · this term`, title: 'Chat' };
     default:
-      return { kicker: today, title: 'Today' };
+      return fallbackHeader(state.screen, today);
   }
+}
+
+/**
+ * The title for a screen this switch has no case for.
+ *
+ * It used to be `{ kicker: today, title: 'Today' }` — flatly, for anything
+ * unnamed above — and four screens were quietly wearing it: **Everything**,
+ * **How this works**, **Your data** and **Privacy**. Each said "Today", with
+ * today's date over it, above content that was plainly not today. A screen
+ * that lies about which screen it is is worse than one with no title, and
+ * nothing failed, because a default that always returns something can never
+ * be missing a case.
+ *
+ * So the fallback asks the registry, which already holds a label and a
+ * sentence for every screen and is what the directory, the shelves and search
+ * all read. A screen added to `DESTINATIONS` is now named in the header for
+ * free, and `header.test.ts` fails if one ever is not.
+ *
+ * `Today` remains the answer for `home` and for anything genuinely unlisted,
+ * which is the honest last resort rather than the first one.
+ */
+function fallbackHeader(screen: Screen, today: string): { kicker: string; title: string } {
+  const known = destination(screen);
+  if (!known) return { kicker: today, title: 'Today' };
+  return { kicker: 'In the app', title: known.short ?? known.label };
 }
 
 function Header() {

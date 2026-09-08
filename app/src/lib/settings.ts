@@ -27,6 +27,18 @@ export interface SettingsRow {
   /** The screen this pushes. A real screen, so Back and deep links work. */
   screen: Screen;
   label: string;
+  /**
+   * A shorter name, where the full one will not fit the header bar.
+   *
+   * Optional, and only two pages need it. It is here rather than written out
+   * again in `App.tsx` because the name of a page was, until now, in *three*
+   * places — this list, the `title` a page hands `SettingsPage`, and a switch
+   * in `App.tsx` — and three copies of a name drift the moment one is
+   * renamed. They had: the header bar still said "Appearance" and
+   * "Navigation" over pages calling themselves "Colour and type" and "Layout
+   * and navigation". `settingsTitle` below is the one answer now.
+   */
+  short?: string;
   /** What is on that page, in the order somebody would look for them. */
   holds: string;
   /**
@@ -54,6 +66,7 @@ export const SETTINGS: SettingsSection[] = [
       {
         screen: 'setNav',
         label: 'Layout and navigation',
+        short: 'Layout',
         holds: 'Which navigation, how screens are drawn, what Today shows',
         keywords:
           'tabs tab bar navigation nav feed home screen springboard shelves pills icons layout shell grouped drawn soft presentation arrangement structure order sections today rearrange move labels badges directory everything two systems',
@@ -61,6 +74,7 @@ export const SETTINGS: SettingsSection[] = [
       {
         screen: 'setLook',
         label: 'Colour and type',
+        short: 'Colour',
         holds: 'Ground, accent, fonts, text size, spacing',
         keywords:
           'theme dark light mode colour color accent ground background parchment fog ink paper font fonts typeface heading body text size larger bigger smaller spacing density line height reading width corners rounded contrast appearance look style tone voice',
@@ -138,6 +152,28 @@ export const SETTINGS: SettingsSection[] = [
     ],
   },
 ];
+
+/**
+ * The full name of a settings page — the heading on the page itself.
+ *
+ * `settingsTitle` below is the same name shortened for the header bar, which
+ * also holds three icons. Two readings of one entry, never two entries.
+ */
+export function pageTitle(screen: Screen): string {
+  return SETTINGS.flatMap((s) => s.rows).find((r) => r.screen === screen)?.label ?? 'Settings';
+}
+
+/**
+ * What the header bar calls a settings page. One name, from one list.
+ *
+ * `short` where the full label would be truncated in a bar that also holds
+ * three icons; the label otherwise. Anything that is not a settings page
+ * comes back empty, so callers can fall through to their own switch.
+ */
+export function settingsTitle(screen: Screen): string {
+  const row = SETTINGS.flatMap((s) => s.rows).find((r) => r.screen === screen);
+  return row ? (row.short ?? row.label) : '';
+}
 
 /** Every settings page, for the deep-link allowance and for tests. */
 export const SETTINGS_SCREENS: Screen[] = SETTINGS.flatMap((s) => s.rows.map((r) => r.screen));

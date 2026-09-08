@@ -1,16 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  SETTINGS,
-  SETTINGS_SCREENS,
-  findSetting,
-  isSettingsPage,
-  lights,
-  markLooking,
-  nothingFound,
-  rowFor,
-  sectionOf,
-  takeLooking,
-} from './settings';
+import { findSetting, isSettingsPage, lights, markLooking, nothingFound, rowFor, sectionOf, SETTINGS, SETTINGS_SCREENS, settingsTitle, takeLooking } from './settings';
 import { ROOTS } from '../state/shape';
 import { rootOf } from './nav';
 
@@ -68,6 +57,32 @@ describe('where the pages sit', () => {
     expect(sectionOf('setGrading')).toBe('Academic');
     expect(sectionOf('home')).toBe('');
     expect(rowFor('setAbout')?.label).toBe('About');
+  });
+});
+
+/*
+ * A page's name was in three places — this registry, the `title` the page
+ * hands `SettingsPage`, and a switch in `App.tsx` — and had already drifted:
+ * the header bar said "Appearance" over a page calling itself "Colour and
+ * type". This is the check that there is one name.
+ */
+describe('what a page is called', () => {
+  it('names every settings page, from the registry', () => {
+    for (const row of SETTINGS.flatMap((s) => s.rows)) {
+      expect(settingsTitle(row.screen), row.screen).toBe(row.short ?? row.label);
+      expect(settingsTitle(row.screen).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('says nothing about a screen that is not a settings page', () => {
+    expect(settingsTitle('home')).toBe('');
+    expect(settingsTitle('courses')).toBe('');
+  });
+
+  it('keeps the short name short enough for a bar with three icons in it', () => {
+    for (const row of SETTINGS.flatMap((s) => s.rows)) {
+      expect(settingsTitle(row.screen).length, row.screen).toBeLessThanOrEqual(20);
+    }
   });
 });
 

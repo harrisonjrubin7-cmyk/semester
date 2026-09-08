@@ -29,7 +29,6 @@ export function SettingsGrading() {
   return (
     <SettingsPage
       screen="setGrading"
-      title="Grading"
       blurb="Per course, because syllabi disagree. Nothing here changes a grade — it changes what the app reads one as."
     >
       {(lit) => (

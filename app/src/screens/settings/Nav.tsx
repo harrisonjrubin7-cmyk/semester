@@ -51,7 +51,6 @@ export function SettingsNav() {
   return (
     <SettingsPage
       screen="setNav"
-      title="Layout and navigation"
       blurb="Four navigations and three layouts, in every combination. Nothing here hides anything — every screen stays reachable whichever you pick."
     >
       {(lit) => (

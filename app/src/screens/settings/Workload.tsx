@@ -17,7 +17,6 @@ export function SettingsWorkload() {
   return (
     <SettingsPage
       screen="setWorkload"
-      title="Workload"
       blurb="What the app assumes about your time. Get these wrong and every estimate it gives you is wrong in the same direction."
     >
       {(lit) => (

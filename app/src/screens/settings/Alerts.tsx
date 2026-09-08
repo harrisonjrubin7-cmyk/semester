@@ -22,7 +22,6 @@ export function SettingsAlerts() {
   return (
     <SettingsPage
       screen="setAlerts"
-      title="Alerts"
       blurb="Nothing here is on until you turn it on. Everything is worked out on this device."
     >
       {(lit) => (

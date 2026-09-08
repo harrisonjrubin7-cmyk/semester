@@ -24,7 +24,6 @@ export function SettingsCourses() {
   return (
     <SettingsPage
       screen="setCourses"
-      title="Courses"
       blurb="What the app is holding this term, and the university it reads the rest of the app against."
     >
       {(lit) => (

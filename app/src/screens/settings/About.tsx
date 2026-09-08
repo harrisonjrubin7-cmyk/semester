@@ -22,7 +22,6 @@ export function SettingsAbout() {
   return (
     <SettingsPage
       screen="setAbout"
-      title="About"
       blurb="Where the app's own figures come from, and how to say something is wrong."
     >
       {(lit) => (
