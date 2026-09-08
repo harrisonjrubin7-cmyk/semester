@@ -1391,6 +1391,26 @@ input[type='search'].input {
   color: var(--app-accent);
 }
 
+/*
+ * The tile's number, where it has one.
+ *
+ * Smaller than the hero's figure and larger than everything else on the tile:
+ * a grid of eight tiles each shouting a percentage is a dashboard, and one
+ * where the grade is the same size as the room number is a list.
+ */
+.soft-tile-figure {
+  font-family: var(--font-heading);
+  font-size: calc(26px * var(--text-scale, 1));
+  line-height: var(--leading-tight);
+  color: var(--app-fg);
+  margin-top: var(--sp-2);
+}
+
+/* The course colour, as an edge. See `LightTile`. */
+.soft-tile.is-tinted {
+  border-left: 3px solid var(--tile-edge);
+}
+
 .soft-tile-sub {
   font-size: calc(12px * var(--text-scale, 1));
   color: var(--app-dim);
@@ -1588,6 +1608,24 @@ input[type='search'].input {
   /* Two across on a phone, and as many as fit after that. */
   grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
   gap: var(--sp-5);
+}
+
+/*
+ * A grid of tiles, two across on a phone.
+ *
+ * The same measurements as the folder overlay's grid, because they are the
+ * same object at the same size — a tile you tap to open one thing — and two
+ * grids of light tiles that disagree by four pixels is the kind of difference
+ * nobody can name and everybody can see.
+ */
+.soft-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: var(--sp-5);
+}
+
+.soft-tiles .soft-tile {
+  text-align: left;
 }
 
 /* The steps ahead, on the soft shell's opening panel. */

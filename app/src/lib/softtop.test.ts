@@ -160,6 +160,27 @@ describe('an account with something in it', () => {
     expect(said('worked')).not.toBe(said('weekly'));
   });
 
+  it('tells Settings about its storage and its account, not about the term', () => {
+    // It used to report courses, alerts and screens-used: three true numbers
+    // about the semester, on the one screen that is not about the semester.
+    const stats = softTop('settings', input()).stats.map((s) => s.label);
+    expect(stats).toContain('On this device');
+    expect(stats).toContain('Account');
+    expect(stats).not.toContain('Courses');
+  });
+
+  it('says the size in a unit a person reads, and never an empty account', () => {
+    const size = softTop('settings', input()).stats.find((s) => s.label === 'On this device')!;
+    expect(size.value).toMatch(/^\d+(\.\d)? (KB|MB)$/);
+  });
+
+  it('shows the sync word it was given, and a dash when there is none', () => {
+    const said = (over?: string) =>
+      softTop('settings', { ...input(), sync: over }).stats.find((s) => s.label === 'Account')!.value;
+    expect(said('Synced')).toBe('Synced');
+    expect(said()).toBe('—');
+  });
+
   it('counts what the screen holds rather than what it shows', () => {
     // Term deadlines holds a list of its own, so its figure is that list's
     // length — not the count of syllabus deadlines, which belongs to the term.

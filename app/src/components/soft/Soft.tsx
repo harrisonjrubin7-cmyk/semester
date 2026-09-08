@@ -24,7 +24,7 @@
  * the tokens in step 1 — and `.card` is left where it is.
  */
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Blueprint } from '../Blueprint';
 
 /** A caps label. The one piece of typography every part of the shell shares. */
@@ -159,22 +159,44 @@ export function Step({
   );
 }
 
-/** The default tile: one glyph, a caps label, a sentence under it. */
+/**
+ * The default tile: one glyph, a caps label, a sentence under it.
+ *
+ * `figure` is the slot a tile gets when the thing it stands for has a number
+ * worth reading — a course and its grade. Optional, because most tiles are a
+ * name and a sentence and a number would be an invention.
+ *
+ * `tint` is the course colour, drawn as an edge rather than a wash for the
+ * reason the drawn card gives: four tinted tiles is a dashboard, and the look
+ * is not one. It is a custom property rather than a class because the value
+ * comes from data — the same reason `StatRow` sets its column count inline.
+ */
 export function LightTile({
   glyph,
   label,
+  figure,
   sub,
+  tint,
   onClick,
 }: {
   glyph?: ReactNode;
   label: ReactNode;
+  figure?: ReactNode;
   sub?: ReactNode;
+  tint?: string;
   onClick?: () => void;
 }) {
   return (
-    <Blueprint plain as="button" onClick={onClick} className="soft-tile surface">
+    <Blueprint
+      plain
+      as="button"
+      onClick={onClick}
+      className={`soft-tile surface${tint ? ' is-tinted' : ''}`}
+      style={tint ? ({ ['--tile-edge' as string]: tint } as CSSProperties) : undefined}
+    >
       {glyph ? <div className="soft-tile-glyph">{glyph}</div> : null}
       <Caps>{label}</Caps>
+      {figure === undefined ? null : <div className="soft-tile-figure">{figure}</div>}
       {sub ? <div className="soft-tile-sub">{sub}</div> : null}
     </Blueprint>
   );

@@ -7,6 +7,9 @@ import { ShareCourse } from '../components/ShareCourse';
 import { Attendance } from '../components/Attendance';
 import { DropBy } from '../components/DropBy';
 import { Page } from '../components/Page';
+import { LightTile } from '../components/soft/Soft';
+import { useSoft } from '../components/shell/useShell';
+import { standing } from '../lib/grades';
 import { has } from '../lib/search';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
@@ -58,6 +61,7 @@ function CoursesTabs({
  */
 export function Courses() {
   const { state, dispatch, now, catalog } = useStore();
+  const soft = useSoft();
   const tint = (id: string) => tintFor(state.yours, id);
   const ahead = upcomingItems(catalog, now);
   if (catalog.empty) return <FirstRun where="in your courses" />;
@@ -109,7 +113,50 @@ export function Courses() {
           <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
           {/* Absent until there is more than one term. See `components/TermSwitch`. */}
           <TermSwitch />
-          {shown.map((c) => {
+          {/*
+            The soft layout shows the same courses as a grid of tiles.
+
+            The handoff asks for "light tiles per course with grade", and the
+            grade is the half that was missing rather than the tiles: a card
+            here has never carried one, so the answer to "how am I doing in
+            this course" was a different screen. A tile is small enough that
+            the grade is the second thing on it rather than the ninth.
+
+            What the card has and the tile does not is the professor, the
+            meeting pattern and the full course name. None of those is lost —
+            they are on the course itself, one tap away, which is where the
+            card was taking you anyway.
+          */}
+          {soft ? (
+            <div className="soft-tiles">
+              {shown.map((c) => {
+                const next = ahead.find((i) => i.c === c.id);
+                const mark = standing(c, state.grades, {
+                  pieces: state.pieces,
+                  drops: state.drops,
+                }).current;
+                return (
+                  <LightTile
+                    key={c.id}
+                    label={c.code}
+                    tint={tint(c.id)?.base}
+                    // A course with nothing entered has no grade, and a dash
+                    // is not a grade. It says so instead.
+                    figure={mark === null ? undefined : `${Math.round(mark)}%`}
+                    sub={
+                      mark === null
+                        ? `No scores yet · ${next ? next.dueShort : 'nothing due'}`
+                        : next
+                          ? `Next ${next.dueShort}`
+                          : 'Nothing scheduled'
+                    }
+                    onClick={() => dispatch({ type: 'openCourse', id: c.id })}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+          shown.map((c) => {
             const next = ahead.find((i) => i.c === c.id);
             return (
               <Blueprint
@@ -180,7 +227,8 @@ export function Courses() {
                 </div>
               </Blueprint>
             );
-          })}
+          })
+          )}
 
           <button
             type="button"
