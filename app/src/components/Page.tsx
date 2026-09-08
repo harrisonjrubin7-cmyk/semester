@@ -9,7 +9,6 @@ import {
   type ReactNode,
 } from 'react';
 import { useStore } from '../state/store';
-import { Search as SearchIcon } from './Icons';
 import type { SearchAdapter } from '../lib/search';
 import { holdBox, takeSeed } from '../lib/screenbox';
 
@@ -34,12 +33,12 @@ const Inside = createContext(false);
  * is why the gap above the tab bar is different depending on where you are.
  *
  * It is also where a screen's own filter appears when one is asked for — and
- * no longer as a box standing on top of all fifty-nine screens. The header
- * carries a search icon on every screen already, so a field under it was the
- * same tool drawn twice, and on the forty-three screens with nothing of their
- * own to filter it was a field whose only use was to forward what you typed to
- * the icon beside it. The screens that do filter still filter; the field for
- * it arrives when somebody asks. See `search` below and `lib/search.ts`.
+ * nothing about it is drawn until then. The header carries a search icon on
+ * every screen already; a field under it was the same tool twice, and a line
+ * offering to open one was the same tool three times. So the frame holds no
+ * search chrome of its own: the sixteen screens with rows to filter still
+ * filter, on `/` or on the whole-app search handing this screen a query. See
+ * `search` below and `lib/search.ts`.
  *
  * ## What this does not do
  *
@@ -87,11 +86,11 @@ export function Page<T>({
   /**
    * What searching this screen means. See `lib/search.ts`.
    *
-   * With one, `children` is called with the rows that survived the filter, and
-   * the field itself is off screen until somebody asks for it: `/`, or taking
-   * the whole-app search's offer to "search “trounstine” in Sources". Without
-   * one there is no field here at all — the header's search icon is what a
-   * screen that is a form, a report or a player has, and it is enough.
+   * With one, `children` is called with the rows that survived the filter. The
+   * field itself is not drawn on the screen at all: it appears for `/`, and for
+   * the whole-app search's offer to "search “trounstine” in Sources", which
+   * arrives with the query already in it. Without an adapter there is nothing
+   * here either way — the header's search icon is what every screen has.
    */
   search?: SearchAdapter<T>;
   /**
@@ -225,8 +224,14 @@ export function Page<T>({
   }, [open]);
 
   /*
-   * Open the field and put the caret in it — the one way in, for both the key
-   * and the button, so they cannot drift into two behaviours.
+   * Open the field and put the caret in it.
+   *
+   * Nothing on the screen calls this: no button, no line, nothing standing
+   * above a list waiting to be noticed. `/` calls it on a laptop, and arriving
+   * from the whole-app search's "12 sources match — search in Sources" opens
+   * the field the other way, through the seed. On a phone that offer is the
+   * one way in, and searching a screen the offer does not cover — People, Help
+   * — means the whole-app search rather than filtering in place.
    */
   const reveal = () => {
     wantsCaret.current = true;
@@ -285,48 +290,6 @@ export function Page<T>({
         with no list is one that filters nothing. What is left is the case the
         field is actually for: a list of sixty rows, and the one row you want.
       */}
-      {/*
-        The way in on a phone.
-
-        `/` opens the field on a laptop, and the whole-app search offers to look
-        inside a few of these screens — but neither reaches People or Help from
-        a phone, and a filter nobody can open is a filter that has been deleted.
-        So: one quiet line, on the sixteen screens that have rows of their own,
-        rather than a field on all fifty-nine.
-      */}
-      {search && !open && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginTop: blurb !== undefined && actions !== undefined ? 'var(--sp-6)' : 0,
-            ...side,
-          }}
-        >
-          <button
-            type="button"
-            className="bare tappable tap-y"
-            onClick={reveal}
-            aria-label={search.placeholder}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--sp-2)',
-              width: 'auto',
-              flex: 'none',
-              fontFamily: 'var(--font-heading)',
-              fontSize: 'var(--type-xs)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              opacity: 0.55,
-            }}
-          >
-            <SearchIcon size={13} />
-            Filter
-          </button>
-        </div>
-      )}
-
       {search && open && (
         <div
           style={{
