@@ -111,6 +111,11 @@ export const STRATEGY: Record<string, Strategy> = {
   feed: 'theirs',
   shell: 'theirs',
   badges: 'theirs',
+  // An arrangement somebody made on purpose, and one they made once. It
+  // follows the account rather than the device for the same reason the shell
+  // does — having to drag the tiles back into place on the laptop is exactly
+  // the work the look keys exist to avoid.
+  groupOrder: 'theirs',
   // Ergonomics: about the screen in front of you, not about you. See `mine`.
   textSize: 'mine',
   // `mine` like every other look setting: how this device phrases things is a
