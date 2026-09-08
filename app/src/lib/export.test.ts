@@ -3,6 +3,7 @@ import {
   ALARMS,
   appointmentEvents,
   backupDate,
+  backupOf,
   readBackup,
   cell,
   deadlineCsv,
@@ -16,6 +17,7 @@ import {
   toIcs,
 } from './export';
 import { parseIcs } from './ics';
+import { DEFAULT_PERSISTED, initialEphemeral, type State } from '../state/shape';
 import { NO_TIME } from './duetime';
 import type { Appointment, Course, DatedItem, Note } from './types';
 
@@ -333,6 +335,45 @@ describe('readBackup', () => {
     const { data } = readBackup(sneaky);
     expect(data.tokens).toBeUndefined();
     expect(data.screen).toBeUndefined();
+  });
+});
+
+/**
+ * What a backup is for, which the restructure did not change.
+ *
+ * Acceptance criterion 10 asks that export and import round-trip identically
+ * before and after Command 2. They do, and the reason is worth pinning down
+ * rather than re-checking by hand every time a look key is added: a backup
+ * carries the semester, not the way it is drawn. No accent, no ground, no
+ * shell — and so no `groupOrder`, the arrangement key the launcher added.
+ *
+ * That is the right line and it is easy to cross by accident, because a look
+ * key is a field on the same `Persisted` object as everything a backup does
+ * carry. Restoring somebody's backup onto their laptop should give them their
+ * courses, not repaint their laptop.
+ */
+describe('a backup carries the semester, not the look', () => {
+  const LOOK = [
+    'accent', 'textSize', 'ground', 'density', 'corners', 'typeface', 'bodyface',
+    'lineHeight', 'readingWidth', 'iconShape', 'labels', 'badges', 'feed', 'shell',
+    'groupOrder', 'hue',
+  ];
+
+  it('names no look key', () => {
+    const keys = Object.keys(backupOf({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date()) } as State));
+    expect(keys.filter((k) => LOOK.includes(k))).toEqual([]);
+  });
+
+  it('will not restore one either, however the file was edited', () => {
+    // The allow-list is the guard; this is what stops a hand-written file
+    // repainting an account it was restored into.
+    const meddled = JSON.stringify({
+      format: 'semester.backup.v1',
+      notes: [],
+      ...Object.fromEntries(LOOK.map((k) => [k, { any: 'thing' }])),
+    });
+    const { data } = readBackup(meddled);
+    for (const k of LOOK) expect(data[k], k).toBeUndefined();
   });
 });
 

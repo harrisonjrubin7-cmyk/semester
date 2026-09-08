@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# The screenshot baseline. `scripts/baseline.mjs` regenerates it; the script is
+# what is committed, because a folder of pictures nobody can remake is a folder
+# of pictures nobody dares delete.
+shots
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
