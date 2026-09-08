@@ -579,10 +579,22 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'account',
+    /*
+     * Data rather than You, which is where it sat while carrying the `data`
+     * tag — the file already thought this was a data screen and shelved it
+     * with Progress and Settings anyway.
+     *
+     * Signing in is the decision about whether this term leaves the device
+     * at all, which is the question the other four on that shelf answer:
+     * what comes in (Connect accounts), what is held (Your data), what is
+     * sent (Privacy), and how to take it out (Take it with you). The move
+     * also puts Data back over the five-screen floor after Files & mail was
+     * deleted, and leaves You on five rather than six.
+     */
     label: 'Account',
     blurb: 'Sign in so the same semester is on your phone and your laptop.',
     keywords: 'sign in log in register sync devices password email',
-    group: 'You',
+    group: 'Data',
     taskTags: ['data'],
     root: 'me',
   },
