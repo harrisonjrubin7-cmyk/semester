@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESTINATIONS, lately, saysFor } from './nav';
+import { DESTINATIONS, GROUPS, destinationsIn, lately, saysFor } from './nav';
 import { NO_SCHOOL, type Capabilities } from './school';
 import { BUNDLED } from '../data/schools';
 
@@ -146,5 +146,46 @@ describe('the places you keep going back to', () => {
   it('stops at four, because a list of twelve is the directory again', () => {
     const many = ['grades', 'runway', 'essay', 'deck', 'exam', 'costs'];
     expect(lately(many, [], caps)).toHaveLength(4);
+  });
+});
+
+describe('the shelves the directory is arranged on', () => {
+  // The largest shelf is a row of pills on a phone. Eight is what fits when
+  // the row is allowed to scroll; more than that and the row stops being a
+  // thing you can learn the positions of.
+  const MOST_ON_A_SHELF = 8;
+
+  it('files every screen on exactly one shelf', () => {
+    const counted = GROUPS.reduce((n, g) => n + destinationsIn(g).length, 0);
+    expect(counted).toBe(DESTINATIONS.length);
+    for (const d of DESTINATIONS) expect(GROUPS).toContain(d.group);
+  });
+
+  it('keeps every shelf drawable as a single row', () => {
+    for (const g of GROUPS) {
+      expect(destinationsIn(g).length).toBeLessThanOrEqual(MOST_ON_A_SHELF);
+      // An empty shelf is a pill that leads nowhere.
+      expect(destinationsIn(g).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('holds the nine shelves in the order they are shown', () => {
+    // Order is the thing a student learns by position, so it is asserted
+    // rather than left to however the registry happens to be written.
+    expect(GROUPS).toEqual([
+      'Semester',
+      'Courses',
+      'Study',
+      'Make',
+      'Standing',
+      'Campus',
+      'Life',
+      'You',
+      'Data',
+    ]);
+  });
+
+  it('names each shelf once', () => {
+    expect(new Set(GROUPS).size).toBe(GROUPS.length);
   });
 });

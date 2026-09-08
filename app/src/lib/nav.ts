@@ -33,8 +33,53 @@ import { showing, type Facts } from './reveal';
  * the four things that *are* your term — today, the week, your courses, the
  * calendar — and Upkeep is the six you go to when something needs correcting,
  * adding or checking. Nobody opens "Check the dates" as part of their day.
+ *
+ * Nine now, because six could not be drawn. Yours had grown to fifteen, which
+ * is not a row of pills on a phone at any text size — it is a scroll with no
+ * end in sight, which is the thing shelves exist to stop. Upkeep held "how am
+ * I doing" beside "fix my data", two questions asked on different days;
+ * Standing takes the first and Data the second. Study held learning and
+ * producing together, so Make takes the producing.
+ *
+ * Grouped by what the student is doing rather than by where a screen was
+ * filed before, so several cross the old boundaries: Tonight and Ahead answer
+ * "what now" and sit under Semester; Mail is drafting, so it sits beside
+ * Draft it under Make; Costs is money rather than a campus service.
+ *
+ * The largest is eight and the smallest five, which is what keeps any one
+ * shelf drawable as a single row.
  */
-export type Group = 'Study' | 'Make' | 'Semester' | 'Upkeep' | 'Campus' | 'Yours';
+export type Group =
+  | 'Semester'
+  | 'Courses'
+  | 'Study'
+  | 'Make'
+  | 'Standing'
+  | 'Campus'
+  | 'Life'
+  | 'You'
+  | 'Data';
+
+/**
+ * The shelves in the order they are shown.
+ *
+ * One list, exported, because three files had each written their own copy —
+ * the tab chooser, the guidebook and the Everything screen — and a shelf
+ * added to the registry appeared in none of them until all three were edited.
+ * A regrouping is exactly the change that finds that bug, so the copies are
+ * gone and this is the order.
+ */
+export const GROUPS: Group[] = [
+  'Semester',
+  'Courses',
+  'Study',
+  'Make',
+  'Standing',
+  'Campus',
+  'Life',
+  'You',
+  'Data',
+];
 
 export interface Destination {
   screen: Screen;
@@ -127,7 +172,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Courses',
     blurb: 'Every course, its deadlines, its grading and its professor.',
     keywords: 'class syllabus professor office hours grading credits',
-    group: 'Semester',
+    group: 'Courses',
     taskTags: ['due', 'stand'],
     root: 'courses',
   },
@@ -165,7 +210,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Work',
     blurb: 'Paste an assignment and get it broken down — rubric, plan, dates, what to ask.',
     keywords: 'assignment essay paper homework problem set instructions rubric deadline draft feedback outline plan generate write',
-    group: 'Study',
+    group: 'Make',
     taskTags: ['study', 'make'],
     root: 'study',
   },
@@ -252,7 +297,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Import',
     blurb: 'Upload a syllabus and get the course back, checked before you keep it.',
     keywords: 'new syllabus pdf upload generate create import',
-    group: 'Upkeep',
+    group: 'Courses',
     taskTags: ['data'],
     root: 'courses',
   },
@@ -266,7 +311,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Edit',
     blurb: 'A syllabus is a first draft — fix dates, weightings, rooms and the AI policy.',
     keywords: 'edit change fix correct course syllabus date moved weighting grading room professor email meets credits delete deadline add assignment ai policy allowed banned rules',
-    group: 'Upkeep',
+    group: 'Courses',
     taskTags: ['data'],
     root: 'courses',
   },
@@ -276,7 +321,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Dates',
     blurb: 'Add/drop, withdrawal, registration — the dates your registrar sets, not a syllabus.',
     keywords: 'registrar term deadline add drop withdraw withdrawal pass fail audit registration enrol enroll academic calendar reading days finals exam period evaluations grades posted last day university school important dates w transcript',
-    group: 'Semester',
+    group: 'Courses',
     taskTags: ['due', 'ahead'],
     root: 'calendar',
   },
@@ -286,7 +331,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Notices',
     blurb: 'Paste the email that moved a deadline, and take the changes one at a time.',
     keywords: 'announcement announce email post update moved change changed cancelled canceled postponed rescheduled deadline date shift new due date brightspace canvas notice message professor said class email paste',
-    group: 'Upkeep',
+    group: 'Courses',
     taskTags: ['due', 'data'],
     root: 'courses',
   },
@@ -296,7 +341,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Costs',
     blurb: 'Books, fees and access codes, with what came back — and what the same course cost last time.',
     keywords: 'cost costs money price prices textbook textbooks book books buy rent rental sell back buyback bookstore fee fees access code clicker supplies spend spending budget expense expenses receipt total how much',
-    group: 'Campus',
+    group: 'Life',
     taskTags: ['campus', 'ahead'],
     root: 'courses',
   },
@@ -347,7 +392,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Worked',
     blurb: 'The end of a term, read back from your own evidence — and silent where the evidence is thin.',
     keywords: 'what worked end of term semester review retrospective looking back reflection how did it go study habits pattern patterns evidence december finals over improve next term learn about myself',
-    group: 'Upkeep',
+    group: 'Standing',
     taskTags: ['stand', 'ahead'],
     root: 'home',
   },
@@ -357,7 +402,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Weekly',
     blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',
     keywords: 'weekly week report review recap summary sunday end of week retrospective what happened how did the week go progress last week next week',
-    group: 'Upkeep',
+    group: 'Standing',
     taskTags: ['week', 'stand'],
     root: 'home',
   },
@@ -367,7 +412,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Ahead',
     blurb: 'The next seven days in hours — what is promised, what is due, where the room is.',
     keywords: 'week ahead next seven days forecast load hours busy workload plan planning free time capacity schedule how much time commitments heaviest day room',
-    group: 'Upkeep',
+    group: 'Semester',
     taskTags: ['week'],
     root: 'home',
   },
@@ -377,7 +422,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Check',
     blurb: 'Your syllabus dates against what the LMS calendar says today.',
     keywords: 'check dates changed moved deadline reconcile compare diff brightspace calendar feed ics syllabus out of date wrong date updated rescheduled verify audit',
-    group: 'Upkeep',
+    group: 'Standing',
     taskTags: ['due', 'data'],
     root: 'courses',
   },
@@ -386,7 +431,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Grades',
     blurb: 'What you have so far, and what the rest has to average.',
     keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
-    group: 'Upkeep',
+    group: 'Standing',
     taskTags: ['stand'],
     root: 'courses',
   },
@@ -405,7 +450,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Email',
     blurb: 'Draft the email you have been putting off — extension, question, meeting.',
     keywords: 'email mail write draft professor reply extension office hours absence recommendation letter follow up gmail outlook compose message send',
-    group: 'Campus',
+    group: 'Make',
     taskTags: ['campus', 'make'],
     root: 'courses',
   },
@@ -448,7 +493,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'People',
     blurb: 'The professors who will write about you, what you have actually talked about, and what you asked them for.',
     keywords: 'recommendation letter letters reference references professor mentor advisor office hours conversation relationship network networking grad school fellowship truman rhodes marshall boren scholarship internship referral thank you follow up',
-    group: 'Yours',
+    group: 'Life',
     taskTags: ['campus', 'ahead'],
     root: 'me',
   },
@@ -458,7 +503,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Degree',
     blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
     keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
-    group: 'Upkeep',
+    group: 'Standing',
     taskTags: ['ahead', 'stand'],
     root: 'me',
   },
@@ -468,7 +513,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Behind',
     blurb: 'What has gone by, what still fits, and the moves that are not working harder.',
     keywords: 'behind late overdue missed catch up caught up triage bad week overwhelmed stressed stress panic drowning too much falling behind help extension late policy recover crisis sick',
-    group: 'Upkeep',
+    group: 'Standing',
     taskTags: ['due', 'week', 'stand'],
     root: 'home',
   },
@@ -477,7 +522,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Tonight',
     blurb: 'How long you have, and where those hours buy the most against your grade.',
     keywords: 'tonight evening plan priority prioritise prioritize what should i do first order effort allocation worth it points per hour six hours study plan triage decide choose',
-    group: 'Study',
+    group: 'Semester',
     taskTags: ['study', 'week'],
     root: 'home',
   },
@@ -487,7 +532,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Apply',
     blurb: 'Internships, jobs and research posts — the deadlines that land on the same days as your coursework.',
     keywords: 'internship internships job jobs application applications apply applied recruiting recruitment career careers offer interview interviews resume cv cover letter fellowship scholarship grad school research assistant ra summer analyst deadline pipeline tracker handshake linkedin networking coffee chat referral',
-    group: 'Yours',
+    group: 'Life',
     taskTags: ['ahead', 'due'],
     root: 'mine',
   },
@@ -507,7 +552,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Timers',
     blurb: 'A countdown for anything, and an alarm at a time. Nothing to do with your courses.',
     keywords: 'timer timers alarm alarms clock countdown stopwatch minutes egg kitchen wake up wake me nap ring ringing remind reminder pomodoro count down set a timer set an alarm snooze',
-    group: 'Yours',
+    group: 'Life',
     taskTags: ['week', 'study'],
     root: 'mine',
   },
@@ -518,7 +563,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Personal',
     blurb: 'Your own tasks, appointments, notes, places and files.',
     keywords: 'mine personal todo task appointment note file attachment place own yours',
-    group: 'Yours',
+    group: 'Life',
     taskTags: ['due', 'week'],
     root: 'mine',
   },
@@ -530,7 +575,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Progress',
     blurb: 'Your load at a glance, and everything else the app can do.',
     keywords: 'me progress profile load more menu overview directory settings everything',
-    group: 'Yours',
+    group: 'You',
     taskTags: ['stand', 'app'],
     root: 'me',
   },
@@ -539,7 +584,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Account',
     blurb: 'Sign in so the same semester is on your phone and your laptop.',
     keywords: 'sign in log in register sync devices password email',
-    group: 'Yours',
+    group: 'You',
     taskTags: ['data'],
     root: 'me',
   },
@@ -549,7 +594,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Links',
     blurb: 'Campus sites, the bookstore, tickets, and any address you add.',
     keywords: 'links bookmarks shortcuts campus yes anchorlink brightspace onevu myvu bookstore books tickets game football basketball commodores social instagram twitter x address url website site',
-    group: 'Campus',
+    group: 'Life',
     taskTags: ['campus'],
     root: 'me',
   },
@@ -559,7 +604,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Connect',
     blurb: 'Your course site, Outlook, Google, Zoom — calendars and links in.',
     keywords: 'brightspace outlook microsoft google zoom apple icloud ics feed subscribe calendar claude anthropic api key sign in with claude',
-    group: 'Yours',
+    group: 'Data',
     taskTags: ['data'],
     root: 'me',
   },
@@ -569,7 +614,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Cloud',
     blurb: 'Pull a reading out of Drive or OneDrive; turn announcements into cards.',
     keywords: 'gmail email drive onedrive sharepoint documents attachments send tasks',
-    group: 'Yours',
+    group: 'Data',
     taskTags: ['data', 'study'],
     root: 'me',
   },
@@ -579,7 +624,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Guide',
     blurb: 'Every screen in the app, what it is for, and what it will not do.',
     keywords: 'help guide manual how do i what does documentation tour onboarding explain instructions getting started first time shortcuts keyboard reference handbook',
-    group: 'Yours',
+    group: 'You',
     taskTags: ['app'],
     root: 'me',
   },
@@ -601,7 +646,7 @@ export const DESTINATIONS: Destination[] = [
     blurb: 'Every screen in the app, what it does, and whether you have used it.',
     keywords:
       'everything all screens index directory list of features what can this app do capabilities map contents table of contents overview browse explore find a screen where is what is there tour inventory sitemap unused never opened shortcuts keys',
-    group: 'Yours',
+    group: 'You',
     taskTags: ['app'],
     root: 'me',
   },
@@ -611,7 +656,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Your data',
     blurb: 'Every record the app holds, what it weighs, and how much room is left.',
     keywords: 'data storage space records size counts quota full disk memory how many database indexeddb localstorage diagnostics health inspect browse export backup usage',
-    group: 'Yours',
+    group: 'Data',
     taskTags: ['data'],
     root: 'me',
   },
@@ -621,7 +666,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Privacy',
     blurb: 'What leaves this device, what it is used for, and how to delete all of it.',
     keywords: 'privacy policy data gdpr delete account remove erase retention what is stored where api key anthropic sent transmitted analytics tracking rights legal terms security row level',
-    group: 'Yours',
+    group: 'Data',
     taskTags: ['data'],
     root: 'me',
   },
@@ -631,7 +676,7 @@ export const DESTINATIONS: Destination[] = [
     short: 'Export',
     blurb: 'Download everything, or push it to Drive or OneDrive.',
     keywords: 'export download backup save csv ics markdown json zip archive google drive onedrive transfer migrate leave copy print spreadsheet excel calendar import restore',
-    group: 'Yours',
+    group: 'Data',
     taskTags: ['data'],
     root: 'me',
   },
@@ -640,7 +685,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Settings',
     blurb: 'Navigation, alerts, which courses are loaded.',
     keywords: 'preferences options remove course sample notifications feed tab bar',
-    group: 'Yours',
+    group: 'You',
     taskTags: ['data', 'app'],
     root: 'me',
   },
@@ -649,7 +694,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Alerts',
     blurb: 'What the app would have poked you about.',
     keywords: 'notifications reminders',
-    group: 'Yours',
+    group: 'You',
     taskTags: ['due', 'app'],
     root: 'me',
   },

@@ -1,4 +1,4 @@
-import { DESTINATIONS, type Destination, type Group } from './nav';
+import { DESTINATIONS, GROUPS, type Destination, type Group } from './nav';
 import { SHORTCUTS, keyLabel } from './keys';
 import {
   BADGES,
@@ -52,7 +52,7 @@ export interface Guidebook {
 }
 
 /** The six areas, in the order somebody meets them. */
-const GROUPS: Group[] = ['Semester', 'Study', 'Make', 'Upkeep', 'Campus', 'Yours'];
+
 
 /** What each area is for. The one piece of prose per group. */
 const AREA: Record<Group, string> = {
@@ -61,12 +61,18 @@ const AREA: Record<Group, string> = {
   Study:
     'Turning what a course holds into something you can be tested on. One guide per course, and several ways through it: cards, a quiz, a read-through, a cram sheet, slides. They all read the same material, so adding a reading updates every one of them at once.',
   Make:
-    'The tools that produce something — a practice paper, a deck, a diagram, a draft. These are the screens that ask for your own work rather than showing you the app’s.',
-  Upkeep:
-    'Keeping the app’s picture of your term true. Syllabi move, professors send emails, dates slip. Nothing here changes anything without showing you what it would change first.',
+    'The tools that produce something — a practice paper, a deck, a diagram, a draft, a letter. These are the screens that ask for your own work rather than showing you the app’s.',
+  Courses:
+    'The four courses themselves, and the ways their record is kept true. A syllabus moves, a professor sends an email, a date slips; nothing here changes anything without showing you what it would change first.',
+  Standing:
+    'Where you actually are. What each course is running at, what that does to the degree, and which weeks went by without being ticked off — the questions worth asking once a week rather than once a day.',
   Campus:
     'The parts of university that are not coursework — where a building is, what is on your meal plan, where you live, what is on this week.',
-  Yours: 'Your account, your data, how the app looks, and what it is allowed to do.',
+  Life:
+    'The term around the coursework. Your own notes and tasks, the hours you sit down for, the people, the applications, what it is all costing.',
+  You: 'Your account, how the app looks, and what it is allowed to do.',
+  Data:
+    'Where your semester is kept and what reaches it. The accounts you have connected, the copies held off this device, everything exportable, and what the app will and will not send.',
 };
 
 /**

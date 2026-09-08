@@ -18,7 +18,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { TabGlyph } from './TabIcon';
-import { destinationsFor, saysFor, type Group } from '../lib/nav';
+import { GROUPS, destinationsFor, saysFor } from '../lib/nav';
 import {
   MOST,
   MOST_CHOSEN,
@@ -32,7 +32,8 @@ import {
 import type { Screen } from '../lib/types';
 import { useRowStyle } from './shell/useShell';
 
-const SHELVES: Group[] = ['Semester', 'Study', 'Make', 'Campus', 'Upkeep', 'Yours'];
+// The shelves, from the one list in lib/nav.ts rather than a fourth copy.
+const SHELVES = GROUPS;
 
 /**
  * The bar as it will look.

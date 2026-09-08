@@ -8,7 +8,7 @@
  * worse than not trying.
  *
  * So: the drawn icon where one exists, and otherwise the icon of the shelf
- * the screen sits on in `lib/nav.ts`. Six shelves, six fallbacks. A student
+ * the screen sits on in `lib/nav.ts`. Nine shelves, nine fallbacks. A student
  * who puts Draft it, Make a deck and Draw it in the bar gets three pen nibs,
  * which is honest — they are three things from the same shelf — and the label
  * underneath is what tells them apart. The alternative was a blank square,
@@ -20,6 +20,7 @@ import {
   Bell,
   CalendarIcon,
   CampusIcon,
+  Check,
   CoursesIcon,
   MakeIcon,
   MapIcon,
@@ -49,12 +50,21 @@ const OWN: Partial<Record<Screen, Glyph>> = {
 };
 
 const SHELF: Record<Group, Glyph> = {
+  Semester: CalendarIcon,
+  Courses: CoursesIcon,
   Study: StudyIcon,
   Make: MakeIcon,
-  Semester: CalendarIcon,
-  Upkeep: UpkeepIcon,
+  // Standing is where you find out how it is going, and the tick is the mark
+  // the app uses for a thing settled — a grade in, a week worked.
+  Standing: Check,
   Campus: CampusIcon,
-  Yours: Person,
+  // Life is the term around the coursework, and Mine is the largest thing on
+  // it, so it lends its glyph the way Study and Make do.
+  Life: NotesIcon,
+  You: Person,
+  // Upkeep's glyph outlived Upkeep. Data is what that shelf actually held —
+  // the accounts, the copies, the export — so it keeps the wrench.
+  Data: UpkeepIcon,
 };
 
 function iconFor(screen: Screen): Glyph {
