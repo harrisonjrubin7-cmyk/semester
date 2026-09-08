@@ -75,3 +75,34 @@ describe('move', () => {
     expect([...out].sort()).toEqual([...DEFAULT_ORDER].sort());
   });
 });
+
+/*
+ * `ordered` says it makes a stored order safe to render from, and it read
+ * that order with `?? []` — a guard that catches null and undefined only. An
+ * order that came back a string reached `.filter` and threw, and Today
+ * rendered the screen boundary instead of the day. Storage does not
+ * typecheck, so neither does its type any more.
+ */
+describe('an order that is not an order', () => {
+  it.each([
+    ['a string', 'today'],
+    ['a number', 3],
+    ['an object', { 0: 'today' }],
+    ['true', true],
+    ['null', null],
+    ['undefined', undefined],
+    ['a list with rubbish in it', ['today', 7, null, {}, 'due']],
+  ])('renders the default order for %s', (_name, saved) => {
+    const out = ordered(saved as never);
+    expect(Array.isArray(out)).toBe(true);
+    // Every section the app has, and nothing it does not.
+    for (const id of DEFAULT_ORDER) expect(out).toContain(id);
+    expect(out.every((id) => typeof id === 'string')).toBe(true);
+    expect(new Set(out).size).toBe(out.length);
+  });
+
+  it('still keeps a good order', () => {
+    const mine = [...DEFAULT_ORDER].reverse();
+    expect(ordered(mine)).toEqual(mine);
+  });
+});
