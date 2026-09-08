@@ -11,6 +11,7 @@
  */
 
 import { useState } from 'react';
+import { Reorder } from './Reorder';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { ACCENTS } from '../lib/look';
@@ -131,33 +132,14 @@ export function YourCourses() {
                 ) : null}
               </button>
 
-              <button
-                type="button"
-                className="bare"
-                disabled={i === 0}
-                onClick={() =>
-                  dispatch({ type: 'setCourseOrder', order: reorder(shown, c.id, -1) })
-                }
-                aria-label={`Move ${c.code} up`}
-                style={{ width: 24, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'var(--type-lg)' }}
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                className="bare"
-                disabled={i === shown.length - 1}
-                onClick={() => dispatch({ type: 'setCourseOrder', order: reorder(shown, c.id, 1) })}
-                aria-label={`Move ${c.code} down`}
-                style={{
-                  width: 24,
-                  flex: 'none',
-                  opacity: i === shown.length - 1 ? 0.2 : 0.6,
-                  fontSize: 'var(--type-lg)',
-                }}
-              >
-                ↓
-              </button>
+              <Reorder
+                label={c.code}
+                width={24}
+                atStart={i === 0}
+                atEnd={i === shown.length - 1}
+                onUp={() => dispatch({ type: 'setCourseOrder', order: reorder(shown, c.id, -1) })}
+                onDown={() => dispatch({ type: 'setCourseOrder', order: reorder(shown, c.id, 1) })}
+              />
             </div>
 
             {isOpen && (

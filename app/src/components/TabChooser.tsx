@@ -15,6 +15,7 @@
  */
 
 import { useState } from 'react';
+import { Reorder } from './Reorder';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { TabGlyph } from './TabIcon';
@@ -152,34 +153,22 @@ export function TabChooser() {
             <div style={{ flex: 1, minWidth: 0, padding: '11px 0', fontSize: 'var(--type-md)' }}>
               {tabLabel(id)}
             </div>
+            {/* Drawn as ↑ and ↓, read as left and right: the bar is a row on
+                screen and this is a column on the page. `ways` is what keeps
+                the two honest without a second copy of the control. */}
+            <Reorder
+              label={tabLabel(id)}
+              ways={['left', 'right']}
+              atStart={i === 0}
+              atEnd={i === chosen.length - 1}
+              onUp={() => set(moveTab(tabs, id, -1))}
+              onDown={() => set(moveTab(tabs, id, 1))}
+            />
             <button
               type="button"
-              className="bare"
-              disabled={i === 0}
-              onClick={() => set(moveTab(tabs, id, -1))}
-              aria-label={`Move ${tabLabel(id)} left`}
-              style={{ width: 26, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'var(--type-lg)' }}
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              className="bare"
-              disabled={i === chosen.length - 1}
-              onClick={() => set(moveTab(tabs, id, 1))}
-              aria-label={`Move ${tabLabel(id)} right`}
-              style={{
-                width: 26,
-                flex: 'none',
-                opacity: i === chosen.length - 1 ? 0.2 : 0.6,
-                fontSize: 'var(--type-lg)',
-              }}
-            >
-              ↓
-            </button>
-            <button
-              type="button"
-              className="bare"
+              // The third control on this row, after the two arrows, and the
+              // same argument: up and down is where the room is.
+              className="bare tap-y"
               onClick={() => tryToggle(id)}
               aria-label={`Take ${tabLabel(id)} out of the bar`}
               style={{ width: 28, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}

@@ -130,7 +130,9 @@ export function Insights({
               */}
               <button
                 type="button"
-                className="bare"
+                // 24×17 as three caps letters. `tap-y`: it heads a row with
+                // the receipt beside it, so the room is above and below.
+                className="bare tap-y"
                 onClick={() => {
                   ai.forgetAbout();
                   ai.register(`about:insight:${f.id}`, {

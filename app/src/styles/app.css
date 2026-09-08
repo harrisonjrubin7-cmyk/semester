@@ -947,6 +947,75 @@ a:hover {
   background: rgba(212, 217, 226, 0.26);
 }
 
+/* ── Tap targets ──────────────────────────────────────────────────────────
+ *
+ * A fingertip is about 44px across and does not shrink to match a nine-pixel
+ * caps label. An audit of every screen at 390px found 104 targets under 30px:
+ * the reorder arrows in settings at 26×23, the sample-semester banner's two
+ * answers at 112×20, ADD and EDIT on the links screen at 30×17, two raw
+ * checkboxes at 13×13 and 18×18. Each is a miss, and the app's own spacing
+ * note already says a miss costs more than the line it saved.
+ *
+ * ## Why the area grows and the drawing does not
+ *
+ * The obvious fix — make everything 44px tall — would redraw the app. This is
+ * a dense design on purpose, its type and spacing are held to a scale by
+ * `styles/rules.ts`, and a settings list whose arrows suddenly need 44px a row
+ * is a different screen. So the *target* grows and the *mark* stays put: a
+ * transparent overlay, centred on the control, reaching out to 44px in
+ * whichever directions have room.
+ *
+ * ## Which directions, and why it is asked rather than assumed
+ *
+ * An overlay that reaches in every direction is worse than a small target,
+ * not better: two chips 6px apart would each claim 19px of the other's space,
+ * the later one in the DOM would win the overlap, and a careful tap on the
+ * first would open the second. Nothing about that failure is visible.
+ *
+ * So the axis is named at each site. `.tap-y` for something in a horizontal
+ * row — a chip, a pair of arrows — which has room above and below and none
+ * beside it. `.tap-x` for something in a vertical list. `.tap` for something
+ * standing alone, which can have both. `tap.test.ts` re-measures every screen
+ * and fails on any pair of targets whose areas overlap.
+ */
+.tap,
+.tap-x,
+.tap-y {
+  position: relative;
+}
+
+.tap::after,
+.tap-x::after,
+.tap-y::after {
+  content: '';
+  position: absolute;
+  /* Centred on the control: half the shortfall on each side, and never
+     negative, so a control already big enough is left exactly as it is. */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* Not `pointer-events: none` — this element *is* the target. It sits above
+     the label and inherits the button's own click. */
+  pointer-events: auto;
+}
+
+.tap::after {
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+}
+
+/* A horizontal row: reach up and down, never sideways into a neighbour. */
+.tap-y::after {
+  width: 100%;
+  height: max(100%, 44px);
+}
+
+/* A vertical list: reach sideways, never up or down into the row above. */
+.tap-x::after {
+  width: max(100%, 44px);
+  height: 100%;
+}
+
 /* Rows and cards the prototype made clickable with an inline cursor. */
 .tappable {
   cursor: pointer;

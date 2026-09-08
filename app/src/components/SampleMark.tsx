@@ -54,7 +54,7 @@ export function SampleMark() {
       <span style={{ flex: 1, minWidth: 0, opacity: 0.8 }}>The semester this app ships with</span>
       <button
         type="button"
-        className="bare"
+        className="bare tap-y"
         onClick={() => {
           adopt();
           say('Taken on · They are your courses now, editable like any you import.', 'courses');
@@ -66,7 +66,7 @@ export function SampleMark() {
       <span aria-hidden="true" style={{ opacity: 0.3, flex: 'none' }}>·</span>
       <button
         type="button"
-        className="bare"
+        className="bare tap-y"
         onClick={() => {
           dispatch({ type: 'setSample', on: false });
           say('Removed. Your own courses are what is left.');
@@ -79,6 +79,15 @@ export function SampleMark() {
   );
 }
 
+/*
+ * `tap-y` on both, not `tap`: they sit side by side with a separator between
+ * them, so an overlay reaching sideways would have each claiming the other's
+ * space. Up and down is free — the strip is the full width of the screen and
+ * what is above and below it is the header and the page, neither of which has
+ * anything tappable at this height.
+ *
+ * Measured 112×20 and 69×20 before, which is a fingertip and a half short.
+ */
 const link = {
   flex: 'none',
   width: 'auto',

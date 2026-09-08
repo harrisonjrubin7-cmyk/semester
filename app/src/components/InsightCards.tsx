@@ -82,7 +82,10 @@ function One({ insight }: { insight: Insight }) {
         */}
         <button
           type="button"
-          className="bare tappable"
+          // 193×17 as a line of caps. `tap-y`: it is a full-width row of its
+          // own inside the card, with the detail below it, so up and down is
+          // where the room is.
+          className="bare tappable tap-y"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
           style={{
@@ -102,7 +105,11 @@ function One({ insight }: { insight: Insight }) {
         {insight.action && (
           <button
             type="button"
-            className="bare tappable"
+            /* The card's one way out, at 108×17 — the size of two caps words.
+               `tap-y` like the toggle it shares this row with: the row is
+               `space-between`, so they sit at opposite ends and the room a
+               thumb needs is above and below. */
+            className="bare tappable tap-y"
             onClick={() => dispatch({ type: 'go', screen: insight.action!.screen })}
             style={{
               width: 'auto',

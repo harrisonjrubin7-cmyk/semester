@@ -300,10 +300,14 @@ export function AccountScreen() {
         button that looks broken.
       </div>
 
+      {/* Two text links side by side, 14px apart — so `tap-y` on both. An
+          overlay reaching sideways would have each claiming the other's
+          space, and the one later in the DOM would quietly win the overlap.
+          Measured 102×19: the size of the words, not of a thumb. */}
       <div style={{ display: 'flex', gap: 14, marginTop: 18 }}>
         <button
           type="button"
-          className="bare"
+          className="bare tap-y"
           onClick={() => setMode(mode === 'in' ? 'up' : 'in')}
           style={{ fontSize: 'var(--type-sm)', opacity: 0.7, width: 'auto' }}
         >
@@ -312,7 +316,7 @@ export function AccountScreen() {
         {mode === 'in' && email.trim() && (
           <button
             type="button"
-            className="bare"
+            className="bare tap-y"
             onClick={() => void run(() => sendReset(email.trim()))}
             style={{ fontSize: 'var(--type-sm)', opacity: 0.5, width: 'auto' }}
           >
