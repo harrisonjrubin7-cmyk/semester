@@ -5,12 +5,24 @@
  * another, so what it does and does not claim is written down here and said
  * again on the screen.
  *
- * **Verification proves an address, not an enrolment.** A confirmed
- * @vanderbilt.edu address means somebody controls a Vanderbilt mailbox. It
- * does not mean they are in ECON 1020, because nothing here can read the
- * registrar — no student-usable API exposes a class roster, and there will not
- * be one. So a room is people who say they are in that class, and the screen
- * says exactly that rather than implying a roster.
+ * **Verification proves an address, not an enrolment.** A confirmed address at
+ * a school's own domain means somebody controls a mailbox there. It does not
+ * mean they are in ECON 1020, because nothing here can read the registrar — no
+ * student-usable API exposes a class roster, and there will not be one. So a
+ * room is people who say they are in that class, and the screen says exactly
+ * that rather than implying a roster.
+ *
+ * **Which domain is a fact about the school, not a constant.** This file used
+ * to hold `DOMAIN = 'vanderbilt.edu'` and refuse everyone else outright, which
+ * is the one thing the ground rules for school support say never to do. The
+ * domains come off the school profile now, and a school that lists none gets
+ * no domain check — with the screen saying so, because a room whose membership
+ * is weaker than somebody assumes is worse than one that admits it.
+ *
+ * **A room belongs to a school.** The key is the school, the term and the
+ * course code together. Without the school in it, four universities' ECON 1020
+ * would be one room the moment the domain gate came off — which is how a
+ * change that makes the app general makes it worse.
  *
  * **Blocking happens in the database.** A blocked person's messages are
  * removed by a row-level policy, so they never reach the device. Filtering in
@@ -27,12 +39,56 @@
  */
 
 import { cloud } from './cloud';
+import type { School } from './school';
 
-/** Only these addresses may take part, and only once confirmed. */
-export const DOMAIN = 'vanderbilt.edu';
+/**
+ * Whether an address is one this school recognises.
+ *
+ * A school listing no domains admits any confirmed address, because the
+ * alternative — refusing everybody at a university whose domains nobody has
+ * filled in — is refusing the whole feature to every school but one. The
+ * screen says which of the two is happening.
+ *
+ * Matched on the domain and its subdomains, never as a substring:
+ * `a@vanderbilt.edu.attacker.com` is not a Vanderbilt address.
+ */
+export function eligible(email: string | undefined | null, school: School | null): boolean {
+  if (typeof email !== 'string') return false;
+  const at = email.trim().toLowerCase().split('@')[1];
+  if (!at) return false;
+  const domains = (school?.emailDomains ?? [])
+    .map((d) => d.trim().toLowerCase().replace(/^@/, ''))
+    .filter(Boolean);
+  if (domains.length === 0) return true;
+  return domains.some((d) => at === d || at.endsWith(`.${d}`));
+}
 
-export function eligible(email: string | undefined | null): boolean {
-  return typeof email === 'string' && email.trim().toLowerCase().endsWith(`@${DOMAIN}`);
+/** What the screen may claim about who is in the room. */
+export function proves(school: School | null): string {
+  const domains = (school?.emailDomains ?? []).filter((d) => d.trim());
+  if (domains.length === 0) {
+    return 'Anyone signed in who says they study here can take part. Your school has no confirmed address domain in this app, so the room is people who say they are in the class — nothing more.';
+  }
+  return `Taking part needs a confirmed address at ${domains.join(' or ')}. That proves somebody controls a mailbox there. It does not prove they are in the class — nothing here can read a registrar — so the room is still people who say they are in it.`;
+}
+
+/**
+ * The key a room is stored under: the school, the term and the code.
+ *
+ * The school has to be in it. `ECON 1020` on its own was unambiguous only
+ * because one university could reach the feature at all, and the moment that
+ * stopped being true the same string would have put four campuses in one room.
+ */
+export function roomKey(schoolId: string, code: string): string {
+  const c = normaliseCode(code);
+  if (!c) return '';
+  return schoolId ? `${schoolId}/${c}` : c;
+}
+
+/** The course code back out of a room key, for anything that displays one. */
+export function codeOf(key: string): string {
+  const cut = key.lastIndexOf('/');
+  return cut === -1 ? key : key.slice(cut + 1);
 }
 
 /**
@@ -150,22 +206,33 @@ export interface Message {
  * are in that class, and that should be a thing you did, not a thing that
  * happened while you were importing a syllabus.
  */
-export function roomsFor(codes: string[], joined: string[]): { code: string; joined: boolean }[] {
+export interface Room {
+  /** What the room is stored under: school, then course code. */
+  key: string;
+  /** What it is called on the screen. */
+  code: string;
+  joined: boolean;
+}
+
+export function roomsFor(codes: string[], joined: string[], schoolId: string): Room[] {
   const seen = new Set<string>();
-  const out: { code: string; joined: boolean }[] = [];
+  const out: Room[] = [];
   for (const raw of codes) {
-    const code = normaliseCode(raw);
-    if (!code || seen.has(code)) continue;
-    seen.add(code);
-    out.push({ code, joined: joined.includes(code) });
+    const key = roomKey(schoolId, raw);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push({ key, code: codeOf(key), joined: joined.includes(key) });
   }
-  for (const code of joined) {
-    if (!seen.has(code)) {
-      seen.add(code);
-      out.push({ code, joined: true });
+  // Rooms already joined that no current course accounts for — a course
+  // dropped, or one this device has not imported. Keyed as they are stored, so
+  // one from another school still shows what it is rather than vanishing.
+  for (const key of joined) {
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push({ key, code: codeOf(key), joined: true });
     }
   }
-  return out.sort((a, b) => a.code.localeCompare(b.code));
+  return out.sort((a, b) => a.code.localeCompare(b.code) || a.key.localeCompare(b.key));
 }
 
 // ── The network ───────────────────────────────────────────────────────────
@@ -202,8 +269,13 @@ export async function myRooms(userId: string, term: string): Promise<string[]> {
 }
 
 export async function join(userId: string, term: string, code: string): Promise<void> {
-  const clean = normaliseCode(code);
-  if (!clean) throw new Error('That is not a course code. "ECON 1020", with the number.');
+  // `code` is a room key, which carries the school. Validate the course part
+  // of it — stripping the school here is what would put two campuses in one
+  // room, so the key goes to the database exactly as it arrived.
+  if (!normaliseCode(codeOf(code))) {
+    throw new Error('That is not a course code. "ECON 1020", with the number.');
+  }
+  const clean = code;
   const { error } = await (await cloud())
     .from('enrollments')
     .upsert({ user_id: userId, term, code: clean }, { onConflict: 'user_id,term,code' });
@@ -374,8 +446,8 @@ export function explain(message: string): string {
   const text = message.toLowerCase();
   if (text.includes('row-level security') || text.includes('violates row-level')) {
     return (
-      'The database would not accept that. Almost always this means the account is not a ' +
-      `confirmed @${DOMAIN} address, or you have not joined that class yet.`
+      'The database would not accept that. Almost always this means the address on the account ' +
+      'is not confirmed, or you have not joined that class yet.'
     );
   }
   if (text.includes('check constraint') && text.includes('code')) {
