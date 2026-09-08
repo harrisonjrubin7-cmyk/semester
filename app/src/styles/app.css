@@ -1081,3 +1081,114 @@ input[type='search'].input {
 @media (prefers-reduced-motion: reduce) {
   [style*='aiPulse'] { animation: none !important; }
 }
+
+/*
+ * ── The soft shell's surfaces ────────────────────────────────────────────
+ *
+ * One raised thing, and one pill. Both are classes rather than inline styles
+ * on purpose: this is the first of the soft shell's parts, and the shell is
+ * meant to reduce the count of hand-written containers rather than add to it.
+ *
+ * The shadows come from `tokensFor`, derived per ground, so these two rules
+ * are the same on Bone, on Ink and on Parchment and only the tokens differ.
+ */
+.surface {
+  background: var(--app-panel);
+  /* Under the shadow, always. A shadow is depth; the hairline is the edge,
+     and the edge is what survives when the shadow is taken away. */
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-soft-out);
+}
+
+.surface-in {
+  background: var(--app-bg);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-soft-in);
+}
+
+/*
+ * The pill: resting, active, disabled.
+ *
+ * Active is filled with the accent's darkest stop rather than its lightest.
+ * White on the light stop is about 2.4:1 and fails; on the dark stop it is
+ * around 6:1 and passes. `--app-accent-fill` already resolves to the dark
+ * stop on a light ground, which is the same decision made once upstream.
+ */
+.pill-soft {
+  background: var(--app-panel);
+  color: var(--app-fg);
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft-out);
+}
+
+.pill-soft[aria-pressed='true'],
+.pill-soft.is-on {
+  background: var(--app-accent-fill);
+  color: var(--chrome-ink);
+  border-color: var(--app-accent-fill);
+}
+
+.pill-soft:disabled {
+  color: var(--app-faint);
+  box-shadow: none;
+}
+
+/*
+ * The contrast floor.
+ *
+ * `prefers-contrast: more` did not appear in this sheet at all before the
+ * soft shell, which was survivable while every edge was a hairline and is
+ * not once depth is doing work. Somebody who has asked for more contrast
+ * gets the border and no shadow: the same structure, stated rather than
+ * implied. `tokensFor` already returns `none` for both shadow tokens under
+ * the same preference, so this is the half that cannot be done in JS.
+ */
+@media (prefers-contrast: more) {
+  .surface,
+  .surface-in,
+  .pill-soft {
+    box-shadow: none;
+    border-color: var(--app-fg);
+  }
+}
+
+@media (forced-colors: active) {
+  .surface,
+  .surface-in,
+  .pill-soft {
+    box-shadow: none;
+    border: 1px solid CanvasText;
+  }
+
+  /*
+   * Which pill is the chosen one.
+   *
+   * The border above puts every control back, and that is where the first
+   * version of this stopped — three identical outlines, one of which was the
+   * tab you were on. A state carried only by a discardable property is a
+   * state that goes missing, so it has to be restated.
+   *
+   * Not as `background: Highlight; color: HighlightText`, which was the
+   * second version and looked right in the computed styles and wrong on the
+   * screen: Chromium paints a `Canvas`-coloured backplate behind text in
+   * this mode, and HighlightText is white on it, so the label rendered as a
+   * white block. That is a rendering rule no stylesheet can talk out of it.
+   *
+   * A thicker edge instead. Border width is geometry rather than colour, so
+   * forced colours keep it, and the label stays CanvasText on Canvas where
+   * the backplate is doing its job rather than fighting it.
+   */
+  .pill-soft[aria-pressed='true'],
+  .pill-soft.is-on {
+    border-width: 3px;
+    font-weight: 700;
+  }
+
+  .pill-soft:disabled {
+    color: GrayText;
+    border-color: GrayText;
+  }
+}

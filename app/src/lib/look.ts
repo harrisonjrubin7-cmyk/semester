@@ -53,8 +53,8 @@ export interface Accent {
  * six of these were under WCAG's 4.5:1 against the darker panels, Oxblood
  * worst at 3.23:1 on Graphite. They have been lightened by the smallest amount
  * that clears it. Nothing was chosen by eye: `lib/contrast.test.ts` holds every
- * accent-and-ground combination to the ratio — eleven accents across twelve
- * grounds, 132 pairings, all but a couple of which nobody has ever looked at.
+ * accent-and-ground combination to the ratio — eleven accents across thirteen
+ * grounds, 143 pairings, all but a couple of which nobody has ever looked at.
  *
  * Metals and stones. The look depends on the accent not being a colour — a
  * saturated one turns a drawn interface into a dashboard — so every one of
@@ -76,7 +76,7 @@ export const ACCENTS: Accent[] = [
    * accent on fills and rules; this app puts `--app-accent` in text.
    *
    * So the hue is kept and every role moves to the ramp step that clears its
-   * requirement across all twelve grounds, not just Industry's own — the
+   * requirement across all thirteen grounds, not just Industry's own — the
    * numbers below are the worst case over the whole set, measured by
    * `contrast.test.ts`:
    *
@@ -138,7 +138,7 @@ export interface Ground {
 }
 
 /**
- * Twelve grounds — eight dark, four light.
+ * Thirteen grounds — eight dark, five light.
  *
  * Ink is the original and stays the default. The rest are the ways a dark
  * screen can actually differ: how light it is, and which way the shadows lean.
@@ -149,9 +149,10 @@ export interface Ground {
  * still read as neutral at this darkness, and are there because a whole app in
  * one of them is a different room to sit in.
  *
- * The light four are ordered the same way. Parchment is warm; Paper is the
- * cooler, plainer one; Fog is grey enough that a phone in direct sun still
- * shows the panel edges, which a white ground does not.
+ * The light five are ordered the same way. Parchment is warm; Paper is the
+ * cooler, plainer one; Bone is warmer than Paper and lighter than Parchment,
+ * drawn to have cards lifted off it; Fog is grey enough that a phone in direct
+ * sun still shows the panel edges, which a white ground does not.
  *
  * Industry and Industry Dark are the pair the design system arrived as, and
  * the only two here that carry a `corners` opinion — everything else leaves
@@ -248,6 +249,36 @@ export const GROUNDS: Ground[] = [
     ramp: ['#dfe2e8', '#f2f4f7', '#fbfcfd', '#ffffff', '#ffffff'],
     fg: '#15181d',
     dimAlpha: 0.68,
+    faintAlpha: 0.47,
+  },
+  {
+    /*
+     * Bone, and why it is not called Brass.
+     *
+     * The surface system this ground comes from is described in its
+     * references as bone-and-brass: a warm off-white page, white cards
+     * lifted off it, and an antique gold for the ink that matters. Brass is
+     * already taken — it is one of the accent ramps, and `look.accent` is
+     * persisted, so renaming it would quietly move somebody who had chosen
+     * it onto whatever sorted into that slot instead. So the ground takes
+     * the half of the name that was free, and the brass ramp is what it
+     * wears: `shade` #6b5c34 for ink, which is the reference's #8B7332 by
+     * another two per cent.
+     *
+     * Warmer than Paper and lighter than Parchment, which is the gap it
+     * fills — Parchment is a ground to read a long page on, this one is a
+     * ground to lift cards off.
+     */
+    id: 'bone',
+    label: 'Bone',
+    blurb: 'Warm off-white, with cards lifted off it. Made for the soft shell.',
+    light: true,
+    ramp: ['#e4e0d9', '#ece9e3', '#faf9f7', '#ffffff', '#ffffff'],
+    fg: '#1a1a18',
+    // 0.62 puts dim text at #6b6862 over the card, which is the muted ink the
+    // references name — derived rather than written down twice, so it stays
+    // true if the ground is ever retuned.
+    dimAlpha: 0.62,
     faintAlpha: 0.47,
   },
   /*
@@ -827,6 +858,35 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
         : 'rgba(255, 255, 255, 0.07)',
     '--app-line-soft': `rgba(${edge}, ${moreContrast ? LOUD.lineSoft : g.light ? 0.09 : 0.06})`,
     '--app-track': `rgba(${edge}, ${moreContrast ? LOUD.track : g.light ? 0.12 : 0.09})`,
+
+    /*
+     * The soft shell's elevation, derived rather than written once.
+     *
+     * Two shadows, light from the top-left: a lifted half and a cast half.
+     * The obvious version hard-codes white for the lift, which is right on
+     * Bone and wrong everywhere else — on Ink a white bloom is a smear, and
+     * the reference sheets that do this are all one-ground sheets. So the
+     * lift is white only on a light ground; on a dark one it is a lifted
+     * neutral at low alpha, which reads as the same gesture without the
+     * glow. The cast half is a warm near-black on light and a true black on
+     * dark, because a warm shadow on Ink turns brown.
+     *
+     * Taking the shadow away under "Increase contrast" is app.css's job, not
+     * this function's. The dimmed text and the hairlines are adjusted here
+     * because the tokens are inline on the root element and a media query
+     * cannot override them; `box-shadow` on `.surface` is an ordinary
+     * property on a class, which a media query overrides perfectly well. Two
+     * mechanisms for one preference is how they drift apart.
+     *
+     * Nothing is ever identified by shadow alone. These are for depth, and
+     * `.surface` in app.css carries a hairline underneath them.
+     */
+    '--shadow-soft-out': g.light
+      ? '-2px -2px 6px rgba(255, 255, 255, 0.7), 4px 6px 14px rgba(90, 84, 72, 0.14)'
+      : '-2px -2px 6px rgba(255, 255, 255, 0.045), 4px 6px 14px rgba(0, 0, 0, 0.5)',
+    '--shadow-soft-in': g.light
+      ? 'inset 2px 2px 5px rgba(90, 84, 72, 0.16), inset -2px -2px 5px rgba(255, 255, 255, 0.65)'
+      : 'inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -2px -2px 5px rgba(255, 255, 255, 0.04)',
 
     '--r-sm': `${sm}px`,
     '--r-md': `${md}px`,
