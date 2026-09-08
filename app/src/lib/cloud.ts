@@ -487,3 +487,92 @@ export async function wipeQueue(): Promise<void> {
   if (!userId) return;
   await db.from('push_queue').delete().eq('user_id', userId);
 }
+
+// ── The calendar feed ────────────────────────────────────────────────────
+//
+// A row per account holding the `.ics` this device rendered, the name the
+// calendar app shows, and a token. The Edge Function at `/calendar/<token>`
+// serves it to Apple and Google, who arrive with no credentials at all.
+//
+// The device renders and this uploads. The function has no idea what a
+// deadline is — see `supabase/CALENDAR-REVIEW.md` for why a second emitter in
+// Deno would be the wrong shape.
+
+/** Where the functions live, for building a subscribable URL. */
+export function feedBase(): string {
+  return `${URL.replace(/\/$/, '')}/functions/v1`;
+}
+
+/**
+ * Put the rendered calendar up, keeping the token that is already published.
+ *
+ * The token is generated on the device and only ever travels upward, so a
+ * link somebody has already given to their phone keeps working across every
+ * later publish. Replacing it is a separate, deliberate act — `replaceFeed`.
+ */
+export async function publishFeed(feed: {
+  token: string;
+  body: string;
+  name: string;
+  events: number;
+}): Promise<void> {
+  const db = await cloud();
+  const { data } = await db.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) throw new Error('Sign in first — a feed belongs to an account.');
+  const { error } = await db
+    .from('calendar_feeds')
+    .upsert({ user_id: userId, ...feed }, { onConflict: 'user_id' });
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * The feed as the account holds it, or nothing.
+ *
+ * `body` is deliberately not selected. It is the whole calendar and the screen
+ * only ever says how fresh it is and how much is in it — fetching a hundred
+ * kilobytes to render "Published 2 hours ago" would be a waste on every visit.
+ */
+export async function readFeed(): Promise<{
+  token: string;
+  updatedAt?: number;
+  events?: number;
+} | null> {
+  const db = await cloud();
+  const { data } = await db.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) return null;
+  const { data: row, error } = await db
+    .from('calendar_feeds')
+    .select('token, events, updated_at')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error || !row) return null;
+  return {
+    token: String(row.token),
+    events: typeof row.events === 'number' ? row.events : undefined,
+    updatedAt: row.updated_at ? Date.parse(String(row.updated_at)) : undefined,
+  };
+}
+
+/**
+ * Retire the published link and start a new one.
+ *
+ * The body goes with it. A new token with the old calendar still attached
+ * would answer for a link nobody has yet, and the next publish puts the body
+ * back a moment later anyway — whereas leaving the old body reachable is the
+ * one thing "replace this link" is for.
+ */
+export async function replaceFeed(token: string): Promise<void> {
+  const db = await cloud();
+  const { data } = await db.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) throw new Error('Sign in first — a feed belongs to an account.');
+  const { error } = await db
+    .from('calendar_feeds')
+    .upsert(
+      { user_id: userId, token, body: '', events: 0 },
+      { onConflict: 'user_id' },
+    );
+  if (error) throw new Error(error.message);
+}

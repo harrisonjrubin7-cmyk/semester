@@ -130,3 +130,25 @@ export function readPublished(value: unknown): Published | null {
     events: typeof row.events === 'number' ? row.events : undefined,
   };
 }
+
+/**
+ * What goes into the subscription, out of everything dated.
+ *
+ * Ticked-off work is left out. `CALENDAR-REVIEW.md` left this open and inclined
+ * this way: a calendar showing what you have already finished is one you stop
+ * reading, and a subscription is read every day where an export is read once.
+ *
+ * The downloaded `.ics` is deliberately not filtered — an export should be a
+ * complete record of the term, including what got done. Two different jobs, and
+ * the Export screen says which is which rather than leaving somebody to notice
+ * that the two files differ.
+ *
+ * Here rather than in the component so the rule can be tested and so it sits
+ * beside the copy that explains it.
+ */
+export function feedItems<T extends { id: string }>(
+  items: T[],
+  done: Record<string, unknown>,
+): T[] {
+  return items.filter((i) => !done[i.id]);
+}

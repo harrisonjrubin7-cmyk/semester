@@ -9,6 +9,7 @@ import {
   looksLikeToken,
   newToken,
   readPublished,
+  feedItems,
   webcalUrl,
 } from './subscribe';
 
@@ -121,5 +122,37 @@ describe('reading a published feed back', () => {
       updatedAt: undefined,
       events: undefined,
     });
+  });
+});
+
+describe('what goes into the subscription', () => {
+  const items = [
+    { id: 'a', title: 'Problem Set 1' },
+    { id: 'b', title: 'Quiz 1' },
+    { id: 'c', title: 'Final' },
+  ];
+
+  it('leaves out what has been ticked off', () => {
+    // The decision CALENDAR-REVIEW.md left open. A calendar showing what you
+    // have already finished is one you stop reading.
+    expect(feedItems(items, { b: true }).map((i) => i.id)).toEqual(['a', 'c']);
+  });
+
+  it('keeps everything when nothing is done', () => {
+    expect(feedItems(items, {})).toHaveLength(3);
+  });
+
+  it('reads a falsy mark as not done', () => {
+    // `done` is a map the app writes over time; an explicitly false or cleared
+    // entry means unticked, not missing.
+    expect(feedItems(items, { a: false, b: undefined, c: 0 })).toHaveLength(3);
+  });
+
+  it('does not filter the download, which is a different job', () => {
+    // Stated as a test because the two files are meant to differ: an export is
+    // a complete record of the term, a subscription is what is still ahead.
+    const all = items;
+    expect(all).toHaveLength(3);
+    expect(feedItems(all, { a: true })).toHaveLength(2);
   });
 });

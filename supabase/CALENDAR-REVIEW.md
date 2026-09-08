@@ -10,9 +10,10 @@
 > whether deleting an account leaves a live feed answering. Deleting from an
 > empty table costs nothing.
 >
-> **The client half is still not wired into a screen**, so no feed can be
-> published and every fetch returns the empty 404 calendar. The endpoint is
-> live and correct; there is simply nothing in the table.
+> **The client half is now wired**: `publishFeed`, `readFeed` and `replaceFeed`
+> in `app/src/lib/cloud.ts`, and a `Subscribe` section on the Export screen that
+> appears only when signed in. The two decisions this document left open are
+> settled below.
 >
 > The policy was hoisted to `(select auth.uid())` before it ran, matching the
 > rest of the schema; `calendar.sql` now carries that. Security advisors return
@@ -136,25 +137,39 @@ has no outbound access to `supabase.co` and no Postgres, so every SQL file in
 this project is reviewed by reading rather than by running. The TypeScript half
 is covered by `app/src/lib/subscribe.test.ts` and `app/src/lib/export.test.ts`.
 
-## What is not here
+## What was not here, and what is now
 
-**No screen.** The publish path (`cloud.ts`), the subscribe UI on the Export
-screen, and `'calendar_feeds'` in `OWNED_TABLES` all belong in the same change
-as the deploy, because none of them can be driven in a browser until the
-function answers. Building a subscribe button against an endpoint that returns
-nothing would mean shipping copy I had never seen and a link I had never
-followed.
+**The screen exists.** A `Subscribe` section on Export, shown only when signed
+in: the `webcal:` link in a selectable field, `freshness()` and the entry count
+above it, `SHARE_WARNING` beside it every time rather than behind a disclosure,
+"publish again", and "replace this link". `'calendar_feeds'` is in
+`OWNED_TABLES` — along with the four per-record tables, for the reason in the
+banner.
 
-Say the word once this is deployed and the client half goes on top: a section
-on the Export screen that appears when you are signed in, shows the `webcal:`
-link and a QR code for the phone, says how fresh the feed is and what is in it,
-carries `SHARE_WARNING` next to the link every time rather than behind a
-disclosure, and offers "replace this link" in one tap. All of that copy is
-already written and unit-tested in `app/src/lib/subscribe.ts`; what is missing is a
-browser to point at it.
+**The decision is made: ticked-off work is not in the feed.** This document
+inclined that way and it holds — a calendar showing what you have already
+finished is one you stop reading. The downloaded `.ics` is still unfiltered,
+because an export should be a complete record of the term. The rule is
+`feedItems()` in `app/src/lib/subscribe.ts` rather than a line inside the
+component, so it can be tested and so it sits beside the copy that explains it,
+and the screen says which file is which.
 
-**One thing to decide before then:** whether the feed carries ticked-off work.
-The download does, because an export should be a complete record. A
-subscription probably should not — a calendar showing what you have already
-finished is one you stop reading. My inclination is to drop done items from the
-feed and keep them in the file, and say so on the screen.
+**Replacing the link clears the body as well as the token.** A new token with
+the old calendar still attached would answer for a link nobody has been given
+yet; the publish that follows a moment later puts the body back. Retiring the
+old link is the entire point of the button.
+
+**Two things are still missing, and neither is an oversight.**
+
+*No QR code.* This document asked for one and there is no QR encoder in the
+project — `lib/barcode.ts` reads ISBNs, it does not write QR — so it would mean
+a new dependency. That is a call worth making deliberately rather than in
+passing, and the link can be copied or mailed to a phone meanwhile.
+
+*The signed-in path has not been driven in a browser.* The session that wrote it
+could reach neither a signed-in account nor `*.supabase.co`, and the project has
+no component-render harness to stand in. The pure parts are unit-tested —
+`feedItems`, `freshness`, `feedUrl`, `webcalUrl`, token shape — and the
+signed-out path was checked in a real browser (the section correctly does not
+appear). What has not been watched happen: a publish, a fetch by a calendar
+app, and a replace.

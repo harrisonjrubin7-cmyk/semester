@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Snapshots } from '../components/Snapshots';
+import { Subscribe } from '../components/Subscribe';
 import { SectionLabel, TickBox } from '../components/ui';
 import { PROVIDERS, tokens, type ProviderId } from '../lib/connect';
 import { datedItems } from '../lib/select';
@@ -311,6 +312,8 @@ export function Export() {
       ) : null}
 
       <div style={{ marginTop: 22 }}>
+        <Subscribe />
+
         <Snapshots />
       </div>
 
