@@ -164,17 +164,53 @@ export interface Found {
 }
 
 /**
+ * Does `text` contain `q` starting at a word boundary?
+ *
+ * The difference between finding what somebody meant and finding what happens
+ * to share letters with it. Searching settings for "soft" used to return
+ * **Connected accounts**, ahead of the page that holds the Soft layout, because
+ * that page's summary says "Microsoft" and a plain `includes` cannot tell the
+ * middle of a word from the start of one.
+ *
+ * A prefix rather than a whole word, because somebody typing "notif" has not
+ * finished the word and should still be finding notifications.
+ */
+function startsAWord(text: string, q: string): boolean {
+  let at = text.indexOf(q);
+  while (at !== -1) {
+    if (at === 0 || /[^a-z0-9]/.test(text[at - 1])) return true;
+    at = text.indexOf(q, at + 1);
+  }
+  return false;
+}
+
+/**
  * Search inside settings.
  *
- * Label first, then the summary of what a page holds, then the synonyms —
- * ranked in that order, because somebody who typed the exact name of a page
- * should get that page rather than one that merely mentions it.
+ * Label first, then the synonyms and the summary of what a page holds, and a
+ * match in the middle of a word last of all — because somebody who typed the
+ * exact name of a page should get that page rather than one that merely shares
+ * six letters with it.
+ *
+ * ## Two bugs this ranking exists to have fixed
+ *
+ * **Nothing with a space in it could ever match a synonym.** The keywords were
+ * split on whitespace and each word tested with `startsWith`, so a query of two
+ * words was compared against a list of single words and could never hit — and
+ * the keyword lists are written in phrases. "tab bar" is in the navigation
+ * page's keywords, word for word, and returned nothing at all. So did "text
+ * size", "line height", "reading width", "quiet hours" and "extra credit". The
+ * whole keyword string is searched now, phrases included.
+ *
+ * **A match inside a word outranked a real one.** See `startsAWord`. Those
+ * still match, because a partial word is sometimes all somebody can remember,
+ * but they now come last instead of first.
  *
  * A blank query finds nothing rather than everything: the index is already
  * on the screen underneath, and repeating it is not an answer.
  */
 export function findSetting(query: string): Found[] {
-  const q = query.trim().toLowerCase();
+  const q = query.trim().toLowerCase().replace(/\s+/g, ' ');
   if (q.length < 2) return [];
 
   const out: (Found & { rank: number })[] = [];
@@ -182,25 +218,39 @@ export function findSetting(query: string): Found[] {
     for (const row of section.rows) {
       const label = row.label.toLowerCase();
       const holds = row.holds.toLowerCase();
-      const words = row.keywords.split(/\s+/);
+      const keywords = row.keywords.toLowerCase();
+
+      /** The synonym that matched, whole, so the page can say what it was. */
+      const keyword = (): string => {
+        const at = keywords.indexOf(q);
+        if (at === -1) return q;
+        const from = keywords.lastIndexOf(' ', at) + 1;
+        const to = keywords.indexOf(' ', at + q.length);
+        return keywords.slice(from, to === -1 ? undefined : to);
+      };
 
       let rank = -1;
       let matched = '';
       if (label === q) {
         rank = 0;
         matched = row.label;
-      } else if (label.includes(q)) {
+      } else if (startsAWord(label, q)) {
         rank = 1;
         matched = row.label;
-      } else if (holds.includes(q)) {
+      } else if (startsAWord(keywords, q)) {
+        // Ahead of `holds`: keywords are the words somebody actually arrives
+        // with — "gmail", "gpa", "dark" — and are chosen for this job, while
+        // `holds` is a sentence written to be read.
         rank = 2;
+        matched = keyword();
+      } else if (startsAWord(holds, q)) {
+        rank = 3;
         matched = row.holds;
-      } else {
-        const hit = words.find((w) => w.startsWith(q));
-        if (hit) {
-          rank = 3;
-          matched = hit;
-        }
+      } else if (keywords.includes(q) || holds.includes(q) || label.includes(q)) {
+        // Mid-word, and last. "soft" inside "Microsoft" is not nothing — it is
+        // just not as good as any of the four above it.
+        rank = 4;
+        matched = label.includes(q) ? row.label : keywords.includes(q) ? keyword() : row.holds;
       }
       if (rank >= 0) out.push({ row, section: section.header, matched, rank });
     }

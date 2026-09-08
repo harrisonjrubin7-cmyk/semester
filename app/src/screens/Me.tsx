@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ForcedProvider, useRowStyle } from '../components/shell/useShell';
+import { useRowStyle } from '../components/shell/useShell';
 import { learned, showSpan } from '../lib/pace';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
@@ -302,11 +302,14 @@ export function Me() {
         does. One scroll, six headed panels, no chip to get wrong. It is the
         same set of rows either way — nothing has been dropped.
 
-        `ForcedProvider` for the same reason `Index.tsx` has one: a directory
-        is findable because every row looks like every other row, so it does
-        not follow the app-wide plain/grouped setting.
+        Drawn in whichever layout the app is set to, like everything else.
+        This used to force `grouped` on itself, on the argument that a
+        directory is findable because every row looks like every other row —
+        which it does in all three layouts, because `Panel` and `Destination`
+        are the same components either way. Settings forced itself for the
+        same reason and has stopped; a directory of the app that does not look
+        like the app is one more thing that does not match.
       */}
-      <ForcedProvider value="grouped">
         <nav aria-label="Everything" style={{ margin: '0 -18px' }}>
           {recent.length > 0 && (
             <Panel header="Lately">
@@ -337,7 +340,6 @@ export function Me() {
             );
           })}
         </nav>
-      </ForcedProvider>
         </>
       )}
     </Page>

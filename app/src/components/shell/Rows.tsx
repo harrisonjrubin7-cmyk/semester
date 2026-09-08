@@ -75,9 +75,12 @@ export function Group({
   /**
    * Briefly outlined, after a search sent somebody to this group.
    *
-   * Only settings uses it today, and only in the grouped layout, where there
-   * is a panel edge to outline. In the drawn layout there is nothing to draw
-   * it on and it is ignored rather than invented.
+   * Works in every layout. It used to work in the grouped one only — the
+   * argument being that the drawn layout has no panel edge to outline — but
+   * the drawn layout has the `Blueprint` frame, which is an edge, and the
+   * argument was really that nobody had drawn it. So a search that took
+   * somebody to the right page then left them to find the group themselves,
+   * and only if they had chosen one of the three layouts.
    */
   lit?: boolean;
   /**
@@ -109,7 +112,21 @@ export function Group({
             {footer}
           </div>
         ) : null}
-        {framed ? <Blueprint style={{ padding: 14 }}>{children}</Blueprint> : children}
+        {framed ? (
+          <Blueprint
+            style={{
+              padding: 14,
+              // The same two-second outline the grouped panel gets, on the
+              // frame this layout already draws.
+              borderColor: lit ? 'var(--app-accent)' : undefined,
+              transition: 'border-color 220ms ease',
+            }}
+          >
+            {children}
+          </Blueprint>
+        ) : (
+          children
+        )}
       </section>
     );
   }

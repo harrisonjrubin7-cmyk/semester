@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { HIGHLIGHT_MS, sectionOf, takeLooking } from '../../lib/settings';
-import { ForcedProvider } from '../../components/shell/useShell';
 import type { Screen } from '../../lib/types';
 
 /**
@@ -51,14 +50,21 @@ export function SettingsPage({
 
   return (
     /*
-     * Always grouped, whatever the app-wide layout is.
+     * Drawn in whichever layout the app is set to, like every other screen.
      *
-     * Settings is an index of rows and was rebuilt as one before the layout
-     * setting existed. It does not become a run of loose sections because
-     * somebody prefers drawn cards on their course screens — the thing that
-     * makes an index findable is that every row looks like every other row.
+     * This used to force `grouped` on itself, whatever anybody had chosen.
+     * The argument was that an index is findable because every row looks like
+     * every other row — which is true, and is a fact about the row primitives
+     * rather than about the grouped layout: `ItemRow`, `NavRow`, `ToggleRow`
+     * and the rest are the same rows in all three, and every one of them
+     * already knows how to draw itself in each.
+     *
+     * What forcing it actually bought was a settings screen that did not look
+     * like the app it configured. Somebody who chose the drawn layout and
+     * opened Settings to change something about the drawn layout was looking
+     * at the grouped one, on the very screen where the choice is made and the
+     * previews are drawn. One layout, everywhere, including here.
      */
-    <ForcedProvider value="grouped">
     <main style={{ paddingBottom: 'calc(24px * var(--density, 1))' }}>
       <div style={{ padding: '0 16px calc(12px * var(--density, 1))' }}>
         <div
@@ -110,6 +116,5 @@ export function SettingsPage({
           settings' — so this is what makes the panels read as inset. */}
       <div style={{ padding: '0 16px' }}>{children(lit)}</div>
     </main>
-    </ForcedProvider>
   );
 }

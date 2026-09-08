@@ -6,17 +6,25 @@ export type Shell = 'plain' | 'grouped' | 'soft';
 /**
  * A layout forced for one part of the app, whatever the setting says.
  *
- * Two callers, pulling in opposite directions, and both are right:
+ * **One caller, and it may stay one.** `FullBleed` forces **plain** around a
+ * field guide, the calendar's month grid, a flashcard, a map: each is one
+ * object rather than a run of rows, and an inset panel makes it narrower and
+ * harder to read for nothing. A layout that makes reading worse is a bug, and
+ * this is what stops it. The list of what gets it is `exempt.ts`, in one
+ * place, so no screen is half-converted.
  *
- *   `FullBleed` forces **plain**. A field guide, the calendar's month grid, a
- *   flashcard, a map: each is one object rather than a run of rows, and an
- *   inset panel makes it narrower and harder to read for nothing. A layout
- *   mode that makes reading worse is a bug, and this is what stops it.
+ * There were three callers. Settings and the Me directory each forced
+ * **grouped** on themselves, on the argument that an index is findable
+ * because every row looks like every other row. That is true, and it is a
+ * fact about the row primitives rather than about the grouped layout — the
+ * same `NavRow` draws itself correctly in all three. What the forcing
+ * actually produced was a settings screen that did not look like the app it
+ * configures, on the very screen where the layout is chosen and its preview
+ * is drawn. Both follow the setting now.
  *
- *   The settings screens force **grouped**. Settings is an index of rows and
- *   is always drawn that way — it was rebuilt as one before the app-wide
- *   layout existed, and it does not become a run of loose sections because
- *   somebody prefers drawn cards everywhere else.
+ * So: forcing is for a *body that cannot be a list*, never for a screen that
+ * would prefer a different look. The second kind is how an app ends up
+ * looking like several apps.
  *
  * `null` is the ordinary case: follow the setting.
  */

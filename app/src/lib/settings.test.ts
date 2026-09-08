@@ -99,6 +99,38 @@ describe('searching it', () => {
     expect(findSetting('appearance')[0].row.screen).toBe('setLook');
   });
 
+  /*
+   * The keywords are written in phrases — "tab bar", "line height", "quiet
+   * hours" — and were split on whitespace before being matched, so a query
+   * with a space in it was compared against a list of single words and could
+   * never hit. Every one of these was in the keywords, word for word, and
+   * returned nothing.
+   */
+  it('finds a phrase, not just a single word', () => {
+    expect(findSetting('tab bar')[0]?.row.screen).toBe('setNav');
+    expect(findSetting('text size')[0]?.row.screen).toBe('setLook');
+    expect(findSetting('line height')[0]?.row.screen).toBe('setLook');
+    expect(findSetting('quiet hours')[0]?.row.screen).toBe('setAlerts');
+  });
+
+  /*
+   * "soft" is one of the three layouts. It used to return Connected accounts
+   * first, because that page's summary says "Microsoft" and a plain substring
+   * test cannot tell the middle of a word from the start of one.
+   */
+  it('ranks a word ahead of the middle of a longer word', () => {
+    expect(findSetting('soft')[0]?.row.screen).toBe('setNav');
+    // Still found, just not first: a partial word is sometimes all somebody
+    // can remember.
+    expect(findSetting('soft').map((f) => f.row.screen)).toContain('connect');
+  });
+
+  it('finds each navigation and each layout by its own name', () => {
+    for (const name of ['tabs', 'feed', 'springboard', 'shelves', 'drawn', 'grouped', 'soft']) {
+      expect(findSetting(name)[0]?.row.screen, name).toBe('setNav');
+    }
+  });
+
   it('says which word it matched, so the page can light the right group', () => {
     expect(findSetting('dark')[0].matched).toBe('dark');
     expect(findSetting('colour and type')[0].matched).toBe('Colour and type');
