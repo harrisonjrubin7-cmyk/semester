@@ -25,9 +25,5 @@ if (!existsSync(dir)) {
   console.log('webback: no dist/web, nothing to do');
 } else {
   const done = await apply(dir);
-  console.log(
-    done.length
-      ? `webback: linked back to the app from ${done.join(', ')}`
-      : 'webback: already done',
-  );
+  console.log(done.length ? `webback: repaired ${done.join(', ')}` : 'webback: already done');
 }

@@ -251,6 +251,45 @@ return link is re-applied on the next build. Two things worth knowing:
   the website is there but the added link is not. Use `npm run build && npx
   vite preview` to see it.
 
+#### The bundles ask for their own source tree — fix this where they are made
+
+The same build step repairs a second thing, and this one is not cosmetic. The
+generator wrote asset paths relative to the directory it ran in rather than to
+the page it was writing. Verbatim out of `study.html`:
+
+```js
+fetch('app/public/audio/lessons/' + course + '/lessons.json')
+```
+
+Served from `/semester/web/study.html` that resolves to
+`/semester/web/app/public/audio/…`, which is nothing. The file is really at
+`/semester/audio/…`: Vite publishes the *contents* of `public/`, so `app/public/`
+is where a file sits in the repository and is never part of a URL.
+
+It cost the whole study page. Every course read "0 units", the contents list was
+empty and the script pane blank, because the 404 is swallowed by an
+`r.ok ? … : null`. The term page lost its logo to the same prefix.
+
+`webback` now rewrites `app/public/…` to the deployment root at run time — it
+patches `fetch`, `XMLHttpRequest.open`, `setAttribute` and the `<img>` `src`
+setter before the bundler unpacks the document, because `study.html` has the
+path as a literal and `app.html` builds its own at run time, so a search and
+replace would only catch half. Regenerating the website is safe; the repair is
+re-applied on the next build.
+
+**But it belongs upstream.** Wherever these three pages are generated, no
+emitted URL should carry an `app/public/` prefix — it is a repository path, not
+a served one. Two more, left alone deliberately because there is no right answer
+for them here:
+
+| Requested by `app.html` | Why it is not repaired |
+| --- | --- |
+| `_ds/industry-ec2ca40c-…/styles.css` and `_ds_bundle.js` | The Industry design system lives at `project/_ds/…`, outside `app/public/`, so nothing publishes it. The pages are styled from inlined CSS and the bundle is inert. |
+| ten `icons/*.svg` (`search`, `today`, `calendar`, `notes`, `courses`, `check`, `map`, `study`, `upkeep`) | No such files exist anywhere in the repository, and the pages draw no icons. |
+
+Both should be inlined or dropped by the generator. Sending them somewhere
+plausible here would turn a visible 404 into a silent wrong answer.
+
 ## 5 · The optional connectors
 
 None of these are needed to use the app; each is documented in
