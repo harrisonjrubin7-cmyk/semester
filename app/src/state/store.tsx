@@ -51,7 +51,7 @@ import { LEGACY_TERM, sortTerms, type Term } from '../lib/term';
 import { readSeen, writeSeen } from '../lib/since';
 import { badge } from '../lib/device';
 import { SHARE_FLAG } from '../lib/shared';
-import { isSettingsPage } from '../lib/settings';
+import { linkedScreen } from '../lib/deeplink';
 import { NAMED, fromHash, replaces, same, toHash, type Route } from '../lib/route';
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
@@ -64,7 +64,6 @@ import type { School } from '../lib/school';
 // Aliased: an effect below has its own local `said` for a save error.
 import { said as refreshSaid } from '../lib/refresh';
 import {
-  ROOTS,
   STORAGE_KEY,
   SYNCED_KEY,
   initialEphemeral,
@@ -83,32 +82,16 @@ export { reducer } from './reducer';
 
 
 /**
- * An installed app's shortcuts open `?screen=study` and the like. Only the
- * roots are addressable — a deep link into a drill would land somewhere with
- * no way back.
+ * An installed app's shortcuts open `?screen=study` and the like.
+ *
+ * Which screens a link may name is `lib/deeplink.ts`, which is where the
+ * reasoning and the tests live. This is only the part that needs a browser:
+ * reading the query string, and refusing to throw if there isn't one.
  */
 function screenFromUrl(): Screen | null {
   try {
     const params = new URLSearchParams(window.location.search);
-    const asked = params.get('screen') as Screen | null;
-    if (asked && ROOTS.includes(asked)) return asked;
-    // A syllabus shared in from another app, or a file opened with this one,
-    // lands on the importer — which is not a root, so it needs saying
-    // explicitly. Only for a real share: `?screen=import` typed by hand is
-    // still refused, the same as any other non-root.
-    if (asked === 'import' && params.get(SHARE_FLAG) === '1') return 'import' as Screen;
-    // The settings pages are addressable too. They are not roots — a tab
-    // cannot open one — but they are leaves with a heading, a Back and no way
-    // to strand anybody, which is the actual reason roots were the rule. A
-    // link to the appearance page is a reasonable thing for a help page or a
-    // shortcut to hold. See `lib/settings.ts`, which is also what the index
-    // and the search read.
-    // The index itself, and every page under it. `settings` is not a root —
-    // no tab lands on it — but it is the one screen a link most obviously
-    // wants, and refusing it while allowing its children would be strange.
-    if (asked === 'settings') return asked;
-    if (asked && isSettingsPage(asked)) return asked;
-    return null;
+    return linkedScreen(params.get('screen'), params.get(SHARE_FLAG) === '1');
   } catch {
     return null;
   }
