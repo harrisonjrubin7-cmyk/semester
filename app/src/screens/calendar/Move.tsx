@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../../state/store';
 import { Blueprint } from '../../components/Blueprint';
 import { isoToDate, longLabel } from '../../lib/date';
@@ -51,9 +51,39 @@ interface Asking {
 }
 
 export function useCalendarMove() {
-  const { state, dispatch, say } = useStore();
+  const { state, dispatch, say, adopt } = useStore();
   const [asking, setAsking] = useState<Asking | null>(null);
   const [refused, setRefused] = useState('');
+  /**
+   * A move refused because the course is one of the four shipped with the app.
+   *
+   * Held rather than dropped, so the offer below can be the way out of the
+   * refusal instead of a sentence telling somebody to go and find one. Taking
+   * the semester on is two taps away in the header strip, and "two taps away"
+   * is how a gesture people just tried becomes a gesture they stop trying.
+   */
+  const [offer, setOffer] = useState<(Movable & { kind: 'item' }) | null>(null);
+  /**
+   * The drag that was refused, kept until the courses are actually yours.
+   *
+   * `adopt()` dispatches; the state it writes lands on the next render, so the
+   * move cannot simply be retried on the line after. A ref rather than state
+   * because it is read by the effect below and never drawn.
+   */
+  const waiting = useRef<{ what: Movable & { kind: 'item' }; to: Landing } | null>(null);
+  /**
+   * The notice, so it can be brought on screen when it appears.
+   *
+   * The drop happens up in the grid and the answer to it renders under the
+   * day's list, which on a phone is below the fold — so the first version of
+   * this refused a drag and said so somewhere nobody was looking, which reads
+   * exactly like a gesture that silently does nothing. The confirm takes focus
+   * as well as the scroll, because it is a question and the reader has to be
+   * told it was asked; the refusal only scrolls, because `role="status"`
+   * announces it politely and taking focus for a sentence would be rude.
+   */
+  const notes = useRef<HTMLDivElement>(null);
+  const dialog = useRef<HTMLDivElement>(null);
 
   /** Only a course you own can be changed — the sample four are compiled in. */
   const owned = (courseId: CourseId) => state.courses.find((c) => c.course.id === courseId);
@@ -85,8 +115,10 @@ export function useCalendarMove() {
     const module = owned(what.courseId);
     if (!module) {
       setRefused(
-        `${what.code} is one of the courses built into the app, so its dates are fixed. Take the semester on under Edit the course to change one.`,
+        `${what.code} is one of the four courses built into the app rather than held in your account, so its dates are fixed.`,
       );
+      setOffer(what);
+      waiting.current = { what, to };
       return;
     }
     const item = module.items.find((i) => i.id === what.id);
@@ -94,6 +126,36 @@ export function useCalendarMove() {
     const from = new Date(item.year ?? new Date().getFullYear(), item.month, item.day);
     setAsking({ what, to, was: longLabel(from) });
   };
+
+  /*
+   * The refused drag, picked back up once the courses are yours.
+   *
+   * Adopting is not the thing somebody wanted — moving a deadline was — so
+   * the move they made is what happens next, and it still goes through the
+   * confirm below, because it is still a claim about what a syllabus says.
+   */
+  useEffect(() => {
+    const held = waiting.current;
+    if (!held) return;
+    if (!state.courses.some((c) => c.course.id === held.what.courseId)) return;
+    waiting.current = null;
+    setOffer(null);
+    setRefused('');
+    move(held.what, held.to);
+    // `move` is rebuilt on every render, so depending on it would run this on
+    // every render. What decides whether the move can go through is the course
+    // list, and that is what this watches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.courses]);
+
+  useEffect(() => {
+    if (!asking && !refused) return;
+    // `center`, not `nearest`: nearest counts the viewport, and the bottom of
+    // it is under the tab bar — so the button that answers the refusal came to
+    // rest half behind the navigation.
+    notes.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (asking) dialog.current?.focus();
+  }, [asking, refused]);
 
   const confirm = () => {
     if (!asking) return;
@@ -117,6 +179,8 @@ export function useCalendarMove() {
    * names the reason and the thing you can actually do.
    */
   const refuse = (why: 'class' | 'event') => {
+    setOffer(null);
+    waiting.current = null;
     setRefused(
       why === 'class'
         ? 'A class is the timetable repeating, not a single entry — moving one here would either rewrite every week or invent a one-off. Cancel this one, or change the pattern, under Edit the course.'
@@ -131,13 +195,13 @@ export function useCalendarMove() {
    * calendar the drop happened on rather than in a dialog somewhere else.
    */
   const notice = (
-    <>
+    <div ref={notes}>
       {asking && (
-        <Blueprint
-          role="alertdialog"
-          aria-label="Move a deadline the syllabus set"
-          style={{ padding: 'var(--sp-6) var(--sp-7)', marginTop: 'var(--sp-5)' }}
-        >
+        // The role and the focus go on a wrapper: `Blueprint` is a drawn frame
+        // and does not forward a ref, and giving one component two jobs to
+        // save an element is how a frame ends up with an ARIA role.
+        <div ref={dialog} tabIndex={-1} role="alertdialog" aria-label="Move a deadline the syllabus set">
+        <Blueprint style={{ padding: 'var(--sp-6) var(--sp-7)', marginTop: 'var(--sp-5)' }}>
           <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             Move <strong>{asking.what.code} {asking.what.title}</strong> to{' '}
             {longLabel(isoToDate(asking.to.date))}?
@@ -165,6 +229,7 @@ export function useCalendarMove() {
             </button>
           </div>
         </Blueprint>
+        </div>
       )}
 
       {refused && (
@@ -179,9 +244,27 @@ export function useCalendarMove() {
           }}
         >
           {refused}
+          {offer && (
+            <>
+              {' '}
+              Take the semester on and all four become yours — every tick, grade and card already
+              filed against them stays filed.
+              <button
+                type="button"
+                className="btn btn-secondary btn-block"
+                onClick={() => {
+                  adopt();
+                  say('Taken on · They are your courses now, editable like any you import.', 'courses');
+                }}
+                style={{ height: 40, marginTop: 'var(--sp-5)' }}
+              >
+                Take the semester on, and move it
+              </button>
+            </>
+          )}
         </div>
       )}
-    </>
+    </div>
   );
 
   return { move, refuse, notice, asking: asking !== null };
