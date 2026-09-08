@@ -53,15 +53,14 @@ export function Keys() {
       switch (hit.action) {
         case 'search':
           /*
-           * The box in front of you first, the whole app second.
+           * The list in front of you first, the whole app second.
            *
-           * Every screen now carries a filter box, but only the ones with a
-           * list of their own actually filter with it — see `<Page>`. So this
-           * asks: if the screen in front of you has a real filter, the caret
-           * goes there, because searching what you are looking at is the
-           * commoner intention and the overlay is one press of Enter further
-           * on. If it does not, focusing a box that filters nothing would be
-           * a worse answer than the overlay, which is what people meant.
+           * A screen with rows of its own opens its filter here — that is what
+           * the key is for on Sources or Grades, and the overlay is one press
+           * of Enter further on. Nothing is standing there waiting to be
+           * focused: no screen draws a filter field until it is asked for, so
+           * this opens one. On the screens that have no list, there is nothing
+           * to open and the whole-app search is what the key meant anyway.
            *
            * Both used to happen at once. See `lib/screenbox.ts`.
            */
