@@ -90,7 +90,6 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   settings: yours.settings,
   notifs: yours.notifs,
   connect: yours.connect,
-  cloud: yours.cloud,
   export: yours.exportScreen,
   account: yours.account,
   privacy: yours.privacy,

@@ -334,23 +334,6 @@ export function Connect() {
         </Blueprint>
       )}
 
-      {Object.keys(live).length > 0 && (
-        <Blueprint
-          onClick={() => dispatch({ type: 'go', screen: 'cloud' })}
-          style={{ padding: '13px 15px', marginTop: 14, display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
-        >
-          <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
-          <span style={{ flex: 1, minWidth: 0 }}>
-            <span className="kicker" style={{ display: 'block' }}>
-              Use what is connected
-            </span>
-            <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-1)' }}>
-              Documents into a course, course mail, deadlines onto your real calendar
-            </span>
-          </span>
-        </Blueprint>
-      )}
-
       {/* ── Brightspace ─────────────────────────────────────────────────── */}
       <SectionLabel>Brightspace</SectionLabel>
       <Blueprint style={{ padding: '14px 15px' }}>

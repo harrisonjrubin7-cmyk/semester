@@ -4,8 +4,8 @@
  * Three things were each carrying their own private idea of what this app
  * contains: the tab bar knew six screens, the Me screen listed seven buttons,
  * and search knew about deadlines only. So a screen could exist and be
- * reachable and still be unfindable — Files & mail was two taps down a list of
- * identical grey buttons, and typing "email" found nothing at all.
+ * reachable and still be unfindable — Connect accounts was two taps down a
+ * list of identical grey buttons, and typing "email" found nothing at all.
  *
  * This is the one list. The tab bar reads it to know which tab to light up for
  * a screen nested under it, the Me screen renders it as a directory with a
@@ -591,16 +591,6 @@ export const DESTINATIONS: Destination[] = [
     keywords: 'brightspace outlook microsoft google zoom apple icloud ics feed subscribe calendar claude anthropic api key sign in with claude',
     group: 'Data',
     taskTags: ['data'],
-    root: 'me',
-  },
-  {
-    screen: 'cloud',
-    label: 'Files & mail',
-    short: 'Cloud',
-    blurb: 'Pull a reading out of Drive or OneDrive; turn announcements into cards.',
-    keywords: 'gmail email drive onedrive sharepoint documents attachments send tasks',
-    group: 'Data',
-    taskTags: ['data', 'study'],
     root: 'me',
   },
   {

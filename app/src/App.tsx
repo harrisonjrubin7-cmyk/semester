@@ -52,7 +52,6 @@ const Ask = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
 const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
 const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
-const Cloud = lazy(() => import('./screens/Cloud').then((m) => ({ default: m.Cloud })));
 const Connect = lazy(() => import('./screens/Connect').then((m) => ({ default: m.Connect })));
 const Links = lazy(() => import('./screens/Links').then((m) => ({ default: m.Links })));
 const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Costs })));
@@ -355,8 +354,6 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Yours, never invented', title: 'Sources' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
-    case 'cloud':
-      return { kicker: 'Files, mail and your calendar', title: 'Your accounts' };
     case 'slides':
       return { kicker: about('deck'), title: 'Slides' };
     case 'import':
@@ -860,8 +857,6 @@ function CurrentScreen() {
       return <Sources />;
     case 'account':
       return <AccountScreen />;
-    case 'cloud':
-      return <Cloud />;
     case 'slides':
       return <SlideDeck />;
     default:
@@ -885,7 +880,7 @@ function Rail() {
   // a phone, which the rail is not on.
   // Taken from the one list of places, so the rail cannot drift out of step
   // with what Me and search know about.
-  const extras = ['ask', 'import', 'account', 'connect', 'cloud', 'settings']
+  const extras = ['ask', 'import', 'account', 'connect', 'settings']
     .map((s) => destination(s as Screen))
     .filter((d): d is NonNullable<typeof d> => Boolean(d))
     // Not twice. Four of these six can now be put in the bar, and the rail
