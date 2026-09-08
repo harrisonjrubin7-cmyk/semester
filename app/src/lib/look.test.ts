@@ -239,7 +239,7 @@ describe('lookLine', () => {
   });
 });
 
-describe('the two layouts', () => {
+describe('the three layouts', () => {
   it('defaults to drawn, so nobody’s app changes until they choose', () => {
     expect(readLook(undefined).shell).toBe('plain');
     expect(readLook({}).shell).toBe('plain');
@@ -253,8 +253,10 @@ describe('the two layouts', () => {
     expect(readLook({ shell: 'nonsense' }).shell).toBe('plain');
   });
 
-  it('offers exactly two, each with a name and a reason', () => {
-    expect(SHELLS.map((s) => s.id)).toEqual(['plain', 'grouped']);
+  it('offers exactly three, each with a name and a reason', () => {
+    // Asserted rather than counted, so a shell added by accident fails here
+    // rather than appearing in the picker. Soft is the third.
+    expect(SHELLS.map((s) => s.id)).toEqual(['plain', 'grouped', 'soft']);
     for (const s of SHELLS) {
       expect(s.label.length).toBeGreaterThan(2);
       expect(s.blurb.length).toBeGreaterThan(20);

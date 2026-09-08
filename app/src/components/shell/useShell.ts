@@ -1,7 +1,7 @@
 import { createContext, useContext, type CSSProperties } from 'react';
 import { useStore } from '../../state/store';
 
-export type Shell = 'plain' | 'grouped';
+export type Shell = 'plain' | 'grouped' | 'soft';
 
 /**
  * A layout forced for one part of the app, whatever the setting says.
@@ -41,12 +41,26 @@ export function useShell(): Shell {
   const { state } = useStore();
   const forced = useContext(Forced);
   if (forced) return forced;
-  return state.shell === 'grouped' ? 'grouped' : 'plain';
+  if (state.shell === 'grouped') return 'grouped';
+  if (state.shell === 'soft') return 'soft';
+  return 'plain';
 }
 
 /** True when the grouped layout is on here. Reads better than a compare. */
 export function useGrouped(): boolean {
   return useShell() === 'grouped';
+}
+
+/**
+ * Whether this part of the app is drawn in the soft shell.
+ *
+ * Its own hook rather than a third branch inside `useGrouped`, because soft
+ * is not a kind of grouped: `useGrouped` is asked by things deciding whether
+ * to drop a hairline or a registration mark, and the honest answer for soft
+ * is no. A screen that wants the soft shell asks for it by name.
+ */
+export function useSoft(): boolean {
+  return useShell() === 'soft';
 }
 
 /** How far a row's label sits from the panel's own edge. Matches `Rows.tsx`. */
