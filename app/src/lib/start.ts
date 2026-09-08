@@ -34,6 +34,7 @@
  * claims about the assignment, which the app has not read.
  */
 
+import { dateToIso } from './date';
 import type { DatedItem } from './types';
 import { estimate, type Spent } from './pace';
 import { hoursOn, WAKING_HOURS, type Window } from './windows';
@@ -99,10 +100,6 @@ export function opener(kind: string, title: string): string {
   const text = `${kind} ${title}`;
   for (const [re, said] of OPENERS) if (re.test(text)) return said;
   return 'Open it and write one line. Starting badly beats not starting.';
-}
-
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /**
@@ -221,8 +218,8 @@ export function plan(input: StartInput): Plan {
       continue;
     }
 
-    const startOn = iso(found.on);
-    const isToday = startOn === iso(today);
+    const startOn = dateToIso(found.on);
+    const isToday = startOn === dateToIso(today);
     const gone = found.on < today;
     starts.push({
       id: i.id,

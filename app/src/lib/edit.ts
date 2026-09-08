@@ -15,6 +15,7 @@
  * mutate what they were handed, because the store compares by identity.
  */
 
+import { percentOf } from './grades';
 import { isPlace } from './maps';
 import type { CourseModule, GradeRow, Item, RecurringBlock } from './types';
 
@@ -116,10 +117,12 @@ export function weightTotal(grading: GradeRow[]): number | null {
   let total = 0;
   let any = false;
   for (const row of grading) {
-    const m = /(\d+(?:\.\d+)?)\s*%/.exec(row.pct);
-    if (!m) continue;
+    // `percentOf` returns 0 for a row with no percentage in it, and a row
+    // graded on points or letters must not count towards the total — so the
+    // test is on the wording, not on the number it produced.
+    if (!/\d\s*%/.test(row.pct)) continue;
     any = true;
-    total += Number(m[1]);
+    total += percentOf(row.pct);
   }
   return any ? Math.round(total * 10) / 10 : null;
 }

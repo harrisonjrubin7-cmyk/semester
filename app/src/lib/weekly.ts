@@ -28,7 +28,7 @@
 
 import type { DatedItem, PersonalTask } from './types';
 import type { Catalog } from '../data/catalog';
-import { decorateItem } from './date';
+import { dateToIso, decorateItem } from './date';
 import type { DoneMap } from './standing';
 import type { Sitting } from './sitting';
 import type { Reviews } from './review';
@@ -84,12 +84,6 @@ export interface WeeklyInput {
   reviews: Reviews;
 }
 
-function isoOf(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate(),
-  ).padStart(2, '0')}`;
-}
-
 /**
  * The week just gone.
  *
@@ -121,8 +115,8 @@ export function behind(input: WeeklyInput): Behind {
 
   // And the ones with no recorded time, which fall back to their due date.
   const fallback = inWeek.filter((i) => done[i.id] && input.tickedAt[i.id] === undefined);
-  const startKey = isoOf(start);
-  const endKey = isoOf(end);
+  const startKey = dateToIso(start);
+  const endKey = dateToIso(end);
 
   const tasksInWeek = input.tasks.filter(
     (t) => t.date !== null && t.date >= startKey && t.date < endKey,

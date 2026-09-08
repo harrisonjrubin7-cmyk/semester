@@ -43,6 +43,7 @@
  */
 
 import { BACKUP_SECTIONS } from './export';
+import { newId as makeId, store } from './idb';
 
 /** How many days back the app keeps a copy of each day. */
 export const KEEP_DAYS = 7;
@@ -254,30 +255,8 @@ interface Stored extends Snapshot {
   gzip: boolean;
 }
 
-function open(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: 'id' });
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  return open().then(
-    (db) =>
-      new Promise<T>((resolve, reject) => {
-        const t = db.transaction(STORE, mode);
-        const req = run(t.objectStore(STORE));
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-        t.oncomplete = () => db.close();
-      }),
-  );
-}
+/** This file's own database and store. The wrapper is `lib/idb.ts`. */
+const { tx } = store(DB_NAME, STORE, DB_VERSION);
 
 /** Squeeze the JSON where the browser offers it, and shrug where it does not. */
 async function squeeze(text: string): Promise<{ blob: Blob; gzip: boolean }> {
@@ -299,7 +278,7 @@ async function unsqueeze(blob: Blob, gzip: boolean): Promise<string> {
 }
 
 export function newId(): string {
-  return `snap-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  return makeId('snap-');
 }
 
 /**

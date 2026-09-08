@@ -1,3 +1,4 @@
+import { dateToIso } from './date';
 /**
  * A project file for an essay — the document around the essay, not the essay.
  *
@@ -61,10 +62,6 @@ const STEPS: { at: number; what: string; why: string }[] = [
 
 const DAY = 86_400_000;
 
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 /**
  * Milestones counted back from the deadline.
  *
@@ -82,12 +79,12 @@ export function schedule(due: Date, from = new Date()): Milestone[] {
 
   if (days <= 0) {
     // Due today or already past. Say so rather than inventing runway.
-    return STEPS.map((s) => ({ date: iso(end), what: s.what, why: s.why }));
+    return STEPS.map((s) => ({ date: dateToIso(end), what: s.what, why: s.why }));
   }
 
   return STEPS.map((s) => {
     const offset = Math.min(days, Math.max(0, Math.round(days * s.at)));
-    return { date: iso(new Date(start.getTime() + offset * DAY)), what: s.what, why: s.why };
+    return { date: dateToIso(new Date(start.getTime() + offset * DAY)), what: s.what, why: s.why };
   });
 }
 

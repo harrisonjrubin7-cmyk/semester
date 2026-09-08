@@ -40,6 +40,7 @@
  * means.
  */
 
+import { dateToIso } from './date';
 import type { CourseId, DatedItem } from './types';
 
 /** What kind of thing is being applied for. */
@@ -166,10 +167,6 @@ export function quiet(a: Application, now: Date): boolean {
   return a.stage === 'sent' && daysInStage(a, now) >= QUIET_DAYS;
 }
 
-function isoOf(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 function daysBetween(iso: string, now: Date): number | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!m) return null;
@@ -280,7 +277,7 @@ export function asItems(apps: Application[], now: Date): DatedItem[] {
 
 /** What is standing on one day. */
 export function standingOn(apps: Application[], now: Date, day: Date): Standing[] {
-  const iso = isoOf(day);
+  const iso = dateToIso(day);
   return standing(apps, now).filter((s) => s.date === iso);
 }
 

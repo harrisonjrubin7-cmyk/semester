@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
+import { dateToIso } from './date';
 import { SLIPPING_ABSENCES, SLIPPING_DAYS, misses, missesLine } from './misses';
 import { NO_POLICY, type AttendPolicy, type Attended } from './attend';
 
 const now = new Date(2026, 8, 20);
 const day = (back: number) => {
   const d = new Date(2026, 8, 20 - back);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return dateToIso(d);
 };
 
 const absent = (courseId: string, back: number): Attended => ({

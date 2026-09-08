@@ -9,7 +9,7 @@
  * the next one. See `state/reducer.ts`.
  */
 
-import { newId } from '../../lib/files';
+import { newId } from '../../lib/idb';
 import { newAlarm, newTimer } from '../../lib/clocks';
 import { moveTo, newApplication } from '../../lib/apply';
 import { mark, newProgress } from '../../lib/progress';

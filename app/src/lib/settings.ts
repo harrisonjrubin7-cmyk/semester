@@ -52,18 +52,18 @@ export const SETTINGS: SettingsSection[] = [
     header: 'General',
     rows: [
       {
-        screen: 'setLook',
-        label: 'Appearance',
-        holds: 'Accent, ground, fonts, text size, spacing',
+        screen: 'setNav',
+        label: 'Layout and navigation',
+        holds: 'Which navigation, how screens are drawn, what Today shows',
         keywords:
-          'theme dark light mode colour color accent ground background parchment fog ink paper font fonts typeface heading body text size larger bigger smaller spacing density line height reading width corners rounded contrast appearance look style',
+          'tabs tab bar navigation nav feed home screen springboard shelves pills icons layout shell grouped drawn soft presentation arrangement structure order sections today rearrange move labels badges directory everything two systems',
       },
       {
-        screen: 'setNav',
-        label: 'Navigation',
-        holds: 'Tab bar, home screen, what Today shows',
+        screen: 'setLook',
+        label: 'Colour and type',
+        holds: 'Ground, accent, fonts, text size, spacing',
         keywords:
-          'tabs tab bar navigation nav feed home screen springboard icons layout order sections today rearrange move labels badges icon shape directory everything',
+          'theme dark light mode colour color accent ground background parchment fog ink paper font fonts typeface heading body text size larger bigger smaller spacing density line height reading width corners rounded contrast appearance look style tone voice',
       },
       {
         screen: 'setAlerts',

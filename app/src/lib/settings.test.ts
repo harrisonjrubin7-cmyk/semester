@@ -84,13 +84,24 @@ describe('searching it', () => {
   });
 
   it('puts an exact page name first', () => {
-    const hits = findSetting('appearance');
-    expect(hits[0].row.label).toBe('Appearance');
+    const hits = findSetting('colour and type');
+    expect(hits[0].row.label).toBe('Colour and type');
+  });
+
+  /*
+   * "Appearance" stopped being a page name when the shape of the app — which
+   * navigation, which layout — moved onto one page with the navigation, and
+   * the colour page took the name that says what is on it. The word is still
+   * what people type, so it stays a keyword, and this is the check that it
+   * still lands somewhere sensible rather than nowhere.
+   */
+  it('still finds the page a retired name used to open', () => {
+    expect(findSetting('appearance')[0].row.screen).toBe('setLook');
   });
 
   it('says which word it matched, so the page can light the right group', () => {
     expect(findSetting('dark')[0].matched).toBe('dark');
-    expect(findSetting('appearance')[0].matched).toBe('Appearance');
+    expect(findSetting('colour and type')[0].matched).toBe('Colour and type');
   });
 
   it('says which section a hit lives in', () => {

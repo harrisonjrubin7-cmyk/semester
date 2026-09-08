@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { dateToIso } from './date';
 import {
   QUIET_DAYS,
   ahead,
@@ -24,7 +25,7 @@ const NOW = new Date(2026, 8, 4, 9, 0);
 const AT = NOW.getTime();
 const day = (n: number) => {
   const d = new Date(2026, 8, 4 + n);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return dateToIso(d);
 };
 
 const app = (patch: Partial<Application> = {}, at = AT) => newApplication(patch, at);

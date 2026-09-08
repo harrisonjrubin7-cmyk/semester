@@ -33,7 +33,7 @@
  * disagreed with.
  */
 
-import type { Standing } from './grades';
+import { percentOf, type Standing } from './grades';
 import { estimate, showSpan, type Spent } from './pace';
 
 /** How much a run of scores has actually varied, in percentage points. */
@@ -295,11 +295,6 @@ export interface BuyInput {
   daysAway: number;
 }
 
-function pointsOf(weight: string): number {
-  const m = /(\d+(?:\.\d+)?)\s*%/.exec(weight);
-  return m ? Number(m[1]) : 0;
-}
-
 /**
  * Tonight's work, ordered by what an hour actually buys.
  *
@@ -315,7 +310,7 @@ export function bestBuys(
   c: Calibration | null,
 ): Buy[] {
   const out: Buy[] = items.map((i) => {
-    const worth = pointsOf(i.weight);
+    const worth = percentOf(i.weight);
     const e = estimate(spent, i.courseId, i.kind);
     const minutes = e.minutes > 0 ? corrected(e.minutes, c) : null;
     const perHour = worth > 0 && minutes ? Math.round(((worth / minutes) * 60) * 100) / 100 : null;

@@ -26,6 +26,9 @@
  * all have the same keys.
  */
 
+import { contrast as wcagContrast } from './contrast';
+import type { NavMode } from './types';
+
 export interface Accent {
   id: string;
   label: string;
@@ -618,17 +621,104 @@ export function feedStyleOf(id: string | undefined): string {
 }
 
 /**
- * Two ways of laying out every screen in the app.
+ * The two axes the app is arranged on, named once, here.
+ *
+ * `NAVS` is **how you move**: which single navigation is drawn. `SHELLS` is
+ * **how a screen is drawn** once you are on it. They are independent — every
+ * one of the twelve pairings is a working app — and neither may quietly do
+ * the other's job.
+ *
+ * That last sentence is the whole reason these two lists now sit together.
+ * The soft layout used to draw its own two rows of pills, so choosing it put
+ * a second navigation on top of the tab bar or the rail that was already
+ * there: one app, two live navigations, each unaware of the other. The rows
+ * were good; being a layout's side effect was not. They are a navigation now,
+ * choosable in every layout, and a layout adds no navigation at all.
+ *
+ * Both lists are read by the Appearance screen that renders the pickers, by
+ * the guidebook that documents them, and by the readers below that validate
+ * what comes back from storage — so an option added here appears everywhere
+ * without a second edit, and an option that never existed cannot strand
+ * somebody on a screen with no way off.
+ */
+
+/**
+ * The four navigations. Exactly one of them is on screen at any time.
+ *
+ * Genuinely different habits rather than four skins: the bar suits somebody
+ * who lives in four screens, the feed somebody who wants the day in one
+ * scroll, the springboard somebody who has forty-six screens and would rather
+ * see them than remember which shelf they are on, the shelves somebody who
+ * wants the shelf and its screens visible at once.
+ */
+export const NAVS = [
+  {
+    id: 'tabs',
+    label: 'Tab bar',
+    blurb: 'A fixed bar of seven you choose. Every thing has one home you can learn.',
+    /** What the first screen is called in this navigation. See `homeTitle`. */
+    home: 'Today',
+  },
+  {
+    id: 'feed',
+    label: 'One feed',
+    blurb: 'Classes and deadlines interleaved in a single scroll, sliced by a filter row.',
+    home: 'Everything',
+  },
+  {
+    id: 'springboard',
+    label: 'Home screen',
+    blurb: 'Three pages of icons with a dock that does not move. Everything visible rather than remembered.',
+    home: 'Semester',
+  },
+  {
+    id: 'shelves',
+    label: 'Shelves',
+    blurb: 'Two rows of pills — the shelf you are on, and the screens on it — with a line saying what this screen is for.',
+    home: 'Today',
+  },
+];
+
+/**
+ * What the header calls the first screen, per navigation.
+ *
+ * A lookup rather than the chain of ternaries this was, in `App.tsx`, which
+ * had to be found and extended every time a navigation was added — and which
+ * silently fell through to "Today" for anything it did not recognise, so a
+ * new mode looked finished while wearing the wrong name.
+ */
+export function homeTitle(nav: string | undefined): string {
+  return NAVS.find((n) => n.id === nav)?.home ?? 'Today';
+}
+
+/**
+ * A navigation id, read back safely.
+ *
+ * Storage is not a trusted input: it holds whatever an older build, a newer
+ * build, or a half-finished sync wrote. An unrecognised value used to reach
+ * `App.tsx` untouched, where every branch tested for a name it did not match
+ * — so the app drew no navigation at all and the only way out was to clear
+ * the site's data. Falling back to the bar is a worse app for a moment; no
+ * navigation is not an app.
+ */
+export function navOf(id: string | undefined): NavMode {
+  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'tabs';
+}
+
+/**
+ * Three ways of laying out every screen in the app.
  *
  * `plain` is what this app has always looked like: framed cards with
  * registration marks, headings with air around them, rows that belong to the
  * screen that drew them. `grouped` is the inset-list arrangement people know
  * from a phone's own settings — one rounded container per section, hairlines
  * between rows, the explanation under the group rather than inside a row.
+ * `soft` lifts each card off the page and puts the one figure worth reading
+ * first at the top of the screen.
  *
- * Neither is a skin. They are different readings of the same screens, in the
+ * None is a skin. They are different readings of the same screens, in the
  * same way `feed` is three readings of the same day, and a screen shows every
- * control it shows today in both.
+ * control it shows today in all three.
  *
  * `plain` is the default and stays the default. Nobody's app changes until
  * they choose otherwise.
@@ -657,28 +747,25 @@ export function shellOf(id: string | undefined): string {
 
 // ── Contrast, checked rather than promised ──────────────────────────────
 
-/** Relative luminance, per WCAG 2.1. */
-function luminance(hex: string): number {
-  const clean = hex.replace('#', '');
-  const full = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
-  const channel = (i: number) => {
-    const v = parseInt(full.slice(i * 2, i * 2 + 2), 16) / 255;
-    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * channel(0) + 0.7152 * channel(1) + 0.0722 * channel(2);
-}
-
 /**
- * The contrast ratio between two colours, 1 to 21.
+ * The contrast ratio between two colours, 1 to 21, rounded for display.
  *
  * This exists because the accent is now a hue somebody can drag, and a hue
  * picker without a contrast readout is a way to let people make their own app
  * unreadable and then wonder why. Better to show the number as it moves.
+ *
+ * The arithmetic is `lib/contrast.ts` and is not repeated here. It was, once:
+ * the same WCAG luminance transfer function written out a second time in this
+ * file, agreeing with the first by luck rather than by construction. Two
+ * copies of a formula are two places to fix a rounding rule, and the pair that
+ * disagrees is the pair nobody is looking at. This is a display wrapper —
+ * rounding to two places, and reading an unparseable colour as the worst case
+ * rather than as `null`, because a readout in the settings screen has to print
+ * something.
  */
 export function contrast(a: string, b: string): number {
-  const la = luminance(a);
-  const lb = luminance(b);
-  const ratio = (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  const ratio = wcagContrast(a, b);
+  if (ratio === null) return 1;
   return Math.round(ratio * 100) / 100;
 }
 

@@ -67,6 +67,38 @@ export function startOfDay(d: Date): Date {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
+/**
+ * The same midnight, as a timestamp, for the callers that hold one.
+ *
+ * `lib/everything.ts` and `state/slices/navigate.ts` had written this out,
+ * identically, because the version above takes and returns a `Date` and they
+ * hold numbers. They record and compare the *day* a screen was last opened,
+ * so a screen opened twice in one evening counts once — and two copies of
+ * "what day is this timestamp on" is two places for a timezone to be got
+ * wrong, in code whose whole job is a local calendar day.
+ */
+export function dayOf(at: number): number {
+  return startOfDay(new Date(at)).getTime();
+}
+
+/**
+ * How far a date moved, in words: "7 days later", "1 day earlier".
+ *
+ * One sentence, two callers. `lib/reconcile.ts` compares the app against a
+ * subscribed calendar and `lib/rediff.ts` compares one syllabus against the
+ * next, and each had written this out against its own `Moved` — same words,
+ * same singular, same sign convention, two functions. The two `Moved` types
+ * are genuinely different records and stay that way; the phrase is not.
+ *
+ * Positive is later. A caller with the sign the other way round should negate
+ * it rather than teach this two conventions.
+ */
+export function movedLine(days: number): string {
+  const size = Math.abs(days);
+  const unit = size === 1 ? 'day' : 'days';
+  return days > 0 ? `${size} ${unit} later` : `${size} ${unit} earlier`;
+}
+
 export function sameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() &&

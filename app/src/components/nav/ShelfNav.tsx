@@ -1,5 +1,12 @@
 /**
- * The soft shell's navigation: two rows of pills and a line saying where you are.
+ * The shelves: two rows of pills and a line saying where you are.
+ *
+ * One of the app's four navigations, chosen in Appearance like the other
+ * three. It arrived as part of the soft *layout*, which meant choosing that
+ * layout put these rows on top of the tab bar or the rail that was already
+ * drawn — two navigations at once, in one app. The rows were worth keeping;
+ * being a layout's side effect was not. So they are a navigation now, and
+ * `nav === 'shelves'` is the only thing that draws them, in every layout.
  *
  * Row one is the nine shelves. Row two is the screens on the shelf you are
  * standing on. Under both, the current screen's own sentence from the
@@ -34,7 +41,7 @@ import { useEffect, useRef } from 'react';
 import { useStore } from '../../state/store';
 import { GROUPS, destination, destinationsFor, saysFor, shelfOf } from '../../lib/nav';
 
-export function SoftNav() {
+export function ShelfNav() {
   const { state, dispatch, school } = useStore();
   const here = shelfOf(state.screen);
   const caps = school.capabilities;
@@ -60,8 +67,8 @@ export function SoftNav() {
   }, [state.screen]);
 
   return (
-    <nav className="soft-nav" aria-label="Screens" ref={rows}>
-      <div className="soft-nav-row" role="tablist" aria-label="Areas">
+    <nav className="shelf-nav" aria-label="Screens" ref={rows}>
+      <div className="shelf-nav-row" role="tablist" aria-label="Areas">
         {GROUPS.map((g) => {
           const on = g === here;
           return (
@@ -70,7 +77,7 @@ export function SoftNav() {
               type="button"
               role="tab"
               aria-selected={on}
-              className={`bare pill-soft soft-nav-pill${on ? ' is-on' : ''}`}
+              className={`bare pill-soft shelf-nav-pill${on ? ' is-on' : ''}`}
               onClick={() => {
                 // A shelf is not a screen, so pressing one opens the first
                 // screen on it rather than doing nothing. Row two then shows
@@ -85,7 +92,7 @@ export function SoftNav() {
         })}
       </div>
 
-      <div className="soft-nav-row" aria-label={`Screens in ${here}`}>
+      <div className="shelf-nav-row" aria-label={`Screens in ${here}`}>
         {onShelf.map((d) => {
           const on = d.screen === state.screen;
           return (
@@ -93,7 +100,7 @@ export function SoftNav() {
               key={d.screen}
               type="button"
               aria-current={on ? 'page' : undefined}
-              className={`bare pill-soft soft-nav-pill${on ? ' is-on' : ''}`}
+              className={`bare pill-soft shelf-nav-pill${on ? ' is-on' : ''}`}
               onClick={() => dispatch({ type: 'go', screen: d.screen })}
             >
               {saysFor(d, caps).label}
@@ -102,7 +109,7 @@ export function SoftNav() {
         })}
       </div>
 
-      {said ? <p className="soft-nav-said">{saysFor(said, caps).blurb}</p> : null}
+      {said ? <p className="shelf-nav-said">{saysFor(said, caps).blurb}</p> : null}
     </nav>
   );
 }

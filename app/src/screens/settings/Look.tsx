@@ -4,19 +4,15 @@ import { SettingsPage } from './Page';
 import { CustomRow, Group, SelectRow } from '../../components/shell/Rows';
 import { TONE_LABELS } from '../../lib/tone';
 import { lights } from '../../lib/settings';
-import { ShellPicker } from '../../components/ShellPicker';
 import { SectionLabel, Segmented, Toggle } from '../../components/ui';
 import { usePrefersDark } from '../../lib/prefers';
 import {
   ACCENTS,
-  BADGES,
   BODYFACES,
   CORNERS,
   DENSITIES,
-  FEEDS,
   GROUNDS,
   ICON_SHAPES,
-  LABELS,
   LINE_HEIGHTS,
   MATCH_DEVICE,
   MATCH_GROUND,
@@ -148,12 +144,17 @@ function HuePicker() {
 }
 
 /**
- * Everything about how the app looks.
+ * What the app is made of: its colour, its type, its edges, its voice.
  *
  * Sixteen sections that used to be scattered through one long screen, grouped
- * into three: what colour it is, how it reads, and how it is spaced. The
- * controls are the ones that were already here — this moved them and did not
- * rewrite any of them.
+ * into four: what colour it is, how it reads, how it talks, and how it is
+ * spaced.
+ *
+ * What is deliberately *not* here is the app's shape — which navigation is
+ * drawn and how a screen is arranged. Those two were split across this page
+ * and the Navigation page, one each, so nobody could see one while changing
+ * the other. They are together on **Layout and navigation** now, and this
+ * page links to it rather than keeping a second copy of half the question.
  */
 export function SettingsLook() {
   const { state, dispatch } = useStore();
@@ -410,16 +411,6 @@ export function SettingsLook() {
           </Group>
 
           <Group
-            header="Layout"
-            footer="The drawn layout is the app as it is. Grouped arranges every screen the way a phone's own settings do. Nothing is hidden either way."
-            lit={lights('layout shell grouped drawn inset list rows panel arrangement', lit)}
-          >
-            <CustomRow>
-              <ShellPicker />
-            </CustomRow>
-          </Group>
-
-          <Group
             header="How it talks to you"
             footer="The figures are the same in all three — five overdue is five overdue. Only the words around them change."
             lit={lights('tone voice wording supportive direct minimal phrasing language kind blunt', lit)}
@@ -479,43 +470,6 @@ export function SettingsLook() {
                 value={state.iconShape}
                 onChange={(iconShape) => dispatch({ type: 'setLook', look: { iconShape } })}
               />
-            </CustomRow>
-            <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Tab bar</SectionLabel>
-              <Segmented
-                options={LABELS.map((l) => ({ id: l.id, label: l.label }))}
-                value={state.labels}
-                onChange={(labels) => dispatch({ type: 'setLook', look: { labels } })}
-              />
-              <div style={HINT}>
-                {LABELS.find((l) => l.id === state.labels)?.blurb} The names stay for a screen reader
-                either way.
-              </div>
-            </CustomRow>
-            <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Badges</SectionLabel>
-              <Segmented
-                options={BADGES.map((b) => ({ id: b.id, label: b.label }))}
-                value={state.badges}
-                onChange={(badges) => dispatch({ type: 'setLook', look: { badges } })}
-              />
-              <div style={HINT}>
-                {BADGES.find((b) => b.id === state.badges)?.blurb} A number is a claim on your attention,
-                and an app that puts one on everything has made them all mean nothing.
-              </div>
-
-              <HuePicker />
-            </CustomRow>
-            <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Today’s feed</SectionLabel>
-              <Segmented
-                options={FEEDS.map((f) => ({ id: f.id, label: f.label }))}
-                value={state.feed}
-                onChange={(feed) => dispatch({ type: 'setLook', look: { feed } })}
-              />
-              <div style={HINT}>
-                {FEEDS.find((f) => f.id === state.feed)?.blurb}
-              </div>
             </CustomRow>
           </Group>
         </>

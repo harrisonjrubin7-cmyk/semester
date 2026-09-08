@@ -20,6 +20,7 @@
  * the substance; the paragraph is the garnish.
  */
 
+import { dateToIso } from './date';
 import type { Catalog } from '../data/catalog';
 import type { Appointment, DatedItem, PersonalTask } from './types';
 import type { Commitment } from './activities';
@@ -52,9 +53,7 @@ export interface Morning {
 
 /** The ISO date, for keying a report to the day it covers. */
 export function dayKey(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate(),
-  ).padStart(2, '0')}`;
+  return dateToIso(d);
 }
 
 function sameDay(a: Date, b: Date): boolean {

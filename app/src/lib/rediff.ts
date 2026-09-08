@@ -30,6 +30,7 @@
  * keeps the id its tick is filed under.
  */
 
+import { movedLine as movedDays } from './date';
 import type { CourseModule, GradeRow, Item } from './types';
 import { similarity, THRESHOLD } from './reconcile';
 
@@ -232,9 +233,7 @@ export function summary(d: Diff): string {
   return `${bits.join(', ')}.`;
 }
 
-/** How a move reads. */
+/** How a move reads. The words are `lib/date.ts`, shared with reconcile. */
 export function movedLine(m: Moved): string {
-  const size = Math.abs(m.days);
-  const unit = size === 1 ? 'day' : 'days';
-  return m.days > 0 ? `${size} ${unit} later` : `${size} ${unit} earlier`;
+  return movedDays(m.days);
 }

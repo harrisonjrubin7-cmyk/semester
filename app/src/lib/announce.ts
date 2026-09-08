@@ -31,7 +31,7 @@
  */
 
 import type { CourseModule, Item } from './types';
-import { newId } from './files';
+import { newId } from './idb';
 
 export type Op = 'move' | 'rename' | 'add' | 'drop';
 

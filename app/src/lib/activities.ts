@@ -26,6 +26,7 @@
  * place to keep what you are actually in, with the hours it actually costs.
  */
 
+import { dateToIso } from './date';
 import type { Appointment, Block } from './types';
 import type { EventKindId } from './kinds';
 
@@ -299,9 +300,7 @@ export function asAppointments(list: Commitment[], date: Date): Appointment[] {
     id: `commitment-${date.toDateString()}-${i}`,
     title: b.title,
     kind: b.kind,
-    date: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-      date.getDate(),
-    ).padStart(2, '0')}`,
+    date: dateToIso(date),
     at: b.at,
     time: b.time,
     where: b.meta,

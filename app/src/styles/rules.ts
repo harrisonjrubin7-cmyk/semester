@@ -237,16 +237,23 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 698,
+  type: 697,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 225,
+  leading: 224,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 541,
+  space: 537,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 561,
+  shorthand: 558,
 };
 
 /*
+ * 698/225/541/561 → 697/224/537/558 with the two-navigations release. Four
+ * numbers down and none up, which is the direction this is here to enforce:
+ * a duplicated appearance control was deleted rather than reformatted, the
+ * layout picker's three thumbnails were drawn on the spacing scale rather
+ * than in loose pixels, and the settings pages that were merged brought no
+ * new off-scale values with them.
+ *
  * `space` went 552 → 546 while the chat surface was being built, which is the
  * budget doing its job in the useful direction: the count now skips `0`, and
  * the six it stops counting were `padding: 0` cancelling a default rather than

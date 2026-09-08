@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { asset } from './asset';
-import { formatBytes, newId } from './files';
+import { formatBytes } from './files';
+import { newId } from './idb';
 import { blobOf, numbered, zipOf } from './deliver';
 import { clockOf, explainMicError, micSupported, recordingName } from './mic';
 import { MAX_SHOTS, ShotError, weigh } from './shots';

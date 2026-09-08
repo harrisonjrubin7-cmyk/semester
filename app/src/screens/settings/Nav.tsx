@@ -1,19 +1,48 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, Group } from '../../components/shell/Rows';
+import { CustomRow, Group, NavRow } from '../../components/shell/Rows';
 import { useRowStyle } from '../../components/shell/useShell';
 import { lights } from '../../lib/settings';
 import { SectionLabel, Segmented, TickBox, Toggle } from '../../components/ui';
 import { countHidden, revealLine } from '../../lib/reveal';
 import { TabChooser } from '../../components/TabChooser';
+import { LayoutPicker, NavPicker } from '../../components/Appearance';
+import { BADGES, FEEDS, LABELS } from '../../lib/look';
 import { SECTIONS, move, ordered } from '../../lib/feed';
 
+const HINT = {
+  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+  opacity: 0.5,
+  marginTop: 'var(--sp-3)',
+  lineHeight: 'var(--leading-normal)',
+  textWrap: 'pretty',
+} as const;
+
+const LABEL_STYLE = {
+  margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))',
+} as const;
+
 /**
- * How you get around, and what Today opens on.
+ * The shape of the app: which navigation is drawn, and how a screen is drawn.
  *
- * The two halves of the same question — which structure the app has, and what
- * the first screen shows — sat forty sections apart. They belong together:
- * changing one is usually why somebody came to change the other.
+ * ## Why these are one page
+ *
+ * They were three. The navigation was here; the layout was under Appearance;
+ * the tab bar's labels, the badges and the shape of Today's feed were under
+ * Appearance's "Shape and spacing", forty sections away from the setting that
+ * decides whether there is a tab bar at all. Three places to answer one
+ * question — *what shape is this app* — and changing one usually meant going
+ * to find another.
+ *
+ * Worse than scattered, they overlapped: the soft layout drew its own
+ * navigation, so choosing it put two navigations on screen at once, and
+ * nothing on either page said so. That is fixed underneath this screen (see
+ * `lib/types.ts`, `NavMode`) and this page is what makes it visible: one
+ * navigation, chosen here, and a layout that only ever changes how a screen
+ * is drawn.
+ *
+ * Order is the order somebody decides in: what shape it is, then how it is
+ * drawn, then what the first screen holds.
  */
 export function SettingsNav() {
   const { state, dispatch, facts } = useStore();
@@ -22,52 +51,84 @@ export function SettingsNav() {
   return (
     <SettingsPage
       screen="setNav"
-      title="Navigation"
-      blurb="Two structures, the same screens. Nothing here hides anything — every screen stays reachable whichever you pick."
+      title="Layout and navigation"
+      blurb="Four navigations and three layouts, in every combination. Nothing here hides anything — every screen stays reachable whichever you pick."
     >
       {(lit) => (
         <>
           <Group
-            header="Structure"
-            footer="The tab bar gives every thing a fixed home. One feed interleaves classes and deadlines in a single scroll. The home screen is three pages of icons."
-            lit={lights('tabs tab bar navigation nav feed home screen springboard icons layout structure', lit)}
+            header="How you move"
+            footer="Only one navigation is ever drawn. Whichever you pick, the search in the header reaches every screen, and Everything lists them all."
+            lit={lights(
+              'tabs tab bar navigation nav feed home screen springboard icons shelves pills structure move around',
+              lit,
+            )}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Navigation</SectionLabel>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
-                Two structures, the same screens. The tab bar gives every thing a fixed home. The feed
-                interleaves classes and deadlines in one scroll and slices it with a filter row.
-              </div>
-              <Segmented
-                options={[
-                  { id: 'tabs', label: 'Tab bar' },
-                  { id: 'feed', label: 'One feed' },
-                  { id: 'springboard', label: 'Home screen' },
-                ]}
-                value={state.nav}
-                onChange={(nav) => dispatch({ type: 'setNav', nav })}
-              />
-
-              {/* Only in tab-bar mode: in feed mode there is no bar to arrange, and
-                  offering the setting anyway would be a control that does nothing. */}
-              {state.nav === 'springboard' && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
-                  Three pages of icons with a dock that does not move, folders that open in place, and a
-                  search that filters to everything at once. Every icon goes to the same screen the tab bar
-                  would have — it is a way in, not a different app.
-                </div>
-              )}
+              <NavPicker />
+              {/* Only where there is a bar to arrange. Offering it in the
+                  other three would be a control that does nothing. */}
               {state.nav === 'tabs' && <TabChooser />}
+            </CustomRow>
+          </Group>
+
+          <Group
+            header="How a screen is drawn"
+            footer="The layout changes arrangement and nothing else: the same screen shows the same controls and the same content in all three. It adds no navigation of its own."
+            lit={lights('layout shell grouped drawn soft inset list rows panel cards arrangement presentation', lit)}
+          >
+            <CustomRow>
+              <LayoutPicker />
+            </CustomRow>
+          </Group>
+
+          <Group
+            header="The bar itself"
+            footer="Both of these are about the bar and the rail, which is why they sit under the setting that decides whether you have one."
+            lit={lights('tab bar labels names icons badges counts numbers dot', lit)}
+          >
+            <CustomRow>
+              <SectionLabel style={LABEL_STYLE}>Tab labels</SectionLabel>
+              <Segmented
+                options={LABELS.map((l) => ({ id: l.id, label: l.label }))}
+                value={state.labels}
+                onChange={(labels) => dispatch({ type: 'setLook', look: { labels } })}
+              />
+              <div style={HINT}>
+                {LABELS.find((l) => l.id === state.labels)?.blurb} The names stay for a screen reader
+                either way.
+              </div>
+            </CustomRow>
+            <CustomRow>
+              <SectionLabel style={LABEL_STYLE}>Badges</SectionLabel>
+              <Segmented
+                options={BADGES.map((b) => ({ id: b.id, label: b.label }))}
+                value={state.badges}
+                onChange={(badges) => dispatch({ type: 'setLook', look: { badges } })}
+              />
+              <div style={HINT}>
+                {BADGES.find((b) => b.id === state.badges)?.blurb} A number is a claim on your
+                attention, and an app that puts one on everything has made them all mean nothing.
+              </div>
             </CustomRow>
           </Group>
 
           <Group
             header="What Today shows"
             footer="Turn a section off and it is gone from Today, not from the app — everything it held is still on the screen it belongs to."
-            lit={lights('today sections order rearrange move up down feed hide show', lit)}
+            lit={lights('today sections order rearrange move up down feed hide show cards rows timeline', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Your Today</SectionLabel>
+              <SectionLabel style={LABEL_STYLE}>Today’s feed</SectionLabel>
+              <Segmented
+                options={FEEDS.map((f) => ({ id: f.id, label: f.label }))}
+                value={state.feed}
+                onChange={(feed) => dispatch({ type: 'setLook', look: { feed } })}
+              />
+              <div style={HINT}>{FEEDS.find((f) => f.id === state.feed)?.blurb}</div>
+            </CustomRow>
+            <CustomRow>
+              <SectionLabel style={LABEL_STYLE}>Your Today</SectionLabel>
               <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
                 The right order is not the same for everyone. Somebody with a job and one class wants the
                 rail first; somebody with a paper due wants the checklist and would rather not scroll past
@@ -132,19 +193,26 @@ export function SettingsNav() {
 
           <Group
             header="The directory"
-            lit={lights('directory everything list screens hidden show all', lit)}
+            footer="Everything lists every screen the app has, with a line saying what each is for. This decides whether it starts full or fills up as you go."
+            lit={lights('directory everything list screens hidden show all reveal', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>The directory</SectionLabel>
               <Toggle
                 label="Show every screen straight away"
                 on={state.showAll}
                 onChange={() => dispatch({ type: 'showEverything', on: !state.showAll })}
               />
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+              <div style={HINT}>
                 {revealLine(countHidden(facts, state.visited, state.showAll), state.showAll)}
               </div>
             </CustomRow>
+            {/* The other half of the same question is a page away, so it is
+                one tap rather than a hunt through the index. */}
+            <NavRow
+              label="Colour and type"
+              sub="Ground, accent, fonts, text size, spacing"
+              onClick={() => dispatch({ type: 'go', screen: 'setLook' })}
+            />
           </Group>
         </>
       )}

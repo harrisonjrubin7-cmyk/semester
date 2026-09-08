@@ -15,7 +15,7 @@ import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
 import { usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
-import { ground, resolveGround, scaleOf, tokensFor, type Look } from './lib/look';
+import { ground, homeTitle, resolveGround, scaleOf, tokensFor, type Look } from './lib/look';
 
 /**
  * Every screen but the first, fetched when it is opened.
@@ -113,12 +113,12 @@ const Chat = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
+import { chromeFor, homeShape } from './lib/chrome';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
-import { SoftNav } from './components/soft/SoftNav';
+import { ShelfNav } from './components/nav/ShelfNav';
 import { SoftBar, SoftTop } from './components/soft/SoftTop';
 import { litRailTab, litTab, tabLabel } from './lib/tabbar';
-import { useSoft } from './components/shell/useShell';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
@@ -170,14 +170,6 @@ function Loading() {
   );
 }
 
-/**
- * The screens that keep the whole display.
- *
- * A drill is one card at a time and a tab bar under it invites a mis-tap; a
- * lesson and a deck are playback. Everything else keeps the bar.
- */
-const FULLSCREEN: Screen[] = ['drill', 'quiz', 'guess', 'lesson', 'slides', 'onboarding'];
-
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
   const { state, now, catalog } = useStore();
@@ -203,10 +195,7 @@ function useHeader(): { kicker: string; title: string } {
 
   switch (state.screen) {
     case 'home':
-      return {
-        kicker: today,
-        title: state.nav === 'feed' ? 'Everything' : state.nav === 'springboard' ? 'Semester' : 'Today',
-      };
+      return { kicker: today, title: homeTitle(state.nav) };
     case 'courses':
       return { kicker: load, title: 'Courses' };
     case 'course': {
@@ -704,10 +693,11 @@ function CurrentScreen() {
   const { state } = useStore();
   switch (state.screen) {
     case 'home':
-      // The Home layout choice, from Settings. The springboard is a way in
-      // rather than a different app: every icon goes to the same screen the
-      // tab bar would have.
-      return state.nav === 'springboard' ? <Springboard /> : <Today />;
+      // The home screen the chosen navigation calls for. The springboard is a
+      // way in rather than a different app: every icon goes to the same screen
+      // the tab bar would have. `Today` reads the same `homeShape` to decide
+      // between its two readings of the day, so the three cannot disagree.
+      return homeShape(state.nav) === 'springboard' ? <Springboard /> : <Today />;
     case 'privacy':
       return <Privacy />;
     case 'data':
@@ -958,8 +948,20 @@ function Rail() {
 export default function App() {
   const { state, dispatch, saveTrouble, asking, settle } = useStore();
   const wide = useMedia(DESKTOP);
-  // The soft shell brings its own two-row navigation; the other two do not.
-  const soft = useSoft();
+  /*
+   * Which navigation is drawn — and it is one, always.
+   *
+   * This used to be four conditions in four places, and more than one of them
+   * could be yes. `shell === 'soft'` drew its own two rows of pills while
+   * `nav` drew a tab bar or a rail underneath them, so the soft layout was
+   * the same app with two navigations stacked in it. Anybody who chose it saw
+   * two systems running at once, because that is what it was.
+   *
+   * The whole rule is `lib/chrome.ts` now, and `chrome.test.ts` runs every
+   * combination of navigation, screen and width to prove no two are ever
+   * drawn together. Here there is one call and no conditions of its own.
+   */
+  const chrome = chromeFor(state.nav, state.screen, wide);
 
   /**
    * The whole look, written onto the document root.
@@ -1030,15 +1032,6 @@ export default function App() {
     );
   }
 
-  // The tab bar used to hide on every screen that was not itself a tab, so
-  // opening a course guide left Back as the only exit — five taps from a
-  // flashcard to the calendar. It now stays put everywhere except the screens
-  // that genuinely need the whole display: a running drill, a lesson, a deck.
-  // Not in springboard mode: its dock is the bar, and two of them would be
-  // eleven icons across the bottom of a phone.
-  const showTabs = state.nav === 'tabs' && !FULLSCREEN.includes(state.screen) && !wide;
-  const showFab = state.nav === 'feed' && state.screen === 'home' && !wide;
-
   /**
    * A banner for a device that has stopped saving.
    *
@@ -1067,7 +1060,19 @@ export default function App() {
 
   if (wide) {
     return (
-      <div className="desk">
+      /*
+       * One column when the shelves are the navigation, two when the rail is.
+       *
+       * The rail is how the tab bar, the feed and the springboard all express
+       * themselves on a wide screen — a laptop has room to keep the
+       * navigation visible, and hiding it behind the phone's rules would make
+       * the wide layout worse than the narrow one. The shelves are already a
+       * navigation that shows both the shelf and its screens, so drawing the
+       * rail beside them is the same doubling this release exists to remove.
+       * `.desk-one` drops the rail's column so the pane does not sit in the
+       * second half of an empty grid.
+       */
+      <div className={chrome.rail ? 'desk' : 'desk desk-one'}>
         <Fresh />
         <Said />
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
@@ -1092,7 +1097,7 @@ export default function App() {
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
-        <Rail />
+        {chrome.rail && <Rail />}
         <div className="device device-pane">
           <Header />
           {/* Under the header rather than above it, and inside the pane rather
@@ -1100,7 +1105,7 @@ export default function App() {
               at its root takes the rail's column. */}
           <SampleMark />
           {trouble}
-          {soft && <SoftNav />}
+          {chrome.shelves && <ShelfNav />}
           <ScrollArea screen={state.screen} key={state.screen}>
             <SoftTop />
             <Suspense fallback={<Loading />}>
@@ -1142,7 +1147,7 @@ export default function App() {
       <Header />
       <SampleMark />
       {trouble}
-      {soft && <SoftNav />}
+      {chrome.shelves && <ShelfNav />}
       <ScrollArea screen={state.screen} key={state.screen}>
         <SoftTop />
         <Suspense fallback={<Loading />}>
@@ -1152,8 +1157,8 @@ export default function App() {
         </Suspense>
         <SoftBar />
       </ScrollArea>
-      {showTabs && <TabBar />}
-      {showFab && (
+      {chrome.tabs && <TabBar />}
+      {chrome.fab && (
         <button
           type="button"
           className="bare"

@@ -10,6 +10,7 @@ import {
   ICON_SHAPES,
   LABELS,
   LINE_HEIGHTS,
+  NAVS,
   READING_WIDTHS,
   SHELLS,
   SIZES,
@@ -135,8 +136,20 @@ const SETTINGS: { name: string; options: { id: string; label: string }[]; does: 
   { name: 'Icon shape', options: ICON_SHAPES, does: 'How the icons in the bar and the rail are drawn.', doesNot: 'It does not change which icons are there.' },
   { name: 'Tab labels', options: LABELS, does: 'Whether the bottom bar names its tabs or shows icons alone.', doesNot: 'It does not change which tabs are in the bar.' },
   { name: 'Badges', options: BADGES, does: 'Whether counts appear on the tabs and the rail.', doesNot: 'It does not change what is counted.' },
-  { name: 'How your day is drawn', options: FEEDS, does: 'The shape of Today — a feed, a list, or the springboard.', doesNot: 'It does not change what is on it.' },
-  { name: 'Navigation', options: SHELLS, does: 'Whether the app uses a tab bar, a feed with one screen at a time, or a springboard of everything.', doesNot: 'Every screen is reachable in all three.' },
+  /*
+   * These two named each other's options.
+   *
+   * "Navigation" was handed `SHELLS` — Drawn, Grouped, Soft — while its prose
+   * described the tab bar and the springboard, and no entry documented the
+   * layout at all. So the app's own guidebook printed three layout names
+   * under a heading about navigation, which is worse than saying nothing:
+   * somebody reading it learned a wrong pairing and then could not find the
+   * setting. `NAVS` and `SHELLS` are the two lists now, one each, and the
+   * page they both live on is named in the prose.
+   */
+  { name: 'How your day is drawn', options: FEEDS, does: 'The shape of Today — cards, compact rows, or one timeline down the day.', doesNot: 'It does not change what is on it.' },
+  { name: 'Navigation', options: NAVS, does: 'Which single navigation the app draws: a tab bar, one feed, a home screen of icons, or two rows of shelves. On Layout and navigation.', doesNot: 'It never draws two. Every screen is reachable in all four, and search finds them all.' },
+  { name: 'Layout', options: SHELLS, does: 'How a screen is arranged once you are on it — drawn cards, grouped inset lists, or soft raised tiles. On Layout and navigation, beside the navigation.', doesNot: 'It changes no content and adds no navigation of its own.' },
 ];
 
 /** A registry entry by screen id, or nothing. */

@@ -28,6 +28,7 @@
  * it gives one step, not five compressed into an evening.
  */
 
+import { dateToIso } from './date';
 import { normalKind } from './pace';
 
 /** One named piece of the work, and the day it belongs on. */
@@ -70,10 +71,6 @@ const GENERIC = ['Start it', 'Main pass', 'Finish and submit'];
 /** How many days out this is worth doing at all. Below one, there is no plan. */
 export const LEAST_DAYS = 1;
 
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 /** The step names for a kind of work, without dates on them yet. */
 export function shapeOf(kind: string): string[] {
   return SHAPES[normalKind(kind)] ?? GENERIC;
@@ -109,7 +106,7 @@ export function planFor(kind: string, due: Date, now: Date, most = 6): Step[] {
     const back = Math.round(((picked.length - 1 - i) * days) / Math.max(1, picked.length - 1));
     const on = new Date(end);
     on.setDate(on.getDate() - back);
-    return { title, date: iso(on) };
+    return { title, date: dateToIso(on) };
   });
 }
 

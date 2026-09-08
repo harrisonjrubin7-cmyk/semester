@@ -1,3 +1,4 @@
+import { dateToIso } from './date';
 /**
  * One box: "econ ps4 friday 5pm".
  *
@@ -93,10 +94,6 @@ const KINDS: [RegExp, string][] = [
   [/\b(?:project|case)\s*\d*\b/i, 'Project'],
 ];
 
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 /**
  * The course, matched on the letters of its code.
  *
@@ -146,11 +143,11 @@ export function matchDate(text: string, now: Date): { date: string; word: string
   const plus = (days: number) => {
     const d = new Date(today);
     d.setDate(d.getDate() + days);
-    return iso(d);
+    return dateToIso(d);
   };
 
-  if (/\btoday\b/.test(s)) return { date: iso(today), word: 'today' };
-  if (/\btonight\b/.test(s)) return { date: iso(today), word: 'tonight' };
+  if (/\btoday\b/.test(s)) return { date: dateToIso(today), word: 'today' };
+  if (/\btonight\b/.test(s)) return { date: dateToIso(today), word: 'tonight' };
   if (/\btomorrow\b|\btmr?w?\b/.test(s)) {
     return { date: plus(1), word: /tomorrow/.test(s) ? 'tomorrow' : 'tmrw' };
   }
@@ -185,7 +182,7 @@ export function matchDate(text: string, now: Date): { date: string; word: string
       // November means the coming January, which is what anybody means.
       let year = today.getFullYear();
       if (new Date(year, month, day) < today) year += 1;
-      return { date: iso(new Date(year, month, day)), word: named[0] };
+      return { date: dateToIso(new Date(year, month, day)), word: named[0] };
     }
   }
 
@@ -197,7 +194,7 @@ export function matchDate(text: string, now: Date): { date: string; word: string
       let year = slashes[3] ? Number(slashes[3]) : today.getFullYear();
       if (year < 100) year += 2000;
       if (!slashes[3] && new Date(year, month, day) < today) year += 1;
-      return { date: iso(new Date(year, month, day)), word: slashes[0] };
+      return { date: dateToIso(new Date(year, month, day)), word: slashes[0] };
     }
   }
 
