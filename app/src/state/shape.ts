@@ -904,6 +904,32 @@ export function primePersisted(state: Persisted | null): void {
   primed = state;
 }
 
+/**
+ * An array from storage, or an empty one.
+ *
+ * `list(saved.tasks)` looks like it guards this and does not: `??` only
+ * catches null and undefined, so a `tasks` that came back as a string, a
+ * number or an object went straight through into the app, and the first
+ * `.map` on it killed the whole page. Measured: storage holding
+ * `{"tasks":"none"}` rendered zero characters and threw
+ * `e.tasks.map is not a function` — before any boundary could catch it,
+ * because it happens while the store is being built rather than while a
+ * screen is being drawn.
+ *
+ * Storage is not a trusted input. It holds whatever an older build wrote, a
+ * half-finished sync left behind, a quota error truncated, or somebody typed
+ * into devtools. `readTabs` and `navOf` already read their fields back
+ * defensively; there were twenty-three arrays that did not, and this is the
+ * same idea applied to all of them at once.
+ *
+ * Empty rather than throwing, for the reason the whole file is written this
+ * way: an app that opens with one list missing is recoverable, and an app
+ * that will not open is not.
+ */
+function list<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
 export function loadPersisted(): Persisted {
   if (primed) return primed;
   try {
@@ -928,15 +954,15 @@ export function loadPersisted(): Persisted {
       done: saved.done ?? {},
       saved: saved.saved ?? DEFAULT_PERSISTED.saved,
       picked: { ...DEFAULT_PERSISTED.picked, ...(saved.picked ?? {}) },
-      tasks: saved.tasks ?? [],
-      appointments: saved.appointments ?? [],
-      notes: saved.notes ?? [],
-      updates: saved.updates ?? [],
-      feeds: saved.feeds ?? [],
-      feedEvents: saved.feedEvents ?? [],
+      tasks: list(saved.tasks),
+      appointments: list(saved.appointments),
+      notes: list(saved.notes),
+      updates: list(saved.updates),
+      feeds: list(saved.feeds),
+      feedEvents: list(saved.feedEvents),
       linkUrls: saved.linkUrls ?? {},
-      extraLinks: saved.extraLinks ?? [],
-      courses: saved.courses ?? [],
+      extraLinks: list(saved.extraLinks),
+      courses: list(saved.courses),
       // An install that predates courses-as-data was running the four built-in
       // ones; it keeps them, or the app would look wiped on the next load. A
       // genuinely new account starts empty.
@@ -956,10 +982,10 @@ export function loadPersisted(): Persisted {
         ? saved.archivedTerms.filter((t): t is string => typeof t === 'string')
         : [],
       lastSync: readLastSync(saved.lastSync),
-      places: saved.places ?? [],
-      commitments: saved.commitments ?? [],
-      timers: saved.timers ?? [],
-      alarms: saved.alarms ?? [],
+      places: list(saved.places),
+      commitments: list(saved.commitments),
+      timers: list(saved.timers),
+      alarms: list(saved.alarms),
       applications: readApplications(saved.applications),
       progress: readProgress(saved.progress),
       returned: readReturned(saved.returned),
@@ -1011,28 +1037,28 @@ export function loadPersisted(): Persisted {
       drops: Object.fromEntries(
         Object.entries(saved.drops ?? {}).map(([k, v]) => [k, readDrop(v)]),
       ),
-      courseOrder: saved.courseOrder ?? [],
-      recent: saved.recent ?? [],
+      courseOrder: list(saved.courseOrder),
+      recent: list(saved.recent),
       // Seeded from `recent` for anybody upgrading: without this the app
       // would tell somebody who has used it all term that they have never
       // opened Today, which is both wrong and the sort of wrong that makes
       // the rest of the sentence untrustworthy.
       visited:
         saved.visited ??
-        Object.fromEntries((saved.recent ?? []).map((s: Screen) => [s, true])),
+        Object.fromEntries(list<Screen>(saved.recent).map((s) => [s, true])),
       // No seeding from `recent`, unlike `visited` above: `recent` carries no
       // times, so any date invented here would be today's, and "opened
       // today" beside a screen somebody last saw in August is worse than
       // "opened at some point", which is what an empty entry says.
       lastOpened: saved.lastOpened ?? {},
-      sittings: saved.sittings ?? [],
-      sources: saved.sources ?? [],
-      registrar: saved.registrar ?? [],
-      spent: saved.spent ?? [],
-      windows: saved.windows ?? [],
-      costs: saved.costs ?? [],
-      balances: saved.balances ?? [],
-      residences: saved.residences ?? [],
+      sittings: list(saved.sittings),
+      sources: list(saved.sources),
+      registrar: list(saved.registrar),
+      spent: list(saved.spent),
+      windows: list(saved.windows),
+      costs: list(saved.costs),
+      balances: list(saved.balances),
+      residences: list(saved.residences),
       accessLeadDays: saved.accessLeadDays ?? 0,
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
