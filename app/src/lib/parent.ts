@@ -30,7 +30,20 @@ import type { Screen } from './types';
 const OF_COURSE: Partial<Record<Screen, 'courseId' | 'guideId'>> = {
   // These name a course directly.
   edit: 'courseId',
-  grades: 'courseId',
+  /*
+   * `grades` is deliberately not here, and used to be.
+   *
+   * It reads like a course screen and is not one: `screens/Grades.tsx` renders
+   * `catalog.courses` — every course, each with its own weights and its own
+   * projection — and never reads `state.courseId`. Listing it here gave the
+   * header an up-link to whichever course was last opened, so a page showing
+   * all four courses carried a link labelled "CORE 2500" that went somewhere
+   * the page had not mentioned.
+   *
+   * That is the same failure the note below describes for `item`, arrived at
+   * from the other direction: there the course is known and was being guessed
+   * at, here there is no single course to know.
+   */
   // The study screens name a guide, which is a course by another name.
   guide: 'guideId',
   drill: 'guideId',

@@ -4,7 +4,18 @@ import { courseFieldFor, insideCourse } from './parent';
 describe('courseFieldFor', () => {
   it('reads a course screen from courseId', () => {
     expect(courseFieldFor('edit')).toBe('courseId');
-    expect(courseFieldFor('grades')).toBe('courseId');
+  });
+
+  it('does not claim one for Grades, which is every course at once', () => {
+    /*
+     * It reads like a course screen and is not one. `screens/Grades.tsx`
+     * renders `catalog.courses` and never touches `state.courseId`, so
+     * claiming a field here put a link labelled with whichever course was last
+     * opened above a page listing all four — pointing somewhere the page had
+     * not mentioned.
+     */
+    expect(courseFieldFor('grades')).toBeNull();
+    expect(insideCourse('grades')).toBe(false);
   });
 
   it('reads a study screen from guideId', () => {
@@ -34,13 +45,13 @@ describe('insideCourse', () => {
   });
 
   it('counts every screen that names a course', () => {
-    for (const s of ['edit', 'grades', 'guide', 'drill', 'quiz', 'lesson', 'slides'] as const) {
+    for (const s of ['edit', 'guide', 'drill', 'quiz', 'lesson', 'slides'] as const) {
       expect(insideCourse(s)).toBe(true);
     }
   });
 
   it('does not count a top-level screen', () => {
-    for (const s of ['home', 'courses', 'study', 'calendar', 'mine'] as const) {
+    for (const s of ['home', 'courses', 'study', 'calendar', 'mine', 'grades'] as const) {
       expect(insideCourse(s)).toBe(false);
     }
   });
