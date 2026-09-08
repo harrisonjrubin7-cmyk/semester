@@ -1,18 +1,32 @@
 # Classmates, for any university
 
-> **Merged in PR #3 — and the SQL half has to be run now.**
+> **Merged in PR #3, and the SQL was applied on 8 September 2026** as
+> migration `classmates_any_school`. Both halves are now live and Classmates
+> works again.
 >
-> This document was written before the merge and said the two halves had to
-> land together. The client half has landed. Until `classmates-schools.sql`
-> runs against the live database, **joining a room fails**: the client now
-> writes `vanderbilt/ECON 1020` (`roomKey` in `app/src/lib/classmates.ts`) and
-> the live `enrollments.code` constraint is still
-> `check (code ~ '^[A-Z]{2,4} [0-9]{3,4}[A-Z]?$')`, which refuses the slash
-> and the lowercase prefix. The insert is rejected outright.
+> It was broken in between, which is what this note used to warn about: the
+> client writes `vanderbilt/ECON 1020` (`roomKey` in
+> `app/src/lib/classmates.ts`) and the live `enrollments.code` constraint
+> still read `check (code ~ '^[A-Z]{2,4} [0-9]{3,4}[A-Z]?$')`, so every join
+> was rejected by the database.
 >
-> It affects signed-in users only, and only Classmates — nothing else reads
-> that table. Run the SQL, in the order below, and it is resolved. The checks
-> in "What to check in the SQL" are still the right ones to make first.
+> What the run found and did:
+>
+> | | |
+> |---|---|
+> | Rows to migrate | 4 enrollments, 0 messages |
+> | Failing the "expect 0" pre-flight | 0 — every row was a plain code, as predicted |
+> | Already prefixed | 0, so nothing double-migrated |
+> | `verified_student` | found in `private` only, so no PostgREST endpoint was resurrected |
+> | After | all four rooms are `vanderbilt/…`; the new constraint is on; security advisors clean |
+>
+> The rooms are now `vanderbilt/BUS 1600`, `vanderbilt/CORE 2500`,
+> `vanderbilt/ECON 1020` and `vanderbilt/PSCI 1104`.
+>
+> **The trade in "The honest cost" below is now in force**: the server checks
+> only that an address is confirmed. Rolling back is only safe while no
+> student outside Vanderbilt has joined a room — see the footer of
+> `classmates-schools.sql`.
 
 The rest of this document is as written before the merge, and its reasoning
 stands.
