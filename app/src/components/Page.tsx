@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useStore } from '../state/store';
+import { Search as SearchIcon } from './Icons';
 import type { SearchAdapter } from '../lib/search';
 import { holdBox, takeSeed } from '../lib/screenbox';
 
@@ -32,9 +33,13 @@ const Inside = createContext(false);
  * on twelve. That is the whole of the shared layout, repeated by hand, which
  * is why the gap above the tab bar is different depending on where you are.
  *
- * It is also where the search box lives, so that adding it once puts it on
- * every screen rather than on the eight somebody remembered. See `search`
- * below and `lib/search.ts`.
+ * It is also where a screen's own filter appears when one is asked for — and
+ * no longer as a box standing on top of all fifty-nine screens. The header
+ * carries a search icon on every screen already, so a field under it was the
+ * same tool drawn twice, and on the forty-three screens with nothing of their
+ * own to filter it was a field whose only use was to forward what you typed to
+ * the icon beside it. The screens that do filter still filter; the field for
+ * it arrives when somebody asks. See `search` below and `lib/search.ts`.
  *
  * ## What this does not do
  *
@@ -82,11 +87,11 @@ export function Page<T>({
   /**
    * What searching this screen means. See `lib/search.ts`.
    *
-   * With one, the box filters in place and `children` is called with the rows
-   * that survived. Without one, the box is still there and what is typed goes
-   * to the global search — a screen that is a form, a report or a player has
-   * nothing of its own to filter, and a box that pretends otherwise is worse
-   * than one that says plainly where it is about to take you.
+   * With one, `children` is called with the rows that survived the filter, and
+   * the field itself is off screen until somebody asks for it: `/`, or taking
+   * the whole-app search's offer to "search “trounstine” in Sources". Without
+   * one there is no field here at all — the header's search icon is what a
+   * screen that is a form, a report or a player has, and it is enough.
    */
   search?: SearchAdapter<T>;
   /**
@@ -136,6 +141,14 @@ export function Page<T>({
   }
   const [typed, setTyped] = useState('');
   const [query, setQuery] = useState('');
+  /*
+   * Whether the filter field is on screen.
+   *
+   * Closed to start, on every screen, every time. It opens two ways and both
+   * are somebody asking to filter this list: `/`, and arriving here from the
+   * whole-app search's "12 sources match" offer, which hands over the query.
+   */
+  const [open, setOpen] = useState(false);
   const box = useRef<HTMLInputElement>(null);
 
   /*
@@ -169,6 +182,10 @@ export function Page<T>({
     const seed = takeSeed();
     setTyped(seed ?? '');
     setQuery(seed ? seed.toLowerCase() : '');
+    // With a seed the field has to be visible: a screen that came up showing
+    // eleven of forty rows, with nothing on it saying why, is the missing rows
+    // unexplained. Without one it stays shut — see `open` above.
+    setOpen(Boolean(seed));
   }, [state.screen]);
 
   /*
@@ -190,7 +207,34 @@ export function Page<T>({
   // re-claim the slot on every keystroke. Whether there is one is the only
   // part that changes.
   const filters = Boolean(search);
-  useEffect(() => holdBox({ input: box, filters }), [filters]);
+  /*
+   * The caret goes in the field when `/` opened it, and not when a seed did.
+   *
+   * `App.tsx` moves focus to the new screen's heading on every navigation, so
+   * grabbing it back on arrival would talk over the screen's own name for a
+   * screen reader and raise a keyboard on a phone — for a filter that has
+   * already been applied and needs nothing typed into it. The key is a
+   * different matter: somebody pressed it to type.
+   */
+  const wantsCaret = useRef(false);
+  useEffect(() => {
+    if (!open || !wantsCaret.current) return;
+    wantsCaret.current = false;
+    box.current?.focus();
+    box.current?.select();
+  }, [open]);
+
+  /*
+   * Open the field and put the caret in it — the one way in, for both the key
+   * and the button, so they cannot drift into two behaviours.
+   */
+  const reveal = () => {
+    wantsCaret.current = true;
+    setOpen(true);
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => holdBox({ input: box, filters, reveal }), [filters]);
 
   const all = search?.select();
   const shown = useMemo(
@@ -219,6 +263,14 @@ export function Page<T>({
             opacity: 0.65,
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
+            /*
+             * The gap under it used to belong to the search field, which sat
+             * between the blurb and the screen. With the field gone the blurb
+             * ran straight into the first row — so the space it was relying on
+             * is now its own. Not when there are `actions`: those carry the
+             * same margin on top and two of them read as a missing section.
+             */
+            marginBottom: actions === undefined ? 'var(--sp-6)' : 0,
             ...side,
           }}
         >
@@ -227,59 +279,108 @@ export function Page<T>({
       )}
 
       {/*
-        On every screen, adapter or not. That is the point of putting it here
-        rather than adding it screen by screen: a box that appears on the
-        eight screens somebody got to is a box people learn not to look for.
-        Where the screen has nothing of its own to filter, the placeholder
-        says so and Enter goes to the whole app.
+        Only where searching this screen means something, and only once asked
+        for. A field that forwards what you typed to the search icon two
+        centimetres above it is that icon with extra steps; a field on a screen
+        with no list is one that filters nothing. What is left is the case the
+        field is actually for: a list of sixty rows, and the one row you want.
       */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 'var(--sp-3)',
-          alignItems: 'center',
-          marginTop: blurb !== undefined ? 'var(--sp-6)' : 0,
-          ...side,
-        }}
-      >
-        <input
-          ref={box}
-          className="input"
-          type="search"
-          value={typed}
-          onChange={(e) => setTyped(e.target.value)}
-          onKeyDown={(e) => {
-            // Escape clears rather than blurs. Blurring leaves the list
-            // filtered with the box no longer under the cursor, which is
-            // the state people get stuck in.
-            if (e.key === 'Escape' && typed) {
-              e.preventDefault();
-              setTyped('');
-              return;
-            }
-            // Enter is the way out to the whole app from anywhere — the only
-            // way on a screen with no list of its own, and the second answer
-            // on one that has.
-            if (e.key === 'Enter' && typed.trim()) {
-              e.preventDefault();
-              toEverything();
-            }
+      {/*
+        The way in on a phone.
+
+        `/` opens the field on a laptop, and the whole-app search offers to look
+        inside a few of these screens — but neither reaches People or Help from
+        a phone, and a filter nobody can open is a filter that has been deleted.
+        So: one quiet line, on the sixteen screens that have rows of their own,
+        rather than a field on all fifty-nine.
+      */}
+      {search && !open && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginTop: blurb !== undefined && actions !== undefined ? 'var(--sp-6)' : 0,
+            ...side,
           }}
-          placeholder={search ? search.placeholder : 'Search all of Semester'}
-          aria-label={search ? search.placeholder : 'Search all of Semester'}
-          // `flex: 1, minWidth: 0` and not the `.input` default: the class
-          // is written for a block field, so inside this row it shrank to the
-          // width of the browser's own clear button and the text you had
-          // typed was not on screen at all.
-          style={{ margin: 0, flex: 1, minWidth: 0, fontSize: 'var(--type-md)' }}
-        />
-        {typed && (
+        >
+          <button
+            type="button"
+            className="bare tappable tap-y"
+            onClick={reveal}
+            aria-label={search.placeholder}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--sp-2)',
+              width: 'auto',
+              flex: 'none',
+              fontFamily: 'var(--font-heading)',
+              fontSize: 'var(--type-xs)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              opacity: 0.55,
+            }}
+          >
+            <SearchIcon size={13} />
+            Filter
+          </button>
+        </div>
+      )}
+
+      {search && open && (
+        <div
+          style={{
+            display: 'flex',
+            gap: 'var(--sp-3)',
+            alignItems: 'center',
+            // Only where the blurb is not already holding the gap open: it
+            // gives up its bottom margin to `actions`, and on those screens
+            // the field between the two has to hold its own.
+            marginTop: blurb !== undefined && actions !== undefined ? 'var(--sp-6)' : 0,
+            ...side,
+          }}
+        >
+          <input
+            ref={box}
+            className="input"
+            type="search"
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            onKeyDown={(e) => {
+              // Escape empties it, and empties it again by closing it. Blurring
+              // instead would leave the list filtered with the caret gone,
+              // which is the state people get stuck in; leaving an empty field
+              // on screen would put back the box this pass took away.
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                if (typed) {
+                  setTyped('');
+                  return;
+                }
+                setOpen(false);
+                return;
+              }
+              // Enter is still the way out to the whole app when the answer
+              // turns out not to be on this screen after all.
+              if (e.key === 'Enter' && typed.trim()) {
+                e.preventDefault();
+                toEverything();
+              }
+            }}
+            placeholder={search.placeholder}
+            aria-label={search.placeholder}
+            // `flex: 1, minWidth: 0` and not the `.input` default: the class
+            // is written for a block field, so inside this row it shrank to the
+            // width of the browser's own clear button and the text you had
+            // typed was not on screen at all.
+            style={{ margin: 0, flex: 1, minWidth: 0, fontSize: 'var(--type-md)' }}
+          />
           <button
             type="button"
             className="bare tappable"
             onClick={() => {
               setTyped('');
-              box.current?.focus();
+              setOpen(false);
             }}
             // `width: auto` matters: `.bare` sets `width: 100%` for the rows
             // it was written for, and in a flex line that made this button ask
@@ -293,27 +394,9 @@ export function Page<T>({
               padding: '0 2px',
             }}
           >
-            CLEAR
+            {typed ? 'CLEAR' : 'DONE'}
           </button>
-        )}
-      </div>
-
-      {/* The screen has no list of its own, so there is one place to go and
-          the box says so rather than sitting there doing nothing. */}
-      {!search && searching && (
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={toEverything}
-          style={{
-            height: 40,
-            marginTop: 'var(--sp-4)',
-            fontSize: 'var(--type-sm)',
-            ...side,
-          }}
-        >
-          Look through the whole app for “{typed.trim()}”
-        </button>
+        </div>
       )}
 
       {actions !== undefined && (

@@ -113,10 +113,10 @@ describe('dropping one tile on another', () => {
   });
 
   it('round-trips through the look key it will be stored in', () => {
-    const all = screens('Standing');
-    const next = afterDrag('Standing', CAPS, {}, all[2], all[0]);
-    expect(tilesFor('Standing', CAPS, readOrder(writeOrder(next))).map((d) => d.screen)).toEqual(
-      next.Standing,
+    const all = screens('Courses');
+    const next = afterDrag('Courses', CAPS, {}, all[2], all[0]);
+    expect(tilesFor('Courses', CAPS, readOrder(writeOrder(next))).map((d) => d.screen)).toEqual(
+      next.Courses,
     );
   });
 });

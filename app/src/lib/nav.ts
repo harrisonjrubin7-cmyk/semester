@@ -34,17 +34,32 @@ import { showing, type Facts } from './reveal';
  * calendar — and Upkeep is the six you go to when something needs correcting,
  * adding or checking. Nobody opens "Check the dates" as part of their day.
  *
- * Nine now, because six could not be drawn. Yours had grown to fifteen, which
+ * Nine then, because six could not be drawn. Yours had grown to fifteen, which
  * is not a row of pills on a phone at any text size — it is a scroll with no
  * end in sight, which is the thing shelves exist to stop. Upkeep held "how am
  * I doing" beside "fix my data", two questions asked on different days;
- * Standing takes the first and Data the second. Study held learning and
+ * Standing took the first and Data the second. Study held learning and
  * producing together, so Make takes the producing.
  *
  * Grouped by what the student is doing rather than by where a screen was
  * filed before, so several cross the old boundaries: Tonight and Ahead answer
  * "what now" and sit under Semester; Mail is drafting, so it sits beside
  * Draft it under Make; Costs is money rather than a campus service.
+ *
+ * ## Eight, because Standing wore out
+ *
+ * Standing was three screens and shrinking — the assistant screens moved to
+ * Study and the calendar work moved to Semester, and what was left was Grades,
+ * The degree and When you are behind. A shelf of three is worse than no shelf:
+ * it costs a pill in the row and a tile in the grid to hold a third of what
+ * every other shelf holds, and "which of these nine is it under" gets harder
+ * for every shelf that exists, not just the full ones.
+ *
+ * They fold into Semester, where the question was already being asked —
+ * Reports is a Semester screen and carries the `stand` tag. Semester is your
+ * term, and how it is going is part of your term. It also puts The week ahead
+ * and When you are behind next to each other, which is where two screens that
+ * answer the same question in opposite directions should always have been.
  *
  * The largest is eight and the smallest five, which is what keeps any one
  * shelf drawable as a single row.
@@ -54,7 +69,6 @@ export type Group =
   | 'Courses'
   | 'Study'
   | 'Make'
-  | 'Standing'
   | 'Campus'
   | 'Life'
   | 'You'
@@ -74,7 +88,6 @@ export const GROUPS: Group[] = [
   'Courses',
   'Study',
   'Make',
-  'Standing',
   'Campus',
   'Life',
   'You',
@@ -412,13 +425,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'home',
   },
   {
-    screen: 'grades',
-    label: 'Grades',
-    blurb: 'What you have so far, and what the rest has to average.',
-    keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
-    group: 'Standing',
-    taskTags: ['stand'],
-    root: 'courses',
+    screen: 'behind',
+    label: 'When you are behind',
+    short: 'Behind',
+    blurb: 'What has gone by, what still fits, and the moves that are not working harder.',
+    keywords: 'behind late overdue missed catch up caught up triage bad week overwhelmed stressed stress panic drowning too much falling behind help extension late policy recover crisis sick',
+    group: 'Semester',
+    taskTags: ['due', 'week', 'stand'],
+    root: 'home',
   },
   {
     screen: 'maps',
@@ -483,26 +497,6 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
-    screen: 'degree',
-    label: 'The degree',
-    short: 'Degree',
-    blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
-    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
-    group: 'Standing',
-    taskTags: ['ahead', 'stand'],
-    root: 'me',
-  },
-  {
-    screen: 'behind',
-    label: 'When you are behind',
-    short: 'Behind',
-    blurb: 'What has gone by, what still fits, and the moves that are not working harder.',
-    keywords: 'behind late overdue missed catch up caught up triage bad week overwhelmed stressed stress panic drowning too much falling behind help extension late policy recover crisis sick',
-    group: 'Standing',
-    taskTags: ['due', 'week', 'stand'],
-    root: 'home',
-  },
-  {
     screen: 'tonight',
     label: 'Tonight',
     blurb: 'How long you have, and where those hours buy the most against your grade.',
@@ -510,6 +504,25 @@ export const DESTINATIONS: Destination[] = [
     group: 'Semester',
     taskTags: ['study', 'week'],
     root: 'home',
+  },
+  {
+    screen: 'grades',
+    label: 'Grades',
+    blurb: 'What you have so far, and what the rest has to average.',
+    keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
+    group: 'Semester',
+    taskTags: ['stand'],
+    root: 'courses',
+  },
+  {
+    screen: 'degree',
+    label: 'The degree',
+    short: 'Degree',
+    blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
+    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
+    group: 'Semester',
+    taskTags: ['ahead', 'stand'],
+    root: 'me',
   },
   {
     screen: 'applying',
