@@ -1,19 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
+  BASE_MARK,
   BROKEN,
   CLOCK_SNIPPET,
   COUNTDOWN,
   MARK,
   MENDED,
   NEEDS_BACK,
+  OWN_BASE,
   PAGES,
   PATHS,
   PATH_SNIPPET,
   SNIPPET,
   SOURCE_PREFIX,
+  baseLapsed,
   stillBroken,
   withBackLink,
   withCountdown,
+  withOwnBase,
   withPathFix,
 } from './webback';
 import { readDue } from './duetime';
@@ -292,5 +296,93 @@ describe('the injected reader against readDue, which is the one with the reasoni
 
   it('is defensive about a value that is not a string, as readDue is', () => {
     for (const t of [null, undefined, 7, {}]) expect(injected(t)).toBeNull();
+  });
+});
+
+describe('the two pages that only worked on one deployment', () => {
+  const head = (body: string) =>
+    `<!DOCTYPE html><html><head><title>Bundled Page</title></head><body>${body}</body></html>`;
+
+  it('sends the study page’s audio to wherever it is actually served from', () => {
+    const one = OWN_BASE['study.html'];
+    const out = withOwnBase(head(`<script>${one.find}</script>`), 'study.html');
+    expect(out).not.toContain(one.find);
+    expect(out).toContain('const BASE = window.__semesterBase();');
+  });
+
+  it('sends the front door’s button to the app beside it', () => {
+    const one = OWN_BASE['index.html'];
+    const out = withOwnBase(head(`<script>${one.find}</script>`), 'index.html');
+    expect(out).toContain("window.open(window.__semesterBase() + '/#/home', '_blank')");
+  });
+
+  it('defines the reader before the page that reads it', () => {
+    // study.html evaluates BASE as its module is read, so a reader defined
+    // after the bundle unpacks is a reader defined too late.
+    const one = OWN_BASE['study.html'];
+    const out = withOwnBase(head(`<script>${one.find}</script>`), 'study.html');
+    expect(out.indexOf(BASE_MARK)).toBeLessThan(out.indexOf('__semesterBase()'));
+    expect(out.indexOf(BASE_MARK)).toBeLessThan(out.indexOf('</head>'));
+  });
+
+  it('leaves the term page alone, which has neither', () => {
+    const page = head('<script>var x = 1;</script>');
+    expect(withOwnBase(page, 'app.html')).toBe(page);
+    expect(baseLapsed(page, 'app.html')).toBe(false);
+  });
+
+  it('is idempotent', () => {
+    const one = OWN_BASE['study.html'];
+    const once = withOwnBase(head(`<script>${one.find}</script>`), 'study.html');
+    expect(withOwnBase(once, 'study.html')).toBe(once);
+  });
+
+  it('says the repair lapsed when the address is gone, and stays quiet after it is done', () => {
+    const one = OWN_BASE['study.html'];
+    expect(baseLapsed(head('<script>const BASE = base();</script>'), 'study.html')).toBe(true);
+    const done = withOwnBase(head(`<script>${one.find}</script>`), 'study.html');
+    expect(baseLapsed(done, 'study.html')).toBe(false);
+  });
+
+  it('anchors on whole statements, so a repository link is never rewritten', () => {
+    /*
+     * `index.html` links to github.com/harrisonjrubin7-cmyk/semester and
+     * `app.html` prints "harrisonjrubin7-cmyk/semester · main" as a label.
+     * Both name the same project and neither is an address to compute — a
+     * repair keyed on the host would have quietly broken the link.
+     */
+    const link = head('<a href="https://github.com/harrisonjrubin7-cmyk/semester">The repository</a>');
+    expect(withOwnBase(link, 'index.html')).toBe(link);
+    for (const one of Object.values(OWN_BASE)) {
+      expect(one.find.startsWith('window.open(') || one.find.startsWith('const BASE =')).toBe(true);
+    }
+  });
+
+  it('computes the very same string on the real site, run as the browser would', () => {
+    // The whole argument for this repair: it changes nothing where the page
+    // already worked. If that is not exactly true it is a regression, not a fix.
+    const base = (origin: string, path: string) => {
+      const cut = path.lastIndexOf('/web/');
+      return origin + (cut === -1 ? '' : path.slice(0, cut));
+    };
+    expect(base('https://harrisonjrubin7-cmyk.github.io', '/semester/web/study.html')).toBe(
+      'https://harrisonjrubin7-cmyk.github.io/semester',
+    );
+    expect(base('http://localhost:4173', '/web/study.html')).toBe('http://localhost:4173');
+    expect(base('https://someone.github.io', '/a/fork/web/index.html')).toBe(
+      'https://someone.github.io/a/fork',
+    );
+  });
+
+  it('still matches both bundles that are actually committed', () => {
+    // As with the countdown: the fixture tests above are worth nothing if the
+    // anchors have stopped matching the real files.
+    for (const [page, one] of Object.entries(OWN_BASE)) {
+      const html = readFileSync(
+        join(import.meta.dirname, '..', '..', 'public', 'web', page),
+        'utf8',
+      );
+      expect(html.split(one.find), page).toHaveLength(2);
+    }
   });
 });

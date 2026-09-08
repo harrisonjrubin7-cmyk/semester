@@ -386,17 +386,25 @@ fixed properly.
 | 2 | `_ds/industry-ec2ca40c-…/styles.css`, `_ds_bundle.js` | inline the stylesheet, as the pages already inline the rest of their CSS, or emit a path relative to the deployed page — not one into the design-system source tree | the two real files copied out of `project/_ds/` |
 | 3 | twelve `icons/*.svg` as `mask-image` | ship the files beside the page, or inline them as `data:` URIs | generated from `app/src/components/icons.data.ts` |
 | 4 | `parseInt(it.time, 10)`, then `new Date(…, hh, 59)` | read the time out of the wording, and take the minutes from it instead of assuming `59` | `BROKEN` → `MENDED`, a source patch |
-| 5 | `const BASE = 'https://harrisonjrubin7-cmyk.github.io/semester'` in `study.html`, and `window.open('https://harrisonjrubin7-cmyk.github.io/semester/#/home')` in `index.html` | derive the base from `location.pathname`, the way the injected return link does | **nothing yet — see below** |
+| 5 | `const BASE = 'https://harrisonjrubin7-cmyk.github.io/semester'` in `study.html`, and `window.open('https://harrisonjrubin7-cmyk.github.io/semester/#/home')` in `index.html` | derive the base from `location.pathname`, the way the injected return link does | `OWN_BASE`, two source patches |
 
-**Item 5 is the one nothing here repairs**, and it is worth knowing what that
-costs. `study.html` sets an `<audio>` element's `src` to `BASE + l.file`, so a
-fork, a renamed repository or a local `vite preview` streams from *this*
-deployment or not at all; the front door's "open the app" button goes to this
-deployment from anywhere. On the real site both work, which is exactly why it is
-easy to miss. It is left alone because it is the one item where the shim would
-be guessing — `location.pathname` is right for a fork and wrong for a page
-deliberately pointing somebody at the hosted app — so it wants a decision rather
-than a patch.
+**Item 5 is the one that was invisible**, because on the real site it is right.
+`study.html` sets an `<audio>` element's `src` to `BASE + l.file`, so a fork, a
+renamed repository or a local `vite preview` streamed from *this* deployment or
+not at all — a fork would have looked like it worked while depending on a URL
+its owner does not control. The front door's "open the app" button went here
+from anywhere.
+
+Both now call `window.__semesterBase()`, which is the rule the return link has
+always used: everything before `/web/` in `location.pathname`. On this
+deployment it computes the identical string, character for character, so the
+live site is unchanged and every other copy is fixed.
+
+The two anchors are whole statements rather than the host, deliberately.
+`index.html` also links to `https://github.com/harrisonjrubin7-cmyk/semester`
+and `app.html` prints `harrisonjrubin7-cmyk/semester · main` as a label; a
+repair keyed on the host would have rewritten a real external link and a piece
+of text.
 
 Two things make these safe to leave until then. The committed bundles are
 untouched — byte for byte as they arrived — so **regenerating the website loses

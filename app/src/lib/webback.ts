@@ -6,7 +6,7 @@
  * repository — `docs/data-contract.md` §0 records the search — so none of what
  * follows can be fixed at the source from here. Each one is a build step, and
  * each is dead weight the day the generator is fixed. SETUP.md §4 carries that
- * handover list; the four repairs, in the order they appear below, are:
+ * handover list; the five repairs, in the order they appear below, are:
  *
  * 1. **A way back to the app.** The front door links home; `app.html` and
  *    `study.html` link only to each other, so somebody landing on the term or
@@ -14,7 +14,9 @@
  * 2. **Paths into the repository's own source tree**, which cost the study page
  *    every one of its units.
  * 3. **A countdown that could not read a deadline**, which showed "NaNm left".
- * 4. **Files the pages ask for and nothing published** — the design system, and
+ * 4. **One deployment's address, written into two pages**, which made a fork
+ *    stream its audio from this site.
+ * 5. **Files the pages ask for and nothing published** — the design system, and
  *    twelve icons drawn as CSS masks.
  *
  * ## Why this runs at build time rather than being edited into the files
@@ -35,10 +37,10 @@
  * The front door's own link home is written out in full —
  * `https://…github.io/semester/#/home` — which is right for exactly one
  * deployment, and `study.html` streams its audio from the same hard-coded
- * `BASE`. Neither is repaired here; both are item 5 on SETUP.md's list. The
- * snippet below reads `location.pathname` instead and cuts everything from
- * `/web/` onwards, so what this file *does* add is right under any base: a
- * fork, a local `vite preview`, a repository somebody renamed.
+ * `BASE`. Both are repaired further down, by `OWN_BASE`. The snippet below
+ * reads `location.pathname` instead and cuts everything from `/web/` onwards,
+ * so it is right under any base: a fork, a local `vite preview`, a repository
+ * somebody renamed. Every repair in this file computes its address that way.
  *
  * The element re-attaches itself on a `MutationObserver`, because the bundler
  * replaces the document as it unpacks and would otherwise take the link with
@@ -414,6 +416,91 @@ export function stillBroken(html: string): boolean {
  * what it says it loads, and so a later regeneration that leans on a token
  * finds one.
  */
+/**
+ * ## Two pages that only work on one deployment
+ *
+ * `study.html` opens with a constant:
+ *
+ *     const BASE = 'https://harrisonjrubin7-cmyk.github.io/semester';
+ *
+ * and every lesson plays through `audio.src = BASE + l.file`. `index.html`
+ * hard-codes the same address in the button that opens the app. Both are
+ * correct for exactly one deployment and wrong everywhere else: a fork, a
+ * repository somebody renamed, a local `vite preview`. Worse than wrong, in the
+ * fork's case — the audio would quietly stream from *this* site, so somebody
+ * else's copy would look like it worked while depending on a URL they do not
+ * control.
+ *
+ * It went unnoticed through every other check in this file because on the real
+ * site it is right. Nothing 404s, nothing looks odd; the address is simply the
+ * one address it was written for.
+ *
+ * ## What replaces it
+ *
+ * The same rule the return link has used all along: everything before `/web/`
+ * in `location.pathname` is the deployment's base, whatever it is. On the real
+ * site that computes the identical string, character for character, so this
+ * changes nothing there and fixes every other copy.
+ *
+ * ## What it deliberately leaves alone
+ *
+ * `index.html` also links to `https://github.com/harrisonjrubin7-cmyk/semester`
+ * and `app.html` prints `harrisonjrubin7-cmyk/semester · main` as a label. Those
+ * are a real external link and a piece of text — a repair that rewrote either
+ * would be a bug in this file rather than a fix to the page.
+ */
+export const BASE_MARK = 'semester-own-base';
+
+export const BASE_SNIPPET = `
+<script>/* ${BASE_MARK} — added by scripts/webback.mjs, see the note there */
+window.__semesterBase = function () {
+  // Everything before /web/ is the deployment's base, whatever it is. No
+  // trailing slash: every caller appends a path that already starts with one.
+  var path = location.pathname;
+  var cut = path.lastIndexOf('/web/');
+  return location.origin + (cut === -1 ? '' : path.slice(0, cut));
+};
+</script>
+`;
+
+/**
+ * The one address, and the two places it is written down.
+ *
+ * Anchored on whole statements rather than on the host, so a rewrite cannot
+ * reach the repository link or the label that merely say the same words.
+ */
+export const OWN_BASE: Record<string, { find: string; put: string }> = {
+  'index.html': {
+    find: "window.open('https://harrisonjrubin7-cmyk.github.io/semester/#/home', '_blank')",
+    put: "window.open(window.__semesterBase() + '/#/home', '_blank')",
+  },
+  'study.html': {
+    find: "const BASE = 'https://harrisonjrubin7-cmyk.github.io/semester';",
+    put: 'const BASE = window.__semesterBase();',
+  },
+};
+
+/**
+ * The page pointing at wherever it is served from, or the page unchanged.
+ *
+ * The reader goes in the head, before the bundler unpacks the document, because
+ * `study.html`'s `BASE` is evaluated as its module is read.
+ */
+export function withOwnBase(html: string, page: string): string {
+  const one = OWN_BASE[page];
+  if (!one || html.includes(BASE_MARK) || !html.includes(one.find)) return html;
+  const fixed = html.replace(one.find, one.put);
+  const at = fixed.indexOf('</head>');
+  if (at === -1) return html;
+  return fixed.slice(0, at) + BASE_SNIPPET + fixed.slice(at);
+}
+
+/** Whether a page that should carry the hard-coded address no longer does. */
+export function baseLapsed(html: string, page: string): boolean {
+  const one = OWN_BASE[page];
+  return Boolean(one) && !html.includes(BASE_MARK) && !html.includes(one.find);
+}
+
 export const DESIGN = 'industry-ec2ca40c-1b5d-43d4-b745-e12440ac38fa';
 
 /** What the helmet asks for by name. The bundle is 300 bytes and inert. */
@@ -448,6 +535,8 @@ export async function apply(dir: string, from?: string): Promise<Applied> {
       if (stillBroken(after)) lapsed.push(`${name}: the deadline countdown`);
       after = withCountdown(after);
     }
+    if (baseLapsed(after, name)) lapsed.push(`${name}: the hard-coded deployment address`);
+    after = withOwnBase(after, name);
     if (after === before) continue;
     await writeFile(file, after);
     patched.push(name);
