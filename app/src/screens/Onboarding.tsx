@@ -79,8 +79,17 @@ export function Onboarding() {
    * `safe-top` and its own padding, one step at a time. There is nothing to
    * search yet — the app has no data until this finishes.
    */
+  /*
+   * `<main>`, because this is the whole page while it is up.
+   *
+   * Onboarding replaces the shell rather than sitting inside it, so the
+   * `<main>` that `ScrollArea` renders is not on the page at all — and a
+   * first run is the one visit where every user is a new user. Lighthouse
+   * scored the app 96 on accessibility for exactly this, and the single
+   * failing audit was `landmark-one-main` on this screen.
+   */
   return (
-    <div
+    <main
       className="safe-top"
       style={{
         flex: 1,
@@ -300,6 +309,6 @@ export function Onboarding() {
       >
         Skip
       </button>
-    </div>
+    </main>
   );
 }

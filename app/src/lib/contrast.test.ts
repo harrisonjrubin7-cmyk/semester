@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   AA_LARGE,
   AA_TEXT,
@@ -113,6 +115,86 @@ describe('every combination the app will wear', () => {
         ratio: contrast(over(g.fg, panel, g.faintAlpha) ?? '', panel) ?? 0,
         needs: AA_LARGE,
       },
+
+      /*
+       * The soft shell's own pairings.
+       *
+       * The eight above are the drawn shell's, and they are not enough for a
+       * shell that fills pills with the accent, paints a near-black tile on a
+       * bone page and puts a progress bar on a translucent track. Each of
+       * these was read off `app.css` rather than remembered — the audit is a
+       * list of what the stylesheet actually pairs, or it is a list of what
+       * somebody thought it paired.
+       */
+
+      // The handoff calls this the likely failure, and it would be: white on
+      // the accent's `deep` stop is about 2.4:1. It passes because step 1
+      // resolved `--app-accent-fill` to `shade` on light grounds, and this is
+      // what holds that decision in place.
+      {
+        what: `${where} · pill and bar text: chrome-ink on accent-fill`,
+        ratio: contrast(t['--chrome-ink'], t['--app-accent-fill']) ?? 0,
+        needs: AA_TEXT,
+      },
+      // The dark tile's value, against both ends of its gradient.
+      {
+        what: `${where} · tile value on the light end of the gradient`,
+        ratio: contrast(t['--tile-ink'], t['--tile-top']) ?? 0,
+        needs: AA_TEXT,
+      },
+      {
+        what: `${where} · tile value on the dark end of the gradient`,
+        ratio: contrast(t['--tile-ink'], t['--tile-bottom']) ?? 0,
+        needs: AA_TEXT,
+      },
+      // Glyphs are read as graphics, not as text.
+      {
+        what: `${where} · tile glyph on the light end of the gradient`,
+        ratio: contrast(t['--tile-glyph'], t['--tile-top']) ?? 0,
+        needs: AA_LARGE,
+      },
+      {
+        what: `${where} · tile glyph on the dark end of the gradient`,
+        ratio: contrast(t['--tile-glyph'], t['--tile-bottom']) ?? 0,
+        needs: AA_LARGE,
+      },
+      // The stat meter: the fill has to be findable against its own groove.
+      {
+        what: `${where} · progress fill on its track`,
+        ratio: contrast(t['--app-accent-fill'], over(g.fg, panel, g.light ? 0.12 : 0.09) ?? '') ?? 0,
+        needs: AA_LARGE,
+      },
+      /*
+       * The quiet caps label, at the size it is actually set.
+       *
+       * This is the one the audit caught. It was `--app-faint`, the strength
+       * held to 3:1 — right for a hairline, wrong for the hero's meta note,
+       * the bar's status line and the count under a folder's name, which are
+       * all small uppercase *text*. It sat at 3.6–3.8:1 on all hundred and
+       * forty-three, so it was not an unlucky pairing; it was the wrong token.
+       */
+      {
+        what: `${where} · quiet caps on panel`,
+        ratio: contrast(over(g.fg, panel, g.dimAlpha) ?? '', panel) ?? 0,
+        needs: AA_TEXT,
+      },
+      {
+        what: `${where} · the navigation's description line, on the ground`,
+        ratio: contrast(over(g.fg, bg, g.dimAlpha) ?? '', bg) ?? 0,
+        needs: AA_TEXT,
+      },
+      // The numbered step's chip, which inverts the ground.
+      {
+        what: `${where} · step number: ground on ink`,
+        ratio: contrast(bg, g.fg) ?? 0,
+        needs: AA_TEXT,
+      },
+      // `.surface-in` sits a panel on the ground, so its text is on the ground.
+      {
+        what: `${where} · body text on the ground`,
+        ratio: contrast(g.fg, bg) ?? 0,
+        needs: AA_TEXT,
+      },
     ];
   };
 
@@ -139,6 +221,59 @@ describe('every combination the app will wear', () => {
       }
     }
     expect(failures).toEqual([]);
+  });
+});
+
+/**
+ * The other half of the audit: what the stylesheet actually uses.
+ *
+ * Everything above checks the tokens `tokensFor` emits. That is most of the
+ * job and it is not all of it — a token can pass every ratio in this file
+ * while the rule that renders the text names a different one, which is
+ * exactly the bug the soft shell's quiet caps had. So these read `app.css`
+ * and check that the rules whose colours the audit vouched for are the rules
+ * that use them.
+ *
+ * Deliberately few. A test that pinned every declaration in the sheet would
+ * fail on every restyle and teach people to update it without reading it;
+ * these are the three pairings where using the wrong token is a contrast
+ * failure rather than a preference.
+ */
+describe('the stylesheet uses the tokens the audit passed', () => {
+  const css = readFileSync(join(process.cwd(), 'src/styles/app.css'), 'utf8');
+
+  /** The declarations inside one rule, by its exact selector. */
+  const ruleFor = (selector: string): string => {
+    const at = css.indexOf(`\n${selector} {`);
+    expect(at, `${selector} is not in app.css`).toBeGreaterThan(-1);
+    return css.slice(at, css.indexOf('}', at));
+  };
+
+  it('sets the quiet caps in dim, not faint', () => {
+    // `--app-faint` is held to 3:1, which is a hairline's bar. This is small
+    // uppercase text — the hero's meta note, the bar's status line, the count
+    // under a folder's name — and it was failing on all 143 pairings.
+    expect(ruleFor('.soft-caps-quiet')).toContain('var(--app-dim)');
+    expect(ruleFor('.soft-caps-quiet')).not.toContain('var(--app-faint)');
+  });
+
+  it('fills the pill with the stop white survives on', () => {
+    // The handoff's flagged failure: white on the accent's `deep` stop is
+    // about 2.4:1. `--app-accent-fill` is `shade` on a light ground, which is
+    // where the 4.5:1 above comes from — naming `--app-accent-deep` here
+    // would pass every test in this file and fail every reader.
+    for (const rule of ['.soft-bar-primary', '.pill-soft.is-on']) {
+      const body = ruleFor(rule);
+      expect(body, rule).toContain('var(--app-accent-fill)');
+      expect(body, rule).not.toContain('var(--app-accent-deep)');
+    }
+  });
+
+  it('paints the dark tile from the tile stops rather than the panel', () => {
+    const body = ruleFor('.soft-dark');
+    expect(body).toContain('var(--tile-top)');
+    expect(body).toContain('var(--tile-bottom)');
+    expect(body).toContain('var(--tile-ink)');
   });
 });
 

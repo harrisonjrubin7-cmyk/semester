@@ -1261,8 +1261,23 @@ input[type='search'].input {
   color: var(--app-accent-deep);
 }
 
+/*
+ * The quiet caps: dim, not faint.
+ *
+ * `--app-faint` is the app's third strength and is held to 3:1, which is the
+ * right bar for a hairline and the wrong one for text — and this is text.
+ * Small uppercase text, at that: the hero's meta note, the bar's status line,
+ * the screen count under a folder's name. The audit put it at 3.6–3.8:1 on
+ * every one of the hundred and forty-three pairings, which is a fail on all
+ * of them rather than an unlucky combination.
+ *
+ * `--app-dim` is the strength that is already held to 4.5:1 everywhere, so
+ * the fix is to use it. The pair still reads as a pair — accent against
+ * neutral is what separates a caps label from a quiet one, not how close the
+ * quiet one is to disappearing.
+ */
 .soft-caps-quiet {
-  color: var(--app-faint);
+  color: var(--app-dim);
 }
 
 /* The one dominant numeral. Tight leading so a two-line hero does not sprawl. */
