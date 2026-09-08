@@ -55,11 +55,37 @@ completeAuth()
     // eviction is allowed. See `lib/device.ts`.
     void askToPersist();
 
+    /*
+     * Register it now if the page has already loaded, and on `load` if it has
+     * not — in that order, because by the time this runs it usually has.
+     *
+     * This was `window.addEventListener('load', …)` alone, and it never
+     * fired. Look where it sits: inside `.finally()` on a chain that awaits
+     * `completeAuth()` and then an IndexedDB read. Both settle well after the
+     * document has finished loading — measured at 127ms for `load` against a
+     * listener attached later still — so the app was adding a listener for an
+     * event that had already happened, and `register` was never called at
+     * all.
+     *
+     * Nothing failed. There is no error for subscribing to a past event, the
+     * app works perfectly with no worker, and every check passed: the file
+     * was built, deployed and served at `/semester/sw.js` with the right
+     * type, and nothing ever asked for it. What it cost was the promise made
+     * on the front of the README — *Add to Home Screen … keeps working with
+     * no signal* — plus the cached lessons and podcast editions, all of which
+     * are the worker's doing. Found by driving the live build in a phone
+     * browser and pulling the network out from under it.
+     *
+     * `once` so a `load` that does somehow arrive after an immediate
+     * registration cannot register a second time.
+     */
     if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
+      const register = () => {
         const base = import.meta.env.BASE_URL || '/';
         void navigator.serviceWorker.register(`${base}sw.js`, { scope: base });
-      });
+      };
+      if (document.readyState === 'complete') register();
+      else window.addEventListener('load', register, { once: true });
     }
 
     createRoot(document.getElementById('root')!).render(
