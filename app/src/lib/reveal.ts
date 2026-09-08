@@ -109,7 +109,6 @@ export const UNLOCKS: Record<string, (f: Facts) => boolean> = {
 
   // The grade machinery, once there is a grade.
   grades: (f) => f.hasGrades,
-  worked: (f) => f.hasGrades || f.sittings > 0,
   proof: (f) => f.sittings > 0,
 
   // Study formats need something to study.
@@ -122,8 +121,16 @@ export const UNLOCKS: Record<string, (f: Facts) => boolean> = {
   sources: (f) => f.notes > 0 || f.courses > 0,
   draw: (f) => f.notes > 0 || f.courses > 0,
 
-  // The reflective screens, which need a week to have happened.
-  weekly: (f) => f.courses > 0 && (f.ownThings > 0 || f.hasGrades),
+  /*
+   * The reflective screens, which need a week to have happened.
+   *
+   * The report is not one of them any more, and deliberately has no gate. Its
+   * week and term grains used to be screens with a gate each — a week needs a
+   * week, the term report needs a grade or a sitting — and those gates cannot
+   * move onto the merged screen, because the day grain is what Today embeds
+   * as a tab and is useful on the first morning. A grain with nothing behind
+   * it says so in its own words instead: see `nothingLine` in `lib/worked.ts`.
+   */
   behind: (f) => f.courses > 1,
   tonight: (f) => f.courses > 0,
 

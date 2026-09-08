@@ -221,7 +221,33 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
     }
 
-    case 'brief':
+    case 'brief': {
+      /*
+       * One screen, three spans — so three heroes.
+       *
+       * The report used to be three screens and the hero was written per
+       * screen. Now the grain is state, and a hero that ignored it would put
+       * today's count above the term's report. The spans stay what they were:
+       * the day is today, the week is the last seven days, the term is the
+       * term, and counting the term under all three would be the same number
+       * under three different questions.
+       */
+      const ticked = dated.filter((i) => state.done[i.id]);
+      if (state.report === 'week') {
+        const lastWeek = ticked.filter((i) => i.daysAway <= 0 && i.daysAway >= -7);
+        return {
+          hero: { label: 'This week', meta: 'Last seven days', figure: num(lastWeek.length), foot: 'ticked off' },
+          stats: term,
+          bar: { primary: { label: 'The week ahead', screen: 'ahead' } },
+        };
+      }
+      if (state.report === 'term') {
+        return {
+          hero: { label: 'What worked', meta: 'This term', figure: num(ticked.length), foot: 'ticked off so far' },
+          stats: term,
+          bar: { primary: { label: 'The week ahead', screen: 'ahead' } },
+        };
+      }
       return {
         hero: {
           label: 'Your day',
@@ -232,6 +258,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         stats: term,
         bar: { primary: { label: 'Plan tonight', screen: 'tonight' } },
       };
+    }
 
     case 'calendar':
       return {
@@ -457,23 +484,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         },
         stats: term,
         bar: { primary: { label: 'Tonight', screen: 'tonight' } },
-      };
-    }
-
-    case 'worked':
-    case 'weekly': {
-      // Two screens, two spans: the weekly report is the last seven days and
-      // What worked is the term. Counting the term on both put the same
-      // number under two different questions.
-      const ticked = dated.filter((i) => state.done[i.id]);
-      const lastWeek = ticked.filter((i) => i.daysAway <= 0 && i.daysAway >= -7);
-      return {
-        hero:
-          screen === 'weekly'
-            ? { label: 'Weekly report', meta: 'Last seven days', figure: num(lastWeek.length), foot: 'ticked off' }
-            : { label: 'What worked', meta: 'This term', figure: num(ticked.length), foot: 'ticked off so far' },
-        stats: term,
-        bar: { primary: { label: 'The week ahead', screen: 'ahead' } },
       };
     }
 

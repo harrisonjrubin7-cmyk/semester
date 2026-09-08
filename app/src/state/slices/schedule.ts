@@ -25,6 +25,9 @@ export function schedule(state: State, action: Action): State | null {
     case 'setCalView':
       return { ...state, calView: action.view };
 
+    case 'setReport':
+      return { ...state, report: action.grain };
+
     case 'setCalSource':
       return { ...state, calSource: action.source };
 

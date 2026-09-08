@@ -62,6 +62,24 @@ export const NAMED: Partial<Record<Screen, 'courseId' | 'itemId' | 'eventId' | '
   note: 'noteId',
 };
 
+/**
+ * Screens that used to exist, and where their links go now.
+ *
+ * A URL is a promise: somebody bookmarked `#/weekly` in October and the app
+ * merged that screen into the report in November. Dropping them would land a
+ * saved link on a screen the switch in `App.tsx` does not have — a blank page
+ * that reads as the app being broken rather than as a screen having moved.
+ *
+ * Only ever grows, and only ever by a merge. A screen that was *removed*
+ * rather than merged does not belong here: sending somebody somewhere
+ * unrelated is worse than telling them the link is dead.
+ */
+const RETIRED: Record<string, Screen> = {
+  // Three grains of one report — see `screens/Reports.tsx`.
+  weekly: 'brief' as Screen,
+  worked: 'brief' as Screen,
+};
+
 /** A screen id is already url-safe; an account's own ids may not be. */
 function safe(id: string): string {
   return encodeURIComponent(id);
@@ -98,10 +116,11 @@ export function fromHash(hash: string): Route | null {
   const parts = path.split('/').filter(Boolean);
   if (parts.length === 0) return null;
 
-  const screen = parts[0] as Screen;
+  const named = parts[0];
   // A screen name is written by this file and read by this file; anything
   // with a character it would never have produced is not one of ours.
-  if (!/^[A-Za-z]+$/.test(screen)) return null;
+  if (!/^[A-Za-z]+$/.test(named)) return null;
+  const screen = (RETIRED[named] ?? named) as Screen;
 
   const id = parts[1] ? decodeURIComponent(parts[1]) : '';
   const mode = new URLSearchParams(query ?? '').get('mode');

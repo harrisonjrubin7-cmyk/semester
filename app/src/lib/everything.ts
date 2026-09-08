@@ -114,8 +114,6 @@ export const WHY: Partial<Record<Screen, string>> = {
   runway: 'Three weeks before a final is when a plan is still worth making.',
   tonight: 'You have four hours and five courses; this says which four hours are worth the most.',
   ahead: 'A week that looks fine on a calendar can be twenty-six hours of work.',
-  weekly: 'What actually happened last week, rather than what you remember of it.',
-  worked: 'At the end of a term you have a semester of evidence about how you study, and no habit of reading it.',
   grades: 'The question in week ten is what you need on the final, and that is arithmetic nobody does by hand.',
   degree: 'Four years of requirements, and the advisor meeting is twenty minutes long.',
   costs: 'Textbook money is the one budget nobody tracks until the term is over.',

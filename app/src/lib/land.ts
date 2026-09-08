@@ -34,6 +34,14 @@ export interface Landing {
   screen: Screen;
   /** The deadline to open, where the reminder was about one. */
   item?: string;
+  /**
+   * Which grain of the report to open on.
+   *
+   * The Sunday reminder is about the week, and the week used to be a screen
+   * of its own. It is a grain of `brief` now — so the screen name alone would
+   * land somebody on today's report, having told them it was about the week.
+   */
+  grain?: 'day' | 'week' | 'term';
 }
 
 export const HOME: Landing = { screen: 'home' as Screen };
@@ -53,7 +61,7 @@ const BY_RULE: Record<string, Screen> = {
   // A registrar date — drop, withdraw, add. The registrar screen is the one
   // that says what it costs.
   term: 'registrar' as Screen,
-  sun: 'weekly' as Screen,
+  sun: 'brief' as Screen,
 };
 
 /**
@@ -77,7 +85,8 @@ export function landingFor(id: string): Landing {
     return { screen: 'item' as Screen, item: rest };
   }
   const screen = BY_RULE[rule];
-  return screen ? { screen } : HOME;
+  if (!screen) return HOME;
+  return rule === 'sun' ? { screen, grain: 'week' } : { screen };
 }
 
 /**
@@ -88,7 +97,7 @@ export function landingFor(id: string): Landing {
  */
 export function landingFrom(data: unknown): Landing {
   if (!data || typeof data !== 'object') return HOME;
-  const d = data as { screen?: unknown; item?: unknown };
+  const d = data as { screen?: unknown; item?: unknown; grain?: unknown };
   if (typeof d.item === 'string' && d.item) {
     return { screen: 'item' as Screen, item: d.item };
   }
@@ -96,7 +105,10 @@ export function landingFrom(data: unknown): Landing {
     // Trusted only as far as the table above: a screen name arriving from
     // outside is not allowed to name a screen the app does not have.
     const known = Object.values(BY_RULE).includes(d.screen as Screen);
-    if (known) return { screen: d.screen as Screen };
+    if (known) {
+      const grain = d.grain === 'week' || d.grain === 'term' || d.grain === 'day' ? d.grain : undefined;
+      return { screen: d.screen as Screen, ...(grain ? { grain } : {}) };
+    }
   }
   return HOME;
 }

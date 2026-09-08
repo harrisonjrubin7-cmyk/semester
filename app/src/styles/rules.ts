@@ -237,16 +237,22 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 697,
+  type: 689,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 224,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
   space: 537,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 558,
+  shorthand: 551,
 };
 
 /*
+ * 697/224/537/558 → 689/224/537/551 when the three reports became one screen
+ * at three grains. Two down, none up, and neither by reformatting: the three
+ * screens each drew their own list rows by hand — two of them with an
+ * identical twenty-line `row()` helper — and the merged version uses `ItemRow`
+ * and `Group`, which carry the scale themselves. See `screens/Reports.tsx`.
+ *
  * 698/225/541/561 → 697/224/537/558 with the two-navigations release. Four
  * numbers down and none up, which is the direction this is here to enforce:
  * a duplicated appearance control was deleted rather than reformatted, the

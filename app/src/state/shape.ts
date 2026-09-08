@@ -522,6 +522,15 @@ export interface Ephemeral {
   filter: string;
   evFilter: string;
   calTab: 'deadlines' | 'campus';
+  /**
+   * Which grain the report screen is showing — the day, the week, the term.
+   *
+   * A field rather than the screen's own state because it is addressed from
+   * outside: a Sunday reminder opens the week, and the day report's "this
+   * week" row switches grain rather than navigating. Not persisted, for the
+   * same reason `calView` is not — coming back tomorrow should open today.
+   */
+  report: 'day' | 'week' | 'term';
   /** Which schedule view the calendar is showing. */
   calView: 'day' | 'week' | 'month' | 'semester';
   /** Which sources the calendar is showing — combined, or one at a time. */
@@ -843,6 +852,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     filter: 'All',
     evFilter: 'All',
     calTab: 'deadlines',
+    report: 'day',
     calView: 'month',
     calSource: 'all',
     calDay: null,
@@ -1299,6 +1309,7 @@ export type Action =
   | { type: 'pickAnswer'; index: number }
   | { type: 'nextQuestion' }
   | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }
+  | { type: 'setReport'; grain: 'day' | 'week' | 'term' }
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }

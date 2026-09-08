@@ -31,7 +31,6 @@ export const EXEMPT: Screen[] = [
   'slides',
   'update',
   'brief',
-  'weekly',
   'essay',
   'work',
   'solve',

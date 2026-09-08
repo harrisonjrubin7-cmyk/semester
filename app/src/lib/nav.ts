@@ -152,7 +152,7 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'home',
     label: 'Today',
-    blurb: 'What is due, what is next, and tonight’s study plan.',
+    blurb: 'What is due, what is next, and what is on today.',
     keywords: 'now due soon next class plan agenda',
     group: 'Semester',
     taskTags: ['due', 'week'],
@@ -160,11 +160,18 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'brief',
-    label: 'Your day',
-    blurb: 'A start-of-day and an end-of-day report — what is due, and what got done.',
-    keywords: 'brief briefing report daily day start end morning evening summary recap review standup what is due what did i do plan wrap up',
+    label: 'Reports',
+    short: 'Report',
+    blurb: 'The day, the week or the term, read back from what the app recorded.',
+    // Three screens' worth, because three screens merged into this one: a
+    // search for "weekly report" or "what worked" has to land somewhere, and
+    // the somewhere is now a grain of this rather than a screen of its own.
+    keywords:
+      'brief briefing report daily day start end morning evening summary recap review standup what is due what did i do plan wrap up ' +
+      'weekly week sunday end of week retrospective what happened how did the week go progress last week next week ' +
+      'what worked end of term semester reflection study habits pattern patterns evidence december finals over improve next term learn about myself',
     group: 'Semester',
-    taskTags: ['due', 'week'],
+    taskTags: ['due', 'week', 'stand', 'ahead'],
     root: 'home',
   },
   {
@@ -385,26 +392,6 @@ export const DESTINATIONS: Destination[] = [
     group: 'Study',
     taskTags: ['study', 'week', 'ahead'],
     root: 'study',
-  },
-  {
-    screen: 'worked',
-    label: 'What worked',
-    short: 'Worked',
-    blurb: 'The end of a term, read back from your own evidence — and silent where the evidence is thin.',
-    keywords: 'what worked end of term semester review retrospective looking back reflection how did it go study habits pattern patterns evidence december finals over improve next term learn about myself',
-    group: 'Standing',
-    taskTags: ['stand', 'ahead'],
-    root: 'home',
-  },
-  {
-    screen: 'weekly',
-    label: 'Weekly report',
-    short: 'Weekly',
-    blurb: 'The week that happened and the one coming — finished, slipped, drilled, sat.',
-    keywords: 'weekly week report review recap summary sunday end of week retrospective what happened how did the week go progress last week next week',
-    group: 'Standing',
-    taskTags: ['week', 'stand'],
-    root: 'home',
   },
   {
     screen: 'ahead',

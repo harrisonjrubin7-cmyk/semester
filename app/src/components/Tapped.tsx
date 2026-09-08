@@ -47,6 +47,9 @@ export function Tapped() {
       dispatch({ type: 'openItem', id: to.item });
       return;
     }
+    // Before the navigation, so the report paints on the grain the reminder
+    // was about rather than painting today's and then switching.
+    if (to.grain) dispatch({ type: 'setReport', grain: to.grain });
     dispatch({ type: 'go', screen: to.screen });
   };
 

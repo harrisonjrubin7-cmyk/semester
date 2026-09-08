@@ -47,7 +47,7 @@ const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahe
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
 const Announce = lazy(() => import('./screens/Announce').then((m) => ({ default: m.Announce })));
 const Ask = lazy(() => import('./screens/Ask').then((m) => ({ default: m.Ask })));
-const Brief = lazy(() => import('./screens/Brief').then((m) => ({ default: m.Brief })));
+const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
 const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
 const CheckDates = lazy(() => import('./screens/CheckDates').then((m) => ({ default: m.CheckDates })));
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
@@ -100,9 +100,7 @@ const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: 
 const Solve = lazy(() => import('./screens/Solve').then((m) => ({ default: m.Solve })));
 const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
 const Study = lazy(() => import('./screens/Study').then((m) => ({ default: m.Study })));
-const Weekly = lazy(() => import('./screens/Weekly').then((m) => ({ default: m.Weekly })));
 const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work })));
-const Worked = lazy(() => import('./screens/Worked').then((m) => ({ default: m.Worked })));
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
@@ -327,7 +325,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'people':
       return { kicker: 'Started late, invisibly', title: 'People and letters' };
     case 'brief':
-      return { kicker: 'Counted, then read', title: 'Your day' };
+      return { kicker: 'Counted, then read', title: 'Reports' };
     case 'essay':
       return { kicker: 'Everything but coursework', title: 'Draft it' };
     case 'deck':
@@ -342,8 +340,6 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'The email that moves a date', title: 'An announcement' };
     case 'costs':
       return { kicker: 'Books, fees and what came back', title: 'What this term cost' };
-    case 'worked':
-      return { kicker: 'Four months of your own evidence', title: 'What worked' };
     case 'gap':
       return { kicker: 'One thumb, and the walk taken off', title: 'Between classes' };
     case 'groupwork':
@@ -354,8 +350,6 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'The room, and the day you are out of it', title: 'Housing' };
     case 'runway':
       return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
-    case 'weekly':
-      return { kicker: 'What happened, and what is next', title: 'This week' };
     case 'registrar':
       return { kicker: 'The dates the university sets', title: 'Term deadlines' };
     case 'sources':
@@ -840,7 +834,7 @@ function CurrentScreen() {
     case 'people':
       return <People />;
     case 'brief':
-      return <Brief />;
+      return <Reports />;
     case 'essay':
       return <Essay />;
     case 'deck':
@@ -855,8 +849,6 @@ function CurrentScreen() {
       return <Announce />;
     case 'costs':
       return <Costs />;
-    case 'worked':
-      return <Worked />;
     case 'gap':
       return <Gap />;
     case 'groupwork':
@@ -867,8 +859,6 @@ function CurrentScreen() {
       return <Housing />;
     case 'runway':
       return <Runway />;
-    case 'weekly':
-      return <Weekly />;
     case 'registrar':
       return <Registrar />;
     case 'sources':

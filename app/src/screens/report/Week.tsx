@@ -1,18 +1,16 @@
 import { useMemo, useRef, useState } from 'react';
-import { Produced } from '../components/Produced';
-import { useStore } from '../state/store';
-import { Page } from '../components/Page';
-import { Trouble } from '../components/Trouble';
-import { useTrouble } from '../lib/trouble';
-import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
-import { Insights } from '../components/Insights';
-import { insights } from '../insights';
-import { factsFrom } from '../insights/facts';
-import { PrintButton } from '../components/PrintButton';
-import { ask, configured, provider } from '../lib/claude';
-import { download } from '../lib/deliver';
-import { showHours, week } from '../lib/ahead';
+import { Produced } from '../../components/Produced';
+import { useStore } from '../../state/store';
+import { Trouble } from '../../components/Trouble';
+import { useTrouble } from '../../lib/trouble';
+import { Blueprint } from '../../components/Blueprint';
+import { Group, ItemRow } from '../../components/shell/Rows';
+import { Insights } from '../../components/Insights';
+import { insights } from '../../insights';
+import { factsFrom } from '../../insights/facts';
+import { ask, configured, provider } from '../../lib/claude';
+import { download } from '../../lib/deliver';
+import { showHours, week } from '../../lib/ahead';
 import {
   SYSTEM,
   behind,
@@ -23,7 +21,7 @@ import {
   weekLabel,
   weekStart,
   type Ahead,
-} from '../lib/weekly';
+} from '../../lib/weekly';
 
 /**
  * The week that happened, and the one coming.
@@ -39,8 +37,12 @@ import {
  * not to score the week — a week with three classes, a shift at work and two
  * ticked boxes is a normal week, and a report that called it a bad one would
  * be both wrong and the last one anybody read.
+ *
+ * The middle grain of `screens/Reports.tsx`. This was its own screen and its
+ * own destination; what made it one was the frame around it, and the frame is
+ * upstairs now.
  */
-export function Weekly() {
+export function WeekReport() {
   const { state, dispatch, now, catalog } = useStore();
 
   const [said, setSaid] = useState('');
@@ -86,7 +88,9 @@ export function Weekly() {
   const ahead: Ahead = {
     promised: forward.promised,
     due: forward.due,
-    heaviest: forward.heaviest ? `${forward.heaviest.name}, ${showHours(forward.heaviest.promised)}` : '',
+    heaviest: forward.heaviest
+      ? `${forward.heaviest.name}, ${showHours(forward.heaviest.promised)}`
+      : '',
     freest: forward.freest ? forward.freest.name : '',
   };
 
@@ -125,30 +129,8 @@ export function Weekly() {
     }
   };
 
-  const row = (label: string, right: string, onClick?: () => void) => (
-    <button
-      key={label}
-      type="button"
-      className="bare tappable"
-      disabled={!onClick}
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        gap: 'var(--sp-6)',
-        alignItems: 'baseline',
-        width: '100%',
-        padding: '10px 0',
-        borderBottom: '1px solid var(--app-line)',
-        textAlign: 'left',
-      }}
-    >
-      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{label}</span>
-      <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55 }}>{right}</span>
-    </button>
-  );
-
   return (
-    <Page bottom={26}>
+    <>
       <Blueprint style={{ padding: '15px 16px' }}>
         <div className="kicker">{back.label}</div>
         <div
@@ -167,73 +149,90 @@ export function Weekly() {
       <Insights />
 
       {back.done.length > 0 && (
-        <>
-          <SectionLabel>Finished</SectionLabel>
-          {back.done.map((i) =>
-            row(`${code(i.c)} · ${i.title}`, 'done', () =>
-              dispatch({ type: 'openItem', id: i.id }),
-            ),
-          )}
-        </>
+        <Group header="Finished" framed={false}>
+          {back.done.map((i) => (
+            <ItemRow
+              key={i.id}
+              title={`${code(i.c)} · ${i.title}`}
+              trailing="done"
+              onClick={() => dispatch({ type: 'openItem', id: i.id })}
+            />
+          ))}
+        </Group>
       )}
 
       {back.slipped.length > 0 && (
-        <>
-          <SectionLabel>Still open from this week</SectionLabel>
-          {back.slipped.map((i) =>
-            row(`${code(i.c)} · ${i.title}`, i.dueShort, () =>
-              dispatch({ type: 'openItem', id: i.id }),
-            ),
-          )}
-        </>
+        <Group header="Still open from this week" framed={false}>
+          {back.slipped.map((i) => (
+            <ItemRow
+              key={i.id}
+              title={`${code(i.c)} · ${i.title}`}
+              trailing={i.dueShort}
+              onClick={() => dispatch({ type: 'openItem', id: i.id })}
+            />
+          ))}
+        </Group>
       )}
 
-      <SectionLabel>Also this week</SectionLabel>
-      {row(`${back.tasksDone} of your own tasks done`, back.tasksOpen > 0 ? `${back.tasksOpen} open` : '')}
-      {row(`${back.cardsDrilled} cards drilled`, '')}
-      {back.papers.length > 0
-        ? back.papers.map((p) =>
-            row(`${code(p.courseId)} practice paper`, `${p.pct}%`),
-          )
-        : row('No practice papers sat', '')}
+      <Group header="Also this week" framed={false}>
+        <ItemRow
+          title={`${back.tasksDone} of your own tasks done`}
+          trailing={back.tasksOpen > 0 ? `${back.tasksOpen} open` : ''}
+        />
+        <ItemRow title={`${back.cardsDrilled} cards drilled`} />
+        {back.papers.length > 0 ? (
+          back.papers.map((p) => (
+            <ItemRow
+              key={`${p.courseId}:${p.pct}`}
+              title={`${code(p.courseId)} practice paper`}
+              trailing={`${p.pct}%`}
+            />
+          ))
+        ) : (
+          <ItemRow title="No practice papers sat" />
+        )}
+      </Group>
 
-      <SectionLabel>The week coming</SectionLabel>
-      <Blueprint style={{ padding: '13px 14px' }}>
-        <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4 }}>
-          {showHours(forward.promised)} already promised
-          {forward.due.length > 0
-            ? `, ${forward.due.length} ${forward.due.length === 1 ? 'deadline' : 'deadlines'}`
-            : ' and nothing due'}
-          .
-        </div>
-        {forward.heaviest ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-            {forward.heaviest.name} carries most of it, at {showHours(forward.heaviest.promised)}
-            {forward.freest && forward.freest !== forward.heaviest
-              ? `; ${forward.freest.name} has the most room`
-              : ''}
+      <Group header="The week coming" framed={false}>
+        <Blueprint style={{ padding: '13px 14px' }}>
+          <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4 }}>
+            {showHours(forward.promised)} already promised
+            {forward.due.length > 0
+              ? `, ${forward.due.length} ${forward.due.length === 1 ? 'deadline' : 'deadlines'}`
+              : ' and nothing due'}
             .
           </div>
-        ) : null}
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
-          onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
-          style={{ height: 40, marginTop: 'var(--sp-5)' }}
-        >
-          Hour by hour
-        </button>
-      </Blueprint>
+          {forward.heaviest ? (
+            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+              {forward.heaviest.name} carries most of it, at {showHours(forward.heaviest.promised)}
+              {forward.freest && forward.freest !== forward.heaviest
+                ? `; ${forward.freest.name} has the most room`
+                : ''}
+              .
+            </div>
+          ) : null}
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
+            style={{ height: 40, marginTop: 'var(--sp-5)' }}
+          >
+            Hour by hour
+          </button>
+        </Blueprint>
+      </Group>
 
       {forward.due.length > 0 && (
-        <>
-          <SectionLabel>Due next week</SectionLabel>
-          {forward.due.map((i) =>
-            row(`${code(i.c)} · ${i.title}`, i.dueShort, () =>
-              dispatch({ type: 'openItem', id: i.id }),
-            ),
-          )}
-        </>
+        <Group header="Due next week" framed={false}>
+          {forward.due.map((i) => (
+            <ItemRow
+              key={i.id}
+              title={`${code(i.c)} · ${i.title}`}
+              trailing={i.dueShort}
+              onClick={() => dispatch({ type: 'openItem', id: i.id })}
+            />
+          ))}
+        </Group>
       )}
 
       {configured() && (
@@ -255,8 +254,8 @@ export function Weekly() {
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
           <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Every number above is counted from your own data. {provider()} reads the counts and is
-            told not to score the week — a week with three classes, a shift and two ticked boxes is
-            a normal week.
+            told not to score the week — a week with three classes, a shift and two ticked boxes is a
+            normal week.
           </div>
         </>
       )}
@@ -293,13 +292,13 @@ export function Weekly() {
           {kept ? 'Kept' : 'Keep as note'}
         </button>
       </div>
-      <PrintButton label="Print the week" style={{ marginTop: 'var(--sp-4)' }} />
+
       <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         A deadline counts to the week you ticked it.
         {back.staleTicks > 0
           ? ` ${back.staleTicks} of these ${back.staleTicks === 1 ? 'was' : 'were'} ticked before the app started recording the moment, so ${back.staleTicks === 1 ? 'it counts' : 'they count'} to the week ${back.staleTicks === 1 ? 'it was' : 'they were'} due instead.`
           : ''}
       </div>
-    </Page>
+    </>
   );
 }

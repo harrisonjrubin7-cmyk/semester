@@ -172,7 +172,12 @@ export function queueFor(
       // already says what it is about and a second field is a second thing to
       // get out of step. The server only relays it.
       const to = landingFor(r.id);
-      return { ...r, screen: to.screen as string, ...(to.item ? { item: to.item } : {}) };
+      return {
+        ...r,
+        screen: to.screen as string,
+        ...(to.item ? { item: to.item } : {}),
+        ...(to.grain ? { grain: to.grain } : {}),
+      };
     });
 }
 
