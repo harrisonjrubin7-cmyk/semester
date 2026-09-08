@@ -23,6 +23,22 @@ import { softTop, type TopStat } from '../../lib/softtop';
 import { useSoft } from '../shell/useShell';
 import { Hero, Stat, StatRow, BottomBar } from './Soft';
 
+/*
+ * What each sync state is called on a stat card.
+ *
+ * One word each, because the slot is a stat's value and set at the size of
+ * one: "Signed out" wrapped to two lines and made the card taller than the
+ * two beside it. "None" for a signed-out account says the same thing in the
+ * space there is — there is no account — and the card's label already
+ * supplies the noun.
+ */
+const SYNC_SAID: Record<string, string> = {
+  synced: 'Synced',
+  syncing: 'Syncing',
+  'signed-out': 'None',
+  error: 'Trouble',
+};
+
 /**
  * This screen's spec.
  *
@@ -32,11 +48,14 @@ import { Hero, Stat, StatRow, BottomBar } from './Soft';
  * recomputed when something changes and not when something re-renders.
  */
 function useTop() {
-  const { state, catalog, now, school } = useStore();
+  const { state, catalog, now, school, sync } = useStore();
   const caps = school.capabilities;
+  // The word Settings shows, not the whole status object: the spec holds
+  // strings, and a shape with a timestamp in it would recompute every tick.
+  const said = SYNC_SAID[sync.status] ?? 'Local';
   return useMemo(
-    () => softTop(state.screen, { state, catalog, now, caps }),
-    [state, catalog, now, caps],
+    () => softTop(state.screen, { state, catalog, now, caps, sync: said }),
+    [state, catalog, now, caps, said],
   );
 }
 

@@ -44,6 +44,8 @@ import { behindLine, howBehind } from './behind';
 import { WAKING_HOURS, hoursOn } from './windows';
 import { DESTINATIONS } from './nav';
 import { tally } from './review';
+import { bytesOf } from './inventory';
+import { pickPersisted } from '../state/shape';
 
 export interface TopHero {
   label: string;
@@ -85,6 +87,13 @@ export interface TopInput {
   catalog: Catalog;
   now: Date;
   caps: Capabilities;
+  /**
+   * How the account copy is doing, for the one screen that reports it.
+   *
+   * Not derivable from `state`: it is the store's own account of a network
+   * conversation, and Settings is the screen somebody opens to ask about it.
+   */
+  sync?: string;
 }
 
 const nothing: SoftTop = { hero: null, stats: [], bar: null };
@@ -570,16 +579,26 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         screen: 'connect',
       });
 
-    case 'settings':
+    case 'settings': {
+      /*
+       * Storage and sync, which is what the handoff asks this row for.
+       *
+       * It was courses, alerts and screens-used — three true numbers about
+       * the semester on a screen that is not about the semester. What
+       * somebody opens Settings to find out is where their data is and
+       * whether the other device has it, and neither was anywhere on it.
+       */
+      const kb = Math.round(bytesOf(pickPersisted(state)) / 1024);
       return {
         hero: null,
         stats: [
-          { label: 'Courses', value: num(courses) },
+          { label: 'On this device', value: kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb} KB` },
+          { label: 'Account', value: input.sync ?? '—' },
           { label: 'Alerts on', value: num(Object.values(state.notifs).filter(Boolean).length) },
-          { label: 'Screens used', value: num(Object.keys(state.visited).length) },
         ],
         bar: { primary: { label: 'Your data', screen: 'data' } },
       };
+    }
 
     case 'notifs':
       return {
