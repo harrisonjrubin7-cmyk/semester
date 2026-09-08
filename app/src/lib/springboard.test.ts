@@ -129,6 +129,24 @@ describe('searching the springboard', () => {
     expect(matches('registrar', 'withdraw')).toBe(true);
   });
 
+  /*
+   * The blurb is what the shelves print under a screen and what the directory
+   * shows beside it, so a word read there has to find the screen here too. It
+   * did not: this matcher looked at the label and the keywords only.
+   */
+  it('matches a word from the sentence the directory shows', () => {
+    // Taken from the registry rather than typed here, so this keeps testing
+    // the behaviour after somebody rewrites a blurb.
+    const found = DESTINATIONS.map((d) => {
+      const word = d.blurb.toLowerCase().match(/\b[a-z]{7,}\b/)?.[0];
+      return word && !`${d.label} ${d.short ?? ''} ${d.keywords}`.toLowerCase().includes(word)
+        ? { screen: d.screen, word }
+        : null;
+    }).find(Boolean);
+    expect(found, 'no blurb has a word the label and keywords do not').toBeTruthy();
+    expect(matches(found!.screen, found!.word)).toBe(true);
+  });
+
   it('shows everything when nothing is typed', () => {
     expect(matches('meals', '')).toBe(true);
     expect(matches('meals', '   ')).toBe(true);

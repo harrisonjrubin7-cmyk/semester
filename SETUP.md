@@ -217,214 +217,26 @@ workflow passes `VITE_BASE` and nothing in the app reads a leading-slash path
 directly. If you deploy somewhere that serves from the root, drop `VITE_BASE`
 and it works unchanged.
 
-### The website that goes with it
+### One deployment, one app
 
-Three pages — a front door, the term, and the study side — live in
-`app/public/web/`. Vite copies `public/` through verbatim, so they deploy with
-everything else and land at `<base>/web/`. Nothing to configure, and no change
-to `pages.yml`.
+There is one thing to deploy and one address to open. There used to be two: a
+separately-built three-page website — a front door, a second copy of the term
+and a second copy of the study side — shipped under `<base>/web/` and linked
+from the app's Connect screen. Three megabytes of generated bundles that could
+not be edited in this repository, could not be tested, and drifted from the app
+the day anything changed. It was a second version of the same product one tap
+from the first, and it is gone.
 
-Same origin as the app, which is the whole point: one `localStorage`, one
-Supabase session. Sign in on either and the other already knows you.
+What it was there for, the app already does. From 760px the tab bar unrolls
+into a rail beside the reading column, so a laptop gets the wide layout by
+opening the same address rather than a different page. On a phone, *Add to Home
+Screen* installs it.
 
-The app links to all three from **Connect → On a desktop**, at addresses
-derived from wherever the app is served (`app/src/lib/web.ts`), so they are
-right under any base.
+If you are looking for the old `webback` build step, `lib/web.ts`,
+`lib/webback.ts`, `lib/webicons.ts` or the `semweb:*` storage keys: all removed
+with the site they served. `npm run build` is now `tsc -b && vite build` and
+nothing runs after it.
 
-The other direction needs one note. Those three files are **generated
-bundles** — one line of minified HTML wrapping the real document as an escaped
-string — regenerated whole whenever the website changes. Its front door links
-back to the app; `app.html` and `study.html` did not, so a shared link to
-either left you with no way home but the address bar. Rather than edit a
-generated file, the build appends a small return link to the copies in
-`dist/`: `app/scripts/webback.mjs`, run by `npm run build`, with the work in
-`app/src/lib/webback.ts` and tests in `webback.test.ts`.
-
-So **regenerating the website loses nothing** — drop the new bundles in and the
-return link is re-applied on the next build. Two things worth knowing:
-
-- The added link computes the app's address from `location.pathname`, so it is
-  right on a fork or a local `vite preview`. The front door's own link home is
-  written out in full and points at this deployment; a fork should change it
-  wherever the website is generated.
-- It only appears in a built site. `npm run dev` serves `public/` directly, so
-  the website is there but the added link is not. Use `npm run build && npx
-  vite preview` to see it.
-
-#### The bundles ask for their own source tree — fix this where they are made
-
-The same build step repairs a second thing, and this one is not cosmetic. The
-generator wrote asset paths relative to the directory it ran in rather than to
-the page it was writing. Verbatim out of `study.html`:
-
-```js
-fetch('app/public/audio/lessons/' + course + '/lessons.json')
-```
-
-Served from `/semester/web/study.html` that resolves to
-`/semester/web/app/public/audio/…`, which is nothing. The file is really at
-`/semester/audio/…`: Vite publishes the *contents* of `public/`, so `app/public/`
-is where a file sits in the repository and is never part of a URL.
-
-It cost the whole study page. Every course read "0 units", the contents list was
-empty and the script pane blank, because the 404 is swallowed by an
-`r.ok ? … : null`. The term page lost its logo to the same prefix.
-
-`webback` now rewrites `app/public/…` to the deployment root at run time — it
-patches `fetch`, `XMLHttpRequest.open`, `setAttribute` and the `<img>` `src`
-setter before the bundler unpacks the document, because `study.html` has the
-path as a literal and `app.html` builds its own at run time, so a search and
-replace would only catch half. Regenerating the website is safe; the repair is
-re-applied on the next build.
-
-It belongs upstream; see [the list below](#what-has-to-change-in-the-generator).
-
-#### The other fourteen files, which the shim could never have reached
-
-`app.html` also asked for a stylesheet, a script and twelve icons. None of them
-came through `fetch` or a `src` attribute — they are in a `<sc-helmet>` block the
-page writes with `innerHTML`, and the icons arrive as **CSS masks**:
-
-```css
-.ic-today { mask-image: url("icons/today.svg"); background: currentColor }
-```
-
-A mask URL is not an attribute, so nothing the shim hooks ever sees it, and a
-404 on a mask paints nothing and reports nothing. That is also why the count was
-wrong at first: only nine icons 404 on the home screen. `make`, `campus` and
-`person` appear on screens further in. Reading the helmet block out of the live
-page gives all twelve.
-
-None of these were missing in the sense of not existing. They were missing in
-the sense of never having been published:
-
-| What | Where it really is | How it now ships |
-| --- | --- | --- |
-| `_ds/industry-ec2ca40c-…/styles.css`, `_ds_bundle.js` | `project/_ds/industry-ec2ca40c-…/` — outside `app/`, so Vite never saw it | copied into `dist/web/_ds/…` by `webback` |
-| twelve `icons/*.svg` | drawn in `app/src/components/icons.data.ts`, as the app's own glyphs | written out by `app/src/lib/webicons.ts` |
-
-Two things worth knowing about those:
-
-- **The stylesheet changes nothing visible**, and that is the point rather than a
-  disappointment. It is the Industry token sheet; the page carries its own styles
-  inline, *after* the link, so they win. It ships so the page loads what it says
-  it loads, and so a regeneration that leans on a token finds one.
-- **The icons are generated, not drawn twice.** Every name the website asks for
-  is one the app already had. Twelve hand-written files would mean two copies of
-  each glyph, and the day somebody redraws the map icon in the app the website
-  would keep the old one — silently, because a stale glyph is still a glyph. The
-  shapes moved into `icons.data.ts`, `Icons.tsx` renders them, and the build
-  writes the same shapes out as files. They are stroked in flat black rather than
-  `currentColor`, which a mask cannot resolve.
-
-After all three repairs, **all three pages load with no failed request at all.**
-
-#### "NaNm left" — the term page could not read its own deadlines
-
-A third repair, and the one worth understanding, because it is about the data
-rather than the plumbing. The countdown for anything due today read:
-
-```js
-const hh = parseInt(it.time, 10) + (/PM/.test(it.time) && … ? 12 : 0);
-const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, 59);
-```
-
-`it.time` is the deadline **as the syllabus words it** — that is deliberate and
-documented in `app/src/lib/duetime.ts`: "In class" and "Window is Sep 8–17" mean
-things no clock can hold, and rewriting them would lose the only wording you can
-check against the PDF. `parseInt` of any of those is `NaN`, which makes an
-Invalid Date, which makes `Math.max(0, NaN)` — `NaN`, not `0`.
-
-Of the thirteen wordings in the data the page carries, three survive:
-
-| Wording | Deadlines | The page read | Actually |
-| --- | --- | --- | --- |
-| `Before class, 1:15p` | 24 | `NaN` | 13:15 |
-| `11:59 PM` | 6 | 23:00 — right only because the next line hard-codes `, 59` | 23:59 |
-| `In class`, `Before class`, `` (blank) | 9 | `NaN` | no clock time |
-| `Before class, 2:45p`, `In class, 2:45p` | 6 | `NaN` | 14:45 |
-| `Window is …` | 2 | `NaN` | no clock time |
-| `Take-home posted 9a Sep 14` | 1 | `NaN` | 09:00 |
-| `5:00p` | 1 | **05:00** — `/PM/` does not match a lowercase `p` | 17:00 |
-| `9:00–11:00 AM`, `3:00–5:00 PM` | 2 | correct, by luck | 09:00, 15:00 |
-
-Weighted by items, **44 of 50 deadlines showed `NaN` on the day they were due**,
-and `5:00p` counted down to a deadline twelve hours before the real one — worse
-than `NaN`, because nothing about a plausible number looks wrong.
-
-This one is a **source patch**, not a shim: the bad value is computed and
-rendered inside the bundle, so nothing at a boundary can see it. `webback`
-replaces those two lines in `dist/`, anchored on a long literal, and injects a
-reader — `readDue` from `duetime.ts` written out as browser JavaScript. A
-wording with no clock time now returns "today", beside the page's own
-"tomorrow", instead of counting down to a time nobody stated.
-
-Two things keep that patch honest, and both are tests rather than intentions:
-
-- `webback.test.ts` reads the committed `app.html` and asserts the anchor still
-  matches **exactly once**. A regeneration that rewrites the countdown turns
-  `npm test` red, rather than the site quietly going back to `NaNm left`.
-- The injected reader is checked against `readDue` on every wording in the data.
-  They must agree; `readDue` is the one with the reasoning behind it.
-
-Upstream this is one line; see [the list below](#what-has-to-change-in-the-generator).
-
-#### What has to change in the generator
-
-Everything above is a **repair applied at build time to `dist/`**, because the
-thing that produces these three pages is not in this repository. Neither is the
-website's source: `docs/data-contract.md` §0 records the search, by name and by
-content. The bundles arrived as a zip of three built HTML files and a README.
-
-So this section is the handover. Each item is a defect in whatever emits the
-bundles, and each has a repair here that becomes dead weight the moment it is
-fixed properly.
-
-| # | In the generated page | What it should emit | Repaired here by |
-| --- | --- | --- | --- |
-| 1 | `app/public/…` in a URL | the path alone — Vite publishes the *contents* of `public/`, so the prefix is a repository path and never part of a URL | `PATH_SNIPPET`, a runtime shim |
-| 2 | `_ds/industry-ec2ca40c-…/styles.css`, `_ds_bundle.js` | inline the stylesheet, as the pages already inline the rest of their CSS, or emit a path relative to the deployed page — not one into the design-system source tree | the two real files copied out of `project/_ds/` |
-| 3 | twelve `icons/*.svg` as `mask-image` | ship the files beside the page, or inline them as `data:` URIs | generated from `app/src/components/icons.data.ts` |
-| 4 | `parseInt(it.time, 10)`, then `new Date(…, hh, 59)` | read the time out of the wording, and take the minutes from it instead of assuming `59` | `BROKEN` → `MENDED`, a source patch |
-| 5 | `const BASE = 'https://harrisonjrubin7-cmyk.github.io/semester'` in `study.html`, and `window.open('https://harrisonjrubin7-cmyk.github.io/semester/#/home')` in `index.html` | derive the base from `location.pathname`, the way the injected return link does | `OWN_BASE`, two source patches |
-
-**Item 5 is the one that was invisible**, because on the real site it is right.
-`study.html` sets an `<audio>` element's `src` to `BASE + l.file`, so a fork, a
-renamed repository or a local `vite preview` streamed from *this* deployment or
-not at all — a fork would have looked like it worked while depending on a URL
-its owner does not control. The front door's "open the app" button went here
-from anywhere.
-
-Both now call `window.__semesterBase()`, which is the rule the return link has
-always used: everything before `/web/` in `location.pathname`. On this
-deployment it computes the identical string, character for character, so the
-live site is unchanged and every other copy is fixed.
-
-The two anchors are whole statements rather than the host, deliberately.
-`index.html` also links to `https://github.com/harrisonjrubin7-cmyk/semester`
-and `app.html` prints `harrisonjrubin7-cmyk/semester · main` as a label; a
-repair keyed on the host would have rewritten a real external link and a piece
-of text.
-
-Two things make these safe to leave until then. The committed bundles are
-untouched — byte for byte as they arrived — so **regenerating the website loses
-nothing**, and every repair is re-applied on the next build. And where a repair
-depends on matching a literal, a test asserts the literal is still there, so a
-regeneration that fixes item 4 upstream turns `npm test` red rather than
-silently reverting the site. Red there means "delete the patch", not "something
-broke".
-
-Finally, the bundles answer a question `docs/data-contract.md` §0 was still
-holding open. It listed the `semweb:*` keys among the things no file in the
-repository mentioned; the bundles carry them, and they are the website's half of
-the mapping table that section could not fill. §0 now records this, and the
-names are:
-
-| Page | Keys it reads and writes |
-| --- | --- |
-| `index.html` | `semweb:cloud:v1` |
-| `app.html` | `semweb:v1`, `semweb:custom:v1`, `semweb:grades:v1`, `semweb:places:v1` |
-| `study.html` | `semweb:study:v1`, `semweb:custom:v1` |
 
 ## 5 · The optional connectors
 

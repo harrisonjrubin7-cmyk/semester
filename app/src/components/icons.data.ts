@@ -1,17 +1,17 @@
 /**
  * The icon shapes, as data rather than markup.
  *
- * They were JSX inside `Icons.tsx` and only ever rendered by React, which was
- * fine until something outside React needed them: the website's sidebar draws
- * the same glyphs as CSS masks — `mask-image: url("icons/today.svg")` — and
- * asks for twelve standalone `.svg` files that this repository did not have.
+ * They were JSX inside `Icons.tsx`, which was fine until something outside
+ * React wanted the same glyphs and got its own hand-drawn copies of them.
+ * Shapes as data, rendered by `Icons.tsx`, is what stops that: there is one
+ * path per glyph and redrawing it redraws every place it appears.
  *
- * Two ways to answer that, and only one of them stays true. Writing twelve
- * files by hand would leave two copies of every glyph, and the day somebody
- * redraws the map icon in the app the website keeps the old one — silently,
- * because nothing fails. So the shapes moved here, `Icons.tsx` renders them,
- * and `lib/webicons.ts` writes the same shapes out as files at build time.
- * One source, two consumers.
+ * (The second consumer was the separate static website that used to ship
+ * under `/web/`, which drew these as CSS masks from twelve generated `.svg`
+ * files. That site is gone — it was a second version of this app — and the
+ * generator with it. The shapes stay here regardless: one definition per
+ * glyph is right with one consumer as well as two, and it is what the icon
+ * shape setting in Appearance is able to restyle in one place.)
  *
  * The style is unchanged and worth keeping: Lucide-like, on a 24×24 grid, at
  * stroke-width 1.5 — the Industry system's rule.

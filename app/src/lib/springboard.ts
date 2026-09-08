@@ -27,6 +27,7 @@
  */
 
 import { DESTINATIONS, offered } from './nav';
+import { has } from './search';
 import type { Capabilities } from './school';
 
 export interface Folder {
@@ -160,16 +161,24 @@ export function labelFor(screen: string): string {
 /**
  * What a search across the springboard matches.
  *
- * The same scoring the app's own search uses would be better, but this runs on
- * every keystroke over forty-six items and a substring match on the label and
- * the directory's keywords is enough to find an icon you can already see.
+ * The same ranked scoring `lib/find.ts` uses would be better, but this runs on
+ * every keystroke over forty-six items, and an icon you can already see needs
+ * finding rather than ordering. So it is the plain substring test every
+ * in-screen filter in the app uses — `has`, from `lib/search.ts` — over the
+ * words the directory already holds.
+ *
+ * The blurb is one of those words now. It was not, and the difference showed:
+ * the directory's own sentence for a screen is what the shelves print under
+ * it and what Everything matches on, so a word somebody had just read there
+ * found the screen in one place and nothing in the other. Whatever the
+ * registry says about a screen is searchable, everywhere.
  */
 export function matches(screen: string, query: string): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
   const d = DESTINATIONS.find((x) => x.screen === screen);
   if (!d) return false;
-  return `${d.label} ${d.short ?? ''} ${d.keywords}`.toLowerCase().includes(q);
+  return has(q, d.label, d.short, d.blurb, d.keywords);
 }
 
 /** Everything on offer, flattened, for the search results grid. */

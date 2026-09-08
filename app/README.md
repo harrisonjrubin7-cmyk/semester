@@ -50,16 +50,41 @@ Five sections, twenty screens.
 - **Me** — load by course, the account connections, settings and the syllabus
   importer.
 
-## Two navigation structures
+## Two axes: how you move, and how a screen is drawn
 
-The design compared two, and both ship. Switch in **Settings → Navigation**.
+Both are chosen on one page — **Settings → Layout and navigation** — with a
+drawing of each option beside its name. They are independent, and all twelve
+pairings are a working app.
+
+**Navigation** decides which single piece of chrome is drawn. One, always:
+`src/lib/chrome.ts` is the whole rule, and `chrome.test.ts` runs every
+combination of navigation, screen and width to prove no two are ever on screen
+together.
 
 - **Tab bar** — Today / Courses / Study / Calendar / Me. Every thing has a fixed
   home. Costs you taps when comparing two courses.
 - **One feed** — no tabs. Classes and deadlines interleave in one chronological
   scroll, sliced by a filter row. Fastest for "what is actually next", weaker
-  for browsing a course whole. Since it has no tab bar, the Me screen carries
-  links to the other sections.
+  for browsing a course whole. Since it has no bar, the Me screen carries links
+  to the other sections.
+- **Home screen** — three pages of icons with a dock that does not move. Every
+  icon goes to the same screen the tab bar would have.
+- **Shelves** — two rows of pills, the shelf you are on and the screens on it,
+  with the current screen's own sentence under them.
+
+**Layout** decides how a screen is arranged once you are on it, and nothing
+else: the same screen shows the same controls and the same content in all three
+(`src/components/shell/useShell.ts`).
+
+- **Drawn** — framed cards with registration marks, and room between them.
+- **Grouped** — one inset panel per section, hairlines between rows.
+- **Soft** — cards lifted off the page, and one figure per screen worth reading
+  first.
+
+The shelves used to be part of the soft layout rather than a navigation, so
+choosing that layout drew its pills *on top of* the tab bar or the rail — two
+live navigations in one window. They are a navigation now, available in all
+three layouts, and no layout draws navigation of its own.
 
 ## The date is real
 
@@ -192,18 +217,44 @@ Everything visual is a token. Screens read `var(--app-*)`, never a hex. If you
 want a different look, retune the tokens at the top of `app.css` and the whole
 app follows.
 
-## Layout
+## Where things live
 
 ```
 src/
+  ai/           The assistant: prompt, tools, providers, the chat surface
   components/   Blueprint frame, icons, diagrams, shared UI
   data/         Courses, items, schedule, guides, figures, events, audio, copy
-  lib/          Types, date maths, selectors, quiz builder
+  lib/          Types, date maths, selectors, the registries below
   screens/      One file per area
   state/        Reducer, persistence, the live clock
   styles/       industry.css (the system) + app.css (this app)
 ```
 
-Data is plain TypeScript, not fetched. Selectors in `lib/select.ts` are the only
-place the current date turns into what a screen shows, so if a date looks wrong
-that is where to look.
+Data is plain TypeScript, not fetched.
+
+### One list per thing
+
+Each of these is the only place its subject is decided. Change it here and
+every screen, the search, the directory and the guidebook follow — that is the
+point of them, and adding a second list beside one is the bug they exist to
+prevent.
+
+| To change… | Edit |
+| --- | --- |
+| Which screens exist, what each is called, what it is for, and what somebody would search for to find it | `lib/nav.ts` (`DESTINATIONS`) |
+| Which navigation is drawn, and when | `lib/chrome.ts` |
+| The four navigations and the three layouts, with their names and blurbs | `lib/look.ts` (`NAVS`, `SHELLS`) |
+| Every colour, ground, typeface, size and spacing token | `lib/look.ts` (`tokensFor`) |
+| Which settings pages exist and what each holds | `lib/settings.ts` (`SETTINGS`) |
+| What Today shows, and in what order | `lib/feed.ts` (`SECTIONS`) |
+| Which screens a new account sees before it has earned the rest | `lib/reveal.ts` |
+| Keyboard shortcuts | `lib/keys.ts` |
+| What a school does and does not have (meal swipes, a card, an LMS) | `lib/school.ts` |
+| What the date turns into on screen — labels, "today", countdowns | `lib/select.ts` |
+| What the assistant can do | `ai/providers/` |
+| The spacing, type and leading scales every screen is held to | `styles/rules.ts` |
+
+If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen
+shows. If a screen is unreachable, `lib/nav.ts` is why — and
+`lib/findable.test.ts` fails until every screen is either in that registry or
+named there as one you arrive at from somewhere else.
