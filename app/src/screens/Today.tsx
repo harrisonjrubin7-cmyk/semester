@@ -9,7 +9,6 @@ import { ReadingsOnTheGo } from '../components/ReadingProgress';
 import { ClosingWindows } from '../components/Windows';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { BarButton, BottomBar, Hero, Pill, Stat, StatRow } from '../components/soft/Soft';
 import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import {
@@ -45,102 +44,6 @@ import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
 
 /** The next-class card, shared by both nav modes. */
-/**
- * Today in the soft shell.
- *
- * The same facts as the drawn shell, arranged the way the soft one arranges
- * every screen: one figure worth reading first, the numbers that qualify it
- * beneath, and the action at the bottom where a thumb is.
- *
- * It reads the same selectors the plain sections read rather than being given
- * a prepared summary, so there is no second source of "what is next" to fall
- * out of step with the first.
- *
- * The hero never renders empty. With a class ahead it carries the time; with
- * none it carries the sentence, which is what `said` is for — a dash in a
- * 44px slot is worse than no hero at all.
- */
-function SoftToday() {
-  const { state, now, catalog } = useStore();
-  const next = nextClass(catalog, now);
-  const dueToday = datedItems(catalog, now).filter((i) => i.isToday && !state.done[i.id]);
-  const doneToday = datedItems(catalog, now).filter((i) => i.isToday && state.done[i.id]);
-  // Seven days, not "everything still ahead" — `upcomingItems` is only
-  // "not past", and a stat labelled This week reading 42 is a wrong number
-  // rather than a big one.
-  const week = upcomingItems(catalog, now).filter((i) => !i.isToday && i.daysAway <= 7);
-  const settled = dueToday.length + doneToday.length;
-
-  return (
-    <>
-      {next ? (
-        <Hero
-          label="Next class"
-          meta={next.untilLabel}
-          figure={next.block.time}
-          foot={
-            <>
-              <div className="soft-step-head">{next.block.title}</div>
-              <div className="soft-tile-sub">
-                {next.block.c ? catalog.byId[next.block.c].room : next.block.meta}
-              </div>
-            </>
-          }
-        />
-      ) : (
-        <Hero label="Today" said="No class today." foot={<div className="soft-tile-sub">{`${dueToday.length} still due`}</div>} />
-      )}
-
-      <StatRow cols={3}>
-        <Stat
-          label="Due today"
-          value={dueToday.length}
-          fraction={settled ? doneToday.length / settled : undefined}
-        />
-        <Stat label="This week" value={week.length} />
-        <Stat label="Overdue" value={overdueCount(datedItems(catalog, now), state.done)} />
-      </StatRow>
-    </>
-  );
-}
-
-/**
- * The soft shell's bottom bar for Today.
- *
- * One primary action and its secondaries. Separate from `SoftToday` because
- * it sits at the foot of the page rather than in the flow of it.
- */
-function SoftTodayBar() {
-  const { state, now, catalog, dispatch } = useStore();
-  const dueToday = datedItems(catalog, now).filter((i) => i.isToday && !state.done[i.id]);
-  const first = dueToday[0];
-
-  return (
-    <BottomBar
-      status={first ? `${dueToday.length} left today` : 'Nothing left today'}
-      segments={
-        <>
-          <Pill on>Today</Pill>
-          <Pill onClick={() => dispatch({ type: 'setHomeTab', tab: 'week' })}>Week</Pill>
-          <Pill onClick={() => dispatch({ type: 'setHomeTab', tab: 'done' })}>Done</Pill>
-        </>
-      }
-      primary={first ? 'Start the next thing' : 'Plan tonight'}
-      onPrimary={() => dispatch({ type: 'go', screen: first ? 'work' : 'tonight' })}
-      secondaries={
-        <>
-          <BarButton label="Search" onClick={() => dispatch({ type: 'go', screen: 'search' })}>
-            <ChevronRight size={18} />
-          </BarButton>
-          <BarButton label="Mark the next thing done" onClick={() => first && dispatch({ type: 'toggleDone', id: first.id })}>
-            <Check size={18} />
-          </BarButton>
-        </>
-      }
-    />
-  );
-}
-
 function NextClassCard() {
   const { now, catalog } = useStore();
   const next = nextClass(catalog, now);
@@ -348,7 +251,6 @@ function TabHome() {
   const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
   const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
   const tab = state.homeTab;
-  const soft = useSoft();
 
   return (
     <Page bottom={26}>
@@ -369,12 +271,7 @@ function TabHome() {
 
       {tab === 'brief' && <Brief bare />}
 
-      {/* The soft shell's own top. `plain` and `grouped` are untouched. */}
-      {tab === 'today' && soft && <SoftToday />}
-
       {tab === 'today' && <TodayFeed />}
-
-      {tab === 'today' && soft && <SoftTodayBar />}
 
       {tab === 'week' && (
         <>
