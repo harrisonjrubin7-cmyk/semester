@@ -193,12 +193,25 @@ honest result.
 
 ## 4. What is left, and in what order
 
-| # | Change | Destinations | Files touched |
+| # | Change | Destinations | Done |
 | --- | --- | --- | --- |
-| M1 | `weekly` + `worked` → `brief`, at three grains | −2 | ~10 |
-| M2 | `check` → `announce`, at two sources | −1 | ~6 |
-| M3 | Drop the duplicate `edit` and `import` offers where a screen and its own softtop bar both make them | 0 | ~4 |
-| M4 | Fix the `home` blurb, and move every merged screen's `keywords` onto its survivor | 0 | 1 |
+| M1 | `weekly` + `worked` → `brief`, at three grains | −2 | ✅ `bc8c5b3` |
+| M2 | `check` → `announce`, at two sources | −1 | ✅ `28d8422` |
+| M3 | The duplicate `edit` and `import` offers | 0 | ◐ partly — see below |
+| M4 | The `home` blurb, and the merged screens' `keywords` | 0 | ✅ with M1 and M2 |
+
+### M3, as far as it went
+
+One of the two was real and is fixed: the edit screen's "take the semester on"
+button dispatched `go: 'edit'` from `edit`, which pushed a history entry, so
+Back landed somebody on the screen they had just pressed Back from. `adopt()`
+alone is enough — the editor draws on the next render.
+
+The rest were not duplicates on inspection. `import` is offered by the Courses
+screen, by the soft shell's action bar and by the springboard's floating
+button, and those are three different navigations of which exactly one is on
+screen at a time (`NAVS` in `lib/look.ts`). Cutting any of them would remove
+the affordance for whoever chose that navigation. Left alone, deliberately.
 
 **59 → 56 destinations.** That is a smaller cut than the brief assumed, and the
 reason is worth stating plainly: this app is large because it does a lot, not
