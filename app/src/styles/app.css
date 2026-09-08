@@ -1472,3 +1472,54 @@ input[type='search'].input {
     border: 1px solid CanvasText;
   }
 }
+
+/*
+ * ── The soft shell's two rows ────────────────────────────────────────────
+ *
+ * Nine shelves on the first row, the screens on that shelf on the second,
+ * and the current screen's own sentence under both. Both rows scroll
+ * sideways on a phone — nine pills do not fit 390px at any text size, and
+ * wrapping them would change the height of the chrome as you moved around,
+ * which is the one thing navigation must not do.
+ */
+.soft-nav {
+  padding: calc(8px * var(--density, 1)) 0 calc(10px * var(--density, 1));
+  border-bottom: 1px solid var(--app-line-soft);
+  background: var(--app-bg);
+}
+
+.soft-nav-row {
+  display: flex;
+  gap: var(--sp-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* The fade says "there is more this way" without drawing a scrollbar over
+     the pills. Transparent at both ends so it works scrolled to either. */
+  mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+  padding: calc(4px * var(--density, 1)) 14px;
+}
+
+.soft-nav-row::-webkit-scrollbar {
+  display: none;
+}
+
+/*
+ * Never wrap and never clip: a name that does not fit makes the row scroll.
+ *
+ * `width: auto` because `.bare` sets `width: 100%` for the full-width buttons
+ * it was written for, and a pill that fills the row turns a row of nine into
+ * nine rows of one — which is what the first version of this did.
+ */
+.soft-nav-pill {
+  flex: none;
+  width: auto;
+  white-space: nowrap;
+}
+
+.soft-nav-said {
+  margin: calc(4px * var(--density, 1)) 0 0;
+  padding: 0 14px;
+  font-size: calc(12px * var(--text-scale, 1));
+  line-height: var(--line-height, 1.45);
+  color: var(--app-dim);
+}

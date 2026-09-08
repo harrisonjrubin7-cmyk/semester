@@ -743,6 +743,21 @@ export function destination(screen: Screen): Destination | undefined {
   return BY_SCREEN.get(screen);
 }
 
+/**
+ * The shelf a screen sits on.
+ *
+ * Its own, when the registry lists it; otherwise the shelf of the root it
+ * nests under, so a flashcard three levels inside Study still answers Study
+ * rather than nothing. The last fallback is the first shelf, unreachable in
+ * practice because every root is a destination, and there so the return type
+ * is a `Group` rather than one every caller has to unwrap.
+ */
+export function shelfOf(screen: Screen): Group {
+  const own = destination(screen)?.group;
+  if (own) return own;
+  return destination(rootOf(screen))?.group ?? GROUPS[0];
+}
+
 export function destinationsIn(group: Group): Destination[] {
   return DESTINATIONS.filter((d) => d.group === group);
 }

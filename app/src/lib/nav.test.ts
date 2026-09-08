@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESTINATIONS, GROUPS, destinationsIn, lately, saysFor } from './nav';
+import { DESTINATIONS, GROUPS, destinationsFor, destinationsIn, lately, saysFor, shelfOf } from './nav';
 import { NO_SCHOOL, type Capabilities } from './school';
 import { BUNDLED } from '../data/schools';
 
@@ -187,5 +187,39 @@ describe('the shelves the directory is arranged on', () => {
 
   it('names each shelf once', () => {
     expect(new Set(GROUPS).size).toBe(GROUPS.length);
+  });
+});
+
+describe('the two rows reach everything', () => {
+  // The soft shell's navigation: row one is the shelves, row two is the
+  // screens on the shelf you are standing on. "All 55 reachable" is the
+  // acceptance criterion for it, so it is a test rather than a thing somebody
+  // clicked through once.
+  it('puts every screen on the second row of its own shelf', () => {
+    for (const d of DESTINATIONS) {
+      const shelf = shelfOf(d.screen);
+      const row = destinationsFor(shelf, vanderbilt).map((x) => x.screen);
+      expect(row, `${d.label} (${d.screen}) on ${shelf}`).toContain(d.screen);
+    }
+  });
+
+  it('lands somewhere from every pill on the first row', () => {
+    // A shelf pill opens the first screen on that shelf, so an empty shelf
+    // would be a pill that does nothing.
+    for (const g of GROUPS) expect(destinationsFor(g, vanderbilt).length).toBeGreaterThan(0);
+  });
+
+  it('answers with a shelf for a screen the registry does not list', () => {
+    // Flashcards and the guide are reached from inside Study rather than being
+    // destinations, and the rows still have to say where you are.
+    expect(shelfOf('drill' as never)).toBe('Study');
+    expect(shelfOf('guide' as never)).toBe('Study');
+  });
+
+  it('gives every screen a sentence to show under the rows', () => {
+    for (const d of DESTINATIONS) {
+      const { blurb } = saysFor(d, vanderbilt);
+      expect(blurb.length, d.screen).toBeGreaterThan(10);
+    }
   });
 });
