@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { TASKS, build, check, toMarkdown } from './guidebook';
 import { buildGuide, complaint } from '../../scripts/build-guide';
-import { DESTINATIONS } from './nav';
+import { DESTINATIONS, GROUPS } from './nav';
 import { SHORTCUTS } from './keys';
 
 /**
@@ -60,7 +60,7 @@ describe('what happens when the app changes', () => {
       label: 'A screen the guide has never heard of',
       blurb: 'Added by a test.',
       keywords: 'test',
-      group: 'Yours',
+      group: 'You',
       taskTags: ['app'],
       root: 'me',
     });
@@ -104,12 +104,17 @@ describe('what happens when the app changes', () => {
 });
 
 describe('the shape of the thing', () => {
-  it('has the eight sections the guide is meant to have', () => {
+  it('has a section for every area the registry names, and the fixed ones around them', () => {
     const ids = build().sections.map((s) => s.id);
     expect(ids[0]).toBe('what');
     expect(ids[1]).toBe('start');
-    for (const g of ['semester', 'study', 'make', 'upkeep', 'campus', 'yours']) {
-      expect(ids).toContain(`area-${g}`);
+    // Read from the one list rather than repeated here. This test held the
+    // seventh copy of the six shelf names, and a regrouping is exactly the
+    // change that finds a copy — it failed on `area-upkeep` after the shelves
+    // became nine, which is the test doing its job and then needing the same
+    // fix as the four source files.
+    for (const g of GROUPS) {
+      expect(ids).toContain(`area-${g.toLowerCase()}`);
     }
     for (const id of ['tasks', 'screens', 'settings', 'keys', 'wrong']) {
       expect(ids).toContain(id);

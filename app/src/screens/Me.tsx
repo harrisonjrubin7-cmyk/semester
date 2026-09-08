@@ -13,7 +13,7 @@ import { NOTIFICATIONS } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
-import { destinationsIn, lately, listed, saysFor, type Group } from '../lib/nav';
+import { GROUPS, destinationsIn, lately, listed, saysFor } from '../lib/nav';
 
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
@@ -30,7 +30,7 @@ import { SettingsIndex } from './settings/Index';
  * under. Five short shelves you can flick between is the same information and
  * a different object.
  */
-const GROUPS: Group[] = ['Study', 'Make', 'Semester', 'Upkeep', 'Campus', 'Yours'];
+
 
 /** Already a tab on the phone, so listing them again is noise. */
 // Settings is a tab of this screen now, so listing it in the directory would
