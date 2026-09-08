@@ -115,7 +115,7 @@ import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
-import { litTab, tabLabel } from './lib/tabbar';
+import { litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
@@ -869,7 +869,6 @@ function CurrentScreen() {
 function Rail() {
   const { state, dispatch } = useStore();
   const tabs = state.tabs;
-  const here = litTab(state.screen, tabs);
   // The rail keeps its labels whatever the tab bar does: it is a wide-screen
   // sidebar with room for words, and the setting exists to buy height back on
   // a phone, which the rail is not on.
@@ -882,6 +881,13 @@ function Rail() {
     // draws the bar above this list — so without the filter, a student who
     // put Ask Claude in their bar would find it in the rail twice.
     .filter((d) => !tabs.includes(d.screen));
+  // Whichever of those the rail ended up drawing, so `litRailTab` knows which
+  // screens this nav already has a row of its own for.
+  const here = litRailTab(
+    state.screen,
+    tabs,
+    extras.map((d) => d.screen),
+  );
 
   return (
     <nav className="rail" aria-label="Sections">
@@ -919,18 +925,29 @@ function Rail() {
         );
       })}
       <div className="rail-gap" />
-      {extras.map(({ screen, label, blurb }) => (
-        <button
-          key={screen}
-          type="button"
-          className="bare rail-item rail-quiet"
-          onClick={() => dispatch({ type: 'go', screen })}
-          title={blurb}
-          style={{ color: state.screen === screen ? 'var(--app-accent)' : 'var(--app-faint)' }}
-        >
-          <span>{label}</span>
-        </button>
-      ))}
+      {extras.map(({ screen, label, blurb }) => {
+        // The same treatment a tab gets, because it means the same thing: this
+        // is the screen you are on. A colour shift alone lost that argument to
+        // the lit pill `litTab` used to put on the tab above.
+        const on = state.screen === screen;
+        return (
+          <button
+            key={screen}
+            type="button"
+            className="bare rail-item rail-quiet"
+            onClick={() => dispatch({ type: 'go', screen })}
+            title={blurb}
+            aria-current={on ? 'page' : undefined}
+            style={{
+              color: on ? 'var(--app-accent-bright)' : 'var(--app-faint)',
+              background: on ? 'var(--app-hero)' : 'transparent',
+              boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
+            }}
+          >
+            <span>{label}</span>
+          </button>
+        );
+      })}
     </nav>
   );
 }
