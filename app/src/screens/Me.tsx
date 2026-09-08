@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ForcedProvider, useRowStyle } from '../components/shell/useShell';
+import { ForcedProvider, useRowStyle, useSoft } from '../components/shell/useShell';
 import { learned, showSpan } from '../lib/pace';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
@@ -14,6 +14,7 @@ import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
 import { GROUPS, destinationsIn, lately, listed, saysFor } from '../lib/nav';
+import { Launcher } from '../components/soft/Launcher';
 
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
@@ -137,6 +138,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
 
 export function Me() {
   const { state, dispatch, now, catalog, account , courseCode, school, facts } = useStore();
+  const soft = useSoft();
   const rowNine = useRowStyle(9);
   const rowTen = useRowStyle(10);
   const ahead = upcomingItems(catalog, now);
@@ -306,6 +308,22 @@ export function Me() {
         is findable because every row looks like every other row, so it does
         not follow the app-wide plain/grouped setting.
       */}
+      {/*
+        The soft shell puts the launcher here instead.
+
+        Not as well as — the two are the same fifty-five rows arranged two
+        ways, and showing both would be a directory with a directory on top
+        of it. The drawn and grouped layouts keep the panels below exactly as
+        they were, which is the rollback this restructure is built on.
+
+        `Lately` and `NotYetOpened` go with them. Both are answers to "where
+        was that", and the grid answers it by position instead — a Lately
+        panel above a grid whose whole claim is that Data is always
+        bottom-left would be arguing with the thing under it.
+      */}
+      {soft ? (
+        <Launcher />
+      ) : (
       <ForcedProvider value="grouped">
         <nav aria-label="Everything" style={{ margin: '0 -18px' }}>
           {recent.length > 0 && (
@@ -338,6 +356,7 @@ export function Me() {
           })}
         </nav>
       </ForcedProvider>
+      )}
         </>
       )}
     </Page>

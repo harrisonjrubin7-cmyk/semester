@@ -6,6 +6,9 @@ import { NOTIF_DEFS } from '../data/misc';
 import { Check } from '../components/Icons';
 import type { Catalog } from '../data/catalog';
 import { SchoolPicker } from '../components/SchoolPicker';
+import { useSoft } from '../components/shell/useShell';
+import { Step } from '../components/soft/Soft';
+import { welcomeLead, welcomeLine } from '../lib/welcome';
 
 /**
  * The first three screens, written from what is actually loaded.
@@ -64,7 +67,8 @@ function steps(cat: Catalog, tone: Tone) {
 
 /** Four screens: the promise, what it read, where you study, and the alerts. */
 export function Onboarding() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, now } = useStore();
+  const soft = useSoft();
   const all = steps(catalog, state.tone);
   const step = all[state.onb] ?? all[0];
 
@@ -112,14 +116,36 @@ export function Onboarding() {
           textWrap: 'pretty',
         }}
       >
-        {step.t}
+        {soft && state.onb === 0 ? welcomeLine(catalog, now) : step.t}
       </div>
       <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', opacity: 0.72, maxWidth: '30ch' }}>
-        {step.b}
+        {soft && state.onb === 0 ? welcomeLead(catalog) : step.b}
       </div>
 
+      {/*
+        The soft shell says what is ahead, on the first screen only.
+
+        Four numbered cards, one per step, so the four screens that follow are
+        a thing with an end rather than a corridor. The steps themselves keep
+        every input they had — the school picker and the alert switches are
+        where they were, because this is a different opening panel and not a
+        different flow, and the restructure's second rule is that no screen
+        loses a feature.
+
+        `Step` was built in step 2 and had no callers until here.
+      */}
+      {soft && state.onb === 0 && (
+        <div className="soft-steps">
+          {all.map((one, i) => (
+            <Step key={one.k} n={i + 1} head={one.t}>
+              {one.b}
+            </Step>
+          ))}
+        </div>
+      )}
+
       {/* Empty boxes on a first run look like something failed to load. */}
-      {state.onb === 0 && catalog.courses.length > 0 && (
+      {!soft && state.onb === 0 && catalog.courses.length > 0 && (
         <Blueprint
           style={{
             marginTop: 34,

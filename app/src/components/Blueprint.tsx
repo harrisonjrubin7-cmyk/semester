@@ -1,5 +1,16 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, HTMLAttributes, ReactNode } from 'react';
 import { useGrouped } from './shell/useShell';
+
+/**
+ * The props a caller may pass straight through to the element.
+ *
+ * Deliberately not "every prop": `className`, `style` and `onClick` are the
+ * frame's own and are composed rather than replaced. `HTMLAttributes` rather
+ * than the button's own, because both branches below spread it and a
+ * `disabled` that silently vanished on the `div` would be worse than one the
+ * type refuses.
+ */
+type Passed = Omit<HTMLAttributes<HTMLElement>, 'className' | 'style' | 'onClick' | 'children'>;
 
 /**
  * The wireframe frame every card, figure and primary object wears in the
@@ -14,7 +25,8 @@ export function Blueprint({
   onClick,
   as = 'div',
   plain = false,
-}: {
+  ...rest
+}: Passed & {
   children: ReactNode;
   style?: CSSProperties;
   className?: string;
@@ -53,6 +65,7 @@ export function Blueprint({
   if (as === 'button' || onClick) {
     return (
       <button
+        {...rest}
         type="button"
         onClick={onClick}
         className={`blueprint bare tappable${grouped ? ' grouped' : ''}${className ? ` ${className}` : ''}`}
@@ -65,7 +78,11 @@ export function Blueprint({
   }
 
   return (
-    <div className={`blueprint${grouped ? ' grouped' : ''}${className ? ` ${className}` : ''}`} style={style}>
+    <div
+      {...rest}
+      className={`blueprint${grouped ? ' grouped' : ''}${className ? ` ${className}` : ''}`}
+      style={style}
+    >
       {marks}
       {children}
     </div>
