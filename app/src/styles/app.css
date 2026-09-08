@@ -1428,6 +1428,84 @@ input[type='search'].input {
   color: var(--tile-ink);
 }
 
+/*
+ * The change strip: what just moved, at the top, for five seconds.
+ *
+ * Under the header rather than over it. Over would cover the screen's own
+ * name at the moment somebody is being told something changed, which is the
+ * one moment the name is worth keeping — "moved to Friday" means a different
+ * thing on Calendar than on Today.
+ */
+.soft-strip {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  padding: var(--sp-5) 18px;
+  background: var(--app-panel);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.soft-strip-body {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2) var(--sp-4);
+}
+
+.soft-strip-lead {
+  font-family: var(--font-heading);
+  font-size: calc(11px * var(--text-scale, 1));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.soft-strip-detail {
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+/*
+ * The way through to the record. `.bare` is 100% wide; this is a tail.
+ *
+ * 44px tall, which is the size of a fingertip and not the size of the word.
+ * Set as caps at 11px it measured 62 by 17 on a phone — a target somebody
+ * misses, and the app's own spacing note is that a miss costs more than the
+ * line it saved. The strip is 79px tall, so the room was already there; what
+ * was missing was asking for it.
+ */
+.soft-strip-to {
+  width: auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--sp-3);
+  font-family: var(--font-heading);
+  font-size: calc(11px * var(--text-scale, 1));
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-fg);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (prefers-contrast: more) {
+  .soft-strip {
+    border-bottom-color: var(--app-fg);
+  }
+}
+
+@media (forced-colors: active) {
+  .soft-strip {
+    background: Canvas;
+    border-bottom: 1px solid CanvasText;
+  }
+}
+
 /* ── The launcher and the folder overlay ─────────────────────────────────
    Step 5. The nine shelves as a grid, and a shelf opened over it. */
 

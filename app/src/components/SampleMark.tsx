@@ -57,7 +57,7 @@ export function SampleMark() {
         className="bare"
         onClick={() => {
           adopt();
-          say('Taken on. They are your courses now — editable like any you import.');
+          say('Taken on · They are your courses now, editable like any you import.', 'courses');
         }}
         style={link}
       >

@@ -144,13 +144,18 @@ interface Store {
    */
   refresh: () => Promise<string>;
   /**
-   * Announce one outcome to the app's live region.
+   * Announce one outcome, to the live region and to the change strip.
    *
    * For things somebody would otherwise have to look at the screen to
    * confirm — a card marked, an absence recorded, a sync finished. Not for
-   * edits. See `components/Said.tsx`.
+   * edits: a grade field that saves on every keystroke has no outcome yet,
+   * only typing, which is why `ScoreField` says its piece on blur instead.
+   *
+   * `to` is the screen the record lives on, where naming one helps. Most
+   * outcomes happen on the screen you are already looking at and want none.
+   * See `components/Said.tsx`.
    */
-  say: (said: string) => void;
+  say: (said: string, to?: Screen) => void;
   /**
    * Where this student studies, and therefore what the app offers.
    *
@@ -933,7 +938,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [seed]);
 
   const say = useCallback(
-    (said: string) => dispatch({ type: 'say', said, at: Date.now() }),
+    (said: string, to?: Screen) => dispatch({ type: 'say', said, at: Date.now(), to }),
     [dispatch],
   );
 
