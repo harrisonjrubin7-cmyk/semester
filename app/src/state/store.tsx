@@ -228,6 +228,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         screen: landed.screen,
         ...(field && landed.id ? { [field]: landed.id } : {}),
         ...(landed.mode ? { mode: landed.mode } : {}),
+        // A link to a screen that has since merged says which part of its
+        // survivor it meant — see `RETIRED` in `lib/route.ts`.
+        ...(landed.opens?.report ? { report: landed.opens.report } : {}),
+        ...(landed.opens?.changes ? { changes: landed.opens.changes } : {}),
       };
     }
     return { ...persisted, ...ephemeral, screen: screenFromUrl() ?? ('home' as Screen) };
@@ -803,6 +807,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const asked = fromHash(window.location.hash);
       if (!asked || same(asked, shown.current)) return;
       shown.current = asked;
+      // Which part of a merged screen the link meant, before the navigation,
+      // so the screen paints on the right one rather than switching under
+      // somebody. Same rule as the cold-start branch above and as `Tapped`.
+      if (asked.opens?.report) dispatch({ type: 'setReport', grain: asked.opens.report });
+      if (asked.opens?.changes) dispatch({ type: 'setChanges', source: asked.opens.changes });
       dispatch({ type: 'landed', screen: asked.screen, id: asked.id, mode: asked.mode });
     };
     window.addEventListener('popstate', moved);

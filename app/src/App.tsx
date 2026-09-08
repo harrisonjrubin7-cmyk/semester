@@ -46,7 +46,9 @@ const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default
 const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
 const Changes = lazy(() => import('./screens/Changes').then((m) => ({ default: m.Changes })));
-const Ask = lazy(() => import('./screens/Ask').then((m) => ({ default: m.Ask })));
+// The Ask tab *is* the conversation. There is one component for it and one
+// destination — see the note at the top of `ai/Chat.tsx`.
+const Ask = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
 const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
 const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
@@ -95,6 +97,7 @@ const SettingsGrading = lazy(() => import('./screens/settings/Grading').then((m)
 const SettingsWorkload = lazy(() => import('./screens/settings/Workload').then((m) => ({ default: m.SettingsWorkload })));
 const SettingsStorage = lazy(() => import('./screens/settings/Storage').then((m) => ({ default: m.SettingsStorage })));
 const SettingsAbout = lazy(() => import('./screens/settings/About').then((m) => ({ default: m.SettingsAbout })));
+const SettingsAssistant = lazy(() => import('./screens/settings/Assistant').then((m) => ({ default: m.SettingsAssistant })));
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
 const Solve = lazy(() => import('./screens/Solve').then((m) => ({ default: m.Solve })));
 const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
@@ -106,7 +109,6 @@ const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
 const Help = lazy(() => import('./screens/Help').then((m) => ({ default: m.Help })));
 const Everything = lazy(() => import('./screens/Everything').then((m) => ({ default: m.Everything })));
-const Chat = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
@@ -284,7 +286,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'links':
       return { kicker: 'Everywhere you go', title: 'Links' };
     case 'ask':
-      return { kicker: about('with the guide'), title: 'Ask Claude' };
+      return { kicker: `${provider()} · this term`, title: 'Ask Claude' };
     case 'work':
       return { kicker: about('assignments'), title: 'Work on it' };
     case 'grades':
@@ -367,8 +369,6 @@ function useHeader(): { kicker: string; title: string } {
      * rather than repeating the title, which is the one thing about this
      * screen worth saying before you have asked anything.
      */
-    case 'chat':
-      return { kicker: `${provider()} · this term`, title: 'Chat' };
     default:
       return fallbackHeader(state.screen, today);
   }
@@ -730,8 +730,6 @@ function CurrentScreen() {
       return <Help />;
     case 'everything':
       return <Everything />;
-    case 'chat':
-      return <Chat />;
     case 'courses':
       return <Courses />;
     case 'course':
@@ -766,6 +764,8 @@ function CurrentScreen() {
       return <SettingsStorage />;
     case 'setAbout':
       return <SettingsAbout />;
+    case 'setAssistant':
+      return <SettingsAssistant />;
     case 'mine':
       return <Mine />;
     case 'note':

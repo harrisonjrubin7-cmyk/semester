@@ -118,7 +118,7 @@ export function readChunk(line: string): string | null {
  */
 export function explain(status: number, detail: string): string {
   if (status === 401) {
-    return 'OpenAI did not accept that key. Check it under Ask Claude → Settings — a revoked or mistyped key gives exactly this.';
+    return 'OpenAI did not accept that key. Check it under Settings → The assistant — a revoked or mistyped key gives exactly this.';
   }
   if (status === 403) {
     return 'OpenAI refused the request. Often this is a model your account cannot use yet — try GPT-4o.';
@@ -149,7 +149,7 @@ export interface OpenAiAsk {
 /** One streamed call. Returns the whole reply; `onText` sees it arriving. */
 export async function askOpenAI(options: OpenAiAsk): Promise<string> {
   const key = options.apiKey.trim();
-  if (!key) throw new Error('No OpenAI key yet. Add one under Ask Claude → Settings.');
+  if (!key) throw new Error('No OpenAI key yet. Add one under Settings → The assistant.');
 
   const res = await fetch(ENDPOINT, {
     method: 'POST',

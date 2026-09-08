@@ -14,6 +14,7 @@
 import type {
   Appointment,
   CampusLink,
+  ChangeSource,
   CourseId,
   CourseModule,
   CourseUpdate,
@@ -22,6 +23,7 @@ import type {
   NavMode,
   Note,
   PersonalTask,
+  ReportGrain,
   Screen,
   StudyMode,
 } from '../lib/types';
@@ -530,7 +532,7 @@ export interface Ephemeral {
    * week" row switches grain rather than navigating. Not persisted, for the
    * same reason `calView` is not — coming back tomorrow should open today.
    */
-  report: 'day' | 'week' | 'term';
+  report: ReportGrain;
   /**
    * Which post a change arrived in — an email, or a calendar.
    *
@@ -538,7 +540,7 @@ export interface Ephemeral {
    * two screens, so the links that pointed at "Check the dates" have to be
    * able to land on that half rather than on the other one.
    */
-  changes: 'told' | 'feed';
+  changes: ChangeSource;
   /** Which schedule view the calendar is showing. */
   calView: 'day' | 'week' | 'month' | 'semester';
   /** Which sources the calendar is showing — combined, or one at a time. */
@@ -1318,8 +1320,8 @@ export type Action =
   | { type: 'pickAnswer'; index: number }
   | { type: 'nextQuestion' }
   | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }
-  | { type: 'setReport'; grain: 'day' | 'week' | 'term' }
-  | { type: 'setChanges'; source: 'told' | 'feed' }
+  | { type: 'setReport'; grain: ReportGrain }
+  | { type: 'setChanges'; source: ChangeSource }
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }

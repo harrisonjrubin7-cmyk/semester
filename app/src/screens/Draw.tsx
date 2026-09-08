@@ -84,7 +84,7 @@ export function Draw() {
         <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Needs {provider()}</div>
           <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
-            Sign in to use the shared key, or add your own under Ask Claude → Settings.
+            Sign in to use the shared key, or add your own under Settings → The assistant.
           </div>
         </Blueprint>
       </Page>

@@ -459,7 +459,6 @@ export type Screen =
   | 'data'
   | 'help'
   | 'everything'
-  | 'chat'
   | 'onboarding'
   | 'home'
   | 'courses'
@@ -530,7 +529,19 @@ export type Screen =
   | 'setGrading'
   | 'setWorkload'
   | 'setStorage'
-  | 'setAbout';
+  | 'setAbout'
+  | 'setAssistant';
+
+/**
+ * The report's grain, and the post a changed date arrived in.
+ *
+ * Here rather than in `state/shape.ts` because they are not only state: a URL
+ * names one. Three screens merged into the report and two into the changes
+ * screen, and a link to a retired one has to say *which part* of its survivor
+ * it meant — `#/weekly` landing on today's report is the link not kept.
+ */
+export type ReportGrain = 'day' | 'week' | 'term';
+export type ChangeSource = 'told' | 'feed';
 
 export type StudyMode =
   | 'cards'

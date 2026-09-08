@@ -370,7 +370,7 @@ export function Import() {
       {!configured() && (
         <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           Building a course asks {provider()} to read the documents, which needs a key. Set one under{' '}
-          <strong>Ask Claude → Settings</strong>, or sign in and use the shared one.
+          <strong>Settings → The assistant</strong>, or sign in and use the shared one.
         </div>
       )}
 

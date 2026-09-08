@@ -24,12 +24,13 @@ const catalog = buildCatalog([ECON, BUS]);
  *
  * `people` is a rule rather than an omission — see the test below.
  *
- * `chat` is the assistant's own screen. A provider for it would hand the model
- * a description of the conversation it is already holding, which is either
- * nothing it does not know or the same text twice. "Looking at: Chat" is also
- * the one context line that could never help an answer.
+ * `ask` is the assistant's own screen — the tab *is* the conversation now. A
+ * provider for it would hand the model a description of the conversation it is
+ * already holding, which is either nothing it does not know or the same text
+ * twice. "Looking at: Ask Claude" is also the one context line that could
+ * never help an answer.
  */
-const EXPECTED_WITHOUT: string[] = ['chat', 'people'];
+const EXPECTED_WITHOUT: string[] = ['ask', 'people'];
 const NOW = new Date(2026, 8, 15);
 
 const look = (over: Partial<State> = {}): Look => ({

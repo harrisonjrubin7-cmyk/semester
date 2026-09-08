@@ -205,8 +205,12 @@ export const DESTINATIONS: Destination[] = [
     screen: 'ask',
     label: 'Ask Claude',
     short: 'Ask',
-    blurb: 'A question about this course, answered with its guide in hand.',
-    keywords: 'ai chat explain help tutor claude',
+    blurb: 'The conversation — your term in hand, and every thread you have had.',
+    // The full-screen chat was a destination of its own called "Chat", beside
+    // a tab called "Ask Claude" that opened a key form. One room, one door.
+    keywords:
+      'ai chat explain help tutor claude conversation talk assistant ask threads history messages ' +
+      'discuss back and forth question answer gpt chatgpt',
     group: 'Study',
     taskTags: ['study', 'app'],
     root: 'study',
@@ -610,16 +614,6 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
-    screen: 'chat',
-    label: 'Chat',
-    blurb: 'The assistant with the whole screen — for a conversation rather than a question.',
-    keywords:
-      'chat conversation talk assistant claude ai ask full screen thread threads history messages discuss back and forth',
-    group: 'Study',
-    taskTags: ['study', 'app'],
-    root: 'study',
-  },
-  {
     screen: 'everything',
     label: 'Everything',
     // Ten characters is one past what the bar holds. See `lib/tabbar.ts`.
@@ -704,6 +698,7 @@ const NESTED: Partial<Record<Screen, Screen>> = {
   setWorkload: 'me',
   setStorage: 'me',
   setAbout: 'me',
+  setAssistant: 'me',
 };
 
 const BY_SCREEN = new Map(DESTINATIONS.map((d) => [d.screen, d]));

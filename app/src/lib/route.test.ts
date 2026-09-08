@@ -128,6 +128,18 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/weekly')?.screen).toBe('brief');
     expect(fromHash('#/worked')?.screen).toBe('brief');
     expect(fromHash('#/check')?.screen).toBe('announce');
+    expect(fromHash('#/chat')?.screen).toBe('ask');
+  });
+
+  it('says which part of the survivor the link meant', () => {
+    // The screen alone is the promise technically kept and actually broken:
+    // a bookmark to the weekly report opening today's report is not it.
+    expect(fromHash('#/weekly')?.opens).toEqual({ report: 'week' });
+    expect(fromHash('#/worked')?.opens).toEqual({ report: 'term' });
+    expect(fromHash('#/check')?.opens).toEqual({ changes: 'feed' });
+    // Nothing to disambiguate: the chat was the whole of what Ask now is.
+    expect(fromHash('#/chat')?.opens).toBeUndefined();
+    expect(fromHash('#/brief')?.opens).toBeUndefined();
   });
 
   it('leaves every screen that still exists alone', () => {

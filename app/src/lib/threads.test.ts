@@ -17,6 +17,8 @@ import {
   MAX_ARCHIVE,
   ROOM,
   type Thread,
+  bucket,
+  grouped,
   nameOf,
   search,
   foundIn,
@@ -517,5 +519,47 @@ describe('where a conversation was started', () => {
     localStorage.clear();
     save({ threads: [{ id: 'a', title: 'Q', turns: [{ role: 'user', content: 'Q' }], at: 1, from: 'grades' }], openId: 'a' });
     expect(load().threads[0].from).toBe('grades');
+  });
+});
+
+describe('grouping the list by day', () => {
+  // A Wednesday, mid-morning, so "today" has hours either side of the clock.
+  const NOW = new Date(2026, 8, 9, 10, 30).getTime();
+  const at = (d: Date) => d.getTime();
+
+  it('reads day boundaries rather than elapsed hours', () => {
+    // Eleven last night is Yesterday at half past ten this morning, not
+    // "11 hours ago" — the question is which day it was.
+    expect(bucket(at(new Date(2026, 8, 9, 0, 5)), NOW)).toBe('Today');
+    expect(bucket(at(new Date(2026, 8, 8, 23, 55)), NOW)).toBe('Yesterday');
+    expect(bucket(at(new Date(2026, 8, 8, 0, 1)), NOW)).toBe('Yesterday');
+    expect(bucket(at(new Date(2026, 8, 7, 23, 59)), NOW)).toBe('Previous 7 days');
+  });
+
+  it('counts the seven days from the start of today, not from now', () => {
+    // Otherwise the window shrinks as the day goes on and a thread moves from
+    // one heading to another while somebody is looking at it.
+    expect(bucket(at(new Date(2026, 8, 2, 0, 0)), NOW)).toBe('Previous 7 days');
+    expect(bucket(at(new Date(2026, 8, 1, 23, 59)), NOW)).toBe('Older');
+  });
+
+  it('lifts pinned threads out of the buckets entirely', () => {
+    const old: Thread = { ...blank(), id: 'a', at: at(new Date(2026, 7, 1)), pinned: true };
+    const today: Thread = { ...blank(), id: 'b', at: NOW };
+    expect(grouped([old, today], NOW).map((g) => g.label)).toEqual(['Pinned', 'Today']);
+  });
+
+  it('leaves out a heading with nothing under it', () => {
+    // A heading over no rows is a list that looks broken.
+    const today: Thread = { ...blank(), id: 'b', at: NOW };
+    expect(grouped([today], NOW).map((g) => g.label)).toEqual(['Today']);
+  });
+
+  it('keeps every thread, in the order it was given', () => {
+    const a: Thread = { ...blank(), id: 'a', at: NOW };
+    const b: Thread = { ...blank(), id: 'b', at: NOW - 1000 };
+    const c: Thread = { ...blank(), id: 'c', at: at(new Date(2026, 7, 1)) };
+    const out = grouped([a, b, c], NOW).flatMap((g) => g.threads.map((t) => t.id));
+    expect(out).toEqual(['a', 'b', 'c']);
   });
 });

@@ -530,7 +530,7 @@ export async function ask(options: AskOptions): Promise<string> {
   if (taking === 'none') {
     throw new Error(
       s.provider === 'openai'
-        ? 'No OpenAI key yet. Add one under Ask Claude → Settings, or switch back to Claude.'
+        ? 'No OpenAI key yet. Add one under Settings → The assistant, or switch back to Claude.'
         : 'No key yet. Sign in to use the shared one, or add your own under Settings.',
     );
   }

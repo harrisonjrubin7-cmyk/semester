@@ -504,3 +504,58 @@ export function foundIn(t: Thread, query: string): string {
   }
   return '';
 }
+
+/**
+ * Which heading a conversation belongs under in the list.
+ *
+ * A list of forty conversations sorted by time is a list you scroll rather
+ * than one you scan: every row says "3 days ago" in small grey text and none
+ * of them says where the boundary is. Four buckets give the eye somewhere to
+ * stop, and they are the ones people already read in every chat app they use.
+ *
+ * Day boundaries, not elapsed hours. Something asked at eleven last night is
+ * "Yesterday" at nine this morning, not "10 hours ago" — the question a
+ * reader is answering is *which day was that*, and elapsed time answers a
+ * different one badly.
+ *
+ * Pinned threads are not bucketed. They are lifted out above all of these,
+ * because pinning is a statement that a thread should not sink, and sorting
+ * it back into last Tuesday would undo exactly that.
+ */
+export type Bucket = 'Today' | 'Yesterday' | 'Previous 7 days' | 'Older';
+
+export function bucket(at: number, now: number): Bucket {
+  const midnight = new Date(now);
+  midnight.setHours(0, 0, 0, 0);
+  const startOfToday = midnight.getTime();
+  const day = 86_400_000;
+  if (at >= startOfToday) return 'Today';
+  if (at >= startOfToday - day) return 'Yesterday';
+  // Seven days back from the start of today, so "Previous 7 days" is seven
+  // whole days rather than a window that shrinks as the day goes on.
+  if (at >= startOfToday - 7 * day) return 'Previous 7 days';
+  return 'Older';
+}
+
+/**
+ * The list, in the order it is drawn: pinned, then a heading per bucket.
+ *
+ * Returned as pairs rather than a map so the order is the return value's own
+ * rather than something every caller has to know. A bucket with nothing in it
+ * is left out entirely — a heading over no rows is a list that looks broken.
+ */
+export function grouped(
+  threads: Thread[],
+  now: number,
+): { label: string; threads: Thread[] }[] {
+  const pinned = threads.filter((t) => t.pinned);
+  const rest = threads.filter((t) => !t.pinned);
+  const order: Bucket[] = ['Today', 'Yesterday', 'Previous 7 days', 'Older'];
+  const out: { label: string; threads: Thread[] }[] = [];
+  if (pinned.length > 0) out.push({ label: 'Pinned', threads: pinned });
+  for (const label of order) {
+    const its = rest.filter((t) => bucket(t.at, now) === label);
+    if (its.length > 0) out.push({ label, threads: its });
+  }
+  return out;
+}

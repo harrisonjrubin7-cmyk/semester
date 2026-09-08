@@ -284,7 +284,7 @@ export function Deck() {
             </button>
           ) : (
             <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
-              Needs a key first — set one under Ask Claude → Settings. Building a deck from a unit
+              Needs a key first — set one under Settings → The assistant. Building a deck from a unit
               needs no key at all.
             </div>
           )}

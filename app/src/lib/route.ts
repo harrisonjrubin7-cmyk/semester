@@ -31,7 +31,7 @@
  * not, and the id means nothing without the device it was written on.
  */
 
-import type { Screen, StudyMode } from './types';
+import type { ChangeSource, ReportGrain, Screen, StudyMode } from './types';
 
 /** What a screen is currently about, if anything. */
 export interface Route {
@@ -40,6 +40,15 @@ export interface Route {
   id: string;
   /** Only for a guide: which way it is being read. */
   mode?: StudyMode;
+  /**
+   * Which part of a merged screen a retired link meant.
+   *
+   * Only ever set by the `RETIRED` table below. A live URL does not carry
+   * these: the grain and the source are a switch somebody flips while they
+   * are there, not part of the address, and putting them in the hash would
+   * mean every flip pushed a history entry.
+   */
+  opens?: { report?: ReportGrain; changes?: ChangeSource };
 }
 
 /**
@@ -74,12 +83,16 @@ export const NAMED: Partial<Record<Screen, 'courseId' | 'itemId' | 'eventId' | '
  * rather than merged does not belong here: sending somebody somewhere
  * unrelated is worse than telling them the link is dead.
  */
-const RETIRED: Record<string, Screen> = {
-  // Three grains of one report — see `screens/Reports.tsx`.
-  weekly: 'brief' as Screen,
-  worked: 'brief' as Screen,
+const RETIRED: Record<string, { screen: Screen; opens?: Route['opens'] }> = {
+  // Three grains of one report — see `screens/Reports.tsx`. Each link says
+  // which grain it meant: `#/weekly` opening today's report is the promise
+  // technically kept and actually broken.
+  weekly: { screen: 'brief' as Screen, opens: { report: 'week' } },
+  worked: { screen: 'brief' as Screen, opens: { report: 'term' } },
   // Both halves of "something says a date moved" — see `screens/Changes.tsx`.
-  check: 'announce' as Screen,
+  check: { screen: 'announce' as Screen, opens: { changes: 'feed' } },
+  // The chat was a second door into the conversation the Ask tab now is.
+  chat: { screen: 'ask' as Screen },
 };
 
 /** A screen id is already url-safe; an account's own ids may not be. */
@@ -122,7 +135,8 @@ export function fromHash(hash: string): Route | null {
   // A screen name is written by this file and read by this file; anything
   // with a character it would never have produced is not one of ours.
   if (!/^[A-Za-z]+$/.test(named)) return null;
-  const screen = (RETIRED[named] ?? named) as Screen;
+  const moved = RETIRED[named];
+  const screen = (moved?.screen ?? named) as Screen;
 
   const id = parts[1] ? decodeURIComponent(parts[1]) : '';
   const mode = new URLSearchParams(query ?? '').get('mode');
@@ -130,6 +144,7 @@ export function fromHash(hash: string): Route | null {
     screen,
     id: NAMED[screen] ? id : '',
     ...(screen === 'guide' && mode ? { mode: mode as StudyMode } : {}),
+    ...(moved?.opens ? { opens: moved.opens } : {}),
   };
 }
 

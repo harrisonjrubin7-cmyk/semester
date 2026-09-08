@@ -44,7 +44,6 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
 
   // Study — turning a course into something testable.
   study: core.study,
-  ask: study.ask,
   work: study.work,
   update: study.update,
   analyse: study.analyse,
