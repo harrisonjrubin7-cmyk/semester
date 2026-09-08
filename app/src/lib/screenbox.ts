@@ -1,10 +1,10 @@
 import type { RefObject } from 'react';
 
 /**
- * The filter box on the screen in front of you, if it filters anything.
+ * The filter for the screen in front of you, if it has one.
  *
  * `/` has to do one of two things and it cannot decide which without knowing
- * what is on screen: focus the filter where the screen has a list of its own,
+ * what is on screen: open the filter where the screen has a list of its own,
  * open the whole-app search where it does not. Those two facts live in
  * different places — the key binding is global and mounted once, the box is
  * inside `<Page>` and re-created on every screen — so this is the one line
@@ -26,8 +26,18 @@ import type { RefObject } from 'react';
 
 interface Box {
   input: RefObject<HTMLInputElement | null>;
-  /** Whether it filters this screen, or only forwards to the whole app. */
+  /** Whether this screen has rows of its own to filter. */
   filters: boolean;
+  /**
+   * Put the field on screen.
+   *
+   * The field is not drawn until somebody asks for it — the header's search
+   * icon is on every screen and a second one under it was the same tool twice,
+   * so `<Page>` keeps its own shut. `/` is one of the two ways of asking, which
+   * means this has to open the field as well as reach it: there is nothing to
+   * focus yet at the moment the key is pressed.
+   */
+  reveal: () => void;
 }
 
 let current: Box | null = null;
@@ -53,20 +63,18 @@ export function boxNow(): Box | null {
 }
 
 /**
- * Put the caret in the screen's filter, if there is one worth focusing.
+ * Open the screen's filter and put the caret in it, if it has one.
  *
  * True when it took the key, false when the caller should fall back to the
- * whole-app search. A box with no adapter is not worth focusing: typing into
- * it filters nothing, and the only way out of it is Enter, which opens the
- * overlay anyway — so `/` may as well open the overlay directly.
+ * whole-app search — which is every screen that does not filter a list of its
+ * own. Opening and focusing are one call because the field does not exist
+ * until this asks for it; `<Page>` focuses it as it draws it, which is the
+ * render this cannot wait for from out here.
  */
 export function focusBox(): boolean {
   const box = current;
   if (!box?.filters) return false;
-  const el = box.input.current;
-  if (!el) return false;
-  el.focus();
-  el.select();
+  box.reveal();
   return true;
 }
 

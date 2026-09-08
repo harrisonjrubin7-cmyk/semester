@@ -10,18 +10,24 @@ import type { ReactNode } from 'react';
  * every screen that mentions Trounstine; they want that row, here, now.
  *
  * So a screen declares what its own rows are and what matching one means, and
- * `<Page>` does everything else: the box, the debounce, the empty state, the
+ * `<Page>` does everything else: the field, the debounce, the empty state, the
  * clearing, and the way out to the global search when the answer is not on
  * this screen after all.
  *
  * ## Screens with no adapter
  *
- * They get the same box, and typing in it goes straight to the global search.
- * That is the point of doing this in the shell rather than screen by screen: a
- * screen nobody has written an adapter for is not a screen where the search box
- * is missing or, worse, present and dead. A stub adapter that "searches" a
- * screen with nothing to search would be exactly that dead box, which is why
+ * They get nothing here, and that is right. The header has a search icon on
+ * every screen; a field under it that only forwarded what you typed to that
+ * icon was the same tool drawn twice, which is what this used to put on the
+ * forty-three screens that have no list of their own. A stub adapter that
+ * "searches" a screen with nothing to search would put it back, which is why
  * there are none.
+ *
+ * ## Where the field is
+ *
+ * Not on screen until somebody asks for it, even with an adapter — `/`, or the
+ * whole-app search's offer to look inside this screen, which arrives with the
+ * query already in it. See `components/Page.tsx` and `lib/screenbox.ts`.
  */
 export interface SearchAdapter<T> {
   /** What the box says when it is empty. Name the rows: "Filter your sources". */
