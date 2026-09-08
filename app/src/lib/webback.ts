@@ -33,9 +33,13 @@
  * it.
  */
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+// Extension-explicit, unlike the rest of the app: `scripts/webback.mjs` loads
+// this file through Node's own TypeScript stripping, which does not guess at
+// one. Allowed by `allowImportingTsExtensions` in tsconfig.app.json.
+import { writeIcons } from './webicons.ts';
 
 /** The pages that need one. The front door already has two of its own. */
 export const NEEDS_BACK = ['app.html', 'study.html'];
@@ -129,14 +133,15 @@ export function withBackLink(html: string): string {
  * It goes in the head, before the bundler unpacks the real document, because a
  * patch applied after the first fetch has already gone out is not a patch.
  *
- * ## What it deliberately does not touch
+ * ## What it does not reach, and what answers that instead
  *
- * `_ds/industry-…/styles.css`, its bundle, and ten `icons/*.svg` are also
- * requested and also 404. Those are not misplaced — nothing in this repository
- * publishes them, so there is no right URL to send them to. They are inert
- * (the pages are styled from inlined CSS and draw no icons), and inventing a
- * destination for a file that does not exist would turn a visible 404 into a
- * silent wrong answer. They are written up in SETUP.md for whoever regenerates.
+ * Only URLs the browser hands to `fetch`, to an XHR, or to a `src`/`href`
+ * attribute. The pages also ask for `_ds/industry-…/styles.css`, its bundle,
+ * and twelve `icons/*.svg` — and those arrive as a CSS `mask-image`, which is
+ * not an attribute and never passes anything this can hook. They were not
+ * misplaced either; they simply did not ship. `apply` below puts them where the
+ * pages have been asking for them: the design system copied out of `project/`,
+ * the glyphs written from the app's own `icons.data.ts`.
  */
 export const PATHS = 'semester-source-paths';
 
@@ -379,15 +384,46 @@ export function stillBroken(html: string): boolean {
   return !html.includes(COUNTDOWN) && !html.includes(BROKEN);
 }
 
+/**
+ * ## The design system the pages ask for, which is in the repository
+ *
+ * The term page's `<sc-helmet>` block links two more files:
+ *
+ *     <link rel="stylesheet" href="_ds/industry-…/styles.css">
+ *     <script src="_ds/industry-…/_ds_bundle.js"></script>
+ *
+ * Both exist, at `project/_ds/industry-…/` — outside `app/`, so Vite never saw
+ * them and they never shipped. Nothing was invented to satisfy these: they are
+ * the real files, copied to where the page has been asking for them all along.
+ *
+ * The stylesheet changes nothing visible, which is the point rather than a
+ * disappointment. It is the Industry token sheet; the page carries its own
+ * styles inline, after the link, and they win. It is here so the page loads
+ * what it says it loads, and so a later regeneration that leans on a token
+ * finds one.
+ */
+export const DESIGN = 'industry-ec2ca40c-1b5d-43d4-b745-e12440ac38fa';
+
+/** What the helmet asks for by name. The bundle is 300 bytes and inert. */
+export const DESIGN_FILES = ['styles.css', '_ds_bundle.js'];
+
 export interface Applied {
   /** Pages written. */
   patched: string[];
+  /** Files put where the pages were asking for them. */
+  added: string[];
   /** Repairs that no longer match, which is what a regeneration looks like. */
   lapsed: string[];
 }
 
-/** Applied to `dist/web/`, after Vite has copied `public/` into it. */
-export async function apply(dir: string): Promise<Applied> {
+/**
+ * Applied to `dist/web/`, after Vite has copied `public/` into it.
+ *
+ * `from` is the repository root, for the two design-system files that live
+ * outside `app/`. Absent, they are skipped rather than guessed at — the same
+ * rule the rest of this file follows.
+ */
+export async function apply(dir: string, from?: string): Promise<Applied> {
   const patched: string[] = [];
   const lapsed: string[] = [];
   for (const name of PAGES) {
@@ -404,5 +440,20 @@ export async function apply(dir: string): Promise<Applied> {
     await writeFile(file, after);
     patched.push(name);
   }
-  return { patched, lapsed };
+
+  const added = (await writeIcons(join(dir, 'icons'))).map((n) => `icons/${n}`);
+
+  const source = from ? join(from, 'project', '_ds', DESIGN) : '';
+  if (source && existsSync(source)) {
+    await mkdir(join(dir, '_ds', DESIGN), { recursive: true });
+    for (const name of DESIGN_FILES) {
+      if (!existsSync(join(source, name))) continue;
+      await copyFile(join(source, name), join(dir, '_ds', DESIGN, name));
+      added.push(`_ds/${name}`);
+    }
+  } else {
+    lapsed.push(`the Industry design system: no project/_ds/${DESIGN}`);
+  }
+
+  return { patched, added, lapsed };
 }

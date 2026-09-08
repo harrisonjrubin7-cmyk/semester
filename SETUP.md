@@ -279,16 +279,47 @@ re-applied on the next build.
 
 **But it belongs upstream.** Wherever these three pages are generated, no
 emitted URL should carry an `app/public/` prefix — it is a repository path, not
-a served one. Two more, left alone deliberately because there is no right answer
-for them here:
+a served one.
 
-| Requested by `app.html` | Why it is not repaired |
-| --- | --- |
-| `_ds/industry-ec2ca40c-…/styles.css` and `_ds_bundle.js` | The Industry design system lives at `project/_ds/…`, outside `app/public/`, so nothing publishes it. The pages are styled from inlined CSS and the bundle is inert. |
-| ten `icons/*.svg` (`search`, `today`, `calendar`, `notes`, `courses`, `check`, `map`, `study`, `upkeep`) | No such files exist anywhere in the repository, and the pages draw no icons. |
+#### The other fourteen files, which the shim could never have reached
 
-Both should be inlined or dropped by the generator. Sending them somewhere
-plausible here would turn a visible 404 into a silent wrong answer.
+`app.html` also asked for a stylesheet, a script and twelve icons. None of them
+came through `fetch` or a `src` attribute — they are in a `<sc-helmet>` block the
+page writes with `innerHTML`, and the icons arrive as **CSS masks**:
+
+```css
+.ic-today { mask-image: url("icons/today.svg"); background: currentColor }
+```
+
+A mask URL is not an attribute, so nothing the shim hooks ever sees it, and a
+404 on a mask paints nothing and reports nothing. That is also why the count was
+wrong at first: only nine icons 404 on the home screen. `make`, `campus` and
+`person` appear on screens further in. Reading the helmet block out of the live
+page gives all twelve.
+
+None of these were missing in the sense of not existing. They were missing in
+the sense of never having been published:
+
+| What | Where it really is | How it now ships |
+| --- | --- | --- |
+| `_ds/industry-ec2ca40c-…/styles.css`, `_ds_bundle.js` | `project/_ds/industry-ec2ca40c-…/` — outside `app/`, so Vite never saw it | copied into `dist/web/_ds/…` by `webback` |
+| twelve `icons/*.svg` | drawn in `app/src/components/icons.data.ts`, as the app's own glyphs | written out by `app/src/lib/webicons.ts` |
+
+Two things worth knowing about those:
+
+- **The stylesheet changes nothing visible**, and that is the point rather than a
+  disappointment. It is the Industry token sheet; the page carries its own styles
+  inline, *after* the link, so they win. It ships so the page loads what it says
+  it loads, and so a regeneration that leans on a token finds one.
+- **The icons are generated, not drawn twice.** Every name the website asks for
+  is one the app already had. Twelve hand-written files would mean two copies of
+  each glyph, and the day somebody redraws the map icon in the app the website
+  would keep the old one — silently, because a stale glyph is still a glyph. The
+  shapes moved into `icons.data.ts`, `Icons.tsx` renders them, and the build
+  writes the same shapes out as files. They are stroked in flat black rather than
+  `currentColor`, which a mask cannot resolve.
+
+After all three repairs, **all three pages load with no failed request at all.**
 
 #### "NaNm left" — the term page could not read its own deadlines
 
