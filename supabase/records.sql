@@ -68,9 +68,14 @@
 -- conflict forever, silently, until somebody noticed their laptop's edits
 -- never survived.
 
+-- `set search_path = ''` matters more here than it looks. This function
+-- already exists in the live schema, hardened, and three triggers depend on it
+-- — courses_touch, profiles_touch, state_touch. A create-or-replace without it
+-- silently strips the hardening off all three.
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
+set search_path = ''
 as $$
 begin
   new.updated_at = now();
@@ -175,7 +180,8 @@ begin
     execute format('drop policy if exists "own rows" on public.%1$s', t);
     execute format(
       'create policy "own rows" on public.%1$s
-       for all using (auth.uid() = user_id) with check (auth.uid() = user_id)', t);
+       for all using ((select auth.uid()) = user_id)
+       with check ((select auth.uid()) = user_id)', t);
   end loop;
 end;
 $$;
@@ -207,6 +213,7 @@ create or replace function public.sweep_tombstones(older_than interval default '
 returns integer
 language plpgsql
 security invoker
+set search_path = ''
 as $$
 declare
   t text;
@@ -224,6 +231,16 @@ begin
   return n;
 end;
 $$;
+
+-- In `public` this is a PostgREST endpoint. The paragraph above says to run it
+-- by hand, so it is not left callable from the API.
+--
+-- `from public` and not only `from anon, authenticated`: a function carries a
+-- default EXECUTE grant to PUBLIC, which both roles inherit, so revoking from
+-- the roles alone leaves it callable. Checked with
+-- `has_function_privilege('authenticated', …, 'execute')`, which is how this
+-- was caught.
+revoke all on function public.sweep_tombstones(interval) from public, anon, authenticated;
 
 
 -- ── Undoing this ──────────────────────────────────────────────────────────

@@ -1,12 +1,28 @@
 # Per-record sync
 
-> **Merged in PR #5**, deliberately, despite the commit message saying "for
-> review, not for merging" — that message describes the branch, not the
-> decision, and cannot be edited now it is in main's history.
-
-Nothing here touches your database or changes what the deployed app does. The
-SQL is written and unrun; the client half is deliberately not wired up yet.
-Merging moved the code; the decision below is still open.
+> **Merged in PR #5** — deliberately, despite the commit message saying "for
+> review, not for merging" — **and the SQL was applied on 8 September 2026** as
+> migration `per_record_sync_with_soft_deletes`.
+>
+> The tables, policies, indexes and triggers are live. `courses` gained
+> `deleted_at`. **The client half is still not wired up**, so nothing the
+> deployed app does has changed and the decision below is still open: these
+> tables exist and no code reads them.
+>
+> Two things in `records.sql` were hardened before it was run, and the file now
+> carries both:
+>
+> - `touch_updated_at` had no `set search_path = ''`. The live function has it,
+>   and `courses_touch`, `profiles_touch` and `state_touch` all depend on that
+>   function — running the file as written would have stripped the hardening
+>   off three tables that were already correct.
+> - `sweep_tombstones` had no `search_path` either, and in `public` it is a
+>   PostgREST endpoint that deletes rows. It is now hardened and revoked. Note
+>   that `revoke … from anon, authenticated` is *not* enough: a function carries
+>   a default EXECUTE grant to PUBLIC which both roles inherit, so it stayed
+>   callable until PUBLIC was revoked too.
+>
+> Security advisors return no lints.
 
 ## The bug
 

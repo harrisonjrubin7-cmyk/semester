@@ -1,8 +1,21 @@
 # A published calendar feed — what to check before deploying
 
-> **Merged in PR #4.** Nothing changed for anybody when it landed, and that is
-> still true: the SQL is unrun, the Edge Function undeployed, and nothing is
-> wired into a screen. Merging moved the code; it did not turn the feature on.
+> **Merged in PR #4, and the SQL was applied on 8 September 2026** as migration
+> `calendar_feeds`.
+>
+> The table, its policy and its trigger are live. **The Edge Function is still
+> undeployed and nothing is wired into a screen**, so the feature is still off
+> — a feed cannot be published or fetched. Applying the SQL created a table
+> nothing writes to yet.
+>
+> The policy was hoisted to `(select auth.uid())` before it ran, matching the
+> rest of the schema; the file now carries that. Security advisors return no
+> lints.
+>
+> Still to do before this is a feature: deploy `supabase/functions/calendar`,
+> wire the client half, and add `calendar_feeds` to `OWNED_TABLES` in
+> `app/src/lib/cloud.ts` — see the note at the end of this file about a deleted
+> account leaving a live feed behind.
 
 The client library, the SQL and the Edge Function are all here; **nothing is
 wired into a screen yet**, and that is deliberate — see "What is not here" at

@@ -56,8 +56,8 @@ alter table public.calendar_feeds enable row level security;
 drop policy if exists "feeds are managed by their owner" on public.calendar_feeds;
 create policy "feeds are managed by their owner" on public.calendar_feeds
   for all
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 -- Same trigger as the rest of the schema: the timestamp comes from the
 -- database, because the app shows "published 3 hours ago" off it and a device
