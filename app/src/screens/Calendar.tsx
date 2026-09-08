@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
@@ -36,6 +36,9 @@ import {
   itemsOn,
   railFor,
 } from '../lib/select';
+import { timeLabel, useDragToMove } from '../lib/drag';
+import { useCalendarMove, type Movable } from './calendar/Move';
+import { AddHere } from './calendar/AddHere';
 import type { Course, CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
 
 /**
@@ -72,8 +75,29 @@ function courseTint(courses: Course[], id: CourseId | null): string {
 // ── Day ───────────────────────────────────────────────────────────────────
 
 function DayView() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, say } = useStore();
+  const moving = useCalendarMove();
+  const [addAt, setAddAt] = useState<number | null>(null);
   const day = state.calDay ? isoToDate(state.calDay) : now;
+  /*
+   * A task dragged onto the hour grid gets a time.
+   *
+   * The grid moves its own blocks; this is the other direction — a row from
+   * the list below, dropped onto the day. A task's time is free text and is
+   * never parsed, so what lands in it is the hour as this app writes one.
+   */
+  const taskDrag = useDragToMove<Movable>({
+    onDrop: ({ payload, point }) => {
+      if (!point || payload.kind !== 'task') return;
+      dispatch({
+        type: 'moveTask',
+        id: payload.id,
+        date: dateToIso(day),
+        time: timeLabel(point.minutes),
+      });
+      say(`Moved · ${payload.title} to ${timeLabel(point.minutes)}.`, 'mine');
+    },
+  });
   const isToday = sameDay(day, now);
   const source = state.calSource;
 
@@ -183,10 +207,47 @@ function DayView() {
           <SectionLabel style={{ margin: '0 0 6px' }}>By the hour</SectionLabel>
           <KindKey compact />
           <HourGrid
-            blocks={hoursFor(catalog, day, state.appointments, state.commitments)}
+            blocks={hoursFor(
+              catalog,
+              day,
+              state.appointments,
+              state.commitments,
+              datedItems(catalog, day).filter((i) => !state.done[i.id]),
+            )}
             now={isToday ? minutesNow(now) : null}
             style={{ margin: '14px 0 26px' }}
+            /*
+             * What a block is drawn from decides whether it moves. A class is
+             * the timetable repeating and a commitment is a standing
+             * arrangement; neither has a single record to change, and
+             * `railFor` gives a `from` only to the two that do.
+             */
+            canMove={(b) => Boolean(b.from)}
+            onMove={(b, minutes) => {
+              if (!b.from) {
+                moving.refuse('class');
+                return;
+              }
+              moving.move(
+                b.from.kind === 'appointment'
+                  ? { kind: 'appointment', id: b.from.id, title: b.title, minutes: b.at }
+                  : {
+                      kind: 'item',
+                      id: b.from.id,
+                      courseId:
+                        catalog.items.find((i) => i.id === b.from!.id)?.c ?? ('' as CourseId),
+                      title: b.title,
+                      code: b.meta.split(' · ')[0] ?? '',
+                    },
+                { date: dateToIso(day), at: minutes },
+              );
+            }}
+            onAddAt={(minutes) => setAddAt(minutes)}
           />
+          {moving.notice}
+          {addAt !== null && (
+            <AddHere date={dateToIso(day)} at={addAt} onClose={() => setAddAt(null)} />
+          )}
         </>
       )}
 
@@ -286,7 +347,7 @@ function DayView() {
         <>
           <SectionLabel>Yours</SectionLabel>
           {myTasks.map((t) => (
-            <DayTask key={t.id} task={t} />
+            <DayTask key={t.id} task={t} drag={taskDrag.handlers({ kind: 'task', id: t.id, title: t.title })} />
           ))}
         </>
       )}
@@ -375,20 +436,26 @@ function DayView() {
  * nothing about it: not tick it, not move it. Both are exactly what somebody
  * looking at a day is there to do.
  *
- * ## A day at a time, rather than a drag
+ * ## A day at a time, and now a drag as well
  *
- * Dragging a task onto another cell is the obvious gesture and it is the wrong
- * one here. HTML drag events do not fire on touch, so it would be a
- * desktop-only feature in a thumb-first app, and a drag that lands is a change
- * with no confirmation — this app previews everything it changes. Two arrows
- * do the same job: they say which direction, they work with a thumb, and
- * pressing the other one puts it back.
+ * This used to argue that dragging was the obvious gesture and the wrong one,
+ * on two grounds. One of them was about the wrong API: HTML drag events do not
+ * fire on touch, but pointer events do, which is what `lib/drag.ts` uses and
+ * why the drag here works with a thumb. The other has been kept rather than
+ * dropped — a change that lands with no confirmation is not this app's habit —
+ * and it is answered by an Undo on every move rather than by refusing the
+ * gesture.
  *
- * Only *your* tasks move. A syllabus deadline is a fact the professor stated,
- * and a calendar that let you slide one to a more convenient evening would be
- * quietly rewriting the thing the whole app exists to be right about.
+ * The arrows stay. They are the precise version: one day, in a named
+ * direction, reachable with a thumb and by a keyboard, and pressing the other
+ * one puts it back. A drag is the fast version of the same edit, not a
+ * replacement for it.
+ *
+ * Only *your* tasks move freely. A syllabus deadline is a fact a professor
+ * stated; it can be dragged, and it asks first and keeps the date it came
+ * from. See `screens/calendar/Move.tsx`.
  */
-function DayTask({ task: t }: { task: PersonalTask }) {
+function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<HTMLElement> }) {
   const { dispatch, courseCode, say } = useStore();
   if (!t.date) return null;
 
@@ -400,6 +467,7 @@ function DayTask({ task: t }: { task: PersonalTask }) {
 
   return (
     <div
+      {...drag}
       style={{
         display: 'flex',
         gap: 'var(--sp-5)',
@@ -460,6 +528,17 @@ function DayTask({ task: t }: { task: PersonalTask }) {
   );
 }
 
+/** The Move control on a row: quiet until it is wanted, then a live target. */
+const CARRY = {
+  width: 'auto',
+  flex: 'none',
+  padding: 'var(--sp-2) var(--sp-3)',
+  fontFamily: 'var(--font-heading)',
+  fontSize: 'var(--type-xs)',
+  letterSpacing: '0.08em',
+  opacity: 0.55,
+} as const;
+
 const arrow = {
   width: 'auto',
   padding: '6px 7px',
@@ -486,6 +565,8 @@ const arrow = {
  */
 function WeekView() {
   const { state, dispatch, now, catalog } = useStore();
+  const moving = useCalendarMove();
+  const [adding, setAdding] = useState<{ date: string; at: number } | null>(null);
   const anchor = state.calDay ? isoToDate(state.calDay) : now;
   const start = new Date(anchor);
   start.setDate(start.getDate() - start.getDay());
@@ -496,7 +577,13 @@ function WeekView() {
     return {
       date,
       isToday: sameDay(date, now),
-      blocks: hoursFor(catalog, date, state.appointments, state.commitments),
+      blocks: hoursFor(
+        catalog,
+        date,
+        state.appointments,
+        state.commitments,
+        datedItems(catalog, date).filter((i) => !state.done[i.id]),
+      ),
       onOpen: () => {
         dispatch({ type: 'setCalDay', date: dateToIso(date) });
         dispatch({ type: 'setCalView', view: 'day' });
@@ -581,11 +668,47 @@ function WeekView() {
         />
       ) : (
         <>
-          <WeekGrid days={days} now={minutesNow(now)} style={{ marginTop: 14 }} />
+          <WeekGrid
+            days={days}
+            now={minutesNow(now)}
+            style={{ marginTop: 14 }}
+            canMove={(b) => Boolean(b.from)}
+            /* The only view with both axes, so a drop here moves the day and
+               the hour together — which is what rearranging a week is. */
+            onMove={(b, dayIndex, minutes) => {
+              const to = days[dayIndex]?.date;
+              if (!to) return;
+              if (!b.from) {
+                moving.refuse('class');
+                return;
+              }
+              moving.move(
+                b.from.kind === 'appointment'
+                  ? { kind: 'appointment', id: b.from.id, title: b.title, minutes: b.at }
+                  : {
+                      kind: 'item',
+                      id: b.from.id,
+                      courseId: catalog.items.find((i) => i.id === b.from!.id)?.c ?? ('' as CourseId),
+                      title: b.title,
+                      code: b.meta.split(' · ')[0] ?? '',
+                    },
+                { date: dateToIso(to), at: minutes },
+              );
+            }}
+            onAddAt={(dayIndex, minutes) => {
+              const to = days[dayIndex]?.date;
+              if (to) setAdding({ date: dateToIso(to), at: minutes });
+            }}
+          />
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
-            Tap a date to open that day in full. Deadlines are moments rather than spans, so they
-            are listed under the grid instead of drawn on it.
+            Tap a date to open that day in full, hold a block to move it, and double-tap an empty
+            hour to put something there. Deadlines with no hour on them are listed under the grid
+            rather than drawn on it.
           </div>
+          {moving.notice}
+          {adding && (
+            <AddHere date={adding.date} at={adding.at} onClose={() => setAdding(null)} />
+          )}
 
           <WeekDue start={start} classes={total} />
           <PrintButton label="Print the week" style={{ marginTop: 14 }} />
@@ -614,6 +737,83 @@ function MonthView() {
    * whatever somebody was actually using every time the month redrew.
    */
   const [chasing, setChasing] = useState<number | null>(null);
+  /** The day a double-tap opened the composer on, as a day of this month. */
+  const [adding, setAdding] = useState<number | null>(null);
+  const moving = useCalendarMove();
+  const iso = (day: number) =>
+    `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  /*
+   * A month cell is a day and nothing finer, so a drop here moves the date and
+   * leaves the hour alone. `data-drop` on each cell is what `lib/drag.ts`
+   * looks for under the pointer.
+   */
+  const drag = useDragToMove<Movable>({
+    onDrop: ({ payload, target }) => {
+      const day = Number(target?.replace('d:', ''));
+      if (!Number.isFinite(day)) return;
+      moving.move(payload, { date: iso(day) });
+    },
+  });
+
+  /*
+   * The same move, without a pointer.
+   *
+   * A calendar whose only way to move something is a drag is a calendar
+   * nobody can use with a keyboard or a screen reader, and this app does not
+   * ship that anywhere else. Pick a row up with Move, walk it with the arrow
+   * keys — a day at a time, a week with up and down, matching the grid's own
+   * roving focus — and Enter puts it down. Escape leaves it where it was.
+   *
+   * The day it would land on is announced rather than only drawn, which is the
+   * whole point: the person using this cannot see the cell light up.
+   */
+  const [carrying, setCarrying] = useState<{ what: Movable; day: number } | null>(null);
+  const carryKeys = (e: React.KeyboardEvent) => {
+    if (!carrying) return;
+    const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[e.key];
+    if (step !== undefined) {
+      e.preventDefault();
+      const to = Math.min(daysInMonth, Math.max(1, carrying.day + step));
+      setCarrying({ ...carrying, day: to });
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      moving.move(carrying.what, { date: iso(carrying.day) });
+      setCarrying(null);
+      return;
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setCarrying(null);
+    }
+  };
+
+  /** The Move control every draggable row carries, for the keyboard path. */
+  const moveButton = (what: Movable, from: number) =>
+    carrying && carrying.what.id === what.id ? (
+      <button
+        type="button"
+        className="bare tappable"
+        autoFocus
+        onKeyDown={carryKeys}
+        onBlur={() => setCarrying(null)}
+        aria-label={`Carrying ${what.title}. Arrow keys choose a day, Enter drops it, Escape cancels.`}
+        style={CARRY}
+      >
+        {MONTHS[calMonth]} {carrying.day} · ENTER
+      </button>
+    ) : (
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={() => setCarrying({ what, day: from })}
+        aria-label={`Move ${what.title} to another day`}
+        style={CARRY}
+      >
+        MOVE
+      </button>
+    );
 
   // What lands on each day of this month, per the current source filter.
   const marks: Record<number, { c: CourseId | null; kind: string; tint?: string }[]> = {};
@@ -659,6 +859,7 @@ function MonthView() {
       ? now.getDate()
       : 1;
   const selItems = itemsOn(catalog, now, calYear, calMonth, selectedDay);
+  const selTasks = state.tasks.filter((t) => t.date === iso(selectedDay) && !t.done);
 
   return (
     <div style={{ padding: 18 }}>
@@ -786,6 +987,7 @@ function MonthView() {
               aria-selected={isSelected}
               {...(isToday ? { 'aria-current': 'date' as const } : {})}
               tabIndex={isSelected ? 0 : -1}
+              data-drop={`d:${d}`}
               ref={(node) => {
                 // Focus follows the arrow keys, but only when the arrow keys
                 // were what moved it — otherwise opening the month would steal
@@ -796,8 +998,27 @@ function MonthView() {
                 }
               }}
               onClick={() => dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${d}` })}
+              /*
+               * Two taps on a day is "put something here".
+               *
+               * The gesture nobody has to be taught, and the one every desktop
+               * calendar has had for thirty years. It selects the day first —
+               * the single tap has already fired — so the list below is the
+               * day being added to, which is what makes it checkable.
+               */
+              onDoubleClick={() => {
+                dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${d}` });
+                setAdding(d);
+              }}
               style={{
                 aspectRatio: '1',
+                // Where a dragged thing would land, drawn on the cell under
+                // the finger. A drag with no target is a guess.
+                outline:
+                  drag.over === `d:${d}` || carrying?.day === d
+                    ? '2px solid var(--app-accent)'
+                    : undefined,
+                outlineOffset: -2,
                 background: isSelected ? 'var(--app-hero)' : 'var(--app-bg)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -885,20 +1106,113 @@ function MonthView() {
         {inThisMonth && selectedDay === now.getDate() ? ' · today' : ''}
       </SectionLabel>
 
-      {selItems.map((i) => (
-        <DeadlineRow
-          key={i.id}
-          item={i}
-          tone={standingOf(i, state.done)}
-          meta={i.dueTime}
-          trail={null}
-        />
+      {selItems.map((i) => {
+        const what: Movable = {
+          kind: 'item',
+          id: i.id,
+          courseId: i.c,
+          title: i.title,
+          code: catalog.byId[i.c]?.code ?? i.c,
+        };
+        return (
+          /*
+            The Move control sits beside the row rather than inside it.
+
+            `trail` renders inside the row's own button, and a button inside a
+            button is markup a browser silently unnests — so the keyboard path
+            would have been a control that existed in the JSX and not in the
+            page.
+          */
+          <div key={i.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <DeadlineRow
+                item={i}
+                tone={standingOf(i, state.done)}
+                meta={i.dueTime}
+                trail={null}
+                /*
+                 * Held, this row moves; the cell it is dropped on is the new
+                 * date. A syllabus deadline asks first — see
+                 * `screens/calendar/Move.tsx`.
+                 */
+                drag={drag.handlers(what)}
+              />
+            </div>
+            {moveButton(what, selectedDay)}
+          </div>
+        );
+      })}
+
+      {/*
+        Your own things on the same day, which the month list did not show.
+
+        It was a list of syllabus deadlines only, with a button underneath
+        saying the rest was in the day view — which was true and is the wrong
+        answer now that a row is how you move something. The tasks are the ones
+        people actually move, and leaving them out would have made the whole
+        gesture apply to everything except the thing it is for.
+      */}
+      {selTasks.map((t) => (
+        <button
+          key={t.id}
+          type="button"
+          className="bare tappable"
+          {...drag.handlers({ kind: 'task', id: t.id, title: t.title })}
+          onClick={() => {
+            if (drag.tookDrop()) return;
+            dispatch({ type: 'setMineTab', tab: 'tasks' });
+            dispatch({ type: 'go', screen: 'mine' });
+          }}
+          style={{
+            display: 'flex',
+            gap: 'var(--sp-5)',
+            alignItems: 'baseline',
+            width: '100%',
+            textAlign: 'left',
+            padding: 'var(--sp-5) 0',
+            borderBottom: '1px solid var(--app-line)',
+            opacity: drag.held && 'id' in drag.held && drag.held.id === t.id ? 0.4 : 1,
+          }}
+        >
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
+            {t.title}
+          </span>
+          <span style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+            {t.courseId ? (catalog.byId[t.courseId]?.code ?? '') : 'Yours'}
+          </span>
+        </button>
       ))}
 
-      {selItems.length === 0 && (
-        <div style={{ padding: '12px 0 2px', fontSize: 'var(--type-md)', opacity: 0.55 }}>
-          Nothing due this day.
+      {/* The row's Move control lives outside the row for a task, because the
+          row is itself a button and a button inside a button is not markup a
+          browser will keep. */}
+      {selTasks.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-3)' }}>
+          {selTasks.map((t) => (
+            <span key={`m:${t.id}`}>
+              {moveButton({ kind: 'task', id: t.id, title: t.title }, selectedDay)}
+            </span>
+          ))}
         </div>
+      )}
+
+      {/* Where a carried thing would land, said rather than only drawn. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {carrying
+          ? `${carrying.what.title} would move to ${MONTHS[calMonth]} ${carrying.day}.`
+          : ''}
+      </div>
+
+      {selItems.length === 0 && selTasks.length === 0 && (
+        <div style={{ padding: '12px 0 2px', fontSize: 'var(--type-md)', opacity: 0.55 }}>
+          Nothing due this day. Double-tap it to put something there.
+        </div>
+      )}
+
+      {moving.notice}
+
+      {adding !== null && (
+        <AddHere date={iso(adding)} onClose={() => setAdding(null)} />
       )}
 
       {/* Always offered, including on an empty day: this list is deadlines
@@ -939,7 +1253,35 @@ function MonthView() {
  */
 function SemesterView() {
   const { state, dispatch, now, catalog } = useStore();
+  const moving = useCalendarMove();
+  const [adding, setAdding] = useState<string | null>(null);
   const source = state.calSource;
+
+  /*
+   * A week row has no day axis — it is a bar, not a grid — so a drop moves by
+   * whole weeks and keeps the weekday.
+   *
+   * That is the honest reading of the gesture rather than a compromise:
+   * dragging a Wednesday problem set down one row means "next Wednesday", and
+   * landing it on the Monday of that week because the row could not say which
+   * day would be the view inventing a precision it does not have.
+   *
+   * Declared here, above the empty-state return below it: a hook that runs
+   * only on some renders is a hook that runs in a different order on the next
+   * one. `weeks` is read out of a ref rather than closed over for the same
+   * reason — it is built after this point.
+   */
+  const weeksRef = useRef<{ start: Date }[]>([]);
+  const drag = useDragToMove<Movable & { weekday: number }>({
+    onDrop: ({ payload, target }) => {
+      const w = Number(target?.replace('w:', ''));
+      const week = weeksRef.current[w];
+      if (!week) return;
+      const to = new Date(week.start);
+      to.setDate(to.getDate() + payload.weekday);
+      moving.move(payload, { date: dateToIso(to) });
+    },
+  });
 
   const items = source === 'all' || source === 'deadlines' ? datedItems(catalog, now) : [];
   const events = source === 'all' || source === 'campus' ? datedEvents(now, state.sample) : [];
@@ -982,6 +1324,7 @@ function SemesterView() {
   }
 
   const busiest = Math.max(1, ...weeks.map((w) => w.items.length));
+  weeksRef.current = weeks;
 
   return (
     <div style={{ padding: 18 }}>
@@ -997,6 +1340,15 @@ function SemesterView() {
           return (
             <div
               key={i}
+              data-drop={`w:${i}`}
+              /* Two taps on a week is "put something in this week". There is no
+                 day in a bar, so it opens on the Monday and says so. */
+              onDoubleClick={(e) => {
+                if ((e.target as HTMLElement).closest('button')) return;
+                const monday = new Date(w.start);
+                monday.setDate(monday.getDate() + 1);
+                setAdding(dateToIso(monday));
+              }}
               style={{
                 display: 'flex',
                 gap: 'var(--sp-6)',
@@ -1004,6 +1356,8 @@ function SemesterView() {
                 padding: '10px 0',
                 borderBottom: '1px solid var(--app-line)',
                 background: isNow ? 'var(--app-panel)' : 'transparent',
+                outline: drag.over === `w:${i}` ? '2px solid var(--app-accent)' : undefined,
+                outlineOffset: -2,
               }}
             >
               <div
@@ -1075,8 +1429,24 @@ function SemesterView() {
                         key={it.id}
                         type="button"
                         className="bare"
-                        onClick={() => dispatch({ type: 'openItem', id: it.id })}
-                        style={{ width: 'auto', display: 'block', textAlign: 'left' }}
+                        {...drag.handlers({
+                          kind: 'item',
+                          id: it.id,
+                          courseId: it.c,
+                          title: it.title,
+                          code: catalog.byId[it.c]?.code ?? it.c,
+                          weekday: it.date.getDay(),
+                        })}
+                        onClick={() => {
+                          if (drag.tookDrop()) return;
+                          dispatch({ type: 'openItem', id: it.id });
+                        }}
+                        style={{
+                          width: 'auto',
+                          display: 'block',
+                          textAlign: 'left',
+                          opacity: drag.held?.id === it.id ? 0.4 : 1,
+                        }}
                       >
                         <span style={{ opacity: 0.55 }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
                         {it.title.length > 42 ? `${it.title.slice(0, 40)}…` : it.title}
@@ -1107,6 +1477,8 @@ function SemesterView() {
           );
         })}
       </div>
+      {moving.notice}
+      {adding && <AddHere date={adding} onClose={() => setAdding(null)} />}
       <div style={{ height: 22 }} />
     </div>
   );

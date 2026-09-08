@@ -1322,6 +1322,17 @@ export type Action =
   | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }
   | { type: 'setReport'; grain: ReportGrain }
   | { type: 'setChanges'; source: ChangeSource }
+  /*
+   * The three things a drag on the calendar can move, one action each.
+   *
+   * Not `editTask` with a date in it: an edit is undoable by editing it back,
+   * which is why `lib/undo.ts` leaves edits alone — but a drag is a change
+   * whose *previous* value is exactly what nobody remembers. So a move is its
+   * own action, and its own action is what the undo table can name.
+   */
+  | { type: 'moveTask'; id: string; date: string; time?: string }
+  | { type: 'moveAppointment'; id: string; date: string; at: number; time: string }
+  | { type: 'moveItem'; courseId: CourseId; itemId: string; month: number; day: number; year: number }
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }

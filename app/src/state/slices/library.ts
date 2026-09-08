@@ -66,6 +66,43 @@ export function library(state: State, action: Action): State | null {
         ),
       };
 
+    /*
+     * A syllabus deadline, moved.
+     *
+     * Through the same door as every other change to course data — the module
+     * is replaced whole, exactly as `screens/EditCourse.tsx` does it — rather
+     * than by reaching into the catalogue, which is built from these and would
+     * be overwritten on the next render.
+     *
+     * `movedFrom` is written on the first move only. Move a thing twice and
+     * what matters is still what the syllabus said, not the intermediate
+     * guess; and `quote` and `checked` are never touched, because the sentence
+     * from the document is the one thing here that is not the student's to
+     * change.
+     */
+    case 'moveItem':
+      return {
+        ...state,
+        courses: state.courses.map((c) =>
+          c.course.id !== action.courseId
+            ? c
+            : {
+                ...c,
+                items: c.items.map((i) =>
+                  i.id !== action.itemId
+                    ? i
+                    : {
+                        ...i,
+                        movedFrom: i.movedFrom ?? { month: i.month, day: i.day, year: i.year },
+                        month: action.month,
+                        day: action.day,
+                        year: action.year,
+                      },
+                ),
+              },
+        ),
+      };
+
     case 'removeCourse':
       return {
         ...state,

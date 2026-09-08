@@ -74,6 +74,22 @@ export interface Item {
    * none, and `decorateItem` falls back to the year the app shipped for.
    */
   year?: number;
+  /**
+   * Where this was before somebody moved it, when somebody has.
+   *
+   * The app's whole premise is that a deadline is the syllabus's rather than
+   * the app's — every item carries the sentence it came from and the page it
+   * was on. A student may still move one: a professor says it in class, an
+   * announcement lands, or the syllabus was simply wrong. What must not happen
+   * is the app quietly forgetting that it now disagrees with the document it
+   * is showing underneath.
+   *
+   * So a move keeps the old date and says so beside the quote. Optional
+   * because every item that has never been moved has none, which is almost all
+   * of them, and because a course imported before this existed has none
+   * either.
+   */
+  movedFrom?: { month: number; day: number; year?: number };
   /** Time of day, exactly as the syllabus words it. */
   dueTime: string;
   weight: string;

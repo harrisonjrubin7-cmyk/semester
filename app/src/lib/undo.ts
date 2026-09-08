@@ -38,6 +38,15 @@ import type { Persisted } from '../state/shape';
 export interface Undoable {
   label: string;
   fields: (keyof Persisted)[];
+  /**
+   * Offer the undo when the field *changed*, rather than when it shrank.
+   *
+   * Every original entry in the table below is a removal, so "did this take
+   * anything" is answered by counting — see {@link tookSomething}. A move
+   * takes nothing and changes one field of one row, so counting says no. This
+   * says to compare instead.
+   */
+  onChange?: true;
 }
 
 /**
@@ -48,6 +57,18 @@ export interface Undoable {
  * anything that only edits — an edit leaves the thing there to edit back.
  */
 export const UNDOABLE: Record<string, Undoable> = {
+  /*
+   * The three moves, which are edits and are here anyway.
+   *
+   * The rule above is that an edit leaves the thing there to edit back, and it
+   * holds for a form: you can see the field you just changed. A drag is the
+   * case it does not cover — the previous date is gone from the screen the
+   * moment the thing lands, and on a phone a mis-drop is one finger's width.
+   * So a move offers the old date back for eight seconds.
+   */
+  moveTask: { label: 'Task moved', fields: ['tasks'], onChange: true },
+  moveAppointment: { label: 'Moved', fields: ['appointments'], onChange: true },
+  moveItem: { label: 'Deadline moved', fields: ['courses'], onChange: true },
   deleteTask: { label: 'Task deleted', fields: ['tasks'] },
   deleteAppointment: { label: 'Appointment deleted', fields: ['appointments'] },
   removeCommitment: { label: 'Activity removed', fields: ['commitments'] },
@@ -130,6 +151,21 @@ function size(v: unknown): number {
 export function tookSomething(took: Taken, after: Persisted): boolean {
   for (const f of Object.keys(took.was) as (keyof Persisted)[]) {
     if (size(after[f]) < size(took.was[f])) return true;
+  }
+  return false;
+}
+
+/**
+ * The same question for an action that changes rather than removes.
+ *
+ * Reference equality per field, not a deep compare: the slices are written to
+ * return the same array when they change nothing, so a new reference *is* the
+ * signal — and a deep compare of `courses` on every dispatch would walk every
+ * deadline in the term to answer a question about one date.
+ */
+export function changedSomething(took: Taken, before: Persisted, after: Persisted): boolean {
+  for (const f of Object.keys(took.was) as (keyof Persisted)[]) {
+    if (before[f] !== after[f]) return true;
   }
   return false;
 }

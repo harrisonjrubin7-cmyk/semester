@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 import { useStore } from '../state/store';
 import { TickBox } from './ui';
 import { lateBy, type Standing } from '../lib/standing';
@@ -38,6 +38,7 @@ export function DeadlineRow({
   tone,
   meta,
   trail,
+  drag,
 }: {
   item: DatedItem;
   tone: Standing;
@@ -45,6 +46,25 @@ export function DeadlineRow({
   meta?: ReactNode;
   /** Overrides the right-hand marker; pass null to drop it. */
   trail?: ReactNode | null;
+  /**
+   * Pointer handlers that make this row draggable, on a screen where it is.
+   *
+   * ## Why this replaces the long press rather than joining it
+   *
+   * Holding a row already means something: `useAskAbout` waits 450ms and opens
+   * the assistant about this deadline. A drag has to start from a hold too —
+   * see `lib/drag.ts` — and two press-and-hold gestures on one element cannot
+   * both fire. Whichever is shorter simply wins, and a row where that depended
+   * on how long somebody happened to press is worse than either.
+   *
+   * So it is decided here, once, and it is decided by where the row is. On the
+   * calendar the row is a thing at a time and the gesture for it is *move*; on
+   * Today and the course page it is a thing to think about and the gesture is
+   * *ask*. Passing `drag` says which screen this is. Asking about a deadline
+   * is never lost — it is on every other list this row appears in, and the
+   * assistant button reaches it from anywhere.
+   */
+  drag?: HTMLAttributes<HTMLElement>;
 }) {
   // `now` rather than `Date.now()`: the store's clock ticks once a minute, so
   // "open 4 days" stays right without making the render impure.
@@ -100,7 +120,7 @@ export function DeadlineRow({
 
   return (
     <div
-      {...hold}
+      {...(drag ?? hold)}
       style={{
         display: 'flex',
         gap: 'var(--sp-5)',

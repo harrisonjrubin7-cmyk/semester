@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { CLASS_TINT, blockLabel, kindOf } from '../lib/kinds';
+import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
 
 /**
  * A day, by the hour.
@@ -27,6 +28,16 @@ export interface HourBlock {
   kind: string | null;
   canceled?: boolean;
   onClick?: () => void;
+  /**
+   * The record this block was drawn from, where there is one that can move.
+   *
+   * A class has none: it is the recurring schedule repeating, and there is no
+   * single row to change. Neither has a standing commitment. `lib/select.ts`
+   * sets this for the two that do — an appointment you added, and a deadline
+   * whose wording names an hour — which is what makes "may this be dragged"
+   * a fact about the data rather than a guess about the title.
+   */
+  from?: { kind: 'appointment' | 'item'; id: string };
 }
 
 const ROW = 54;
@@ -49,11 +60,28 @@ export function HourGrid({
   blocks,
   now,
   style,
+  onMove,
+  onAddAt,
+  canMove,
 }: {
   blocks: HourBlock[];
   /** Minutes past midnight, or null when this is not today. */
   now: number | null;
   style?: CSSProperties;
+  /**
+   * A block, dragged to a new time on this day.
+   *
+   * The grid owns the gesture rather than the screen above it, because the
+   * hour a point lands on depends on `lo` and `ROW` — the window this grid
+   * works out for itself from the day it was handed. A caller computing that
+   * would be a second copy of the arithmetic, and the copy would be the one
+   * that was wrong after somebody changed a constant here.
+   */
+  onMove?: (block: HourBlock, minutes: number) => void;
+  /** Two taps on an empty part of the day, at the hour they landed on. */
+  onAddAt?: (minutes: number) => void;
+  /** Whether a given block may be dragged at all. Classes may not. */
+  canMove?: (block: HourBlock) => boolean;
 }) {
   // The window is the day's own, not a fixed 7-to-11: a day with an 8am lab and
   // nothing after four should not draw seven empty evening rows. An hour of
@@ -99,8 +127,27 @@ export function HourGrid({
   });
   settle();
 
+  const spec = { rowPx: ROW, gutterPx: GUTTER, startHour: lo, columns: 1 };
+  const drag = useDragToMove<HourBlock>({
+    grid: spec,
+    disabled: !onMove,
+    onDrop: ({ payload, point }) => {
+      if (point) onMove?.(payload, point.minutes);
+    },
+  });
+
   return (
-    <div style={{ position: 'relative', height: hours.length * ROW, ...style }}>
+    <div
+      {...gridAttrs("hours", spec)}
+      onDoubleClick={(e) => {
+        if (!onAddAt) return;
+        // Only on the empty grid. Two taps on a block is two taps on a block.
+        if ((e.target as HTMLElement).closest('[data-block]')) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        onAddAt(pointIn(spec, rect, e.clientX, e.clientY).minutes);
+      }}
+      style={{ position: 'relative', height: hours.length * ROW, ...style }}
+    >
       {hours.map((h, i) => (
         <div
           key={h}
@@ -164,10 +211,24 @@ export function HourGrid({
         const lane = laneOf[i];
         const width = `calc((100% - ${GUTTER}px) / ${widthOf[i]})`;
         const Tag = b.onClick ? 'button' : 'div';
+        const movable = Boolean(onMove) && (canMove ? canMove(b) : true);
+        const holding = drag.held?.id === b.id;
         return (
           <Tag
             key={b.id}
-            {...(b.onClick ? { type: 'button' as const, onClick: b.onClick, className: 'bare' } : {})}
+            data-block=""
+            {...(b.onClick
+              ? {
+                  type: 'button' as const,
+                  onClick: () => {
+                    // The click that ends a drag is not a tap on the block.
+                    if (drag.tookDrop()) return;
+                    b.onClick?.();
+                  },
+                  className: 'bare',
+                }
+              : {})}
+            {...(movable ? drag.handlers(b) : {})}
             // The kind is a 2px tinted border and nothing else; cancelled is
             // an opacity and a line-through. Neither survives being read out.
             aria-label={blockLabel(b.title, b.kind, clock(b.at), b.meta, b.canceled)}
@@ -184,7 +245,9 @@ export function HourGrid({
               borderRadius: 'var(--r-sm)',
               background: 'var(--app-panel)',
               boxShadow: '0 1px 0 var(--app-line-top) inset',
-              opacity: b.canceled ? 0.45 : 1,
+              opacity: holding ? 0.4 : b.canceled ? 0.45 : 1,
+              // Only while held, so the page still scrolls under a finger.
+              ...(holding ? { touchAction: 'none' as const } : {}),
             }}
           >
             <span
