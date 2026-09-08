@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { foundIn, nameOf, search, type Thread } from '../lib/threads';
+import { foundIn, nameOf, search, startedOn, type Thread } from '../lib/threads';
+import { destination } from '../lib/nav';
+import type { Screen } from '../lib/types';
 
 /**
  * The list of conversations, and the way back into one.
@@ -35,6 +37,8 @@ export function Threads({
   onNew,
   onRename,
   onPin,
+  archived,
+  onRestore,
   now,
 }: {
   threads: Thread[];
@@ -44,6 +48,9 @@ export function Threads({
   onNew: () => void;
   onRename: (id: string, name: string) => void;
   onPin: (id: string, pinned: boolean) => void;
+  /** The ones that came out of the list. Almost always empty. */
+  archived: Thread[];
+  onRestore: (id: string) => void;
   /** Passed in rather than read, so a test can say what time it is. */
   now: number;
 }) {
@@ -51,6 +58,14 @@ export function Threads({
   const [query, setQuery] = useState('');
   /** The thread being renamed, and the name so far. */
   const [naming, setNaming] = useState<{ id: string; text: string } | null>(null);
+  /*
+   * The older list is shut until asked for.
+   *
+   * It is empty for almost everybody and long for the few it is not, and
+   * neither of those wants to be the first thing in a panel whose job is the
+   * conversation you are having now.
+   */
+  const [showOlder, setShowOlder] = useState(false);
 
   /*
    * Any tap that is not on the confirm itself puts it back.
@@ -188,7 +203,9 @@ export function Threads({
                 {t.turns.length === 0 ? 'New conversation' : nameOf(t)}
               </span>
               <span style={UNDER}>
-                {t.turns.length === 0 ? 'Nothing asked yet' : `${ago(t.at, now)} · ${count(t.turns.length)}`}
+                {t.turns.length === 0
+                  ? 'Nothing asked yet'
+                  : `${where(t)}${ago(t.at, now)} · ${count(t.turns.length)}`}
               </span>
               {/*
                 Where the query was found, when it was not in the title.
@@ -273,6 +290,55 @@ export function Threads({
           </li>
           );
         })}
+
+        {/*
+          The conversations that came out of the list.
+
+          Under it rather than mixed into it, and shut until asked for. These
+          are not deleted and never were meant to be — the list holds a hundred
+          and the older ones move here — but they are also not what somebody
+          opening this panel is looking for.
+        */}
+        {archived.length > 0 && (
+          <li style={{ marginTop: 'var(--sp-4)' }}>
+            <button
+              type="button"
+              className="bare"
+              onClick={() => setShowOlder((was) => !was)}
+              aria-expanded={showOlder}
+              style={{ ...ACT, opacity: 0.55, padding: '0 var(--sp-5)' }}
+            >
+              {showOlder ? '▾' : '▸'} OLDER ({archived.length})
+            </button>
+            {showOlder && (
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                {search(archived, query).map((t) => (
+                  <li key={t.id}>
+                    <button
+                      type="button"
+                      className="bare"
+                      onClick={() => onRestore(t.id)}
+                      // Named for what pressing it does. "Restore" alone, in a
+                      // list of six, is six buttons with the same name.
+                      aria-label={`Put "${nameOf(t)}" back in the list and open it`}
+                      style={{
+                        width: 'auto',
+                        textAlign: 'left',
+                        padding: 'var(--sp-3) var(--sp-5)',
+                        opacity: 0.75,
+                      }}
+                    >
+                      <span style={ONE_LINE}>{nameOf(t)}</span>
+                      <span style={UNDER}>
+                        {`${where(t)}${ago(t.at, now)} · ${count(t.turns.length)}`}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        )}
       </ul>
     </div>
   );
@@ -320,6 +386,25 @@ const SIDE = {
   placeItems: 'center',
   borderRadius: 'var(--r-md)',
 } as const;
+
+/**
+ * "from Grades · ", or nothing at all.
+ *
+ * On the line that already says when and how long, rather than on one of its
+ * own: a row is three lines already, and where a conversation started is a
+ * qualifier on it, not a fact that stands alone.
+ *
+ * First on that line rather than last, which is not a preference. Three facts
+ * do not fit a 232px panel — "59 min ago · 1 question · from Grades" renders
+ * as "from Gr…" — so something is always at risk of the ellipsis, and this
+ * decides which. Last in the order is "1 question", a number the title above
+ * it already implies. Where the conversation came from is the thing that
+ * cannot be guessed from the rest of the row.
+ */
+function where(t: Thread): string {
+  const from = startedOn(t, (screen) => destination(screen as Screen)?.label);
+  return from ? `from ${from} · ` : '';
+}
 
 function count(turns: number): string {
   // Exchanges, not messages: two turns is one question answered, and "4

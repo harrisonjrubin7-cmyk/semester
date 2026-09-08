@@ -15,6 +15,8 @@ import { useAI } from './store';
 import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
   renameThread,
   pinThread,
+  openedOn,
+  restoreThread,
 } from './live';
 
 /**
@@ -90,6 +92,16 @@ export interface Conversation {
   rename: (id: string, name: string) => void;
   /** Keep one at the top, and keep it from being dropped for room. */
   pin: (id: string, pinned: boolean) => void;
+  /**
+   * The ones that have come out of the list, newest first.
+   *
+   * Almost always empty. The list holds a hundred conversations or a hundred
+   * and fifty thousand characters, whichever comes first, and what passes
+   * either limit is moved here rather than deleted.
+   */
+  archived: Thread[];
+  /** Put one back in the list, and open it. */
+  restore: (id: string) => void;
 }
 
 export function useConversation(): Conversation {
@@ -216,6 +228,15 @@ export function useConversation(): Conversation {
       if (!text.trim() || busy) return;
       const base = from ?? turns;
       const next: Turn[] = [...base, { role: 'user', content: text.trim() }];
+      /*
+       * Where this conversation started, recorded before the question is.
+       *
+       * Before rather than after, because `remember` is what gives the thread
+       * its title and the two belong to the same moment — and because after
+       * the answer arrives the student may well be on a different screen.
+       * `openedOn` ignores every call but the first.
+       */
+      openedOn(state.screen);
       remember(next);
       setStreaming('');
       trouble.clear();
@@ -417,6 +438,18 @@ export function useConversation(): Conversation {
     drop: dropThread,
     rename: renameThread,
     pin: pinThread,
+    /*
+     * The conversations that came out of the list, and the way back into one.
+     *
+     * Restoring opens it, which is deliberate and explained on
+     * `restoreThread`: `fit` never sheds the open thread, so anything restored
+     * without being opened would be archived again by the next save.
+     */
+    archived: live.archived,
+    restore: (id: string) => {
+      restoreThread(id);
+      trouble.clear();
+    },
   };
 }
 

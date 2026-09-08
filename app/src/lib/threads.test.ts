@@ -1,7 +1,26 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Turn } from './claude';
-import { blank, fit, load, save, titleFor, MAX_THREADS, ROOM, type Thread, nameOf, search, foundIn } from './threads';
+import {
+  blank,
+  fit,
+  sift,
+  load,
+  save,
+  clearAll,
+  archive,
+  loadArchive,
+  unarchive,
+  startedOn,
+  titleFor,
+  MAX_THREADS,
+  MAX_ARCHIVE,
+  ROOM,
+  type Thread,
+  nameOf,
+  search,
+  foundIn,
+} from './threads';
 
 /**
  * Keeping more than one conversation, and the ways that loses one.
@@ -344,5 +363,159 @@ describe('searching the conversations', () => {
     expect(foundIn(list[2], 'redlining')).toContain('redlining');
     expect(foundIn(list[0], 'elasticity')).toBe('');
     expect(foundIn(list[0], '')).toBe('');
+  });
+});
+
+describe('a hundred conversations, and an archive under them', () => {
+  const many = (n: number, size = 10): Thread[] =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `t${i}`,
+      title: '',
+      turns: [
+        { role: 'user' as const, content: `Q${i}`.padEnd(size, '.') },
+        { role: 'assistant' as const, content: 'A'.padEnd(size, '.') },
+      ],
+      // Oldest last, so `t0` is newest and the tail is what should fall out.
+      at: 10_000 - i,
+    }));
+
+  beforeEach(() => localStorage.clear());
+
+  it('keeps a hundred where it used to keep twelve', () => {
+    expect(MAX_THREADS).toBe(100);
+    const { kept, shed } = sift(many(100), 't0');
+    expect(kept).toHaveLength(100);
+    expect(shed).toEqual([]);
+  });
+
+  it('moves what is over the cap into the archive rather than deleting it', () => {
+    // The whole point of the change. This used to be a `continue`.
+    const { kept, shed } = sift(many(104), 't0');
+    expect(kept).toHaveLength(100);
+    expect(shed.map((t) => t.id)).toEqual(['t100', 't101', 't102', 't103']);
+    // And whole, not as a stub: an archived conversation you cannot read is
+    // a row saying you used to have something.
+    expect(shed[0].turns).toHaveLength(2);
+  });
+
+  it('moves what is over the character limit too, which is the limit that binds', () => {
+    // Twenty threads of 10k characters is 200k against a 150k budget.
+    const { kept, shed } = sift(many(20, 10_000), 't0');
+    expect(kept.length).toBeLessThan(20);
+    expect(shed.length).toBeGreaterThan(0);
+    expect(kept.length + shed.length).toBe(20);
+  });
+
+  it('never sheds the open one, however old it is', () => {
+    const { kept, shed } = sift(many(104), 't103');
+    expect(kept.some((t) => t.id === 't103')).toBe(true);
+    expect(shed.some((t) => t.id === 't103')).toBe(false);
+  });
+
+  it('never sheds a pinned one', () => {
+    const all = many(104).map((t) => (t.id === 't103' ? { ...t, pinned: true } : t));
+    const { shed } = sift(all, 't0');
+    expect(shed.some((t) => t.id === 't103')).toBe(false);
+  });
+
+  it('does not archive conversations nobody had', () => {
+    // An empty thread is dropped, as it always was. An archive of blank rows
+    // is not a record of anything.
+    const all = [...many(100), { id: 'blank', title: '', turns: [], at: 1 }];
+    const { kept, shed } = sift(all, 't0');
+    expect(kept.some((t) => t.id === 'blank')).toBe(false);
+    expect(shed.some((t) => t.id === 'blank')).toBe(false);
+  });
+});
+
+describe('the archive itself', () => {
+  beforeEach(() => localStorage.clear());
+
+  const one = (id: string, at: number): Thread => ({
+    id,
+    title: '',
+    turns: [{ role: 'user', content: `Q ${id}` }, { role: 'assistant', content: 'A' }],
+    at,
+  });
+
+  it('holds what it is given, newest first', () => {
+    archive([one('a', 1), one('c', 3), one('b', 2)]);
+    expect(loadArchive().map((t) => t.id)).toEqual(['c', 'b', 'a']);
+  });
+
+  it('adds to what is already there rather than replacing it', () => {
+    archive([one('a', 1)]);
+    archive([one('b', 2)]);
+    expect(loadArchive().map((t) => t.id).sort()).toEqual(['a', 'b']);
+  });
+
+  it('does not keep two copies of one conversation', () => {
+    // Restore a thread, ask one more question, and it falls out again.
+    archive([one('a', 1)]);
+    archive([{ ...one('a', 9), name: 'Renamed' }]);
+    const all = loadArchive();
+    expect(all).toHaveLength(1);
+    expect(all[0].name).toBe('Renamed');
+  });
+
+  it('is bounded too, so an archive cannot fill the store either', () => {
+    const lots = Array.from({ length: MAX_ARCHIVE + 20 }, (_, i) => one(`a${i}`, i));
+    expect(archive(lots).length).toBeLessThanOrEqual(MAX_ARCHIVE);
+  });
+
+  it('gives one back, and stops holding it', () => {
+    archive([one('a', 1), one('b', 2)]);
+    expect(unarchive('a')?.id).toBe('a');
+    expect(loadArchive().map((t) => t.id)).toEqual(['b']);
+  });
+
+  it('is nothing for an id it does not have', () => {
+    expect(unarchive('nope')).toBeNull();
+  });
+
+  it('titles what it hands back, so a restored row is not blank', () => {
+    archive([{ ...one('a', 1), title: '' }]);
+    expect(loadArchive()[0].title).toBe('Q a');
+  });
+
+  it('goes when everything goes', () => {
+    // "Wipe every conversation" has to mean the older ones too.
+    archive([one('a', 1)]);
+    clearAll();
+    expect(loadArchive()).toEqual([]);
+  });
+
+  it('is written by save, not only by a caller who remembers to', () => {
+    const all = Array.from({ length: 102 }, (_, i) => ({
+      id: `t${i}`,
+      title: '',
+      turns: [{ role: 'user' as const, content: `Q${i}` }, { role: 'assistant' as const, content: 'A' }],
+      at: 10_000 - i,
+    }));
+    save({ threads: all, openId: 't0' });
+    expect(load().threads).toHaveLength(100);
+    expect(loadArchive().map((t) => t.id)).toEqual(['t100', 't101']);
+  });
+});
+
+describe('where a conversation was started', () => {
+  const labels = (screen: string) => ({ grades: 'Grades', today: 'Today' })[screen];
+
+  it('is the screen name when the screen is known', () => {
+    const t: Thread = { id: 'a', title: 'Q', turns: [], at: 1, from: 'grades' };
+    expect(startedOn(t, labels)).toBe('Grades');
+  });
+
+  it('is nothing at all when it is not', () => {
+    // A row reading "from grade-projection" is worse than one that says
+    // nothing. Threads from before this existed are the same case.
+    expect(startedOn({ id: 'a', title: 'Q', turns: [], at: 1 }, labels)).toBe('');
+    expect(startedOn({ id: 'a', title: 'Q', turns: [], at: 1, from: 'gone' }, labels)).toBe('');
+  });
+
+  it('survives a round trip through the store', () => {
+    localStorage.clear();
+    save({ threads: [{ id: 'a', title: 'Q', turns: [{ role: 'user', content: 'Q' }], at: 1, from: 'grades' }], openId: 'a' });
+    expect(load().threads[0].from).toBe('grades');
   });
 });

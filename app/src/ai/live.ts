@@ -3,7 +3,15 @@ import type { Turn } from '../lib/claude';
 import type { Local } from '../lib/localask';
 import type { Mode } from '../lib/mode';
 import type { Lists, Proposal } from '../lib/tools';
-import { load as loadThreads, save as saveThreads, titleFor, blank, type Thread } from '../lib/threads';
+import {
+  load as loadThreads,
+  save as saveThreads,
+  loadArchive,
+  unarchive,
+  titleFor,
+  blank,
+  type Thread,
+} from '../lib/threads';
 import { read as readSpend } from '../lib/spend';
 import { fit } from '../lib/chatlog';
 
@@ -74,6 +82,18 @@ export interface Live {
    * and worth giving.
    */
   dropped: number;
+  /**
+   * The conversations that have come out of the list, newest first.
+   *
+   * Read once at import and kept in step from here, rather than read whenever
+   * the older list is opened: the panel renders from `Live` like everything
+   * else, and a list that only refreshes when you happen to reopen a disclosure
+   * is the same class of bug the header of this file is about.
+   *
+   * Empty for almost everybody. It fills at a hundred conversations or a
+   * hundred and fifty thousand characters, whichever comes first.
+   */
+  archived: Thread[];
 }
 
 function empty(): Live {
@@ -96,6 +116,7 @@ function empty(): Live {
     // What the load itself had to drop, so a long conversation says so the
     // moment it is opened rather than after the next question.
     dropped: kept.dropped ?? 0,
+    archived: loadArchive(),
   };
 }
 
@@ -196,6 +217,61 @@ export function keepTurns(turns: Turn[]): void {
   );
   live = { ...live, turns: fitted.turns, threads, dropped: fitted.dropped };
   saveThreads({ threads, openId: live.openId });
+  /*
+   * Re-read after the save, because the save is what archives.
+   *
+   * `saveThreads` sheds whatever no longer fits and writes it to the other
+   * key. Reading it back is how the older list on screen stays true without
+   * this file having to reimplement the rule that decides what falls out.
+   */
+  live = { ...live, threads: pruned(threads), archived: loadArchive() };
+  for (const fn of watchers) fn();
+}
+
+/**
+ * The list minus whatever the save just archived.
+ *
+ * Without this the panel would show a conversation in both places at once
+ * until the next reload — in the list because that is the array it was handed,
+ * and under "older" because that is where it now lives.
+ */
+function pruned(threads: Thread[]): Thread[] {
+  const gone = new Set(loadArchive().map((t) => t.id));
+  const rest = threads.filter((t) => !gone.has(t.id));
+  return rest.length > 0 ? rest : threads;
+}
+
+/**
+ * Record where a conversation was started, once.
+ *
+ * Called as the first question goes out. Only the first: a thread is *from*
+ * somewhere, and overwriting this on every question would make the label say
+ * where you happen to be standing rather than what the conversation is about.
+ */
+export function openedOn(screen: string): void {
+  const one = live.threads.find((t) => t.id === live.openId);
+  if (!one || one.from || !screen) return;
+  const threads = live.threads.map((t) => (t.id === live.openId ? { ...t, from: screen } : t));
+  live = { ...live, threads };
+  saveThreads({ threads, openId: live.openId });
+  for (const fn of watchers) fn();
+}
+
+/**
+ * Bring one back out of the archive, and open it.
+ *
+ * Opening it is not a convenience, it is what keeps it: `fit` never sheds the
+ * open thread, so a restored conversation that was not opened would be
+ * archived again by the very next save — the oldest thing in the list, put
+ * back exactly where it was taken from.
+ */
+export function restoreThread(id: string): void {
+  const one = unarchive(id);
+  if (!one) return;
+  const threads = [one, ...live.threads.filter((t) => t.id !== one.id)];
+  live = { ...live, ...cleared(), turns: one.turns, threads, openId: one.id };
+  saveThreads({ threads, openId: one.id });
+  live = { ...live, threads: pruned(threads), archived: loadArchive() };
   for (const fn of watchers) fn();
 }
 
@@ -212,9 +288,19 @@ export function keepTurns(turns: Turn[]): void {
  * rather than after a reload.
  */
 export function newThread(): void {
+  /*
+   * A reused blank is a fresh conversation, including where it is from.
+   *
+   * `from` is written as the first question goes out and an empty thread has
+   * asked none, so a spare carrying one is a spare from an attempt that did
+   * not finish. Reusing it without clearing that would label the new
+   * conversation with the screen somebody was on for the old one.
+   */
   const spare = live.threads.find((t) => t.turns.length === 0);
-  const thread = spare ?? blank();
-  const threads = spare ? live.threads : [thread, ...live.threads];
+  const thread = spare ? { ...spare, from: undefined } : blank();
+  const threads = spare
+    ? live.threads.map((t) => (t.id === thread.id ? thread : t))
+    : [thread, ...live.threads];
   live = { ...live, ...cleared(), turns: [], threads, openId: thread.id };
   saveThreads({ threads, openId: thread.id });
   for (const fn of watchers) fn();

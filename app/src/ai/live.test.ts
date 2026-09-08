@@ -12,7 +12,10 @@ import {
   sender,
   setLive,
   watchLive,
+  openedOn,
+  restoreThread,
 } from './live';
+import { archive, loadArchive, MAX_THREADS, type Thread } from '../lib/threads';
 
 /**
  * One conversation, and the way it stopped being one.
@@ -247,5 +250,116 @@ describe('nobody keeps a second copy', () => {
       expect(source(file)).toContain("from './Turns'");
       expect(source(file)).toContain("from './Composer'");
     }
+  });
+});
+
+describe('where a conversation was started', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    resetLive();
+  });
+
+  it('is recorded on the open thread', () => {
+    openedOn('grades');
+    expect(liveNow().threads.find((t) => t.id === liveNow().openId)?.from).toBe('grades');
+  });
+
+  it('is recorded once, so it says where it began and not where you are', () => {
+    // You ask on Grades, the answer arrives, you walk to Today and ask again.
+    // The conversation is still the one you started on Grades.
+    openedOn('grades');
+    openedOn('today');
+    expect(liveNow().threads.find((t) => t.id === liveNow().openId)?.from).toBe('grades');
+  });
+
+  it('ignores an empty screen rather than writing one', () => {
+    openedOn('');
+    expect(liveNow().threads.find((t) => t.id === liveNow().openId)?.from).toBeUndefined();
+  });
+
+  it('belongs to the thread, so a new one starts again', () => {
+    openedOn('grades');
+    newThread();
+    openedOn('today');
+    const open = liveNow().threads.find((t) => t.id === liveNow().openId);
+    expect(open?.from).toBe('today');
+  });
+});
+
+describe('conversations that come out of the list', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    resetLive();
+  });
+
+  /** More than the list holds, oldest last. */
+  const overflow = (): Thread[] =>
+    Array.from({ length: MAX_THREADS + 2 }, (_, i) => ({
+      id: `t${i}`,
+      title: '',
+      turns: [
+        { role: 'user' as const, content: `Q${i}` },
+        { role: 'assistant' as const, content: 'A' },
+      ],
+      at: 10_000 - i,
+    }));
+
+  it('are archived by a save rather than deleted, and leave the list', () => {
+    setLive('threads', overflow());
+    setLive('openId', 't0');
+    keepTurns([{ role: 'user', content: 'Something new' }]);
+
+    expect(liveNow().threads).toHaveLength(MAX_THREADS);
+    expect(liveNow().archived.map((t) => t.id)).toEqual(['t100', 't101']);
+    // And not in both places at once, which is what a stale list would show.
+    expect(liveNow().threads.some((t) => t.id === 't100')).toBe(false);
+  });
+
+  it('come back whole, and open', () => {
+    archive([
+      {
+        id: 'old',
+        title: '',
+        at: 5,
+        turns: [
+          { role: 'user', content: 'The revision plan' },
+          { role: 'assistant', content: 'Here it is.' },
+        ],
+      },
+    ]);
+    resetLive();
+    expect(liveNow().archived).toHaveLength(1);
+
+    restoreThread('old');
+    expect(liveNow().openId).toBe('old');
+    expect(liveNow().turns).toHaveLength(2);
+    expect(liveNow().turns[0].content).toBe('The revision plan');
+    // Out of the archive, into the list.
+    expect(liveNow().archived).toEqual([]);
+    expect(loadArchive()).toEqual([]);
+  });
+
+  it('stay restored, rather than being archived again by the next save', () => {
+    /*
+     * The failure this guards: `fit` sheds the oldest and never the open one,
+     * so a restored thread that was not opened would be the oldest thing in a
+     * full list and go straight back where it came from.
+     */
+    const all = overflow();
+    setLive('threads', all);
+    setLive('openId', 't0');
+    keepTurns([{ role: 'user', content: 'x' }]);
+    const gone = liveNow().archived[0].id;
+
+    restoreThread(gone);
+    keepTurns([{ role: 'user', content: 'A question in the restored one' }]);
+    expect(liveNow().threads.some((t) => t.id === gone)).toBe(true);
+    expect(liveNow().archived.some((t) => t.id === gone)).toBe(false);
+  });
+
+  it('does nothing for an id the archive does not have', () => {
+    const before = liveNow();
+    restoreThread('nope');
+    expect(liveNow()).toBe(before);
   });
 });

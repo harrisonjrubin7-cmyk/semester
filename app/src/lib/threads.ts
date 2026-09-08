@@ -21,17 +21,24 @@ import { load as loadOne, clear as clearOne, fit as fitOne, trim, ROOM } from '.
  * of six is worse than no list. The first question is what they would have
  * called it anyway.
  *
- * ## Bounded, twice
+ * ## Bounded, twice, and then kept anyway
  *
  * A transcript is the one thing in this app with no natural size, and now
- * there can be twelve of them. Two limits, and the character one binds first:
- * each thread is trimmed by `chatlog`'s own rule, and the whole set is capped
- * so that a year of use cannot fill the store and start losing writes
+ * there can be a hundred of them. Two limits, and the character one binds
+ * first: each thread is trimmed by `chatlog`'s own rule, and the whole set is
+ * capped so that a year of use cannot fill the store and start losing writes
  * silently — which this app has done once before.
  *
- * Threads are dropped oldest-first, and never the open one. Losing the
- * conversation you are in the middle of to make room for its own next turn
- * would be the worst possible moment to enforce a limit.
+ * What changed is what happens at the limit. Threads used to be *dropped*
+ * oldest-first, which meant the cap was a delete button nobody pressed: the
+ * revision plan from week three went in week eight, in the middle of a term,
+ * with no notice, because a twelfth conversation had been started. Now the
+ * oldest come out of the list and go into an archive under their own key —
+ * out of the way, off the hot path, and still there.
+ *
+ * The open thread is never one of them. Losing the conversation you are in the
+ * middle of to make room for its own next turn would be the worst possible
+ * moment to enforce a limit.
  *
  * ## Its own key, still
  *
@@ -43,18 +50,48 @@ import { load as loadOne, clear as clearOne, fit as fitOne, trim, ROOM } from '.
 
 const KEY = 'semester.threads.v1';
 
-/** How many conversations are kept. A drawer, not an archive. */
-export const MAX_THREADS = 12;
+/**
+ * Where a conversation goes instead of being deleted.
+ *
+ * Its own key, and read only when somebody asks for it. That is the whole
+ * reason the archive can be generous: the active list is re-serialised on
+ * every question, and this is written when something falls out of it and read
+ * when the older list is opened. Cost where it is paid, not everywhere.
+ */
+const ARCHIVE_KEY = 'semester.threads.archive.v1';
+
+/**
+ * How many conversations stay in the list.
+ *
+ * Twelve, once — a drawer. Twelve is about six weeks of use, which meant the
+ * cap was doing its work in the middle of a term rather than at the end of
+ * one, and what it did was delete. A hundred is past the point where the count
+ * decides anything; `ROOM_ALL` below is what actually binds now, and nothing
+ * that falls out of either is lost.
+ */
+export const MAX_THREADS = 100;
 
 /**
  * How many characters across all of them.
  *
- * Twelve times a single thread's budget would be half a megabyte, which is
- * more than the rest of the app puts in the store put together. This is the
- * number that actually binds, and it binds on the sum rather than per thread
- * so that one long conversation is allowed to be long.
+ * The number that actually binds, and it binds on the sum rather than per
+ * thread so that one long conversation is allowed to be long. Unchanged when
+ * the count went to a hundred, deliberately: raising both would have made a
+ * key the app re-serialises on every keystroke several times larger, which is
+ * the thing this file has always been most careful about.
  */
 export const ROOM_ALL = 150_000;
+
+/**
+ * The same two limits again, for the archive.
+ *
+ * Larger, because nothing reads this on the hot path — but still limits. An
+ * archive with no bound is a store that fills in a year and starts losing
+ * writes silently, which is the failure this whole file exists to avoid, moved
+ * one drawer down rather than fixed.
+ */
+export const MAX_ARCHIVE = 100;
+export const ROOM_ARCHIVE = 200_000;
 
 export interface Thread {
   id: string;
@@ -78,10 +115,23 @@ export interface Thread {
    *
    * Pinning does two things and the second is the one that matters: a pinned
    * thread is not dropped to make room. The revision plan worked out in week
-   * three is exactly the conversation the twelve-thread cap would quietly
-   * delete in week eight, and it is exactly the one worth keeping.
+   * three is exactly the conversation the cap would quietly move out of the
+   * list in week eight, and it is exactly the one worth keeping.
    */
   pinned?: boolean;
+  /**
+   * The screen it was started from, as a `lib/nav.ts` screen id.
+   *
+   * A conversation begun on Grades and one begun on Today read alike in a
+   * list — both are called by their first question, and "what should I do
+   * about this" is a question you ask on several screens about several things.
+   * Where it was asked is the cheapest thing that tells them apart, and it is
+   * known for free at the moment of asking.
+   *
+   * Set once, from where the first question was sent, and never updated. A
+   * thread is *from* somewhere; it is not wherever you last happened to be.
+   */
+  from?: string;
 }
 
 export interface Kept {
@@ -123,6 +173,22 @@ export function nameOf(t: Thread): string {
   return t.name?.trim() || t.title;
 }
 
+/**
+ * Where it was started, in words, or nothing.
+ *
+ * Takes the lookup rather than importing `lib/nav.ts`, which would pull the
+ * whole 59-screen directory into a module the chat log has no other reason to
+ * depend on. The caller has it already.
+ *
+ * Nothing, rather than the raw id, when the screen is unknown: a row reading
+ * "from grade-projection" is worse than a row that says where it came from
+ * only when it can say it properly. Threads from before this existed have no
+ * `from` at all, and that is the same case.
+ */
+export function startedOn(t: Thread, labelFor: (screen: string) => string | undefined): string {
+  return (t.from && labelFor(t.from)) || '';
+}
+
 export function blank(): Thread {
   return { id: newId(), title: 'New conversation', turns: [], at: Date.now() };
 }
@@ -141,7 +207,25 @@ function newId(): string {
  * cannot be tested against the case that matters: the open thread being the
  * oldest one.
  */
+export interface Fitted {
+  /** What stays in the list. */
+  kept: Thread[];
+  /**
+   * What came out of it, whole, for the archive.
+   *
+   * The point of the change: this used to be the return value of a `continue`
+   * and nothing else. A conversation over the limit was gone, and the only
+   * notice was that it was not there any more.
+   */
+  shed: Thread[];
+}
+
+/** The kept half alone, for the callers that only ever wanted those. */
 export function fit(threads: Thread[], openId: string): Thread[] {
+  return sift(threads, openId).kept;
+}
+
+export function sift(threads: Thread[], openId: string): Fitted {
   /*
    * Pinned first, then newest.
    *
@@ -158,12 +242,16 @@ export function fit(threads: Thread[], openId: string): Thread[] {
     (a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.at - a.at,
   );
   const kept: Thread[] = [];
+  const shed: Thread[] = [];
   let size = 0;
   for (const t of order) {
     const turns = trim(t.turns);
     const cost = turns.reduce((n, x) => n + x.content.length, 0);
     const open = t.id === openId;
-    if (!open && (kept.length >= MAX_THREADS || size + cost > ROOM_ALL)) continue;
+    if (!open && (kept.length >= MAX_THREADS || size + cost > ROOM_ALL)) {
+      shed.push({ ...t, turns });
+      continue;
+    }
     kept.push({ ...t, turns });
     size += cost;
   }
@@ -173,14 +261,86 @@ export function fit(threads: Thread[], openId: string): Thread[] {
    * Otherwise every visit that opened the chat and typed nothing would leave
    * a "New conversation" row behind, and after a week the list is mostly
    * those. The open one stays because it is the box being typed into.
+   *
+   * Those are dropped rather than archived, for the same reason: an archive of
+   * conversations nobody had is not a record of anything.
    */
-  return kept.filter((t) => t.turns.length > 0 || t.id === openId);
+  return {
+    kept: kept.filter((t) => t.turns.length > 0 || t.id === openId),
+    shed: shed.filter((t) => t.turns.length > 0),
+  };
+}
+
+/**
+ * The older conversations, newest first.
+ *
+ * Malformed entries are dropped rather than repaired, as everywhere else in
+ * this file — but note the difference in stakes: a half-read archive row is a
+ * row in a list, not a transcript about to be sent to the model.
+ */
+export function loadArchive(): Thread[] {
+  try {
+    const raw = localStorage.getItem(ARCHIVE_KEY);
+    if (!raw) return [];
+    const all = JSON.parse(raw) as Thread[];
+    if (!Array.isArray(all)) return [];
+    return all
+      .filter((t): t is Thread => Boolean(t) && typeof t.id === 'string' && Array.isArray(t.turns))
+      .map((t) => ({ ...t, title: titleFor(t.turns) }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Put conversations in the archive, newest first, inside its own limits.
+ *
+ * Re-archiving one already there replaces it rather than doubling it, which
+ * happens for a real reason: restore a thread, ask one more question, and it
+ * falls out again.
+ */
+export function archive(older: Thread[]): Thread[] {
+  const byId = new Map<string, Thread>();
+  for (const t of [...older, ...loadArchive()]) if (!byId.has(t.id)) byId.set(t.id, t);
+  const order = [...byId.values()].sort((a, b) => b.at - a.at);
+
+  const kept: Thread[] = [];
+  let size = 0;
+  for (const t of order) {
+    const cost = t.turns.reduce((n, x) => n + x.content.length, 0);
+    if (kept.length >= MAX_ARCHIVE || size + cost > ROOM_ARCHIVE) break;
+    kept.push(t);
+    size += cost;
+  }
+  try {
+    localStorage.setItem(ARCHIVE_KEY, JSON.stringify(kept));
+  } catch {
+    // The archive is the thing that may be lost when the store is full. It is
+    // already the older half, and losing it must not cost the open answer.
+  }
+  return kept;
+}
+
+/** Take one back out, so it can go into the list again. */
+export function unarchive(id: string): Thread | null {
+  const all = loadArchive();
+  const one = all.find((t) => t.id === id);
+  if (!one) return null;
+  try {
+    localStorage.setItem(ARCHIVE_KEY, JSON.stringify(all.filter((t) => t.id !== id)));
+  } catch {
+    /* nothing to do — it is about to be in the list instead */
+  }
+  return one;
 }
 
 export function save(kept: Kept): void {
   try {
-    const threads = fit(kept.threads, kept.openId);
+    const { kept: threads, shed } = sift(kept.threads, kept.openId);
     localStorage.setItem(KEY, JSON.stringify({ threads, openId: kept.openId }));
+    // After the write that matters, not before: a full store should cost the
+    // archive rather than the conversation on screen.
+    if (shed.length > 0) archive(shed);
   } catch {
     // A full store must not lose the answer that is on screen right now.
   }
@@ -222,6 +382,7 @@ export function load(): Kept {
           title: '',
           ...(typeof t.name === 'string' && t.name.trim() ? { name: t.name.trim() } : {}),
           ...(t.pinned ? { pinned: true as const } : {}),
+          ...(typeof t.from === 'string' && t.from ? { from: t.from } : {}),
         };
       })
       .map((t) => ({ ...t, title: titleFor(t.turns) }));
@@ -280,6 +441,9 @@ function migrate(): Kept | null {
 export function clearAll(): void {
   try {
     localStorage.removeItem(KEY);
+    // "Wipe every conversation" has to mean the older ones too. An archive
+    // that survives a wipe is the opposite of what the button promises.
+    localStorage.removeItem(ARCHIVE_KEY);
   } catch {
     /* nothing to do */
   }
