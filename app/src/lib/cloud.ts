@@ -432,7 +432,31 @@ export async function saveQueue(
  * forgotten here leaves rows behind. `privacy.test.ts` is what catches that:
  * the page claims every row goes, and the claim is checked against this list.
  */
-export const OWNED_TABLES = ['push_queue', 'push_devices', 'courses', 'state'];
+/**
+ * Every table a deleted account has to be emptied from.
+ *
+ * The last five exist in the database and nothing writes to them yet: the
+ * per-record sync and the calendar feed both landed their SQL before their
+ * client halves. They are listed anyway, because the order the two halves ship
+ * in decides whether this is a bug, and listing them first makes the order not
+ * matter. Deleting from an empty table costs nothing, and `deleteEverything`
+ * already tolerates a table a fork does not have.
+ *
+ * `calendar_feeds` is the one that would have hurt. A feed is a public URL
+ * serving a student's timetable to anybody holding the token — leaving the row
+ * behind would keep answering after the account it belonged to was gone.
+ */
+export const OWNED_TABLES = [
+  'push_queue',
+  'push_devices',
+  'courses',
+  'state',
+  'notes',
+  'tasks',
+  'appointments',
+  'sittings',
+  'calendar_feeds',
+];
 
 export async function deleteEverything(): Promise<string> {
   const db = await cloud();

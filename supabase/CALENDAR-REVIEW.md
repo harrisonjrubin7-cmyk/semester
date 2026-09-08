@@ -1,21 +1,32 @@
 # A published calendar feed — what to check before deploying
 
-> **Merged in PR #4, and the SQL was applied on 8 September 2026** as migration
-> `calendar_feeds`.
+> **Merged in PR #4. The SQL was applied and the function deployed on
+> 8 September 2026** — migration `calendar_feeds`, function `calendar` at
+> version 1, `verify_jwt` off as this file requires.
 >
-> The table, its policy and its trigger are live. **The Edge Function is still
-> undeployed and nothing is wired into a screen**, so the feature is still off
-> — a feed cannot be published or fetched. Applying the SQL created a table
-> nothing writes to yet.
+> `calendar_feeds` is also now in `OWNED_TABLES` in `app/src/lib/cloud.ts`.
+> That was listed below as something to do "when the client half ships"; it was
+> done early instead, because the order the two halves ship in should not decide
+> whether deleting an account leaves a live feed answering. Deleting from an
+> empty table costs nothing.
+>
+> **The client half is still not wired into a screen**, so no feed can be
+> published and every fetch returns the empty 404 calendar. The endpoint is
+> live and correct; there is simply nothing in the table.
 >
 > The policy was hoisted to `(select auth.uid())` before it ran, matching the
-> rest of the schema; the file now carries that. Security advisors return no
-> lints.
+> rest of the schema; `calendar.sql` now carries that. Security advisors return
+> no lints.
 >
-> Still to do before this is a feature: deploy `supabase/functions/calendar`,
-> wire the client half, and add `calendar_feeds` to `OWNED_TABLES` in
-> `app/src/lib/cloud.ts` — see the note at the end of this file about a deleted
-> account leaving a live feed behind.
+> Not verifiable from the session that deployed it: `*.supabase.co` is outside
+> that container's egress allowlist, so the two checks worth making by hand are
+> that a malformed token and a well-formed unknown one both return **404 with
+> an identical empty VCALENDAR** —
+>
+> ```
+> curl -i https://<project>.supabase.co/functions/v1/calendar/nope
+> curl -i https://<project>.supabase.co/functions/v1/calendar/$(openssl rand -hex 24)
+> ```
 
 The client library, the SQL and the Edge Function are all here; **nothing is
 wired into a screen yet**, and that is deliberate — see "What is not here" at

@@ -137,4 +137,19 @@ describe('"delete my account" really means every row', () => {
     expect(OWNED_TABLES).toContain('courses');
     expect(OWNED_TABLES).toContain('push_queue');
   });
+
+  it('names the tables whose SQL shipped before their client half', async () => {
+    /*
+     * These exist in the database and nothing writes to them yet. Listed now
+     * so that whichever half ships first, a deleted account is still empty.
+     *
+     * `calendar_feeds` is the one that would have hurt: a feed is a public URL
+     * serving a timetable to anybody holding the token, so a row left behind
+     * keeps answering after the account is gone.
+     */
+    const { OWNED_TABLES } = await import('./cloud');
+    for (const t of ['notes', 'tasks', 'appointments', 'sittings', 'calendar_feeds']) {
+      expect(OWNED_TABLES, t).toContain(t);
+    }
+  });
 });
