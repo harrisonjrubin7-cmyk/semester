@@ -1,8 +1,12 @@
 # A published calendar feed — what to check before deploying
 
-On branch `ics-feed`. The client library, the SQL and the Edge Function are all
-here; **nothing is wired into a screen yet**, and that is deliberate — see
-"What is not here" at the end.
+> **Merged in PR #4.** Nothing changed for anybody when it landed, and that is
+> still true: the SQL is unrun, the Edge Function undeployed, and nothing is
+> wired into a screen. Merging moved the code; it did not turn the feature on.
+
+The client library, the SQL and the Edge Function are all here; **nothing is
+wired into a screen yet**, and that is deliberate — see "What is not here" at
+the end.
 
 ## First, a correction to the plan
 

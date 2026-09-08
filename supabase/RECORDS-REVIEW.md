@@ -1,8 +1,12 @@
-# Per-record sync — for review
+# Per-record sync
 
-Nothing on this branch touches your database or changes what the deployed app
-does. The SQL is written and unrun; the client half is deliberately not wired
-up yet. Read this, then decide.
+> **Merged in PR #5**, deliberately, despite the commit message saying "for
+> review, not for merging" — that message describes the branch, not the
+> decision, and cannot be edited now it is in main's history.
+
+Nothing here touches your database or changes what the deployed app does. The
+SQL is written and unrun; the client half is deliberately not wired up yet.
+Merging moved the code; the decision below is still open.
 
 ## The bug
 

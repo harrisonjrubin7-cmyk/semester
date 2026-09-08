@@ -1,8 +1,21 @@
-# Classmates, for any university — what to check before merging
+# Classmates, for any university
 
-On branch `classmates-any-school`. Not merged, because the client half and the
-SQL half have to land together: the room key changes shape, and the existing
-`code` check constraint refuses the new shape.
+> **Merged in PR #3 — and the SQL half has to be run now.**
+>
+> This document was written before the merge and said the two halves had to
+> land together. The client half has landed. Until `classmates-schools.sql`
+> runs against the live database, **joining a room fails**: the client now
+> writes `vanderbilt/ECON 1020` (`roomKey` in `app/src/lib/classmates.ts`) and
+> the live `enrollments.code` constraint is still
+> `check (code ~ '^[A-Z]{2,4} [0-9]{3,4}[A-Z]?$')`, which refuses the slash
+> and the lowercase prefix. The insert is rejected outright.
+>
+> It affects signed-in users only, and only Classmates — nothing else reads
+> that table. Run the SQL, in the order below, and it is resolved. The checks
+> in "What to check in the SQL" are still the right ones to make first.
+
+The rest of this document is as written before the merge, and its reasoning
+stands.
 
 ## The thing being fixed
 
