@@ -493,7 +493,12 @@ function Header() {
         {upTo ? (
           <button
             type="button"
-            className="bare kicker"
+            /* The way up to the course, and the only one on screens opened
+               from a deadline. Measured 115×23 — a caps kicker's height, not
+               a thumb's. `tap-y`: the header is a row, with the Back button
+               and the action icons beside it and nothing tappable above or
+               below. */
+            className="bare kicker tap-y"
             onClick={() => dispatch({ type: 'openCourse', id: upTo.id })}
             aria-label={`Up to ${upTo.code}`}
             style={{

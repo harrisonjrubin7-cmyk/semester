@@ -141,7 +141,10 @@ export function Links() {
                     )}
                     <button
                       type="button"
-                      className="bare"
+                      // Caps at 11px measured 30×17 — the word's size rather
+                      // than a fingertip's. `tap-y`: it is the tail of a row
+                      // in a vertical list, so the room is above and below.
+                      className="bare tap-y"
                       onClick={() => {
                         setDraft(url);
                         setEditing(open ? null : link.id);

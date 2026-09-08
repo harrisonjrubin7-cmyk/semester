@@ -6,6 +6,7 @@ import { lights } from '../../lib/settings';
 import { SectionLabel, Segmented, TickBox, Toggle } from '../../components/ui';
 import { countHidden, revealLine } from '../../lib/reveal';
 import { TabChooser } from '../../components/TabChooser';
+import { Reorder } from '../../components/Reorder';
 import { LayoutPicker, NavPicker } from '../../components/Appearance';
 import { BADGES, DIRECTORIES, FEEDS, LABELS } from '../../lib/look';
 import { SECTIONS, move, ordered } from '../../lib/feed';
@@ -159,31 +160,13 @@ export function SettingsNav() {
                       <div style={{ fontSize: 'var(--type-md)' }}>{section?.label ?? id}</div>
                       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>{section?.blurb}</div>
                     </div>
-                    <button
-                      type="button"
-                      className="bare"
-                      disabled={i === 0}
-                      onClick={() => dispatch({ type: 'setFeedOrder', order: move(state.feedOrder, id, -1) })}
-                      aria-label={`Move ${section?.label} up`}
-                      style={{ width: 26, flex: 'none', opacity: i === 0 ? 0.2 : 0.6, fontSize: 'var(--type-lg)' }}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      className="bare"
-                      disabled={i === all.length - 1}
-                      onClick={() => dispatch({ type: 'setFeedOrder', order: move(state.feedOrder, id, 1) })}
-                      aria-label={`Move ${section?.label} down`}
-                      style={{
-                        width: 26,
-                        flex: 'none',
-                        opacity: i === all.length - 1 ? 0.2 : 0.6,
-                        fontSize: 'var(--type-lg)',
-                      }}
-                    >
-                      ↓
-                    </button>
+                    <Reorder
+                      label={section?.label ?? id}
+                      atStart={i === 0}
+                      atEnd={i === all.length - 1}
+                      onUp={() => dispatch({ type: 'setFeedOrder', order: move(state.feedOrder, id, -1) })}
+                      onDown={() => dispatch({ type: 'setFeedOrder', order: move(state.feedOrder, id, 1) })}
+                    />
                   </div>
                 );
               })}

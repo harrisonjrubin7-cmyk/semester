@@ -69,6 +69,14 @@ export function ChipRow<T extends string>({
             <button
               key={o}
               type="button"
+              /* No `tap-y` here, deliberately, and the measurement is why.
+                 A chip is 25–29px tall, which already clears the 24×24 that
+                 WCAG 2.2 AA asks for, and screens stack these rows: Calendar
+                 puts a `Segmented` directly above a `ChipRow`. Growing both
+                 to 44px made their targets overlap by 4px, and in that band
+                 the lower row wins a tap meant for the upper one. A chip at
+                 29px is a worse target than one at 44; a chip that sometimes
+                 does the wrong thing is a worse control. */
               className="btn"
               onClick={() => onChange(o)}
               aria-pressed={on}
@@ -113,6 +121,9 @@ export function Segmented<T extends string>({
           <button
             key={o.id}
             type="button"
+            // No `tap-y`, for the reason in `ChipRow` above: these clear
+            // 24×24 already, and the rows stack close enough that expanding
+            // them made adjacent rows fight over a 4px band.
             className="btn"
             onClick={() => onChange(o.id)}
             aria-pressed={on}
