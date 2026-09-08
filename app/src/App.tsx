@@ -172,6 +172,22 @@ function Loading() {
   );
 }
 
+/**
+ * The way past the chrome, for a keyboard.
+ *
+ * One component rather than the markup twice: the phone had it and the wide
+ * layout did not, which is the failure mode of anything written out in two
+ * return statements. `#main` is the `<main>` in `ScrollArea`, which is the
+ * same element in both.
+ */
+function SkipLink() {
+  return (
+    <a className="skip-link" href="#main">
+      Skip to content
+    </a>
+  );
+}
+
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
   const { state, now, catalog } = useStore();
@@ -1107,6 +1123,9 @@ export default function App() {
        * second half of an empty grid.
        */
       <div className={chrome.rail ? 'desk' : 'desk desk-one'}>
+        {/* First in the tree, so it is the first tab stop. See the note in
+            the phone layout below. */}
+        <SkipLink />
         <Fresh />
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
             and not another. Renders nothing unless the sheet is open. */}
@@ -1172,10 +1191,15 @@ export default function App() {
         focus. With fifty screens behind a header and a tab bar, a keyboard
         user's only route into the content was to tab through the whole of
         both, on every screen, every time.
+
+        In both layouts, which it was not: this was in the phone's return
+        statement only, so the wide one — a laptop, where a keyboard is the
+        primary input rather than an accessibility route — had no skip link
+        at all. Tabbing into a screen there meant eleven stops through the
+        rail and the header first, every time, which is exactly the problem
+        this element exists to solve.
       */}
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
+      <SkipLink />
       <Fresh />
       <Ringing />
       <PushTop />
