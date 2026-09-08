@@ -501,7 +501,6 @@ export type Screen =
   | 'essay'
   | 'deck'
   | 'exam'
-  | 'check'
   | 'ahead'
   | 'announce'
   | 'costs'

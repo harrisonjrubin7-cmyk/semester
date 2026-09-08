@@ -119,3 +119,28 @@ describe('a link somebody can send', () => {
     );
   });
 });
+
+describe('links to screens that have since merged', () => {
+  it('sends a retired screen to the one it merged into', () => {
+    // Somebody bookmarked these before the merges. A saved link landing on a
+    // screen the app no longer has is a blank page, which reads as the app
+    // being broken rather than as a screen having moved.
+    expect(fromHash('#/weekly')?.screen).toBe('brief');
+    expect(fromHash('#/worked')?.screen).toBe('brief');
+    expect(fromHash('#/check')?.screen).toBe('announce');
+  });
+
+  it('leaves every screen that still exists alone', () => {
+    expect(fromHash('#/brief')?.screen).toBe('brief');
+    expect(fromHash('#/announce')?.screen).toBe('announce');
+    expect(fromHash('#/home')?.screen).toBe('home');
+  });
+
+  it('still refuses a name it has never had', () => {
+    // The rename table is not a licence to guess: an unknown name is a route
+    // to a screen the switch does not have, which is the caller's problem to
+    // notice, not this file's to invent an answer for.
+    expect(fromHash('#/nonsense')?.screen).toBe('nonsense');
+    expect(fromHash('#/../etc')).toBeNull();
+  });
+});

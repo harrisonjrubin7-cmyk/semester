@@ -45,11 +45,10 @@ const People = lazy(() => import('./screens/People').then((m) => ({ default: m.P
 const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
 const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
-const Announce = lazy(() => import('./screens/Announce').then((m) => ({ default: m.Announce })));
+const Changes = lazy(() => import('./screens/Changes').then((m) => ({ default: m.Changes })));
 const Ask = lazy(() => import('./screens/Ask').then((m) => ({ default: m.Ask })));
 const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
 const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
-const CheckDates = lazy(() => import('./screens/CheckDates').then((m) => ({ default: m.CheckDates })));
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
 const Cloud = lazy(() => import('./screens/Cloud').then((m) => ({ default: m.Cloud })));
 const Connect = lazy(() => import('./screens/Connect').then((m) => ({ default: m.Connect })));
@@ -332,12 +331,10 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'A real PowerPoint file', title: 'Make a deck' };
     case 'exam':
       return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
-    case 'check':
-      return { kicker: 'Syllabus against calendar', title: 'Check the dates' };
     case 'ahead':
       return { kicker: 'Counted, before it happens', title: 'The week ahead' };
     case 'announce':
-      return { kicker: 'The email that moves a date', title: 'An announcement' };
+      return { kicker: 'What moved, and what said so', title: 'A change to a date' };
     case 'costs':
       return { kicker: 'Books, fees and what came back', title: 'What this term cost' };
     case 'gap':
@@ -841,12 +838,10 @@ function CurrentScreen() {
       return <Deck />;
     case 'exam':
       return <Exam />;
-    case 'check':
-      return <CheckDates />;
     case 'ahead':
       return <Ahead />;
     case 'announce':
-      return <Announce />;
+      return <Changes />;
     case 'costs':
       return <Costs />;
     case 'gap':

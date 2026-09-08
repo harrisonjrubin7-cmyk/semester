@@ -31,7 +31,7 @@
  */
 
 import type { Catalog } from '../data/catalog';
-import type { State } from '../state/shape';
+import type { Action, State } from '../state/shape';
 import type { DatedItem, Screen } from './types';
 import type { Capabilities } from './school';
 import { swipeUnit } from './school';
@@ -69,6 +69,17 @@ export interface TopStat {
 export interface TopAction {
   label: string;
   screen: Screen;
+  /**
+   * Set before the navigation, where the screen has more than one thing on it.
+   *
+   * A destination used to be one screen doing one thing, so a label and a
+   * screen name said everything. Two merges later some screens carry a switch
+   * — the report's grain, the source a changed date arrived in — and "Check
+   * the dates" landing on the half about pasted emails is the action not
+   * kept. Still no callback: this is an action object the registry describes
+   * and `SoftTop` dispatches.
+   */
+  also?: Action;
 }
 
 export interface TopBar {
@@ -269,7 +280,13 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: count(courses, 'course') + ' this term',
         },
         stats: term,
-        bar: { primary: { label: 'Check the dates', screen: 'check' } },
+        bar: {
+          primary: {
+            label: 'Check the dates',
+            screen: 'announce',
+            also: { type: 'setChanges', source: 'feed' },
+          },
+        },
       };
 
     case 'tonight': {
@@ -329,7 +346,11 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     }
 
     case 'registrar':
-      return holds('Term deadlines', state.registrar.length, 'date', { label: 'Check the dates', screen: 'check' });
+      return holds('Term deadlines', state.registrar.length, 'date', {
+        label: 'Check the dates',
+        screen: 'announce',
+        also: { type: 'setChanges', source: 'feed' },
+      });
 
     case 'import':
       return {
@@ -350,7 +371,10 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
 
     case 'announce':
-      return holds('Folded in', state.updates.length, 'addition', { label: 'Check the dates', screen: 'check' });
+      // Not "Check the dates" any more: that is this screen's other source, so
+      // the bar would offer the screen you are standing on. After a change is
+      // applied the next thing is the course it changed.
+      return holds('Folded in', state.updates.length, 'addition', { label: 'Edit the course', screen: 'edit' });
 
     // ── Study ─────────────────────────────────────────────────────────────
     case 'study': {
@@ -486,17 +510,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         bar: { primary: { label: 'Tonight', screen: 'tonight' } },
       };
     }
-
-    case 'check':
-      return {
-        hero: {
-          label: 'Check the dates',
-          figure: num(catalog.items.length),
-          foot: 'syllabus dates to check against the LMS',
-        },
-        stats: term,
-        bar: { primary: { label: 'Connect accounts', screen: 'connect' } },
-      };
 
     // ── Campus ────────────────────────────────────────────────────────────
     case 'meals':

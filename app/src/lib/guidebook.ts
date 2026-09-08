@@ -118,7 +118,7 @@ export const TASKS: { task: string; why: string; steps: Screen[] }[] = [
   {
     task: 'I want to fix bad import data',
     why: 'Every screen here shows the old and the new side by side before anything changes.',
-    steps: ['edit', 'check', 'announce', 'import'],
+    steps: ['edit', 'announce', 'import'],
   },
 ];
 

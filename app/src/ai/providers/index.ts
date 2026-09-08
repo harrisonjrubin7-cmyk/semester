@@ -65,7 +65,6 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   import: upkeep.importer,
   edit: upkeep.edit,
   announce: upkeep.announce,
-  check: upkeep.check,
   grades: core.grades,
   ahead: upkeep.ahead,
   behind: upkeep.behind,

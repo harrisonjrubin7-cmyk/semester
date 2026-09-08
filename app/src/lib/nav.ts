@@ -334,10 +334,14 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'announce',
-    label: 'Fold in an announcement',
-    short: 'Notices',
-    blurb: 'Paste the email that moved a deadline, and take the changes one at a time.',
-    keywords: 'announcement announce email post update moved change changed cancelled canceled postponed rescheduled deadline date shift new due date brightspace canvas notice message professor said class email paste',
+    label: 'A change to a date',
+    short: 'Changes',
+    blurb: 'The email that moved a deadline, or the calendar that disagrees — taken one at a time.',
+    // Two screens' worth. "Check the dates" was its own destination and is a
+    // source of this one now, so its words have to keep landing somewhere.
+    keywords:
+      'announcement announce email post update moved change changed cancelled canceled postponed rescheduled deadline date shift new due date brightspace canvas notice message professor said class email paste ' +
+      'check dates verify compare reconcile lms ics calendar feed disagree wrong date out of date stale syllabus says different mismatch',
     group: 'Courses',
     taskTags: ['due', 'data'],
     root: 'courses',
@@ -402,16 +406,6 @@ export const DESTINATIONS: Destination[] = [
     group: 'Semester',
     taskTags: ['week'],
     root: 'home',
-  },
-  {
-    screen: 'check',
-    label: 'Check the dates',
-    short: 'Check',
-    blurb: 'Your syllabus dates against what the LMS calendar says today.',
-    keywords: 'check dates changed moved deadline reconcile compare diff brightspace calendar feed ics syllabus out of date wrong date updated rescheduled verify audit',
-    group: 'Standing',
-    taskTags: ['due', 'data'],
-    root: 'courses',
   },
   {
     screen: 'grades',

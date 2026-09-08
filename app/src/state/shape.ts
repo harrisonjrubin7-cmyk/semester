@@ -531,6 +531,14 @@ export interface Ephemeral {
    * same reason `calView` is not — coming back tomorrow should open today.
    */
   report: 'day' | 'week' | 'term';
+  /**
+   * Which post a change arrived in — an email, or a calendar.
+   *
+   * A field for the same reason the report's grain is one: the two used to be
+   * two screens, so the links that pointed at "Check the dates" have to be
+   * able to land on that half rather than on the other one.
+   */
+  changes: 'told' | 'feed';
   /** Which schedule view the calendar is showing. */
   calView: 'day' | 'week' | 'month' | 'semester';
   /** Which sources the calendar is showing — combined, or one at a time. */
@@ -853,6 +861,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     evFilter: 'All',
     calTab: 'deadlines',
     report: 'day',
+    changes: 'told',
     calView: 'month',
     calSource: 'all',
     calDay: null,
@@ -1310,6 +1319,7 @@ export type Action =
   | { type: 'nextQuestion' }
   | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }
   | { type: 'setReport'; grain: 'day' | 'week' | 'term' }
+  | { type: 'setChanges'; source: 'told' | 'feed' }
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }

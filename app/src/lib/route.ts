@@ -78,6 +78,8 @@ const RETIRED: Record<string, Screen> = {
   // Three grains of one report — see `screens/Reports.tsx`.
   weekly: 'brief' as Screen,
   worked: 'brief' as Screen,
+  // Both halves of "something says a date moved" — see `screens/Changes.tsx`.
+  check: 'announce' as Screen,
 };
 
 /** A screen id is already url-safe; an account's own ids may not be. */
