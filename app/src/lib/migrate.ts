@@ -31,7 +31,7 @@
  */
 
 /** The shape this build writes. Bump it when you add a step below. */
-export const SCHEMA = 2;
+export const SCHEMA = 3;
 
 export interface Step {
   /** The version this step produces. */
@@ -52,6 +52,28 @@ export const STEPS: Step[] = [
     to: 2,
     describe: 'Give every stored copy a version marker of its own.',
     run: (s) => s,
+  },
+  {
+    to: 3,
+    describe: 'Let the layout answer for a directory nobody chose.',
+    /*
+     * `directory` shipped with `list` as its initial value, and the state is
+     * written whole on every save, so every stored copy has a literal `list`
+     * in it whether or not anybody opened the setting. That made the unchosen
+     * state unreachable and `directoryOf`'s soft fallback dead: switching to
+     * the soft layout left the fifty-five-row column in place.
+     *
+     * Emptying it puts those copies back into "nobody has chosen", where the
+     * layout answers. Only where the shell is not soft, because that is where
+     * a stored `list` says nothing: it is what the resolver would return
+     * anyway, so nothing on screen moves, and the answer only starts
+     * differing if they switch to soft — which is the point. A `list` stored
+     * against a soft shell is the opposite: soft's own answer is the tiles,
+     * so somebody had to ask for that, and it is kept.
+     *
+     * `tiles` is never touched, under any shell. It is only ever a choice.
+     */
+    run: (s) => (s.directory === 'list' && s.shell !== 'soft' ? { ...s, directory: '' } : s),
   },
 ];
 

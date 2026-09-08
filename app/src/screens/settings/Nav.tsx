@@ -8,7 +8,7 @@ import { countHidden, revealLine } from '../../lib/reveal';
 import { TabChooser } from '../../components/TabChooser';
 import { Reorder } from '../../components/Reorder';
 import { LayoutPicker, NavPicker } from '../../components/Appearance';
-import { BADGES, DIRECTORIES, FEEDS, LABELS } from '../../lib/look';
+import { BADGES, DIRECTORIES, FEEDS, LABELS, directoryOf } from '../../lib/look';
 import { SECTIONS, move, ordered } from '../../lib/feed';
 
 const HINT = {
@@ -48,6 +48,7 @@ const LABEL_STYLE = {
 export function SettingsNav() {
   const { state, dispatch, facts } = useStore();
   const row = useRowStyle(0);
+  const drawn = directoryOf(state.directory, state.shell);
 
   return (
     <SettingsPage
@@ -180,12 +181,22 @@ export function SettingsNav() {
           >
             <CustomRow>
               <SectionLabel style={LABEL_STYLE}>Drawn as</SectionLabel>
+              {/*
+                Resolved, not raw. Somebody who has never touched this row has
+                no stored answer, and the layout is answering for them — soft
+                draws the tiles. Showing the empty string would light neither
+                option and describe neither, which is a control claiming the
+                app is in a state it is not in. See `directoryOf`.
+
+                Touching it at all is a choice, including choosing what was
+                already on screen: from here the layout has no further say.
+              */}
               <Segmented
                 options={DIRECTORIES.map((d) => ({ id: d.id, label: d.label }))}
-                value={state.directory}
+                value={drawn}
                 onChange={(directory) => dispatch({ type: 'setLook', look: { directory } })}
               />
-              <div style={HINT}>{DIRECTORIES.find((d) => d.id === state.directory)?.blurb}</div>
+              <div style={HINT}>{DIRECTORIES.find((d) => d.id === drawn)?.blurb}</div>
             </CustomRow>
             <CustomRow>
               <Toggle

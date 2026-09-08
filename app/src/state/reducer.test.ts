@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { reducer } from './reducer';
 import { DEFAULT_PERSISTED, initialEphemeral, type State } from './shape';
+import { directoryOf } from '../lib/look';
 
 /**
  * The reducer, tested at last.
@@ -463,6 +464,35 @@ describe('the look', () => {
     const s = reducer(blank(), { type: 'setLook', look: { accent: 'copper' } });
     expect(s.accent).toBe('copper');
     expect(s.typeface).toBe(DEFAULT_PERSISTED.typeface);
+  });
+
+  /*
+   * The directory ships unchosen, and has to stay that way through a change of
+   * layout. It was `list` here once, which made "nobody has chosen"
+   * unreachable — the state is written whole every save, so the first save
+   * stamped an answer nobody had given, and the soft layout could never hand
+   * anybody the tiles again. See `directoryOf` in `lib/look.ts`.
+   */
+  it('ships the directory unchosen, so the layout can answer for it', () => {
+    expect(DEFAULT_PERSISTED.directory).toBe('');
+    expect(directoryOf(DEFAULT_PERSISTED.directory, DEFAULT_PERSISTED.shell)).toBe('list');
+  });
+
+  it('does not answer the directory on the way past when the layout changes', () => {
+    const s = reducer(blank(), { type: 'setLook', look: { shell: 'soft' } });
+    expect(s.directory).toBe('');
+    expect(directoryOf(s.directory, s.shell)).toBe('tiles');
+    // And back again, still never having been asked.
+    const back = reducer(s, { type: 'setLook', look: { shell: 'plain' } });
+    expect(back.directory).toBe('');
+    expect(directoryOf(back.directory, back.shell)).toBe('list');
+  });
+
+  it('lets the choice outrank the layout once it is made', () => {
+    const s = reducer(blank(), { type: 'setLook', look: { shell: 'soft', directory: 'list' } });
+    expect(directoryOf(s.directory, s.shell)).toBe('list');
+    const t = reducer(blank(), { type: 'setLook', look: { directory: 'tiles' } });
+    expect(directoryOf(t.directory, t.shell)).toBe('tiles');
   });
 });
 
