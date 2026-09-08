@@ -56,7 +56,7 @@ import type { Cost } from '../lib/cost';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
-import { readLook, type Look } from '../lib/look';
+import { navOf, readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
 import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
 import { readOverrides, type GradeSystem } from '../lib/cutoffs';
@@ -412,8 +412,10 @@ export interface Persisted {
   tone: Tone;
   badges: string;
   feed: string;
-  /** `plain` or `grouped`. Which layout every screen is drawn in. */
+  /** `plain`, `grouped` or `soft`. Which layout every screen is drawn in. */
   shell: string;
+  /** `list` or `tiles`. How the directory of everything is drawn. */
+  directory: string;
   /**
    * How the tiles inside each shelf are arranged, where somebody has said.
    *
@@ -796,6 +798,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   badges: 'due',
   feed: 'cards',
   shell: 'plain',
+  directory: 'list',
   groupOrder: '',
   hue: -1,
 };
@@ -817,6 +820,7 @@ export function currentLook(state: Persisted): Look {
     badges: state.badges,
     feed: state.feed,
     shell: state.shell,
+    directory: state.directory,
     groupOrder: state.groupOrder,
     hue: state.hue,
   };
@@ -979,6 +983,18 @@ export function loadPersisted(): Persisted {
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
       // sync, or one entry long, and any of those renders a broken bar.
       tabs: readTabs(saved.tabs),
+      /*
+       * Read back through `navOf` for the same reason the tabs are.
+       *
+       * The navigation used to come out of storage untouched, and every place
+       * that draws chrome asks it by name — `nav === 'tabs'`, `=== 'feed'`,
+       * and so on. A value none of them matches is not a fallback to the
+       * default, it is *no navigation at all*: no bar, no rail, no pills, and
+       * on a phone no way off the screen you happen to be on. A stale build,
+       * a half-applied sync or a hand-edited key is enough to produce one.
+       * `navOf` turns anything it does not recognise back into the bar.
+       */
+      nav: navOf(typeof saved.nav === 'string' ? saved.nav : undefined),
       tone: readTone(saved.tone),
       yours: saved.yours ?? {},
       myRules: readRules(saved.myRules),
@@ -1132,6 +1148,7 @@ export function pickPersisted(state: State): Persisted {
     badges: state.badges,
     feed: state.feed,
     shell: state.shell,
+    directory: state.directory,
     groupOrder: state.groupOrder,
     hue: state.hue,
   };

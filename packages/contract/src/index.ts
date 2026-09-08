@@ -44,6 +44,15 @@ export interface Envelope {
    * Diagnostics only, and this is load-bearing: the moment `origin` decides a
    * conflict, one client silently wins every race and the other's edits
    * disappear in a way nobody can see. Precedence is `updatedAt`, alone.
+   *
+   * There is one client now. The separately-built website that used to ship
+   * under `/web/` — a second copy of the term and the study side — has been
+   * removed, so nothing writes `'web'` any more. The value stays in the union
+   * because rows written by it are still in people's accounts and a type that
+   * cannot describe stored data is a type that makes reading it an error.
+   * Nothing may start writing it again: a second client is the arrangement
+   * this field was invented to keep track of, and having one is better than
+   * tracking two.
    */
   origin: 'app' | 'web';
 }

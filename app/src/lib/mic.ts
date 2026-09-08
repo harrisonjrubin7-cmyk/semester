@@ -16,6 +16,8 @@
  * press record, never on load.
  */
 
+import { dateToIso } from './date';
+
 export type MicState = 'idle' | 'recording' | 'paused';
 
 export interface Recording {
@@ -159,9 +161,7 @@ export function clockOf(seconds: number): string {
 
 /** A sensible filename, since these end up in a list beside uploaded PDFs. */
 export function recordingName(label: string, at = new Date()): string {
-  const stamp = `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, '0')}-${String(
-    at.getDate(),
-  ).padStart(2, '0')}`;
+  const stamp = dateToIso(at);
   const clean = label.trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 40);
   return `${clean || 'recording'}-${stamp}`;
 }

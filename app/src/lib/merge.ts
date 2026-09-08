@@ -110,6 +110,11 @@ export const STRATEGY: Record<string, Strategy> = {
   // attention. Both about you.
   feed: 'theirs',
   shell: 'theirs',
+  // Whether the directory is a list or nine tiles. `theirs` for the same
+  // reason the shell is: somebody who has learned that Data is bottom-left
+  // has learned it, and finding a column of fifty-five rows on the laptop
+  // instead means learning the place twice.
+  directory: 'theirs',
   badges: 'theirs',
   // An arrangement somebody made on purpose, and one they made once. It
   // follows the account rather than the device for the same reason the shell

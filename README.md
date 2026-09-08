@@ -46,9 +46,14 @@ seven phones side by side, and the phone itself (`Semester Phone.dc.html`), a
 
 Three things were decided rather than inherited:
 
-- **Both navigation structures ship.** The canvas compared a tab bar against a
-  single filtered feed. Rather than pick, both are built and switchable in
-  Settings, so the comparison can be settled by using it.
+- **Navigation and layout are two settings, not two apps.** The canvas compared
+  a tab bar against a single filtered feed; rather than pick, both ship, and two
+  more joined them. They are one axis — *how you move* — with exactly one
+  navigation ever drawn. *How a screen is drawn* is the second axis, and adds no
+  navigation of its own. Both are chosen on one page, **Settings → Layout and
+  navigation**, with a drawing of each option. See
+  [`app/src/lib/chrome.ts`](app/src/lib/chrome.ts) for the rule and the test that
+  holds every combination to it.
 - **The date is live.** The prototype pinned itself to Thursday 3 September.
   Here every relative label, the class rail, the countdown and the exam radar are
   derived from the real clock, with that Thursday's specifics kept as dated

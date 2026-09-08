@@ -1,5 +1,6 @@
 import type { Turn } from './claude';
 import { load as loadOne, clear as clearOne, fit as fitOne, trim, ROOM } from './chatlog';
+import { newId as makeId } from './idb';
 
 /**
  * More than one conversation, and the ability to go back to one.
@@ -194,10 +195,12 @@ export function blank(): Thread {
 }
 
 function newId(): string {
-  // Time plus a little noise. Two threads made in the same millisecond is not
-  // a thing a person can do, but a restored backup landing on the same clock
-  // tick is, and an id collision here silently merges two conversations.
-  return `t${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  // The prefix is the whole difference from every other id in the app, and
+  // `lib/idb.ts` takes it as an argument. The reason it wants one is still
+  // worth keeping: two threads made in the same millisecond is not something
+  // a person can do, but a restored backup landing on the same clock tick is,
+  // and an id collision here silently merges two conversations.
+  return makeId('t');
 }
 
 /**

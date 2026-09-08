@@ -11,6 +11,7 @@ import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
+import { homeShape } from '../lib/chrome';
 import {
   appointmentsOn,
   railFor,
@@ -1010,7 +1011,10 @@ function FeedHome() {
 export function Today() {
   const { state, catalog } = useStore();
   if (catalog.empty) return <FirstRun where="on today" />;
-  return state.nav === 'feed' ? <FeedHome /> : <TabHome />;
+  // `homeShape` rather than a second `nav === 'feed'` written here. This test
+  // and the one in `App.tsx` used to be separate, so a navigation added to
+  // one and not the other got the feed's home screen inside the bar's chrome.
+  return homeShape(state.nav) === 'feed' ? <FeedHome /> : <TabHome />;
 }
 
 /** Re-exported for the Me screen's load bars. */

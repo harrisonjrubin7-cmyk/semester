@@ -41,7 +41,7 @@ import type { Destination, Group } from '../../lib/nav';
 import type { Screen } from '../../lib/types';
 import { TabGlyph } from '../TabIcon';
 import { Blueprint } from '../Blueprint';
-import { Caps } from './Soft';
+import { Caps } from '../soft/Soft';
 
 /** How far down a swipe has to travel before it counts as a dismissal. */
 const SWIPE = 70;

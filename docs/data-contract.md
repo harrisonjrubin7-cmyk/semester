@@ -36,27 +36,20 @@ can trust it.
 
 **What I need:** the website source in this repo, or its type definitions.
 
-### Update — the keys are known now
+### Update — the blocker is gone, because the second client is
 
-This section used to end that list with "`semweb:v1`, `semweb:custom:v1`, … no
-file in the repo mentions these keys". That is no longer true, and the change is
-worth recording rather than quietly deleting.
+The three built pages that used to live at `app/public/web/` — `index.html`,
+`app.html` and `study.html`, holding `semweb:cloud:v1`, `semweb:v1`,
+`semweb:custom:v1`, `semweb:grades:v1`, `semweb:places:v1` and
+`semweb:study:v1` — have been removed. They were generated bundles: one line of
+minified HTML wrapping the real document as an escaped string, unopenable,
+untestable, and a second version of the app one tap from the first.
 
-Three **built** pages now live at `app/public/web/` and deploy with the app:
-`index.html`, `app.html` and `study.html`. They are generated bundles — one line
-of minified HTML wrapping the real document as an escaped string — so they are
-not the source this section is still asking for, and nothing in them can be
-edited or refactored. But they can be read, and they carry the keys:
-
-| Page | Keys it reads and writes |
-| --- | --- |
-| `index.html` | `semweb:cloud:v1` |
-| `app.html` | `semweb:v1`, `semweb:custom:v1`, `semweb:grades:v1`, `semweb:places:v1` |
-| `study.html` | `semweb:study:v1`, `semweb:custom:v1` |
-
-That is the *names*, not the shapes. Filling the mapping table still needs
-either the source or a dump from a browser with real data in it — a key with an
-unknown value shape is a column heading, not a column.
+So the mapping table this section could not fill no longer has a second column
+to fill. There is one client, it is `app/`, and every key it holds is already
+tabled below. The reconciliation problem the whole of Phase 1 was shaped around
+was a consequence of having two front ends; the answer was to stop having two,
+not to keep them in step.
 
 What it does settle is §2.5, and in the direction the plan already recommended:
 the website is served **from the same origin as the app**, so there is one
@@ -64,11 +57,10 @@ the website is served **from the same origin as the app**, so there is one
 Phase 1 does not exist. `SETUP.md` §4 has the deployment detail, and the list of
 defects in those bundles that this repository repairs at build time.
 
-One thing that can be settled without it, and is worth settling first, is §2.5:
-if the website becomes *the desktop client at the same origin*, the
-cross-origin sync problem disappears and roughly half of Phase 1 stops being
-necessary at all. The plan already recommends that. Deciding it before building
-adapters would avoid building adapters for an arrangement that is about to be
+§2.5 is settled, and in the direction the plan recommended without going far
+enough: the desktop client is *the app*, at the same address, which from 760px
+unrolls its tab bar into a rail. There is no cross-origin sync problem, no
+second `localStorage`, and no adapter to write for an arrangement that has been
 retired.
 
 ---

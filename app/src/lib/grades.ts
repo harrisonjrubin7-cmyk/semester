@@ -51,6 +51,25 @@ export interface Standing {
 }
 
 /**
+ * The plain percentage in a piece of syllabus wording, or 0.
+ *
+ * The simplest of the three readings of a weight in this file, and the one
+ * three other files had each written out for themselves: `behind.ts` and
+ * `worth.ts` under the name `pointsOf`, and `edit.ts` inline inside
+ * `weightTotal`. The same regular expression in four places, one of which
+ * would eventually be corrected without the others.
+ *
+ * Zero rather than null for the unreadable case, because every caller sorts
+ * or sums with it and a null in an arithmetic is a `NaN` somebody has to
+ * defend against. Where the difference between "nought per cent" and "no
+ * percentage stated" matters, `readWeight` above is the one to ask.
+ */
+export function percentOf(weight: string): number {
+  const m = /(\d+(?:\.\d+)?)\s*%/.exec(weight);
+  return m ? Number(m[1]) : 0;
+}
+
+/**
  * Read a weight out of a syllabus's own wording.
  *
  * Real tables say "20%", "25–30%", "+3% EC", "10 pts". A range is taken at its

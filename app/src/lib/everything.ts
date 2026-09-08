@@ -4,6 +4,7 @@ import { DESTINATIONS, TASKS, taskLabel, type Destination, type TaskTag } from '
 import { SHORTCUTS } from './keys';
 import type { Screen } from './types';
 import { has } from './search';
+import { dayOf } from './date';
 
 /**
  * What the Everything directory knows, with no React in it.
@@ -154,7 +155,7 @@ export const WHY: Partial<Record<Screen, string>> = {
 /** How long ago, in the plainest words that are still true. */
 export function openedLabel(at: number | undefined, now: number): string {
   if (!at) return 'Never opened';
-  const days = Math.floor((startOfDay(now) - at) / DAY);
+  const days = Math.floor((dayOf(now) - at) / DAY);
   if (days <= 0) return 'Opened today';
   if (days === 1) return 'Opened yesterday';
   if (days < 7) return `Opened ${days} days ago`;
@@ -162,12 +163,6 @@ export function openedLabel(at: number | undefined, now: number): string {
   if (days < 60) return `Opened ${Math.round(days / 7)} weeks ago`;
   if (days < 365) return `Opened ${Math.round(days / 30)} months ago`;
   return 'Opened over a year ago';
-}
-
-function startOfDay(at: number): number {
-  const d = new Date(at);
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
 }
 
 /**
@@ -183,7 +178,7 @@ export function untried(
   lastOpened: Record<string, number>,
   now: number,
 ): Destination[] {
-  const stale = startOfDay(now) - STALE_DAYS * DAY;
+  const stale = dayOf(now) - STALE_DAYS * DAY;
   return rows.filter((d) => {
     if (!visited[d.screen]) return true;
     const at = lastOpened[d.screen];

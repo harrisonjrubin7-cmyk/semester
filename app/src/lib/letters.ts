@@ -1,3 +1,4 @@
+import { dateToIso } from './date';
 /**
  * The people who will write about you, and what you asked them for.
  *
@@ -92,10 +93,6 @@ export interface Letter {
  */
 export const NOTICE = 21;
 
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 function daysBetween(from: string, to: string): number | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) return null;
   const [ay, am, ad] = from.split('-').map(Number);
@@ -107,7 +104,7 @@ function daysBetween(from: string, to: string): number | null {
 
 /** Days until the letter is due. Null when no deadline was recorded. */
 export function daysLeft(l: Letter, now: Date): number | null {
-  return daysBetween(iso(now), l.due);
+  return daysBetween(dateToIso(now), l.due);
 }
 
 /**
@@ -116,7 +113,7 @@ export function daysLeft(l: Letter, now: Date): number | null {
  * while there is still a choice about when to ask.
  */
 export function notice(l: Letter, now: Date): number | null {
-  return daysBetween(l.askedOn || iso(now), l.due);
+  return daysBetween(l.askedOn || dateToIso(now), l.due);
 }
 
 /** Whether the notice is under the convention. */

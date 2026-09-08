@@ -12,7 +12,6 @@ import {
 } from '../lib/claude';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
-import { WEB_PAGES, webUrl } from '../lib/web';
 import { parseIcs } from '../lib/ics';
 import {
   PROVIDERS,
@@ -676,34 +675,26 @@ export function Connect() {
         went rather than concluding they were deleted.
       */}
       {/*
-        The same term on a bigger screen.
+        The same app on a bigger screen — and it is the same app.
 
-        Here rather than on the Links screen, which is for the university's
-        systems — this is not somewhere else to go, it is this, wider. And the
-        addresses are derived from wherever the app is served from, so these
-        work in development and under any deployment's base. See `lib/web.ts`.
+        This used to link to three separately-built static pages under
+        `/web/`: a front door, a second copy of the term, and a second copy of
+        the study side. Three megabytes of generated bundles that could not be
+        edited, could not be tested, and drifted from the app the moment
+        anything here changed — a second version of the same product, one tap
+        from the real one, which is exactly what somebody discovers when they
+        say the app feels like two systems.
+
+        There is one now. It already knows what to do with a wide screen: from
+        760px the tab bar unrolls into a rail beside the reading column, which
+        is what a laptop was being sent somewhere else for.
       */}
       <SectionLabel>On a desktop</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-        {WEB_PAGES.map((page) => (
-          <a
-            key={page.id}
-            href={webUrl(page.id)}
-            // A new tab, not this one: the app is often installed, and
-            // navigating it away from itself is a thing you cannot undo with
-            // Back from a standalone window.
-            target="_blank"
-            rel="noreferrer"
-            className="btn btn-secondary btn-block"
-            style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            {page.label}
-          </a>
-        ))}
-      </div>
-      <div className="kicker" style={{ marginTop: 'var(--sp-4)', textTransform: 'none', letterSpacing: 0, opacity: 0.6 }}>
-        The same address, so the same sign-in and the same data — nothing to set
-        up, and the front door has a way back here.
+      <div className="kicker" style={{ marginTop: 'var(--sp-3)', textTransform: 'none', letterSpacing: 0, opacity: 0.6 }}>
+        Open this same address on a laptop. It is one app rather than a phone
+        version and a desktop one: the navigation moves to a rail down the side,
+        the reading column keeps its width, and it is the same sign-in and the
+        same data because it is the same page.
       </div>
 
       <SectionLabel>Links</SectionLabel>

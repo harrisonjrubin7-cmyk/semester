@@ -52,7 +52,6 @@ export function SettingsStorage() {
   return (
     <SettingsPage
       screen="setStorage"
-      title="Storage and backup"
       blurb="What this app is holding on the device, and the three ways to get it back out."
     >
       {(lit) => (

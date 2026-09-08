@@ -9,6 +9,8 @@
  * Everything here stays on the device. Nothing is uploaded anywhere.
  */
 
+import { newId, store } from './idb';
+
 const DB_NAME = 'semester-files';
 const DB_VERSION = 1;
 const STORE = 'files';
@@ -27,36 +29,8 @@ export interface StoredFile {
 /** What the UI needs to list a file, without pulling the bytes into memory. */
 export type FileMeta = Omit<StoredFile, 'blob'>;
 
-function open(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: 'id' });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  return open().then(
-    (db) =>
-      new Promise<T>((resolve, reject) => {
-        const t = db.transaction(STORE, mode);
-        const req = run(t.objectStore(STORE));
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-        t.oncomplete = () => db.close();
-      }),
-  );
-}
-
-export function newId(): string {
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
+/** This file's own database and store. The wrapper is `lib/idb.ts`. */
+const { tx } = store(DB_NAME, STORE, DB_VERSION);
 
 export async function addFile(file: File, courseId: string | null): Promise<FileMeta> {
   const record: StoredFile = {

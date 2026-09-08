@@ -36,6 +36,7 @@
 
 import type { DatedItem } from './types';
 import { estimate, type Spent } from './pace';
+import { percentOf } from './grades';
 
 /**
  * How far back a miss is still part of *this* week.
@@ -162,11 +163,6 @@ export interface Step {
   says: string;
 }
 
-function pointsOf(weight: string): number {
-  const m = /(\d+(?:\.\d+)?)\s*%/.exec(weight);
-  return m ? Number(m[1]) : 0;
-}
-
 /**
  * Everything outstanding, in the order a bad week wants it.
  *
@@ -189,7 +185,7 @@ export function triage(
     .map((i) => {
       const e = estimate(spent, i.c, i.kind);
       const minutes = e.minutes > 0 ? e.minutes : null;
-      const worth = pointsOf(i.weight);
+      const worth = percentOf(i.weight);
       return { item: i, minutes, worth };
     });
 

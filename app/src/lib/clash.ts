@@ -32,6 +32,7 @@
  * commitment because the student entered it.
  */
 
+import { dateToIso } from './date';
 import { estimate, type Spent } from './pace';
 import { isExam } from './runway';
 import type { Commitment } from './activities';
@@ -72,10 +73,6 @@ const STACKED = 3;
  * would miss it.
  */
 
-function isoOf(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 /**
  * Which days in the horizon are worth warning about.
  *
@@ -96,7 +93,7 @@ export function clashes(
   const ahead = items.filter((i) => i.daysAway >= 0 && i.daysAway <= HORIZON);
   const byDay = new Map<string, DatedItem[]>();
   for (const i of ahead) {
-    const day = isoOf(i.date);
+    const day = dateToIso(i.date);
     byDay.set(day, [...(byDay.get(day) ?? []), i]);
   }
 

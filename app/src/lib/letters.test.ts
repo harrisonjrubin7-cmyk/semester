@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { dateToIso } from './date';
 import {
   NOTICE,
   known,
@@ -24,7 +25,7 @@ const DAY = 86_400_000;
 
 const day = (n: number) => {
   const d = new Date(2026, 8, 18 + n);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return dateToIso(d);
 };
 
 const letter = (patch: Partial<Letter>) => newLetter(patch, AT);

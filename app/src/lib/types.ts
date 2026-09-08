@@ -569,15 +569,31 @@ export interface Lesson {
 }
 
 /**
- * How the app is entered.
+ * How the app is entered — and the only thing that decides which navigation
+ * is on screen.
  *
  * `tabs` is the bar; `feed` is one scrolling day; `springboard` is a home
- * screen of icons. Three genuinely different habits rather than three skins —
- * the bar suits somebody who lives in four screens, the springboard somebody
- * who has forty-six and would rather see them than remember which shelf they
- * are on.
+ * screen of icons; `shelves` is the two rows of pills, the shelf you are on
+ * and the screens on it. Four genuinely different habits rather than four
+ * skins — the bar suits somebody who lives in four screens, the springboard
+ * somebody who has forty-six and would rather see them than remember which
+ * shelf they are on, the shelves somebody who wants both at once.
+ *
+ * ## One navigation, always
+ *
+ * `shelves` used to arrive a different way: it was drawn by the soft *layout*
+ * rather than chosen as a navigation, so picking soft put its two rows of
+ * pills on top of the tab bar or the rail that was already there. Two
+ * navigations, both live, neither aware of the other — the app looked like
+ * two apps running in one window.
+ *
+ * So the two axes are now genuinely separate and each answers one question.
+ * This one answers *how you move*, and exactly one of these four is ever
+ * drawn. `Shell` (in `components/shell/useShell.ts`) answers *how a screen is
+ * drawn*, and never adds navigation of its own. Every combination of the two
+ * is a valid app, which is what makes them settings rather than forks.
  */
-export type NavMode = 'tabs' | 'feed' | 'springboard';
+export type NavMode = 'tabs' | 'feed' | 'springboard' | 'shelves';
 
 /** A class that repeats every week, from the syllabus meeting pattern. */
 export interface RecurringBlock {

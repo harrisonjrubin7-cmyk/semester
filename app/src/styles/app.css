@@ -356,6 +356,14 @@ a:hover {
   background: var(--app-void);
 }
 
+/*
+ * The shelves are the navigation on a wide screen too, so there is no rail
+ * beside them and no column to leave for one.
+ */
+.desk-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .rail {
   display: flex;
   flex-direction: column;
@@ -1757,14 +1765,17 @@ input[type='search'].input {
  * sideways on a phone — nine pills do not fit 390px at any text size, and
  * wrapping them would change the height of the chrome as you moved around,
  * which is the one thing navigation must not do.
+ *
+ * Named for the shelves rather than for the soft layout it was born in: it is
+ * one of the four navigations now, and is drawn in every layout.
  */
-.soft-nav {
+.shelf-nav {
   padding: calc(8px * var(--density, 1)) 0 calc(10px * var(--density, 1));
   border-bottom: 1px solid var(--app-line-soft);
   background: var(--app-bg);
 }
 
-.soft-nav-row {
+.shelf-nav-row {
   display: flex;
   gap: var(--sp-4);
   overflow-x: auto;
@@ -1775,7 +1786,7 @@ input[type='search'].input {
   padding: calc(4px * var(--density, 1)) 14px;
 }
 
-.soft-nav-row::-webkit-scrollbar {
+.shelf-nav-row::-webkit-scrollbar {
   display: none;
 }
 
@@ -1786,13 +1797,13 @@ input[type='search'].input {
  * it was written for, and a pill that fills the row turns a row of nine into
  * nine rows of one — which is what the first version of this did.
  */
-.soft-nav-pill {
+.shelf-nav-pill {
   flex: none;
   width: auto;
   white-space: nowrap;
 }
 
-.soft-nav-said {
+.shelf-nav-said {
   margin: calc(4px * var(--density, 1)) 0 0;
   padding: 0 14px;
   font-size: calc(12px * var(--text-scale, 1));

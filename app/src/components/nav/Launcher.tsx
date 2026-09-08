@@ -1,5 +1,5 @@
 /**
- * The soft shell's launcher: nine dark tiles, one per shelf.
+ * The launcher: nine dark tiles, one per shelf.
  *
  * The directory it stands in for is a good directory — grouped, every row
  * saying what it is for — and it is a column of fifty-five rows. That is the
@@ -12,8 +12,16 @@
  * anything in it this week, which is the property a directory cannot have and
  * the reason this exists.
  *
- * The directory is not replaced. `shell: 'plain'` and `'grouped'` render it
- * exactly as before, and search still reaches every screen from anywhere.
+ * The directory is not replaced — it is the other half of a setting. This is
+ * `directory: 'tiles'` and the list is `'list'`, chosen on **Layout and
+ * navigation**, and search still reaches every screen from anywhere whichever
+ * is on.
+ *
+ * It lives beside `ShelfNav` rather than in `soft/` because it used to be
+ * drawn by `shell === 'soft'` and is not any more: a layout decides how a
+ * screen is drawn, never what it contains. It still borrows the soft parts
+ * below — `DarkTile` is a good tile in every layout, and a second one drawn
+ * to look almost the same would be the duplication this release is about.
  */
 
 import { useState } from 'react';
@@ -24,7 +32,7 @@ import { softTop } from '../../lib/softtop';
 import { currentLook } from '../../state/shape';
 import { TabGlyph } from '../TabIcon';
 import { glyphFor } from '../icons.pick';
-import { DarkTile } from './Soft';
+import { DarkTile } from '../soft/Soft';
 import { Folder } from './Folder';
 
 /**

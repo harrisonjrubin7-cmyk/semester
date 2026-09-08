@@ -3,7 +3,6 @@ import { useStore } from '../../state/store';
 import { NavRow, Group } from '../../components/shell/Rows';
 import { SETTINGS, SEARCH_PLACEHOLDER, findSetting, markLooking, nothingFound } from '../../lib/settings';
 import type { Screen } from '../../lib/types';
-import { ForcedProvider } from '../../components/shell/useShell';
 
 /**
  * Settings, as an index.
@@ -45,9 +44,10 @@ export function SettingsIndex() {
             : 'On this device only';
 
   return (
-    // Always grouped, for the reason in `Page.tsx`: an index is findable
-    // because every row looks like every other row.
-    <ForcedProvider value="grouped">
+    // In whichever layout the app is set to, for the reason in `Page.tsx`:
+    // the rows are the same rows in all three, and a settings screen that does
+    // not look like the app it configures is the one screen that cannot afford
+    // to be an exception.
     <div>
       <div style={{ padding: '0 16px calc(14px * var(--density, 1))' }}>
         <input
@@ -129,6 +129,5 @@ export function SettingsIndex() {
         </nav>
       )}
     </div>
-    </ForcedProvider>
   );
 }

@@ -9,7 +9,7 @@
  * the next one. See `state/reducer.ts`.
  */
 
-import { newId } from '../../lib/files';
+import { newId } from '../../lib/idb';
 import { withNotes } from '../../lib/merge';
 import { LANDMARKS, apply, sheet } from '../../lib/registrar';
 import type { CampusLink, FeedSource } from '../../lib/types';

@@ -29,7 +29,7 @@ import type { Catalog } from '../data/catalog';
 import { blocksFor } from '../data/catalog';
 import type { Commitment } from './activities';
 import { blocksOn } from './activities';
-import { decorateItem } from './date';
+import { dateToIso, decorateItem } from './date';
 import type { DoneMap } from './standing';
 import { weekShape, type WeekShape, type Window } from './windows';
 
@@ -116,9 +116,7 @@ export function week(input: WeekInput): Week {
     const classes = minutesOfBlocks(blocksFor(catalog, date).filter((b) => !b.canceled)) / 60;
     const commitments = minutesOfBlocks(blocksOn(input.commitments, date)) / 60;
 
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-      date.getDate(),
-    ).padStart(2, '0')}`;
+    const key = dateToIso(date);
     // An appointment has a start and no end, same as a class. An hour is the
     // ordinary length of one and the same honest approximation.
     const appointments = input.appointments.filter((a) => a.date === key).length;

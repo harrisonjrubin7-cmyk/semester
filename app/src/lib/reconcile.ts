@@ -24,6 +24,7 @@
  * wrong pairing sends somebody to change a date that was already right.
  */
 
+import { dateToIso, movedLine as movedDays } from './date';
 import type { DatedItem, FeedEvent, Item } from './types';
 
 /** Words that appear in half of all assignment titles and carry no signal. */
@@ -131,12 +132,6 @@ export interface Report {
   agreed: number;
 }
 
-function iso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate(),
-  ).padStart(2, '0')}`;
-}
-
 const DAY = 86_400_000;
 
 function daysBetween(a: string, b: string): number {
@@ -183,7 +178,7 @@ export function compare(items: DatedItem[], events: FeedEvent[]): Report {
 
     const item = items[pair.i];
     const event = events[pair.e];
-    const was = iso(item.date);
+    const was = dateToIso(item.date);
     if (was === event.date) {
       agreed++;
       continue;
@@ -212,11 +207,9 @@ export function compare(items: DatedItem[], events: FeedEvent[]): Report {
   };
 }
 
-/** How a move reads in one line. */
+/** How a move reads in one line. The words are `lib/date.ts`. */
 export function movedLine(m: Moved): string {
-  const size = Math.abs(m.days);
-  const unit = size === 1 ? 'day' : 'days';
-  return m.days > 0 ? `${size} ${unit} later` : `${size} ${unit} earlier`;
+  return movedDays(m.days);
 }
 
 /** The headline over a report. Plain, and it says when nothing is wrong. */

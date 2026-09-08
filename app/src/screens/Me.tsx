@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ForcedProvider, useRowStyle, useSoft } from '../components/shell/useShell';
+import { useRowStyle } from '../components/shell/useShell';
 import { learned, showSpan } from '../lib/pace';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
@@ -14,7 +14,7 @@ import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
 import { GROUPS, destinationsIn, lately, listed, saysFor } from '../lib/nav';
-import { Launcher } from '../components/soft/Launcher';
+import { Launcher } from '../components/nav/Launcher';
 
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
@@ -138,7 +138,6 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
 
 export function Me() {
   const { state, dispatch, now, catalog, account , courseCode, school, facts } = useStore();
-  const soft = useSoft();
   const rowNine = useRowStyle(9);
   const rowTen = useRowStyle(10);
   const ahead = upcomingItems(catalog, now);
@@ -304,27 +303,39 @@ export function Me() {
         does. One scroll, six headed panels, no chip to get wrong. It is the
         same set of rows either way — nothing has been dropped.
 
-        `ForcedProvider` for the same reason `Index.tsx` has one: a directory
-        is findable because every row looks like every other row, so it does
-        not follow the app-wide plain/grouped setting.
+        Drawn in whichever layout the app is set to, like everything else.
+        This used to force `grouped` on itself, on the argument that a
+        directory is findable because every row looks like every other row —
+        which it does in all three layouts, because `Panel` and `Destination`
+        are the same components either way. Settings forced itself for the
+        same reason and has stopped; a directory of the app that does not look
+        like the app is one more thing that does not match.
       */}
       {/*
-        The soft shell puts the launcher here instead.
+        Tiles or panels — a choice, not a consequence of the layout.
 
-        Not as well as — the two are the same fifty-five rows arranged two
-        ways, and showing both would be a directory with a directory on top
-        of it. The drawn and grouped layouts keep the panels below exactly as
-        they were, which is the rollback this restructure is built on.
+        The two are the same fifty-five rows arranged two ways, and showing
+        both would be a directory with a directory on top of it. So one of
+        them is drawn, and which one is `state.directory`, chosen on **Layout
+        and navigation** beside everything else about the shape of the app.
 
-        `Lately` and `NotYetOpened` go with them. Both are answers to "where
-        was that", and the grid answers it by position instead — a Lately
-        panel above a grid whose whole claim is that Data is always
+        It arrived gated on `shell === 'soft'`, which meant the only way to
+        get the tiles was to accept a different set of colours, cards and
+        type with them, and the only way to keep the drawn look was to give
+        the tiles up. Two good ideas soldered together. Anybody who was on
+        soft when this landed keeps the tiles — `readLook` reads the absent
+        key back as `tiles` for them, once — and everybody can now have
+        either with either.
+
+        `Lately` and `NotYetOpened` go with the panels. Both are answers to
+        "where was that", and the grid answers it by position instead — a
+        Lately panel above a grid whose whole claim is that Data is always
         bottom-left would be arguing with the thing under it.
       */}
-      {soft ? (
+      {state.directory === 'tiles' ? (
         <Launcher />
       ) : (
-      <ForcedProvider value="grouped">
+        <>
         <nav aria-label="Everything" style={{ margin: '0 -18px' }}>
           {recent.length > 0 && (
             <Panel header="Lately">
@@ -355,7 +366,7 @@ export function Me() {
             );
           })}
         </nav>
-      </ForcedProvider>
+        </>
       )}
         </>
       )}

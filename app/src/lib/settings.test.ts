@@ -1,16 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  SETTINGS,
-  SETTINGS_SCREENS,
-  findSetting,
-  isSettingsPage,
-  lights,
-  markLooking,
-  nothingFound,
-  rowFor,
-  sectionOf,
-  takeLooking,
-} from './settings';
+import { findSetting, isSettingsPage, lights, markLooking, nothingFound, rowFor, sectionOf, SETTINGS, SETTINGS_SCREENS, settingsTitle, takeLooking } from './settings';
 import { ROOTS } from '../state/shape';
 import { rootOf } from './nav';
 
@@ -71,6 +60,32 @@ describe('where the pages sit', () => {
   });
 });
 
+/*
+ * A page's name was in three places — this registry, the `title` the page
+ * hands `SettingsPage`, and a switch in `App.tsx` — and had already drifted:
+ * the header bar said "Appearance" over a page calling itself "Colour and
+ * type". This is the check that there is one name.
+ */
+describe('what a page is called', () => {
+  it('names every settings page, from the registry', () => {
+    for (const row of SETTINGS.flatMap((s) => s.rows)) {
+      expect(settingsTitle(row.screen), row.screen).toBe(row.short ?? row.label);
+      expect(settingsTitle(row.screen).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('says nothing about a screen that is not a settings page', () => {
+    expect(settingsTitle('home')).toBe('');
+    expect(settingsTitle('courses')).toBe('');
+  });
+
+  it('keeps the short name short enough for a bar with three icons in it', () => {
+    for (const row of SETTINGS.flatMap((s) => s.rows)) {
+      expect(settingsTitle(row.screen).length, row.screen).toBeLessThanOrEqual(20);
+    }
+  });
+});
+
 describe('searching it', () => {
   it('finds the page by the word people actually use', () => {
     // Nobody searches "ground" for dark mode, and nobody searches "typeface"
@@ -84,13 +99,56 @@ describe('searching it', () => {
   });
 
   it('puts an exact page name first', () => {
-    const hits = findSetting('appearance');
-    expect(hits[0].row.label).toBe('Appearance');
+    const hits = findSetting('colour and type');
+    expect(hits[0].row.label).toBe('Colour and type');
+  });
+
+  /*
+   * "Appearance" stopped being a page name when the shape of the app — which
+   * navigation, which layout — moved onto one page with the navigation, and
+   * the colour page took the name that says what is on it. The word is still
+   * what people type, so it stays a keyword, and this is the check that it
+   * still lands somewhere sensible rather than nowhere.
+   */
+  it('still finds the page a retired name used to open', () => {
+    expect(findSetting('appearance')[0].row.screen).toBe('setLook');
+  });
+
+  /*
+   * The keywords are written in phrases — "tab bar", "line height", "quiet
+   * hours" — and were split on whitespace before being matched, so a query
+   * with a space in it was compared against a list of single words and could
+   * never hit. Every one of these was in the keywords, word for word, and
+   * returned nothing.
+   */
+  it('finds a phrase, not just a single word', () => {
+    expect(findSetting('tab bar')[0]?.row.screen).toBe('setNav');
+    expect(findSetting('text size')[0]?.row.screen).toBe('setLook');
+    expect(findSetting('line height')[0]?.row.screen).toBe('setLook');
+    expect(findSetting('quiet hours')[0]?.row.screen).toBe('setAlerts');
+  });
+
+  /*
+   * "soft" is one of the three layouts. It used to return Connected accounts
+   * first, because that page's summary says "Microsoft" and a plain substring
+   * test cannot tell the middle of a word from the start of one.
+   */
+  it('ranks a word ahead of the middle of a longer word', () => {
+    expect(findSetting('soft')[0]?.row.screen).toBe('setNav');
+    // Still found, just not first: a partial word is sometimes all somebody
+    // can remember.
+    expect(findSetting('soft').map((f) => f.row.screen)).toContain('connect');
+  });
+
+  it('finds each navigation and each layout by its own name', () => {
+    for (const name of ['tabs', 'feed', 'springboard', 'shelves', 'drawn', 'grouped', 'soft']) {
+      expect(findSetting(name)[0]?.row.screen, name).toBe('setNav');
+    }
   });
 
   it('says which word it matched, so the page can light the right group', () => {
     expect(findSetting('dark')[0].matched).toBe('dark');
-    expect(findSetting('appearance')[0].matched).toBe('Appearance');
+    expect(findSetting('colour and type')[0].matched).toBe('Colour and type');
   });
 
   it('says which section a hit lives in', () => {

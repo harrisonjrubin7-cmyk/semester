@@ -332,22 +332,23 @@ describe('round-trip — the Phase 2 gate', () => {
 });
 
 /*
- * Tests 1, 2, 5 and 6 need the other client.
+ * Tests 1, 2, 5 and 6 of the plan are gone rather than skipped.
  *
- * They are app↔website by definition — "create a course in the app, it appears
- * in the website with identical fields" cannot be asserted against a website
- * that is not in this repository. Skipped rather than approximated: a gate
- * that passes because four of its seven cases were quietly replaced with
- * stand-ins is not a gate.
+ * They were app↔website by definition — "create a course in the app, it
+ * appears in the website with identical fields" — and stood here as four empty
+ * `it` bodies inside a `describe.skip`, waiting for a second client to arrive
+ * so they could be written. It has gone the other way: the separately-built
+ * website has been removed, because it was a second version of this app rather
+ * than a second client of the data. There is nothing to round-trip against and
+ * nothing to unblock.
  *
- * `docs/data-contract.md` §0 says what is needed to unblock them.
+ * Four empty tests that can never run are not a gate, they are a promise the
+ * suite keeps making and cannot keep. What survives them is the pair of checks
+ * that were doing the real work all along and are directly above and below
+ * this: a status change written elsewhere still lands here, and every record
+ * still carries the envelope. Both hold whether or not anything else ever
+ * writes to the account.
  */
-describe.skip('round-trip — needs the website client', () => {
-  it('1. a course made in the app appears in the website, identical', () => {});
-  it('2. a course made in the website appears in the app, identical', () => {});
-  it('5. the same record edited in both, offline, reports the loss', () => {});
-  it('6. a syllabus imported in the app reaches the website study side', () => {});
-});
 
 /** Kept honest: every contract record is an Envelope, whatever else it is. */
 describe('every record carries the envelope', () => {

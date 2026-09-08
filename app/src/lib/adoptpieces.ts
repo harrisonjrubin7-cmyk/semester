@@ -1,4 +1,4 @@
-import { newId } from './files';
+import { newId } from './idb';
 import type { Change } from './changeset';
 import type { Where } from './harvest';
 import type { CourseModule } from './types';

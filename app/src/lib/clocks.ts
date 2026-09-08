@@ -1,3 +1,4 @@
+import { dateToIso } from './date';
 /**
  * Timers and alarms — the ordinary kind, for anything.
  *
@@ -236,10 +237,6 @@ export function newAlarm(label: string, at: number, days: number[], created: num
   };
 }
 
-function isoOf(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 /**
  * When it next goes off, or null if it is off.
  *
@@ -253,7 +250,7 @@ export function nextRing(a: Alarm, now: Date): Date | null {
   for (let ahead = 0; ahead <= 7; ahead++) {
     const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + ahead);
     if (a.days.length > 0 && !a.days.includes(day.getDay())) continue;
-    if (isoOf(day) === a.lastRang) continue;
+    if (dateToIso(day) === a.lastRang) continue;
     const when = new Date(day);
     when.setHours(Math.floor(a.at / 60), a.at % 60, 0, 0);
     if (when.getTime() > now.getTime()) return when;
@@ -272,7 +269,7 @@ export function nextRing(a: Alarm, now: Date): Date | null {
 export function alarmDue(a: Alarm, now: Date): boolean {
   if (!a.on) return false;
   if (a.ringingAt > 0) return false;
-  const today = isoOf(now);
+  const today = dateToIso(now);
   if (a.lastRang === today) return false;
   if (a.days.length > 0 && !a.days.includes(now.getDay())) return false;
   const minutes = now.getHours() * 60 + now.getMinutes();
@@ -330,13 +327,13 @@ export function untilLine(a: Alarm, now: Date): string {
   }
   const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const when = timeLine(a.at);
-  if (isoOf(next) === isoOf(tomorrow)) return `Tomorrow, ${when}`;
+  if (dateToIso(next) === dateToIso(tomorrow)) return `Tomorrow, ${when}`;
   return `${DAY_NAMES[next.getDay()]}, ${when}`;
 }
 
 /** Stop it: rung for today, silent, and off if it was only ever for once. */
 export function rang(a: Alarm, now: Date): Alarm {
-  return { ...a, lastRang: isoOf(now), ringingAt: 0, on: a.days.length > 0 ? a.on : false };
+  return { ...a, lastRang: dateToIso(now), ringingAt: 0, on: a.days.length > 0 ? a.on : false };
 }
 
 /**

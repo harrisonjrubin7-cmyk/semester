@@ -39,6 +39,7 @@
  * impact, not recency" asks for.
  */
 
+import { dateToIso } from './date';
 import type { Attended, AttendPolicy } from './attend';
 import { budget, hasPolicy, standing, tally } from './attend';
 
@@ -74,8 +75,7 @@ function absencesSince(log: Attended[], courseId: string, from: string): number 
 
 /** `YYYY-MM-DD`, this many days before a date. */
 function daysBefore(now: Date, days: number): string {
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - days);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return dateToIso(new Date(now.getFullYear(), now.getMonth(), now.getDate() - days));
 }
 
 /**

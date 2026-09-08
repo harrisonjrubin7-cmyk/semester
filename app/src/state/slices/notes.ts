@@ -9,7 +9,7 @@
  * the next one. See `state/reducer.ts`.
  */
 
-import { newId } from '../../lib/files';
+import { newId } from '../../lib/idb';
 import type { Note } from '../../lib/types';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
