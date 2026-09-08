@@ -165,6 +165,25 @@ export function litTab(screen: Screen, chosen: Screen[]): Screen | null {
 }
 
 /**
+ * The same question for the rail, which draws more than the bar does.
+ *
+ * `litTab` falls back to `rootOf` because on a phone that fallback is the only
+ * indicator there is: Settings files under Me, there is no Settings tab, and
+ * lighting Me at least says which shelf you are on. The rail has room to draw
+ * those shelved screens as entries of their own, below the bar — so on the
+ * rail the fallback lights the wrong row of a nav that is already showing the
+ * right one. Standing on Settings lit Me, styled as the current page and
+ * marked `aria-current="page"`, while Settings itself took a colour shift and
+ * no more; a screen reader announced Progress as the page you were on.
+ *
+ * So a screen the rail lists itself is not "under" anything. Nesting is
+ * untouched: Drill is not a rail entry, so it still lights Study.
+ */
+export function litRailTab(screen: Screen, chosen: Screen[], listed: Screen[]): Screen | null {
+  return listed.includes(screen) ? null : litTab(screen, chosen);
+}
+
+/**
  * The name the bar shows.
  *
  * The directory's own label where it fits, and the short one where it does

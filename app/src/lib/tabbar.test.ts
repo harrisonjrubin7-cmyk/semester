@@ -8,6 +8,7 @@ import {
   PINNED,
   choosable,
   hasRoom,
+  litRailTab,
   litTab,
   moveTab,
   readTabs,
@@ -172,6 +173,48 @@ describe('which tab lights up', () => {
     // Nothing in the bar covers the calendar, so the bar says so by going
     // dark rather than leaving Today lit on a screen that is not Today.
     expect(litTab('calendar', ['home', 'study', PINNED])).toBeNull();
+  });
+});
+
+describe('which tab the rail lights', () => {
+  // What the rail draws below the bar, and so what it must not file under a
+  // tab. Same list App.tsx builds, minus anything already in the bar.
+  const LISTED: Screen[] = ['ask', 'import', 'account', 'connect', 'cloud', 'settings'];
+
+  it('lights no tab for a screen the rail lists itself', () => {
+    // The bug this exists for. `rootOf('settings')` is 'me', which the rail
+    // labels Progress — so standing on Settings lit Progress, gave it the
+    // current-page pill and told a screen reader Progress was the page you
+    // were on, while the Settings row you had just pressed took a colour
+    // shift and nothing else.
+    expect(litTab('settings', DEFAULT_TABS)).toBe(PINNED);
+    expect(litRailTab('settings', DEFAULT_TABS, LISTED)).toBeNull();
+  });
+
+  it('does the same for the others that were pointing at the wrong row', () => {
+    // Ask Claude filed under Study, Account under Me. Both were checked in a
+    // browser against the deployed build before this was written.
+    expect(litRailTab('ask', DEFAULT_TABS, LISTED)).toBeNull();
+    expect(litRailTab('account', DEFAULT_TABS, LISTED)).toBeNull();
+  });
+
+  it('still lights the tab a genuinely nested screen sits under', () => {
+    // Drill is not a rail entry, so nothing changes for it: the rail has no
+    // row of its own to point at, and Study is the honest answer.
+    expect(litRailTab('drill', DEFAULT_TABS, LISTED)).toBe('study');
+  });
+
+  it('leaves a screen that is in the bar alone', () => {
+    // A student who puts Ask Claude in the bar has it filtered out of the
+    // rail's extras, so it is a tab like any other and lights itself.
+    expect(litRailTab('ask', ['home', 'study', 'ask', PINNED], [])).toBe('ask');
+  });
+
+  it('agrees with litTab wherever the rail lists nothing', () => {
+    // The tab bar's behaviour is the fallback, not a separate rule.
+    for (const screen of ['home', 'drill', 'calendar', 'settings'] as Screen[]) {
+      expect(litRailTab(screen, DEFAULT_TABS, [])).toBe(litTab(screen, DEFAULT_TABS));
+    }
   });
 });
 
