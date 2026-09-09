@@ -36,6 +36,86 @@ export const DOW_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
  * Deliberately not `toISOString()`, which converts to UTC first and so lands on
  * the wrong day for anyone west of Greenwich after their evening.
  */
+/**
+ * A date, or nothing — where `new Date(y, m, d)` would invent one.
+ *
+ * `new Date(2026, 1, 31)` does not refuse 31 February. It silently returns
+ * 3 March, and every check of the form "is the day between 1 and 31" passes
+ * it through: 31 is a day in October and is not one in April, and a bare
+ * range test cannot tell the difference.
+ *
+ * That matters most for the one input here that comes from a server the
+ * student does not control and is refetched without them asking. A malformed
+ * `DTSTART` in a subscribed calendar, measured one at a time against the real
+ * parser:
+ *
+ *     20260231  ->  3 March 2026          20260001  ->  1 December 2025
+ *     20261345  ->  14 February 2027      20260900  ->  31 August 2026
+ *     00000101  ->  1 January 1900        T990000Z  ->  the 18th, at 3:00a
+ *
+ * Each was drawn beside the real classes, in the same colour, with nothing to
+ * say it was invented — and because the feed is refetched, a bad row comes
+ * back on the next refresh rather than being a one-off somebody can correct.
+ *
+ * The check is to build the date and read it back through its own getters. A
+ * range test cannot be written correctly without a month-length table, and a
+ * month-length table has to know about leap years, which is the arithmetic
+ * `Date` already does.
+ *
+ * `utc` reads it back through the UTC getters instead, for a stamp that said
+ * `Z`. Reading a UTC stamp back locally would refuse every correct feed either
+ * side of Greenwich.
+ *
+ * The two-digit-year trap is caught here too, and it is the one a range test
+ * cannot reach at all: `new Date(26, 0, 1)` is 1926, because `Date` maps 0–99
+ * into the 1900s. The year is compared to what was asked for, so 0026 is
+ * refused rather than quietly becoming 1926.
+ */
+export function realDate(
+  year: number,
+  month: number,
+  day: number,
+  time?: { hours: number; minutes: number; seconds: number },
+  utc = false,
+): Date | null {
+  const { hours = 0, minutes = 0, seconds = 0 } = time ?? {};
+  if (![year, month, day, hours, minutes, seconds].every(Number.isInteger)) return null;
+  const d = utc
+    ? new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds))
+    : new Date(year, month - 1, day, hours, minutes, seconds);
+  if (Number.isNaN(d.getTime())) return null;
+  const got = utc
+    ? [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()]
+    : [d.getFullYear(), d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds()];
+  const asked = [year, month, day, hours, minutes, seconds];
+  return got.every((n, i) => n === asked[i]) ? d : null;
+}
+
+/**
+ * Whether a month and a day are a day that exists, with no year to go on.
+ *
+ * Six files store a date as `{ month, day }` and let the term decide the year
+ * later, so `realDate` cannot be used on them — and all six checked the day
+ * was between 1 and 31. 31 is a day in October and is not one in April, and a
+ * bare range test cannot tell the difference: "April 31" was accepted, and
+ * `new Date(2026, 3, 31)` then drew it as 1 May, under a heading, in a list,
+ * beside the dates that were real.
+ *
+ * February is 29 here rather than 28. The year genuinely is not known yet —
+ * `readTerm` settles it downstream — and refusing 29 February outright would
+ * throw away a real date in every leap year to catch a wrong one in three
+ * years out of four. The permissive bound is the right way round: this is the
+ * check that a day *can* exist, and `realDate` is the check that it does.
+ *
+ * `month` is 0-based, as every caller of this already holds it.
+ */
+export function realMonthDay(month: number, day: number): boolean {
+  if (!Number.isInteger(month) || !Number.isInteger(day)) return false;
+  if (month < 0 || month > 11) return false;
+  const LENGTHS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return day >= 1 && day <= LENGTHS[month];
+}
+
 export function dateToIso(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');

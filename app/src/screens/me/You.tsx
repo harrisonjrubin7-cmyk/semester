@@ -249,13 +249,29 @@ export function You() {
               <button
                 key={d.id}
                 type="button"
-                // The first door is the one the day is asking for, so it is
-                // the one that looks like a button you press. `.btn` is 44px
-                // tall in this app, so none of these needs a tap overlay.
-                className={i === 0 ? 'btn btn-primary' : 'btn btn-secondary'}
+                /*
+                 * The first door is the one the day is asking for, so it is
+                 * the one that looks like a button you press. `.btn` is 44px
+                 * tall in this app, so none of these needs a tap overlay.
+                 *
+                 * Except when the first door is what is late, which is not a
+                 * thing to press so much as a thing to answer, and #110 is why
+                 * it is not in the metal: it coloured Progress's Late figure
+                 * `--app-warn` because "6 late" and "42 ahead" arrived at the
+                 * same weight and the one you needed to see was the one you
+                 * had to read to find. That figure is gone from the strip — a
+                 * cell that appears and disappears moved its neighbours — so
+                 * the colour comes here, to the door that replaced it. Warn is
+                 * a passed deadline everywhere else in the app, and
+                 * `contrast.test.ts` holds it at 4.5:1 on every ground.
+                 */
+                className={i === 0 && d.id !== 'late' ? 'btn btn-primary' : 'btn btn-secondary'}
                 onClick={() => press(d)}
                 style={{
                   width: 'auto',
+                  ...(d.id === 'late'
+                    ? { color: 'var(--app-warn)', borderColor: 'var(--app-warn)' }
+                    : null),
                   // Shrinks before it wraps its own words, and the label is a
                   // deadline's title on the third door, which can be long.
                   flex: '0 1 auto',

@@ -67,7 +67,7 @@ export function ShelfNav() {
   }, [state.screen]);
 
   return (
-    <nav className="shelf-nav" aria-label="Screens" ref={rows}>
+    <nav className="shelf-nav pane-strip" aria-label="Screens" ref={rows}>
       <div className="shelf-nav-row" role="tablist" aria-label="Areas">
         {GROUPS.map((g) => {
           const on = g === here;

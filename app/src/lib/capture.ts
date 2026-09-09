@@ -1,4 +1,4 @@
-import { dateToIso } from './date';
+import { dateToIso, realDate } from './date';
 /**
  * One box: "econ ps4 friday 5pm".
  *
@@ -177,12 +177,19 @@ export function matchDate(text: string, now: Date): { date: string; word: string
   if (named) {
     const month = MONTHS.findIndex((m) => m.startsWith(named[1].toLowerCase().slice(0, 3)));
     const day = Number(named[2]);
-    if (month >= 0 && day >= 1 && day <= 31) {
+    if (month >= 0) {
       // The year is chosen so the date is not in the past: "jan 20" typed in
       // November means the coming January, which is what anybody means.
-      let year = today.getFullYear();
-      if (new Date(year, month, day) < today) year += 1;
-      return { date: dateToIso(new Date(year, month, day)), word: named[0] };
+      //
+      // `realDate` rather than `day <= 31`: this is the box somebody types
+      // into by hand, so it is also where a typo is likeliest, and "essay feb
+      // 31" made a task on 3 March. The year has to be settled first, because
+      // 29 February is a date in one year and not in the next. See
+      // `lib/date.ts`.
+      const year = today.getFullYear();
+      const thisYear = realDate(year, month + 1, day);
+      const chosen = thisYear && thisYear >= today ? thisYear : realDate(year + 1, month + 1, day);
+      if (chosen) return { date: dateToIso(chosen), word: named[0] };
     }
   }
 
@@ -190,11 +197,18 @@ export function matchDate(text: string, now: Date): { date: string; word: string
   if (slashes) {
     const month = Number(slashes[1]) - 1;
     const day = Number(slashes[2]);
-    if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+    if (month >= 0 && month <= 11) {
       let year = slashes[3] ? Number(slashes[3]) : today.getFullYear();
       if (year < 100) year += 2000;
-      if (!slashes[3] && new Date(year, month, day) < today) year += 1;
-      return { date: dateToIso(new Date(year, month, day)), word: slashes[0] };
+      const asWritten = realDate(year, month + 1, day);
+      // A year the writer stated is theirs: 29/2/2026 is a typo to be
+      // refused, not a date to be rolled into 2027.
+      const chosen = slashes[3]
+        ? asWritten
+        : asWritten && asWritten >= today
+          ? asWritten
+          : realDate(year + 1, month + 1, day);
+      if (chosen) return { date: dateToIso(chosen), word: slashes[0] };
     }
   }
 

@@ -15,6 +15,7 @@ import {
   type Change,
 } from '../../lib/announce';
 import { Folding } from '../../components/Fold';
+import { NeedsKey } from '../../components/NeedsKey';
 
 /**
  * "The midterm has moved to the 8th."
@@ -132,9 +133,7 @@ export function FromText() {
           {busy ? 'Reading it…' : 'What does this change?'}
         </ActionButton>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
-          Needs a key first — set one under Settings → The assistant.
-        </div>
+        <NeedsKey />
       )}
 
       <Trouble said={trouble.said} onRetry={trouble.again} />

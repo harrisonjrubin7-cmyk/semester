@@ -1,3 +1,4 @@
+import { realMonthDay } from './date';
 /**
  * The email that changes a date.
  *
@@ -103,9 +104,17 @@ function asMonth(value: unknown): number {
   return Number.isInteger(n) && n >= 0 && n <= 11 ? n : -1;
 }
 
-function asDay(value: unknown): number {
+/**
+ * A day, checked against the month it is in rather than against 31.
+ *
+ * The two were read independently, so "February 31" passed both and the
+ * proposal then named a date the announcement never did — under a quote
+ * *from* the announcement, which is the badge that exists to mean the
+ * opposite. See `lib/date.ts`.
+ */
+function asDay(value: unknown, month: number): number {
   const n = Number(value);
-  return Number.isInteger(n) && n >= 1 && n <= 31 ? n : -1;
+  return realMonthDay(month, n) ? n : -1;
 }
 
 /**
@@ -155,7 +164,7 @@ export function readChanges(text: string, module: CourseModule): Change[] {
     if (op === 'rename' && !title) continue;
 
     const month = asMonth(r.month);
-    const day = asDay(r.day);
+    const day = asDay(r.day, month);
     // A move with no date to move to is not a move. The model is told to say
     // so in the title instead, which reaches the student as a rename.
     if (op === 'move' && (month < 0 || day < 0)) continue;
