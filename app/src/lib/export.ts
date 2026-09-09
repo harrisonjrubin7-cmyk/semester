@@ -415,6 +415,24 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean }[] =
   { key: 'places', label: 'saved places', array: true },
   { key: 'extraLinks', label: 'your links', array: true },
   { key: 'grades', label: 'grades', array: false },
+  /*
+   * The pieces a category's grade is worked out from, and the syllabus's drop
+   * rule for it — both of them typed in by hand, and both of them missing.
+   *
+   * `grades` was here and these were not, which is two halves of one number
+   * kept apart. `standing` in `lib/grades.ts` scores a category from its
+   * pieces where there are any and only falls back to the single box
+   * otherwise, so a restore did not merely lose them: it changed the grade on
+   * the screen. A category entered as "88, 92, 76, lowest dropped" came back
+   * as whatever the single box happened to hold, which for most rows is
+   * nothing at all — so the course read "nothing graded yet" for work that had
+   * been graded and entered.
+   *
+   * Quiet, too. Nothing errors, the file is valid, the restore reports
+   * success, and the number is simply different afterwards.
+   */
+  { key: 'pieces', label: 'scores you typed in', array: false },
+  { key: 'drops', label: 'drop rules', array: false },
   { key: 'reviews', label: 'what you have drilled', array: false },
   { key: 'done', label: 'what you have ticked off', array: false },
   { key: 'saved', label: 'saved items', array: false },
@@ -486,6 +504,10 @@ export function backupOf(state: State) {
     tasks: state.tasks,
     appointments: state.appointments,
     grades: state.grades,
+    // The pieces those grades are actually worked out from, and the drop rule
+    // that decides which of them count. See `BACKUP_SECTIONS`.
+    pieces: state.pieces,
+    drops: state.drops,
     places: state.places,
     reviews: state.reviews,
     done: state.done,

@@ -398,6 +398,40 @@ describe('readBackup', () => {
 });
 
 /**
+ * The grade and the pieces it is worked out from travel together.
+ *
+ * `grades` was in the backup and `pieces` and `drops` were not, which is two
+ * halves of one number kept apart. `standing` scores a category from its
+ * pieces where there are any and only falls back to the single box otherwise,
+ * so a restore did not merely lose them — it changed the grade on the screen,
+ * quietly, with a valid file and a successful restore.
+ */
+describe('a backup carries the working as well as the answer', () => {
+  const state = {
+    ...DEFAULT_PERSISTED,
+    ...initialEphemeral(new Date()),
+    grades: { 'econ:0': '88' },
+    pieces: { 'econ:0': '88, 92, 76' },
+    drops: { 'econ:0': 1 },
+  } as State;
+
+  it('writes the typed-in pieces and the drop rule', () => {
+    const out = backupOf(state) as Record<string, unknown>;
+    expect(out.pieces).toEqual({ 'econ:0': '88, 92, 76' });
+    expect(out.drops).toEqual({ 'econ:0': 1 });
+  });
+
+  it('reads them back, so the same figure comes out', () => {
+    const { data, parts } = readBackup(JSON.stringify(backupOf(state)));
+    expect(data.pieces).toEqual({ 'econ:0': '88, 92, 76' });
+    expect(data.drops).toEqual({ 'econ:0': 1 });
+    // Named in the preview too, or a restore would say it was changing less
+    // than it is.
+    expect(parts.join(', ')).toContain('scores you typed in');
+  });
+});
+
+/**
  * What a backup is for, which the restructure did not change.
  *
  * Acceptance criterion 10 asks that export and import round-trip identically
