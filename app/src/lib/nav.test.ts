@@ -331,12 +331,18 @@ describe('the promise', () => {
      * The screen comes from the registry rather than being written here,
      * which is the promise this describe is named for.
      *
-     * It used to say `'grades'`. That screen stopped being a destination in
-     * #76 while the move of this block was open in #85 — neither red on its
-     * own, both red together — and the failure was a test about the registry
-     * being the one source of truth keeping a copy of one of its rows. Taking
-     * the row from `byTask` itself cannot go stale, and cannot pick a screen
-     * with no task tag, which would pass for the wrong reason.
+     * It said `'grades'`, and #76 took the grade table out of the registry
+     * while the move of this block was open in #85 — neither red alone, both
+     * red together. So the test that exists to say the registry is the one
+     * source of truth was keeping its own copy of one of its rows.
+     *
+     * Two things are worth keeping from how that was caught. The suite stayed
+     * green: vitest does not typecheck, so a name that is no longer a `Screen`
+     * fails `tsc` and nothing else, which is why CI runs both. And the first
+     * repair was to name a different screen — correct, and the same shape one
+     * screen along. Taking the row from `byTask` itself cannot go stale when a
+     * screen is renamed or removed, and cannot pick one with no task tag,
+     * which would pass for the wrong reason.
      */
     const [gone] = byTask(DESTINATIONS)[0].rows;
     const short = DESTINATIONS.filter((d) => d.screen !== gone.screen);
