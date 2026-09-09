@@ -307,6 +307,15 @@ function useHeader(): { kicker: string; title: string } {
     case 'setGrading':
     case 'setWorkload':
     case 'setAbout':
+    // The assistant's page was the one of the eight this arm never listed, so
+    // it fell past the switch to `fallbackHeader` — and it is not in
+    // `DESTINATIONS` either, being a settings page rather than a destination,
+    // so it wore the last resort: "Today", with today's date over it, above
+    // the API key and the model picker. The exact failure the comment above
+    // describes, on the ninth screen. `settings.test` now walks the settings
+    // registry rather than the destination registry, so a page added to
+    // `lib/settings.ts` and not to this arm fails instead of lying.
+    case 'setAssistant':
       return { kicker: 'Settings', title: settingsTitle(state.screen) };
     case 'mine':
       return { kicker: 'Yours, not the syllabus', title: 'Personal' };
