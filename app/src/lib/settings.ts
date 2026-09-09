@@ -135,7 +135,12 @@ export const SETTINGS: SettingsSection[] = [
       {
         screen: 'setStorage',
         label: 'Storage and backup',
-        holds: 'Space used, copies, export and restore',
+        // Not "space used" any more: the measuring is Your data's, and this
+        // page is the two ways of getting something back. The `space` and
+        // `quota` keywords stay, because those are still the words somebody
+        // types when their phone says it is full — and this page carries the
+        // row that takes them there.
+        holds: 'Copies, export and restore — and where to see the space used',
         keywords:
           'storage space full quota backup copies snapshot restore export download zip json save room disk drafts',
       },
