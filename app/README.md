@@ -29,7 +29,9 @@ own application.
 
 ## What is in it
 
-Five sections, twenty screens.
+Five tabs, fifty screens. The tabs are below; the fifty are the registry in
+`src/lib/nav.ts`, which is also what the directory, the search box and the
+home-screen icons are drawn from — there is one list, and it is that one.
 
 - **Today** — the next class with a live countdown, what is due today as a
   checklist, the day's rail of classes, the next campus event, and what is
@@ -37,12 +39,14 @@ Five sections, twenty screens.
 - **Courses** — the four syllabi, how each grade is built, and every dated
   obligation with the syllabus line it came from.
 - **Study** — an exam radar, a guide per course, "tonight's 25 minutes" built
-  from your weakest unit in each, and **Ask Claude**. Each guide has nine modes:
-  **Cards** (tap-to-flip drill), **Read** (the guide as prose), **Watch** (a
-  narrated lesson per unit with slides that follow the voice), **Slides** (the
-  unit as a deck), **Doc** (the guide as .docx, .pdf, or printed), **Quiz** (ten
-  multiple choice, decoys drawn from other units), **Figures**, **Cases**,
-  **Cram** and **Listen**.
+  from your weakest unit in each, and **Ask Claude**. Each guide has eleven
+  modes: **Cards** (tap-to-flip drill), **Read** (the guide as prose), **Field
+  guide** (the whole thing as the published document, masthead and all),
+  **Watch** (a narrated lesson per unit with slides that follow the voice),
+  **Slides** (the unit as a deck), **Doc** (the guide as .docx, .pdf, or
+  printed), **Quiz** (ten multiple choice, decoys drawn from other units),
+  **Figures**, **Cases**, **Cram** and **Listen**. They are one list too —
+  `src/lib/modes.ts`.
 - **Calendar** — a month grid of deadlines, and a Campus tab for athletics,
   clubs and university events.
 - **Mine** — your own tasks, appointments, notes and files, kept visibly apart
@@ -132,7 +136,7 @@ If you add a unit to a guide, check the figure keys — they are unit indices.
 
 ## Audio
 
-`public/audio` holds five recordings, wired into each guide's **Listen** mode
+`public/audio` holds eight recordings, wired into each guide's **Listen** mode
 with chapter marks that seek.
 
 - `econ-guide.mp3`, `psci-condensed.mp3`, `psci-full.mp3`, `core-full.mp3` —

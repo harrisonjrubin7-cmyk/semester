@@ -66,7 +66,7 @@ Three things were decided rather than inherited:
 
 ## Audio
 
-Five recordings ship in `app/public/audio`, wired into each guide's Listen mode
+Eight recordings ship in `app/public/audio`, wired into each guide's Listen mode
 with chapter marks that seek:
 
 - The four original narrated readings.
