@@ -100,6 +100,23 @@ export function Import() {
   const abort = useRef<AbortController | null>(null);
   /** Whether a file is being dragged over the screen right now. */
   const [over, setOver] = useState(false);
+  /**
+   * Whether the drop box is open, and whether something is being held over it.
+   *
+   * The screen has always taken a drop anywhere on it, but nothing on it said
+   * so: a person who wanted to drag a folder in had to guess that the guess
+   * would work, and the only visible control opened the operating system's
+   * file dialog instead. So pressing that control now also opens a box under
+   * it that names the gesture and shows exactly where it lands — and because
+   * it opens as the dialog does, it is already standing there for anyone who
+   * cancels the dialog looking for the other way in.
+   *
+   * It stays open once opened. Adding a second reading after the syllabus is
+   * the common second act, and a target that disappears after one use makes
+   * the person hunt for it again.
+   */
+  const [zone, setZone] = useState(false);
+  const [overZone, setOverZone] = useState(false);
   /** The paste box, which is the way in when there is no file to pick. */
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
@@ -371,17 +388,73 @@ export function Import() {
       <FilePick
         accept={ACCEPT}
         disabled={busy !== ''}
+        onOpen={() => setZone(true)}
         onPick={(picked) => void addFiles(picked)}
         style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-7)' }}
       >
         {busy || (over ? 'Drop them here' : 'Choose files — PDF, Word, slides, text, or a zip')}
       </FilePick>
 
-      {/* The other door in. A course somebody has already generated arrives
-          as a file and needs no upload and no request — but it goes through
-          exactly the same review as a course generated here, including the
-          diff against a course you already hold, because a shared course can
-          be from a different section with different dates. */}
+      {/*
+        The drop box. Opened by the press above, and drawn as the dashed
+        rectangle everybody already reads as "put it here".
+
+        The box is itself a `FilePick`, so it is a target for the drag and a
+        second way to open the dialog, and neither of those is a scripted
+        click. The drop is not handled here: it bubbles to the screen-wide
+        handler above, whose `preventDefault` also stops the browser handing
+        the same files to the input underneath — which is what would otherwise
+        add every file twice.
+      */}
+      {zone && (
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (busy === '') setOverZone(true);
+          }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOverZone(false);
+          }}
+          onDrop={() => setOverZone(false)}
+          style={{ marginTop: 'var(--sp-4)' }}
+        >
+          <FilePick
+            accept={ACCEPT}
+            disabled={busy !== ''}
+            onPick={(picked) => void addFiles(picked)}
+            style={{
+              height: 'auto',
+              minHeight: 140,
+              flexDirection: 'column',
+              gap: 'var(--sp-2)',
+              padding: 'var(--sp-7)',
+              textAlign: 'center',
+              textTransform: 'none',
+              letterSpacing: 'normal',
+              border: `1px dashed ${overZone ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
+              background: overZone ? 'rgba(236, 238, 242, 0.09)' : 'transparent',
+            }}
+          >
+            <span style={{ fontSize: 'var(--type-md)', fontFamily: 'var(--font-body)', lineHeight: 'var(--leading-normal)' }}>
+              {busy || (overZone ? 'Let go — they land here' : 'Drag your files into this box')}
+            </span>
+            <span
+              style={{
+                fontSize: 'var(--type-sm)',
+                fontFamily: 'var(--font-body)',
+                fontWeight: 400,
+                opacity: 0.62,
+                lineHeight: 'var(--leading-normal)',
+                textWrap: 'pretty',
+              }}
+            >
+              PDF, Word, slides, text, or a zip · or click the box to browse again
+            </span>
+          </FilePick>
+        </div>
+      )}
+
+      {/* The door with no file behind it at all. See `takePasted`. */}
       <button
         type="button"
         className="bare tappable"
@@ -426,6 +499,11 @@ export function Import() {
         </>
       )}
 
+      {/* The other door in. A course somebody has already generated arrives
+          as a file and needs no upload and no request — but it goes through
+          exactly the same review as a course generated here, including the
+          diff against a course you already hold, because a shared course can
+          be from a different section with different dates. */}
       <FilePick
         accept="application/json,.json"
         multiple={false}

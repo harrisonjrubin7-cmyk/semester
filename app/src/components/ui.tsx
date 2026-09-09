@@ -680,6 +680,7 @@ export function FilePick({
   capture,
   disabled = false,
   onPick,
+  onOpen,
   tone = 'secondary',
   block = true,
   style,
@@ -702,6 +703,17 @@ export function FilePick({
   capture?: 'environment' | 'user';
   disabled?: boolean;
   onPick: (files: File[]) => void;
+  /**
+   * Fired as the picker opens, before the person has chosen anything.
+   *
+   * The operating system's dialog is a box the app cannot see into or draw
+   * on, so this is the only moment a screen has to say something about the
+   * choice being made — Import uses it to open the drop box underneath, which
+   * is then standing there in the open when the dialog is cancelled.
+   *
+   * It runs on the keyboard too: Enter on a focused file input is a click.
+   */
+  onOpen?: () => void;
   /**
    * `bare` is not a button at all — it is the app's quiet text link, for the
    * "…or open a course somebody shared with you" shape. It takes no height
@@ -741,6 +753,7 @@ export function FilePick({
         multiple={multiple}
         {...(capture ? { capture } : null)}
         disabled={disabled}
+        onClick={() => onOpen?.()}
         onChange={(e) => {
           const picked = Array.from(e.target.files ?? []);
           // Cleared before the handler runs, so that re-choosing the same file

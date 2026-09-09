@@ -76,7 +76,9 @@ describe('tap targets', () => {
       'src/components/InsightCards.tsx', // 108×17 and 193×17
       'src/components/Insights.tsx',     // 24×17
       'src/screens/Links.tsx',           // 30×17
-      'src/screens/Account.tsx',         // 102×19
+      // 102×19 — the sign-in links, which moved off the account screen into
+      // the form both it and the first run now render.
+      'src/components/Credentials.tsx',
       'src/App.tsx',                     // 115×23, the way up to a course
       // 17×16, one per section of Today, and the reason the measuring is
       // written down twice: the first version of this grip was the size of
