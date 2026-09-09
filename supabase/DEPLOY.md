@@ -10,6 +10,24 @@ are missing.
     claude   ACTIVE, v1, verify_jwt off
     push     ACTIVE, v1, verify_jwt off
 
+## Deploying a function without a laptop
+
+`.github/workflows/functions.yml` runs the same command from Actions:
+**Actions → Deploy Edge Functions → Run workflow**, with the function's name
+(`fetchcal` by default). It also runs itself when a push to main changes a
+function's own directory, and it deploys only the directories that changed.
+
+It needs one secret, once: `SUPABASE_ACCESS_TOKEN`, from
+[supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens),
+added under Settings → Secrets and variables → Actions. That is an *account*
+credential — it can deploy — so it lives in a secret and nowhere else. It is
+neither the publishable key (which is public by design and committed) nor the
+service key (which must never be anywhere). Without it the workflow warns and
+deploys nothing rather than failing main.
+
+The project is read from the `SUPABASE_PROJECT_REF` variable if set, and
+otherwise off `VITE_SUPABASE_URL` — so a fork deploys to its own project.
+
 ## Not deployed yet: `fetchcal`
 
     supabase functions deploy fetchcal
