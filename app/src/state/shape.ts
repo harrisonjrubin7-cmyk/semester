@@ -490,6 +490,20 @@ export interface Persisted {
   picked: Record<string, boolean>;
   seenOnboarding: boolean;
   /**
+   * Whether an account has ever been made or signed into on this device.
+   *
+   * Not a session and not a claim about being signed in — `store.account` is
+   * that, and it is deliberately not persisted. This is the one bit the sign-in
+   * form needs and cannot ask anybody for: whether the person in front of it
+   * has an account yet. Without it the form has to guess, and a form that opens
+   * on "sign in" for somebody who has never registered is a wall with no door
+   * in it.
+   *
+   * It only ever goes from false to true. Signing out does not un-make the
+   * account, so it does not clear this either.
+   */
+  registered: boolean;
+  /**
    * Which university, as an id rather than a name.
    *
    * Empty is a normal state, not an error: it means the universal eighty per
@@ -748,6 +762,7 @@ export const DEFAULT_PERSISTED: Persisted = {
     return a;
   }, {}),
   seenOnboarding: false,
+  registered: false,
   // Vanderbilt by default, because that is who this was built for and a fresh
   // install should be the app they already have. Changed in Settings.
   schoolId: 'vanderbilt',
@@ -1163,6 +1178,7 @@ export function pickPersisted(state: State): Persisted {
     notifs: state.notifs,
     picked: state.picked,
     seenOnboarding: state.seenOnboarding,
+    registered: state.registered,
     cleared: state.cleared,
     tasks: state.tasks,
     appointments: state.appointments,
@@ -1402,6 +1418,15 @@ export type Action =
    * your colours changed.
    */
   | { type: 'wipeLocalForAdopt' }
+  /**
+   * An account was made, or signed into, on this device.
+   *
+   * Idempotent and one-way: it is dispatched by the credentials form the
+   * moment either call comes back without an error, and again by the store
+   * when a session arrives from anywhere else — the OAuth round trip, or a
+   * confirmation link opened in another tab.
+   */
+  | { type: 'registered' }
   | { type: 'onbNext' }
   | { type: 'restartOnboarding' }
   | { type: 'finishOnboarding' }

@@ -35,6 +35,24 @@ describe('the header', () => {
     expect(usesRegistry || unnamed.length === 0, unnamed.join(', ')).toBe(true);
   });
 
+  /*
+   * The other registry, and the one the check above cannot see.
+   *
+   * A settings page is deliberately absent from `DESTINATIONS` — it is a page
+   * under Settings, not a destination of its own — so "every registry screen
+   * is named" passed while `setAssistant` had no case, was not in the
+   * registry the fallback reads, and therefore wore `fallbackHeader`'s last
+   * resort: "Today", dated, over the API key and the model picker. Every
+   * settings page needs a case; there is no fallback that can name one.
+   */
+  it('gives every settings page a case of its own', () => {
+    const cased = new Set([...headerSource().matchAll(/case '([A-Za-z]+)':/g)].map((m) => m[1]));
+    const missing = SETTINGS.flatMap((s) => s.rows)
+      .map((r) => r.screen)
+      .filter((s) => /^set[A-Z]/.test(s) && !cased.has(s));
+    expect(missing, `${missing.join(', ')} would fall through to "Today"`).toEqual([]);
+  });
+
   it('never falls back to Today for a screen the registry knows', () => {
     const src = headerSource();
     // The literal that four screens used to wear. It may appear as the answer

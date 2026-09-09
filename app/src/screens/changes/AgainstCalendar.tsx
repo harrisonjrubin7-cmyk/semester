@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { secondLine } from '../../lib/dim';
 import { useStore } from '../../state/store';
 import { useRowStyle } from '../../components/shell/useShell';
 import { Blueprint } from '../../components/Blueprint';
@@ -127,6 +128,7 @@ export function AgainstCalendar() {
         <>
           <SectionLabel>The calendar file</SectionLabel>
           <textarea
+            aria-label="The calendar file, pasted"
             className="input"
             value={pasted}
             onChange={(e) => setPasted(e.target.value)}
@@ -298,7 +300,7 @@ export function AgainstCalendar() {
           )}
 
           <PrintButton label="Print this comparison" style={{ marginTop: 14 }} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Titles are matched by how much they have in common, scoped to the course. Where a
             pairing is not clearly right it is reported as two separate lines rather than one
             confident wrong match — a wrong match would send you to change a date that was right.

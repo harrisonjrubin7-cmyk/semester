@@ -296,7 +296,7 @@ export function multipliers(css: string): Problem[] {
  */
 
 /** The four things counted. Ordered, because the reports read in this order. */
-export const AXES = ['type', 'leading', 'space', 'shorthand'] as const;
+export const AXES = ['type', 'leading', 'space', 'shorthand', 'dim'] as const;
 
 export type Axis = (typeof AXES)[number];
 
@@ -312,6 +312,7 @@ export const AXIS_SAYS: Record<Axis, string> = {
   leading: 'line heights off the three — 1.55, 1.4, 1.35 and below',
   space: 'spacing numbers off the seven steps — 14, 7, 9, 18 and a tail',
   shorthand: "`padding: '11px 0'` and the like: two axes in one string",
+  dim: 'text dimmed with a hand-written `opacity` rather than with `--app-dim`',
 };
 
 /*
@@ -462,6 +463,23 @@ function countIn(text: string): Counted {
 
   add('shorthand', [...code.matchAll(/\b(?:margin|padding): '[^']*px[^']*'/g)].length);
 
+  /*
+   * Text dimmed by hand, which the palette audit cannot see.
+   *
+   * `lib/look.ts` gives every ground a `dimAlpha` and a `faintAlpha`, and
+   * `contrast.test.ts` checks both against every panel of every ground. An
+   * `opacity: 0.55` written into a component answers to none of that: it was
+   * picked by eye on one ground, it is not raised by "Increase contrast", and
+   * where two of them nest they multiply — which is how a ticked-off row's
+   * second line came to render at 0.23, or 1.9:1. See `lib/dim.ts`.
+   *
+   * Counted rather than banned, because `opacity` is still the right tool for
+   * dimming a whole row — tag, rule and all — and no regex can tell that case
+   * from a caption. So this is a ledger like the three above it: it may shrink
+   * and it may not grow, and the way to spend nothing is `secondLine()`.
+   */
+  add('dim', [...code.matchAll(/\bopacity: 0\.\d+/g)].length);
+
   return out;
 }
 
@@ -493,7 +511,7 @@ export function countsByFile(dir: string): Budget {
  * summary and the rule can never disagree about what is in the tree.
  */
 export function counts(dir: string): Record<Axis, number> {
-  const total: Record<Axis, number> = { type: 0, leading: 0, space: 0, shorthand: 0 };
+  const total: Record<Axis, number> = { type: 0, leading: 0, space: 0, shorthand: 0, dim: 0 };
   for (const owed of Object.values(countsByFile(dir))) {
     for (const axis of AXES) total[axis] += owed[axis] ?? 0;
   }
@@ -502,7 +520,7 @@ export function counts(dir: string): Record<Axis, number> {
 
 /** Add up one side of the ledger, for a report that wants a single number. */
 export function owed(budget: Budget): Record<Axis, number> {
-  const total: Record<Axis, number> = { type: 0, leading: 0, space: 0, shorthand: 0 };
+  const total: Record<Axis, number> = { type: 0, leading: 0, space: 0, shorthand: 0, dim: 0 };
   for (const entry of Object.values(budget)) {
     for (const axis of AXES) total[axis] += entry[axis] ?? 0;
   }
@@ -552,8 +570,12 @@ export function overBudget(dir: string, budget: Budget): Problem[] {
           found: `${axis} ${n}, and ${cap} allowed`,
           says:
             `${n - cap} more than this file is allowed — ${AXIS_SAYS[axis]}.\n` +
-            '    Use a token, or a `calc(Npx * var(--text-scale, 1))` for a size that is\n' +
-            '    genuinely not on the scale. If the value has to stay, raise this file\n' +
+            (axis === 'dim'
+              ? '    Dim text with `secondLine()` from `lib/dim.ts`, which is the audited\n' +
+                '    token. Keep `opacity` for a whole row, and reach for `DIMMED_ROW`.\n'
+              : '    Use a token, or a `calc(Npx * var(--text-scale, 1))` for a size that is\n' +
+                '    genuinely not on the scale.\n') +
+            '    If the value has to stay, raise this file\n' +
             '    with `npm run lint:styles -- --fix` and say why in the same diff.',
         });
       } else {

@@ -5,7 +5,8 @@ import { Blueprint } from '../components/Blueprint';
 import { StorageRoom } from '../components/StorageRoom';
 import { syncLine } from '../lib/merge';
 import { ActionButton, SectionLabel } from '../components/ui';
-import { cloudConfigured, sendReset, signIn, signInWith, signOut, signUp } from '../lib/cloud';
+import { Credentials } from '../components/Credentials';
+import { cloudConfigured, signOut } from '../lib/cloud';
 
 /**
  * The account screen.
@@ -17,9 +18,6 @@ import { cloudConfigured, sendReset, signIn, signInWith, signOut, signUp } from 
  */
 export function AccountScreen() {
   const { state, account, sync, refresh } = useStore();
-  const [mode, setMode] = useState<'in' | 'up'>('in');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(false);
   const [checked, setChecked] = useState('');
@@ -173,14 +171,30 @@ export function AccountScreen() {
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
         </div>
+        {/* Signing out can fail — a network that has gone, most often — and a
+            button that appears to do nothing is the worst thing this screen
+            could do with an account still signed in. */}
+        {note && (
+          <div role="status" aria-live="polite" style={{ fontSize: 'var(--type-base)', opacity: 0.85, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
+            {note}
+          </div>
+        )}
+        {error && (
+          <div role="alert" style={{ fontSize: 'var(--type-base)', color: 'var(--app-accent)', marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
+            {error}
+          </div>
+        )}
       </Page>
     );
   }
 
   return (
     <Page>
+      {/* The same test the form opens by, and it has to be made here because
+          the form owns which way round it is: somebody with an account is
+          coming back to it, and somebody without one has never seen it. */}
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
-        {mode === 'in' ? 'Pick up where you left off.' : 'One semester, every device.'}
+        {state.registered ? 'Pick up where you left off.' : 'One semester, every device.'}
       </div>
       <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         An account keeps your courses, notes and progress in step between your phone and your
@@ -188,143 +202,14 @@ export function AccountScreen() {
       </div>
 
       {/*
-        A real form, with labels tied to inputs by id.
+        The form itself lives in `components/Credentials.tsx`.
 
-        Two inputs with `aria-label` and no `<form>` around them is a shape a
-        password manager does not recognise: 1Password and iCloud Keychain look
-        for a submittable form with named fields, so filling this had to be done
-        by hand. It also means Enter submits and an iOS keyboard shows Go.
-
-        The labels are visually hidden rather than absent — the placeholder says
-        the same words, and a placeholder disappears the moment somebody starts
-        typing, which is exactly when a label is needed.
+        It is the same two fields the first run asks for, and it was written
+        out here when here was the only place that asked. A second copy is a
+        second place for the autocomplete hints, the eight-character floor and
+        the reset link to drift apart, so both places render this one.
       */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (busy || !email.trim() || password.length < 8) return;
-          void run(() =>
-            mode === 'in' ? signIn(email.trim(), password) : signUp(email.trim(), password),
-          );
-        }}
-      >
-        <label className="sr-only" htmlFor="account-email">
-          Email
-        </label>
-        <input
-          className="input"
-          id="account-email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          inputMode="email"
-          placeholder="you@vanderbilt.edu"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-7)' }}
-        />
-        <label className="sr-only" htmlFor="account-password">
-          Password
-        </label>
-        <input
-          className="input"
-          id="account-password"
-          name="password"
-          type="password"
-          autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
-          placeholder={mode === 'in' ? 'Password' : 'Password — at least 8 characters'}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)' }}
-        />
-
-        <button
-          type="submit"
-          className="btn btn-primary btn-block"
-          disabled={busy || !email.trim() || password.length < 8}
-          style={{
-            height: 50,
-            fontSize: 'var(--type-lg)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            marginTop: 14,
-          }}
-        >
-          {busy ? 'Working…' : mode === 'in' ? 'Sign in' : 'Create the account'}
-        </button>
-      </form>
-
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={busy}
-          onClick={() => void run(() => signInWith('google'))}
-          style={{ flex: 1, height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Google
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={busy}
-          onClick={() => void run(() => signInWith('azure'))}
-          style={{ flex: 1, height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Microsoft
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={busy}
-          onClick={() => void run(() => signInWith('apple'))}
-          style={{ flex: 1, height: 42, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Apple
-        </button>
-      </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
-        Any Google or Microsoft account works — there is no check on which university the address
-        belongs to. Email and a password is kept as a third way in because some universities block
-        third-party sign-in outright, and being locked out of the only option is not a good enough
-        reason to be locked out of the app. Each provider works once it is switched on for the
-        project; until then it answers with a provider error, which is the truth rather than a
-        button that looks broken.
-      </div>
-
-      {/* Two text links side by side, 14px apart — so `tap-y` on both. An
-          overlay reaching sideways would have each claiming the other's
-          space, and the one later in the DOM would quietly win the overlap.
-          Measured 102×19: the size of the words, not of a thumb. */}
-      <div style={{ display: 'flex', gap: 14, marginTop: 18 }}>
-        <button
-          type="button"
-          className="bare tap-y"
-          onClick={() => setMode(mode === 'in' ? 'up' : 'in')}
-          style={{ fontSize: 'var(--type-sm)', opacity: 0.7, width: 'auto' }}
-        >
-          {mode === 'in' ? 'Make an account' : 'I already have one'}
-        </button>
-        {mode === 'in' && email.trim() && (
-          <button
-            type="button"
-            className="bare tap-y"
-            onClick={() => void run(() => sendReset(email.trim()))}
-            style={{ fontSize: 'var(--type-sm)', opacity: 0.5, width: 'auto' }}
-          >
-            Send a reset link
-          </button>
-        )}
-      </div>
-
-      {note && (
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.85, marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>{note}</div>
-      )}
-      {error && (
-        <div role="alert" style={{ fontSize: 'var(--type-base)', color: 'var(--app-accent)', marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
-          {error}
-        </div>
-      )}
+      <Credentials />
 
       <SectionLabel>Before you sign up</SectionLabel>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.55, textWrap: 'pretty' }}>

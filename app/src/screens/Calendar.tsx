@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
@@ -1159,7 +1160,7 @@ function MonthView() {
               fontSize: 'calc(10px * var(--text-scale, 1))',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              opacity: 0.45,
+              ...secondLine(),
             }}
           >
             {d}

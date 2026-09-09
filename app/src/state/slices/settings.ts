@@ -218,6 +218,14 @@ export function settings(state: State, action: Action): State | null {
      * One tap, permanent, and it only ever adds. Nothing is un-revealed by
      * switching it back off — `visited` sees to that.
      */
+    /*
+     * One-way, and idempotent. Signing out does not un-make an account, so
+     * this never goes back to false — the next visit asks for the password,
+     * not for a second account.
+     */
+    case 'registered':
+      return state.registered ? state : { ...state, registered: true };
+
     case 'showEverything':
       return state.showAll === action.on ? state : { ...state, showAll: action.on };
 

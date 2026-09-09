@@ -37,6 +37,29 @@ describe('the first run knows how long it is', () => {
     expect(Math.max(...branches)).toBeLessThan(ONB_STEPS);
   });
 
+  /*
+   * The account, asked for in the one place everybody passes through.
+   *
+   * It was offered only on the account screen, behind Settings, opening on a
+   * sign-in form — so a first run never mentioned that an account existed and
+   * the people who most need one never found it. The step is here now, and
+   * these two say so in a way that a tidy-up cannot quietly undo.
+   */
+  it('asks for an account, with the one form both places share', () => {
+    expect(onboarding).toContain('<Credentials');
+    expect(onboarding).toContain("from '../components/Credentials'");
+  });
+
+  it('asks before the alerts, which need the account to reach a phone', () => {
+    // A reminder the server sends belongs to an account — see `saveDevice` in
+    // `lib/cloud.ts`. Switching the alerts on first would be switching on
+    // something that cannot be delivered yet.
+    const account = onboarding.indexOf('<Credentials');
+    const alerts = onboarding.indexOf('NOTIF_DEFS.map');
+    expect(account).toBeGreaterThan(-1);
+    expect(alerts).toBeGreaterThan(account);
+  });
+
   it('ends the run from the constant, never from a literal', () => {
     // The bug this file exists for. A hardcoded bound here is invisible until
     // somebody adds a screen and it silently never appears.

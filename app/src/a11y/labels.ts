@@ -20,20 +20,32 @@ import { join } from 'node:path';
  *
  * `aria-label`, `aria-labelledby`, or an `id` a `<label htmlFor>` can point at.
  *
- * A `placeholder` also counts, grudgingly — it is the last resort in the
- * accessible-name computation, so the browser does produce a name from it and
- * axe does not flag it. It is a poor label: it disappears the moment somebody
- * types, so the one control they are filling in is the one with no name left.
- * This rule accepts it because rejecting it would mean relabelling seventy
- * fields that are currently *usable*, which is a different piece of work from
- * the one this rule is here to prevent — a control with no name at all.
+ * Or an enclosing `<label>`, which is the oldest way of saying it and the one
+ * `Attendance` and `PiecesRow` already used. That took reading the file rather
+ * than the tag, which is why the rule missed it at first and leant on the
+ * placeholder instead.
+ *
+ * ## What a `placeholder` is not
+ *
+ * It counted, once, and the comment here said "grudgingly": the browser does
+ * derive a name from it as the last resort of the accessible-name computation,
+ * so axe stays quiet, and rejecting it would have meant relabelling sixty-odd
+ * fields. That was deferred work, not a judgement that it was fine, and this
+ * is it done.
+ *
+ * A placeholder is a poor label for a reason that has nothing to do with
+ * screen readers: **it disappears the moment somebody types.** The one field
+ * they are filling in is the one field with no label left, which is why every
+ * long form eventually gets somebody scrolling up to check what the third box
+ * wanted. Mail asks for five things in a row. Essay asks for five. Filling in
+ * the fourth should not require remembering the first.
  *
  * ## What it does not look at
  *
- * `type="hidden"`, and the file, checkbox and radio inputs that are drawn
- * inside a `<label>` or triggered by a button beside them. Those are named by
- * their surroundings in ways this rule cannot see from the text, and guessing
- * at them would produce exactly the false positives that get a linter deleted.
+ * `type="hidden"`, and the file, checkbox and radio inputs that are triggered
+ * by a button beside them. Those are named by their surroundings in ways this
+ * rule cannot see from the text, and guessing at them would produce exactly
+ * the false positives that get a linter deleted.
  */
 
 /** Attributes that give a control a name, or put it out of this rule's reach. */
@@ -41,7 +53,6 @@ const NAMED = [
   'aria-label',
   'aria-labelledby',
   ' id=',
-  'placeholder',
   'type="hidden"',
   'type="file"',
   'type="checkbox"',
@@ -107,6 +118,26 @@ function sources(dir: string): { path: string; text: string }[] {
   return out;
 }
 
+/**
+ * Whether a control at this offset is wrapped in a `<label>`.
+ *
+ * Counted rather than parsed: every `<label` before the control against every
+ * `</label>`, and an excess of openings means one is still open around it.
+ * That is enough for JSX, which cannot nest a label inside a label and cannot
+ * leave one unclosed and still compile.
+ *
+ * Without this the rule cannot see the oldest and plainest way to name a
+ * field — `<label>Absences allowed<input …/></label>` — and would report six
+ * controls that are already correct. A linter that cries wolf about correct
+ * code is a linter somebody deletes.
+ */
+function insideLabel(code: string, at: number): boolean {
+  const before = code.slice(0, at);
+  const opens = (before.match(/<label\b/g) ?? []).length;
+  const closes = (before.match(/<\/label>/g) ?? []).length;
+  return opens > closes;
+}
+
 /** Every form control in the app that a screen reader cannot name. */
 export function unnamed(dir: string): Unnamed[] {
   const out: Unnamed[] = [];
@@ -123,6 +154,7 @@ export function unnamed(dir: string): Unnamed[] {
         if (end === -1) continue;
         const written = code.slice(m.index, end + 1);
         if (NAMED.some((k) => written.includes(k))) continue;
+        if (insideLabel(code, m.index)) continue;
         out.push({
           file: rel,
           line: code.slice(0, m.index).split('\n').length,
@@ -140,7 +172,8 @@ export function unnamed(dir: string): Unnamed[] {
 export function says(p: Unnamed): string {
   return (
     `This <${p.tag}> has no accessible name, so a screen reader announces it ` +
-    `as a bare control.\n    Add aria-label with the same words as the ` +
-    `<SectionLabel> above it.`
+    `as a bare control — and a placeholder is not one, since it goes away as ` +
+    `soon as somebody types.\n    Add aria-label with the same words as the ` +
+    `<SectionLabel> above it, or wrap it in a <label>.`
   );
 }

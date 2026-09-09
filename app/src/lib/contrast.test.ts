@@ -291,6 +291,12 @@ describe('“Increase contrast”, which cannot be done in a media query', () =>
       for (const token of ['--app-dim', '--app-faint', '--app-line', '--app-line-soft', '--app-track']) {
         expect(alphaOf(loud[token]), `${g.id} ${token}`).toBeGreaterThan(alphaOf(plain[token]));
       }
+      // Written as a bare number rather than as a colour, so it is read
+      // rather than parsed for an alpha. See `lib/dim.ts` on why the one
+      // dimming that stays an opacity is still a token.
+      expect(Number(loud['--app-row-dim']), `${g.id} --app-row-dim`).toBeGreaterThan(
+        Number(plain['--app-row-dim']),
+      );
     }
   });
 
@@ -307,6 +313,7 @@ describe('“Increase contrast”, which cannot be done in a media query', () =>
       '--app-line-top',
       '--app-line-soft',
       '--app-track',
+      '--app-row-dim',
     ]);
     for (const [name, value] of Object.entries(plain)) {
       if (moved.has(name)) continue;

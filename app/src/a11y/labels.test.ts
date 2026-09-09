@@ -90,12 +90,57 @@ export const toField = (m: number) => m;`,
     <input aria-label="Your name" value={a} />
     <input aria-labelledby="who" value={b} />
     <input id="mail" value={c} />
-    <input placeholder="someone@vanderbilt.edu" value={d} />
     <input type="hidden" value={e} />
   </>
 );`,
     );
     expect(unnamed(dir)).toEqual([]);
+  });
+
+  it('accepts a control wrapped in its own label', () => {
+    // The oldest way of saying it, and the one `Attendance` and `PiecesRow`
+    // were already using. Until the rule could see it, both were passing only
+    // because they also had a placeholder.
+    const dir = withFile(
+      'Six.tsx',
+      `export const A = () => (
+  <>
+    <label>
+      Absences allowed
+      <input inputMode="numeric" value={a} onChange={(e) => set(e.target.value)} />
+    </label>
+    <label>
+      Then % off, each
+      <input inputMode="decimal" value={b} onChange={(e) => set(e.target.value)} />
+    </label>
+  </>
+);`,
+    );
+    expect(unnamed(dir)).toEqual([]);
+  });
+
+  it('does not accept a placeholder', () => {
+    /*
+     * It counted once, and the browser does derive a name from it — it is the
+     * last resort of the accessible-name computation, so axe stays quiet too.
+     * The reason to reject it is not the screen reader: a placeholder is gone
+     * the moment somebody types, so on a form that asks five things in a row
+     * the field being filled in is the one with no label left.
+     */
+    const dir = withFile(
+      'Seven.tsx',
+      `export const A = () => (
+  <input placeholder="someone@vanderbilt.edu" value={d} />
+);`,
+    );
+    expect(unnamed(dir)).toEqual([
+      {
+        file: 'Seven.tsx',
+        line: 2,
+        tag: 'input',
+        found: '<input placeholder="someone@vanderbilt.edu" value={d} />',
+      },
+    ]);
   });
 
   it('leaves alone the inputs named by what is drawn around them', () => {

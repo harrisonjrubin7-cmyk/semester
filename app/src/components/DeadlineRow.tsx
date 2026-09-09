@@ -6,6 +6,7 @@ import { isUnderway, openLine } from '../lib/underway';
 import { useRowStyle } from './shell/useShell';
 import { useAskAbout } from '../ai/AskAbout';
 import { CourseTag } from './CourseTag';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import type { DatedItem } from '../lib/types';
 
 /**
@@ -177,7 +178,7 @@ export function DeadlineRow({
           alignItems: 'center',
           padding: pad,
           textAlign: 'left',
-          opacity: done ? 0.45 : 1,
+          opacity: done ? DIMMED_ROW : 1,
         }}
       >
         <CourseTag id={item.c} style={{ flex: 'none' }} />
@@ -211,7 +212,7 @@ export function DeadlineRow({
             style={{
               display: 'block',
               fontSize: 'var(--type-xs)',
-              opacity: 0.55,
+              ...secondLine(done),
               marginTop: tight ? 0 : 2,
               // On one line in compact rows. Dropped entirely would be a
               // deadline with no date on it, which is not "compact".
