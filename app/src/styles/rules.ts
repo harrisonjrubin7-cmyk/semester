@@ -239,14 +239,21 @@ export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
   type: 688,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 224,
+  leading: 222,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 534,
+  space: 533,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 549,
+  shorthand: 545,
 };
 
 /*
+ * 688/224/534/549 → 688/222/533/545 when the assistant's panel became the
+ * chat. Three numbers down and none up, and none of it by reformatting: the
+ * panel's transcript, opening, header and footer are now the same components
+ * and the same measure the Ask tab uses, so the two loose 1.4 line heights,
+ * the hand-set gap and the four `'12px 16px'`-shaped paddings it drew for
+ * itself went with the layout they belonged to. See `ai/Assistant.tsx`.
+ *
  * 689/537/551 → 688/534/549 when the Ask tab became the conversation: the
  * screen that was a key form is a settings page built from `Group` and
  * `CustomRow`, which carry the scale, and the sizes and gaps it used to set by

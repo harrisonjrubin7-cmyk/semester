@@ -1108,14 +1108,27 @@ export default function App() {
         {/* Offers the last removal back, from wherever it happened. */}
         <Replaced />
       <Undone />
-        {/* One assistant, in the shell rather than on a screen. See `ai/`. */}
-        <Assistant />
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
         {chrome.rail && <Rail />}
         <div className="device device-pane">
+          {/*
+            One assistant, in the shell rather than on a screen — but inside
+            the pane, not beside it.
+
+            Every control primitive in `app.css` is scoped `.device .btn`,
+            `.device .input`, `.device .bare`. Mounted as a sibling of the pane
+            the panel was outside all of them, so on a wide window its
+            suggestion chips had no border and its composer was a white browser
+            textarea with a blue focus ring — the one place in the app that did
+            not look like the app. Nothing else changes: the panel and the
+            button are `position: fixed`, so they are laid out against the
+            viewport wherever they are mounted, and the pane's `overflow:
+            hidden` does not reach them.
+          */}
+          <Assistant />
           <Header />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
