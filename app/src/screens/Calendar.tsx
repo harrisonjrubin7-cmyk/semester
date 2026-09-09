@@ -1538,7 +1538,12 @@ function MonthView() {
                   {a.title}
                 </span>
                 {[a.time, a.where].filter(Boolean).length > 0 && (
-                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                  // `secondLine` rather than an opacity: main's contrast pass
+                  // landed while this branch was open, and a line written at
+                  // 0.55 inside a row is invisible to the audit and to
+                  // "Increase contrast". The campus row below still has the
+                  // old shape and is that pass's to convert, not this one's.
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine() }}>
                     {[a.time, a.where].filter(Boolean).join(' \u00b7 ')}
                   </span>
                 )}
