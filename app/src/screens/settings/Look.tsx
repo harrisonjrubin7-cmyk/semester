@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { secondLine } from '../../lib/dim';
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
 import { CustomRow, Group, SelectRow } from '../../components/shell/Rows';
@@ -65,7 +66,7 @@ const CAP: CSSProperties = {
 
 const HINT: CSSProperties = {
   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-  opacity: 0.5,
+  ...secondLine(),
   marginTop: 'var(--sp-3)',
   lineHeight: 'var(--leading-normal)',
 };

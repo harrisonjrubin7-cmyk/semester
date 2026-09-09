@@ -63,3 +63,18 @@ export function welcomeLead(catalog: Catalog): string {
     ? 'A syllabus goes in as a PDF, a Word file or pasted text. Everything below happens after that, and none of it is permanent.'
     : 'All of it came out of the PDFs your professors posted, and none of it is permanent — every date, weighting and room can be corrected.';
 }
+
+/**
+ * "Good morning" and its two siblings, for the screen the app opens on.
+ *
+ * The hours are the plain ones — morning until noon, afternoon until six,
+ * evening after that — with no fourth bucket for the small hours. A student
+ * reading this at 2am is working, not waking up, and "good night" would be the
+ * app telling them to stop.
+ */
+export function greeting(now: Date): string {
+  const h = now.getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 18) return 'Good afternoon';
+  return 'Good evening';
+}

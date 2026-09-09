@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
@@ -77,7 +78,7 @@ export function Walks({ date }: { date?: Date }) {
         </button>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         {pressed.length > 0
           ? 'Measured between places you saved, at an unhurried eighty metres a minute — slow on purpose, since an estimate that says you will make it and is wrong costs more than one that says you will not.'
           : 'Measured between places you saved, and a building you have not placed gets no distance rather than a guessed one. The map can look up every building this semester names in one tap.'}

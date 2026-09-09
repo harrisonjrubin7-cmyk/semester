@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useStore } from '../state/store';
-import { DESTINATIONS } from '../lib/nav';
+import { screenName } from '../lib/nav';
 import { providerFor } from './providers';
 import { render, type Look, type ScreenContext } from './shape';
 import type { Screen } from '../lib/types';
@@ -123,7 +123,11 @@ export function AIProvider({ children }: { children: ReactNode }) {
 
   const look = useCallback((): Assembled => {
     const now = live.current;
-    const label = DESTINATIONS.find((d) => d.screen === screen)?.label ?? screen;
+    // `screenName` rather than the registry alone: it also knows the settings
+    // pages and the screens you reach from something else, which the registry
+    // deliberately does not list. Without it the sheet's header read "Looking
+    // at: setLook" and its placeholder "Ask about drill".
+    const label = screenName(screen);
     const registered = [...extra.current.values()];
     if (!now) {
       return { screen, label, own: null, extra: registered, text: '', dropped: 0 };

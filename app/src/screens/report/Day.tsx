@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { secondLine } from '../../lib/dim';
 import { Produced } from '../../components/Produced';
 import { useStore } from '../../state/store';
 import { Trouble } from '../../components/Trouble';
@@ -309,7 +310,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
             </Produced>
           ) : null}
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Every number above is counted from your own data. {provider()} only reads the counts — it
             is told never to restate one differently or invent one.
           </div>
