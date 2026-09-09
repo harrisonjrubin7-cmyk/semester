@@ -22,7 +22,7 @@
 import { useStore } from '../../state/store';
 import { currentLook } from '../../state/shape';
 import { appCount, appShelves } from '../../lib/apps';
-import { saysFor } from '../../lib/nav';
+import { saysFor, shortFor } from '../../lib/nav';
 import { Caps } from '../soft/Soft';
 import { AppGrid } from './AppGrid';
 import { TileSheet } from './TileSheet';
@@ -45,7 +45,9 @@ export function AllApps({ onClose }: { onClose: () => void }) {
           <Caps quiet>{shelf.group}</Caps>
           <AppGrid
             apps={shelf.apps}
-            says={(d) => saysFor(d, caps)}
+            // The name this school uses, cut to the column when this school
+            // has no name of its own for it. `shortFor` holds both halves.
+            says={(d) => ({ label: shortFor(d, caps), blurb: saysFor(d, caps).blurb })}
             onOpen={(d) => {
               dispatch({ type: 'go', screen: d.screen });
               // The sheet is a way of getting somewhere, so arriving closes

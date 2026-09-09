@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { appCount, appShelves } from './apps';
 import { glyphFor } from '../components/icons.pick';
-import { GROUPS, offered, saysFor } from './nav';
+import { GROUPS, offered, saysFor, shortFor } from './nav';
 import { writeOrder } from './launcher';
 import type { Capabilities } from './school';
 import type { Screen } from './types';
@@ -81,15 +81,36 @@ describe('the app launcher', () => {
     expect(flat(FULL, stale).sort()).toEqual(flat(FULL).sort());
   });
 
-  it('says a screen the way this school says it', () => {
-    // Vanderbilt calls its registrar YES. A launcher printing the registry's
-    // own word there would be the one place in the app using somebody else's
-    // name for a student's university.
+  /*
+   * Vanderbilt calls its registrar YES. The launcher shipped printing
+   * "Register" there, because the tile takes `short` — an abbreviation of the
+   * *registry's* label — before the name the school actually uses, and `yes`
+   * has both. Checked through `shortFor`, which is what the grid renders,
+   * rather than through `saysFor`, which is what the first version of this
+   * test checked and what made the bug invisible.
+   */
+  it('says a screen the way this school says it, short label or not', () => {
     const named: Capabilities = { ...FULL, registrarName: 'YES', registrarUrl: 'https://example.edu' };
     const yes = appShelves(named, undefined)
       .flatMap((s) => s.apps)
-      .find((d) => d.screen === 'yes');
-    expect(yes && saysFor(yes, named).label).toBe('YES');
+      .find((d) => d.screen === 'yes')!;
+    expect(yes.short, 'the case only bites where there is a short label').toBe('Register');
+    expect(saysFor(yes, named).label).toBe('YES');
+    expect(shortFor(yes, named)).toBe('YES');
+  });
+
+  it('still cuts a long name down where the school has not renamed it', () => {
+    const yes = appShelves(FULL, undefined)
+      .flatMap((s) => s.apps)
+      .find((d) => d.screen === 'brief')!;
+    expect(shortFor(yes, FULL)).toBe('Report');
+  });
+
+  it('renders the name it was handed, not the registry’s short one', () => {
+    // `AppGrid` is the grid both this and the Tools tab draw. The order of
+    // that fallback is the whole of the bug above.
+    const grid = readFileSync('src/components/nav/AppGrid.tsx', 'utf8');
+    expect(grid).toMatch(/said\?\.label \?\? d\.short \?\? d\.label/);
   });
 });
 
@@ -125,6 +146,37 @@ describe('the icons in the grid', () => {
         seen.set(glyph, d.screen);
       }
     }
+  });
+});
+
+/*
+ * What the sheet covers, which is not the same box on both layouts.
+ *
+ * `absolute` fills `.device`, and on a phone `.device` is the app. On a desk
+ * it is a strip beside the rail — so the sheet covered the strip, and the rail
+ * stayed lit and clickable behind a dialog declaring `aria-modal="true"`.
+ * Tapping Courses there navigated the screen underneath while the sheet stayed
+ * over it, and a screen reader was told the rail was not there while it was.
+ *
+ * `Command` reached this conclusion first and switches to `fixed` at the same
+ * width; `a11y/modal.ts` argues the Tab half of the same promise. jsdom has no
+ * layout and no media queries, so the rule is held on the stylesheet.
+ */
+describe('what the sheet covers', () => {
+  const css = () => readFileSync('src/styles/app.css', 'utf8');
+
+  it('covers the window rather than the pane once the rail appears', () => {
+    const at = /@media \(min-width: 760px\) \{([\s\S]*?)\n\}/g;
+    const blocks = [...css().matchAll(at)].map((m) => m[1]);
+    const folder = blocks.find((b) => /\.soft-folder \{/.test(b));
+    expect(folder, 'no 760px rule for .soft-folder — the rail is live behind it').toBeDefined();
+    expect(folder).toMatch(/position:\s*fixed/);
+  });
+
+  it('draws its content as a column there, not a grid stretched over a laptop', () => {
+    const at = /@media \(min-width: 760px\) \{([\s\S]*?)\n\}/g;
+    const blocks = [...css().matchAll(at)].map((m) => m[1]);
+    expect(blocks.some((b) => /\.soft-folder-body/.test(b) && /max-width/.test(b))).toBe(true);
   });
 });
 

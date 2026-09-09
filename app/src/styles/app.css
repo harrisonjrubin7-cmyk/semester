@@ -2553,6 +2553,42 @@ input[type='search'].input {
   }
 }
 
+/*
+ * On a desk, the window rather than the pane.
+ *
+ * `absolute` is right on a phone, where `.device` is the app, and on a browser
+ * window between 402 and 760px, where the app is a column with ground either
+ * side and a sheet spilling onto the ground would be the only thing that does.
+ * Above 760px `.device-pane` is a strip beside the rail, and a sheet that
+ * covers only the strip leaves the rail lit and clickable behind a dialog
+ * saying `aria-modal="true"` — so a tap on Courses navigated the screen
+ * underneath while the sheet stayed over it, and a screen reader was told the
+ * rail was not there while it plainly was.
+ *
+ * `Command` reached the same conclusion for the same reason and switches to
+ * `fixed` at the same width; `a11y/modal.ts` argues the Tab half of it. Safe
+ * because nothing above this transforms — a transformed ancestor would become
+ * the containing block and put the sheet back over the pane.
+ *
+ * The content is a column at that width rather than a grid stretched over a
+ * laptop, which is what makes a covered window read as a sheet and not as a
+ * screen that has been pulled out of shape.
+ */
+@media (min-width: 760px) {
+  .soft-folder {
+    position: fixed;
+    padding: 26px;
+  }
+
+  .soft-folder-top,
+  .soft-folder-grid,
+  .soft-folder-body {
+    width: 100%;
+    max-width: 620px;
+    margin-inline: auto;
+  }
+}
+
 .soft-folder-top {
   display: flex;
   align-items: flex-start;

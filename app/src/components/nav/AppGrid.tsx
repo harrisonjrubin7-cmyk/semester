@@ -60,9 +60,14 @@ export function AppGrid({
             title={said?.blurb ?? d.blurb}
           >
             <span className="appicon-tile">{createElement(glyphFor(d.screen), { size: 27 })}</span>
-            {/* The short name when there is one: this is a 74px column, and
-                the label that fits a directory row does not fit here. */}
-            <span className="appicon-name">{d.short ?? said?.label ?? d.label}</span>
+            {/* The caller's name first, then the short one: this is a 74px
+                column, so the registry's `short` is the right default — but
+                it abbreviates the registry's own label, and a caller passing
+                `says` is telling us this school calls the screen something
+                else. `d.short` first is how the launcher shipped saying
+                "Register" at the one university that calls it YES. See
+                `shortFor` in `lib/nav.ts`. */}
+            <span className="appicon-name">{said?.label ?? d.short ?? d.label}</span>
           </button>
         );
       })}
