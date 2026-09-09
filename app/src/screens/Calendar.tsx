@@ -37,10 +37,12 @@ import {
   railFor,
 } from '../lib/select';
 import { timeLabel, useDragToMove } from '../lib/drag';
+import { keepBlock, shows, sourceName, type CalSource } from '../lib/calsource';
 import { useRowStyle } from '../components/shell/useShell';
 import { useCalendarMove, type Movable } from './calendar/Move';
 import { AddHere } from './calendar/AddHere';
 import type { CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
+import { Folding } from '../components/Fold';
 
 /**
  * The calendar has two independent axes.
@@ -59,7 +61,7 @@ const SOURCES = [
   { id: 'campus', label: 'Campus' },
 ] as const;
 
-type Source = (typeof SOURCES)[number]['id'];
+type Source = CalSource;
 
 const EV_FILTERS = ['All', 'Athletics', 'Clubs', 'University', 'Saved'] as const;
 
@@ -72,6 +74,41 @@ const EV_FILTERS = ['All', 'Athletics', 'Clubs', 'University', 'Saved'] as const
  * turned rather than four new colours, and it is the same in every view
  * instead of being the calendar's private scheme. Ask the store: `tint(id)`.
  */
+
+/**
+ * Back to today, said out loud.
+ *
+ * Every view could already be walked away from and only two could be walked
+ * back, by tapping a heading that gave no sign it was a control: the day's
+ * date and the week's range reset when tapped, which nobody knows unless they
+ * have read this file. The month had nothing at all, so a term browsed to
+ * December came back six taps at a time, and it is the view most people are in.
+ *
+ * One control, in one place, that appears only when it would do something.
+ * Drawn where the view's own arrows are, because that is where the hand
+ * already is when it has gone too far.
+ */
+function BackToToday({ onClick }: { onClick: () => void }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--sp-5)' }}>
+      <button
+        type="button"
+        className="btn"
+        onClick={onClick}
+        style={{
+          flex: 'none',
+          padding: 'var(--sp-2) var(--sp-6)',
+          fontSize: 'var(--type-xs)',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          background: 'transparent',
+        }}
+      >
+        Back to today
+      </button>
+    </div>
+  );
+}
 
 // ── Day ───────────────────────────────────────────────────────────────────
 
@@ -103,33 +140,34 @@ function DayView() {
   });
   const isToday = sameDay(day, now);
   const source = state.calSource;
+  // What this source includes, from `lib/calsource.ts` rather than from three
+  // conditions written out here. Day's buckets were the right ones and are
+  // what that file records; asking it is what stops the other three views
+  // drifting from them again.
+  const on = shows(source);
 
-  const rail =
-    source === 'all' || source === 'classes'
-      ? railFor(
-          catalog,
-          day,
-          state.appointments,
-          state.commitments,
-          // A deadline with an hour on it sits on the rail at that hour.
-          datedItems(catalog, day).filter((i) => !state.done[i.id]),
-        )
-      : [];
-  const due = source === 'all' || source === 'deadlines'
+  const rail = on.classes
+    ? railFor(
+        catalog,
+        day,
+        state.appointments,
+        state.commitments,
+        // A deadline with an hour on it sits on the rail at that hour.
+        datedItems(catalog, day).filter((i) => !state.done[i.id]),
+      )
+    : [];
+  const due = on.deadlines
     ? datedItems(catalog, now).filter((i) => sameDay(i.date, day))
     : [];
-  const events = source === 'all' || source === 'campus'
+  const events = on.campus
     ? datedEvents(now, state.sample).filter((e) => sameDay(e.date, day))
     : [];
-  const myTasks = source === 'all' || source === 'deadlines'
-    ? state.tasks.filter((t) => t.date === dateToIso(day))
-    : [];
+  const myTasks = on.deadlines ? state.tasks.filter((t) => t.date === dateToIso(day)) : [];
 
   // Anything a connected calendar says is on — Brightspace, Outlook, Zoom.
   // It sits in its own section, labelled, so a feed can never be mistaken for
   // a date the syllabus stated.
-  const feedToday =
-    source === 'all' || source === 'campus' ? feedEventsOn(state.feedEvents, day) : [];
+  const feedToday = on.campus ? feedEventsOn(state.feedEvents, day) : [];
 
   const empty =
     rail.length === 0 &&
@@ -140,6 +178,7 @@ function DayView() {
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
+      <Folding name="DayView">
       <div
         style={{
           display: 'flex',
@@ -156,19 +195,14 @@ function DayView() {
         >
           <ChevronLeft size={18} />
         </button>
-        <button
-          type="button"
-          className="bare"
-          onClick={() => dispatch({ type: 'setCalDay', date: null })}
-          style={{ width: 'auto', textAlign: 'center' }}
-        >
+        <div style={{ textAlign: 'center' }}>
           <span className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', display: 'block' }}>
             {isToday ? 'Today' : DOW[day.getDay()]}
           </span>
           <span className="kicker" style={{ display: 'block' }}>
             {MONTHS[day.getMonth()]} {day.getDate()}
           </span>
-        </button>
+        </div>
         <button
           type="button"
           className="btn btn-ghost btn-icon"
@@ -179,13 +213,15 @@ function DayView() {
         </button>
       </div>
 
+      {!isToday && <BackToToday onClick={() => dispatch({ type: 'setCalDay', date: null })} />}
+
       {empty && (
         <EmptyState
           title="Nothing on."
           body={
             source === 'all'
               ? 'No classes, no deadlines, no events. A genuinely free day.'
-              : 'Nothing from this source. There may be something under another one.'
+              : `Nothing from ${sourceName(source)} on this day. There may be something under another chip.`
           }
           // A free day is a fact and there is nothing to do about it. An empty
           // filter is a question — is the day free, or am I looking through a
@@ -425,6 +461,7 @@ function DayView() {
       )}
 
       <div style={{ height: 22 }} />
+      </Folding>
     </div>
   );
 }
@@ -565,12 +602,22 @@ const arrow = {
  * label, so the week is for shape and the day is for reading.
  */
 function WeekView() {
+  const weekEventRow = useRowStyle(11);
   const { state, dispatch, now, catalog } = useStore();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<{ date: string; at: number } | null>(null);
   const anchor = state.calDay ? isoToDate(state.calDay) : now;
   const start = new Date(anchor);
   start.setDate(start.getDate() - start.getDay());
+  /*
+   * The source axis, which this view ignored entirely.
+   *
+   * Choosing "Due" left every class on the grid and choosing "Campus" changed
+   * nothing at all — the chips moved and the week did not. They are read here
+   * exactly as Day reads them, through `lib/calsource.ts`, so the two views
+   * cannot mean different things by the same chip.
+   */
+  const on = shows(state.calSource);
 
   const days = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(start);
@@ -581,16 +628,38 @@ function WeekView() {
       blocks: hoursFor(
         catalog,
         date,
-        state.appointments,
-        state.commitments,
-        datedItems(catalog, date).filter((i) => !state.done[i.id]),
-      ),
+        on.classes ? state.appointments : [],
+        on.classes ? state.commitments : [],
+        on.deadlines ? datedItems(catalog, date).filter((i) => !state.done[i.id]) : [],
+        // Classes come out of the catalogue rather than out of the arguments
+        // above, so the filter is what drops them. The rule is in
+        // `lib/calsource.ts` so the day rail and this grid cannot disagree.
+      ).filter((b) => keepBlock(b.from, on)),
       onOpen: () => {
         dispatch({ type: 'setCalDay', date: dateToIso(date) });
         dispatch({ type: 'setCalView', view: 'day' });
       },
     };
   });
+
+  /*
+   * What is on around campus this week.
+   *
+   * Not on the grid: a football game is not yours to move and has no course,
+   * so drawing it as a block would give it a colour that means "an
+   * uncategorised thing you added" and a drag that gets refused. It goes under
+   * the week as a list, which is how the Day view and the month's day panel
+   * already show campus — one idiom, three places.
+   */
+  const weekEnd = new Date(start);
+  weekEnd.setDate(start.getDate() + 7);
+  const inWeek = (d: Date) => d >= start && d < weekEnd;
+  const campus = on.campus
+    ? datedEvents(now, state.sample).filter((e) => inWeek(e.date))
+    : [];
+  const feedWeek = on.campus
+    ? state.feedEvents.filter((e) => inWeek(isoToDate(e.date)))
+    : [];
 
   const step = (delta: number) => {
     const to = new Date(start);
@@ -601,6 +670,23 @@ function WeekView() {
   const last = new Date(start);
   last.setDate(start.getDate() + 6);
   const total = days.reduce((n, d) => n + d.blocks.length, 0);
+  // What the week holds under this source, grid and list together — so the
+  // count above the week and the empty state below it agree with each other.
+  const anything = total + campus.length + feedWeek.length;
+  /*
+   * Class meetings this week, counted from the syllabi rather than from the
+   * grid.
+   *
+   * `WeekDue`'s line says "N classes and M deadlines this week" and was being
+   * handed the number of *blocks drawn*, which already counted appointments
+   * and timed deadlines as classes and, once the source filter reached this
+   * view, would have called two deadlines "2 classes" under the Due chip.
+   * Zero when classes are filtered out, so the sentence does not describe
+   * something the week is not showing.
+   */
+  const classMeetings = on.classes
+    ? days.reduce((n, d) => n + railFor(catalog, d.date, []).filter((b) => b.c && !b.canceled).length, 0)
+    : 0;
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
@@ -623,21 +709,16 @@ function WeekView() {
         {/* Marked so it survives the printer. A pinned-up week wants its
             dates at the top of the page; the arrows either side of it do not
             print, and should not. */}
-        <button
-          type="button"
-          className="bare wk-head"
-          onClick={() => dispatch({ type: 'setCalDay', date: null })}
-          style={{ width: 'auto', textAlign: 'center' }}
-        >
+        <div className="wk-head" style={{ textAlign: 'center' }}>
           <span className="chrome-text" style={{ fontSize: 'calc(18px * var(--text-scale, 1))', display: 'block' }}>
             {MONTHS[start.getMonth()]} {start.getDate()} –{' '}
             {start.getMonth() === last.getMonth() ? '' : `${MONTHS[last.getMonth()]} `}
             {last.getDate()}
           </span>
           <span className="kicker" style={{ display: 'block' }}>
-            {total} {total === 1 ? 'thing' : 'things'} on
+            {anything} {anything === 1 ? 'thing' : 'things'} on
           </span>
-        </button>
+        </div>
         <button
           type="button"
           className="btn btn-ghost btn-icon"
@@ -648,11 +729,17 @@ function WeekView() {
         </button>
       </div>
 
-      <KindKey compact />
-      {total === 0 ? (
+      {!days.some((d) => d.isToday) && (
+        <BackToToday onClick={() => dispatch({ type: 'setCalDay', date: null })} />
+      )}
+
+      {total > 0 && <KindKey compact />}
+      {anything === 0 ? (
         <EmptyState
           title="Nothing this week."
-          body="No classes and nothing of your own."
+          // Names what is missing rather than "this source", which describes
+          // the chips to somebody who has forgotten which one is lit.
+          body={`Nothing from ${sourceName(state.calSource)} in this week.`}
           // The sentence used to end "Add something under Mine → Events",
           // which is a set of directions to a screen the app could simply
           // open. Naming a destination in prose is what a dead end sounds
@@ -669,6 +756,7 @@ function WeekView() {
         />
       ) : (
         <>
+          {total > 0 && (
           <WeekGrid
             days={days}
             now={minutesNow(now)}
@@ -701,17 +789,88 @@ function WeekView() {
               if (to) setAdding({ date: dateToIso(to), at: minutes });
             }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
-            Tap a date to open that day in full, hold a block to move it, and double-tap an empty
-            hour to put something there. Deadlines with no hour on them are listed under the grid
-            rather than drawn on it.
-          </div>
+          )}
+          {total > 0 && (
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
+              Tap a date to open that day in full, hold a block to move it, and double-tap an empty
+              hour to put something there. Deadlines with no hour on them are listed under the grid
+              rather than drawn on it.
+            </div>
+          )}
           {moving.notice}
           {adding && (
             <AddHere date={adding.date} at={adding.at} onClose={() => setAdding(null)} />
           )}
 
-          <WeekDue start={start} classes={total} />
+          {(campus.length > 0 || feedWeek.length > 0) && (
+            <>
+              <SectionLabel>On campus this week</SectionLabel>
+              {campus.map((e) => (
+                <button
+                  key={e.id}
+                  type="button"
+                  className="bare tappable"
+                  onClick={() => dispatch({ type: 'openEvent', id: e.id })}
+                  style={{ display: 'flex', gap: 'var(--sp-5)', width: '100%', textAlign: 'left', ...weekEventRow }}
+                >
+                  <span
+                    style={{
+                      width: 52,
+                      flex: 'none',
+                      fontFamily: 'var(--font-heading)',
+                      fontSize: 'var(--type-xs)',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      opacity: 0.55,
+                    }}
+                  >
+                    {DOW_INITIALS[e.date.getDay()]} {e.date.getDate()}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
+                      {e.title}
+                    </span>
+                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                      {e.time} · {e.where}
+                    </span>
+                  </span>
+                  <ChevronRight size={14} style={{ opacity: 0.4, flex: 'none' }} />
+                </button>
+              ))}
+              {feedWeek.map((e) => (
+                <div
+                  key={e.id}
+                  style={{ display: 'flex', gap: 'var(--sp-5)', ...weekEventRow }}
+                >
+                  <span
+                    style={{
+                      width: 52,
+                      flex: 'none',
+                      fontFamily: 'var(--font-heading)',
+                      fontSize: 'var(--type-xs)',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      opacity: 0.55,
+                    }}
+                  >
+                    {DOW_INITIALS[isoToDate(e.date).getDay()]} {isoToDate(e.date).getDate()}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
+                      {e.title}
+                    </span>
+                    {/* Said out loud, every time: a feed is what somebody
+                        else's calendar claims, not what a syllabus stated. */}
+                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                      From a connected calendar
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </>
+          )}
+
+          {on.deadlines && <WeekDue start={start} classes={classMeetings} />}
           <PrintButton label="Print the week" style={{ marginTop: 14 }} />
         </>
       )}
@@ -824,7 +983,9 @@ function MonthView() {
     (marks[d.getDate()] ??= []).push(mark);
   };
 
-  if (calSource === 'all' || calSource === 'deadlines') {
+  const on = shows(calSource);
+
+  if (on.deadlines) {
     datedItems(catalog, now).forEach((i) => add(i.date, { c: i.c, kind: 'due', title: i.title }));
     state.tasks.forEach((t) => {
       if (t.date) add(isoToDate(t.date), { c: t.courseId, kind: 'mine', title: t.title });
@@ -832,12 +993,12 @@ function MonthView() {
   }
   // Your own events, in the colour the day and week grids give them, so the
   // three views agree about what a colour means.
-  if (calSource === 'all' || calSource === 'classes') {
+  if (on.classes) {
     state.appointments.forEach((a) =>
       add(isoToDate(a.date), { c: null, kind: 'appt', tint: kindOf(a.kind).tint, title: a.title }),
     );
   }
-  if (calSource === 'all' || calSource === 'campus') {
+  if (on.campus) {
     datedEvents(now, state.sample).forEach((e) => add(e.date, { c: null, kind: 'event', title: e.title }));
     state.feedEvents.forEach((e) =>
       add(isoToDate(e.date), { c: e.courseId, kind: 'feed', title: e.title }),
@@ -867,6 +1028,7 @@ function MonthView() {
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
+      <Folding name="MonthView">
       <div
         style={{
           display: 'flex',
@@ -898,6 +1060,23 @@ function MonthView() {
           <ChevronRight size={18} />
         </button>
       </div>
+
+      {/* The month is the view somebody browses furthest from today, and it
+          was the one with no way back: December to September was six taps of
+          an arrow. The step is arithmetic on the month already displayed, so
+          this needs no action of its own; the selection is cleared with it,
+          or the panel underneath would still be showing a day in December. */}
+      {!inThisMonth && (
+        <BackToToday
+          onClick={() => {
+            dispatch({
+              type: 'stepMonth',
+              delta: (now.getFullYear() - calYear) * 12 + (now.getMonth() - calMonth),
+            });
+            dispatch({ type: 'selectDate', date: null });
+          }}
+        />
+      )}
 
       <div
         style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1, marginBottom: 'var(--sp-3)' }}
@@ -1279,6 +1458,7 @@ function MonthView() {
         See classes and events that day
       </ActionButton>
       <div style={{ height: 22 }} />
+      </Folding>
     </div>
   );
 }
@@ -1325,11 +1505,30 @@ function SemesterView() {
     },
   });
 
-  const items = source === 'all' || source === 'deadlines' ? datedItems(catalog, now) : [];
-  const events = source === 'all' || source === 'campus' ? datedEvents(now, state.sample) : [];
+  const on = shows(source);
+  const items = on.deadlines ? datedItems(catalog, now) : [];
+  const events = on.campus ? datedEvents(now, state.sample) : [];
 
   // Weeks from the first Sunday on or before the earliest thing, to the last.
   const dates = [...items.map((i) => i.date), ...events.map((e) => e.date)];
+  /*
+   * The term's teaching, which this view had no branch for at all.
+   *
+   * "Just my classes, for the whole semester" is the combination the comment
+   * at the top of this file offers as the reason the two axes are independent,
+   * and choosing it produced "Nothing from this source across the whole
+   * semester" — about four courses that meet all week, every week. The
+   * catalogue knows the meeting pattern; a semester of it is one pass.
+   *
+   * The bounds come from the deadlines rather than from the classes: a course
+   * with a recurring schedule and no dates would otherwise run to the end of
+   * whatever range this loop was given. When classes are all there is, the
+   * term's own dated obligations still say where it starts and stops.
+   */
+  const spanFrom = catalog.items.length
+    ? datedItems(catalog, now).map((i) => i.date)
+    : [];
+  if (on.classes) dates.push(...spanFrom);
   if (dates.length === 0) {
     return (
       <div style={{ padding: 'var(--page-pad)' }}>
@@ -1339,7 +1538,7 @@ function SemesterView() {
             to write, and writing one would be writing dead copy. */}
         <EmptyState
           title="Nothing to plot."
-          body="Nothing from this source across the whole semester."
+          body={`Nothing from ${sourceName(source)} across the whole semester.`}
           action={{
             label: 'Show everything',
             onClick: () => dispatch({ type: 'setCalSource', source: 'all' }),
@@ -1353,26 +1552,68 @@ function SemesterView() {
   const start = new Date(first);
   start.setDate(start.getDate() - start.getDay());
 
-  const weeks: { start: Date; items: DatedItem[]; events: DatedEvent[] }[] = [];
+  const weeks: { start: Date; items: DatedItem[]; events: DatedEvent[]; classes: number }[] = [];
   for (let cursor = new Date(start); cursor <= last; cursor.setDate(cursor.getDate() + 7)) {
     const weekStart = new Date(cursor);
     const weekEnd = new Date(cursor);
     weekEnd.setDate(weekEnd.getDate() + 7);
+    let classes = 0;
+    if (on.classes) {
+      for (let d = 0; d < 7; d += 1) {
+        const date = new Date(weekStart);
+        date.setDate(date.getDate() + d);
+        classes += railFor(catalog, date, []).filter((b) => b.c && !b.canceled).length;
+      }
+    }
     weeks.push({
       start: weekStart,
       items: items.filter((i) => i.date >= weekStart && i.date < weekEnd),
       events: events.filter((e) => e.date >= weekStart && e.date < weekEnd),
+      classes,
     });
   }
 
   const busiest = Math.max(1, ...weeks.map((w) => w.items.length));
+  // The fullest teaching week, so the rule below can be read against it. A
+  // fixed width per meeting made every week the same length, which is a mark
+  // that says "there are classes" and nothing a person did not already know.
+  const busiestTeaching = Math.max(1, ...weeks.map((w) => w.classes));
+  /*
+   * The ordinary teaching week, and whether any week departs from it.
+   *
+   * The syllabi give a recurring pattern — days and times, no term dates and
+   * no holidays — so most terms this is the same number sixteen times over.
+   * Printing it on all sixteen rows says "there are classes", which nobody
+   * needed telling; it is said once above instead, and a row speaks up only
+   * when its week is not the usual one, which is a thing worth seeing.
+   */
+  const usualWeek = weeks.length
+    ? weeks.map((w) => w.classes).sort((a, b) => b - a)[Math.floor(weeks.length / 2)]
+    : 0;
+  const teachingVaries = weeks.some((w) => w.classes !== usualWeek);
   weeksRef.current = weeks;
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
-        {items.length} deadlines and {events.length} events across {weeks.length} weeks. The bar is
-        how loaded each week is; exams are marked.
+        {[
+          on.deadlines && `${items.length} ${items.length === 1 ? 'deadline' : 'deadlines'}`,
+          on.campus && `${events.length} ${events.length === 1 ? 'event' : 'events'}`,
+          on.classes &&
+            (teachingVaries
+              ? `${weeks.reduce((n, w) => n + w.classes, 0)} class meetings`
+              : `${usualWeek} class meetings a week`),
+        ]
+          .filter(Boolean)
+          .join(', ')}{' '}
+        across {weeks.length} weeks. The bar is how loaded each week is; exams are marked.
+        {on.classes && !teachingVaries && (
+          <>
+            {' '}
+            The teaching is the same every week: the syllabi give a recurring pattern, with no
+            term breaks in it.
+          </>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -1427,7 +1668,7 @@ function SemesterView() {
                     marginBottom: 'var(--sp-3)',
                   }}
                 >
-                  {w.items.length === 0 && w.events.length === 0 ? (
+                  {w.items.length === 0 && w.events.length === 0 && w.classes === 0 ? (
                     <div
                       style={{ flex: 1, background: 'var(--app-track)', opacity: 0.4, height: 2, alignSelf: 'center' }}
                     />
@@ -1459,6 +1700,24 @@ function SemesterView() {
                           }}
                         />
                       ))}
+                      {/* The teaching, as a quiet rule behind the week rather
+                          than one mark per meeting: twelve blocks for a normal
+                          week would drown the two deadlines that make one week
+                          different from the next, which is what this view is
+                          for. Reading week shows up as the gap it is. */}
+                      {w.classes > 0 && (
+                        <div
+                          title={`${w.classes} class meetings`}
+                          style={{
+                            flex: 'none',
+                            width: `${Math.round((w.classes / busiestTeaching) * 38)}%`,
+                            background: 'var(--app-track)',
+                            height: 2,
+                            alignSelf: 'center',
+                            order: -1,
+                          }}
+                        />
+                      )}
                     </>
                   )}
                 </div>
@@ -1496,6 +1755,16 @@ function SemesterView() {
                     {w.items.length > 3 && (
                       <div style={{ opacity: 0.5 }}>+{w.items.length - 3} more</div>
                     )}
+                  </div>
+                )}
+
+                {on.classes && w.classes !== usualWeek && (
+                  <div style={{ opacity: 0.6 }}>
+                    {w.classes === 0
+                      ? 'No classes this week'
+                      : `${w.classes} class ${w.classes === 1 ? 'meeting' : 'meetings'} — ${
+                          w.classes < usualWeek ? 'fewer' : 'more'
+                        } than usual`}
                   </div>
                 )}
 

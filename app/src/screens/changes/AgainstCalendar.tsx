@@ -9,6 +9,7 @@ import { parseIcs } from '../../lib/ics';
 import { asItemDate, compare, movedLine, summary, type Moved } from '../../lib/reconcile';
 import { patchItem } from '../../lib/edit';
 import type { FeedEvent } from '../../lib/types';
+import { Folding } from '../../components/Fold';
 
 /**
  * The app's dates, checked against the ones a calendar is showing today.
@@ -92,7 +93,7 @@ export function AgainstCalendar() {
   const nothing = events.length === 0;
 
   return (
-    <>
+    <Folding name="AgainstCalendar">
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Every deadline here was read off a syllabus once, before term started. This checks them
         against what your LMS calendar says today, and shows both dates before changing anything.
@@ -304,6 +305,6 @@ export function AgainstCalendar() {
           </div>
         </>
       )}
-    </>
+    </Folding>
   );
 }

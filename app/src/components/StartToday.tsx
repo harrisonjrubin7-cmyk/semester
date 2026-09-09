@@ -18,6 +18,7 @@ import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { beginNow, plan, planLine } from '../lib/start';
 import { adjustedLine, calibrate } from '../lib/worth';
+import { Folding } from './Fold';
 
 export function StartToday() {
   const { state, dispatch, now, catalog, tint } = useStore();
@@ -40,6 +41,7 @@ export function StartToday() {
 
   return (
     <div style={{ marginTop: 14 }}>
+      <Folding name="StartToday">
       <SectionLabel style={{ margin: '0 0 8px' }}>Begin today</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {list.map((s) => (
@@ -114,6 +116,7 @@ export function StartToday() {
           {adjustedLine(bias)}
         </div>
       ) : null}
+      </Folding>
     </div>
   );
 }
@@ -149,7 +152,7 @@ export function StartList() {
   if (p.starts.length === 0) return null;
 
   return (
-    <>
+    <Folding name="StartList">
       <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
         When to begin
       </SectionLabel>
@@ -253,6 +256,6 @@ export function StartList() {
         for any one piece of work — you have other courses. Work the app has never timed gets no
         start date rather than a guessed one.
       </p>
-    </>
+    </Folding>
   );
 }

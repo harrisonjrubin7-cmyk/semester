@@ -27,6 +27,7 @@ import { KEEP, LOG_KEY, dump, dumpName, read } from '../lib/diagnose';
 import { SCHEMA, migrationLine } from '../lib/migrate';
 import { migrationReport } from '../state/shape';
 import { cloudConfigured, deleteEverything } from '../lib/cloud';
+import { eraseDevice } from '../lib/erase';
 import { Toggle } from '../components/ui';
 import { DESTINATIONS } from '../lib/nav';
 import {
@@ -53,6 +54,17 @@ export function Privacy() {
     }
   });
   const [asking, setAsking] = useState(false);
+  /*
+   * Two destructive things on one screen, and they must never be one.
+   *
+   * `asking` is the account — every row on the server belonging to this
+   * email. `erasing` is this device — everything in this browser and nothing
+   * anywhere else. They share no state on purpose: a single `asking` flag
+   * with a kind beside it is one wrong branch away from emptying the account
+   * when somebody asked to clear a borrowed laptop.
+   */
+  const [erasing, setErasing] = useState(false);
+  const [wiping, setWiping] = useState(false);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [saved, setSaved] = useState('');
@@ -256,6 +268,61 @@ export function Privacy() {
           You are not signed in, so there is no account to delete — nothing about this semester
           has ever left the device.
         </div>
+      )}
+
+      {/* Tokens rather than the numbers its neighbours were written with:
+          this file is at its own budget in `styles/rules.ts`, and a new
+          section is the wrong place to spend the last of it. */}
+      <SectionLabel>Erase from this device</SectionLabel>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.8, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        Removes everything this app has put in this browser: your semester, the courses you added,
+        notes, tasks, attachments, the assistant's threads, the daily copies, and any keys or
+        connected accounts. {account ? 'Your account is not touched — what has synced stays on the server, and this device signs out.' : 'Nothing has ever left this device, so this is all of it.'} The app restarts empty, as it was
+        the first time you opened it.
+      </div>
+      <button
+        type="button"
+        className="btn btn-block"
+        disabled={wiping}
+        onClick={() => setErasing(true)}
+        style={{ marginTop: 'var(--sp-6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+      >
+        {wiping ? 'Erasing…' : 'Erase from this device'}
+      </button>
+
+      {erasing && (
+        <TypeToConfirm
+          title="Erase from this device"
+          what={[
+            'Your semester on this device: courses, deadlines, notes, tasks, grades and cards.',
+            'Attachments, the daily copies you could have restored from, and the assistant’s threads.',
+            'Any connected accounts and keys — this browser signs out.',
+            account
+              ? `Nothing belonging to ${account.email} on the server is touched, and it can be synced back.`
+              : 'Nothing has ever left this device, so there is nowhere to sync it back from.',
+            'There is no undo.',
+          ]}
+          want="ERASE"
+          describe="the word"
+          confirmLabel="Erase it"
+          onConfirm={() => {
+            setErasing(false);
+            setWiping(true);
+            /*
+             * Reload rather than dispatch.
+             *
+             * The store is a reducer in memory and every screen is holding
+             * something derived from it. Emptying the disk underneath that
+             * would leave the app rendering a semester that no longer exists
+             * until something happened to re-read it — and the one thing a
+             * person needs to see after pressing this is that it is gone.
+             * `eraseDevice` stops the writer first, so nothing in flight
+             * lands between the erase and the reload.
+             */
+            void eraseDevice().finally(() => window.location.reload());
+          }}
+          onCancel={() => setErasing(false)}
+        />
       )}
 
       {asking && account && (

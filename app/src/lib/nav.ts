@@ -79,7 +79,6 @@ export type Group =
   | 'Make'
   | 'Campus'
   | 'Life'
-  | 'You'
   | 'Data';
 
 /**
@@ -98,7 +97,6 @@ export const GROUPS: Group[] = [
   'Make',
   'Campus',
   'Life',
-  'You',
   'Data',
 ];
 
@@ -565,7 +563,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Personal',
     blurb: 'Your own tasks, appointments, notes, places and files.',
     keywords: 'mine personal todo task appointment note file attachment place own yours',
-    group: 'You',
+    group: 'Life',
     // On You rather than Life: this is the one screen holding what the
     // student wrote rather than what a syllabus or the campus did, which is
     // the same question the rest of that shelf answers. It also keeps both
@@ -588,7 +586,7 @@ export const DESTINATIONS: Destination[] = [
       'me progress profile load more menu overview directory settings everything ' +
       'all screens index list of features what can this app do capabilities map contents table of contents ' +
       'browse explore find a screen where is what is there tour inventory sitemap unused never opened by task',
-    group: 'You',
+    group: 'Semester',
     taskTags: ['stand', 'app'],
     root: 'me',
   },
@@ -634,16 +632,6 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
-    screen: 'help',
-    label: 'How this works',
-    short: 'Guide',
-    blurb: 'Every screen in the app, what it is for, and what it will not do.',
-    keywords: 'help guide manual how do i what does documentation tour onboarding explain instructions getting started first time shortcuts keyboard reference handbook',
-    group: 'You',
-    taskTags: ['app'],
-    root: 'me',
-  },
-  {
     screen: 'data',
     label: 'Your data and how it is running',
     short: 'Your data',
@@ -678,7 +666,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Settings',
     blurb: 'Navigation, alerts, which courses are loaded.',
     keywords: 'preferences options remove course sample notifications feed tab bar',
-    group: 'You',
+    group: 'Data',
     taskTags: ['data', 'app'],
     root: 'me',
   },
@@ -687,8 +675,18 @@ export const DESTINATIONS: Destination[] = [
     label: 'Alerts',
     blurb: 'What the app would have poked you about.',
     keywords: 'notifications reminders',
-    group: 'You',
+    group: 'Data',
     taskTags: ['due', 'app'],
+    root: 'me',
+  },
+  {
+    screen: 'help',
+    label: 'How this works',
+    short: 'Guide',
+    blurb: 'Every screen in the app, what it is for, and what it will not do.',
+    keywords: 'help guide manual how do i what does documentation tour onboarding explain instructions getting started first time shortcuts keyboard reference handbook',
+    group: 'Data',
+    taskTags: ['app'],
     root: 'me',
   },
 ];
@@ -705,7 +703,6 @@ const NESTED: Partial<Record<Screen, Screen>> = {
   lesson: 'study',
   slides: 'study',
   note: 'mine',
-  search: 'home',
   // Every settings page lives under Me, the same as settings itself, so the
   // tab bar does not change out from under somebody two taps deep in it.
   setLook: 'me',

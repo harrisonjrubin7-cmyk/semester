@@ -173,7 +173,7 @@ describe('the shelves the directory is arranged on', () => {
     }
   });
 
-  it('holds the eight shelves in the order they are shown', () => {
+  it('holds the seven shelves in the order they are shown', () => {
     // Order is the thing a student learns by position, so it is asserted
     // rather than left to however the registry happens to be written.
     expect(GROUPS).toEqual([
@@ -183,7 +183,6 @@ describe('the shelves the directory is arranged on', () => {
       'Make',
       'Campus',
       'Life',
-      'You',
       'Data',
     ]);
   });
@@ -327,13 +326,21 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    // Whichever screen the task view happens to put first, rather than one
-    // named here. This test named `grades`, which stopped being a `Screen`
-    // when the registry dropped it — so the assertion that exists to prove
-    // the view follows the registry was the thing the registry broke, and it
-    // broke as a type error rather than a failure. Nothing to keep in step
-    // now: the subject is read out of the same list the assertion is about.
-    const gone = byTask(DESTINATIONS)[0].rows[0].screen;
+    /*
+     * The screen is taken from the registry rather than named.
+     *
+     * It was `grades`, and that is the case this test describes happening to
+     * the test itself: #76 took the grade table out of the registry, the name
+     * here stopped being a `Screen`, and the file stopped typechecking. The
+     * suite stayed green either way — vitest does not typecheck — so what
+     * caught it was `tsc`, which is why CI runs both.
+     *
+     * Naming a different screen fixes today and leaves the same trap for
+     * whichever screen moves next. A test whose whole subject is "the registry
+     * decides what exists" should not carry a copy of one of its rows, so this
+     * asks the registry for one.
+     */
+    const gone = DESTINATIONS[0].screen;
     const short = DESTINATIONS.filter((d) => d.screen !== gone);
     const rows = byTask(short).flatMap((s) => s.rows);
     expect(rows.some((d) => d.screen === gone)).toBe(false);

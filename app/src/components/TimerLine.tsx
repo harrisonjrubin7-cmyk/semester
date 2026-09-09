@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { clockFace, lengthLine, remaining, running } from '../lib/clocks';
+import { Folding } from './Fold';
 
 export function TimerLine() {
   const { state, dispatch } = useStore();
@@ -33,46 +34,48 @@ export function TimerLine() {
   if (counting.length === 0) return null;
 
   return (
-    <div style={{ marginTop: 14 }}>
-      <SectionLabel style={{ margin: '0 0 8px' }}>Counting</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-        {counting.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className="bare tappable"
-            onClick={() => dispatch({ type: 'go', screen: 'clocks' })}
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 'var(--sp-5)',
-              width: '100%',
-              textAlign: 'left',
-              padding: '10px 13px',
-              borderRadius: 'var(--r-md)',
-              border: '1px solid var(--app-line)',
-            }}
-          >
-            <span
+    <Folding name="TimerLine">
+      <div style={{ marginTop: 14 }}>
+        <SectionLabel style={{ margin: '0 0 8px' }}>Counting</SectionLabel>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          {counting.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className="bare tappable"
+              onClick={() => dispatch({ type: 'go', screen: 'clocks' })}
               style={{
-                fontSize: 'calc(19px * var(--text-scale, 1))',
-                fontVariantNumeric: 'tabular-nums',
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 'var(--sp-5)',
+                width: '100%',
+                textAlign: 'left',
+                padding: '10px 13px',
+                borderRadius: 'var(--r-md)',
+                border: '1px solid var(--app-line)',
               }}
             >
-              {clockFace(remaining(t, at))}
-            </span>
-            <span
-              style={{
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                opacity: 0.65,
-                textWrap: 'pretty',
-              }}
-            >
-              {t.label || lengthLine(t.seconds)}
-            </span>
-          </button>
-        ))}
+              <span
+                style={{
+                  fontSize: 'calc(19px * var(--text-scale, 1))',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {clockFace(remaining(t, at))}
+              </span>
+              <span
+                style={{
+                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  opacity: 0.65,
+                  textWrap: 'pretty',
+                }}
+              >
+                {t.label || lengthLine(t.seconds)}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
+    </Folding>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SectionLabel } from './ui';
 import { askToPersist, roomLine, storageRoom, type Room } from '../lib/device';
+import { Folding } from './Fold';
 
 /**
  * How much room there is, and whether the browser may take it back.
@@ -43,7 +44,7 @@ export function StorageRoom() {
   const pct = room.used >= 0 && room.quota > 0 ? Math.min(100, (room.used / room.quota) * 100) : -1;
 
   return (
-    <>
+    <Folding name="StorageRoom">
       <SectionLabel>Room on this device</SectionLabel>
 
       {pct >= 0 ? (
@@ -89,6 +90,6 @@ export function StorageRoom() {
         home screen is what most often changes the answer. Signing in is the other half: an account
         keeps a copy off this device entirely, which is the only thing that survives losing it.
       </div>
-    </>
+    </Folding>
   );
 }

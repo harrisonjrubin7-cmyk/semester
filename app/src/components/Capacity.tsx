@@ -16,6 +16,7 @@ import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { forecast } from '../lib/pace';
 import { over, takenLine, verdict, weekCapacity } from '../lib/rest';
+import { Folding } from './Fold';
 
 function clock(minutes: number): string {
   const h = Math.floor(minutes / 60) % 24;
@@ -42,7 +43,7 @@ export function Capacity() {
     });
 
   return (
-    <>
+    <Folding name="Capacity">
       <SectionLabel style={{ margin: '0 0 8px' }}>Does this week fit?</SectionLabel>
       <div
         style={{
@@ -118,7 +119,7 @@ export function Capacity() {
         only fits by working at half past one does not fit. Nothing is prevented — the app takes
         those hours off its own arithmetic, not off you.
       </p>
-    </>
+    </Folding>
   );
 }
 

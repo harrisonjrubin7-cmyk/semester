@@ -26,6 +26,7 @@ import {
   resolveCorners,
   resolveGround,
 } from '../../lib/look';
+import { Folding } from '../../components/Fold';
 
 /**
  * A hue you can drag, with the reason it is safe to offer.
@@ -81,7 +82,7 @@ function HuePicker() {
   const verdict = contrastVerdict(ratio);
 
   return (
-    <>
+    <Folding name="HuePicker">
       <SectionLabel style={CAP}>
         Your own accent
       </SectionLabel>
@@ -150,7 +151,7 @@ function HuePicker() {
           </div>
         </>
       )}
-    </>
+    </Folding>
   );
 }
 
@@ -168,7 +169,7 @@ function CoursePalette() {
   const on = state.courseColours !== 'off';
 
   return (
-    <>
+    <Folding name="CoursePalette">
       <SectionLabel style={CAP}>
         Your courses
       </SectionLabel>
@@ -201,7 +202,7 @@ function CoursePalette() {
           </div>
         </>
       )}
-    </>
+    </Folding>
   );
 }
 

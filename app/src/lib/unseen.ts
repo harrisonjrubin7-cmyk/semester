@@ -28,11 +28,11 @@ export type Visited = Record<string, boolean>;
  * Screens that are not worth suggesting.
  *
  * Not because they are unimportant — because arriving at them cold means
- * nothing. An empty note editor, a course detail with no course chosen, and a
- * search box are all reached *through* something, and offered on their own
- * they are a dead end with a heading.
+ * nothing. An empty note editor and a course detail with no course chosen are
+ * reached *through* something, and offered on their own they are a dead end
+ * with a heading.
  */
-const REACHED_THROUGH: Screen[] = ['note', 'edit', 'search', 'notifs', 'settings'];
+const REACHED_THROUGH: Screen[] = ['note', 'edit', 'notifs', 'settings'];
 
 /** Below this the suggestions stop: they have seen the app. */
 export const ENOUGH_SEEN = 0.6;

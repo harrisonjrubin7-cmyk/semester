@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { Screen } from '../../lib/types';
 import { FullBleed } from './Rows';
 import { isCanvas, isExempt } from './exempt';
+import { FoldAll, FoldScope } from '../Fold';
 
 /**
  * The body of whichever screen is open, in the right layout for it.
@@ -25,13 +26,30 @@ import { isCanvas, isExempt } from './exempt';
  * among them — draw their own frame and never mount `<Page>` at all, and a
  * measure that half the app opts out of by accident is worse than none. This
  * is the one wrapper every screen goes through.
+ *
+ * ## And which sections are folded
+ *
+ * For that last reason twice over. A folded section has to know which screen
+ * it is on — a fold is remembered across reloads, so "What's coming" on Today
+ * and "What's coming" on a course must be two different memories — and this
+ * is the wrapper that knows. See `components/Fold.tsx`.
+ *
+ * "Collapse all" goes here too. `<Page>` would have been the obvious home and
+ * is the wrong one for the same reason the measure is not there: a course, an
+ * event and a deadline keep their own frame rather than opening a `Page`, and
+ * every one of them has sections. A control that appeared on most screens
+ * would be worse than none.
  */
 export function ShellBody({ screen, children }: { screen: Screen; children: ReactNode }) {
   const cls = isCanvas(screen) ? 'pane-body is-canvas' : 'pane-body';
-  if (!isExempt(screen)) return <div className={cls}>{children}</div>;
   return (
-    <div className={cls}>
-      <FullBleed>{children}</FullBleed>
-    </div>
+    <FoldScope value={screen}>
+      <div className={cls}>
+        {/* The screen's own gutter, so it lines up with the headings it folds.
+            It draws nothing at all until there are two sections to fold. */}
+        <FoldAll style={{ paddingTop: 'var(--sp-5)', paddingLeft: '18px', paddingRight: '18px' }} />
+        {isExempt(screen) ? <FullBleed>{children}</FullBleed> : children}
+      </div>
+    </FoldScope>
   );
 }

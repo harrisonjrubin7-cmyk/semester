@@ -13,11 +13,11 @@ const allBut = (...keep: string[]): Visited =>
 
 describe('what can be suggested at all', () => {
   it('leaves out the screens that mean nothing arrived at cold', () => {
-    // An empty note editor and a search box are reached *through* something.
-    // Offered on their own they are a dead end with a heading.
+    // An empty note editor and a course detail with no course chosen are
+    // reached *through* something. Offered on their own they are a dead end
+    // with a heading.
     const screens = offerable().map((d) => d.screen);
     expect(screens).not.toContain('note');
-    expect(screens).not.toContain('search');
     expect(screens).not.toContain('edit');
   });
 

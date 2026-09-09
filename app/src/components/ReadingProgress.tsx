@@ -30,6 +30,7 @@ import {
   type Unit,
 } from '../lib/progress';
 import type { DatedItem } from '../lib/types';
+import { Folding } from './Fold';
 
 const UNITS: { id: Unit; label: string }[] = [
   { id: 'pages', label: 'Pages' },
@@ -237,72 +238,74 @@ export function ReadingsOnTheGo() {
   const all = datedItems(catalog, now);
 
   return (
-    <div style={{ marginTop: 14 }}>
-      <SectionLabel style={{ margin: '0 0 8px' }}>Part way through</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-        {going.map((p) => {
-          const item = all.find((i) => i.id === p.id);
-          const along = pct(p);
-          return (
-            <button
-              key={p.id}
-              type="button"
-              className="bare tappable"
-              onClick={() => dispatch({ type: 'openItem', id: p.id })}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '10px 13px',
-                borderRadius: 'var(--r-md)',
-                border: '1px solid var(--app-line)',
-              }}
-            >
-              <span
+    <Folding name="ReadingProgress">
+      <div style={{ marginTop: 14 }}>
+        <SectionLabel style={{ margin: '0 0 8px' }}>Part way through</SectionLabel>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          {going.map((p) => {
+            const item = all.find((i) => i.id === p.id);
+            const along = pct(p);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className="bare tappable"
+                onClick={() => dispatch({ type: 'openItem', id: p.id })}
                 style={{
                   display: 'block',
-                  fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                  lineHeight: 1.35,
-                  textWrap: 'pretty',
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '10px 13px',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--app-line)',
                 }}
               >
-                {item?.title ?? 'A reading'}
-              </span>
-              {along !== null ? (
                 <span
                   style={{
                     display: 'block',
-                    height: 4,
-                    borderRadius: 2,
-                    background: 'var(--app-line)',
-                    margin: '7px 0 6px',
-                    overflow: 'hidden',
+                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                    lineHeight: 1.35,
+                    textWrap: 'pretty',
                   }}
                 >
+                  {item?.title ?? 'A reading'}
+                </span>
+                {along !== null ? (
                   <span
                     style={{
                       display: 'block',
-                      width: `${along}%`,
-                      height: '100%',
-                      background: 'var(--app-accent)',
+                      height: 4,
+                      borderRadius: 2,
+                      background: 'var(--app-line)',
+                      margin: '7px 0 6px',
+                      overflow: 'hidden',
                     }}
-                  />
+                  >
+                    <span
+                      style={{
+                        display: 'block',
+                        width: `${along}%`,
+                        height: '100%',
+                        background: 'var(--app-accent)',
+                      }}
+                    />
+                  </span>
+                ) : null}
+                <span
+                  style={{
+                    display: 'block',
+                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    opacity: 0.62,
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {leftLine(p)}
                 </span>
-              ) : null}
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.62,
-                  textWrap: 'pretty',
-                }}
-              >
-                {leftLine(p)}
-              </span>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </Folding>
   );
 }

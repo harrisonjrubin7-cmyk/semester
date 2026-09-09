@@ -69,10 +69,12 @@ function get(url) {
 }
 
 /**
- * Every module specifier a file names, however it spells it.
+ * Every file a file names, however it spells it.
  *
- * Two rules earned by false positives, and both matter more than they look:
- * a verification tool that cries wolf is one whose red is ignored.
+ * Four rules, each earned by a failure. The first two are false positives —
+ * a verification tool that cries wolf is one whose red is ignored — and the
+ * last two are false *negatives*, which are worse, because this file's whole
+ * promise is that it does not have any.
  *
  *   · **A specifier in JavaScript contains a slash.** Matching every quoted
  *     string ending `.css` also caught Leaflet's own runtime sniffing for its
@@ -84,16 +86,42 @@ function get(url) {
  *
  *   · **A path the code computes cannot be fetched.** `${e}sw.js` is assembled
  *     at runtime; chasing it produced a phantom 404.
+ *
+ *   · **A stylesheet names files this never read.** Only `.js` and `.css` were
+ *     matched, so `url(/semester/assets/Barlow-400-latin.woff2)` — every face
+ *     the app ships — was invisible: not fetched, and then not reported,
+ *     because the closure check below asks this same function what a file
+ *     references. The mirror booted, rendered in fallback faces, and swore it
+ *     was closed under references. A browser check on it reported thirteen
+ *     failed requests against a site that serves all thirteen with a 200, and
+ *     the cost landed on the change being verified. `url()` is read now, minus
+ *     the two spellings that are not files: `data:` payloads, and the `#`
+ *     fragments that reference a filter or a gradient in the same document.
+ *
+ *   · **A manifest names files this never read.** Same shape, same silence:
+ *     the icons are `"src": "./icon-192.png"`, which is neither `.js`, `.css`,
+ *     nor an HTML attribute, so an installed app's icons were missing from
+ *     every mirror. Only `src` is followed — a shortcut's `url` is a
+ *     navigation, and `start_url` is a route, and neither is a file on disk.
  */
-function specifiers(text, isHtml) {
+function specifiers(text, path) {
   const out = new Set();
   // Quoted strings — "…", '…' and the backticks a bundler emits for a
   // dynamic import. Anything ending .js or .css is a candidate.
   for (const m of text.matchAll(/["'`]([^"'`\n]+?\.(?:js|css))["'`]/g)) {
     if (m[1].includes('/')) out.add(m[1]);
   }
-  if (isHtml) {
+  if (path.endsWith('.html')) {
     for (const m of text.matchAll(/(?:src|href)="([^"]+)"/g)) out.add(m[1]);
+  }
+  if (path.endsWith('.css')) {
+    for (const m of text.matchAll(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g)) {
+      const ref = m[2].trim();
+      if (ref && !ref.startsWith('data:') && !ref.startsWith('#')) out.add(ref);
+    }
+  }
+  if (path.endsWith('.webmanifest')) {
+    for (const m of text.matchAll(/"src"\s*:\s*"([^"]+)"/g)) out.add(m[1]);
   }
   return [...out].filter((s) => !s.includes('${'));
 }
@@ -159,7 +187,7 @@ function crawl() {
 
     if (!/\.(js|css|html|webmanifest)$/.test(path)) continue;
     const text = body.toString('utf8');
-    for (const spec of specifiers(text, path.endsWith('.html'))) {
+    for (const spec of specifiers(text, path)) {
       const next = resolve(spec, path);
       if (next && !seen.has(next)) queue.push(next);
     }
@@ -177,7 +205,7 @@ function crawl() {
   for (const [path, ok] of seen) {
     if (!ok || !/\.(js|css|html|webmanifest)$/.test(path)) continue;
     const text = readFileSync(join(OUT, path), 'utf8');
-    for (const spec of specifiers(text, path.endsWith('.html'))) {
+    for (const spec of specifiers(text, path)) {
       const target = resolve(spec, path);
       if (target && !existsSync(join(OUT, target))) missing.push(`${path} → ${target}`);
     }
