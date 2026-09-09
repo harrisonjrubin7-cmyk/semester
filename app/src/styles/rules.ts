@@ -310,6 +310,17 @@ export const AXIS_SAYS: Record<Axis, string> = {
  * merged five times in twenty minutes, conflicting on these four numbers
  * every single time. Which is what the per-file ledger above was written for.
  *
+ * 673/218/515/498 → 673/218/490/494 with the three layouts.
+ *
+ * Twenty-five spacing values and four shorthands gone, none of them
+ * reformatted: they were the twenty-four `padding: 18` a screen wrote to mean
+ * "the page gutter" and the settings pages' `'0 16px'` meaning the same
+ * thing. There is one gutter now — `--page-pad` in `styles/app.css` — and it
+ * is a different number on a phone, a tablet and a desktop, which is a thing
+ * a literal 18 cannot be. Every one of those sites was a screen that could
+ * not follow the layout it was in. Measured on the merged tree, like every
+ * note below.
+ *
  * 674/218/515/498 → 673/218/515/498 when Study's Revise tab was rebuilt and
  * the Tools grid grew the two or three cards that say which tile to press
  * tonight. One down, none up. The Revise tab's hand-set 11.5px captions, a

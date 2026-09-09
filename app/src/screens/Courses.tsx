@@ -133,7 +133,15 @@ export function Courses() {
               })}
             </div>
           ) : (
-          catalog.courses.map((c) => {
+          /*
+            One column on a phone, as many as fit on a desktop.
+            `.cards` is the whole of it — see `styles/app.css`. Four course
+            cards down the middle of a 1440px window were four rows of mostly
+            nothing; the same four in two columns are a semester you can see
+            at once, and on a phone the class does nothing at all.
+          */
+          <div className="cards">
+          {catalog.courses.map((c) => {
             const next = ahead.find((i) => i.c === c.id);
             return (
               <Blueprint
@@ -206,7 +214,8 @@ export function Courses() {
                 </div>
               </Blueprint>
             );
-          })
+          })}
+          </div>
           )}
 
           {/*
@@ -437,7 +446,7 @@ export function CourseDetail() {
   const mineOpen = underway(ours, state.started, state.done);
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 'var(--page-pad)' }}>
       <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{nameFor(course, state.yours)}</div>
       {/* The syllabus name stays visible under a nickname. This screen is
           where somebody checks what a course actually is — dropping the real
@@ -623,7 +632,7 @@ export function ItemDetail() {
   const going = isUnderway(item.id, state.started, state.done);
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 'var(--page-pad)' }}>
       <Blueprint style={{ padding: 'var(--sp-7)' }}>
         <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
           <CourseTag id={item.c} />
