@@ -27,7 +27,7 @@
  * not shown anywhere except the screen that asks for it.
  */
 
-import { dateToIso, daysBetween, isoToDate, startOfDay } from './date';
+import { dateToIso, daysBetween, isoToDate, realMonthDay, startOfDay } from './date';
 
 export type RegistrarKind = 'deadline' | 'window' | 'break' | 'exams';
 
@@ -350,7 +350,9 @@ export function parse(text: string, year: number): Found[] {
     const month = monthIndex(m[1]);
     if (month < 0) continue;
     const day = Number(m[2]);
-    if (day < 1 || day > 31) continue;
+    // A registrar landmark is the one date somebody arranges a fortnight
+    // around, so an invented one is worse here than almost anywhere.
+    if (!realMonthDay(month, day)) continue;
 
     // What is left once the date is taken out is the label.
     const label = row

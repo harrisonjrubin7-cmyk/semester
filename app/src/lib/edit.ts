@@ -1,3 +1,4 @@
+import { realMonthDay } from './date';
 /**
  * Changing a course after it exists.
  *
@@ -152,7 +153,9 @@ export function fromInputDate(iso: string): { month: number; day: number } | nul
   if (!m) return null;
   const month = Number(m[2]) - 1;
   const day = Number(m[3]);
-  if (month < 0 || month > 11 || day < 1 || day > 31) return null;
+  // Not `day <= 31`: the year was in the field and thrown away, so 31 April
+  // was accepted and drawn as 1 May. See `lib/date.ts`.
+  if (!realMonthDay(month, day)) return null;
   return { month, day };
 }
 

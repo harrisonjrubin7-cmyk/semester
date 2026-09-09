@@ -1,3 +1,4 @@
+import { realMonthDay } from './date';
 /**
  * A syllabus in, a course out.
  *
@@ -240,7 +241,7 @@ function validate(
   for (const [n, it] of rawItems.entries()) {
     const month = Number(it.month);
     const day = Number(it.day);
-    if (!Number.isInteger(month) || month < 0 || month > 11 || !Number.isInteger(day) || day < 1 || day > 31) {
+    if (!realMonthDay(month, day)) {
       notes.push(`Dropped "${it.title ?? 'an item'}" — its date (${it.month}/${it.day}) is not a real one.`);
       continue;
     }

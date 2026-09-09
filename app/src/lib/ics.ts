@@ -13,6 +13,7 @@
  */
 
 import type { Course, FeedEvent } from './types';
+import { realDate } from './date';
 
 /** Folded lines are continued with a space or tab. Undo that first. */
 function unfold(text: string): string[] {
@@ -45,17 +46,28 @@ function parseWhen(field: { params: Record<string, string>; value: string }): {
   const dateOnly = /^(\d{4})(\d{2})(\d{2})$/.exec(v);
   if (dateOnly) {
     const [, y, m, d] = dateOnly;
-    return { date: new Date(Number(y), Number(m) - 1, Number(d)), allDay: true };
+    // `realDate` rather than `new Date(...)`: the shape of a date is not the
+    // same as the date existing, and this is the one input in the app that a
+    // server the student does not control can send, and resend. See
+    // `lib/date.ts`.
+    const date = realDate(Number(y), Number(m), Number(d));
+    return date ? { date, allDay: true } : null;
   }
   const stamp = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z)?$/.exec(v);
   if (!stamp) return null;
   const [, y, mo, d, h, mi, s, utc] = stamp;
   // A UTC stamp is converted to the device's own time; a floating or TZID
   // stamp is taken at face value, which is what a campus feed means by it.
-  const date = utc
-    ? new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +s))
-    : new Date(+y, +mo - 1, +d, +h, +mi, +s);
-  return { date, allDay: false };
+  // Read back through whichever set of getters matches, or every correct feed
+  // either side of Greenwich would be refused.
+  const date = realDate(
+    +y,
+    +mo,
+    +d,
+    { hours: +h, minutes: +mi, seconds: +s },
+    Boolean(utc),
+  );
+  return date ? { date, allDay: false } : null;
 }
 
 function iso(date: Date): string {

@@ -1,3 +1,4 @@
+import { realMonthDay } from './date';
 /**
  * One course, handed to a classmate.
  *
@@ -138,7 +139,7 @@ function tidyItems(raw: unknown, courseId: string): { items: Item[]; dropped: nu
       dropped += 1;
       continue;
     }
-    if (month < 0 || month > 11 || day < 1 || day > 31) {
+    if (!realMonthDay(month, day)) {
       dropped += 1;
       continue;
     }
