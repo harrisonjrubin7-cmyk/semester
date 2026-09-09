@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { matchCourse, parseIcs } from './ics';
+import { union } from './merge';
 import type { Course } from './types';
 
 const course = (id: string, code: string): Course => ({
@@ -413,5 +414,165 @@ describe('a component nested inside an event', () => {
     expect(name).toBe('Brightspace');
     expect(events).toHaveLength(1);
     expect(events[0].date).toBe('2026-09-25');
+  });
+});
+
+describe('a repeating class that changes', () => {
+  const weekly = (...extra: string[]) =>
+    cal(
+      event(
+        'UID:econ1020@vanderbilt.edu',
+        'SUMMARY:ECON 1020 lecture',
+        'DTSTART:20260907T140000',
+        'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+        ...extra,
+      ),
+    );
+
+  const days = (ics: string) => parseIcs(COURSES, ics).events.map((e) => e.date);
+
+  it('leaves out a week the calendar cancelled', () => {
+    // EXDATE is the only way iCalendar says a single week is off, and every
+    // calendar server writes one when an occurrence is deleted. Ignoring it
+    // sent a student to a lecture that was not happening.
+    expect(days(weekly('EXDATE:20260914T140000'))).toEqual(['2026-09-07', '2026-09-21', '2026-09-28']);
+  });
+
+  it('leaves out every cancelled week, however they are written', () => {
+    // Google writes one EXDATE line per cancelled week; others put them in one
+    // comma-separated line; an all-day series writes bare dates.
+    expect(days(weekly('EXDATE:20260914T140000', 'EXDATE:20260921T140000'))).toEqual([
+      '2026-09-07',
+      '2026-09-28',
+    ]);
+    expect(days(weekly('EXDATE:20260914T140000,20260921T140000'))).toEqual(['2026-09-07', '2026-09-28']);
+    expect(days(weekly('EXDATE;VALUE=DATE:20260914'))).toEqual([
+      '2026-09-07',
+      '2026-09-21',
+      '2026-09-28',
+    ]);
+  });
+
+  it('draws a moved week on the day it moved to, and not the day it moved from', () => {
+    const ics = cal(
+      [
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20260907T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+        ),
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'RECURRENCE-ID:20260907T140000',
+          'SUMMARY:ECON 1020 lecture (moved to Thursday)',
+          'DTSTART:20260910T140000',
+        ),
+      ].join('\r\n'),
+    );
+    const { events } = parseIcs(COURSES, ics);
+    expect(events.map((e) => e.date).sort()).toEqual([
+      '2026-09-10',
+      '2026-09-14',
+      '2026-09-21',
+      '2026-09-28',
+    ]);
+    expect(events.find((e) => e.date === '2026-09-10')?.title).toBe('ECON 1020 lecture (moved to Thursday)');
+  });
+
+  it('reads a moved week written before the class it moves', () => {
+    // A calendar may write the override first, so the rule's own occurrences
+    // are not known until the whole file has been read.
+    const ics = cal(
+      [
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'RECURRENCE-ID:20260907T140000',
+          'SUMMARY:Moved',
+          'DTSTART:20260910T140000',
+        ),
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20260907T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+        ),
+      ].join('\r\n'),
+    );
+    expect(parseIcs(COURSES, ics).events.map((e) => e.date).sort()).toEqual([
+      '2026-09-10',
+      '2026-09-14',
+      '2026-09-21',
+      '2026-09-28',
+    ]);
+  });
+
+  it('gives the moved week an id of its own, so a sync keeps both', () => {
+    /*
+     * `${uid}-0` is the first occurrence of the series, and the first week is
+     * exactly the one most likely to move. `union` in `lib/merge.ts` keeps one
+     * row per id, so two rows sharing one meant the first sync dropped one of
+     * them — and re-reading the feed only built the collision again.
+     */
+    const ics = cal(
+      [
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20260907T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+        ),
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'RECURRENCE-ID:20260914T140000',
+          'SUMMARY:Moved',
+          'DTSTART:20260917T140000',
+        ),
+      ].join('\r\n'),
+    );
+    const { events } = parseIcs(COURSES, ics);
+    expect(new Set(events.map((e) => e.id)).size).toBe(events.length);
+    expect(union(events, [])).toHaveLength(events.length);
+  });
+
+  it('does not renumber the weeks after a cancelled one', () => {
+    /*
+     * An id is what ties a row to the copy already on another device. Number
+     * the weeks after the exclusions are taken out and cancelling one lecture
+     * renames every later week of the term, so a sync keeps the old rows as
+     * well as the new ones and the class appears twice for the rest of term.
+     */
+    const whole = parseIcs(COURSES, weekly()).events;
+    const short = parseIcs(COURSES, weekly('EXDATE:20260914T140000')).events;
+    const idOn = (list: typeof whole, date: string) => list.find((e) => e.date === date)?.id;
+    for (const date of ['2026-09-21', '2026-09-28']) {
+      expect(idOn(short, date), date).toBe(idOn(whole, date));
+    }
+  });
+
+  it('draws a moved week whose class is not in the file', () => {
+    const ics = cal(
+      event('UID:elsewhere@vanderbilt.edu', 'RECURRENCE-ID:20260907T140000', 'SUMMARY:Moved', 'DTSTART:20260910T140000'),
+    );
+    expect(parseIcs(COURSES, ics).events.map((e) => e.date)).toEqual(['2026-09-10']);
+  });
+
+  it('leaves a class with no exceptions exactly as it was', () => {
+    expect(days(weekly())).toEqual(['2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28']);
+    expect(parseIcs(COURSES, weekly()).events.map((e) => e.id)).toEqual([
+      'econ1020@vanderbilt.edu-0',
+      'econ1020@vanderbilt.edu-1',
+      'econ1020@vanderbilt.edu-2',
+      'econ1020@vanderbilt.edu-3',
+    ]);
+  });
+
+  it('ignores an exclusion that is not a date', () => {
+    expect(days(weekly('EXDATE:banana'))).toEqual([
+      '2026-09-07',
+      '2026-09-14',
+      '2026-09-21',
+      '2026-09-28',
+    ]);
   });
 });

@@ -8,8 +8,9 @@
  *
  * What is supported is what these feeds actually contain: VEVENT with SUMMARY,
  * DTSTART, DTEND, LOCATION, DESCRIPTION, and weekly or daily RRULEs so a class
- * that repeats does not appear once. Anything else is skipped rather than
- * guessed at.
+ * that repeats does not appear once — together with the two ways a repeating
+ * class is changed, EXDATE for a week cancelled and RECURRENCE-ID for a week
+ * moved. Anything else is skipped rather than guessed at.
  */
 
 import type { Course, FeedEvent } from './types';
@@ -188,7 +189,18 @@ export interface IcsResult {
 
 export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsResult {
   const lines = unfold(text);
-  const events: FeedEvent[] = [];
+  /*
+   * Read every entry before drawing any of them.
+   *
+   * An entry that moves one week of a repeating class is a second VEVENT
+   * carrying the same UID and a RECURRENCE-ID naming the week it replaces, and
+   * it may be written before or after the entry it replaces. So which
+   * occurrences the rule actually produces is not known until the whole file
+   * has been read — emitting each entry as its END line arrives cannot express
+   * that, and drew the class on the day it moved from as well as the day it
+   * moved to.
+   */
+  const raws: RawEvent[] = [];
   let name = '';
   let current: RawEvent | null = null;
 
@@ -228,7 +240,7 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
       if (opens) {
         current = {};
       } else {
-        if (current) events.push(...toEvents(courses, current, sourceId));
+        if (current) raws.push(current);
         current = null;
       }
       inside = 0;
@@ -259,13 +271,52 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
       if (key.toUpperCase() === 'X-WR-CALNAME') name = unescape(value);
       continue;
     }
-    current[key.toUpperCase()] = { params, value };
+    const k = key.toUpperCase();
+    /*
+     * A property may be written once — except the exclusions, which RFC 5545
+     * lets a calendar spread over as many EXDATE lines as it likes, and Google
+     * writes one line per cancelled week. Every other property here is
+     * single-valued and the last one written wins. EXDATE's value is already a
+     * comma-separated list, so joining the lines with a comma is not a special
+     * case downstream; it is the same list, written out in full.
+     */
+    const held = current[k];
+    current[k] = held && k === 'EXDATE' ? { params, value: `${held.value},${value}` } : { params, value };
   }
+
+  /*
+   * The weeks a rule generates but the calendar has taken back: one map from
+   * an entry's UID to the days some other entry says it now happens on
+   * instead. Held by day rather than by the exact stamp, because a calendar is
+   * free to write the replaced week as a floating time, a UTC time or a bare
+   * date, and the app draws these by the day either way — the alternative is
+   * an exact match that a correct feed can miss, leaving the class on both
+   * days again.
+   */
+  const replaced = new Map<string, Set<string>>();
+  for (const raw of raws) {
+    const at = raw['RECURRENCE-ID'];
+    if (!at) continue;
+    const day = parseWhen(at);
+    if (!day) continue;
+    const uid = raw.UID?.value ?? '';
+    const days = replaced.get(uid) ?? new Set<string>();
+    days.add(iso(day.date));
+    replaced.set(uid, days);
+  }
+
+  const events: FeedEvent[] = [];
+  for (const raw of raws) events.push(...toEvents(courses, raw, sourceId, replaced));
 
   return { events, name };
 }
 
-function toEvents(courses: Course[], raw: RawEvent, sourceId: string): FeedEvent[] {
+function toEvents(
+  courses: Course[],
+  raw: RawEvent,
+  sourceId: string,
+  replaced: Map<string, Set<string>>,
+): FeedEvent[] {
   const startField = raw.DTSTART;
   if (!startField) return [];
   const when = parseWhen(startField);
@@ -277,11 +328,8 @@ function toEvents(courses: Course[], raw: RawEvent, sourceId: string): FeedEvent
   const uid = raw.UID?.value ?? `${title}-${when.date.getTime()}`;
   const courseId = matchCourse(courses, `${title} ${where} ${note}`);
 
-  const dates = raw.RRULE ? expand(raw.RRULE.value, when.date) : [when.date];
-  const all = dates.length ? dates : [when.date];
-
-  return all.map((date, i) => ({
-    id: `${uid}-${i}`,
+  const draw = (date: Date, id: string): FeedEvent => ({
+    id,
     sourceId,
     title,
     date: iso(date),
@@ -290,5 +338,46 @@ function toEvents(courses: Course[], raw: RawEvent, sourceId: string): FeedEvent
     where,
     note,
     courseId,
-  }));
+  });
+
+  /*
+   * This entry replaces one week of a repeating class rather than describing a
+   * class of its own, so it is drawn once, on its own date, and its rule — if
+   * it even carries one — is not expanded.
+   *
+   * Its id is the week it replaces, not a position in a series. `${uid}-0` is
+   * what the first occurrence of the master entry is called, and an override
+   * of the first week is exactly the common case, so numbering this one would
+   * have given two entries the same id. That is not only untidy: `union` in
+   * `lib/merge.ts` keeps one row per id, so the first sync silently dropped
+   * one of the two, and re-reading the feed only recreated the collision.
+   */
+  const at = raw['RECURRENCE-ID'];
+  if (at) return [draw(when.date, `${uid}-at-${iso(when.date)}`)];
+
+  /*
+   * Weeks the calendar has taken back — the class was cancelled, or it moved
+   * and some other entry now draws it. Both are read by day, for the reason
+   * given where `replaced` is built.
+   */
+  const gone = new Set(replaced.get(uid) ?? []);
+  for (const value of (raw.EXDATE?.value ?? '').split(',')) {
+    if (!value.trim()) continue;
+    const day = parseWhen({ params: raw.EXDATE?.params ?? {}, value });
+    if (day) gone.add(iso(day.date));
+  }
+
+  const dates = raw.RRULE ? expand(raw.RRULE.value, when.date) : [when.date];
+  const all = dates.length ? dates : [when.date];
+
+  /*
+   * Numbered before the cancelled weeks are taken out, so that cancelling one
+   * week does not renumber the ones after it. An id is what ties a row to the
+   * one already synced to another device; renumbering would make every later
+   * week of the term look like a new entry, and leave the old ones behind.
+   */
+  return all
+    .map((date, i) => ({ date, id: `${uid}-${i}` }))
+    .filter((o) => !gone.has(iso(o.date)))
+    .map((o) => draw(o.date, o.id));
 }
