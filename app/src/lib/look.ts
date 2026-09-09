@@ -115,6 +115,32 @@ export function scaleOf(id: string | undefined): number {
   return SIZES.find((s) => s.id === id)?.scale ?? 1;
 }
 
+/** The root font size this app's type was drawn against. */
+export const DRAWN_AT = 16;
+
+/**
+ * What the app's px sizes have to be multiplied by, given the root it is on.
+ *
+ * Every font size in this app is `calc(Npx * var(--text-scale, 1))` — the six
+ * tokens and about twelve hundred inline ones — and `App.tsx` used to set the
+ * root to a flat `16 * scale` px. That is not merely ignoring the browser's
+ * own font size: it *overwrites* it. Measured against Chromium with its
+ * default raised from 16 to 24, which is the ordinary way somebody with low
+ * vision makes the web readable and is what a great many people use instead
+ * of zoom: the app rendered pixel for pixel the same, root font size forced
+ * back to 16, body text 12px in both. Every other site they had made bigger;
+ * this one quietly undid it.
+ *
+ * So the root is now a percentage of whatever the browser was already using,
+ * and this converts the size that produces back into the multiplier the px
+ * sizes need. At the 16px default it returns exactly the scale that was there
+ * before, so nothing about the app moves for anybody who has not changed the
+ * setting — which is the condition for a change this wide being safe.
+ */
+export function scaleFrom(rootPx: number): number {
+  return rootPx > 0 ? rootPx / DRAWN_AT : 1;
+}
+
 // ── The ground ───────────────────────────────────────────────────────────
 
 export interface Ground {
