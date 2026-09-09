@@ -76,3 +76,85 @@ describe('opening the app on damaged storage', () => {
     expect(state.recent).toEqual(['home', 'courses']);
   });
 });
+
+/**
+ * The next layer of the same argument: the rows, not just the lists.
+ *
+ * `list()` above checks that a saved list is a list and says nothing about
+ * what is in it — which is the whole of the guard for twenty-two of them. The
+ * same sentence at the top of this file applies unchanged one level down: an
+ * older build wrote a row without a field this one reads, or a sync stopped
+ * halfway through writing it.
+ *
+ * Found by driving the app with one row carrying nothing but its id in one
+ * list at a time. Seven of the twenty-two took a screen down, and one took the
+ * app: `hoursOn` is called from a hook the whole tree hangs off rather than
+ * from inside a screen's boundary, so a study window with no `days` was an
+ * uncaught TypeError and a blank document — every screen after it blank too,
+ * with clearing site data the only way out. Exactly the failure this file was
+ * written about, one layer in.
+ *
+ *     windows       hoursOn      w.days.includes    the app
+ *     commitments   clashes      c.days.includes    <WorstDay>, <ClashList>
+ *     updates       factsFrom    update.cards       <Insights>
+ *     spent         courseCode   id.toUpperCase     <Me>
+ *     appointments  isoToDate    iso.split          <MonthView>
+ *     feedEvents    isoToDate    iso.split          <MonthView>
+ *     registrar     daysTo       iso.split          <Feed_registrar>
+ */
+describe('opening the app on a row that is missing a field', () => {
+  const thin = (field: string) => JSON.stringify({ [field]: [{ id: 'x1' }] });
+
+  it('gives a study window the days every hour figure filters on', () => {
+    const { windows } = withStorage(thin('windows'), () => loadPersisted());
+    expect(Array.isArray(windows[0].days)).toBe(true);
+  });
+
+  it('gives a commitment the days the clash detector reads', () => {
+    const { commitments } = withStorage(thin('commitments'), () => loadPersisted());
+    expect(Array.isArray(commitments[0].days)).toBe(true);
+  });
+
+  it('gives an update the two lists five callers iterate', () => {
+    const { updates } = withStorage(thin('updates'), () => loadPersisted());
+    expect(Array.isArray(updates[0].cards)).toBe(true);
+    expect(Array.isArray(updates[0].terms)).toBe(true);
+  });
+
+  it('gives a work report the course the pace table names it by', () => {
+    const { spent } = withStorage(thin('spent'), () => loadPersisted());
+    expect(typeof spent[0].courseId).toBe('string');
+  });
+
+  it('gives everything dated a date the month grid can split', () => {
+    const { appointments } = withStorage(thin('appointments'), () => loadPersisted());
+    const { feedEvents } = withStorage(thin('feedEvents'), () => loadPersisted());
+    const { registrar } = withStorage(thin('registrar'), () => loadPersisted());
+    expect(typeof appointments[0].date).toBe('string');
+    expect(typeof feedEvents[0].date).toBe('string');
+    expect(typeof registrar[0].iso).toBe('string');
+  });
+
+  it('still keeps what the row did hold', () => {
+    const raw = JSON.stringify({
+      windows: [{ id: 'w1', label: 'Evenings', days: [1, 2], from: 1140, to: 1380 }],
+      spent: [{ id: 's1', courseId: 'econ', kind: 'paper', minutes: 90 }],
+    });
+    const state = withStorage(raw, () => loadPersisted());
+    expect(state.windows[0]).toMatchObject({ label: 'Evenings', days: [1, 2], from: 1140, to: 1380 });
+    expect(state.spent[0]).toMatchObject({ courseId: 'econ', kind: 'paper', minutes: 90 });
+  });
+
+  /*
+   * `lib/migrate.ts` loads a copy written by a newer build and says of it "the
+   * app reads what it recognises and ignores the rest". Ignoring a field is not
+   * deleting it, and a reader that rebuilt a row from the fields it knows would
+   * delete it on the next save — so every one of them keeps the row and writes
+   * its guarantees over the top.
+   */
+  it('does not strip a field a newer build wrote', () => {
+    const raw = JSON.stringify({ windows: [{ id: 'w1', days: [1], from: 0, to: 60, colour: 'blue' }] });
+    const { windows } = withStorage(raw, () => loadPersisted());
+    expect((windows[0] as unknown as { colour: string }).colour).toBe('blue');
+  });
+});

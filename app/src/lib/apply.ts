@@ -390,18 +390,17 @@ function text(v: unknown): string {
 /**
  * A stored list made safe to render from.
  *
- * Rebuilt field by field rather than spread. This started as `{ ...a }` with
- * three fields repaired on top — `stage`, `kind`, `moves` — and that was the
- * hole: everything else was assumed to be there because a list this build
- * wrote would have it. Storage is not a trusted input, and the app opens
+ * Every field guaranteed, not three. This started as `{ ...a }` with `stage`,
+ * `kind` and `moves` repaired on top, and that was the hole: everything else
+ * was assumed to be there because a list this build wrote would have it. Storage is not a trusted input, and the app opens
  * whatever it finds: an application written by an older build, or by a sync
  * that stopped halfway, arrives without `url`, and `safeUrl` calls `.trim()`
  * on it and the applications screen goes white. Measured, with a row missing
  * `url`: `TypeError: Cannot read properties of undefined (reading 'trim')`.
  *
- * It is the same lesson `lib/handoff.ts` writes down about `tidyCourse`, and
- * it is the same sentence in both directions — a spread does not guarantee
- * what arrives any more than it limits what leaves.
+ * The spread stays — see `lib/stored.ts` on why storage is the one place it
+ * belongs — and every field the app does arithmetic or string work on is
+ * written over the top of it.
  */
 export function readApplications(raw: unknown): Application[] {
   if (!Array.isArray(raw)) return [];
@@ -431,6 +430,7 @@ export function readApplications(raw: unknown): Application[] {
       : [];
 
     out.push({
+      ...row,
       id,
       org: text(row.org),
       role: text(row.role),
@@ -448,7 +448,7 @@ export function readApplications(raw: unknown): Application[] {
       // half-written sync — would report zero days in every stage, which reads
       // as "just moved" and is the opposite of the truth.
       moves: moves.length > 0 ? moves : [{ stage, at: created }],
-    });
+    } as Application);
   }
   return out;
 }

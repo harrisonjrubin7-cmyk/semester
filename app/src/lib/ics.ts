@@ -12,6 +12,7 @@
  * guessed at.
  */
 
+import { rows, str } from './stored';
 import type { Course, FeedEvent } from './types';
 
 /** Folded lines are continued with a space or tab. Undo that first. */
@@ -166,6 +167,33 @@ function expand(rule: string, start: Date): Date[] {
   return out
     .sort((a, b) => a.getTime() - b.getTime())
     .slice(0, count || 200);
+}
+
+/**
+ * The saved events from a subscribed calendar, with the field every view dates
+ * them by.
+ *
+ * These are not typed in by hand — they are parsed out of somebody else's ICS
+ * feed, stored, and read back on every load. The calendar's month grid reads
+ * `e.date` straight into `isoToDate`, which splits it; an event stored by a
+ * build whose parser wrote a different field name was a caught TypeError and
+ * `<MonthView>` was replaced by a panel.
+ *
+ * `at` stays nullable: null is a real state and means an all-day entry.
+ */
+export function readFeedEvents(raw: unknown): FeedEvent[] {
+  return rows<FeedEvent>(raw, 'fe').map((e) => ({
+    ...e,
+    id: e.id as string,
+    sourceId: str(e.sourceId),
+    title: str(e.title),
+    date: str(e.date),
+    at: typeof e.at === 'number' && Number.isFinite(e.at) ? e.at : null,
+    time: str(e.time),
+    where: str(e.where),
+    note: str(e.note),
+    courseId: typeof e.courseId === 'string' ? e.courseId : null,
+  })) as FeedEvent[];
 }
 
 export interface IcsResult {

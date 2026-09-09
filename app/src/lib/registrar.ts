@@ -27,6 +27,7 @@
  * not shown anywhere except the screen that asks for it.
  */
 
+import { rows, str } from './stored';
 import { dateToIso, daysBetween, isoToDate, startOfDay } from './date';
 
 export type RegistrarKind = 'deadline' | 'window' | 'break' | 'exams';
@@ -174,21 +175,64 @@ export function blankTerm(): TermDate[] {
  * whatever the student typed — they entered it, so it is theirs.
  */
 export function sheet(saved: TermDate[] | undefined): TermDate[] {
-  const mine = saved ?? [];
+  /*
+   * The two dates are read back as strings and not merely passed through.
+   * `filled` below is the guard that keeps an undated landmark away from the
+   * arithmetic, and it asks `d.iso !== ''` — which is true of `undefined`, so a
+   * row saved before these fields existed sailed through it and `daysTo` split
+   * nothing. Measured: an uncaught TypeError from `isoToDate`, and the
+   * registrar section of Today replaced by a panel at boot.
+   */
+  const mine = (Array.isArray(saved) ? saved : []).filter(
+    (d): d is TermDate => Boolean(d) && typeof d === 'object' && typeof d.id === 'string',
+  );
   const byId = new Map(mine.map((d) => [d.id, d]));
   const known = blankTerm().map((row) => {
     const held = byId.get(row.id);
     // The label and the consequence come from the code, so improving the
     // wording later improves it for everybody. Only the dates are the
     // student's.
-    return held ? { ...row, iso: held.iso, until: held.until } : row;
+    return held ? { ...row, iso: str(held.iso), until: str(held.until) } : row;
   });
-  const extra = mine.filter((d) => !LANDMARKS.some((l) => l.id === d.id));
+  const extra = mine
+    .filter((d) => !LANDMARKS.some((l) => l.id === d.id))
+    .map((d) => ({ ...d, iso: str(d.iso), until: str(d.until) }));
   return [...known, ...extra];
 }
 
+/**
+ * The rows with a date on them, which is the only kind the arithmetic can use.
+ *
+ * `d.iso !== ''` was the check, and it says yes to `undefined` and to "some
+ * time in October" alike — both then reach `daysTo` below, where the first
+ * threw and the second returned NaN and sorted the list into whatever order
+ * NaN comparisons leave. A date is either the shape the rest of this file
+ * reads or it is not filled in.
+ */
 export function filled(dates: TermDate[]): TermDate[] {
-  return dates.filter((d) => d.iso !== '');
+  return dates.filter((d) => ISO.test(d?.iso ?? ''));
+}
+
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * The saved sheet, read back before anything asks it for a date.
+ *
+ * `sheet` above merges a saved list with the landmarks this build knows and is
+ * where the setup screen goes; `pressing` on Today goes straight to the stored
+ * list instead, so the coercion has to be at the boundary as well. Measured
+ * with one row carrying only its id: an uncaught TypeError from `isoToDate`,
+ * and the registrar section of Today replaced by a panel at boot.
+ */
+export function readTermDates(raw: unknown): TermDate[] {
+  return rows<TermDate>(raw, 'rg').map((d) => ({
+    ...d,
+    id: d.id as string,
+    label: str(d.label),
+    iso: str(d.iso),
+    until: str(d.until),
+    cost: str(d.cost),
+  })) as TermDate[];
 }
 
 /** Whole days from today to the date. Negative once it is past. */

@@ -28,6 +28,7 @@
 
 import type { Block } from './types';
 import type { EventKindId } from './kinds';
+import { num, nums, rows, str } from './stored';
 
 export type ActivityKind =
   | 'club'
@@ -98,6 +99,39 @@ export interface Commitment {
   hours: number;
   active: boolean;
   created: number;
+}
+
+/**
+ * The saved commitments, with the fields the week arithmetic runs on.
+ *
+ * `hoursOf` right below reads `c.days.length` and `lib/clash.ts` reads
+ * `c.days.includes(...)` — a commitment saved without `days` was a caught
+ * TypeError on Today and on Ahead, so the next-class card and the clash list
+ * were both replaced by a panel saying something went wrong.
+ *
+ * `at` stays nullable, because null is a real state here and means "no fixed
+ * time"; anything that is not a finite number reads as that rather than as an
+ * hour nobody stated.
+ */
+export function readCommitments(raw: unknown): Commitment[] {
+  return rows<Commitment>(raw, 'cm').map((c) => ({
+    ...c,
+    id: c.id as string,
+    name: str(c.name),
+    kind: activityKind(typeof c.kind === 'string' ? c.kind : undefined).id,
+    role: str(c.role),
+    where: str(c.where),
+    url: str(c.url),
+    note: str(c.note),
+    days: nums(c.days),
+    at: typeof c.at === 'number' && Number.isFinite(c.at) ? c.at : null,
+    minutes: num(c.minutes),
+    hours: num(c.hours),
+    // Absent reads as active: a commitment saved before this field existed is
+    // one somebody entered and never switched off.
+    active: c.active !== false,
+    created: num(c.created),
+  })) as Commitment[];
 }
 
 /**

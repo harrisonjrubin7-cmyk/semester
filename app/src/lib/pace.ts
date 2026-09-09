@@ -55,6 +55,8 @@ export function bucket(id: string): Bucket | undefined {
 }
 
 /** One piece of work, and how long it took. */
+import { num, rows, str } from './stored';
+
 export interface Spent {
   /** The deadline it was reported against, so it is only ever asked once. */
   id: string;
@@ -266,6 +268,28 @@ export interface PaceRow {
   kind: string;
   minutes: number;
   from: number;
+}
+
+/**
+ * The saved reports, with the fields the pace table groups and names by.
+ *
+ * `learned` below groups on `courseId` and `kind` and carries both straight
+ * through to the row, where Progress draws the course tag from it — and
+ * `courseCode` in the store falls back to `id.toUpperCase()` for an id it does
+ * not recognise. A report saved without a course was a caught TypeError and
+ * the whole Progress screen was replaced by a panel.
+ *
+ * A report with no course keeps its minutes and files under a blank, which is
+ * what an unattributed hour is. It is still an hour that was worked.
+ */
+export function readSpent(raw: unknown): Spent[] {
+  return rows<Spent>(raw, 'sp').map((s) => ({
+    ...s,
+    id: s.id as string,
+    courseId: str(s.courseId),
+    kind: str(s.kind),
+    minutes: num(s.minutes),
+  })) as Spent[];
 }
 
 export function learned(spent: Spent[]): PaceRow[] {

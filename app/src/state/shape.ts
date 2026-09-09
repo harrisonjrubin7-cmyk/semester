@@ -34,6 +34,12 @@ import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
 import { readApplications, type Application, type Stage } from '../lib/apply';
 import { readAppointments } from '../lib/appointment';
+import { readCommitments } from '../lib/activities';
+import { readFeedEvents } from '../lib/ics';
+import { readUpdates } from '../lib/updates';
+import { readSpent } from '../lib/pace';
+import { readTermDates } from '../lib/registrar';
+import { readWindows as readStudyWindows } from '../lib/windows';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
 import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
@@ -1010,9 +1016,9 @@ export function loadPersisted(): Persisted {
       tasks: list(saved.tasks),
       appointments: readAppointments(saved.appointments),
       notes: list(saved.notes),
-      updates: list(saved.updates),
+      updates: readUpdates(saved.updates),
       feeds: list(saved.feeds),
-      feedEvents: list(saved.feedEvents),
+      feedEvents: readFeedEvents(saved.feedEvents),
       linkUrls: saved.linkUrls ?? {},
       extraLinks: list(saved.extraLinks),
       courses: list(saved.courses),
@@ -1037,7 +1043,7 @@ export function loadPersisted(): Persisted {
         : [],
       lastSync: readLastSync(saved.lastSync),
       places: list(saved.places),
-      commitments: list(saved.commitments),
+      commitments: readCommitments(saved.commitments),
       timers: list(saved.timers),
       alarms: list(saved.alarms),
       applications: readApplications(saved.applications),
@@ -1111,9 +1117,9 @@ export function loadPersisted(): Persisted {
       lastOpened: saved.lastOpened ?? {},
       sittings: list(saved.sittings),
       sources: list(saved.sources),
-      registrar: list(saved.registrar),
-      spent: list(saved.spent),
-      windows: list(saved.windows),
+      registrar: readTermDates(saved.registrar),
+      spent: readSpent(saved.spent),
+      windows: readStudyWindows(saved.windows),
       costs: list(saved.costs),
       balances: list(saved.balances),
       residences: list(saved.residences),

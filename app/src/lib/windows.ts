@@ -24,6 +24,8 @@
  * stated as a default rather than as a fact.
  */
 
+import { num, nums, rows, str } from './stored';
+
 export interface Window {
   id: string;
   /** "Weekday evenings". Yours, and shown as you wrote it. */
@@ -33,6 +35,29 @@ export interface Window {
   /** Minutes past midnight. */
   from: number;
   to: number;
+}
+
+/**
+ * The saved windows, with the fields the hour arithmetic runs on.
+ *
+ * The one list whose bad row took down more than a screen. `hoursOn` filters
+ * `w.days.includes(day)`, and it is called from a hook the whole app hangs
+ * off rather than from inside one screen's boundary — so a window saved
+ * without `days` was an uncaught TypeError and a blank document, not a
+ * "something went wrong" panel with the rest of the app still working.
+ *
+ * A window with no days is kept and offers nothing, which is what a window
+ * that runs on no days is. Dropping it would lose a row somebody set.
+ */
+export function readWindows(raw: unknown): Window[] {
+  return rows<Window>(raw, 'w').map((w) => ({
+    ...w,
+    id: w.id as string,
+    label: str(w.label),
+    days: nums(w.days),
+    from: num(w.from),
+    to: num(w.to),
+  })) as Window[];
 }
 
 /** The day is sixteen waking hours when nobody has said otherwise. */

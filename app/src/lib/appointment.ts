@@ -1,4 +1,5 @@
 import { readDue } from './duetime';
+import { num, rows, str } from './stored';
 import type { Appointment } from './types';
 
 /**
@@ -27,14 +28,21 @@ import type { Appointment } from './types';
  * appointment invented at midnight would be a fact the app made up.
  */
 export function readAppointments(raw: unknown): Appointment[] {
-  if (!Array.isArray(raw)) return [];
-  const out: Appointment[] = [];
-  for (const a of raw) {
-    if (!a || typeof a !== 'object') continue;
-    const row = a as Partial<Appointment>;
-    const time = typeof row.time === 'string' ? row.time : '';
-    const at = typeof row.at === 'number' && Number.isFinite(row.at) ? row.at : (readDue(time) ?? -1);
-    out.push({ ...row, time, at } as Appointment);
-  }
-  return out;
+  return rows<Appointment>(raw, 'ap').map((a) => {
+    const time = str(a.time);
+    return {
+      ...a,
+      id: a.id as string,
+      title: str(a.title),
+      // The calendar's month grid reads this straight into `isoToDate`, which
+      // splits it. Blank rather than absent, so the `if (t.date)` the same
+      // function already applies to your own tasks works here too.
+      date: str(a.date),
+      at: num(a.at, readDue(time) ?? -1),
+      time,
+      where: str(a.where),
+      note: str(a.note),
+      created: num(a.created),
+    } as Appointment;
+  });
 }

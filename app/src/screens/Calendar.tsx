@@ -994,15 +994,19 @@ function MonthView() {
   // Your own events, in the colour the day and week grids give them, so the
   // three views agree about what a colour means.
   if (on.classes) {
-    state.appointments.forEach((a) =>
-      add(isoToDate(a.date), { c: null, kind: 'appt', tint: kindOf(a.kind).tint, title: a.title }),
-    );
+    // `if (a.date)` for the same reason your own tasks carry it three lines
+    // above: a record with no day is not on a day, and `isoToDate` given
+    // nothing lands it on 1 January 1900 — or, before `readAppointments`
+    // guaranteed the field, threw and took the month grid with it.
+    state.appointments.forEach((a) => {
+      if (a.date) add(isoToDate(a.date), { c: null, kind: 'appt', tint: kindOf(a.kind).tint, title: a.title });
+    });
   }
   if (on.campus) {
     datedEvents(now, state.sample).forEach((e) => add(e.date, { c: null, kind: 'event', title: e.title }));
-    state.feedEvents.forEach((e) =>
-      add(isoToDate(e.date), { c: e.courseId, kind: 'feed', title: e.title }),
-    );
+    state.feedEvents.forEach((e) => {
+      if (e.date) add(isoToDate(e.date), { c: e.courseId, kind: 'feed', title: e.title });
+    });
   }
   if (calSource === 'classes') {
     // Mark every day that has a class on it, so a term's teaching days show up.
