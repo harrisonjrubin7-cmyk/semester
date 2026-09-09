@@ -13,7 +13,8 @@ import { NOTIFICATIONS } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
-import { GROUPS, destinationsIn, lately, listed, saysFor } from '../lib/nav';
+import { GROUPS, destinationsIn, lately, listed, offered, saysFor } from '../lib/nav';
+import { byTask } from '../lib/everything';
 import { Launcher } from '../components/nav/Launcher';
 import { directoryOf } from '../lib/look';
 
@@ -183,6 +184,7 @@ export function Me() {
         options={[
           { id: 'you', label: 'You' },
           { id: 'all', label: 'Everything' },
+          { id: 'task', label: 'By task' },
         ]}
         value={tab}
         onChange={(next) => dispatch({ type: 'setMeTab', tab: next })}
@@ -377,6 +379,49 @@ export function Me() {
         </nav>
         </>
       )}
+        </>
+      )}
+
+      {tab === 'task' && (
+        <>
+          {/*
+            The same screens, filed under what somebody is trying to do.
+
+            This was a screen of its own — Everything — whose four views were
+            these task headings, the shelves above, the never-opened list that
+            `NotYetOpened` already draws, and the shortcut sheet that `?` and
+            the guide already carry. Three of the four were this tab with
+            different headings, so the screen went and the one view that was
+            genuinely its own came here, drawn with the same `Panel` and the
+            same rows as the shelves beside it.
+
+            A screen appears under every task it serves, so several appear more
+            than once. That is the difference from the shelves, where a screen
+            sits on exactly one: a shelf is where a thing lives, and a task is
+            what you wanted when you went looking for it.
+          */}
+          <p
+            style={{
+              fontSize: 'var(--type-sm)',
+              opacity: 0.6,
+              lineHeight: 'var(--leading-normal)',
+              margin: '0 0 var(--sp-6)',
+            }}
+          >
+            The same screens, filed under what you would be trying to do. Several appear more than
+            once, because they answer more than one question.
+          </p>
+          <nav aria-label="By task" style={{ margin: '0 -18px' }}>
+            {byTask(
+              offered(school.capabilities).filter((d) => !HIDE_IN_ME.includes(d.screen)),
+            ).map((section) => (
+              <Panel key={section.tag} header={section.label}>
+                {section.rows.map((d) => (
+                  <Destination key={d.screen} to={d} account={account} />
+                ))}
+              </Panel>
+            ))}
+          </nav>
         </>
       )}
     </Page>

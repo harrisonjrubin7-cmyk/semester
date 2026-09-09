@@ -42,7 +42,6 @@ import { standing } from './grades';
 import { isExam } from './runway';
 import { behindLine, howBehind } from './behind';
 import { WAKING_HOURS, hoursOn } from './windows';
-import { DESTINATIONS } from './nav';
 import { tally } from './review';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
@@ -576,7 +575,10 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: through === null ? 'deadlines this term' : 'of the term’s deadlines are behind you',
         },
         stats: term,
-        bar: { primary: { label: 'Everything', screen: 'everything' } },
+        // Not "Everything" any more: that opened a second directory, and the
+        // directory is the tab beside the one you are on. The guide is the
+        // thing this screen cannot tell you itself.
+        bar: { primary: { label: 'How this works', screen: 'help' } },
       };
     }
 
@@ -627,20 +629,8 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         bar: { primary: { label: 'Settings', screen: 'settings' } },
       };
 
-    case 'everything':
-      return {
-        hero: {
-          label: 'Everything',
-          meta: `${Object.keys(state.visited).length} opened`,
-          figure: num(DESTINATIONS.length),
-          foot: 'screens in the app',
-        },
-        stats: term,
-        bar: { primary: { label: 'How this works', screen: 'help' } },
-      };
-
     case 'help':
-      return prose({ label: 'Everything', screen: 'everything' });
+      return prose({ label: 'Everything', screen: 'me' });
 
     // ── Data ──────────────────────────────────────────────────────────────
     case 'data':

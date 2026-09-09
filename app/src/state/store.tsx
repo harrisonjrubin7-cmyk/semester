@@ -230,6 +230,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // survivor it meant — see `RETIRED` in `lib/route.ts`.
         ...(landed.opens?.report ? { report: landed.opens.report } : {}),
         ...(landed.opens?.changes ? { changes: landed.opens.changes } : {}),
+        ...(landed.opens?.meTab ? { meTab: landed.opens.meTab } : {}),
       };
     }
     return { ...persisted, ...ephemeral, screen: screenFromUrl() ?? ('home' as Screen) };

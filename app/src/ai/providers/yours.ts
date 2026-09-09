@@ -1,7 +1,6 @@
 import { inventory, bytesOf } from '../../lib/inventory';
 import { pickPersisted } from '../../state/shape';
 import { SHORTCUTS } from '../../lib/keys';
-import { DESTINATIONS } from '../../lib/nav';
 import type { Provide } from '../shape';
 
 /**
@@ -14,35 +13,6 @@ import type { Provide } from '../shape';
  * the student. And nothing here carries a key, a token or an address.
  */
 
-/**
- * The Everything directory — what the app can do, and what has gone unused.
- *
- * The registry is already in the system prompt (see `PICK.always` in
- * `lib/context.ts`), so repeating fifty-four labels here would spend two
- * thousand tokens saying what the model has been told twice. What it does not
- * have is which of them this student has actually opened, which is the one
- * question this screen answers and the only thing worth sending.
- */
-export const everything: Provide = (look) => {
-  const { state } = look;
-  // The whole registry rather than the school-filtered list: `Look` carries
-  // no capabilities, and a screen this student cannot reach is not a screen
-  // they have failed to open. Filtering it here would need a fourth argument
-  // through every provider to change one line.
-  const rows = DESTINATIONS;
-  const never = rows.filter((d) => !state.visited[d.screen]).map((d) => d.screen);
-  return {
-    summary: `The directory of every screen. ${rows.length - never.length} of ${rows.length} have been opened at least once.`,
-    visible: never.length > 0 ? [{ neverOpened: never.join(', ') }] : [],
-    actions: ['open_screen'],
-    suggestions: [
-      'Which of these would help me most this week?',
-      'What have I never opened that I should?',
-    ],
-  };
-};
-
-/** Timers and alarms — what is running and what will go off. */
 export const clocks: Provide = (look) => {
   const { state, now } = look;
   const running = state.timers.filter((t) => t.endsAt !== null);

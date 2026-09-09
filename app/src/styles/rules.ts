@@ -243,10 +243,14 @@ export const BUDGET = {
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
   space: 524,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 544,
+  shorthand: 543,
 };
 
 /*
+ * 680/222/524/544 → 680/222/524/543 when the second directory was deleted. The
+ * view that survived it is drawn with the `Panel` and rows the first directory
+ * already used, so what went with the screen was its own hand-drawn heading.
+ *
  * Unchanged when Settings stopped counting the bytes a second time: the two
  * rows that moved to the Data screen are drawn with `ItemRow` rather than
  * copied, so the page that went took its own numbers with it.

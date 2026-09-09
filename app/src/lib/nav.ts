@@ -569,7 +569,12 @@ export const DESTINATIONS: Destination[] = [
     label: 'Personal',
     blurb: 'Your own tasks, appointments, notes, places and files.',
     keywords: 'mine personal todo task appointment note file attachment place own yours',
-    group: 'Life',
+    group: 'You',
+    // On You rather than Life: this is the one screen holding what the
+    // student wrote rather than what a syllabus or the campus did, which is
+    // the same question the rest of that shelf answers. It also keeps both
+    // shelves inside the five-to-eight rule after the Everything screen
+    // merged into Progress — see `nav.test.ts`.
     taskTags: ['due', 'week'],
     root: 'mine',
   },
@@ -580,7 +585,13 @@ export const DESTINATIONS: Destination[] = [
     // for, so the name says the first.
     label: 'Progress',
     blurb: 'Your load at a glance, and everything else the app can do.',
-    keywords: 'me progress profile load more menu overview directory settings everything',
+    // Three tabs' worth, because the Everything screen merged into this one:
+    // "where does the thing live" is the shelves, "what am I trying to do" is
+    // the task view, and both used to be a second directory of their own.
+    keywords:
+      'me progress profile load more menu overview directory settings everything ' +
+      'all screens index list of features what can this app do capabilities map contents table of contents ' +
+      'browse explore find a screen where is what is there tour inventory sitemap unused never opened by task',
     group: 'You',
     taskTags: ['stand', 'app'],
     root: 'me',
@@ -632,18 +643,6 @@ export const DESTINATIONS: Destination[] = [
     short: 'Guide',
     blurb: 'Every screen in the app, what it is for, and what it will not do.',
     keywords: 'help guide manual how do i what does documentation tour onboarding explain instructions getting started first time shortcuts keyboard reference handbook',
-    group: 'You',
-    taskTags: ['app'],
-    root: 'me',
-  },
-  {
-    screen: 'everything',
-    label: 'Everything',
-    // Ten characters is one past what the bar holds. See `lib/tabbar.ts`.
-    short: 'All of it',
-    blurb: 'Every screen in the app, what it does, and whether you have used it.',
-    keywords:
-      'everything all screens index directory list of features what can this app do capabilities map contents table of contents overview browse explore find a screen where is what is there tour inventory sitemap unused never opened shortcuts keys',
     group: 'You',
     taskTags: ['app'],
     root: 'me',
