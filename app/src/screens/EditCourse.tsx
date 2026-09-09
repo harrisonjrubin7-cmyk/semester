@@ -308,7 +308,7 @@ export function EditCourse() {
 
       <SectionLabel>When it meets</SectionLabel>
       {draft.schedule.map((block, i) => (
-        <Blueprint key={i} style={{ padding: '12px 13px', marginBottom: 9 }}>
+        <Blueprint plain key={i} style={{ padding: '12px 13px', marginBottom: 9 }}>
           <div style={{ display: 'flex', gap: 5, marginBottom: 9 }}>
             {DAYS.map((d) => {
               const on = block.days.includes(d.day);
@@ -453,7 +453,7 @@ export function EditCourse() {
         Deadlines
       </SectionLabel>
       {draft.items.map((i) => (
-        <Blueprint key={i.id} style={{ padding: '12px 13px', marginBottom: 9 }}>
+        <Blueprint plain key={i.id} style={{ padding: '12px 13px', marginBottom: 9 }}>
           <input
             className="input"
             value={i.title}
