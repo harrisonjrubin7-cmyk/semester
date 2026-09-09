@@ -127,6 +127,35 @@ right in one place and stale in another.
 | Doc | The guide as a real .docx and .pdf, plus a print view. |
 | Listen | The podcast editions, with chapter marks that seek. |
 
+## Checking the quotes in your own writing
+
+The app already checks quotes in one direction: when a course is generated, every
+quote the model wrote is tested against the syllabus, because those are presented
+as the document's own words. The same machinery had never been pointed at the
+writing the student actually hands in — where a misquotation is not a bug report.
+
+**Check the writing** now runs a second question over the same box. Every passage
+in double quotes is looked for in the readings you have added to a course, the
+guides built from them, or a file you drop in for the purpose. Three verdicts:
+**found** word-for-word; **close**, where the words are there but the punctuation
+is not — and the source's own sentence comes back, punctuation included, because
+the instruction beside it is *copy those*; and **not in anything here**.
+
+That third one is the wording the whole thing turns on. It is *not* "wrong". The
+app holds a fraction of what a student reads, and a screen that turned "I have
+never seen this book" into a red flag would be lying in the most damaging
+possible direction — about somebody's academic honesty, in a tool they trust. So
+the sentence says what was searched in the same breath as what was found, and
+nothing is coloured like an error.
+
+An ellipsis is honoured rather than failed on: each side of the gap is looked for
+separately and in order, which is exactly what an ellipsis claims. Single quotes
+are left alone, because an apostrophe is one and "don't" would otherwise open a
+quotation that swallows the paragraph. Your own notes are not searched at all — a
+quote found in your own notes has been checked against yourself. Nothing leaves
+the device, here or in the rules pass. See
+[`app/src/lib/quotes.ts`](app/src/lib/quotes.ts).
+
 ## What the exam actually covers
 
 The exam runway counted the whole course. For a final that is fair; for the
