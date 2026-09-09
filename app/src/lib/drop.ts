@@ -25,14 +25,44 @@
 
 import { readScore } from './grades';
 
-/** A column of scores, as typed. Commas, spaces or newlines all separate. */
+/**
+ * A column of scores, as typed. Newlines, commas and semicolons separate.
+ *
+ * Whitespace cannot be a separator outright, because a score is allowed to
+ * contain some: `readScore` reads "17 out of 20", which is how a person says
+ * a fraction and how a rubric writes one. So a piece is split off on the
+ * punctuation first and read whole.
+ *
+ * What that missed is the paste. A row copied out of a gradebook arrives
+ * tab-separated, and a column typed from one arrives "88 92 76" as often as
+ * "88, 92, 76" — neither holds a comma, so the whole thing came back as one
+ * unreadable piece and the field silently showed nothing at all. Losing
+ * somebody's grades without saying so is the worst way to be wrong about
+ * them.
+ *
+ * So a piece that cannot be read on its own is split on whitespace and its
+ * parts read separately. Strictly a second chance: anything that parsed
+ * before parses identically now, and "88, missed, 92" still drops the word
+ * rather than inventing a score for it.
+ */
 export function readScores(text: string): number[] {
-  return text
-    .split(/[\n,;]+/)
-    .map((piece) => piece.trim())
-    .filter(Boolean)
-    .map((piece) => readScore(piece))
-    .filter((n): n is number => n !== null);
+  const out: number[] = [];
+  for (const raw of text.split(/[\n,;]+/)) {
+    const piece = raw.trim();
+    if (!piece) continue;
+
+    const whole = readScore(piece);
+    if (whole !== null) {
+      out.push(whole);
+      continue;
+    }
+
+    for (const part of piece.split(/\s+/)) {
+      const one = readScore(part);
+      if (one !== null) out.push(one);
+    }
+  }
+  return out;
 }
 
 export interface Kept {

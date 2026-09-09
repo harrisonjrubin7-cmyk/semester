@@ -28,6 +28,32 @@ describe('readWeight', () => {
     expect(readWeight('graded pass/fail').weight).toBeNull();
     expect(readWeight('10 pts').weight).toBeNull();
   });
+
+  /*
+   * A plus that joins two things is not a bonus.
+   *
+   * `pct` carries prose — the case above reads a weight out of "Best 2 of 3
+   * exams, 60%" — so a syllabus writing "Exams 1 + 2, 40%" is an ordinary
+   * input, and reading it as extra credit takes forty points out of the
+   * denominator and makes every band on the Grades screen wrong.
+   */
+  it('does not read a plus between two things as extra credit', () => {
+    expect(readWeight('Exams 1 + 2, 40%').extra).toBe(false);
+    expect(readWeight('Midterm + final, 45%').extra).toBe(false);
+    expect(readWeight('Quizzes + reflections, 25%')).toEqual({
+      weight: 25,
+      extra: false,
+      points: null,
+    });
+  });
+
+  it('still reads a plus attached to the figure as extra credit', () => {
+    expect(readWeight('+3% EC').extra).toBe(true);
+    expect(readWeight('+3%').extra).toBe(true);
+    expect(readWeight('up to +5 pts').extra).toBe(true);
+    expect(readWeight('Extra credit, 4%').extra).toBe(true);
+    expect(readWeight('Bonus quiz, 2%').extra).toBe(true);
+  });
 });
 
 describe('readScore', () => {

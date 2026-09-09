@@ -83,7 +83,7 @@ export function readWeight(pct: string): {
   /** The figure when the syllabus stated points rather than a percentage. */
   points: number | null;
 } {
-  const extra = /\+|\bEC\b|extra credit/i.test(pct);
+  const extra = isExtra(pct);
 
   // A range first, and only when the two numbers are joined by a dash: real
   // tables write "25–30%" with a single per-cent sign at the end. Matching
@@ -103,6 +103,32 @@ export function readWeight(pct: string): {
   // converted once `standing` knows the total. See `asWeights`.
   const points = pct.match(/(\d+(?:\.\d+)?)\s*(?:pts?|points?)\b/i);
   return { weight: null, extra, points: points ? Number(points[1]) : null };
+}
+
+/**
+ * Whether a weight is extra credit rather than part of the hundred.
+ *
+ * The test used to be a bare `+` anywhere in the string, which is right for
+ * the shape it was written against — "+3% EC" — and wrong for a syllabus
+ * that uses the sign to join two things: "Exams 1 + 2, 40%", "Midterm +
+ * final, 45%", "Quizzes + reflections, 25%". Those are not bonuses. Reading
+ * one as a bonus takes its weight out of the denominator, so a course marked
+ * out of 100 is suddenly marked out of 60, `standing` reports a grade against
+ * the wrong total, `incomplete` fires, and every band on the Grades screen is
+ * a confident wrong number.
+ *
+ * `pct` genuinely carries prose — `readWeight` already reads "Best 2 of 3
+ * exams, 60%" out of it — so this cannot assume a clean figure.
+ *
+ * A plus means extra credit when it is attached to the figure: at the front
+ * of the whole string, or immediately before a number that is itself a
+ * percentage or a points total. Otherwise it takes the syllabus at its word,
+ * which says "EC", "extra credit" or "bonus" when it means one.
+ */
+function isExtra(pct: string): boolean {
+  if (/^\s*\+/.test(pct)) return true;
+  if (/\+\s*\d+(?:\.\d+)?\s*(?:%|pts?\b|points?\b)/i.test(pct)) return true;
+  return /\bEC\b|\bextra credit\b|\bbonus\b/i.test(pct);
 }
 
 /**

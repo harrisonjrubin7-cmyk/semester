@@ -23,6 +23,27 @@ describe('reading a column of scores', () => {
   it('keeps a zero, which is a real score and the one most likely dropped', () => {
     expect(readScores('0, 88, 92')).toEqual([0, 88, 92]);
   });
+
+  /*
+   * The paste. A row copied out of a gradebook is tab-separated and a column
+   * typed from one is as likely to be spaced as punctuated; neither holds a
+   * comma, and both used to come back empty with nothing said.
+   */
+  it('reads a row pasted out of a gradebook', () => {
+    expect(readScores('88 92 76')).toEqual([88, 92, 76]);
+    expect(readScores('88\t92\t76')).toEqual([88, 92, 76]);
+    expect(readScores('17/20 18/20')).toEqual([85, 90]);
+  });
+
+  it('still reads a fraction that is written out in words', () => {
+    // The reason whitespace is not a separator outright.
+    expect(readScores('17 out of 20')).toEqual([85]);
+    expect(readScores('17 out of 20, 19 out of 20')).toEqual([85, 95]);
+  });
+
+  it('does not invent scores out of words when it falls back', () => {
+    expect(readScores('88, not sat yet, 92')).toEqual([88, 92]);
+  });
 });
 
 describe('striking out the lowest', () => {

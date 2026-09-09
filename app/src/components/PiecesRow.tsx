@@ -58,7 +58,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
         className="input"
         value={text}
         onChange={(e) => dispatch({ type: 'setPieces', key: gradeKey, text: e.target.value })}
-        placeholder="88, 92, 76 — one per line or comma-separated. 17/20 works too."
+        placeholder="88, 92, 76 — or one per line, or a row pasted from your gradebook. 17/20 works too."
         aria-label={`Individual scores for ${what}`}
         style={{
           width: '100%',
