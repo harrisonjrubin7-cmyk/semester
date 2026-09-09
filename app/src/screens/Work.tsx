@@ -15,10 +15,11 @@ import { useRowStyle } from '../components/shell/useShell';
 import { Check, Plus } from '../components/Icons';
 import { extractText } from '../lib/extract';
 import { breakDown, critique, type Breakdown } from '../lib/assignment';
-import { ask, configured, provider, routeLabel } from '../lib/claude';
+import { ask, configured, routeLabel } from '../lib/claude';
 import { datedItems } from '../lib/select';
 import type { CourseId } from '../lib/types';
 import { Folding } from '../components/Fold';
+import { NeedsKey } from '../components/NeedsKey';
 
 type Tab = 'plan' | 'file' | 'draft' | 'ask';
 
@@ -133,19 +134,7 @@ export function Work() {
     setKept(true);
   };
 
-  if (!configured()) {
-    return (
-      <Page>
-        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
-          <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
-            Sign in to use the shared key, or add your own under Settings → The assistant. Everything
-            else in the app works without it.
-          </div>
-        </Blueprint>
-      </Page>
-    );
-  }
+  if (!configured()) return <NeedsKey frame />;
 
   return (
     <Page>
