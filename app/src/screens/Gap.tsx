@@ -223,7 +223,17 @@ function Run({ win }: { win: GapWindow }) {
           {canSpeak() ? (
             <button
               type="button"
-              className="bare"
+              /*
+                38×17 as drawn, which the tap audit in `styles/taps.test.ts`
+                would have caught had it reached this far: the control only
+                exists inside a running gap session, behind a start button and
+                a browser that can speak. `tap-y` rather than `tap`, for the
+                reason the audit gives — the counter sits beside it in the
+                same row, and a target that grew sideways would reach across
+                the gap towards it. Nothing interactive is above or below, so
+                the vertical growth costs no other control a tap.
+              */
+              className="bare tap-y"
               aria-pressed={aloud}
               aria-label={aloud ? 'Stop reading cards aloud' : 'Read cards aloud'}
               onClick={() => {

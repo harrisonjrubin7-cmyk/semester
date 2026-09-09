@@ -1509,8 +1509,20 @@ a:hover {
   color: var(--app-faint) !important;
   font-size: 10px;
 }
+/* Underlined, and not only because it is prettier. The credit sits inside a
+   run of text of its own and is told apart from it by colour alone — measured
+   at 1.93:1 against the words either side of it, where WCAG 1.4.1 asks for 3
+   or for a second signal. Lifting the colour enough would make the link
+   louder than the map; an underline is the second signal, and it is the one
+   convention every reader already knows. */
 .leaflet-control-attribution a {
   color: var(--app-dim) !important;
+  /* `!important` for the same reason the colour above needs it: leaflet.css
+     is imported by the map component and so lands after this file, and its
+     own `.leaflet-control-attribution a { text-decoration: none }` has the
+     identical specificity. Without it the underline is set and then quietly
+     taken away again. */
+  text-decoration: underline !important;
 }
 .leaflet-bar a {
   background: var(--app-raise) !important;
