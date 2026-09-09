@@ -327,9 +327,12 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    // Any real destination will do; this one is named because it is stable.
+    // It used to be `grades`, which stopped being a destination underneath the
+    // test — the case the test is about, arriving as a type error.
+    const short = DESTINATIONS.filter((d) => d.screen !== 'tonight');
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === 'tonight')).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
