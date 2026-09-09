@@ -110,12 +110,18 @@ of a key that ships inside the page. Signing in also lets you generate a course
 without supplying an API key, through a server function that meters usage per
 account.
 
-## Six ways through the same material
+## <!--modes-->Eleven<!--/--> ways through the same material
 
 Each course carries one body of material, and every study mode is a different
-route through it — not a different copy. Cards, Read, Watch, Slides, Doc, Quiz,
-Cram, Figures, Cases and Listen all read the same guide, so nothing can be
-right in one place and stale in another.
+route through it — not a different copy. **Cards**, **Read**, **Field guide**,
+**Watch**, **Slides**, **Doc**, **Quiz**, **Figures**, **Cases**, **Cram** and
+**Listen** all read the same guide, so nothing can be right in one place and
+stale in another.
+
+The count and the list are written from `app/src/lib/modes.ts` rather than by
+hand — `npm run counts` fills the number, and a test holds the list to the
+same registry. Both had drifted before that: this heading said six, the
+sentence under it named ten, and the table listed seven.
 
 | Mode | What it is |
 | --- | --- |
@@ -125,6 +131,10 @@ right in one place and stale in another.
 | Watch | A narrated lesson per unit — 44 of them — with the slide changing as the voice moves. |
 | Slides | The same unit as a deck: one point per slide, question before answer. |
 | Doc | The guide as a real .docx and .pdf, plus a print view. |
+| Quiz | Multiple choice, marked as you go, with the wrong answers drawn from the guide itself. |
+| Figures | The diagrams — curves, flows and frames — each with what it shows. |
+| Cases | The worked examples in full, with the reasoning left in. |
+| Cram | Everything on one page for the night before: no flipping, no waiting. |
 | Listen | The podcast editions, with chapter marks that seek. |
 
 ## Checking the quotes in your own writing
