@@ -407,7 +407,7 @@ function Alarms() {
           <SectionLabel style={{ margin: '24px 0 10px' }}>Set</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
             {state.alarms.map((a) => (
-              <Blueprint key={a.id} style={{ padding: '12px 14px' }}>
+              <Blueprint plain key={a.id} style={{ padding: '12px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-6)' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
