@@ -28,7 +28,7 @@ import { has } from '../lib/search';
  *   the page padding and the empty-state guard. Standalone it supplies its own.
  */
 export function Grades({ bare = false }: { bare?: boolean } = {}) {
-  const { state, dispatch, catalog, school } = useStore();
+  const { state, dispatch, catalog, school, tint } = useStore();
   // The hairline this row wears, in whichever layout is on. Spread rather
   // than wrapped so the row keeps its own insides. See `useRowStyle`.
   const rowFlush = useRowStyle(0);
@@ -112,7 +112,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
               </div>
               {s.current !== null && (
                 <div style={{ marginTop: 'var(--sp-5)' }}>
-                  <Meter pct={Math.min(100, Math.round(s.current))} />
+                  <Meter pct={Math.min(100, Math.round(s.current))} fill={tint(c.id).fill} />
                 </div>
               )}
               {s.extraCredit > 0 && (

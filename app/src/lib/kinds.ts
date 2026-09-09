@@ -12,6 +12,9 @@
  * draws them differently for exactly that reason.
  */
 
+import { hueToHex } from './look';
+import { LIGHT_GROUND_LUM, hueOf, satOf } from './tint';
+
 export type EventKindId = 'study' | 'work' | 'social' | 'family' | 'health' | 'admin' | 'other';
 
 export interface KindDef {
@@ -44,8 +47,33 @@ export function kindOf(id: string | undefined): KindDef {
   return BY_ID.get((id ?? 'other') as EventKindId) ?? EVENT_KINDS[EVENT_KINDS.length - 1];
 }
 
-/** The colour a class gets — the app's own accent, so lessons read as the spine. */
+/**
+ * The colour a class gets when the courses are not coloured separately — the
+ * app's own accent, so lessons read as the spine. With "a colour per course"
+ * on, which is the default, a class wears its course's instead. See
+ * `lib/tint.ts`.
+ */
 export const CLASS_TINT = 'var(--app-accent)';
+
+/**
+ * A kind's colour, drawn for the ground it is actually on.
+ *
+ * The table above is one set of values, mixed for a dark screen, and on
+ * Parchment the same seven came out as pastels a couple of steps off the
+ * page — a category colour you cannot see is a category that is not there.
+ *
+ * So on a dark ground this returns the table verbatim: those values are the
+ * palette and a change of ground must not become a change of palette. On a
+ * light one it keeps both the hue *and* the saturation and moves only the
+ * lightness, to the step the course palette uses in that direction. Keeping
+ * the saturation is the part that matters: "Other" is a near-grey on purpose,
+ * and re-mixing every kind at the palette's own saturation would turn the one
+ * category meaning "uncategorised" into a blue.
+ */
+export function kindTint(id: string | null | undefined, light: boolean): string {
+  const tint = kindOf(id ?? undefined).tint;
+  return light ? hueToHex(hueOf(tint), LIGHT_GROUND_LUM, satOf(tint)) : tint;
+}
 
 /**
  * What a block on a grid is called out loud.

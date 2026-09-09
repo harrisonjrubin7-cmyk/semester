@@ -14,7 +14,6 @@ import { nextExam, tonightPlan } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
 import { cardKey, dueCount } from '../lib/review';
 import { destinationsIn } from '../lib/nav';
-import { tintFor } from '../lib/yours';
 
 /**
  * Study, in the shape Calendar and Mine already use.
@@ -29,7 +28,7 @@ import { tintFor } from '../lib/yours';
  * view you are on and it is the thing you want to see without looking.
  */
 export function Study() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   /**
    * Courses whose full list of ways has been asked for.
    *
@@ -195,10 +194,8 @@ export function Study() {
                 // The same stripe as the Courses list, for the same reason:
                 // this is the other screen where four codes have to be told
                 // apart at a glance.
-                borderLeft: tintFor(state.yours, c.id)
-                  ? `3px solid ${tintFor(state.yours, c.id)?.base}`
-                  : undefined,
-                paddingLeft: tintFor(state.yours, c.id) ? 12 : 15,
+                borderLeft: `3px solid ${tint(c.id).edge}`,
+                paddingLeft: 'var(--sp-6)',
               }}
             >
               <button
@@ -239,7 +236,7 @@ export function Study() {
               </div>
               <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-1)' }}>{g.blurb}</div>
               <div style={{ marginTop: 11 }}>
-                <Meter pct={g.mastery} />
+                <Meter pct={g.mastery} fill={tint(c.id).fill} />
               </div>
               <div
                 style={{

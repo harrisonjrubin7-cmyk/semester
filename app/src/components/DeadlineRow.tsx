@@ -5,6 +5,7 @@ import { lateBy, type Standing } from '../lib/standing';
 import { isUnderway, openLine } from '../lib/underway';
 import { useRowStyle } from './shell/useShell';
 import { useAskAbout } from '../ai/AskAbout';
+import { CourseTag } from './CourseTag';
 import type { DatedItem } from '../lib/types';
 
 /**
@@ -68,7 +69,7 @@ export function DeadlineRow({
 }) {
   // `now` rather than `Date.now()`: the store's clock ticks once a minute, so
   // "open 4 days" stays right without making the render impure.
-  const { state, dispatch, catalog, now } = useStore();
+  const { state, dispatch, catalog, now, tint } = useStore();
   // Only the row and timeline styles take it. A card already has its own edge
   // and inset, and a card inside a grouped panel would be a card in a card.
   const row = useRowStyle(0);
@@ -131,6 +132,10 @@ export function DeadlineRow({
           ? {
               background: 'var(--app-panel)',
               border: '1px solid var(--app-line)',
+              // The one edge that says whose card this is. A card is the
+              // roomiest of the three feeds and the one where a stack of six
+              // otherwise reads as six identical rectangles.
+              borderLeft: `3px solid ${tint(item.c).edge}`,
               borderRadius: 'var(--r-md)',
               padding: '0 12px',
               marginBottom: 'var(--sp-4)',
@@ -141,7 +146,10 @@ export function DeadlineRow({
               // The line itself, drawn as a left border on every row so it is
               // continuous down the list without a wrapper element that each
               // caller would have to remember to add.
-              borderLeft: '2px solid var(--app-line)',
+              // In the course's colour rather than a hairline: the timeline
+              // is one continuous line down a mixed day, and the segment a row
+              // sits on is the cheapest possible way to say whose it is.
+              borderLeft: `2px solid ${tint(item.c).edge}`,
               marginLeft: 7,
               paddingLeft: 'var(--sp-6)',
             }
@@ -172,9 +180,7 @@ export function DeadlineRow({
           opacity: done ? 0.45 : 1,
         }}
       >
-        <span className="tag tag-accent" style={{ flex: 'none' }}>
-          {catalog.byId[item.c]?.code}
-        </span>
+        <CourseTag id={item.c} style={{ flex: 'none' }} />
         {going && (
           // A pip rather than a word: the row is already carrying a course
           // code, a title, a date, a kind and a weight, and a sixth label
@@ -186,7 +192,7 @@ export function DeadlineRow({
               width: 6,
               height: 6,
               borderRadius: '50%',
-              background: 'var(--app-accent)',
+              background: tint(item.c).fill,
             }}
           />
         )}

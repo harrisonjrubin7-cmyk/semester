@@ -292,7 +292,16 @@ export function TickBox({ on, size = 20 }: { on: boolean; size?: number }) {
 }
 
 /** A progress bar in brushed metal. */
-export function Meter({ pct, height = 6 }: { pct: number; height?: number }) {
+export function Meter({
+  pct,
+  height = 6,
+  fill,
+}: {
+  pct: number;
+  height?: number;
+  /** The bar's colour. Defaults to the brushed metal every other meter is. */
+  fill?: string;
+}) {
   // Named so Windows High Contrast can give it an edge: forced colours drop
   // both of these backgrounds, and a bar drawn only in colour disappears
   // entirely. See `styles/app.css`.
@@ -302,7 +311,7 @@ export function Meter({ pct, height = 6 }: { pct: number; height?: number }) {
         style={{
           height: '100%',
           width: `${Math.max(0, Math.min(100, pct))}%`,
-          background: 'var(--chrome)',
+          background: fill ?? 'var(--chrome)',
         }}
       />
     </div>

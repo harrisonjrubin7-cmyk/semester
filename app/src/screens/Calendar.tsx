@@ -39,7 +39,7 @@ import {
 import { timeLabel, useDragToMove } from '../lib/drag';
 import { useCalendarMove, type Movable } from './calendar/Move';
 import { AddHere } from './calendar/AddHere';
-import type { Course, CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
+import type { CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
 
 /**
  * The calendar has two independent axes.
@@ -62,20 +62,20 @@ type Source = (typeof SOURCES)[number]['id'];
 
 const EV_FILTERS = ['All', 'Athletics', 'Clubs', 'University', 'Saved'] as const;
 
-/** Colour a course consistently wherever it appears on the calendar. */
-function courseTint(courses: Course[], id: CourseId | null): string {
-  if (!id) return 'var(--app-accent-deep)';
-  const index = courses.findIndex((c) => c.id === id);
-  // A single accent, stepped in opacity — the system is mono by design, so
-  // courses are distinguished by weight rather than by inventing new hues.
-  const steps = [1, 0.78, 0.56, 0.38];
-  return `color-mix(in srgb, var(--app-accent) ${(steps[index % steps.length] ?? 0.5) * 100}%, transparent)`;
-}
+/*
+ * Courses used to be told apart here by opacity: one accent at 100, 78, 56 and
+ * 38 percent. It was the honest thing to do while the app had one colour, and
+ * it did not work — the third and fourth course are a pair of greys, the steps
+ * repeat at the fifth course, and a dot at 38% on a month grid is a dot nobody
+ * sees at all. The palette is `lib/tint.ts` now, it is the reader's own accent
+ * turned rather than four new colours, and it is the same in every view
+ * instead of being the calendar's private scheme. Ask the store: `tint(id)`.
+ */
 
 // ── Day ───────────────────────────────────────────────────────────────────
 
 function DayView() {
-  const { state, dispatch, now, catalog, say } = useStore();
+  const { state, dispatch, now, catalog, say , tint } = useStore();
   const moving = useCalendarMove();
   const [addAt, setAddAt] = useState<number | null>(null);
   const day = state.calDay ? isoToDate(state.calDay) : now;
@@ -282,7 +282,7 @@ function DayView() {
                         ? 'var(--app-track)'
                         : b.mine
                           ? 'transparent'
-                          : courseTint(catalog.courses, b.c),
+                          : tint(b.c).fill,
                       border: b.mine ? '1px solid var(--app-accent)' : 'none',
                     }}
                   />
@@ -722,7 +722,7 @@ function WeekView() {
 // ── Month ─────────────────────────────────────────────────────────────────
 
 function MonthView() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog , tint } = useStore();
   const { calYear, calMonth, calSource } = state;
   const cells = monthGrid(calYear, calMonth);
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -1048,7 +1048,7 @@ function MonthView() {
                       background:
                         m.kind === 'mine'
                           ? 'transparent'
-                          : (m.tint ?? courseTint(catalog.courses, m.c)),
+                          : (m.tint ?? tint(m.c).fill),
                       border: m.kind === 'mine' ? '1px solid var(--app-accent)' : 'none',
                       borderRadius: m.kind === 'event' || m.kind === 'appt' ? '50%' : 0,
                     }}
@@ -1252,7 +1252,7 @@ function MonthView() {
  * something new.
  */
 function SemesterView() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog , tint } = useStore();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<string | null>(null);
   const source = state.calSource;
@@ -1399,7 +1399,7 @@ function SemesterView() {
                           style={{
                             flex: 1,
                             maxWidth: `${100 / busiest}%`,
-                            background: courseTint(catalog.courses, it.c),
+                            background: tint(it.c).fill,
                             border: it.kind === 'Exam' ? '1px solid var(--app-accent-bright)' : 'none',
                           }}
                         />

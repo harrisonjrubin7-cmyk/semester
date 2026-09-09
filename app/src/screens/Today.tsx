@@ -43,15 +43,24 @@ import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
+import { CourseTag } from '../components/CourseTag';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
-  const { now, catalog } = useStore();
+  const { now, catalog, tint } = useStore();
   const next = nextClass(catalog, now);
   if (!next) return null;
 
   return (
-    <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
+    <Blueprint
+      style={{
+        padding: 'var(--sp-7)',
+        background: 'var(--app-hero)',
+        // The card names the class in words; the edge says which one it is in
+        // the same colour the block on the grid below it is drawn in.
+        borderLeft: `3px solid ${tint(next.block.c).edge}`,
+      }}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div className="kicker">Next class</div>
         <div
@@ -445,7 +454,7 @@ function Feed_due() {
                 style={{ flex: 1, minWidth: 0, opacity: done ? 0.4 : 1 }}
               >
                 <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 3 }}>
-                  <span className="tag tag-accent">{catalog.byId[it.c].code}</span>
+                  <CourseTag id={it.c} />
                   <span
                     style={{
                       fontSize: 'var(--type-xs)',
@@ -562,7 +571,7 @@ function Feed_walks() {
 
 /** One section of the Today feed, so its place in the order can be yours. */
 function Feed_rail() {
-  const { state, now, catalog } = useStore();
+  const { state, now, catalog, tint } = useStore();
   // Deadlines with a real hour on them belong on the rail where they happen,
   // not only in a list above it. See `lib/duetime.ts`.
   const due = datedItems(catalog, now).filter((i) => i.isToday && !state.done[i.id]);
@@ -602,13 +611,17 @@ function Feed_rail() {
                       left: -3,
                       width: 7,
                       height: 7,
+                      // The course's own colour, so the rail and the grid
+                      // under it say the same thing about the same class.
+                      // Office hours stay quieter than the class they belong
+                      // to — the same course, at half the presence.
                       background: b.canceled
                         ? 'var(--app-track)'
                         : b.mine
                           ? 'transparent'
                           : b.optional
-                            ? 'var(--app-accent-deep)'
-                            : 'var(--app-accent)',
+                            ? tint(b.c).edge
+                            : tint(b.c).fill,
                       border: b.mine ? '1px solid var(--app-accent)' : 'none',
                     }}
                   />
@@ -820,9 +833,7 @@ function DoneToday() {
                 ...rowTwelve,
               }}
             >
-              <span className="tag tag-accent" style={{ flex: 'none' }}>
-                {catalog.byId[i.c]?.code}
-              </span>
+              <CourseTag id={i.c} style={{ flex: 'none' }} />
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span
                   style={{
@@ -898,7 +909,7 @@ function HoursToday() {
 
 /** Nav mode 1B — one chronological scroll, sliced by the chip row. */
 function FeedHome() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   const rowThirteen = useRowStyle(13);
   const entries = filterFeed(catalog, feed(catalog, now, state.done), state.filter as FeedFilter);
 
@@ -964,7 +975,10 @@ function FeedHome() {
                 style={{
                   width: 1,
                   alignSelf: 'stretch',
-                  background: f.isClass ? 'var(--app-line)' : 'var(--app-accent)',
+                  // The spine of the timeline, in the colour of whatever it
+                  // is holding: a day of four courses reads as four threads
+                  // rather than one.
+                  background: tint(f.c).edge,
                 }}
               />
               <div
@@ -975,7 +989,9 @@ function FeedHome() {
                 }}
               >
                 <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 3 }}>
-                  <span className={`tag ${f.isClass ? 'tag-neutral' : 'tag-accent'}`}>{f.code}</span>
+                  <CourseTag id={f.c} style={f.isClass ? { opacity: 0.75 } : undefined}>
+                    {f.code}
+                  </CourseTag>
                   <span
                     style={{
                       fontSize: 'var(--type-xs)',
