@@ -429,7 +429,23 @@ export function FoldAll({ style }: { style?: CSSProperties }) {
         onClick={press}
         style={{
           width: 'auto',
-          padding: 'var(--sp-3) 0',
+          /*
+           * `tap-x` reaches sideways; this reaches up and down, and the two
+           * are not interchangeable. The button drew 72x29 — wide enough and
+           * fifteen pixels short — so the axis it was missing was the one the
+           * class does not grow.
+           *
+           * Not a `tap-y` overlay, for the reason written against the heading
+           * above: the first section heading sits directly under this and is
+           * itself a button, so an overlay reaching down would start winning
+           * taps meant for it. This is the same padding-and-negative-margin
+           * the heading uses — the box grows past 44px, the layout does not
+           * move, and more of the growth goes up (into the row's own top
+           * padding, which is whitespace) than down (towards that heading).
+           */
+          paddingBlock: 'var(--sp-7) var(--sp-6)',
+          marginBlock: 'calc(var(--sp-3) - var(--sp-7)) calc(var(--sp-3) - var(--sp-6))',
+          paddingInline: 0,
           fontFamily: 'var(--font-heading)',
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.14em',
