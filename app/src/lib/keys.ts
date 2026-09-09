@@ -65,7 +65,7 @@ export const SHORTCUTS: Shortcut[] = [
   { key: 'a', does: 'Ask about this screen', action: 'assistant' },
   { key: 'n', does: 'Add a course from a syllabus', screen: 'import' },
   { key: 'q', does: 'Add something in one line', action: 'capture' },
-  { key: '/', does: 'Filter this screen, or search everything', action: 'search' },
+  { key: '/', does: 'Search everything', action: 'search' },
   { key: 'escape', does: 'Back', action: 'back' },
   { key: '?', does: 'This list', action: 'help' },
 ];

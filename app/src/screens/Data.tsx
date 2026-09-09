@@ -6,7 +6,6 @@ import { useStore } from '../state/store';
 import { pickPersisted } from '../state/shape';
 import { bytesOf, inventory, space, type Row, type Space } from '../lib/inventory';
 import { formatBytes } from '../lib/files';
-import { has } from '../lib/search';
 
 /**
  * What data exists, and whether the app is healthy.
@@ -59,20 +58,14 @@ export function DataScreen() {
   return (
     <Page
       blurb="Every record the app holds, what it weighs, and how much room is left. Nothing on this screen changes anything."
-      search={{
-        placeholder: 'Find a collection',
-        select: () => store.rows,
-        match: (r, q) => has(q, r.label, r.key),
-      }}
     >
-      {(shown) => (
         <>
           <SectionLabel>What you have</SectionLabel>
           <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Largest first, so what is taking the room is at the top.
           </div>
 
-          {shown.map((row) => (
+          {store.rows.map((row) => (
             <Collection
               key={row.key}
               row={row}
@@ -171,7 +164,6 @@ export function DataScreen() {
             Where any of this goes, and how to delete it
           </button>
         </>
-      )}
     </Page>
   );
 }

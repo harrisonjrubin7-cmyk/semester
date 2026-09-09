@@ -7,7 +7,6 @@ import { Blueprint } from '../components/Blueprint';
 import type { Pin } from '../components/LiveMap';
 import { ChipRow, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
-import { has } from '../lib/search';
 import {
   CENTRES,
   OSM_CREDIT,
@@ -200,28 +199,7 @@ export function Maps() {
   );
 
   return (
-    <Page
-      /*
-       * One filter over three lists, because they are three lists of the same
-       * thing: a place with a name and a where. Somebody looking for Buttrick
-       * does not know whether it is under "today", "your places" or "every
-       * room", and having to guess is the reason a directory of forty rooms is
-       * hard to use at all.
-       */
-      search={{
-        placeholder: 'Find a place — a building, a room, a class',
-        select: () => [...classes, ...saved, ...rooms],
-        match: (r, q) => has(q, r.label, r.where),
-        empty: (q) => `No class, saved place or room matches “${q}”.`,
-      }}
-    >
-      {(shown, query) => {
-        // Filtering keeps the headings rather than flattening into one list:
-        // "where you are due today" and "every room this semester" are
-        // different answers, and a flat list of matches loses which is which.
-        const kept = new Set(shown.map((r) => r.key));
-        const only = (list: Row[]) => (query ? list.filter((r) => kept.has(r.key)) : list);
-        return (
+    <Page>
     <>
       <Segmented
         options={[
@@ -379,24 +357,24 @@ export function Maps() {
         and it works with the screen off.
       </div>
 
-      {only(classes).length > 0 && (
+      {classes.length > 0 && (
         <>
           <SectionLabel>Where you are due today</SectionLabel>
-          {only(classes).map(row)}
+          {classes.map(row)}
         </>
       )}
 
-      {only(saved).length > 0 && (
+      {saved.length > 0 && (
         <>
           <SectionLabel>Your places</SectionLabel>
-          {only(saved).map(row)}
+          {saved.map(row)}
         </>
       )}
 
-      {only(rooms).length > 0 && (
+      {rooms.length > 0 && (
         <>
           <SectionLabel>Every room this semester</SectionLabel>
-          {only(rooms).map(row)}
+          {rooms.map(row)}
         </>
       )}
 
@@ -445,8 +423,6 @@ export function Maps() {
         </div>
       )}
     </>
-        );
-      }}
     </Page>
   );
 }

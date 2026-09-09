@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { Page } from '../components/Page';
 import { build, toMarkdown, type Section } from '../lib/guidebook';
 import { download } from '../lib/deliver';
-import { has } from '../lib/search';
 import { useStore } from '../state/store';
 
 /**
@@ -29,14 +28,6 @@ export function Help() {
   return (
     <Page
       blurb="Every screen in the app, what it is for, and what it will not do. Generated from the app itself, so it cannot describe something that is not there."
-      search={{
-        placeholder: 'Search the guide',
-        select: () => book.sections,
-        // The body as well as the title: somebody looking for "meal plan"
-        // does not know which section it is in, which is the whole reason
-        // they are searching.
-        match: (s, q) => has(q, s.title, s.body),
-      }}
       actions={
         <>
           <button
@@ -64,9 +55,8 @@ export function Help() {
         </>
       }
     >
-      {(shown) => (
         <>
-          {shown.map((s) => (
+          {book.sections.map((s) => (
             <Chapter
               key={s.id}
               section={s}
@@ -75,7 +65,6 @@ export function Help() {
             />
           ))}
         </>
-      )}
     </Page>
   );
 }
