@@ -11,6 +11,7 @@
 
 import { newId } from '../../lib/idb';
 import { withNotes } from '../../lib/merge';
+import { readIncoming } from '../../lib/stored';
 import { LANDMARKS, apply, sheet } from '../../lib/registrar';
 import type { CampusLink, FeedSource } from '../../lib/types';
 import { DEFAULT_PERSISTED, type Action, type Persisted, type State } from '../shape';
@@ -268,7 +269,14 @@ export function library(state: State, action: Action): State | null {
     // you add to keep both sides, ticked boxes keep both ticks, settings take
     // the copy that synced later.
     case 'hydrate': {
-      const { merged: mergedRaw, notes } = withNotes(state, action.persisted, DEFAULT_PERSISTED);
+      // Two of the three doors into the state are here, and this is the one
+      // that opens itself: what arrives came from whichever build the other
+      // device was running. See `lib/stored.ts`.
+      const { merged: mergedRaw, notes } = withNotes(
+        state,
+        readIncoming(action.persisted),
+        DEFAULT_PERSISTED,
+      );
       // Recorded on every hydrate, including the one another tab triggers —
       // what came in is what came in, whichever door it used.
       const merged = { ...mergedRaw, lastSync: { at: action.at ?? Date.now(), notes } };
@@ -303,8 +311,13 @@ export function library(state: State, action: Action): State | null {
      * the current state first, so this is undoable. See `lib/snapshots.ts`.
      */
     case 'restore': {
-      const incoming = Object.fromEntries(
-        Object.entries(action.persisted).filter(([, v]) => v !== undefined && v !== null),
+      // The second door. `readBackup` checks each section is an array or an
+      // object and could go no further without duplicating every field rule;
+      // this is that rule, in the one place it is written down.
+      const incoming = readIncoming(
+        Object.fromEntries(
+          Object.entries(action.persisted).filter(([, v]) => v !== undefined && v !== null),
+        ),
       ) as Partial<Persisted>;
       return {
         ...state,

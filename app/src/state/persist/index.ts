@@ -23,6 +23,7 @@
 
 import { readAll, isEmpty, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
 import { COLLECTIONS, MAPS, SETTINGS, idOf } from './shape';
+import { readIncoming } from '../../lib/stored';
 import {
   DEFAULT_PERSISTED,
   STORAGE_KEY,
@@ -116,7 +117,11 @@ export async function load(): Promise<Persisted | null> {
   }
 
   const found = await readEverything();
-  return { ...DEFAULT_PERSISTED, ...found };
+  // The database path never goes near `loadPersisted` — the value is primed
+  // before the reducer's initialiser runs, so its field rules are not in the
+  // way. The third door, through the same reader as the other two. See
+  // `lib/stored.ts`.
+  return { ...DEFAULT_PERSISTED, ...readIncoming(found as Record<string, unknown>) } as Persisted;
 }
 
 /**
