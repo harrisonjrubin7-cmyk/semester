@@ -299,6 +299,16 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
     if (!at) continue;
     const day = parseWhen(at);
     if (!day) continue;
+    /*
+     * A week is only taken back by an entry that actually puts something in
+     * its place. An override with no DTSTART, or one this reader cannot read a
+     * date out of, draws nothing — and counting it here suppressed the week
+     * anyway, so a malformed entry deleted a lecture outright rather than
+     * failing to move it. Read on its own the week simply stays where the rule
+     * put it, which is what the reader did before it knew about overrides at
+     * all, and the smaller wrong answer of the two.
+     */
+    if (!raw.DTSTART || !parseWhen(raw.DTSTART)) continue;
     const uid = raw.UID?.value ?? '';
     const days = replaced.get(uid) ?? new Set<string>();
     days.add(iso(day.date));

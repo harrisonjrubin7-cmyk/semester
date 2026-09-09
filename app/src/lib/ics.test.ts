@@ -557,6 +557,37 @@ describe('a repeating class that changes', () => {
     expect(parseIcs(COURSES, ics).events.map((e) => e.date)).toEqual(['2026-09-10']);
   });
 
+  it('keeps the week when the entry meant to replace it draws nothing', () => {
+    /*
+     * An override with no DTSTART, or one whose date cannot be read, produces
+     * no event. Taking the week back for it deleted the lecture outright
+     * rather than failing to move it — a worse answer than the one the reader
+     * gave before it knew about overrides at all.
+     */
+    for (const broken of [
+      ['UID:econ1020@vanderbilt.edu', 'RECURRENCE-ID:20260914T140000', 'SUMMARY:Moved'],
+      ['UID:econ1020@vanderbilt.edu', 'RECURRENCE-ID:20260914T140000', 'DTSTART:banana', 'SUMMARY:Moved'],
+    ]) {
+      const ics = cal(
+        [
+          event(
+            'UID:econ1020@vanderbilt.edu',
+            'SUMMARY:ECON 1020 lecture',
+            'DTSTART:20260907T140000',
+            'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+          ),
+          event(...broken),
+        ].join('\r\n'),
+      );
+      expect(days(ics), broken.join(' ')).toEqual([
+        '2026-09-07',
+        '2026-09-14',
+        '2026-09-21',
+        '2026-09-28',
+      ]);
+    }
+  });
+
   it('leaves a class with no exceptions exactly as it was', () => {
     expect(days(weekly())).toEqual(['2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28']);
     expect(parseIcs(COURSES, weekly()).events.map((e) => e.id)).toEqual([
