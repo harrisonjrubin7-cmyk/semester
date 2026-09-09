@@ -303,6 +303,7 @@ prevent.
 | What the date turns into on screen — labels, "today", countdowns | `lib/select.ts` |
 | What the assistant can do | `ai/providers/` |
 | The spacing, type and leading scales every screen is held to | `styles/rules.ts` |
+| What each screen is still owed off those scales, per file | `styles/budget.ts` (generated: `npm run lint:styles -- --fix`) |
 | How a list is dragged into a different order, and what an arrow means | `lib/arrange.ts` |
 
 If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen
