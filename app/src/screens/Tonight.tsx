@@ -28,7 +28,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { PickChips, SectionLabel } from '../components/ui';
 import { datedItems } from '../lib/select';
 import { bestBuys, calibrate, calibrationLine, eveningLine, fits, overHours } from '../lib/worth';
 
@@ -87,27 +87,7 @@ export function Tonight() {
       </Blueprint>
 
       <SectionLabel style={{ margin: '18px 0 8px' }}>How long have you got?</SectionLabel>
-      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-        {HOURS.map((h) => (
-          <button
-            key={h}
-            type="button"
-            className="bare tappable"
-            aria-pressed={hours === h}
-            onClick={() => setHours(h)}
-            style={{
-              width: 'auto',
-              padding: '9px 15px',
-              borderRadius: 'var(--r-md)',
-              border: `1px solid ${hours === h ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'var(--type-base)',
-              fontVariantNumeric: 'tabular-nums',
-            }}
-          >
-            {h}h
-          </button>
-        ))}
-      </div>
+      <PickChips options={HOURS} value={hours} onChange={setHours} labels={(h) => `${h}h`} />
 
       {taken.length > 0 ? (
         <>

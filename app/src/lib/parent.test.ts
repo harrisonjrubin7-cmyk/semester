@@ -12,10 +12,11 @@ describe('courseFieldFor', () => {
      * renders `catalog.courses` and never touches `state.courseId`, so
      * claiming a field here put a link labelled with whichever course was last
      * opened above a page listing all four — pointing somewhere the page had
-     * not mentioned.
+     * not mentioned. It is the grades grain of `courses` now, and the same
+     * holds of the screen that hosts it.
      */
-    expect(courseFieldFor('grades')).toBeNull();
-    expect(insideCourse('grades')).toBe(false);
+    expect(courseFieldFor('courses')).toBeNull();
+    expect(insideCourse('courses')).toBe(false);
   });
 
   it('reads a study screen from guideId', () => {
@@ -51,7 +52,7 @@ describe('insideCourse', () => {
   });
 
   it('does not count a top-level screen', () => {
-    for (const s of ['home', 'courses', 'study', 'calendar', 'mine', 'grades'] as const) {
+    for (const s of ['home', 'courses', 'study', 'calendar', 'mine', 'brief'] as const) {
       expect(insideCourse(s)).toBe(false);
     }
   });
