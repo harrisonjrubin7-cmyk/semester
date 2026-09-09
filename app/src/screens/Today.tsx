@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle, useSoft } from '../components/shell/useShell';
@@ -20,12 +20,16 @@ import {
   feed,
   filterFeed,
   itemsDueToday,
+  lengthOf,
   nextClass,
   punchline,
   upcomingItems,
   type FeedFilter,
 } from '../lib/select';
 import { minutesNow } from '../lib/date';
+import { clockOf } from '../lib/atrisk';
+import { nowAt, readDay, worthMarking } from '../lib/rail';
+import { said } from '../lib/arrive';
 import { datedEvents, datedItems } from '../lib/select';
 import { overdueCount } from '../lib/standing';
 import { ordered, sectionLabel, visible } from '../lib/feed';
@@ -579,6 +583,18 @@ function Feed_walks() {
 }
 
 /** One section of the Today feed, so its place in the order can be yours. */
+/**
+ * The rail's own two measurements, written once.
+ *
+ * The gutter holds a clock time and the gap separates it from the spine; the
+ * rows and the line marking the present both have to sit on them, and two
+ * copies of a number is how one of them drifts. Neither is on the spacing
+ * scale — a 56px column is a measurement of the widest time this app writes,
+ * not a step of the layout's rhythm.
+ */
+const RAIL_GUTTER = 56;
+const RAIL_GAP = 14;
+
 function Feed_rail() {
   const { state, now, catalog, tint } = useStore();
   // Deadlines with a real hour on them belong on the rail where they happen,
@@ -586,6 +602,59 @@ function Feed_rail() {
   const due = datedItems(catalog, now).filter((i) => i.isToday && !state.done[i.id]);
   const rail = railFor(catalog, now, state.appointments, state.commitments, due);
   const minutes = minutesNow(now);
+  /*
+   * Where the day has got to.
+   *
+   * The rail listed four times and said nothing about which of them you were
+   * in the middle of, so the one thing it is opened for — what is on now, what
+   * is next — was left to be worked out against the clock on your own phone.
+   * `lib/rail.ts` does that arithmetic; everything below only draws it.
+   *
+   * A deadline drawn on the rail is a moment rather than an hour, so it has no
+   * length and is never "on now". A class's length comes from the syllabus's
+   * own meeting line where it states one, and is fifty minutes where it does
+   * not — `lengthOf`, which the hour grid already reads.
+   */
+  const read = readDay(rail, minutes, (b) => b.at, (b) => (b.from?.kind === 'item' ? 0 : lengthOf(catalog, b)));
+  const line = nowAt(rail, minutes, (b) => b.at);
+  const marker = worthMarking(rail, minutes, (b) => b.at);
+
+  /** The rule that says where the present is, drawn between two blocks. */
+  const nowRule = (
+    <div
+      key="now"
+      aria-label={`Now, ${clockOf(minutes)}`}
+      style={{ display: 'flex', gap: RAIL_GAP, alignItems: 'center', padding: 'var(--sp-2) 0' }}
+    >
+      <div
+        style={{
+          width: RAIL_GUTTER,
+          flex: 'none',
+          textAlign: 'right',
+          fontFamily: 'var(--font-heading)',
+          fontSize: 'var(--type-sm)',
+          color: 'var(--app-warn)',
+        }}
+      >
+        {clockOf(minutes)}
+      </div>
+      <div style={{ width: 1, flex: 'none', position: 'relative' }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: -2,
+            left: -2,
+            width: 5,
+            height: 5,
+            borderRadius: '50%',
+            background: 'var(--app-warn)',
+          }}
+        />
+      </div>
+      <div style={{ flex: 1, height: 1, background: 'var(--app-warn-line)' }} />
+    </div>
+  );
+
   return (
     <Folding name="Feed_rail">
       <SectionLabel>Today’s schedule</SectionLabel>
@@ -596,69 +665,116 @@ function Feed_rail() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {rail.map((b, i) => {
-            const past = b.at < minutes;
+            const mark = read[i];
+            const gone = mark.when === 'past';
             return (
-              <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'stretch' }}>
+              <Fragment key={i}>
+                {marker && i === line && nowRule}
                 <div
                   style={{
-                    width: 56,
-                    flex: 'none',
-                    textAlign: 'right',
-                    fontFamily: 'var(--font-heading)',
-                    fontSize: 'var(--type-md)',
-                    paddingTop: 'var(--sp-6)',
-                    opacity: 0.6,
+                    display: 'flex',
+                    gap: RAIL_GAP,
+                    alignItems: 'stretch',
+                    // Everything behind you at once — the hour, the dot and
+                    // the words together — rather than the title alone, which
+                    // left a column of bright times above a dimmed day.
+                    opacity: gone ? 0.45 : 1,
                   }}
                 >
-                  {b.time}
-                </div>
-                <div style={{ width: 1, background: 'var(--app-line)', position: 'relative' }}>
+                  {/*
+                    A deadline states its hour in prose — "Before class, 1:15p"
+                    — which is the right wording in a list and four words too
+                    many for a 56px gutter: it wrapped to two lines and pushed
+                    the row off the rail's own rhythm. The gutter takes the
+                    clock time, in the same format the classes use, and the
+                    wording moves down to the meta line where there is room
+                    for it.
+                  */}
                   <div
                     style={{
-                      position: 'absolute',
-                      top: 16,
-                      left: -3,
-                      width: 7,
-                      height: 7,
-                      // The course's own colour, so the rail and the grid
-                      // under it say the same thing about the same class.
-                      // Office hours stay quieter than the class they belong
-                      // to — the same course, at half the presence.
-                      background: b.canceled
-                        ? 'var(--app-track)'
-                        : b.mine
-                          ? 'transparent'
-                          : b.optional
-                            ? tint(b.c).edge
-                            : tint(b.c).fill,
-                      border: b.mine ? '1px solid var(--app-accent)' : 'none',
-                    }}
-                  />
-                </div>
-                <div style={{ flex: 1, padding: '11px 0 15px', minWidth: 0 }}>
-                  <div
-                    style={{
+                      width: RAIL_GUTTER,
+                      flex: 'none',
+                      textAlign: 'right',
                       fontFamily: 'var(--font-heading)',
-                      fontSize: 'calc(19px * var(--text-scale, 1))',
-                      lineHeight: 1.15,
-                      opacity: b.canceled ? 0.45 : past ? 0.6 : 1,
-                      textDecoration: b.canceled ? 'line-through' : 'none',
+                      fontSize: 'var(--type-md)',
+                      paddingTop: 'var(--sp-6)',
+                      opacity: 0.6,
                     }}
                   >
-                    {b.title}
+                    {b.from?.kind === 'item' ? said(b.at) : b.time}
                   </div>
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
-                    {b.mine && (
-                      <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
-                        Yours
-                      </span>
+                  <div style={{ width: 1, background: 'var(--app-line)', position: 'relative' }}>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 16,
+                        left: mark.when === 'now' ? -4 : -3,
+                        width: mark.when === 'now' ? 9 : 7,
+                        height: mark.when === 'now' ? 9 : 7,
+                        // The course's own colour, so the rail and the grid
+                        // under it say the same thing about the same class.
+                        // Office hours stay quieter than the class they belong
+                        // to — the same course, at half the presence.
+                        background: b.canceled
+                          ? 'var(--app-track)'
+                          : b.mine
+                            ? 'transparent'
+                            : b.optional
+                              ? tint(b.c).edge
+                              : tint(b.c).fill,
+                        border: b.mine ? '1px solid var(--app-accent)' : 'none',
+                        // The one you are inside gets a ring, so it is found
+                        // by the eye before any of the words are read.
+                        boxShadow: mark.when === 'now' ? '0 0 0 3px var(--app-warn-wash)' : 'none',
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, padding: '11px 0 15px', minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-heading)',
+                        fontSize: 'calc(19px * var(--text-scale, 1))',
+                        lineHeight: 1.15,
+                        opacity: b.canceled ? 0.45 : 1,
+                        textDecoration: b.canceled ? 'line-through' : 'none',
+                      }}
+                    >
+                      {b.title}
+                    </div>
+                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
+                      {b.mine && (
+                        <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
+                          Yours
+                        </span>
+                      )}
+                      {[b.meta, b.from?.kind === 'item' && b.time !== said(b.at) ? b.time : '']
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </div>
+                    {/*
+                      Only two blocks in a day ever say anything here: the one
+                      running and the one after it. A countdown beside every
+                      row is a column nobody reads.
+                    */}
+                    {mark.said && (
+                      <div
+                        style={{
+                          fontSize: 'var(--type-xs)',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          marginTop: 'var(--sp-2)',
+                          color: mark.when === 'now' ? 'var(--app-warn)' : 'var(--app-accent-deep)',
+                        }}
+                      >
+                        {mark.said}
+                      </div>
                     )}
-                    {b.meta}
                   </div>
                 </div>
-              </div>
+              </Fragment>
             );
           })}
+          {marker && line === rail.length && nowRule}
         </div>
       )}
     </Folding>
