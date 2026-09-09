@@ -19,6 +19,7 @@
 
 import type { Catalog } from '../data/catalog';
 import { datedItems } from './select';
+import { dueLabel, isoToDate } from './date';
 import { DESTINATIONS, saysFor } from './nav';
 import { nearAny } from './near';
 import { allowed, type Capabilities } from './school';
@@ -293,7 +294,20 @@ export function findEverything(
           kind: 'task',
           id: t.id,
           title: t.title,
-          sub: [t.date ?? 'Someday', t.time].filter(Boolean).join(' · '),
+          /*
+           * The date the way the app says dates everywhere else.
+           *
+           * This was the stored value — "2026-09-10 · 9:00 PM" — the one
+           * machine date anywhere on screen: the row for the same task on
+           * Personal reads "Thu Sep 10", and the deadline hits in the group
+           * above this one, in this same list, read "Tomorrow". A search
+           * result is often the second time somebody sees a thing they wrote,
+           * and it should not be the one place it is written in a different
+           * language.
+           */
+          sub: [t.date ? dueLabel(isoToDate(t.date), now, t.time) : 'Someday', t.time]
+            .filter(Boolean)
+            .join(' · '),
           tag: t.done ? 'Done' : 'Task',
           score: s,
         });
