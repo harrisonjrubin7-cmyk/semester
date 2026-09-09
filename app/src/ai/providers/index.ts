@@ -93,7 +93,6 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   applying: yours.applying,
   data: yours.data,
   help: yours.help,
-  everything: yours.everything,
   settings: yours.settings,
   notifs: yours.notifs,
   connect: yours.connect,

@@ -563,9 +563,18 @@ export const DESTINATIONS: Destination[] = [
     // "Mine" said whose it was and not what it held. Everything in the app is
     // yours; what makes this tab different is that you put it there yourself.
     label: 'Personal',
-    blurb: 'Your own tasks, appointments, notes, places and files.',
+    blurb: 'Your own tasks, appointments, notes and files.',
     keywords: 'mine personal todo task appointment note file attachment place own yours',
-    group: 'Life',
+    // Moved from Life when the Everything screen was folded into Progress.
+    // That took You to four, and the shelf rule is five to eight — a shelf
+    // thinner than five costs a pill in the row and a tile in the grid to
+    // hold half of what its neighbours hold, so it should be folded rather
+    // than kept. You and Data together are nine, one past the ceiling that
+    // keeps a shelf drawable as one row, so folding was not available and one
+    // screen had to move instead. This is the one that reads right on either:
+    // Life is the admin around a term — money, contacts, applications, hours —
+    // and what a student typed themselves is about them, not around them.
+    group: 'You',
     taskTags: ['due', 'week'],
     root: 'mine',
   },
@@ -575,8 +584,12 @@ export const DESTINATIONS: Destination[] = [
     // report and a directory. It is the second thing it does that people come
     // for, so the name says the first.
     label: 'Progress',
-    blurb: 'Your load at a glance, and everything else the app can do.',
-    keywords: 'me progress profile load more menu overview directory settings everything',
+    blurb: 'Your load at a glance, every screen the app has, and what each is for.',
+    // Widened with the `everything` screen's own words when that screen was
+    // folded in here. A search for "sitemap" or "never opened" has to land
+    // somewhere, and this is now the only screen that answers either.
+    keywords:
+      'me progress profile load more menu overview directory settings everything all screens index list of features what can this app do capabilities map contents table of contents browse explore find a screen where is what is there tour inventory sitemap unused never opened by task',
     group: 'You',
     taskTags: ['stand', 'app'],
     root: 'me',
@@ -628,18 +641,6 @@ export const DESTINATIONS: Destination[] = [
     short: 'Guide',
     blurb: 'Every screen in the app, what it is for, and what it will not do.',
     keywords: 'help guide manual how do i what does documentation tour onboarding explain instructions getting started first time shortcuts keyboard reference handbook',
-    group: 'You',
-    taskTags: ['app'],
-    root: 'me',
-  },
-  {
-    screen: 'everything',
-    label: 'Everything',
-    // Ten characters is one past what the bar holds. See `lib/tabbar.ts`.
-    short: 'All of it',
-    blurb: 'Every screen in the app, what it does, and whether you have used it.',
-    keywords:
-      'everything all screens index directory list of features what can this app do capabilities map contents table of contents overview browse explore find a screen where is what is there tour inventory sitemap unused never opened shortcuts keys',
     group: 'You',
     taskTags: ['app'],
     root: 'me',
@@ -857,6 +858,29 @@ export function saysFor(d: Destination, c: Capabilities): { label: string; blurb
  * Capability-gated like everything else: a screen visited before somebody
  * changed school must not come back through this door.
  */
+/**
+ * The tag sections, each with the screens that carry it, in registry order.
+ *
+ * The shelves (`GROUPS`) answer "where is the thing called X"; this answers
+ * "what would I use this for". A screen appears under every intention it
+ * serves, so several appear more than once — `taskTags` is a list, not a
+ * category, and a view that showed each screen once would be the shelves with
+ * different headings.
+ *
+ * It lived in `lib/everything.ts` with seven other functions when there was an
+ * Everything screen. That screen drew the shelves and the never-opened list
+ * that Progress already drew, so it was folded in and only this came with it —
+ * which left one function in a file of its own, importing `TASKS` and
+ * `taskLabel` from here. It is here now.
+ */
+export function byTask(rows: Destination[]): { tag: TaskTag; label: string; rows: Destination[] }[] {
+  return TASKS.map(([tag]) => ({
+    tag,
+    label: taskLabel(tag),
+    rows: rows.filter((d) => d.taskTags.includes(tag)),
+  })).filter((s) => s.rows.length > 0);
+}
+
 export function lately(
   recent: string[],
   onBar: string[],

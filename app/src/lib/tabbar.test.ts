@@ -245,3 +245,41 @@ describe('what the bar says', () => {
     expect(tooLong.map((s) => `${s}: ${tabLabel(s)}`)).toEqual([]);
   });
 });
+
+/**
+ * A bar saved before a screen was deleted.
+ *
+ * `readTabs` has always dropped screens it does not recognise, and `lately`
+ * has always skipped a recent entry with no registry row. Neither was written
+ * for a particular removal, which is why neither needed changing when
+ * `everything` was folded into Progress — but "it happens to work" and "it is
+ * checked" are different states, and the second is the one that survives
+ * somebody optimising the loop.
+ *
+ * `everything` is used here as the name of a screen that no longer exists.
+ * The point is not that screen: it is that a phone which last synced before
+ * any deletion still gets a bar it can use.
+ */
+describe('a bar saved before a screen was removed', () => {
+  const GONE = 'everything' as never;
+
+  it('drops the screen that is no longer in the registry', () => {
+    expect(readTabs(['home', GONE, 'courses', 'calendar'])).toEqual([
+      'home',
+      'courses',
+      'calendar',
+      PINNED,
+    ]);
+  });
+
+  it('falls back to the default bar rather than rendering a stub', () => {
+    // Below FEWEST_CHOSEN once the dead one is dropped, which is the case that
+    // would otherwise leave somebody with a one-button navigation.
+    expect(readTabs([GONE, 'home'])).toEqual(DEFAULT_TABS);
+  });
+
+  it('keeps the pinned tab whatever the saved list held', () => {
+    expect(readTabs([GONE])).toEqual(DEFAULT_TABS);
+    expect(readTabs(['home', 'courses', 'study', GONE])).toContain(PINNED);
+  });
+});

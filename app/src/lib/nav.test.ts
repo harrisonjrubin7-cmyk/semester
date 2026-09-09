@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESTINATIONS, GROUPS, destinationsFor, destinationsIn, lately, saysFor, shelfOf } from './nav';
+import { DESTINATIONS, GROUPS, TASKS, byTask, destinationsFor, destinationsIn, lately, saysFor, shelfOf, type TaskTag } from './nav';
 import { NO_SCHOOL, type Capabilities } from './school';
 import { BUNDLED } from '../data/schools';
 
@@ -272,5 +272,71 @@ describe('the two rows reach everything', () => {
       const { blurb } = saysFor(d, vanderbilt);
       expect(blurb.length, d.screen).toBeGreaterThan(10);
     }
+  });
+});
+
+/*
+ * Moved here with `byTask` when the Everything screen was folded into
+ * Progress. The function reads `TASKS` and `taskLabel`, both defined in
+ * `nav.ts`, so these are tests of this file rather than of a screen that no
+ * longer exists.
+ */
+describe('by task', () => {
+  it('gives every screen at least one thing somebody would be trying to do', () => {
+    const orphans = DESTINATIONS.filter((d) => d.taskTags.length === 0).map((d) => d.screen);
+    expect(orphans).toEqual([]);
+  });
+
+  it('uses no tag without a heading', () => {
+    const known = new Set(TASKS.map(([id]) => id as string));
+    const loose = DESTINATIONS.flatMap((d) => d.taskTags.filter((t) => !known.has(t)));
+    expect([...new Set(loose)]).toEqual([]);
+  });
+
+  it('leaves no heading empty', () => {
+    // A section with nothing under it reads as a bug rather than as a shelf
+    // somebody has not filled.
+    const used = new Set(DESTINATIONS.flatMap((d) => d.taskTags));
+    const bare = TASKS.map(([id]) => id).filter((id) => !used.has(id as TaskTag));
+    expect(bare).toEqual([]);
+  });
+
+  it('lets a screen answer more than one question', () => {
+    // The point of tags over shelves. If this ever came out at zero the two
+    // views would be the same view with different headings.
+    expect(DESTINATIONS.filter((d) => d.taskTags.length > 1).length).toBeGreaterThan(10);
+  });
+
+  it('keeps the sections in the order the headings are written', () => {
+    const order = byTask(DESTINATIONS).map((s) => s.tag);
+    expect(order).toEqual(TASKS.map(([id]) => id).filter((id) => order.includes(id as TaskTag)));
+  });
+});
+
+describe('the promise', () => {
+  it('writes down no screen of its own', () => {
+    // Acceptance criterion 7, as far as a unit test can carry it: every row in
+    // the task view traces back to the registry it was built from.
+    const known = new Set<string>(DESTINATIONS.map((d) => d.screen));
+    for (const section of byTask(DESTINATIONS)) {
+      for (const d of section.rows) expect(known.has(d.screen)).toBe(true);
+    }
+  });
+
+  it('drops a screen the moment the registry does', () => {
+    const short = DESTINATIONS.filter((d) => d.screen !== 'tonight');
+    const rows = byTask(short).flatMap((s) => s.rows);
+    expect(rows.some((d) => d.screen === 'tonight')).toBe(false);
+  });
+
+  it('picks up a screen the moment the registry has one', () => {
+    const extra = {
+      ...DESTINATIONS[0],
+      screen: 'somethingNew' as (typeof DESTINATIONS)[number]['screen'],
+      label: 'Something new',
+      taskTags: ['study'] as TaskTag[],
+    };
+    const rows = byTask([...DESTINATIONS, extra]).flatMap((s) => s.rows);
+    expect(rows.some((d) => (d.screen as string) === 'somethingNew')).toBe(true);
   });
 });

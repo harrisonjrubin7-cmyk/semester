@@ -59,7 +59,6 @@ import { standing } from './grades';
 import { isExam } from './runway';
 import { behindLine, howBehind } from './behind';
 import { WAKING_HOURS, hoursOn } from './windows';
-import { DESTINATIONS } from './nav';
 import { tally } from './review';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
@@ -582,16 +581,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         stats: term,
       };
 
-    case 'everything':
-      return {
-        hero: {
-          label: 'Everything',
-          meta: `${Object.keys(state.visited).length} opened`,
-          figure: num(DESTINATIONS.length),
-          foot: 'screens in the app',
-        },
-        stats: term,
-      };
 
     case 'help':
       return nothing;

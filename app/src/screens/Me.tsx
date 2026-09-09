@@ -1,4 +1,4 @@
-import { useState, type HTMLAttributes } from 'react';
+import { useMemo, useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -13,7 +13,16 @@ import { NOTIFICATIONS } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
-import { GROUPS, destinationsIn, lately, listed, saysFor, type Group as Shelves } from '../lib/nav';
+import {
+  GROUPS,
+  byTask,
+  destinationsIn,
+  lately,
+  listed,
+  offered,
+  saysFor,
+  type Group as Shelves,
+} from '../lib/nav';
 import { arranged, useMovable } from '../lib/arrange';
 import { readOrder, tilesFor, writeOrder } from '../lib/launcher';
 import { currentLook } from '../state/shape';
@@ -255,10 +264,17 @@ export function Me() {
         Settings button landed on the same list, so the app had two homes for
         one thing. The screen kept its own — this keeps the row that opens it.
       */}
+      {/*
+        Three tabs now. The third was the `everything` screen, which drew the
+        same shelves from the same registry through the same helpers that the
+        Everything tab does — two of its four views were this tab, and a third
+        was the `?` sheet. Only "by task" was its own, so only "by task" moved.
+      */}
       <Segmented
         options={[
           { id: 'you', label: 'You' },
           { id: 'all', label: 'Everything' },
+          { id: 'task', label: 'By task' },
         ]}
         value={tab}
         onChange={(next) => dispatch({ type: 'setMeTab', tab: next })}
@@ -452,7 +468,37 @@ export function Me() {
       )}
         </>
       )}
+
+      {tab === 'task' && <ByTask account={account} />}
     </Page>
+  );
+}
+
+/**
+ * The same screens, filed under what you would be trying to do.
+ *
+ * The shelves answer "where is the thing called X". This answers "what would I
+ * use this for", which is a different question and the reason the `everything`
+ * screen existed. It is the one view of that screen that was not already drawn
+ * somewhere else, so it is the one that moved here rather than being deleted
+ * with it.
+ *
+ * A screen appears under every intention it serves, so several appear more
+ * than once. That is the point: `taskTags` is a list, not a category.
+ */
+function ByTask({ account }: { account: { email: string } | null }) {
+  const { school } = useStore();
+  const sections = useMemo(() => byTask(offered(school.capabilities)), [school.capabilities]);
+  return (
+    <nav aria-label="By task" style={{ margin: '0 -18px' }}>
+      {sections.map((s) => (
+        <Panel key={s.tag} header={s.label}>
+          {s.rows.map((d) => (
+            <Destination key={`${s.tag}-${d.screen}`} to={d} account={account} />
+          ))}
+        </Panel>
+      ))}
+    </nav>
   );
 }
 

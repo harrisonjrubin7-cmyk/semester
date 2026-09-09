@@ -152,12 +152,6 @@ describe('an account with something in it', () => {
     }
   });
 
-  it('takes its numbers from the app’s own derivations, not a second copy', () => {
-    // Everything's figure is the registry's length. Typing 55 here would be a
-    // number that goes stale the next time a screen is added.
-    expect(softTop('everything', input()).hero?.figure).toBe(String(DESTINATIONS.length));
-  });
-
   it('counts a finished deadline once, not once per list it appears in', () => {
     // The term report summed today's done items and then the whole term's, so
     // a thing ticked off this morning was counted twice.

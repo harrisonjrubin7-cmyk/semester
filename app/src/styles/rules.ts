@@ -243,8 +243,17 @@ export const BUDGET = {
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
   space: 515,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 498,
+  shorthand: 497,
 };
+
+/*
+ * .../498 → .../497 when the Everything screen was folded into Progress. One
+ * down and none up, from a 575-line screen deleted rather than reformatted:
+ * two of its four views were already the Progress directory and a third was
+ * the `?` sheet, so only "by task" moved, and it moved onto the `Group` and
+ * `Destination` rows Progress already draws. The other three do not move,
+ * which is the honest result — what was deleted was already on the scale.
+ */
 
 /*
  * The Tools tab became a home screen, and its four are folded into every
