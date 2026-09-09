@@ -327,9 +327,23 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    /*
+     * The screen is taken from the registry rather than written down here.
+     *
+     * It used to name `grades`, and when the grade table stopped being a
+     * screen this stopped compiling — `Screen` no longer had that member, so
+     * the filter was a no-op and the comparison a type error. Which screen
+     * gets dropped has nothing to do with what is being asserted, so naming
+     * one only ties this test to a registry that is expected to change.
+     *
+     * Taken from the task view's own rows rather than from `DESTINATIONS`, so
+     * it is always a screen the view actually lists: dropping one that was
+     * never shown would pass without testing anything.
+     */
+    const gone = byTask(DESTINATIONS).flatMap((s) => s.rows)[0].screen;
+    const short = DESTINATIONS.filter((d) => d.screen !== gone);
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === gone)).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
