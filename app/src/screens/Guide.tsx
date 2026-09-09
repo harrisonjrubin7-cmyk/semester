@@ -7,7 +7,7 @@ import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
-import { ActionButton, ChipRow, Meter, SectionLabel } from '../components/ui';
+import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel } from '../components/ui';
 import { addedLine } from '../lib/study';
 import { ModePicker } from '../components/ModePicker';
 import { modeInfo, modesFor } from '../lib/modes';
@@ -143,7 +143,23 @@ export function Guide() {
         </div>
       )}
 
-      {state.mode === 'cards' && (
+      {/*
+        A course can genuinely have nothing to study yet: adding one by hand
+        makes a real course with an empty guide, and so does importing a
+        syllabus before any reading is attached. That used to draw "Drill all
+        0 cards" over an empty unit list — and, until `weakestUnit` learned to
+        say so, threw on the weakest unit of nothing and put the error screen
+        in front of somebody who had done nothing wrong.
+      */}
+      {state.mode === 'cards' && cards.length === 0 && (
+        <EmptyState
+          inline
+          title="Nothing to drill yet"
+          body="Add a reading, a handout or a photograph of the board and the cards come with it."
+        />
+      )}
+
+      {state.mode === 'cards' && cards.length > 0 && (
         <>
           <ActionButton
             onClick={() => dispatch({ type: 'startDrill', unit: null })}
@@ -153,6 +169,7 @@ export function Guide() {
             Drill all {cards.length} cards
           </ActionButton>
 
+          {weak && (
           <Blueprint
             onClick={() => dispatch({ type: 'startDrill', unit: weak.index })}
             style={{
@@ -179,8 +196,9 @@ export function Guide() {
             </span>
             <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
           </Blueprint>
+          )}
 
-          <SectionLabel>Units</SectionLabel>
+          {guide.units.length > 0 && <SectionLabel>Units</SectionLabel>}
           {guide.units.map((u, i) => (
             <div key={u.name}>
             <button

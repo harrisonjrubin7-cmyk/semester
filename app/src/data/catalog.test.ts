@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCatalog, blocksFor } from './catalog';
+import { buildCatalog, blocksFor, weakestUnit } from './catalog';
 import type { CourseModule } from '../lib/types';
 import { decorateItem } from '../lib/date';
 
@@ -94,5 +94,51 @@ describe('exceptions follow the same year', () => {
     expect(blocksFor(cat, new Date(2027, 1, 10))[0].canceled).toBe(true);
     // The same day number a year earlier is not.
     expect(blocksFor(cat, new Date(2026, 1, 10))[0]?.canceled).toBeUndefined();
+  });
+});
+
+/**
+ * The empty guide is a real guide, not a missing one.
+ *
+ * `lib/edit.ts` builds one for every course added by hand, so "no units" is
+ * an ordinary state of the app and not a corrupt one.
+ */
+describe('the weakest unit of a guide with no units', () => {
+  const empty = {
+    code: 'HIST 1500',
+    name: '',
+    blurb: '',
+    source: '',
+    mastery: 0,
+    audio: false,
+    units: [],
+    terms: [],
+  };
+
+  it('is null rather than a unit that is not there', () => {
+    expect(weakestUnit(empty)).toBeNull();
+  });
+
+  it('is the coldest unit when there are some', () => {
+    const guide = {
+      ...empty,
+      units: [
+        { name: 'One', mastery: 60, cards: [] },
+        { name: 'Two', mastery: 20, cards: [] },
+        { name: 'Three', mastery: 45, cards: [] },
+      ],
+    };
+    expect(weakestUnit(guide)).toEqual({ index: 1, unit: guide.units[1] });
+  });
+
+  it('takes the first of a tie, so the answer does not wander', () => {
+    const guide = {
+      ...empty,
+      units: [
+        { name: 'One', mastery: 30, cards: [] },
+        { name: 'Two', mastery: 30, cards: [] },
+      ],
+    };
+    expect(weakestUnit(guide)?.index).toBe(0);
   });
 });

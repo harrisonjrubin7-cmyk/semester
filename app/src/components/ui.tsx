@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 import { ChevronRight } from './Icons';
 import { useRowStyle } from './shell/useShell';
+import { longMargins } from '../lib/margins';
 
 /** The uppercase rule that opens a section. */
 /**
@@ -43,7 +44,7 @@ export function SectionLabel({
   const heading = (
     <h2
       className="section-label"
-      style={{
+      style={longMargins({
         margin: 'calc(26px * var(--density, 1)) 0 calc(12px * var(--density, 1))',
         fontSize: 'var(--type-sm)',
         fontWeight: 'inherit',
@@ -52,7 +53,7 @@ export function SectionLabel({
         // where they stop.
         ...(aside === undefined ? null : { flex: 1, minWidth: 0 }),
         ...style,
-      }}
+      })}
     >
       {children}
     </h2>
