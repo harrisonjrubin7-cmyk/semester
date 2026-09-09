@@ -30,6 +30,7 @@
  * a sentence for.
  */
 
+import { realDate } from './date';
 import type { CourseModule, Item } from './types';
 import { newId } from './idb';
 
@@ -158,8 +159,14 @@ export function readChanges(text: string, module: CourseModule): Change[] {
     const day = asDay(r.day);
     // A move with no date to move to is not a move. The model is told to say
     // so in the title instead, which reaches the student as a rename.
-    if (op === 'move' && (month < 0 || day < 0)) continue;
-    if (op === 'add' && (month < 0 || day < 0)) continue;
+    //
+    // `realDate` on the pair, not `day <= 31` on the day alone: the two have
+    // to be checked together, because 31 is a day in October and is not one
+    // in April — and `new Date` answers 31 April with 1 May rather than
+    // refusing, so the proposal would name a date the announcement never did.
+    const dated = realDate(month, day);
+    if (op === 'move' && !dated) continue;
+    if (op === 'add' && !dated) continue;
 
     out.push({
       op,

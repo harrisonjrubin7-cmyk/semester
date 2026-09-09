@@ -230,3 +230,32 @@ describe('counting days', () => {
     expect(daysTo('2026-10-02', late)).toBe(1);
   });
 });
+
+/**
+ * A registrar's page listing a day that does not exist.
+ *
+ * The check was `day <= 31`, so "February 31" became 3 March — and a
+ * registrar's landmark is the one date in this app somebody arranges a
+ * fortnight around. The closing half of a span had no range check at all.
+ */
+describe('a page with a date that is not one', () => {
+  it('leaves out the row rather than moving it', () => {
+    expect(parse('February 31 Last day to drop', 2026)).toEqual([]);
+    expect(parse('April 31 Last day to withdraw', 2026)).toEqual([]);
+    expect(parse('February 29 Last day to drop', 2027)).toEqual([]);
+  });
+
+  it('keeps the row when the date is real', () => {
+    expect(parse('February 28 Last day to drop', 2026)).toHaveLength(1);
+    expect(parse('February 29 Last day to drop', 2028)).toHaveLength(1);
+    expect(parse('October 31 Last day to withdraw', 2026)).toHaveLength(1);
+  });
+
+  it('drops a closing date that is not one, and keeps the row', () => {
+    const [span] = parse('October 15–31 Fall break', 2026);
+    expect(span.until).toBe('2026-10-31');
+    const [bad] = parse('February 15–31 Reading days', 2026);
+    expect(bad.iso).toBe('2026-02-15');
+    expect(bad.until).toBe('');
+  });
+});

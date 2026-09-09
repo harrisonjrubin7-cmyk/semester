@@ -15,6 +15,7 @@
  * mutate what they were handed, because the store compares by identity.
  */
 
+import { realDate } from './date';
 import { percentOf } from './grades';
 import { isPlace } from './maps';
 import type { CourseModule, GradeRow, Item, RecurringBlock } from './types';
@@ -152,7 +153,10 @@ export function fromInputDate(iso: string): { month: number; day: number } | nul
   if (!m) return null;
   const month = Number(m[2]) - 1;
   const day = Number(m[3]);
-  if (month < 0 || month > 11 || day < 1 || day > 31) return null;
+  // `realDate` rather than `day <= 31`, and with the year the field already
+  // carries, so 29 February is kept in 2028 and refused in 2027. The date
+  // picker cannot produce these; a pasted or typed value can.
+  if (!realDate(month, day, Number(m[1]))) return null;
   return { month, day };
 }
 

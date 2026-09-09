@@ -28,7 +28,7 @@
  */
 
 import { rows, str } from './stored';
-import { dateToIso, daysBetween, isoToDate, startOfDay } from './date';
+import { dateToIso, daysBetween, isoToDate, realDate, startOfDay } from './date';
 
 export type RegistrarKind = 'deadline' | 'window' | 'break' | 'exams';
 
@@ -394,7 +394,10 @@ export function parse(text: string, year: number): Found[] {
     const month = monthIndex(m[1]);
     if (month < 0) continue;
     const day = Number(m[2]);
-    if (day < 1 || day > 31) continue;
+    // `realDate` with the year, not `day <= 31`: a page listing "February 31"
+    // would otherwise put a landmark on 3 March, and a registrar's landmark is
+    // the one date in the app somebody arranges a fortnight around.
+    if (!realDate(month, day, year)) continue;
 
     // What is left once the date is taken out is the label.
     const label = row
@@ -409,7 +412,9 @@ export function parse(text: string, year: number): Found[] {
     // A span: "October 15–16", or "October 30 – November 2".
     const endMonth = m[3] ? monthIndex(m[3]) : month;
     const until =
-      m[4] && endMonth >= 0 ? dateToIso(new Date(year, endMonth, Number(m[4]))) : '';
+      m[4] && realDate(endMonth, Number(m[4]), year)
+        ? dateToIso(new Date(year, endMonth, Number(m[4])))
+        : '';
 
     const hit = HINTS.find((h) => h.words.test(label));
     const id = hit?.id ?? '';

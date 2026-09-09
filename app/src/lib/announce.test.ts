@@ -247,3 +247,33 @@ describe('the summary', () => {
     expect(summary([])).toBe('Nothing in that changes a deadline.');
   });
 });
+
+/**
+ * A proposed date that is not a date.
+ *
+ * `asDay` checked 1–31 on the day alone, and the two have to be checked
+ * together: 31 is a day in October and is not one in April. `new Date` answers
+ * 31 April with 1 May rather than refusing, so the proposal named a date the
+ * announcement never did — under a quote from the announcement, which is what
+ * makes the row trustworthy.
+ */
+describe('a proposal dated to a day that does not exist', () => {
+  const mod = module_([item({ id: 'i1' })]);
+  const dated = (month: number, day: number) =>
+    readChanges(
+      reply([{ op: 'move', itemId: 'i1', month, day, quote: 'The midterm has moved.' }]),
+      mod,
+    );
+
+  it('is thrown away, like every other way the model can be wrong here', () => {
+    expect(dated(3, 31)).toEqual([]);
+    expect(dated(1, 30)).toEqual([]);
+    expect(dated(1, 31)).toEqual([]);
+  });
+
+  it('still takes every date that is one', () => {
+    expect(dated(9, 31)).toHaveLength(1);
+    expect(dated(1, 29)).toHaveLength(1);
+    expect(dated(9, 8)).toHaveLength(1);
+  });
+});

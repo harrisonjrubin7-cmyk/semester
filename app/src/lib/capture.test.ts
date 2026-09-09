@@ -172,3 +172,31 @@ describe('showing its working', () => {
     expect(said.some((l) => l.includes('No date read'))).toBe(true);
   });
 });
+
+/**
+ * A date typed into the box that is not a date.
+ *
+ * `lib/date.ts` says why `realDate` exists: "two files check a date by asking
+ * whether the day is between 1 and 31, and then hand it to `new Date(year,
+ * month, day)` — which does not refuse 31 April, it silently returns 1 May."
+ * It was written for two files and applied to two, and five more had the same
+ * line. This is one of them, and it is the one somebody types into by hand.
+ */
+describe('a date that is not one', () => {
+  it('does not turn 31 February into 3 March', () => {
+    expect(matchDate('essay feb 31', NOW)).toBeNull();
+    expect(matchDate('essay 2/31', NOW)).toBeNull();
+    expect(matchDate('essay apr 31', NOW)).toBeNull();
+    expect(matchDate('essay 4/31', NOW)).toBeNull();
+  });
+
+  it('keeps every date that is one', () => {
+    expect(matchDate('essay feb 28', NOW)?.date).toContain('-02-28');
+    expect(matchDate('essay oct 31', NOW)?.date).toContain('-10-31');
+    expect(matchDate('essay 3/31', NOW)?.date).toContain('-03-31');
+    // February defaults to 29 without a year, which `realDate` documents: a
+    // caller that cannot say which year should not throw away a date that
+    // might be real. The year is then chosen so it is not in the past.
+    expect(matchDate('essay feb 29', NOW)).not.toBeNull();
+  });
+});

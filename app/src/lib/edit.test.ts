@@ -223,3 +223,29 @@ describe('blankCourse', () => {
     expect(blankCourse('???').course.id).toMatch(/^course/);
   });
 });
+
+/**
+ * A hand-typed deadline date.
+ *
+ * The picker cannot produce these; a pasted or typed value can, and the check
+ * was `day <= 31`. The year is in the field and was being thrown away, so 29
+ * February was accepted in every year rather than the ones that have it.
+ */
+describe('a date field that is not a date', () => {
+  it('refuses a day the month does not have', () => {
+    expect(fromInputDate('2026-02-31')).toBeNull();
+    expect(fromInputDate('2026-04-31')).toBeNull();
+    expect(fromInputDate('2026-13-01')).toBeNull();
+    expect(fromInputDate('2026-00-01')).toBeNull();
+  });
+
+  it('uses the year the field carries, so a leap day is right either way', () => {
+    expect(fromInputDate('2028-02-29')).toEqual({ month: 1, day: 29 });
+    expect(fromInputDate('2027-02-29')).toBeNull();
+  });
+
+  it('keeps an ordinary date', () => {
+    expect(fromInputDate('2026-09-10')).toEqual({ month: 8, day: 10 });
+    expect(fromInputDate('2026-10-31')).toEqual({ month: 9, day: 31 });
+  });
+});

@@ -1,4 +1,4 @@
-import { dateToIso } from './date';
+import { dateToIso, realDate } from './date';
 /**
  * One box: "econ ps4 friday 5pm".
  *
@@ -177,7 +177,7 @@ export function matchDate(text: string, now: Date): { date: string; word: string
   if (named) {
     const month = MONTHS.findIndex((m) => m.startsWith(named[1].toLowerCase().slice(0, 3)));
     const day = Number(named[2]);
-    if (month >= 0 && day >= 1 && day <= 31) {
+    if (realDate(month, day)) {
       // The year is chosen so the date is not in the past: "jan 20" typed in
       // November means the coming January, which is what anybody means.
       let year = today.getFullYear();
@@ -190,7 +190,7 @@ export function matchDate(text: string, now: Date): { date: string; word: string
   if (slashes) {
     const month = Number(slashes[1]) - 1;
     const day = Number(slashes[2]);
-    if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+    if (realDate(month, day)) {
       let year = slashes[3] ? Number(slashes[3]) : today.getFullYear();
       if (year < 100) year += 2000;
       if (!slashes[3] && new Date(year, month, day) < today) year += 1;

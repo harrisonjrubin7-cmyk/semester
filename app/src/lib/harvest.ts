@@ -1,3 +1,4 @@
+import { realDate } from './date';
 import { ask } from './claude';
 import { flatten } from './cite';
 import type { Kind } from './classify';
@@ -319,8 +320,12 @@ export function assemble(parsed: Reply, item: Intake, base: Omit<Where, 'page'>)
     // The same validation the syllabus importer makes, and for the same
     // reason: a date that is not a date becomes a row that cannot be shown
     // and cannot be corrected.
-    if (!Number.isInteger(month) || month < 0 || month > 11) continue;
-    if (!Number.isInteger(day) || day < 1 || day > 31) continue;
+    //
+    // It says the same thing it always said and now does it: the importer was
+    // moved to `realDate` and this copy of the sentence was left checking
+    // `day <= 31`, which admits 31 April and 30 February — and `new Date`
+    // answers those with 1 May and 2 March rather than refusing.
+    if (!realDate(month, day)) continue;
     const title = typeof raw.title === 'string' ? raw.title.trim() : '';
     if (!title) continue;
     pieces.push({

@@ -253,3 +253,24 @@ describe('provenance', () => {
     expect(only(out.pieces, 'card')[0].unit).toBe('Conjoint analysis');
   });
 });
+
+/**
+ * The sentence that named a validation this branch had already changed.
+ *
+ * The comment here says "the same validation the syllabus importer makes, and
+ * for the same reason: a date that is not a date becomes a row that cannot be
+ * shown and cannot be corrected". The importer was moved to `realDate`; this
+ * copy of the sentence was left checking `day <= 31`, which admits 31 April
+ * and 30 February.
+ */
+describe('a harvested date that is not one', () => {
+  it('is dropped, the way the importer drops it', () => {
+    expect(only(run({ items: [{ title: 'Essay', month: 3, day: 31 }] }).pieces, 'item')).toEqual([]);
+    expect(only(run({ items: [{ title: 'Essay', month: 1, day: 30 }] }).pieces, 'item')).toEqual([]);
+  });
+
+  it('still takes a date the calendar has', () => {
+    expect(only(run({ items: [{ title: 'Essay', month: 9, day: 31 }] }).pieces, 'item')).toHaveLength(1);
+    expect(only(run({ items: [{ title: 'Essay', month: 1, day: 29 }] }).pieces, 'item')).toHaveLength(1);
+  });
+});
