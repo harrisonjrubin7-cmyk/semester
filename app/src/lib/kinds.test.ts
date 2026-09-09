@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { EVENT_KINDS, blockLabel } from './kinds';
+import { EVENT_KINDS, blockLabel, kindOf, kindTint } from './kinds';
+import { AA_LARGE, contrast } from './contrast';
+import { GROUNDS } from './look';
+import { satOf } from './tint';
 
 describe('blockLabel', () => {
   it('names the kind, which the tinted border carries and nothing else', () => {
@@ -28,5 +31,41 @@ describe('blockLabel', () => {
     for (const k of EVENT_KINDS) {
       expect(blockLabel('x', k.id, '1:00'), k.id).toContain(k.label);
     }
+  });
+});
+
+describe('a kind drawn for the ground it is on', () => {
+  it('is the table verbatim on a dark ground', () => {
+    // Not "close to": those seven values are the palette, and a change of
+    // ground must not become a change of palette.
+    for (const k of EVENT_KINDS) expect(kindTint(k.id, false)).toBe(k.tint);
+  });
+
+  it('keeps a kind’s own saturation, so Other stays a grey', () => {
+    // The failure this catches: re-mixing every kind at the course palette's
+    // saturation, which turns the one category meaning "uncategorised" into
+    // a blue. Other is a near-grey in the table and has to stay one.
+    expect(satOf('#9aa2ad')).toBeLessThan(0.2);
+    expect(satOf(kindTint('other', true))).toBeLessThan(0.2);
+    // And a kind that is a colour stays as saturated as it was.
+    expect(satOf(kindTint('social', true))).toBeCloseTo(satOf(kindOf('social').tint), 2);
+  });
+
+  it('is dark enough to see on a light one, which it was not', () => {
+    // The bug this fixes: seven pastels a couple of steps off a Parchment
+    // page. A category colour that cannot be seen is a category that is not
+    // there. A block's edge is a mark, so 3:1.
+    for (const g of GROUNDS.filter((x) => x.light)) {
+      for (const k of EVENT_KINDS) {
+        expect(contrast(kindTint(k.id, true), g.ramp[2]) ?? 0, `${k.label} on ${g.label}`).toBeGreaterThanOrEqual(
+          AA_LARGE,
+        );
+      }
+    }
+  });
+
+  it('calls an unknown kind Other rather than throwing', () => {
+    expect(kindTint('chores', false)).toBe(kindTint('other', false));
+    expect(kindTint(null, true)).toBe(kindTint('other', true));
   });
 });
