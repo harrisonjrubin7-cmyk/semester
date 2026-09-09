@@ -1068,6 +1068,26 @@ export default function App() {
     // `=== 'parchment'`, so Paper and Fog — both light — got a dark scrollbar
     // and a dark overscroll edge.
     root.style.colorScheme = ground(JSON.parse(lookKey).ground).light ? 'light' : 'dark';
+
+    /*
+     * And the other half of the browser's chrome.
+     *
+     * `theme-color` is what paints the title bar of an installed window and
+     * the bar behind the status text on Android — and it was a fixed
+     * `#0a0b0e` in `index.html`, chosen when every ground was dark. There are
+     * five light ones now, so Paper, Parchment, Bone, Industry and Fog each
+     * installed as a white app under a near-black bar. Exactly the fault the
+     * comment above is about, in the one place that is markup rather than a
+     * style property.
+     *
+     * `--app-void` rather than `--app-bg`: void is what `body` actually
+     * paints, so the bar matches the pixel beside it instead of the panel
+     * colour a shade off it.
+     */
+    const painted = getComputedStyle(root).getPropertyValue('--app-void').trim();
+    if (painted) {
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', painted);
+    }
   }, [lookKey, state.textSize, moreContrast]);
 
   if (state.screen === 'onboarding') {

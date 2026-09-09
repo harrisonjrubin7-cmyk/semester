@@ -19,6 +19,26 @@ const store = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/**
+ * `shed`, having actually shed something.
+ *
+ * It returns null when it gives up — the last test in that block is about
+ * exactly that — so every `out?.next` below was an optional chain over a
+ * value that is genuinely sometimes null. Two of them then read `.length`
+ * off the result, which on a regression throws `Cannot read properties of
+ * undefined` from inside a cast rather than failing an assertion. A test that
+ * reports a real bug as a TypeError is a test somebody debugs instead of
+ * reads.
+ *
+ * Asserted once, here, so the failure says "shed returned nothing" and the
+ * assertions after it are about what it shed.
+ */
+const shedFrom = (store: Record<string, unknown>) => {
+  const out = shed(store);
+  expect(out, 'shed gave up when this case expects it to shed something').not.toBeNull();
+  return out as NonNullable<ReturnType<typeof shed>>;
+};
+
 describe('isQuotaError', () => {
   it('recognises the name every engine spells differently', () => {
     expect(isQuotaError(quota())).toBe(true);
@@ -44,30 +64,30 @@ describe('isQuotaError', () => {
 
 describe('shed', () => {
   it('drops half the old practice papers first', () => {
-    const out = shed(store());
-    expect((out?.next.sittings as unknown[]).length).toBe(10);
-    expect(out?.said).toContain('practice papers');
+    const out = shedFrom(store());
+    expect((out.next.sittings as unknown[]).length).toBe(10);
+    expect(out.said).toContain('practice papers');
   });
 
   it('keeps a floor of recent papers rather than emptying the list', () => {
-    const out = shed(store({ sittings: Array.from({ length: 6 }, (_, i) => ({ id: `s${i}` })) }));
-    expect((out?.next.sittings as unknown[]).length).toBe(5);
+    const out = shedFrom(store({ sittings: Array.from({ length: 6 }, (_, i) => ({ id: `s${i}` })) }));
+    expect((out.next.sittings as unknown[]).length).toBe(5);
   });
 
   it('moves on to note bodies once the papers are down to the floor', () => {
-    const out = shed(store({ sittings: [] }));
-    expect(out?.said).toContain('one old note');
-    const notes = out?.next.notes as { id: string; body: string }[];
+    const out = shedFrom(store({ sittings: [] }));
+    expect(out.said).toContain('one old note');
+    const notes = out.next.notes as { id: string; body: string }[];
     // The oldest fat one, and its title and files stay.
     expect(notes.find((n) => n.id === 'n1')?.body).toContain('cleared to make room');
     expect(notes.find((n) => n.id === 'n2')?.body).toBe('short');
   });
 
   it('never touches a tick, a course or a source', () => {
-    const out = shed(store({ sources: [{ id: 'x' }] }));
-    expect(out?.next.done).toEqual({ a: true });
-    expect(out?.next.courses).toEqual([{ id: 'econ' }]);
-    expect(out?.next.sources).toEqual([{ id: 'x' }]);
+    const out = shedFrom(store({ sources: [{ id: 'x' }] }));
+    expect(out.next.done).toEqual({ a: true });
+    expect(out.next.courses).toEqual([{ id: 'econ' }]);
+    expect(out.next.sources).toEqual([{ id: 'x' }]);
   });
 
   it('gives up rather than starting on data somebody would miss', () => {

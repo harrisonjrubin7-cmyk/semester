@@ -54,6 +54,10 @@ const asPart = (p: PartRow): Part => ({
  * are verified, you are in that class, and nobody can remove you from a group
  * but you.
  */
+/** Stable empties, so a closed group does not hand out a new array each render. */
+const NOBODY: Profile[] = [];
+const NOTHING: PartRow[] = [];
+
 export function Groupwork() {
   const { state, dispatch, now, account, catalog } = useStore();
   // Spread rather than wrapped, so a button row stays one tap target.
@@ -66,8 +70,30 @@ export function Groupwork() {
   );
   const [groups, setGroups] = useState<GroupRow[]>([]);
   const [openId, setOpenId] = useState('');
-  const [members, setMembers] = useState<Profile[]>([]);
-  const [parts, setParts] = useState<PartRow[]>([]);
+  /**
+   * The open group's roster, and the group it belongs to.
+   *
+   * One state rather than two, and carrying its own `id`, because the id is
+   * what makes it readable: `openId` changes the instant somebody taps a
+   * second group, and the fetch for that group lands later. Held separately,
+   * `members` and `parts` lagged behind — the panel drew immediately, out of
+   * `groups`, showing the *first* group's parts, its owners and its answer to
+   * "am I in this one" until the request came back. One frame on a laptop,
+   * several seconds on a phone in a basement library, showing somebody else's
+   * work as yours.
+   *
+   * Stamped with the id it was loaded for, the mismatch is visible during
+   * render and the stale roster is simply not read. Nothing has to be cleared,
+   * so nothing depends on a cleanup running in time, and a slow answer for a
+   * group you have already left is discarded rather than raced.
+   */
+  const [roster, setRoster] = useState<{ id: string; members: Profile[]; parts: PartRow[] }>({
+    id: '',
+    members: [],
+    parts: [],
+  });
+  const members = roster.id === openId ? roster.members : NOBODY;
+  const parts = roster.id === openId ? roster.parts : NOTHING;
   const [newName, setNewName] = useState('');
   const [newPart, setNewPart] = useState('');
   const [error, setError] = useState('');
@@ -86,12 +112,12 @@ export function Groupwork() {
     }
   }, [term, code]);
 
+  /** One group's roster, on opening it and again after anything in it changes. */
   const loadOne = useCallback(async (id: string) => {
     if (!id) return;
     try {
       const [who, what] = await Promise.all([membersOf(id), partsOf(id)]);
-      setMembers(who);
-      setParts(what);
+      setRoster({ id, members: who, parts: what });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
