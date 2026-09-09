@@ -563,8 +563,8 @@ export interface Ephemeral {
    * single long scroll with everything on it.
    */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
-  homeTab: 'today' | 'hours' | 'week' | 'done' | 'brief';
-  coursesTab: 'courses' | 'due' | 'grades';
+  homeTab: 'today' | 'hours' | 'week' | 'done';
+  coursesTab: 'courses' | 'due';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all';
   /** Which shelf of the directory is showing under Everything. */
@@ -1364,8 +1364,8 @@ export type Action =
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
-  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
-  | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
+  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
+  | { type: 'setCoursesTab'; tab: 'courses' | 'due' }
   | { type: 'setMeTab'; tab: 'you' | 'all' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
