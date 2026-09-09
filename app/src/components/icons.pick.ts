@@ -105,3 +105,29 @@ export function glyphFor(screen: Screen): Glyph {
   const group = destination(screen)?.group;
   return group ? SHELF[group] : NotesIcon;
 }
+
+/**
+ * Up to `limit` screens whose glyphs differ, for a tile that stands for many.
+ *
+ * Twenty-two of the fifty-five screens have a glyph of their own; the rest
+ * fall back to their shelf's. So the first three screens on a shelf — or
+ * under an intention — are often the same drawing three times, which reads as
+ * a decorative flourish rather than as a cluster of what is inside. One glyph
+ * is a truer answer than three copies of it.
+ *
+ * It was the launcher's, privately, until the task index grew tiles of its
+ * own. Two clusters drawn by two rules would differ in exactly the way nobody
+ * could name, so there is one rule and it lives beside the glyphs.
+ */
+export function distinctGlyphs(screens: Screen[], limit = 3): Screen[] {
+  const out: Screen[] = [];
+  const seen = new Set<Glyph>();
+  for (const screen of screens) {
+    const glyph = glyphFor(screen);
+    if (seen.has(glyph)) continue;
+    seen.add(glyph);
+    out.push(screen);
+    if (out.length === limit) break;
+  }
+  return out;
+}

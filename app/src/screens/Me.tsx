@@ -363,9 +363,9 @@ export function Me() {
         headings, so the screen went and the one view that was genuinely its
         own came here.
 
-        Its own component now rather than fifty lines inline, because it grew
-        a filter, a jump bar and a column rule of its own and none of those
-        are things the You tab or the Everything tab has any use for.
+        Its own component now rather than fifty lines inline, because it is a
+        grid of tiles with a filter and a sheet that opens over it, and none
+        of that is anything the You tab or the Everything tab has a use for.
         `components/nav/ByTask.tsx` says what each is for. A screen appears
         under every task it serves, so several appear more than once — that is
         the difference from the shelves, where a screen sits on exactly one: a

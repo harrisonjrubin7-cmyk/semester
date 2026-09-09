@@ -691,3 +691,37 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       return nothing;
   }
 }
+
+/**
+ * The one live number for a tile that stands for a set of screens.
+ *
+ * A tile on the launcher stands for a shelf and a tile on the task index
+ * stands for an intention, and both want the same thing under their glyphs:
+ * one figure that is true right now rather than a decoration. The honest
+ * source for that is the hero the screen itself opens with — Semester's next
+ * class, Courses' term progress, Study's cards due — so the tile borrows one
+ * and the two can never disagree.
+ *
+ * Which one: the first that has something to say, and the first of any kind
+ * if none does. A zero is a true answer to a question nobody asked here —
+ * the tile carries no label for its figure, so "0" under *Keep track of what
+ * is due* reads as an app with nothing in it rather than as "nothing due
+ * today", and seven tiles saying it reads as an app that is broken. A grid
+ * where every figure is zero still shows zeros, because that is then the
+ * truth about the term rather than an accident of which screen came first.
+ *
+ * `undefined` when nothing in the set has a figure at all, which is the
+ * ordinary answer for a set of tools: the caller says what to print instead,
+ * because only the caller knows what its tiles are counting.
+ */
+export function firstFigure(screens: Screen[], input: TopInput): string | undefined {
+  let any: string | undefined;
+  for (const screen of screens) {
+    const figure = softTop(screen, input).hero?.figure;
+    if (!figure) continue;
+    if (any === undefined) any = figure;
+    // "0", "0%", "$0" and "0.0" — a figure whose every digit is a nought.
+    if (!/^\D*0([.,]0+)?\D*$/.test(figure)) return figure;
+  }
+  return any;
+}
