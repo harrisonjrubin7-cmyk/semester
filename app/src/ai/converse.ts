@@ -317,14 +317,20 @@ export function useConversation(): Conversation {
         let sending: Turn[] = next;
         let reply = '';
         /*
-         * Whether the answer stopped because it ran out of room.
+         * Whether the answer stopped rather than ended.
          *
-         * The one stop reason a reader cannot see for themselves. An answer
-         * cut off at the ceiling arrives looking finished — it ends on a full
+         * The stop reasons a reader cannot see for themselves. An answer cut
+         * off at the ceiling arrives looking finished — it ends on a full
          * sentence about as often as not — and the transcript already has a
          * way to say otherwise, the same one Stop uses. Without this the
          * model is later sent a truncated answer as though it were complete
          * and reasons on from a conclusion it never reached.
+         *
+         * `cut` is the same failure arriving a different way: the stream died
+         * mid-answer, which on a phone is the ordinary one. `lib/claude.ts`
+         * could not tell that from an answer that ended until it was taught
+         * to read the closing event, and until then a dropped connection was
+         * drawn here as a finished turn.
          */
         let ranOut = false;
 
@@ -393,7 +399,7 @@ export function useConversation(): Conversation {
             },
             signal: flight.abort.signal,
             onStop: (why) => {
-              ranOut = why === 'max_tokens';
+              ranOut = why === 'max_tokens' || why === 'cut';
             },
             onText: (chunk) => {
               // The first word of the round is the end of the pause the

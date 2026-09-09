@@ -32,6 +32,25 @@
 
 import type { Shot, Turn } from './claude';
 
+/**
+ * A stream that opened and then said nothing.
+ *
+ * Not a status — the request succeeded and the connection went away
+ * afterwards — so it is worded the way `explainAskError` words the rest: what
+ * happened, and the one thing worth doing about it.
+ *
+ * It sits here rather than beside those, and only because of the direction of
+ * the imports: both routes throw it, `lib/claude.ts` already imports this
+ * file, and the other way round would be a cycle. It is re-exported there, so
+ * a reader who goes looking beside the other explanations finds it.
+ *
+ * Not to be confused with `CUT_OFF` there, which is the opposite situation:
+ * some of an answer arrived, and that marker is how the transcript tells the
+ * model so. This one is for when none of it did.
+ */
+export const NOTHING_ARRIVED =
+  'The connection closed before any of the answer arrived. Nothing was lost — ask again.';
+
 export const OPENAI_MODELS = [
   { id: 'gpt-5', label: 'GPT-5', note: 'The strongest of these at a hard explanation.' },
   { id: 'gpt-5-mini', label: 'GPT-5 mini', note: 'Faster and cheaper. Fine for most asking.' },
@@ -143,6 +162,14 @@ export interface OpenAiAsk {
   maxTokens?: number;
   images?: Shot[];
   onText?: (chunk: string) => void;
+  /**
+   * Why the answer ended, where the stream says.
+   *
+   * Only `cut` here — this API's stream carries no stop reason of its own,
+   * and the one thing the caller cannot see for itself is that the words
+   * stopped arriving rather than finished.
+   */
+  onStop?: (reason: string) => void;
   signal?: AbortSignal;
 }
 
@@ -179,6 +206,17 @@ export async function askOpenAI(options: OpenAiAsk): Promise<string> {
   let buffer = '';
   let whole = '';
 
+  /*
+   * Whether the stream ended, or merely stopped.
+   *
+   * `[DONE]` is the sentence this API closes with, and `readChunk` was
+   * already reading it — to skip it, because it is not JSON, which is not the
+   * same as noticing it. Without that, a connection dropped mid-answer read
+   * exactly like a finished one: the loop ran out of reader and returned what
+   * had arrived. See the same repair, and what it cost, in `lib/claude.ts`.
+   */
+  let closed = false;
+
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -188,11 +226,17 @@ export async function askOpenAI(options: OpenAiAsk): Promise<string> {
     const lines = buffer.split('\n');
     buffer = lines.pop() ?? '';
     for (const line of lines) {
+      if (line.startsWith('data:') && line.slice(5).trim() === '[DONE]') closed = true;
       const piece = readChunk(line);
       if (piece === null) continue;
       whole += piece;
       options.onText?.(piece);
     }
+  }
+
+  if (!closed) {
+    if (!whole) throw new Error(NOTHING_ARRIVED);
+    options.onStop?.('cut');
   }
 
   return whole;

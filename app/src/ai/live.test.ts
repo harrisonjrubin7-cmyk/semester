@@ -459,6 +459,17 @@ describe('looking something up mid-answer', () => {
     expect(src).toContain('ranOut ? { incomplete: true } : {}');
   });
 
+  it('marks an answer whose stream stopped rather than ended, the same way', () => {
+    /*
+     * The same failure arriving a different way, and on a phone the ordinary
+     * one: the connection dies mid-answer. `lib/claude.ts` reports that as
+     * `cut` — it could not tell it from a finished answer until it was taught
+     * to read the closing event — and a turn drawn as finished is exactly
+     * what the comment above is about.
+     */
+    expect(converse()).toContain("why === 'max_tokens' || why === 'cut'");
+  });
+
   it('clears that line when the request it explains has failed', () => {
     // In `finally`, not after the loop: a request that throws halfway leaves
     // "Reading your grades" on screen under an error message otherwise.

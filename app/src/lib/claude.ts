@@ -24,7 +24,12 @@ import type { CaseFile, Example, Figure, Frame, StudyCard } from './types';
 import { FIGURE_SHAPES, readFigures } from './figure';
 import { STUDY_SHAPES, readStudyParts } from './study';
 
-import { DEFAULT_MODEL as OPENAI_DEFAULT, OPENAI_MODELS, askOpenAI } from './openai';
+import {
+  DEFAULT_MODEL as OPENAI_DEFAULT,
+  NOTHING_ARRIVED,
+  OPENAI_MODELS,
+  askOpenAI,
+} from './openai';
 
 const SETTINGS_KEY = 'semester.claude.v1';
 
@@ -233,6 +238,13 @@ type Route = 'proxy' | 'shared' | 'own' | 'openai' | 'none';
  * do what; everything else is passed through, because the API's own wording
  * beats a guess.
  */
+// The sentence for a stream that opened and then said nothing. Defined in
+// `lib/openai.ts`, which both routes can reach without a cycle, and re-exported
+// here so it is found beside the explanations it belongs with. `CUT_OFF`
+// further down is a different thing: how *half* an answer is described to the
+// model, once there is half an answer to describe.
+export { NOTHING_ARRIVED };
+
 export function explainAskError(taking: Route, status: number, detail: string): string {
   if (taking === 'shared') {
     if (status === 404 || /function was not found|not_found/i.test(detail)) {
@@ -659,6 +671,10 @@ export async function ask(options: AskOptions): Promise<string> {
       maxTokens: options.maxTokens,
       images: options.images,
       onText: options.onText,
+      // So a cut stream is marked on this route too. Everything above `ask()`
+      // is unaware of which company answered, and that has to include how an
+      // answer failed to finish.
+      onStop: options.onStop,
       signal: options.signal,
     });
   }
@@ -766,6 +782,43 @@ export async function ask(options: AskOptions): Promise<string> {
 
   /** Why the model stopped, as the closing event reports it. */
   let stopped = '';
+
+  /*
+   * Whether the stream *said* it was finished, rather than simply stopping.
+   *
+   * A reader that runs out is not the same thing as an answer that ends, and
+   * this loop could not tell the two apart: it read until `done` and returned
+   * whatever had arrived. So a connection dropped mid-answer — the ordinary
+   * failure of a streamed API on a phone — came back as a complete reply.
+   *
+   * Measured, with the response mocked and nothing else changed:
+   *
+   *   200, empty body            no answer, and the turn drawn as finished
+   *   200, unparseable events    the same
+   *   200, cut mid-event         the same
+   *   one delta, then cut        "The three things due", drawn as finished
+   *
+   * The last is the one that costs something. `ai/converse.ts` already
+   * carries the argument, for the ceiling: *"an answer cut off at the ceiling
+   * arrives looking finished — it ends on a full sentence about as often as
+   * not"*, and marks the turn so the reader sees it and the model is not
+   * later sent a conclusion it never reached. A stream that dies is the same
+   * failure with a different cause, and was the one case not covered, because
+   * `onStop` only fires on a reason the stream reported.
+   *
+   * Either closing event will do. `message_delta` carries the reason and
+   * `message_stop` ends the stream, and a route that forwards one forwards
+   * the other.
+   */
+  let closed = false;
+  /**
+   * Whether anything a reader could use arrived — words, or a whole tool call.
+   *
+   * Not "any event": a stream that opens with `message_start` and then dies
+   * has still said nothing, and an empty answer under a "Stopped here." is
+   * not better than the sentence saying the connection went.
+   */
+  let gave = false;
   const count = (u: RawUsage | undefined) => {
     if (!u) return;
     counted = {
@@ -806,8 +859,12 @@ export async function ask(options: AskOptions): Promise<string> {
         if (event.type === 'message_start') count(event.message?.usage);
         if (event.type === 'message_delta') {
           count(event.usage);
-          if (event.delta?.stop_reason) stopped = event.delta.stop_reason;
+          if (event.delta?.stop_reason) {
+            stopped = event.delta.stop_reason;
+            closed = true;
+          }
         }
+        if (event.type === 'message_stop') closed = true;
 
         if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use') {
           building = {
@@ -825,7 +882,10 @@ export async function ask(options: AskOptions): Promise<string> {
           try {
             // Never string-match a serialised tool input: escaping varies.
             const input = done.json ? (JSON.parse(done.json) as Record<string, unknown>) : {};
-            if (done.name) options.onToolUse?.({ id: done.id, name: done.name, input });
+            if (done.name) {
+              options.onToolUse?.({ id: done.id, name: done.name, input });
+              gave = true;
+            }
           } catch {
             // Arguments that did not survive the stream. Dropping the call is
             // right: acting on a half-read instruction is the one outcome
@@ -834,6 +894,7 @@ export async function ask(options: AskOptions): Promise<string> {
         }
         if (event.type === 'content_block_delta' && event.delta?.text) {
           text += event.delta.text;
+          gave = true;
           options.onText?.(event.delta.text);
         }
         // Citations arrive on their own delta type against the text block
@@ -851,6 +912,21 @@ export async function ask(options: AskOptions): Promise<string> {
         // A partial or unknown event. Skipping it is correct.
       }
     }
+  }
+
+  if (!closed) {
+    /*
+     * Nothing usable came through at all, so there is no answer to draw and
+     * no half of one to keep. That is a failure, and the assistant already
+     * knows how to say so — every other failure here throws, and the screen
+     * puts the sentence under a "Try that again". Reported as a completed
+     * empty turn instead, it reads as the model having nothing to say.
+     */
+    if (!gave) throw new Error(NOTHING_ARRIVED);
+    // Something arrived and then the stream stopped without ending. The words
+    // are kept — half an answer is still context — and marked, which is what
+    // `cut` says to the caller.
+    stopped = stopped || 'cut';
   }
 
   if (counted) options.onUsage?.(counted);
