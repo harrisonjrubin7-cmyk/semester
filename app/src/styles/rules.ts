@@ -112,7 +112,7 @@ export function sources(dir: string): { path: string; text: string }[] {
  * would be a rule people delete rather than satisfy. Replaced with spaces
  * rather than removed so a reported line number is still the right one.
  */
-function withoutComments(text: string): string {
+export function withoutComments(text: string): string {
   return text
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
     .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length));
@@ -237,16 +237,20 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 680,
+  type: 678,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 220,
+  leading: 219,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 521,
+  space: 518,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 537,
+  shorthand: 512,
 };
 
 /*
+ * 678/219/518/512 is what the merged tree counts, measured after this branch
+ * and the Places-tab pass met. The two notes below each name their own
+ * branch's numbers.
+ *
  * 680/222/524/543 → 680/220/521/537 when eleven hand-written "nothing here yet"
  * blocks became `EmptyState`. Three down and none up, none of it by
  * reformatting: each of those blocks set its own padding, opacity and line
@@ -265,6 +269,16 @@ export const BUDGET = {
  * 682/222/524/544 → 680/222/524/544 when the code with no caller was cut. Two
  * sizes down, none up, and neither by reformatting: they were inside two of
  * the row components nothing rendered.
+ *
+ * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
+ * down and none up: the tab was a second copy of what the map already is, and
+ * the one thing only it could do — standing somewhere and naming it — moved to
+ * `screens/Maps.tsx` as it was rather than being redrawn, so the panel's own
+ * off-scale values went with it and the tab's list rows did not come back.
+ *
+ * The two above landed either side of a merge, so the numbers each names are
+ * its own branch's. What the merged tree actually counts is the block at the
+ * top of this file, measured rather than added up.
  *
  * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
  * One down, none up, and only one because the filter field lived in `<Page>`

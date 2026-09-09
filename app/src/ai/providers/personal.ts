@@ -19,7 +19,8 @@ import { guideNow } from '../shape';
  * right outcome: the rule is worth more than the feature.
  */
 
-/** Personal — your own tasks, appointments, notes, places and files. */
+/** Personal — your own tasks, appointments, notes and files. Saved places
+ * live on the map, which is the one screen that has them. */
 export const mine: Provide = (look) => {
   const { state, catalog } = look;
   // The tab decides what the screen is showing, and each shows something
@@ -52,15 +53,6 @@ export const mine: Provide = (look) => {
       })),
       actions: ['add_task', 'open_screen'],
       suggestions: ['What have I got on this week?', 'Does anything clash with a deadline?'],
-    };
-  }
-
-  if (tab === 'places') {
-    return {
-      summary: `Saved places — ${state.places.length}.`,
-      visible: state.places.map((p) => ({ label: p.label })),
-      actions: ['open_screen'],
-      suggestions: ['How far is this from my next class?'],
     };
   }
 

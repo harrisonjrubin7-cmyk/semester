@@ -473,6 +473,7 @@ function FindThings() {
       {LINKS.map((l) => (
         <a key={l.id} href={l.url} target="_blank" rel="noreferrer" className="bare">
           <Blueprint
+            plain
             style={{
               padding: '14px 15px',
               marginBottom: 9,

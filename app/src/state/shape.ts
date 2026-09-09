@@ -562,9 +562,9 @@ export interface Ephemeral {
    * the app — so Today, Courses and Study use it too rather than each being a
    * single long scroll with everything on it.
    */
-  mineTab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files';
-  homeTab: 'today' | 'hours' | 'week' | 'done' | 'brief';
-  coursesTab: 'courses' | 'due' | 'grades';
+  mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
+  homeTab: 'today' | 'hours' | 'week' | 'done';
+  coursesTab: 'courses' | 'due';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all' | 'task';
   /** Which shelf of the directory is showing under Everything. */
@@ -1363,9 +1363,9 @@ export type Action =
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
-  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
-  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
-  | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
+  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
+  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
+  | { type: 'setCoursesTab'; tab: 'courses' | 'due' }
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'task' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
