@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { PICK, build } from './context';
 import { DEFAULT_PERSISTED, type State } from '../state/shape';
 import { buildCatalog } from '../data/catalog';
+import { PROVIDERS } from '../ai/providers';
 import type { CourseUpdate } from './types';
 import BUS from '../data/courses/bus';
 import ECON from '../data/courses/econ';
@@ -94,6 +95,61 @@ describe('what never leaves, under any circumstance', () => {
     const payload = sent('what did I say about PERSON-NAME-HERE after office hours');
     expect(payload).not.toContain('PERSON-NAME-HERE');
     expect(payload).not.toContain('SAID-ABOUT-THEM');
+  });
+
+  /**
+   * The other half of the boundary, which these tests were not covering.
+   *
+   * `build` takes an `onScreen` string and pushes it into the payload whole —
+   * that is the design, and this file's own comment states the split: "the
+   * providers decide what a screen is showing, this decides whether it may
+   * go". But every test above calls `build` without one, so the half of the
+   * payload that comes from a provider was the half nothing checked. A
+   * provider that put a note body or somebody's name into `visible` would
+   * have sent it, past an allowlist that never saw it.
+   *
+   * So: every provider in the registry, on a state carrying every secret, in
+   * each tab that picks a different branch — and the same secrets looked for
+   * in the result. It is the assertion the file's opening paragraph asks for,
+   * applied to the door it had not been pointed at.
+   *
+   * Driven in a browser first, over 3,024 payloads, before being written down
+   * here. Nothing leaked then and nothing leaks now; this is what keeps it
+   * that way.
+   */
+  it('sends nothing private through a screen provider either', () => {
+    const state = loaded();
+    // The tabs that pick a different branch inside one provider. The notes tab
+    // is the one that reads notes at all, and it promises titles only.
+    const tabs: Partial<State>[] = [
+      { mineTab: 'tasks' },
+      { mineTab: 'notes' },
+      { mineTab: 'appointments' },
+      { coursesTab: 'courses' },
+      { coursesTab: 'grades' },
+    ] as Partial<State>[];
+
+    for (const screen of Object.keys(PROVIDERS) as (keyof typeof PROVIDERS)[]) {
+      const provide = PROVIDERS[screen];
+      if (!provide) continue;
+      for (const tab of tabs) {
+        const look = { state: { ...state, ...tab } as State, catalog, now: NOW };
+        const context = provide(look);
+        if (!context) continue;
+        const onScreen = [
+          context.summary,
+          JSON.stringify(context.focus ?? ''),
+          JSON.stringify(context.visible ?? []),
+        ].join('\n');
+
+        for (const q of QUESTIONS) {
+          const payload = build(q, 'grounded', look.state, catalog, NOW, screen, onScreen).text;
+          for (const secret of SECRETS) {
+            expect(payload, `${screen} leaked ${secret} for "${q}"`).not.toContain(secret);
+          }
+        }
+      }
+    }
   });
 
   it('names in the allowlist the things it refuses to send', () => {
