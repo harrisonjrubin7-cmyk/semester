@@ -327,9 +327,14 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    // The screen is taken from the registry rather than typed in. This said
+    // 'grades', and when that screen moved the comparison stopped compiling —
+    // a test whose whole subject is "the registry decides" should not carry a
+    // copy of one of its rows.
+    const gone = DESTINATIONS[0].screen;
+    const short = DESTINATIONS.filter((d) => d.screen !== gone);
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === gone)).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
