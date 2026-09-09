@@ -47,6 +47,8 @@ export interface Facts {
   courses: number;
   /** Any deadline that is an exam. */
   hasExam: boolean;
+  /** Any grade entered by hand or read off a paper. */
+  hasGrades: boolean;
   notes: number;
   /** Practice papers sat. */
   sittings: number;
@@ -60,6 +62,7 @@ export interface Facts {
 export const NOTHING_YET: Facts = {
   courses: 0,
   hasExam: false,
+  hasGrades: false,
   notes: 0,
   sittings: 0,
   ownThings: 0,
@@ -104,9 +107,8 @@ export const UNLOCKS: Record<string, (f: Facts) => boolean> = {
   runway: (f) => f.hasExam,
   exam: (f) => f.hasExam,
 
-  // The grade machinery, once there is a grade. The table itself is a grain of
-  // Courses rather than a screen, so there is nothing here to gate: Courses is
-  // where you type the first score, and gating it would hide the way in.
+  // The grade machinery, once there is a grade.
+  grades: (f) => f.hasGrades,
   proof: (f) => f.sittings > 0,
 
   // Study formats need something to study.

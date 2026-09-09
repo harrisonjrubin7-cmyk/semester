@@ -245,7 +245,6 @@ export function Links() {
           ) : (
             <ActionButton
               onClick={() => setAdding(true)}
-              height={40}
               style={{ fontSize: 'var(--type-xs)', marginTop: 'var(--sp-6)' }}
             >
               Add a link of your own

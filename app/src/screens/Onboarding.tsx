@@ -289,14 +289,14 @@ export function Onboarding() {
 
       <ActionButton
         onClick={() => dispatch({ type: 'onbNext' })}
-        tone="primary" height={52}
+        tone="primary"
         style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}
       >
         {step.cta}
       </ActionButton>
       <ActionButton
         onClick={() => dispatch({ type: 'finishOnboarding' })}
-        tone="ghost" height={34} spacing="0.14em"
+        tone="ghost" spacing="0.14em"
         style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}
       >
         Skip

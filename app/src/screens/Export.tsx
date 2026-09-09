@@ -263,7 +263,7 @@ export function Export() {
       <ActionButton
         disabled={!!busy}
         onClick={saveZip}
-        tone="primary" height={46}
+        tone="primary"
       >
         {busy === 'Packing…' ? 'Packing…' : 'Download as one zip'}
       </ActionButton>

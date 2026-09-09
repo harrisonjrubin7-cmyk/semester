@@ -297,7 +297,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
       </div>
       <ActionButton
         onClick={add}
-        height={44} spacing="0.09em"
+        spacing="0.09em"
         style={{ marginTop: 'var(--sp-6)' }}
       >
         Add the course
@@ -432,7 +432,7 @@ function Rules() {
       />
       <ActionButton
         onClick={add}
-        height={44} spacing="0.09em"
+        spacing="0.09em"
         style={{ marginTop: 'var(--sp-5)' }}
       >
         Add the requirement

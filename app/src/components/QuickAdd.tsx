@@ -180,7 +180,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           <ActionButton
             onClick={add}
             disabled={!ready}
-            tone="primary" height={46} spacing="0.09em"
+            tone="primary" spacing="0.09em"
             style={{ marginTop: 'var(--sp-7)' }}
           >
             Add it

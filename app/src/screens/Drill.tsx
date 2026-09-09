@@ -620,7 +620,7 @@ export function Quiz() {
           </Blueprint>
           <ActionButton
             onClick={() => dispatch({ type: 'nextQuestion' })}
-            tone="primary" height={48}
+            tone="primary"
             style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
           >
             Next

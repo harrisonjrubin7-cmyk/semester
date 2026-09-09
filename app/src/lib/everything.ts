@@ -79,6 +79,8 @@ export function heldBy(screen: Screen, state: State, catalog: Catalog): string |
       return n(state.residences.length, 'room');
     case 'meals':
       return n(state.balances.length, 'balance');
+    case 'grades':
+      return n(Object.keys(state.grades).length, 'score');
     case 'calendar':
     case 'home':
       return n(catalog.items.length, 'deadline');
@@ -110,8 +112,7 @@ export const WHY: Partial<Record<Screen, string>> = {
   runway: 'Three weeks before a final is when a plan is still worth making.',
   tonight: 'You have four hours and five courses; this says which four hours are worth the most.',
   ahead: 'A week that looks fine on a calendar can be twenty-six hours of work.',
-  courses:
-    'Every syllabus in one place — and on its grades grain, what you need on the final, which is arithmetic nobody does by hand.',
+  grades: 'The question in week ten is what you need on the final, and that is arithmetic nobody does by hand.',
   degree: 'Four years of requirements, and the advisor meeting is twenty minutes long.',
   costs: 'Textbook money is the one budget nobody tracks until the term is over.',
   solve: 'A worked answer teaches nothing; the method on different numbers does.',

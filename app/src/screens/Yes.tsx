@@ -173,7 +173,7 @@ export function Yes() {
 
           <ActionButton
             onClick={create}
-            tone="primary" height={46}
+            tone="primary"
             style={{ marginTop: 14 }}
           >
             Add them to the semester

@@ -31,7 +31,7 @@
  * not, and the id means nothing without the device it was written on.
  */
 
-import type { ChangeSource, CoursesTab, ReportGrain, Screen, StudyMode } from './types';
+import type { ChangeSource, ReportGrain, Screen, StudyMode } from './types';
 import type { State } from '../state/shape';
 
 /** What a screen is currently about, if anything. */
@@ -49,7 +49,7 @@ export interface Route {
    * are there, not part of the address, and putting them in the hash would
    * mean every flip pushed a history entry.
    */
-  opens?: { report?: ReportGrain; changes?: ChangeSource; courses?: CoursesTab; meTab?: MeTab };
+  opens?: { report?: ReportGrain; changes?: ChangeSource; meTab?: MeTab };
 }
 
 /**
@@ -61,6 +61,7 @@ export interface Route {
 export const NAMED: Partial<Record<Screen, 'courseId' | 'itemId' | 'eventId' | 'guideId' | 'noteId'>> = {
   course: 'courseId',
   edit: 'courseId',
+  grades: 'courseId',
   item: 'itemId',
   event: 'eventId',
   guide: 'guideId',
@@ -95,10 +96,6 @@ const RETIRED: Record<string, { screen: Screen; opens?: Route['opens'] }> = {
   check: { screen: 'announce' as Screen, opens: { changes: 'feed' } },
   // The chat was a second door into the conversation the Ask tab now is.
   chat: { screen: 'ask' as Screen },
-  // The grade table was a screen and the third tab of Courses at once. A
-  // bookmark saying `#/grades` meant the table, so it opens the tab that is
-  // now the only one — see `screens/Grades.tsx`.
-  grades: { screen: 'courses' as Screen, opens: { courses: 'grades' } },
   // Settings had a page counting the same bytes as the Data screen. The
   // measurements are there now; the copies and the restore are on Export,
   // which had them already.

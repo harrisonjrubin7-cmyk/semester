@@ -67,6 +67,7 @@ const EventDetail = lazy(() => import('./screens/Calendar').then((m) => ({ defau
 const Exam = lazy(() => import('./screens/Exam').then((m) => ({ default: m.Exam })));
 const Export = lazy(() => import('./screens/Export').then((m) => ({ default: m.Export })));
 const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap })));
+const Grades = lazy(() => import('./screens/Grades').then((m) => ({ default: m.Grades })));
 const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ default: m.Groupwork })));
 const Guide = lazy(() => import('./screens/Guide').then((m) => ({ default: m.Guide })));
 const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
@@ -301,6 +302,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: `${provider()} · this term`, title: 'Ask Claude' };
     case 'work':
       return { kicker: about('assignments'), title: 'Work on it' };
+    case 'grades':
+      return { kicker: 'Weights from your syllabi', title: 'Grades' };
     case 'maps':
       return { kicker: 'Campus, city, and how to get there', title: 'Getting there' };
     case 'mail':
@@ -468,7 +471,7 @@ function Header() {
       {canGoBack && (
         <button
           type="button"
-          className="btn btn-ghost btn-icon"
+          className="btn btn-ghost btn-icon tap"
           onClick={() => {
             // The browser's history, not the app's. Every navigation now
             // writes an entry, so going back any other way would leave the
@@ -550,7 +553,17 @@ function Header() {
       </div>
 
       {showActions && (
-        <div style={{ display: 'flex', gap: 'var(--sp-1)', flex: 'none', alignItems: 'center' }}>
+        /*
+         * The gap is load-bearing, not taste. `.btn-icon` draws 36px, and the
+         * `.tap` overlay on each of these grows the *hit* area to 44px — 4px
+         * past the button on each side. At the 2px gap this row used to have,
+         * the pitch was 38px and those overlays ran into each other: the later
+         * button won the overlap, so a thumb landing on the right of Search
+         * pressed Alerts. Eight puts the pitch at 44 and the overlays exactly
+         * meet. Tightening this re-breaks the targets without changing
+         * anything you can see, so `lib/header.test.ts` holds it.
+         */
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', flex: 'none', alignItems: 'center' }}>
           {/* Before the icons, because it is the only thing here that is
               counting. Renders nothing at all unless a timer is running. */}
           <Running />
@@ -565,7 +578,7 @@ function Header() {
               routes: by name in search, `n`, and the soft layout's bar. */}
           <button
             type="button"
-            className="btn btn-ghost btn-icon"
+            className="btn btn-ghost btn-icon tap"
             onClick={() => dispatch({ type: 'quickAdd', open: true })}
             aria-label="Add something in one line"
           >
@@ -573,7 +586,7 @@ function Header() {
           </button>
           <button
             type="button"
-            className="btn btn-ghost btn-icon"
+            className="btn btn-ghost btn-icon tap"
             onClick={() => dispatch({ type: 'go', screen: 'search' })}
             aria-label="Search"
           >
@@ -582,7 +595,7 @@ function Header() {
           {atRoot && (
           <button
             type="button"
-            className="btn btn-ghost btn-icon"
+            className="btn btn-ghost btn-icon tap"
             onClick={() => dispatch({ type: 'go', screen: 'notifs' })}
             aria-label="Alerts"
             style={{ position: 'relative' }}
@@ -605,7 +618,7 @@ function Header() {
           {state.nav === 'feed' && atRoot && (
             <button
               type="button"
-              className="btn btn-ghost btn-icon"
+              className="btn btn-ghost btn-icon tap"
               onClick={() => dispatch({ type: 'go', screen: 'me' })}
               aria-label="Me"
             >
@@ -804,6 +817,8 @@ function CurrentScreen() {
       return <Ask />;
     case 'work':
       return <Work />;
+    case 'grades':
+      return <Grades />;
     case 'maps':
       return <Maps />;
     case 'mail':
