@@ -239,14 +239,21 @@ export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
   type: 680,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 222,
+  leading: 220,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 524,
+  space: 521,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 543,
+  shorthand: 537,
 };
 
 /*
+ * 680/222/524/543 → 680/220/521/537 when eleven hand-written "nothing here yet"
+ * blocks became `EmptyState`. Three down and none up, none of it by
+ * reformatting: each of those blocks set its own padding, opacity and line
+ * height, and the component sets none of them per screen. Two of the eight
+ * gained the thing the component exists for — the button that would put
+ * something there.
+ *
  * 680/222/524/544 → 680/222/524/543 when the second directory was deleted. The
  * view that survived it is drawn with the `Panel` and rows the first directory
  * already used, so what went with the screen was its own hand-drawn heading.

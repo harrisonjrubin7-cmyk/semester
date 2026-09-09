@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { EmptyState, SectionLabel } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { cloudConfigured } from '../lib/cloud';
 import {
@@ -439,10 +439,11 @@ function Room({
 
       <div style={{ marginTop: 14 }}>
         {messages.length === 0 && (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '18px 0', lineHeight: 'var(--leading-relaxed)' }}>
-            Nothing said yet. Somebody has to be first — a question about the reading is usually the
-            easiest one.
-          </div>
+          <EmptyState
+            inline
+            title="Nothing said yet"
+            body="Somebody has to be first — a question about the reading is usually the easiest one."
+          />
         )}
         {messages.map((m) => {
           const mine = m.user_id === me;

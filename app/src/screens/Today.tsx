@@ -9,7 +9,7 @@ import { ReadingsOnTheGo } from '../components/ReadingProgress';
 import { ClosingWindows } from '../components/Windows';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ChipRow, DateRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import { homeShape } from '../lib/chrome';
 import {
@@ -799,10 +799,11 @@ function DoneToday() {
       </Blueprint>
 
       {done.length === 0 ? (
-        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', opacity: 0.55, lineHeight: 'var(--leading-relaxed)' }}>
-          Nothing ticked off yet. Anything you finish shows up here, so a day leaves a trace rather
-          than just emptying out.
-        </div>
+        <EmptyState
+          inline
+          title="Nothing ticked off yet"
+          body="Anything you finish shows up here, so a day leaves a trace rather than just emptying out."
+        />
       ) : (
         <>
           <SectionLabel>What you did</SectionLabel>
@@ -868,9 +869,11 @@ function HoursToday() {
       </div>
       <KindKey />
       {blocks.length === 0 ? (
-        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', opacity: 0.55, lineHeight: 'var(--leading-relaxed)' }}>
-          Nothing on today. Add something below and it appears on the grid.
-        </div>
+        <EmptyState
+          inline
+          title="Nothing on today"
+          body="Add something below and it appears on the grid."
+        />
       ) : (
         <HourGrid blocks={blocks} now={minutesNow(now)} style={{ marginTop: 14 }} />
       )}
