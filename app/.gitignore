@@ -27,3 +27,6 @@ shots
 *.njsproj
 *.sln
 *.sw?
+
+# What scripts/mirror.mjs fetches — a copy of the deployed site, not source.
+mirror

@@ -26,7 +26,7 @@ import {
  * of thing people switch off in the first week.
  */
 export function HomeWalk() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
 
   const mine = useMemo(() => current(state.residences, state.term), [state.residences, state.term]);
 
@@ -36,7 +36,7 @@ export function HomeWalk() {
     );
     if (!first) return null;
     const course = first.c ? catalog.byId[first.c] : null;
-    return { title: first.title, room: course?.room ?? first.meta, at: first.at };
+    return { title: first.title, room: course?.room ?? first.meta, at: first.at, c: first.c };
   }, [catalog, now, state.appointments, state.commitments]);
 
   const exams = useMemo(
@@ -78,6 +78,11 @@ export function HomeWalk() {
         marginBottom: 14,
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
+        // The morning card is about getting to one particular class, so it
+        // wears that course's colour on its edge — the same mark the block
+        // for that class carries on the grid below. The move-out card belongs
+        // to no course and keeps the plain hairline.
+        ...(morning ? { borderLeft: `3px solid ${tint(firstToday?.c).edge}` } : {}),
         background: 'var(--app-panel)',
       }}
     >
