@@ -668,6 +668,7 @@ function Feed_registrar() {
       <SectionLabel style={{ margin: '14px 0 12px' }}>From the registrar</SectionLabel>
       {soon.slice(0, 3).map((d) => (
         <Blueprint
+          plain
           key={d.id}
           onClick={() => dispatch({ type: 'go', screen: 'registrar' })}
           style={{ padding: '12px 14px', marginBottom: 'var(--sp-4)' }}

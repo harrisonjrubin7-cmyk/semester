@@ -130,7 +130,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
             .sort((a, b) => b.at - a.at);
           const course = p.courseId ? catalog.byId[p.courseId]?.code : '';
           return (
-            <Blueprint key={p.id} style={{ padding: '13px 14px' }}>
+            <Blueprint plain key={p.id} style={{ padding: '13px 14px' }}>
               <button
                 type="button"
                 className="bare tappable"
@@ -322,6 +322,7 @@ function LettersTab() {
               const tight = short(l, now);
               return (
                 <Blueprint
+                  plain
                   key={l.id}
                   style={{
                     padding: '13px 14px',

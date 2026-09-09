@@ -562,7 +562,7 @@ export interface Ephemeral {
    * the app — so Today, Courses and Study use it too rather than each being a
    * single long scroll with everything on it.
    */
-  mineTab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files';
+  mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done' | 'brief';
   coursesTab: 'courses' | 'due' | 'grades';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
@@ -1363,7 +1363,7 @@ export type Action =
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
-  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
+  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
   | { type: 'setMeTab'; tab: 'you' | 'all' }

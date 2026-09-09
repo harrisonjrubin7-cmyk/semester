@@ -10,6 +10,8 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { ProjectFile } from '../components/ProjectFile';
 import { ChipRow, SectionLabel } from '../components/ui';
+import { ItemRow } from '../components/shell/Rows';
+import { useRowStyle } from '../components/shell/useShell';
 import { Check, Plus } from '../components/Icons';
 import { extractText } from '../lib/extract';
 import { breakDown, critique, type Breakdown } from '../lib/assignment';
@@ -388,13 +390,19 @@ function PlanView({
   saved: number;
   onKeep: () => void;
 }) {
+  /*
+   * A numbered step keeps its own markup and takes the row's metrics.
+   *
+   * `ItemRow` is a title with a subtitle under it; this is three tiers of text
+   * beside a big ordinal, and flattening it into two would lose the ordering
+   * the whole section is about. What it was missing was not a component but
+   * the layout's own padding and hairline, which is exactly what this hook is
+   * for — before it, this row drew a fixed 12px and a plain border whatever
+   * layout the app was set to.
+   */
+  const stepRow = useRowStyle(12);
   const row = (label: string, body: string, key: string) => (
-    <div key={key} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
-      <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{label}</div>
-      {body && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3, lineHeight: 'var(--leading-normal)' }}>{body}</div>
-      )}
-    </div>
+    <ItemRow key={key} title={label} meta={body || undefined} />
   );
 
   return (
@@ -423,30 +431,24 @@ function PlanView({
         <>
           <SectionLabel>How it is marked</SectionLabel>
           {plan.rubric.map((r, i) => (
-            <div key={`r${i}`} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
-              <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
-                <div style={{ fontSize: 'var(--type-md)', flex: 1, minWidth: 0, lineHeight: 'var(--leading-tight)' }}>
-                  {r.criterion}
-                </div>
-                {r.weight && (
-                  <div
+            <ItemRow
+              key={`r${i}`}
+              title={r.criterion}
+              meta={r.means || undefined}
+              trailing={
+                r.weight ? (
+                  <span
                     style={{
                       fontFamily: 'var(--font-heading)',
                       fontSize: 'var(--type-sm)',
                       color: 'var(--app-accent)',
-                      flex: 'none',
                     }}
                   >
                     {r.weight}
-                  </div>
-                )}
-              </div>
-              {r.means && (
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
-                  {r.means}
-                </div>
-              )}
-            </div>
+                  </span>
+                ) : undefined
+              }
+            />
           ))}
         </>
       )}
@@ -455,7 +457,7 @@ function PlanView({
         <>
           <SectionLabel>A way through it</SectionLabel>
           {plan.steps.map((s, i) => (
-            <div key={`s${i}`} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '12px 0', borderBottom: '1px solid var(--app-line)' }}>
+            <div key={`s${i}`} style={{ display: 'flex', gap: 'var(--sp-6)', ...stepRow }}>
               <div
                 style={{
                   width: 26,

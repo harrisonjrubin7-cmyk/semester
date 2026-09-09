@@ -237,16 +237,22 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 682,
+  type: 680,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 222,
+  leading: 221,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 524,
+  space: 521,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 544,
+  shorthand: 519,
 };
 
 /*
+ * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
+ * down and none up: the tab was a second copy of what the map already is, and
+ * the one thing only it could do — standing somewhere and naming it — moved to
+ * `screens/Maps.tsx` as it was rather than being redrawn, so the panel's own
+ * off-scale values went with it and the tab's list rows did not come back.
+ *
  * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
  * One down, none up, and only one because the filter field lived in `<Page>`
  * rather than in the fifteen screens that used it: what went with it here was

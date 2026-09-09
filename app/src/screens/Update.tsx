@@ -17,6 +17,7 @@ import { ReviewSheet } from '../components/ReviewSheet';
 import type { ShotFile } from '../lib/shots';
 import type { StudyCard } from '../lib/types';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
@@ -63,6 +64,10 @@ const HINT: CSSProperties = {
 };
 
 export function AddMaterial() {
+  // A row's padding and hairline, from the layout rather than hard-coded.
+  const row11 = useRowStyle(11);
+  const row10 = useRowStyle(10);
+  const row9 = useRowStyle(9);
   const { state, dispatch, catalog } = useStore();
   const courseId = state.guideId;
   const { guide, updates, figures, extras } = useLive(courseId);
@@ -548,8 +553,7 @@ export function AddMaterial() {
           style={{
             display: 'flex',
             gap: 'var(--sp-5)',
-            padding: '11px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...row11,
             textAlign: 'left',
             opacity: unit === null ? 1 : 0.55,
           }}
@@ -568,8 +572,7 @@ export function AddMaterial() {
             style={{
               display: 'flex',
               gap: 'var(--sp-5)',
-              padding: '11px 0',
-              borderBottom: '1px solid var(--app-line)',
+              ...row11,
               textAlign: 'left',
               opacity: unit === i ? 1 : 0.55,
             }}
@@ -766,7 +769,7 @@ export function AddMaterial() {
       {parsed.cards.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 'var(--sp-6)' }}>
           {parsed.cards.slice(0, 3).map((c) => (
-            <Blueprint key={c.q} style={{ padding: '11px 13px' }}>
+            <Blueprint plain key={c.q} style={{ padding: '11px 13px' }}>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 1.2 }}>
                 {c.q}
               </div>
@@ -895,8 +898,7 @@ export function AddMaterial() {
             justifyContent: 'space-between',
             gap: 'var(--sp-5)',
             fontSize: 'var(--type-base)',
-            padding: '9px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...row9,
           }}
         >
           <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
@@ -960,8 +962,7 @@ export function AddMaterial() {
                 display: 'flex',
                 gap: 'var(--sp-5)',
                 alignItems: 'baseline',
-                padding: '10px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...row10,
               }}
             >
               <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal)' }}>
@@ -997,8 +998,7 @@ export function AddMaterial() {
                 display: 'flex',
                 gap: 'var(--sp-5)',
                 alignItems: 'baseline',
-                padding: '11px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...row11,
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
