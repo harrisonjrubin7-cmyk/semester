@@ -85,7 +85,7 @@ const Quiz = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Quiz
 const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
 const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
 const Search = lazy(() => import('./screens/Me').then((m) => ({ default: m.Search })));
-const Settings = lazy(() => import('./screens/Me').then((m) => ({ default: m.Settings })));
+const Settings = lazy(() => import('./screens/settings/Index').then((m) => ({ default: m.Settings })));
 // The settings pages. Lazy like every other screen: somebody who never opens
 // settings should not download the colour picker.
 const SettingsLook = lazy(() => import('./screens/settings/Look').then((m) => ({ default: m.SettingsLook })));
