@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { Change, ChangeSet, Verdict } from '../lib/changeset';
 import { SectionLabel } from './ui';
+import { Folding } from './Fold';
 
 /**
  * What an import would change, one row at a time, before anything is written.
@@ -122,11 +123,13 @@ export function ReviewSheet({
   if (set.seenBefore) {
     return (
       <div style={{ marginTop: 'var(--sp-7)' }}>
+        <Folding name="ReviewSheet">
         <SectionLabel>Already in</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', opacity: 0.75 }}>
           You have added this exact file to {course} before. Nothing in it is new, so there is
           nothing to review.
         </div>
+        </Folding>
       </div>
     );
   }
@@ -134,18 +137,21 @@ export function ReviewSheet({
   if (set.changes.length === 0) {
     return (
       <div style={{ marginTop: 'var(--sp-7)' }}>
+        <Folding name="ReviewSheet">
         <SectionLabel>Nothing new</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', opacity: 0.75 }}>
           {set.duplicates > 0
             ? `Everything in ${source} is already covered by ${course} — ${set.duplicates} ${set.duplicates === 1 ? 'piece' : 'pieces'} checked, none of them new. That is a good answer, not a failure.`
             : `Nothing came out of ${source} that this could add.`}
         </div>
+        </Folding>
       </div>
     );
   }
 
   return (
     <div style={{ marginTop: 'var(--sp-7)' }}>
+      <Folding name="ReviewSheet">
       <SectionLabel>
         {source} — {course}
       </SectionLabel>
@@ -298,6 +304,7 @@ export function ReviewSheet({
           and start unticked. One of the two is right and this cannot tell which.
         </div>
       )}
+      </Folding>
     </div>
   );
 }

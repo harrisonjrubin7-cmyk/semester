@@ -7,6 +7,7 @@ import { datedItems } from '../lib/select';
 import { tallyBy } from '../lib/review';
 import { isOfficeHours, nextSitting, whenLine, worthGoing } from '../lib/officehours';
 import { CourseTag } from './CourseTag';
+import { Folding } from './Fold';
 
 /**
  * "This is the week to go", when the app can say why.
@@ -57,7 +58,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
   if (reasons.length === 0) return null;
 
   return (
-    <>
+    <Folding name="DropBy">
       <SectionLabel>Office hours worth going to</SectionLabel>
       {reasons.map((r) => {
         const mod = catalog.modules.find((m) => m.course.id === r.courseId);
@@ -124,6 +125,6 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
           </Blueprint>
         );
       })}
-    </>
+    </Folding>
   );
 }

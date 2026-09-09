@@ -15,6 +15,7 @@ import { calibrate, calibrationLine } from '../../lib/worth';
 import { pattern } from '../../lib/postmortem';
 import { readTerm } from '../../lib/term';
 import { basis, document as asDocument, findings, nothingLine, type TermInput } from '../../lib/worked';
+import { Folding } from '../../components/Fold';
 
 /**
  * What actually worked, at the end of a term.
@@ -101,7 +102,7 @@ export function TermReport() {
   const nothing = nothingLine(input);
 
   return (
-    <>
+    <Folding name="Term">
       <TermSwitch />
 
       {/*
@@ -211,6 +212,6 @@ export function TermReport() {
         enough observations was left out rather than softened. There is no score for the term, and no
         comparison with anybody else.
       </div>
-    </>
+    </Folding>
   );
 }

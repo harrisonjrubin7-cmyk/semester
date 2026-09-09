@@ -1,4 +1,5 @@
 import { createContext, useContext, type CSSProperties, type ReactNode } from 'react';
+import { useFolding } from './Fold';
 
 /**
  * Whether we are already inside one of these.
@@ -70,6 +71,7 @@ export function Page({
   bottom = 22,
   className,
   style,
+  folds = true,
 }: {
   /** What this screen is for, in a sentence or two. Under the heading. */
   blurb?: ReactNode;
@@ -101,6 +103,15 @@ export function Page({
    * spacers were all working around.
    */
   bottom?: number;
+  /**
+   * Whether this screen's sections fold.
+   *
+   * True everywhere, and the exception is meant to stay theoretical: a screen
+   * whose headings do not head anything — a reader, a single form — gains a
+   * chevron that does nothing useful. Turn it off there rather than growing
+   * a rule about which screens are which.
+   */
+  folds?: boolean;
 }) {
   const nested = useContext(Inside);
   if (nested && import.meta.env.DEV) {
@@ -122,6 +133,17 @@ export function Page({
    * screens agree on anything about their frame.
    */
   const side = wide ? { padding: '0 var(--page-pad)' } : undefined;
+
+  /*
+   * The screen's own sections, found and made foldable on the way past.
+   *
+   * This is where it happens for the whole app: `children` here is the markup
+   * the screen wrote, headings and all, and this is the last place anybody
+   * can see it before React does. `components/Fold.tsx` explains what it
+   * looks for and why it is a transform rather than three hundred edits.
+   */
+  const folded = useFolding(children);
+  const body = folds ? folded : children;
 
   return (
     <Inside.Provider value>
@@ -162,7 +184,7 @@ export function Page({
         </div>
       )}
 
-      {children}
+      {body}
 
       <div style={{ height: bottom }} />
     </div>

@@ -6,6 +6,7 @@ import { Blueprint } from '../components/Blueprint';
 import { FigureCard } from '../components/FigureCard';
 import { SectionLabel } from '../components/ui';
 import { addedLine } from '../lib/study';
+import { Folding } from '../components/Fold';
 
 /** The note under a heading saying part of what follows arrived later. */
 const SINCE = {
@@ -69,6 +70,7 @@ export function FieldGuide() {
    */
   return (
     <div style={{ marginTop: 18 }}>
+      <Folding name="FieldGuide">
       {/* ── Masthead ─────────────────────────────────────────────────── */}
       <Blueprint style={{ padding: '20px 17px', background: 'var(--app-hero)' }}>
         <div className="kicker">Field guide · {guide.code}</div>
@@ -448,6 +450,7 @@ export function FieldGuide() {
         End of {guide.code}. {guide.source ? `Built from ${guide.source}.` : ''} Anything you add to
         this course appears here too, marked.
       </div>
+      </Folding>
     </div>
   );
 }

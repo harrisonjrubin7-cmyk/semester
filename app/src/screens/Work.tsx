@@ -18,6 +18,7 @@ import { breakDown, critique, type Breakdown } from '../lib/assignment';
 import { ask, configured, provider, routeLabel } from '../lib/claude';
 import { datedItems } from '../lib/select';
 import type { CourseId } from '../lib/types';
+import { Folding } from '../components/Fold';
 
 type Tab = 'plan' | 'file' | 'draft' | 'ask';
 
@@ -400,7 +401,7 @@ function PlanView({
   );
 
   return (
-    <>
+    <Folding name="PlanView">
       <Blueprint style={{ padding: 15, marginTop: 'var(--sp-7)', background: 'var(--app-hero)' }}>
         <div className="kicker">What this is</div>
         <div
@@ -521,6 +522,6 @@ function PlanView({
           {plan.unclear.map((q, i) => row(q, '', `q${i}`))}
         </>
       )}
-    </>
+    </Folding>
   );
 }

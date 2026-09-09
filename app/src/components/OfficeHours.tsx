@@ -2,6 +2,7 @@ import { useStore } from '../state/store';
 import { useRowStyle } from './shell/useShell';
 import { SectionLabel } from './ui';
 import { isOfficeHours, nextSitting, whenLine } from '../lib/officehours';
+import { Folding } from './Fold';
 
 /**
  * A course's office hours, on the course, always.
@@ -23,7 +24,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
     // Nothing to offer on a sample course, which cannot be edited.
     if (!yours) return null;
     return (
-      <>
+      <Folding name="OfficeHours">
         <SectionLabel style={{ margin: '22px 0 6px' }}>Office hours</SectionLabel>
         <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
           None recorded. They are on the syllabus, and having them here means the app can point at
@@ -37,14 +38,14 @@ export function OfficeHours({ courseId }: { courseId: string }) {
         >
           Add them
         </button>
-      </>
+      </Folding>
     );
   }
 
   const next = nextSitting(hours, now);
 
   return (
-    <>
+    <Folding name="OfficeHours">
       <SectionLabel style={{ margin: '22px 0 6px' }}>Office hours</SectionLabel>
       {hours.map((h, i) => (
         <div
@@ -68,6 +69,6 @@ export function OfficeHours({ courseId }: { courseId: string }) {
           Next: {whenLine(next, now)}.
         </div>
       ) : null}
-    </>
+    </Folding>
   );
 }

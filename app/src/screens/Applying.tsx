@@ -38,6 +38,7 @@ import {
   type ApplyKind,
   type Stage,
 } from '../lib/apply';
+import { Folding } from '../components/Fold';
 
 export function Applying() {
   const { state, now } = useStore();
@@ -313,7 +314,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
   };
 
   return (
-    <>
+    <Folding name="AddOne">
       <input
         className="input"
         value={org}
@@ -435,6 +436,6 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
       >
         Add it
       </ActionButton>
-    </>
+    </Folding>
   );
 }

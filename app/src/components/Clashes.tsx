@@ -16,6 +16,7 @@ import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { asItems } from '../lib/apply';
 import { adviceFor, clashes, whenLine, worstAhead, type Clash } from '../lib/clash';
+import { Folding } from './Fold';
 
 function useClashes(): Clash[] {
   const { state, now, catalog, courseCode } = useStore();
@@ -182,7 +183,7 @@ export function ClashList() {
   if (all.length === 0) return null;
 
   return (
-    <>
+    <Folding name="Clashes">
       <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(8px * var(--density, 1))' }}>
         Worth seeing coming
       </SectionLabel>
@@ -195,6 +196,6 @@ export function ClashList() {
           />
         ))}
       </div>
-    </>
+    </Folding>
   );
 }

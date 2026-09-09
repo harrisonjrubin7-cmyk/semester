@@ -42,6 +42,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { useCalendarMove, type Movable } from './calendar/Move';
 import { AddHere } from './calendar/AddHere';
 import type { CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
+import { Folding } from '../components/Fold';
 
 /**
  * The calendar has two independent axes.
@@ -177,6 +178,7 @@ function DayView() {
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
+      <Folding name="DayView">
       <div
         style={{
           display: 'flex',
@@ -459,6 +461,7 @@ function DayView() {
       )}
 
       <div style={{ height: 22 }} />
+      </Folding>
     </div>
   );
 }
@@ -1025,6 +1028,7 @@ function MonthView() {
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
+      <Folding name="MonthView">
       <div
         style={{
           display: 'flex',
@@ -1454,6 +1458,7 @@ function MonthView() {
         See classes and events that day
       </ActionButton>
       <div style={{ height: 22 }} />
+      </Folding>
     </div>
   );
 }

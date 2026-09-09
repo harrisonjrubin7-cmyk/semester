@@ -10,6 +10,7 @@ import { projectGrade, projectionLine } from '../lib/worth';
 import { NO_CUTOFFS, letterFor, systemFor, targetsOf } from '../lib/cutoffs';
 import { Cutoffs } from '../components/Cutoffs';
 import { ScoreField } from '../components/ScoreField';
+import { Folding } from '../components/Fold';
 
 /**
  * What you have, and what the rest has to be.
@@ -58,6 +59,7 @@ export function Grades() {
         });
         return (
           <div key={c.id}>
+            <Folding name="body">
             <SectionLabel style={{ margin: '26px 0 8px' }}>{c.code}</SectionLabel>
 
             <Blueprint style={{ padding: 15, background: 'var(--app-hero)' }}>
@@ -308,6 +310,7 @@ export function Grades() {
                 </div>
               );
             })()}
+            </Folding>
           </div>
         );
       })}

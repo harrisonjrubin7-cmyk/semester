@@ -14,6 +14,7 @@ import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { NO_WINDOW, closing, windowLine } from '../lib/returned';
+import { Folding } from './Fold';
 
 export function ClosingWindows() {
   const { state, dispatch, now, catalog } = useStore();
@@ -27,53 +28,55 @@ export function ClosingWindows() {
   const all = datedItems(catalog, now);
 
   return (
-    <div style={{ marginTop: 14 }}>
-      <SectionLabel style={{ margin: '0 0 8px' }}>Time to say something</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-        {soon.map((r) => {
-          const item = all.find((i) => i.id === r.id);
-          return (
-            <button
-              key={r.id}
-              type="button"
-              className="bare tappable"
-              onClick={() => dispatch({ type: 'openItem', id: r.id })}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                padding: '10px 13px',
-                borderRadius: 'var(--r-md)',
-                border: '1px solid var(--app-warn-line)',
-                background: 'var(--app-warn-wash)',
-              }}
-            >
-              <span
+    <Folding name="Windows">
+      <div style={{ marginTop: 14 }}>
+        <SectionLabel style={{ margin: '0 0 8px' }}>Time to say something</SectionLabel>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          {soon.map((r) => {
+            const item = all.find((i) => i.id === r.id);
+            return (
+              <button
+                key={r.id}
+                type="button"
+                className="bare tappable"
+                onClick={() => dispatch({ type: 'openItem', id: r.id })}
                 style={{
                   display: 'block',
-                  fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                  lineHeight: 1.35,
-                  textWrap: 'pretty',
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '10px 13px',
+                  borderRadius: 'var(--r-md)',
+                  border: '1px solid var(--app-warn-line)',
+                  background: 'var(--app-warn-wash)',
                 }}
               >
-                {item?.title ?? 'A piece of work'}
-                {r.score ? ` · ${r.score}` : ''}
-              </span>
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.7,
-                  marginTop: 3,
-                  textWrap: 'pretty',
-                }}
-              >
-                {windowLine(r, state.regradeWindows[r.courseId] ?? NO_WINDOW, now)}
-              </span>
-            </button>
-          );
-        })}
+                <span
+                  style={{
+                    display: 'block',
+                    fontSize: 'calc(13.5px * var(--text-scale, 1))',
+                    lineHeight: 1.35,
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {item?.title ?? 'A piece of work'}
+                  {r.score ? ` · ${r.score}` : ''}
+                </span>
+                <span
+                  style={{
+                    display: 'block',
+                    fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                    opacity: 0.7,
+                    marginTop: 3,
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {windowLine(r, state.regradeWindows[r.courseId] ?? NO_WINDOW, now)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </Folding>
   );
 }

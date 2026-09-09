@@ -50,6 +50,7 @@ import {
   webcalUrl,
   type Published,
 } from '../lib/subscribe';
+import { Folding } from './Fold';
 
 export function Subscribe() {
   const { state, catalog, now, courseCode, account } = useStore();
@@ -134,60 +135,62 @@ export function Subscribe() {
   const url = feed ? feedUrl(feedBase(), feed.token) : '';
 
   return (
-    <section style={{ marginTop: 'var(--sp-7)' }}>
-      <SectionLabel>Subscribe in a calendar app</SectionLabel>
-      <p style={LEAD}>
-        A link Apple Calendar or Google Calendar checks every few hours, so a date that
-        moves here moves there. Anything you have ticked off stays out of it — the
-        download above still has everything.
-      </p>
+    <Folding name="Subscribe">
+      <section style={{ marginTop: 'var(--sp-7)' }}>
+        <SectionLabel>Subscribe in a calendar app</SectionLabel>
+        <p style={LEAD}>
+          A link Apple Calendar or Google Calendar checks every few hours, so a date that
+          moves here moves there. Anything you have ticked off stays out of it — the
+          download above still has everything.
+        </p>
 
-      {feed ? (
-        <>
-          <p style={FRESH}>
-            {freshness(feed.updatedAt, now)}
-            {typeof feed.events === 'number' ? ` ${feed.events} in the calendar.` : ''}
-          </p>
-          <input
-            className="input"
-            readOnly
-            value={webcalUrl(url)}
-            aria-label="Your calendar feed link"
-            onFocus={(e) => e.currentTarget.select()}
-            style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 'var(--type-xs)' }}
-          />
-          {/*
-            For the phone sitting next to the laptop.
+        {feed ? (
+          <>
+            <p style={FRESH}>
+              {freshness(feed.updatedAt, now)}
+              {typeof feed.events === 'number' ? ` ${feed.events} in the calendar.` : ''}
+            </p>
+            <input
+              className="input"
+              readOnly
+              value={webcalUrl(url)}
+              aria-label="Your calendar feed link"
+              onFocus={(e) => e.currentTarget.select()}
+              style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: 'var(--type-xs)' }}
+            />
+            {/*
+              For the phone sitting next to the laptop.
 
-            `dangerouslySetInnerHTML` because `qrSvg` returns markup this
-            project generated from a string it was handed — there is no user
-            HTML anywhere near it, and building four hundred React elements
-            for a 41×41 grid would cost a layout on every render.
+              `dangerouslySetInnerHTML` because `qrSvg` returns markup this
+              project generated from a string it was handed — there is no user
+              HTML anywhere near it, and building four hundred React elements
+              for a 41×41 grid would cost a layout on every render.
 
-            Hidden from screen readers: it encodes the link that is already in
-            the field above, so announcing it would be the same information a
-            second time with no way to act on it.
-          */}
-          <div style={QR} aria-hidden="true" dangerouslySetInnerHTML={{ __html: qrSvg(webcalUrl(url)) }} />
-          <p style={WARN}>{SHARE_WARNING}</p>
-          {replaced && <p style={WARN}>{REPLACED_LINE}</p>}
-        </>
-      ) : (
-        <p style={FRESH}>Nothing published yet.</p>
-      )}
-
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
-        <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void publish()}>
-          {feed ? 'Publish again' : 'Publish my calendar'}
-        </button>
-        {feed && (
-          <button type="button" className="bare" disabled={busy} onClick={() => void replace()} style={ACT}>
-            REPLACE THIS LINK
-          </button>
+              Hidden from screen readers: it encodes the link that is already in
+              the field above, so announcing it would be the same information a
+              second time with no way to act on it.
+            */}
+            <div style={QR} aria-hidden="true" dangerouslySetInnerHTML={{ __html: qrSvg(webcalUrl(url)) }} />
+            <p style={WARN}>{SHARE_WARNING}</p>
+            {replaced && <p style={WARN}>{REPLACED_LINE}</p>}
+          </>
+        ) : (
+          <p style={FRESH}>Nothing published yet.</p>
         )}
-      </div>
-      {said && <p style={FRESH}>{said}</p>}
-    </section>
+
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
+          <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void publish()}>
+            {feed ? 'Publish again' : 'Publish my calendar'}
+          </button>
+          {feed && (
+            <button type="button" className="bare" disabled={busy} onClick={() => void replace()} style={ACT}>
+              REPLACE THIS LINK
+            </button>
+          )}
+        </div>
+        {said && <p style={FRESH}>{said}</p>}
+      </section>
+    </Folding>
   );
 }
 

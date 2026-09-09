@@ -31,6 +31,7 @@ import {
 } from '../lib/yours';
 import { useRowStyle } from './shell/useShell';
 import type { CourseId } from '../lib/types';
+import { Folding } from './Fold';
 
 export function YourCourses() {
   const { state, dispatch, catalog, tint: palette } = useStore();
@@ -68,7 +69,7 @@ export function YourCourses() {
   if (catalog.courses.length === 0) return null;
 
   return (
-    <>
+    <Folding name="YourCourses">
       <SectionLabel
         style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}
       >
@@ -249,6 +250,6 @@ export function YourCourses() {
           </div>
         );
       })}
-    </>
+    </Folding>
   );
 }

@@ -42,6 +42,7 @@ import {
   untilLine,
   type Timer,
 } from '../lib/clocks';
+import { Folding } from '../components/Fold';
 
 /**
  * The time, once a second, for as long as this screen is open.
@@ -120,7 +121,7 @@ function Timers() {
   };
 
   return (
-    <>
+    <Folding name="Timers">
       <SectionLabel style={{ margin: '0 0 10px' }}>Set one</SectionLabel>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 'var(--sp-6)' }}>
@@ -214,7 +215,7 @@ function Timers() {
           nothing they do reaches your grades or your pace.
         </p>
       )}
-    </>
+    </Folding>
   );
 }
 
@@ -336,7 +337,7 @@ function Alarms() {
   };
 
   return (
-    <>
+    <Folding name="Alarms">
       <SectionLabel style={{ margin: '0 0 10px' }}>Set one</SectionLabel>
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
@@ -510,6 +511,6 @@ function Alarms() {
           Let it notify me in the background
         </button>
       ) : null}
-    </>
+    </Folding>
   );
 }
