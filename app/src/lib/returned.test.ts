@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   NO_WINDOW,
-  backLine,
   closesOn,
   closing,
   daysLeft,
@@ -111,17 +110,6 @@ describe('the order the open ones come back in', () => {
     const econ = newReturned('b', 'econ', on(4).getTime());
     const byCourse = (id: string) => (id === 'core' ? week : NO_WINDOW);
     expect(closing([core, econ], byCourse, on(6)).map((r) => r.id)).toEqual(['a']);
-  });
-});
-
-describe('how much has come back', () => {
-  it('says how little a projection is resting on', () => {
-    expect(backLine([back(), back()], 11)).toBe('2 of 11 graded pieces back so far.');
-    expect(backLine([], 11)).toBe('Nothing marked has come back yet.');
-  });
-
-  it('says nothing where there is nothing graded to count against', () => {
-    expect(backLine([], 0)).toBe('');
   });
 });
 

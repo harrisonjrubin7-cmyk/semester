@@ -50,3 +50,24 @@ export const EXEMPT: Screen[] = [
 export function isExempt(screen: Screen): boolean {
   return EXEMPT.includes(screen);
 }
+
+/**
+ * Screens whose body is a drawing, and wants the room to be one.
+ *
+ * A subset of the exempt list, and a different question from it. Exempt asks
+ * "is this a list?"; this asks "does it get better the wider it is?". A month
+ * grid, a week grid and a map all do — seven columns and a fortnight of
+ * evenings need width, and on a 1440px screen there is width going spare.
+ * A field guide does not: it is prose, and prose past about ninety characters
+ * is harder to read, not easier, which is what `.prose` and the reading-width
+ * setting are already about. A flashcard does not either — it is one card, and
+ * a card the width of a monitor is a poster.
+ *
+ * So the drawn screens take `--canvas` on a desktop and everything else takes
+ * `--measure`. Below 1180px the two are both `100%` and this changes nothing.
+ */
+export const CANVAS: Screen[] = ['calendar', 'maps', 'draw'];
+
+export function isCanvas(screen: Screen): boolean {
+  return CANVAS.includes(screen);
+}

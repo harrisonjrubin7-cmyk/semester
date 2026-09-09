@@ -488,86 +488,12 @@ export function SelectRow<T extends string>({
   );
 }
 
-/** A number chosen by dragging, with what each end means written on it. */
-export function SliderRow({
-  label,
-  value,
-  min,
-  max,
-  step = 1,
-  onChange,
-  low,
-  high,
-  said,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  step?: number;
-  onChange: (n: number) => void;
-  low: string;
-  high: string;
-  /** The current value in words, which is the part anybody reads. */
-  said?: string;
-}) {
-  const grouped = useGrouped();
-  const id = useId();
-  return (
-    <div
-      style={{
-        padding: grouped ? `calc(11px * var(--density, 1)) ${SIDE}px` : 'calc(11px * var(--density, 1)) 0',
-        ...(grouped ? DIVIDER : { borderBottom: '1px solid var(--app-line)' }),
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
-        <label htmlFor={id} style={{ flex: 1, fontSize: 'var(--type-md)' }}>
-          {label}
-        </label>
-        {said ? <Value>{said}</Value> : null}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)', marginTop: 'var(--sp-4)' }}>
-        <span style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.45, flex: 'none' }}>{low}</span>
-        <input
-          id={id}
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          style={{ flex: 1, accentColor: 'var(--app-accent-fill)', minHeight: 28 }}
-        />
-        <span style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.45, flex: 'none' }}>{high}</span>
-      </div>
-    </div>
-  );
-}
-
 /** Something the app knows and you cannot change. */
 export function ValueRow({ label, value }: { label: ReactNode; value: ReactNode }) {
   return (
     <Row>
       <Label label={label} />
       <Value>{value}</Value>
-    </Row>
-  );
-}
-
-/** The one that takes something away. Centred, and the warn colour. */
-export function DestructiveRow({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <Row as="button" onClick={onClick}>
-      <span
-        style={{
-          flex: 1,
-          textAlign: 'center',
-          color: 'var(--app-warn)',
-          fontSize: 'var(--type-md)',
-        }}
-      >
-        {label}
-      </span>
     </Row>
   );
 }

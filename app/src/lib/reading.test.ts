@@ -6,7 +6,6 @@ import {
   plan,
   planLine,
   size,
-  sizeLine,
   typicalExtent,
   weight,
   type Sized,
@@ -123,13 +122,6 @@ describe('how long one takes', () => {
 
   it('does not scale when there is nothing to scale against', () => {
     expect(size(item({ title: 'Read pp. 1–50' }), history, 0).minutes).toBe(60);
-  });
-
-  it('says what it is, briefly', () => {
-    expect(sizeLine(size(item({ title: 'Read ch. 4–6' }), history, 25))).toBe(
-      'about 3h · 3 chapters',
-    );
-    expect(sizeLine(size(item({}), [], 25))).toBe('');
   });
 });
 

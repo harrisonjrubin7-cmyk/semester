@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { EmptyState } from '../components/ui';
 import { allCards } from '../data/catalog';
 import { liveGuide } from '../lib/live';
 import { cardKey, dueFirst } from '../lib/review';
@@ -38,10 +39,10 @@ export function Gap() {
 
   if (!win) {
     return (
-      <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6, lineHeight: 1.55 }}>
-        Nothing to fill. This opens when there is a real gap before your next class — long enough
-        to be worth starting something, short enough that sitting down for it would be a waste.
-      </div>
+      <EmptyState
+        title="Nothing to fill"
+        body="This opens when there is a real gap before your next class — long enough to be worth starting something, short enough that sitting down for it would be a waste."
+      />
     );
   }
 
@@ -128,15 +129,17 @@ function Run({ win }: { win: GapWindow }) {
 
   if (deck.length === 0) {
     return (
-      <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6, lineHeight: 1.55 }}>
-        No cards yet. Import a syllabus and the app builds them out of it.
-      </div>
+      <EmptyState
+        title="No cards yet"
+        body="Import a syllabus and the app builds them out of it."
+        action={{ label: 'Add a course', onClick: () => dispatch({ type: 'go', screen: 'import' }) }}
+      />
     );
   }
 
   if (over) {
     return (
-      <div style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: '70vh' }}>
+      <div style={{ padding: 'var(--page-pad)', display: 'flex', flexDirection: 'column', minHeight: '70vh' }}>
         <div style={{ flex: 1, paddingTop: 40 }}>
           <div className="chrome-text" style={{ fontSize: 'calc(46px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             {runLine(idx, got)}

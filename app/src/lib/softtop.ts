@@ -49,17 +49,17 @@
 
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
-import type { DatedItem, Screen } from './types';
+import type { Screen } from './types';
 import type { Capabilities } from './school';
 import { swipeUnit } from './school';
 import { datedItems, nextClass, upcomingItems } from './select';
 import { overdueCount } from './standing';
+import { termProgress } from './you';
 import { week as weekAhead, headline, pressure, showHours } from './ahead';
 import { standing } from './grades';
 import { isExam } from './runway';
 import { behindLine, howBehind } from './behind';
 import { WAKING_HOURS, hoursOn } from './windows';
-import { DESTINATIONS } from './nav';
 import { tally } from './review';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
@@ -119,23 +119,6 @@ function count(n: number, one: string, many = `${one}s`): string {
 
 /** A count as a stat value. Stats are always numbers; the label carries the noun. */
 const num = (n: number): string => String(n);
-
-/**
- * How far through the term the deadlines say we are.
- *
- * The app has no term start and end — `activeTermId` is still zero, and the
- * one place a term's shape is written down is the spread of its own
- * deadlines. First deadline to last is a proxy and is named as one wherever
- * it is shown ("of the term's deadlines"), rather than claimed as a calendar.
- */
-function termProgress(items: DatedItem[], now: Date): number | null {
-  const times = items.map((i) => i.date.getTime()).filter((t) => !Number.isNaN(t));
-  if (times.length < 2) return null;
-  const first = Math.min(...times);
-  const last = Math.max(...times);
-  if (last <= first) return null;
-  return Math.max(0, Math.min(1, (now.getTime() - first) / (last - first)));
-}
 
 /** The running grade across every course that has one, weighted by nothing. */
 function runningGrade(input: TopInput): { pct: number; scored: number } | null {
@@ -571,17 +554,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           label: 'Alerts',
           figure: num(Object.values(state.notifs).filter(Boolean).length),
           foot: 'kinds switched on',
-        },
-        stats: term,
-      };
-
-    case 'everything':
-      return {
-        hero: {
-          label: 'Everything',
-          meta: `${Object.keys(state.visited).length} opened`,
-          figure: num(DESTINATIONS.length),
-          foot: 'screens in the app',
         },
         stats: term,
       };

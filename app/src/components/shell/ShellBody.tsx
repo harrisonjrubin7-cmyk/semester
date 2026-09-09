@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Screen } from '../../lib/types';
 import { FullBleed } from './Rows';
-import { isExempt } from './exempt';
+import { isCanvas, isExempt } from './exempt';
 import { FoldAll, FoldScope } from '../Fold';
 
 /**
@@ -15,26 +15,41 @@ import { FoldAll, FoldScope } from '../Fold';
  * The chrome around it is untouched: the header and the tab bar are outside
  * this and stay in whichever layout is on.
  *
- * It is also where a folded section learns which screen it is on. The name
- * has to come from outside the screen — a fold is remembered across reloads,
- * so "What's coming" on Today and "What's coming" on a course have to be two
- * different memories — and this already knows. See `components/Fold.tsx`.
+ * ## And how wide it runs
  *
- * And it is where "collapse all" goes, for the same reason `FullBleed` is
- * here: it belongs to the screen rather than to any part of one. `<Page>`
- * would have been the obvious home and is the wrong one — a course, an event
- * and a deadline are sub-views that keep their own frame rather than opening
- * a `Page`, and every one of them has sections. A control that appeared on
- * most screens would be worse than none.
+ * The same wrapper carries the desktop measure. On a phone or a tablet
+ * `.pane-body` is `max-width: 100%` and does nothing; on a desktop it is what
+ * stops a settings row being a metre of hairline with a chevron at the far
+ * end of it, and `.is-canvas` is what lets the month grid be wider than that.
+ *
+ * Here rather than in `<Page>` because eighteen screens — every settings page
+ * among them — draw their own frame and never mount `<Page>` at all, and a
+ * measure that half the app opts out of by accident is worse than none. This
+ * is the one wrapper every screen goes through.
+ *
+ * ## And which sections are folded
+ *
+ * For that last reason twice over. A folded section has to know which screen
+ * it is on — a fold is remembered across reloads, so "What's coming" on Today
+ * and "What's coming" on a course must be two different memories — and this
+ * is the wrapper that knows. See `components/Fold.tsx`.
+ *
+ * "Collapse all" goes here too. `<Page>` would have been the obvious home and
+ * is the wrong one for the same reason the measure is not there: a course, an
+ * event and a deadline keep their own frame rather than opening a `Page`, and
+ * every one of them has sections. A control that appeared on most screens
+ * would be worse than none.
  */
 export function ShellBody({ screen, children }: { screen: Screen; children: ReactNode }) {
-  const body = isExempt(screen) ? <FullBleed>{children}</FullBleed> : children;
+  const cls = isCanvas(screen) ? 'pane-body is-canvas' : 'pane-body';
   return (
     <FoldScope value={screen}>
-      {/* The screen's own gutter, so it lines up with the headings it folds.
-          It draws nothing at all until there are two sections to fold. */}
-      <FoldAll style={{ paddingTop: 'var(--sp-5)', paddingLeft: '18px', paddingRight: '18px' }} />
-      {body}
+      <div className={cls}>
+        {/* The screen's own gutter, so it lines up with the headings it folds.
+            It draws nothing at all until there are two sections to fold. */}
+        <FoldAll style={{ paddingTop: 'var(--sp-5)', paddingLeft: '18px', paddingRight: '18px' }} />
+        {isExempt(screen) ? <FullBleed>{children}</FullBleed> : children}
+      </div>
     </FoldScope>
   );
 }

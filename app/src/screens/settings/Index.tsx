@@ -49,7 +49,7 @@ export function SettingsIndex() {
     // not look like the app it configures is the one screen that cannot afford
     // to be an exception.
     <div>
-      <div style={{ padding: '0 16px calc(14px * var(--density, 1))' }}>
+      <div style={{ padding: '0 var(--page-pad) calc(14px * var(--density, 1))' }}>
         <input
           className="input"
           type="search"
@@ -62,7 +62,7 @@ export function SettingsIndex() {
       </div>
 
       {searching ? (
-        <nav aria-label="Settings search results" style={{ padding: '0 16px' }}>
+        <nav aria-label="Settings search results" style={{ padding: '0 var(--page-pad)' }}>
           {found.length === 0 ? (
             <div
               style={{
@@ -93,7 +93,17 @@ export function SettingsIndex() {
           )}
         </nav>
       ) : (
-        <nav aria-label="Settings" style={{ padding: '0 16px' }}>
+        /*
+          Two columns on a desktop, one everywhere else.
+
+          Six sections down the middle of a window is a scroll for a screen
+          that fits on a phone without one — and the rows themselves are the
+          worst case for a wide column, a label at the far left and a chevron
+          a hand's width away at the right. `.flow-cols` is a column flow
+          rather than a grid because the sections are different heights and a
+          grid would leave a hole under the short one. See `styles/app.css`.
+        */
+        <nav aria-label="Settings" className="flow-cols" style={{ padding: '0 var(--page-pad)' }}>
           <Group>
             <NavRow
               tall

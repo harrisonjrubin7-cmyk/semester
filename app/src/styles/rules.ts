@@ -237,16 +237,27 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 673,
+  type: 671,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 218,
+  leading: 216,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 515,
+  space: 490,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 498,
+  shorthand: 487,
 };
 
 /*
+ * 673/218/515/498 → 673/218/490/494 with the three layouts.
+ *
+ * Twenty-five spacing values and four shorthands gone, none of them
+ * reformatted: they were the twenty-four `padding: 18` a screen wrote to mean
+ * "the page gutter" and the settings pages' `'0 16px'` meaning the same
+ * thing. There is one gutter now — `--page-pad` in `styles/app.css` — and it
+ * is a different number on a phone, a tablet and a desktop, which is a thing
+ * a literal 18 cannot be. Every one of those sites was a screen that could
+ * not follow the layout it was in. Measured on the merged tree, like every
+ * note below.
+ *
  * 674/218/515/498 → 673/218/515/498 when Study's Revise tab was rebuilt and
  * the Tools grid grew the two or three cards that say which tile to press
  * tonight. One down, none up. The Revise tab's hand-set 11.5px captions, a
@@ -262,7 +273,7 @@ export const BUDGET = {
  * blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes live in
  * `app.css` on the scales. The one value the grid sets by hand, the 11.5px
  * icon name, is inside the numbers. Measured rather than derived, like every
- * note below: 674/218/515/498 is what `counts()` reports on the merged tree.
+ * note below: 674/218/515/498 is what `counts()` reported on that tree.
  *
  * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
  * chat. Two numbers down and none up, and neither by reformatting: the

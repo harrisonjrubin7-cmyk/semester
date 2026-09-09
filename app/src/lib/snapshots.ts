@@ -294,11 +294,6 @@ export function newId(): string {
  */
 let dailyTried = false;
 
-/** Reset between tests. Nothing in the app calls this. */
-export function forgetDailyTry(): void {
-  dailyTried = false;
-}
-
 /**
  * Take today's copy, if today has not had one.
  *

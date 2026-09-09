@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { findSetting, isSettingsPage, lights, markLooking, nothingFound, rowFor, sectionOf, SETTINGS, SETTINGS_SCREENS, settingsTitle, takeLooking } from './settings';
+import { findSetting, isSettingsPage, lights, markLooking, nothingFound, SETTINGS, SETTINGS_SCREENS, settingsTitle, takeLooking } from './settings';
 import { ROOTS } from '../state/shape';
 import { rootOf } from './nav';
 
@@ -60,13 +60,6 @@ describe('where the pages sit', () => {
     expect(isSettingsPage('home')).toBe(false);
     expect(isSettingsPage('settings')).toBe(false);
   });
-
-  it('can say which section a page belongs to', () => {
-    expect(sectionOf('setLook')).toBe('General');
-    expect(sectionOf('setGrading')).toBe('Academic');
-    expect(sectionOf('home')).toBe('');
-    expect(rowFor('setAbout')?.label).toBe('About');
-  });
 });
 
 /*
@@ -103,7 +96,10 @@ describe('searching it', () => {
     expect(findSetting('dark')[0].row.screen).toBe('setLook');
     expect(findSetting('font')[0].row.screen).toBe('setLook');
     expect(findSetting('notifications')[0].row.screen).toBe('setAlerts');
-    expect(findSetting('backup')[0].row.screen).toBe('setStorage');
+    // "Backup" lands on the screen that measures the bytes and links the
+    // copies, which is the Data screen since Settings stopped counting them
+    // a second time.
+    expect(findSetting('backup')[0].row.screen).toBe('data');
     expect(findSetting('gpa')[0].row.screen).toBe('setGrading');
   });
 
