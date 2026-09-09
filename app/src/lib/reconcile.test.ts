@@ -169,6 +169,36 @@ describe('compare', () => {
   });
 });
 
+describe('an event that names no day', () => {
+  /*
+   * `daysBetween` splits both sides on `-` and subtracts, so an event whose
+   * date is not a date made `NaN` — and the report told the student their
+   * deadline had moved "NaN days earlier". A stored feed row from an older
+   * build, or a reader that left the field blank, is all it takes.
+   */
+  it('is never paired, so no move is ever reported in NaN days', () => {
+    const r = compare([item('i1', 'Essay 1', 8, 25)], [event('e1', 'Essay 1', '')]);
+    expect(r.moved).toEqual([]);
+    expect(r.moved.map((m) => movedLine(m)).join(' ')).not.toMatch(/NaN/);
+  });
+
+  it('is still listed as something the feed has and the app does not', () => {
+    // Dropping it from the pairing must not drop it from the report.
+    const r = compare([item('i1', 'Essay 1', 8, 25)], [event('e1', 'Essay 1', '')]);
+    expect(r.onlyThere.map((e) => e.id)).toEqual(['e1']);
+  });
+
+  it('does not stop the events beside it from being compared', () => {
+    const r = compare(
+      [item('i1', 'Essay 1', 8, 25)],
+      [event('bad', 'Essay 1', 'sometime'), event('e1', 'Essay 1', '2026-09-27')],
+    );
+    expect(r.moved).toHaveLength(1);
+    expect(r.moved[0].days).toBe(2);
+    expect(r.onlyThere.map((e) => e.id)).toEqual(['bad']);
+  });
+});
+
 describe('movedLine', () => {
   it('says which way it moved, in days', () => {
     const later = compare(
