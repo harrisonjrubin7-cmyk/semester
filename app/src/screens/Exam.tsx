@@ -421,7 +421,15 @@ export function Exam() {
                   const key = marking && String(n) === q.answer;
                   return (
                     <button
-                      key={option}
+                      /*
+                       * The index, which is already this option's identity —
+                       * `chosen === String(n)` and the answer comparison above
+                       * both use it. Two identical options cannot reach here
+                       * today because `readExam` de-duplicates them, but that
+                       * guarantee lives in another file and a key should not
+                       * depend on one.
+                       */
+                      key={`${n}:${option}`}
                       type="button"
                       className="bare tappable"
                       disabled={marking}

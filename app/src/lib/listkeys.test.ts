@@ -20,7 +20,11 @@ import { join } from 'node:path';
  * written out as "Unit".
  *
  * The projections listed here are the ones a person or a model chooses the
- * text of, so two of them can be the same. The fix in every case was to carry
+ * text of, so two of them can be the same. It is a list of what driving the
+ * app has actually turned up, not a proof: a key made of drawn text can be
+ * written in more shapes than a grep knows, and the second batch here came
+ * from using the screens rather than from reading them. Anything new belongs
+ * on the list. The fix in every case was to carry
  * the position alongside, which the surrounding code was already using for
  * everything else — `figMap[i]`, `state.openUnit === i`, `lessons[i]` — and
  * the key alone had dropped.
@@ -35,6 +39,13 @@ const NAKED = [
   't.t',
   'c.q',
   'f.t',
+  // A bare parameter over an array of drawn fields, which the shapes above do
+  // not cover: `[s.author, s.year, s.title, s.project].filter(Boolean).map((bit)
+  // => <span key={bit}>)` in Sources, and a quiz option in Exam. Found by using
+  // the app rather than by reading it — adding two sources whose parse left the
+  // same words in two fields.
+  'bit',
+  'option',
 ];
 
 function tsx(dir: string): string[] {

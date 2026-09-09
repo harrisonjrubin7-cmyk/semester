@@ -196,10 +196,19 @@ export function Sources() {
                         flexWrap: 'wrap',
                       }}
                     >
+                      {/*
+                        Keyed by position as well as by text. These four are
+                        drawn from one source and two of them being the same
+                        string is ordinary — a reading filed under a project
+                        named after its title, an author whose name is the
+                        title. React then omits one, so a row silently loses a
+                        tag. Measured by adding two sources whose parse left
+                        the same words in two of these fields.
+                      */}
                       {[s.author, s.year, s.title, s.project]
                         .filter(Boolean)
-                        .map((bit) => (
-                          <span key={bit} className="tag tag-outline" style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))' }}>
+                        .map((bit, i) => (
+                          <span key={`${i}:${bit}`} className="tag tag-outline" style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))' }}>
                             {bit}
                           </span>
                         ))}

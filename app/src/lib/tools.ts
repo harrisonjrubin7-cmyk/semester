@@ -555,7 +555,11 @@ export function readProposal(call: ToolCall, known: Known, now = new Date()): Pr
       did: `A ${whole}-minute timer is running`,
       verb: 'Start it',
       sort: 'write',
-      action: { type: 'addTimer', label, seconds: whole * 60, at: Date.now() },
+      // The clock this proposal was read against, not a second one. Two in
+      // one function is what `lib/clash.ts` refuses by taking no `now` at
+      // all: "a second clock here could disagree with the one the rest of the
+      // screen is drawn from".
+      action: { type: 'addTimer', label, seconds: whole * 60, at: now.getTime() },
       undo: {
         how: 'appeared',
         field: 'timers',
