@@ -222,11 +222,45 @@ export function Courses() {
           })
           )}
 
-          {/* No "add a course" button here. It was a full-width one under
-              the last card, and it was the second add-affordance on a screen
-              that already has a + in its header. Adding a course is reached
-              by name in search, by `n`, and by the soft layout's own bar —
-              see `lib/nav.ts`, `lib/keys.ts` and `lib/softtop.ts`. */}
+          {/*
+            One quiet way to add a course, at the end of the courses.
+
+            Not the full-width uppercase button this used to be: that read as
+            the screen's main action when it is the rarest thing you do here —
+            four times a semester against a list you open weekly. And not
+            nothing either, which is what it was briefly: the + in the header
+            captures a deadline, so with no link here the courses screen was
+            the one place that talked about courses and could not add one,
+            leaving `n` and search as the only routes on a phone.
+
+            `tap-x`: it is the last item in a vertical list, so the room is
+            beside it — reaching up would claim the last card's own tap area.
+          */}
+          <button
+            type="button"
+            className="bare tap-x"
+            onClick={() => dispatch({ type: 'go', screen: 'import' })}
+            style={{
+              width: 'auto',
+              // Longhand and on the scale: `padding` as a shorthand puts two
+              // raw pixel values past the style budget. 16 + 16 either side of
+              // a --type-sm line is already a fingertip tall, so the tap
+              // overlay adds nothing vertically and cannot reach the card.
+              paddingTop: 'var(--sp-7)',
+              paddingBottom: 'var(--sp-7)',
+              paddingLeft: 'var(--sp-1)',
+              paddingRight: 'var(--sp-1)',
+              marginTop: 'var(--sp-1)',
+              textAlign: 'left',
+              fontSize: 'var(--type-sm)',
+              opacity: 0.6,
+              textDecoration: 'underline dotted',
+              textUnderlineOffset: 3,
+              textDecorationColor: 'currentColor',
+            }}
+          >
+            Add a course from a syllabus
+          </button>
           <div style={{ height: 12 }} />
         </>
     </Page>
