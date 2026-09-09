@@ -345,6 +345,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     latest.current = state;
   });
 
+  /**
+   * The next write came from another tab, so it must not be announced.
+   *
+   * `lib/tabs.ts` states the rule: "A tab that receives a nudge takes what is
+   * on disk. It never pushes back, never merges, and never argues." Answering
+   * a nudge with a nudge is pushing back, and it is what the write effect
+   * below did — it tells the other tabs on every run, including the run caused
+   * by a hydrate that a nudge triggered.
+   *
+   * Two tabs then talk for ever. Measured, both idle, doing nothing at all:
+   * 172 messages each in four seconds, about forty-three round trips a second.
+   *
+   * The cost is not only the noise. `persist` is debounced and clears its
+   * timer on every call, so at that rate the quarter-second never elapses and
+   * `flush` never runs: **with two tabs open the app wrote nothing at all**. A
+   * note typed in either one drew on screen, stayed in memory, and was gone on
+   * reload. Closing the second tab started saving again, which is what made it
+   * look like it worked.
+   *
+   * The write still happens — the receiving tab may hold changes of its own
+   * that the merge kept, and those belong on disk. Only the telling stops.
+   */
+  const heard = useRef(false);
+
   const [asking, setAsking] = useState<{
     sides: Sides;
     say: string;
@@ -366,7 +390,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      * stop being normal. See `state/persist/`.
      */
     if (dbAvailable()) {
-      persistToDb(picked);
+      // Told after the write lands, not before it — see `persist`. A nudge
+      // sent ahead of the write sends the other tab to read a disk that does
+      // not have the change on it yet.
+      persistToDb(picked, heard.current ? undefined : tellOtherTabs);
       // Occasionally, because the number moves slowly and a warning somebody
       // sees every day is one they stop reading. Nothing is shed on this path
       // — this is a warning while there is still room to act on it, which is
@@ -379,7 +406,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setSaveTrouble((was) => (was === said ? was : said));
         });
       }
-      tellOtherTabs();
+      // A run caused by another tab's nudge writes and stays quiet. See
+      // `heard` above.
+      heard.current = false;
       return;
     }
     // Unchanged text means nothing to write, which is what the string dep used
@@ -394,8 +423,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // A second tab of this app is now told, so it can re-read rather than
     // sit on a deadline you ticked a minute ago somewhere else. Only the
     // fact is sent; the disk stays the single copy both tabs agree on. See
-    // `lib/tabs.ts`.
-    tellOtherTabs();
+    // `lib/tabs.ts` — and `heard` above for why a nudge is not answered with
+    // one.
+    if (heard.current) heard.current = false;
+    else tellOtherTabs();
   }, [picked, persisted]);
 
   /**
@@ -417,11 +448,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () =>
       onOtherTab(() => {
         if (!dbAvailable()) {
+          heard.current = true;
           dispatch({ type: 'hydrate', persisted: loadPersisted() });
           return;
         }
         void loadFromDb().then((fresh) => {
-          if (fresh) dispatch({ type: 'hydrate', persisted: fresh });
+          if (!fresh) return;
+          heard.current = true;
+          dispatch({ type: 'hydrate', persisted: fresh });
         });
       }),
     [],

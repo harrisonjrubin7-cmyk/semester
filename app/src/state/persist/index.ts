@@ -177,6 +177,11 @@ async function flush(): Promise<void> {
   if (writes.length === 0) return;
   try {
     await write(writes);
+    // Only now, and only because something was actually written. See
+    // `persist` below on why the order matters.
+    const say = announce;
+    announce = null;
+    say?.();
   } catch {
     // A failed write must never break the app. The state is still in memory,
     // the old localStorage copy is still on disk, and the next change tries
@@ -197,9 +202,32 @@ export function prime(state: Partial<Persisted>): void {
  * second after the typing stops, not one per keystroke. Asynchronous
  * throughout, so nothing here can block a render.
  */
-export function persist(next: Partial<Persisted>): void {
+let announce: (() => void) | null = null;
+
+/**
+ * Save, eventually.
+ *
+ * Debounced and coalesced: typing a note produces one write a quarter of a
+ * second after the typing stops, not one per keystroke. Asynchronous
+ * throughout, so nothing here can block a render.
+ *
+ * `onWrote` is called once the write has landed, and only when there was
+ * something to write. That is what the caller uses to tell the other tabs,
+ * and the ordering is the point. `lib/tabs.ts` claims there is "no ordering
+ * problem between a broadcast and a write" — true of the localStorage path,
+ * where the write is synchronous and done before anyone is told. On this path
+ * the write is a quarter of a second away, so telling the other tab first sent
+ * it to read a disk that did not have the change on it yet: it hydrated the
+ * old copy, and wrote that back over the new one.
+ *
+ * Measured with two tabs open and a note typed in one: the note's row reached
+ * the database with an empty title. The title was on screen, in memory, and
+ * nowhere else.
+ */
+export function persist(next: Partial<Persisted>, onWrote?: () => void): void {
   if (!ready) return;
   pending = next;
+  if (onWrote) announce = onWrote;
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
     timer = null;
@@ -219,6 +247,7 @@ export function persist(next: Partial<Persisted>): void {
 export function stopWriting(): void {
   ready = false;
   pending = null;
+  announce = null;
   if (timer) {
     clearTimeout(timer);
     timer = null;
