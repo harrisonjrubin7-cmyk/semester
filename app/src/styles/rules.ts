@@ -112,7 +112,7 @@ export function sources(dir: string): { path: string; text: string }[] {
  * would be a rule people delete rather than satisfy. Replaced with spaces
  * rather than removed so a reported line number is still the right one.
  */
-function withoutComments(text: string): string {
+export function withoutComments(text: string): string {
   return text
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
     .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length));

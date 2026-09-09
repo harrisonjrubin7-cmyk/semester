@@ -20,11 +20,16 @@ import { tintFor } from '../lib/yours';
 /**
  * Study, in the shape Calendar and Mine already use.
  *
- * It was one long scroll: exam radar, two Claude cards, the guides, then
- * tonight's plan at the very bottom where nobody reached it. The three are
- * different errands — pick a course to work through, be told what to do
- * tonight, ask something — so they are three views of the same subject rather
- * than a queue you scroll past.
+ * It was one long scroll: exam radar, two Claude cards, the guides, then the
+ * revision plan at the very bottom where nobody reached it. The three are
+ * different errands — pick a course to work through, be told what to revise,
+ * ask something — so they are three views of the same subject rather than a
+ * queue you scroll past.
+ *
+ * The middle one was called Tonight until the app had a screen of that name
+ * doing something else: ordering everything outstanding by points of final
+ * grade per hour. This one picks the unit you are weakest at and opens its
+ * cards. Both are real and neither is the other, so only one keeps the word.
  *
  * The exam countdown stays above the switcher, because it is true whichever
  * view you are on and it is the thing you want to see without looking.
@@ -90,7 +95,12 @@ export function Study() {
       <Segmented
         options={[
           { id: 'guides', label: 'Guides' },
-          { id: 'tonight', label: 'Tonight' },
+          // Not "Tonight": that is a screen of its own, and it answers a
+          // different question — which of tonight's hours are worth most
+          // against a grade, across everything outstanding. This is one short
+          // sitting on the unit you are weakest at. Two jobs sharing a word
+          // meant the tab and the screen were a coin toss from the directory.
+          { id: 'revise', label: 'Revise' },
           { id: 'ask', label: 'Tools' },
         ]}
         value={tab}
@@ -348,7 +358,7 @@ export function Study() {
         </>
       )}
 
-      {tab === 'tonight' && (
+      {tab === 'revise' && (
         <>
       <SectionLabel style={{ margin: '20px 0 4px' }}>Tonight’s 25 minutes</SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-6)', textWrap: 'pretty' }}>

@@ -563,8 +563,8 @@ export interface Ephemeral {
    * single long scroll with everything on it.
    */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
-  homeTab: 'today' | 'hours' | 'week' | 'done' | 'brief';
-  coursesTab: 'courses' | 'due' | 'grades';
+  homeTab: 'today' | 'hours' | 'week' | 'done';
+  coursesTab: 'courses' | 'due';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all';
   /** Which shelf of the directory is showing under Everything. */
@@ -612,7 +612,7 @@ export interface Ephemeral {
    * had one open yesterday is an app that has misread what a search is for.
    */
   finder: boolean;
-  studyTab: 'guides' | 'tonight' | 'ask';
+  studyTab: 'guides' | 'revise' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
   /** Unit whose lesson is playing. */
@@ -1364,8 +1364,8 @@ export type Action =
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
-  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
-  | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
+  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
+  | { type: 'setCoursesTab'; tab: 'courses' | 'due' }
   | { type: 'setMeTab'; tab: 'you' | 'all' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
@@ -1394,7 +1394,7 @@ export type Action =
       to?: string;
       incoming?: string;
     }
-  | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
+  | { type: 'setStudyTab'; tab: 'guides' | 'revise' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
   /**
    * Change a task after it exists.
