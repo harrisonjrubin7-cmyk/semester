@@ -152,8 +152,18 @@ export function matchDate(text: string, now: Date): { date: string; word: string
     return { date: plus(1), word: /tomorrow/.test(s) ? 'tomorrow' : 'tmrw' };
   }
 
-  const inDays = /\bin\s+(\d{1,2})\s+days?\b/.exec(s);
-  if (inDays) return { date: plus(Number(inDays[1])), word: inDays[0] };
+  /*
+   * "in 3 days", and "in 2 weeks" beside it.
+   *
+   * The days form was here alone, and a week is how the other half of these
+   * get said — "problem set 3 due in 2 weeks" read as no date at all, and the
+   * whole phrase stayed in the title, so the row was called "problem set 3
+   * due in 2 weeks" and turned up nowhere. Same rule, times seven.
+   */
+  const counted = /\bin\s+(\d{1,2})\s+(day|week)s?\b/.exec(s);
+  if (counted) {
+    return { date: plus(Number(counted[1]) * (counted[2] === 'week' ? 7 : 1)), word: counted[0] };
+  }
 
   const weekday = /\b(next\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)\b/.exec(s);
   if (weekday) {
@@ -270,9 +280,30 @@ export function capture(text: string, courses: Named[], now: Date): Caught {
   const date = matchDate(raw, now);
   const time = matchTime(raw);
 
+  /*
+   * The word that introduced the date goes with the date.
+   *
+   * Each match was cut out of the line on its own, and the little word in
+   * front of it was left standing: "essay draft due friday 5pm" became a task
+   * called *essay draft due*, and "advisor meeting oct 2 at 10:30am" one
+   * called *advisor meeting at*. Both measured through the sheet, and both
+   * then read that way on every screen that lists them, which is a small
+   * thing that makes an app feel like it is not paying attention.
+   *
+   * Only immediately in front, and only these words, which do nothing in a
+   * line but point at a date or a clock. That keeps "essay on federalism
+   * oct 6" — where `on` belongs to the essay and is nowhere near the date —
+   * exactly as it was.
+   */
+  const LEAD_IN = /\b(due|at|on|by|before|from|until|till)\s+$/i;
   let left = raw;
   for (const word of [course?.word, date?.word, time?.word]) {
-    if (word) left = left.replace(new RegExp(escape(word), 'i'), ' ');
+    if (!word) continue;
+    const found = new RegExp(escape(word), 'i').exec(left);
+    if (!found) continue;
+    const before = left.slice(0, found.index);
+    const lead = LEAD_IN.exec(before);
+    left = `${lead ? before.slice(0, lead.index) : before} ${left.slice(found.index + found[0].length)}`;
   }
   // The kind's own words stay in the title — "PS4" is the name of the thing,
   // not just its category, and stripping it leaves a row called nothing.
