@@ -9,7 +9,8 @@ import { hasTime } from '../lib/duetime';
 import { Folding } from './Fold';
 
 /**
- * The week's deadlines, under the grid it cannot draw them on.
+ * The week's deadlines and your own tasks, under the grid it cannot draw them
+ * on.
  *
  * The grid holds spans: a class occupies an hour and can be a rectangle. A
  * deadline is a moment, so the week view left them out entirely and pointed
@@ -25,9 +26,19 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
   const { state, now, catalog, courseCode } = useStore();
   const row = useRowStyle(8);
 
+  /*
+   * Your tasks are here as well as on the grid, and the two do not overlap.
+   *
+   * The grid can only draw a task that names an hour — most do not, and
+   * "before work" is a real answer to when — so without this the week showed
+   * a day of your own work as an empty column. Every task dated in the week
+   * is listed, the timed ones included: a printed week is the whole of what
+   * you can see when it is on a wall, and "it is drawn above" is no answer
+   * there.
+   */
   const days = useMemo(
-    () => dueByDay(datedItems(catalog, now), start),
-    [catalog, now, start],
+    () => dueByDay(datedItems(catalog, now), start, state.tasks),
+    [catalog, now, start, state.tasks],
   );
 
   return (
@@ -56,13 +67,13 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
               fontSize: 'var(--type-xs)',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              opacity: d.items.length > 0 ? 0.8 : 0.35,
+              opacity: d.items.length + d.tasks.length > 0 ? 0.8 : 0.35,
             }}
           >
             {d.label}
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            {d.items.length === 0 ? (
+            {d.items.length + d.tasks.length === 0 ? (
               <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.3 }}>—</span>
             ) : (
               d.items.map((i) => (
@@ -89,6 +100,29 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
                 </div>
               ))
             )}
+            {/* Yours, under the syllabus's, and never mixed into them: the
+                tag is the whole point, because a week you can check against
+                the PDF is a week that says which lines came out of it. */}
+            {d.tasks.map((t) => (
+              <div
+                key={t.id}
+                style={{
+                  fontSize: 'var(--type-base)',
+                  lineHeight: 'var(--leading-normal)',
+                  marginBottom: 'var(--sp-1)',
+                  opacity: t.done ? 0.45 : 1,
+                  textDecoration: t.done ? 'line-through' : 'none',
+                }}
+              >
+                <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
+                  Yours
+                </span>
+                {t.title}
+                {t.time.trim() && (
+                  <span style={{ opacity: 0.5, fontSize: 'var(--type-xs)' }}> {t.time.trim()}</span>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       ))}

@@ -223,3 +223,24 @@ export const EVENTS: CampusEvent[] = [
     ticket: 'Student ticket claim opens Monday 9 AM',
   },
 ];
+
+/**
+ * Which school each bundled campus calendar belongs to.
+ *
+ * The list above is Vanderbilt's — a Commodores football schedule is not a
+ * fact about universities in general — and it used to be reached through the
+ * sample-semester flag, on the reasoning that the sample is a Vanderbilt
+ * semester. That is true and it was still the wrong key: a Vanderbilt student
+ * who imports their own four syllabi turns the sample off, and turning it off
+ * took their athletics calendar with it. The Campus chip then answered every
+ * one of its filters — Athletics, Clubs, University, Saved — with nothing, on
+ * a screen that had been full the day before.
+ *
+ * So the calendar hangs off the school, which is what it is about. Anyone
+ * studying somewhere the app has no listings for gets an empty campus source
+ * rather than somebody else's football, and the sample semester still carries
+ * Vanderbilt's calendar for the person who is only looking around.
+ */
+export const CAMPUS_CALENDARS: Record<string, CampusEvent[]> = {
+  vanderbilt: EVENTS,
+};

@@ -14,7 +14,25 @@ import { useAI } from './store';
  * come from that screen's own provider, so they are about what is actually on
  * it rather than a fixed list that would be wrong four screens out of five.
  */
-export function Opening({ onPick, tight = false }: { onPick: (q: string) => void; tight?: boolean }) {
+export function Opening({
+  onPick,
+  tight = false,
+  big = false,
+}: {
+  onPick: (q: string) => void;
+  tight?: boolean;
+  /**
+   * The full-screen reading of it: a greeting the size of a greeting.
+   *
+   * The sheet's copy is a panel over a screen and its first line is one line
+   * of a stack — `tight` is that. The tab has the window to itself and the
+   * opening is centred in it, where a 14px sentence floating in the middle of
+   * a phone reads as a caption for something missing. Same words, same three
+   * suggestions, same disclosure; the difference is only how much room the
+   * surface has to give them.
+   */
+  big?: boolean;
+}) {
   const ai = useAI();
   const suggestions = ai.suggestions().slice(0, 4);
 
@@ -35,9 +53,11 @@ export function Opening({ onPick, tight = false }: { onPick: (q: string) => void
     <div style={{ marginBottom: tight ? 'var(--sp-7)' : 'calc(var(--sp-7) * 1.6)' }}>
       <div
         style={{
-          fontSize: tight ? 'var(--type-lg)' : 'var(--type-md)',
+          fontSize: big ? 'var(--type-xl)' : tight ? 'var(--type-lg)' : 'var(--type-md)',
+          fontFamily: big ? 'var(--font-display)' : undefined,
           lineHeight: 'var(--leading-tight)',
           textWrap: 'pretty',
+          marginBottom: big ? 'var(--sp-3)' : undefined,
         }}
       >
         {seen ? `You are on ${seen}.` : 'Ask about your term.'}
@@ -48,7 +68,7 @@ export function Opening({ onPick, tight = false }: { onPick: (q: string) => void
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--sp-4)',
-            marginTop: 'var(--sp-6)',
+            marginTop: big ? 'var(--sp-7)' : 'var(--sp-6)',
           }}
         >
           {suggestions.map((s) => (
@@ -59,11 +79,16 @@ export function Opening({ onPick, tight = false }: { onPick: (q: string) => void
               onClick={() => onPick(s)}
               style={{
                 height: 'auto',
-                padding: 'var(--sp-5) var(--sp-6)',
+                // A thumb, not a hairline. 10px of padding was fine as a row
+                // in a stack of rows; as the only thing on an empty screen a
+                // suggestion is the thing you are being invited to tap.
+                padding: big ? 'var(--sp-6) var(--sp-7)' : 'var(--sp-5) var(--sp-6)',
                 textAlign: 'left',
                 justifyContent: 'flex-start',
-                fontSize: 'var(--type-sm)',
+                fontSize: big ? 'var(--type-md)' : 'var(--type-sm)',
                 lineHeight: 'var(--leading-normal)',
+                // Round, to match the composer they are a shortcut to.
+                borderRadius: big ? '16px' : undefined,
               }}
             >
               {s}

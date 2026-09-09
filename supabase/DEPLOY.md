@@ -1,14 +1,61 @@
 # Deploying the backend
 
-Two Edge Functions, the SQL they read, and a scheduler. Neither function needs
-the app redeployed — the browser calls them by URL — but neither does anything
-useful until its secrets are set, and both fail *closed* rather than open when
-they are missing.
+Edge Functions, the SQL they read, and a scheduler. No function needs the app
+redeployed — the browser calls them by URL — but none does anything useful
+until its secrets are set, and each fails *closed* rather than open when they
+are missing.
 
 ## What is live
 
     claude   ACTIVE, v1, verify_jwt off
     push     ACTIVE, v1, verify_jwt off
+
+## Deploying a function without a laptop
+
+`.github/workflows/functions.yml` runs the same command from Actions:
+**Actions → Deploy Edge Functions → Run workflow**, with the function's name
+(`fetchcal` by default). It also runs itself when a push to main changes a
+function's own directory, and it deploys only the directories that changed.
+
+It needs one secret, once: `SUPABASE_ACCESS_TOKEN`, from
+[supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens),
+added under Settings → Secrets and variables → Actions. That is an *account*
+credential — it can deploy — so it lives in a secret and nowhere else. It is
+neither the publishable key (which is public by design and committed) nor the
+service key (which must never be anywhere). Without it the workflow warns and
+deploys nothing rather than failing main.
+
+The project is read from the `SUPABASE_PROJECT_REF` variable if set, and
+otherwise off `VITE_SUPABASE_URL` — so a fork deploys to its own project.
+
+## Not deployed yet: `fetchcal`
+
+    supabase functions deploy fetchcal
+
+`supabase/functions/fetchcal/index.ts`. It reads **one pasted calendar link**
+on behalf of a signed-in device — the Connect screen's *Subscribe* button.
+
+Why it has to exist at all: a calendar server sends no CORS headers, so the
+browser is refused before the request leaves. The dev server forwards that one
+request itself (`/feed?url=` in `app/vite.config.ts`), which is why pasting a
+Brightspace or Outlook link works on a laptop running `npm run dev` and, until
+this is deployed, fails on the built app.
+
+It takes no secret and needs no SQL. It verifies the caller's own JWT, refuses
+anything that is not https to a public host, refuses a redirect that lands
+somewhere private, caps the read at a megabyte and fifteen seconds, and returns
+the body only if it is a `VCALENDAR` — so it is a calendar reader rather than a
+URL proxy that happens to fetch calendars. It never logs the address, because a
+feed URL carries a token that is the whole of the authentication for that
+person's calendar.
+
+`verify_jwt` should be **off** for the same reason as the other two: the
+function checks the token itself, and the platform check would reject the CORS
+preflight, which carries no `Authorization` header.
+
+Until it is deployed the app degrades rather than breaks — links from hosts
+that do allow the browser still work, the screen says what failed, and adding a
+downloaded `.ics` needs no network at all.
 
 `verify_jwt` is off on both, and on both it is the platform check that is off,
 not authentication:
