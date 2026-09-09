@@ -152,6 +152,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
       <input
         className="input"
         type="date"
+        aria-label="When it is due"
         value={due}
         onChange={(e) => setDue(e.target.value)}
         style={{ width: '100%' }}

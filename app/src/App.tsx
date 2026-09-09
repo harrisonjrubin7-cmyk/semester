@@ -67,6 +67,7 @@ const EventDetail = lazy(() => import('./screens/Calendar').then((m) => ({ defau
 const Exam = lazy(() => import('./screens/Exam').then((m) => ({ default: m.Exam })));
 const Export = lazy(() => import('./screens/Export').then((m) => ({ default: m.Export })));
 const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap })));
+const Grades = lazy(() => import('./screens/Grades').then((m) => ({ default: m.Grades })));
 const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ default: m.Groupwork })));
 const Guide = lazy(() => import('./screens/Guide').then((m) => ({ default: m.Guide })));
 const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
@@ -304,6 +305,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: `${provider()} · this term`, title: 'Ask Claude' };
     case 'work':
       return { kicker: about('assignments'), title: 'Work on it' };
+    case 'grades':
+      return { kicker: 'Weights from your syllabi', title: 'Grades' };
     case 'maps':
       return { kicker: 'Campus, city, and how to get there', title: 'Getting there' };
     case 'mail':
@@ -471,7 +474,7 @@ function Header() {
       {canGoBack && (
         <button
           type="button"
-          className="btn btn-ghost btn-icon"
+          className="btn btn-ghost btn-icon tap"
           onClick={() => {
             // The browser's history, not the app's. Every navigation now
             // writes an entry, so going back any other way would leave the
@@ -553,7 +556,17 @@ function Header() {
       </div>
 
       {showActions && (
-        <div style={{ display: 'flex', gap: 'var(--sp-1)', flex: 'none', alignItems: 'center' }}>
+        /*
+         * The gap is load-bearing, not taste. `.btn-icon` draws 36px, and the
+         * `.tap` overlay on each of these grows the *hit* area to 44px — 4px
+         * past the button on each side. At the 2px gap this row used to have,
+         * the pitch was 38px and those overlays ran into each other: the later
+         * button won the overlap, so a thumb landing on the right of Search
+         * pressed Alerts. Eight puts the pitch at 44 and the overlays exactly
+         * meet. Tightening this re-breaks the targets without changing
+         * anything you can see, so `lib/header.test.ts` holds it.
+         */
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', flex: 'none', alignItems: 'center' }}>
           {/* Before the icons, because it is the only thing here that is
               counting. Renders nothing at all unless a timer is running. */}
           <Running />
@@ -568,7 +581,7 @@ function Header() {
               routes: by name in search, `n`, and the soft layout's bar. */}
           <button
             type="button"
-            className="btn btn-ghost btn-icon"
+            className="btn btn-ghost btn-icon tap"
             onClick={() => dispatch({ type: 'quickAdd', open: true })}
             aria-label="Add something in one line"
           >
@@ -576,7 +589,7 @@ function Header() {
           </button>
           <button
             type="button"
-            className="btn btn-ghost btn-icon"
+            className="btn btn-ghost btn-icon tap"
             onClick={() => dispatch({ type: 'go', screen: 'search' })}
             aria-label="Search"
           >
@@ -585,7 +598,7 @@ function Header() {
           {atRoot && (
           <button
             type="button"
-            className="btn btn-ghost btn-icon"
+            className="btn btn-ghost btn-icon tap"
             onClick={() => dispatch({ type: 'go', screen: 'notifs' })}
             aria-label="Alerts"
             style={{ position: 'relative' }}
@@ -608,7 +621,7 @@ function Header() {
           {state.nav === 'feed' && atRoot && (
             <button
               type="button"
-              className="btn btn-ghost btn-icon"
+              className="btn btn-ghost btn-icon tap"
               onClick={() => dispatch({ type: 'go', screen: 'me' })}
               aria-label="Me"
             >
@@ -811,6 +824,8 @@ function CurrentScreen() {
       return <Ask />;
     case 'work':
       return <Work />;
+    case 'grades':
+      return <Grades />;
     case 'maps':
       return <Maps />;
     case 'mail':
@@ -1053,6 +1068,26 @@ export default function App() {
     // `=== 'parchment'`, so Paper and Fog — both light — got a dark scrollbar
     // and a dark overscroll edge.
     root.style.colorScheme = ground(JSON.parse(lookKey).ground).light ? 'light' : 'dark';
+
+    /*
+     * And the other half of the browser's chrome.
+     *
+     * `theme-color` is what paints the title bar of an installed window and
+     * the bar behind the status text on Android — and it was a fixed
+     * `#0a0b0e` in `index.html`, chosen when every ground was dark. There are
+     * five light ones now, so Paper, Parchment, Bone, Industry and Fog each
+     * installed as a white app under a near-black bar. Exactly the fault the
+     * comment above is about, in the one place that is markup rather than a
+     * style property.
+     *
+     * `--app-void` rather than `--app-bg`: void is what `body` actually
+     * paints, so the bar matches the pixel beside it instead of the panel
+     * colour a shade off it.
+     */
+    const painted = getComputedStyle(root).getPropertyValue('--app-void').trim();
+    if (painted) {
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', painted);
+    }
   }, [lookKey, state.textSize, moreContrast]);
 
   if (state.screen === 'onboarding') {

@@ -6,6 +6,7 @@ const fresh: Facts = { ...NOTHING_YET };
 const settled: Facts = {
   courses: 4,
   hasExam: true,
+  hasGrades: true,
   notes: 6,
   sittings: 2,
   ownThings: 9,
@@ -58,6 +59,11 @@ describe('earning a screen', () => {
   it('opens the runway on the first exam, not on the first course', () => {
     expect(unlocked('runway', { ...fresh, courses: 3 })).toBe(false);
     expect(unlocked('runway', { ...fresh, courses: 3, hasExam: true })).toBe(true);
+  });
+
+  it('opens the projection on the first grade', () => {
+    expect(unlocked('grades', { ...fresh, courses: 3 })).toBe(false);
+    expect(unlocked('grades', { ...fresh, hasGrades: true })).toBe(true);
   });
 
   it('waits for two courses before offering to sort out a bad week', () => {

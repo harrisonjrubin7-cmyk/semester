@@ -15,6 +15,9 @@ import { nextExam, testedIn } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
 import { cardKey, dueCount } from '../lib/review';
 import { destinationsIn } from '../lib/nav';
+import { suggest, type Coming } from '../lib/toolnow';
+import { codeOf } from '../data/catalog';
+import { upcomingItems } from '../lib/select';
 import {
   MIN_STRETCH_MINUTES,
   doneToday,
@@ -44,6 +47,7 @@ const BUDGETS = [10, 25, 45];
  * button that does a run that long without a decision between every unit.
  */
 const PLAN_ROWS = 8;
+
 
 /**
  * Study, in the shape Calendar and Mine already use.
@@ -133,6 +137,32 @@ export function Study() {
   // shuffle of one deck, which is a shuffle of nothing.
   const mixable = !only && new Set(ranked.map((s) => s.courseId)).size > 1;
 
+  /*
+   * The fortnight in front of the student, in the shape `lib/toolnow.ts`
+   * wants: what, whose, what kind, how far off. Everything it decides comes
+   * off these rows, so a suggestion can always be checked against a syllabus.
+   */
+  const outstanding = useMemo<Coming[]>(
+    () =>
+      upcomingItems(catalog, now)
+        .filter((i) => !state.done[i.id])
+        .map((i) => ({
+          id: i.id,
+          title: i.title,
+          kind: i.kind,
+          code: codeOf(catalog, i.c),
+          courseId: i.c,
+          daysAway: i.daysAway,
+          when: i.dueShort,
+        })),
+    [catalog, now, state.done],
+  );
+  const picks = suggest(outstanding, { sources: state.sources.length });
+  /** Every tool this tab offers, minus Study itself — this is Study. */
+  const tools = [...destinationsIn('Study'), ...destinationsIn('Make')].filter(
+    (d) => d.screen !== 'study',
+  );
+  const toolByScreen = new Map(tools.map((d) => [d.screen, d]));
   if (catalog.empty) return <FirstRun where="to study" />;
   const tab = state.studyTab;
 
@@ -223,16 +253,91 @@ export function Study() {
             them put twelve in the space four were using, and give each one a
             position you can point at rather than read for. See
             `components/nav/AppGrid.tsx`.
+
+            What neither fixed is that a grid, like the list before it, says
+            what each tool *is* and never what it is *for, now*. At eleven at
+            night four days before a midterm, "Practice paper" and "Draw it"
+            are not equally likely, and the app holds every fact needed to
+            know which — so two or three tiles are said out loud above the
+            grid, with the deadline that asked for them. See `lib/toolnow.ts`.
           */}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
-            Everything the app can do with a course, in one place.
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
+            Everything the app can do with a course. What is at the top is picked from what you
+            actually have due.
           </div>
+
+          {picks.length > 0 && (
+            <>
+              <SectionLabel>Because of this fortnight</SectionLabel>
+              {picks.map((p) => {
+                const d = toolByScreen.get(p.screen);
+                if (!d) return null;
+                return (
+                  <Blueprint
+                    plain
+                    key={p.screen}
+                    onClick={() => dispatch({ type: 'go', screen: p.screen, courseId: p.courseId })}
+                    style={{
+                      padding: 'var(--sp-6) var(--sp-7)',
+                      marginTop: 'var(--sp-5)',
+                      display: 'flex',
+                      gap: 'var(--sp-6)',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {/* The course's own colour when the reason belongs to one
+                        course, so the card and the deadline it came from are
+                        the same thing on the eye. */}
+                    <span
+                      style={{
+                        width: 8,
+                        height: 34,
+                        background: p.courseId ? tint(p.courseId).edge : 'var(--chrome)',
+                        flex: 'none',
+                      }}
+                    />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span className="kicker" style={{ display: 'block' }}>
+                        {d.label}
+                      </span>
+                      {/* The reason, not the blurb. What the tool is matters
+                          less here than which deadline sent you to it, and the
+                          deadline is quoted so it can be checked. */}
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: 'var(--type-base)',
+                          lineHeight: 'var(--leading-normal)',
+                          marginTop: 'var(--sp-2)',
+                          textWrap: 'pretty',
+                        }}
+                      >
+                        {p.why}
+                      </span>
+                    </span>
+                    <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+                  </Blueprint>
+                );
+              })}
+            </>
+          )}
+
+          {/*
+            The grid keeps every tool, including the two or three said above
+            it. That is deliberate and it is the one place this tab does not
+            follow "one thing, one door": a grid's value is positional — Email
+            is bottom-left and stays bottom-left — and a tile that moves
+            because a deadline moved is a grid you have to read again every
+            night. So the cards above are a shortcut past the grid, never a
+            hole in it.
+          */}
           <AppGrid
-            apps={[...destinationsIn('Study'), ...destinationsIn('Make')].filter((d) => d.screen !== 'study')}
+            apps={tools}
             onOpen={(d) => dispatch({ type: 'go', screen: d.screen })}
           />
         </>
       )}
+
 
       {tab === 'guides' && (
         <>
@@ -518,14 +623,9 @@ export function Study() {
               : 'Everything here is answered and scheduled ahead. Come back when something comes round — or drill it anyway, below.'}
           </div>
           {mine.length > 0 && (
-            <button
-              type="button"
-              className="btn btn-secondary btn-block"
-              onClick={() => startStretch(mine[0])}
-              style={{ height: 42, marginTop: 'var(--sp-6)' }}
-            >
+            <ActionButton onClick={() => startStretch(mine[0])} style={{ marginTop: 'var(--sp-6)' }}>
               Drill {mine[0].code} anyway
-            </button>
+            </ActionButton>
           )}
         </Blueprint>
       ) : (
@@ -652,17 +752,15 @@ export function Study() {
       */}
       {mixable && (
         <>
-          <button
-            type="button"
-            className="btn btn-secondary btn-block"
+          <ActionButton
             onClick={() => {
               dispatch({ type: 'mixCourses', on: true });
               dispatch({ type: 'startDrill', unit: null });
             }}
-            style={{ height: 42, marginTop: 'var(--sp-6)' }}
+            style={{ marginTop: 'var(--sp-6)' }}
           >
             Mix every course in one run
-          </button>
+          </ActionButton>
           <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Cards from all your courses, shuffled together, due ones first. Harder than one
             course at a time, and closer to what an exam asks of you.
@@ -694,15 +792,14 @@ export function Study() {
           plan is the answer, and this is the working. */}
       {alsoRanked.length > 0 && (
         <>
-          <button
-            type="button"
-            className="btn btn-block"
+          <ActionButton
+            tone="ghost"
             onClick={() => setShowRest((was) => !was)}
             aria-expanded={showRest}
-            style={{ height: 40, marginTop: 'var(--sp-5)', background: 'transparent' }}
+            style={{ marginTop: 'var(--sp-5)' }}
           >
             {showRest ? 'Hide what did not fit' : `What did not fit (${alsoRanked.length})`}
-          </button>
+          </ActionButton>
           {showRest &&
             alsoRanked.map((s) => (
               <button

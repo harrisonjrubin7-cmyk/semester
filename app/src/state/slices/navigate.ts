@@ -61,7 +61,10 @@ export function navigate(state: State, action: Action): State | null {
       return { ...state, finder: action.open };
 
     case 'go':
-      return push(state, action.screen);
+      return push(
+        action.courseId ? { ...state, guideId: action.courseId } : state,
+        action.screen,
+      );
 
     /**
      * The browser went somewhere, so the app follows it there.

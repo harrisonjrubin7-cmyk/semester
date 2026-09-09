@@ -237,7 +237,7 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 674,
+  type: 673,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 218,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
@@ -247,6 +247,15 @@ export const BUDGET = {
 };
 
 /*
+ * 674/218/515/498 → 673/218/515/498 when Study's Revise tab was rebuilt and
+ * the Tools grid grew the two or three cards that say which tile to press
+ * tonight. One down, none up. The Revise tab's hand-set 11.5px captions, a
+ * 1.25 line height and an 11px padding went with the rows that carried them;
+ * the new cards above the grid set their padding from `--sp-*` and their
+ * headings take `SectionLabel`'s own margin rather than overriding it, so
+ * neither the spacing nor the shorthand count moved. Measured on the merged
+ * tree, like the note below and for the same reason.
+ *
  * The Tools tab became a home screen, and its four are folded into every
  * measurement below rather than added to any of them: thirteen cards drawn by
  * hand in `screens/Study.tsx` — each with its own padding, its own 13.5px

@@ -81,6 +81,7 @@ export function Sources() {
           <SectionLabel>Course</SectionLabel>
           <select
             className="input"
+            aria-label="Course"
             value={courseId ?? ''}
             onChange={(e) => {
               setCourseId(e.target.value || null);

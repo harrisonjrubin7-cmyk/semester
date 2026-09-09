@@ -35,8 +35,10 @@ root, which is why nothing in the app reads a leading-slash path directly — se
 | `chats/` | The design conversation that produced it. |
 
 `project/` and `chats/` are the source material and are not built or imported by
-the app. The one thing the app does take from `project/` verbatim is the Industry
-stylesheet, copied to `app/src/styles/industry.css`.
+the app. The one thing the app does take from `project/` is the Industry
+stylesheet, copied to `app/src/styles/industry.css` — verbatim but for its font
+import, which is now `app/src/styles/typefaces.css` and served from this origin
+rather than from Google.
 
 ## What was built, and from what
 
@@ -80,7 +82,7 @@ arithmetic rather than by eye. See
 
 ## Audio
 
-Five recordings ship in `app/public/audio`, wired into each guide's Listen mode
+Eight recordings ship in `app/public/audio`, wired into each guide's Listen mode
 with chapter marks that seek:
 
 - The four original narrated readings.
