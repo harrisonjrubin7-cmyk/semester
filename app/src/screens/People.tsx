@@ -13,6 +13,7 @@
  */
 
 import { useState } from 'react';
+import { dateToIso } from '../lib/date';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -374,7 +375,7 @@ function LettersTab() {
                             // fact rather than something to remember later.
                             patch:
                               a.id === 'asked' && !l.askedOn
-                                ? { stage: a.id, askedOn: new Date(now).toISOString().slice(0, 10) }
+                                ? { stage: a.id, askedOn: dateToIso(new Date(now)) }
                                 : { stage: a.id },
                           })
                         }

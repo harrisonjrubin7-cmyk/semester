@@ -17,6 +17,7 @@
  */
 
 import type { Catalog } from '../data/catalog';
+import { dateToIso } from './date';
 import type { Appointment, DatedItem, Note, PersonalTask } from './types';
 import { standingOf, type DoneMap } from './standing';
 import { NO_TIME } from './duetime';
@@ -76,7 +77,10 @@ export function taskCsv(tasks: PersonalTask[], code: (id: string) => string) {
 export function notesMarkdown(notes: Note[], code: (id: string) => string): string {
   if (notes.length === 0) return '# Notes\n\nNothing written yet.\n';
   const parts = notes.map((n) => {
-    const when = new Date(n.updated || n.created).toISOString().slice(0, 10);
+    // The day the note was written where the person writing it was, which
+    // `toISOString` is not: it converts to UTC first, so a note written on a
+    // Tuesday evening in Nashville exported as Wednesday.
+    const when = dateToIso(new Date(n.updated || n.created));
     const tag = n.courseId ? ` · ${code(n.courseId)}` : '';
     return `## ${n.title || 'Untitled'}\n\n_${when}${tag}_\n\n${n.body.trim() || '(empty)'}\n`;
   });

@@ -28,6 +28,7 @@
  */
 
 import { ask } from './claude';
+import { dateToIso } from './date';
 
 export interface Deliverable {
   what: string;
@@ -159,7 +160,10 @@ export async function breakDown(
   unitNames: string[],
   signal?: AbortSignal,
 ): Promise<Breakdown> {
-  const today = new Date().toISOString().slice(0, 10);
+  // The student's own calendar day, not the UTC one. `toISOString` converts
+  // first, so any evening west of Greenwich told the model that today was
+  // tomorrow — and it works out what is left of a deadline from this.
+  const today = dateToIso(new Date());
   const reply = await ask({
     signal,
     maxTokens: 2600,

@@ -297,12 +297,22 @@ describe('appointmentEvents', () => {
 });
 
 describe('notesMarkdown', () => {
+  /*
+   * Local instants, because the assertion below is about a calendar day.
+   *
+   * These were `Date.UTC(2026, 8, 4)` — midnight UTC, which is seven in the
+   * evening on the 3rd in Chicago. The date the export carried then agreed
+   * with the date asserted here only on a UTC runner, because both were
+   * computed the same wrong way. Fixing `notesMarkdown` to write the writer's
+   * own day made this fixture's two halves disagree, which is the fixture
+   * having had the same confusion as the code.
+   */
   const note = {
     id: 'n1',
     title: 'Lecture 4',
     body: 'Inflation expectations.',
-    created: Date.UTC(2026, 8, 3),
-    updated: Date.UTC(2026, 8, 4),
+    created: new Date(2026, 8, 3).getTime(),
+    updated: new Date(2026, 8, 4).getTime(),
     courseId: 'econ',
     fileIds: [],
   } as Note;
@@ -468,5 +478,35 @@ describe('a backup carries the semester, not the look', () => {
     });
     const { data } = readBackup(meddled);
     for (const k of LOOK) expect(data[k], k).toBeUndefined();
+  });
+});
+
+/**
+ * A note's date is the day it was written where the person writing it was.
+ *
+ * `lib/date.ts` says why `toISOString` is not that: it converts to UTC first,
+ * "and so lands on the wrong day for anyone west of Greenwich after their
+ * evening." Three places in this app were still spelling a local date that
+ * way, and `lib/letters.ts` was already writing the very same field with
+ * `dateToIso` one file away from the screen that was not.
+ *
+ * Invisible on a UTC runner, which is what `npm run test:zones` exists for —
+ * so the instant here is pinned rather than taken from the clock, and this
+ * says the same thing in every zone.
+ */
+describe('the day a note carries', () => {
+  const note = (at: number) =>
+    ({ id: 'n', title: 'Evening thought', body: 'text', created: at, updated: at, courseId: null, fileIds: [] }) as never;
+
+  it('is the local day, not the UTC one', () => {
+    // 9pm on Tuesday 8 September in Chicago is already Wednesday in UTC.
+    const evening = new Date(2026, 8, 8, 21, 30);
+    expect(notesMarkdown([note(evening.getTime())], () => '')).toContain('2026-09-08');
+  });
+
+  it('is the local day at the other end of the world too', () => {
+    // 1am on Wednesday 9 September in Kiritimati is still Tuesday in UTC.
+    const small = new Date(2026, 8, 9, 1, 0);
+    expect(notesMarkdown([note(small.getTime())], () => '')).toContain('2026-09-09');
   });
 });
