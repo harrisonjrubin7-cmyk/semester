@@ -44,7 +44,3 @@ export function everySchool(mine: School[]): School[] {
   return [...Object.values(BUNDLED), ...mine];
 }
 
-/** For a picker: what the app already knows without asking anyone. */
-export function bundledList(): School[] {
-  return Object.values(BUNDLED);
-}

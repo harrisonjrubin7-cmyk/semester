@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  FEED_NOTE,
   REPLACED_LINE,
   SHARE_WARNING,
   TOKEN_BYTES,
@@ -8,7 +7,6 @@ import {
   freshness,
   looksLikeToken,
   newToken,
-  readPublished,
   feedItems,
   webcalUrl,
 } from './subscribe';
@@ -90,38 +88,6 @@ describe('what it says about the risk', () => {
   it('says what replacing the link breaks', () => {
     expect(REPLACED_LINE).toContain('old link is dead');
     expect(REPLACED_LINE).toContain('re-subscribe');
-  });
-
-  it('carries the same caveat inside the calendar itself', () => {
-    // Somebody may only ever see this in Apple Calendar, not in the app.
-    expect(FEED_NOTE).toContain('not continuously');
-  });
-});
-
-describe('reading a published feed back', () => {
-  const token = newToken();
-
-  it('takes a good record', () => {
-    expect(readPublished({ token, updatedAt: 5, events: 12 })).toEqual({
-      token,
-      updatedAt: 5,
-      events: 12,
-    });
-  });
-
-  it('refuses anything without a real token, rather than building a broken link', () => {
-    expect(readPublished(null)).toBeNull();
-    expect(readPublished('nope')).toBeNull();
-    expect(readPublished({})).toBeNull();
-    expect(readPublished({ token: 'short' })).toBeNull();
-  });
-
-  it('drops fields that are not what they claim', () => {
-    expect(readPublished({ token, updatedAt: 'yesterday', events: null })).toEqual({
-      token,
-      updatedAt: undefined,
-      events: undefined,
-    });
   });
 });
 

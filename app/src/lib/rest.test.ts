@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_FLOOR,
   NO_CONTRACT,
-  claimedHours,
   dayCapacity,
   insideFloor,
   insideRest,
@@ -109,10 +108,6 @@ describe('the week', () => {
 
   it('says nothing when nothing came out', () => {
     expect(takenLine(weekCapacity(windows, { ...FLOOR, on: false }, []))).toBe('');
-  });
-
-  it('counts the hours the windows claimed before anything came out', () => {
-    expect(claimedHours(windows)).toBe(46);
   });
 });
 

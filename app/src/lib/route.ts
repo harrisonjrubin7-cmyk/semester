@@ -32,6 +32,7 @@
  */
 
 import type { ChangeSource, ReportGrain, Screen, StudyMode } from './types';
+import type { State } from '../state/shape';
 
 /** What a screen is currently about, if anything. */
 export interface Route {
@@ -48,7 +49,7 @@ export interface Route {
    * are there, not part of the address, and putting them in the hash would
    * mean every flip pushed a history entry.
    */
-  opens?: { report?: ReportGrain; changes?: ChangeSource };
+  opens?: { report?: ReportGrain; changes?: ChangeSource; meTab?: MeTab };
 }
 
 /**
@@ -83,6 +84,8 @@ export const NAMED: Partial<Record<Screen, 'courseId' | 'itemId' | 'eventId' | '
  * rather than merged does not belong here: sending somebody somewhere
  * unrelated is worse than telling them the link is dead.
  */
+type MeTab = State['meTab'];
+
 const RETIRED: Record<string, { screen: Screen; opens?: Route['opens'] }> = {
   // Three grains of one report — see `screens/Reports.tsx`. Each link says
   // which grain it meant: `#/weekly` opening today's report is the promise
@@ -93,6 +96,13 @@ const RETIRED: Record<string, { screen: Screen; opens?: Route['opens'] }> = {
   check: { screen: 'announce' as Screen, opens: { changes: 'feed' } },
   // The chat was a second door into the conversation the Ask tab now is.
   chat: { screen: 'ask' as Screen },
+  // Settings had a page counting the same bytes as the Data screen. The
+  // measurements are there now; the copies and the restore are on Export,
+  // which had them already.
+  setStorage: { screen: 'data' as Screen },
+  // Three of the Everything screen's four views were the Progress tab beside
+  // it. The link opens the tab that held them.
+  everything: { screen: 'me' as Screen, opens: { meTab: 'all' } },
 };
 
 /** A screen id is already url-safe; an account's own ids may not be. */
@@ -166,13 +176,3 @@ export function same(a: Route | null, b: Route | null): boolean {
   return a.screen === b.screen && a.id === b.id && (a.mode ?? '') === (b.mode ?? '');
 }
 
-/**
- * The full address, for a link somebody can send.
- *
- * Built from the current page rather than from a constant, because this app is
- * served from a subpath in one place and the root in another, and hardcoding
- * either produces links that work for exactly one of them.
- */
-export function linkTo(route: Route, here: { origin: string; pathname: string }): string {
-  return `${here.origin}${here.pathname}${toHash(route)}`;
-}

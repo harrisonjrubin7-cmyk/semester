@@ -1,3 +1,4 @@
+import { DESTINATIONS } from '../../lib/nav';
 import { datedItems } from '../../lib/select';
 import { tally } from '../../lib/review';
 import type { Provide } from '../shape';
@@ -95,14 +96,26 @@ export const me: Provide = (look) => {
       ahead: datedItems(catalog, now).filter((i) => i.c === c.id && !i.isPast).length,
     };
   });
+  /*
+   * What the directory knew, now that the directory is a tab of this screen.
+   *
+   * The registry itself is already in the system prompt — see `PICK.always` in
+   * `lib/context.ts` — so naming fifty screens here would spend two thousand
+   * tokens on what the model has been told twice. What it does not have is
+   * which of them this student has opened, which is the one thing the
+   * Everything screen's own provider sent and the one thing worth keeping.
+   */
+  const never = DESTINATIONS.filter((d) => !state.visited[d.screen]).map((d) => d.screen);
   return {
-    summary: `Progress — ${t.cards} cards answered, ${t.pct}% right. ${state.spent.length} pieces of work timed, ${state.sittings.length} practice papers sat.`,
-    visible: rows,
+    summary:
+      `Progress — ${t.cards} cards answered, ${t.pct}% right. ${state.spent.length} pieces of work timed, ${state.sittings.length} practice papers sat. ` +
+      `The Everything tab is the directory: ${DESTINATIONS.length - never.length} of ${DESTINATIONS.length} screens have been opened at least once.`,
+    visible: never.length > 0 ? [...rows, { neverOpened: never.join(', ') }] : rows,
     actions: ['open_screen'],
     suggestions: [
       'Is the studying actually working?',
       'Which course am I furthest behind on?',
-      'What should I change about how I revise?',
+      'What have I never opened that I should?',
     ],
   };
 };

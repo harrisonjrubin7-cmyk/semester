@@ -129,15 +129,6 @@ export function verdict(right: number, asked: number): string {
   return `${right} of ${asked}. The ones you missed are the ones the reading will now stick to. ${kept}`;
 }
 
-/** How a pretested unit reads later, so the record is worth having. */
-export function guessedLine(at: number | undefined, now = Date.now()): string {
-  if (!at) return '';
-  const days = Math.floor((now - at) / 86_400_000);
-  if (days <= 0) return 'You guessed at this one before reading it, today.';
-  if (days === 1) return 'You guessed at this one before reading it, yesterday.';
-  return `You guessed at this one before reading it, ${days} days ago.`;
-}
-
 /** Every stored record, made safe to read. */
 export function readPretested(raw: unknown): Record<string, number> {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};

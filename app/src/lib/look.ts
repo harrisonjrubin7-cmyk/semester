@@ -1194,14 +1194,3 @@ export function readLook(saved: Look | undefined): Required<Look> {
   };
 }
 
-/** How the current look reads in one line, for a settings row. */
-export function lookLine(look: Look): string {
-  const parts = [accent(look.accent).label, ground(look.ground).label];
-  const face = typefaceOf(look.typeface);
-  if (face.id !== TYPEFACES[0].id) parts.push(face.label);
-  // Resolved, not raw: on Industry this line should say Square, because that
-  // is what the reader is looking at.
-  const corners = CORNERS.find((c) => c.id === resolveCorners(look.corners, look.ground));
-  if (corners && corners.id !== CORNERS[0].id) parts.push(corners.label);
-  return parts.join(' · ');
-}

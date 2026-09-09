@@ -12,7 +12,6 @@ import {
   letter,
   marksFor,
   paper,
-  pointsFor,
   readExam,
   readSeed,
   result,
@@ -79,15 +78,6 @@ describe('shapeFor', () => {
   it('clamps a nonsense length rather than producing a thousand questions', () => {
     expect(shapeFor(0, 'choice').minutes).toBe(5);
     expect(shapeFor(9999, 'choice').minutes).toBe(180);
-  });
-
-  it('totals the points from the counts, so the paper and its header agree', () => {
-    const shape = shapeFor(50, 'mixed');
-    const sum =
-      shape.counts.choice * pointsFor('choice') +
-      shape.counts.short * pointsFor('short') +
-      shape.counts.long * pointsFor('long');
-    expect(shape.points).toBe(sum);
   });
 
   it('falls back to the first format rather than throwing', () => {

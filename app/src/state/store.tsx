@@ -83,7 +83,6 @@ export type { Action, Persisted, QuizQuestion, State } from './shape';
 export { pickPersisted } from './shape';
 export { reducer } from './reducer';
 
-
 /**
  * An installed app's shortcuts open `?screen=study` and the like.
  *
@@ -99,7 +98,6 @@ function screenFromUrl(): Screen | null {
     return null;
   }
 }
-
 
 /** Where the account copy stands, for the Account screen to show honestly. */
 export type SyncStatus =
@@ -247,6 +245,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // survivor it meant — see `RETIRED` in `lib/route.ts`.
         ...(landed.opens?.report ? { report: landed.opens.report } : {}),
         ...(landed.opens?.changes ? { changes: landed.opens.changes } : {}),
+        ...(landed.opens?.meTab ? { meTab: landed.opens.meTab } : {}),
       };
     }
     return { ...persisted, ...ephemeral, screen: screenFromUrl() ?? ('home' as Screen) };
@@ -271,8 +270,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       stamp();
     };
   }, []);
-
-
 
   /*
    * A count per screen, on this device and nowhere else.
@@ -1021,8 +1018,3 @@ export function useStore(): Store {
   return store;
 }
 
-/** Convenience: a stable dispatcher for a fixed action. */
-export function useGo() {
-  const { dispatch } = useStore();
-  return useCallback((screen: Screen) => dispatch({ type: 'go', screen }), [dispatch]);
-}

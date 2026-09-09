@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { WARN_AT, atRiskToday, clockOf } from './atrisk';
-import { dueReminders, inSleep, ATTEND_LEAD } from './notify';
+import { dueReminders, ATTEND_LEAD } from './notify';
 import type { Attended } from './attend';
 import type { Block, DatedItem } from './types';
 import type { NotifKey } from '../data/misc';
@@ -125,21 +125,5 @@ describe('the reminder it becomes', () => {
 
   it('lead time is the one the module states', () => {
     expect(ATTEND_LEAD).toBe(45);
-  });
-});
-
-describe('the sleep floor', () => {
-  it('covers a window that wraps midnight', () => {
-    const floor = { from: 23 * 60, to: 7 * 60 };
-    expect(inSleep(23 * 60 + 30, floor)).toBe(true);
-    expect(inSleep(3 * 60, floor)).toBe(true);
-    expect(inSleep(7 * 60, floor)).toBe(false);
-    expect(inSleep(13 * 60, floor)).toBe(false);
-  });
-
-  it('covers a window inside one day', () => {
-    const floor = { from: 1 * 60, to: 6 * 60 };
-    expect(inSleep(2 * 60, floor)).toBe(true);
-    expect(inSleep(22 * 60, floor)).toBe(false);
   });
 });

@@ -237,19 +237,6 @@ export function planLine(p: Plan): string {
   return `${bits.join(', ')}.`;
 }
 
-/** "About 40 minutes · 3 chapters" — what a row says about one reading. */
-export function sizeLine(s: Sized): string {
-  const bits: string[] = [];
-  if (s.known && s.minutes > 0) {
-    bits.push(s.minutes >= 60 ? `about ${Math.round((s.minutes / 60) * 10) / 10}h` : `about ${s.minutes} min`);
-  }
-  if (s.extent.pages > 0) bits.push(`${s.extent.pages} pages`);
-  else if (s.extent.chapters > 0) {
-    bits.push(`${s.extent.chapters} ${s.extent.chapters === 1 ? 'chapter' : 'chapters'}`);
-  }
-  return bits.join(' · ');
-}
-
 /** Every reading due in a window of days, sized. */
 export function due(items: DatedItem[], done: Record<string, boolean>, within: number): Item[] {
   return items.filter(

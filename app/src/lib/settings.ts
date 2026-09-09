@@ -133,7 +133,12 @@ export const SETTINGS: SettingsSection[] = [
           'privacy data policy gdpr delete erase what is stored sent tracking analytics rights api key anthropic security',
       },
       {
-        screen: 'setStorage',
+        // Not a settings page of its own: the Data screen measures every byte
+        // this app holds, and a second page counting a different subset of the
+        // same three places is how the two totals came to disagree. Export
+        // holds the copies and the restore, which is the other half of what
+        // this row used to open.
+        screen: 'data',
         label: 'Storage and backup',
         // Not "space used" any more: the measuring is Your data's, and this
         // page is the two ways of getting something back. The `space` and
@@ -142,7 +147,7 @@ export const SETTINGS: SettingsSection[] = [
         // row that takes them there.
         holds: 'Copies, export and restore — and where to see the space used',
         keywords:
-          'storage space full quota backup copies snapshot restore export download zip json save room disk drafts',
+          'storage space full quota backup copies snapshot restore export download zip json save room disk drafts attachments',
       },
       {
         screen: 'connect',
@@ -194,10 +199,6 @@ export const SETTINGS_SCREENS: Screen[] = SETTINGS.flatMap((s) => s.rows.map((r)
 /** Whether a screen is one of the settings pages. */
 export function isSettingsPage(screen: Screen): boolean {
   return SETTINGS_SCREENS.includes(screen);
-}
-
-export function rowFor(screen: Screen): SettingsRow | undefined {
-  return SETTINGS.flatMap((s) => s.rows).find((r) => r.screen === screen);
 }
 
 /** Which section a page sits under, for the heading on the page itself. */

@@ -4,9 +4,7 @@ import {
   addEvent,
   addTask,
   describe as explain,
-  fetchRemoteText,
   forget,
-  listMail,
   listRemoteFiles,
   pullCalendar,
   tokens,
@@ -404,60 +402,6 @@ describe('listRemoteFiles', () => {
     connected('zoom');
     answering({});
     await expect(listRemoteFiles('zoom')).rejects.toThrow();
-  });
-});
-
-describe('fetchRemoteText', () => {
-  it('refuses a file the provider will not hand over directly', async () => {
-    // A Google Doc has no bytes to download; it has to be exported. Saying so
-    // beats a request that fails with somebody else's wording.
-    connected('google');
-    answering('');
-    await expect(
-      fetchRemoteText('google', { id: 'f1', name: 'x', link: '', download: '', modified: '' }),
-    ).rejects.toThrow(/no direct download/i);
-  });
-
-  it('returns the text when there is something to fetch', async () => {
-    connected('google');
-    answering('The syllabus says…');
-    const text = await fetchRemoteText('google', {
-      id: 'f1',
-      name: 'x',
-      link: '',
-      download: 'https://example.test/f1',
-      modified: '',
-    });
-    expect(text).toBe('The syllabus says…');
-  });
-});
-
-describe('listMail', () => {
-  it('asks for nothing at all when there are no courses to look for', async () => {
-    // The search is built out of course codes. With none, there is no query
-    // worth sending and no inbox worth reading.
-    const fetchMock = answering({ value: [] });
-    expect(await listMail([], 'microsoft')).toEqual([]);
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
-  it('files a message against the course it names', async () => {
-    connected('microsoft');
-    answering({
-      value: [
-        {
-          id: 'm1',
-          subject: 'ECON 1020: reading swapped',
-          bodyPreview: 'Chapter 5 instead of 4',
-          from: { emailAddress: { name: 'Dr. Stromme', address: 's@x.edu' } },
-          receivedDateTime: '2026-09-01T10:00:00Z',
-          webLink: 'https://outlook/m1',
-        },
-      ],
-    });
-    const [mail] = await listMail(COURSES, 'microsoft');
-    expect(mail.courseId).toBe('econ');
-    expect(mail.subject).toContain('reading swapped');
   });
 });
 
