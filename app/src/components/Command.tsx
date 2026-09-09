@@ -32,7 +32,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { countHits, findEverything } from '../lib/find';
-import { scopesFor } from '../lib/scoped';
 import { flatten, hitKey, openHit } from '../lib/openhit';
 
 /** How wide the search column gets, matching the app's own pane. */
@@ -40,9 +39,9 @@ const COLUMN = 620;
 
 export function Command({ onClose }: { onClose: () => void }) {
   const { state, dispatch, now, catalog, school } = useStore();
-  // Seeded when a screen's own search escalated to here, so "search everywhere
-  // for this" arrives with the query rather than asking for it again.
-  const [text, setText] = useState(state.finderSeed);
+  // Empty every time. It used to open seeded from a screen's own filter box,
+  // and there are no filter boxes any more — this is where searching starts.
+  const [text, setText] = useState('');
   const [at, setAt] = useState(0);
   const box = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
@@ -64,34 +63,16 @@ export function Command({ onClose }: { onClose: () => void }) {
   );
 
   /*
-   * The collections this overlay does not list, offered as a place to look.
+   * What was found, and nothing else.
    *
-   * Sources, applications, saved places and the rest are each a list of tens
-   * with a filter of its own. Inlining them would bury the deadlines and notes
-   * people are usually after; naming the screen without a number would be a
-   * guess. So: the count, and the query carried over. See `lib/scoped.ts`.
+   * There used to be a group under the results — "12 sources match — search in
+   * Sources" — that opened a screen with the query in its own filter. The
+   * screens have no filters now, so the offer had nowhere to land: it would
+   * have been a row promising a search and delivering a navigation. The
+   * collections it stood in for are reached the way everything else is, by
+   * opening the screen and reading it.
    */
-  const groups = useMemo(() => {
-    const scopes = scopesFor(text, state);
-    if (scopes.length === 0) return found;
-    return [
-      ...found,
-      {
-        label: 'Look inside a screen',
-        hits: scopes.map((sc) => ({
-          kind: 'scope' as const,
-          screen: sc.screen,
-          query: text.trim(),
-          title: `Search “${text.trim()}” in ${sc.label}`,
-          sub: `${sc.said} match`,
-          tag: 'Filter',
-          // Below the real records, always. An offer to keep looking is worth
-          // less than a thing that has been found, however many matched.
-          score: 0,
-        })),
-      },
-    ];
-  }, [found, text, state]);
+  const groups = found;
   const hits = flatten(groups);
   const total = countHits(groups);
   // Clamped rather than reset: the selection following the results down as

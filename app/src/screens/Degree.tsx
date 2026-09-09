@@ -22,7 +22,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { has } from '../lib/search';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import {
@@ -52,19 +51,9 @@ export function Degree() {
    * left and Requirements are both short by construction — a degree has a
    * dozen requirements, not a hundred — so neither declares an adapter.
    */
-  const search =
-    tab === 'taken'
-      ? {
-          placeholder: 'Find a course — code, title, term',
-          select: () => state.taken,
-          match: (c: Taken, q: string) => has(q, c.code, c.title, c.term, c.grade),
-        }
-      : undefined;
-
   return (
-    <Page search={search as never}>
-      {(shown: unknown[]) => (
-        <>
+    <Page>
+      <>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div className="kicker">Your arithmetic, not the registrar’s</div>
         <div
@@ -94,10 +83,9 @@ export function Degree() {
       />
 
       {tab === 'left' ? <WhatIsLeft /> : null}
-      {tab === 'taken' ? <Transcript rows={shown as Taken[]} /> : null}
+      {tab === 'taken' ? <Transcript rows={state.taken} /> : null}
       {tab === 'rules' ? <Rules /> : null}
-        </>
-      )}
+      </>
     </Page>
   );
 }

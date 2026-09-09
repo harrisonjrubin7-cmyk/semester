@@ -58,10 +58,7 @@ export function navigate(state: State, action: Action): State | null {
       return { ...state, quickAdd: action.open };
 
     case 'finder':
-      // Cleared on close, not left behind: reopening the overlay from the
-      // header must not arrive pre-filled with what somebody searched for on
-      // a screen they have since left.
-      return { ...state, finder: action.open, finderSeed: action.open ? (action.seed ?? '') : '' };
+      return { ...state, finder: action.open };
 
     case 'go':
       return push(state, action.screen);

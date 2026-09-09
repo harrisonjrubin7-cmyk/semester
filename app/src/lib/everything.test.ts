@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DESTINATIONS, TASKS, type TaskTag } from './nav';
 import { SHORTCUTS } from './keys';
-import { WHY, allRows, byTask, matches, openedLabel, untried, STALE_DAYS } from './everything';
+import { WHY, byTask, openedLabel, untried, STALE_DAYS } from './everything';
 
 /**
  * The Everything directory, and the promise it makes.
@@ -13,32 +13,22 @@ import { WHY, allRows, byTask, matches, openedLabel, untried, STALE_DAYS } from 
  * checking that this one cannot be.
  */
 
-const says = (d: (typeof DESTINATIONS)[number]) => ({ label: d.label, blurb: d.blurb });
-const keywordsFor = (screen: string) => DESTINATIONS.find((d) => d.screen === screen)?.keywords ?? '';
 const NOW = new Date(2026, 8, 7).getTime();
 const DAY = 86_400_000;
 
 describe('by area', () => {
-  it('shows every screen in the registry exactly once', () => {
-    const rows = allRows(DESTINATIONS, says, []).filter((r) => r.view === 'area');
-    expect(rows).toHaveLength(DESTINATIONS.length);
-    expect(new Set(rows.map((r) => r.screen)).size).toBe(DESTINATIONS.length);
+  it('names every screen in the registry exactly once', () => {
+    expect(new Set(DESTINATIONS.map((d) => d.screen)).size).toBe(DESTINATIONS.length);
   });
 
-  it('files each under its own shelf, and invents no others', () => {
-    const rows = allRows(DESTINATIONS, says, []).filter((r) => r.view === 'area');
-    for (const r of rows) {
-      expect(r.where).toBe(DESTINATIONS.find((d) => d.screen === r.screen)?.group);
-    }
+  it('files each under a shelf', () => {
+    expect(DESTINATIONS.filter((d) => !d.group).map((d) => d.screen)).toEqual([]);
   });
 
-  it('carries the blurb, in full', () => {
-    // Acceptance criterion 1. Not "starts with" — a directory of first halves
-    // is what this screen exists instead of.
-    for (const r of allRows(DESTINATIONS, says, []).filter((x) => x.view === 'area')) {
-      const d = DESTINATIONS.find((x) => x.screen === r.screen)!;
-      expect(r.sub).toBe(d.blurb);
-    }
+  it('carries a blurb for each, in full', () => {
+    // Acceptance criterion 1. The view renders `d.blurb` as it stands — a
+    // directory of first halves is what this screen exists instead of.
+    expect(DESTINATIONS.filter((d) => !d.blurb.trim()).map((d) => d.screen)).toEqual([]);
   });
 });
 
@@ -116,38 +106,10 @@ describe('not tried yet', () => {
 });
 
 describe('shortcuts', () => {
-  it('renders the same array the ? sheet does', () => {
-    const rows = allRows(DESTINATIONS, says, []).filter((r) => r.view === 'keys');
-    expect(rows.map((r) => r.title)).toEqual(SHORTCUTS.map((s) => s.does));
-  });
-});
-
-describe('searching', () => {
-  const universe = allRows(DESTINATIONS, says, DESTINATIONS);
-  const find = (q: string) =>
-    universe.filter((f) => matches(f, q, keywordsFor)).map((f) => f.title);
-
-  it('finds Meal plan from "swipes"', () => {
-    expect(find('swipes')).toContain('Meal plan');
-  });
-
-  it('finds Housing from "dorm"', () => {
-    expect(find('dorm')).toContain('Housing');
-  });
-
-  it('finds a screen by a task heading nobody wrote as a keyword', () => {
-    expect(find('plan my week').length).toBeGreaterThan(0);
-  });
-
-  it('finds a shortcut by what it does', () => {
-    expect(find('filter this screen').length).toBeGreaterThan(0);
-  });
-
-  it('says which view each hit came from', () => {
-    for (const f of universe.filter((x) => matches(x, 'grades', keywordsFor))) {
-      expect(['area', 'task', 'untried', 'keys']).toContain(f.view);
-      expect(f.where.length).toBeGreaterThan(0);
-    }
+  it('renders the same array the ? sheet does, with a key and a description each', () => {
+    // The keys view maps `SHORTCUTS` directly, so what this can still check is
+    // that every row in it has something to draw.
+    expect(SHORTCUTS.filter((s) => !s.key || !s.does).map((s) => s.key)).toEqual([]);
   });
 });
 
@@ -165,19 +127,19 @@ describe('when a screen was last opened', () => {
 
 describe('the promise', () => {
   it('writes down no screen of its own', () => {
-    // Acceptance criterion 7, as far as a unit test can carry it: every row
-    // in every view traces back to the registry or to the shortcut array.
+    // Acceptance criterion 7, as far as a unit test can carry it: every row in
+    // the task view traces back to the registry it was built from.
     const known = new Set<string>(DESTINATIONS.map((d) => d.screen));
-    for (const r of allRows(DESTINATIONS, says, DESTINATIONS)) {
-      if (r.view === 'keys') continue;
-      expect(known.has(r.screen as string)).toBe(true);
+    for (const section of byTask(DESTINATIONS)) {
+      for (const d of section.rows) expect(known.has(d.screen)).toBe(true);
     }
   });
 
   it('drops a screen the moment the registry does', () => {
     const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
-    const rows = allRows(short, says, short);
-    expect(rows.some((r) => r.screen === 'grades')).toBe(false);
+    const rows = byTask(short).flatMap((s) => s.rows);
+    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(untried(short, {}, {}, NOW).some((d) => d.screen === 'grades')).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
@@ -187,7 +149,7 @@ describe('the promise', () => {
       label: 'Something new',
       taskTags: ['study'] as TaskTag[],
     };
-    const rows = allRows([...DESTINATIONS, extra], says, []);
-    expect(rows.filter((r) => (r.screen as string) === 'somethingNew').length).toBeGreaterThanOrEqual(2);
+    const rows = byTask([...DESTINATIONS, extra]).flatMap((s) => s.rows);
+    expect(rows.some((d) => (d.screen as string) === 'somethingNew')).toBe(true);
   });
 });

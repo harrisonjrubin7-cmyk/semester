@@ -12,7 +12,6 @@ import { projectGrade, projectionLine } from '../lib/worth';
 import { NO_CUTOFFS, letterFor, systemFor, targetsOf } from '../lib/cutoffs';
 import { Cutoffs } from '../components/Cutoffs';
 import { ScoreField } from '../components/ScoreField';
-import { has } from '../lib/search';
 
 /**
  * What you have, and what the rest has to be.
@@ -41,32 +40,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
     </>
   );
 
-  /**
-   * What filtering this screen means.
-   *
-   * A course survives if its own name matches or if any of its graded pieces
-   * does — because "midterm" is a piece, not a course, and hiding ECON
-   * entirely on a query that its midterm answers would be the filter working
-   * against the question. Inside a course that survived, the rows are filtered
-   * by the same query, so a search for "quiz" leaves the quizzes and not the
-   * whole gradebook.
-   *
-   * The pieces are what people search by: `standing` names them from the
-   * syllabus — "Midterm 1", "Problem sets", "Attendance" — and they are the
-   * rows this screen exists to fill in.
-   */
-  const rowsIn = (c: (typeof catalog.courses)[number]) =>
-    standing(c, state.grades, {
-      pieces: state.pieces,
-      drops: state.drops,
-      pointsOff: pointsOff(state.attendPolicy[c.id] ?? NO_POLICY, tally(state.attendance, c.id)),
-      attendance: {
-        worth: (state.attendPolicy[c.id] ?? NO_POLICY).worth,
-        rate: rate(tally(state.attendance, c.id)),
-      },
-    }).rows;
-
-  const body = (shown: typeof catalog.courses, query: string) => (
+  const body = (shown: typeof catalog.courses) => (
     <>
       {shown.map((c) => {
         // Everything the projection now needs beyond the syllabus: the
@@ -154,13 +128,9 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
             </Blueprint>
 
             {s.rows
-              .map((r, i) => ({ r, i }))
-              // The index is kept because it is the grade's key — filtering
-              // with `.filter().map()` on the raw array would renumber every
-              // row below the first one hidden and write scores to the wrong
-              // piece.
-              .filter(({ r }) => !query || has(query, r.what, r.pct))
-              .map(({ r, i }) => (
+              // The index is the grade's key, so it comes from the row's
+              // position in the course's own list and nothing may renumber it.
+              .map((r, i) => (
               <div key={r.what} style={rowFlush}>
               <div
                 style={{
@@ -373,22 +343,12 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
         {/* No filter on the embedded path: the Courses switcher owns the frame
             and its box already filters courses. A second one inside it would
             be two boxes filtering overlapping things on one screen. */}
-        {body(catalog.courses, '')}
+        {body(catalog.courses)}
         <div style={{ height: 22 }} />
       </div>
     );
   }
   return (
-    <Page
-      blurb={intro}
-      search={{
-        placeholder: 'Find a piece — midterm, quiz, the final',
-        select: () => catalog.courses,
-        match: (c, q) => has(q, c.code, c.name) || rowsIn(c).some((r) => has(q, r.what, r.pct)),
-        empty: (q) => `No course and no graded piece matches “${q}”.`,
-      }}
-    >
-      {(shown, query) => body(shown, query)}
-    </Page>
+    <Page blurb={intro}>{body(catalog.courses)}</Page>
   );
 }
