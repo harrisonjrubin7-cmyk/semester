@@ -120,6 +120,33 @@ export function withoutComments(text: string): string {
 
 const lineOf = (text: string, at: number) => text.slice(0, at).split('\n').length;
 
+/**
+ * The spacing properties, as one definition rather than two.
+ *
+ * It was written out twice — once for the rule, once for the ledger — and both
+ * copies carried the same bug for as long as they existed: `padding` had its
+ * suffix optional and `margin` did not.
+ *
+ *     padding: 14      counted
+ *     marginTop: 14    counted
+ *     margin: 14       invisible, to the rule and to the ledger both
+ *
+ * Nothing justified the difference and nothing was written down beside it, so
+ * it reads as a typo rather than a decision — `padding(?:Top|…)?` with the
+ * `?`, `margin(?:Top|…)` without. It meant an off-scale bare margin was never
+ * once reported in the life of this rule, and never appeared in any budget.
+ *
+ * Two copies is how a fix reaches one of them and not the other, which is
+ * exactly the shape of the bug being fixed, so there is one now. The value is
+ * the only capture; `m[0]` still carries the property for a report that wants
+ * to quote it.
+ *
+ * Safe to share despite the `g` flag: `matchAll` runs against its own clone
+ * and leaves this one's `lastIndex` at zero.
+ */
+const SPACING =
+  /\b(?:gap|rowGap|columnGap|margin(?:Top|Bottom|Left|Right)?|padding(?:Top|Bottom|Left|Right)?): (\d+)(?![0-9.])/g;
+
 /** Everything wrong, with the file and line, ready to print. */
 export function check(dir: string): Problem[] {
   const files = sources(dir);
@@ -185,16 +212,14 @@ export function check(dir: string): Problem[] {
         says: `${m[1]} is \`var(--leading-${name})\`.`,
       });
     }
-    const SPACING =
-      /\b(gap|rowGap|columnGap|margin(?:Top|Bottom|Left|Right)|padding(?:Top|Bottom|Left|Right)?): (\d+)(?![0-9.])/g;
     for (const m of code.matchAll(SPACING)) {
-      const step = SPACE[m[2]];
+      const step = SPACE[m[1]];
       if (!step) continue;
       out.push({
         file: rel,
         line: lineOf(code, m.index),
         found: m[0],
-        says: `${m[2]}px is \`var(--sp-${step})\`, which also carries the density multiplier this does not.`,
+        says: `${m[1]}px is \`var(--sp-${step})\`, which also carries the density multiplier this does not.`,
       });
     }
   }
@@ -427,8 +452,6 @@ function countIn(text: string): Counted {
   for (const m of code.matchAll(/lineHeight: (\d+(?:\.\d+)?)(?![0-9.])/g)) if (!LEADING[m[1]]) leading += 1;
   add('leading', leading);
 
-  const SPACING =
-    /\b(?:gap|rowGap|columnGap|margin(?:Top|Bottom|Left|Right)|padding(?:Top|Bottom|Left|Right)?): (\d+)(?![0-9.])/g;
   // `0` is not a spacing choice, it is the absence of one, and there is no
   // step for it. Counting it as drift meant the budget crept up every time
   // somebody wrote `padding: 0` to cancel a default, which is the opposite

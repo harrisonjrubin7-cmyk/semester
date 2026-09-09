@@ -104,6 +104,25 @@ export const d = <i style={{ fontSize: '0.92em' }} />;`),
     expect(p.says).toContain('density');
   });
 
+  /*
+   * Every spacing property the rule claims to watch, one case each.
+   *
+   * `margin: 8` was silently exempt for the life of this rule — the pattern
+   * made `padding`'s suffix optional and `margin`'s mandatory — so an
+   * off-scale bare margin was never reported and never counted. The old tests
+   * covered `gap` alone, which is why nobody found it. Listing the properties
+   * is what stops the next one being exempt for as long.
+   */
+  it.each(['gap', 'rowGap', 'columnGap', 'margin', 'marginTop', 'padding', 'paddingLeft'])(
+    'catches an off-step %s',
+    (prop) => {
+      const [p] = on(`export const x = <i style={{ ${prop}: 8 }} />;`);
+      expect(p?.found, `${prop}: 8 should be caught`).toBe(`${prop}: 8`);
+      expect(p.says).toContain('var(--sp-4)');
+    },
+  );
+
+
   it('fails on a line height that is a step', () => {
     const [p] = on(`export const x = <i style={{ lineHeight: 1.45 }} />;`);
     expect(p.says).toContain('var(--leading-normal)');
@@ -192,6 +211,19 @@ describe('the per-file ledger', () => {
     const [p] = overBudget(tree(DRIFT), {});
     expect(p.file).toBe('Probe.tsx');
     expect(p.says).toContain('more than this file is allowed');
+  });
+
+  it('counts an off-scale bare margin, which the ledger used to miss', () => {
+    // The other half of the same bug as the property sweep above: the pattern
+    // the ledger counts with was the pattern the rule checked with, so a bare
+    // margin was absent from both.
+    expect(countsByFile(tree(`export const x = <i style={{ margin: 14 }} />;`))).toEqual({
+      'Probe.tsx': { space: 1 },
+    });
+  });
+
+  it('still treats a zero margin as the absence of a choice, not as drift', () => {
+    expect(countsByFile(tree(`export const x = <i style={{ margin: 0 }} />;`))).toEqual({});
   });
 
   it('leaves a clean file off the ledger rather than writing it as zeroes', () => {
