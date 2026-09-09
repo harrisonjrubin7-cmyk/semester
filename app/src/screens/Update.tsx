@@ -5,7 +5,7 @@ import { RecordButton } from '../components/RecordButton';
 import { Rework } from '../components/Rework';
 import { configured, provider, readMaterial, readShots } from '../lib/claude';
 import { extractText } from '../lib/extract';
-import { guess, KIND_LABEL, SURE, type Verdict as Told } from '../lib/classify';
+import { classify, guess, KIND_LABEL, SURE, type Verdict as Told } from '../lib/classify';
 import { alreadyAdded, hashOf, materialHash, type Intake } from '../lib/intake';
 import { harvest, type Where } from '../lib/harvest';
 import { anything, piecesFrom, type Pasted } from '../lib/pasted';
@@ -272,7 +272,6 @@ export function AddMaterial() {
   /** The model's opinion, when the free one was not confident enough. */
   const classifyWith = async (item: Intake, fallback: Told): Promise<Told> => {
     if (!claudeReady) return fallback;
-    const { classify } = await import('../lib/classify');
     return classify(item, context);
   };
 

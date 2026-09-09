@@ -35,8 +35,10 @@ root, which is why nothing in the app reads a leading-slash path directly — se
 | `chats/` | The design conversation that produced it. |
 
 `project/` and `chats/` are the source material and are not built or imported by
-the app. The one thing the app does take from `project/` verbatim is the Industry
-stylesheet, copied to `app/src/styles/industry.css`.
+the app. The one thing the app does take from `project/` is the Industry
+stylesheet, copied to `app/src/styles/industry.css` — verbatim but for its font
+import, which is now `app/src/styles/typefaces.css` and served from this origin
+rather than from Google.
 
 ## What was built, and from what
 

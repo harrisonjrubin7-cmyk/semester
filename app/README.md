@@ -207,11 +207,20 @@ Clear it from the console with `localStorage.removeItem('semester.v1')`.
 
 ## Design system
 
-`src/styles/industry.css` is the Industry design system, copied verbatim from
-the handoff — it is the source of truth for tokens and component classes.
-`src/styles/app.css` is the app layer over it: a stealth-chrome treatment with a
-near-black ground, sterling hairlines and a brushed-metal gradient on display
-type and primary actions.
+`src/styles/industry.css` is the Industry design system, copied from the handoff
+with one line changed — it is the source of truth for tokens and component
+classes. `src/styles/app.css` is the app layer over it: a stealth-chrome
+treatment with a near-black ground, sterling hairlines and a brushed-metal
+gradient on display type and primary actions.
+
+The changed line is the font import. Both sheets used to open with an
+`@import` of fonts.googleapis.com; the faces are now in
+`src/styles/typefaces.css` and served from this origin, which is what makes
+three of the app's own claims true — *signed out, nothing leaves the device at
+all* on the Privacy screen, "keeps working with no signal" above (the service
+worker leaves cross-origin requests alone by design, so the fonts were never
+cached), and a first paint that does not wait on two more hosts. The reasoning
+is written out at the top of that file.
 
 Everything visual is a token. Screens read `var(--app-*)`, never a hex. If you
 want a different look, retune the tokens at the top of `app.css` and the whole
@@ -227,7 +236,7 @@ src/
   lib/          Types, date maths, selectors, the registries below
   screens/      One file per area
   state/        Reducer, persistence, the live clock
-  styles/       industry.css (the system) + app.css (this app)
+  styles/       industry.css (the system) + app.css (this app) + typefaces.css
 ```
 
 Data is plain TypeScript, not fetched.

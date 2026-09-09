@@ -465,6 +465,7 @@ export function EditCourse() {
             <input
               className="input"
               type="date"
+              aria-label="When it is due"
               value={toInputDate(i.month, i.day, yearFor(readTerm(draft.course.term), i.month))}
               onChange={(e) => {
                 const on = fromInputDate(e.target.value);
@@ -483,6 +484,7 @@ export function EditCourse() {
           <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
             <select
               className="input"
+              aria-label="What kind of thing this is"
               value={KINDS.includes(i.kind) ? i.kind : KINDS[0]}
               onChange={(e) => change(patchItem(draft, i.id, { kind: e.target.value }))}
               style={{ flex: 1, minWidth: 0 }}

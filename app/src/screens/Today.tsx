@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { Suspense, lazy, useMemo } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle, useSoft } from '../components/shell/useShell';
@@ -36,13 +36,22 @@ import { Walks } from '../components/Walks';
 import { BehindOffer } from '../components/BehindOffer';
 import { StartToday } from '../components/StartToday';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
-import { GapOffer } from './Gap';
+import { GapOffer } from './GapOffer';
 import { HomeWalk } from '../components/HomeWalk';
-import { Reports } from './Reports';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
+
+/**
+ * The report, fetched when the Report tab is opened.
+ *
+ * Today is the one screen that is *not* code-split — it is what the app opens
+ * on — so a plain import here is an instruction to download the day, week and
+ * term reports before anything paints, for a tab most opens never touch. It is
+ * `lazy()` in `App.tsx` for the same reason, and both now land on one chunk.
+ */
+const Reports = lazy(() => import('./Reports').then((m) => ({ default: m.Reports })));
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -270,7 +279,11 @@ function TabHome() {
         style={{ margin: '0 0 16px' }}
       />
 
-      {tab === 'brief' && <Reports bare />}
+      {tab === 'brief' && (
+        <Suspense fallback={<div style={{ height: 200 }} />}>
+          <Reports bare />
+        </Suspense>
+      )}
 
       {tab === 'today' && <TodayFeed />}
 

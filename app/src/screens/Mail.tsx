@@ -200,6 +200,7 @@ export function Mail() {
           <SectionLabel>About which deadline</SectionLabel>
           <select
             className="input"
+            aria-label="About which deadline"
             value={itemId}
             onChange={(e) => setItemId(e.target.value)}
             style={{ width: '100%' }}
@@ -289,6 +290,7 @@ export function Mail() {
           />
           <textarea
             className="input"
+            aria-label="The email itself"
             value={body}
             onChange={(e) => setBody(e.target.value)}
             spellCheck

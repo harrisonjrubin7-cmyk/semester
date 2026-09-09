@@ -160,6 +160,7 @@ export function Deck() {
           <SectionLabel>{guide.code}</SectionLabel>
           <select
             className="input"
+            aria-label="Which unit"
             value={unit}
             onChange={(e) => setUnit(Number(e.target.value))}
             style={{ width: '100%' }}

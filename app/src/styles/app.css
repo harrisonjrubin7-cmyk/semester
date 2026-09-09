@@ -17,7 +17,7 @@
  * Everything visual is a token. Screens read var(--app-*), never a hex.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&display=swap');
+/* Cinzel is declared in styles/typefaces.css, loaded by main.tsx. */
 
 :root {
   /* Ground — five steps of near-black, cooled very slightly toward blue.
