@@ -116,7 +116,7 @@ import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
 import { ShelfNav } from './components/nav/ShelfNav';
-import { SoftBar, SoftTop } from './components/soft/SoftTop';
+import { SoftTop } from './components/soft/SoftTop';
 import { litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
@@ -1186,7 +1186,6 @@ export default function App() {
                 </ShellBody>
               </ScreenTrouble>
             </Suspense>
-            <SoftBar />
           </ScrollArea>
         </div>
       </div>
@@ -1238,7 +1237,6 @@ export default function App() {
             </ShellBody>
           </ScreenTrouble>
         </Suspense>
-        <SoftBar />
       </ScrollArea>
       {chrome.tabs && <TabBar />}
       {chrome.fab && (

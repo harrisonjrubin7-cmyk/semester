@@ -22,7 +22,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Suggested } from '../components/Suggested';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import {
   KINDS,
   LIVE,
@@ -428,14 +428,13 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         style={{ width: '100%', height: 42, marginTop: 'var(--sp-7)' }}
       />
 
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={add}
-        style={{ height: 46, marginTop: 14, textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        spacing="0.09em"
+        style={{ marginTop: 14 }}
       >
         Add it
-      </button>
+      </ActionButton>
     </>
   );
 }

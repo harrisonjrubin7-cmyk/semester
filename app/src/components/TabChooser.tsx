@@ -16,6 +16,7 @@
 
 import { useState } from 'react';
 import { Reorder } from './Reorder';
+import { MOVE_HINT, useMovable } from '../lib/arrange';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { TabGlyph } from './TabIcon';
@@ -104,6 +105,19 @@ export function TabChooser() {
 
   const set = (next: Screen[]) => dispatch({ type: 'setTabs', tabs: next });
 
+  /*
+   * Dragging a tab into place.
+   *
+   * Me is not in `chosen` and so cannot be dragged or dragged onto — it is
+   * the one tab that stays, and it is put back on the end of every write. The
+   * arrows below do exactly the same thing one step at a time, and both are
+   * here because a bar of seven is five taps from the order somebody wants.
+   */
+  const bar = useMovable<Screen>({
+    items: chosen,
+    onMove: (next) => set([...next, PINNED]),
+  });
+
   const tryToggle = (screen: Screen) => {
     const why = whyNot(tabs, screen);
     // The list comes back unchanged when it refuses, so saying why is the
@@ -140,17 +154,26 @@ export function TabChooser() {
         {chosen.map((id, i) => (
           <div
             key={id}
-            style={{
-              display: 'flex',
-              gap: 'var(--sp-4)',
-              alignItems: 'center',
-              ...row,
-            }}
+            {...bar.props(id, {
+              style: {
+                display: 'flex',
+                gap: 'var(--sp-4)',
+                alignItems: 'center',
+                ...row,
+              },
+            })}
           >
             <div style={{ flex: 'none', width: 26, opacity: 0.5, display: 'flex' }}>
               <TabGlyph screen={id} size={16} />
             </div>
-            <div style={{ flex: 1, minWidth: 0, padding: '11px 0', fontSize: 'var(--type-md)' }}>
+            {/* The name is the handle a keyboard lands on: a row that can be
+                moved has to be focusable to be moved without a pointer, and
+                the two arrows beside it are buttons rather than the row. */}
+            <div
+              tabIndex={0}
+              aria-label={`${tabLabel(id)}. ${MOVE_HINT}`}
+              style={{ flex: 1, minWidth: 0, padding: '11px 0', fontSize: 'var(--type-md)' }}
+            >
               {tabLabel(id)}
             </div>
             {/* Drawn as ↑ and ↓, read as left and right: the bar is a row on

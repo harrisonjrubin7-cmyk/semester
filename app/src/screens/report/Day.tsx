@@ -6,7 +6,7 @@ import { useTrouble } from '../../lib/trouble';
 import { Blueprint } from '../../components/Blueprint';
 import { Group, ItemRow } from '../../components/shell/Rows';
 import { Insights } from '../../components/Insights';
-import { Segmented } from '../../components/ui';
+import { ActionButton, Segmented } from '../../components/ui';
 import { ask, configured, provider } from '../../lib/claude';
 import {
   EVENING_SYSTEM,
@@ -295,15 +295,14 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
 
       {configured() && (
         <>
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={() => void read()}
             disabled={busy}
-            style={{ height: 46, marginTop: 18, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            tone="primary"
+            style={{ marginTop: 18 }}
           >
             {busy ? 'Reading it…' : 'What should I make of this?'}
-          </button>
+          </ActionButton>
           {said ? (
             <Produced style={{ marginTop: 'var(--sp-6)', background: 'var(--app-panel)' }}>
               {said}

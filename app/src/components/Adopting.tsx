@@ -28,6 +28,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SAFEST, backupName, destructive, options, type Choice, type Sides } from '../lib/adopt';
+import { ActionButton } from './ui';
 import { DESKTOP, useMedia } from '../lib/media';
 
 /**
@@ -160,14 +161,13 @@ export function Adopting({
         })}
       </div>
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={go}
-        style={{ marginTop: 'var(--sp-7)', height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        tone="primary"
+        style={{ marginTop: 'var(--sp-7)' }}
       >
         {picked === SAFEST ? 'Keep both' : 'Save a backup and go ahead'}
-      </button>
+      </ActionButton>
       </div>
     </div>
   );

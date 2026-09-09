@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 import { ChevronRight } from './Icons';
 import { useRowStyle } from './shell/useShell';
 
@@ -229,12 +229,22 @@ export function DateRow({
   title,
   meta,
   onClick,
+  edge,
 }: {
   top: string;
   bottom: string;
   title: string;
   meta: string;
   onClick?: () => void;
+  /**
+   * A colour for the spine at the row's left — the course this belongs to.
+   *
+   * Passed in rather than looked up, so this stays a row that draws what it is
+   * given. Five of these stacked is the "What's coming" list, and without it
+   * five rows from four courses are five identical rows whose only difference
+   * is a course code set in 11px caps at the end of a meta line.
+   */
+  edge?: string;
 }) {
   // Spread rather than wrapped: the whole button is the tap target, and
   // `CustomRow` would put the padding outside it.
@@ -251,6 +261,12 @@ export function DateRow({
         ...row,
       }}
     >
+      {edge ? (
+        <span
+          aria-hidden
+          style={{ width: 3, alignSelf: 'stretch', flex: 'none', borderRadius: 2, background: edge }}
+        />
+      ) : null}
       <div style={{ width: 46, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}>
         <div
           style={{
@@ -480,5 +496,75 @@ export function EmptyState({
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * The button that does the thing, across the width of the screen.
+ *
+ * Written out seventy times before this — "Save a backup and go ahead", "Build
+ * the project file", "Add the requirement", "+ New note" — as the same
+ * `type="button"`, the same `btn btn-* btn-block`, the same
+ * `textTransform: 'uppercase'` and the same `letterSpacing`, with only the
+ * height and the words differing. Seventy copies of a control is seventy
+ * places to fix the next thing wrong with it, which is the argument
+ * `components/Reorder.tsx` already makes about two arrows and three copies.
+ *
+ * ## The height, settled
+ *
+ * `HEIGHT`, and there is no prop for it. Nine were in use when these were
+ * gathered — 34, 36, 40, 42, 44, 46, 48, 50 and 52 — which is what seventy
+ * separate decisions look like rather than a scale anybody designed. 46 was
+ * already thirty of the seventy and is the number kept.
+ *
+ * Two of the nine were below the tap-target minimum: Onboarding's "Skip" at 34
+ * and Work's "Stop" at 36, neither wearing a `tap` overlay. `styles/taps.test.ts`
+ * puts a fingertip at about 44px, so those two were not a smaller size of this
+ * button, they were this button too small to hit. Both are `tone="ghost"` with
+ * their own `fontSize` and opacity, so what made them quiet was never the
+ * height, and they stay quiet at 46.
+ *
+ * There is deliberately no `height` prop. A prop with a default is a prop
+ * somebody passes, and seventy call sites each passing "just this once" is how
+ * the nine happened. A call site that genuinely needs a different height can
+ * still say so in `style`, which is spread last — but it has to mean it.
+ *
+ * `spacing` is the same story at smaller scale: 0.1em on fifty-seven of the
+ * seventy, and the other four values kept as they were. Note that `.btn` in
+ * `app.css` sets 0.08em, so almost every one of these is an override — the
+ * default here is the one the app actually uses, not the one the stylesheet
+ * declares.
+ *
+ * Anything else — `marginTop`, `fontSize` — stays the caller's, through
+ * `style`, and is spread last so a call site that needs to disagree still can.
+ *
+ * `type="button"` is fixed, which is the one thing this cannot express: a
+ * submit button inside a form is a different control and `screens/Account.tsx`
+ * still writes its own.
+ */
+/** The one height. See the note above for why it is not a prop. */
+export const HEIGHT = 46;
+
+export function ActionButton({
+  tone = 'secondary',
+  spacing = '0.1em',
+  style,
+  children,
+  ...rest
+}: {
+  tone?: 'primary' | 'secondary' | 'ghost';
+  spacing?: string;
+  style?: CSSProperties;
+  children: ReactNode;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'style' | 'children'>) {
+  return (
+    <button
+      type="button"
+      className={`btn btn-${tone} btn-block`}
+      style={{ height: HEIGHT, letterSpacing: spacing, textTransform: 'uppercase', ...style }}
+      {...rest}
+    >
+      {children}
+    </button>
   );
 }

@@ -12,6 +12,7 @@
 
 import { useState } from 'react';
 import { Reorder } from './Reorder';
+import { MOVE_HINT, useMovable } from '../lib/arrange';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { ACCENTS, ground as groundOf, resolveGround } from '../lib/look';
@@ -29,6 +30,7 @@ import {
   yoursOf,
 } from '../lib/yours';
 import { useRowStyle } from './shell/useShell';
+import type { CourseId } from '../lib/types';
 
 export function YourCourses() {
   const { state, dispatch, catalog, tint: palette } = useStore();
@@ -38,12 +40,32 @@ export function YourCourses() {
   // have to be drawn for the screen in front of somebody.
   const light = groundOf(resolveGround(state.ground, usePrefersDark())).light;
 
-  if (catalog.courses.length === 0) return null;
-
-  // The order as drawn, which is what the arrows move within — the stored
-  // order can be empty or partial, and an arrow that moved a course past
-  // something not next to it would be a control nobody could predict.
+  // The order as drawn, which is what the arrows and the drag both move
+  // within — the stored order can be empty or partial, and a control that
+  // moved a course past something not next to it on screen is a control
+  // nobody could predict.
   const shown = catalog.courses.map((c) => c.id);
+
+  /*
+   * Dragging a course up the list.
+   *
+   * The whole of the drawn order is written back rather than the pair that
+   * moved: a partial order leaves the rest at the mercy of the next import,
+   * which is the one thing somebody who has just arranged their courses does
+   * not expect. Held on the row's top line only — the panel it opens has a
+   * text box in it, and a drag that started in a name box would be a name box
+   * nobody can put their cursor in.
+   *
+   * Above the empty case rather than after it: a hook that is skipped on the
+   * render where somebody has no courses yet is a hook the next render counts
+   * differently.
+   */
+  const list = useMovable<CourseId>({
+    items: shown,
+    onMove: (order) => dispatch({ type: 'setCourseOrder', order }),
+  });
+
+  if (catalog.courses.length === 0) return null;
 
   return (
     <>
@@ -67,7 +89,11 @@ export function YourCourses() {
 
         return (
           <div key={c.id} style={row}>
-            <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
+            <div
+              {...list.props(c.id, {
+                style: { display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' },
+              })}
+            >
               <button
                 type="button"
                 className="bare tappable"
@@ -89,8 +115,14 @@ export function YourCourses() {
               <button
                 type="button"
                 className="bare tappable"
-                onClick={() => setOpen(isOpen ? '' : c.id)}
+                // A drop ends in a click on the row it started from, and
+                // without this the course you have just moved also opens.
+                onClick={() => {
+                  if (list.tookDrop()) return;
+                  setOpen(isOpen ? '' : c.id);
+                }}
                 aria-expanded={isOpen}
+                aria-label={`${c.code} ${nameFor(c, state.yours)}. ${MOVE_HINT}`}
                 style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: '10px 0' }}
               >
                 <span

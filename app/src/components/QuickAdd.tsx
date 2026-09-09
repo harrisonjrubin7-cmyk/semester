@@ -27,6 +27,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { capture, enough, readBack } from '../lib/capture';
+import { ActionButton } from './ui';
 import { DESKTOP, useMedia } from '../lib/media';
 
 /**
@@ -176,20 +177,14 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={add}
             disabled={!ready}
-            style={{
-              height: 46,
-              marginTop: 'var(--sp-7)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.09em',
-            }}
+            tone="primary" spacing="0.09em"
+            style={{ marginTop: 'var(--sp-7)' }}
           >
             Add it
-          </button>
+          </ActionButton>
         </div>
       ) : (
         <div

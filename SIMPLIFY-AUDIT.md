@@ -413,14 +413,17 @@ ruled that `grades` stays a screen; this is the second door to it.
 
 ### Kept, with the reason
 
-- **Study → "Tonight" is not the `tonight` screen.** The tab is "Tonight's 25
-  minutes": weakest unit per course, ordered by mastery, opening a card drill.
-  The screen is points of final grade per hour over outstanding deadlines. Two
-  questions — *what should I revise* and *how do I spend the evening* — that
-  happen to share a word. Both kept, per the rule about two things that look
-  alike. **The shared name was the real cost, and it is the half that could be
-  fixed without merging anything: the tab is "Revise" (T3). Two jobs, two
-  names, both still there.**
+- **Study → "Tonight" is not the `tonight` screen.** The tab ranks every unit
+  in every course by what has come round in the review schedule, how cold it
+  is and what is tested soon, then fills the time you say you have and starts
+  the cards. The screen is points of final grade per hour over outstanding
+  deadlines. Two questions — *what should I revise* and *how do I spend the
+  evening* — that happen to share a word. Both kept, per the rule about two
+  things that look alike. **The shared name was the real cost, and it is the
+  half that could be fixed without merging anything: the tab is "Revise" (T3).
+  Two jobs, two names, both still there.** (The tab was "Tonight's 25 minutes"
+  — the weakest unit per course, sized by a fixed string in the course module —
+  until `lib/revise.ts`.)
 - **Progress → "Everything" is not the `everything` screen.** `Everything.tsx`
   argues this out in its own file comment and section 1 Cluster D accepted it:
   "where is the thing called X" versus "what would I use this for, and what
@@ -502,17 +505,20 @@ only one caller and one frame.
 
 **50 → 49 destinations.**
 
-### The rest of the sweep, which found nothing
+### The rest of the sweep
 
 Two censuses run alongside T2', recorded because a null result is worth as much
-as a finding:
+as a finding — and one of them was a null result for the wrong reason.
 
-- **Controls.** Every `set*` action in `state/slices/settings.ts` against every
-  file that dispatches it: 18 actions, and exactly one — `setLook` — is written
-  from more than one file. Those four writes touch different keys (colour and
-  type on Settings › Appearance, the shell and nav pickers through the shared
-  `Appearance` component, the springboard's arrangement in `nav/Folder`). No
-  control has a second copy.
+- **Controls. This one was wrong, and §3 above says why.** The census was every
+  `set*` action in `state/slices/settings.ts` against every file that dispatches
+  it: 18 actions, one of them — `setLook` — written from more than one file, and
+  those four writes touch different keys. That is all true and it is not the
+  question. The Claude key, the proxy field and the model picker were a genuine
+  second copy at the time this ran, and they call `saveSettings()` rather than
+  the reducer, so no `set*` census could have seen them however carefully it was
+  run. Read as "no control is duplicated *through the reducer*"; §3 has the
+  finding and #46 has the merge.
 - **Routes, recounted.** `edit` 5, `import` 4, `mine` 3, everything else two or
   fewer — unchanged from section 2 and left alone for its reasons.
 - **Screens imported by screens**, the other way a screen could hide inside

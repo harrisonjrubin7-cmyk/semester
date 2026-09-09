@@ -13,6 +13,8 @@
  * future version does not leave a hole in somebody's saved order.
  */
 
+import { nudged } from './arrange';
+
 export interface FeedSection {
   id: string;
   label: string;
@@ -135,14 +137,10 @@ export function visible(saved: unknown, hidden: Record<string, boolean>): string
  * too often and the thing you were promoting is suddenly last.
  */
 export function move(saved: string[] | undefined, id: string, by: -1 | 1): string[] {
-  const list = ordered(saved);
-  const from = list.indexOf(id);
-  if (from === -1) return list;
-  const to = from + by;
-  if (to < 0 || to >= list.length) return list;
-  const next = [...list];
-  [next[from], next[to]] = [next[to], next[from]];
-  return next;
+  // Against the resolved order, never the saved one: a saved order can be
+  // partial or predate a section, and an arrow that moved a row past
+  // something not next to it on screen is a control nobody can predict.
+  return nudged(ordered(saved), id, by);
 }
 
 export function sectionLabel(id: string): string {
