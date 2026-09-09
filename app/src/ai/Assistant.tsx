@@ -889,10 +889,9 @@ export function Assistant() {
                   */}
                   {talk.busy && (
                     <div aria-hidden style={{ fontSize: 'var(--type-sm)' }}>
-                      {talk.streaming ? (
-                        <Reply text={talk.streaming} />
-                      ) : (
-                        <Waiting who={provider()} />
+                      {talk.streaming && <Reply text={talk.streaming} />}
+                      {(!talk.streaming || talk.looking.length > 0) && (
+                        <Waiting who={provider()} doing={talk.looking} />
                       )}
                     </div>
                   )}

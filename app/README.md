@@ -249,6 +249,36 @@ server-side so the .p8 never reaches the browser.
 with the course guide as system context, and a card-maker that refuses anything
 it cannot parse cleanly rather than inventing a card.
 
+### Two kinds of tool, and the rule that tells them apart
+
+The assistant has two tool sets and they are opposites, split by risk.
+
+`src/lib/tools.ts` **proposes**. A call there changes something — a task added,
+a class marked absent, a screen opened — so nothing runs: it becomes one line
+saying exactly what would happen, with a button, and you decide. Every write
+carries its own undo, worked out before the change rather than after.
+
+`src/lib/lookup.ts` **reads**. A call there changes nothing — it takes state and
+returns a string, and there is no `dispatch` in the file to call — so waiting for
+a tap would be friction protecting nobody. It runs at once and the answer goes
+straight back to the model in a second request.
+
+That second door exists because the first one is decided too early.
+`src/lib/context.ts` chooses what travels with a question from keywords, before
+anything has read the question properly, and a heuristic that misses used to
+leave the model saying *I do not have your grades* about numbers on the same
+device. Now it can go and get them: deadlines and their ids, a course's grading
+and where you stand in it, absences against the policy, a search of your own
+study guide, your own task list, and which classes meet on a day. What is read
+is named on screen while it happens and joins the *what it read* row underneath
+the answer.
+
+Nothing about the boundary moved. Every lookup reaches a category
+`context.ts`'s allowlist already names — what changed is who asks, not what may
+be asked for — and `lookup.test.ts` runs every lookup against a state holding a
+private note, a task note, another person and a letter, and asserts none of them
+comes back.
+
 ## What persists
 
 `localStorage`, under `semester.v1`: ticked tasks, saved events, alert
@@ -338,6 +368,9 @@ prevent.
 | What a school does and does not have (meal swipes, a card, an LMS) | `lib/school.ts` |
 | What the date turns into on screen — labels, "today", countdowns | `lib/select.ts` |
 | What the assistant can do | `ai/providers/` |
+| What the assistant may offer to change, and how each is undone | `lib/tools.ts` |
+| What the assistant may look up for itself, mid-answer | `lib/lookup.ts` |
+| What leaves the device when a question is asked | `lib/context.ts` (`PICK`) |
 | The spacing, type and leading scales every screen is held to | `styles/rules.ts` |
 | What each screen is still owed off those scales, per file | `styles/budget.ts` (generated: `npm run lint:styles -- --fix`) |
 | How a list is dragged into a different order, and what an arrow means | `lib/arrange.ts` |

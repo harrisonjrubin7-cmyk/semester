@@ -393,3 +393,78 @@ describe('conversations that come out of the list', () => {
     expect(liveNow()).toBe(before);
   });
 });
+
+
+/**
+ * The loop that lets an answer go and get what it was not given.
+ *
+ * Read out of the source for the same reason the test above is: these are
+ * shapes rather than behaviours, and every one of them still passes a
+ * component test after it has broken. The behaviour they protect is in
+ * `lib/lookup.test.ts`; what is here is the wiring around it, and each of
+ * these was a live bug or a near miss while it was being built.
+ */
+describe('looking something up mid-answer', () => {
+  const converse = () => source('./converse.ts');
+
+  it('tells the two kinds of tool apart before doing anything with either', () => {
+    /*
+     * `isLookup` is the whole safety argument. A read runs at once and
+     * returns to the model; a write becomes a card and waits for a tap. One
+     * function decides which, and it decides before `readProposal` is
+     * reached — a lookup that fell through to the proposal branch would be a
+     * button offering to do something that has already happened.
+     */
+    const src = converse();
+    expect(src.indexOf('isLookup(call.name)')).toBeGreaterThan(-1);
+    expect(src.indexOf('isLookup(call.name)')).toBeLessThan(src.indexOf('readProposal(call'));
+  });
+
+  it('bounds how many times one question may go back', () => {
+    // Without a ceiling, a model that keeps asking keeps being answered, and
+    // one question quietly becomes twenty requests on the student's key.
+    expect(converse()).toContain('MOST_ROUNDS');
+  });
+
+  it('keeps the lookups out of the transcript and in the request', () => {
+    /*
+     * Two turns per round go to the API and none of them to the thread. What
+     * is remembered is the question and the answer — nobody wants to scroll
+     * past `read_grades: ECON 1010` to reread what they were told, and the
+     * thread list titles itself from the turns.
+     */
+    const src = converse();
+    expect(src).toMatch(/remember\(\[\s*\.\.\.next,/);
+    expect(src).not.toMatch(/remember\(\[\s*\.\.\.sending/);
+  });
+
+  it('says what it is reading while it reads it', () => {
+    // A pause a second longer than usual with no account of why reads as a
+    // stall. Both surfaces draw the same line, from the same field.
+    expect(converse()).toContain('setLooking(found.saying)');
+    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+      expect(source(file), file).toContain('doing={talk.looking}');
+    }
+  });
+
+  it('marks an answer that stopped because it ran out of room', () => {
+    /*
+     * The one stop reason a reader cannot see. `incomplete` already exists
+     * for the Stop button and does exactly the right two things — says so on
+     * screen, and tells the model in the next request that this answer was
+     * cut rather than concluded.
+     */
+    const src = converse();
+    expect(src).toContain("why === 'max_tokens'");
+    expect(src).toContain('ranOut ? { incomplete: true } : {}');
+  });
+
+  it('clears that line when the request it explains has failed', () => {
+    // In `finally`, not after the loop: a request that throws halfway leaves
+    // "Reading your grades" on screen under an error message otherwise.
+    const src = converse();
+    const fin = src.indexOf('} finally {');
+    expect(fin).toBeGreaterThan(-1);
+    expect(src.slice(fin)).toContain('setLooking([])');
+  });
+});

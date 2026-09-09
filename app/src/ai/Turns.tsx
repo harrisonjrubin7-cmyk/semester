@@ -232,8 +232,14 @@ const QUIET = {
  * says "something is loading" and nothing else, and not invented status text
  * — it does not claim to be "thinking about your grades" when what it is
  * doing is waiting on a network.
+ *
+ * `doing` is the exception that proves it, and it is not invented either: it
+ * is the list of lookups that have actually run this turn, named by
+ * `lib/lookup.ts` in the student's own words. When it is there the wait really
+ * is a second request carrying their grades, and saying so is both true and
+ * the most reassuring thing available.
  */
-export function Waiting({ who }: { who: string }) {
+export function Waiting({ who, doing = [] }: { who: string; doing?: string[] }) {
   return (
     <div
       style={{
@@ -259,7 +265,7 @@ export function Waiting({ who }: { who: string }) {
           />
         ))}
       </span>
-      {who} is reading your screen…
+      {doing.length > 0 ? `${doing.join(', ')}…` : `${who} is reading your screen…`}
     </div>
   );
 }
