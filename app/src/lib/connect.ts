@@ -162,7 +162,7 @@ export interface Token {
   account: string;
 }
 
-type TokenStore = Partial<Record<ProviderId, Token>>;
+export type TokenStore = Partial<Record<ProviderId, Token>>;
 
 export function tokens(): TokenStore {
   try {
@@ -170,6 +170,25 @@ export function tokens(): TokenStore {
   } catch {
     return {};
   }
+}
+
+/**
+ * The providers this app can write to, as opposed to read from.
+ *
+ * Not the same question as `PROVIDERS[id].calendar`, which says an account
+ * publishes a calendar worth reading: Zoom publishes meetings and answers
+ * true, while `addEvent` and `addTask` below have no Zoom branch at all. A
+ * screen that asked the flag therefore offered a student with only Zoom
+ * connected a column of buttons whose every press came back "Zoom has no
+ * calendar to write to". Kept here, beside the two functions whose branches
+ * decide it, so it cannot drift from them the way a filter written out on a
+ * screen did.
+ */
+export const WRITABLE: ProviderId[] = ['google', 'microsoft'];
+
+/** Which of those are actually connected, in the order they are offered. */
+export function writable(held: TokenStore = tokens()): ProviderId[] {
+  return WRITABLE.filter((id) => held[id]);
 }
 
 function saveToken(token: Token): void {

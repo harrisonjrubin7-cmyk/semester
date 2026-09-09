@@ -52,7 +52,6 @@ const Ask = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
 const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
 const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
-const Cloud = lazy(() => import('./screens/Cloud').then((m) => ({ default: m.Cloud })));
 const Connect = lazy(() => import('./screens/Connect').then((m) => ({ default: m.Connect })));
 const Links = lazy(() => import('./screens/Links').then((m) => ({ default: m.Links })));
 const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Costs })));
@@ -114,6 +113,7 @@ import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
 import { settingsTitle } from './lib/settings';
 import { chromeFor, homeShape } from './lib/chrome';
+import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
 import { ShelfNav } from './components/nav/ShelfNav';
@@ -167,6 +167,22 @@ function Loading() {
         />
       ))}
     </div>
+  );
+}
+
+/**
+ * The way past the chrome, for a keyboard.
+ *
+ * One component rather than the markup twice: the phone had it and the wide
+ * layout did not, which is the failure mode of anything written out in two
+ * return statements. `#main` is the `<main>` in `ScrollArea`, which is the
+ * same element in both.
+ */
+function SkipLink() {
+  return (
+    <a className="skip-link" href="#main">
+      Skip to content
+    </a>
   );
 }
 
@@ -355,8 +371,6 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Yours, never invented', title: 'Sources' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
-    case 'cloud':
-      return { kicker: 'Files, mail and your calendar', title: 'Your accounts' };
     case 'slides':
       return { kicker: about('deck'), title: 'Slides' };
     case 'import':
@@ -860,8 +874,6 @@ function CurrentScreen() {
       return <Sources />;
     case 'account':
       return <AccountScreen />;
-    case 'cloud':
-      return <Cloud />;
     case 'slides':
       return <SlideDeck />;
     default:
@@ -885,7 +897,7 @@ function Rail() {
   // a phone, which the rail is not on.
   // Taken from the one list of places, so the rail cannot drift out of step
   // with what Me and search know about.
-  const extras = ['ask', 'import', 'account', 'connect', 'cloud', 'settings']
+  const extras = ['ask', 'import', 'account', 'connect', 'settings']
     .map((s) => destination(s as Screen))
     .filter((d): d is NonNullable<typeof d> => Boolean(d))
     // Not twice. Four of these six can now be put in the bar, and the rail
@@ -1091,6 +1103,9 @@ export default function App() {
        * second half of an empty grid.
        */
       <div className={chrome.rail ? 'desk' : 'desk desk-one'}>
+        {/* First in the tree, so it is the first tab stop. See the note in
+            the phone layout below. */}
+        <SkipLink />
         <Fresh />
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
             and not another. Renders nothing unless the sheet is open. */}
@@ -1146,9 +1161,14 @@ export default function App() {
           <ScrollArea screen={state.screen} key={state.screen}>
             <SoftTop />
             <Suspense fallback={<Loading />}>
-              <ShellBody screen={state.screen}>
-                <CurrentScreen />
-              </ShellBody>
+              {/* Keyed on the screen so moving on clears a failure. Inside
+                  the chrome, so a screen that falls over leaves you
+                  somewhere you can leave from. See `Boundary.tsx`. */}
+              <ScreenTrouble key={state.screen} onLeave={() => dispatch({ type: 'go', screen: 'home' })}>
+                <ShellBody screen={state.screen}>
+                  <CurrentScreen />
+                </ShellBody>
+              </ScreenTrouble>
             </Suspense>
             <SoftBar />
           </ScrollArea>
@@ -1164,10 +1184,15 @@ export default function App() {
         focus. With fifty screens behind a header and a tab bar, a keyboard
         user's only route into the content was to tab through the whole of
         both, on every screen, every time.
+
+        In both layouts, which it was not: this was in the phone's return
+        statement only, so the wide one — a laptop, where a keyboard is the
+        primary input rather than an accessibility route — had no skip link
+        at all. Tabbing into a screen there meant eleven stops through the
+        rail and the header first, every time, which is exactly the problem
+        this element exists to solve.
       */}
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
+      <SkipLink />
       <Fresh />
       <Ringing />
       <PushTop />
@@ -1189,9 +1214,13 @@ export default function App() {
       <ScrollArea screen={state.screen} key={state.screen}>
         <SoftTop />
         <Suspense fallback={<Loading />}>
-          <ShellBody screen={state.screen}>
-            <CurrentScreen />
-          </ShellBody>
+          {/* The same boundary as the wide layout above. Both, or a screen
+              that fails on a phone still takes the whole app with it. */}
+          <ScreenTrouble key={state.screen} onLeave={() => dispatch({ type: 'go', screen: 'home' })}>
+            <ShellBody screen={state.screen}>
+              <CurrentScreen />
+            </ShellBody>
+          </ScreenTrouble>
         </Suspense>
         <SoftBar />
       </ScrollArea>

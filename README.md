@@ -146,16 +146,13 @@ and an answer stays prose.
   Put it in `app/.env.local`; without one the app says so and points at the file
   route instead.
 
-Once an account is connected, **Files & mail** is where it earns its place:
-
-- **Files** — the syllabus is in Drive or OneDrive, not on the phone. Pull it
-  into a course directly; what reads as a question and an answer becomes cards.
-- **Mail** — course announcements arrive as email and are lost by Thursday. The
-  app finds the ones naming a course and turns them into material or a task.
-  Read-only: it never sends anything as you.
-- **Send out** — deadlines onto the calendar you actually use, this week's
-  classes as events, your own tasks into To Do or Google Tasks. They add rather
-  than sync, so running one twice makes duplicates, and the screen says so.
+Once an account is connected, the same screen lists its recent files, so the
+syllabus sitting in Drive or OneDrive can be opened without downloading and
+re-uploading it. There was a second screen behind this one — Files & mail —
+that listed the same files again, swept the inbox for course mail and pushed
+deadlines out to Google or Microsoft. It has been deleted: two of its three
+tabs were already here or under Write an email, and the whole thing was one
+more thing to find. Nothing sends mail as you, and nothing did before.
 
 Apple is a third case, and the screen says which half is which: **iCloud
 calendars** come in with no account and no key — publish one from the Calendar

@@ -15,7 +15,6 @@ import {
   Bell,
   CalendarIcon,
   CampusIcon,
-  Check,
   CoursesIcon,
   MakeIcon,
   MapIcon,
@@ -49,9 +48,6 @@ const SHELF: Record<Group, Glyph> = {
   Courses: CoursesIcon,
   Study: StudyIcon,
   Make: MakeIcon,
-  // Standing is where you find out how it is going, and the tick is the mark
-  // the app uses for a thing settled — a grade in, a week worked.
-  Standing: Check,
   Campus: CampusIcon,
   // Life is the term around the coursework, and Mine is the largest thing on
   // it, so it lends its glyph the way Study and Make do.

@@ -137,7 +137,6 @@ export const WHY: Partial<Record<Screen, string>> = {
   maps: 'A building code is not a location, and ten minutes between classes is not much.',
   yes: 'Registration opens at a time, and the good sections go in the first hour.',
   mail: 'The email you are putting off is usually four sentences.',
-  cloud: 'A reading in Drive is a reading you have to remember to go and get.',
   connect: 'The calendar you already keep can feed this one instead of being retyped.',
   clocks: 'A countdown you can see is the difference between a study hour and an evening.',
   export: 'It is your data, and being able to leave is what makes staying a choice.',

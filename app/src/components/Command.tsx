@@ -53,7 +53,14 @@ export function Command({ onClose }: { onClose: () => void }) {
 
   const found = useMemo(
     () => findEverything(catalog, now, text, state.notes, state.tasks, school.capabilities, state.updates),
-    [catalog, now, text, state.notes, state.tasks, school.capabilities],
+    // `state.updates` is searched and was not listed here, so the results
+    // could not see material added after the palette opened. `catalog` does
+    // not cover it either — that memo depends on the term, the ordering and
+    // the courses, not on what has been added to them — so nothing else was
+    // making this recompute. Reachable while the palette is open through a
+    // sync landing new material, which is rare and is not the same as
+    // impossible.
+    [catalog, now, text, state.notes, state.tasks, school.capabilities, state.updates],
   );
 
   /*

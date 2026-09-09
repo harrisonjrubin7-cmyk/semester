@@ -237,22 +237,28 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 688,
+  type: 682,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 222,
+  leading: 220,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 533,
+  space: 523,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 545,
+  shorthand: 541,
 };
 
 /*
- * 688/224/534/549 → 688/222/533/545 when the assistant's panel became the
+ * 682/222/524/545 → 682/220/523/541 when the assistant's panel became the
  * chat. Three numbers down and none up, and none of it by reformatting: the
  * panel's transcript, opening, header and footer are now the same components
  * and the same measure the Ask tab uses, so the two loose 1.4 line heights,
  * the hand-set gap and the four `'12px 16px'`-shaped paddings it drew for
  * itself went with the layout they belonged to. See `ai/Assistant.tsx`.
+ *
+ * 688/224/534/549 → 682/222/524/545 when Files & mail was deleted. All four
+ * down and none up: the screen listed Drive files and inbox messages in rows
+ * it drew by hand, and Connect accounts already lists the same files. What it
+ * did that nothing else does — pushing deadlines out to Google or Microsoft —
+ * went with it rather than being moved, so nothing was reformatted here.
  *
  * 689/537/551 → 688/534/549 when the Ask tab became the conversation: the
  * screen that was a key form is a settings page built from `Group` and

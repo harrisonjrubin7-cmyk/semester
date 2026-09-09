@@ -8,7 +8,7 @@
  * worse than not trying.
  *
  * So: the drawn icon where one exists, and otherwise the icon of the shelf
- * the screen sits on in `lib/nav.ts`. Nine shelves, nine fallbacks. A student
+ * the screen sits on in `lib/nav.ts`. One fallback per shelf. A student
  * who puts Draft it, Make a deck and Draw it in the bar gets three pen nibs,
  * which is honest — they are three things from the same shelf — and the label
  * underneath is what tells them apart. The alternative was a blank square,
