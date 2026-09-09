@@ -36,7 +36,6 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
   item: 'One deadline. Opened from the course it belongs to, or from Today.',
   event: 'One calendar entry. Opened from the calendar.',
   note: 'One note. Opened from Notes, or made by the + button.',
-  search: 'The search itself, in the header of every screen. It cannot list itself.',
   guide: 'A course’s field guide. Opened from Study, for a course.',
   quiz: 'A quiz on one unit. Opened from Study.',
   drill: 'Cards for one unit. Opened from Study.',

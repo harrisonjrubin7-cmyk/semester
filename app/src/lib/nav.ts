@@ -705,7 +705,6 @@ const NESTED: Partial<Record<Screen, Screen>> = {
   lesson: 'study',
   slides: 'study',
   note: 'mine',
-  search: 'home',
   // Every settings page lives under Me, the same as settings itself, so the
   // tab bar does not change out from under somebody two taps deep in it.
   setLook: 'me',

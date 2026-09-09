@@ -11,8 +11,6 @@ import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { Bell } from '../components/Icons';
 import { NOTIFICATIONS } from '../data/misc';
 import { datedItems, loadByCourse } from '../lib/select';
-import { countHits, findEverything, type Hit } from '../lib/find';
-import { openHit } from '../lib/openhit';
 import {
   GROUPS,
   byTask,
@@ -726,93 +724,6 @@ export function Me() {
             ))}
           </nav>
         </>
-      )}
-    </Page>
-  );
-}
-
-/**
- * Search, across the whole app rather than the deadlines alone.
- *
- * It also finds screens, so somebody who wants their Gmail readings does not
- * have to know that the thing they want is called "Connect accounts" and lives
- * two taps under Me. Typing what you want is allowed to be the way you get
- * there.
- */
-export function Search() {
-  const { state, dispatch, now, catalog, school } = useStore();
-  const rowTwelve = useRowStyle(12);
-  const groups = findEverything(catalog, now, state.query, state.notes, state.tasks, school.capabilities, state.updates);
-  const total = countHits(groups);
-  const typed = state.query.trim().length > 0;
-
-  // Shared with the search overlay rather than repeated. Two copies drift the
-  // first time a kind of hit is added, and a result that opens from one place
-  // and not the other reads as the app being broken. See `lib/openhit.ts`.
-  const open = (hit: Hit) => openHit(hit, dispatch);
-
-  return (
-    <Page>
-      <input
-        className="input"
-        value={state.query}
-        onChange={(e) => dispatch({ type: 'setQuery', query: e.target.value })}
-        placeholder="A course, a topic, a deadline, a screen…"
-        style={{ height: 44, fontSize: 'var(--type-lg)' }}
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
-        aria-label="Search everything"
-      />
-
-      {typed && total > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)' }}>
-          {total} {total === 1 ? 'result' : 'results'}
-        </div>
-      )}
-
-      {groups.map((group) => (
-        <div key={group.label}>
-          <SectionLabel style={{ margin: 'calc(18px * var(--density, 1)) 0 calc(4px * var(--density, 1))' }}>{group.label}</SectionLabel>
-          {group.hits.map((hit) => (
-            <button
-              key={`${hit.kind}-${hit.title}-${hit.sub}`}
-              type="button"
-              className="bare tappable"
-              onClick={() => open(hit)}
-              style={{
-                display: 'flex',
-                gap: 'var(--sp-5)',
-                alignItems: 'center',
-                textAlign: 'left',
-                ...rowTwelve,
-              }}
-            >
-              <span className={hit.kind === 'screen' ? 'tag tag-outline' : 'tag tag-accent'}>
-                {hit.tag}
-              </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{hit.title}</span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, lineHeight: 1.35 }}>
-                  {hit.sub}
-                </span>
-              </span>
-            </button>
-          ))}
-        </div>
-      ))}
-
-      {typed && total === 0 && (
-        <EmptyState
-          title={`Nothing matches “${state.query}”.`}
-          body="Try a course code, a topic from a guide, a professor, or the name of a screen."
-        />
-      )}
-
-      {!typed && (
-        <EmptyState
-          title="Search everything."
-          body="Deadlines, courses, study units, your own notes and tasks — and the app's own screens, so you can type where you want to go instead of hunting for it."
-        />
       )}
     </Page>
   );
