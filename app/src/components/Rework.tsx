@@ -110,7 +110,7 @@ export function Rework({
       </button>
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-5)', color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
+        <div role="alert" style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-5)', color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       ) : null}

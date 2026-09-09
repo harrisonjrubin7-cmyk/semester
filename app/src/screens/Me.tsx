@@ -459,7 +459,8 @@ export function Me() {
         */}
         {weekPct !== null && weekPct > 0 && (
           <div style={{ marginTop: 'var(--sp-3)' }}>
-            <Meter pct={weekPct} />
+            {/* `weekLine` beside it already says "3 of 5 done". */}
+            <Meter pct={weekPct} label={null} />
           </div>
         )}
       </button>
@@ -479,7 +480,8 @@ export function Me() {
               bar cannot draw. */}
           {termPct > 0 && (
             <div style={{ marginTop: 'var(--sp-3)' }}>
-              <Meter pct={termPct} />
+              {/* The sentence under it reads "{termPct}% of the way…". */}
+              <Meter pct={termPct} label={null} />
             </div>
           )}
           <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
@@ -538,7 +540,12 @@ export function Me() {
             */}
             {cards.seen > 0 && (
               <div style={{ marginTop: 'var(--sp-3)' }}>
-                <Meter pct={Math.round((cards.seen / cards.deck) * 100)} />
+                {/* Coverage, which the comment above says the line does not
+                    carry — so the bar has to say it out loud. */}
+                <Meter
+                  pct={Math.round((cards.seen / cards.deck) * 100)}
+                  label="Share of the deck seen"
+                />
               </div>
             )}
           </button>
@@ -570,7 +577,7 @@ export function Me() {
             {/* Four bars in one metal are four bars you have to read the label
                 of. In their courses' colours they are the same four facts,
                 comparable at a glance and matched to every other list. */}
-            <Meter pct={b.pct} fill={tint(b.id).fill} />
+            <Meter pct={b.pct} fill={tint(b.id).fill} label={`Share of what is left, ${b.code}`} />
           </div>
         </button>
       ))}
