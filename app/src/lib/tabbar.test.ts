@@ -69,6 +69,17 @@ describe('reading back what was stored', () => {
     ]);
   });
 
+  it('drops a screen that has since merged into another', () => {
+    /*
+     * A saved bar outlives the app that wrote it. Grades was a destination
+     * anybody could put in their bar, and is the grades grain of Courses now
+     * — see `screens/Grades.tsx`. The stored id must not survive as a button
+     * that goes nowhere, which is the same rule as the line above and worth
+     * asserting against a real removal rather than a made-up one.
+     */
+    expect(readTabs(['home', 'grades', 'courses'])).toEqual(['home', 'courses', PINNED]);
+  });
+
   it('drops a repeat, which two devices syncing can produce', () => {
     expect(readTabs(['home', 'study', 'home', 'calendar'])).toEqual([
       'home',
