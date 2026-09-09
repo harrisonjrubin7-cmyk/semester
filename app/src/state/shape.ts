@@ -1348,7 +1348,16 @@ export type Action =
   | { type: 'restartOnboarding' }
   | { type: 'finishOnboarding' }
   | { type: 'setLoadStep'; step: number }
-  | { type: 'startDrill'; unit: number | null }
+  /**
+   * Start a run of cards.
+   *
+   * `courseId` is optional and means what it says: drill *that* course's unit,
+   * rather than whichever guide happens to be open. Revise ranks units across
+   * the whole catalogue, so the course it wants is usually not the one last
+   * looked at — without this it had to open the guide first and the student
+   * arrived at a screen they did not ask for on the way to the cards.
+   */
+  | { type: 'startDrill'; unit: number | null; courseId?: CourseId }
   | { type: 'flip' }
   | { type: 'markCard'; got: boolean; key: string; sure?: Sure; courseId?: string }
   /** An answer recorded against a card, with no drill run around it. */
