@@ -16,6 +16,20 @@ screens.** It is in one directory drawn twice, one storage report written twice,
 and 76 pieces of code with no caller. The screen count should come down by one,
 not by nine.
 
+> **A third pass ran against `3a12e03` at the same time as this one**, by other
+> hands and without sight of it, and landed three things before this document
+> was written. They are folded in below rather than kept apart, because two
+> audits of one app is exactly the shape this command exists to remove.
+>
+> · **S2 is done** — and was reached independently, with the same survivor and
+>   the same requirement to carry the drafts and attachments rows across. Two
+>   passes agreeing about a merge from different starting points is the best
+>   evidence either of them offers.
+> · **§3's conclusion was wrong, and is corrected there.** There *was* a
+>   genuine second copy of a control. A `set*` scan cannot see it.
+> · **A second chip idiom** had five hand-rolled copies and no component; §4
+>   carries it as S8.
+
 ---
 
 ## 0. What the last five passes removed
@@ -78,7 +92,7 @@ it is the one row in this audit where the survivor is arguable, because
 Everything's own file comment argues for the split and that argument was written
 before Me grew an Everything tab.
 
-### S2 — what the app is storing, written twice · **MERGE**
+### S2 — what the app is storing, written twice · **MERGE — done**
 
 | | Reads | Renders |
 | --- | --- | --- |
@@ -97,6 +111,17 @@ not agree go with it: both show the browser's own used-of-quota, and beside it
 the drafts and the attachments as three rows. Neither is wrong and they do not
 match, which is what a number kept in two places does. Whichever survives has to
 carry the drafts and attachments rows, which exist only on `Storage` today.
+
+**Done, and reached independently.** The third pass merged this before reading
+this section and landed on the same survivor for the same reason, with one
+detail worth adding to the record: the two numbers disagreed because they were
+two *measurements*, not two renders — `Data` asks `space()` in
+`lib/inventory.ts`, `Storage` called `navigator.storage.estimate()` inline.
+`space()` survives; it asks the same browser API and also reports which backend
+is live and whether the browser has promised not to evict. The drafts and
+attachments rows moved across as this section requires, drawn below the store's
+total and outside it, since that total is the size of one string the app writes
+and these are not in it.
 
 ### S3 — code with no caller · **CUT**
 
@@ -204,6 +229,15 @@ grounds that `App`, `softtop` and the springboard are three *navigations* of
 which exactly one is drawn at a time (`NAVS` in `lib/look.ts`). That still
 holds; I re-ran it rather than trusting it.
 
+**One hole in this grep, found on the third pass and worth keeping written
+down.** `screen: '…'` misses every route through the reducers, which pass the
+screen positionally — `push({ …state, quiz: action.quiz }, 'quiz')`. Twelve
+sub-screens are reached only that way (`drill`, `quiz`, `guess`, `lesson`,
+`slides`, `exam`, `item`, `course`, `event`, `note`, `guide`, `update`), so a
+count without them makes `quiz` read as dead code when it is the second half of
+a flow that starts on the guide. The second grep is
+`grep -rhno "}, '[a-z][a-zA-Z]*'" app/src/state/slices/`.
+
 **Three destinations have nothing routing to them at all** — `activities`,
 `analyse`, `solve` — reachable by the tab bar, the directory and search only.
 That is the shape the brief asks for, and it is worth saying that the app is
@@ -226,8 +260,38 @@ Every `set*` action dispatched from more than one file outside `state/`:
 | `setDayBudget` | `Clashes`, `lib/tools` | **Fine.** The tool surface is the assistant, not a second screen. |
 | `setReport`, `setChanges`, `setQuery` | 2 each | **Deep links.** |
 
-**No genuine second copy of a control.** Same finding as the first pass, from a
-scan that now has three fewer screens to disagree about.
+### The one this scan could not see · **MERGE**
+
+**There was a genuine second copy of a control, and the table above cannot
+contain it.** The scan is "every `set*` action dispatched from more than one
+file" — and the Claude API key, the proxy field and the model picker do not go
+through the reducer at all. They call `saveSettings()` in `lib/claude.ts`, which
+writes `localStorage` directly. A duplicate implemented that way is invisible to
+this method by construction, however carefully the method is run.
+
+```
+$ grep -ln "config.apiKey" app/src/screens/*.tsx app/src/screens/settings/*.tsx
+app/src/screens/Connect.tsx            # a private ClaudeAccount(), ~145 lines
+app/src/screens/settings/Assistant.tsx # the whole screen
+```
+
+Both rendered a key field and a model list; both called `saveSettings`. Settings
+is the survivor — a strict superset, with two providers, the routing between
+them and the month's spend — and the two things only Connect had moved rather
+than died: the **check-this-key** button, and the sentence saying there is no
+"sign in with Claude" to hunt for, which now sits on the page somebody hunting
+for a login button actually lands on. Connect keeps a row saying where the key
+went. Done on the third pass.
+
+**The lesson for the next run of this section** is that "dispatched from more
+than one file" is the wrong net. The right question is *which files write this
+setting*, by whatever route — a reducer action, a direct `localStorage` write,
+or a module-level helper. The rest of the table stands; it was checked again
+after this one was found.
+
+**No other second copy of a control.** Same finding as the first pass, from a
+scan that now has three fewer screens to disagree about — and one hole in it,
+named above.
 
 ---
 
@@ -242,6 +306,29 @@ scan that now has three fewer screens to disagree about.
 | S5 | `brief`/`weekly`/`worked` libraries | 0 | Kept, recorded |
 | S6 | The assistant's two shells | 0 | Kept, `/ask-tab` |
 | S7 | The `help` / `everything` blurb collision | 0 | Reword with S1 |
+| S8 | The second chip idiom — five hand-rolled copies, no component | 0 | Shared component, **done** |
+
+Two of those are already done, on the third pass that ran alongside this one:
+
+| # | Change | Landed as |
+| --- | --- | --- |
+| S2 | Settings → Storage is a row that opens `data`; the drafts and attachments rows moved with the measuring | the survivor is `data`, as this section asks |
+| — | The Claude key stopped being a control on two screens | see §3, "the one this scan could not see" |
+| S8 | `PickChips` in `components/ui.tsx` | five sites converted, three left alone on purpose |
+
+**S8, stated properly**, because the naive count oversells it. There are two
+chip idioms in this app and only one had a component. `ChipRow` is a filled,
+uppercase 29px chip in a row that scrolls sideways, and its comment explains why
+it must not grow: the calendar stacks a `Segmented` directly above one, and at
+44px their targets overlapped by 4px, in which band the lower row silently won
+taps meant for the upper. The other is an outlined pick that wraps onto several
+lines under a heading — five copies, padding drifting between 7px and 9px, radius
+between `--r-sm` and `--r-md`. Converting those into `ChipRow` would have shrunk
+them, uppercased them and put them in a scrolling row: three changes nobody asked
+for. Registrar's found-dates list and Degree's "Taking it now" are **toggles**,
+not picks, and stay hand-written; Mine's course filter is `ChipRow`'s shape but
+its value is `CourseId | null`, and threading a sentinel through the filter for a
+styling win is not a trade worth making.
 
 **50 → 49 destinations**, and the honest headline is again that this app is
 large because it does a lot. The duplication that is left is one directory, one

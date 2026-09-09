@@ -617,7 +617,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Connect accounts',
     short: 'Connect',
     blurb: 'Your course site, Outlook, Google, Zoom — calendars and links in.',
-    keywords: 'brightspace outlook microsoft google zoom apple icloud ics feed subscribe calendar claude anthropic api key sign in with claude',
+    keywords: 'brightspace outlook microsoft google zoom apple icloud ics feed subscribe calendar drive onedrive send deadlines to my calendar',
     group: 'Data',
     taskTags: ['data'],
     root: 'me',
