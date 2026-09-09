@@ -674,6 +674,7 @@ export function FilePick({
   multiple = true,
   disabled = false,
   onPick,
+  onOpen,
   tone = 'secondary',
   style,
   children,
@@ -683,6 +684,17 @@ export function FilePick({
   multiple?: boolean;
   disabled?: boolean;
   onPick: (files: File[]) => void;
+  /**
+   * Fired as the picker opens, before the person has chosen anything.
+   *
+   * The operating system's dialog is a box the app cannot see into or draw
+   * on, so this is the only moment a screen has to say something about the
+   * choice being made — Import uses it to open the drop box underneath, which
+   * is then standing there in the open when the dialog is cancelled.
+   *
+   * It runs on the keyboard too: Enter on a focused file input is a click.
+   */
+  onOpen?: () => void;
   tone?: 'primary' | 'secondary' | 'ghost';
   style?: CSSProperties;
   children: ReactNode;
@@ -706,6 +718,7 @@ export function FilePick({
         accept={accept}
         multiple={multiple}
         disabled={disabled}
+        onClick={() => onOpen?.()}
         onChange={(e) => {
           const picked = Array.from(e.target.files ?? []);
           // Cleared before the handler runs, so that re-choosing the same file
