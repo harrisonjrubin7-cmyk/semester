@@ -169,6 +169,7 @@ export function Study() {
           });
           return (
             <Blueprint
+              plain
               key={c.id}
               style={{
                 padding: '14px 15px',
