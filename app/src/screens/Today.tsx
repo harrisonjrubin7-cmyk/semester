@@ -836,6 +836,23 @@ function FeedPart({
         <button
           type="button"
           {...feed.grip(id, {
+            /*
+             * `tap`, both ways, because this one really does stand alone.
+             *
+             * The drawn grip is 17×16 on a phone, which is the size the tap
+             * audit was about — a fingertip is 44px and does not shrink to
+             * meet a braille glyph. `tap` rather than `tap-x` or `tap-y`
+             * because the nearest other target is the next section's grip, a
+             * whole section away: there is room in every direction, which is
+             * the condition `app.css` names for using it.
+             *
+             * Half the widened target falls off the left edge of the screen,
+             * since the grip sits in the page's margin and the overlay is
+             * centred. What is left is still about 32×44, which clears the
+             * 24×24 the rest of the app is held to. Measured rather than
+             * assumed — see the note beside `top` below.
+             */
+            className: 'tap',
             style: {
               position: 'absolute',
               // Level with the heading it belongs to, and out in the page's
@@ -844,6 +861,18 @@ function FeedPart({
               top: at,
               left: -17,
               width: 17,
+              /*
+               * Above the section's own frame, or the widened target is not
+               * widened at all.
+               *
+               * Measured: without this the grip on the next-class section
+               * came back 18×45 while every other one was 32×45, because the
+               * card's frame is painted after it and takes the points to its
+               * right. Nothing interactive is there — the frame is a drawing
+               * — so lifting the grip over it costs no other control a tap,
+               * which is the thing that was checked rather than assumed.
+               */
+              zIndex: 1,
               padding: 0,
               border: 'none',
               background: 'transparent',
