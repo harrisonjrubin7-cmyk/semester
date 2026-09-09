@@ -20,7 +20,6 @@ import { AskForTime } from '../components/AskForTime';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { longLabel } from '../lib/date';
-import { Grades } from './Grades';
 import { appleMapsUrl, directionsUrl, fromRoom, prefersApple, type Destination } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
 import { DeadlineRow } from '../components/DeadlineRow';
@@ -33,15 +32,14 @@ function CoursesTabs({
   value,
   onChange,
 }: {
-  value: 'courses' | 'due' | 'grades';
-  onChange: (t: 'courses' | 'due' | 'grades') => void;
+  value: 'courses' | 'due';
+  onChange: (t: 'courses' | 'due') => void;
 }) {
   return (
     <Segmented
       options={[
         { id: 'courses', label: 'Courses' },
         { id: 'due', label: 'Coming up' },
-        { id: 'grades', label: 'Grades' },
       ]}
       value={value}
       onChange={onChange}
@@ -67,15 +65,6 @@ export function Courses() {
   if (catalog.empty) return <FirstRun where="in your courses" />;
   const tab = state.coursesTab;
 
-  if (tab === 'grades') {
-    return (
-      <Page bottom={0}>
-        <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
-        <Grades bare />
-      </Page>
-    );
-  }
-
   if (tab === 'due') {
     return (
       <Page>
@@ -87,14 +76,12 @@ export function Courses() {
 
   return (
     /*
-      Three returns, three shells.
+      Two returns, two shells.
 
       A "screen" in the registry is not always one component: this one has a
-      branch per tab, and two of them are somebody else's screen rendered
-      bare. Only the third is a list, so only the third declares an adapter —
-      the other two get the box and send what is typed to the whole app, which
-      is the honest answer for a grade table and for a deadline list that
-      already has its own three-way split.
+      branch per tab. There was a third, and it rendered the Grades screen
+      bare — the same table the Grades destination is, reached a second way.
+      Grades kept its own screen and this lost the copy.
     */
     <Page
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}
@@ -150,6 +137,7 @@ export function Courses() {
             const next = ahead.find((i) => i.c === c.id);
             return (
               <Blueprint
+                plain
                 key={c.id}
                 onClick={() => dispatch({ type: 'openCourse', id: c.id })}
                 style={{

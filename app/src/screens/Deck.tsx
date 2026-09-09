@@ -298,7 +298,7 @@ export function Deck() {
           <SectionLabel>{file.slides.length} slides</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
             {file.slides.map((slide, i) => (
-              <Blueprint key={`${slide.title}-${i}`} style={{ padding: '11px 13px' }}>
+              <Blueprint plain key={`${slide.title}-${i}`} style={{ padding: '11px 13px' }}>
                 <div className="kicker">
                   {i + 1}
                   {slide.note ? ` · ${slide.note}` : ''}

@@ -463,6 +463,7 @@ export function Maps() {
       <SectionLabel>The official maps</SectionLabel>
       <a href={CAMPUS_MAP} target="_blank" rel="noreferrer" className="bare">
         <Blueprint
+          plain
           style={{ padding: '14px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
         >
           <span style={{ flex: 1, minWidth: 0 }}>
@@ -478,6 +479,7 @@ export function Maps() {
       </a>
       <a href={CITY_MAP} target="_blank" rel="noreferrer" className="bare">
         <Blueprint
+          plain
           style={{
             padding: '14px 15px',
             marginTop: 'var(--sp-5)',

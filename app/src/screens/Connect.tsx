@@ -363,7 +363,7 @@ export function Connect() {
           const token = live[id];
           const feed = state.feeds.find((f) => f.kind === (id === 'microsoft' ? 'microsoft' : 'ics') && f.url === id);
           return (
-            <Blueprint key={id} style={{ padding: '14px 15px' }}>
+            <Blueprint plain key={id} style={{ padding: '14px 15px' }}>
               <div
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}
               >

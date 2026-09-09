@@ -290,3 +290,121 @@ used by a third of the files that should use it.
 Nothing here touches `lib/context.ts`, `docs/data-contract.md` or
 `packages/contract`, and no merge blurs a syllabus-derived date with a
 student-written one.
+
+---
+
+## 5. Duplicate tabs — an axis this pass did not look at
+
+*The section below came from a pass running on `main` at the same time as this
+one, and it is kept whole because it is right and because this audit missed it.
+Sections 1–4 look at screens, routes and controls; none of those greps can see
+a **tab that renders another screen**, because such a tab adds no destination
+and no `go` dispatch. It is a second front door all the same.*
+
+*Its two findings — Today's "Report" tab and Courses' "Grades" tab — are
+already cut on `main`. Read together with §2 above, the shape of the whole
+result is: the duplicate screens went in passes one and two, the duplicate
+tabs went here, and what this pass found was the duplicate controls.*
+
+Counted against `app/src` at `659a424`: **50 destinations**, 57 screen files.
+
+Sections 1–4 audited *screens* and *routes*. Neither catches a **tab that
+renders another screen**, because the tab adds no destination and no `go`
+dispatch — the grep in section 2 cannot see it. It is a second front door all
+the same, and it is the shape #34 removed for Settings.
+
+The tell is a `bare` prop: a screen exported with a second render path that
+drops its own `<Page>` frame so it can sit inside somebody else's.
+
+```
+$ grep -rn "bare" --include=*.tsx app/src/screens | grep -v 'className'
+screens/Reports.tsx:43   export function Reports({ bare = false })
+screens/Today.tsx:273      {tab === 'brief' && <Reports bare />}
+screens/Grades.tsx:29    export function Grades({ bare = false })
+screens/Courses.tsx:74       <Grades bare />
+```
+
+Two, and the app has exactly two remaining. Both are destinations in their own
+right, so each is one job with two homes.
+
+### Every screen-level tab bar, and what each tab is
+
+| Screen | Tabs | Any tab a destination? |
+| --- | --- | --- |
+| `home` Today | Today · Hours · Week · Done · **Report** | **Yes — `brief`** |
+| `courses` Courses | Courses · Coming up · **Grades** | **Yes — `grades`** |
+| `study` Study | Guides · Tonight · Tools | Name collision only — see below |
+| `me` Progress | You · Everything | Name collision only — see below |
+| `mine` Personal | Tasks · Events · Notes · Files | No (Places went in #35) |
+| `brief` Reports | Day · Week · Term | No — grains of one report |
+| `calendar` Calendar | Day · Week · Month · Semester | No — grains of one grid |
+| `degree` | What is left · Taken · Requirements | No |
+| `people` | People · Letters | No |
+| `clocks` | Timers · Alarms | No |
+| `applying` | Open · Add one · Closed | No |
+| `activities` | Yours · Add one · Find things | No |
+| `registrar` | Fill them in · Paste the page | No |
+| `deck` | From a unit · From a brief | No |
+| `exam` | From your cards · Written for you | No |
+| `announce` | A connected feed · Paste a calendar | No — M2's two sources |
+| `maps` | Campus · Nashville | No — map scope |
+
+Everything else that renders a `<Segmented>` is an option picker inside a form
+(`settings/Look`, `settings/Nav`, `Essay` lengths and voices, `Exam` and `Deck`
+durations, `Sources` filter). Those are controls, not tabs, and are out of
+scope.
+
+### T1 — Today's "Report" tab · **CUT the tab, keep the screen**
+
+`brief` is a destination with `short: 'Report'`, three grains of its own, and
+its own `keywords`. Today renders the same component inline as a fifth tab.
+Pressing Today → Report and opening Reports land on the identical body, and
+the tab even shares `state.report`, so the grain you left on one is the grain
+you find on the other. One job, two homes.
+
+The tab is the copy that goes, per #34: the screen is the thing the directory,
+the search box and the tab bar all point at, and a tab cannot be any of those.
+It also buys back the fifth-tab problem the code comments about — the comment
+at `Today.tsx:262` records that "This week" had to be shortened to "Week"
+because Report made the switcher a fifth tab and it wrapped to two lines.
+
+### T2 — Courses' "Grades" tab · **CUT the tab, keep the screen**
+
+Identical shape. `grades` is a destination (`root: 'courses'`, `taskTags:
+['stand']`); `Courses.tsx:70` intercepts its own `grades` tab and returns
+`<Grades bare />` inside a `<Page bottom={0}>`. Section 1 Cluster E already
+ruled that `grades` stays a screen; this is the second door to it.
+
+### Kept, with the reason
+
+- **Study → "Tonight" is not the `tonight` screen.** The tab is "Tonight's 25
+  minutes": weakest unit per course, ordered by mastery, opening a card drill.
+  The screen is points of final grade per hour over outstanding deadlines. Two
+  questions — *what should I revise* and *how do I spend the evening* — that
+  happen to share a word. Kept, per the rule about two things that look alike.
+  **The shared name is a real cost and is recorded here as a naming collision,
+  not a duplication.**
+- **Progress → "Everything" is not the `everything` screen.** `Everything.tsx`
+  argues this out in its own file comment and section 1 Cluster D accepted it:
+  "where is the thing called X" versus "what would I use this for, and what
+  have I never opened". Same collision, same verdict.
+- **Today → "Week" is not `ahead`.** Five upcoming rows and the next campus
+  event, against seven days of hours arithmetic, clash detection and reading
+  extents. A preview is not the screen it previews.
+
+### Done
+
+| # | Change | Tabs | Destinations | Done |
+| --- | --- | --- | --- | --- |
+| T1 | Today's "Report" tab → the `brief` screen | −1 | 0 | ✅ `0ec5044` |
+| T2 | Courses' "Grades" tab → the `grades` screen | −1 | 0 | ✅ `0ec5044` |
+
+### After T1 and T2
+
+Two tabs go; no destination goes; nothing becomes unreachable, because in both
+cases the survivor is the destination and it keeps its own row, keywords and
+task tags. `homeTab` and `coursesTab` are `Ephemeral` — declared in the
+`Ephemeral` interface, defaulted in `blank()`, never read back out of a save —
+so there is no persisted value to migrate, which is why #34 narrowed `meTab`'s
+union and added no migration either. The `bare` prop and its second render path
+come out of both screens with the callers.

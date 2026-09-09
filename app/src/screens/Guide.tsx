@@ -447,7 +447,7 @@ export function Guide() {
                     {onUnit(i)
                       .filter((up) => up.body)
                       .map((up) => (
-                        <Blueprint key={up.id} style={{ padding: '13px 14px' }}>
+                        <Blueprint plain key={up.id} style={{ padding: '13px 14px' }}>
                           <div className="kicker">
                             Added{up.source ? ` · ${up.source}` : ''}
                           </div>
@@ -795,6 +795,7 @@ function Documents() {
           {files.map((f) => (
             <a key={f.label} href={f.href} target="_blank" rel="noreferrer" className="bare">
               <Blueprint
+                plain
                 style={{ padding: '14px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
               >
                 <span
@@ -945,7 +946,7 @@ function Cases() {
           <SectionLabel>The debates, claim by claim</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
             {guide.cases.map((c) => (
-              <Blueprint key={c.title} style={{ padding: '14px 15px' }}>
+              <Blueprint plain key={c.title} style={{ padding: '14px 15px' }}>
                 <div className="kicker">{c.when}</div>
                 <div
                   style={{
@@ -1012,7 +1013,7 @@ function Cases() {
       <SectionLabel>Apply it</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {examples.map((e) => (
-          <Blueprint key={e.t} style={{ padding: '14px 15px' }}>
+          <Blueprint plain key={e.t} style={{ padding: '14px 15px' }}>
             <span className="tag tag-accent">{e.tag}</span>
             <div
               style={{
