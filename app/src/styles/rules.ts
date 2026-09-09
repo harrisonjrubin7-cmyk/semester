@@ -237,16 +237,24 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 680,
+  type: 678,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 221,
+  leading: 220,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 521,
+  space: 520,
   /** `padding: '11px 0'` and the like: two axes in one string. */
   shorthand: 509,
 };
 
 /*
+ * 680/221/521/509 → 678/220/520/509 when Study's Revise and Tools tabs were
+ * rebuilt. Three down, none up, and none by reformatting anything that was
+ * already there: the two tabs' hand-set 11.5px captions, one 1.25 line height
+ * and one 11px padding went when the rows they were on were rewritten, and
+ * what replaced them is on the scale. The two new section headings take
+ * `SectionLabel`'s own margin rather than overriding it, which is why the
+ * shorthand count did not move either way.
+ *
  * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
  * down and none up: the tab was a second copy of what the map already is, and
  * the one thing only it could do — standing somewhere and naming it — moved to

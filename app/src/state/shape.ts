@@ -1214,7 +1214,17 @@ export function pickPersisted(state: State): Persisted {
 }
 
 export type Action =
-  | { type: 'go'; screen: Screen }
+  /**
+   * Go to a screen.
+   *
+   * `courseId` is optional and sets which course the screen opens on — every
+   * course-bound tool (the paper, the solver, the deck, the diagram, the
+   * runway, the breakdown) reads `guideId`, so a tool suggested *because* of
+   * one course's deadline can arrive on that course instead of on whichever
+   * guide was last looked at. It sets `guideId` only; `courseId`, which is the
+   * course *page*, is not a tool's idea of where it is.
+   */
+  | { type: 'go'; screen: Screen; courseId?: CourseId }
   | { type: 'back' }
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }

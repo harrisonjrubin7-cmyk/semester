@@ -13,7 +13,11 @@ import { ChevronRight } from '../components/Icons';
 import { nextExam, testedIn } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
 import { cardKey, dueCount } from '../lib/review';
-import { destinationsIn } from '../lib/nav';
+import { destinationsIn, type Group } from '../lib/nav';
+import { heldBy } from '../lib/everything';
+import { suggest, type Coming } from '../lib/toolnow';
+import { codeOf } from '../data/catalog';
+import { upcomingItems } from '../lib/select';
 import {
   MIN_STRETCH_MINUTES,
   doneToday,
@@ -43,6 +47,19 @@ const BUDGETS = [10, 25, 45];
  * button that does a run that long without a decision between every unit.
  */
 const PLAN_ROWS = 8;
+
+/**
+ * The two shelves the Tools tab is drawn on.
+ *
+ * The registry's own groups, with the registry's own words for what somebody
+ * is doing on each — Study is learning from what you have, Make is producing
+ * something that leaves the app. Not a third opinion about where a screen
+ * belongs: a tool filed under either lands in the right half by itself.
+ */
+const TOOL_SHELVES: { group: Group; label: string }[] = [
+  { group: 'Study', label: 'Study for something' },
+  { group: 'Make', label: 'Write or make something' },
+];
 
 /**
  * Study, in the shape Calendar and Mine already use.
@@ -132,6 +149,41 @@ export function Study() {
   // shuffle of one deck, which is a shuffle of nothing.
   const mixable = !only && new Set(ranked.map((s) => s.courseId)).size > 1;
 
+  /*
+   * The fortnight in front of the student, in the shape `lib/toolnow.ts`
+   * wants: what, whose, what kind, how far off. Everything it decides comes
+   * off these rows, so a suggestion can always be checked against a syllabus.
+   */
+  const outstanding = useMemo<Coming[]>(
+    () =>
+      upcomingItems(catalog, now)
+        .filter((i) => !state.done[i.id])
+        .map((i) => ({
+          id: i.id,
+          title: i.title,
+          kind: i.kind,
+          code: codeOf(catalog, i.c),
+          courseId: i.c,
+          daysAway: i.daysAway,
+          when: i.dueShort,
+        })),
+    [catalog, now, state.done],
+  );
+  const picks = suggest(outstanding, { sources: state.sources.length });
+  /** Every tool this tab offers, minus Study itself — this is Study. */
+  const tools = [...destinationsIn('Study'), ...destinationsIn('Make')].filter(
+    (d) => d.screen !== 'study',
+  );
+  const toolByScreen = new Map(tools.map((d) => [d.screen, d]));
+  const picked = new Set(picks.map((p) => p.screen));
+  /*
+   * A tool appears once on the tab. One promoted to the top with a reason is
+   * not also listed below without one — that is the same door twice, which is
+   * the thing the audit keeps finding.
+   */
+  const shelfRows = (group: Group) =>
+    tools.filter((d) => d.group === group && !picked.has(d.screen));
+
   if (catalog.empty) return <FirstRun where="to study" />;
   const tab = state.studyTab;
 
@@ -212,47 +264,152 @@ export function Study() {
             three taps into Me. Six features nobody would ever find. Reading
             the list from `lib/nav.ts` means the next one appears here the day
             it is added, without anybody remembering to come back.
+
+            What generation could not fix is that thirteen cards in registry
+            order say what each tool *is* and never what it is *for, now*. At
+            eleven at night four days before a midterm, "Practice paper" and
+            "Draw it" are not equally likely, and the app holds every fact
+            needed to know which — so the top of the tab is read off the
+            fortnight ahead and the rest is the directory. See `lib/toolnow.ts`.
           */}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
-            Everything the app can do with a course, in one place.
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
+            Everything the app can do with a course. What is at the top is picked from what you
+            actually have due.
           </div>
-          {[...destinationsIn('Study'), ...destinationsIn('Make')]
-            .filter((d) => d.screen !== 'study')
-            .map((d) => (
-              <Blueprint
-                plain
-                key={d.screen}
-                onClick={() => dispatch({ type: 'go', screen: d.screen })}
-                style={{
-                  padding: '13px 15px',
-                  marginTop: 'var(--sp-5)',
-                  display: 'flex',
-                  gap: 'var(--sp-6)',
-                  alignItems: 'center',
-                }}
-              >
-                <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span className="kicker" style={{ display: 'block' }}>
-                    {d.label}
-                  </span>
-                  <span
+
+          {picks.length > 0 && (
+            <>
+              <SectionLabel>Because of this fortnight</SectionLabel>
+              {picks.map((p) => {
+                const d = toolByScreen.get(p.screen);
+                if (!d) return null;
+                return (
+                  <Blueprint
+                    plain
+                    key={p.screen}
+                    onClick={() => dispatch({ type: 'go', screen: p.screen, courseId: p.courseId })}
                     style={{
-                      display: 'block',
-                      fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                      lineHeight: 1.35,
-                      marginTop: 3,
-                      textWrap: 'pretty',
+                      padding: '13px 15px',
+                      marginTop: 'var(--sp-5)',
+                      display: 'flex',
+                      gap: 'var(--sp-6)',
+                      alignItems: 'center',
                     }}
                   >
-                    {d.blurb}
-                  </span>
-                </span>
-                <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
-              </Blueprint>
-            ))}
+                    {/* The course's own colour when the reason belongs to one
+                        course, so the card and the deadline it came from are
+                        the same thing on the eye. */}
+                    <span
+                      style={{
+                        width: 8,
+                        height: 34,
+                        background: p.courseId ? tint(p.courseId).edge : 'var(--chrome)',
+                        flex: 'none',
+                      }}
+                    />
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span className="kicker" style={{ display: 'block' }}>
+                        {d.label}
+                      </span>
+                      {/* The reason, not the blurb. What the tool is matters
+                          less here than which deadline sent you to it, and the
+                          deadline is quoted so it can be checked. */}
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: 'var(--type-base)',
+                          lineHeight: 'var(--leading-normal)',
+                          marginTop: 'var(--sp-2)',
+                          textWrap: 'pretty',
+                        }}
+                      >
+                        {p.why}
+                      </span>
+                    </span>
+                    <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+                  </Blueprint>
+                );
+              })}
+            </>
+          )}
+
+          {/*
+            The rest, on two shelves rather than one run of thirteen.
+
+            The shelves are the registry's own — Study is learning from what
+            you have, Make is producing something that leaves the app — so
+            nothing here is a third opinion about where a screen belongs, and a
+            tool added to either shelf lands in the right half on its own.
+          */}
+          {TOOL_SHELVES.map((shelf) => {
+            const rows = shelfRows(shelf.group);
+            if (rows.length === 0) return null;
+            return (
+              <div key={shelf.group}>
+                <SectionLabel>{shelf.label}</SectionLabel>
+                {rows.map((d) => {
+                  // What the screen is holding, where that is a real answer —
+                  // "6 sources", "empty". Read from `lib/everything.ts` rather
+                  // than counted again here: a tool with nothing in it looked
+                  // exactly like one with everything, which is the problem
+                  // `lib/modes.ts` had already solved for the study modes.
+                  const held = heldBy(d.screen, state, catalog);
+                  return (
+                    <button
+                      key={d.screen}
+                      type="button"
+                      className="bare tappable"
+                      onClick={() => dispatch({ type: 'go', screen: d.screen })}
+                      style={{
+                        display: 'flex',
+                        gap: 'var(--sp-6)',
+                        alignItems: 'center',
+                        width: '100%',
+                        textAlign: 'left',
+                        ...rowTwelve,
+                      }}
+                    >
+                      <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
+                          {d.label}
+                        </span>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontSize: 'var(--type-xs)',
+                            opacity: 0.6,
+                            marginTop: 'var(--sp-1)',
+                            lineHeight: 'var(--leading-normal)',
+                            textWrap: 'pretty',
+                          }}
+                        >
+                          {d.blurb}
+                        </span>
+                      </span>
+                      {held && (
+                        <span
+                          style={{
+                            flex: 'none',
+                            fontFamily: 'var(--font-heading)',
+                            fontSize: 'var(--type-xs)',
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            opacity: held === 'empty' ? 0.35 : 0.55,
+                          }}
+                        >
+                          {held}
+                        </span>
+                      )}
+                      <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
         </>
       )}
+
 
       {tab === 'guides' && (
         <>
