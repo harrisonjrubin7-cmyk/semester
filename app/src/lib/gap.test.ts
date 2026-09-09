@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
   addSample,
-  budgetLine,
   cardSeconds,
   cardsThatFit,
   DEFAULT_SECONDS,
   ENOUGH,
-  gapLine,
+  fitsLine,
   gapNow,
   goLine,
   leftOf,
   roomOf,
   runLine,
+  termsLine,
   walkLine,
   walkTo,
   type NextUp,
@@ -167,7 +167,10 @@ describe('how far it is to the next thing', () => {
 describe('what it says', () => {
   it('names the walk it took off', () => {
     const g = gapNow(next({ inMinutes: 30 }), known(7));
-    expect(gapLine(g!)).toBe('23 minutes before you set off for ECON 1020.');
+    expect(fitsLine(g!, 34)).toBe('34 cards fit before ECON 1020.');
+    expect(termsLine(g!, [])).toBe(
+      "23 minutes before you set off, at 20 seconds each — the app's guess until it has watched you do a few.",
+    );
     expect(walkLine(g!)).toBe('Furman 114 is a 7 minute walk, already taken off.');
     expect(goLine(g!)).toBe('Set off now. ECON 1020, Furman 114, 7 minutes away.');
   });
@@ -192,12 +195,18 @@ describe('what it says', () => {
   });
 
   it('says whose number the budget is', () => {
-    expect(budgetLine(34, [])).toBe(
-      "34 cards, at 20 seconds each — the app's guess until it has watched you do a few.",
+    const g = gapNow(next({ inMinutes: 20 }), { minutes: 0, known: false })!;
+    expect(termsLine(g, [])).toBe(
+      "20 minutes until it starts, at 20 seconds each — the app's guess until it has watched you do a few.",
     );
-    expect(budgetLine(41, Array.from({ length: ENOUGH }, () => 9))).toBe(
-      '41 cards, at the 9 seconds a card you actually take.',
+    expect(termsLine(g, Array.from({ length: ENOUGH }, () => 9))).toBe(
+      '20 minutes until it starts, at the 9 seconds a card you actually take.',
     );
+  });
+
+  it('counts one card as one card', () => {
+    const g = gapNow(next({ inMinutes: 20 }), known(7))!;
+    expect(fitsLine(g, 1)).toBe('One card fits before ECON 1020.');
   });
 
   it('scores what you reached, not the deck you did not', () => {
