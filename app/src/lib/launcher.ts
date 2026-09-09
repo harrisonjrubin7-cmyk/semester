@@ -32,7 +32,7 @@
  */
 
 import { arranged, readLists, writeLists } from './arrange';
-import { destinationsFor, GROUPS, type Group } from './nav';
+import { destinationsFor, GROUPS, saysFor, type Group } from './nav';
 import type { Capabilities } from './school';
 import type { Destination } from './nav';
 import type { Screen } from './types';
@@ -71,6 +71,41 @@ export function writeOrder(order: ShelfOrder): string {
  * named in the saved order first and in that order, and the rest after in
  * registry order.
  */
+/**
+ * Each shelf as a flat list something can put arrows on.
+ *
+ * The shelf order is dragged in two places — the tiles inside a folder on the
+ * shelves navigation, and the directory rows on Me — and in neither is there
+ * any way to move a row without dragging it. Same gap as the board's, same
+ * reason it matters (WCAG 2.2's 2.5.7: what a drag does, a single pointer has
+ * to do without dragging), and the same answer: name the lists, and let the
+ * settings page draw them with the arrows every other arranged list in this
+ * app already has.
+ *
+ * Not on Me itself, where the rows are each a single `<button>` — arrows
+ * inside a button is a button inside a button, which is why the settings
+ * page's own movable rows are a `<div>` with the label made focusable beside
+ * them. Restructuring the row every list in the app shares, to add a control
+ * to one use of it, is a wide change to make for a narrow reason.
+ */
+export interface ShelfList {
+  group: Group;
+  label: string;
+  items: { id: Screen; label: string }[];
+}
+
+export function shelfLists(caps: Capabilities, saved: string | undefined): ShelfList[] {
+  const order = readOrder(saved);
+  return GROUPS.map((group) => ({
+    group,
+    label: group,
+    items: tilesFor(group, caps, order).map((d) => ({
+      id: d.screen,
+      label: saysFor(d, caps).label,
+    })),
+  })).filter((l) => l.items.length > 1);
+}
+
 export function tilesFor(group: Group, caps: Capabilities, order: ShelfOrder): Destination[] {
   const real = destinationsFor(group, caps);
   const byScreen = new Map(real.map((d) => [d.screen, d]));
