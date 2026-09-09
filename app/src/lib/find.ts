@@ -54,16 +54,7 @@ export type Hit =
     }
   | { kind: 'note'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'task'; id: string; title: string; sub: string; tag: string; score: number }
-  | { kind: 'screen'; screen: Screen; title: string; sub: string; tag: string; score: number }
-  /**
-   * Not a record — an offer to keep looking somewhere narrower.
-   *
-   * "12 sources match that" is the answer when the thing being searched for is
-   * a source, and inlining twelve source rows here would bury the deadlines
-   * and notes people are usually after. Selecting one navigates and arrives
-   * with the query already in that screen's filter. See `lib/scoped.ts`.
-   */
-  | { kind: 'scope'; screen: Screen; query: string; title: string; sub: string; tag: string; score: number };
+  | { kind: 'screen'; screen: Screen; title: string; sub: string; tag: string; score: number };
 
 export interface HitGroup {
   label: string;

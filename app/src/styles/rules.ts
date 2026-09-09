@@ -243,10 +243,16 @@ export const BUDGET = {
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
   space: 524,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 545,
+  shorthand: 544,
 };
 
 /*
+ * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
+ * One down, none up, and only one because the filter field lived in `<Page>`
+ * rather than in the fifteen screens that used it: what went with it here was
+ * that field's own `padding: '0 2px'` on the clear button. The screens lost an
+ * adapter each, which is prose, not spacing.
+ *
  * 688/224/534/549 → 682/222/524/545 when Files & mail was deleted. All four
  * down and none up: the screen listed Drive files and inbox messages in rows
  * it drew by hand, and Connect accounts already lists the same files. What it

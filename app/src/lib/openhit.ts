@@ -9,7 +9,6 @@
  */
 
 import type { Hit } from './find';
-import { seedBox } from './screenbox';
 import type { Action } from '../state/shape';
 
 export function openHit(hit: Hit, dispatch: (a: Action) => void): void {
@@ -29,12 +28,6 @@ export function openHit(hit: Hit, dispatch: (a: Action) => void): void {
       dispatch({ type: 'setMineTab', tab: 'tasks' });
       return dispatch({ type: 'go', screen: 'mine' });
     case 'screen':
-      return dispatch({ type: 'go', screen: hit.screen });
-    case 'scope':
-      // The query first, then the navigation: `<Page>` takes the seed in the
-      // effect that runs when the screen changes, so it has to be waiting
-      // before the change happens. See `lib/screenbox.ts`.
-      seedBox(hit.query);
       return dispatch({ type: 'go', screen: hit.screen });
   }
 }
