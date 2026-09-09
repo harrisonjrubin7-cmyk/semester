@@ -2815,3 +2815,106 @@ input[type='search'].input {
   line-height: var(--line-height, 1.45);
   color: var(--app-dim);
 }
+
+/* ---------------------------------------------------------------------------
+   The opening screen.
+
+   A curtain over the half-second in which the store is read, the look is
+   written onto the root element and the first screen's chunk arrives — see
+   `components/Splash.tsx` for why it exists and why it never waits on any of
+   them. Painted in `--app-void`, which is what `body` paints, so the ground
+   under it is the ground the app is about to be on rather than a colour of
+   its own that has to be faded out of.
+
+   The blanket `prefers-reduced-motion` rule further up this sheet already
+   collapses both the entrance and the fade to nothing, so there is no second
+   copy of the timings here.
+   --------------------------------------------------------------------------- */
+
+.splash {
+  position: fixed;
+  inset: 0;
+  /* Above the map's 1200, which is the highest anything else in the app
+     claims — the curtain is in front of the whole window or it is a stripe. */
+  z-index: 1500;
+  display: grid;
+  place-items: center;
+  background: var(--app-void);
+  color: var(--app-fg);
+  transition: opacity 340ms ease;
+}
+
+.splash[data-going='yes'] {
+  opacity: 0;
+  /* Straight through to the app underneath the moment it starts leaving: a
+     tap during the fade should reach what it was aimed at. */
+  pointer-events: none;
+}
+
+.splash-in {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-7);
+  max-width: 34ch;
+  padding-inline: var(--sp-7);
+  text-align: center;
+  animation: splash-rise 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.splash-mark {
+  width: 76px;
+  height: 76px;
+  color: var(--app-accent);
+}
+
+/* The tick draws itself in, behind the rest — the one piece of movement, and
+   it is the mark completing rather than anything sliding about. */
+.splash-tick {
+  stroke-dasharray: 250;
+  stroke-dashoffset: 250;
+  animation: splash-tick 620ms cubic-bezier(0.65, 0, 0.35, 1) 180ms both;
+}
+
+.splash-name {
+  font-family: var(--font-display);
+  font-size: calc(var(--type-xl) * 1.35);
+  letter-spacing: 0.08em;
+  line-height: var(--leading-tight);
+}
+
+.splash-said {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.splash-hello {
+  font-family: var(--font-heading);
+  font-size: var(--type-sm);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--app-accent-deep);
+}
+
+.splash-what {
+  font-size: var(--type-md);
+  line-height: var(--leading-relaxed);
+  color: var(--app-dim);
+  text-wrap: pretty;
+}
+
+@keyframes splash-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes splash-tick {
+  to {
+    stroke-dashoffset: 0;
+  }
+}

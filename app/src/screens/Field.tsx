@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { secondLine } from '../lib/dim';
 import { revealKindly } from '../lib/prefers';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
@@ -113,7 +114,7 @@ export function FieldGuide() {
           {meta}
         </div>
         {guide.source && (
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-3)' }}>From {guide.source}</div>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-3)' }}>From {guide.source}</div>
         )}
       </Blueprint>
 

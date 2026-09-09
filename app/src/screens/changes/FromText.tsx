@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { secondLine } from '../../lib/dim';
 import { useStore } from '../../state/store';
 import { Blueprint } from '../../components/Blueprint';
 import { ActionButton, EmptyState, SectionLabel } from '../../components/ui';
@@ -116,6 +117,7 @@ export function FromText() {
 
       <SectionLabel>The announcement</SectionLabel>
       <textarea
+        aria-label="The announcement, pasted"
         className="input"
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -224,7 +226,7 @@ export function FromText() {
         </>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
         {provider()} may only propose a date the announcement states, and every row quotes the
         sentence it came from — anything it cannot quote is dropped before you see it. A moved
         deadline keeps its id, so a box you already ticked stays ticked.

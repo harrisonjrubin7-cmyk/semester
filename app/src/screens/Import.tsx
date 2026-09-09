@@ -548,6 +548,7 @@ export function Import() {
         <>
           <SectionLabel>Anything it should know</SectionLabel>
           <input
+            aria-label="Anything it should know"
             className="input"
             placeholder="Optional — “the midterm moved to Oct 8”, “skip chapter 4”"
             value={hint}
@@ -684,6 +685,7 @@ function ByHand() {
       <SectionLabel>Add it by hand</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'stretch' }}>
         <input
+          aria-label="Add a course by hand"
           className="input"
           autoFocus
           placeholder="ECON 1020"

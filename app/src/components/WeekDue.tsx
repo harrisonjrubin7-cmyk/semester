@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
@@ -110,7 +111,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
                   fontSize: 'var(--type-base)',
                   lineHeight: 'var(--leading-normal)',
                   marginBottom: 'var(--sp-1)',
-                  opacity: t.done ? 0.45 : 1,
+                  opacity: t.done ? DIMMED_ROW : 1,
                   textDecoration: t.done ? 'line-through' : 'none',
                 }}
               >
@@ -119,7 +120,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
                 </span>
                 {t.title}
                 {t.time.trim() && (
-                  <span style={{ opacity: 0.5, fontSize: 'var(--type-xs)' }}> {t.time.trim()}</span>
+                  <span style={{ ...secondLine(t.done), fontSize: 'var(--type-xs)' }}> {t.time.trim()}</span>
                 )}
               </div>
             ))}

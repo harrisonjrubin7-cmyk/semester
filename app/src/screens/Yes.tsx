@@ -107,6 +107,7 @@ export function Yes() {
         the page — a browser will not let this app see a tab it does not own, and it should not.
       </div>
       <textarea
+        aria-label="Your schedule, pasted"
         className="input"
         value={text}
         onChange={(e) => setText(e.target.value)}

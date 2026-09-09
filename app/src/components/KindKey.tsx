@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { secondLine } from '../lib/dim';
 import { CAMPUS_KIND, CLASS_TINT, EVENT_KINDS, kindTint } from '../lib/kinds';
 import { useStore } from '../state/store';
 import { ground as groundOf, resolveGround } from '../lib/look';
@@ -60,12 +61,16 @@ export function KindKey({ compact = false, lead }: { compact?: boolean; lead?: R
   ];
 
   /** The caps both halves are set in — the quietest line the app draws. */
+  // Dimmed with the token rather than with an opacity. At 10px uppercase this
+  // is the smallest text on the screen, and 0.55 rendered it at 4.03:1 — under
+  // AA, and under it again for anything nested, which is how the count beside
+  // the label came to 0.44. See `lib/dim.ts`.
   const caps = {
     fontSize: 'calc(10px * var(--text-scale, 1))',
     fontFamily: 'var(--font-heading)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
-    opacity: 0.55,
+    ...secondLine(),
   };
 
   return (
@@ -94,10 +99,10 @@ export function KindKey({ compact = false, lead }: { compact?: boolean; lead?: R
           ))}
         </span>
         <span style={{ flex: 1, minWidth: 0 }}>{open ? 'What the colours mean' : 'Colour key'}</span>
-        <span style={{ flex: 'none', opacity: 0.8 }}>{open ? 'Hide' : rows.length}</span>
+        <span style={{ flex: 'none' }}>{open ? 'Hide' : rows.length}</span>
         <ChevronRight
           size={12}
-          style={{ flex: 'none', opacity: 0.6, transform: open ? 'rotate(90deg)' : 'none' }}
+          style={{ flex: 'none', transform: open ? 'rotate(90deg)' : 'none' }}
         />
       </button>
 

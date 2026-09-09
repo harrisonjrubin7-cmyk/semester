@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -263,14 +264,14 @@ function Collection({
           alignItems: 'baseline',
           padding: '10px 0',
           textAlign: 'left',
-          opacity: row.count === 0 ? 0.45 : 1,
+          opacity: row.count === 0 ? DIMMED_ROW : 1,
         }}
       >
         <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)' }}>{row.label}</span>
-        <span style={{ fontSize: 'var(--type-sm)', opacity: 0.6, fontVariantNumeric: 'tabular-nums', flex: 'none' }}>
+        <span style={{ fontSize: 'var(--type-sm)', ...secondLine(row.count === 0), fontVariantNumeric: 'tabular-nums', flex: 'none' }}>
           {row.count.toLocaleString()}
         </span>
-        <span style={{ fontSize: 'var(--type-sm)', opacity: 0.75, fontVariantNumeric: 'tabular-nums', flex: 'none', minWidth: 62, textAlign: 'right' }}>
+        <span style={{ fontSize: 'var(--type-sm)', opacity: row.count === 0 ? 1 : 0.75, fontVariantNumeric: 'tabular-nums', flex: 'none', minWidth: 62, textAlign: 'right' }}>
           {formatBytes(row.bytes)}
         </span>
       </button>
