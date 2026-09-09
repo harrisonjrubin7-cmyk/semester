@@ -327,9 +327,16 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    // Any real destination will do; this one is named because it is stable.
-    // It used to be `grades`, which stopped being a destination underneath the
-    // test — the case the test is about, arriving as a type error.
+    /*
+     * Any real destination will do, and this one is named because it is not
+     * the subject of an argument.
+     *
+     * It was `grades`, which is the case this test describes happening to the
+     * test itself: #76 took the grade table out of the registry, so the name
+     * here stopped being a `Screen` and the file stopped typechecking. The
+     * suite stayed green either way — vitest does not typecheck — so the
+     * thing that caught it was `tsc`, which is why CI runs both.
+     */
     const short = DESTINATIONS.filter((d) => d.screen !== 'tonight');
     const rows = byTask(short).flatMap((s) => s.rows);
     expect(rows.some((d) => d.screen === 'tonight')).toBe(false);
