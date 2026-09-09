@@ -195,6 +195,37 @@ describe('every combination the app will wear', () => {
         ratio: contrast(g.fg, bg) ?? 0,
         needs: AA_TEXT,
       },
+
+      /*
+       * The one colour, which is text.
+       *
+       * `--app-warn` was the last fixed hex in the palette — one mid-tone
+       * worn unchanged by all thirteen grounds — and it is spent on the
+       * app's most important sentence. `DeadlineRow` colours a late date
+       * with it and `Rework` a whole line of prose, so it is body text and
+       * takes the body-text bar. It measured 2.54:1 on Fog and 2.75:1 on
+       * Bone: the least legible ink on the screen, in the place that most
+       * needed reading, on five of thirteen grounds. Held here so a later
+       * ground cannot arrive and quietly do it again.
+       *
+       * The edge and the wash are not on this list, and deliberately. A
+       * hairline round a card is not a mark that carries meaning on its own
+       * — the warn-coloured text inside it is — and the dark grounds' own
+       * edge measures 2.06:1, so a 3:1 bar here would be a bar the app has
+       * never met and would be raised by weakening the thing it protects.
+       * What the edge does have to be is the *same* edge on every ground,
+       * and that is what the alpha in `tokensFor` is set from.
+       */
+      {
+        what: `${where} · a late date, on panel`,
+        ratio: contrast(t['--app-warn'], panel) ?? 0,
+        needs: AA_TEXT,
+      },
+      {
+        what: `${where} · a late date, on the ground`,
+        ratio: contrast(t['--app-warn'], bg) ?? 0,
+        needs: AA_TEXT,
+      },
     ];
   };
 

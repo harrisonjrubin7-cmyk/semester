@@ -1060,6 +1060,44 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     '--app-track': `rgba(${edge}, ${moreContrast ? LOUD.track : g.light ? 0.12 : 0.09})`,
 
     /*
+     * The one colour, darkened for the five light grounds.
+     *
+     * `--app-warn` is the app's only colour and it is spent on its most
+     * important sentence — a deadline has gone by. It was a fixed #c8785f
+     * that every ground wore unchanged, which is the mistake the accent
+     * ramp exists to avoid: an oxidised mid-tone drawn for near-black is a
+     * pale smear on Parchment. Measured, it was the *least* legible ink on
+     * the screen exactly where it mattered most —
+     *
+     *   ground      as text, worst step of the ramp
+     *   Fog                 2.54:1
+     *   Bone                2.75:1
+     *   Industry            2.98:1
+     *   Parchment           2.95:1
+     *   Paper               3.02:1
+     *
+     * — against 4.5:1 for body text, and it is body text: `DeadlineRow`
+     * colours the date with it, `Rework` a whole line of prose. The eight
+     * dark grounds measure 4.2–6.3:1 and were never the problem, which is
+     * why nobody saw this: the app is drawn on Ink.
+     *
+     * The fix is the one the accent already uses — the same hue and
+     * saturation, three steps down, so it is the same colour rather than a
+     * different one. #9d4c33 is #c8785f at the same 14° hue and within two
+     * per cent of its saturation, and measures 4.55:1 on the worst step of
+     * the worst light ground. `lib/contrast.test.ts` holds all thirteen to
+     * that bar now, the way it already holds the 143 accent pairings.
+     *
+     * The edge alpha rises with it for the same reason `--app-line` does:
+     * 0.45 of the pale warn on near-black draws a 2.06:1 hairline, and 0.5
+     * of the darker one on the light grounds draws 2.02–2.14:1 — the same
+     * edge, not a heavier one. Nothing moves on a dark ground.
+     */
+    '--app-warn': g.light ? '#9d4c33' : '#c8785f',
+    '--app-warn-line': g.light ? 'rgba(157, 76, 51, 0.5)' : 'rgba(200, 120, 95, 0.45)',
+    '--app-warn-wash': g.light ? 'rgba(157, 76, 51, 0.09)' : 'rgba(200, 120, 95, 0.09)',
+
+    /*
      * The soft shell's elevation, derived rather than written once.
      *
      * Two shadows, light from the top-left: a lifted half and a cast half.
