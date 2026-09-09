@@ -13,7 +13,7 @@ import { newId } from '../../lib/idb';
 import { withNotes } from '../../lib/merge';
 import { LANDMARKS, apply, sheet } from '../../lib/registrar';
 import type { CampusLink, FeedSource } from '../../lib/types';
-import { DEFAULT_PERSISTED, type Action, type Persisted, type State } from '../shape';
+import { DEFAULT_PERSISTED, readRestore, type Action, type Persisted, type State } from '../shape';
 
 export function library(state: State, action: Action): State | null {
   switch (action.type) {
@@ -303,8 +303,27 @@ export function library(state: State, action: Action): State | null {
      * the current state first, so this is undoable. See `lib/snapshots.ts`.
      */
     case 'restore': {
+      /*
+       * Through the same reader storage goes through.
+       *
+       * This spread its argument straight into the state, and its argument is
+       * a file somebody opened. `readBackup` in `lib/export.ts` checks each
+       * section is an array or an object and says why — "restoring it could
+       * put nonsense into your account" — and could go no further without
+       * duplicating every field rule in `state/shape.ts`. So a backup holding
+       * `courses: [{ id: 'c1' }]` restored a course with no `course` on it,
+       * and the app was blank at the next render: the same shapes that took it
+       * down out of localStorage, through a door that is easier to reach,
+       * because somebody has to open a file for it rather than edit devtools.
+       *
+       * `readRestore` reads the blob as a whole persisted state and hands back
+       * only the keys it carried, so a backup with no `notes` still leaves the
+       * notes alone.
+       */
       const incoming = Object.fromEntries(
-        Object.entries(action.persisted).filter(([, v]) => v !== undefined && v !== null),
+        Object.entries(readRestore(action.persisted)).filter(
+          ([, v]) => v !== undefined && v !== null,
+        ),
       ) as Partial<Persisted>;
       return {
         ...state,

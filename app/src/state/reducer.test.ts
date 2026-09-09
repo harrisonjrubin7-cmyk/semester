@@ -278,6 +278,47 @@ describe('going back to a copy', () => {
     });
     expect(back.notes).toHaveLength(1);
   });
+
+  /*
+   * A restore's argument is a file somebody opened, and this used to spread it
+   * straight into the state.
+   *
+   * `readBackup` in `lib/export.ts` checks that each section is an array or an
+   * object, and its own error message says why it cares — "restoring it could
+   * put nonsense into your account". It could go no further without
+   * duplicating every field rule in `state/shape.ts`.
+   *
+   * So the shapes that took the app down out of localStorage came back through
+   * a door that is easier to reach: somebody opens a file rather than editing
+   * devtools. Measured by driving the Export screen with a backup holding
+   * `courses: [{ id: 'c1' }]` and pressing Replace and restore — `Cannot read
+   * properties of undefined (reading 'term')`, uncaught, and the scroll area
+   * went from 1,761 characters to 0.
+   */
+  it('reads a restored blob the way it reads storage', () => {
+    const back = reducer(blank(), {
+      type: 'restore',
+      persisted: {
+        courses: [{ id: 'c1' }],
+        tasks: [{ id: 't1', date: 9 }],
+        reviews: { 'econ::c1': null },
+        windows: [{ id: 'w1' }],
+      } as never,
+    });
+    // A course with nothing to address it by is dropped, the way storage
+    // drops it — not spread into the catalogue for the store to read `.term`
+    // off.
+    expect(back.courses).toEqual([]);
+    expect(back.tasks[0].date).toBeNull();
+    expect(back.reviews).toEqual({});
+    expect(Array.isArray(back.windows[0].days)).toBe(true);
+  });
+
+  it('still restores a whole, good file exactly', () => {
+    const s = { ...blank(), notes: [note('a', 'Yesterday'), note('b', 'This morning')] };
+    const back = reducer(s, { type: 'restore', persisted: { notes: [note('a', 'Yesterday')] } });
+    expect(back.notes).toEqual([note('a', 'Yesterday')]);
+  });
 });
 
 describe('your own things', () => {

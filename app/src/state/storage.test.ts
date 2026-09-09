@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadPersisted } from './shape';
+import { loadPersisted, readRestore } from './shape';
 
 /**
  * Storage is not a trusted input, and the app opens whatever it finds.
@@ -219,5 +219,49 @@ describe('opening the app on a row that is missing a field', () => {
     const raw = JSON.stringify({ windows: [{ id: 'w1', days: [1], from: 0, to: 60, colour: 'blue' }] });
     const { windows } = withStorage(raw, () => loadPersisted());
     expect((windows[0] as unknown as { colour: string }).colour).toBe('blue');
+  });
+});
+
+/**
+ * The other door into the same state.
+ *
+ * Everything above is about what `loadPersisted` reads out of localStorage.
+ * `state/slices/library.ts` has a `restore` that put a blob into the state
+ * without going near any of it, and its blob is a file somebody opened — which
+ * is a good deal easier to reach than editing devtools.
+ *
+ * `readPersisted` and `readRestore` are the same reader, so there is one list
+ * of what a field means and both doors use it. A restore stays a partial: it
+ * replaces the sections the file holds and leaves the rest alone.
+ */
+describe('a blob handed to a restore', () => {
+  it('is read the same way storage is', () => {
+    const back = readRestore({
+      courses: [{ id: 'c1' }],
+      windows: [{ id: 'w1' }],
+      reviews: { 'a::b': null },
+      tasks: [{ id: 't1', date: 9 }],
+    } as never);
+    expect(back.courses).toEqual([]);
+    expect(Array.isArray(back.windows![0].days)).toBe(true);
+    expect(back.reviews).toEqual({});
+    expect(back.tasks![0].date).toBeNull();
+  });
+
+  it('hands back only the sections the file carried', () => {
+    const back = readRestore({ notes: [] } as never);
+    expect(Object.keys(back)).toEqual(['notes']);
+  });
+
+  it('leaves out a section the file said nothing about', () => {
+    // `restore` treats null as "not in this file"; repairing it into an empty
+    // list here would blank a list the caller meant to leave alone.
+    expect(Object.keys(readRestore({ notes: null, tasks: undefined } as never))).toEqual([]);
+  });
+
+  it('takes anything that is not an object as nothing', () => {
+    expect(readRestore('none' as never)).toEqual({});
+    expect(readRestore([1, 2] as never)).toEqual({});
+    expect(readRestore(null as never)).toEqual({});
   });
 });

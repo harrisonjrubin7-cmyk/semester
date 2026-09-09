@@ -994,24 +994,34 @@ function list<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
-export function loadPersisted(): Persisted {
-  if (primed) return primed;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_PERSISTED };
-    /*
-     * Through the migration before anything reads a field.
-     *
-     * While this app had one user a shape change was free — change the code,
-     * clear the storage if it looks wrong. It stops being free the moment
-     * somebody else has a semester in here, written by whichever build they
-     * last opened. See `lib/migrate.ts`; a copy newer than this build knows
-     * about is deliberately left alone rather than walked backwards.
-     */
-    const moved = migrate(JSON.parse(raw));
-    lastMigration = moved;
-    const saved = moved.state as Partial<Persisted>;
-    return {
+/**
+ * A saved blob, read into the shape the app can run on.
+ *
+ * Split out of `loadPersisted` below so that the *other* way a saved blob gets
+ * into the app can go through it too. `state/slices/library.ts` has a
+ * `restore` that spread its argument straight into the state — no reader, no
+ * migration — and its argument is a file somebody opened. `readBackup` in
+ * `lib/export.ts` checks that each section is an array or an object and says
+ * why: "restoring it could put nonsense into your account". It could not check
+ * further without duplicating everything below, and duplicating it is how the
+ * two drift.
+ *
+ * So there is one list of what a field means, and both doors use it.
+ */
+export function readPersisted(raw: unknown): Persisted {
+  /*
+   * Through the migration before anything reads a field.
+   *
+   * While this app had one user a shape change was free — change the code,
+   * clear the storage if it looks wrong. It stops being free the moment
+   * somebody else has a semester in here, written by whichever build they
+   * last opened. See `lib/migrate.ts`; a copy newer than this build knows
+   * about is deliberately left alone rather than walked backwards.
+   */
+  const moved = migrate(raw);
+  lastMigration = moved;
+  const saved = moved.state as Partial<Persisted>;
+  return {
       ...DEFAULT_PERSISTED,
       ...saved,
       notifs: { ...DEFAULT_PERSISTED.notifs, ...(saved.notifs ?? {}) },
@@ -1137,11 +1147,43 @@ export function loadPersisted(): Persisted {
       // them one by one here is how a new control gets added, saved, and then
       // silently dropped on the next reload.
       ...readLook(saved as Look),
-    };
+  };
+}
+
+export function loadPersisted(): Persisted {
+  if (primed) return primed;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_PERSISTED };
+    return readPersisted(JSON.parse(raw));
   } catch {
     // A private window, or storage disabled. Run with defaults.
     return { ...DEFAULT_PERSISTED };
   }
+}
+
+/**
+ * The fields a restore actually carries, read the same way storage is.
+ *
+ * A restore is a partial: it replaces the sections the file holds and leaves
+ * everything else alone. So this reads the blob as a whole persisted state —
+ * which is where every field's rules live — and then hands back only the keys
+ * the blob actually had, so a backup with no `notes` does not wipe the notes.
+ */
+export function readRestore(raw: Partial<Persisted>): Partial<Persisted> {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const given = raw as Record<string, unknown>;
+  const whole = readPersisted(raw) as unknown as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const key of Object.keys(given)) {
+    // A key the file did not really carry is left out rather than repaired
+    // into an empty one: `restore` treats null as "this section is not in the
+    // file", and turning it into `[]` here would blank a list the caller
+    // meant to leave alone. `state/slices/library.ts` pins that.
+    if (given[key] === undefined || given[key] === null) continue;
+    if (key in whole) out[key] = whole[key];
+  }
+  return out as Partial<Persisted>;
 }
 
 /**
