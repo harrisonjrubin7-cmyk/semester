@@ -188,6 +188,46 @@ export function gaps(module: CourseModule): string[] {
 }
 
 /**
+ * The id a course of this code gets, wherever it is added from.
+ *
+ * There was no such function, and the three places that needed one disagreed.
+ * `blankCourse` stripped the punctuation out of the code — "econ1020".
+ * `generate.ts` slugged with hyphens — "econ-1020" — but only as a fallback,
+ * because it preferred the id the *model* proposed, and the prompt asks the
+ * model for "a short lowercase slug, e.g. econ". So a syllabus for PSCI 2200
+ * came back as `psci`, which is the id the shipped PSCI 1104 already has.
+ *
+ * Nothing rejected that. Two courses then sat in the account under one id, and
+ * every screen keyed by course id — office hours, deadlines, grades, the study
+ * guide, the colour — served one course's material under the other's name. A
+ * student importing a second course from a department they already have a
+ * course in got a course with somebody else's office hours in it.
+ *
+ * So: the id comes from the code, which is the thing that identifies a course,
+ * and never from the model. `taken` is the ids already spoken for; a clash
+ * takes a numbered suffix rather than silently merging. Passing nothing gives
+ * the plain slug, which is what the by-hand path wants — typing "ECON 1020"
+ * today and importing its syllabus next week has to reach the same id, or the
+ * ticks filed in between are orphaned.
+ */
+export function courseId(code: string, taken: Iterable<string> = []): string {
+  const base =
+    code
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 24)
+      .replace(/-$/, '') || `course${Date.now().toString(36).slice(-4)}`;
+
+  const held = new Set(taken);
+  if (!held.has(base)) return base;
+  for (let n = 2; n < 100; n += 1) {
+    if (!held.has(`${base}-${n}`)) return `${base}-${n}`;
+  }
+  return `${base}-${Date.now().toString(36).slice(-4)}`;
+}
+
+/**
  * A course with nothing in it yet, ready for the editor.
  *
  * Adding a course meant uploading a syllabus and having a model read it. That
@@ -205,11 +245,8 @@ export function gaps(module: CourseModule): string[] {
  * would produce. That is what lets somebody type "ECON 1020" today, import the
  * real syllabus next week, and have their ticks and grades still attached.
  */
-export function blankCourse(code: string, term?: string): CourseModule {
-  const id = code
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '')
-    .slice(0, 24) || `course${Date.now().toString(36).slice(-4)}`;
+export function blankCourse(code: string, term?: string, taken: Iterable<string> = []): CourseModule {
+  const id = courseId(code, taken);
 
   return {
     course: {

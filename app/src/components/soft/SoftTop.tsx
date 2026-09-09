@@ -19,6 +19,7 @@ import { useMemo } from 'react';
 import { useStore } from '../../state/store';
 import { softTop, type TopStat } from '../../lib/softtop';
 import { useSoft } from '../shell/useShell';
+import { fills } from '../shell/exempt';
 import { Hero, Stat, StatRow } from './Soft';
 
 /*
@@ -58,9 +59,27 @@ function useTop() {
 }
 
 export function SoftTop() {
+  const { state } = useStore();
   const soft = useSoft();
   const top = useTop();
   if (!soft) return null;
+  /*
+   * Not above a screen that is already the full height of the window.
+   *
+   * A hero is the top of a column you scroll: it introduces the screen and
+   * then goes away as you read past it. The chat has no such column — it is a
+   * log that scrolls inside itself and a composer on the bottom edge, sized to
+   * the box it is given. So 200px of hero above it is not an introduction, it
+   * is 200px taken off the conversation, and because the chat cannot scroll
+   * out of the way of it the composer was pushed clean off the bottom of the
+   * phone and clipped. The one place the hero and the screen disagreed about
+   * who owns the height.
+   *
+   * The registry keeps its entry for `ask` — it is data, and the same facts
+   * would be right if this screen ever became a column. This is the wiring
+   * declining to draw them here.
+   */
+  if (fills(state.screen)) return null;
   if (!top.hero && top.stats.length === 0) return null;
 
   return (

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { CLASS_TINT, EVENT_KINDS, kindTint } from '../lib/kinds';
+import { CAMPUS_KIND, CLASS_TINT, EVENT_KINDS, kindTint } from '../lib/kinds';
 import { useStore } from '../state/store';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
@@ -54,6 +54,9 @@ export function KindKey({ compact = false, lead }: { compact?: boolean; lead?: R
   const rows = [
     ...courses,
     ...EVENT_KINDS.map((k) => ({ key: k.id, tint: kindTint(k.id, light), label: k.label })),
+    // Last, because it is the one colour on the grids that is nobody's choice:
+    // what is on around campus, and what a calendar you connected says is on.
+    { key: CAMPUS_KIND, tint: kindTint(CAMPUS_KIND, light), label: 'Campus' },
   ];
 
   /** The caps both halves are set in — the quietest line the app draws. */

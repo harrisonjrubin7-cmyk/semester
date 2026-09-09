@@ -225,6 +225,45 @@ describe('ids', () => {
     const out = await run(course());
     expect(out.module.course.id).toBe('econ-1020');
   });
+
+  it('takes the id from the code even when the model proposes one', async () => {
+    /*
+     * The prompt asks for "a short lowercase slug, e.g. econ" and the model
+     * obliges, which means every syllabus out of a department comes back
+     * wanting the same id. A course id keys deadlines, office hours, grades,
+     * notes and the guide, so the second course under it was not a second
+     * course to any screen in the app — it was the first one, wearing the
+     * other's material.
+     */
+    const out = await run(course({ course: { code: 'ECON 3100', id: 'econ' } }));
+    expect(out.module.course.id).toBe('econ-3100');
+  });
+
+  it('steps aside for a course the account already holds', async () => {
+    const reply2 = course({ course: { code: 'ECON 1020', id: 'econ' } });
+    reply = JSON.stringify(reply2);
+    const out = await generateCourse({
+      documents: [{ name: 'Econ.pdf', text: SYLLABUS }],
+      hint: '',
+      year: 2026,
+      taken: ['econ-1020'],
+    });
+    expect(out.module.course.id).toBe('econ-1020-2');
+    for (const item of out.module.items) expect(item.c).toBe('econ-1020-2');
+  });
+
+  it('files a deadline under this course, not the one the model named', async () => {
+    // Ticks are stored against an item id alone, so `psci-q1` out of a PSCI
+    // 2200 syllabus would tick the PSCI 1104 quiz of the same id.
+    const out = await run(
+      course({
+        course: { code: 'PSCI 2200', id: 'psci' },
+        items: [{ id: 'psci-q1', title: 'Quiz 1', month: 8, day: 4, quote: '' }],
+      }),
+    );
+    expect(out.module.course.id).toBe('psci-2200');
+    expect(out.module.items[0].id).toBe('psci-2200-q1');
+  });
 });
 
 describe('the meeting pattern', () => {

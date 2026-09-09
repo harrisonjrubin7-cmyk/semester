@@ -68,8 +68,11 @@ the registries and the test only checks that it was run. See
   clubs and university events.
 - **Mine** — your own tasks, appointments, notes and files, kept visibly apart
   from anything a syllabus produced.
-- **Me** — load by course, the account connections, settings and the syllabus
-  importer.
+- **Progress** — where you stand, in one sentence, with the two or three things
+  worth doing about it; the next seven days as a shape you can press a day of;
+  the term, the drilling, the load per course and how long work actually takes
+  you. Its other two tabs are the app's own directory — every screen by shelf,
+  and every screen by what you are trying to do.
 
 ## Two axes: how you move, and how a screen is drawn
 
@@ -235,11 +238,22 @@ Two details that matter:
 
 `src/lib/ics.ts` reads any iCalendar feed — Brightspace's subscribe link,
 Outlook, Google, Zoom — including weekly RRULEs so a repeating class appears
-more than once. `src/lib/connect.ts` handles the OAuth route for Microsoft,
-Google and Zoom: PKCE in the browser, client IDs from `.env.local`, tokens in
-this device's storage and nowhere else. Zoom's API sends no CORS headers, so it
-goes through the dev-server proxy in `vite.config.ts`; the same file forwards
-`/feed?url=` so a subscribed calendar can be fetched at all.
+more than once. `src/lib/feedlink.ts` is the step before it: it repairs whatever
+was pasted (`webcal://`, a missing scheme, a Google embed page, the angle
+brackets a mail client added), works out from the host who published it, and
+then fetches it by whichever route this build has — straight at the calendar
+first, the forwarder second, deciding on whether what came back is a calendar
+rather than on the status code, because a single-page host answers an unknown
+path with its own index.html and a 200.
+
+`src/lib/connect.ts` handles the OAuth route for Microsoft, Google and Zoom:
+PKCE in the browser, client IDs from `.env.local`, tokens in this device's
+storage and nowhere else. Zoom's API sends no CORS headers, so it goes through
+the dev-server proxy in `vite.config.ts`; the same file forwards `/feed?url=` so
+a subscribed calendar can be fetched at all. A deployment with its own forwarder
+points `VITE_ICS_PROXY` at it; without one, pasted links still work for hosts
+that allow the browser to read them, and the .ics file route works everywhere
+and needs nothing.
 
 Campus systems with no student-usable API — myVU, YES, AnchorLink — are links
 rather than integrations, held in `src/data/campus.ts` with the addresses

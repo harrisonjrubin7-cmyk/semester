@@ -576,3 +576,49 @@ export async function replaceFeed(token: string): Promise<void> {
     );
   if (error) throw new Error(error.message);
 }
+
+// ── Reading a calendar somebody pasted ───────────────────────────────────
+//
+// The other direction from the feed above, and the one that needs a server for
+// a dull reason: a calendar host sends no CORS headers, so the browser is
+// refused before the request leaves. `supabase/functions/fetchcal/index.ts` is
+// the one route that forwards it, and `lib/feedlink.ts` reaches for this only
+// after trying the calendar directly and trying the dev server's own forwarder.
+
+/**
+ * One pasted calendar link, fetched through the account.
+ *
+ * Signed out this throws rather than asking anonymously: the function has no
+ * anonymous path, by design — an open URL fetcher is an open relay.
+ *
+ * The address goes in the body rather than the query string because it carries
+ * a token that is the whole of the authentication for that person's calendar,
+ * and a query string is the part of a request that lands in every log on the
+ * way.
+ */
+export async function fetchIcsVia(url: string): Promise<string> {
+  const db = await cloud();
+  const { data } = await db.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('Signed out.');
+  const res = await fetch(`${feedBase()}/fetchcal`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      apikey: KEY,
+    },
+    body: JSON.stringify({ url }),
+  });
+  const text = await res.text();
+  if (res.ok) return text;
+  // The function answers a refusal as JSON and a calendar as text, so the
+  // message it wrote is worth more than the status code.
+  let said = '';
+  try {
+    said = String((JSON.parse(text) as { error?: unknown }).error ?? '');
+  } catch {
+    said = '';
+  }
+  throw new Error(said || `The calendar could not be read (${res.status}).`);
+}

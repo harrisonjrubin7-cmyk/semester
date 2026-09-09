@@ -1,5 +1,5 @@
 import { blocksFor, classNote, codeOf, type Catalog } from '../data/catalog';
-import { EVENTS } from '../data/events';
+import { CAMPUS_CALENDARS } from '../data/events';
 import {
   dateToIso,
   daysBetween,
@@ -11,11 +11,13 @@ import {
   untilLabel,
 } from './date';
 import { blocksOn, type Commitment } from './activities';
-import { hasTime } from './duetime';
+import { hasTime, readDue } from './duetime';
+import { CAMPUS_KIND } from './kinds';
 import { punchline as tonePunchline, type Tone } from './tone';
 import type {
   Appointment,
   Block,
+  CampusEvent,
   CourseId,
   DatedEvent,
   DatedItem,
@@ -49,13 +51,25 @@ export function datedItems(cat: Catalog, now: Date): DatedItem[] {
     .sort((a, b) => a.date.getTime() - b.date.getTime() || a.dueAt - b.dueAt);
 }
 
-export function datedEvents(now: Date, include = true): DatedEvent[] {
-  // The campus calendar is Vanderbilt's, and ships with the sample semester
-  // rather than with every account.
-  if (!include) return [];
-  return EVENTS.map((e) => decorateEvent(e, now)).sort(
-    (a, b) => a.date.getTime() - b.date.getTime(),
-  );
+/**
+ * The campus calendar this student actually has.
+ *
+ * Keyed by where they study rather than by whether the sample semester is on:
+ * the listings are one university's, and a Vanderbilt student who imports
+ * their own syllabi is still at Vanderbilt. See `data/events.ts`.
+ *
+ * The sample stays a way in for somebody who has set no school and is only
+ * looking around — it is a Vanderbilt semester, so it carries Vanderbilt's
+ * calendar with it.
+ */
+export function campusCalendar(schoolId: string, sample = false): CampusEvent[] {
+  return CAMPUS_CALENDARS[schoolId] ?? (sample ? CAMPUS_CALENDARS.vanderbilt : []);
+}
+
+export function datedEvents(now: Date, schoolId = '', sample = false): DatedEvent[] {
+  return campusCalendar(schoolId, sample)
+    .map((e) => decorateEvent(e, now))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
 export function itemsDueToday(cat: Catalog, now: Date): DatedItem[] {
@@ -334,7 +348,17 @@ export function railFor(
    * drawing it at midnight would be inventing an hour.
    */
   due: DatedItem[] = [],
-): (Block & { mine?: boolean; kind?: string; minutes?: number; from?: { kind: 'appointment' | 'item'; id: string } })[] {
+  /**
+   * Your own tasks, which every grid in the app used to leave out.
+   *
+   * A task has a day and, when you gave it one, an hour — the same shape as a
+   * deadline, and it was drawn in exactly one view of five. Handed in here so
+   * that the day rail, the day grid, the week grid and the hours tab all get
+   * them from the one place, rather than three of them being taught
+   * separately and the fourth being forgotten again.
+   */
+  tasks: PersonalTask[] = [],
+): (Block & { mine?: boolean; kind?: string; minutes?: number; from?: { kind: 'appointment' | 'item' | 'task'; id: string } })[] {
   const classes = blocksFor(cat, date);
   const mine = appointmentsOn(appointments, date).map((a) => ({
     time: a.time,
@@ -368,7 +392,38 @@ export function railFor(
       from: { kind: 'item' as const, id: i.id },
     }));
 
-  return [...classes, ...mine, ...standing, ...deadlines].sort((a, b) => a.at - b.at);
+  /*
+   * Your tasks, on the hours they name.
+   *
+   * The same rule a deadline gets, for the same reason: a task's time is your
+   * wording and is never rewritten, so "before work" stays a thing you have
+   * all day for and only a stated clock time lands on the grid. The rest are
+   * listed beside it — see `tasksOn`, which every view already had and only
+   * the month was using.
+   *
+   * A finished task is off the day entirely rather than drawn with a line
+   * through it: an hour you have given back is a gap, and the whole use of a
+   * grid is showing where the gaps are.
+   */
+  const yours = tasks
+    .filter((t) => !t.done && t.date === dateToIso(date))
+    .map((t) => ({ t, at: readDue(t.time) }))
+    .filter((x): x is { t: PersonalTask; at: number } => x.at !== null)
+    .map(({ t, at }) => ({
+      time: t.time.trim(),
+      at,
+      title: t.title,
+      // The course it is filed against, then the word for what it is. A task
+      // with no course says only "Task", which is still more than the blank
+      // second line it would otherwise draw.
+      meta: [t.courseId ? codeOf(cat, t.courseId) : '', 'Task'].filter(Boolean).join(' · '),
+      c: t.courseId,
+      mine: true,
+      kind: 'task',
+      from: { kind: 'task' as const, id: t.id },
+    }));
+
+  return [...classes, ...mine, ...standing, ...deadlines, ...yours].sort((a, b) => a.at - b.at);
 }
 
 /**
@@ -385,6 +440,8 @@ export function hoursFor(
   commitments: Commitment[] = [],
   /** Deadlines with an hour on them, so the grid can draw and move them too. */
   due: DatedItem[] = [],
+  /** Your own tasks, drawn on the hours they name. */
+  tasks: PersonalTask[] = [],
 ): {
   id: string;
   title: string;
@@ -396,9 +453,9 @@ export function hoursFor(
   c: CourseId | null;
   canceled?: boolean;
   /** The record this block was drawn from, where there is one that can move. */
-  from?: { kind: 'appointment' | 'item'; id: string };
+  from?: { kind: 'appointment' | 'item' | 'task'; id: string };
 }[] {
-  return railFor(cat, date, appointments, commitments, due).map((b, i) => ({
+  return railFor(cat, date, appointments, commitments, due, tasks).map((b, i) => ({
     id: `${b.at}-${i}-${b.title}`,
     ...(b.from ? { from: b.from } : {}),
     title: b.title,
@@ -413,6 +470,85 @@ export function hoursFor(
     c: b.c ?? null,
     canceled: b.canceled,
   }));
+}
+
+/**
+ * One thing on around campus, as an hour grid draws it.
+ *
+ * The same shape `hoursFor` returns, plus the listing it came from: a tap on
+ * the block opens the event, and only the university's own listings have a
+ * screen to open — an entry out of a connected .ics is a title and a time and
+ * nothing else to read.
+ */
+export interface CampusHour {
+  id: string;
+  title: string;
+  meta: string;
+  at: number;
+  minutes: number;
+  kind: string;
+  c: null;
+  /** The campus listing behind this block, where there is one. */
+  eventId: string | null;
+}
+
+/**
+ * What is on around campus, as blocks a grid can draw.
+ *
+ * The calendar knew about campus events in all four views and drew them on
+ * none of them: they were a list under the week, a list under the day, a dot
+ * on the month and a ring on the semester bar — so the one question a
+ * timetable is for, *does this collide with anything*, could not be asked of
+ * the involvement fair at four. A game at six is an hour of a Saturday in
+ * exactly the way a shift is, and the grid is where hours live.
+ *
+ * Two rules keep it honest:
+ *
+ *  - **Only when a time was stated.** A listing whose time is "TBD" — which
+ *    the football schedule is full of until the television window is set —
+ *    gets no block, the same way a deadline whose wording names no hour is
+ *    listed under the grid rather than drawn at midnight on it. The lists
+ *    below the grids still carry every one of them.
+ *  - **An hour long, and no claim beyond that.** A listing states when it
+ *    starts and not when it ends. An hour is long enough to read the title in
+ *    and short enough not to assert how long a fair or a game runs.
+ *
+ * They are never movable: a campus event is somebody else's date, and the
+ * grids refuse a drag on one and say so — see `screens/calendar/Move.tsx`.
+ */
+export function campusHours(events: DatedEvent[], feed: FeedEvent[], date: Date): CampusHour[] {
+  const iso = dateToIso(date);
+  const listings = events
+    .filter((e) => sameDay(e.date, date))
+    .map((e) => ({ e, at: readDue(e.time) }))
+    .filter((x): x is { e: DatedEvent; at: number } => x.at !== null)
+    .map(({ e, at }) => ({
+      id: `campus-${e.id}`,
+      title: e.title,
+      meta: [e.kind, e.where].filter(Boolean).join(' · '),
+      at,
+      minutes: 60,
+      kind: CAMPUS_KIND,
+      c: null,
+      eventId: e.id,
+    }));
+
+  // An all-day entry from a feed has `at: null` and stays in the list, for the
+  // same reason a "TBD" listing does: there is no hour to draw it at.
+  const feeds = feed
+    .filter((e) => e.date === iso && e.at !== null)
+    .map((e) => ({
+      id: `feed-${e.id}`,
+      title: e.title,
+      meta: e.where || 'From a connected calendar',
+      at: e.at as number,
+      minutes: 60,
+      kind: CAMPUS_KIND,
+      c: null,
+      eventId: null,
+    }));
+
+  return [...listings, ...feeds].sort((a, b) => a.at - b.at);
 }
 
 /**

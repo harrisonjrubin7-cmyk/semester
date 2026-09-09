@@ -1,0 +1,125 @@
+# Deploy an Edge Function, from here rather than from somebody's laptop.
+#
+# `supabase/DEPLOY.md` used to end every function with "run this on your
+# machine", which is fine until the machine is a phone. This is the same
+# command with a button on it: Actions → Deploy Edge Functions → Run workflow.
+#
+# It needs one secret, `SUPABASE_ACCESS_TOKEN` — a personal access token from
+# supabase.com/dashboard/account/tokens, added under Settings → Secrets and
+# variables → Actions. It is not a project key and not the service key: it is
+# an account credential that can deploy, so it belongs in a secret and nowhere
+# else. Without it this workflow says so and stops, rather than failing main
+# with a stack trace about being logged out.
+#
+# Nothing here touches the app or the database. A function is code; the tables
+# it reads are applied separately, by hand, from the SQL in `supabase/`.
+
+name: Deploy Edge Functions
+
+on:
+  # A change to a function's own directory, once it is on main.
+  push:
+    branches: ['main']
+    paths:
+      - 'supabase/functions/**'
+      - '.github/workflows/functions.yml'
+  # Or by hand, which is how a function first goes up.
+  workflow_dispatch:
+    inputs:
+      functions:
+        description: 'Which functions to deploy, space-separated'
+        required: true
+        default: 'fetchcal'
+        type: string
+
+# Deploys are not worth racing. Never cancel one half-way: the platform is
+# mid-swap of a live function and the loser leaves it undefined.
+concurrency:
+  group: functions
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Two commits, so a push can be asked which functions it changed.
+          fetch-depth: 2
+
+      # Which project. A repository variable wins; otherwise the ref is read
+      # off the URL the app is built against, so a fork that set its own
+      # `VITE_SUPABASE_URL` deploys to its own project rather than to this one.
+      - name: Work out the project
+        id: project
+        env:
+          REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          URL: ${{ vars.VITE_SUPABASE_URL }}
+        run: |
+          ref="$REF"
+          if [ -z "$ref" ]; then
+            url="$URL"
+            # The committed default, which is what the deployed app uses.
+            [ -z "$url" ] && url=$(grep -E '^VITE_SUPABASE_URL=' app/.env.production | cut -d= -f2-)
+            ref=$(printf '%s' "$url" | sed -E 's#https?://##; s#\..*##')
+          fi
+          if [ -z "$ref" ]; then
+            echo "::error title=No project::Set the SUPABASE_PROJECT_REF repository variable, or VITE_SUPABASE_URL."
+            exit 1
+          fi
+          echo "::notice title=Project::Deploying to $ref."
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+
+      # Which functions. Named by hand on a dispatch; on a push, whichever
+      # directories the push actually touched — so a change to `fetchcal` does
+      # not redeploy `claude` and `push` for no reason.
+      - name: Work out what to deploy
+        id: what
+        env:
+          ASKED: ${{ inputs.functions }}
+        run: |
+          if [ -n "$ASKED" ]; then
+            list="$ASKED"
+          else
+            list=$(git diff --name-only HEAD^ HEAD -- supabase/functions \
+              | cut -d/ -f3 | sort -u | tr '\n' ' ')
+          fi
+          list=$(printf '%s' "$list" | tr -s ' ' | sed 's/^ //; s/ $//')
+          if [ -z "$list" ]; then
+            echo "::notice title=Nothing to deploy::No function directory changed."
+          else
+            echo "::notice title=Functions::$list"
+          fi
+          echo "list=$list" >> "$GITHUB_OUTPUT"
+
+      - uses: supabase/setup-cli@v1
+        if: steps.what.outputs.list != ''
+        with:
+          version: latest
+
+      - name: Deploy
+        if: steps.what.outputs.list != ''
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          REF: ${{ steps.project.outputs.ref }}
+          LIST: ${{ steps.what.outputs.list }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::warning title=Not deployed::No SUPABASE_ACCESS_TOKEN secret, so nothing was deployed. Add one from supabase.com/dashboard/account/tokens under Settings → Secrets and variables → Actions, then run this workflow again."
+            exit 0
+          fi
+          # `--no-verify-jwt` on every one of these, and on every one of them it
+          # is the platform check that is off rather than authentication:
+          # `claude` and `fetchcal` verify the caller's token themselves and
+          # have to answer a CORS preflight, which carries no Authorization
+          # header at all; `push` is called by the scheduler and authenticates
+          # with a shared secret. See supabase/DEPLOY.md.
+          for fn in $LIST; do
+            if [ ! -f "supabase/functions/$fn/index.ts" ]; then
+              echo "::error title=No such function::supabase/functions/$fn/index.ts does not exist."
+              exit 1
+            fi
+            echo "::group::$fn"
+            supabase functions deploy "$fn" --project-ref "$REF" --no-verify-jwt
+            echo "::endgroup::"
+          done

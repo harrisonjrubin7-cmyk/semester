@@ -590,7 +590,7 @@ export const DESTINATIONS: Destination[] = [
     // report and a directory. It is the second thing it does that people come
     // for, so the name says the first.
     label: 'Progress',
-    blurb: 'Your load at a glance, and everything else the app can do.',
+    blurb: 'What is late, what the week holds, and everything else the app can do.',
     // Three tabs' worth, because the Everything screen merged into this one:
     // "where does the thing live" is the shelves, "what am I trying to do" is
     // the task view, and both used to be a second directory of their own.
@@ -879,12 +879,75 @@ export function saysFor(d: Destination, c: Capabilities): { label: string; blurb
  * two-hundred-line file holding one seven-line function that imports `TASKS`
  * and `taskLabel` from here. It is here now, and that file is gone.
  */
-export function byTask(rows: Destination[]): { tag: TaskTag; label: string; rows: Destination[] }[] {
+export interface TaskSection {
+  tag: TaskTag;
+  label: string;
+  rows: Destination[];
+}
+
+export function byTask(rows: Destination[]): TaskSection[] {
   return TASKS.map(([tag]) => ({
     tag,
     label: taskLabel(tag),
     rows: rows.filter((d) => d.taskTags.includes(tag)),
   })).filter((s) => s.rows.length > 0);
+}
+
+/**
+ * Would somebody typing this be looking at that row?
+ *
+ * Every word has to land somewhere, in any order — "exam paper" finds the
+ * screen whose blurb says *paper* and whose keywords say *exam*, and "paper
+ * exam" finds the same one. A single run of characters was the first draft
+ * and it fails the way people actually type into a filter, which is two words
+ * they remember rather than the label as written.
+ *
+ * The haystack is what the row shows plus what search already matches on:
+ * the school's own words for it (`saysFor` — the meal row is not "Commodore
+ * Cash" everywhere), the blurb under the label, the keywords behind it, and
+ * the shelf it lives on, so "campus" finds the campus shelf's rows from a
+ * view that never names a shelf.
+ *
+ * Deliberately not `lib/find.ts`. That is a ranked search over deadlines,
+ * courses, units and notes, with a typo tier and a near-miss tier, and it
+ * answers the header's search icon. This is a filter over one list of
+ * forty-nine rows that has to stay in the order the sections put them in —
+ * ranking would shuffle a row out of the heading that explains it, which is
+ * the whole point of this view.
+ */
+export function taskMatch(d: Destination, q: string, c?: Capabilities): boolean {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  const said = c ? saysFor(d, c) : { label: d.label, blurb: d.blurb };
+  const hay = `${said.label} ${said.blurb} ${d.keywords} ${d.group}`.toLowerCase();
+  return words.every((w) => hay.includes(w));
+}
+
+/**
+ * The task index, narrowed to what somebody typed into the filter.
+ *
+ * A heading that matches keeps every row under it: somebody typing "campus"
+ * or "week" is naming the intention rather than the screen, and answering
+ * that with the three rows whose blurbs happen to contain the word would be
+ * the app pretending not to know what it was asked. Sections left with
+ * nothing drop out, so the count above the list is the count on screen.
+ *
+ * The order never changes. Whatever is typed, a row stays under the heading
+ * that says why it is there and the headings stay in the order `TASKS` puts
+ * them in — a filter that re-ranks is a filter that moves the thing you were
+ * reaching for while you reach for it.
+ */
+export function narrowTasks(sections: TaskSection[], q: string, c?: Capabilities): TaskSection[] {
+  const want = q.trim().toLowerCase();
+  if (want === '') return sections;
+  const words = want.split(/\s+/).filter(Boolean);
+  return sections
+    .map((s) => {
+      const heading = s.label.toLowerCase();
+      if (words.every((w) => heading.includes(w))) return s;
+      return { ...s, rows: s.rows.filter((d) => taskMatch(d, want, c)) };
+    })
+    .filter((s) => s.rows.length > 0);
 }
 
 export function lately(
