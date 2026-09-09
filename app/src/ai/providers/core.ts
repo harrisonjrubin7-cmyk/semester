@@ -4,7 +4,7 @@ import { datedItems } from '../../lib/select';
 import { forScope, insights } from '../../insights';
 import { factsFrom } from '../../insights/facts';
 import type { Provide, Look } from '../shape';
-import { guideNow } from '../shape';
+import { guideNow, startedNow } from '../shape';
 
 /**
  * What each screen tells the assistant it is showing.
@@ -194,14 +194,24 @@ export const study: Provide = (look) => {
   if (!guide || !course) return null;
 
   const cards = guide.units.reduce((n, u) => n + u.cards.length, 0);
+  /*
+   * A percentage only where one has been earned. Before the first answer in
+   * this course every unit's mastery is the figure the guide declared, and
+   * sending it as `mastered` invites exactly the answer the suggestions below
+   * ask for — which unit is cold, what to drill first — out of numbers nobody
+   * earned. See `startedNow`.
+   */
+  const started = startedNow(look, state.guideId, guide);
   return {
-    summary: `Studying ${course.code} — ${guide.units.length} units, ${cards} cards, in ${state.mode} mode.`,
+    summary: `Studying ${course.code} — ${guide.units.length} units, ${cards} cards, in ${state.mode} mode.${
+      started ? '' : ' Nothing in this course has been answered yet.'
+    }`,
     focus: { course: course.code, mode: state.mode },
     visible: guide.units.map((u, i) => ({
       unit: i + 1,
       name: u.name,
       cards: u.cards.length,
-      mastered: `${u.mastery}%`,
+      mastered: started ? `${u.mastery}%` : 'not started',
     })),
     actions: ['open_screen', 'start_timer'],
     suggestions: [

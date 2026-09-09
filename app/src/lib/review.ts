@@ -305,6 +305,29 @@ export function neverMet(keys: string[], reviews: Reviews): number {
   }).length;
 }
 
+/**
+ * Has anything here been answered at all?
+ *
+ * The question `unitMastery` cannot answer about its own result. That function
+ * blends what has been answered with the figure the guide declared, and the
+ * declared figure stands in for every card not answered yet — so before the
+ * first answer it returns the guide's number, and nothing in the number says
+ * so. A caller that draws it as measured is drawing an estimate wearing a
+ * measurement's clothes: "49% mastered" for a course nobody has opened, and —
+ * worse, because it is advice — "all 11 units are above 40%, keep them warm"
+ * about units nobody has ever seen.
+ *
+ * So the callers that *say* a mastery figure ask this first. It is one line
+ * three of them had written out for themselves, and one line in three places
+ * is the shape of a rule that will eventually be true in two of them.
+ */
+export function anyAnswered(keys: string[], reviews: Reviews): boolean {
+  return keys.some((k) => {
+    const r = reviews[k];
+    return !!r && r.seen > 0;
+  });
+}
+
 export interface Tally {
   /** Distinct cards answered at least once. Never more than the deck holds. */
   cards: number;

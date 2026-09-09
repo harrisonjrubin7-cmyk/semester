@@ -13,7 +13,7 @@ import { ChevronRight } from '../components/Icons';
 import { AppGrid } from '../components/nav/AppGrid';
 import { nextExam, testedIn } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
-import { cardKey, comeRound, neverMet } from '../lib/review';
+import { anyAnswered, cardKey, comeRound, neverMet } from '../lib/review';
 import { destinationsIn } from '../lib/nav';
 import { suggest, type Coming } from '../lib/toolnow';
 import { codeOf } from '../data/catalog';
@@ -226,7 +226,7 @@ export function Study() {
                */
               const keys = allCards(guide).map((card) => cardKey(exam.item.c, card.q));
               const cards = keys.length;
-              if (!keys.some((k) => state.reviews[k])) {
+              if (!anyAnswered(keys, state.reviews)) {
                 return `${guide.units.length} units on it and ${cards} cards, none of them answered yet. Nothing here knows what you know until you drill some — start with the first unit.`;
               }
               const coldUnits = guide.units.filter((u) => u.mastery < 40);
@@ -404,7 +404,7 @@ export function Study() {
           const keys = allCards(g).map((card) => cardKey(c.id, card.q));
           const due = comeRound(keys, state.reviews, now.getTime());
           const fresh = neverMet(keys, state.reviews);
-          const started = keys.some((k) => state.reviews[k]);
+          const started = anyAnswered(keys, state.reviews);
           const test = testedIn(catalog, now, c.id);
           const step = nextStep({
             ways,

@@ -21,6 +21,7 @@ import type { Catalog } from '../data/catalog';
 import { datedItems } from './select';
 import { dueLabel, isoToDate } from './date';
 import { DESTINATIONS, saysFor } from './nav';
+import { anyAnswered, cardKey, type Reviews } from './review';
 import { nearAny } from './near';
 import { allowed, type Capabilities } from './school';
 
@@ -195,6 +196,17 @@ export function findEverything(
    * "it did not save".
    */
   updates: CourseUpdate[] = [],
+  /*
+   * What has actually been answered.
+   *
+   * A unit's `mastery` is `unitMastery`'s blend of answers with the figure the
+   * guide declared, and before the first answer it is entirely the declared
+   * one — so this row read "8 cards · 47% known" about a unit nobody had
+   * opened. "Known" is the strongest word on the row and it was the least
+   * earned. Optional because every caller that has reviews should pass them
+   * and a caller that has none is telling the truth by saying nothing.
+   */
+  reviews: Reviews = {},
 ): HitGroup[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -246,7 +258,12 @@ export function findEverything(
       // The guide as it stands today, not as it was compiled. `liveGuide` is the
       // same merge the study screens use, so a search hit and the screen it
       // opens can never disagree about what is in a unit.
-      const guide = updates.length ? liveGuide(cat, c.id, updates) : cat.guides[c.id];
+      // The guide as it stands, reviews included, so a figure in a search
+      // result and the same figure on the study screen cannot disagree.
+      const guide =
+        updates.length || Object.keys(reviews).length
+          ? liveGuide(cat, c.id, updates, reviews)
+          : cat.guides[c.id];
       if (!guide) continue;
       guide.units.forEach((u, index) => {
         const cards = u.cards.map((card) => `${card.q} ${card.a}`).join(' ');
@@ -263,7 +280,14 @@ export function findEverything(
             unit: index,
             mode: 'cards',
             title: u.name,
-            sub: `${u.cards.length} cards · ${u.mastery}% known`,
+            sub: `${u.cards.length} cards · ${
+              anyAnswered(
+                u.cards.map((card) => cardKey(c.id, card.q)),
+                reviews,
+              )
+                ? `${u.mastery}% known`
+                : 'not started'
+            }`,
             tag: c.code,
             score: s,
           });
