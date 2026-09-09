@@ -267,20 +267,6 @@ export function ahead(dates: TermDate[], now: Date): TermDate[] {
     .sort((a, b) => daysTo(a.iso, now) - daysTo(b.iso, now));
 }
 
-/** The days a term break covers, so nothing schedules work into them. */
-export function breakDays(dates: TermDate[]): Set<string> {
-  const out = new Set<string>();
-  for (const d of filled(dates)) {
-    if (d.kind !== 'break') continue;
-    const from = isoToDate(d.iso);
-    const to = d.until ? isoToDate(d.until) : from;
-    for (let day = from; day <= to; day.setDate(day.getDate() + 1)) {
-      out.add(dateToIso(day));
-    }
-  }
-  return out;
-}
-
 // ── Reading a registrar's page ────────────────────────────────────────────
 
 const MONTH_WORDS = [

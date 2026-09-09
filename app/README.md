@@ -29,7 +29,7 @@ own application.
 
 ## What is in it
 
-Five tabs, forty-nine screens. The tabs are below; the forty-nine are the registry in
+Five tabs, forty-eight screens. The tabs are below; the forty-eight are the registry in
 `src/lib/nav.ts`, which is also what the directory, the search box and the
 home-screen icons are drawn from — there is one list, and it is that one.
 
@@ -316,6 +316,7 @@ prevent.
 | What the date turns into on screen — labels, "today", countdowns | `lib/select.ts` |
 | What the assistant can do | `ai/providers/` |
 | The spacing, type and leading scales every screen is held to | `styles/rules.ts` |
+| What each screen is still owed off those scales, per file | `styles/budget.ts` (generated: `npm run lint:styles -- --fix`) |
 | How a list is dragged into a different order, and what an arrow means | `lib/arrange.ts` |
 
 If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen

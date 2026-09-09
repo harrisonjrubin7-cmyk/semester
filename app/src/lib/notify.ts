@@ -98,20 +98,6 @@ export interface AtRisk {
 /** How long before the class the warning is worth having. */
 export const ATTEND_LEAD = 45;
 
-/**
- * The hours a reminder will not be sent in.
- *
- * The attendance nudge cannot land here anyway — a class at 4am is not a
- * class — but the rule is written down rather than left to that coincidence,
- * because the coincidence is not something a future rule can rely on.
- */
-export function inSleep(minutes: number, floor: { from: number; to: number }): boolean {
-  // A window that wraps midnight is two windows.
-  return floor.from > floor.to
-    ? minutes >= floor.from || minutes < floor.to
-    : minutes >= floor.from && minutes < floor.to;
-}
-
 const day = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
 /**
@@ -291,7 +277,6 @@ export function fire(reminders: Reminder[]): number {
   if (shown > 0) remember(already);
   return shown;
 }
-
 
 /**
  * The reminders the next few days will produce, with when each one fires.

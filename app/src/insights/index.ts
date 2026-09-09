@@ -67,10 +67,3 @@ export function forScope(all: Insight[], scope: Scope | 'all', limit?: number): 
   return typeof limit === 'number' ? mine.slice(0, limit) : mine;
 }
 
-/**
- * What the minimum sample is for each, for a screen that wants to say why it
- * is showing nothing — without showing a card that says nothing.
- */
-export const MINIMUMS: Record<string, number> = Object.fromEntries(
-  SOURCES.map((s) => [s.id, s.minimum]),
-);

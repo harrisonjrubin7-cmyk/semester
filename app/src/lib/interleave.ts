@@ -137,20 +137,6 @@ export function interleave<T>(items: T[], groupOf: (item: T) => string): T[] {
   return out;
 }
 
-/** The longest stretch of one group, for a test and for the settings line. */
-export function longestRun<T>(items: T[], groupOf: (item: T) => string): number {
-  let best = 0;
-  let run = 0;
-  let last = '';
-  for (const item of items) {
-    const g = groupOf(item);
-    run = g === last ? run + 1 : 1;
-    last = g;
-    if (run > best) best = run;
-  }
-  return best;
-}
-
 /** How many distinct groups are in play. */
 export function groupCount<T>(items: T[], groupOf: (item: T) => string): number {
   return new Set(items.map(groupOf)).size;

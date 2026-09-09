@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ASK, NUDGE, guessedLine, invite, pick, readPretested, studied, unitKey, verdict, worthGuessing } from './pretest';
+import { ASK, NUDGE, invite, pick, readPretested, studied, unitKey, verdict, worthGuessing } from './pretest';
 import { cardKey, type Reviews } from './review';
 import type { StudyCard } from './types';
 
@@ -117,16 +117,6 @@ describe('the verdict, which is not a score', () => {
 });
 
 describe('the record it keeps', () => {
-  it('says when, in days, rather than a timestamp', () => {
-    const now = Date.UTC(2026, 8, 10);
-    expect(guessedLine(now, now)).toContain('today');
-    expect(guessedLine(now - 86_400_000, now)).toContain('yesterday');
-    expect(guessedLine(now - 5 * 86_400_000, now)).toContain('5 days ago');
-  });
-
-  it('says nothing about a unit never pretested', () => {
-    expect(guessedLine(undefined)).toBe('');
-  });
 
   it('drops anything stored that is not a time', () => {
     expect(readPretested({ a: 1, b: 'yesterday', c: 0, d: -5 })).toEqual({ a: 1 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NAMED, fromHash, linkTo, replaces, same, toHash } from './route';
+import { NAMED, fromHash, replaces, same, toHash } from './route';
 import type { Screen } from './types';
 
 describe('writing an address', () => {
@@ -107,19 +107,6 @@ describe('comparing two', () => {
   });
 });
 
-describe('a link somebody can send', () => {
-  it('keeps whatever subpath the app is served from', () => {
-    // Served from a subpath on Pages and from the root elsewhere. Hardcoding
-    // either produces links that work in exactly one of them.
-    expect(
-      linkTo({ screen: 'course', id: 'econ' }, { origin: 'https://x.github.io', pathname: '/semester/' }),
-    ).toBe('https://x.github.io/semester/#/course/econ');
-    expect(linkTo({ screen: 'home', id: '' }, { origin: 'http://localhost:5199', pathname: '/' })).toBe(
-      'http://localhost:5199/#/home',
-    );
-  });
-});
-
 describe('links to screens that have since merged', () => {
   it('sends a retired screen to the one it merged into', () => {
     // Somebody bookmarked these before the merges. A saved link landing on a
@@ -130,6 +117,11 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/check')?.screen).toBe('announce');
     expect(fromHash('#/chat')?.screen).toBe('ask');
     expect(fromHash('#/grades')?.screen).toBe('courses');
+    // A settings page rather than a destination, and the same rule: it counted
+    // the same bytes the Data screen counts.
+    expect(fromHash('#/setStorage')?.screen).toBe('data');
+    // The directory that was a screen is the tab it duplicated.
+    expect(fromHash('#/everything')?.screen).toBe('me');
   });
 
   it('says which part of the survivor the link meant', () => {
@@ -144,8 +136,12 @@ describe('links to screens that have since merged', () => {
     // The id a link used to carry went with the screen: the table lists every
     // course and never read it.
     expect(fromHash('#/grades/econ')?.screen).toBe('courses');
-    // Nothing to disambiguate: the chat was the whole of what Ask now is.
+    // `#/everything` says which tab of Progress it meant.
+    expect(fromHash('#/everything')?.opens).toEqual({ meTab: 'all' });
+    // Nothing to disambiguate: the chat was the whole of what Ask now is, and
+    // the Data screen has no sections to open.
     expect(fromHash('#/chat')?.opens).toBeUndefined();
+    expect(fromHash('#/setStorage')?.opens).toBeUndefined();
     expect(fromHash('#/brief')?.opens).toBeUndefined();
   });
 

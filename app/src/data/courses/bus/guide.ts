@@ -547,8 +547,7 @@ export const BUS_GUIDE: Guide = {
   ],
 };
 
-/** The session map, straight from the syllabus. Red rows are the ones that cost points. */
-export const BUS_SESSIONS: { date: string; topic: string; due: string; costly: boolean }[] = [
+[] = [
   { date: 'Aug 27', topic: 'Course introduction — Ch. 1–2', due: 'Group Assignment 1 handed out: ECOALF case', costly: false },
   { date: 'Sep 1', topic: 'Value & customer centricity — Ch. 4–5', due: 'SONA account due 5 PM', costly: true },
   { date: 'Sep 3', topic: 'Marketing research — Ch. 19', due: 'Group Assignment 1 due 11:59 PM · guest speaker', costly: true },

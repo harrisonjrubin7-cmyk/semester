@@ -3,7 +3,6 @@ import { buildCatalog, EMPTY_CATALOG } from '../data/catalog';
 import {
   appointmentsOn,
   datedItems,
-  dotsForMonth,
   feed,
   feedEventsOn,
   feedFilters,
@@ -16,7 +15,6 @@ import {
   nextClass,
   nextExam,
   railFor,
-  searchItems,
   spanOf,
   tasksOn,
   upcomingItems,
@@ -270,10 +268,6 @@ describe('an item whose course is not in the catalogue', () => {
     expect(feed(orphaned, NOW, {}).find((r) => r.itemId === 'stray')?.code).toBe('A-COURSE-THAT-IS-GONE');
   });
 
-  it('is still searchable', () => {
-    expect(searchItems(orphaned, NOW, 'orphan').map((i) => i.id)).toEqual(['stray']);
-  });
-
   it('still counts towards the next exam', () => {
     expect(nextExam(orphaned, NOW)?.item.id).toBe('stray');
   });
@@ -360,30 +354,6 @@ describe('loadByCourse', () => {
   });
 });
 
-describe('searchItems', () => {
-  it('matches a title, a kind, a course code and a professor', () => {
-    expect(searchItems(CAT, NOW, 'midterm').map((i) => i.id)).toEqual(['e-m1', 'e-m2']);
-    expect(searchItems(CAT, NOW, 'response').length).toBe(2);
-    expect(searchItems(CAT, NOW, 'ECON 1020').length).toBe(3);
-    expect(searchItems(CAT, NOW, 'Dr. Someone').length).toBe(6);
-  });
-
-  it('ignores case and surrounding space', () => {
-    expect(searchItems(CAT, NOW, '  MIDTERM  ').length).toBe(2);
-  });
-
-  it('returns nothing at all for an empty query', () => {
-    // Not everything: an empty search box means "you have not asked yet",
-    // and answering it with the whole semester is not an answer.
-    expect(searchItems(CAT, NOW, '')).toEqual([]);
-    expect(searchItems(CAT, NOW, '   ')).toEqual([]);
-  });
-
-  it('searches what has gone as well as what is coming', () => {
-    expect(searchItems(CAT, NOW, 'Problem Set 1').map((i) => i.id)).toEqual(['e-ps1']);
-  });
-});
-
 describe('itemsOn and dotsForMonth', () => {
   it('finds the deadlines on one day', () => {
     expect(itemsOn(CAT, NOW, 2026, 8, 9).map((i) => i.id)).toEqual(['p-r1', 'p-r2']);
@@ -393,14 +363,6 @@ describe('itemsOn and dotsForMonth', () => {
   it('does not confuse the same day of another month or year', () => {
     expect(itemsOn(CAT, NOW, 2026, 9, 9)).toEqual([]);
     expect(itemsOn(CAT, NOW, 2025, 8, 9)).toEqual([]);
-  });
-
-  it('counts a month day by day', () => {
-    expect(dotsForMonth(CAT, NOW, 2026, 8)).toEqual({ 4: 1, 9: 2, 22: 1, 30: 1 });
-  });
-
-  it('gives an empty month an empty count', () => {
-    expect(dotsForMonth(CAT, NOW, 2026, 7)).toEqual({});
   });
 });
 

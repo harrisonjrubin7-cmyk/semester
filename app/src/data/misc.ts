@@ -95,25 +95,4 @@ export const EXTRACT = [
   { id: 'x9', title: 'Top Hat participation', when: 'Every class', kind: 'Extra credit' },
 ];
 
-/** Real text from the ECON syllabus, pre-pasted into the importer. */
-export const PASTED = `Important Dates:
-• MIDTERM 1 : September 30th (Wednesday, in class)
-• Fall Break: October 22–23rd (I.e., No Class Friday)
-• MIDTERM 2 : November 4th (Wednesday, in class)
-• Thanksgiving Break: November 21st–29th (Full Week Off)
-• MID 3/FINAL EXAM : (Will take place during our official "final exam slot")
-  9:05: Tuesday December 15th, 3:00–5:00p
-
-Evaluation:
-20% Problem Sets — Due roughly every Friday. All deadlines and
-submissions will be in gradescope.
-80% Exams — three multiple-choice exams, in class, closed-note.`;
-
-export const LOAD_STEPS = [
-  'Splitting pages…',
-  'Finding the schedule table…',
-  'Resolving “roughly every Friday”…',
-  'Cross-checking the academic calendar…',
-];
-
 /** The three onboarding screens. */

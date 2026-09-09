@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appleMapsUrl, directionsUrl, fromRoom, isPlace, placeUrl } from './maps';
+import { appleMapsUrl, directionsUrl, fromRoom, isPlace } from './maps';
 
 describe('fromRoom', () => {
   it('drops the room number, which no map service knows about', () => {
@@ -102,13 +102,5 @@ describe('appleMapsUrl', () => {
 
   it('sends a bike ride walking rather than silently driving it', () => {
     expect(new URL(appleMapsUrl({ query: 'x' }, 'bicycling')).searchParams.get('dirflg')).toBe('w');
-  });
-});
-
-describe('placeUrl', () => {
-  it('searches rather than routes', () => {
-    const url = new URL(placeUrl({ query: 'Central Library' }));
-    expect(url.pathname).toContain('search');
-    expect(url.searchParams.get('query')).toBe('Central Library');
   });
 });

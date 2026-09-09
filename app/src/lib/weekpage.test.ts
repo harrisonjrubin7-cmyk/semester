@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { busyDays, dueByDay, lanesOf, weekDates, weekLabel, weekLine } from './weekpage';
+import { dueByDay, lanesOf, weekDates, weekLabel, weekLine } from './weekpage';
 import type { DatedItem } from './types';
 
 const MON = new Date(2026, 8, 7); // Mon 7 Sep 2026
@@ -42,11 +42,6 @@ describe('deadlines by day', () => {
     expect(dueByDay([item(new Date(2026, 8, 20), 'Later')], MON).every((d) => !d.items.length)).toBe(
       true,
     );
-  });
-
-  it('can be narrowed to the days that carry something', () => {
-    const days = dueByDay([item(new Date(2026, 8, 9), 'Problem Set 2')], MON);
-    expect(busyDays(days).map((d) => d.label)).toEqual(['Wed 9']);
   });
 });
 
