@@ -414,6 +414,14 @@ export interface Persisted {
   tone: Tone;
   badges: string;
   feed: string;
+  /**
+   * `on` or `off`. Whether each course is drawn in its own turn of the accent.
+   *
+   * Part of the look and stored with it, so it syncs with the account and
+   * survives a reinstall like every other appearance choice. The colours it
+   * decides are `lib/tint.ts`.
+   */
+  courseColours: string;
   /** `plain`, `grouped` or `soft`. Which layout every screen is drawn in. */
   shell: string;
   /**
@@ -820,6 +828,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   labels: 'on',
   badges: 'due',
   feed: 'cards',
+  courseColours: 'on',
   shell: 'plain',
   // Not `list`. Writing a default in here made "never chosen" unreachable —
   // the first save stamped `list` on everybody, and `directoryOf`'s soft
@@ -846,6 +855,7 @@ export function currentLook(state: Persisted): Look {
     labels: state.labels,
     badges: state.badges,
     feed: state.feed,
+    courseColours: state.courseColours,
     shell: state.shell,
     directory: state.directory,
     groupOrder: state.groupOrder,
@@ -1206,6 +1216,7 @@ export function pickPersisted(state: State): Persisted {
     labels: state.labels,
     badges: state.badges,
     feed: state.feed,
+    courseColours: state.courseColours,
     shell: state.shell,
     directory: state.directory,
     groupOrder: state.groupOrder,

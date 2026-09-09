@@ -23,6 +23,7 @@ import { directoryOf } from '../lib/look';
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
 import { TypeToConfirm } from '../components/TypeToConfirm';
+import { CourseTag } from '../components/CourseTag';
 
 /**
  * The shelves, in the order they read: what you study, what you make with it,
@@ -214,7 +215,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
 }
 
 export function Me() {
-  const { state, dispatch, now, catalog, account , courseCode, school, facts } = useStore();
+  const { state, dispatch, now, catalog, account , courseCode, school, facts, tint } = useStore();
   const rowNine = useRowStyle(9);
   const rowTen = useRowStyle(10);
   const ahead = upcomingItems(catalog, now);
@@ -304,7 +305,10 @@ export function Me() {
             <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{b.n} left</div>
           </div>
           <div style={{ marginTop: 'var(--sp-3)' }}>
-            <Meter pct={b.pct} />
+            {/* Four bars in one metal are four bars you have to read the label
+                of. In their courses' colours they are the same four facts,
+                comparable at a glance and matched to every other list. */}
+            <Meter pct={b.pct} fill={tint(b.id).fill} />
           </div>
         </div>
       ))}
@@ -331,9 +335,9 @@ export function Me() {
                 ...rowNine,
               }}
             >
-              <span className="tag tag-accent" style={{ flex: 'none' }}>
+              <CourseTag id={r.courseId} style={{ flex: 'none' }}>
                 {courseCode(r.courseId)}
-              </span>
+              </CourseTag>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{r.kind}</span>
               <span style={{ flex: 'none', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{showSpan(r.minutes / 60)}</span>
               <span style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.45, minWidth: 46, textAlign: 'right' }}>
