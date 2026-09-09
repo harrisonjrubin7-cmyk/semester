@@ -566,7 +566,7 @@ export interface Ephemeral {
   homeTab: 'today' | 'hours' | 'week' | 'done' | 'brief';
   coursesTab: 'courses' | 'due' | 'grades';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
-  meTab: 'you' | 'all' | 'settings';
+  meTab: 'you' | 'all';
   /** Which shelf of the directory is showing under Everything. */
   meGroup: string;
   /**
@@ -1379,7 +1379,7 @@ export type Action =
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
-  | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
+  | { type: 'setMeTab'; tab: 'you' | 'all' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
   /**
