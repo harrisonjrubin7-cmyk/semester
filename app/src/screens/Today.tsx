@@ -12,6 +12,8 @@ import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import { homeShape } from '../lib/chrome';
+import type { Catalog } from '../data/catalog';
+import type { State } from '../state/shape';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import {
   appointmentsOn,
@@ -1604,13 +1606,43 @@ function FeedHome() {
   );
 }
 
+/**
+ * Whether Today has nothing to draw — which depends on which Today it is.
+ *
+ * `TabHome` shows the student's own tasks and appointments in sections of
+ * their own, so it has something to draw the moment either exists. `FeedHome`
+ * is one list built from `feed(catalog, …)`, which reads classes and deadlines
+ * and nothing else — so on a catalogue with only personal entries in it, it
+ * drew a header, three chips and nothing at all.
+ *
+ * Measured under all four navigations with one task and one appointment and no
+ * courses: tabs, springboard and shelves each showed both, and feed showed
+ * "WED · SEP 9 Today ALL DUE CLASSES" and stopped. That is worse than the
+ * first-run screen it replaced, which at least said what to do next.
+ *
+ * So the feed keeps the old question. It leaves the feed navigation still
+ * telling somebody with a task that there is nothing on today, which is the
+ * defect this change is about — but fixing it there means putting personal
+ * entries into `feed()` itself, and that changes the feed for everybody who
+ * uses it rather than only for the empty case. That is a change with its own
+ * design in it, and it is not this one.
+ */
+export function nothingOnToday(
+  shape: ReturnType<typeof homeShape>,
+  catalog: Catalog,
+  state: Pick<State, 'tasks' | 'appointments' | 'feedEvents'>,
+): boolean {
+  return shape === 'feed' ? catalog.empty : nothingYet(catalog, state);
+}
+
 export function Today() {
   const { state, catalog } = useStore();
-  if (nothingYet(catalog, state)) return <FirstRun where="on today" />;
   // `homeShape` rather than a second `nav === 'feed'` written here. This test
   // and the one in `App.tsx` used to be separate, so a navigation added to
   // one and not the other got the feed's home screen inside the bar's chrome.
-  return homeShape(state.nav) === 'feed' ? <FeedHome /> : <TabHome />;
+  const shape = homeShape(state.nav);
+  if (nothingOnToday(shape, catalog, state)) return <FirstRun where="on today" />;
+  return shape === 'feed' ? <FeedHome /> : <TabHome />;
 }
 
 /** Re-exported for the Me screen's load bars. */
