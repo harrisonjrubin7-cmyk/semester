@@ -98,7 +98,6 @@ export function Import() {
    */
   const [dropped, setDropped] = useState<Set<string>>(new Set());
   const abort = useRef<AbortController | null>(null);
-  const shared = useRef<HTMLInputElement>(null);
   /** Whether a file is being dragged over the screen right now. */
   const [over, setOver] = useState(false);
   /**
@@ -455,21 +454,7 @@ export function Import() {
         </div>
       )}
 
-      {/* The other door in. A course somebody has already generated arrives
-          as a file and needs no upload and no request — but it goes through
-          exactly the same review as a course generated here, including the
-          diff against a course you already hold, because a shared course can
-          be from a different section with different dates. */}
-      <input
-        ref={shared}
-        type="file"
-        accept="application/json,.json"
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          void openShared(e.target.files?.[0] ?? null);
-          e.target.value = '';
-        }}
-      />
+      {/* The door with no file behind it at all. See `takePasted`. */}
       <button
         type="button"
         className="bare tappable"
@@ -514,15 +499,21 @@ export function Import() {
         </>
       )}
 
-      <button
-        type="button"
-        className="bare tappable"
-        onClick={() => shared.current?.click()}
+      {/* The other door in. A course somebody has already generated arrives
+          as a file and needs no upload and no request — but it goes through
+          exactly the same review as a course generated here, including the
+          diff against a course you already hold, because a shared course can
+          be from a different section with different dates. */}
+      <FilePick
+        accept="application/json,.json"
+        multiple={false}
         disabled={busy !== ''}
+        tone="bare"
+        onPick={([file]) => void openShared(file)}
         style={QUIET}
       >
         …or open a course somebody shared with you
-      </button>
+      </FilePick>
 
       <ByHand />
 

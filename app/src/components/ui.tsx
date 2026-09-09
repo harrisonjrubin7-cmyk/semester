@@ -668,20 +668,39 @@ export function ActionButton({
  *
  * The value is cleared on the way out of `onChange`, which is what makes the
  * same file choosable twice.
+ *
+ * Every file picker in the app is this one. `lib/onefile.test.ts` holds that
+ * open: an `<input type="file">` written anywhere but here fails the suite,
+ * because the pattern this replaced is the one that comes back — it is four
+ * lines and it looks like it works.
  */
 export function FilePick({
   accept,
   multiple = true,
+  capture,
   disabled = false,
   onPick,
   onOpen,
   tone = 'secondary',
+  block = true,
   style,
   children,
 }: {
-  /** The `accept` list. Keep it in step with what `lib/extract.ts` can read. */
-  accept: string;
+  /**
+   * The `accept` list. Keep it in step with what the reader behind it can
+   * actually open — a format missing here is not refused with a sentence, it
+   * is greyed out in the operating system's own dialog.
+   */
+  accept?: string;
   multiple?: boolean;
+  /**
+   * `environment` opens the rear camera straight away on a phone.
+   *
+   * The one attribute that makes "photograph the board" a different control
+   * from "pick a photo", rather than the same picker twice. On a laptop it
+   * falls back to the file dialog, which is right there.
+   */
+  capture?: 'environment' | 'user';
   disabled?: boolean;
   onPick: (files: File[]) => void;
   /**
@@ -695,28 +714,44 @@ export function FilePick({
    * It runs on the keyboard too: Enter on a focused file input is a click.
    */
   onOpen?: () => void;
-  tone?: 'primary' | 'secondary' | 'ghost';
+  /**
+   * `bare` is not a button at all — it is the app's quiet text link, for the
+   * "…or open a course somebody shared with you" shape. It takes no height
+   * and no uppercase; the caller styles it as it would style any `.bare`.
+   */
+  tone?: 'primary' | 'secondary' | 'ghost' | 'bare';
+  /** False for one that shares a row with another control. */
+  block?: boolean;
   style?: CSSProperties;
   children: ReactNode;
 }) {
+  const bare = tone === 'bare';
   return (
     <label
-      className={`btn btn-${tone} btn-block`}
+      className={bare ? 'bare tappable' : `btn btn-${tone}${block ? ' btn-block' : ''}`}
       style={{
-        height: HEIGHT,
-        letterSpacing: '0.1em',
-        textTransform: 'uppercase',
+        // A `position` of its own, because the input is absolutely positioned
+        // against it. Everything else is the block button's own chrome and is
+        // skipped for a text link.
         position: 'relative',
-        overflow: 'hidden',
         cursor: disabled ? 'default' : 'pointer',
-        opacity: disabled ? 0.55 : 1,
+        ...(bare
+          ? null
+          : {
+              height: HEIGHT,
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase' as const,
+              overflow: 'hidden',
+              opacity: disabled ? 0.55 : 1,
+            }),
         ...style,
       }}
     >
       <input
         type="file"
-        accept={accept}
+        {...(accept ? { accept } : null)}
         multiple={multiple}
+        {...(capture ? { capture } : null)}
         disabled={disabled}
         onClick={() => onOpen?.()}
         onChange={(e) => {
