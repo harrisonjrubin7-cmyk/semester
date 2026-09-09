@@ -217,3 +217,63 @@ describe('asItemDate', () => {
     expect(asItemDate('')).toBe(null);
   });
 });
+
+/**
+ * An event with no date has nothing to disagree about.
+ *
+ * Everything in `compare` is a comparison of two dates, and an event whose own
+ * is not one turns that into arithmetic on `new Date(NaN)`. Measured with the
+ * shape `readFeedEvents` produces for a stored event whose `date` was absent:
+ * the pair was reported as **moved**, `days` was NaN, the line read *"NaN days
+ * earlier"*, and the heading over it said *"1 moved."*
+ *
+ * `parseIcs` no longer lets an undated event out of a feed, so what this
+ * catches is what is already in the database from before it did, or from
+ * another build — the same rows `lib/stored.ts` exists for.
+ */
+describe('an event the feed gave no date', () => {
+  const undated = (title: string) => event('fe-blank', title, '');
+
+  it('is not reported as a move', () => {
+    const r = compare([item('i1', 'Problem Set 1', 8, 4)], [undated('Problem Set 1')]);
+    expect(r.moved).toEqual([]);
+    expect(r.agreed).toBe(0);
+  });
+
+  it('does not turn a matching title into NaN days', () => {
+    const r = compare([item('i1', 'Problem Set 1', 8, 4)], [undated('Problem Set 1')]);
+    expect(r.moved.map(movedLine)).toEqual([]);
+    expect(summary(r)).not.toContain('NaN');
+  });
+
+  it('is not offered as something to add either', () => {
+    // `onlyThere` is an offer to put the event into the app, and an undated
+    // obligation is not one the app can hold.
+    const r = compare([], [undated('Problem Set 1')]);
+    expect(r.onlyThere).toEqual([]);
+  });
+
+  it('leaves the app’s own deadline alone, unmatched', () => {
+    const r = compare([item('i1', 'Problem Set 1', 8, 4)], [undated('Problem Set 1')]);
+    expect(r.onlyHere.map((i) => i.id)).toEqual(['i1']);
+  });
+
+  it('still compares every event that does have a date', () => {
+    const r = compare(
+      [item('i1', 'Problem Set 1', 8, 4), item('i2', 'Reflection 2', 8, 20)],
+      [undated('Nothing dated'), event('e1', 'Problem Set 1', '2026-09-11'), event('e2', 'Reflection 2', '2026-09-20')],
+    );
+    expect(r.moved).toHaveLength(1);
+    expect(r.moved[0].item.id).toBe('i1');
+    expect(r.moved[0].days).toBe(7);
+    expect(r.agreed).toBe(1);
+    expect(r.onlyThere).toEqual([]);
+  });
+
+  it('refuses a date that is shaped wrong as well as one that is missing', () => {
+    for (const bad of ['not a date', '2026-9-4', '20260904', '2026-09-04T00:00:00Z']) {
+      const r = compare([item('i1', 'Problem Set 1', 8, 4)], [event('x', 'Problem Set 1', bad)]);
+      expect(r.moved, bad).toEqual([]);
+    }
+  });
+});

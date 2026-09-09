@@ -134,6 +134,9 @@ export interface Report {
 
 const DAY = 86_400_000;
 
+/** A date this file can do arithmetic on. */
+const ISO = /^\d{4}-\d{2}-\d{2}$/;
+
 function daysBetween(a: string, b: string): number {
   const [ay, am, ad] = a.split('-').map(Number);
   const [by, bm, bd] = b.split('-').map(Number);
@@ -152,10 +155,27 @@ function daysBetween(a: string, b: string): number {
  * matters more when somebody is deciding whether to trust it.
  */
 export function compare(items: DatedItem[], events: FeedEvent[]): Report {
+  /*
+   * An event with no date has nothing to disagree about.
+   *
+   * Everything below is a comparison of two dates, and an event whose own is
+   * not one turns that into arithmetic on `new Date(NaN)`: the pair is
+   * reported as **moved**, and the line reads "NaN days earlier" under a
+   * heading saying one thing moved. Measured, with the shape
+   * `readFeedEvents` produces for a stored event whose `date` was absent —
+   * `moved: 1`, `days: NaN`, *"1 moved."*
+   *
+   * `parseIcs` no longer lets an undated event out of a feed, so this is what
+   * is already in the database from before it did, or from another build. It
+   * is left out of the comparison entirely rather than listed as only-in-the-
+   * feed: that list is an offer to add the event to the app, and an undated
+   * obligation is not one the app can hold.
+   */
+  const dated = events.filter((e) => ISO.test(e.date));
   const pairs: { i: number; e: number; score: number }[] = [];
 
   items.forEach((item, i) => {
-    events.forEach((event, e) => {
+    dated.forEach((event, e) => {
       // A course on both sides that disagrees is disqualifying. A course on
       // only one side is not — the feed's matcher misses plenty.
       if (item.c && event.courseId && item.c !== event.courseId) return;
@@ -177,7 +197,7 @@ export function compare(items: DatedItem[], events: FeedEvent[]): Report {
     usedEvents.add(pair.e);
 
     const item = items[pair.i];
-    const event = events[pair.e];
+    const event = dated[pair.e];
     const was = dateToIso(item.date);
     if (was === event.date) {
       agreed++;
@@ -200,7 +220,7 @@ export function compare(items: DatedItem[], events: FeedEvent[]): Report {
   return {
     moved,
     onlyHere: items.filter((_, i) => !usedItems.has(i)),
-    onlyThere: events
+    onlyThere: dated
       .filter((_, e) => !usedEvents.has(e))
       .sort((a, b) => a.date.localeCompare(b.date)),
     agreed,
