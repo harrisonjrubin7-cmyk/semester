@@ -168,26 +168,106 @@ let last: Partial<Persisted> | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let inFlight: Promise<void> = Promise.resolve();
 
+/**
+ * Told whether writes are landing.
+ *
+ * The catch below carries on quietly, and the argument for that is still
+ * right — there is nothing to do about one failed write mid-keystroke, and
+ * throwing would take the screen down over it. What was missing is the part
+ * after "mid-keystroke": a database that refuses one write usually refuses
+ * every write after it, and then everything the person does is being lost on
+ * the next reload with nothing on screen to say so.
+ *
+ * Measured, with `put` refusing the way a full disk refuses it: a task added
+ * through the quick-add sheet drew on screen, stayed in memory, and was gone
+ * after a reload — no warning while typing, none afterwards, no error in the
+ * console. The same shape as the two-tab bug, from a different cause.
+ *
+ * `App.tsx` already draws the banner for exactly this, and says so above it:
+ * *"Until it is fixed, everything the person does is being lost on the next
+ * reload"*. It could only ever be turned on by `navigator.storage.estimate()`,
+ * which is a guess about a quota rather than news about a write — coarse in
+ * Firefox, absent in some browsers, and no help at all when the disk is full
+ * but the origin's quota is not. So a write now reports itself.
+ *
+ * A standing registration rather than an argument to `persist`, because it is
+ * about the writer and not about one write, and because `stopWriting` next to
+ * it is already that shape.
+ */
+let watching: ((failing: boolean) => void) | null = null;
+
+/** Register the one listener, or clear it with null. */
+export function whileWriting(fn: ((failing: boolean) => void) | null): void {
+  watching = fn;
+}
+
 async function flush(): Promise<void> {
   const next = pending;
   pending = null;
   if (!next || !last) return;
+  const before = last;
   const writes = writesFor(last, next);
   last = next;
   if (writes.length === 0) return;
+
+  /*
+   * `write` reports a failure by answering false, not by throwing.
+   *
+   * This was a `try`/`catch` around it, whose catch could therefore never run
+   * — `db.ts` resolves false on an error, on an abort, and on a synchronous
+   * throw. So every write counted as a success: `last` moved on to a state
+   * the database had refused, and `announce` went out.
+   *
+   * That last one matters most, because `announce` is the nudge that sends
+   * the other tab to re-read the disk. Sent after a write that did not land,
+   * it sends that tab to read a disk without the change on it — which is the
+   * hazard the ordering here exists to prevent, re-armed by the one case
+   * where it does most damage.
+   *
+   * Measured, with `put` refusing the way a full disk refuses it: a task
+   * added through the quick-add sheet drew on screen, stayed in memory, and
+   * was gone after a reload — no warning while typing, none afterwards, and
+   * nothing in the console. The same shape as the two-tab bug, from a
+   * different cause.
+   */
+  let ok = false;
   try {
-    await write(writes);
-    // Only now, and only because something was actually written. See
-    // `persist` below on why the order matters.
-    const say = announce;
-    announce = null;
-    say?.();
+    ok = await write(writes);
   } catch {
-    // A failed write must never break the app. The state is still in memory,
-    // the old localStorage copy is still on disk, and the next change tries
-    // again — this is the one place where carrying on is better than saying
-    // so, because there is nothing the person could do about it mid-keystroke.
+    ok = false;
   }
+
+  if (!ok) {
+    /*
+     * Nothing is thrown and no screen is taken down: the state is still in
+     * memory, and there is nothing a person could do about one failed write
+     * mid-keystroke. Two things do happen, and neither did before.
+     *
+     * `last` goes back, so the next write carries this change too. It had
+     * already moved on to what the database *would* have held, so the failed
+     * change was never retried — not even when the failure was one
+     * transaction losing one race.
+     *
+     * And it is said out loud. `App.tsx` draws a banner for exactly this and
+     * says so above it — *"Until it is fixed, everything the person does is
+     * being lost on the next reload"* — and until now the only thing that
+     * could turn it on was `navigator.storage.estimate()`, a guess about a
+     * quota rather than news about a write.
+     */
+    last = before;
+    watching?.(true);
+    return;
+  }
+
+  // Only now, and only because something was actually written. See `persist`
+  // below on why the order matters.
+  const say = announce;
+  announce = null;
+  say?.();
+  // And the writer is working, which clears a warning left by a failure that
+  // has since passed — a browser that made room, or a transaction that lost a
+  // race and won the next one.
+  watching?.(false);
 }
 
 /** What the app last read or wrote, so the first diff has something to be against. */

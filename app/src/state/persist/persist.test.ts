@@ -42,14 +42,26 @@ vi.mock('./db', async (importOriginal) => ({
   open: vi.fn(async () => ({}) as IDBDatabase),
   isEmpty: vi.fn(async () => false),
   readAll: vi.fn(async () => []),
+  /*
+   * False, not a throw, and true rather than nothing.
+   *
+   * This double used to throw on failure and answer `undefined` on success,
+   * and the real `write` in `./db` does neither: it resolves `false` on an
+   * error, on an abort and on a synchronous throw, and `true` when the
+   * transaction completes. The difference is exactly what hid the bug —
+   * `flush` guarded the call with a `try`/`catch` that could never run, so
+   * every write counted as a success, and only in this file did the failure
+   * path exist at all.
+   */
   write: vi.fn(async (writes: unknown[]) => {
-    if (fail) throw new Error('no');
+    if (fail) return false;
     written.push(writes);
     order.push('wrote');
+    return true;
   }),
 }));
 
-const { load, persist, prime, flushNow } = await import('./index');
+const { load, persist, prime, flushNow, whileWriting } = await import('./index');
 
 const state = (over: Partial<Persisted> = {}): Partial<Persisted> =>
   ({ myName: '', schoolId: 'vanderbilt', ...over }) as Partial<Persisted>;
@@ -93,6 +105,53 @@ describe('telling the other tabs', () => {
     persist(state({ myName: 'Harrison' }), () => { told += 1; });
     await flushNow();
     expect(told).toBe(0);
+  });
+
+  it('says out loud that a write failed, and that one landed after it', async () => {
+    /*
+     * The banner in `App.tsx` is written for exactly this — *"Until it is
+     * fixed, everything the person does is being lost on the next reload"* —
+     * and nothing but `navigator.storage.estimate()` could turn it on, which
+     * is a guess about a quota rather than news about a write. Measured in a
+     * browser with the database refusing writes: a task drew, stayed in
+     * memory, and was gone after a reload, with nothing said either time.
+     */
+    const heard: boolean[] = [];
+    whileWriting((failing) => heard.push(failing));
+
+    fail = true;
+    persist(state({ myName: 'Harrison' }));
+    await flushNow();
+    expect(heard).toEqual([true]);
+
+    fail = false;
+    persist(state({ myName: 'Harrison J' }));
+    await flushNow();
+    expect(heard).toEqual([true, false]);
+
+    whileWriting(null);
+  });
+
+  it('carries a failed change into the next write rather than dropping it', async () => {
+    /*
+     * `last` had already moved on to what the database *would* have held, so
+     * the next flush diffed against a state that was never written and the
+     * failed change was never retried — not even when the failure was one
+     * transaction losing one race.
+     */
+    fail = true;
+    persist(state({ myName: 'Harrison' }));
+    await flushNow();
+    expect(written).toEqual([]);
+
+    fail = false;
+    persist(state({ myName: 'Harrison', schoolId: 'mit' }));
+    await flushNow();
+
+    const keys = written.flat().map((w) => (w as { key: string }).key);
+    // Both: the change the database refused, and the one made after it.
+    expect(keys).toContain('myName');
+    expect(keys).toContain('schoolId');
   });
 
   it('tells once for a run of changes, not once per change', async () => {
