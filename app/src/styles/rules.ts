@@ -237,16 +237,21 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 682,
+  type: 679,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 222,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 524,
+  space: 522,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 544,
+  shorthand: 542,
 };
 
 /*
+ * 682/222/524/544 → 679/222/522/542 when the Claude key stopped being on two
+ * screens. Three down, none up, and none by reformatting: Connect accounts'
+ * copy of the key form drew its own model list by hand, and Settings already
+ * had one built from `CustomRow`.
+ *
  * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
  * One down, none up, and only one because the filter field lived in `<Page>`
  * rather than in the fifteen screens that used it: what went with it here was
