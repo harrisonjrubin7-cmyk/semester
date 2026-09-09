@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { FigureCard } from '../components/FigureCard';
@@ -37,6 +38,10 @@ const SINCE = {
  * which an embed of four published URLs never could.
  */
 export function FieldGuide() {
+  // A row's padding and hairline, from the layout rather than hard-coded.
+  const jumpRow = useRowStyle(9);
+  const termRow = useRowStyle(11);
+  const askRow = useRowStyle(13);
   const { state, catalog } = useStore();
   const { guide, figures: figMap, extras } = useLive(state.guideId);
   const sections = useRef<(HTMLDivElement | null)[]>([]);
@@ -121,8 +126,7 @@ export function FieldGuide() {
             display: 'flex',
             gap: 'var(--sp-6)',
             alignItems: 'baseline',
-            padding: '9px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...jumpRow,
             textAlign: 'left',
           }}
         >
@@ -356,7 +360,7 @@ export function FieldGuide() {
         <>
           <SectionLabel style={{ margin: '36px 0 6px' }}>Glossary</SectionLabel>
           {guide.terms.map((t) => (
-            <div key={t.t} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
+            <div key={t.t} style={termRow}>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15.5px * var(--text-scale, 1))' }}>{t.t}</div>
               <div
                 style={{
@@ -388,7 +392,7 @@ export function FieldGuide() {
             </div>
           )}
           {guide.selfTest.map((c, i) => (
-            <div key={c.q} style={{ padding: '13px 0', borderBottom: '1px solid var(--app-line)' }}>
+            <div key={c.q} style={askRow}>
               <div style={{ display: 'flex', gap: 11 }}>
                 <span
                   style={{

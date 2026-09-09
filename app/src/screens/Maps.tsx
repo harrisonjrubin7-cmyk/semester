@@ -1,5 +1,6 @@
 import { Suspense, lazy, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
@@ -60,6 +61,8 @@ interface Row {
  * tool for the job.
  */
 export function Maps() {
+  // A row's padding and hairline, from the layout rather than hard-coded.
+  const linkRow = useRowStyle(13);
   const { state, now, catalog } = useStore();
   const [mode, setMode] = useState<Travel>('walking');
   const [scope, setScope] = useState<Scope>('campus');
@@ -183,8 +186,7 @@ export function Maps() {
         display: 'flex',
         gap: 'var(--sp-6)',
         alignItems: 'center',
-        padding: '13px 0',
-        borderBottom: '1px solid var(--app-line)',
+        ...linkRow,
         textDecoration: 'none',
         color: 'inherit',
       }}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { nowPlaying, playbackIs } from '../lib/device';
 import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -73,6 +74,8 @@ const BEAT_BODY = {
 } as const;
 
 export function LessonPlayer() {
+  // A row's padding and hairline, from the layout rather than hard-coded.
+  const chapterRow = useRowStyle(10);
   const { state, dispatch } = useStore();
   const { guide, lessons, figures, onUnit, figuresOn } = useLive(state.guideId);
   const unit = state.lessonUnit;
@@ -409,8 +412,7 @@ export function LessonPlayer() {
             display: 'flex',
             gap: 'var(--sp-6)',
             alignItems: 'baseline',
-            padding: '10px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...chapterRow,
             textAlign: 'left',
             opacity: i === index ? 1 : 0.55,
           }}
