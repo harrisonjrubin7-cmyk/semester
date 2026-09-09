@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESTINATIONS, GROUPS, destinationsFor, destinationsIn, lately, saysFor, shelfOf } from './nav';
+import { DESTINATIONS, GROUPS, TASKS, byTask, destinationsFor, destinationsIn, lately, saysFor, shelfOf, type TaskTag } from './nav';
 import { NO_SCHOOL, type Capabilities } from './school';
 import { BUNDLED } from '../data/schools';
 
@@ -115,8 +115,8 @@ describe('the places you keep going back to', () => {
   const caps = vanderbilt;
 
   it('lists the most recent first', () => {
-    expect(lately(['grades', 'runway', 'essay'], [], caps).map((d) => d.screen)).toEqual([
-      'grades',
+    expect(lately(['tonight', 'runway', 'essay'], [], caps).map((d) => d.screen)).toEqual([
+      'tonight',
       'runway',
       'essay',
     ]);
@@ -125,26 +125,30 @@ describe('the places you keep going back to', () => {
   it('leaves out whatever this layout already puts one tap away', () => {
     // The tab bar and the springboard's dock hold different screens, which is
     // why the bar is a parameter rather than a constant.
-    expect(lately(['grades', 'runway'], ['grades'], caps).map((d) => d.screen)).toEqual(['runway']);
+    expect(lately(['tonight', 'runway'], ['tonight'], caps).map((d) => d.screen)).toEqual(['runway']);
   });
 
   it('leaves out a screen this school has no equivalent of', () => {
     // Visited before somebody changed school. It must not come back in
     // through this door when the directory has already dropped it.
-    expect(lately(['meals', 'grades'], [], nowhere).map((d) => d.screen)).toEqual(['grades']);
-    expect(lately(['meals', 'grades'], [], caps).map((d) => d.screen)).toContain('meals');
+    expect(lately(['meals', 'tonight'], [], nowhere).map((d) => d.screen)).toEqual(['tonight']);
+    expect(lately(['meals', 'tonight'], [], caps).map((d) => d.screen)).toContain('meals');
   });
 
   it('drops anything that is not a place in the app', () => {
-    expect(lately(['grades', 'nonsense'], [], caps).map((d) => d.screen)).toEqual(['grades']);
+    expect(lately(['tonight', 'nonsense'], [], caps).map((d) => d.screen)).toEqual(['tonight']);
+    // Including a screen that was a place until it merged into another: the
+    // grade table is the grades grain of Courses now, and `recent` is saved
+    // state that can still be carrying the old id.
+    expect(lately(['tonight', 'grades'], [], caps).map((d) => d.screen)).toEqual(['tonight']);
   });
 
   it('never lists the same screen twice', () => {
-    expect(lately(['grades', 'grades', 'runway'], [], caps)).toHaveLength(2);
+    expect(lately(['tonight', 'tonight', 'runway'], [], caps)).toHaveLength(2);
   });
 
   it('stops at four, because a list of twelve is the directory again', () => {
-    const many = ['grades', 'runway', 'essay', 'deck', 'exam', 'costs'];
+    const many = ['tonight', 'runway', 'essay', 'deck', 'exam', 'costs'];
     expect(lately(many, [], caps)).toHaveLength(4);
   });
 });
@@ -212,10 +216,12 @@ describe('the shelves the directory is arranged on', () => {
 
   it('put the standing screens where the question is asked', () => {
     // Reports already asked "how is it going" from Semester — it carries the
-    // `stand` tag — so the two about this term sit with it.
+    // `stand` tag — so the ones about this term sit with it. The grade table
+    // is not among them any more: it is the grades grain of Courses, and
+    // Courses carries the `stand` tag for it.
     const semester = destinationsIn('Semester').map((d) => d.screen);
-    expect(semester).toContain('grades');
     expect(semester).toContain('behind');
+    expect(DESTINATIONS.find((d) => d.screen === 'courses')?.taskTags).toContain('stand');
     expect(DESTINATIONS.find((d) => d.screen === 'brief')?.taskTags).toContain('stand');
 
     // The degree is the one that is not about this term, and Semester is a
@@ -266,5 +272,74 @@ describe('the two rows reach everything', () => {
       const { blurb } = saysFor(d, vanderbilt);
       expect(blurb.length, d.screen).toBeGreaterThan(10);
     }
+  });
+});
+
+/*
+ * Moved here with `byTask` when `lib/everything.ts` was deleted.
+ *
+ * The rest of that file's tests went with the functions they covered — the
+ * Everything screen was the only caller of seven of its eight exports, so when
+ * the screen folded into Progress the functions had nothing left to be right
+ * about. These two survive because `byTask` does: it reads `TASKS` and
+ * `taskLabel`, both defined here, so these are tests of this file.
+ */
+describe('by task', () => {
+  it('gives every screen at least one thing somebody would be trying to do', () => {
+    const orphans = DESTINATIONS.filter((d) => d.taskTags.length === 0).map((d) => d.screen);
+    expect(orphans).toEqual([]);
+  });
+
+  it('uses no tag without a heading', () => {
+    const known = new Set(TASKS.map(([id]) => id as string));
+    const loose = DESTINATIONS.flatMap((d) => d.taskTags.filter((t) => !known.has(t)));
+    expect([...new Set(loose)]).toEqual([]);
+  });
+
+  it('leaves no heading empty', () => {
+    // A section with nothing under it reads as a bug rather than as a shelf
+    // somebody has not filled.
+    const used = new Set(DESTINATIONS.flatMap((d) => d.taskTags));
+    const bare = TASKS.map(([id]) => id).filter((id) => !used.has(id as TaskTag));
+    expect(bare).toEqual([]);
+  });
+
+  it('lets a screen answer more than one question', () => {
+    // The point of tags over shelves. If this ever came out at zero the two
+    // views would be the same view with different headings.
+    expect(DESTINATIONS.filter((d) => d.taskTags.length > 1).length).toBeGreaterThan(10);
+  });
+
+  it('keeps the sections in the order the headings are written', () => {
+    const order = byTask(DESTINATIONS).map((s) => s.tag);
+    expect(order).toEqual(TASKS.map(([id]) => id).filter((id) => order.includes(id as TaskTag)));
+  });
+});
+
+describe('the promise', () => {
+  it('writes down no screen of its own', () => {
+    // Acceptance criterion 7, as far as a unit test can carry it: every row in
+    // the task view traces back to the registry it was built from.
+    const known = new Set<string>(DESTINATIONS.map((d) => d.screen));
+    for (const section of byTask(DESTINATIONS)) {
+      for (const d of section.rows) expect(known.has(d.screen)).toBe(true);
+    }
+  });
+
+  it('drops a screen the moment the registry does', () => {
+    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    const rows = byTask(short).flatMap((s) => s.rows);
+    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+  });
+
+  it('picks up a screen the moment the registry has one', () => {
+    const extra = {
+      ...DESTINATIONS[0],
+      screen: 'somethingNew' as (typeof DESTINATIONS)[number]['screen'],
+      label: 'Something new',
+      taskTags: ['study'] as TaskTag[],
+    };
+    const rows = byTask([...DESTINATIONS, extra]).flatMap((s) => s.rows);
+    expect(rows.some((d) => (d.screen as string) === 'somethingNew')).toBe(true);
   });
 });

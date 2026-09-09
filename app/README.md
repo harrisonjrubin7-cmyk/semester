@@ -29,17 +29,30 @@ own application.
 
 ## What is in it
 
-Five tabs, forty-nine screens. The tabs are below; the forty-nine are the registry in
-`src/lib/nav.ts`, which is also what the directory, the search box and the
-home-screen icons are drawn from — there is one list, and it is that one.
+Five tabs, and every screen behind them. The tabs are below; the screens are
+the registry in `src/lib/nav.ts`, which is also what the directory, the search
+box and the home-screen icons are drawn from — there is one list, and it is
+that one.
+
+Not a count, deliberately. It was one, and it was wrong for months — "twenty
+screens" while there were fifty — and then, once a test held it to the
+registry, it was right and *fragile*: the number moves most weeks, so the
+sentence spent more effort staying true than it was worth. A pointer at the
+list cannot go stale.
 
 - **Today** — the next class with a live countdown, what is due today as a
   checklist, the day's rail of classes, the next campus event, and what is
   coming.
 - **Courses** — the four syllabi, how each grade is built, and every dated
   obligation with the syllabus line it came from.
-- **Study** — an exam radar, a guide per course, "tonight's 25 minutes" built
-  from your weakest unit in each, and **Ask Claude**. Each guide has eleven
+- **Study** — an exam radar and three views of the same four courses.
+  **Guides** is a card per course saying what is due, what is unseen and what
+  to do next, with every way into it a tap away. **Revise** ranks every unit in
+  every course by what has come round, how cold it is and what is tested soon,
+  then fills the time you say you have — ten minutes, twenty-five or
+  forty-five — and starts the cards. **Tools** is every tool the app has as a
+  home screen, with the two or three this fortnight's deadlines actually ask
+  for said out loud above it. Each guide has eleven
   modes: **Cards** (tap-to-flip drill), **Read** (the guide as prose), **Field
   guide** (the whole thing as the published document, masthead and all),
   **Watch** (a narrated lesson per unit with slides that follow the voice),
@@ -110,9 +123,17 @@ they are the visible sign that a list has an order.
 A movable thing is usually its own handle. Today's sections are the exception
 and the reason is worth knowing: a hold inside one already asks the assistant
 about the row under your thumb, and two press-and-hold gestures on one element
-cannot both win. So the section is what a drop lands on, a grip in the margin
-beside its heading is what starts the drag, and everything inside it answers a
-hold exactly as it did. `zone` and `grip` on the hook are those two halves.
+cannot both win. So the section is what a drop lands on, a grip just above its
+heading is what starts the drag, and everything inside it answers a hold
+exactly as it did. `zone` and `grip` on the hook are those two halves.
+
+The grip sits inside the column rather than out in the page's margin, which is
+where it started. The leftmost strip of a phone screen is where iOS Safari's
+back-swipe begins, and a handle the browser can take the gesture from is a
+handle that does not work — silently, and in a way that reads as the feature
+being broken. It moves up into the gap above the heading instead, which is
+empty on every section, so it clears both the swipe band and the words without
+indenting eighteen sections.
 
 Where the order is a preference rather than data, it is a look key —
 `groupOrder` for the shelves, `boardOrder` for the home screen — and both are
