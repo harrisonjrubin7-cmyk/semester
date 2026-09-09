@@ -327,9 +327,17 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    // The screen is taken from what `byTask` actually returned rather than
+    // named here. It used to name `grades`, which stopped being a screen the
+    // moment the grade table went back to being a tab of Courses — so the test
+    // that exists to prove the registry is the only source of screens had a
+    // second source of its own, and `tsc` rejected the comparison. Taking the
+    // first row it drew cannot go stale, and cannot pass vacuously against a
+    // destination that has no task tags.
+    const gone = byTask(DESTINATIONS).flatMap((s) => s.rows)[0].screen;
+    const short = DESTINATIONS.filter((d) => d.screen !== gone);
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === gone)).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
