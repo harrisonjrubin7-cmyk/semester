@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ask, readCitation, readMaterial, withAttachments, asSent, CUT_OFF } from './claude';
+import { ask, readCitation, readMaterial, withAttachments, asSent, wire, CUT_OFF } from './claude';
+import type { Turn } from './claude';
 
 const user = [{ role: 'user' as const, content: 'What is due first?' }];
 
@@ -524,5 +525,110 @@ describe('a stopped answer, on the way back to the model', () => {
   it('does not mark an empty one, which has nothing to be cut off', () => {
     const [, a] = asSent([asked, { role: 'assistant', content: '  ', incomplete: true }]);
     expect(a.content).toBe('  ');
+  });
+});
+
+
+// ── Tool results, going back ──────────────────────────────────────────────
+//
+// The read-only lookups in `lib/lookup.ts` only work if a call and its answer
+// survive the trip back. The API's rule is unforgiving and silent: an
+// assistant message carrying `tool_use` is invalid unless the very next
+// message answers every one of those calls, and what comes back when it does
+// not is a 400 with nothing in it that says which call was missing.
+
+describe('a lookup and its answer, on the wire', () => {
+  const chat: Turn[] = [
+    { role: 'user', content: 'How am I doing in ECON?' },
+    {
+      role: 'assistant',
+      content: 'Let me read them.',
+      calls: [{ id: 'toolu_1', name: 'read_grades', input: { course: 'ECON 1020' } }],
+    },
+    { role: 'user', content: '', results: [{ id: 'toolu_1', text: 'ECON 1020: 74%.' }] },
+  ];
+
+  it('leaves an ordinary conversation as plain strings', () => {
+    const plain: Turn[] = [{ role: 'user', content: 'hi' }];
+    // Identity, not equality: every conversation that never looked anything up
+    // must cost nothing at all here.
+    expect(wire(plain)).toBe(plain);
+  });
+
+  it('pairs the call with the answer, in the order the API wants them', () => {
+    const [, answer, back] = wire(chat) as {
+      role: string;
+      content: { type: string; id?: string; tool_use_id?: string; name?: string }[];
+    }[];
+    expect(answer.content.map((b) => b.type)).toEqual(['text', 'tool_use']);
+    expect(answer.content[1].name).toBe('read_grades');
+    // Results first in the message that answers them, which is what the API
+    // requires and also how a person would read it.
+    expect(back.content.map((b) => b.type)).toEqual(['tool_result']);
+    expect(back.content[0].tool_use_id).toBe(answer.content[1].id);
+  });
+
+  it('drops the empty text of a turn that is only an answer', () => {
+    // An empty text block is not the same as no text block: the API rejects
+    // one, and there is nothing for the model to read in it anyway.
+    const [, , back] = wire(chat) as { content: unknown[] }[];
+    expect(back.content).toHaveLength(1);
+  });
+
+  it('marks a lookup that failed, so the model is not told a guess', async () => {
+    catchRequest([said('ok')]);
+    await ask({
+      system: 's',
+      messages: [
+        { role: 'user', content: 'q' },
+        { role: 'assistant', content: '', calls: [{ id: 'toolu_9', name: 'read_tasks', input: {} }] },
+        { role: 'user', content: '', results: [{ id: 'toolu_9', text: 'No such lookup.', failed: true }] },
+      ],
+    });
+    const messages = sent!.body.messages as { content: { is_error?: boolean }[] }[];
+    expect(messages[2].content[0].is_error).toBe(true);
+  });
+
+  it('keeps the calls on a conversation that also had an answer stopped', () => {
+    /*
+     * `asSent` used to rebuild each turn from `role` and `content` alone,
+     * which quietly dropped the calls off any conversation containing a
+     * stopped answer — and a `tool_use` with no `tool_result` after it is the
+     * 400 with nothing in it.
+     */
+    const withStop: Turn[] = [...chat, { role: 'assistant', content: 'half', incomplete: true }];
+    const [, answer] = wire(asSent(withStop)) as { content: { type: string }[] }[];
+    expect(answer.content.map((b) => b.type)).toEqual(['text', 'tool_use']);
+  });
+});
+
+describe('why the model stopped', () => {
+  it('reports the reason the closing event gives', async () => {
+    catchRequest([
+      said('As much as fits'),
+      { type: 'message_delta', delta: { stop_reason: 'max_tokens' }, usage: { output_tokens: 12 } },
+    ]);
+    let why = '';
+    await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      onStop: (r) => {
+        why = r;
+      },
+    });
+    expect(why).toBe('max_tokens');
+  });
+
+  it('says nothing where the stream reported nothing', async () => {
+    catchRequest([said('done')]);
+    let called = false;
+    await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      onStop: () => {
+        called = true;
+      },
+    });
+    expect(called).toBe(false);
   });
 });

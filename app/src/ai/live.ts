@@ -66,6 +66,16 @@ export interface Live {
   mode: Mode | null;
   /** Which parts of the context were drawn on, for the "what it read" row. */
   used: string[];
+  /**
+   * What is being looked up right now, while it is being looked up.
+   *
+   * Empty except during the pause between rounds of a question that asked for
+   * something — see `lib/lookup.ts`. It is on screen for the same reason
+   * `dropped` is: a spinner that sits for a second longer than usual with no
+   * account of why reads as a stall, and "Reading your ECON grades" is both
+   * the truth and the most reassuring thing the app could say there.
+   */
+  looking: string[];
   /** What the app could answer about itself, with nothing sent. */
   locally: Local | null;
   proposals: Proposal[];
@@ -109,6 +119,7 @@ function empty(): Live {
     busy: false,
     mode: null,
     used: [],
+    looking: [],
     locally: null,
     proposals: [],
     applied: [],
@@ -386,12 +397,16 @@ export function dropThread(id: string): void {
  * `spend` is not here: it is the month's total across everything, not a
  * property of one conversation.
  */
-function cleared(): Pick<Live, 'streaming' | 'busy' | 'mode' | 'used' | 'locally' | 'proposals' | 'applied'> {
+function cleared(): Pick<
+  Live,
+  'streaming' | 'busy' | 'mode' | 'used' | 'looking' | 'locally' | 'proposals' | 'applied'
+> {
   return {
     streaming: '',
     busy: false,
     mode: null,
     used: [],
+    looking: [],
     locally: null,
     proposals: [],
     applied: [],
