@@ -1,5 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+// The typefaces both sheets below name, declared once and served from this
+// origin rather than from Google — see `styles/typefaces.css` for why.
+import './styles/typefaces.css';
 import './styles/industry.css';
 import './styles/app.css';
 import App from './App';

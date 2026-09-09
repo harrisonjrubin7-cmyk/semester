@@ -218,6 +218,7 @@ export function Analyse() {
           <SectionLabel>Which column</SectionLabel>
           <select
             className="input"
+            aria-label="Which column"
             value={xi}
             onChange={(e) => setXi(Number(e.target.value))}
             style={{ width: '100%' }}
@@ -235,6 +236,7 @@ export function Analyse() {
               <SectionLabel>Against, if you want a relationship</SectionLabel>
               <select
                 className="input"
+                aria-label="Against, if you want a relationship"
                 value={yi}
                 onChange={(e) => setYi(Number(e.target.value))}
                 style={{ width: '100%' }}
