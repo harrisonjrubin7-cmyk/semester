@@ -5,7 +5,9 @@ import { SectionLabel } from '../components/ui';
 import { useStore } from '../state/store';
 import { pickPersisted } from '../state/shape';
 import { bytesOf, inventory, space, type Row, type Space } from '../lib/inventory';
-import { formatBytes } from '../lib/files';
+import { formatBytes, totalSize } from '../lib/files';
+import { weigh } from '../lib/keep';
+import { DRAFTS_KEY } from '../lib/draft';
 
 /**
  * What data exists, and whether the app is healthy.
@@ -32,6 +34,25 @@ export function DataScreen() {
   const { state, dispatch } = useStore();
   const [room, setRoom] = useState<Space | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  /*
+   * The two things the app holds that are not in the store.
+   *
+   * Came from Settings → Storage, which measured them beside a second copy of
+   * the quota figure below. The quota is now measured once, by `space()`, and
+   * these two moved here rather than being lost with that copy: a screen that
+   * answers "what is this app holding" and omits the attachments is answering
+   * it wrongly. Drafts are a string this app wrote, so their size is exact;
+   * attachments are asked of IndexedDB and can decline to answer.
+   */
+  const [drafts] = useState(() => {
+    try {
+      return weigh(localStorage.getItem(DRAFTS_KEY) ?? '');
+    } catch {
+      // A private window with storage switched off has nothing to measure.
+      return 0;
+    }
+  });
+  const [files, setFiles] = useState<number | null>(null);
 
   const store = useMemo(() => inventory(pickPersisted(state)), [state]);
 
@@ -40,6 +61,13 @@ export function DataScreen() {
     void space().then((s) => {
       if (alive) setRoom(s);
     });
+    void totalSize()
+      .then((n) => {
+        if (alive) setFiles(n);
+      })
+      .catch(() => {
+        if (alive) setFiles(null);
+      });
     return () => {
       alive = false;
     };
@@ -95,6 +123,27 @@ export function DataScreen() {
               {new Date(store.span.to).toLocaleDateString()}.
             </div>
           )}
+
+          {/*
+            Outside the store, and said so.
+
+            These are not collections and must not be added into the total
+            above, which is the size of one string this app writes. Kept
+            beside it because the question people arrive with is "what is
+            this app taking up", and the answer is all three.
+          */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+            <span>Drafts in progress</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {drafts ? formatBytes(drafts) : 'None'}
+            </span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-2)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+            <span>Attachments</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {files === null ? 'Not available' : formatBytes(files)}
+            </span>
+          </div>
 
           <SectionLabel>Room</SectionLabel>
           {room === null ? (

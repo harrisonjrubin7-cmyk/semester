@@ -129,6 +129,7 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/worked')?.screen).toBe('brief');
     expect(fromHash('#/check')?.screen).toBe('announce');
     expect(fromHash('#/chat')?.screen).toBe('ask');
+    expect(fromHash('#/grades')?.screen).toBe('courses');
   });
 
   it('says which part of the survivor the link meant', () => {
@@ -137,6 +138,12 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/weekly')?.opens).toEqual({ report: 'week' });
     expect(fromHash('#/worked')?.opens).toEqual({ report: 'term' });
     expect(fromHash('#/check')?.opens).toEqual({ changes: 'feed' });
+    // `#/grades` meant the grade table, which is one of the three grains of
+    // Courses — landing on the course list is the same broken promise.
+    expect(fromHash('#/grades')?.opens).toEqual({ courses: 'grades' });
+    // The id a link used to carry went with the screen: the table lists every
+    // course and never read it.
+    expect(fromHash('#/grades/econ')?.screen).toBe('courses');
     // Nothing to disambiguate: the chat was the whole of what Ask now is.
     expect(fromHash('#/chat')?.opens).toBeUndefined();
     expect(fromHash('#/brief')?.opens).toBeUndefined();
