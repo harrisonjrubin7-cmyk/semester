@@ -239,6 +239,11 @@ export const STRATEGY: Record<string, Strategy> = {
   sample: 'theirs',
   term: 'theirs',
   seenOnboarding: 'theirs',
+  // Whether this person has an account at all. `theirs` reads oddly for a flag
+  // that only ever becomes true — but a copy arriving from the account is by
+  // definition a copy from an account, so the value it carries is true and the
+  // direction never comes up.
+  registered: 'theirs',
   // Where you study. A fact about the person, not the device — and the last
   // device to be told is the one that is right, because somebody transferring
   // sets it once and expects both phones to follow.

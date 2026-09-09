@@ -154,6 +154,13 @@ Email confirmation is on by default. To let a new account sign in immediately
 while you are testing, Authentication → Providers → Email → turn off *Confirm
 email*.
 
+That setting decides what the first run does, because the fourth of its five
+screens is where an account is made: with *Confirm email* on, somebody is told
+to check their inbox and the run waits there with the sign-in form; with it
+off, the account is live and the run moves itself on. Either way the screen is
+skippable and the app works signed out — an account only decides whether the
+semester follows somebody to a second device.
+
 ### Google and Apple sign-in (optional)
 
 Authentication → Providers, switch on what you want, and paste each provider's
