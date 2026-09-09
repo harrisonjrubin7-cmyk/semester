@@ -229,12 +229,22 @@ export function DateRow({
   title,
   meta,
   onClick,
+  edge,
 }: {
   top: string;
   bottom: string;
   title: string;
   meta: string;
   onClick?: () => void;
+  /**
+   * A colour for the spine at the row's left — the course this belongs to.
+   *
+   * Passed in rather than looked up, so this stays a row that draws what it is
+   * given. Five of these stacked is the "What's coming" list, and without it
+   * five rows from four courses are five identical rows whose only difference
+   * is a course code set in 11px caps at the end of a meta line.
+   */
+  edge?: string;
 }) {
   // Spread rather than wrapped: the whole button is the tap target, and
   // `CustomRow` would put the padding outside it.
@@ -251,6 +261,12 @@ export function DateRow({
         ...row,
       }}
     >
+      {edge ? (
+        <span
+          aria-hidden
+          style={{ width: 3, alignSelf: 'stretch', flex: 'none', borderRadius: 2, background: edge }}
+        />
+      ) : null}
       <div style={{ width: 46, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}>
         <div
           style={{
