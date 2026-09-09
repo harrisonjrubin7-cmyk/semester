@@ -179,11 +179,14 @@ export function loadLine(l: Load): string {
 export function blocksOn(
   list: Commitment[],
   date: Date,
-): (Block & { mine?: boolean; kind?: string; minutes?: number })[] {
+): (Block & { id?: string; mine?: boolean; kind?: string; minutes?: number })[] {
   const day = date.getDay();
   return list
     .filter((c) => c.active && c.at !== null && c.days.includes(day))
     .map((c) => ({
+      // Carried because a `Block` has no identity of its own and a commitment
+      // does. `lib/brief.ts` needs one to key a row by; see the comment there.
+      id: c.id,
       time: clock(c.at as number),
       at: c.at as number,
       title: c.name,

@@ -162,11 +162,21 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
               <div style={quiet}>No classes and nothing committed.</div>
             ) : (
               <>
+                {/*
+                  Keyed by the course and the commitment's own id, not by what
+                  the row says. Two courses that both call a class "Lecture" at
+                  nine — which is a timetable clash, the thing `Clashes` exists
+                  to point out — gave React two children with the key
+                  `c:Lecture:9:00a`, and its warning for that ends "may cause
+                  children to be duplicated and/or omitted". Omitted is a class
+                  missing from the day's report. See `lib/brief.ts`, which now
+                  carries the identifier the projection used to drop.
+                */}
                 {am.classes.map((c) => (
-                  <ItemRow key={`c:${c.title}:${c.time}`} title={c.title} trailing={c.time} />
+                  <ItemRow key={`c:${c.c}:${c.time}:${c.title}`} title={c.title} trailing={c.time} />
                 ))}
                 {am.commitments.map((c) => (
-                  <ItemRow key={`m:${c.title}:${c.time}`} title={c.title} trailing={c.time} />
+                  <ItemRow key={`m:${c.id}`} title={c.title} trailing={c.time} />
                 ))}
               </>
             )}
@@ -250,7 +260,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
                   <ItemRow key={i.id} title={`${code(i.c)} · ${i.title}`} trailing={i.dueTime} />
                 ))}
                 {pm.tomorrowClasses.map((c) => (
-                  <ItemRow key={`t:${c.title}:${c.time}`} title={c.title} trailing={c.time} />
+                  <ItemRow key={`t:${c.c}:${c.time}:${c.title}`} title={c.title} trailing={c.time} />
                 ))}
               </>
             )}

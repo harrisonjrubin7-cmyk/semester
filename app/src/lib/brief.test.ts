@@ -14,8 +14,9 @@ import {
   type DayInput,
 } from './brief';
 import type { Catalog } from '../data/catalog';
+import { buildCatalog } from '../data/catalog';
 import type { Commitment } from './activities';
-import type { Item, PersonalTask } from './types';
+import type { CourseModule, Item, PersonalTask } from './types';
 
 const NOW = new Date(2026, 8, 3, 9, 0); // Thu 3 Sep 2026
 
@@ -242,5 +243,46 @@ describe('whether the brief knows your name', () => {
     // app is a small and memorable thing to be annoyed by.
     expect(nameNote('')).toMatch(/Do not invent one/);
     expect(nameNote('   ')).toMatch(/Do not invent one/);
+  });
+});
+
+/**
+ * Two things that look the same have to be told apart.
+ *
+ * The report keys its rows off these projections, and they used to be time,
+ * title and room — everything drawn and nothing identifying. Two courses whose
+ * syllabi both call a class "Lecture" at nine, which is a timetable clash and
+ * the thing `components/Clashes.tsx` exists to point out, gave React two
+ * children with the key `c:Lecture:9:00a`; its warning for that ends "may
+ * cause children to be duplicated and/or omitted", and omitted is a class
+ * missing from the day.
+ */
+describe('telling one row from another', () => {
+  const lecture = (id: string, code: string) =>
+    ({
+      course: { id, code, term: '2026FA' },
+      items: [],
+      // Same title, same minute, different course: a clash.
+      schedule: [{ days: [4], at: 540, time: '9:00a', title: 'Lecture', meta: `Room ${id}` }],
+      exceptions: [],
+    }) as unknown as CourseModule;
+
+  it('carries the course on a class, so two identical ones differ', () => {
+    const cat = buildCatalog([lecture('a', 'AAA 100'), lecture('b', 'BBB 200')]);
+    const m = morning(input({ catalog: cat }));
+    expect(m.classes).toHaveLength(2);
+    const keys = m.classes.map((c) => `c:${c.c}:${c.time}:${c.title}`);
+    expect(new Set(keys).size).toBe(2);
+  });
+
+  it('carries the commitment\u2019s own id, which it had all along', () => {
+    const one: Commitment = {
+      id: 'c1', name: 'Practice', kind: 'clubsport', role: '', where: '', url: '', note: '',
+      days: [4], at: 17 * 60, minutes: 90, hours: 0, active: true, created: 0,
+    };
+    const two: Commitment = { ...one, id: 'c2' };
+    const m = morning(input({ commitments: [one, two] }));
+    expect(m.commitments).toHaveLength(2);
+    expect(new Set(m.commitments.map((c) => c.id)).size).toBe(2);
   });
 });

@@ -22,7 +22,7 @@
 
 import { dateToIso } from './date';
 import type { Catalog } from '../data/catalog';
-import type { Appointment, DatedItem, PersonalTask } from './types';
+import type { Appointment, CourseId, DatedItem, PersonalTask } from './types';
 import type { Commitment } from './activities';
 import { blocksOn, hoursOf } from './activities';
 import { blocksFor } from '../data/catalog';
@@ -42,8 +42,20 @@ export interface DayInput {
 
 export interface Morning {
   dueToday: DatedItem[];
-  classes: { time: string; title: string; where: string }[];
-  commitments: { time: string; title: string }[];
+  /*
+   * Each carries what tells one of them from another, and that is the whole
+   * reason the field is here.
+   *
+   * These projections used to be time, title and room, which is everything
+   * the report draws — and two courses whose syllabi both call a class
+   * "Lecture" at the same hour are then two rows React cannot tell apart. It
+   * says so: "Encountered two children with the same key, `c:Lecture:9:00a`
+   * … may cause children to be duplicated and/or omitted". Omitted is a class
+   * missing from the day's report, and the case that produces it is a
+   * timetable clash — the thing `components/Clashes.tsx` exists to warn about.
+   */
+  classes: { time: string; title: string; where: string; c: CourseId | null }[];
+  commitments: { time: string; title: string; id: string }[];
   overdue: number;
   /** The next deadline after today, when there is one. */
   next: DatedItem | null;
@@ -79,11 +91,12 @@ export function morning(input: DayInput): Morning {
 
   const classes = blocksFor(catalog, now)
     .filter((b) => !b.canceled)
-    .map((b) => ({ time: b.time, title: b.title, where: b.meta }));
+    .map((b) => ({ time: b.time, title: b.title, where: b.meta, c: b.c }));
 
   const commitments = blocksOn(input.commitments, now).map((b) => ({
     time: b.time,
     title: b.title,
+    id: b.id ?? `${b.at}:${b.title}`,
   }));
 
   const key = dayKey(now);
@@ -112,7 +125,7 @@ export interface Evening {
   overdue: number;
   /** Tomorrow, so the last thing read at night is the first thing needed. */
   tomorrow: DatedItem[];
-  tomorrowClasses: { time: string; title: string }[];
+  tomorrowClasses: { time: string; title: string; c: CourseId | null }[];
 }
 
 export function evening(input: DayInput): Evening {
@@ -135,7 +148,7 @@ export function evening(input: DayInput): Evening {
     tomorrow,
     tomorrowClasses: blocksFor(catalog, next)
       .filter((b) => !b.canceled)
-      .map((b) => ({ time: b.time, title: b.title })),
+      .map((b) => ({ time: b.time, title: b.title, c: b.c })),
   };
 }
 

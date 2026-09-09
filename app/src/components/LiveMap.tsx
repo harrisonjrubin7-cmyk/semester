@@ -115,10 +115,27 @@ export function LiveMap({
     tiles.addTo(m);
     layer.current = L.layerGroup().addTo(m);
     map.current = m;
-    // Leaflet measures the container on creation, and this one is often still
-    // laying out. A tick later it is the right size.
-    setTimeout(() => m.invalidateSize(), 60);
+    /*
+     * Leaflet measures the container on creation, and this one is often still
+     * laying out. A tick later it is the right size.
+     *
+     * Cleared on the way out, and that is not tidiness. Leave for the map
+     * inside sixty milliseconds — tap Maps and change your mind, which is a
+     * thing people do and which every sweep of this app does dozens of times
+     * — and the timer fires after `m.remove()` has taken the map's container
+     * out from under it. `invalidateSize` then reads a position that is no
+     * longer there:
+     *
+     *     TypeError: Cannot read properties of undefined (reading '_leaflet_pos')
+     *
+     * An uncaught error rather than a broken screen, which is why it survived:
+     * nothing looks wrong, the map is already gone. But `components/
+     * Watching.tsx` listens on `window` for exactly this and files it as a
+     * fault, so the app was reporting itself broken for leaving a page early.
+     */
+    const sized = setTimeout(() => m.invalidateSize(), 60);
     return () => {
+      clearTimeout(sized);
       m.remove();
       map.current = null;
       layer.current = null;
