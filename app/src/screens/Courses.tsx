@@ -220,9 +220,11 @@ export function Courses() {
           })
           )}
 
-          {/* No "add a course" button here. The header's + is that button —
-              see `lib/adding.ts`. Two of them on one screen is the doubling
-              this app keeps removing. */}
+          {/* No "add a course" button here. It was a full-width one under
+              the last card, and it was the second add-affordance on a screen
+              that already has a + in its header. Adding a course is reached
+              by name in search, by `n`, and by the soft layout's own bar —
+              see `lib/nav.ts`, `lib/keys.ts` and `lib/softtop.ts`. */}
           <div style={{ height: 12 }} />
         </>
     </Page>
