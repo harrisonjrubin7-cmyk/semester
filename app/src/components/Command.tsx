@@ -29,7 +29,8 @@
  * one wrong Enter is unrecoverable.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useModal } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { countHits, findEverything, spelled } from '../lib/find';
 import { flatten, hitKey, openHit } from '../lib/openhit';
@@ -47,10 +48,10 @@ export function Command({ onClose }: { onClose: () => void }) {
   const [at, setAt] = useState(0);
   const box = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    box.current?.focus();
-  }, []);
+  // The field, not the first button — opening a search anywhere but in its
+  // box is opening it wrong. `useModal` takes Escape and the tab ring; where
+  // focus starts stays this component's decision.
+  const modal = useModal<HTMLDivElement>({ onClose, initial: box });
 
   const found = useMemo(
     () => findEverything(catalog, now, text, state.notes, state.tasks, school.capabilities, state.updates),
@@ -138,13 +139,14 @@ export function Command({ onClose }: { onClose: () => void }) {
         display: 'flex',
         flexDirection: 'column',
       }}
+      ref={modal.ref}
+      tabIndex={-1}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          e.stopPropagation();
-          onClose();
-          return;
-        }
+        // Escape and Tab first, then this palette's own keys. `defaultPrevented`
+        // rather than a second copy of the Escape branch, so there is one
+        // answer to "what closes a dialog" and it is not written out here.
+        modal.onKeyDown(e);
+        if (e.defaultPrevented) return;
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
           e.preventDefault();
           if (hits.length === 0) return;

@@ -26,6 +26,7 @@
  */
 
 import { useState } from 'react';
+import { useModal } from '../a11y/modal';
 import { createPortal } from 'react-dom';
 import { SAFEST, backupName, destructive, options, type Choice, type Sides } from '../lib/adopt';
 import { ActionButton } from './ui';
@@ -48,6 +49,14 @@ export function Adopting({
   onChoose: (choice: Choice, backup: string | null) => void;
 }) {
   const [picked, setPicked] = useState<Choice>(SAFEST);
+  /*
+   * No `onClose`, and that is the point. Escape is deliberately not a way out
+   * of this question — see the note above — so what the trap adds here is the
+   * half the note's own argument was missing: the rail and the assistant were
+   * stopped from *showing* beside a dialog that says `aria-modal`, and Tab
+   * could still walk into them.
+   */
+  const modal = useModal<HTMLDivElement>();
   const wide = useMedia(DESKTOP);
   const list = options(sides);
 
@@ -62,6 +71,9 @@ export function Adopting({
       role="dialog"
       aria-modal="true"
       aria-label="Which copy to keep"
+      ref={modal.ref}
+      onKeyDown={modal.onKeyDown}
+      tabIndex={-1}
       style={{
         /*
          * What a blocking question covers, which is not the same box on both
