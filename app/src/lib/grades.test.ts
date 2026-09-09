@@ -496,3 +496,111 @@ describe('the extras a grade is worked out from', () => {
     expect(s.incomplete).toBe(old.incomplete);
   });
 });
+
+/**
+ * The arithmetic, across shapes rather than at a worked example.
+ *
+ * The cases above pin the answers this file was written against, which is the
+ * right way to state intent and does not stop a rewrite of the weighting from
+ * being self-consistently wrong. These two properties are what `needFor` and
+ * `standing` actually promise, and they are checked over several hundred
+ * syllabus shapes rather than one:
+ *
+ *  - Score exactly what `needFor` asks for on everything left and you land on
+ *    the target. That is the whole meaning of the number, and it is the
+ *    sentence the Grades screen puts in front of somebody deciding whether a
+ *    course is still worth the effort.
+ *  - A weighted mean of scores lies between the lowest and the highest of
+ *    them. No weighting, however odd, can put it outside.
+ *
+ * `lib/tools.ts` says why this file is worth the extra rigour: it refuses to
+ * give the assistant any tool that touches a grade, a dropped score or the
+ * grading scale, because "those numbers are what the projection screens rest
+ * on, and a model that can move them is a model that can quietly make every
+ * one of those screens wrong". The same is true of a refactor.
+ *
+ * Deterministic: one fixed seed, so a failure is reproducible and the suite
+ * does not flake.
+ */
+describe('the arithmetic, over many syllabus shapes', () => {
+  const shapes = (runs: number) => {
+    let s = 12345;
+    const rnd = () => {
+      s = (s * 9301 + 49297) % 233280;
+      return s / 233280;
+    };
+    const out: { weights: number[]; scored: number; scores: string[]; off: number }[] = [];
+    while (out.length < runs) {
+      const n = 2 + Math.floor(rnd() * 5);
+      const raw = Array.from({ length: n }, () => 1 + Math.floor(rnd() * 40));
+      const sum = raw.reduce((a, b) => a + b, 0);
+      const weights = raw.map((r) => Math.round((r / sum) * 100));
+      weights[0] += 100 - weights.reduce((a, b) => a + b, 0);
+      if (weights.some((w) => w <= 0)) continue;
+      const scored = Math.floor(rnd() * n);
+      out.push({
+        weights,
+        scored,
+        scores: Array.from({ length: scored }, () => String(Math.round(rnd() * 100))),
+        off: [0, 0, 0, 3, 7.5][Math.floor(rnd() * 5)],
+      });
+    }
+    return out;
+  };
+
+  const grading = (weights: number[]) => weights.map((p, i) => ({ what: `Category ${i}`, pct: `${p}%` }));
+  const entered = (scores: string[]) =>
+    Object.fromEntries(scores.map((v, i) => [key('econ', i), v]));
+
+  it('lands on the target when everything left scores what it asked for', () => {
+    let checked = 0;
+    for (const shape of shapes(400)) {
+      const c = course(grading(shape.weights));
+      const extras = { pointsOff: shape.off };
+      const before = standing(c, entered(shape.scores), extras);
+      const need = needFor(before, 90);
+      // Only where the target is reachable. `needFor` returning 125% is the
+      // honest answer and means "not happening"; a score above 100 is clamped
+      // on the way in, so feeding one back would prove nothing.
+      if (need === null || need > 100 || need < 0) continue;
+
+      const after = { ...entered(shape.scores) };
+      // Written with the sign, because `readScore` reads a bare value at or
+      // below 1 as a proportion — "0.8" is 80%. That is documented and right
+      // for a field somebody types into; it makes a bare number the wrong way
+      // to feed a computed percentage back.
+      for (let i = shape.scored; i < shape.weights.length; i++) after[key('econ', i)] = `${need}%`;
+      const end = standing(c, after, extras);
+      checked++;
+      expect(end.current).not.toBeNull();
+      expect(end.current!).toBeCloseTo(90, 1);
+    }
+    // The sweep has to have actually swept: a filter that rejected everything
+    // would pass this test in silence.
+    expect(checked).toBeGreaterThan(150);
+  });
+
+  it('never puts the weighted mean outside the scores it is a mean of', () => {
+    let checked = 0;
+    for (const shape of shapes(400)) {
+      if (shape.scores.length === 0) continue;
+      const st = standing(course(grading(shape.weights)), entered(shape.scores), {});
+      // As the app reads them, not as they were written: `readScore` takes a
+      // bare value at or below 1 as a proportion, so "1" is 100%. Comparing
+      // against the raw strings would be measuring this test's arithmetic
+      // rather than the app's.
+      const values = shape.scores.map((v) => readScore(v)!);
+      checked++;
+      expect(st.current).not.toBeNull();
+      expect(st.current!).toBeGreaterThanOrEqual(Math.min(...values) - 0.01);
+      expect(st.current!).toBeLessThanOrEqual(Math.max(...values) + 0.01);
+    }
+    expect(checked).toBeGreaterThan(150);
+  });
+
+  it('reports nothing rather than zero when nothing is entered', () => {
+    // A course that reads 0% before anything is graded is the one wrong number
+    // that would make somebody panic in week two.
+    expect(standing(course(grading([50, 50])), {}).current).toBeNull();
+  });
+});
