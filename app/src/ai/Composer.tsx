@@ -40,9 +40,9 @@ export function Composer({
    *
    * The terminal gesture, and the one people try in a chat box without being
    * told: you asked something slightly wrong and want to fix three words of
-   * it rather than retype the sentence. Optional because the sheet has no
-   * conversation behind it worth recalling into a panel that is about to be
-   * dismissed.
+   * it rather than retype the sentence. Both surfaces pass it — they are two
+   * views of one conversation, so the last question is the same question on
+   * either. Still optional, for a caller with nothing behind the box.
    */
   onRecall?: () => string | null;
   busy: boolean;

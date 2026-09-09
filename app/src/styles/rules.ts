@@ -239,25 +239,25 @@ export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
   type: 675,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 221,
+  leading: 219,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 517,
+  space: 516,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 503,
+  shorthand: 499,
 };
 
 /*
- * 513 → 509 on main (the corner-mark pass) and → 503 on the merged tree: both
- * sides removed shorthand padding from rows this branch also touched, so the
- * overlap counts once and neither number is the answer on its own. Measured,
- * like the ones below it.
+ * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
+ * chat. Two numbers down and none up, and neither by reformatting: the
+ * panel's transcript, opening, header and footer are now the same components
+ * and the same measure the Ask tab uses, so the hand-set gap and the four
+ * `'12px 16px'`-shaped paddings it drew for itself went with the layout they
+ * belonged to. See `ai/Assistant.tsx`.
  *
- * Two ratchets landed at once and this is their merge, measured rather than
- * added up: the Places tab left Personal on main, and on this branch the Claude
- * key stopped being on two screens and the second chip idiom got a name. Both
- * started from 682/222/524/544 and neither's arithmetic survives the other, so
- * the numbers above are what `counts()` reports on the merged tree:
- * 675/221/517/513, which is below both.
+ * It also took out two loose 1.4 line heights, which do not show above: the
+ * row pass landed `leading` on 219 from the other side, and these counts are
+ * of what is left in the tree rather than of what each branch removed. Two
+ * changes can take the same number to the same place.
  *
  * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
  * down and none up: the tab was a second copy of what the map already is, and
