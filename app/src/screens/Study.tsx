@@ -13,7 +13,7 @@ import { ChevronRight } from '../components/Icons';
 import { AppGrid } from '../components/nav/AppGrid';
 import { nextExam, testedIn } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
-import { cardKey, comeRound, neverMet } from '../lib/review';
+import { cardKey, comeRound, masteryWord, neverMet } from '../lib/review';
 import { destinationsIn } from '../lib/nav';
 import { suggest, type Coming } from '../lib/toolnow';
 import { codeOf } from '../data/catalog';
@@ -466,7 +466,11 @@ export function Study() {
                   textTransform: 'uppercase',
                 }}
               >
-                {g.mastery}% mastered
+                {/* "Mastered" is a claim about you; until a card in this course
+                    has been answered the figure is entirely the guide's estimate,
+                    and this line sat three above "Nothing answered in this course
+                    yet." See `masteryWord` in `lib/review.ts`. */}
+                {g.mastery}% {masteryWord(keys, state.reviews)}
                 {due > 0 && ` · ${due} due`}
                 {started && due === 0 && ' · nothing due'}
                 {fresh > 0 && ` · ${fresh} unseen`}

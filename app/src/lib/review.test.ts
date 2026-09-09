@@ -7,6 +7,7 @@ import {
   neverMet,
   dueFirst,
   emptyReview,
+  masteryWord,
   score,
   strength,
   tally,
@@ -138,6 +139,41 @@ describe('unitMastery', () => {
     const good: Reviews = Object.fromEntries(keys.map((k) => [k, pass(3)]));
     const bad: Reviews = Object.fromEntries(keys.map((k) => [k, score(pass(3), false, T0)]));
     expect(unitMastery(keys, bad, 50, T0)).toBeLessThan(unitMastery(keys, good, 50, T0 + 2 * DAY));
+  });
+});
+
+describe('masteryWord', () => {
+  const keys = ['a', 'b', 'c', 'd'];
+
+  it('is an estimate while nothing in the unit has been answered', () => {
+    // The Study card read "51% mastered · 68 unseen" three lines above
+    // "Nothing answered in this course yet." Each of the three was true and
+    // the three together were not.
+    expect(masteryWord(keys, {})).toBe('estimated');
+  });
+
+  it('is measured from the first answer, not from a threshold', () => {
+    // One card out of four is mostly still the guide's estimate, and there is
+    // no honest line between partly yours and yours. There is one between
+    // some evidence and none, and that is where this sits.
+    expect(masteryWord(keys, { a: pass(1) })).toBe('mastered');
+  });
+
+  it('counts a card that was answered and missed as evidence', () => {
+    // A miss is something the app watched happen. Calling the figure an
+    // estimate after it would be the same dishonesty pointing the other way.
+    expect(masteryWord(keys, { a: score(undefined, false, T0) })).toBe('mastered');
+  });
+
+  it('does not count a review with no answer against it', () => {
+    // `emptyReview` is scheduling state, not evidence: `seen` is 0 until an
+    // answer lands. A word that keyed on the record existing would have said
+    // "mastered" for a card nobody has ever seen.
+    expect(masteryWord(keys, { a: emptyReview(T0) })).toBe('estimated');
+  });
+
+  it('is an estimate for a unit with no cards in it at all', () => {
+    expect(masteryWord([], { a: pass(3) })).toBe('estimated');
   });
 });
 

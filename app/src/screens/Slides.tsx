@@ -5,6 +5,7 @@ import { Blueprint } from '../components/Blueprint';
 import { FigureCard } from '../components/FigureCard';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import type { Figure } from '../lib/types';
+import { cardKey, masteryWord } from '../lib/review';
 
 type Slide =
   | { kind: 'title'; title: string; sub: string }
@@ -72,10 +73,16 @@ export function SlideDeck() {
     out.push({
       kind: 'end',
       title: 'End of the unit',
-      sub: `${unit.cards.length} cards · ${unit.mastery}% mastered`,
+      /* Same word, same reason as the guide card on Study: until a card in
+         this unit has been answered the figure is the guide's estimate, and
+         nothing has watched you learn it. `masteryWord` in `lib/review.ts`. */
+      sub: `${unit.cards.length} cards · ${unit.mastery}% ${masteryWord(
+        unit.cards.map((c) => cardKey(state.guideId, c.q)),
+        state.reviews,
+      )}`,
     });
     return out;
-  }, [unit, guide.code, unitFigures, added]);
+  }, [unit, guide.code, unitFigures, added, state.guideId, state.reviews]);
 
   const [at, setAt] = useState(0);
   const last = slides.length - 1;
