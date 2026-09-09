@@ -17,6 +17,7 @@ import { SectionLabel } from './ui';
 import { TabGlyph } from './TabIcon';
 import { dayOf, offer, seenLine } from '../lib/unseen';
 import { saysFor } from '../lib/nav';
+import { Folding } from './Fold';
 
 export function NotYetOpened() {
   const { state, dispatch, now, school } = useStore();
@@ -25,7 +26,7 @@ export function NotYetOpened() {
   if (three.length === 0) return null;
 
   return (
-    <>
+    <Folding name="NotYetOpened">
       <SectionLabel
         style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(4px * var(--density, 1))' }}
       >
@@ -74,6 +75,6 @@ export function NotYetOpened() {
           </button>
         ))}
       </div>
-    </>
+    </Folding>
   );
 }

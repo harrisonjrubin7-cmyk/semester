@@ -2,6 +2,7 @@ import { useStore } from '../state/store';
 import { useRowStyle } from './shell/useShell';
 import { SectionLabel } from './ui';
 import { SUGGESTED, daysLine, hoursAWeek, spanLine, tidy } from '../lib/windows';
+import { Folding } from './Fold';
 
 const DAYS = [
   { day: 0, label: 'S' },
@@ -38,7 +39,7 @@ export function WorkWindows() {
   const windows = state.windows;
 
   return (
-    <>
+    <Folding name="WorkWindows">
       <SectionLabel>When you actually work</SectionLabel>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         The app counts a day as sixteen waking hours until you say otherwise, which is a default
@@ -175,6 +176,6 @@ export function WorkWindows() {
           into a window — this only says how many hours are actually there.
         </div>
       )}
-    </>
+    </Folding>
   );
 }

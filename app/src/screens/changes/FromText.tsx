@@ -14,6 +14,7 @@ import {
   summary,
   type Change,
 } from '../../lib/announce';
+import { Folding } from '../../components/Fold';
 
 /**
  * "The midterm has moved to the 8th."
@@ -85,7 +86,7 @@ export function FromText() {
   };
 
   return (
-    <>
+    <Folding name="FromText">
 
       <SectionLabel>Which course</SectionLabel>
       <select
@@ -229,6 +230,6 @@ export function FromText() {
         sentence it came from — anything it cannot quote is dropped before you see it. A moved
         deadline keeps its id, so a box you already ticked stays ticked.
       </div>
-    </>
+    </Folding>
   );
 }

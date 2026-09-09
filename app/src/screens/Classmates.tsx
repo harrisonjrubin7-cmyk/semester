@@ -33,6 +33,7 @@ import {
   type Profile,
 } from '../lib/classmates';
 import { codeIn } from '../lib/exam';
+import { Folding } from '../components/Fold';
 
 /**
  * The people in your classes.
@@ -566,7 +567,7 @@ function Blocked({ me }: { me: string }) {
   }, [me]);
   if (ids.length === 0) return null;
   return (
-    <>
+    <Folding name="Blocked">
       <SectionLabel>Blocked</SectionLabel>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         {ids.length} {ids.length === 1 ? 'person' : 'people'}. Their messages never reach this
@@ -585,7 +586,7 @@ function Blocked({ me }: { me: string }) {
           </button>
         </div>
       ))}
-    </>
+    </Folding>
   );
 }
 

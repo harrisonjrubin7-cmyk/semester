@@ -22,6 +22,7 @@ import {
   ruleLine,
 } from '../lib/myrules';
 import { useRowStyle } from './shell/useShell';
+import { Folding } from './Fold';
 
 /** The leads people actually use. A free number field invites 0 and 365. */
 const LEADS = [0, 1, 2, 3, 5, 7, 10, 14, MOST_DAYS];
@@ -39,7 +40,7 @@ export function MyRules() {
   const set = (next: typeof rules) => dispatch({ type: 'setMyRules', rules: next });
 
   return (
-    <>
+    <Folding name="MyRules">
       <SectionLabel
         style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}
       >
@@ -156,6 +157,6 @@ export function MyRules() {
           {MOST_RULES} is the limit — past that nobody remembers what they asked for.
         </div>
       )}
-    </>
+    </Folding>
   );
 }

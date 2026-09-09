@@ -13,6 +13,7 @@
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { ahead, missed, title, type Standing } from '../lib/apply';
+import { Folding } from './Fold';
 
 const HORIZON = 14;
 
@@ -70,6 +71,7 @@ export function ApplyingSoon() {
 
   return (
     <div style={{ marginTop: 14 }}>
+      <Folding name="ApplyingSoon">
       <SectionLabel style={{ margin: '0 0 8px' }}>Applications</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         {late.map((s) => (
@@ -79,6 +81,7 @@ export function ApplyingSoon() {
           <Row key={s.id} s={s} onOpen={open} />
         ))}
       </div>
+      </Folding>
     </div>
   );
 }
@@ -93,7 +96,7 @@ export function ApplyingOn({ day }: { day: Date }) {
   if (onDay.length === 0) return null;
 
   return (
-    <>
+    <Folding name="ApplyingOn">
       <SectionLabel style={{ margin: '20px 0 8px' }}>Applications</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
         {onDay.map((s) => (
@@ -134,6 +137,6 @@ export function ApplyingOn({ day }: { day: Date }) {
           </button>
         ))}
       </div>
-    </>
+    </Folding>
   );
 }

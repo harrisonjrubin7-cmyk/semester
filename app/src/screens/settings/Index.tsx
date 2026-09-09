@@ -75,7 +75,11 @@ export function SettingsIndex() {
               {nothingFound(query)}
             </div>
           ) : (
-            <Group header={`${found.length} ${found.length === 1 ? 'match' : 'matches'}`}>
+            /* Not foldable: a section is named by what its heading says, and
+               this one says a count that changes on every keystroke. There is
+               nothing here to come back to anyway — it is the answer to a
+               question being typed. */
+            <Group folds={false} header={`${found.length} ${found.length === 1 ? 'match' : 'matches'}`}>
               {found.map((f) => (
                 <NavRow
                   key={f.row.screen}

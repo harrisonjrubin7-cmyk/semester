@@ -3,6 +3,7 @@ import { ChevronRight } from '../Icons';
 import { ForcedProvider, InsetProvider, SIDE, useGrouped } from './useShell';
 import { Blueprint } from '../Blueprint';
 import { SectionLabel } from '../ui';
+import { FoldHead, useSection } from '../Fold';
 
 /**
  * The pieces every screen is built from, in whichever layout is on.
@@ -60,6 +61,13 @@ const DIVIDER: CSSProperties = {
  * In `plain` this is what a screen writes today — a `SectionLabel`, the
  * blurb under it, and the content. In `grouped` the content moves into an
  * inset panel and the blurb moves below it.
+ *
+ * It folds, in all three layouts, and it does its own folding rather than
+ * being found by the transform in `components/Fold.tsx`: a `Group` is handed
+ * its heading and its contents as two separate props, so where the section
+ * begins and ends is not something anybody has to work out. Settings is built
+ * almost entirely of these, which is how nine pages of it fold without a line
+ * of any of them changing.
  */
 export function Group({
   header,
@@ -67,6 +75,7 @@ export function Group({
   children,
   framed = true,
   lit = false,
+  folds = true,
   style,
 }: {
   header?: ReactNode;
@@ -90,16 +99,39 @@ export function Group({
    * which is most of them. Grouped mode always insets.
    */
   framed?: boolean;
+  /**
+   * Whether the heading folds this away. True everywhere it has one.
+   *
+   * Off for a group whose heading is not really a heading — the one-row
+   * panels a screen uses as a card — where a chevron would promise something
+   * to hide and hide a single row.
+   */
+  folds?: boolean;
   style?: CSSProperties;
 }) {
   const grouped = useGrouped();
   const id = useId();
+  const section = useSection(header);
+  // Nothing to fold without a heading to fold it by, and nothing worth
+  // folding by a heading that says nothing.
+  const foldable = folds && header !== undefined && section.said !== '';
+  const shut = foldable && section.shut;
 
   if (!grouped) {
     return (
       <section aria-labelledby={header ? id : undefined} style={style}>
-        {header ? <SectionLabel style={{ marginBottom: 'var(--sp-3)' }}>{<span id={id}>{header}</span>}</SectionLabel> : null}
-        {footer ? (
+        {header ? (
+          <SectionLabel style={{ marginBottom: shut ? 0 : 'var(--sp-3)' }}>
+            {foldable ? (
+              <FoldHead shut={shut} toggle={section.toggle}>
+                <span id={id}>{header}</span>
+              </FoldHead>
+            ) : (
+              <span id={id}>{header}</span>
+            )}
+          </SectionLabel>
+        ) : null}
+        {shut ? null : footer ? (
           <div
             style={{
               fontSize: 'var(--type-base)',
@@ -112,7 +144,7 @@ export function Group({
             {footer}
           </div>
         ) : null}
-        {framed ? (
+        {shut ? null : framed ? (
           <Blueprint
             style={{
               padding: 14,
@@ -156,23 +188,31 @@ export function Group({
             opacity: 0.55,
           }}
         >
-          {header}
+          {foldable ? (
+            <FoldHead shut={shut} toggle={section.toggle}>
+              {header}
+            </FoldHead>
+          ) : (
+            header
+          )}
         </h2>
       ) : null}
-      <div
-        style={{
-          background: 'var(--app-panel)',
-          // The `corners` look key, not a fixed radius: somebody who chose
-          // square corners chose them for the whole app.
-          borderRadius: 'var(--r-lg)',
-          border: `1px solid ${lit ? 'var(--app-accent)' : 'var(--app-line-soft)'}`,
-          overflow: 'hidden',
-          transition: 'border-color 220ms ease',
-        }}
-      >
-        {children}
-      </div>
-      {footer ? (
+      {shut ? null : (
+        <div
+          style={{
+            background: 'var(--app-panel)',
+            // The `corners` look key, not a fixed radius: somebody who chose
+            // square corners chose them for the whole app.
+            borderRadius: 'var(--r-lg)',
+            border: `1px solid ${lit ? 'var(--app-accent)' : 'var(--app-line-soft)'}`,
+            overflow: 'hidden',
+            transition: 'border-color 220ms ease',
+          }}
+        >
+          {children}
+        </div>
+      )}
+      {shut ? null : footer ? (
         <div
           style={{
             margin: `calc(7px * var(--density, 1)) ${SIDE}px 0`,

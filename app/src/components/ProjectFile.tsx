@@ -19,6 +19,7 @@ import {
 } from '../lib/project';
 import type { CourseId } from '../lib/types';
 import { UseSources, appendTo } from './UseSources';
+import { Folding } from './Fold';
 
 /**
  * The document you write the essay in.
@@ -112,7 +113,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
   const document = out ? header(title, course, dueDate?.toDateString() ?? '') + out : '';
 
   return (
-    <>
+    <Folding name="ProjectFile">
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         A document to write the thing <em>in</em> — headings, the question each section has to
         answer, your sources with a column for what each is for, the rubric as a checklist, and
@@ -291,6 +292,6 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         </>
       )}
       <div style={{ height: 26 }} />
-    </>
+    </Folding>
   );
 }

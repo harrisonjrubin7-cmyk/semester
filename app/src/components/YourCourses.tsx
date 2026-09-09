@@ -29,6 +29,7 @@ import {
   yoursOf,
 } from '../lib/yours';
 import { useRowStyle } from './shell/useShell';
+import { Folding } from './Fold';
 
 export function YourCourses() {
   const { state, dispatch, catalog, tint: palette } = useStore();
@@ -46,7 +47,7 @@ export function YourCourses() {
   const shown = catalog.courses.map((c) => c.id);
 
   return (
-    <>
+    <Folding name="YourCourses">
       <SectionLabel
         style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}
       >
@@ -217,6 +218,6 @@ export function YourCourses() {
           </div>
         );
       })}
-    </>
+    </Folding>
   );
 }

@@ -43,6 +43,7 @@ import { hoursFor } from '../lib/select';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
 import { CourseTag } from '../components/CourseTag';
+import { Folding } from '../components/Fold';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -118,34 +119,29 @@ function YourTasks() {
   const left = mine.filter((t) => !t.done).length;
 
   return (
-    <>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          justifyContent: 'space-between',
-          margin: '26px 0 12px',
-        }}
+    <Folding name="YourTasks">
+      <SectionLabel
+        style={{ margin: '26px 0 12px' }}
+        aside={
+          <button
+            type="button"
+            className="bare"
+            onClick={() => dispatch({ type: 'go', screen: 'mine' })}
+            style={{
+              width: 'auto',
+              fontFamily: 'var(--font-heading)',
+              fontSize: 'var(--type-sm)',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: 'var(--app-accent)',
+            }}
+          >
+            {left > 0 ? `${left} left` : 'All done'}
+          </button>
+        }
       >
-        <h2 className="section-label" style={{ margin: 0, fontSize: 'var(--type-sm)', fontWeight: 'inherit' }}>
-          Yours today
-        </h2>
-        <button
-          type="button"
-          className="bare"
-          onClick={() => dispatch({ type: 'go', screen: 'mine' })}
-          style={{
-            width: 'auto',
-            fontFamily: 'var(--font-heading)',
-            fontSize: 'var(--type-sm)',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'var(--app-accent)',
-          }}
-        >
-          {left > 0 ? `${left} left` : 'All done'}
-        </button>
-      </div>
+        Yours today
+      </SectionLabel>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {mine.map((t) => (
@@ -191,7 +187,7 @@ function YourTasks() {
           </div>
         ))}
       </div>
-    </>
+    </Folding>
   );
 }
 
@@ -365,29 +361,24 @@ function Feed_due() {
   // Used only by the all-clear line, which names what is next after today.
   const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
   return (
-    <>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          justifyContent: 'space-between',
-          margin: '26px 0 4px',
-        }}
+    <Folding name="Feed_due">
+      <SectionLabel
+        style={{ margin: '26px 0 4px' }}
+        aside={
+          <div
+            style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: 'var(--type-sm)',
+              letterSpacing: '0.12em',
+              opacity: 0.5,
+            }}
+          >
+            {doneCount} of {today.length} done
+          </div>
+        }
       >
-        <h2 className="section-label" style={{ margin: 0, fontSize: 'var(--type-sm)', fontWeight: 'inherit' }}>
-          Due today
-        </h2>
-        <div
-          style={{
-            fontFamily: 'var(--font-heading)',
-            fontSize: 'var(--type-sm)',
-            letterSpacing: '0.12em',
-            opacity: 0.5,
-          }}
-        >
-          {doneCount} of {today.length} done
-        </div>
-      </div>
+        Due today
+      </SectionLabel>
       <div
         className="chrome-text"
         style={{
@@ -493,7 +484,7 @@ function Feed_due() {
           );
         })}
       </div>
-    </>
+    </Folding>
   );
 }
 
@@ -583,7 +574,7 @@ function Feed_rail() {
   const rail = railFor(catalog, now, state.appointments, state.commitments, due);
   const minutes = minutesNow(now);
   return (
-    <>
+    <Folding name="Feed_rail">
       <SectionLabel>Today’s schedule</SectionLabel>
       {rail.length === 0 ? (
         <div style={{ fontSize: 'var(--type-md)', opacity: 0.5, paddingBottom: 'var(--sp-4)' }}>
@@ -657,7 +648,7 @@ function Feed_rail() {
           })}
         </div>
       )}
-    </>
+    </Folding>
   );
 }
 
@@ -682,7 +673,7 @@ function Feed_registrar() {
   if (soon.length === 0) return null;
 
   return (
-    <>
+    <Folding name="Feed_registrar">
       <SectionLabel style={{ margin: '14px 0 12px' }}>From the registrar</SectionLabel>
       {soon.slice(0, 3).map((d) => (
         <Blueprint
@@ -710,7 +701,7 @@ function Feed_registrar() {
           ) : null}
         </Blueprint>
       ))}
-    </>
+    </Folding>
   );
 }
 
@@ -789,7 +780,7 @@ function DoneToday() {
   const cards = tally(state.reviews);
 
   return (
-    <>
+    <Folding name="DoneToday">
       <Blueprint style={{ padding: 15, background: 'var(--app-hero)' }}>
         <div className="kicker">Finished</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)', marginTop: 'var(--sp-3)' }}>
@@ -861,7 +852,7 @@ function DoneToday() {
         </>
       )}
       <div style={{ height: 22 }} />
-    </>
+    </Folding>
   );
 }
 

@@ -130,6 +130,23 @@ The tab bar stays put while you move around — going into a guide no longer
 leaves Back as the only exit — and **Me** is a directory of everything the app
 can do, grouped, with a line under each saying what it is for.
 
+## Folding a screen down to what you came for
+
+Every section heading in the app, on every tab, is a control: tap it and that
+section folds away, leaving the heading as a one-line summary of what is under
+it. **Collapse all** at the top of a screen does the lot, and turns into
+**Expand all** once everything is shut.
+
+It is one gesture, everywhere — the sections a screen writes, the settings
+groups, the ones drawn by a component shared between screens. A course is nine
+sections and Today is five; folding the four you are not thinking about is the
+difference between scrolling for the reading and seeing it.
+
+What you fold is remembered on that device and nothing else. Not in the
+account and not in a backup: which sections you closed on the phone in a
+lecture is not a fact about you that the laptop should be told, and a fresh
+device shows every screen the way it has always looked.
+
 ## Adding to a course mid-semester
 
 A reading posted in week six, a handout before the midterm, a photograph of the

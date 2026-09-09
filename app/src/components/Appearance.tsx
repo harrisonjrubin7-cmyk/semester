@@ -34,6 +34,7 @@ import { useStore } from '../state/store';
 import { NAVS, SHELLS } from '../lib/look';
 import type { NavMode } from '../lib/types';
 import { SectionLabel } from './ui';
+import { Folding } from './Fold';
 
 const LABEL_STYLE = {
   margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))',
@@ -408,7 +409,7 @@ export function NavPicker() {
   const { state, dispatch } = useStore();
 
   return (
-    <>
+    <Folding name="Appearance">
       <SectionLabel style={LABEL_STYLE}>Navigation</SectionLabel>
       <div style={BLURB_STYLE}>
         Four ways of moving through the same screens. Only one is ever on screen at a time, and
@@ -427,7 +428,7 @@ export function NavPicker() {
           />
         ))}
       </Row>
-    </>
+    </Folding>
   );
 }
 
@@ -438,7 +439,7 @@ export function LayoutPicker() {
   const { state, dispatch } = useStore();
 
   return (
-    <>
+    <Folding name="Appearance">
       <SectionLabel style={LABEL_STYLE}>Layout</SectionLabel>
       <div style={BLURB_STYLE}>
         Three ways of arranging every screen. Neither the controls nor the content change — the
@@ -456,6 +457,6 @@ export function LayoutPicker() {
           />
         ))}
       </Row>
-    </>
+    </Folding>
   );
 }

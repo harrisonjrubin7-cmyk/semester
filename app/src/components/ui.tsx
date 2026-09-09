@@ -15,27 +15,55 @@ import { useRowStyle } from './shell/useShell';
  */
 export function SectionLabel({
   children,
+  aside,
   style,
 }: {
   children: ReactNode;
+  /**
+   * What sits at the right-hand end of the heading's line.
+   *
+   * "0 of 3 done" beside Due today, "4 left" beside Yours today. Two screens
+   * used to build that row by hand — a flex `<div>` with an `<h2
+   * className="section-label">` inside it — because this component had no way
+   * to say it, and a hand-built heading is a heading nothing else can
+   * recognise. When sections became foldable those two were the ones that
+   * folded the count instead of the section.
+   *
+   * It stays outside the fold control on purpose: on Today it is a button of
+   * its own, and a button inside a button is not markup any browser agrees
+   * about.
+   */
+  aside?: ReactNode;
   style?: CSSProperties;
 }) {
-  return (
-    // An <h2>, not a styled div. The screen's name is the <h1>; these are the
-    // sections under it, and until they were headings a screen reader had no
-    // structure to move through — the whole app read as one long run of
-    // buttons with no way to skip. The reset keeps it looking identical.
+  // An <h2>, not a styled div. The screen's name is the <h1>; these are the
+  // sections under it, and until they were headings a screen reader had no
+  // structure to move through — the whole app read as one long run of
+  // buttons with no way to skip. The reset keeps it looking identical.
+  const heading = (
     <h2
       className="section-label"
       style={{
         margin: 'calc(26px * var(--density, 1)) 0 calc(12px * var(--density, 1))',
         fontSize: 'var(--type-sm)',
         fontWeight: 'inherit',
+        // Wide enough for the whole line when something shares it, so the
+        // fold control reaches as far as the words do rather than stopping
+        // where they stop.
+        ...(aside === undefined ? null : { flex: 1, minWidth: 0 }),
         ...style,
       }}
     >
       {children}
     </h2>
+  );
+
+  if (aside === undefined) return heading;
+  return (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-4)' }}>
+      {heading}
+      {aside}
+    </div>
   );
 }
 

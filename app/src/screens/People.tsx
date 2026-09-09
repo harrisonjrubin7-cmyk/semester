@@ -29,6 +29,7 @@ import {
   short,
   type Person,
 } from '../lib/letters';
+import { Folding } from '../components/Fold';
 
 export function People() {
   const { state } = useStore();
@@ -259,7 +260,7 @@ function LettersTab() {
   }
 
   return (
-    <>
+    <Folding name="LettersTab">
       <SectionLabel style={{ margin: '0 0 8px' }}>Ask for one</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
         {state.people.map((p) => (
@@ -432,7 +433,7 @@ function LettersTab() {
         rule — some want a month, some are happy with ten days, and somebody you have worked
         with for two years is a different case from somebody whose lecture you attended.
       </p>
-    </>
+    </Folding>
   );
 }
 

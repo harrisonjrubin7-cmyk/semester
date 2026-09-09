@@ -124,7 +124,9 @@ export function SettingsPage({
       {/* The gutter the groups inset within. `Group` has no margin of its
           own — every screen supplies its own page padding, and this is
           settings' — so this is what makes the panels read as inset. */}
-      <div style={{ padding: '0 16px' }}>{children(lit)}</div>
+      <div style={{ padding: '0 16px' }}>
+        {children(lit)}
+      </div>
     </main>
   );
 }

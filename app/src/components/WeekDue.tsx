@@ -6,6 +6,7 @@ import { datedItems } from '../lib/select';
 import { dueByDay, weekLabel, weekLine } from '../lib/weekpage';
 import { clock } from '../lib/date';
 import { hasTime } from '../lib/duetime';
+import { Folding } from './Fold';
 
 /**
  * The week's deadlines, under the grid it cannot draw them on.
@@ -30,7 +31,7 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
   );
 
   return (
-    <>
+    <Folding name="WeekDue">
       <SectionLabel>Due this week</SectionLabel>
       <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
         {weekLabel(start)} · {weekLine(days, classes)}
@@ -91,6 +92,6 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
           </div>
         </div>
       ))}
-    </>
+    </Folding>
   );
 }

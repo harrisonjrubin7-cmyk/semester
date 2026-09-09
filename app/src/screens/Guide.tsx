@@ -17,6 +17,7 @@ import { ChevronRight, Plus } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
 import { buildQuiz } from '../lib/quiz';
 import { asset } from '../lib/asset';
+import { Folding } from '../components/Fold';
 
 /** The note under a heading saying part of what follows arrived later. */
 const SINCE = {
@@ -784,7 +785,7 @@ function Documents() {
     : [];
 
   return (
-    <>
+    <Folding name="Documents">
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
         The same {guide.units.length} units as a document — every card, the terms and the
         self-test, in reading order.
@@ -881,7 +882,7 @@ function Documents() {
           ))}
         </div>
       ))}
-    </>
+    </Folding>
   );
 }
 
@@ -929,7 +930,7 @@ function Cases() {
   const examples = guide.examples;
 
   return (
-    <>
+    <Folding name="Cases">
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
         The concepts pointed at things you can actually see. All four professors grade on applying
         an idea to a case you have not met before — this is the rep for that.
@@ -1040,7 +1041,7 @@ function Cases() {
           </Blueprint>
         ))}
       </div>
-    </>
+    </Folding>
   );
 }
 
@@ -1051,7 +1052,7 @@ function Cram() {
   const notes = updates.filter((u) => u.body);
 
   return (
-    <>
+    <Folding name="Cram">
       {guide.frames && guide.frames.length > 0 && (
         <>
           <SectionLabel>{catalog.frameLabels[state.guideId]}</SectionLabel>
@@ -1158,7 +1159,7 @@ function Cram() {
           ))}
         </>
       )}
-    </>
+    </Folding>
   );
 }
 
@@ -1195,7 +1196,7 @@ function Listen() {
   };
 
   return (
-    <>
+    <Folding name="Listen">
       {pod.editions.length > 1 && (
         <div style={{ marginTop: 14 }}>
           <ChipRow
@@ -1311,6 +1312,6 @@ function Listen() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{c.name}</span>
         </button>
       ))}
-    </>
+    </Folding>
   );
 }

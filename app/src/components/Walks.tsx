@@ -4,6 +4,7 @@ import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { railFor } from '../lib/select';
 import { daySummary, hopLine, hops, tight } from '../lib/rooms';
+import { Folding } from './Fold';
 
 /**
  * The eight minutes between Buttrick and Furman.
@@ -33,7 +34,7 @@ export function Walks({ date }: { date?: Date }) {
   const pressed = measurable.filter((h) => tight(h));
 
   return (
-    <>
+    <Folding name="Walks">
       <SectionLabel>Getting between them</SectionLabel>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-4)' }}>
         {daySummary(list)}
@@ -81,6 +82,6 @@ export function Walks({ date }: { date?: Date }) {
           ? 'Measured between places you saved, at an unhurried eighty metres a minute — slow on purpose, since an estimate that says you will make it and is wrong costs more than one that says you will not.'
           : 'Measured between places you saved. The app never geocodes an address, so a building it has no place for gets no distance rather than a guessed one.'}
       </div>
-    </>
+    </Folding>
   );
 }

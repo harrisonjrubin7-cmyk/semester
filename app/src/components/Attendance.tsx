@@ -25,6 +25,7 @@ import {
   type AttendPolicy,
 } from '../lib/attend';
 import type { CourseId } from '../lib/types';
+import { Folding } from './Fold';
 
 export function Attendance({ courseId }: { courseId: CourseId }) {
   const { state, dispatch } = useStore();
@@ -40,7 +41,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
     dispatch({ type: 'setAttendPolicy', courseId, policy: { ...policy, ...patch } });
 
   return (
-    <>
+    <Folding name="Attendance">
       <SectionLabel style={{ margin: '24px 0 6px' }}>Turning up</SectionLabel>
 
       {hasPolicy(policy) ? (
@@ -171,6 +172,6 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           </div>
         </div>
       )}
-    </>
+    </Folding>
   );
 }

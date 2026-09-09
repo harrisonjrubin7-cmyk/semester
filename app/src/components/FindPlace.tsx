@@ -40,6 +40,7 @@ import {
   type Found,
   type Near,
 } from '../lib/geocode';
+import { Folding } from './Fold';
 
 export function FindPlace() {
   const { state, dispatch } = useStore();
@@ -106,7 +107,7 @@ export function FindPlace() {
   const service = SERVICES.find((s) => s.id === g.service) ?? SERVICES[0];
 
   return (
-    <>
+    <Folding name="FindPlace">
       <SectionLabel style={{ margin: '0 0 8px' }}>Look up an address</SectionLabel>
 
       {!g.on ? (
@@ -340,6 +341,6 @@ export function FindPlace() {
           </button>
         </>
       )}
-    </>
+    </Folding>
   );
 }
