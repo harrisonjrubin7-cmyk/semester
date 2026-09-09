@@ -144,7 +144,28 @@ export function Guide() {
         </div>
       )}
 
-      {state.mode === 'cards' && (
+      {state.mode === 'cards' && !weak && (
+        /*
+         * A course typed in by hand has a guide with no units in it, which is
+         * the ordinary state of one until a syllabus is imported — not an
+         * error, and not worth an empty "Units" heading over a button
+         * offering to drill all nought cards.
+         */
+        <div
+          style={{
+            fontSize: 'var(--type-base)',
+            opacity: 0.6,
+            lineHeight: 'var(--leading-normal)',
+            marginTop: 'var(--sp-7)',
+            textWrap: 'pretty',
+          }}
+        >
+          Nothing to drill yet. Import a syllabus for this course and its units
+          and cards arrive with it.
+        </div>
+      )}
+
+      {state.mode === 'cards' && weak && (
         <>
           <ActionButton
             onClick={() => dispatch({ type: 'startDrill', unit: null })}

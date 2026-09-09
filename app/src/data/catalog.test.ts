@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildCatalog, blocksFor } from './catalog';
+import { buildCatalog, blocksFor, weakestUnit } from './catalog';
+import { blankCourse } from '../lib/edit';
 import type { CourseModule } from '../lib/types';
 import { decorateItem } from '../lib/date';
 
@@ -94,5 +95,42 @@ describe('exceptions follow the same year', () => {
     expect(blocksFor(cat, new Date(2027, 1, 10))[0].canceled).toBe(true);
     // The same day number a year earlier is not.
     expect(blocksFor(cat, new Date(2026, 1, 10))[0]?.canceled).toBeUndefined();
+  });
+});
+
+/*
+ * A course typed in by hand crashed its own study guide.
+ *
+ * `blankCourse` gives it a real guide with no units — deliberately, so that
+ * every study screen can read `guide.units` without a null check of its own.
+ * `weakestUnit` did not hold up the other end: with no units it still
+ * answered `{ index: 0, unit: guide.units[0] }`, and `units[0]` of an empty
+ * array is `undefined`. `screens/Guide.tsx` read `.name` off that, so adding
+ * a course by hand and opening Study put the error screen in front of
+ * somebody who had done nothing wrong.
+ *
+ * The fix is in the type rather than at the call site — the next caller would
+ * have had the same crash waiting for it — so this holds the type.
+ */
+describe('the weakest unit of a guide with none', () => {
+  it('is null rather than a unit that is not there', () => {
+    const { guide } = blankCourse('HIST 1500');
+    expect(guide.units).toEqual([]);
+    expect(weakestUnit(guide)).toBeNull();
+  });
+
+  it('still names the coldest unit when there are units', () => {
+    // Guards the null above: a function that answered null always would pass
+    // the first test and be useless.
+    const guide = {
+      ...blankCourse('HIST 1500').guide,
+      units: [
+        { name: 'Warm', mastery: 80, cards: [] },
+        { name: 'Cold', mastery: 12, cards: [] },
+        { name: 'Middling', mastery: 44, cards: [] },
+      ],
+    } as Parameters<typeof weakestUnit>[0];
+    expect(weakestUnit(guide)?.unit.name).toBe('Cold');
+    expect(weakestUnit(guide)?.index).toBe(1);
   });
 });
