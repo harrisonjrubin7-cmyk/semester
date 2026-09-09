@@ -977,12 +977,12 @@ function Rail() {
               }
               dispatch({ type: 'go', screen: id });
             }}
+            // The lit treatment is drawn off this in `app.css` — see
+            // `.rail .rail-item[aria-current='page']`. It used to be an
+            // inline style here as well, which meant the rail's colours were
+            // a pairing the contrast audit could not read, and the unlit one
+            // was `--app-faint` at 3.65:1.
             aria-current={on ? 'page' : undefined}
-            style={{
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-faint)',
-              background: on ? 'var(--app-hero)' : 'transparent',
-              boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
-            }}
           >
             <TabGlyph screen={id} size={18} />
             <span>{label}</span>
@@ -1003,11 +1003,6 @@ function Rail() {
             onClick={() => dispatch({ type: 'go', screen })}
             title={blurb}
             aria-current={on ? 'page' : undefined}
-            style={{
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-faint)',
-              background: on ? 'var(--app-hero)' : 'transparent',
-              boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
-            }}
           >
             <span>{label}</span>
           </button>

@@ -276,6 +276,32 @@ describe('the stylesheet uses the tokens the audit passed', () => {
     expect(body).toContain('var(--tile-bottom)');
     expect(body).toContain('var(--tile-ink)');
   });
+
+  /*
+   * The rail, which is the same mistake as the quiet caps in a place the
+   * audit above could not see.
+   *
+   * `.soft-caps-quiet` was caught by reading `app.css`. The rail's colours
+   * were not in `app.css` — they were an inline style in `App.tsx`, chosen
+   * per item from `on`, so no rule named a token and there was nothing here
+   * to read. Measured in a browser at 1440px on Ink: the unlit labels came
+   * out at 3.65:1 and the quiet ones below the divider at 2.53:1, against
+   * 4.5:1 for text this size. That is the app's whole navigation on a laptop.
+   *
+   * They are rules now, so this is a rule this file can check.
+   */
+  it('sets the rail in dim, not faint — it is the navigation, and it is small caps', () => {
+    const body = ruleFor('.rail .rail-item');
+    expect(body).toContain('var(--app-dim)');
+    expect(body).not.toContain('var(--app-faint)');
+  });
+
+  it('does not fade the quiet rail rows back under the bar', () => {
+    // The size and the divider above them carry the hierarchy. An opacity
+    // here multiplies whatever token the rule above names and lands the
+    // result back where it started — 0.75 of dim was the 2.53:1.
+    expect(ruleFor('.rail .rail-quiet')).not.toContain('opacity');
+  });
 });
 
 describe('“Increase contrast”, which cannot be done in a media query', () => {

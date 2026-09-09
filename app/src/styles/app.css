@@ -509,13 +509,38 @@ a:hover {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition: color 120ms ease;
+  /*
+   * `--app-dim`, and here rather than in `App.tsx`, for the same reason
+   * `.soft-caps-quiet` names it: this is small uppercase *text*, and
+   * `--app-faint` is the strength held to a hairline's 3:1. It was faint,
+   * set inline per item, and measured at 1440px on Ink it came out at
+   * 3.65:1 — the app's whole navigation on a laptop, under the bar.
+   *
+   * Written as a rule because the audit in `lib/contrast.test.ts` reads this
+   * file. An inline style is a colour nothing can check, which is how this
+   * one survived the pass that caught the identical mistake in the shell.
+   */
+  color: var(--app-dim);
+  background: transparent;
+}
+/* The lit row, off `aria-current` — the attribute the component already sets
+   to say the same thing to a screen reader. One source for the state. */
+.rail .rail-item[aria-current='page'] {
+  color: var(--app-accent-bright);
+  background: var(--app-hero);
+  box-shadow: 0 1px 0 var(--app-line-top) inset;
 }
 .rail .rail-item:hover {
   color: var(--app-accent-bright);
 }
+/*
+ * Smaller, and below a divider — which is all the hierarchy these need.
+ * They used to carry `opacity: 0.75` as well, which multiplies whatever
+ * colour the rule above sets and put the result back where it started:
+ * 2.53:1, measured, on the default ground.
+ */
 .rail .rail-quiet {
   font-size: 11px;
-  opacity: 0.75;
   padding: 9px 20px;
 }
 .rail .rail-item:hover {
