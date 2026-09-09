@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import { DESKTOP, TOUCH, useMedia } from '../lib/media';
+import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { useConversation, provider } from './converse';
 import { configured, modelLabel } from '../lib/claude';
 import { Composer, sendHint } from './Composer';
@@ -32,7 +32,7 @@ export function Chat() {
   const { dispatch, now } = useStore();
   const talk = useConversation();
   const touch = useMedia(TOUCH);
-  const wide = useMedia(DESKTOP);
+  const wide = useMedia(WIDE);
   const [draft, setDraft] = useState('');
   /** The history, when there is no room for it beside the conversation. */
   const [listing, setListing] = useState(false);

@@ -103,7 +103,7 @@ export function SlideDeck() {
   }, [step]);
 
   if (!unit || slides.length === 0) {
-    return <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6 }}>Nothing to show here.</div>;
+    return <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', opacity: 0.6 }}>Nothing to show here.</div>;
   }
 
   const slide = slides[at];
@@ -117,7 +117,7 @@ export function SlideDeck() {
    * about. This screen is presented, not read.
    */
   return (
-    <div style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+    <div style={{ padding: 'var(--page-pad)', display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
       <div className="kicker">
         {guide.code} · unit {unitIndex + 1} · slide {at + 1} of {slides.length}
       </div>
