@@ -63,11 +63,17 @@ describing the quiz with a "Start quiz" button; `startQuiz` in
 registry and are one flow.
 
 **The header `+` and the springboard's floating button both point at
-`import`, and they are different buttons.** `lib/adding.ts` makes the header's
-`+` mean "add a course" on the courses list and "add something in one line"
-everywhere else, and `lib/chrome.ts:100` only draws the FAB on `home` in the
-`feed` navigation. So on the one screen where both exist, one adds a deadline
-and the other adds a course.
+`import`, and they are different buttons.** When this was written, `lib/adding.ts`
+made the header's `+` mean "add a course" on the courses list and "add something
+in one line" everywhere else, while `lib/chrome.ts` only draws the FAB on `home`
+in the `feed` navigation — so on the one screen where both exist, one added a
+deadline and the other a course.
+
+`main` has since gone further and deleted `lib/adding.ts` outright: the `+` is
+now the same one-line capture on every screen, on the argument that "the one
+control whose meaning you can rely on" should not be one you have to check. The
+conclusion here is unchanged and now unambiguous — two buttons, two jobs — and
+the file this paragraph originally cited as evidence no longer exists.
 
 ---
 
