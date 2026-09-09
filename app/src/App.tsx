@@ -116,6 +116,7 @@ import { chromeFor, homeShape } from './lib/chrome';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
+import { isCanvas } from './components/shell/exempt';
 import { ShelfNav } from './components/nav/ShelfNav';
 import { SoftBar, SoftTop } from './components/soft/SoftTop';
 import { litRailTab, litTab, tabLabel } from './lib/tabbar';
@@ -134,7 +135,7 @@ import { Adopting } from './components/Adopting';
 import { Watching } from './components/Watching';
 import { forget } from './lib/scrollback';
 import { Fresh } from './components/Fresh';
-import { DESKTOP, useMedia } from './lib/media';
+import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { provider } from './lib/claude';
 import type { Screen } from './lib/types';
@@ -153,7 +154,7 @@ import type { Screen } from './lib/types';
  */
 function Loading() {
   return (
-    <div style={{ padding: 18 }} aria-hidden="true">
+    <div style={{ padding: 'var(--page-pad)' }} aria-hidden="true">
       {[62, 30, 96, 96].map((h, i) => (
         <div
           key={i}
@@ -983,7 +984,18 @@ function Rail() {
 
 export default function App() {
   const { state, dispatch, saveTrouble, asking, settle } = useStore();
-  const wide = useMedia(DESKTOP);
+  /*
+   * Which of the three layouts this window is in — see `lib/media.ts`.
+   *
+   * `wide` is the old question ("is there room for the rail?") and is still
+   * what the chrome rule asks, because a tablet and a desktop answer it the
+   * same way. The tier itself goes onto the layout's root element as
+   * `data-tier`, so anything that needs to know which of the two wide layouts
+   * it is in can ask the DOM rather than re-running a media query of its own,
+   * and so a screenshot of a bug says which layout it was taken in.
+   */
+  const tier = useTier();
+  const wide = tier !== 'phone';
   /*
    * Which navigation is drawn — and it is one, always.
    *
@@ -1108,7 +1120,7 @@ export default function App() {
        * `.desk-one` drops the rail's column so the pane does not sit in the
        * second half of an empty grid.
        */
-      <div className={chrome.rail ? 'desk' : 'desk desk-one'}>
+      <div className={chrome.rail ? 'desk' : 'desk desk-one'} data-tier={tier}>
         {/* First in the tree, so it is the first tab stop. See the note in
             the phone layout below. */}
         <SkipLink />
@@ -1136,7 +1148,12 @@ export default function App() {
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
         {chrome.rail && <Rail />}
-        <div className="device device-pane">
+        {/* `has-canvas` widens the header's gutter to match a screen whose
+            body is a grid rather than a column — see `.pane-body.is-canvas`
+            in `styles/app.css`. Both answers come from the same list in
+            `shell/exempt.ts`, so the header and the body cannot disagree
+            about which one this screen is. */}
+        <div className={isCanvas(state.screen) ? 'device device-pane has-canvas' : 'device device-pane'}>
           <Header />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
@@ -1171,7 +1188,7 @@ export default function App() {
   }
 
   return (
-    <div className="device">
+    <div className="device" data-tier={tier}>
       {/*
         The first focusable thing on the page, and invisible until it has
         focus. With fifty screens behind a header and a tab bar, a keyboard

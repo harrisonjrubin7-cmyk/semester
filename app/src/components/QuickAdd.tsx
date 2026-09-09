@@ -71,7 +71,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         background: 'var(--app-bg)',
         display: 'flex',
         flexDirection: 'column',
-        padding: 18,
+        padding: 'var(--page-pad)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>

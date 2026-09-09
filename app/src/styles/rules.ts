@@ -241,12 +241,22 @@ export const BUDGET = {
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 221,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 521,
+  space: 496,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 509,
+  shorthand: 505,
 };
 
 /*
+ * 680/221/521/509 → 680/221/496/505 with the three layouts.
+ *
+ * Twenty-five spacing values and four shorthands gone, none of them
+ * reformatted: they were the twenty-four `padding: 18` a screen wrote to mean
+ * "the page gutter" and the settings pages' `'0 16px'` meaning the same
+ * thing. There is one gutter now — `--page-pad` in `styles/app.css` — and it
+ * is a different number on a phone, a tablet and a desktop, which is a thing
+ * a literal 18 cannot be. Every one of those sites was a screen that could
+ * not follow the layout it was in.
+ *
  * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
  * down and none up: the tab was a second copy of what the map already is, and
  * the one thing only it could do — standing somewhere and naming it — moved to
