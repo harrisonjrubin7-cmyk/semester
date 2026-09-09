@@ -209,7 +209,7 @@ export function Guide() {
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{u.name}</span>
                 <span style={{ display: 'block', marginTop: 'var(--sp-3)' }}>
-                  <Meter pct={u.mastery} height={5} />
+                  <Meter pct={u.mastery} height={5} label={`Mastery, ${u.name}`} />
                 </span>
               </span>
               <span

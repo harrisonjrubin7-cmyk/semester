@@ -321,7 +321,7 @@ export function AccountScreen() {
         <div style={{ fontSize: 'var(--type-base)', opacity: 0.85, marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>{note}</div>
       )}
       {error && (
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-accent)', marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
+        <div role="alert" style={{ fontSize: 'var(--type-base)', color: 'var(--app-accent)', marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
           {error}
         </div>
       )}

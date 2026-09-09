@@ -345,6 +345,7 @@ prevent.
 | How a dialog keeps the Tab key, and gives focus back | `a11y/modal.ts` |
 | What the browser tab, the history entry and the installed window are called | `a11y/title.ts` |
 | How the app scrolls, for somebody who asked for less movement | `lib/prefers.ts` |
+| Whether a bar speaks its value or repeats the words beside it | `components/ui.tsx` (`Meter`), decided per call site |
 | The words in the podcasts | `audio/scripts/` → `npm run transcripts` → `data/transcripts/` |
 
 If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen
@@ -354,9 +355,9 @@ named there as one you arrive at from somewhere else.
 
 ### Reachable without a pointer, and without sight
 
-Six things hold the app together for somebody on a keyboard, a screen reader,
-or a body that does not want to be moved, and each is one implementation
-rather than a habit.
+Eight things hold the app together for somebody on a keyboard, a screen
+reader, or a body that does not want to be moved, and each is one
+implementation rather than a habit.
 
 - **Every screen has a landmark, a heading and a name.** `<main>` is the one
   scrolling element, the header is a real `<header>`, and the screen's name is
@@ -401,3 +402,18 @@ rather than a habit.
   provokes nausea and vertigo in a vestibular disorder, not a matter of taste.
   `scrollKindly` and `revealKindly` in `lib/prefers.ts` are the only way the
   app scrolls now, and `a11y/motion.test.ts` fails on a raw `'smooth'`.
+- **Every bar says its number.** A meter is a number drawn as a length, and
+  four of the app's seven were the only place their figure appeared — Study's
+  mastery bar beside "11 units · 68 cards", the deck-coverage bar on Progress
+  whose own comment says it shows *what the line does not show*. A screen
+  reader met two nested `<div>`s. `Meter` takes a required `label` now: a
+  string for a bar that has to speak, an explicit `null` for one whose number
+  is already in the words, and no default — so the compiler asks the question
+  at every site rather than letting a silent bar ship.
+- **Every failure is announced.** `components/Trouble.tsx` had this right, and
+  said why: "a failure that is only visible is a failure half the people using
+  the app miss". Twelve other error messages did not — a plain `<div>` in the
+  warn colour, appearing where nothing was before, so pressing Sign in with a
+  wrong password did nothing a reader could tell you about. They carry
+  `role="alert"` now, which changes nothing about how any of them looks.
+  `a11y/tellings.test.ts` holds both of these, and fails on a thirteenth.

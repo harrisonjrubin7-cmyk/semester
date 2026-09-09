@@ -116,7 +116,7 @@ export function Dictate({
         </div>
       )}
       {error && (
-        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-accent)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div role="alert" style={{ fontSize: 'var(--type-sm)', color: 'var(--app-accent)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {error}
         </div>
       )}
