@@ -132,7 +132,7 @@ export const BUDGET: Budget = {
   'screens/Lesson.tsx': { type: 5, leading: 7, space: 5 },
   'screens/Links.tsx': { type: 6, space: 4, shorthand: 1 },
   'screens/Mail.tsx': { type: 4, leading: 1, space: 1, shorthand: 1 },
-  'screens/Me.tsx': { type: 7, leading: 2, shorthand: 3 },
+  'screens/Me.tsx': { type: 2, leading: 1, shorthand: 2 },
   'screens/Meals.tsx': { type: 5, leading: 1, space: 2, shorthand: 1 },
   'screens/Mine.tsx': { type: 7, leading: 5, space: 10, shorthand: 13 },
   'screens/Onboarding.tsx': { type: 5, leading: 1, space: 7, shorthand: 4 },
