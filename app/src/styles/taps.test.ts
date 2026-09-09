@@ -68,7 +68,7 @@ describe('tap targets', () => {
     );
     // The eight the audit named, plus Today's grip. Fewer than this means one
     // was reverted without the measurement being redone.
-    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(9);
+    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(10);
     for (const must of [
       'src/components/SampleMark.tsx',   // 112×20, on 65 screens
       'src/components/Reorder.tsx',      // 26×23, three lists
@@ -86,6 +86,13 @@ describe('tap targets', () => {
       // other control's taps. Half the target is off the left edge of the
       // screen, which is what the page's own margin leaves room for.
       'src/screens/Today.tsx',
+      // 38×17, and it survived the audit that took 104 targets under 30px
+      // down to none — because a walk of the screens never sees it. It is
+      // drawn only inside a running gap session, behind a start button and
+      // behind a browser that can speak. `tap-y` rather than `tap`, for the
+      // reason the audit itself gives: the card counter shares its row, and
+      // a target that grew sideways would reach across the gap towards it.
+      'src/screens/Gap.tsx',
     ]) {
       expect(used, `${must} lost its tap class`).toContain(must);
     }
