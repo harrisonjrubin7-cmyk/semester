@@ -53,3 +53,61 @@ describe("the month day panel's empty state", () => {
     expect(MONTH).toMatch(/const selAppts = on\.classes \?/);
   });
 });
+
+describe("the semester bar's empty week", () => {
+  /*
+   * The same join, one view along, and the third time this view has been
+   * caught by it.
+   *
+   * `Calendar.tsx` carries two notes above the semester view's sources: one
+   * for the calendars you connect, which "plotted only the bundled listings",
+   * and one for your own tasks, which it "had no branch for at all". Both were
+   * found the same way — something dated and yours, plotted as an empty week.
+   * Appointments were the third, and were still missing after both.
+   *
+   * Measured: a task and an appointment on the same day, and the bar carried
+   * the task and not the appointment, with "1 of your own" in the summary.
+   */
+  const WEEK = MONTH.slice(MONTH.indexOf('const weeks:'));
+
+  it('names every list a week draws from', () => {
+    const drawn = [...WEEK.matchAll(/\bw\.(\w+)\.map\(|\.\.\.w\.(\w+)/g)]
+      .map((m) => m[1] ?? m[2])
+      .filter((n) => n !== 'start' && n !== 'classes');
+    expect(new Set(drawn).size).toBeGreaterThan(3);
+
+    const at = WEEK.indexOf('.length === 0 &&');
+    expect(at).toBeGreaterThan(0);
+    const condition = WEEK.slice(Math.max(0, at - 120), at + 260);
+
+    for (const list of new Set(drawn)) {
+      expect(condition, `a week draws w.${list} and the empty test ignores it`).toContain(
+        `w.${list}.length === 0`,
+      );
+    }
+  });
+
+  /*
+   * A source scan cannot see an emptied bucket.
+   *
+   * Replacing the filter with `appts: []` leaves every shape above intact and
+   * the whole file green, while the bar goes back to plotting nothing. A
+   * browser is what caught that — a task and an appointment on one day, and
+   * only the task on the bar — and this is the cheap half of it: the bucket
+   * has to be filled from the list, not from nothing.
+   */
+  it('fills each week from the list rather than from nothing', () => {
+    for (const list of ['items', 'events', 'feed', 'tasks', 'appts']) {
+      expect(WEEK, `w.${list} is declared and never filled`).toMatch(
+        new RegExp(`${list}: ${list}\\.filter\\(|${list}: \\w+\\.filter\\(`),
+      );
+    }
+  });
+
+  it('counts appointments in what it calls your own', () => {
+    // The summary said "48 deadlines, 1 of your own" with a task and an
+    // appointment on the term. Both are things the student put there.
+    expect(WEEK).toContain('of your own');
+    expect(MONTH).toMatch(/on\.classes \? appts\.length : 0/);
+  });
+});

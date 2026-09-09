@@ -54,7 +54,14 @@ import {
 import { useRowStyle } from '../components/shell/useShell';
 import { movableOf, useCalendarMove, type Movable } from './calendar/Move';
 import { AddHere } from './calendar/AddHere';
-import type { CourseId, DatedEvent, DatedItem, FeedEvent, PersonalTask } from '../lib/types';
+import type {
+  Appointment,
+  CourseId,
+  DatedEvent,
+  DatedItem,
+  FeedEvent,
+  PersonalTask,
+} from '../lib/types';
 import { Folding } from '../components/Fold';
 
 /**
@@ -1713,6 +1720,20 @@ function SemesterView() {
    * "someday" has no week to sit in.
    */
   const tasks = on.deadlines ? state.tasks.filter((t) => t.date !== null) : [];
+  /*
+   * And your appointments, which this view had no branch for either.
+   *
+   * The third time this same omission has been found on this one view: the
+   * two notes above are the connected calendars and your own tasks, each of
+   * which plotted as an empty week until somebody looked. An appointment is
+   * dated, it is yours, and it is the only one of the three that was still
+   * missing — a fortnight of advising and interviews plotted as bars with
+   * nothing in them.
+   *
+   * Gated on `on.classes`, the flag the month grid marks them under, so the
+   * chips say the same thing about them on every view of this screen.
+   */
+  const appts = on.classes ? state.appointments : [];
 
   // Weeks from the first Sunday on or before the earliest thing, to the last.
   const dates = [
@@ -1720,6 +1741,7 @@ function SemesterView() {
     ...events.map((e) => e.date),
     ...feed.map((e) => isoToDate(e.date)),
     ...tasks.map((t) => isoToDate(t.date as string)),
+    ...appts.map((a) => isoToDate(a.date)),
   ];
   /*
    * The term's teaching, which this view had no branch for at all.
@@ -1768,6 +1790,7 @@ function SemesterView() {
     events: DatedEvent[];
     feed: FeedEvent[];
     tasks: PersonalTask[];
+    appts: Appointment[];
     classes: number;
   }[] = [];
   for (let cursor = new Date(start); cursor <= last; cursor.setDate(cursor.getDate() + 7)) {
@@ -1796,11 +1819,13 @@ function SemesterView() {
       // string in the store, and turning seven of them into `Date`s per week
       // to compare them back is arithmetic with a timezone in it.
       tasks: tasks.filter((t) => t.date! >= from && t.date! < to),
+      // ISO strings, for the reason above.
+      appts: appts.filter((a) => a.date >= from && a.date < to),
       classes,
     });
   }
 
-  const busiest = Math.max(1, ...weeks.map((w) => w.items.length + w.tasks.length));
+  const busiest = Math.max(1, ...weeks.map((w) => w.items.length + w.tasks.length + w.appts.length));
   // The fullest teaching week, so the rule below can be read against it. A
   // fixed width per meeting made every week the same length, which is a mark
   // that says "there are classes" and nothing a person did not already know.
@@ -1827,7 +1852,12 @@ function SemesterView() {
           on.deadlines && `${items.length} ${items.length === 1 ? 'deadline' : 'deadlines'}`,
           // Counted apart from the deadlines, the way the whole app counts
           // them apart: what you decided to do is not what a syllabus asked.
-          on.deadlines && tasks.length > 0 && `${tasks.length} of your own`,
+          // Tasks and appointments together: both are things the student put
+          // there, and the sentence says "of your own" rather than naming a
+          // kind. Each keeps its own chip, which is why the two are counted
+          // under different flags.
+          (on.deadlines ? tasks.length : 0) + (on.classes ? appts.length : 0) > 0 &&
+            `${(on.deadlines ? tasks.length : 0) + (on.classes ? appts.length : 0)} of your own`,
           on.campus &&
             `${events.length + feed.length} ${events.length + feed.length === 1 ? 'event' : 'events'}`,
           on.classes &&
@@ -1903,6 +1933,7 @@ function SemesterView() {
                   w.events.length === 0 &&
                   w.feed.length === 0 &&
                   w.tasks.length === 0 &&
+                  w.appts.length === 0 &&
                   w.classes === 0 ? (
                     <div
                       style={{ flex: 1, background: 'var(--app-track)', opacity: 0.4, height: 2, alignSelf: 'center' }}
@@ -1933,6 +1964,18 @@ function SemesterView() {
                             maxWidth: `${100 / busiest}%`,
                             background: 'transparent',
                             border: `1px solid ${tint(t.courseId).fill}`,
+                          }}
+                        />
+                      ))}
+                      {w.appts.map((a) => (
+                        <div
+                          key={a.id}
+                          title={a.title}
+                          style={{
+                            flex: 1,
+                            maxWidth: `${100 / busiest}%`,
+                            background: 'transparent',
+                            border: `1px solid ${kindOf(a.kind).tint}`,
                           }}
                         />
                       ))}
@@ -2082,6 +2125,37 @@ function SemesterView() {
                     ))}
                     {w.tasks.length > 3 && (
                       <div style={{ opacity: 0.5 }}>+{w.tasks.length - 3} more of your own</div>
+                    )}
+                  </div>
+                )}
+
+                {/* And the appointments in that week, in the same list and the
+                    same words. They are not draggable here: a task's day is a
+                    choice and an appointment's is somebody else's. */}
+                {w.appts.length > 0 && (
+                  <div style={WEEK_LIST}>
+                    {w.appts.slice(0, 3).map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        className="bare"
+                        onClick={() => {
+                          dispatch({ type: 'setMineTab', tab: 'appointments' });
+                          dispatch({ type: 'go', screen: 'mine' });
+                        }}
+                        style={{ width: 'auto', display: 'block', textAlign: 'left' }}
+                      >
+                        {/* `secondLine` rather than an opacity — main's
+                            contrast pass landed while this was open, and new
+                            dimmed text answers to the audit now. The task rows
+                            above keep the old shape; converting those is that
+                            pass's to finish. */}
+                        <span style={secondLine()}>Yours</span>{' '}
+                        {a.title.length > 42 ? `${a.title.slice(0, 40)}…` : a.title}
+                      </button>
+                    ))}
+                    {w.appts.length > 3 && (
+                      <div style={secondLine()}>+{w.appts.length - 3} more of your own</div>
                     )}
                   </div>
                 )}
