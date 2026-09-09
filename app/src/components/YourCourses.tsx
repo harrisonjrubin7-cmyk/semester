@@ -14,14 +14,15 @@ import { useState } from 'react';
 import { Reorder } from './Reorder';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
-import { ACCENTS } from '../lib/look';
+import { ACCENTS, ground as groundOf, resolveGround } from '../lib/look';
+import { anchorHue, tintAt } from '../lib/tint';
+import { usePrefersDark } from '../lib/prefers';
 import {
   LONGEST_NAME,
   nameFor,
   renamed,
   rename,
   reorder,
-  tintFor,
   tintTo,
   togglePin,
   yoursNote,
@@ -30,9 +31,12 @@ import {
 import { useRowStyle } from './shell/useShell';
 
 export function YourCourses() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, tint: palette } = useStore();
   const row = useRowStyle(0);
   const [open, setOpen] = useState('');
+  // The resolved ground, not the stored one: on "match my device" the swatches
+  // have to be drawn for the screen in front of somebody.
+  const light = groundOf(resolveGround(state.ground, usePrefersDark())).light;
 
   if (catalog.courses.length === 0) return null;
 
@@ -49,15 +53,15 @@ export function YourCourses() {
         Your courses, your way
       </SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
-        Call them what you call them, colour them so four codes are four things at a glance, and
-        put the one you are living in this week at the top. The course code does not change —
-        that is what a re-imported syllabus is matched on, and what a shared practice paper
-        carries.
+        Call them what you call them and put the one you are living in this week at the top.
+        Each already has a colour — your accent, divided between your classes, and worn on every
+        deadline, block and dot that belongs to it. Open a course to hold it to a different one.
+        The course code does not change — that is what a re-imported syllabus is matched on, and
+        what a shared practice paper carries.
       </div>
 
       {catalog.courses.map((c, i) => {
         const mine = yoursOf(state.yours, c.id);
-        const tint = tintFor(state.yours, c.id);
         const note = yoursNote(state.yours, c.id, c.name);
         const isOpen = open === c.id;
 
@@ -99,11 +103,11 @@ export function YourCourses() {
                       width: 9,
                       height: 9,
                       borderRadius: 9,
-                      // A hollow ring for a course with no colour, so the row
-                      // still has something in that slot and the list does not
-                      // jog sideways when one is given a colour.
-                      background: tint ? tint.base : 'transparent',
-                      border: tint ? 'none' : '1px solid var(--app-line-top)',
+                      // The colour this course is actually wearing, whether it
+                      // was chosen here or handed out by the palette. It used
+                      // to be a hollow ring for the second case, which is to
+                      // say for almost every course.
+                      background: palette(c.id).fill,
                     }}
                   />
                   {/* The code is the identifier and never wraps — without
@@ -165,16 +169,27 @@ export function YourCourses() {
                   </div>
                 ) : null}
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 11 }}>
+                <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 11 }}>
+                  {mine.tint
+                    ? 'Held here. Tap it again to hand this course back to the palette.'
+                    : 'The palette placed this one. Pick a colour to hold it there instead.'}
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 'var(--sp-4)' }}>
                   {ACCENTS.map((a) => {
                     const on = mine.tint === a.id;
+                    // Drawn as the course would actually wear it rather than as
+                    // the accent's own swatch: the palette turns an accent into
+                    // a tint for this ground, and a picker that showed the metal
+                    // and then applied something else is a picker that lies.
+                    const shown = tintAt(anchorHue(a.id, -1), light);
                     return (
                       <button
                         key={a.id}
                         type="button"
                         className="bare tappable"
-                        // Tapping the colour it already has clears it, so
-                        // there is no separate "no colour" swatch to explain.
+                        // Tapping the colour it already has hands the course
+                        // back to the palette, so there is no separate "let the
+                        // app choose" swatch to explain.
                         onClick={() =>
                           dispatch({
                             type: 'setYours',
@@ -182,14 +197,14 @@ export function YourCourses() {
                           })
                         }
                         aria-pressed={on}
-                        aria-label={on ? `Clear ${a.label}` : `${a.label} for ${c.code}`}
+                        aria-label={on ? `Let the app colour ${c.code}` : `${a.label} for ${c.code}`}
                         title={a.label}
                         style={{
                           flex: 'none',
                           width: 26,
                           height: 26,
                           borderRadius: 26,
-                          background: a.base,
+                          background: shown.fill,
                           border: on ? '2px solid var(--app-fg)' : '1px solid var(--app-line)',
                           boxShadow: on ? '0 0 0 2px var(--app-bg) inset' : 'none',
                         }}

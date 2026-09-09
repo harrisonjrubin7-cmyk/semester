@@ -243,11 +243,11 @@ export const BUDGET = {
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
   space: 520,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 515,
+  shorthand: 505,
 };
 
 /*
- * 680/219/521/519 → 680/219/520/515 when the assistant's panel became the
+ * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
  * chat. Two numbers down and none up, and neither by reformatting: the
  * panel's transcript, opening, header and footer are now the same components
  * and the same measure the Ask tab uses, so the hand-set gap and the four
@@ -301,6 +301,12 @@ export const BUDGET = {
  * six spacing decisions anybody made. The two the chat added — a 3px gap
  * between the waiting dots, and the send button's clearance inside the
  * composer — are drawing measurements and are inside the new number.
+ *
+ * `shorthand` went 519 → 509 when the courses got their own colours. The Look
+ * settings page wrote the same section-label margin twelve times — one string,
+ * twelve copies, eleven chances to be a pixel out — and it is one `CAP`
+ * constant now. The thirteenth section, the course palette, uses it too rather
+ * than adding the thirteenth copy, which is the whole reason to have counted.
  *
  * Set to what is there, not to what a grep said.
  *
