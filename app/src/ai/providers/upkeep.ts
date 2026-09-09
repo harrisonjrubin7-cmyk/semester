@@ -1,6 +1,15 @@
 import { budget, hasPolicy, tally } from '../../lib/attend';
 import { datedItems } from '../../lib/select';
-import { progress } from '../../lib/degree';
+import { resolveSchool } from '../../data/schools';
+import { gpa, progress } from '../../lib/degree';
+import {
+  missingLine,
+  moves,
+  sittings,
+  systemsFor,
+  termGpa,
+  type TermInput,
+} from '../../lib/termgpa';
 import type { Provide } from '../shape';
 
 /**
@@ -183,7 +192,6 @@ export const behind: Provide = (look) => {
  */
 export const degree: Provide = (look) => {
   const { state } = look;
-  if (state.requirements.length === 0) return null;
   const rows = state.requirements.map((r) => {
     const p = progress(r, state.taken);
     return {
@@ -196,15 +204,70 @@ export const degree: Provide = (look) => {
       met: p.met || p.meetsAfter,
     };
   });
+
+  /*
+   * The term in progress, the same arithmetic the screen renders.
+   *
+   * Through `lib/termgpa.ts` rather than recomputed here, so an answer about
+   * the projection and the projection on the page cannot differ — which is
+   * the failure mode that makes an assistant unusable on a numbers screen.
+   */
+  const input: TermInput = {
+    courses: look.catalog.courses,
+    grades: state.grades,
+    pieces: state.pieces,
+    drops: state.drops,
+    attendance: state.attendance,
+    attendPolicy: state.attendPolicy,
+    gradeSystems: state.gradeSystems,
+    // The same resolution the store does. `Look` carries no school, and
+    // passing null here would quietly use the assumed American scale while
+    // the screen used the school's own — the two numbers would differ by a
+    // whole grade band on a school that publishes different cutoffs.
+    school: resolveSchool(state.schoolId, null, state.mySchools),
+  };
+  const finished = gpa(state.taken, state.scale);
+  const term = termGpa(
+    sittings(input),
+    finished ? { points: finished.points, hours: finished.hours } : null,
+  );
+  const projecting = term.gpa
+    ? {
+        termGpa: term.gpa,
+        hours: term.hours,
+        // The letters as a band, not a letter: the middle on its own is the
+        // over-confident number this whole file avoids.
+        courses: term.counted.map((c) => ({
+          course: c.code,
+          hours: c.hours,
+          heading: `${c.band!.low.letter} to ${c.band!.high.letter}`,
+          at: c.standing.current === null ? null : Math.round(c.standing.current * 10) / 10,
+        })),
+        ...(term.cumulative ? { cumulative: term.cumulative } : {}),
+        steps: moves(term, systemsFor(input))
+          .slice(0, 4)
+          .map((m) => ({ course: m.code, from: m.from, to: m.to, needs: m.need, reach: m.reach, worth: m.gain })),
+        notCounted: term.courses.filter((c) => c.missing !== '').map((c) => missingLine(c)),
+      }
+    : null;
+
+  // Nothing recorded and nothing in progress is a screen with nothing on it.
+  if (rows.length === 0 && !projecting) return null;
+
   const done = rows.filter((r) => r.met).length;
+  const audit = rows.length
+    ? `${rows.length} requirements tracked, ${done} met or met after this term. ${state.taken.length} courses recorded.`
+    : 'No requirements entered yet.';
   return {
-    summary: `The degree — ${rows.length} requirements tracked, ${done} met or met after this term. ${state.taken.length} courses recorded.`,
+    summary: `The degree — ${audit}${term.gpa ? ` This term projects to ${term.gpa.low.toFixed(2)}–${term.gpa.high.toFixed(2)} across ${term.hours} hours.` : ''}`,
+    ...(projecting ? { focus: projecting } : {}),
     visible: rows,
     actions: ['open_screen'],
     suggestions: [
       'What is left before I graduate?',
+      ...(term.gpa ? ['Where would an hour tonight do the most for my GPA?'] : []),
       'What should I take next term?',
-      'Does anything I am taking now count twice?',
     ],
   };
 };
+

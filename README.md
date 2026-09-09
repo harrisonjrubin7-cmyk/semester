@@ -127,6 +127,36 @@ right in one place and stale in another.
 | Doc | The guide as a real .docx and .pdf, plus a print view. |
 | Listen | The podcast editions, with chapter marks that seek. |
 
+## What this term does to your GPA
+
+The app held every number for this and never did the sum. `lib/degree.ts`
+computes a GPA and skips in-progress courses on purpose — a course with no
+grade has no grade. `lib/grades.ts` knows where each course stands and what the
+rest has to be. `lib/worth.ts` projects one course's landing. `lib/cutoffs.ts`
+turns a percentage into a letter and a letter into grade points. Four files,
+and the question a student actually asks in week ten went to a calculator at
+midnight with four syllabi open.
+
+**The degree → This term, projected** answers it, under the cumulative figure it
+is going to change rather than on a screen of its own. It is a **band**, never a
+number: every input is already a range, and folding four ranges into one
+confident "3.62" would be the least earned figure in the app. So: *somewhere
+between 2.34 and 3.87 — 3.42 if the rest goes like the graded part*, and the
+line under it says what the term does to the cumulative.
+
+A letter is a cliff and the arithmetic treats it as one — 89.94 is a B+, and no
+percentage is rounded before the scale reads it. A course with nothing graded, a
+course whose credit hours cannot be read from its syllabus line, and a scale with
+cutoffs but no grade points are three different holes with three different fixes,
+and each is named per course rather than silently dropped.
+
+Then **what would move it**: one grade step in each course, what everything left
+would have to average for it, and what the step is worth to the term — which is
+not the same in a two-credit course as in a four-credit one. A step that has gone
+out of reach is shown as out of reach rather than left off, because knowing a
+grade is gone is what stops the hours going after it. See
+[`app/src/lib/termgpa.ts`](app/src/lib/termgpa.ts).
+
 ## Where two courses meet
 
 Every other study screen is one course at a time, which is how a term is
