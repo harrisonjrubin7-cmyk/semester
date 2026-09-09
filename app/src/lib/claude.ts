@@ -188,6 +188,37 @@ export interface Turn {
    * API that validates them.
    */
   incomplete?: boolean;
+  /**
+   * The tools this answer asked to have run, on an assistant turn.
+   *
+   * Only the read-only ones — see `lib/lookup.ts`. A proposal is not a call:
+   * it is shown to the student with a button and never returns anything to
+   * the model, so it is not kept here and no result is ever sent for it.
+   *
+   * Kept on the turn rather than beside it because the API requires the pair
+   * to travel together: an assistant message carrying `tool_use` is only
+   * valid when the message after it answers every one of them.
+   */
+  calls?: ToolCall[];
+  /**
+   * What those calls returned, on the user turn immediately after.
+   *
+   * Written by the app from its own state, never by the model. One per call
+   * on the turn above, in any order, and the API rejects a set that does not
+   * cover them all — which is why `runLookups` answers every call it is
+   * given, including the ones it does not recognise.
+   */
+  results?: ToolResult[];
+}
+
+/** What a read-only tool gave back, ready to be sent as the answer to a call. */
+export interface ToolResult {
+  /** The `id` of the `ToolCall` this answers. */
+  id: string;
+  /** The answer itself, as text the model reads. */
+  text: string;
+  /** True when the lookup could not be run at all. */
+  failed?: boolean;
 }
 
 type Route = 'proxy' | 'shared' | 'own' | 'openai' | 'none';
@@ -383,12 +414,23 @@ interface AskOptions {
    */
   think?: boolean;
   onText?: (chunk: string) => void;
+  /**
+   * Why the model stopped: "end_turn", "tool_use", "max_tokens", "refusal".
+   *
+   * The one a caller cannot work out for itself is `max_tokens` — an answer
+   * cut off at the ceiling arrives looking finished, and the only signal that
+   * it is not is this field. `tool_use` is the other: it is how a lookup loop
+   * knows there is a second round to run rather than an answer to show.
+   */
+  onStop?: (reason: string) => void;
   signal?: AbortSignal;
 }
 
 type Block =
   | { type: 'text'; text: string }
   | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
+  | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
+  | { type: 'tool_result'; tool_use_id: string; content: string; is_error?: true }
   | {
       type: 'document';
       source:
@@ -475,15 +517,83 @@ export const CUT_OFF = '[This answer was stopped here and is unfinished.]';
  */
 export function asSent(messages: Turn[]): Turn[] {
   if (!messages.some((m) => m.incomplete)) return messages;
-  return messages.map(({ role, content, incomplete }) =>
-    incomplete && content.trim()
-      ? { role, content: `${content}\n\n${CUT_OFF}` }
-      : { role, content },
+  return messages.map(({ incomplete, ...turn }) =>
+    // Spread rather than rebuilt from two fields: this used to name `role` and
+    // `content` and nothing else, which quietly dropped the tool calls off a
+    // conversation the moment anything in it had been stopped — and a
+    // `tool_use` with no `tool_result` after it is a 400 with nothing in it
+    // that says why.
+    incomplete && turn.content.trim()
+      ? { ...turn, content: `${turn.content}\n\n${CUT_OFF}` }
+      : turn,
   );
 }
 
+/**
+ * A message as the wire carries it: plain text, or a list of blocks.
+ *
+ * `Turn` is the app's shape — a role, a string, and two fields the API has
+ * never heard of. This is what those become. Keeping them apart is what lets
+ * a transcript be stored, trimmed, titled and rendered as prose while still
+ * round-tripping tool calls exactly as the API requires.
+ */
+export interface Sent {
+  role: 'user' | 'assistant';
+  content: string | Block[];
+}
+
+/**
+ * The transcript as blocks, so a tool call and its answer survive the trip.
+ *
+ * The API's rule is strict and worth stating: an assistant message containing
+ * `tool_use` is only valid when the very next message answers every one of
+ * those calls with a matching `tool_result`. So the pair is rendered here,
+ * from the two fields on `Turn`, rather than assembled by whoever happens to
+ * be building a request — a lookup loop that drops one result gets a 400 with
+ * no clue in it, and this is the one place that cannot get the pairing wrong.
+ *
+ * Turns with neither field are left as strings, which is every turn in every
+ * conversation that never looked anything up.
+ */
+export function wire(messages: Turn[]): Sent[] {
+  if (!messages.some((m) => m.calls?.length || m.results?.length)) return messages;
+  return messages.map((m): Sent => {
+    if (m.role === 'assistant' && m.calls?.length) {
+      return {
+        role: 'assistant',
+        content: [
+          ...(m.content.trim() ? [{ type: 'text' as const, text: m.content }] : []),
+          ...m.calls.map((c) => ({
+            type: 'tool_use' as const,
+            id: c.id,
+            name: c.name,
+            input: c.input,
+          })),
+        ],
+      };
+    }
+    if (m.role === 'user' && m.results?.length) {
+      return {
+        role: 'user',
+        content: [
+          // Results first. The API wants them at the top of the message, and
+          // anything the student typed reads as a follow-up to them anyway.
+          ...m.results.map((r) => ({
+            type: 'tool_result' as const,
+            tool_use_id: r.id,
+            content: r.text,
+            ...(r.failed ? { is_error: true as const } : {}),
+          })),
+          ...(m.content.trim() ? [{ type: 'text' as const, text: m.content }] : []),
+        ],
+      };
+    }
+    return { role: m.role, content: m.content };
+  });
+}
+
 export function withAttachments(
-  messages: Turn[],
+  messages: Sent[],
   images: Shot[] | undefined,
   docs: Doc[] | undefined,
   cite = false,
@@ -494,7 +604,9 @@ export function withAttachments(
 
   const last = messages.length - 1;
   return messages.map((m, i) => {
-    if (i !== last || m.role !== 'user') return m;
+    // A turn already rendered to blocks is a tool-result turn, which carries
+    // no attachments and never ends a request anyway.
+    if (i !== last || m.role !== 'user' || typeof m.content !== 'string') return m;
     const blocks: Block[] = [
       ...(docs ?? []).map((d) => ({
         type: 'document' as const,
@@ -592,7 +704,12 @@ export async function ask(options: AskOptions): Promise<string> {
         ...(options.format && !options.cite && !structuredRefused
           ? { output_config: { format: options.format } }
           : {}),
-        messages: withAttachments(asSent(options.messages), options.images, options.docs, options.cite),
+        messages: withAttachments(
+          wire(asSent(options.messages)),
+          options.images,
+          options.docs,
+          options.cite,
+        ),
       }),
     });
   } catch (e) {
@@ -646,6 +763,9 @@ export async function ask(options: AskOptions): Promise<string> {
    * distinguishable from a reply that genuinely cost nothing.
    */
   let counted: Usage | null = null;
+
+  /** Why the model stopped, as the closing event reports it. */
+  let stopped = '';
   const count = (u: RawUsage | undefined) => {
     if (!u) return;
     counted = {
@@ -678,12 +798,16 @@ export async function ask(options: AskOptions): Promise<string> {
             text?: string;
             citation?: RawCitation;
             partial_json?: string;
+            stop_reason?: string;
           };
         };
 
         // Input counts open the stream; output counts close it.
         if (event.type === 'message_start') count(event.message?.usage);
-        if (event.type === 'message_delta') count(event.usage);
+        if (event.type === 'message_delta') {
+          count(event.usage);
+          if (event.delta?.stop_reason) stopped = event.delta.stop_reason;
+        }
 
         if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use') {
           building = {
@@ -730,6 +854,7 @@ export async function ask(options: AskOptions): Promise<string> {
   }
 
   if (counted) options.onUsage?.(counted);
+  if (stopped) options.onStop?.(stopped);
   return text;
 }
 
