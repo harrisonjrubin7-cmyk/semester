@@ -39,6 +39,16 @@ import {
   type Taken,
 } from '../lib/degree';
 import { Folding } from '../components/Fold';
+import {
+  missingLine,
+  moveLine,
+  moves,
+  sittings,
+  systemsFor,
+  termGpa,
+  termLine,
+  type TermInput,
+} from '../lib/termgpa';
 
 export function Degree() {
   const { state } = useStore();
@@ -122,6 +132,7 @@ function WhatIsLeft() {
             </div>
           </>
         ) : null}
+        <ThisTerm />
       </Folding>
     );
   }
@@ -196,6 +207,8 @@ function WhatIsLeft() {
         {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
       </div>
 
+      <ThisTerm />
+
       {loose.length > 0 ? (
         <>
           <SectionLabel style={{ margin: '24px 0 8px' }}>Counting towards nothing</SectionLabel>
@@ -207,6 +220,160 @@ function WhatIsLeft() {
             requirement they satisfy has not been entered yet.
           </div>
         </>
+      ) : null}
+    </Folding>
+  );
+}
+
+
+/**
+ * The term in progress, folded into the record it is going to change.
+ *
+ * `gpa()` above counts finished courses and skips this term on purpose — a
+ * course with no grade has no grade, and putting one on the transcript screen
+ * would be a fiction. But the student is *in* a term, and the question they
+ * have is what it is about to do to the number above. So it is answered here,
+ * as a band, on the screen where the cumulative already lives rather than on a
+ * screen of its own: one home per thing.
+ *
+ * Everything on the page above this line is typed in by hand. Everything below
+ * it is computed from the syllabus weights and the scores already entered
+ * under Courses → Grades, so nothing here is a second place to maintain.
+ */
+function ThisTerm() {
+  const { state, catalog, school } = useStore();
+
+  const input: TermInput = {
+    courses: catalog.courses,
+    grades: state.grades,
+    pieces: state.pieces,
+    drops: state.drops,
+    attendance: state.attendance,
+    attendPolicy: state.attendPolicy,
+    gradeSystems: state.gradeSystems,
+    school,
+  };
+
+  const finished = gpa(state.taken, state.scale);
+  const term = termGpa(
+    sittings(input),
+    finished ? { points: finished.points, hours: finished.hours } : null,
+  );
+  if (catalog.courses.length === 0) return null;
+
+  const steps = moves(term, systemsFor(input)).slice(0, 3);
+  const left = term.courses.filter((c) => c.missing !== '');
+
+  return (
+    <Folding name="ThisTerm">
+      <SectionLabel style={{ marginTop: 'var(--sp-7)', marginBottom: 'var(--sp-4)' }}>
+        This term, projected
+      </SectionLabel>
+      <div
+        style={{
+          fontSize: 'var(--type-base)',
+          lineHeight: 'var(--leading-relaxed)',
+          textWrap: 'pretty',
+        }}
+      >
+        {termLine(term)}
+      </div>
+
+      {term.cumulative ? (
+        <div
+          style={{
+            marginTop: 'var(--sp-4)',
+            fontSize: 'var(--type-base)',
+            lineHeight: 'var(--leading-relaxed)',
+            textWrap: 'pretty',
+          }}
+        >
+          {term.cumulative.before.toFixed(3)} now, and{' '}
+          {term.cumulative.after.low.toFixed(3)} to {term.cumulative.after.high.toFixed(3)} once
+          this term is in — across {term.cumulative.hours} hours.
+        </div>
+      ) : null}
+
+      {term.counted.length > 0 ? (
+        <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          {term.counted.map((c) => (
+            <div
+              key={c.courseId}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 'var(--sp-5)',
+                fontSize: 'var(--type-base)',
+                lineHeight: 'var(--leading-relaxed)',
+              }}
+            >
+              <span>
+                {c.code}
+                <span style={{ opacity: 0.55 }}> · {c.hours} hrs</span>
+              </span>
+              {/* The letter band, not one letter: the middle alone would be
+                  the same over-confident number this whole file avoids. */}
+              <span style={{ opacity: 0.8 }}>
+                {c.band!.low.letter === c.band!.high.letter
+                  ? c.band!.mid.letter
+                  : `${c.band!.low.letter} to ${c.band!.high.letter}`}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {steps.length > 0 ? (
+        <>
+          <SectionLabel style={{ marginTop: 'var(--sp-7)', marginBottom: 'var(--sp-4)' }}>
+            What would move it
+          </SectionLabel>
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              opacity: 0.55,
+              marginBottom: 'var(--sp-4)',
+              lineHeight: 'var(--leading-relaxed)',
+              textWrap: 'pretty',
+            }}
+          >
+            One grade step in each course, by what the step is worth to the term. A step out of
+            reach is shown as out of reach rather than left off — knowing a grade has gone is
+            what stops the hours going after it.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+            {steps.map((m) => (
+              <div
+                key={m.courseId}
+                style={{
+                  fontSize: 'var(--type-base)',
+                  lineHeight: 'var(--leading-relaxed)',
+                  textWrap: 'pretty',
+                  opacity: m.reach === 'unreachable' ? 0.6 : 1,
+                }}
+              >
+                {moveLine(m)}
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
+
+      {left.length > 0 ? (
+        <div
+          style={{
+            marginTop: 'var(--sp-5)',
+            fontSize: 'var(--type-xs)',
+            opacity: 0.6,
+            lineHeight: 'var(--leading-relaxed)',
+            textWrap: 'pretty',
+          }}
+        >
+          {/* Named one at a time with the fix, rather than "3 courses were
+              excluded" — a GPA quietly computed over some of your courses is
+              worse than no GPA. */}
+          {left.map((c) => missingLine(c)).join(' ')}
+        </div>
       ) : null}
     </Folding>
   );

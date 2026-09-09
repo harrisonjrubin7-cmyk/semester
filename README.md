@@ -127,6 +127,116 @@ right in one place and stale in another.
 | Doc | The guide as a real .docx and .pdf, plus a print view. |
 | Listen | The podcast editions, with chapter marks that seek. |
 
+## Checking the quotes in your own writing
+
+The app already checks quotes in one direction: when a course is generated, every
+quote the model wrote is tested against the syllabus, because those are presented
+as the document's own words. The same machinery had never been pointed at the
+writing the student actually hands in — where a misquotation is not a bug report.
+
+**Check the writing** now runs a second question over the same box. Every passage
+in double quotes is looked for in the readings you have added to a course, the
+guides built from them, or a file you drop in for the purpose. Three verdicts:
+**found** word-for-word; **close**, where the words are there but the punctuation
+is not — and the source's own sentence comes back, punctuation included, because
+the instruction beside it is *copy those*; and **not in anything here**.
+
+That third one is the wording the whole thing turns on. It is *not* "wrong". The
+app holds a fraction of what a student reads, and a screen that turned "I have
+never seen this book" into a red flag would be lying in the most damaging
+possible direction — about somebody's academic honesty, in a tool they trust. So
+the sentence says what was searched in the same breath as what was found, and
+nothing is coloured like an error.
+
+An ellipsis is honoured rather than failed on: each side of the gap is looked for
+separately and in order, which is exactly what an ellipsis claims. Single quotes
+are left alone, because an apostrophe is one and "don't" would otherwise open a
+quotation that swallows the paragraph. Your own notes are not searched at all — a
+quote found in your own notes has been checked against yourself. Nothing leaves
+the device, here or in the rules pass. See
+[`app/src/lib/quotes.ts`](app/src/lib/quotes.ts).
+
+## What the exam actually covers
+
+The exam runway counted the whole course. For a final that is fair; for the
+midterm PSCI 1104's syllabus describes as "units 1 to 8" it was wrong in the
+direction that hurts — fourteen units counted where eight are examinable, six of
+them inflating the "untouched" figure, and a weakest-unit recommendation that
+could point at material the paper will not ask about.
+
+**Exam runway → Unit by unit** now says what is on the paper, and on whose
+authority: what the syllabus said, in its own words, read out of the deadline the
+app already keeps verbatim; what you said, in a box that takes "units 1 to 8",
+"5-9" or "all"; or nobody, in which case it counts everything exactly as before
+and says that is what it is doing.
+
+What it will not do is guess. Three exams and fourteen units could be split
+evenly by arithmetic, and a student told "Midterm 2 covers 6 to 10" will revise 6
+to 10 — so when the real split was 5 to 9 the app has caused the failure it
+exists to prevent. A default that is visibly a default costs nothing. See
+[`app/src/lib/covers.ts`](app/src/lib/covers.ts).
+
+## What this term does to your GPA
+
+The app held every number for this and never did the sum. `lib/degree.ts`
+computes a GPA and skips in-progress courses on purpose — a course with no
+grade has no grade. `lib/grades.ts` knows where each course stands and what the
+rest has to be. `lib/worth.ts` projects one course's landing. `lib/cutoffs.ts`
+turns a percentage into a letter and a letter into grade points. Four files,
+and the question a student actually asks in week ten went to a calculator at
+midnight with four syllabi open.
+
+**The degree → This term, projected** answers it, under the cumulative figure it
+is going to change rather than on a screen of its own. It is a **band**, never a
+number: every input is already a range, and folding four ranges into one
+confident "3.62" would be the least earned figure in the app. So: *somewhere
+between 2.34 and 3.87 — 3.42 if the rest goes like the graded part*, and the
+line under it says what the term does to the cumulative.
+
+A letter is a cliff and the arithmetic treats it as one — 89.94 is a B+, and no
+percentage is rounded before the scale reads it. A course with nothing graded, a
+course whose credit hours cannot be read from its syllabus line, and a scale with
+cutoffs but no grade points are three different holes with three different fixes,
+and each is named per course rather than silently dropped.
+
+Then **what would move it**: one grade step in each course, what everything left
+would have to average for it, and what the step is worth to the term — which is
+not the same in a two-credit course as in a four-credit one. A step that has gone
+out of reach is shown as out of reach rather than left off, because knowing a
+grade is gone is what stops the hours going after it. See
+[`app/src/lib/termgpa.ts`](app/src/lib/termgpa.ts).
+
+## Where two courses meet
+
+Every other study screen is one course at a time, which is how a term is
+organised and how an exam is sat — and it makes four courses look like four
+sealed boxes. **Study → Where courses meet** compares them against each other:
+PSCI 1104 and BUS 1600 both define *margin of error*, ECON 1020's elasticity is
+the elasticity BUS prices with, and until now nothing said so. A term you have
+already learned once, met again in a second context, is the cheapest revision
+there is; two courses using one word for two things is one of the commonest ways
+to get a question wrong.
+
+It is matching words, not ideas, and the screen is built around admitting that.
+There is no model and no embedding — it is string work on the glossaries, the
+cards, the frames and the case files. So it never says two things are the same.
+Where both courses define the term, **both definitions are shown side by side**
+and the judgement is yours; where one course merely uses the word, the sentence
+it was found in is quoted rather than paraphrased. The four grades of evidence —
+both define it, one phrase inside the other, defined here and used there, one
+word in common — are separate headings rather than one mixed list.
+
+A shared word has to earn its row. Generic academic furniture — *data*, *model*,
+*value*, *effect* — joins every course to every other and says nothing, so it is
+refused; a single word needs six characters or has to be an acronym; and a course
+never meets itself. Four courses in four departments sharing nothing is a real
+answer, and the screen says that rather than padding itself out. See
+[`app/src/lib/meet.ts`](app/src/lib/meet.ts).
+
+Asking Claude from this screen hands over the pairs and both courses' own words
+for them, because *are these actually the same idea?* is the one question here
+that no arithmetic can answer.
+
 ## Finding things
 
 The search icon is in the header of every screen, and it searches the whole

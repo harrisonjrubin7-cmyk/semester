@@ -236,6 +236,18 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'meet',
+    label: 'Where courses meet',
+    short: 'Overlap',
+    blurb: 'The same term in two of your courses, with both definitions side by side.',
+    keywords:
+      'overlap shared same term glossary between across courses connections links compare ' +
+      'crossover common concept both twice repeated elsewhere',
+    group: 'Study',
+    taskTags: ['study', 'stand'],
+    root: 'study',
+  },
+  {
     screen: 'ask',
     label: 'Ask Claude',
     short: 'Ask',
@@ -540,8 +552,8 @@ export const DESTINATIONS: Destination[] = [
     screen: 'proof',
     label: 'Check the writing',
     short: 'Check',
-    blurb: 'Spelling, grammar and punctuation read back to you — before somebody else reads it.',
-    keywords: 'spell check spelling spellcheck grammar grammar check proofread proofreading proof read punctuation typo typos writing editor edit check my writing mistakes errors comma apostrophe capitalisation capitalization word choice',
+    blurb: 'Spelling, grammar and punctuation read back to you — and every quotation checked against the reading.',
+    keywords: 'spell check spelling spellcheck grammar grammar check proofread proofreading proof read punctuation typo typos writing editor edit check my writing mistakes errors comma apostrophe capitalisation capitalization word choice quote quotes quotation quotations cite citation misquote verify source verbatim plagiarism',
     group: 'Make',
     taskTags: ['make'],
     root: 'me',

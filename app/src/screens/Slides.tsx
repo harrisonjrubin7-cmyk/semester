@@ -5,7 +5,7 @@ import { Blueprint } from '../components/Blueprint';
 import { FigureCard } from '../components/FigureCard';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import type { Figure } from '../lib/types';
-import { cardKey, masteryWord } from '../lib/review';
+import { cardKey } from '../lib/review';
 
 type Slide =
   | { kind: 'title'; title: string; sub: string }
@@ -33,6 +33,16 @@ export function SlideDeck() {
   const unit = guide.units[unitIndex];
   const unitFigures = figuresOn(unitIndex);
   const added = onUnit(unitIndex);
+
+  /* Whether anything in this unit has ever been answered. `Study.tsx`
+     computes the same thing for the whole course two lines above the figure
+     it labels; this is the unit-sized version of it. */
+  const started = useMemo(
+    () =>
+      !!unit &&
+      unit.cards.some((c) => (state.reviews[cardKey(state.guideId, c.q)]?.seen ?? 0) > 0),
+    [unit, state.reviews, state.guideId],
+  );
 
   const slides = useMemo<Slide[]>(() => {
     if (!unit) return [];
@@ -73,16 +83,23 @@ export function SlideDeck() {
     out.push({
       kind: 'end',
       title: 'End of the unit',
-      /* Same word, same reason as the guide card on Study: until a card in
-         this unit has been answered the figure is the guide's estimate, and
-         nothing has watched you learn it. `masteryWord` in `lib/review.ts`. */
-      sub: `${unit.cards.length} cards · ${unit.mastery}% ${masteryWord(
-        unit.cards.map((c) => cardKey(state.guideId, c.q)),
-        state.reviews,
-      )}`,
+      /*
+       * The same sentence the guide card on Study says, for the same reason,
+       * on the one surface that still showed the old one.
+       *
+       * `unitMastery` blends what you have answered with what the guide
+       * declared, and before the first answer there is nothing to blend — so
+       * "68% mastered" on the last slide of a deck nobody has drilled is the
+       * declared estimate wearing a measurement's clothes. Study said this
+       * first and says it this way; a second wording for one fact would be
+       * worse than the bug.
+       */
+      sub: started
+        ? `${unit.cards.length} cards · ${unit.mastery}% mastered`
+        : `${unit.cards.length} cards · not started`,
     });
     return out;
-  }, [unit, guide.code, unitFigures, added, state.guideId, state.reviews]);
+  }, [unit, guide.code, unitFigures, added, started]);
 
   const [at, setAt] = useState(0);
   const last = slides.length - 1;

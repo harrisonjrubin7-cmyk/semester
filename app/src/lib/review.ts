@@ -224,34 +224,6 @@ export function comeRound(keys: string[], reviews: Reviews, now: number): number
   }).length;
 }
 
-/**
- * What to call a mastery figure: measured where there is evidence for it,
- * estimated where there is none.
- *
- * `unitMastery` blends the two on purpose — a card you have answered is scored
- * on your answers, a card you have not keeps the guide's estimate — and that
- * is the right arithmetic. It was the wrong word. A fresh install opened Study
- * and read, three lines apart on the same card:
- *
- *     51% MASTERED · 68 UNSEEN
- *     Nothing answered in this course yet.
- *
- * Every one of those is true and the three together are not: sixty-eight
- * unseen cards out of sixty-eight, nothing answered, and a claim to have
- * mastered half of it. The number is entirely the guide's estimate at that
- * point, and saying so is what makes it honest rather than wrong — the app is
- * not claiming to have watched you learn something it has not watched you
- * learn.
- *
- * The switch is "any evidence at all", not a threshold. One answer makes the
- * figure partly yours, and there is no honest place to draw a line between
- * partly yours and yours; what there is an honest line between is *some*
- * evidence and *none*.
- */
-export function masteryWord(keys: string[], reviews: Reviews): 'mastered' | 'estimated' {
-  return keys.some((k) => (reviews[k]?.seen ?? 0) > 0) ? 'mastered' : 'estimated';
-}
-
 /** Cards nobody has answered yet — new material rather than a backlog. */
 export function neverMet(keys: string[], reviews: Reviews): number {
   return keys.filter((k) => {

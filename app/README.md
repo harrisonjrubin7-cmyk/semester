@@ -29,7 +29,7 @@ own application.
 
 ## What is in it
 
-<!--tabs-->Five<!--/--> tabs, <!--screens-->forty-eight<!--/--> screens. The tabs
+<!--tabs-->Five<!--/--> tabs, <!--screens-->forty-nine<!--/--> screens. The tabs
 are below; the screens are the registry in `src/lib/nav.ts`, which is also what
 the directory, the search box and the home-screen icons are drawn from — there
 is one list, and it is that one.
@@ -60,7 +60,10 @@ the registries and the test only checks that it was run. See
   **Slides** (the unit as a deck), **Doc** (the guide as .docx, .pdf, or
   printed), **Quiz** (ten multiple choice, decoys drawn from other units),
   **Figures**, **Cases**, **Cram** and **Listen**. They are one list too —
-  `src/lib/modes.ts`.
+  `src/lib/modes.ts`. **Where courses meet** is the one study screen that is
+  not one course at a time: the terms two of your courses both use, with both
+  definitions side by side and the evidence graded, because it matches words
+  rather than ideas — `src/lib/meet.ts`.
 - **Calendar** — a month grid of deadlines, and a Campus tab for athletics,
   clubs and university events.
 - **Mine** — your own tasks, appointments, notes and files, kept visibly apart
@@ -379,6 +382,7 @@ prevent.
 | What the browser tab, the history entry and the installed window are called | `a11y/title.ts` |
 | How the app scrolls, for somebody who asked for less movement | `lib/prefers.ts` |
 | Whether a bar speaks its value or repeats the words beside it | `components/ui.tsx` (`Meter`), decided per call site |
+| How big the type is, and whose setting decides | `lib/look.ts` (`SIZES`, `scaleFrom`) over the root in `App.tsx` |
 | The words in the podcasts | `audio/scripts/` → `npm run transcripts` → `data/transcripts/` |
 
 If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen
@@ -388,9 +392,9 @@ named there as one you arrive at from somewhere else.
 
 ### Reachable without a pointer, and without sight
 
-Nine things hold the app together for somebody on a keyboard, a screen
-reader, or a body that does not want to be moved, and each is one
-implementation rather than a habit.
+Ten things hold the app together for somebody on a keyboard, a screen reader,
+a body that does not want to be moved, or eyes that need bigger words, and
+each is one implementation rather than a habit.
 
 - **Every screen has a landmark, a heading and a name.** `<main>` is the one
   scrolling element, the header is a real `<header>`, and the screen's name is
@@ -463,6 +467,17 @@ implementation rather than a habit.
   all three, reading the source with its comments stripped — the first draft
   failed on four files that were *describing* landmarks rather than opening
   them, including the paragraphs above the fixes.
+- **The browser's own font size reaches the app.** Raising the default font
+  size is how a great many people with low vision read the web — more often
+  than zoom, because it leaves layouts alone and only makes the words bigger.
+  This app set the root to a flat `16 * scale` px, which does not ignore that
+  setting so much as overwrite it: driven against Chromium with its default
+  raised from 16 to 24, the app came out pixel for pixel identical, root forced
+  back to 16 and body text 12px either way. The root is a percentage of the
+  inherited size now, and `--text-scale` — which the six type tokens and about
+  twelve hundred inline sizes all multiply through — is read back from what
+  that produced, so at the 16px default it is arithmetically the number that
+  was there before and nothing moves. `a11y/type.test.ts` holds it.
 
   The one feed is deliberately not in that list: it draws no navigation chrome
   at all on a phone — its only fixed control is an Import button — and marking

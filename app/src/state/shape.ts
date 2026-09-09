@@ -275,6 +275,16 @@ export interface Persisted {
   pieces: Record<string, string>;
   /** How many lowest pieces a category drops. See `lib/drop.ts`. */
   drops: Record<string, number>;
+  /**
+   * What an exam covers, in your words, keyed by the deadline's id.
+   *
+   * Free text — "units 1 to 8", "5-9", "all" — rather than a pair of numbers,
+   * because what persists is what you typed, and because the same reader in
+   * `lib/covers.ts` then handles the syllabus's phrasing and yours. Absent
+   * means nobody has said, which is a different thing from "everything" and
+   * the runway says which of the two it is looking at.
+   */
+  examCovers: Record<string, string>;
   /** Hours of coursework in a day before it stops being a normal day. */
   dayBudget: number;
   /** The order they put their courses in. Ids not listed keep import order. */
@@ -815,6 +825,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   attendPolicy: {},
   pieces: {},
   drops: {},
+  examCovers: {},
   dayBudget: DEFAULT_BUDGET,
   recent: [],
   sittings: [],
@@ -1087,6 +1098,11 @@ export function loadPersisted(): Persisted {
         Object.entries(saved.attendPolicy ?? {}).map(([k, v]) => [k, readPolicy(v)]),
       ),
       pieces: saved.pieces ?? {},
+      examCovers: Object.fromEntries(
+        Object.entries(saved.examCovers ?? {})
+          .filter(([, v]) => typeof v === 'string')
+          .map(([k, v]) => [k, String(v).slice(0, 80)]),
+      ),
       dayBudget:
         typeof saved.dayBudget === 'number' && saved.dayBudget > 0 && saved.dayBudget <= 16
           ? saved.dayBudget
@@ -1197,6 +1213,7 @@ export function pickPersisted(state: State): Persisted {
     pieces: state.pieces,
     dayBudget: state.dayBudget,
     drops: state.drops,
+    examCovers: state.examCovers,
     courseOrder: state.courseOrder,
     feedHidden: state.feedHidden,
     recent: state.recent,
@@ -1355,6 +1372,7 @@ export type Action =
   | { type: 'markAttendance'; courseId: CourseId; date: string; mark: Attended['mark'] | null }
   | { type: 'setAttendPolicy'; courseId: CourseId; policy: AttendPolicy }
   | { type: 'setPieces'; key: string; text: string }
+  | { type: 'setExamCovers'; id: string; text: string }
   | { type: 'setDrop'; key: string; drop: number }
   | { type: 'setDayBudget'; hours: number }
   | { type: 'setCourseOrder'; order: CourseId[] }

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
-import { ChevronRight } from './Icons';
 import { useRowStyle } from './shell/useShell';
 import { longhandMargins } from '../lib/margins';
 
@@ -321,85 +320,6 @@ export function Segmented<T extends string>({
   );
 }
 
-/** A list row with a date block on the left and a chevron on the right. */
-export function DateRow({
-  top,
-  bottom,
-  title,
-  meta,
-  onClick,
-  edge,
-}: {
-  top: string;
-  bottom: string;
-  title: string;
-  meta: string;
-  onClick?: () => void;
-  /**
-   * A colour for the spine at the row's left — the course this belongs to.
-   *
-   * Passed in rather than looked up, so this stays a row that draws what it is
-   * given. Five of these stacked is the "What's coming" list, and without it
-   * five rows from four courses are five identical rows whose only difference
-   * is a course code set in 11px caps at the end of a meta line.
-   */
-  edge?: string;
-}) {
-  // Spread rather than wrapped: the whole button is the tap target, and
-  // `CustomRow` would put the padding outside it.
-  const row = useRowStyle(12);
-  return (
-    <button
-      type="button"
-      className="bare tappable"
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        gap: 'var(--sp-6)',
-        alignItems: 'center',
-        ...row,
-      }}
-    >
-      {edge ? (
-        <span
-          aria-hidden
-          style={{ width: 3, alignSelf: 'stretch', flex: 'none', borderRadius: 2, background: edge }}
-        />
-      ) : null}
-      <div style={{ width: 46, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}>
-        <div
-          style={{
-            fontSize: 'calc(10px * var(--text-scale, 1))',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            opacity: 0.5,
-          }}
-        >
-          {top}
-        </div>
-        <div style={{ fontSize: 'calc(24px * var(--text-scale, 1))' }}>{bottom}</div>
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{title}</div>
-        <div
-          style={{
-            fontSize: 'var(--type-xs)',
-            opacity: 0.55,
-            fontFamily: 'var(--font-heading)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            marginTop: 'var(--sp-1)',
-          }}
-        >
-          {meta}
-        </div>
-      </div>
-      <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
-    </button>
-  );
-}
-
-/** The on/off switch used by the alert preferences. */
 export function Toggle({
   on,
   label,

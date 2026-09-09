@@ -13,12 +13,12 @@ import { useMemo } from 'react';
 import { useStore } from '../state/store';
 import { nextClass, railFor } from '../lib/select';
 import {
-  budgetLine,
   cardsThatFit,
-  gapLine,
+  fitsLine,
   gapNow,
   readPace,
   roomOf,
+  termsLine,
   walkLine,
   walkTo,
   type Gap as GapWindow,
@@ -97,10 +97,10 @@ export function GapOffer() {
     >
       <div className="kicker">Between classes</div>
       <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.35, marginTop: 5, textWrap: 'pretty' }}>
-        {gapLine(win)}
+        {fitsLine(win, cards)}
       </div>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
-        {budgetLine(cards, pace)} One thumb, no typing.
+        {termsLine(win, pace)} One thumb, no typing.
       </div>
       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
         {walkLine(win)}
