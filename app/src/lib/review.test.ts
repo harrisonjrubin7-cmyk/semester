@@ -12,6 +12,7 @@ import {
   tally,
   tallyKeys,
   unitMastery,
+  readReviews,
   type Reviews,
 } from './review';
 
@@ -295,5 +296,55 @@ describe('a right answer the student says they guessed at', () => {
 
   it('changes nothing about a wrong answer', () => {
     expect(score(undefined, false, NOW, true)).toEqual(score(undefined, false, NOW));
+  });
+});
+
+/**
+ * The history read back before anything iterates it.
+ *
+ * Three places take `Object.values(reviews)` and read a number off each —
+ * `totals` here, `seenSince` in `lib/revise.ts` and the Study screen's top line
+ * in `lib/softtop.ts`. None can check first, because a record this build wrote
+ * holds only whole reviews. `state/shape.ts` read it as `saved.reviews ?? {}`,
+ * and `??` catches null for the record and says nothing about what is in it.
+ *
+ * Measured with a single `null` under one card's key: `Cannot read properties
+ * of null (reading 'seen')`, uncaught, and the app blank from Study onward.
+ */
+describe('reading a saved review history', () => {
+  const whole = { right: 3, wrong: 1, streak: 2, ease: 2.6, interval: 4, seen: 100, due: 200 };
+
+  it('keeps a whole record exactly as it was saved', () => {
+    expect(readReviews({ 'econ::c1': whole })).toEqual({ 'econ::c1': whole });
+  });
+
+  it('drops a value with no history in it', () => {
+    expect(readReviews({ a: null, b: 'seen', c: 7, d: whole })).toEqual({ d: whole });
+  });
+
+  it('survives the shape that took the app down', () => {
+    const back = readReviews({ 'econ::c1': null, 'econ::c2': whole });
+    expect(() => Object.values(back).filter((r) => r.seen > 0)).not.toThrow();
+    expect(Object.values(back)).toHaveLength(1);
+  });
+
+  it('keeps the rest of a record with one damaged field', () => {
+    const [r] = Object.values(readReviews({ 'econ::c1': { ...whole, seen: 'today' } }));
+    expect(r.seen).toBe(0);
+    expect(r.right).toBe(3);
+    expect(r.due).toBe(200);
+  });
+
+  it('gives back a real ease rather than nought', () => {
+    // An ease of nought makes every interval nought, and the card never leaves
+    // the front of the queue.
+    const [r] = Object.values(readReviews({ 'econ::c1': { ...whole, ease: undefined } }));
+    expect(r.ease).toBe(2.5);
+  });
+
+  it('takes anything that is not a record as nothing', () => {
+    expect(readReviews(null)).toEqual({});
+    expect(readReviews('none')).toEqual({});
+    expect(readReviews([whole])).toEqual({});
   });
 });

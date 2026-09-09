@@ -62,7 +62,7 @@ import { readDrop } from '../lib/drop';
 import { DEFAULT_BUDGET } from '../lib/clash';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
-import { type Reviews } from '../lib/review';
+import { readReviews, type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
 import type { Spent } from '../lib/pace';
@@ -1034,7 +1034,7 @@ export function loadPersisted(): Persisted {
       term: saved.term ?? LEGACY_TERM,
     waysOpen: saved.waysOpen ?? true,
       keyOpen: saved.keyOpen ?? false,
-      reviews: saved.reviews ?? {},
+      reviews: readReviews(saved.reviews),
       grades: saved.grades ?? {},
       gradeSystems: readOverrides(saved.gradeSystems),
       mySchools: Array.isArray(saved.mySchools)

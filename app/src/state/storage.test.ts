@@ -145,6 +145,16 @@ describe('opening the app on a row that is missing a field', () => {
     expect(state.spent[0]).toMatchObject({ courseId: 'econ', kind: 'paper', minutes: 90 });
   });
 
+  it('drops a review with no history in it, rather than iterating a null', () => {
+    // Not a list: `reviews` is a record, and `?? {}` guards the record and not
+    // what is in it. Three places take `Object.values` and read a number off
+    // each; a single null took the app down from Study onward.
+    const raw = JSON.stringify({ reviews: { 'econ::c1': null, 'econ::c2': { right: 1, wrong: 0, streak: 1, ease: 2.5, interval: 1, seen: 5, due: 9 } } });
+    const { reviews } = withStorage(raw, () => loadPersisted());
+    expect(Object.keys(reviews)).toEqual(['econ::c2']);
+    expect(() => Object.values(reviews).filter((r) => r.seen > 0)).not.toThrow();
+  });
+
   it('gives a task a date that is a string or nothing', () => {
     // `if (t.date)` answers "is there a date", not "is it one": a number is
     // truthy and `isoToDate` splits it.

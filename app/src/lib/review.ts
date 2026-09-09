@@ -41,6 +41,51 @@ export interface CardReview {
 
 export type Reviews = Record<string, CardReview>;
 
+/**
+ * The saved review history, read back before anything iterates it.
+ *
+ * Three places take `Object.values(reviews)` and read a number off each —
+ * `totals` below, `seenSince` in `lib/revise.ts` and the Study screen's own
+ * top line in `lib/softtop.ts`. None of them can check first, because a record
+ * this build wrote holds only whole reviews. `state/shape.ts` read it as
+ * `saved.reviews ?? {}`, and `??` catches null and undefined for the record
+ * itself and says nothing about what is in it.
+ *
+ * Measured with a single `null` under one card's key: `Cannot read properties
+ * of null (reading 'seen')` from `softtop.ts`, uncaught, and the app blank
+ * from Study onward.
+ *
+ * This is also the one record worth being careful with. It is a term of spaced
+ * repetition — the thing the app cannot rebuild and the student cannot retype
+ * — and it syncs, so a half-written copy is a real shape rather than a
+ * hypothetical one. A value that is not an object is dropped, because there is
+ * no history in it to keep; one that is has every number read back as a
+ * number, so a card with a damaged field keeps the rest of its record.
+ */
+export function readReviews(raw: unknown): Reviews {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const out: Reviews = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (!value || typeof value !== 'object') continue;
+    const r = value as Partial<CardReview>;
+    const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+    out[key] = {
+      ...r,
+      right: n(r.right),
+      wrong: n(r.wrong),
+      streak: n(r.streak),
+      // The two SM-2 constants have real defaults rather than zero: an ease of
+      // nought would make every interval nought and the card would never leave
+      // the front of the queue.
+      ease: typeof r.ease === 'number' && Number.isFinite(r.ease) ? r.ease : START_EASE,
+      interval: n(r.interval),
+      seen: n(r.seen),
+      due: n(r.due),
+    } as CardReview;
+  }
+  return out;
+}
+
 const DAY = 86_400_000;
 const MIN_EASE = 1.3;
 const START_EASE = 2.5;
