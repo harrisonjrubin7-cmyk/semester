@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { matchCourse, parseIcs } from './ics';
+import { readFileSync } from 'node:fs';
+import { matchCourse, notCalendar, parseIcs } from './ics';
 import type { Course } from './types';
 
 const course = (id: string, code: string): Course => ({
@@ -286,5 +287,42 @@ describe('a DTSTART that is shaped right and is not a moment', () => {
     expect(one('DTSTART:20260910T140000Z')).toHaveLength(1);
     expect(one('DTSTART:20260101T000000Z')).toHaveLength(1);
     expect(one('DTSTART:20261231T235959Z')).toHaveLength(1);
+  });
+});
+
+describe('whether a body is a calendar at all', () => {
+  const shell = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+
+  it('says nothing about a real calendar, however small', () => {
+    expect(notCalendar('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n')).toBeNull();
+    // An empty one is still a calendar. Counting its events is the caller's job
+    // and "there is nothing in it" is a different sentence from "this is not one".
+    expect(notCalendar('begin:vcalendar\nend:vcalendar')).toBeNull();
+  });
+
+  it('knows the app\u2019s own page, which is what a built app fetches', () => {
+    // `/feed` is a dev-server middleware. In a built app the request reaches
+    // the static host, which answers an unknown path with index.html — 200,
+    // and `res.ok`. Measured: every subscription in the shipped build failed
+    // as "It may be the wrong link", with a correct link.
+    const said = notCalendar(shell);
+    expect(said).toMatch(/never reached/i);
+    expect(said).toMatch(/add the file/i);
+  });
+
+  it('calls any other page what it is, rather than guessing at the link', () => {
+    const said = notCalendar('<!doctype html><html><title>Brightspace Login</title></html>');
+    expect(said).toMatch(/not a calendar/i);
+    expect(said).not.toMatch(/never reached/i);
+  });
+
+  it('does not take a mention of the format for the format', () => {
+    // A page that talks about calendars is still a page.
+    expect(notCalendar('The feed begins with BEGIN:VCALENDAR')).not.toBeNull();
+  });
+
+  it('reads a calendar written on Windows, BOM and all', () => {
+    expect(notCalendar('\uFEFFBEGIN:VCALENDAR\r\nEND:VCALENDAR')).toBeNull();
+    expect(notCalendar('\n\nBEGIN:VCALENDAR\r\nEND:VCALENDAR')).toBeNull();
   });
 });

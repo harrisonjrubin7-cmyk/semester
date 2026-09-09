@@ -5,7 +5,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { configured, modelLabel, routeLabel } from '../lib/claude';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, SectionLabel } from '../components/ui';
-import { parseIcs } from '../lib/ics';
+import { notCalendar, parseIcs } from '../lib/ics';
 import {
   PROVIDERS,
   addEvent,
@@ -88,9 +88,16 @@ export function Connect() {
   const out = outbound.includes(sendTo) ? sendTo : outbound[0];
 
   const addIcsText = (text: string, name: string, from: string, kind: FeedSource['kind']) => {
+    // Whether this is a calendar at all, before asking what is in it. The
+    // sentence, and what each one is for, is in `lib/ics.ts`.
+    const wrong = notCalendar(text);
+    if (wrong) {
+      setNote(wrong);
+      return;
+    }
     const { events, name: calName } = parseIcs(catalog.courses, text);
     if (events.length === 0) {
-      setNote('No events in that calendar. It may be the wrong link — the feed has to be the .ics one.');
+      setNote('No events in that calendar. It reads as one, and there is nothing in it.');
       return;
     }
     dispatch({
