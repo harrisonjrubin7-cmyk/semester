@@ -1068,9 +1068,41 @@ a:hover {
     color: #111318 !important;
   }
 
-  /* Anything you press is noise on paper. The exception is a link, which is
-     printed with its address after it further down. */
-  button,
+  /*
+   * Anything you press is noise on paper — except a row, which is content.
+   *
+   * `button` alone took out 172 of them. `.tappable` is documented three
+   * hundred lines down as "rows and cards the prototype made clickable", and
+   * in this app that is how a deadline, a task, an appointment and a campus
+   * listing are all drawn: the whole row is the tap target, so the row is a
+   * `<button>`, so the row was not on the paper.
+   *
+   * Measured on The week ahead, which has a button that says Print the week:
+   * "Reflection #2", "Quiz #2", "Midterm" and "CORE 2500" were all on the
+   * screen and none of them on the page. The printed week had its headings
+   * and its empty days and not one deadline. On the calendar's week the same
+   * rule took the hour and the place off a campus listing and left the title.
+   *
+   * Excluded from the rule rather than given a `display` of their own: these
+   * rows set `display: flex` inline, and a `display: block !important` here
+   * would beat it and take the row apart to fix the row.
+   *
+   * `aria-pressed` is the other half of the rule and the reason it is a
+   * selector rather than a class on each one: in this codebase that attribute
+   * means a two-state control every time — thirty-five of them, the exam's
+   * format picker, the deck's kind, the essay's use, six chips saying 1h to
+   * 8h — and never a row of content. Marking each by hand would be thirty-five
+   * edits that drift; the attribute cannot.
+   *
+   * The three that are controls and carry no `aria-pressed` say `no-print`
+   * where they are written: the colour key's own toggle, "Collapse all", and
+   * the stepper beside "a day is heavy past N hours".
+   *
+   * The other exception is a link, which is printed with its address after it
+   * further down.
+   */
+  button:not(.tappable),
+  button[aria-pressed],
   input[type='file'],
   select,
   .chiprow,
