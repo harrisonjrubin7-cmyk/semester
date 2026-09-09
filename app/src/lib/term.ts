@@ -110,6 +110,49 @@ export function sortTerms(ids: string[]): Term[] {
 }
 
 /**
+ * The months a term's teaching runs through: its own, and the next season's
+ * first one.
+ *
+ * A syllabus gives a recurring pattern — "MWF 9:05" — and no term dates, so
+ * a course's classes had no end and were drawn on every Monday, Wednesday and
+ * Friday there has ever been. Opening the app in February 2027 with a Fall
+ * 2026 course in it said "5 minutes until ECON 1020" and offered to walk you
+ * there, which is the app being confidently wrong about the one thing it puts
+ * at the top of the screen. It matters more once somebody has two terms in
+ * the app at once, which is what `lib/term.ts` exists for: last autumn's four
+ * courses would sit on the rail beside this spring's, every week, forever.
+ *
+ * The rule is the seasons themselves, and they overlap by a month on purpose:
+ * a term runs from the first day of its own start month to the last day of
+ * the month the *next* season begins in. Fall is August through December —
+ * December being both Fall's finals and Winter's start — spring is January
+ * through May, summer May through August, winter December through January.
+ * No magic number, and nothing to keep in step with a season list that might
+ * gain a term.
+ *
+ * Deliberately generous rather than exact. The alternative is to guess a
+ * first and last day of teaching from nothing, and a window that is a
+ * fortnight wide at each end costs nothing — nobody is misled by a rail that
+ * works in the week before term — where a window a fortnight short would hide
+ * a class somebody has to be at. `isPast` below is the tighter rule and says
+ * in its own comment why it is not the one to use here.
+ *
+ * Widened further by the course's own dated obligations wherever it is used;
+ * see `teachingSpan` in `data/catalog.ts`. A syllabus whose last exam falls
+ * outside this window is the syllabus, and it wins.
+ */
+export function termSpan(term: Term): { from: number; to: number } {
+  const next = SEASONS.find((s) => s.startMonth > term.startMonth) ?? SEASONS[0];
+  // A season with no later season in the list wraps to the next year — which
+  // is Winter, running December into January.
+  const wraps = next.startMonth <= term.startMonth;
+  const from = new Date(term.year, term.startMonth, 1);
+  // Day 0 of the month after the last one is the last day of the last one.
+  const to = new Date(term.year + (wraps ? 1 : 0), next.startMonth + 1, 0, 23, 59, 59, 999);
+  return { from: from.getTime(), to: to.getTime() };
+}
+
+/**
  * Whether a term has finished, given today.
  *
  * A term is over once the term *after* it has begun, which is a rule that

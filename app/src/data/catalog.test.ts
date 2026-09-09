@@ -142,3 +142,88 @@ describe('the weakest unit of a guide with no units', () => {
     expect(weakestUnit(guide)?.index).toBe(0);
   });
 });
+
+/**
+ * A term stops teaching, which the weekly pattern had no way to know.
+ *
+ * The syllabi give days and times and no term dates, so a Fall course was
+ * drawn on every Monday, Wednesday and Friday there has ever been. Walked in
+ * a browser: on 10 February 2027, with only the four Fall 2026 courses
+ * loaded, Today said "5 minutes until ECON 1020", the next-class card counted
+ * down to it, and the map offered to walk you there.
+ *
+ * It is worse than a stale card once somebody has two terms in the app, which
+ * is the thing `lib/term.ts` exists to allow: last autumn's four courses
+ * would sit on the rail beside this spring's, every week, for good.
+ */
+describe('a term stops teaching', () => {
+  // MWF 9:05, with the one deadline the helper gives, in September.
+  const fall = (): CourseModule => {
+    const m = mod({ term: '2026FA', month: 8, day: 4 });
+    m.schedule = [{ days: [1, 3, 5], at: 545, time: '9:05a', title: 'Lecture', meta: '' }];
+    return m;
+  };
+  const on = (m: CourseModule, d: Date) => blocksFor(buildCatalog([m]), d);
+
+  it('draws the pattern inside the term', () => {
+    // Wednesday 30 September 2026.
+    expect(on(fall(), new Date(2026, 8, 30))).toHaveLength(1);
+  });
+
+  it('draws it in the first weeks, before the first deadline', () => {
+    // Monday 31 August 2026 — term has started, nothing is due yet. A window
+    // that began at the first deadline would blank the rail for the week
+    // that matters most.
+    expect(on(fall(), new Date(2026, 7, 31))).toHaveLength(1);
+  });
+
+  it('draws it through finals, in the month the next season starts', () => {
+    // Wednesday 16 December 2026. `isPast` calls Fall over on 1 December,
+    // which is why it is not the rule this uses.
+    expect(on(fall(), new Date(2026, 11, 16))).toHaveLength(1);
+  });
+
+  it('stops once the term is over', () => {
+    // Wednesday 10 February 2027 — the day the browser walk found.
+    expect(on(fall(), new Date(2027, 1, 10))).toEqual([]);
+    // And a year on, on the same weekday.
+    expect(on(fall(), new Date(2027, 8, 29))).toEqual([]);
+  });
+
+  it('does not draw it before the term begins', () => {
+    // Wednesday 1 July 2026.
+    expect(on(fall(), new Date(2026, 6, 1))).toEqual([]);
+  });
+
+  it('follows a syllabus whose last date is outside the season', () => {
+    // A Fall course with an exam on 6 January. The season window ends on 31
+    // December; the syllabus wins, and the classes on the day of the exam
+    // are still drawn.
+    const m = fall();
+    m.items.push({ ...m.items[0], id: 'i2', title: 'Deferred final', month: 0, day: 6 });
+    // Wednesday 6 January 2027.
+    expect(on(m, new Date(2027, 0, 6))).toHaveLength(1);
+    // And it still stops after that.
+    expect(on(m, new Date(2027, 1, 10))).toEqual([]);
+  });
+
+  it('keeps two terms apart', () => {
+    const spring = mod({ id: 'c2', code: 'TEST 200', term: '2027SP', month: 2, day: 3 });
+    spring.schedule = [{ days: [1, 3, 5], at: 600, time: '10:00a', title: 'Seminar', meta: '' }];
+    const cat = buildCatalog([fall(), spring]);
+    // Wednesday 10 February 2027: this spring's class, and not last autumn's.
+    expect(blocksFor(cat, new Date(2027, 1, 10)).map((b) => b.title)).toEqual(['Seminar']);
+    // Wednesday 30 September 2026: last autumn's, and not this spring's.
+    expect(blocksFor(cat, new Date(2026, 8, 30)).map((b) => b.title)).toEqual(['Lecture']);
+  });
+
+  it('still draws a dated exception, which is a day somebody wrote down', () => {
+    // An extra session needs no window to justify it — see `teachingSpan`.
+    const m = fall();
+    m.exceptions = [
+      { month: 8, day: 30, extra: { time: '4:00p', at: 960, title: 'Review session', meta: '' } },
+    ];
+    const titles = on(m, new Date(2026, 8, 30)).map((b) => b.title);
+    expect(titles).toContain('Review session');
+  });
+});

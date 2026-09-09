@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LEGACY_TERM, SEASONS, isPast, readTerm, sortTerms, termId, termNow, yearFor } from './term';
+import { LEGACY_TERM, SEASONS, isPast, readTerm, sortTerms, termId, termNow, termSpan, yearFor } from './term';
 
 describe('reading a term id', () => {
   it('takes the six characters a course stores', () => {
@@ -95,5 +95,56 @@ describe('the id itself', () => {
 
   it('sorts correctly as a plain string within a year', () => {
     expect(['2026FA', '2026SP', '2026SU'].sort()).toEqual(['2026FA', '2026SP', '2026SU']);
+  });
+});
+
+/**
+ * The window a term's weekly pattern is drawn in.
+ *
+ * A syllabus gives "MWF 9:05" and no term dates, so without this a Fall
+ * course met on every Monday there has ever been — and the app told somebody
+ * in February that their September class started in five minutes.
+ */
+describe('how long a term teaches for', () => {
+  const span = (id: string) => {
+    const { from, to } = termSpan(readTerm(id));
+    return [new Date(from), new Date(to)] as const;
+  };
+  const ymd = (d: Date) => [d.getFullYear(), d.getMonth(), d.getDate()];
+
+  it('runs a season from its own month into the next season\u2019s first', () => {
+    // The seasons overlap by a month on purpose: December is both Fall's
+    // finals and Winter's start, and May is both Spring's and Summer's.
+    const [fallFrom, fallTo] = span('2026FA');
+    expect(ymd(fallFrom)).toEqual([2026, 7, 1]);   // 1 August
+    expect(ymd(fallTo)).toEqual([2026, 11, 31]);   // 31 December
+
+    const [springFrom, springTo] = span('2027SP');
+    expect(ymd(springFrom)).toEqual([2027, 0, 1]); // 1 January
+    expect(ymd(springTo)).toEqual([2027, 4, 31]);  // 31 May
+
+    const [summerFrom, summerTo] = span('2027SU');
+    expect(ymd(summerFrom)).toEqual([2027, 4, 1]); // 1 May
+    expect(ymd(summerTo)).toEqual([2027, 7, 31]);  // 31 August
+  });
+
+  it('carries a winter session into the next year, like yearFor does', () => {
+    const [from, to] = span('2026WI');
+    expect(ymd(from)).toEqual([2026, 11, 1]);      // 1 December 2026
+    expect(ymd(to)).toEqual([2027, 0, 31]);        // 31 January 2027
+  });
+
+  it('ends on the last moment of its last day, not the first', () => {
+    // A class held on the morning of the last day is still a class.
+    const [, to] = span('2026FA');
+    expect(to.getHours()).toBe(23);
+    expect(to.getMinutes()).toBe(59);
+  });
+
+  it('does not reach the term after it', () => {
+    const fall = termSpan(readTerm('2026FA'));
+    const spring = termSpan(readTerm('2027SP'));
+    expect(new Date(2027, 1, 10).getTime()).toBeGreaterThan(fall.to);
+    expect(new Date(2027, 1, 10).getTime()).toBeGreaterThan(spring.from);
   });
 });

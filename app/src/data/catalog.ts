@@ -13,7 +13,7 @@ import type {
   Unit,
 } from '../lib/types';
 import { sameDay } from '../lib/date';
-import { readTerm, yearFor } from '../lib/term';
+import { readTerm, termSpan, yearFor } from '../lib/term';
 
 // ── The catalog ───────────────────────────────────────────────────────────
 //
@@ -40,6 +40,14 @@ export interface Catalog {
   lessons: Record<CourseId, Record<number, Lesson>>;
   planMinutes: Record<CourseId, string>;
   frameLabels: Record<CourseId, string>;
+  /**
+   * When each course's recurring schedule is drawn between. See `teachingSpan`.
+   *
+   * Computed here rather than in `blocksFor`, which is called once per day by
+   * the loops that fill a week or a fortnight — this is a fact about a course
+   * and not about a date.
+   */
+  teaches: Record<CourseId, { from: number; to: number }>;
   /** Every dated obligation across every course. */
   items: Item[];
   /** The filter chips: the first word of each course code. */
@@ -66,6 +74,7 @@ export function buildCatalog(modules: CourseModule[]): Catalog {
     lessons: index(modules, (m) => m.lessons ?? {}),
     planMinutes: index(modules, (m) => m.planMinutes),
     frameLabels: index(modules, (m) => m.frameLabel),
+    teaches: index(modules, teachingSpan),
     // The one place a year is decided. Every screen downstream reads
     // `item.date` and knows nothing about terms, which is the point.
     items: modules.flatMap((m) => {
@@ -86,11 +95,38 @@ export function codeOf(cat: Catalog, id: CourseId): string {
 }
 
 /**
+ * When a course's weekly pattern is drawn between.
+ *
+ * The season's own window (`termSpan`), widened to hold every dated
+ * obligation the syllabus gave — because the syllabus is the better evidence
+ * wherever the two disagree, and a course whose final sits outside the season
+ * is a course still being taught on the day of it.
+ *
+ * Only the *recurring* pattern is bounded by this. A dated exception — a
+ * make-up session, a review class — is a specific day somebody wrote down,
+ * and a written-down day needs no window to justify it.
+ */
+export function teachingSpan(mod: CourseModule): { from: number; to: number } {
+  const term = readTerm(mod.course.term);
+  const span = termSpan(term);
+
+  let last = span.to;
+  for (const i of mod.items) {
+    // End of that day, so a deadline on the last day of teaching does not
+    // stop the classes held that morning being drawn.
+    const at = new Date(i.year ?? yearFor(term, i.month), i.month, i.day, 23, 59, 59, 999).getTime();
+    if (at > last) last = at;
+  }
+  return { from: span.from, to: last };
+}
+
+/**
  * The rail for one day: every course's recurring classes, with that date's
  * exceptions applied, in time order.
  */
 export function blocksFor(cat: Catalog, date: Date): Block[] {
   const dow = date.getDay();
+  const at = date.getTime();
   const blocks: Block[] = [];
 
   for (const mod of cat.modules) {
@@ -99,7 +135,15 @@ export function blocksFor(cat: Catalog, date: Date): Block[] {
       sameDay(new Date(yearFor(term, e.month), e.month, e.day), date),
     );
 
+    // A term that has ended stops teaching. See `teachingSpan` — without this
+    // a Fall course met on every Monday there has ever been, so the app told
+    // somebody in February that their September class started in five
+    // minutes.
+    const span = cat.teaches[mod.course.id] ?? teachingSpan(mod);
+    const teaching = at >= span.from && at <= span.to;
+
     for (const b of mod.schedule) {
+      if (!teaching) continue;
       if (!b.days.includes(dow)) continue;
       // An exception applies to the block it names; an unnamed one applies to
       // real classes only, so cancelling a lecture leaves office hours alone.

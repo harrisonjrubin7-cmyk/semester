@@ -586,12 +586,24 @@ function Feed_rail() {
   const due = datedItems(catalog, now).filter((i) => i.isToday && !state.done[i.id]);
   const rail = railFor(catalog, now, state.appointments, state.commitments, due);
   const minutes = minutesNow(now);
+  /*
+   * A Saturday and a finished term are two different silences, and until
+   * terms had an end the app could not tell them apart — a weekly pattern
+   * with no last day meant there was always a next teaching day, so the
+   * sentence below was always true. `catalog.teaches` says when each course
+   * stops, so a promise the app cannot keep is no longer made.
+   */
+  const finished =
+    catalog.modules.length > 0 &&
+    catalog.modules.every((m) => now.getTime() > (catalog.teaches[m.course.id]?.to ?? Infinity));
   return (
     <Folding name="Feed_rail">
       <SectionLabel>Today’s schedule</SectionLabel>
       {rail.length === 0 ? (
         <div style={{ fontSize: 'var(--type-md)', opacity: 0.5, paddingBottom: 'var(--sp-4)' }}>
-          No classes today. Your schedule picks up again on your next teaching day.
+          {finished
+            ? 'No classes today, or any day: every course in here has finished its term. Add next term’s syllabi and the rail fills again.'
+            : 'No classes today. Your schedule picks up again on your next teaching day.'}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -799,7 +811,25 @@ function FeedPart({
       // further down is that card's, and a section that moved when you took
       // hold of a line in the middle of it would be a surprise.
       const head = el.querySelector<HTMLElement>('.section-label, .kicker');
-      const seen = head ?? (el.firstElementChild as HTMLElement | null);
+      /*
+       * The fallback skips the grip, and that is not tidiness — it is the
+       * difference between this settling and never settling.
+       *
+       * A section that draws something but heads it with neither a
+       * `SectionLabel` nor a kicker falls back to its first child. Once `at`
+       * is set the grip is rendered, and the grip is that first child — so
+       * the next run of this effect measured the grip, at a top of
+       * `at - 21`, set `at` to that, which moved the grip another 21px up,
+       * and so on until React gave up with "Maximum update depth exceeded"
+       * and the error screen took the whole of Today.
+       *
+       * It needs a headingless section that still draws, which is rare
+       * enough that it took walking the app on a date after the term had
+       * ended to produce one. The measurement is of the section's own
+       * content; the grip is this component's, and was never meant to be in
+       * it.
+       */
+      const seen = head ?? el.querySelector<HTMLElement>(':scope > *:not(.grip)');
       if (!seen || el.getBoundingClientRect().height === 0) {
         setAt(null);
         return;
