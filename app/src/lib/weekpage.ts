@@ -85,11 +85,6 @@ export function weekLine(days: DayDue[], classes: number): string {
   return `${parts.join(' and ')} this week.`;
 }
 
-/** The days with something due, for a sheet that would rather not print blanks. */
-export function busyDays(days: DayDue[]): DayDue[] {
-  return days.filter((d) => d.items.length > 0);
-}
-
 export interface Lane {
   /** Which side-by-side slot this block sits in, from zero. */
   lane: number;

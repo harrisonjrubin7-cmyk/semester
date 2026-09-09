@@ -113,10 +113,6 @@ export function daysBetween(from: Date, to: Date): number {
   return Math.round(ms / 86_400_000);
 }
 
-export function monthName(month: number): string {
-  return MONTHS[month];
-}
-
 /** "Fri Sep 4" */
 export function longLabel(d: Date): string {
   return `${DOW[d.getDay()]} ${MONTHS[d.getMonth()]} ${d.getDate()}`;

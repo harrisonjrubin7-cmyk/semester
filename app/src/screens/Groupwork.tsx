@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { EmptyState, SectionLabel } from '../components/ui';
 import {
   addPart,
   dropPart,
@@ -373,9 +373,11 @@ export function Groupwork() {
 
           <SectionLabel>The parts</SectionLabel>
           {parts.length === 0 ? (
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
-              Nothing on the list yet. Write down the sections and the group can divide them.
-            </div>
+            <EmptyState
+              inline
+              title="Nothing on the list yet"
+              body="Write down the sections and the group can divide them."
+            />
           ) : (
             parts.map(asPart).map((p) => {
               const owner = members.find((m) => m.user_id === p.owner);

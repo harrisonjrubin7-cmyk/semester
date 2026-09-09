@@ -110,38 +110,6 @@ export function Stat({
   );
 }
 
-/**
- * The pill.
- *
- * `on` fills with `--app-accent-fill`, which resolves to the accent's darkest
- * stop on a light ground — white on the lighter stop is about 2.4:1 and
- * fails, on the darker one about 6:1 and passes. That decision is made once
- * upstream in `tokensFor` rather than here.
- */
-export function Pill({
-  children,
-  on = false,
-  disabled = false,
-  onClick,
-}: {
-  children: ReactNode;
-  on?: boolean;
-  disabled?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`bare pill-soft${on ? ' is-on' : ''}`}
-      aria-pressed={onClick ? on : undefined}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-}
-
 /** A numbered step. Onboarding, how-to, and the guided fixes. */
 export function Step({
   n,

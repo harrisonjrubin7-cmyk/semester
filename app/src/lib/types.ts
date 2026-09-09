@@ -474,7 +474,6 @@ export interface FeedEvent {
 export type Screen =
   | 'data'
   | 'help'
-  | 'everything'
   | 'onboarding'
   | 'home'
   | 'courses'
@@ -543,7 +542,6 @@ export type Screen =
   | 'setCourses'
   | 'setGrading'
   | 'setWorkload'
-  | 'setStorage'
   | 'setAbout'
   | 'setAssistant';
 

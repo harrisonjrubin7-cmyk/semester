@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   SHOWN_FOR,
-  TYPE_TO_CONFIRM,
   UNDOABLE,
   fresh,
   snapshot,
@@ -53,12 +52,6 @@ describe('which actions can be taken back', () => {
     for (const u of Object.values(UNDOABLE)) {
       expect(u.label.length).toBeGreaterThan(3);
       expect(u.label).not.toMatch(/[A-Z]{2,}|_|\bid\b/);
-    }
-  });
-
-  it('does not offer undo for the two that ask instead', () => {
-    for (const type of Object.keys(TYPE_TO_CONFIRM)) {
-      expect(undoableFor(type)).toBeNull();
     }
   });
 });

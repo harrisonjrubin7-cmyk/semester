@@ -81,28 +81,6 @@ export function check(quote: string, citations: Citation[]): Checked {
   return { confirmed: false };
 }
 
-/** "Page 4" — or nothing, for a document with no pages. */
-export function pageLabel(c: Checked): string {
-  return c.confirmed && c.page ? `Page ${c.page}` : '';
-}
-
-/**
- * What to say under a quote.
- *
- * A confirmed quote says where it is, because a page number is the thing that
- * makes it checkable. An unconfirmed one says what that means without
- * implying the date is wrong: the model may have summarised a sentence
- * accurately, and the app cannot tell.
- */
-export function quoteNote(c: Checked): string {
-  if (c.confirmed) {
-    return c.page
-      ? `Checked against the file — page ${c.page}.`
-      : 'Checked against the file.';
-  }
-  return 'Not found word-for-word in the file. Worth opening the syllabus before you rely on it.';
-}
-
 /**
  * How a whole import came out.
  *

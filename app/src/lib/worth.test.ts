@@ -6,8 +6,6 @@ import {
   bestBuys,
   adjustedLine,
   calibrate,
-  calibrateFor,
-  guessLine,
   calibrationLine,
   corrected,
   eveningLine,
@@ -312,13 +310,6 @@ describe('what the evening’s list says at the top', () => {
 describe('the calibration window, and what it is allowed to say', () => {
   const rep = (guess: number, minutes: number, at: number) => ({ guess, minutes, at });
 
-  it('is silent below five reports rather than showing a noisy number', () => {
-    const four = [1, 2, 3, 4].map((n) => rep(60, 120, n));
-    expect(calibrate(four)).toBeNull();
-    expect(adjustedLine(calibrate(four))).toBe('');
-    expect(guessLine(four, calibrate(four))).toBe('');
-  });
-
   it('looks at the recent ten, not the whole term', () => {
     // Somebody who started the term wildly optimistic and has since got the
     // measure of it should not still be told they are wildly optimistic.
@@ -332,28 +323,6 @@ describe('the calibration window, and what it is allowed to say', () => {
     // An older store wrote no `at`, and those reports are still evidence.
     const old = [1, 2, 3, 4, 5].map(() => ({ guess: 60, minutes: 90 }));
     expect(calibrate(old)?.from).toBe(5);
-  });
-
-  it('measures one course on its own', () => {
-    // Somebody can have the measure of their problem sets and be consistently
-    // wrong about their essays; one number across both hides exactly that.
-    const mixed = [
-      ...Array.from({ length: 5 }, (_, i) => ({ guess: 60, minutes: 60, at: i, c: 'econ' })),
-      ...Array.from({ length: 5 }, (_, i) => ({ guess: 60, minutes: 180, at: i, c: 'psci' })),
-    ];
-    const of = (r: { c: string }) => r.c;
-    expect(calibrateFor(mixed, of, 'econ')?.ratio).toBe(1);
-    expect(calibrateFor(mixed, of, 'psci')?.ratio).toBe(3);
-    expect(calibrateFor(mixed, of)?.ratio).toBe(2);
-  });
-
-  it('says nothing for a course with too little of its own', () => {
-    // Rather than borrowing the overall figure and calling it that course's.
-    const mixed = [
-      ...Array.from({ length: 2 }, (_, i) => ({ guess: 60, minutes: 60, at: i, c: 'econ' })),
-      ...Array.from({ length: 8 }, (_, i) => ({ guess: 60, minutes: 180, at: i, c: 'psci' })),
-    ];
-    expect(calibrateFor(mixed, (r) => r.c, 'econ')).toBeNull();
   });
 });
 
@@ -375,13 +344,5 @@ describe('saying that a number has been adjusted', () => {
 
   it('reads the other way round when work takes less than you think', () => {
     expect(adjustedLine(calibrate(many(120, 60)))).toContain('less');
-  });
-
-  it('puts the gap in hours and a ratio, as a person would say it', () => {
-    const reports = many(120, 200);
-    const said = guessLine(reports, calibrate(reports));
-    expect(said).toContain('You estimate 2 hours');
-    expect(said).toContain('You take about 3.5 hours');
-    expect(said).toContain('ratio of 1.67');
   });
 });

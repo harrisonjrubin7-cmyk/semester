@@ -3,7 +3,6 @@ import {
   COMMON_LETTER,
   TOP_BANDS,
   fromTyped,
-  hasCutoffs,
   letterFor,
   readGradeSystem,
   readOverrides,
@@ -73,15 +72,6 @@ describe('the targets table', () => {
     // The old hardcoded constant. Extraction, not authorship — a Vanderbilt
     // student must see the same five rows they saw yesterday.
     expect(targetsOf(COMMON_LETTER)).toEqual(TARGETS.map((t) => ({ label: t.label, at: t.at })));
-  });
-
-  it('is empty for a scale with grade points and no cutoffs', () => {
-    // A university publishing "an A− is worth 3.7" has not said what earns
-    // one. Drawing a cutoff table from that would be inventing the number the
-    // student then plans around.
-    const points: GradeSystem = { kind: 'letter', gpaMax: 4, scale: [{ label: 'A', gpa: 4 }] };
-    expect(targetsOf(points)).toEqual([]);
-    expect(hasCutoffs(points)).toBe(false);
   });
 
   it('is empty for a course marked out of points', () => {

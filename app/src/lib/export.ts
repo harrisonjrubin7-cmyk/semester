@@ -328,7 +328,6 @@ export function stampedName(stem: string, at = new Date()): string {
   return `${safeName(stem)}-${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
 }
 
-
 // ── Coming back in ───────────────────────────────────────────────────────
 
 /**
@@ -414,16 +413,6 @@ export function readBackup(text: string): Restore {
     throw new Error('That backup has nothing in it this version can read.');
   }
   return { parts, data };
-}
-
-/** When the backup was made, for the confirmation. */
-export function backupDate(text: string): string {
-  try {
-    const when = (JSON.parse(text) as { exported?: string }).exported;
-    return when ? new Date(when).toLocaleString() : '';
-  } catch {
-    return '';
-  }
 }
 
 // ── The account as data ───────────────────────────────────────────────────

@@ -10,7 +10,7 @@ import { cardKey, dueCount, dueFirst } from '../lib/review';
 import { interleave, mixLine, worthMixing } from '../lib/interleave';
 import { useKeepAwake } from '../lib/awake';
 import { unitName } from '../lib/unit';
-import { ActionButton, Toggle } from '../components/ui';
+import { ActionButton, EmptyState, Toggle } from '../components/ui';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
@@ -87,9 +87,11 @@ export function Drill() {
 
   if (pool.length === 0) {
     return (
-      <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', opacity: 0.6 }}>
-        Nothing to drill in this unit yet.
-      </div>
+      <EmptyState
+        title="Nothing to drill yet"
+        body="This unit has no cards in it. Adding a reading, a lecture or a set of slides to the course puts them here."
+        action={{ label: 'Add a reading', onClick: () => dispatch({ type: 'go', screen: 'update' }) }}
+      />
     );
   }
 

@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
-import { ActionButton, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { DAYS } from '../lib/edit';
 import { spanOf } from '../lib/select';
@@ -152,10 +152,12 @@ export function Activities() {
                   which is not the same as a filter that matched nothing —
                   `<Page>` says that itself. */}
               {mine.length === 0 && (
-                <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '14px 0', lineHeight: 'var(--leading-relaxed)' }}>
-                  Nothing yet. Add a club, a job, a team or a lab and it appears on your day and week
-                  alongside your classes.
-                </div>
+                <EmptyState
+                  inline
+                  title="Nothing yet"
+                  body="Add a club, a job, a team or a lab and it appears on your day and week alongside your classes."
+                  action={{ label: 'Add one', onClick: () => setTab('add') }}
+                />
               )}
               {mine.map((c) => (
                 <Row key={c.id} commitment={c} />

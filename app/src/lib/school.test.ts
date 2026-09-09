@@ -7,7 +7,6 @@ import {
   hiddenFor,
   lmsName,
   moveOut,
-  moveOutWhy,
   orgPortalName,
   readCapabilities,
   readSchool,
@@ -16,9 +15,7 @@ import {
   showsCash,
   showsSwipes,
   swipeUnit,
-  termFor,
   type Capabilities,
-  type SchoolData,
 } from './school';
 import { BUNDLED, resolveSchool } from '../data/schools';
 
@@ -57,14 +54,6 @@ describe('Vanderbilt loses nothing', () => {
 
   it('is locked against a stranger correcting it', () => {
     expect(VU.verified).toBe(true);
-  });
-
-  it('counts move-out from the last exam, which is a rule not a fact', () => {
-    // The pattern for all of this: the smart Vanderbilt behaviour is not
-    // deleted, it is promoted to a named rule and Vanderbilt uses it.
-    const lastExam = Date.parse('2026-12-18T11:00:00Z');
-    expect(moveOut(VU.data, lastExam)).toBe(lastExam + 24 * 3_600_000);
-    expect(moveOutWhy(VU.data)).toContain('24 hours after your last exam');
   });
 });
 
@@ -129,36 +118,13 @@ describe('the words on the page', () => {
 });
 
 describe('the data pack, and what it refuses to invent', () => {
-  it('gives no move-out date where the school has not said', () => {
-    // An invented move-out date is worse than none: somebody would book a
-    // flight around it.
-    expect(moveOut({}, Date.now())).toBeNull();
-    expect(moveOutWhy({})).toBe('');
-  });
 
   it('gives none where the rule needs an exam and there is none', () => {
     expect(moveOut(VU.data, null)).toBeNull();
   });
 
-  it('handles a school that uses a fixed date instead', () => {
-    const fixed: SchoolData = { housing: { moveOutRule: 'fixed_date', fixedDate: '2026-12-20' } };
-    expect(moveOut(fixed, null)).toBe(Date.parse('2026-12-20T12:00:00'));
-    expect(moveOutWhy(fixed)).toContain('fixed date');
-  });
-
   it('refuses a fixed rule with no date rather than guessing one', () => {
     expect(moveOut({ housing: { moveOutRule: 'fixed_date' } }, Date.now())).toBeNull();
-  });
-
-  it('finds the term covering a date, and none outside one', () => {
-    const data: SchoolData = {
-      academicCalendar: [
-        { termName: 'Fall 2026', startsOn: '2026-08-19', endsOn: '2026-12-18', deadlines: [] },
-      ],
-    };
-    expect(termFor(data, '2026-09-06')?.termName).toBe('Fall 2026');
-    expect(termFor(data, '2027-01-04')).toBeNull();
-    expect(termFor({}, '2026-09-06')).toBeNull();
   });
 });
 

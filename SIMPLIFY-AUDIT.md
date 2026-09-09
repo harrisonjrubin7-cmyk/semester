@@ -30,6 +30,13 @@ not by nine.
 > · **A second chip idiom** had five hand-rolled copies and no component; §4
 >   carries it as S8.
 
+**Status.** S1 and S3 are done on this branch, and S4 is half done — the half
+left is a design decision rather than a mechanical one, recorded in its own
+row. S2 was done twice over: once here and once by the pass above, which
+reached the same survivor from a different start. Where the two touched the
+same file, the other pass's version stands, because it landed first and there
+is no argument between them.
+
 ---
 
 ## 0. What the last five passes removed
@@ -157,9 +164,9 @@ outside `src`; `data/` course content read only by the guide builder stays.
 
 | Idiom | Shared thing that exists | Hand-drawn instances | Files |
 | --- | --- | --- | --- |
-| A caps heading (uppercase + letterSpacing, inline) | `SectionLabel`, `.kicker` | **232** | 79 |
+| A caps label (uppercase + letterSpacing, inline) | `SectionLabel`, `.kicker` | **229**, in **58** distinct style combinations | 79 |
 | A list row with a hairline under it | `ItemRow` in `components/shell/Rows.tsx` | **33** | 12 |
-| "Nothing here yet" | *(none)* | **96** | 71 |
+| "Nothing here yet" | `EmptyState` in `components/ui.tsx` — it exists, and five screens used it | **~40** | 29 |
 | A chip row that scrolls sideways | `Segmented` | 8 | 6 |
 
 ```
@@ -174,9 +181,30 @@ treatment. The row count is down from the first audit's 37 in 14 files; the
 heading count has never been measured before and is the largest single body of
 copy-paste left in the app.
 
-**The empty state is the one worth adding**: 96 hand-written "nothing yet"
-blocks in 71 files (`grep -rniE "nothing (here|yet|to)|no .* yet\b"`), each choosing its own size, opacity and margin, is the
-reason the same absence reads as three different weights on three screens.
+**Two corrections to this row, both of them mine.**
+
+`EmptyState` is not missing. It is in `components/ui.tsx`, it takes an `action`
+— the button that says what would put something there — and five screens were
+already using it. And the count of hand-written empty blocks is about forty in
+29 files, not 96 in 71: the grep behind the larger number was matching
+explanatory prose ("nothing is fetched", "nothing fires while you are typing")
+along with the empty states. **Eleven of the forty are converted**, two of them
+gaining an action they did not have.
+
+**The caps labels are not one idiom and should not be replaced in bulk.**
+229 inline uses, and grouping them by what they actually set — size, tracking,
+opacity, whether they switch to the heading face — gives **58 distinct
+combinations**. The largest group, 51 of them, sets no size at all and is
+mostly buttons: CLEAR, SAVE, ADD ONE. `SectionLabel` is not what those are.
+Nor is it a silent swap for the ones that are headings: the class is 12px at
+0.2em tracking in the accent colour, and most of these are `--type-xs` at 0.1em
+inheriting the text colour, so converting them makes quiet labels louder on
+sixty screens.
+
+That is a decision about which two or three of the 58 are the real ones, taken
+screen by screen with the app in front of you. It is not a find-and-replace,
+and a pass that removes duplication has no business making that call on its
+own. Recorded, with the numbers, for whoever takes it.
 
 ### S5 — three reports, three files of the same shape · **KEEP, recorded**
 
@@ -299,10 +327,10 @@ named above.
 
 | # | Change | Destinations | Kind |
 | --- | --- | --- | --- |
-| S1 | The directory drawn twice — `everything`'s By-area and Not-tried views against Me's Everything tab | −1 | Merge, needs a decision on the survivor |
-| S2 | Settings → Storage becomes a row that opens `data` | 0 | Merge |
-| S3 | 76 exports with no caller — 26 dead outright, 50 read only by their own test | 0 | Cut |
-| S4 | An `EmptyState` component (96 hand-written), then `SectionLabel` for the 68 headings written longhand | 0 | Shared components |
+| S1 | The directory drawn twice — `everything`'s By-area and Not-tried views against Me's Everything tab | −1 | ✅ Merged into Progress, which gains a By-task tab |
+| S2 | Settings → Storage becomes a row that opens `data` | 0 | ✅ Merged |
+| S3 | 76 exports with no caller — 26 dead outright, 50 read only by their own test | 0 | ✅ Cut: 62 gone, 14 kept with reasons |
+| S4 | `EmptyState` where a screen drew its own; the caps labels left alone | 0 | ◐ 11 of ~40 converted; the labels are a design pass |
 | S5 | `brief`/`weekly`/`worked` libraries | 0 | Kept, recorded |
 | S6 | The assistant's two shells | 0 | Kept, `/ask-tab` |
 | S7 | The `help` / `everything` blurb collision | 0 | Reword with S1 |
@@ -333,6 +361,31 @@ styling win is not a trade worth making.
 **50 → 49 destinations**, and the honest headline is again that this app is
 large because it does a lot. The duplication that is left is one directory, one
 storage report, and a long tail of code and markup nothing calls.
+
+---
+
+## 5. What this pass found and did not fix
+
+Two things turned up while cutting S3 that matter more than the rows above.
+
+**"Erase from this device" does not exist.** `lib/privacy.ts` tells the student
+"This device's own copy is separate — signing out leaves it alone, and Erase
+from this device removes it", and `deleteEverything` in `lib/cloud.ts` ends by
+saying the same. No screen in the app offers it. The pieces are all written and
+none is called: `state/persist/db.ts` `wipe`, `lib/snapshots.ts`
+`clearSnapshots`, `lib/threads.ts` `clearAll`, `lib/scrollback.ts` `forgetAll`,
+`ai/live.ts` `resetLive`. They are kept for that reason rather than cut. A
+promise the app makes twice and cannot keep is a bug; building the button is a
+feature, which is why this pass stopped at saying so.
+
+**Two libraries are a second implementation of what a screen does inline.**
+`lib/intake.ts`'s three doors — files, pasted text, a URL — are tested and
+unused, while `screens/Update.tsx` builds its `Intake` objects itself for both
+files and pastes. Same shape for `lib/merge.ts`'s `mergePersisted`, which
+merges whole records while the sync merges per field through `STRATEGY`. In
+both, the library copy is the tested one and the screen's is the one that runs.
+Deleting the library would delete the tests; the fix is the screen calling it,
+which is a refactor with behaviour in it rather than a deletion.
 
 Each merge must carry, as before: the survivor's `keywords` widened with the
 dead screen's, a `state/shape.ts` migration so a saved `screen` that no longer
