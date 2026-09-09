@@ -11,19 +11,9 @@ import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 import { CheckIt } from '../components/CheckIt';
-import { FindPlace } from '../components/FindPlace';
 import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
 import { PrintButton } from '../components/PrintButton';
-import {
-  DEFAULT_RADIUS,
-  far,
-  here,
-  locationSupported,
-  nearest,
-  placeAt,
-  type Fix,
-} from '../lib/place';
 
 /**
  * Everything you added yourself.
@@ -760,12 +750,12 @@ export function Mine() {
   const { state, dispatch, courseCode } = useStore();
 
   /*
-   * One box, five tabs, and it filters whichever one you are looking at.
+   * One box, four tabs, and it filters whichever one you are looking at.
    *
    * Tasks and notes are the two that grow without limit — a term's worth of
-   * either is a scroll. Events, places and files are short by their nature
-   * and get no adapter, so the box on those tabs searches the whole app,
-   * which is what `<Page>` does with a screen that declares none.
+   * either is a scroll. Events and files are short by their nature and get no
+   * adapter, so the box on those tabs searches the whole app, which is what
+   * `<Page>` does with a screen that declares none.
    *
    * The notes adapter searches titles and bodies. That is a local filter and
    * nothing about it leaves the device — worth saying because the assistant
@@ -802,7 +792,6 @@ export function Mine() {
           { id: 'tasks', label: 'Tasks' },
           { id: 'appointments', label: 'Events' },
           { id: 'notes', label: 'Notes' },
-          { id: 'places', label: 'Places' },
           { id: 'files', label: 'Files' },
         ]}
         value={state.mineTab}
@@ -812,172 +801,12 @@ export function Mine() {
       {state.mineTab === 'tasks' && <Tasks rows={shown as PersonalTask[]} />}
       {state.mineTab === 'appointments' && <Appointments />}
       {state.mineTab === 'notes' && <Notes rows={shown as Note[]} />}
-      {state.mineTab === 'places' && <Places />}
       {state.mineTab === 'files' && <Files />}
         </>
       )}
     </Page>
   );
 }
-
-/**
- * Places you named, so a coordinate can mean something.
- *
- * The app never geocodes. There is no free way to turn a position into a
- * building name that does not involve sending your position to somebody else's
- * server, and a study app has no business doing that. You stand somewhere that
- * matters, tap once, and name it — after that the app can say you are at Alumni
- * Hall, and tag a study session with where it happened, entirely from
- * arithmetic on this list.
- */
-function Places() {
-  const { state, dispatch } = useStore();
-  const rowTwelve = useRowStyle(12);
-  const [fix, setFix] = useState<Fix | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [label, setLabel] = useState('');
-
-  const locate = async () => {
-    setBusy(true);
-    setError('');
-    try {
-      setFix(await here());
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const at = fix ? placeAt(fix, state.places) : null;
-  const list = fix ? nearest(fix, state.places) : state.places.map((place) => ({ place, metres: -1 }));
-
-  return (
-    <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-        Name the places you actually go — the lecture hall, the library floor you like, your
-        apartment. Nothing is looked up and nothing is sent anywhere: the app compares where you
-        are to this list, on this device, and that is the whole of it.
-      </div>
-
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
-        disabled={busy || !locationSupported()}
-        onClick={() => void locate()}
-        style={{ height: 44, marginTop: 14, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-      >
-        {busy ? 'Locating…' : locationSupported() ? 'Where am I?' : 'No location on this browser'}
-      </button>
-
-      {fix && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-6)', background: 'var(--app-hero)' }}>
-          <div className="kicker">{at ? 'You are at' : 'Somewhere new'}</div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
-            {at ? at.label : 'Not a place you have named'}
-          </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-2)' }}>
-            Accurate to about {far(fix.accuracy)}.
-          </div>
-
-          {!at && (
-            <>
-              <input
-                className="input"
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                placeholder="Alumni Hall, Central Library, home…"
-                aria-label="Name this place"
-                style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-6)' }}
-              />
-              <button
-                type="button"
-                className="btn btn-primary btn-block"
-                disabled={!label.trim()}
-                onClick={() => {
-                  dispatch({
-                    type: 'addPlace',
-                    place: {
-                      label: label.trim(),
-                      lat: fix.lat,
-                      lon: fix.lon,
-                      radius: DEFAULT_RADIUS,
-                    },
-                  });
-                  setLabel('');
-                }}
-                style={{ height: 42, marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-              >
-                Save this spot
-              </button>
-            </>
-          )}
-        </Blueprint>
-      )}
-
-      {/* The other route to a place, for the addresses you cannot stand in
-          front of. Off until switched on — see `lib/geocode.ts`. */}
-      <div style={{ marginTop: 26 }}>
-        <FindPlace />
-      </div>
-
-      {error && (
-        <div
-          style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            color: 'var(--app-accent)',
-            marginTop: 'var(--sp-6)',
-            lineHeight: 'var(--leading-normal)',
-            whiteSpace: 'pre-wrap',
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      {state.places.length === 0 ? (
-        <EmptyState
-          title="No places yet."
-          body="Tap the button while you are somewhere that matters, and give it a name."
-        />
-      ) : (
-        <>
-          <SectionLabel>Saved</SectionLabel>
-          {list.map(({ place, metres }) => (
-            <div
-              key={place.id}
-              style={{
-                display: 'flex',
-                gap: 'var(--sp-6)',
-                alignItems: 'center',
-                ...rowTwelve,
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{place.label}</div>
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
-                  {metres >= 0 ? `${far(metres)} away · ` : ''}
-                  {place.radius} m across
-                </div>
-              </div>
-              <button
-                type="button"
-                className="bare"
-                onClick={() => dispatch({ type: 'removePlace', id: place.id })}
-                style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
-              >
-                REMOVE
-              </button>
-            </div>
-          ))}
-        </>
-      )}
-      <div style={{ height: 22 }} />
-    </>
-  );
-}
-
 
 /** The note editor. Saves as you type — there is no save button on purpose. */
 export function NoteEditor() {

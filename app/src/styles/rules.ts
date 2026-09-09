@@ -237,16 +237,22 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 682,
+  type: 680,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 222,
+  leading: 221,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 524,
+  space: 523,
   /** `padding: '11px 0'` and the like: two axes in one string. */
   shorthand: 545,
 };
 
 /*
+ * 682/222/524/545 → 680/221/523/545 when Personal lost its Places tab. Three
+ * down and none up: the tab was a second copy of what the map already is, and
+ * the one thing only it could do — standing somewhere and naming it — moved to
+ * `screens/Maps.tsx` as it was rather than being redrawn, so the panel's own
+ * off-scale values went with it and the tab's list rows did not come back.
+ *
  * 688/224/534/549 → 682/222/524/545 when Files & mail was deleted. All four
  * down and none up: the screen listed Drive files and inbox messages in rows
  * it drew by hand, and Connect accounts already lists the same files. What it
