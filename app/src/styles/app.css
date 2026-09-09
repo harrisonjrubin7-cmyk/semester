@@ -686,21 +686,6 @@ a:hover {
   padding-bottom: var(--assistant-strip);
 }
 
-/*
- * Except where the soft shell's bar is the last thing in the column.
- *
- * A sticky element cannot leave its containing block, and the block ends at
- * the content edge — so with the padding on the scroller the pinned bar came
- * to rest exactly one strip short of the bottom, with the page scrolling
- * visibly through the gap beneath it. The strip is still reserved; the bar
- * carries it in its own padding instead, which puts the bar's background
- * over the whole width and its buttons above the assistant's, which is what
- * the padding was reserving the room for in the first place.
- */
-.scrollarea:has(> .soft-bar) {
-  padding-bottom: 0;
-}
-
 .app-tabs {
   flex: none;
   display: flex;
@@ -1893,63 +1878,6 @@ input[type='search'].input {
   gap: var(--sp-5);
 }
 
-.soft-bar {
-  /*
-   * Pinned, now that the two-row navigation has decided what owns the bottom.
-   *
-   * Step 2 left this a block at the foot of the content, because sticky
-   * measured against the wrong box: the bar was inside a screen, and a screen
-   * is inside `Page`'s own frame. `SoftTop.tsx` renders it as a direct child
-   * of `.scrollarea` instead — the element that actually scrolls — so
-   * `bottom: 0` is the bottom of the scrollport and lands above the tab bar
-   * rather than over it. Sticky rather than fixed for the same reason as
-   * before: fixed would cover the one piece of furniture the app cannot.
-   */
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  margin-top: var(--sp-5);
-  /* 18 on the left to line up with `Page`, and the assistant's footprint on
-     the right. Reserving it below instead made the bar a fifth of a phone
-     screen tall with a floating button in the empty half of it; reserving it
-     beside puts the button at the end of the bar's own row, where it reads as
-     the last control on the bar rather than something dropped on top. */
-  padding: var(--sp-6) calc(18px + var(--assistant-strip)) var(--sp-6) 18px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  background: var(--app-bg);
-  border-top: 1px solid var(--app-line);
-}
-
-.soft-bar-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
-}
-
-.soft-bar-primary {
-  flex: 1;
-  padding: calc(13px * var(--density, 1));
-  border-radius: 999px;
-  background: var(--app-accent-fill);
-  color: var(--chrome-ink);
-  border: 1px solid var(--app-accent-fill);
-  font-family: var(--font-heading);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: calc(12px * var(--text-scale, 1));
-}
-
-.soft-bar-second {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-}
-
 /* Same floor as step 1: geometry, not colour, is what survives forced colours. */
 @media (prefers-contrast: more) {
   /* A wash exists to be seen through, which is exactly what somebody who
@@ -1963,8 +1891,7 @@ input[type='search'].input {
   .soft-step,
   .soft-tile,
   .soft-dark,
-  .appicon-tile,
-  .soft-bar-second {
+  .appicon-tile {
     box-shadow: none;
     border-color: var(--app-fg);
   }
@@ -1976,9 +1903,7 @@ input[type='search'].input {
   .soft-step,
   .soft-tile,
   .soft-dark,
-  .appicon-tile,
-  .soft-bar-primary,
-  .soft-bar-second {
+  .appicon-tile {
     box-shadow: none;
     border: 1px solid CanvasText;
   }
@@ -1987,17 +1912,6 @@ input[type='search'].input {
   .soft-dark {
     background: Canvas;
     color: CanvasText;
-  }
-
-  /*
-   * The pinned bar has to stay opaque, or the content scrolls through it.
-   * `--app-bg` is one of the colours forced colours throws away, so it is
-   * named again here as the system's own ground, with a rule along the top
-   * edge — the seam is what says "this is furniture, not more page".
-   */
-  .soft-bar {
-    background: Canvas;
-    border-top: 1px solid CanvasText;
   }
 
   /*
@@ -2011,11 +1925,6 @@ input[type='search'].input {
     border: 1px solid CanvasText;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-  }
-
-  .soft-bar-primary {
-    border-width: 3px;
-    font-weight: 700;
   }
 
   .soft-step-n {
