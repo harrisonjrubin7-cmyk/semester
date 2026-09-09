@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import type { CoursesTab } from '../lib/types';
 import { nameFor, renamed, tintFor } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
 import { Timer } from '../components/Timer';
@@ -33,8 +34,8 @@ function CoursesTabs({
   value,
   onChange,
 }: {
-  value: 'courses' | 'due' | 'grades';
-  onChange: (t: 'courses' | 'due' | 'grades') => void;
+  value: CoursesTab;
+  onChange: (t: CoursesTab) => void;
 }) {
   return (
     <Segmented
@@ -71,7 +72,7 @@ export function Courses() {
     return (
       <Page bottom={0}>
         <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
-        <Grades bare />
+        <Grades />
       </Page>
     );
   }
@@ -90,11 +91,9 @@ export function Courses() {
       Three returns, three shells.
 
       A "screen" in the registry is not always one component: this one has a
-      branch per tab, and two of them are somebody else's screen rendered
-      bare. Only the third is a list, so only the third declares an adapter —
-      the other two get the box and send what is typed to the whole app, which
-      is the honest answer for a grade table and for a deadline list that
-      already has its own three-way split.
+      branch per tab. Grades used to be a screen of its own as well as a tab
+      here — the same table with two homes — and is now only this, so the
+      branch below is where it lives rather than a copy of somewhere else.
     */
     <Page
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}

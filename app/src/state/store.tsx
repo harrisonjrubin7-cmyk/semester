@@ -232,6 +232,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // survivor it meant — see `RETIRED` in `lib/route.ts`.
         ...(landed.opens?.report ? { report: landed.opens.report } : {}),
         ...(landed.opens?.changes ? { changes: landed.opens.changes } : {}),
+        ...(landed.opens?.courses ? { coursesTab: landed.opens.courses } : {}),
       };
     }
     return { ...persisted, ...ephemeral, screen: screenFromUrl() ?? ('home' as Screen) };
@@ -812,6 +813,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // somebody. Same rule as the cold-start branch above and as `Tapped`.
       if (asked.opens?.report) dispatch({ type: 'setReport', grain: asked.opens.report });
       if (asked.opens?.changes) dispatch({ type: 'setChanges', source: asked.opens.changes });
+      if (asked.opens?.courses) dispatch({ type: 'setCoursesTab', tab: asked.opens.courses });
       dispatch({ type: 'landed', screen: asked.screen, id: asked.id, mode: asked.mode });
     };
     window.addEventListener('popstate', moved);
@@ -870,7 +872,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () => ({
       courses: catalog.courses.length,
       hasExam: catalog.items.some((i) => /exam|midterm|final/i.test(`${i.kind} ${i.title}`)),
-      hasGrades: Object.keys(state.grades ?? {}).length > 0,
       notes: state.notes.length,
       sittings: state.sittings.length,
       ownThings: state.tasks.length + state.appointments.length,

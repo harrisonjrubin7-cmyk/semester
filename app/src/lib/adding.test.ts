@@ -23,7 +23,7 @@ describe('addingOn', () => {
   });
 
   it('captures a deadline everywhere else', () => {
-    const elsewhere: Screen[] = ['home', 'course', 'calendar', 'mine', 'study', 'grades', 'me'];
+    const elsewhere: Screen[] = ['home', 'course', 'calendar', 'mine', 'study', 'me'];
     for (const s of elsewhere) expect(addingOn(s).kind, s).toBe('quick');
   });
 

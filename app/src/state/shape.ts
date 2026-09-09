@@ -15,6 +15,7 @@ import type {
   Appointment,
   CampusLink,
   ChangeSource,
+  CoursesTab,
   CourseId,
   CourseModule,
   CourseUpdate,
@@ -564,7 +565,7 @@ export interface Ephemeral {
    */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done';
-  coursesTab: 'courses' | 'due' | 'grades';
+  coursesTab: CoursesTab;
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all';
   /** Which shelf of the directory is showing under Everything. */
@@ -1365,7 +1366,7 @@ export type Action =
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
-  | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
+  | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'all' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
