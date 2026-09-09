@@ -599,6 +599,28 @@ is a view of was never in dispute.
 The tab goes, so there is still exactly one way in. That is the half of §5
 and §6 that has held through all three turns: whatever the grade table is,
 it should not be two things at once.
+
+### T2, a fourth time — the tab, and this is where it stays
+
+Reversed again, by the same person, and this time as a settled preference
+rather than a fresh argument. §6's reasoning is restored and so is its code:
+`grades` leaves the registry, the Courses switcher gets its third view back,
+and `#/grades` retires into `#/courses` on the grades grain.
+
+The question §6 and the turn above disagree on — is "how am I doing" a place
+you go to, or a view of the courses you are already looking at — has no answer
+this document can settle, because it is a preference about somebody else's
+semester. It has now been answered twice, the same way, by the person whose
+semester it is. That is the answer, and the next pass should read it as
+decided rather than as an open question with good arguments on both sides.
+
+What was never in dispute, and still is not: the grade table is one thing,
+reached one way. Four turns, four resolutions of *which* way, and not one of
+them proposed keeping both.
+
+**One destination fewer**, and `app/README.md` follows the registry — it
+reads forty-eight rather than forty-nine because `everything` left it in the
+same hour, for its own reasons.
 ## Appendix — the first pass, resolved
 
 Run at `ac5a2c8` against 59 destinations. Kept because the verdicts still hold

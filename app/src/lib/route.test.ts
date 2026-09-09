@@ -121,6 +121,7 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/setStorage')?.screen).toBe('data');
     // The directory that was a screen is the tab it duplicated.
     expect(fromHash('#/everything')?.screen).toBe('me');
+    expect(fromHash('#/grades')?.screen).toBe('courses');
   });
 
   it('says which part of the survivor the link meant', () => {
@@ -131,6 +132,12 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/check')?.opens).toEqual({ changes: 'feed' });
     // `#/everything` says which tab of Progress it meant.
     expect(fromHash('#/everything')?.opens).toEqual({ meTab: 'all' });
+    // `#/grades` meant the grade table, which is one of the three grains of
+    // Courses — landing on the course list is the same broken promise.
+    expect(fromHash('#/grades')?.opens).toEqual({ courses: 'grades' });
+    // The id a link used to carry went with the screen: the table lists every
+    // course and never read it.
+    expect(fromHash('#/grades/econ')?.screen).toBe('courses');
     // Nothing to disambiguate: the chat was the whole of what Ask now is, and
     // the Data screen has no sections to open.
     expect(fromHash('#/chat')?.opens).toBeUndefined();

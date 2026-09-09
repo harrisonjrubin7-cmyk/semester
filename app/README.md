@@ -29,7 +29,7 @@ own application.
 
 ## What is in it
 
-Five tabs, forty-nine screens. The tabs are below; the forty-nine are the registry in
+Five tabs, forty-eight screens. The tabs are below; the forty-eight are the registry in
 `src/lib/nav.ts`, which is also what the directory, the search box and the
 home-screen icons are drawn from — there is one list, and it is that one.
 
