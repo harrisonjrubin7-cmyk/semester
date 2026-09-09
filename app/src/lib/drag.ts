@@ -234,6 +234,31 @@ export function useDragToMove<T>({ onDrop, grid, disabled }: DragOptions<T>) {
     setAt(null);
   }, []);
 
+  /**
+   * Hold the page still while something is being dragged over it.
+   *
+   * `touch-action: none` on the held element is not enough on its own, and
+   * the reason is a matter of timing rather than of CSS: the browser decides
+   * whether a touch is a scroll at the moment the finger lands, when the
+   * element is still scrollable, and changing the property afterwards does
+   * not change its mind. So the first drag of the finger was a pan, the
+   * browser took the gesture, and the drag ended in `pointercancel` before it
+   * had moved anything. Every drag on a phone died this way — which on a
+   * phone-first app is the whole feature.
+   *
+   * A non-passive `touchmove` listener is what actually says no. It has to be
+   * added by hand: a listener on the document is passive by default, and a
+   * passive listener's `preventDefault` is ignored. It goes on only while
+   * something is held, so scrolling a list is untouched until a hold has
+   * already said this gesture is not a scroll.
+   */
+  useEffect(() => {
+    if (held === null) return;
+    const hold = (e: TouchEvent) => e.preventDefault();
+    document.addEventListener('touchmove', hold, { passive: false });
+    return () => document.removeEventListener('touchmove', hold);
+  }, [held]);
+
   // Escape cancels, wherever the pointer is. A drag somebody has changed their
   // mind about must not need them to find a safe place to let go.
   useEffect(() => {

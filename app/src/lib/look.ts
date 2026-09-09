@@ -909,6 +909,16 @@ export interface Look {
    */
   groupOrder?: string;
   /**
+   * How the home screen's own icons are arranged, where somebody has dragged
+   * one.
+   *
+   * The same kind of string, owned and parsed by `lib/springboard.ts`. A
+   * second key rather than more names inside `groupOrder`: the two arrange
+   * different things — shelves of screens against pages of icons — and one
+   * string holding both would make a shelf called `dock` a real possibility.
+   */
+  boardOrder?: string;
+  /**
    * A hue for the accent, 0–360, or -1 for "use the named accent".
    *
    * Kept alongside `accent` rather than replacing it: the named accents are
@@ -1151,6 +1161,8 @@ export function readLook(saved: Look | undefined): Required<Look> {
     // registry every time it reads, so a stale string can only arrange
     // things oddly — never hide one.
     groupOrder: typeof saved?.groupOrder === 'string' ? saved.groupOrder : '',
+    // Unvalidated for the same reason, and read back the same way.
+    boardOrder: typeof saved?.boardOrder === 'string' ? saved.boardOrder : '',
     // -1 rather than 0, because 0 is red.
     hue: typeof saved?.hue === 'number' && saved.hue >= 0 && saved.hue <= 360 ? saved.hue : -1,
   };

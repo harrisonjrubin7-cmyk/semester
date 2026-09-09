@@ -86,6 +86,29 @@ choosing that layout drew its pills *on top of* the tab bar or the rail — two
 live navigations in one window. They are a navigation now, available in all
 three layouts, and no layout draws navigation of its own.
 
+## Nothing with an order is static
+
+Anything the app draws as an ordered list can be dragged into a different
+order: the icons, folders and dock on the home screen, the tiles inside a
+shelf, the rows of the directory in Me and in Everything, the tabs in the
+bottom bar, your courses, the sections of Today, and everything on the
+calendar. Hold it, move it, let go.
+
+One gesture and one arithmetic, in [`lib/arrange.ts`](src/lib/arrange.ts) over
+the pointer handling in [`lib/drag.ts`](src/lib/drag.ts) — a press is a drag
+only once it is held, so a finger on a list still scrolls it; a drop ends in a
+click that is told to stand down; and Alt with the arrow keys does the same
+move without a pointer, because a list whose only ordering gesture is a drag is
+a list some people cannot order at all. The ↑ ↓ arrows stay wherever they were:
+they are the visible sign that a list has an order.
+
+Where the order is a preference rather than data, it is a look key —
+`groupOrder` for the shelves, `boardOrder` for the home screen — and both are
+read as a preference *over* the registry, never as a replacement for it. A
+screen the school gate has switched off does not come back because an old
+order names it; one added since the order was saved appears at the end rather
+than not at all.
+
 ## The date is real
 
 The prototype pinned itself to Thursday 3 September so its screenshots would be
@@ -253,6 +276,7 @@ prevent.
 | What the date turns into on screen — labels, "today", countdowns | `lib/select.ts` |
 | What the assistant can do | `ai/providers/` |
 | The spacing, type and leading scales every screen is held to | `styles/rules.ts` |
+| How a list is dragged into a different order, and what an arrow means | `lib/arrange.ts` |
 
 If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen
 shows. If a screen is unreachable, `lib/nav.ts` is why — and

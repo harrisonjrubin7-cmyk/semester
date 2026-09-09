@@ -26,6 +26,7 @@
  * that silently hides a screen is worse than one with an untidy last page.
  */
 
+import { arranged, readLists, writeLists } from './arrange';
 import { DESTINATIONS, offered } from './nav';
 import { has } from './search';
 import type { Capabilities } from './school';
@@ -141,6 +142,82 @@ export function pagesFor(caps: Capabilities): Page[] {
     .filter((s) => !seen.has(s));
   if (rest.length > 0) pages.push({ widgets: false, items: rest });
   return pages;
+}
+
+/**
+ * Where an icon has been dragged to, and what it is filed under.
+ *
+ * ## The arrangement above is a starting point, not a home screen
+ *
+ * `PAGES` is somebody's opinion about which eight screens belong on the first
+ * page — a good one, and still an opinion. A home screen whose icons cannot be
+ * moved is the one screen in the app that is a picture of a home screen rather
+ * than one, and every phone anybody owns has taught them otherwise: you hold
+ * an icon and you put it where you want it.
+ *
+ * ## Saved as a preference over the pages, never as a copy of them
+ *
+ * Three lists get their own name in the look key: each page by its number,
+ * each folder by its label, and the dock. Every one of them is resolved
+ * through `arranged()` against what `pagesFor` offers today, so the same
+ * three guarantees hold as everywhere else — a screen the school switched off
+ * stays off, a screen added since appears at the end of its page rather than
+ * nowhere, and a name that is no longer anything is dropped.
+ *
+ * That is also why the arrangement is per page rather than one flat list: a
+ * screen can sit on two pages (`costs` does) and inside a folder as well as
+ * outside it (`brief` does), and one list of names could not say which of
+ * those moved.
+ */
+export const DOCK_KEY = 'dock';
+
+/** The saved-order name for page `i`, for a folder, and for either item. */
+export function pageKey(i: number): string {
+  return `p${i}`;
+}
+
+export function folderKey(label: string): string {
+  return `+${label}`;
+}
+
+export function keyOf(item: string | Folder): string {
+  return isFolder(item) ? folderKey(item.label) : item;
+}
+
+/** The pages this student gets, in the order they have dragged them into. */
+export function arrangedPages(caps: Capabilities, saved: string | undefined): Page[] {
+  const lists = readLists(saved);
+  return pagesFor(caps).map((page, i) => {
+    const byKey = new Map(page.items.map((item) => [keyOf(item), item]));
+    const items = arranged([...byKey.keys()], lists[pageKey(i)] ?? []).map((k) => {
+      const item = byKey.get(k)!;
+      // A folder's own icons are arrangeable too — it is a grid of icons like
+      // any other, and the one somebody opens it for should not be fourth.
+      if (!isFolder(item)) return item;
+      return {
+        label: item.label,
+        screens: arranged(item.screens, lists[folderKey(item.label)] ?? []),
+      };
+    });
+    return { widgets: page.widgets, items };
+  });
+}
+
+/** The dock, arranged. Four icons, and which four is the point of them. */
+export function arrangedDock(caps: Capabilities, saved: string | undefined): string[] {
+  return arranged(dockFor(caps), readLists(saved)[DOCK_KEY] ?? []);
+}
+
+/**
+ * The look key after one drag.
+ *
+ * The whole of the list that moved is written down, not the pair that swapped
+ * — a partial order leaves the rest at the mercy of the next screen anybody
+ * adds to `PAGES`, which is precisely the arrangement a person would have to
+ * make again.
+ */
+export function afterMove(saved: string | undefined, list: string, items: string[]): string {
+  return writeLists({ ...readLists(saved), [list]: items });
 }
 
 /** The dock, minus anything this school does not have. */

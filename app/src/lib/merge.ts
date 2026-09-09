@@ -121,6 +121,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // does — having to drag the tiles back into place on the laptop is exactly
   // the work the look keys exist to avoid.
   groupOrder: 'theirs',
+  // The home screen's icons, for exactly the same reason: dragging them back
+  // into place on the second device is the work these keys exist to avoid.
+  boardOrder: 'theirs',
   // Ergonomics: about the screen in front of you, not about you. See `mine`.
   textSize: 'mine',
   // `mine` like every other look setting: how this device phrases things is a
