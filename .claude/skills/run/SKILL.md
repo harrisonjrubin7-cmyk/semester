@@ -79,13 +79,50 @@ await page.waitForTimeout(2500);
 await page.getByRole('button', { name: /skip/i }).first().click();
 ```
 
-**Match labels case-insensitively.** The caps in this app are
-`text-transform: uppercase`, so `innerText` reports `SKIP` while the DOM
-holds `Skip`. `getByText('SKIP', { exact: true })` times out;
-`{ name: /skip/i }` does not.
+Case-insensitively, for the reason below. Skipping still leaves the four
+shipped courses loaded, which is what you want — an empty catalogue puts
+`FirstRun` in front of half the screens.
 
-Skipping still leaves the four shipped courses loaded, which is what you
-want — an empty catalogue puts `FirstRun` in front of half the screens.
+## 3a · Never match a caps label exactly
+
+**Every run of capitals in this app is `text-transform: uppercase`.** The
+DOM holds sentence case; only the rendering is shouting. So `innerText`
+reports `SKIP` and the element is named `Skip`, and an exact match waits
+the full 30 seconds and then fails as if the control were missing.
+
+```js
+page.getByRole('button', { name: /skip/i })          // ✅
+page.getByText('SKIP', { exact: true })              // ✗ times out
+page.getByRole('button', { name: 'DUE', exact: true })  // ✗ same, it is `Due`
+```
+
+It is not one button. Caps are applied in render throughout — `ChipRow`
+and the tab bar set `textTransform` inline, and `.kicker`,
+`.section-label`, `.tag`, `.soft-caps`, `.soft-strip-*`, `.skip-link` and
+`.rail-item` set it in app.css. That covers the adoption prompt's SKIP,
+every chip row (the feed's ALL / DUE / CLASSES), section headings, stat
+labels and the tab names.
+
+So read a label off a screenshot or off `innerText` and you have read the
+styling, not the name. Use a case-insensitive regex for any of them, and
+anchor it — on the feed, bare `/due/i` matches three elements (the chip,
+the "Due today" stat label and its heading) where the anchored form matches
+one:
+
+```js
+page.getByRole('button', { name: /^due$/i })
+```
+
+Two things this rule does **not** cover, and both will mislead you the
+other way:
+
+- **The shelf pills are genuinely mixed case.** `.shelf-nav-pill` sets no
+  `text-transform`, so `{ name: 'Study' }` is correct there and a
+  screenshot showing `Semester · Courses · Study` is showing you the real
+  names.
+- **Course codes are really uppercase.** `ECON`, `PSCI` and the rest are
+  uppercase in the data, so an exact match on those works — it is `All`,
+  `Due` and `Classes` beside them in the same row that do not.
 
 ## 4 · Reach a screen
 
