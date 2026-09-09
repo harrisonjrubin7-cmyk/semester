@@ -12,7 +12,9 @@
  *  - **Month** read it too, from its own copy of the same three conditions.
  *  - **Week** did not read it at all. Choosing "Due" left every class on the
  *    grid; choosing "Campus" left the grid unchanged and showed no campus
- *    event, because none is drawn there. The chips moved and nothing did.
+ *    event, because none was drawn on any grid at the time. The chips moved
+ *    and nothing did. Campus events are blocks now — see `campusHours` in
+ *    `lib/select.ts` — so this question has to answer for them too.
  *  - **Semester** read it for deadlines and campus and had no branch for
  *    classes, so the exact combination the file's own comment advertises —
  *    classes, whole semester — produced "Nothing from this source across the
@@ -35,6 +37,8 @@
  *  - **campus** — what is on: the campus calendar and anything a connected
  *    calendar feed says.
  */
+
+import { CAMPUS_KIND } from './kinds';
 
 export type CalSource = 'all' | 'classes' | 'deadlines' | 'campus';
 
@@ -75,17 +79,81 @@ export function sourceName(source: CalSource): string {
 /**
  * Whether a block an hour grid drew belongs under this source.
  *
- * The grids build their blocks from the catalogue and from what you have
- * added, and the two arrive mixed: `from` says which record a block can be
- * moved by, and it is also the only thing that says what a block *is*. A block
- * with no record behind it came from a syllabus's meeting pattern or from a
- * standing commitment — the timetable either way, which is the classes bucket.
+ * The grids build their blocks from the catalogue, from what you have added
+ * and — since campus events are drawn rather than only listed — from the
+ * university's calendar and yours. They arrive mixed, and two fields say which
+ * is which: `kind` is `campus` for something that is on around you, and `from`
+ * says which record a block can be moved by, which is also the only thing that
+ * separates work to hand in — a deadline or a task — from an appointment. A
+ * block with neither came from a syllabus's meeting pattern or from a standing
+ * commitment — the timetable either way, which is the classes bucket.
  *
  * Here rather than in the view because the week grid and the day rail have to
  * agree, and the way they came to disagree in the first place was each having
  * its own copy of the question.
  */
-export function keepBlock(from: { kind: 'appointment' | 'item' } | undefined, on: Shows): boolean {
-  if (!from) return on.classes;
-  return from.kind === 'item' ? on.deadlines : on.classes;
+export function keepBlock(
+  block:
+    | { kind?: string | null; from?: { kind: 'appointment' | 'item' | 'task' } }
+    | undefined,
+  on: Shows,
+): boolean {
+  if (block?.kind === CAMPUS_KIND) return on.campus;
+  if (!block?.from) return on.classes;
+  // A deadline and a task are both work to hand in — the doc above puts them
+  // in the same bucket, and a task drawn on the grid has to obey it or the
+  // Due chip would show your tasks in the list under the week and hide the
+  // ones with an hour on them.
+  return block.from.kind === 'appointment' ? on.classes : on.deadlines;
+}
+
+/*
+ * ## The third axis, which only the campus source has
+ *
+ * Under Campus there is a second row of chips — All, Athletics, Clubs,
+ * University, Saved. It lived inside the campus *list*, which is one of the
+ * four views, so it appeared under Campus + Month and nowhere else: choosing
+ * Campus in Day, Week or Semester offered no way to say "just the games", and
+ * a filter set on the month quietly stopped applying the moment the view
+ * changed. The chips are the screen's now, beside the source chips they belong
+ * with, and every view asks the same question of them.
+ */
+
+export const EVENT_KINDS = ['All', 'Athletics', 'Clubs', 'University', 'Saved'] as const;
+
+export type EvFilter = (typeof EVENT_KINDS)[number];
+
+/**
+ * The kind filter as it applies under the current source.
+ *
+ * The chips are only drawn under Campus, so under any other source the answer
+ * is All — a filter nobody can see is a filter nobody can undo, and "Saved"
+ * left over from a visit to Campus must not go on hiding half of Everything.
+ */
+export function eventFilter(source: CalSource, filter: EvFilter): EvFilter {
+  return source === 'campus' ? filter : 'All';
+}
+
+/** Whether a campus event belongs under this filter. */
+export function keepEvent(
+  event: { id: string; kind: string },
+  filter: EvFilter,
+  saved: Record<string, boolean>,
+): boolean {
+  if (filter === 'All') return true;
+  if (filter === 'Saved') return saved[event.id] === true;
+  return event.kind === filter;
+}
+
+/**
+ * Whether an entry from a connected calendar belongs under this filter.
+ *
+ * A feed says what is on and when; it does not say whether that is a game, a
+ * club or the university, so nothing here can honestly be called Athletics —
+ * and Saved is a list of campus listings you have kept, which a feed entry
+ * never joins. So a feed entry shows under All and under nothing else, rather
+ * than being filed under a kind the .ics never claimed.
+ */
+export function keepFeedEvent(filter: EvFilter): boolean {
+  return filter === 'All';
 }

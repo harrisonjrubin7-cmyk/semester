@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { termProgress, weekAhead, weekLine, whereYouStand } from './you';
+import {
+  doors,
+  nextUp,
+  shortly,
+  standLine,
+  termProgress,
+  weekAhead,
+  weekLine,
+  weekShape,
+  whereYouStand,
+} from './you';
 import type { DatedItem } from './types';
 
 const NOW = new Date(2026, 8, 18, 20, 0);
@@ -97,5 +107,150 @@ describe('where you stand', () => {
     });
     expect(w.courses).toBe(4);
     expect(w.credits).toBe(7);
+  });
+});
+
+describe('the sentence at the top', () => {
+  const where = (patch: Partial<Parameters<typeof standLine>[0]>) =>
+    standLine({
+      courses: 4,
+      credits: 11,
+      ahead: 10,
+      done: 2,
+      late: 0,
+      total: 20,
+      through: 0.3,
+      week: { due: 0, done: 0 },
+      ...patch,
+    });
+
+  it('leads on what is late, and moves the verb with the number', () => {
+    expect(where({ late: 1, week: { due: 0, done: 0 } })).toMatch(/1 thing is past its date/);
+    expect(where({ late: 3, week: { due: 0, done: 0 } })).toMatch(/3 things are past their date/);
+  });
+
+  it('says the week alongside it when the week has anything in it', () => {
+    expect(where({ late: 2, week: { due: 4, done: 1 } })).toBe(
+      '2 things are past their date, and 4 more fall inside seven days.',
+    );
+  });
+
+  it('counts what is left rather than what is done, when nothing is late', () => {
+    expect(where({ week: { due: 5, done: 2 } })).toBe(
+      '3 of the 5 due inside seven days are still to do.',
+    );
+    expect(where({ week: { due: 2, done: 1 } })).toMatch(/1 of the 2 .* is still to do/);
+  });
+
+  it('does not call an empty catalogue finished', () => {
+    expect(where({ total: 0, ahead: 0, done: 0, week: { due: 0, done: 0 } })).toMatch(
+      /No dated deadlines/,
+    );
+  });
+
+  it('says so plainly when the week is clear, and does not congratulate', () => {
+    expect(where({ week: { due: 3, done: 3 } })).toBe("All 3 of this week's deadlines are done.");
+    expect(where({ week: { due: 0, done: 0 }, ahead: 12 })).toMatch(/12 still ahead of you/);
+    expect(where({ week: { due: 0, done: 0 }, ahead: 0 })).toMatch(/Every deadline/);
+  });
+});
+
+describe('the shape of the coming week', () => {
+  const items = [
+    item({ id: 'gone', daysAway: -1 }),
+    item({ id: 'a', daysAway: 0 }),
+    item({ id: 'b', daysAway: 0 }),
+    item({ id: 'c', daysAway: 3 }),
+    item({ id: 'far', daysAway: 9 }),
+  ];
+
+  it('starts on today and runs seven days', () => {
+    const days = weekShape(items, {}, NOW);
+    expect(days).toHaveLength(7);
+    expect(days[0].today).toBe(true);
+    expect(days[0].date.getDate()).toBe(NOW.getDate());
+    expect(days.slice(1).every((d) => !d.today)).toBe(true);
+  });
+
+  it('counts each day on its own, and leaves out what is behind or beyond it', () => {
+    const days = weekShape(items, {}, NOW);
+    expect(days.map((d) => d.due)).toEqual([2, 0, 0, 1, 0, 0, 0]);
+  });
+
+  it('counts the ticked ones inside each day', () => {
+    const days = weekShape(items, { a: true, gone: true }, NOW);
+    expect(days[0]).toMatchObject({ due: 2, done: 1 });
+    expect(days[3]).toMatchObject({ due: 1, done: 0 });
+  });
+});
+
+describe('the doors it offers', () => {
+  const standing = (patch: Partial<ReturnType<typeof whereYouStand>>) => ({
+    courses: 4,
+    credits: 11,
+    ahead: 10,
+    done: 2,
+    late: 0,
+    total: 20,
+    through: 0.3,
+    week: { due: 3, done: 0 },
+    ...patch,
+  });
+
+  it('puts what is late first, then the cards, then the next thing', () => {
+    const next = item({ id: 'soon', daysAway: 2 });
+    const got = doors({ where: standing({ late: 2 }), cards: 12, next });
+    expect(got.map((d) => d.id)).toEqual(['late', 'cards', 'next']);
+    expect(got[0]).toMatchObject({ label: '2 late', screen: 'behind' });
+    expect(got[1].label).toBe('Drill 12 cards');
+    expect(got[2]).toMatchObject({ screen: 'item', item: 'soon' });
+  });
+
+  it('never offers a count of nothing', () => {
+    const got = doors({ where: standing({ late: 0 }), cards: 0, next: null });
+    expect(got.map((d) => d.id)).toEqual(['week']);
+  });
+
+  it('offers nothing at all once the term is finished', () => {
+    expect(doors({ where: standing({ ahead: 0, week: { due: 0, done: 0 } }), cards: 0, next: null })).toEqual([]);
+  });
+
+  it('stops at three', () => {
+    const got = doors({ where: standing({ late: 9 }), cards: 4, next: item({ id: 'x', daysAway: 1 }) });
+    expect(got).toHaveLength(3);
+  });
+});
+
+describe('the next thing', () => {
+  it('is the soonest that is neither ticked nor already gone', () => {
+    const items = [
+      item({ id: 'late', daysAway: -3 }),
+      item({ id: 'ticked', daysAway: 1 }),
+      item({ id: 'real', daysAway: 2 }),
+    ];
+    expect(nextUp(items, { ticked: true })?.id).toBe('real');
+    expect(nextUp([item({ id: 'late', daysAway: -3 })], {})).toBeNull();
+  });
+});
+
+describe('a title short enough for a button', () => {
+  it('takes the first clause where the title has one', () => {
+    expect(shortly('Reflection #2 — Are elite athletes super-humans?')).toBe('Reflection #2');
+    expect(shortly('Problem Set 4: elasticity and revenue')).toBe('Problem Set 4');
+  });
+
+  it('cuts on a space rather than mid-word', () => {
+    expect(shortly('Quiz on comparative advantage and the gains from trade')).toBe(
+      'Quiz on comparative advantage…',
+    );
+  });
+
+  it('leaves a title that already fits exactly as it is', () => {
+    expect(shortly('Quiz #1')).toBe('Quiz #1');
+    expect(shortly('Midterm — in class')).toBe('Midterm');
+  });
+
+  it('does not mistake a hyphenated word for a clause break', () => {
+    expect(shortly('Super-humans')).toBe('Super-humans');
   });
 });

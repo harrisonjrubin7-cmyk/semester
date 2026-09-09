@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Screen } from '../../lib/types';
 import { FullBleed } from './Rows';
-import { isCanvas, isExempt } from './exempt';
+import { fills, isCanvas, isExempt } from './exempt';
 import { FoldAll, FoldScope } from '../Fold';
 
 /**
@@ -62,7 +62,24 @@ export function ShellBody({ screen, children }: { screen: Screen; children: Reac
             paddingRight: 'var(--page-pad)',
           }}
         />
-        {isExempt(screen) ? <FullBleed>{children}</FullBleed> : children}
+        {isExempt(screen) ? (
+          /*
+           * The height goes through, for a screen that is the whole box.
+           *
+           * `FullBleed` wraps its children in a plain div under the grouped
+           * layout, and a div at `height: auto` is a broken link in the
+           * percentage chain — the same failure `.pane-body` documents in
+           * `styles/app.css`. The chat resolves `height: 100%` against it and
+           * collapsed to the height of its own content, so under Grouped the
+           * composer sat wherever the conversation happened to end with a
+           * foot of empty ground under it, while the two other layouts had it
+           * on the bottom edge. Only for the screens that ask: a guide is a
+           * column of prose and wants to be as tall as it is.
+           */
+          <FullBleed style={fills(screen) ? { height: '100%' } : undefined}>{children}</FullBleed>
+        ) : (
+          children
+        )}
       </div>
     </FoldScope>
   );

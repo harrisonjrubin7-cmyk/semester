@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Capture } from '../components/Capture';
 import { RecordButton } from '../components/RecordButton';
 import { Rework } from '../components/Rework';
@@ -21,7 +21,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
-import { ActionButton, SectionLabel } from '../components/ui';
+import { ActionButton, FilePick, SectionLabel } from '../components/ui';
 import { addFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
 import { describeParse, parseMaterial } from '../lib/parse';
@@ -34,6 +34,17 @@ import { describeStudyParts, type StudyParts } from '../lib/study';
 
 /** Handled by the camera path above, which can see them. */
 const IMAGE = /\.(png|jpe?g|webp|gif|heic|heif)$/i;
+
+/**
+ * What the picker offers here.
+ *
+ * Wider than the syllabus importer's: a reading can be a photograph of the
+ * board, which `addFile` stores and the camera path reads. Keep it in step
+ * with `READABLE` in `lib/bundle.ts`.
+ */
+const ACCEPT =
+  '.pdf,.docx,.pptx,.txt,.md,.markdown,.csv,.tsv,.rtf,.html,.htm,.zip,' +
+  '.png,.jpg,.jpeg,.webp,.heic,text/*,image/*,application/pdf,application/zip';
 
 /**
  * Enough text to be worth a request.
@@ -114,7 +125,6 @@ export function AddMaterial() {
    */
   const [pastedAs, setPastedAs] = useState<Where | null>(null);
   const [looking, setLooking] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const parsed = useMemo(() => parseMaterial(text), [text]);
 
@@ -408,14 +418,14 @@ export function AddMaterial() {
     setSet(diff(piecesFrom(pasted, where), held()));
   };
 
-  const pick = async (list: FileList | null) => {
-    if (!list || list.length === 0) return;
+  const pick = async (list: File[]) => {
+    if (list.length === 0) return;
     setBusy(true);
     setReadNote('');
 
     // Zips are unpacked here too — a professor posting a week's readings as
     // one archive is the normal case, not an edge one.
-    const got = await gather(Array.from(list));
+    const got = await gather(list);
     const added: FileMeta[] = [];
     const unread: string[] = [];
     const readable: Intake[] = [];
@@ -861,19 +871,18 @@ export function AddMaterial() {
       />
 
       <SectionLabel>Files</SectionLabel>
-      <input
-        ref={fileInput}
-        type="file"
-        multiple
-        onChange={(e) => void pick(e.target.files)}
-        style={{ display: 'none' }}
-      />
-      <ActionButton
-        onClick={() => fileInput.current?.click()}
+      {/* The input is the button, for the reasons in `FilePick` — a hidden
+          input clicked from script is a press that can silently do nothing,
+          and it keeps its value, so attaching the same reading twice in a row
+          did nothing at all. */}
+      <FilePick
+        accept={ACCEPT}
+        disabled={busy}
+        onPick={(picked) => void pick(picked)}
         style={{ fontSize: 'var(--type-sm)' }}
       >
         {busy ? 'Reading…' : 'Attach slides, a PDF, a photo of the board, or a zip'}
-      </ActionButton>
+      </FilePick>
       {files.map((f) => (
         <div
           key={f.id}
