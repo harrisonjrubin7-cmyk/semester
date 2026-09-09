@@ -1,310 +1,346 @@
-# One app — the audit
+# One app — the audit, second pass
 
-Step 1 of `/simplify`, run again. Committed with no code; the status column in
-§4 and the two corrections at the end were filled in as the merges landed.
+Step 1 of `/simplify`, run again. No code in this commit.
 
-Counted against `app/src` at `3a12e03`: **50 destinations** in `lib/nav.ts`, 75
-screen files, 89 components, 8 shelves, 4 navigations.
+Counted against `app/src` at `3a12e03`: **50 destinations** in `lib/nav.ts`, 72
+members of the `Screen` union, 75 screen files, 96 components, 8 shelves.
 
-This is the third pass. The first two took the destination count 59 → 56 → 50,
-and they took the easy half: two whole clusters of duplicate *screens* (three
-reports into one at three grains, two reconciliation screens into one with two
-sources) plus the assistant, the second search, the second Settings door and
-Files & mail. **There are no duplicate screens left that I can find.** What is
-left is two duplicate *controls*, and they are the more dangerous kind, because
-a screen you can see twice is an annoyance and a setting you can set twice is a
-setting that disagrees with itself.
+The first pass of this audit ran at `ac5a2c8` against 59 destinations. Every row
+in it is resolved and the resolutions are kept at the bottom of this file. Nine
+destinations have gone since, across five passes by different hands, and the
+first job here was to check what that left behind rather than to re-run the same
+greps and re-report the same clusters.
 
-Saying that plainly matters more than producing a long list. The previous audit
-ended with a sentence worth repeating: this app is large because it does a lot,
-not because it does the same thing repeatedly.
+**The headline of this pass is that the remaining duplication is not in the
+screens.** It is in one directory drawn twice, one storage report written twice,
+and 76 pieces of code with no caller. The screen count should come down by one,
+not by nine.
+
+> **A third pass ran against `3a12e03` at the same time as this one**, by other
+> hands and without sight of it, and landed three things before this document
+> was written. They are folded in below rather than kept apart, because two
+> audits of one app is exactly the shape this command exists to remove.
+>
+> · **S2 is done** — and was reached independently, with the same survivor and
+>   the same requirement to carry the drafts and attachments rows across. Two
+>   passes agreeing about a merge from different starting points is the best
+>   evidence either of them offers.
+> · **§3's conclusion was wrong, and is corrected there.** There *was* a
+>   genuine second copy of a control. A `set*` scan cannot see it.
+> · **A second chip idiom** had five hand-rolled copies and no component; §4
+>   carries it as S8.
 
 ---
 
-## What I checked, and what it cost to clear
+## 0. What the last five passes removed
 
-Every cluster the brief names, plus every one the last pass left open. The
-verdict column is the point; the evidence is why you can believe it.
-
-| Cluster | Verdict | Evidence |
+| Pass | Destinations | What went |
 | --- | --- | --- |
-| The six "what is due" screens | **Kept** (settled last pass) | `home`/`ahead`/`tonight`/`mine` answer four different questions; `weekly`+`worked` already merged into `brief` at three grains |
-| The assistant's three surfaces | **Done** | `screens/Ask.tsx` is the conversation; only `ai/Assistant.tsx`, `lib/route.ts` and `lib/softtop.ts` dispatch `ask` |
-| Five ways to change course data | **Done** | `check` merged into `announce`; `import`/`edit`/`update` are three different inputs |
-| Five ways to find a screen | **Kept** | `Everything.tsx`'s own comment argues it: "where is X" and "what would I use this for" are different objects |
-| Where you stand | **Kept** | `grades` is this term's marks, `degree` is a four-year ledger |
-| The Make cluster (7 screens) | **Kept** | Each carries a distinct fence — see below |
-| `quiz` vs Guide's quiz block | **Kept** | Launcher and player, not two homes — see below |
-| Header `+` vs springboard FAB | **Kept** | Different jobs, proven in `lib/adding.ts` — see below |
-| **The Claude key and model** | **MERGE (D1)** | Two screens, both calling `saveSettings` |
-| **The storage measurement** | **MERGE (D2)** | Two screens, same bytes, two different measurements |
-| Hand-rolled rows | **Mostly done** | 36 in 13 files, down from 74 in 31; 18 files use shared `Rows` |
-| Hand-rolled chip rows | **MERGE (D3)** | 14 files by this count — but see §4, where the count turns out to be two idioms, not one |
+| Reports at three grains | −2 | `weekly`, `worked` → `brief` |
+| A change to a date, two sources | −1 | `check` → `announce` |
+| The Ask tab became the conversation | −1 | `chat` → `ask` |
+| Files & mail deleted | −1 | `files` |
+| Personal → Places folded into the map | 0 | a tab, not a destination |
+| Progress → Settings tab | 0 | a tab that rendered the Settings index |
+| The second search deleted | 0 | 15 in-screen filters, `screenbox`, `scoped` |
 
-### Three that look like duplicates and are not
-
-Recording these because each cost real reading, and the next person to run this
-command should not have to pay for it twice.
-
-**The Make cluster is seven tools, not one tool seven times.** `work`, `solve`,
-`analyse`, `essay`, `draw`, `deck` and `proof` all take text and call a model.
-They are not interchangeable, and the difference is a *fence* in each one:
-`Analyse` computes every number in `lib/stats.ts` and never lets the model
-report a figure; `Essay` is gated by `gate()` in `lib/essay.ts` so it cannot
-touch coursework; `Solve` works a parallel problem rather than the one being
-marked; `Work` refuses to write the assignment at all. Merging any two would
-merge their fences, and a fence is the only thing standing between this app and
-an Honor Code case. **Kept, emphatically.**
-
-**`quiz` is not a second copy of Guide's quiz.** `Guide.tsx:306` renders a card
-describing the quiz with a "Start quiz" button; `startQuiz` in
-`state/slices/study.ts:126` pushes `screen: 'quiz'`, which renders `Quiz` out of
-`screens/Drill.tsx`. Launcher and player. They read as duplicates from the
-registry and are one flow.
-
-**The header `+` and the springboard's floating button both point at
-`import`, and they are different buttons.** When this was written, `lib/adding.ts`
-made the header's `+` mean "add a course" on the courses list and "add something
-in one line" everywhere else, while `lib/chrome.ts` only draws the FAB on `home`
-in the `feed` navigation — so on the one screen where both exist, one added a
-deadline and the other a course.
-
-`main` has since gone further and deleted `lib/adding.ts` outright: the `+` is
-now the same one-line capture on every screen, on the argument that "the one
-control whose meaning you can rely on" should not be one you have to check. The
-conclusion here is unchanged and now unambiguous — two buttons, two jobs — and
-the file this paragraph originally cited as evidence no longer exists.
+59 → 50. Two of those passes are the precedent this one leans on: a tab that
+rendered another screen's content was removed because *pressing the tab and
+pressing the button landed on the same list*. That argument is not finished —
+see S1.
 
 ---
 
-## 1. Routes per destination — and a correction to how it was counted
+## 1. Screen overlap
 
-The obvious grep is wrong, and the last pass used it.
+Verdict per cluster, with the evidence that decided it.
+
+### S1 — the directory, drawn twice · **MERGE**
+
+`screens/Me.tsx` (the Progress tab) has two tabs: **You** and **Everything**.
+The Everything tab renders `Lately`, `NotYetOpened`, and then `GROUPS.map` — a
+`Panel` per shelf with a `Destination` row per screen.
+
+`screens/Everything.tsx` has four views. The first, **By area**, renders
+`offered(caps)` grouped by shelf. The third, **Not tried**, renders
+`untried(rows, state.visited, state.lastOpened)` — which is what `NotYetOpened`
+renders.
 
 ```
-$ grep -rn "screen: '…'" --include=*.tsx --include=*.ts app/src
+$ grep -n "GROUPS.map" app/src/screens/Me.tsx            # the shelves, in Me
+$ grep -n "view === 'area'" app/src/screens/Everything.tsx # the shelves, again
+$ grep -n "NotYetOpened" app/src/screens/Me.tsx           # 'not tried', in Me
+$ grep -n "view === 'untried'" app/src/screens/Everything.tsx
 ```
 
-That misses every route through the reducers, which pass the screen
-positionally: `push({ …state, quiz: action.quiz }, 'quiz')`. Twelve
-sub-screens are reached only that way — `drill`, `quiz`, `guess`, `lesson`,
-`slides`, `exam`, `item`, `course`, `event`, `note`, `guide`, `update` — and
-counting without them makes `quiz` look dead when it is not. Both greps
-together:
+Both read the same registry through the same two helpers (`offered`, `listed`),
+gate on the same `school.capabilities`, and draw the same rows. Two of
+Everything's four views are the Me tab, and `everything` is not in `HIDE_IN_ME`,
+so the directory contains a row that opens the directory.
 
-```
-$ grep -rn "screen: '[a-zA-Z]*'" --include=*.tsx --include=*.ts app/src | grep -v nav.ts
-$ grep -rhno "}, '[a-z][a-zA-Z]*'" --include=*.ts app/src/state/slices/
-```
+**The survivor is `me`.** It is in `DEFAULT_TABS`; `everything` is not, and
+nothing in the app routes to `everything` except the soft shell's action bar
+(`lib/softtop.ts`, twice). What is genuinely only in `everything` is **By task**
+(`byTask`, the `taskTags` intention view) and **Shortcuts** (the `?` array,
+which is also the `?` sheet and a section of the guide).
 
-The result, for every destination reached more than three times:
+So: **By area** and **Not tried** go — Me already draws both. **By task**
+becomes a third tab of Me, or Everything survives holding only the two views
+that are its own. Either way one destination goes, and the row in the directory
+that opens the directory goes with it. This wants a decision, not a default —
+it is the one row in this audit where the survivor is arguable, because
+Everything's own file comment argues for the split and that argument was written
+before Me grew an Everything tab.
 
-| Destination | Routes | What they actually are |
+### S2 — what the app is storing, written twice · **MERGE — done**
+
+| | Reads | Renders |
 | --- | --- | --- |
-| `home` | 9 | `land.ts` / `shape.ts` fallbacks |
-| `edit` | 8 | 2 × `softtop`, then 6 contextual (a course card, an office-hours row, a drop-by card) |
-| `mine` | 7 | 2 × `Today`, 2 × `Calendar`, all four onto a *named tab* |
-| `import` | 7 | header `+`, springboard FAB, `softtop`, and four contextual |
-| `item` | 6 | deep links from insights and notifications |
-| `ahead` | 6 | 3 × `softtop`, 2 × the reports, 1 × an insight |
-| `tonight` | 5 | 5 × `softtop`, i.e. one contextual action on five screens |
+| `screens/Data.tsx` (`data`) | `pickPersisted(state)`, `navigator.storage.estimate()` | Every collection, largest first, with bytes · "Room": used of quota, the backend, whether the browser has promised to keep it |
+| `screens/settings/Storage.tsx` (`setStorage`) | `localStorage` sizes, IndexedDB | "Your semester", "Drafts in progress", "Attachments", "This browser, in total" · a row to Export |
 
-**The honest claim, stated as the brief asks for it:** no destination in
-`lib/nav.ts` has two general front doors. Every count above three is one of
-three things — `lib/softtop.ts`'s action bar, which is one registry giving each
-screen a single contextual "what you came to do next"; a deep link that names a
-tab or an id (`setMineTab` then `go: 'mine'` is not "open Mine", it is "open
-Mine's appointments"); or a fallback in `land.ts`. A contextual action is not a
-pathway to a home. It is the app answering the question you are already
-holding, and removing them would not simplify the app, it would make it stupid.
+Both measure the same bytes and answer the same question — *what is this app
+taking up, and is it about to run out*. `Storage` is the smaller of the two and
+already ends in a link to another screen.
 
-What I cannot claim is the stronger version — "exactly one pathway each" — and
-I am not going to write it down when the greps above say otherwise.
+**Survivor: `data`.** Settings → Storage becomes a `NavRow` to it, which is what
+Settings does for eight other things. Zero destinations go — `setStorage` is a
+settings page, not a destination — but a screen does, and two numbers that do
+not agree go with it: both show the browser's own used-of-quota, and beside it
+`Data` totals the store a collection at a time while `Storage` totals the store,
+the drafts and the attachments as three rows. Neither is wrong and they do not
+match, which is what a number kept in two places does. Whichever survives has to
+carry the drafts and attachments rows, which exist only on `Storage` today.
+
+**Done, and reached independently.** The third pass merged this before reading
+this section and landed on the same survivor for the same reason, with one
+detail worth adding to the record: the two numbers disagreed because they were
+two *measurements*, not two renders — `Data` asks `space()` in
+`lib/inventory.ts`, `Storage` called `navigator.storage.estimate()` inline.
+`space()` survives; it asks the same browser API and also reports which backend
+is live and whether the browser has promised not to evict. The drafts and
+attachments rows moved across as this section requires, drawn below the store's
+total and outside it, since that total is the size of one string the app writes
+and these are not in it.
+
+### S3 — code with no caller · **CUT**
+
+Not screens: functions. Two counts, from one scan of every `export function`
+and `export const` under `app/src`: a name is counted here when no other
+production file mentions it and it appears only once in its own file — that is,
+nothing but its definition reads it.
+
+- **26 exports nothing reads at all** — not the app, not a test, not their own
+  file. `components/Icons.tsx: PlayIcon, PauseIcon`,
+  `components/shell/Rows.tsx: SliderRow, DestructiveRow`,
+  `components/soft/Soft.tsx: BarButton, Pill`, `lib/activities.ts:
+  asAppointments`, `lib/claude.ts: makeCards`, `lib/date.ts: monthName`,
+  `lib/intake.ts: intakeFiles, intakeUrl`, `state/store.tsx: useGo`, and 14 more.
+- **50 exports whose only reader is their own test.** `lib/connect.ts:
+  listMail` and `fetchRemoteText` are the honest example — the Files & mail pass
+  said out loud that it was leaving "a tested transport, no longer wired to a
+  screen". Also `lib/select.ts: searchItems` (a filter helper from the search
+  that was deleted), `lib/settings.ts: rowFor`, `lib/route.ts: linkTo`,
+  `lib/records.ts: mergeRows, summaryLine, watermark`, `lib/school.ts: termFor,
+  moveOutWhy`, `lib/worth.ts: calibrateFor, guessLine`.
+
+A test is not a reader. A function whose only caller is the test that proves it
+works is a function the app does not use, and the test passing is not evidence
+that anything needs it. **76 in total**, in 55 files.
+
+Three exclusions, deliberately: an export used inside its own file is not dead
+(40 of those, `SettingsIndex` among them — it is rendered by `Settings` two
+functions down); the `styles/rules.ts` exports are read by `scripts/styles.mjs`
+outside `src`; `data/` course content read only by the guide builder stays.
+
+### S4 — the same UI drawn by hand · **SHARED COMPONENTS**
+
+| Idiom | Shared thing that exists | Hand-drawn instances | Files |
+| --- | --- | --- | --- |
+| A caps heading (uppercase + letterSpacing, inline) | `SectionLabel`, `.kicker` | **232** | 79 |
+| A list row with a hairline under it | `ItemRow` in `components/shell/Rows.tsx` | **33** | 12 |
+| "Nothing here yet" | *(none)* | **96** | 71 |
+| A chip row that scrolls sideways | `Segmented` | 8 | 6 |
+
+```
+$ grep -rn "textTransform: 'uppercase'" --include=*.tsx app/src | wc -l   # 235
+$ grep -rn "borderBottom: '1px solid var(--app-line)'" --include=*.tsx app/src | wc -l  # 36
+```
+
+Of the 90 caps headings I could tie to an element, 63 are text (`div`, `span`,
+`h2`, `li`) and 27 are buttons or links — so roughly two-thirds are `SectionLabel`
+written out longhand and one-third are buttons that happen to share the type
+treatment. The row count is down from the first audit's 37 in 14 files; the
+heading count has never been measured before and is the largest single body of
+copy-paste left in the app.
+
+**The empty state is the one worth adding**: 96 hand-written "nothing yet"
+blocks in 71 files (`grep -rniE "nothing (here|yet|to)|no .* yet\b"`), each choosing its own size, opacity and margin, is the
+reason the same absence reads as three different weights on three screens.
+
+### S5 — three reports, three files of the same shape · **KEEP, recorded**
+
+`lib/brief.ts` (277 lines), `lib/weekly.ts` (267) and `lib/worked.ts` (220) are one
+module written three times: `Input` interface → counted struct → `SYSTEM` prompt
+constant → report string. The screens merged; the libraries did not. One reader
+each, and that reader is one screen at three grains.
+
+Kept, because collapsing them means one prompt for three grains and the prompts
+are what make the three reports read differently. Recorded so the next person
+does not have to work it out again.
+
+### S6 — one conversation, two shells · **KEEP, owned elsewhere**
+
+`ai/Assistant.tsx` (686 lines, the sheet over any screen) and `ai/Chat.tsx`
+(392, the Ask tab) both render `talk.turns` from the one `useAI` store, and both
+already share `Composer` and `Turns`. The pieces are shared; the two shells are
+not, and they are genuinely two shapes — a sheet that leaves the screen behind
+usable, and a screen with the thread list beside it. `/ask-tab` owns this.
+
+### S7 — cleared, with the evidence
+
+| Cluster | Verdict |
+| --- | --- |
+| `ahead`, `tonight`, `behind`, `runway` | **Keep.** Four questions: is this week survivable · where do tonight's hours buy most · what do I do having already slipped · how many weeks to the exam and what is in the way. Each file argues its own case at the top and each refuses a readiness score. |
+| `grades`, `degree` | **Keep.** This term's marks; a four-year ledger. |
+| `help`, `everything` | **Keep, but rewrite one blurb.** A generated manual and a directory are different objects. They are not different *in the registry*: "Every screen in the app, what it is for…" and "Every screen in the app, what it does…" are the two blurbs, and they are what search matches on. Whichever survives S1 needs a blurb that does not open with the other's five words. |
+| `essay`, `mail`, `proof` | **Keep.** A draft with a voice and a length; an email with a purpose and a mail app; a paste box that reads text back. `Proof`'s panel is already shared under the app's own boxes — one component, several hosts, which is the pattern rather than the problem. |
+| `work`, `solve` | **Keep.** Break an assignment into a plan; work a parallel problem and check a step. |
+| `data`, `privacy`, `export`, `connect` | **Keep** all four as destinations. What leaves the device, what is held, how to take it, what is plugged in. Only the settings page duplicates one of them — S2. |
+| `import`, `update`, `announce`, `edit` | **Keep.** A syllabus in, a reading in, a stated change in, a hand correction. The fifth (`check`) merged last pass. |
 
 ---
 
-## 2. Duplicated controls — the two real findings
+## 2. Routes per destination
 
-### D1 — the Claude key and model live on two screens · **MERGE**
+Every `screen: '…'` outside `lib/nav.ts`, counted by file, tests excluded:
 
-The whole point of the rule, and the app has one.
+| Destination | Files | Reading |
+| --- | --- | --- |
+| `home` | 7 | `land.ts`, `shape.ts`, `navigate.ts` fallbacks. Not front doors. |
+| `edit` | 7 | `Courses`, `Essay`, `Import`, `DropBy`, `OfficeHours`, `guidebook`, `softtop` |
+| `import` | 6 | `App`, `keys`, `softtop`, `FirstRun`, `Runway`, `Yes` |
+| `courses` | 6 | one tab plus five contextual actions |
+| `mine`, `calendar` | 5 | tab plus deep links |
+| everything else | ≤4 | |
 
-```
-$ grep -ln "config.apiKey" app/src/screens/*.tsx app/src/screens/settings/*.tsx
-app/src/screens/Connect.tsx
-app/src/screens/settings/Assistant.tsx
-```
+`edit` and `import` were examined in the first pass and left alone on the
+grounds that `App`, `softtop` and the springboard are three *navigations* of
+which exactly one is drawn at a time (`NAVS` in `lib/look.ts`). That still
+holds; I re-ran it rather than trusting it.
 
-Both render a key field and a model picker. Both call `saveSettings`.
-`Connect.tsx` holds it in a private `ClaudeAccount()` component (lines 65–223,
-~145 lines) rendered at line 495; `settings/Assistant.tsx` is the whole screen.
+**One hole in this grep, found on the third pass and worth keeping written
+down.** `screen: '…'` misses every route through the reducers, which pass the
+screen positionally — `push({ …state, quiz: action.quiz }, 'quiz')`. Twelve
+sub-screens are reached only that way (`drill`, `quiz`, `guess`, `lesson`,
+`slides`, `exam`, `item`, `course`, `event`, `note`, `guide`, `update`), so a
+count without them makes `quiz` read as dead code when it is the second half of
+a flow that starts on the guide. The second grep is
+`grep -rhno "}, '[a-z][a-zA-Z]*'" app/src/state/slices/`.
 
-`settings/Assistant` is the survivor, and not by preference — it is a strict
-superset. It has two providers (Claude *and* OpenAI), the routing between them
-(`route()`, `routeLabel`), the monthly spend, and the disclosure about what
-leaves the device. Its own file comment already says this is where the choice
-belongs: "a choice made once, checked occasionally, and belonging on a page you
-go to on purpose."
+**Three destinations have nothing routing to them at all** — `activities`,
+`analyse`, `solve` — reachable by the tab bar, the directory and search only.
+That is the shape the brief asks for, and it is worth saying that the app is
+mostly already in it: the counts above are `softtop`'s contextual action bar and
+the insight cards, both of which answer a question you are already holding.
 
-Connect's copy has exactly one thing Settings lacks: a **check this key works**
-button (`checkKey`). That moves rather than dies.
+---
 
-`screens/Links.tsx`'s comment is the tell that this has been half-known for a
-while — it describes the links as having lived "at the bottom of Connect, under
-the accounts, the calendar feeds **and the Claude settings**." The Claude
-settings should have left when the links did.
+## 3. Duplicated controls
 
-**Verdict: delete `ClaudeAccount` from Connect; move `checkKey` into
-Settings → Assistant; leave a link where the block was.** No destination goes.
-
-### D2 — the storage measurement lives on two screens · **MERGE**
-
-```
-$ grep -ln formatBytes app/src/screens/Data.tsx app/src/screens/settings/Storage.tsx
-app/src/screens/Data.tsx
-app/src/screens/settings/Storage.tsx
-```
-
-`Data.tsx` renders "Room" — bytes used of quota, with a bar.
-`settings/Storage.tsx` renders "Space used" — your semester, drafts,
-attachments, and the browser's total. **The same fact, measured twice by two
-different code paths**: `Data` through its own `room` hook, `Storage` by calling
-`navigator.storage.estimate()` inline. Two numbers that can disagree, about the
-one thing somebody opens these screens to check.
-
-`Data.tsx`'s file comment carefully explains why it is not the *privacy*
-screen. It never asks why it is not the *storage settings* page, which is the
-screen it actually overlaps.
-
-`data` is the survivor: it is a directory destination with its own shelf,
-keywords and search entry, and it is the richer screen (per-collection counts,
-the total, the span of dates). It is missing only Storage's breakdown of drafts
-and attachments, which moves across.
-
-Settings → Storage keeps what is genuinely a setting-page job — `Snapshots`
-(restore from a local copy) and the link to Take it with you — and its "Space
-used" group becomes a row pointing at Data.
-
-**Verdict: the measurement has one home (`data`); Settings keeps the actions.**
-No destination goes.
-
-### Everything else in `settings.ts`, cleared
-
-Every `set*` action dispatched from more than one file, re-checked:
+Every `set*` action dispatched from more than one file outside `state/`:
 
 | Action | Files | Verdict |
 | --- | --- | --- |
-| `setLook` | `Appearance`, `settings/Look`, `settings/Nav`, `nav/Folder` | **Fine.** `Appearance` is one shared control with two hosts; `Folder` writes a different key |
-| `setMineTab` | `Calendar`, `Mine`, `Today` | **Deep link**, not a control |
-| `setDueTab`, `setCoursesTab` | `Brief`, `Courses`, `Today` | **Deep link** |
-| `setSample` | `SampleMark`, `FirstRun`, `settings/Courses` | **Fine.** One component, three hosts |
-| `setCalView`, `setCalDay` | `Clashes`, `Calendar` | **Fine.** A clash card jumps to the day it is about |
-| `setMeTab` | `Ahead`, `Me` | **Fine** |
+| `setLook` | `Appearance`, `settings/Look`, `settings/Nav`, `nav/Folder`, `lib/tools` | **Fine.** One shared control with two hosts, plus the springboard's own key and the assistant's tool surface. |
+| `setMineTab`, `setDueTab`, `setCoursesTab` | `Today`, `Courses`, `Calendar`, `report/Day`, `openhit` | **Deep links.** "Open Mine, on tasks". |
+| `setSample` | `SampleMark`, `FirstRun`, `settings/Courses` | **Fine.** One component, three hosts. |
+| `setCalView`, `setCalDay` | `Clashes`, `Calendar` | **Fine.** A clash card jumps to its day. |
+| `setLinkUrl` | `Courses`, `Links` | **Cleared.** Different namespaces in one map: `Courses` writes `lms:${course.id}`, `Links` writes campus and user link ids. Checked because it looked like the same editor twice. |
+| `setDayBudget` | `Clashes`, `lib/tools` | **Fine.** The tool surface is the assistant, not a second screen. |
+| `setReport`, `setChanges`, `setQuery` | 2 each | **Deep links.** |
 
-A shared component rendered on two screens is not a duplicated control. A
-second implementation of the same control is, and D1 is the only one.
+### The one this scan could not see · **MERGE**
+
+**There was a genuine second copy of a control, and the table above cannot
+contain it.** The scan is "every `set*` action dispatched from more than one
+file" — and the Claude API key, the proxy field and the model picker do not go
+through the reducer at all. They call `saveSettings()` in `lib/claude.ts`, which
+writes `localStorage` directly. A duplicate implemented that way is invisible to
+this method by construction, however carefully the method is run.
+
+```
+$ grep -ln "config.apiKey" app/src/screens/*.tsx app/src/screens/settings/*.tsx
+app/src/screens/Connect.tsx            # a private ClaudeAccount(), ~145 lines
+app/src/screens/settings/Assistant.tsx # the whole screen
+```
+
+Both rendered a key field and a model list; both called `saveSettings`. Settings
+is the survivor — a strict superset, with two providers, the routing between
+them and the month's spend — and the two things only Connect had moved rather
+than died: the **check-this-key** button, and the sentence saying there is no
+"sign in with Claude" to hunt for, which now sits on the page somebody hunting
+for a login button actually lands on. Connect keeps a row saying where the key
+went. Done on the third pass.
+
+**The lesson for the next run of this section** is that "dispatched from more
+than one file" is the wrong net. The right question is *which files write this
+setting*, by whatever route — a reducer action, a direct `localStorage` write,
+or a module-level helper. The rest of the table stands; it was checked again
+after this one was found.
+
+**No other second copy of a control.** Same finding as the first pass, from a
+scan that now has three fewer screens to disagree about — and one hole in it,
+named above.
 
 ---
 
-## 3. Duplicated UI
+## 4. What to do, in order
 
-| Thing | Hand-rolled | Shared | Where |
+| # | Change | Destinations | Kind |
 | --- | --- | --- | --- |
-| List rows | 36 in 13 files | 18 files use `shell/Rows` | `Guide`, `Update`, `Calendar` |
-| Chip rows | 14 files | 8 files use `ChipRow` | `Look` (5), `Applying` (4), `People` (3) |
-| Section labels | — | 82 files use `SectionLabel` | settled |
+| S1 | The directory drawn twice — `everything`'s By-area and Not-tried views against Me's Everything tab | −1 | Merge, needs a decision on the survivor |
+| S2 | Settings → Storage becomes a row that opens `data` | 0 | Merge |
+| S3 | 76 exports with no caller — 26 dead outright, 50 read only by their own test | 0 | Cut |
+| S4 | An `EmptyState` component (96 hand-written), then `SectionLabel` for the 68 headings written longhand | 0 | Shared components |
+| S5 | `brief`/`weekly`/`worked` libraries | 0 | Kept, recorded |
+| S6 | The assistant's two shells | 0 | Kept, `/ask-tab` |
+| S7 | The `help` / `everything` blurb collision | 0 | Reword with S1 |
+| S8 | The second chip idiom — five hand-rolled copies, no component | 0 | Shared component, **done** |
 
-The row work is two-thirds done and the remaining 36 are concentrated in three
-screens that draw genuinely unusual rows. **D3 is the chip rows**: 14 files
-build a row of mutually-exclusive pressed buttons by hand when
-`components/ui.tsx` exports `ChipRow` for exactly that.
+Two of those are already done, on the third pass that ran alongside this one:
 
-One number in this section needs care, because the naive grep oversells it:
-`aria-pressed` appears 71 times across 45 files, but most are a *single* toggle
-button — a star, a filter, a switch — and a single toggle is not a chip row and
-must not be converted into one. Only 14 files map a list into chips. That is
-the real number and it is the one D3 is scoped to.
+| # | Change | Landed as |
+| --- | --- | --- |
+| S2 | Settings → Storage is a row that opens `data`; the drafts and attachments rows moved with the measuring | the survivor is `data`, as this section asks |
+| — | The Claude key stopped being a control on two screens | see §3, "the one this scan could not see" |
+| S8 | `PickChips` in `components/ui.tsx` | five sites converted, three left alone on purpose |
 
----
+**S8, stated properly**, because the naive count oversells it. There are two
+chip idioms in this app and only one had a component. `ChipRow` is a filled,
+uppercase 29px chip in a row that scrolls sideways, and its comment explains why
+it must not grow: the calendar stacks a `Segmented` directly above one, and at
+44px their targets overlapped by 4px, in which band the lower row silently won
+taps meant for the upper. The other is an outlined pick that wraps onto several
+lines under a heading — five copies, padding drifting between 7px and 9px, radius
+between `--r-sm` and `--r-md`. Converting those into `ChipRow` would have shrunk
+them, uppercased them and put them in a scrolling row: three changes nobody asked
+for. Registrar's found-dates list and Degree's "Taking it now" are **toggles**,
+not picks, and stay hand-written; Mine's course filter is `ChipRow`'s shape but
+its value is `CourseId | null`, and threading a sentinel through the filter for a
+styling win is not a trade worth making.
 
-## 4. The work, in order
+**50 → 49 destinations**, and the honest headline is again that this app is
+large because it does a lot. The duplication that is left is one directory, one
+storage report, and a long tail of code and markup nothing calls.
 
-| # | Change | Destinations | Status |
-| --- | --- | --- | --- |
-| D1 | Claude key + model → Settings → Assistant only | 0 | **done** |
-| D2 | Storage measurement → `data` only | 0 | **done** |
-| D3 | The second chip idiom becomes `PickChips` | 0 | **done**, and rescoped |
-
-### D3 was mis-scoped in this document, and the correction is the finding
-
-The row above said "14 files hand-roll what `ChipRow` already does". Reading
-them, that is wrong: **there are two chip idioms in this app and only one of
-them had a component.**
-
-`ChipRow` is a filled, uppercase, 29px chip in a row that scrolls sideways, and
-its own comment explains why it must not grow — the calendar stacks a
-`Segmented` directly above one, and at 44px their targets overlapped by 4px, in
-which band the lower row silently won taps meant for the upper.
-
-The other is an outlined pick, accented when chosen, that wraps onto several
-lines under a heading. Five copies, with the padding drifting between 7px and
-9px and the radius between `--r-sm` and `--r-md`. That is `PickChips` now.
-Converting them into `ChipRow` would have shrunk them, uppercased them and put
-them in a scrolling row — three changes nobody asked for.
-
-Three of the fourteen are deliberately left alone, and they are the reason the
-naive count oversold this: Registrar's found-dates list and Degree's "Taking it
-now" are **toggles**, not picks, and a single pressed button is not a chip row.
-Mine's course filter is `ChipRow`'s shape but its value is `CourseId | null`,
-and threading a sentinel through the filter for a styling win is not a trade
-worth making.
-
-### The two claims the brief asks for, checked
-
-**"No saved state can land the app on a screen that no longer exists, and there
-is a test proving it."** There are exactly two things that can put the app on a
-screen across a restart, and neither can strand you:
-
-  · **Saved state cannot, because the screen is not in it.** `screen` lives in
-    `Ephemeral` and is absent from `pickPersisted`, so nothing about where you
-    were standing reaches storage. Asserted now in
-    `app/src/state/screens.test.ts`, because that is load-bearing for screen
-    deletion and was previously only true by habit.
-  · **A URL can, and it lands on Today.** `fromHash` passes an unknown name
-    through on purpose, and `App.tsx`'s `default: return <Today />` catches it.
-    Checked in a browser: `#/cloud` (deleted this week) renders Today,
-    `#/weekly` (merged) renders Reports through the `RETIRED` table, and
-    `#/nonsense` renders Today. None blank.
-
-**"The screen count is lower than 59."** It is **50**, and none of that came
-from this pass — the reports, the reconciliation screens, the assistant's
-second door, the second search, the second Settings door and Files & mail all
-went earlier. This pass removed no destination, because there was no duplicate
-screen left to remove.
-
-**No destination is cut by this pass, and that is the finding.** 50 stays 50.
-The previous two passes removed the duplicate screens; what was left when I
-looked was two settings that could disagree with themselves and a component
-used by a third of the files that should use it.
-
-Nothing here touches `lib/context.ts`, `docs/data-contract.md` or
-`packages/contract`, and no merge blurs a syllabus-derived date with a
-student-written one.
+Each merge must carry, as before: the survivor's `keywords` widened with the
+dead screen's, a `state/shape.ts` migration so a saved `screen` that no longer
+exists lands on the survivor, and a test for that migration.
 
 ---
 
-## 5. Duplicate tabs — an axis this pass did not look at
-
-*The section below came from a pass running on `main` at the same time as this
-one, and it is kept whole because it is right and because this audit missed it.
-Sections 1–4 look at screens, routes and controls; none of those greps can see
-a **tab that renders another screen**, because such a tab adds no destination
-and no `go` dispatch. It is a second front door all the same.*
-
-*Its two findings — Today's "Report" tab and Courses' "Grades" tab — are
-already cut on `main`. Read together with §2 above, the shape of the whole
-result is: the duplicate screens went in passes one and two, the duplicate
-tabs went here, and what this pass found was the duplicate controls.*
+## 5. Duplicate tabs — the axis this audit had not looked at
 
 Counted against `app/src` at `659a424`: **50 destinations**, 57 screen files.
 
@@ -381,9 +417,10 @@ ruled that `grades` stays a screen; this is the second door to it.
   minutes": weakest unit per course, ordered by mastery, opening a card drill.
   The screen is points of final grade per hour over outstanding deadlines. Two
   questions — *what should I revise* and *how do I spend the evening* — that
-  happen to share a word. Kept, per the rule about two things that look alike.
-  **The shared name is a real cost and is recorded here as a naming collision,
-  not a duplication.**
+  happen to share a word. Both kept, per the rule about two things that look
+  alike. **The shared name was the real cost, and it is the half that could be
+  fixed without merging anything: the tab is "Revise" (T3). Two jobs, two
+  names, both still there.**
 - **Progress → "Everything" is not the `everything` screen.** `Everything.tsx`
   argues this out in its own file comment and section 1 Cluster D accepted it:
   "where is the thing called X" versus "what would I use this for, and what
@@ -398,6 +435,7 @@ ruled that `grades` stays a screen; this is the second door to it.
 | --- | --- | --- | --- | --- |
 | T1 | Today's "Report" tab → the `brief` screen | −1 | 0 | ✅ `0ec5044` |
 | T2 | Courses' "Grades" tab → the `grades` screen | −1 | 0 | ✅ `0ec5044` |
+| T3 | Study's "Tonight" tab renamed "Revise" | 0 | 0 | ✅ |
 
 ### After T1 and T2
 
@@ -408,3 +446,46 @@ task tags. `homeTab` and `coursesTab` are `Ephemeral` — declared in the
 so there is no persisted value to migrate, which is why #34 narrowed `meTab`'s
 union and added no migration either. The `bare` prop and its second render path
 come out of both screens with the callers.
+
+---
+
+## Appendix — the first pass, resolved
+
+Run at `ac5a2c8` against 59 destinations. Kept because the verdicts still hold
+and this pass re-used them rather than re-deriving them.
+
+| # | Change | Destinations | Done |
+| --- | --- | --- | --- |
+| M1 | `weekly` + `worked` → `brief`, at three grains | −2 | ✅ `bc8c5b3` |
+| M2 | `check` → `announce`, at two sources | −1 | ✅ `28d8422` |
+| M3 | The duplicate `edit` and `import` offers | 0 | ◐ one fixed; the rest are three navigations, left deliberately |
+| M4 | The `home` blurb, and the merged screens' `keywords` | 0 | ✅ |
+
+Its two corrections to the brief it was given are worth keeping too: the six
+"what is due" screens were four questions and not one, and `proof` was never a
+screen about where you stand.
+
+### M3, as far as it went
+
+One of the two was real and is fixed: the edit screen's "take the semester on"
+button dispatched `go: 'edit'` from `edit`, which pushed a history entry, so
+Back landed somebody on the screen they had just pressed Back from. `adopt()`
+alone is enough — the editor draws on the next render.
+
+The rest were not duplicates on inspection. `import` is offered by the Courses
+screen, by the soft shell's action bar and by the springboard's floating
+button, and those are three different navigations of which exactly one is on
+screen at a time (`NAVS` in `lib/look.ts`). Cutting any of them would remove
+the affordance for whoever chose that navigation. Left alone, deliberately.
+
+**59 → 56 destinations.** That is a smaller cut than the brief assumed, and the
+reason is worth stating plainly: this app is large because it does a lot, not
+because it does the same thing repeatedly. The duplication that exists is
+concentrated in the reports, the two reconciliation screens, and the assistant —
+and the assistant is a different command.
+
+Every merge must carry: the survivor's `keywords` widened with the dead
+screen's, a `state/shape.ts` migration so a saved `screen` that no longer
+exists lands on the survivor, and a test for that migration.
+
+---

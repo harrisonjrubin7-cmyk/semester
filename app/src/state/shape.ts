@@ -612,7 +612,7 @@ export interface Ephemeral {
    * had one open yesterday is an app that has misread what a search is for.
    */
   finder: boolean;
-  studyTab: 'guides' | 'tonight' | 'ask';
+  studyTab: 'guides' | 'revise' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
   /** Unit whose lesson is playing. */
@@ -1394,7 +1394,7 @@ export type Action =
       to?: string;
       incoming?: string;
     }
-  | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
+  | { type: 'setStudyTab'; tab: 'guides' | 'revise' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
   /**
    * Change a task after it exists.
