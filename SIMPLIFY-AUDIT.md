@@ -313,6 +313,13 @@ ruled that `grades` stays a screen; this is the second door to it.
   event, against seven days of hours arithmetic, clash detection and reading
   extents. A preview is not the screen it previews.
 
+### Done
+
+| # | Change | Tabs | Destinations | Done |
+| --- | --- | --- | --- | --- |
+| T1 | Today's "Report" tab → the `brief` screen | −1 | 0 | ✅ `0ec5044` |
+| T2 | Courses' "Grades" tab → the `grades` screen | −1 | 0 | ✅ `0ec5044` |
+
 ### After T1 and T2
 
 Two tabs go; no destination goes; nothing becomes unreachable, because in both
