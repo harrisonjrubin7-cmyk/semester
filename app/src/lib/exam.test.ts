@@ -230,6 +230,44 @@ describe('readExam', () => {
     expect(out.questions.map((x) => x.prompt)).toEqual(['Good']);
   });
 
+  /*
+   * `lib/quiz.ts` learned this from its own decoys and wrote it down: "a
+   * question could show the same sentence twice with one copy marked correct.
+   * Somebody picking the identical-looking option was marked wrong by a quiz
+   * that had asked them to tell two things apart while showing them the same
+   * thing." These options come from a model, which is at least as likely to
+   * repeat itself — and the trim makes it likelier, since "Elastic " and
+   * "Elastic" arrive as two strings and become one.
+   */
+  it('shows the same option once, and keeps the answer on its own text', () => {
+    const out = readExam(
+      '{"questions":[{"kind":"choice","prompt":"P","options":["Same","Same","Other"],"answer":1,"why":"w"}]}',
+      shape,
+    );
+    expect(out.questions[0].options).toEqual(['Same', 'Other']);
+    // The answer was the second "Same"; the surviving copy is still right.
+    expect(out.questions[0].options[Number(out.questions[0].answer)]).toBe('Same');
+  });
+
+  it('sees through a trailing space, which the trim would have made a duplicate', () => {
+    const out = readExam(
+      '{"questions":[{"kind":"choice","prompt":"P","options":["Elastic ","Elastic","Other"],"answer":0,"why":""}]}',
+      shape,
+    );
+    expect(out.questions[0].options).toEqual(['Elastic', 'Other']);
+    expect(out.questions[0].options[Number(out.questions[0].answer)]).toBe('Elastic');
+  });
+
+  it('drops a question that is the same option twice and nothing else', () => {
+    // Two identical options is not a choice, and a one-option one is not
+    // either — the same argument `quiz.ts` makes about a coin toss.
+    const out = readExam(
+      '{"questions":[{"kind":"choice","prompt":"Bad","options":["Same","Same"],"answer":0},{"kind":"short","prompt":"Good","answer":"k"}]}',
+      shape,
+    );
+    expect(out.questions.map((x) => x.prompt)).toEqual(['Good']);
+  });
+
   it('drops a written question with no key, which cannot be marked against anything', () => {
     const out = readExam(
       '{"questions":[{"kind":"short","prompt":"P"},{"kind":"long","prompt":"Q","answer":"k"}]}',

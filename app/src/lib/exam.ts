@@ -395,21 +395,45 @@ export function readExam(text: string, shape: Shape): { title: string; questions
     const from = typeof q.from === 'string' && q.from.trim() ? q.from.trim() : undefined;
 
     if (kind === 'choice') {
-      const options = (Array.isArray(q.options) ? q.options : [])
+      const given = (Array.isArray(q.options) ? q.options : [])
         .filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
         .map((o) => o.trim());
       const index = Number(q.answer);
       // An index pointing outside its own options is a question with no right
       // answer. There is no salvaging it, so it goes.
-      if (options.length < 2 || !Number.isInteger(index) || index < 0 || index >= options.length) {
+      if (given.length < 2 || !Number.isInteger(index) || index < 0 || index >= given.length) {
         return;
       }
+
+      /*
+       * The same option twice is one option, and `lib/quiz.ts` already wrote
+       * down what it costs: "a question could show the same sentence twice
+       * with one copy marked correct. Somebody picking the identical-looking
+       * option was marked wrong by a quiz that had asked them to tell two
+       * things apart while showing them the same thing."
+       *
+       * That file learned it from its own decoys; this one takes its options
+       * from a model, which is at least as likely to repeat itself — and the
+       * trim above makes it likelier still, since "Elastic " and "Elastic"
+       * arrive as two strings and become one.
+       *
+       * De-duplicated rather than dropped, because it is fixable without
+       * losing anything: the student sees the same distinct choices. The
+       * answer follows its own text rather than its old index, so a paper
+       * whose right answer was the second of two identical options still
+       * marks that text correct.
+       */
+      const answerText = given[index];
+      const options = [...new Set(given)];
+      // Two identical options and nothing else is not a question.
+      if (options.length < 2) return;
+
       questions.push({
         id: `q${i}`,
         kind,
         prompt,
         options,
-        answer: String(index),
+        answer: String(options.indexOf(answerText)),
         why,
         points: WORTH.choice.points,
         from,
