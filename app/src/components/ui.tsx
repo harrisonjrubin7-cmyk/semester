@@ -642,3 +642,87 @@ export function ActionButton({
     </button>
   );
 }
+
+/**
+ * The one control that opens a file picker.
+ *
+ * Every screen that took a file did the same thing: a `display: none` input, a
+ * ref, and a button whose `onClick` called `input.current?.click()`. That is
+ * three moving parts to do what the platform does on its own, and each of them
+ * is a way for the button to become a button that does nothing:
+ *
+ *  - **A scripted `.click()` is not always honoured.** It has to happen inside
+ *    the browser's idea of a user gesture, and an input that is `display: none`
+ *    is one some engines decline to open at all. Nothing throws when they
+ *    decline — the press simply does nothing, which is unarguably the worst
+ *    thing a button can do and impossible to tell apart from a broken app.
+ *  - **A ref can be null**, and then the press is silently a no-op.
+ *  - **An input keeps its value**, so choosing the same file twice in a row
+ *    fires `change` once. Pick a syllabus, remove it, pick it again — nothing.
+ *
+ * So the input is the button: it lies across the whole label at zero opacity,
+ * which means the press lands on the real control and the browser opens its own
+ * picker with no JavaScript in the path at all. It keeps the keyboard, too — the
+ * input is focusable, so Tab reaches it and Enter opens the picker, and the
+ * focus ring in `app.css` is drawn around the same box the label occupies.
+ *
+ * The value is cleared on the way out of `onChange`, which is what makes the
+ * same file choosable twice.
+ */
+export function FilePick({
+  accept,
+  multiple = true,
+  disabled = false,
+  onPick,
+  tone = 'secondary',
+  style,
+  children,
+}: {
+  /** The `accept` list. Keep it in step with what `lib/extract.ts` can read. */
+  accept: string;
+  multiple?: boolean;
+  disabled?: boolean;
+  onPick: (files: File[]) => void;
+  tone?: 'primary' | 'secondary' | 'ghost';
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
+  return (
+    <label
+      className={`btn btn-${tone} btn-block`}
+      style={{
+        height: HEIGHT,
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+        position: 'relative',
+        overflow: 'hidden',
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.55 : 1,
+        ...style,
+      }}
+    >
+      <input
+        type="file"
+        accept={accept}
+        multiple={multiple}
+        disabled={disabled}
+        onChange={(e) => {
+          const picked = Array.from(e.target.files ?? []);
+          // Cleared before the handler runs, so that re-choosing the same file
+          // is a change the browser will report next time.
+          e.target.value = '';
+          if (picked.length > 0) onPick(picked);
+        }}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          opacity: 0,
+          cursor: 'inherit',
+        }}
+      />
+      {children}
+    </label>
+  );
+}

@@ -1,11 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { dueByDay, lanesOf, weekDates, weekLabel, weekLine } from './weekpage';
-import type { DatedItem } from './types';
+import type { DatedItem, PersonalTask } from './types';
 
 const MON = new Date(2026, 8, 7); // Mon 7 Sep 2026
 
 const item = (date: Date, title: string): DatedItem =>
   ({ id: title, title, date, daysAway: 0 }) as unknown as DatedItem;
+
+const task = (date: string | null, title: string): PersonalTask => ({
+  id: title,
+  title,
+  date,
+  time: '',
+  note: '',
+  done: false,
+  created: 0,
+  courseId: null,
+});
 
 describe('the seven days', () => {
   it('runs from whatever the view calls the first', () => {
@@ -42,6 +53,20 @@ describe('deadlines by day', () => {
     expect(dueByDay([item(new Date(2026, 8, 20), 'Later')], MON).every((d) => !d.items.length)).toBe(
       true,
     );
+  });
+
+  it('carries your own tasks onto their day, and keeps them apart', () => {
+    // Apart, not merged: a week you can check against the PDF is a week that
+    // says which of its lines came out of one.
+    const days = dueByDay([item(new Date(2026, 8, 9), 'Problem Set 2')], MON, [
+      task('2026-09-09', 'Email the TA'),
+      task('2026-09-20', 'Next week'),
+      task(null, 'Someday'),
+    ]);
+    expect(days[2].tasks.map((t) => t.title)).toEqual(['Email the TA']);
+    expect(days[2].items.map((i) => i.title)).toEqual(['Problem Set 2']);
+    expect(days.every((d) => d.tasks.every((t) => t.title !== 'Someday'))).toBe(true);
+    expect(days.flatMap((d) => d.tasks).map((t) => t.title)).toEqual(['Email the TA']);
   });
 });
 
@@ -112,5 +137,16 @@ describe('what the week asks', () => {
 
   it('says so plainly when there is nothing', () => {
     expect(weekLine(dueByDay([], MON), 0)).toBe('Nothing on this week.');
+  });
+
+  it('counts your own tasks as yours rather than as more deadlines', () => {
+    const days = dueByDay([item(new Date(2026, 8, 9), 'Problem Set 2')], MON, [
+      task('2026-09-08', 'Email the TA'),
+      task('2026-09-10', 'Book the room'),
+    ]);
+    expect(weekLine(days, 12)).toBe('12 classes, 1 deadline and 2 of your own this week.');
+    expect(weekLine(dueByDay([], MON, [task('2026-09-08', 'Email the TA')]), 0)).toBe(
+      '1 of your own this week.',
+    );
   });
 });
