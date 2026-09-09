@@ -1,6 +1,7 @@
 # One app — the audit
 
-Step 1 of `/simplify`, run again. No code in this commit.
+Step 1 of `/simplify`, run again. Committed with no code; the status column in
+§4 and the two corrections at the end were filled in as the merges landed.
 
 Counted against `app/src` at `3a12e03`: **50 destinations** in `lib/nav.ts`, 75
 screen files, 89 components, 8 shelves, 4 navigations.
@@ -38,7 +39,7 @@ verdict column is the point; the evidence is why you can believe it.
 | **The Claude key and model** | **MERGE (D1)** | Two screens, both calling `saveSettings` |
 | **The storage measurement** | **MERGE (D2)** | Two screens, same bytes, two different measurements |
 | Hand-rolled rows | **Mostly done** | 36 in 13 files, down from 74 in 31; 18 files use shared `Rows` |
-| Hand-rolled chip rows | **Open (D3)** | 14 files hand-roll what `ChipRow` already does; 8 use it |
+| Hand-rolled chip rows | **MERGE (D3)** | 14 files by this count — but see §4, where the count turns out to be two idioms, not one |
 
 ### Three that look like duplicates and are not
 
@@ -224,9 +225,56 @@ the real number and it is the one D3 is scoped to.
 
 | # | Change | Destinations | Status |
 | --- | --- | --- | --- |
-| D1 | Claude key + model → Settings → Assistant only | 0 | to do |
-| D2 | Storage measurement → `data` only | 0 | to do |
-| D3 | 14 hand-rolled chip rows → `ChipRow` | 0 | to do |
+| D1 | Claude key + model → Settings → Assistant only | 0 | **done** |
+| D2 | Storage measurement → `data` only | 0 | **done** |
+| D3 | The second chip idiom becomes `PickChips` | 0 | **done**, and rescoped |
+
+### D3 was mis-scoped in this document, and the correction is the finding
+
+The row above said "14 files hand-roll what `ChipRow` already does". Reading
+them, that is wrong: **there are two chip idioms in this app and only one of
+them had a component.**
+
+`ChipRow` is a filled, uppercase, 29px chip in a row that scrolls sideways, and
+its own comment explains why it must not grow — the calendar stacks a
+`Segmented` directly above one, and at 44px their targets overlapped by 4px, in
+which band the lower row silently won taps meant for the upper.
+
+The other is an outlined pick, accented when chosen, that wraps onto several
+lines under a heading. Five copies, with the padding drifting between 7px and
+9px and the radius between `--r-sm` and `--r-md`. That is `PickChips` now.
+Converting them into `ChipRow` would have shrunk them, uppercased them and put
+them in a scrolling row — three changes nobody asked for.
+
+Three of the fourteen are deliberately left alone, and they are the reason the
+naive count oversold this: Registrar's found-dates list and Degree's "Taking it
+now" are **toggles**, not picks, and a single pressed button is not a chip row.
+Mine's course filter is `ChipRow`'s shape but its value is `CourseId | null`,
+and threading a sentinel through the filter for a styling win is not a trade
+worth making.
+
+### The two claims the brief asks for, checked
+
+**"No saved state can land the app on a screen that no longer exists, and there
+is a test proving it."** There are exactly two things that can put the app on a
+screen across a restart, and neither can strand you:
+
+  · **Saved state cannot, because the screen is not in it.** `screen` lives in
+    `Ephemeral` and is absent from `pickPersisted`, so nothing about where you
+    were standing reaches storage. Asserted now in
+    `app/src/state/screens.test.ts`, because that is load-bearing for screen
+    deletion and was previously only true by habit.
+  · **A URL can, and it lands on Today.** `fromHash` passes an unknown name
+    through on purpose, and `App.tsx`'s `default: return <Today />` catches it.
+    Checked in a browser: `#/cloud` (deleted this week) renders Today,
+    `#/weekly` (merged) renders Reports through the `RETIRED` table, and
+    `#/nonsense` renders Today. None blank.
+
+**"The screen count is lower than 59."** It is **50**, and none of that came
+from this pass — the reports, the reconciliation screens, the assistant's
+second door, the second search, the second Settings door and Files & mail all
+went earlier. This pass removed no destination, because there was no duplicate
+screen left to remove.
 
 **No destination is cut by this pass, and that is the finding.** 50 stays 50.
 The previous two passes removed the duplicate screens; what was left when I
