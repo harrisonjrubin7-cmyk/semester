@@ -72,11 +72,6 @@ describe('earning a screen', () => {
     expect(unlocked('behind', { ...fresh, courses: 2 })).toBe(true);
   });
 
-  it('opens sync only with an account', () => {
-    expect(unlocked('cloud', { ...fresh, courses: 4 })).toBe(false);
-    expect(unlocked('cloud', { ...fresh, signedIn: true })).toBe(true);
-  });
-
   it('shows everything to somebody a term in', () => {
     expect(countHidden(settled, none, false)).toBe(0);
   });

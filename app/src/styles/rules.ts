@@ -237,16 +237,22 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 688,
+  type: 682,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 224,
+  leading: 222,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 534,
+  space: 524,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 549,
+  shorthand: 545,
 };
 
 /*
+ * 688/224/534/549 → 682/222/524/545 when Files & mail was deleted. All four
+ * down and none up: the screen listed Drive files and inbox messages in rows
+ * it drew by hand, and Connect accounts already lists the same files. What it
+ * did that nothing else does — pushing deadlines out to Google or Microsoft —
+ * went with it rather than being moved, so nothing was reformatted here.
+ *
  * 689/537/551 → 688/534/549 when the Ask tab became the conversation: the
  * screen that was a key form is a settings page built from `Group` and
  * `CustomRow`, which carry the scale, and the sizes and gaps it used to set by

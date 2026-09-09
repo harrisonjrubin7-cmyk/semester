@@ -278,7 +278,8 @@ export function Me() {
       {/*
         This used to be seven identical grey buttons in a column, each labelled
         with two words and explaining nothing. "Files & mail" and "Connect
-        accounts" sound like the same thing until you have opened both. Now
+        accounts" sounded like the same thing until you had opened both — and
+        largely were, which is why only Connect accounts is left. Now
         everything is grouped and says what it is for, which is most of what
         made the app hard to find your way around.
       */}
@@ -383,8 +384,9 @@ export function Me() {
  * Search, across the whole app rather than the deadlines alone.
  *
  * It also finds screens, so somebody who wants their Gmail readings does not
- * have to know that the thing they want is called "Files & mail" and lives two
- * taps under Me. Typing what you want is allowed to be the way you get there.
+ * have to know that the thing they want is called "Connect accounts" and lives
+ * two taps under Me. Typing what you want is allowed to be the way you get
+ * there.
  */
 export function Search() {
   const { state, dispatch, now, catalog, school } = useStore();

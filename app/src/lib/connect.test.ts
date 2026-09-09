@@ -10,7 +10,9 @@ import {
   listRemoteFiles,
   pullCalendar,
   tokens,
+  writable,
   type ProviderId,
+  type TokenStore,
 } from './connect';
 import type { Course } from './types';
 
@@ -529,5 +531,45 @@ describe('describe', () => {
   it('copes with something thrown that was never an Error', () => {
     expect(explain('a bare string')).toBe('a bare string');
     expect(explain(null)).toBe('null');
+  });
+});
+
+describe('writable', () => {
+  /** A token store holding exactly these providers. */
+  const held = (...ids: ProviderId[]) =>
+    Object.fromEntries(
+      ids.map((id) => [
+        id,
+        { provider: id, access: 'a', refresh: 'r', expires: Date.now() + 3_600_000, account: 'x' },
+      ]),
+    ) as TokenStore;
+
+  it('does not offer to write to Zoom, whose calendar is read-only here', () => {
+    // The bug this exists for. Zoom is `calendar: true` because it publishes
+    // meetings worth reading, and a screen that took that flag as permission
+    // to write put three buttons in front of anybody with only Zoom
+    // connected — every one of which failed on press.
+    expect(PROVIDERS.zoom.calendar).toBe(true);
+    expect(writable(held('zoom'))).toEqual([]);
+  });
+
+  it('offers the two that addEvent and addTask actually implement', () => {
+    expect(writable(held('google'))).toEqual(['google']);
+    expect(writable(held('microsoft'))).toEqual(['microsoft']);
+    expect(writable(held('google', 'microsoft'))).toEqual(['google', 'microsoft']);
+  });
+
+  it('offers nothing at all when nothing is connected', () => {
+    expect(writable({})).toEqual([]);
+    expect(writable(held('apple'))).toEqual([]);
+  });
+
+  it('keeps one order, so the default pick does not move between renders', () => {
+    expect(writable(held('microsoft', 'google'))).toEqual(writable(held('google', 'microsoft')));
+  });
+
+  it('reads the stored tokens when it is given none', () => {
+    connected('google');
+    expect(writable()).toEqual(['google']);
   });
 });
