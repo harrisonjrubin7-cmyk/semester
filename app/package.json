@@ -14,7 +14,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:zones": "TZ=America/Chicago vitest run && TZ=Pacific/Kiritimati vitest run",
-    "lint:labels": "node scripts/labels.mjs"
+    "lint:labels": "node scripts/labels.mjs",
+    "transcripts": "node scripts/transcripts.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0",

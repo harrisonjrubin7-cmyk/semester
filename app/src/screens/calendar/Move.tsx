@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { revealKindly } from '../../lib/prefers';
 import { useStore } from '../../state/store';
 import { Blueprint } from '../../components/Blueprint';
 import { isoToDate, longLabel } from '../../lib/date';
@@ -153,7 +154,7 @@ export function useCalendarMove() {
     // `center`, not `nearest`: nearest counts the viewport, and the bottom of
     // it is under the tab bar — so the button that answers the refusal came to
     // rest half behind the navigation.
-    notes.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    revealKindly(notes.current, { block: 'center' });
     if (asking) dialog.current?.focus();
   }, [asking, refused]);
 

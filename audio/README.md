@@ -24,6 +24,23 @@ separate editions, switchable per course.
 BUS 1600 had no recording at all before this, so that one is new rather than an
 alternative.
 
+## These scripts are also the transcripts
+
+A script is the words of the recording, so it is also the text alternative the
+recording needs — an audio-only study mode with nothing to read is unusable by
+anybody deaf or hard of hearing, and awkward for everybody else, who cannot
+search it, skim it or quote it into an essay.
+
+```bash
+cd app && npm run transcripts     # --check to fail rather than write
+```
+
+That reads every script here and writes `app/src/data/transcripts/<course>.ts`,
+which the app's **Listen** mode shows beneath the chapter marks. Generated,
+never edited by hand: change a script, re-render the audio, and run this, or
+the page goes on showing the words of a recording that no longer exists.
+`app/src/lib/transcript.test.ts` compares the two and fails when they part.
+
 ## Rendering
 
 ```bash
