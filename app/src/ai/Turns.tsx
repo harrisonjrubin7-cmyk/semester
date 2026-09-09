@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { scrollKindly } from '../lib/prefers';
 import { Answer } from './Answer';
 
 /**
@@ -363,7 +364,7 @@ export function useFollowing(deps: unknown[]) {
   }, [el, following, ...deps]);
 
   const toEnd = () => {
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    if (el) scrollKindly(el, { top: el.scrollHeight });
     setFollowing(true);
   };
 
