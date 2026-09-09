@@ -10,7 +10,7 @@ import { cardKey, dueCount, dueFirst } from '../lib/review';
 import { interleave, mixLine, worthMixing } from '../lib/interleave';
 import { useKeepAwake } from '../lib/awake';
 import { unitName } from '../lib/unit';
-import { Toggle } from '../components/ui';
+import { ActionButton, Toggle } from '../components/ui';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
@@ -616,20 +616,13 @@ export function Quiz() {
               {current.full}
             </div>
           </Blueprint>
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={() => dispatch({ type: 'nextQuestion' })}
-            style={{
-              height: 48,
-              fontSize: 'var(--type-lg)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: 14,
-            }}
+            tone="primary" height={48}
+            style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
           >
             Next
-          </button>
+          </ActionButton>
         </>
       )}
       <div style={{ height: 22 }} />

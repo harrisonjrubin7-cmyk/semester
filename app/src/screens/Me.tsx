@@ -5,7 +5,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { learned, showSpan } from '../lib/pace';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
-import { EmptyState, Meter, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, EmptyState, Meter, SectionLabel, Segmented } from '../components/ui';
 import { NotYetOpened } from '../components/NotYetOpened';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { Bell } from '../components/Icons';
@@ -596,19 +596,13 @@ export function Notifications() {
           <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-1)' }}>{n.body}</div>
         </Blueprint>
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => dispatch({ type: 'clearNotifs' })}
-        style={{
-          height: 42,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          marginTop: 'var(--sp-4)',
-        }}
+        height={42} spacing="0.12em"
+        style={{ marginTop: 'var(--sp-4)' }}
       >
         Clear all
-      </button>
+      </ActionButton>
     </Page>
   );
 }
@@ -641,14 +635,13 @@ export function Reminders() {
         as a nudge while you are working, not an alarm clock.
       </div>
       {perm === 'default' && (
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
+        <ActionButton
           onClick={() => void requestPermission().then(setPerm)}
-          style={{ height: 40, marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          height={40}
+          style={{ marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)' }}
         >
           Allow notifications
-        </button>
+        </ActionButton>
       )}
     </div>
   );

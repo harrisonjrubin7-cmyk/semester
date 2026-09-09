@@ -14,6 +14,7 @@ import {
 } from '../../lib/claude';
 import { OPENAI_MODELS } from '../../lib/openai';
 import { money, monthStart, read as readSpend, since, total, RATES_READ } from '../../lib/spend';
+import { ActionButton } from '../../components/ui';
 
 /**
  * Where the answers come from, what they cost, and what leaves the device.
@@ -193,17 +194,15 @@ export function SettingsAssistant() {
             )}
 
             <CustomRow>
-              <button
-                type="button"
-                className="btn btn-primary btn-block"
+              <ActionButton
                 onClick={() => {
-                  saveSettings(config);
-                  setSaved(true);
+                saveSettings(config);
+                setSaved(true);
                 }}
-                style={{ height: 44, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                tone="primary" height={44}
               >
                 {saved ? 'Saved on this device' : 'Save on this device'}
-              </button>
+              </ActionButton>
               {config.provider !== 'openai' && config.apiKey.trim() !== '' && (
                 <>
                   <button

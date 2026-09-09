@@ -3,6 +3,7 @@ import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { ChevronRight, Plus } from '../components/Icons';
 import { SEED_SUMMARY } from '../data/seed';
+import { ActionButton } from '../components/ui';
 
 /**
  * What an account with no courses sees.
@@ -54,20 +55,13 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
 
       {!state.sample && (
         <>
-          <button
-            type="button"
-            className="btn btn-secondary btn-block"
+          <ActionButton
             onClick={() => dispatch({ type: 'setSample', on: true })}
-            style={{
-              height: 44,
-              fontSize: 'var(--type-sm)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: 'var(--sp-6)',
-            }}
+            height={44}
+            style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-6)' }}
           >
             Look at the sample semester
-          </button>
+          </ActionButton>
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-4)' }}>
             {SEED_SUMMARY.courses} real courses — {SEED_SUMMARY.units} units, {SEED_SUMMARY.cards}{' '}
             cards and {SEED_SUMMARY.lessons} narrated lessons — to see what a finished one looks

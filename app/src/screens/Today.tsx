@@ -9,7 +9,7 @@ import { ReadingsOnTheGo } from '../components/ReadingProgress';
 import { ClosingWindows } from '../components/Windows';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import { homeShape } from '../lib/chrome';
 import {
@@ -1018,23 +1018,16 @@ function HoursToday() {
       ) : (
         <HourGrid blocks={blocks} now={minutesNow(now)} style={{ marginTop: 14 }} />
       )}
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => {
-          dispatch({ type: 'setMineTab', tab: 'appointments' });
-          dispatch({ type: 'go', screen: 'mine' });
+        dispatch({ type: 'setMineTab', tab: 'appointments' });
+        dispatch({ type: 'go', screen: 'mine' });
         }}
-        style={{
-          height: 44,
-          marginTop: 18,
-          fontSize: 'var(--type-xs)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-        }}
+        height={44}
+        style={{ marginTop: 18, fontSize: 'var(--type-xs)' }}
       >
         + Add something to the day
-      </button>
+      </ActionButton>
       <div style={{ height: 22 }} />
     </>
   );

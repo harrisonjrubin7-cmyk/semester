@@ -23,7 +23,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
-import { PickChips, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, PickChips, SectionLabel, Segmented } from '../components/ui';
 import {
   countingIn,
   forProgramme,
@@ -295,14 +295,13 @@ function Transcript({ rows }: { rows?: Taken[] }) {
           Taking it now
         </button>
       </div>
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={add}
-        style={{ height: 44, marginTop: 'var(--sp-6)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        height={44} spacing="0.09em"
+        style={{ marginTop: 'var(--sp-6)' }}
       >
         Add the course
-      </button>
+      </ActionButton>
 
       {state.taken.length > 0 ? (
         <>
@@ -431,14 +430,13 @@ function Rules() {
           lineHeight: 'var(--leading-relaxed)',
         }}
       />
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={add}
-        style={{ height: 44, marginTop: 'var(--sp-5)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        height={44} spacing="0.09em"
+        style={{ marginTop: 'var(--sp-5)' }}
       >
         Add the requirement
-      </button>
+      </ActionButton>
 
       {state.requirements.length > 0 ? (
         <>

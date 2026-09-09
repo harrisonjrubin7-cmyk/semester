@@ -4,7 +4,7 @@ import { Page } from '../components/Page';
 import { Dictate } from '../components/Dictate';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
@@ -319,19 +319,13 @@ export function Exam() {
               after revising, or because somebody in your class read theirs out.
             </div>
 
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
+            <ActionButton
               onClick={fromCards}
-              style={{
-                height: 46,
-                marginTop: 'var(--sp-7)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-              }}
+              tone="primary" height={46}
+              style={{ marginTop: 'var(--sp-7)' }}
             >
               Sit it
-            </button>
+            </ActionButton>
             <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               Built from {guide.code}'s own cards — no key needed, nothing invented, works
               offline. Switch course from Study. For the same questions marked one at a time as
@@ -339,15 +333,14 @@ export function Exam() {
             </div>
           </>
         ) : configured() ? (
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={() => void write()}
             disabled={busy}
-            style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            tone="primary" height={46}
+            style={{ marginTop: 'var(--sp-7)' }}
           >
             {busy ? 'Writing the paper…' : 'Write the paper'}
-          </button>
+          </ActionButton>
         ) : (
           <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
             Needs a key first — set one under Settings → The assistant. A paper from your cards needs
@@ -721,17 +714,16 @@ export function Exam() {
         </>
       ) : (
         <>
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={() => {
-              setStage('marking');
-              window.scrollTo(0, 0);
+            setStage('marking');
+            window.scrollTo(0, 0);
             }}
-            style={{ height: 46, marginTop: 22, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            tone="primary" height={46}
+            style={{ marginTop: 22 }}
           >
             Finish and mark it
-          </button>
+          </ActionButton>
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             {total(questions)} marks in {questions.length} questions. Multiple choice is marked
             here; the written ones you mark yourself against the key, which is the part that
