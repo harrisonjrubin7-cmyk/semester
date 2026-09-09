@@ -12,6 +12,7 @@ import { AIProvider } from './ai/store';
 import { completeAuth } from './lib/connect';
 import { load as loadFromDb, prime as primeDb } from './state/persist';
 import { primePersisted } from './state/shape';
+import { warm } from './lib/warm';
 
 /**
  * A sign-in comes back as a redirect to this same page. Redeem the code before
@@ -86,6 +87,11 @@ completeAuth()
       const register = () => {
         const base = import.meta.env.BASE_URL || '/';
         void navigator.serviceWorker.register(`${base}sw.js`, { scope: base });
+        // The worker did not exist while this page's own bundles were being
+        // fetched, so none of them passed through it and none was kept. Tell
+        // it what was used, or the first visit offline is a blank page. See
+        // `lib/warm.ts`.
+        void warm(base);
       };
       if (document.readyState === 'complete') register();
       else window.addEventListener('load', register, { once: true });
