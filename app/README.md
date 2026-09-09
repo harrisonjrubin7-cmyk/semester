@@ -29,9 +29,16 @@ own application.
 
 ## What is in it
 
-Five tabs, forty-nine screens. The tabs are below; the forty-nine are the registry in
-`src/lib/nav.ts`, which is also what the directory, the search box and the
-home-screen icons are drawn from — there is one list, and it is that one.
+Five tabs, and every screen behind them. The tabs are below; the screens are
+the registry in `src/lib/nav.ts`, which is also what the directory, the search
+box and the home-screen icons are drawn from — there is one list, and it is
+that one.
+
+Not a count, deliberately. It was one, and it was wrong for months — "twenty
+screens" while there were fifty — and then, once a test held it to the
+registry, it was right and *fragile*: the number moves most weeks, so the
+sentence spent more effort staying true than it was worth. A pointer at the
+list cannot go stale.
 
 - **Today** — the next class with a live countdown, what is due today as a
   checklist, the day's rail of classes, the next campus event, and what is
