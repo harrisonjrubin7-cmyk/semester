@@ -845,21 +845,37 @@ function FeedPart({
              * because the nearest other target is the next section's grip, a
              * whole section away: there is room in every direction, which is
              * the condition `app.css` names for using it.
-             *
-             * Half the widened target falls off the left edge of the screen,
-             * since the grip sits in the page's margin and the overlay is
-             * centred. What is left is still about 32×44, which clears the
-             * 24×24 the rest of the app is held to. Measured rather than
-             * assumed — see the note beside `top` below.
              */
             className: 'tap',
             style: {
               position: 'absolute',
-              // Level with the heading it belongs to, and out in the page's
-              // own margin so it never lands on the words: these headings
-              // carry a count or a link at their right-hand end.
-              top: at,
-              left: -17,
+              /*
+               * Just above its heading, and inside the column rather than out
+               * in the page's margin.
+               *
+               * The margin was the obvious place — level with the heading,
+               * clear of the words, no layout to change — and it is the one
+               * band of a phone screen a control must not sit in. The
+               * leftmost strip is where iOS Safari's back-swipe starts, so a
+               * drag begun there is a gesture the browser takes before the
+               * page ever hears about it. A handle the system can quietly
+               * steal is a handle that does not work, and it fails in the way
+               * that teaches somebody the feature is broken.
+               *
+               * So the grip comes inside, to the column's own left edge, and
+               * moves up into the gap above the heading instead — which is
+               * empty on every section, being the margin that separates it
+               * from the one before. That keeps it out of both the swipe band
+               * and the heading's words, without indenting eighteen sections
+               * written by eighteen different hands.
+               *
+               * The offset is negative on purpose. A section's box begins at
+               * its heading — the gap above is margin, which is outside the
+               * box — so reaching into that gap means drawing above the box,
+               * and clamping at zero puts the grip back on top of the words.
+               */
+              top: at - 21,
+              left: 0,
               width: 17,
               /*
                * Above the section's own frame, or the widened target is not

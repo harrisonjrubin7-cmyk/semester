@@ -67,7 +67,6 @@ const EventDetail = lazy(() => import('./screens/Calendar').then((m) => ({ defau
 const Exam = lazy(() => import('./screens/Exam').then((m) => ({ default: m.Exam })));
 const Export = lazy(() => import('./screens/Export').then((m) => ({ default: m.Export })));
 const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap })));
-const Grades = lazy(() => import('./screens/Grades').then((m) => ({ default: m.Grades })));
 const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ default: m.Groupwork })));
 const Guide = lazy(() => import('./screens/Guide').then((m) => ({ default: m.Guide })));
 const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
@@ -300,8 +299,6 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: `${provider()} · this term`, title: 'Ask Claude' };
     case 'work':
       return { kicker: about('assignments'), title: 'Work on it' };
-    case 'grades':
-      return { kicker: 'Weights from your syllabi', title: 'Grades' };
     case 'maps':
       return { kicker: 'Campus, city, and how to get there', title: 'Getting there' };
     case 'mail':
@@ -831,8 +828,6 @@ function CurrentScreen() {
       return <Ask />;
     case 'work':
       return <Work />;
-    case 'grades':
-      return <Grades />;
     case 'maps':
       return <Maps />;
     case 'mail':
