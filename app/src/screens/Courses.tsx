@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import { nameFor, renamed, tintFor } from '../lib/yours';
+import { nameFor, renamed } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
 import { Timer } from '../components/Timer';
 import { ShareCourse } from '../components/ShareCourse';
@@ -26,6 +26,7 @@ import { DeadlineRow } from '../components/DeadlineRow';
 import { badge, overdueLine, split, standingOf } from '../lib/standing';
 import { isUnderway, openLine, underway, underwayLine } from '../lib/underway';
 import type { Course } from '../lib/types';
+import { CourseTag } from '../components/CourseTag';
 
 /** The one switcher, so the three views cannot drift apart. */
 function CoursesTabs({
@@ -58,9 +59,8 @@ function CoursesTabs({
  * different questions.
  */
 export function Courses() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   const soft = useSoft();
-  const tint = (id: string) => tintFor(state.yours, id);
   const ahead = upcomingItems(catalog, now);
   if (catalog.empty) return <FirstRun where="in your courses" />;
   const tab = state.coursesTab;
@@ -116,7 +116,7 @@ export function Courses() {
                   <LightTile
                     key={c.id}
                     label={c.code}
-                    tint={tint(c.id)?.base}
+                    tint={tint(c.id).fill}
                     // A course with nothing entered has no grade, and a dash
                     // is not a grade. It says so instead.
                     figure={mark === null ? undefined : `${Math.round(mark)}%`}
@@ -145,10 +145,11 @@ export function Courses() {
                   display: 'block',
                   // The colour is a stripe down the edge rather than a tint on the
                   // whole card: four tinted cards is a dashboard, and the whole point
-                  // of the look is that it is not one. A course with no colour
-                  // keeps the card exactly as it was.
-                  borderLeft: tint(c.id) ? `3px solid ${tint(c.id)?.base}` : undefined,
-                  paddingLeft: tint(c.id) ? 13 : 16,
+                  // of the look is that it is not one. Every course has one now —
+                  // the stripe used to appear only for a course somebody had
+                  // coloured by hand, which is to say almost never.
+                  borderLeft: `3px solid ${tint(c.id).edge}`,
+                  paddingLeft: 13,
                 }}
               >
                 <div
@@ -597,7 +598,7 @@ export function ItemDetail() {
     <div style={{ padding: 18 }}>
       <Blueprint style={{ padding: 'var(--sp-7)' }}>
         <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
-          <span className="tag tag-accent">{catalog.byId[item.c].code}</span>
+          <CourseTag id={item.c} />
           <span
             style={{
               fontSize: 'var(--type-xs)',

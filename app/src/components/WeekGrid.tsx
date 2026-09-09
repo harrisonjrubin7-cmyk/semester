@@ -1,5 +1,8 @@
 import type { CSSProperties } from 'react';
-import { CLASS_TINT, blockLabel, kindOf } from '../lib/kinds';
+import { blockLabel, kindTint } from '../lib/kinds';
+import { useStore } from '../state/store';
+import { ground as groundOf, resolveGround } from '../lib/look';
+import { usePrefersDark } from '../lib/prefers';
 import { DOW_INITIALS, clock } from '../lib/date';
 import type { HourBlock } from './HourGrid';
 import { lanesOf } from '../lib/weekpage';
@@ -68,6 +71,10 @@ export function WeekGrid({
   const col = `calc((100% - ${GUTTER}px) / ${days.length})`;
 
   const spec = { rowPx: ROW, gutterPx: GUTTER, startHour: lo, columns: days.length };
+  const { state, tint: courseTint } = useStore();
+  // The ground as resolved, not as stored: on "match my device" the kind
+  // colours have to be mixed for the screen somebody is actually looking at.
+  const light = groundOf(resolveGround(state.ground, usePrefersDark())).light;
   const drag = useDragToMove<{ block: HourBlock; day: number }>({
     grid: spec,
     disabled: !onMove,
@@ -175,7 +182,8 @@ export function WeekGrid({
           // neither could be read. See `lib/weekpage.ts`.
           const lanes = lanesOf(d.blocks);
           return d.blocks.map((b) => {
-            const tint = b.kind === null ? CLASS_TINT : kindOf(b.kind).tint;
+            const own = b.kind === null;
+            const tint = own ? courseTint(b.c).fill : kindTint(b.kind, light);
             const { lane, of } = lanes[b.id] ?? { lane: 0, of: 1 };
             const slot = `((${col} - 3px) / ${of})`;
             return (
@@ -201,6 +209,11 @@ export function WeekGrid({
                   borderLeft: `2px solid ${tint}`,
                   borderRadius: 'var(--r-sm)',
                   background: 'var(--app-panel)',
+                  // Filled for a class, outlined for something of yours — the
+                  // same rule the day grid draws, and the reason is there.
+                  backgroundImage: own
+                    ? `linear-gradient(${courseTint(b.c).wash}, ${courseTint(b.c).wash})`
+                    : undefined,
                   opacity:
                     drag.held?.block.id === b.id && drag.held.day === di
                       ? 0.35

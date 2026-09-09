@@ -217,6 +217,24 @@ Everything visual is a token. Screens read `var(--app-*)`, never a hex. If you
 want a different look, retune the tokens at the top of `app.css` and the whole
 app follows.
 
+### A colour per course
+
+One exception, and it proves the rule: a course's colour cannot be a token,
+because there is one token set and there are as many courses as you have. So
+`src/lib/tint.ts` derives it. Your accent anchors a wheel and your courses
+divide the rest of it between them — same saturation, same lightness, drawn for
+whichever ground is actually on — so four classes are four colours that still
+read as one family, and moving from Sterling to Copper takes the whole set with
+you. Every deadline row, class block, calendar dot, load bar and course code
+wears it, which turns "whose is this?" from something you read into something
+you see.
+
+Nothing was picked by eye: `tint.test.ts` runs WCAG's arithmetic over every hue
+at five-degree steps against all thirteen grounds — a course code at 4.5:1, a
+mark at 3:1. Hold a course to a particular colour under **Settings → Your
+courses, your way**, or turn the whole thing off under **Settings → Look**,
+where the app goes back to one metal throughout.
+
 ## Where things live
 
 ```
@@ -245,6 +263,7 @@ prevent.
 | Which navigation is drawn, and when | `lib/chrome.ts` |
 | The four navigations and the three layouts, with their names and blurbs | `lib/look.ts` (`NAVS`, `SHELLS`) |
 | Every colour, ground, typeface, size and spacing token | `lib/look.ts` (`tokensFor`) |
+| Which colour each course wears, everywhere it appears | `lib/tint.ts` |
 | Which settings pages exist and what each holds | `lib/settings.ts` (`SETTINGS`) |
 | What Today shows, and in what order | `lib/feed.ts` (`SECTIONS`) |
 | Which screens a new account sees before it has earned the rest | `lib/reveal.ts` |

@@ -109,6 +109,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // How you want your day drawn, and how loudly the app may claim your
   // attention. Both about you.
   feed: 'theirs',
+  // Whether the courses are coloured. About how somebody reads a list rather
+  // than about the screen it is on, so it follows them between devices.
+  courseColours: 'theirs',
   shell: 'theirs',
   // Whether the directory is a list or nine tiles. `theirs` for the same
   // reason the shell is: somebody who has learned that Data is bottom-left
