@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { blockLabel, kindTint } from '../lib/kinds';
 import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
+import { placeBlock } from '../lib/hourplace';
 import { useStore } from '../state/store';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
@@ -240,6 +241,17 @@ export function HourGrid({
         const Tag = b.onClick ? 'button' : 'div';
         const movable = Boolean(onMove) && (canMove ? canMove(b) : true);
         const holding = drag.held?.id === b.id;
+        // Clamped to the grid: an 11:59pm deadline is a minute short of the
+        // bottom of the day, and drawn straight it hangs below the last row
+        // over whatever the screen put under it. See `lib/hourplace.ts`.
+        const box = placeBlock({
+          at: b.at,
+          minutes: b.minutes,
+          startHour: lo,
+          endHour: hi,
+          rowPx: ROW,
+          minHeight: 22,
+        });
         return (
           <Tag
             key={b.id}
@@ -261,10 +273,10 @@ export function HourGrid({
             aria-label={blockLabel(b.title, b.kind, clock(b.at), b.meta, b.canceled)}
             style={{
               position: 'absolute',
-              top: top(b.at) + 1,
+              top: box.top,
               left: `calc(${GUTTER}px + ${lane} * ${width})`,
               width,
-              height: Math.max(22, (b.minutes / 60) * ROW - 3),
+              height: box.height,
               overflow: 'hidden',
               textAlign: 'left',
               padding: '4px 8px',
