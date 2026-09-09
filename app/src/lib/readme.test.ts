@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { counts, fill, inWords, marker, prose } from './counts';
+import { STATED, counts, fill, inWords, marker, prose, statedIn } from './counts';
 import { modesFor } from './modes';
 import { buildCatalog } from '../data/catalog';
 import type { CourseModule, Guide } from './types';
@@ -41,41 +41,74 @@ import type { CourseModule, Guide } from './types';
  */
 
 const ROOT = process.cwd();
-const README = readFileSync(join(ROOT, 'README.md'), 'utf8');
+const REPO = join(ROOT, '..');
+
+/**
+ * Both READMEs, read once.
+ *
+ * There are two — `app/README.md` and the repository's front page — and until
+ * this test loop existed only the first was held to anything. The front page
+ * drifted the whole way this mechanism was built to stop: a heading saying six
+ * ways over eleven modes, a sentence naming ten of them, and a table listing
+ * seven. So the file the test reads is whatever `STATED` names, and adding a
+ * third README is adding a row there.
+ */
+const FILES = STATED.map((file) => {
+  const text = readFileSync(join(REPO, file.path), 'utf8');
+  return { file, text, said: prose(text) };
+});
+
+/** The app's own README, which is where the claims not about counts live. */
+const README = FILES.find((f) => f.file.path === 'app/README.md')!.text;
 const SAID = prose(README);
 
 describe('the README counts', () => {
-  it('are what `npm run counts` would write', () => {
-    const { text, missing } = fill(README, counts(ROOT));
-    expect(missing, `The README has no marker for: ${missing.join(', ')}.`).toEqual([]);
-    expect(
-      text,
-      "The README's counts are out of date. Run `npm run counts` and commit what it writes.",
-    ).toBe(README);
-  });
-
-  it('sit in the sentence a reader would look for them in', () => {
-    /*
-     * The generator only fills markers. It cannot tell whether a marker is in
-     * a sentence that says what its number means, and a count written into
-     * the wrong noun is worse than one that has drifted — it is wrong and
-     * confident. So each number is still read back out of the prose beside
-     * the word it belongs to, which is what this file used to do by hand.
-     */
-    const nouns: Record<string, string> = {
-      screens: 'screens',
-      tabs: 'tabs',
-      modes: 'modes',
-      recordings: 'recordings',
-      lessons: 'narrated lessons',
-    };
-    for (const count of counts(ROOT)) {
-      const noun = nouns[count.key];
-      expect(noun, `No noun for the ${count.key} count. Add one here.`).toBeTruthy();
+  for (const { file, text, said } of FILES) {
+    it(`${file.path} is what \`npm run counts\` would write`, () => {
+      const { text: filled, missing } = fill(text, statedIn(counts(ROOT), file));
+      expect(missing, `${file.path} has no marker for: ${missing.join(', ')}.`).toEqual([]);
       expect(
-        SAID,
-        `${count.from} says ${count.n}, so the README should read "${count.said} ${noun}".`,
-      ).toContain(`${count.said} ${noun}`);
+        filled,
+        `${file.path}'s counts are out of date. Run \`npm run counts\` and commit what it writes.`,
+      ).toBe(text);
+    });
+
+    it(`${file.path} puts them in the sentence a reader would look for them in`, () => {
+      /*
+       * The generator only fills markers. It cannot tell whether a marker is in
+       * a sentence that says what its number means, and a count written into
+       * the wrong noun is worse than one that has drifted — it is wrong and
+       * confident. So each number is still read back out of the prose beside
+       * the word it belongs to, which is what this file used to do by hand.
+       *
+       * The noun is per file rather than per count, because the same number is
+       * "eleven modes" in the app's README and "eleven ways through the same
+       * material" on the front page, and both sentences are the right one
+       * where they are.
+       */
+      for (const count of statedIn(counts(ROOT), file)) {
+        const noun = file.nouns[count.key];
+        expect(
+          noun,
+          `No noun for the ${count.key} count in ${file.path}. Add one to STATED.`,
+        ).toBeTruthy();
+        expect(
+          said,
+          `${count.from} says ${count.n}, so ${file.path} should read "${count.said} ${noun}".`,
+        ).toContain(`${count.said} ${noun}`);
+      }
+    });
+  }
+
+  it('name every count in a file that states it', () => {
+    // A count nobody states is a count that has quietly stopped being checked.
+    // Every key `counts` returns has to appear in at least one `STATED` row,
+    // so dropping a sentence from a README is a failure rather than a silence.
+    for (const count of counts(ROOT)) {
+      expect(
+        STATED.some((file) => file.keys.includes(count.key)),
+        `No README states the ${count.key} count. Add it to a STATED row, or drop it from counts().`,
+      ).toBe(true);
     }
   });
 
@@ -124,6 +157,27 @@ describe('the README counts', () => {
     for (const mode of modes) {
       expect(listed, `The README's mode list is missing ${mode.label}.`).toContain(
         `**${mode.label.toLowerCase()}**`,
+      );
+    }
+
+    /*
+     * And the front page's, which is a sentence and a table rather than one
+     * list — and which was the half that had rotted: ten named in the
+     * sentence, seven rowed in the table, of the eleven that exist. Both are
+     * checked, because a mode present in one and absent from the other is the
+     * same reader misled either way.
+     */
+    const front = FILES.find((f) => f.file.path === 'README.md')!;
+    const section = front.said.slice(front.said.indexOf('ways through the same material'));
+    expect(section, 'The front page no longer has a mode section to check.').not.toBe('');
+    for (const mode of modes) {
+      const label = mode.label.toLowerCase();
+      expect(
+        section,
+        `The front page's mode sentence is missing ${mode.label}.`,
+      ).toContain(`**${label}**`);
+      expect(section, `The front page's mode table has no row for ${mode.label}.`).toContain(
+        `| ${label} |`,
       );
     }
   });
