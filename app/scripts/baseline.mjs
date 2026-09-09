@@ -60,6 +60,24 @@ async function shelfCount() {
   return [...list[1].matchAll(/'([^']+)'/g)].length;
 }
 
+/**
+ * How many screens the registry declares.
+ *
+ * The third number this script had written down. It said fifty-five, the app
+ * has fifty, and screens leave the registry the same way shelves do — so the
+ * check failed on a correct app and said the walk was broken. Counted from
+ * `DESTINATIONS` instead, which is the only thing that knows.
+ *
+ * The count is what a walk of the whole app should reach; it is deliberately
+ * not gated on the school, because the baseline runs with the bundled one.
+ */
+async function screenCount() {
+  const src = await readFile(join(HERE, '..', 'src', 'lib', 'nav.ts'), 'utf8');
+  const n = [...src.matchAll(/^\s{4}screen: '[^']+',$/gm)].length;
+  if (n === 0) throw new Error('cannot find any screens in lib/nav.ts');
+  return n;
+}
+
 /** The widths the acceptance list names. */
 const WIDTHS = [
   { w: 390, h: 844, name: 'phone' },
@@ -304,7 +322,10 @@ console.log('· every screen, phone, Ink');
   await page.waitForTimeout(1400);
   const seen = await everyScreen(page, 'all-phone-ink');
   console.log(`  ${seen.size} screens`);
-  if (seen.size !== 55) problems.push(`the walk reached ${seen.size} screens, not 55`);
+  const wantScreens = await screenCount();
+  if (seen.size !== wantScreens) {
+    problems.push(`the walk reached ${seen.size} screens, not ${wantScreens}`);
+  }
   await ctx.close();
 }
 
