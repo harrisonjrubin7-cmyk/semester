@@ -327,16 +327,19 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    // Taken from what `byTask` actually drew, not written down. A test whose
-    // subject is that the registry is the only source of screens cannot keep
-    // its own copy of one: this named `grades`, and stopped compiling the day
-    // the grade table went back to being a tab of Courses. Reading the row
-    // back out also means it cannot pass vacuously — a hand-named screen with
-    // no task tag would assert nothing and go on looking green.
-    const gone = byTask(DESTINATIONS).flatMap((s) => s.rows)[0].screen;
-    const short = DESTINATIONS.filter((d) => d.screen !== gone);
+    /*
+     * Any real destination will do, and this one is named because it is not
+     * the subject of an argument.
+     *
+     * It was `grades`, which is the case this test describes happening to the
+     * test itself: #76 took the grade table out of the registry, so the name
+     * here stopped being a `Screen` and the file stopped typechecking. The
+     * suite stayed green either way — vitest does not typecheck — so the
+     * thing that caught it was `tsc`, which is why CI runs both.
+     */
+    const short = DESTINATIONS.filter((d) => d.screen !== 'tonight');
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === gone)).toBe(false);
+    expect(rows.some((d) => d.screen === 'tonight')).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
