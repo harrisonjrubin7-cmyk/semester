@@ -280,6 +280,17 @@ export function SlideDeck() {
                 fontSize: 'var(--type-sm)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
+                /*
+                 * Above the two step regions below, which cover the card and
+                 * are drawn after it. This is the only control inside a slide
+                 * and it was unreachable: measured at 390×844, the point at
+                 * the middle of this button belonged to "Previous slide", so
+                 * the last thing a deck asks you to do stepped you backwards
+                 * instead. Nothing looked wrong, and no test could see it —
+                 * the button was in the document, named, enabled and painted.
+                 */
+                position: 'relative',
+                zIndex: 1,
               }}
             >
               Drill it now
@@ -287,19 +298,33 @@ export function SlideDeck() {
           </>
         )}
 
+        {/*
+          Tap the left third to go back, the rest to go on.
+
+          `width: 'auto'` is load-bearing, and the reason is two rules away
+          from here: `.bare` sets `width: 100%`, and an absolutely positioned
+          box with `left`, `right` *and* `width` all set is over-constrained,
+          so the browser drops one edge. Measured on the running app at
+          390×844: both of these were the full 352px of the card rather than a
+          third and two thirds of it, "Previous slide" covered the whole slide,
+          and "Next slide" started at 34% and ran 119px past the card — off
+          the right of the screen, and the only horizontal overflow anywhere
+          in the app at any width. `.rail-item` in app.css carries the same
+          note for the same reason.
+        */}
         <button
           type="button"
           className="bare"
           aria-label="Previous slide"
           onClick={() => step(-1)}
-          style={{ position: 'absolute', inset: '0 66% 0 0', cursor: 'w-resize' }}
+          style={{ position: 'absolute', inset: '0 66% 0 0', width: 'auto', cursor: 'w-resize' }}
         />
         <button
           type="button"
           className="bare"
           aria-label="Next slide"
           onClick={() => step(1)}
-          style={{ position: 'absolute', inset: '0 0 0 34%', cursor: 'e-resize' }}
+          style={{ position: 'absolute', inset: '0 0 0 34%', width: 'auto', cursor: 'e-resize' }}
         />
       </Blueprint>
 

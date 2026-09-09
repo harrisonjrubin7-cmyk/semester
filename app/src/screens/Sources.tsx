@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
@@ -110,6 +111,7 @@ export function Sources() {
 
           <SectionLabel>Add a source</SectionLabel>
           <textarea
+            aria-label="The source"
             className="input"
             value={entry}
             onChange={(e) => setEntry(e.target.value)}
@@ -117,6 +119,7 @@ export function Sources() {
             style={{ width: '100%', minHeight: 84, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
           />
           <input
+            aria-label="What it is for"
             className="input"
             value={role}
             onChange={(e) => setRole(e.target.value)}
@@ -124,6 +127,7 @@ export function Sources() {
             style={{ width: '100%', marginTop: 'var(--sp-4)' }}
           />
           <input
+            aria-label="The project it belongs to"
             className="input"
             value={into}
             onChange={(e) => setInto(e.target.value)}
@@ -173,6 +177,7 @@ export function Sources() {
                       </div>
                     ) : (
                       <input
+                        aria-label="What this source is for"
                         className="input"
                         defaultValue=""
                         placeholder="What is it for?"
@@ -215,7 +220,7 @@ export function Sources() {
                       </button>
                     </div>
                     {missing.length > 0 ? (
-                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
                         Missing {missing.join(', ')}. Kept as you wrote it either way.
                       </div>
                     ) : null}
@@ -266,7 +271,7 @@ export function Sources() {
                 {copied ? 'Copied' : 'Copy for a drafting tool'}
               </button>
               <PrintButton label="Print the list" style={{ marginTop: 'var(--sp-4)' }} />
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
                 BibTeX is built from the fields you entered; anything the app does not have is left out
                 rather than guessed, and the line you typed always goes in as a note. Opens in Zotero
                 or Overleaf.

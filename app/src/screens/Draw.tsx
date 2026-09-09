@@ -118,6 +118,7 @@ export function Draw() {
 
       <SectionLabel>What to draw</SectionLabel>
       <textarea
+        aria-label="What to draw"
         className="input"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}

@@ -160,7 +160,22 @@ export function onAuthChange(fn: (session: Session | null) => void): () => void 
   };
 }
 
-export async function signUp(email: string, password: string): Promise<string> {
+/**
+ * What making an account came to.
+ *
+ * `signedIn` is the part a caller cannot work out from the sentence, and the
+ * two paths are genuinely different: with email confirmation switched off the
+ * account is live and the app can carry on, and with it on there is no session
+ * at all until a link in an inbox is clicked. A first run that moved on from
+ * the account step in both cases would be hiding the one instruction that
+ * matters in the second.
+ */
+export interface SignedUp {
+  said: string;
+  signedIn: boolean;
+}
+
+export async function signUp(email: string, password: string): Promise<SignedUp> {
   const { data, error } = await (await cloud()).auth.signUp({
     email,
     password,
@@ -169,10 +184,14 @@ export async function signUp(email: string, password: string): Promise<string> {
   if (error) throw new Error(error.message);
   // With email confirmation on, there is no session until the link is clicked.
   return data.session
-    ? 'Account made. Your semester will sync from now on.'
-    : 'Check your email for the confirmation link, then come back and sign in. ' +
-      'If the link lands on a page that will not load, the confirmation still worked — ' +
-      'it is verified before the redirect — so come back here and sign in anyway.';
+    ? { said: 'Account made. Your semester will sync from now on.', signedIn: true }
+    : {
+        said:
+          'Check your email for the confirmation link, then come back and sign in. ' +
+          'If the link lands on a page that will not load, the confirmation still worked — ' +
+          'it is verified before the redirect — so come back here and sign in anyway.',
+        signedIn: false,
+      };
 }
 
 export async function signIn(email: string, password: string): Promise<void> {

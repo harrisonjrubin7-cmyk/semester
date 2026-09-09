@@ -3,7 +3,7 @@ import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
-import { DESTINATIONS } from '../lib/nav';
+import { screenName } from '../lib/nav';
 import { useConversation, provider } from './converse';
 import { AskSelection } from './AskAbout';
 import { Composer, sendHint } from './Composer';
@@ -206,10 +206,15 @@ export function Assistant() {
   const cameFrom = useRef<HTMLElement | null>(null);
 
   const assembled = useMemo(() => (ai.open ? ai.look() : null), [ai]);
-  const here = useMemo(
-    () => DESTINATIONS.find((d) => d.screen === ai.screen)?.label ?? ai.screen,
-    [ai.screen],
-  );
+  /*
+   * `screenName`, not the registry directly. Twenty screens are not
+   * destinations — the eight settings pages and the twelve you reach from
+   * something else — so `?? ai.screen` was the answer on all twenty, and the
+   * button announced itself as "Ask about setNav", "Ask about drill", "Ask
+   * about slides". `lib/nav.ts` names them; nothing here has to know which
+   * of the three registries a given screen's name is kept in.
+   */
+  const here = useMemo(() => screenName(ai.screen), [ai.screen]);
 
   /** Nothing asked in this thread yet, so the opening stands in for it. */
   const empty = talk.turns.length === 0 && !talk.busy;

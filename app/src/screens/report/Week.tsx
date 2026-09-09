@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { secondLine } from '../../lib/dim';
 import { Produced } from '../../components/Produced';
 import { useStore } from '../../state/store';
 import { Trouble } from '../../components/Trouble';
@@ -252,7 +253,7 @@ export function WeekReport() {
             </Produced>
           ) : null}
           <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(busy)} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Every number above is counted from your own data. {provider()} reads the counts and is
             told not to score the week — a week with three classes, a shift and two ticked boxes is a
             normal week.
@@ -293,7 +294,7 @@ export function WeekReport() {
         </button>
       </div>
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         A deadline counts to the week you ticked it.
         {back.staleTicks > 0
           ? ` ${back.staleTicks} of these ${back.staleTicks === 1 ? 'was' : 'were'} ticked before the app started recording the moment, so ${back.staleTicks === 1 ? 'it counts' : 'they count'} to the week ${back.staleTicks === 1 ? 'it was' : 'they were'} due instead.`

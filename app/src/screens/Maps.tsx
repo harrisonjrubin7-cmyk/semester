@@ -434,10 +434,14 @@ export function Maps() {
           {[stop.detail, note ?? measured(stop)].filter(Boolean).join(' · ')}
         </span>
       </button>
+      {/* 29×17, in a row with the stop itself and a chevron either side of it,
+          so `tap-y`: the row is 46px tall and there is room above and below,
+          and none at all beside. */}
       <a
         href={goHref(stop)}
         target="_blank"
         rel="noreferrer"
+        className="tap-y"
         aria-label={`Directions to ${stop.label}`}
         style={{
           flex: 'none',
@@ -629,21 +633,42 @@ export function Maps() {
         />
       </Suspense>
 
+      {/*
+        `--sp-7` rather than `--sp-4`, and the four pixels are load-bearing.
+
+        Leaflet draws its attribution — a link, and one this app is obliged to
+        keep — at the foot of the map, three pixels above its bottom edge. The
+        three controls below grew to a 44px target, which is centred on a 17px
+        label and so reaches 13.5px above it; at an 8px gap that put "Bigger"
+        over the last two pixels of "Leaflet", and the later element in the
+        document wins a tap. `--sp-7` clears it at every density.
+      */}
       <div
         style={{
           display: 'flex',
           gap: 'var(--sp-5)',
           alignItems: 'center',
-          marginTop: 'var(--sp-4)',
+          marginTop: 'var(--sp-7)',
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.08em',
           opacity: 0.75,
         }}
       >
+        {/*
+          `tap-y`, because these are 17px tall.
+
+          Three caps labels under the map, set at `--type-xs`: measured on the
+          running app at 390×844 they are 68×17, 43×17 and 42×17, against a
+          fingertip's 44. They are the row that makes the map usable — where
+          you are, everything at once, and bigger — and each was a miss. The
+          axis is `y` rather than both for the reason the audit gives in
+          app.css: they share a row, and a target that grew sideways would
+          reach into the neighbour beside it.
+        */}
         {locationSupported() && (
           <button
             type="button"
-            className="bare"
+            className="bare tap-y"
             onClick={() => void locate()}
             style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.08em' }}
           >
@@ -652,7 +677,7 @@ export function Maps() {
         )}
         <button
           type="button"
-          className="bare"
+          className="bare tap-y"
           onClick={() => setFit((n) => n + 1)}
           disabled={pins.length === 0}
           style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.08em' }}
@@ -661,7 +686,7 @@ export function Maps() {
         </button>
         <button
           type="button"
-          className="bare"
+          className="bare tap-y"
           onClick={() => setTall((t) => !t)}
           style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.08em' }}
         >
