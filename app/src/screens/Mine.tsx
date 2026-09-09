@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { has } from '../lib/search';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
@@ -747,46 +746,22 @@ function Files() {
 }
 
 export function Mine() {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch } = useStore();
 
   /*
-   * One box, four tabs, and it filters whichever one you are looking at.
-   *
-   * Tasks and notes are the two that grow without limit — a term's worth of
-   * either is a scroll. Events and files are short by their nature and get no
-   * adapter, so the box on those tabs searches the whole app, which is what
-   * `<Page>` does with a screen that declares none.
-   *
-   * The notes adapter searches titles and bodies. That is a local filter and
-   * nothing about it leaves the device — worth saying because the assistant
-   * on the same screen deliberately cannot read a note body at all.
+   * Tasks and notes are the two lists here that grow without limit — a term's
+   * worth of either is a scroll — and each had a filter on this screen. Both
+   * went with every other in-screen filter: the header's search reaches tasks
+   * and notes by name, and a note's body is searched there too.
    */
-  const tasks = useMemo(() => state.tasks, [state.tasks]);
   const notes = useMemo(
     () => [...state.notes].sort((a, b) => b.updated - a.updated),
     [state.notes],
   );
 
-  const search =
-    state.mineTab === 'tasks'
-      ? {
-          placeholder: 'Find a task',
-          select: () => tasks,
-          match: (t: PersonalTask, q: string) =>
-            has(q, t.title, t.note, t.time, t.date ?? '', t.courseId ? courseCode(t.courseId) : ''),
-        }
-      : state.mineTab === 'notes'
-        ? {
-            placeholder: 'Find a note — title or anything in it',
-            select: () => notes,
-            match: (n: Note, q: string) => has(q, n.title, n.body),
-          }
-        : undefined;
-
   return (
-    <Page search={search as never}>
-      {(shown: unknown[]) => (
-        <>
+    <Page>
+      <>
       <Segmented
         options={[
           { id: 'tasks', label: 'Tasks' },
@@ -798,12 +773,11 @@ export function Mine() {
         onChange={(tab) => dispatch({ type: 'setMineTab', tab })}
         style={{ marginBottom: 'var(--sp-7)' }}
       />
-      {state.mineTab === 'tasks' && <Tasks rows={shown as PersonalTask[]} />}
+      {state.mineTab === 'tasks' && <Tasks rows={state.tasks} />}
       {state.mineTab === 'appointments' && <Appointments />}
-      {state.mineTab === 'notes' && <Notes rows={shown as Note[]} />}
+      {state.mineTab === 'notes' && <Notes rows={notes} />}
       {state.mineTab === 'files' && <Files />}
-        </>
-      )}
+      </>
     </Page>
   );
 }

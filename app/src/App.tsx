@@ -85,7 +85,7 @@ const Quiz = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Quiz
 const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
 const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
 const Search = lazy(() => import('./screens/Me').then((m) => ({ default: m.Search })));
-const Settings = lazy(() => import('./screens/Me').then((m) => ({ default: m.Settings })));
+const Settings = lazy(() => import('./screens/settings/Index').then((m) => ({ default: m.Settings })));
 // The settings pages. Lazy like every other screen: somebody who never opens
 // settings should not download the colour picker.
 const SettingsLook = lazy(() => import('./screens/settings/Look').then((m) => ({ default: m.SettingsLook })));
@@ -113,6 +113,7 @@ import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
 import { settingsTitle } from './lib/settings';
 import { chromeFor, homeShape } from './lib/chrome';
+import { addingOn } from './lib/adding';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
@@ -448,6 +449,7 @@ function Header() {
   // every screen except the one it opens. Alerts stay at the top level, where
   // a header is not already competing with a Back button and a long title.
   const showActions = state.screen !== 'search';
+  const adding = addingOn(state.screen);
   const atRoot = rootOf(state.screen) === state.screen;
 
   /*
@@ -560,14 +562,20 @@ function Header() {
           {/* Before the icons, because it is the only thing here that is
               counting. Renders nothing at all unless a timer is running. */}
           <Running />
-          {/* One line, from anywhere. The alternative to this button is four
-              taps through two pickers, which is why nobody adds the thing
-              they were told about walking out of a lecture. */}
+          {/* The one +, and it adds what the screen is a list of: a course
+              on the courses list, a deadline everywhere else. See
+              `lib/adding.ts` — the courses list used to carry a second,
+              full-width "add a course" button under its last card because
+              this one could not make a course. */}
           <button
             type="button"
             className="btn btn-ghost btn-icon"
-            onClick={() => dispatch({ type: 'quickAdd', open: true })}
-            aria-label="Add something in one line"
+            onClick={() =>
+              adding.kind === 'course'
+                ? dispatch({ type: 'go', screen: 'import' })
+                : dispatch({ type: 'quickAdd', open: true })
+            }
+            aria-label={adding.label}
           >
             <Plus size={19} />
           </button>

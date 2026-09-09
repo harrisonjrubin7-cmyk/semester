@@ -566,7 +566,7 @@ export interface Ephemeral {
   homeTab: 'today' | 'hours' | 'week' | 'done' | 'brief';
   coursesTab: 'courses' | 'due' | 'grades';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
-  meTab: 'you' | 'all' | 'settings';
+  meTab: 'you' | 'all';
   /** Which shelf of the directory is showing under Everything. */
   meGroup: string;
   /**
@@ -612,18 +612,6 @@ export interface Ephemeral {
    * had one open yesterday is an app that has misread what a search is for.
    */
   finder: boolean;
-  /**
-   * What the overlay opens with, when a screen handed it a query.
-   *
-   * A page-level search that finds nothing offers the whole app, and the way
-   * out has to carry what was typed — otherwise "search everywhere for this"
-   * opens an empty box and asks for it again.
-   *
-   * Ephemeral for the same reason `finder` is, and one more: a search query is
-   * the most incidental thing a person types. Keeping it would sync what
-   * somebody was looking for at midnight to every device they own.
-   */
-  finderSeed: string;
   studyTab: 'guides' | 'tonight' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
@@ -887,7 +875,6 @@ export function initialEphemeral(now: Date): Ephemeral {
     dueTab: 'ahead',
     mailSeed: null,
     finder: false,
-    finderSeed: '',
     studyTab: 'guides',
     noteId: null,
     lessonUnit: 0,
@@ -1310,7 +1297,7 @@ export type Action =
   | { type: 'undo' }
   | { type: 'forgetUndo' }
   | { type: 'quickAdd'; open: boolean }
-  | { type: 'finder'; open: boolean; seed?: string }
+  | { type: 'finder'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }
@@ -1379,7 +1366,7 @@ export type Action =
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
-  | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
+  | { type: 'setMeTab'; tab: 'you' | 'all' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
   /**

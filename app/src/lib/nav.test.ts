@@ -210,14 +210,20 @@ describe('the shelves the directory is arranged on', () => {
     }
   });
 
-  it('put the three standing screens on Semester, where the term is', () => {
-    // Reports already asked "how is it going" from this shelf — it carries
-    // the `stand` tag — so the three that were Standing sit with it.
-    const on = destinationsIn('Semester').map((d) => d.screen);
-    expect(on).toContain('grades');
-    expect(on).toContain('degree');
-    expect(on).toContain('behind');
+  it('put the standing screens where the question is asked', () => {
+    // Reports already asked "how is it going" from Semester — it carries the
+    // `stand` tag — so the two about this term sit with it.
+    const semester = destinationsIn('Semester').map((d) => d.screen);
+    expect(semester).toContain('grades');
+    expect(semester).toContain('behind');
     expect(DESTINATIONS.find((d) => d.screen === 'brief')?.taskTags).toContain('stand');
+
+    // The degree is the one that is not about this term, and Semester is a
+    // term. It goes where the things it counts are, under the course list.
+    const courses = destinationsIn('Courses').map((d) => d.screen);
+    expect(courses).toContain('degree');
+    expect(courses.indexOf('degree')).toBe(courses.indexOf('courses') + 1);
+    expect(semester).not.toContain('degree');
   });
 
   it('puts the week ahead next to when you are behind', () => {

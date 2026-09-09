@@ -243,15 +243,21 @@ export const BUDGET = {
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
   space: 523,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 545,
+  shorthand: 544,
 };
 
 /*
- * 682/222/524/545 → 680/221/523/545 when Personal lost its Places tab. Three
+ * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
  * down and none up: the tab was a second copy of what the map already is, and
  * the one thing only it could do — standing somewhere and naming it — moved to
  * `screens/Maps.tsx` as it was rather than being redrawn, so the panel's own
  * off-scale values went with it and the tab's list rows did not come back.
+ *
+ * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
+ * One down, none up, and only one because the filter field lived in `<Page>`
+ * rather than in the fifteen screens that used it: what went with it here was
+ * that field's own `padding: '0 2px'` on the clear button. The screens lost an
+ * adapter each, which is prose, not spacing.
  *
  * 688/224/534/549 → 682/222/524/545 when Files & mail was deleted. All four
  * down and none up: the screen listed Drive files and inbox messages in rows
