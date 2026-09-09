@@ -658,7 +658,11 @@ function WeekView() {
     ? datedEvents(now, state.sample).filter((e) => inWeek(e.date))
     : [];
   const feedWeek = on.campus
-    ? state.feedEvents.filter((e) => inWeek(isoToDate(e.date)))
+    // `e.date &&` for the same reason the month grid below carries it: an
+    // event with no date is not in any week, and `isoToDate('')` does not say
+    // so — it answers 1 January 1900, which this happens to filter out. Right
+    // answer, wrong reason, and the reason is the part that survives an edit.
+    ? state.feedEvents.filter((e) => e.date && inWeek(isoToDate(e.date)))
     : [];
 
   const step = (delta: number) => {

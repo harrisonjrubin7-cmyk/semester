@@ -113,6 +113,34 @@ export function cardKey(courseId: string, question: string): string {
   return `${courseId}:${(h >>> 0).toString(36)}`;
 }
 
+/**
+ * The longest a card can be pushed out.
+ *
+ * The interval compounds — six, then times the ease each time — and the ease
+ * runs to 3.2, so it grows without limit. Measured, answering one card right
+ * on the day it came round every time:
+ *
+ *     right #6   393 days      due 2028-04-23
+ *     right #7   1,218 days    due 2031-08-24
+ *     right #17  1.37e8 days   due beyond what a Date can hold
+ *
+ * Nothing draws `due` as a date, so there is no "Invalid Date" on screen; what
+ * there is, past the seventeenth, is a timestamp that has stopped being one.
+ * Every comparison in this file still works on it, which is why this was
+ * invisible.
+ *
+ * A hundred years is Anki's own default and is chosen the same way: it is far
+ * outside any schedule a person is really keeping, so it changes nothing for
+ * anybody, and it keeps the number a number.
+ *
+ * It is deliberately *not* a semester-length cap. Whether a card answered
+ * right six times in three weeks should be retired until 2028 — while
+ * `strength` below reports it at 1.00 for ever, because it only decays a card
+ * that is past due — is a question about what this app is for, and that is the
+ * author's to answer rather than a bug to fix quietly.
+ */
+const MAX_INTERVAL = 36_500;
+
 export function emptyReview(now: number): CardReview {
   return { right: 0, wrong: 0, streak: 0, ease: START_EASE, interval: 0, seen: 0, due: now };
 }
@@ -158,7 +186,7 @@ export function score(
   const grown = streak === 1 ? 1 : streak === 2 ? 6 : Math.round(r.interval * r.ease);
   // A guess that happened to be right earns the streak but not the runway: it
   // comes back tomorrow rather than in a week, and the ease does not grow.
-  const interval = soon ? 1 : grown;
+  const interval = soon ? 1 : Math.min(MAX_INTERVAL, grown);
   return {
     right: r.right + 1,
     wrong: r.wrong,

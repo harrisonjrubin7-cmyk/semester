@@ -348,3 +348,97 @@ describe('reading a saved review history', () => {
     expect(readReviews([whole])).toEqual({});
   });
 });
+
+/**
+ * The scheduler, over long random histories rather than at a worked example.
+ *
+ * `score` is folded over one card hundreds of times across a term, and the
+ * examples above pin what it answers at each of the first few steps. These are
+ * the things that must hold however the answers fall — checked over two
+ * thousand histories of forty answers each, from one fixed seed so a failure
+ * is reproducible and the suite does not flake.
+ */
+describe('what a card record promises, however it was arrived at', () => {
+  const histories = () => {
+    let s = 4242;
+    return () => {
+      s = (s * 9301 + 49297) % 233280;
+      return s / 233280;
+    };
+  };
+
+  it('keeps every field inside its own bounds', () => {
+    const rnd = histories();
+    for (let run = 0; run < 400; run++) {
+      let now = 1_700_000_000_000;
+      let r = emptyReview(now);
+      for (let step = 0; step < 40; step++) {
+        const got = rnd() > 0.35;
+        const before = r;
+        r = score(r, got, now, got && rnd() > 0.8);
+
+        expect(r.ease).toBeGreaterThanOrEqual(1.3);
+        expect(r.ease).toBeLessThanOrEqual(3.2);
+        expect(r.interval).toBeGreaterThanOrEqual(0);
+        expect(Number.isFinite(r.interval)).toBe(true);
+        expect(r.seen).toBe(now);
+        expect(r.due).toBeGreaterThanOrEqual(r.seen);
+        // Every answer is counted exactly once, either way.
+        expect(r.right + r.wrong).toBe(step + 1);
+        expect(got ? r.streak : 0).toBe(got ? before.streak + 1 : 0);
+        // A miss brings it back in the same sitting rather than next week —
+        // the whole reason to say you missed it.
+        if (!got) expect(r.due - now).toBeLessThanOrEqual(60 * 60_000);
+
+        now += Math.floor(rnd() * 12 * 86_400_000);
+      }
+    }
+  });
+
+  it('never schedules a card past what a date can hold', () => {
+    // The interval compounds and the ease runs to 3.2, so it grows without
+    // limit: at the seventeenth consecutive right answer `due` left the range
+    // a Date can represent. Nothing draws it, so nothing said so — every
+    // comparison in the file still worked on a number that had stopped being a
+    // timestamp.
+    let now = Date.UTC(2026, 8, 9);
+    let r = emptyReview(now);
+    for (let i = 0; i < 60; i++) {
+      r = score(r, true, now);
+      expect(Number.isNaN(new Date(r.due).getTime())).toBe(false);
+      expect(r.interval).toBeLessThanOrEqual(36_500);
+      now = r.due;
+    }
+  });
+
+  it('still grows the way it did for the intervals anybody reaches', () => {
+    // The cap is far outside any schedule a person is really keeping, so it
+    // must not have moved the early steps at all.
+    let now = Date.UTC(2026, 8, 9);
+    let r = emptyReview(now);
+    const got: number[] = [];
+    for (let i = 0; i < 7; i++) {
+      r = score(r, true, now);
+      got.push(r.interval);
+      now = r.due;
+    }
+    expect(got).toEqual([1, 6, 16, 45, 131, 393, 1218]);
+  });
+
+  it('never lets an overdue card look better than an on-time one', () => {
+    const rnd = histories();
+    for (let run = 0; run < 400; run++) {
+      let now = 1_700_000_000_000;
+      let r = emptyReview(now);
+      for (let step = 0; step < 12; step++) {
+        r = score(r, rnd() > 0.35, now, false);
+        const onTime = strength(r, r.due - 1);
+        expect(onTime).toBeGreaterThanOrEqual(0);
+        expect(onTime).toBeLessThanOrEqual(1);
+        // "A card you last saw six weeks ago is not a card you know today."
+        expect(strength(r, r.due + 30 * 86_400_000)).toBeLessThanOrEqual(onTime);
+        now += Math.floor(rnd() * 12 * 86_400_000);
+      }
+    }
+  });
+});
