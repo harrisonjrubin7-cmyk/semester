@@ -25,7 +25,8 @@
  * amount they have not been told.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useModal } from '../a11y/modal';
 import { createPortal } from 'react-dom';
 import { typedRight } from '../lib/undo';
 
@@ -53,10 +54,8 @@ export function TypeToConfirm({
   const [typed, setTyped] = useState('');
   const box = useRef<HTMLInputElement>(null);
   const ok = typedRight(typed, want);
-
-  useEffect(() => {
-    box.current?.focus();
-  }, []);
+  // The field, because typing the word is the whole of what this asks.
+  const modal = useModal<HTMLDivElement>({ onClose: onCancel, initial: box });
 
   /*
    * Drawn on the device, not where it was asked for.
@@ -80,6 +79,9 @@ export function TypeToConfirm({
       role="dialog"
       aria-modal="true"
       aria-label={title}
+      ref={modal.ref}
+      onKeyDown={modal.onKeyDown}
+      tabIndex={-1}
       style={{
         position: 'absolute',
         inset: 0,
@@ -137,8 +139,11 @@ export function TypeToConfirm({
         value={typed}
         onChange={(e) => setTyped(e.target.value)}
         onKeyDown={(e) => {
+          // Escape belongs to the dialog. It was on this field alone, so on
+          // the one screen where somebody most wants a way out — a question
+          // about deleting a term — it did nothing once focus had moved to
+          // either of the two buttons under it.
           if (e.key === 'Enter' && ok) onConfirm();
-          if (e.key === 'Escape') onCancel();
         }}
         autoComplete="off"
         autoCorrect="off"

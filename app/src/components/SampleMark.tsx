@@ -40,7 +40,17 @@ export function SampleMark() {
         display: 'flex',
         alignItems: 'center',
         gap: 'var(--sp-4)',
-        padding: '5px 16px',
+        /*
+         * Twelve, not five, and the number is the buttons' rather than the
+         * banner's. `.tap-y` grows each one's hit area to 44px tall, centred
+         * on a 20px label — so it needs twelve pixels of room above and below
+         * inside this strip. At five it did not have them, and the overlay
+         * spilled out of the strip in both directions, where the header above
+         * and the fold row below win the hit test. The 44px existed and none
+         * of it could be reached.
+         */
+        paddingBlock: 'var(--sp-6)',
+        paddingInline: 'var(--sp-7)',
         background: 'var(--app-hero)',
         borderBottom: '1px solid var(--app-line)',
         fontFamily: 'var(--font-heading)',
@@ -82,11 +92,16 @@ export function SampleMark() {
 /*
  * `tap-y` on both, not `tap`: they sit side by side with a separator between
  * them, so an overlay reaching sideways would have each claiming the other's
- * space. Up and down is free — the strip is the full width of the screen and
- * what is above and below it is the header and the page, neither of which has
- * anything tappable at this height.
+ * space.
  *
- * Measured 112×20 and 69×20 before, which is a fingertip and a half short.
+ * Up and down is *not* free, which this said before and was wrong about. The
+ * overlay rendered at its full 44px and was unreachable at both ends: above,
+ * the sticky header paints over it at `z-index: 3`; below, the fold row does.
+ * Neither is tappable there, and that turns out not to matter — hit testing
+ * goes to whatever paints on top, not to whatever wants the tap. So the room
+ * has to exist inside this strip, which is what its vertical padding is for.
+ *
+ * Measured 81×20 and 50×20 with the overlay occluded on both sides.
  */
 const link = {
   flex: 'none',

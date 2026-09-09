@@ -133,6 +133,7 @@ import { forget } from './lib/scrollback';
 import { Fresh } from './components/Fresh';
 import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
+import { windowTitle } from './a11y/title';
 import { provider } from './lib/claude';
 import type { Screen } from './lib/types';
 
@@ -181,6 +182,29 @@ function SkipLink() {
       Skip to content
     </a>
   );
+}
+
+/**
+ * The `<title>`, following the screen. Draws nothing.
+ *
+ * Mounted beside the other draw-nothing components in both layouts, for the
+ * reason they are: a title that followed the screen on a phone and not on a
+ * laptop would be the harder half of the bug left in. The rule it writes is
+ * `a11y/title.ts`, which is pure and tested; this is the effect.
+ *
+ * It reads `useHeader()` rather than the screen id, so a screen renamed in
+ * the header is renamed in the tab with it and there is no second list to
+ * keep in step. The title is left alone on unmount: React unmounts the app
+ * only when the page is going away, and setting it back to `Semester` on the
+ * way out would be the last thing the tab said.
+ */
+function Titled() {
+  const { kicker, title } = useHeader();
+  const said = windowTitle(title, kicker);
+  useEffect(() => {
+    document.title = said;
+  }, [said]);
+  return null;
 }
 
 /** The kicker and title in the header, per screen. */
@@ -1155,6 +1179,7 @@ export default function App() {
         {/* First in the tree, so it is the first tab stop. See the note in
             the phone layout below. */}
         <SkipLink />
+        <Titled />
         <Fresh />
         {/* Mounted once, at the top, so a shortcut cannot work on one screen
             and not another. Renders nothing unless the sheet is open. */}
@@ -1261,6 +1286,7 @@ export default function App() {
         this element exists to solve.
       */}
       <SkipLink />
+      <Titled />
       <Fresh />
       <Ringing />
       <PushTop />

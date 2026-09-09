@@ -148,6 +148,34 @@ figcaption {
   border-radius: var(--radius-md);
 }
 .btn svg { display: block; }
+
+/*
+ * A button is as tall as the thumb going for it.
+ *
+ * `.btn` took its height from padding alone and landed at 30-42px, under the
+ * 44 a phone wants. Most of them stand alone in their row with whitespace
+ * above and below, so the growth costs nothing and is taken here rather than
+ * at each of the hundred-odd sites.
+ *
+ * The three exemptions are not tidiness, they are the cases where growing is
+ * the wrong answer:
+ *
+ *   `.chiprow` — measured, and recorded at length in `components/ui.tsx`: the
+ *   calendar stacks a `Segmented` directly above a `ChipRow`, and at 44px
+ *   their targets overlapped by 4px, in which band the lower row silently won
+ *   taps meant for the upper. A chip at 29px clears the 24x24 AA asks for and
+ *   is the better of two bad options.
+ *
+ *   `.seg` — the same stack, from the other side.
+ *
+ *   `.btn-icon` — square by definition, 36x36, and already given a 44px hit
+ *   area by `.tap` in the header without changing what it draws. Growing the
+ *   box would move the header instead.
+ */
+.btn { min-height: 44px; }
+.chiprow .btn,
+.seg .btn,
+.btn-icon { min-height: 0; }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn-primary { background: var(--color-accent); color: var(--color-bg); }
 .btn-primary:hover { background: var(--color-accent-600); }
@@ -167,7 +195,15 @@ figcaption {
   color: color-mix(in srgb, var(--color-text) 70%, transparent);
 }
 .input {
-  width: 100%; min-height: 36px; padding: 6px 10px; font: inherit;
+  /*
+   * 44, not 36. A form field is the one control on a screen somebody is
+   * certain to aim at, and 36px is under the fingertip a phone gives it.
+   * Unlike a chip or a segmented tab, a field stands alone in its row and
+   * grows into its own whitespace, so nothing below it can be stolen by the
+   * extra eight pixels — which is why this is safe here and is not a rule
+   * for every control (see `ChipRow` in `components/ui.tsx`).
+   */
+  width: 100%; min-height: 44px; padding: 6px 10px; font: inherit;
   font-size: 14px; color: var(--color-text); caret-color: var(--color-accent);
   background: var(--color-surface);
   border: 1px solid var(--color-divider); border-radius: var(--radius-md);
