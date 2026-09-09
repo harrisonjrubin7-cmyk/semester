@@ -1780,9 +1780,36 @@ function SemesterView() {
     );
   }
   const first = new Date(Math.min(...dates.map((d) => d.getTime())));
-  const last = new Date(Math.max(...dates.map((d) => d.getTime())));
   const start = new Date(first);
   start.setDate(start.getDate() - start.getDay());
+  /*
+   * How far this view will run, and why it needs an edge at all.
+   *
+   * The loop below builds one row per week from the earliest dated thing to
+   * the latest, and until this there was nothing to stop it. One entry dated
+   * 9999-01-01 — which `<input type="date">` accepts, and a restored backup or
+   * a synced device can carry — made that 415,978 rows, each filtering every
+   * list and calling `railFor` seven times. Measured: the term renders in 97ms
+   * and the far-dated one never finished at all.
+   *
+   * That is not new and it is not appointments. It came in through the task
+   * list, which has been in `dates` since this view learned about tasks, and
+   * the same door stands open for a deadline or a connected-calendar entry
+   * with a bad year on it. Bounding only the appointments — the shape the
+   * review suggested — would have left the hang exactly as reachable through
+   * the other three and looked fixed.
+   *
+   * A year, because the screen is called Semester and no term is longer. What
+   * falls outside is counted rather than dropped silently: the line under the
+   * chips says how many, so a date typed wrong is visible rather than merely
+   * absent.
+   */
+  const MAX_WEEKS = 53;
+  const wanted = new Date(Math.max(...dates.map((d) => d.getTime())));
+  const edge = new Date(start);
+  edge.setDate(edge.getDate() + MAX_WEEKS * 7);
+  const last = wanted < edge ? wanted : edge;
+  const beyond = dates.filter((d) => d > last).length;
 
   const weeks: {
     start: Date;
@@ -1819,8 +1846,21 @@ function SemesterView() {
       // string in the store, and turning seven of them into `Date`s per week
       // to compare them back is arithmetic with a timezone in it.
       tasks: tasks.filter((t) => t.date! >= from && t.date! < to),
-      // ISO strings, for the reason above.
-      appts: appts.filter((a) => a.date >= from && a.date < to),
+      /*
+       * ISO strings, for the reason above — and in the order they happen.
+       *
+       * They were in whatever order the store held, so an appointment added
+       * later showed above one earlier in the week. Every other list on this
+       * screen is in time order, and `appointmentsOn` — which the day panel
+       * uses — sorts by `at` for exactly this reason.
+       *
+       * By date first and then by `at`, which is minutes past midnight and a
+       * number: the review's suggested fix called `localeCompare` on it, which
+       * throws.
+       */
+      appts: appts
+        .filter((a) => a.date >= from && a.date < to)
+        .sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at),
       classes,
     });
   }
@@ -1860,6 +1900,11 @@ function SemesterView() {
             `${(on.deadlines ? tasks.length : 0) + (on.classes ? appts.length : 0)} of your own`,
           on.campus &&
             `${events.length + feed.length} ${events.length + feed.length === 1 ? 'event' : 'events'}`,
+          // Said rather than silently dropped: a date typed as 9999 is a thing
+          // somebody has to be able to find again, and "not on the bar" with
+          // no explanation is how it stays lost.
+          beyond > 0 &&
+            `${beyond} ${beyond === 1 ? 'thing is' : 'things are'} dated past this year and not plotted`,
           on.classes &&
             (teachingVaries
               ? `${weeks.reduce((n, w) => n + w.classes, 0)} class meetings`

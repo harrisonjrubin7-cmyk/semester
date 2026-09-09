@@ -98,8 +98,11 @@ describe("the semester bar's empty week", () => {
    */
   it('fills each week from the list rather than from nothing', () => {
     for (const list of ['items', 'events', 'feed', 'tasks', 'appts']) {
+      // `appts` filters and then sorts across a line break, so the assertion
+      // is that the list is named as the source, not that a `.filter(` follows
+      // on the same line.
       expect(WEEK, `w.${list} is declared and never filled`).toMatch(
-        new RegExp(`${list}: ${list}\\.filter\\(|${list}: \\w+\\.filter\\(`),
+        new RegExp(`${list}: ${list}\\b[\\s\\S]{0,80}?\\.filter\\(`),
       );
     }
   });
@@ -109,5 +112,38 @@ describe("the semester bar's empty week", () => {
     // appointment on the term. Both are things the student put there.
     expect(WEEK).toContain('of your own');
     expect(MONTH).toMatch(/on\.classes \? appts\.length : 0/);
+  });
+});
+
+describe('what the semester view refuses to draw', () => {
+  /*
+   * One entry dated 9999-01-01 made the weekly loop 415,978 rows, each
+   * filtering every list and calling `railFor` seven times. Measured in a
+   * browser: the term renders in 97ms and the far-dated one never finished.
+   *
+   * Not new, and not appointments — it came in through the task list, which
+   * has been in `dates` since this view learned about tasks, and the same door
+   * stands open for a deadline or a connected-calendar entry with a bad year.
+   * Bounding only the appointments, which is what the review suggested, would
+   * have left it as reachable through the other three.
+   */
+  const SPAN = MONTH.slice(MONTH.indexOf('const first = new Date(Math.min'));
+
+  it('stops at an edge rather than at the furthest date it was handed', () => {
+    expect(SPAN).toMatch(/MAX_WEEKS/);
+    // The end is the earlier of what was asked for and where the edge is.
+    expect(SPAN).toMatch(/const last = wanted < edge \? wanted : edge;/);
+    expect(SPAN).not.toMatch(/const last = new Date\(Math\.max/);
+  });
+
+  it('says how much fell outside rather than dropping it in silence', () => {
+    expect(SPAN).toMatch(/const beyond = dates\.filter/);
+    expect(MONTH).toMatch(/dated past this year and not plotted/);
+  });
+
+  it('puts a week’s appointments in the order they happen', () => {
+    // `at` is minutes past midnight, so it sorts as a number. Every other list
+    // on this screen is in time order; this one was in store order.
+    expect(MONTH).toMatch(/\.sort\(\(a, b\) => a\.date\.localeCompare\(b\.date\) \|\| a\.at - b\.at\)/);
   });
 });
