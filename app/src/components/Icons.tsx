@@ -63,3 +63,18 @@ export const CalendarIcon = svg('calendar');
 export const MakeIcon = svg('make');
 export const UpkeepIcon = svg('upkeep');
 export const CampusIcon = svg('campus');
+
+/* The tools, one each — see the note beside their shapes in `icons.data.ts`. */
+export const AskIcon = svg('ask');
+export const WorkIcon = svg('work');
+export const UpdateIcon = svg('update');
+export const AnalyseIcon = svg('analyse');
+export const DrawIcon = svg('draw');
+export const SolveIcon = svg('solve');
+export const ExamIcon = svg('exam');
+export const DeckIcon = svg('deck');
+export const SourcesIcon = svg('sources');
+export const EssayIcon = svg('essay');
+export const RunwayIcon = svg('runway');
+export const MailIcon = svg('mail');
+export const ProofIcon = svg('proof');

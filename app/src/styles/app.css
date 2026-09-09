@@ -1525,6 +1525,98 @@ input[type='search'].input {
   color: var(--tile-ink);
 }
 
+/* ── The home screen ──────────────────────────────────────────────────────
+   The Tools tab, drawn the way a phone draws its apps: a fixed four-column
+   grid of icons with the name under each. See `components/nav/AppGrid.tsx`
+   for why a grid and not the list it replaced.
+
+   `auto-fill` rather than a hard `repeat(4, 1fr)`: four is right on a phone
+   and wrong on the tablet width the app also runs at, where four columns of
+   180px each would be four icons lost in a field. The minimum is the tile
+   plus its label's breathing room, so the row count follows the width.
+
+   And a ceiling on the whole grid, because the other end is just as wrong: on
+   a laptop the same rule gives nine across and one short row under it, which
+   is a strip of icons rather than a home screen. Capped, the thirteen fall
+   five, five and three — a block the eye takes in at once, which is the only
+   thing a grid is doing for you that a list was not. */
+.appgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  gap: calc(18px * var(--density, 1)) var(--sp-4);
+  margin-top: var(--sp-6);
+  max-width: 460px;
+}
+
+.appicon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.appicon-tile {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: var(--app-raise);
+  border: 1px solid var(--app-line);
+  color: var(--app-accent);
+  /* The one thing borrowed from iOS, and it still answers to the Corners
+     setting: a reader who asked for Square gets square icons rather than the
+     single place in the app that overrules them. */
+  border-radius: min(14px, calc(var(--r-lg) * 4));
+  box-shadow: var(--lift-1);
+  transition: transform var(--fast), background var(--fast), border-color var(--fast);
+}
+
+.appicon:hover .appicon-tile {
+  background: var(--app-hero);
+  border-color: var(--app-accent-wash);
+}
+
+/* The press, which on a home screen is the whole of the feedback. */
+.appicon:active .appicon-tile {
+  transform: scale(0.92);
+}
+
+.appicon:focus-visible {
+  outline: none;
+}
+.appicon:focus-visible .appicon-tile {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+/* Two lines at most, centred, and it never widens the column: an icon whose
+   name pushes its neighbours out of line has broken the grid the grid is for. */
+.appicon-name {
+  max-width: 100%;
+  font-size: calc(11.5px * var(--text-scale, 1));
+  line-height: var(--leading-tight);
+  text-align: center;
+  color: var(--app-dim);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appicon:active .appicon-tile {
+    transform: none;
+  }
+}
+
 /*
  * The change strip: what just moved, at the top, for five seconds.
  *
@@ -1806,6 +1898,7 @@ input[type='search'].input {
   .soft-step,
   .soft-tile,
   .soft-dark,
+  .appicon-tile,
   .soft-bar-second {
     box-shadow: none;
     border-color: var(--app-fg);
@@ -1818,6 +1911,7 @@ input[type='search'].input {
   .soft-step,
   .soft-tile,
   .soft-dark,
+  .appicon-tile,
   .soft-bar-primary,
   .soft-bar-second {
     box-shadow: none;

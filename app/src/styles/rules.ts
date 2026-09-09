@@ -237,16 +237,23 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 682,
+  type: 681,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 222,
+  leading: 221,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 524,
+  space: 523,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 544,
+  shorthand: 543,
 };
 
 /*
+ * 682/222/524/544 → 681/221/523/543 when the Tools tab became a home screen.
+ * All four down, none up, and none of it by reformatting: thirteen cards
+ * drawn by hand in `screens/Study.tsx` — each with its own padding, its own
+ * 13.5px blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes
+ * live in `app.css` on the scales. The one value the grid does set by hand,
+ * the 11.5px icon name, is inside the new number.
+ *
  * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
  * One down, none up, and only one because the filter field lived in `<Page>`
  * rather than in the fifteen screens that used it: what went with it here was
