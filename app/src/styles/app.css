@@ -46,9 +46,16 @@
      a deadline that has gone by. Oxidised rather than red — it has to be
      legible as a warning without turning a sterling interface into a
      dashboard. Nothing else in the app is allowed to use it. */
-  --app-warn: #c8785f;
-  --app-warn-line: rgba(200, 120, 95, 0.45);
-  --app-warn-wash: rgba(200, 120, 95, 0.09);
+  /*
+   * A fallback only. The real values are written per ground by `warnFor` in
+   * `lib/look.ts` — this one hex was the least legible ink in the app on five
+   * light grounds and two dark ones, because it never changed with the ground
+   * under it. These stay so the colour exists before the first paint applies
+   * a ground, and so a stylesheet-only render is not colourless.
+   */
+  --app-warn: #9d4d34;
+  --app-warn-line: rgba(157, 77, 52, 0.45);
+  --app-warn-wash: rgba(157, 77, 52, 0.09);
 
   /* Two edge weights, because light has a direction. A raised surface catches
      it along the top and loses it underneath; drawing both is the cheapest

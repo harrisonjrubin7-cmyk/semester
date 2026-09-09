@@ -303,6 +303,7 @@ export function Export() {
       ) : null}
       {error ? (
         <div
+          role="alert"
           style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', color: 'var(--app-warn)' }}
         >
           {error}

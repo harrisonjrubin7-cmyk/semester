@@ -745,6 +745,7 @@ export function AddMaterial() {
 
       {readError && (
         <div
+          role="alert"
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
             color: 'var(--app-accent)',
@@ -815,6 +816,7 @@ export function AddMaterial() {
           )}
           {shotError && (
             <div
+              role="alert"
               style={{
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
                 color: 'var(--app-accent)',

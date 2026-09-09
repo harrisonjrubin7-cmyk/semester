@@ -145,7 +145,23 @@ export function allCards(guide: Guide) {
   return out;
 }
 
-export function weakestUnit(guide: Guide) {
+/**
+ * The unit to drill first, or `null` when there is nothing to drill.
+ *
+ * `null` rather than a unit that isn't there. `blankCourse` gives a course
+ * typed in by hand a real guide with no units in it — deliberately, so that
+ * every study screen can read `guide.units` without a null check of its own —
+ * and this held up the other end of that bargain badly: with no units it
+ * still answered `{ index: 0, unit: guide.units[0] }`, and `units[0]` of an
+ * empty array is `undefined`. The one caller read `.name` off it, so adding a
+ * course by hand and opening Study put the error screen in front of somebody
+ * who had done nothing wrong.
+ *
+ * A type that can say "none" is the fix rather than a check at the call site:
+ * the next caller would have had the same crash waiting for it.
+ */
+export function weakestUnit(guide: Guide): { index: number; unit: Guide['units'][number] } | null {
+  if (guide.units.length === 0) return null;
   let worst = 0;
   guide.units.forEach((u, i) => {
     if (u.mastery < guide.units[worst].mastery) worst = i;
