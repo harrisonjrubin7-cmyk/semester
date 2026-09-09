@@ -132,4 +132,51 @@ describe('every door, through one reader', () => {
   it('reads a list through whichever reader it is given', () => {
     expect(readList([{ id: 'w1' }, null, { nope: 1 }], readWindow)).toHaveLength(1);
   });
+
+  /*
+   * The holes, in the lists and records this reader cannot name.
+   *
+   * `courses` and `windows` have a per-row parser; the other two dozen fields
+   * do not, and until this they rode through untouched. That was fine on the
+   * localStorage boot, where `list` and `record` see them — and it was the
+   * whole hole on the other two doors, which never go near `loadPersisted`:
+   * a backup somebody opens, and a sync from another device that opens
+   * itself. `{"timers":[null]}` blanked the app out of storage; it blanked it
+   * out of a restore too, and out of a hydrate nobody had to open at all.
+   */
+  it('takes the holes out of a list it has no reader for', () => {
+    const out = readIncoming({
+      timers: [{ id: 't1' }, null, { id: 't2' }],
+      recent: ['home', null, 'courses'],
+    }) as { timers: unknown[]; recent: unknown[] };
+    expect(out.timers).toHaveLength(2);
+    // Strings, not objects: a filter for objects would empty this one.
+    expect(out.recent).toEqual(['home', 'courses']);
+  });
+
+  it('takes the holes out of a record it has no reader for', () => {
+    const out = readIncoming({
+      reviews: { a: { seen: 1 }, b: null, c: { seen: 2 } },
+    }) as { reviews: Record<string, unknown> };
+    expect(Object.keys(out.reviews)).toEqual(['a', 'c']);
+  });
+
+  it('leaves a top-level null alone, because one of them means something', () => {
+    // `lastSync` is legitimately null, and "only the keys actually carried are
+    // returned" has to keep meaning what it says: the rule goes one level in,
+    // matching the boot read, and not to the keys themselves.
+    const out = readIncoming({ lastSync: null } as Record<string, unknown>);
+    expect('lastSync' in out).toBe(true);
+    expect(out.lastSync).toBe(null);
+  });
+
+  it('keeps the reference of a field with nothing wrong with it', () => {
+    // `state/persist/` diffs by reference to decide what to write. A field
+    // this reader did not have to change must not look changed.
+    const timers = [{ id: 't1' }];
+    const reviews = { a: { seen: 1 } };
+    const out = readIncoming({ timers, reviews } as Record<string, unknown>);
+    expect(out.timers).toBe(timers);
+    expect(out.reviews).toBe(reviews);
+  });
 });

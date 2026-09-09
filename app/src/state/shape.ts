@@ -68,7 +68,7 @@ import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
-import { readList, readModule, readWindow } from '../lib/stored';
+import { list, readList, readModule, readWindow, record } from '../lib/stored';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -968,80 +968,19 @@ export function primePersisted(state: Persisted | null): void {
   primed = state;
 }
 
-/**
- * An array from storage, or an empty one.
+/*
+ * The two readers every list and record on this screen's state goes through
+ * are `list` and `record` in `lib/stored.ts`, imported above.
  *
- * `list(saved.tasks)` looks like it guards this and does not: `??` only
- * catches null and undefined, so a `tasks` that came back as a string, a
- * number or an object went straight through into the app, and the first
- * `.map` on it killed the whole page. Measured: storage holding
- * `{"tasks":"none"}` rendered zero characters and threw
- * `e.tasks.map is not a function` — before any boundary could catch it,
- * because it happens while the store is being built rather than while a
- * screen is being drawn.
+ * They used to live here, and the file they live in now is the one written
+ * about this exact bug one layer down — so keeping a second copy here meant
+ * the rule was stated twice and applied at one door out of three. A backup
+ * somebody opens and a sync from another device never touch `loadPersisted`
+ * at all; they arrive through `readIncoming`, which is where the rule had to
+ * be if it was going to be the rule.
  *
- * Storage is not a trusted input. It holds whatever an older build wrote, a
- * half-finished sync left behind, a quota error truncated, or somebody typed
- * into devtools. `readTabs` and `navOf` already read their fields back
- * defensively; there were twenty-three arrays that did not, and this is the
- * same idea applied to all of them at once.
- *
- * Empty rather than throwing, for the reason the whole file is written this
- * way: an app that opens with one list missing is recoverable, and an app
- * that will not open is not.
- *
- * ## The holes inside it, which this used to let through
- *
- * The guard was one level short. `[null]` is an array, so it passed, and the
- * first consumer to reach into a member died the same death the container
- * check was written to stop — this time with no boundary above it either,
- * because the readers are app-wide. Measured: storage holding
- * `{"timers":[null]}` rendered zero characters and threw
- * `Cannot read properties of null (reading 'endsAt')` from `Ringing`, which
- * is drawn beside every screen; a reload does not help, because the value
- * that kills it is the value being read.
- *
- * Null and undefined only, rather than "keep the objects". Two of the
- * nineteen lists through here hold strings — `courseOrder` and `recent` —
- * and a filter for objects would silently empty both. Those two are also
- * why this cannot be a schema: `list` is the reader for the fields that
- * have no per-row parser, and the ones that do have one go through
- * `readList` in `lib/stored.ts` instead. What is left is the one member
- * that throws on any property access at all, which is exactly the crash.
+ * What they do, and why, is written over each of them there.
  */
-function list<T>(value: unknown): T[] {
-  return Array.isArray(value)
-    ? (value.filter((row) => row !== null && row !== undefined) as T[])
-    : [];
-}
-
-/**
- * A keyed record from storage, with the holes taken out of it.
- *
- * `list`'s counterpart, and it exists for the same crash found the same way:
- * `reviews: saved.reviews ?? {}` guards the container and not what is under
- * the keys, so `{"reviews":{"econ-1":null}}` opened on a blank page with
- * `Cannot read properties of null (reading 'seen')`. A record's values are
- * read exactly as often as a list's rows and were guarded one level less.
- *
- * Values, not shapes. What is behind a key here is a tick, a grade, a URL or
- * a card's review, and no one rule fits them — the readers that do know a
- * shape (`readOverrides`, `readPretested`, `readWanted`) are called on their
- * own fields below. This takes out the one value that throws whatever the
- * shape was meant to be.
- *
- * A non-object — a string, a number, an array where an object belongs —
- * comes back empty rather than spread into `{0:'x'}`, which is what
- * `{...saved.picked}` was quietly making of it.
- */
-function record<T>(value: unknown): Record<string, T> {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return {};
-  const out: Record<string, T> = {};
-  for (const [key, row] of Object.entries(value)) {
-    if (row !== null && row !== undefined) out[key] = row as T;
-  }
-  return out;
-}
 
 export function loadPersisted(): Persisted {
   if (primed) return primed;

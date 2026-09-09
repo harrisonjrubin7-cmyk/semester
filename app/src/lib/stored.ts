@@ -53,6 +53,73 @@ const str = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : 
 /** An array, or an empty one — the check `list()` makes, reusable per field. */
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
+/**
+ * A value that is there at all.
+ *
+ * The one thing every consumer in this app assumes about a row it has been
+ * handed, and the one thing storage cannot promise. `null` and `undefined`
+ * throw on *any* property access, whatever shape the row was meant to be, so
+ * they are the whole of the rule — see `list` and `record` below.
+ */
+const there = (row: unknown): boolean => row !== null && row !== undefined;
+
+/** A plain object — not null, not an array — or nothing. */
+const plain = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/**
+ * A saved list, with the holes taken out of it.
+ *
+ * `state/shape.ts` had this as a check that a saved list *is* a list, which is
+ * the layer this file was opened to go under, and it stopped one level short
+ * of its own crash: `[null]` is an array, so it passed, and the first consumer
+ * to reach into a member died exactly the way a `tasks` of `"none"` did.
+ * Measured with `{"timers":[null]}` in localStorage: zero characters rendered
+ * and `Cannot read properties of null (reading 'endsAt')`, thrown from
+ * `components/Ringing.tsx` — drawn beside every screen rather than inside one,
+ * so no boundary caught it, and a reload could not, the value that kills it
+ * being the value being read.
+ *
+ * Holes only, not shapes. Two of the nineteen lists read this way hold
+ * strings — `courseOrder` and `recent` — so a filter for objects would
+ * silently empty both, and the fields that do have a per-row parser go
+ * through `readList` above. What is left is the member that throws whatever
+ * it was meant to be.
+ *
+ * Empty rather than throwing, for the reason the layer above is written that
+ * way: an app that opens with one list missing is recoverable, and an app
+ * that will not open is not.
+ */
+export function list<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value.filter(there) as T[]) : [];
+}
+
+/**
+ * A saved record, with the holes taken out of it.
+ *
+ * `list`'s counterpart, for the same crash found one field along:
+ * `reviews: saved.reviews ?? {}` guarded the record and not what was under
+ * its keys, and `{"reviews":{"econ-1":null}}` opened on a blank page with
+ * `Cannot read properties of null (reading 'seen')`. A record's values are
+ * read exactly as often as a list's rows and were guarded one level less.
+ *
+ * Values, not shapes, for the same reason as `list`: what is behind a key
+ * here is a tick, a grade, a URL or a card's review, and the fields that do
+ * know their shape — `readOverrides`, `readPretested`, `readWanted` — are
+ * called on their own fields by the caller.
+ *
+ * A non-object comes back empty rather than spread into `{0:'x'}`, which is
+ * what `{...saved.picked}` was quietly making of a string.
+ */
+export function record<T>(value: unknown): Record<string, T> {
+  if (!plain(value)) return {};
+  const out: Record<string, T> = {};
+  for (const [key, row] of Object.entries(value)) {
+    if (there(row)) out[key] = row as T;
+  }
+  return out;
+}
+
 const obj = (v: unknown): Record<string, unknown> =>
   v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 
@@ -172,6 +239,39 @@ export function readIncoming<T extends Record<string, unknown>>(blob: T): T {
   }
   if ('windows' in out) {
     (out as Record<string, unknown>).windows = readList(out.windows, readWindow);
+  }
+  /*
+   * And the holes, in whatever else came, which is the half these doors were
+   * missing.
+   *
+   * `list` and `record` take them out on the localStorage boot, and nothing
+   * arriving by the other two doors goes near either: a backup file and a
+   * sync from another device are merged straight into live state. So the same
+   * `[null]` that blanked the app out of storage blanked it out of a restore,
+   * and out of a hydrate nobody had to open at all — which is the door this
+   * comment calls the worst of the three.
+   *
+   * Structural rather than by name, because that is the point of the door: a
+   * field this build has never heard of is exactly the one whose rows nothing
+   * here can name, and the rule does not need to name them. One level in,
+   * matching what the boot read does, and top-level nulls are left alone —
+   * `lastSync` is legitimately null, and "only the keys actually carried are
+   * returned" has to keep meaning what it says.
+   *
+   * Replaced only when something was dropped, so an untouched field keeps its
+   * reference and `state/persist/`'s equality diff still sees no write.
+   */
+  for (const [key, value] of Object.entries(out)) {
+    if (key === 'courses' || key === 'windows') continue;
+    if (Array.isArray(value)) {
+      const kept = value.filter(there);
+      if (kept.length !== value.length) (out as Record<string, unknown>)[key] = kept;
+    } else if (plain(value)) {
+      const kept = record(value);
+      if (Object.keys(kept).length !== Object.keys(value).length) {
+        (out as Record<string, unknown>)[key] = kept;
+      }
+    }
   }
   return out;
 }
