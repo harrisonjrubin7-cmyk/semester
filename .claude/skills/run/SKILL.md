@@ -157,6 +157,51 @@ is hard to see and easy to claim:
 const n = await page.evaluate(() => document.querySelectorAll('.soft-bar').length);
 ```
 
+## 6a · Reach for the accessible control, not the gesture
+
+**A synthetic mouse drag does not turn the springboard's pages.** Pressing
+at one point, moving across the grid and releasing leaves it on the same
+page — no error, no movement, which reads as "the app is broken" rather
+than "the driver is wrong". Measured: after the drag the icons were
+unchanged; after the click below they changed.
+
+Assume the same of any other gesture here until you have watched it work.
+There is no need to find out, though, because the touch affordances all
+have a keyboard equivalent with a role and a name — the app is navigable
+without a pointer. Use those:
+
+```js
+await page.getByRole('tab', { name: 'Page 2' }).click();   // springboard pages
+await page.getByRole('tab', { name: 'Study' }).click();    // shelf, row one
+```
+
+Reach for a gesture only when the gesture itself is what you are testing,
+and reach for the role first every other time — it is what a keyboard user
+does, so if it does not work that is a bug worth finding.
+
+## 6b · Where each navigation's chrome lives
+
+The class names do not follow the names on screen, and guessing costs a
+30-second timeout each time:
+
+| Navigation | Its chrome | Where |
+|---|---|---|
+| `tabs` | `.app-tabs` | below the scroller |
+| `shelves` | `.shelf-nav`, `.shelf-nav-row`, `.shelf-nav-pill`, `.shelf-nav-said` | above the scroller |
+| `springboard` | `.iconshape` inside `.tappable`; pages are `role="tab"` | the home screen itself |
+| `feed` | no chrome of its own | — |
+
+`.soft-grid` is the **folder** that opens on top of the springboard, not
+the launcher's own grid — the obvious guess, and it silently matches
+nothing until a folder is open.
+
+Only one navigation is ever drawn, so asserting the others are absent is a
+cheap way to prove the setting took:
+
+```js
+await page.evaluate(() => document.querySelectorAll('.app-tabs').length);  // 0 under shelves
+```
+
 ## 7 · Check nothing threw
 
 ```js

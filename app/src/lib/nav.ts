@@ -198,8 +198,13 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'courses',
     label: 'Courses',
-    blurb: 'Every course, its deadlines, its grading and its professor.',
-    keywords: 'class syllabus professor office hours grading credits',
+    // Three grains, and the third is the one people search for by name:
+    // Grades was a destination of its own until it turned out to be this
+    // screen's third tab as well. Its keywords came here with it, so "what do
+    // i need on the final" still lands somewhere.
+    blurb: 'Every course, what it is asking of you, and what you have scored so far.',
+    keywords:
+      'class syllabus professor office hours grading credits grade grades gpa mark score final exam what do i need weighting rubric percent average',
     group: 'Courses',
     taskTags: ['due', 'stand'],
     root: 'courses',
@@ -522,15 +527,6 @@ export const DESTINATIONS: Destination[] = [
     group: 'Semester',
     taskTags: ['study', 'week'],
     root: 'home',
-  },
-  {
-    screen: 'grades',
-    label: 'Grades',
-    blurb: 'What you have so far, and what the rest has to average.',
-    keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
-    group: 'Semester',
-    taskTags: ['stand'],
-    root: 'courses',
   },
   {
     screen: 'applying',
@@ -859,6 +855,29 @@ export function saysFor(d: Destination, c: Capabilities): { label: string; blurb
  * Capability-gated like everything else: a screen visited before somebody
  * changed school must not come back through this door.
  */
+/**
+ * The tag sections, each with the screens that carry it, in registry order.
+ *
+ * The shelves (`GROUPS`) answer "where is the thing called X"; this answers
+ * "what would I use this for". A screen appears under every intention it
+ * serves, so several appear more than once — `taskTags` is a list, not a
+ * category, and a view showing each screen once would be the shelves with
+ * different headings.
+ *
+ * It lived in `lib/everything.ts`, which was that screen's own module: eight
+ * exports, seven of which the screen was the only caller of. When the screen
+ * folded into Progress this was the one thing that came with it, which left a
+ * two-hundred-line file holding one seven-line function that imports `TASKS`
+ * and `taskLabel` from here. It is here now, and that file is gone.
+ */
+export function byTask(rows: Destination[]): { tag: TaskTag; label: string; rows: Destination[] }[] {
+  return TASKS.map(([tag]) => ({
+    tag,
+    label: taskLabel(tag),
+    rows: rows.filter((d) => d.taskTags.includes(tag)),
+  })).filter((s) => s.rows.length > 0);
+}
+
 export function lately(
   recent: string[],
   onBar: string[],
