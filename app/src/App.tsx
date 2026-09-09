@@ -1131,7 +1131,6 @@ export default function App() {
       <Undone />
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
-        {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
         {chrome.rail && <Rail />}
         <div className="device device-pane">
           {/*
@@ -1161,6 +1160,11 @@ export default function App() {
             `components/Command.tsx`.
           */}
           {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
+          {/* And the capture box, for the same reason and with the same
+              answer: its one field was a white browser textbox out here, and
+              with nothing capping it its explanation ran the full width of a
+              laptop in a single line. See its own `position`. */}
+          {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
           <Header />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
