@@ -28,7 +28,7 @@ import {
 } from '../lib/select';
 import { MONTHS, clock, minutesNow } from '../lib/date';
 import { dueByDay, weekDates, weekLabel, weekLine } from '../lib/weekpage';
-import { hasTime } from '../lib/duetime';
+import { hasTime, readDue } from '../lib/duetime';
 import { clockOf } from '../lib/atrisk';
 import { nowAt, readDay, worthMarking } from '../lib/rail';
 import { said } from '../lib/arrive';
@@ -289,9 +289,15 @@ function OverdueBanner() {
 function ThisWeek() {
   const { state, dispatch, now, catalog, tint, courseCode } = useStore();
   const row = useRowStyle(9);
-  const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
+  const nextEvent = datedEvents(now, state.schoolId, state.sample).find((e) => !e.isPast);
 
-  const days = useMemo(() => dueByDay(datedItems(catalog, now), now), [catalog, now]);
+  // Your own tasks alongside the deadlines, day by day. Same reason as
+  // everywhere else in this change: a week that shows only what a syllabus
+  // asked for is not this week.
+  const days = useMemo(
+    () => dueByDay(datedItems(catalog, now), now, state.tasks),
+    [catalog, now, state.tasks],
+  );
   // Everything still ahead that the seven days do not reach, and the date it
   // is "after" — written out, because "after 14" is not a date.
   const last = weekDates(now)[6];
@@ -372,13 +378,13 @@ function ThisWeek() {
               fontSize: 'var(--type-xs)',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              opacity: d.items.length > 0 ? 0.8 : 0.35,
+              opacity: d.items.length + d.tasks.length > 0 ? 0.8 : 0.35,
             }}
           >
             {i === 0 ? 'Today' : d.label}
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            {d.items.length === 0 ? (
+            {d.items.length + d.tasks.length === 0 ? (
               <span style={{ fontSize: 'var(--type-sm)', opacity: 0.3 }}>Clear</span>
             ) : (
               d.items.map((item) => (
@@ -433,6 +439,61 @@ function ThisWeek() {
                 </button>
               ))
             )}
+            {/* Yours, under the syllabus's and marked as yours — the app's
+                one rule about these two never being drawn as one thing. */}
+            {d.tasks.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                className="bare tappable"
+                onClick={() => {
+                  dispatch({ type: 'setMineTab', tab: 'tasks' });
+                  dispatch({ type: 'go', screen: 'mine' });
+                }}
+                style={{
+                  display: 'flex',
+                  gap: 'var(--sp-5)',
+                  alignItems: 'flex-start',
+                  textAlign: 'left',
+                  width: '100%',
+                  padding: 'var(--sp-2) 0',
+                }}
+              >
+                <span
+                  style={{
+                    flex: 'none',
+                    width: 2,
+                    alignSelf: 'stretch',
+                    background: tint(t.courseId).edge,
+                  }}
+                />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: 'var(--type-base)',
+                      lineHeight: 'var(--leading-normal)',
+                      opacity: t.done ? 0.45 : 1,
+                      textDecoration: t.done ? 'line-through' : 'none',
+                    }}
+                  >
+                    {t.title}
+                  </span>
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: 'var(--type-xs)',
+                      opacity: 0.55,
+                      marginTop: 'var(--sp-1)',
+                    }}
+                  >
+                    {['Yours', t.courseId ? courseCode(t.courseId) : '', t.time.trim()]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       ))}
@@ -1320,7 +1381,26 @@ function DoneToday() {
  */
 function HoursToday() {
   const { state, dispatch, now, catalog } = useStore();
-  const blocks = hoursFor(catalog, now, state.appointments, state.commitments);
+  /*
+   * Your tasks are on this grid, which for a long time they were not.
+   *
+   * The tab said "anything you add is tinted by what it is for" and drew
+   * classes, appointments and standing commitments — every kind of thing you
+   * can add except the one most people add most often. A task you had given
+   * an hour to appeared nowhere on any grid in the app. `hoursFor` takes them
+   * now, so this tab, the day view and the week grid all get them from the
+   * same place rather than three of them being taught separately.
+   */
+  const blocks = hoursFor(catalog, now, state.appointments, state.commitments, [], state.tasks);
+  /*
+   * The rest of today's tasks: the ones whose time is not a clock.
+   *
+   * A task's time is your wording and is never parsed into an hour it did not
+   * state, so "before work" cannot be a block. Listed under the grid rather
+   * than dropped, because a task that is invisible on the one screen that
+   * claims to be your day is the bug this whole change is about.
+   */
+  const untimed = tasksOn(state.tasks, now).filter((t) => !t.done && readDue(t.time) === null);
 
   return (
     <>
@@ -1329,14 +1409,48 @@ function HoursToday() {
         is for.
       </div>
       <KindKey />
-      {blocks.length === 0 ? (
+      {blocks.length === 0 && untimed.length === 0 ? (
         <EmptyState
           inline
           title="Nothing on today"
           body="Add something below and it appears on the grid."
         />
       ) : (
-        <HourGrid blocks={blocks} now={minutesNow(now)} style={{ marginTop: 14 }} />
+        blocks.length > 0 && (
+          <HourGrid blocks={blocks} now={minutesNow(now)} style={{ marginTop: 14 }} />
+        )
+      )}
+      {untimed.length > 0 && (
+        <>
+          <SectionLabel style={{ marginTop: 'var(--sp-7)' }}>No hour on them</SectionLabel>
+          {untimed.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className="bare tappable"
+              onClick={() => {
+                dispatch({ type: 'setMineTab', tab: 'tasks' });
+                dispatch({ type: 'go', screen: 'mine' });
+              }}
+              style={{
+                display: 'flex',
+                gap: 'var(--sp-5)',
+                alignItems: 'baseline',
+                width: '100%',
+                textAlign: 'left',
+                padding: 'var(--sp-3) 0',
+              }}
+            >
+              <span className="tag tag-neutral">Yours</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
+                {t.title}
+                {t.time.trim() && (
+                  <span style={{ opacity: 0.55 }}> · {t.time.trim()}</span>
+                )}
+              </span>
+            </button>
+          ))}
+        </>
       )}
       <ActionButton
         onClick={() => {

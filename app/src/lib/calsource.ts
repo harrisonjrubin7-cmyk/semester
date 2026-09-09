@@ -85,7 +85,65 @@ export function sourceName(source: CalSource): string {
  * agree, and the way they came to disagree in the first place was each having
  * its own copy of the question.
  */
-export function keepBlock(from: { kind: 'appointment' | 'item' } | undefined, on: Shows): boolean {
+export function keepBlock(
+  from: { kind: 'appointment' | 'item' | 'task' } | undefined,
+  on: Shows,
+): boolean {
   if (!from) return on.classes;
-  return from.kind === 'item' ? on.deadlines : on.classes;
+  // A deadline and a task are both work to hand in — the doc above puts them
+  // in the same bucket, and a task drawn on the grid has to obey it or the
+  // Due chip would show your tasks in the list under the week and hide the
+  // ones with an hour on them.
+  return from.kind === 'appointment' ? on.classes : on.deadlines;
+}
+
+/*
+ * ## The third axis, which only the campus source has
+ *
+ * Under Campus there is a second row of chips — All, Athletics, Clubs,
+ * University, Saved. It lived inside the campus *list*, which is one of the
+ * four views, so it appeared under Campus + Month and nowhere else: choosing
+ * Campus in Day, Week or Semester offered no way to say "just the games", and
+ * a filter set on the month quietly stopped applying the moment the view
+ * changed. The chips are the screen's now, beside the source chips they belong
+ * with, and every view asks the same question of them.
+ */
+
+export const EVENT_KINDS = ['All', 'Athletics', 'Clubs', 'University', 'Saved'] as const;
+
+export type EvFilter = (typeof EVENT_KINDS)[number];
+
+/**
+ * The kind filter as it applies under the current source.
+ *
+ * The chips are only drawn under Campus, so under any other source the answer
+ * is All — a filter nobody can see is a filter nobody can undo, and "Saved"
+ * left over from a visit to Campus must not go on hiding half of Everything.
+ */
+export function eventFilter(source: CalSource, filter: EvFilter): EvFilter {
+  return source === 'campus' ? filter : 'All';
+}
+
+/** Whether a campus event belongs under this filter. */
+export function keepEvent(
+  event: { id: string; kind: string },
+  filter: EvFilter,
+  saved: Record<string, boolean>,
+): boolean {
+  if (filter === 'All') return true;
+  if (filter === 'Saved') return saved[event.id] === true;
+  return event.kind === filter;
+}
+
+/**
+ * Whether an entry from a connected calendar belongs under this filter.
+ *
+ * A feed says what is on and when; it does not say whether that is a game, a
+ * club or the university, so nothing here can honestly be called Athletics —
+ * and Saved is a list of campus listings you have kept, which a feed entry
+ * never joins. So a feed entry shows under All and under nothing else, rather
+ * than being filed under a kind the .ics never claimed.
+ */
+export function keepFeedEvent(filter: EvFilter): boolean {
+  return filter === 'All';
 }

@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { blockLabel, kindTint } from '../lib/kinds';
 import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
+import { placeBlock } from '../lib/hourplace';
 import { useStore } from '../state/store';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
@@ -50,7 +51,7 @@ export interface HourBlock {
    * whose wording names an hour — which is what makes "may this be dragged"
    * a fact about the data rather than a guess about the title.
    */
-  from?: { kind: 'appointment' | 'item'; id: string };
+  from?: { kind: 'appointment' | 'item' | 'task'; id: string };
 }
 
 const ROW = 54;
@@ -224,14 +225,33 @@ export function HourGrid({
       )}
 
       {sorted.map((b, i) => {
-        // A class is its course's colour; anything of yours is its kind's.
+        /*
+         * A class is its course's colour; anything of yours is its kind's —
+         * except that a task filed against a course *has* a course, and
+         * drawing it in the grey that means "uncategorised" would throw away
+         * the one thing it says about itself. So the edge is the course's
+         * colour wherever a block names one, and the wash below still belongs
+         * to classes alone. Filled is the syllabus's, outlined is yours; the
+         * colour says which course either way, which is what the key promises.
+         */
         const own = b.kind === null;
-        const tint = own ? courseTint(b.c).fill : kindTint(b.kind, light);
+        const tint = b.c ? courseTint(b.c).fill : kindTint(b.kind, light);
         const lane = laneOf[i];
         const width = `calc((100% - ${GUTTER}px) / ${widthOf[i]})`;
         const Tag = b.onClick ? 'button' : 'div';
         const movable = Boolean(onMove) && (canMove ? canMove(b) : true);
         const holding = drag.held?.id === b.id;
+        // Clamped to the grid: an 11:59pm deadline is a minute short of the
+        // bottom of the day, and drawn straight it hangs below the last row
+        // over whatever the screen put under it. See `lib/hourplace.ts`.
+        const box = placeBlock({
+          at: b.at,
+          minutes: b.minutes,
+          startHour: lo,
+          endHour: hi,
+          rowPx: ROW,
+          minHeight: 22,
+        });
         return (
           <Tag
             key={b.id}
@@ -253,10 +273,10 @@ export function HourGrid({
             aria-label={blockLabel(b.title, b.kind, clock(b.at), b.meta, b.canceled)}
             style={{
               position: 'absolute',
-              top: top(b.at) + 1,
+              top: box.top,
               left: `calc(${GUTTER}px + ${lane} * ${width})`,
               width,
-              height: Math.max(22, (b.minutes / 60) * ROW - 3),
+              height: box.height,
               overflow: 'hidden',
               textAlign: 'left',
               padding: '4px 8px',

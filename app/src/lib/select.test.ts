@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { buildCatalog, EMPTY_CATALOG } from '../data/catalog';
 import {
   appointmentsOn,
+  campusCalendar,
+  datedEvents,
   datedItems,
   feed,
   feedEventsOn,
@@ -490,6 +492,73 @@ describe('railFor', () => {
   });
 });
 
+describe('railFor and your own tasks', () => {
+  const mine = (over: Partial<PersonalTask> = {}): PersonalTask => ({
+    id: 't1',
+    title: 'Draft the memo',
+    date: '2026-09-09',
+    time: '2:00 PM',
+    note: '',
+    done: false,
+    created: 0,
+    courseId: null,
+    ...over,
+  });
+
+  it('puts a task on the hour it names', () => {
+    const drawn = railFor(CAT, NOW, [], [], [], [mine()]).find((b) => b.title === 'Draft the memo');
+    expect(drawn?.at).toBe(14 * 60);
+    expect(drawn?.mine).toBe(true);
+    expect(drawn?.from).toEqual({ kind: 'task', id: 't1' });
+  });
+
+  it('names the course it is filed against, and says what it is either way', () => {
+    const filed = railFor(CAT, NOW, [], [], [], [mine({ courseId: 'econ' })]);
+    expect(filed.find((b) => b.title === 'Draft the memo')?.meta).toBe('ECON 1020 · Task');
+    expect(
+      railFor(CAT, NOW, [], [], [], [mine()]).find((b) => b.title === 'Draft the memo')?.meta,
+    ).toBe('Task');
+  });
+
+  it('will not invent an hour for a task whose time is not a clock', () => {
+    // "Before work" is a real answer to when, and midnight is not what it
+    // means. Those are listed beside the grid rather than drawn on it.
+    const drawn = railFor(CAT, NOW, [], [], [], [mine({ time: 'before work' })]);
+    expect(drawn.map((b) => b.title)).not.toContain('Draft the memo');
+  });
+
+  it('takes a finished task off the day rather than drawing it out', () => {
+    // An hour you have given back is a gap, and showing where the gaps are is
+    // the whole use of a grid.
+    const drawn = railFor(CAT, NOW, [], [], [], [mine({ done: true })]);
+    expect(drawn.map((b) => b.title)).not.toContain('Draft the memo');
+  });
+
+  it('ignores a task dated on another day', () => {
+    const drawn = railFor(CAT, NOW, [], [], [], [mine({ date: '2026-09-10' })]);
+    expect(drawn.map((b) => b.title)).not.toContain('Draft the memo');
+  });
+
+  it('sorts it into the day beside the classes rather than onto the end', () => {
+    const titles = railFor(CAT, NOW, [], [], [], [mine({ time: '10:00 AM' })]).map((b) => b.title);
+    expect(titles).toEqual(['ECON lecture', 'Draft the memo', 'PSCI seminar', 'Office hours']);
+  });
+
+  it('hands the hour grid a task it can colour, move and read out', () => {
+    const drawn = hoursFor(CAT, NOW, [], [], [], [mine({ courseId: 'psci' })]).find(
+      (h) => h.title === 'Draft the memo',
+    );
+    // Its course, so the grid draws it in that course's colour rather than in
+    // the grey that means "uncategorised"; `task` rather than an event kind,
+    // so it is not read out as "Other"; and a record behind it, which is what
+    // makes it draggable.
+    expect(drawn?.c).toBe('psci');
+    expect(drawn?.kind).toBe('task');
+    expect(drawn?.minutes).toBe(50);
+    expect(drawn?.from).toEqual({ kind: 'task', id: 't1' });
+  });
+});
+
 describe('hoursFor', () => {
   it('gives a class the length its syllabus states', () => {
     const hours = hoursFor(CAT, NOW, []);
@@ -575,5 +644,46 @@ describe('lengthOf', () => {
   it('falls back for a block belonging to no course, and for a course that has gone', () => {
     expect(lengthOf(CAT, { time: '', at: 900, title: '', meta: '', c: null })).toBe(50);
     expect(lengthOf(CAT, { time: '', at: 900, title: '', meta: '', c: 'deleted' })).toBe(50);
+  });
+});
+
+describe('campusCalendar and datedEvents', () => {
+  const NOW = new Date(2026, 8, 9);
+
+  it('gives a Vanderbilt student the campus calendar, sample or no sample', () => {
+    // The regression this is here for: importing your own four syllabi turns
+    // the sample semester off, and the campus calendar used to hang off that
+    // flag — so the Campus chip answered Athletics, Clubs, University and
+    // Saved with nothing at all, on a screen that had been full the day
+    // before. It hangs off where you study now, which is what it is about.
+    expect(campusCalendar('vanderbilt', false).length).toBeGreaterThan(0);
+    expect(campusCalendar('vanderbilt', true)).toEqual(campusCalendar('vanderbilt', false));
+    expect(datedEvents(NOW, 'vanderbilt').length).toBeGreaterThan(0);
+  });
+
+  it('carries the sample semester in for somebody who has set no school', () => {
+    // The sample is a Vanderbilt semester, so it brings Vanderbilt's calendar.
+    expect(campusCalendar('', true)).toEqual(campusCalendar('vanderbilt', false));
+  });
+
+  it('offers nobody else somebody else’s football', () => {
+    expect(campusCalendar('', false)).toEqual([]);
+    expect(campusCalendar('somewhere-else', false)).toEqual([]);
+    expect(datedEvents(NOW, 'somewhere-else')).toEqual([]);
+  });
+
+  it('dates every event and puts them in order', () => {
+    const events = datedEvents(NOW, 'vanderbilt');
+    const times = events.map((e) => e.date.getTime());
+    expect([...times].sort((a, b) => a - b)).toEqual(times);
+    expect(events.every((e) => e.kind && e.title)).toBe(true);
+  });
+
+  it('has an event of every kind the chips offer', () => {
+    // Athletics, Clubs and University are chips somebody can choose. A chip
+    // that can only ever answer "nothing" is a broken control, so the
+    // listings have to cover the row.
+    const kinds = new Set(campusCalendar('vanderbilt', false).map((e) => e.kind));
+    expect(kinds).toEqual(new Set(['Athletics', 'Clubs', 'University']));
   });
 });
