@@ -493,6 +493,73 @@ describe('railFor', () => {
   });
 });
 
+describe('railFor and your own tasks', () => {
+  const mine = (over: Partial<PersonalTask> = {}): PersonalTask => ({
+    id: 't1',
+    title: 'Draft the memo',
+    date: '2026-09-09',
+    time: '2:00 PM',
+    note: '',
+    done: false,
+    created: 0,
+    courseId: null,
+    ...over,
+  });
+
+  it('puts a task on the hour it names', () => {
+    const drawn = railFor(CAT, NOW, [], [], [], [mine()]).find((b) => b.title === 'Draft the memo');
+    expect(drawn?.at).toBe(14 * 60);
+    expect(drawn?.mine).toBe(true);
+    expect(drawn?.from).toEqual({ kind: 'task', id: 't1' });
+  });
+
+  it('names the course it is filed against, and says what it is either way', () => {
+    const filed = railFor(CAT, NOW, [], [], [], [mine({ courseId: 'econ' })]);
+    expect(filed.find((b) => b.title === 'Draft the memo')?.meta).toBe('ECON 1020 · Task');
+    expect(
+      railFor(CAT, NOW, [], [], [], [mine()]).find((b) => b.title === 'Draft the memo')?.meta,
+    ).toBe('Task');
+  });
+
+  it('will not invent an hour for a task whose time is not a clock', () => {
+    // "Before work" is a real answer to when, and midnight is not what it
+    // means. Those are listed beside the grid rather than drawn on it.
+    const drawn = railFor(CAT, NOW, [], [], [], [mine({ time: 'before work' })]);
+    expect(drawn.map((b) => b.title)).not.toContain('Draft the memo');
+  });
+
+  it('takes a finished task off the day rather than drawing it out', () => {
+    // An hour you have given back is a gap, and showing where the gaps are is
+    // the whole use of a grid.
+    const drawn = railFor(CAT, NOW, [], [], [], [mine({ done: true })]);
+    expect(drawn.map((b) => b.title)).not.toContain('Draft the memo');
+  });
+
+  it('ignores a task dated on another day', () => {
+    const drawn = railFor(CAT, NOW, [], [], [], [mine({ date: '2026-09-10' })]);
+    expect(drawn.map((b) => b.title)).not.toContain('Draft the memo');
+  });
+
+  it('sorts it into the day beside the classes rather than onto the end', () => {
+    const titles = railFor(CAT, NOW, [], [], [], [mine({ time: '10:00 AM' })]).map((b) => b.title);
+    expect(titles).toEqual(['ECON lecture', 'Draft the memo', 'PSCI seminar', 'Office hours']);
+  });
+
+  it('hands the hour grid a task it can colour, move and read out', () => {
+    const drawn = hoursFor(CAT, NOW, [], [], [], [mine({ courseId: 'psci' })]).find(
+      (h) => h.title === 'Draft the memo',
+    );
+    // Its course, so the grid draws it in that course's colour rather than in
+    // the grey that means "uncategorised"; `task` rather than an event kind,
+    // so it is not read out as "Other"; and a record behind it, which is what
+    // makes it draggable.
+    expect(drawn?.c).toBe('psci');
+    expect(drawn?.kind).toBe('task');
+    expect(drawn?.minutes).toBe(50);
+    expect(drawn?.from).toEqual({ kind: 'task', id: 't1' });
+  });
+});
+
 describe('hoursFor', () => {
   it('gives a class the length its syllabus states', () => {
     const hours = hoursFor(CAT, NOW, []);

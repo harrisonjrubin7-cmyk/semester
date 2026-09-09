@@ -68,6 +68,7 @@ describe('keepBlock', () => {
   const clas = undefined;
   const item = { from: { kind: 'item' as const } };
   const appointment = { from: { kind: 'appointment' as const } };
+  const task = { from: { kind: 'task' as const } };
   const event = { kind: 'campus', at: 16 * 60 };
 
   it('keeps everything under All', () => {
@@ -75,6 +76,7 @@ describe('keepBlock', () => {
     expect(keepBlock(clas, on)).toBe(true);
     expect(keepBlock(item, on)).toBe(true);
     expect(keepBlock(appointment, on)).toBe(true);
+    expect(keepBlock(task, on)).toBe(true);
     expect(keepBlock(event, on)).toBe(true);
   });
 
@@ -93,6 +95,16 @@ describe('keepBlock', () => {
     expect(keepBlock(appointment, shows('deadlines'))).toBe(false);
   });
 
+  it('files a task of yours under Due, where the doc above puts it', () => {
+    // The bucket the sentence at the top of `calsource.ts` promises: what is
+    // due is "the syllabus's dated obligations and your own tasks". A task
+    // drawn on a grid has to obey it, or the Due chip would list your tasks
+    // under the week and hide the ones you gave an hour to.
+    expect(keepBlock(task, shows('deadlines'))).toBe(true);
+    expect(keepBlock(task, shows('classes'))).toBe(false);
+    expect(keepBlock(task, shows('campus'))).toBe(false);
+  });
+
   it('files a campus event under Campus, wherever it is drawn', () => {
     // A game at six is an hour of the day like any other and is drawn on the
     // grids now. It is still the campus calendar's, not the timetable's — so
@@ -103,8 +115,9 @@ describe('keepBlock', () => {
   });
 
   it('leaves the timetable off the grid under Campus', () => {
+    // Campus draws what is on around you and nothing of the timetable's.
     const on = shows('campus');
-    expect([clas, item, appointment].some((b) => keepBlock(b, on))).toBe(false);
+    expect([clas, item, appointment, task].some((b) => keepBlock(b, on))).toBe(false);
   });
 });
 

@@ -84,21 +84,27 @@ export function sourceName(source: CalSource): string {
  * university's calendar and yours. They arrive mixed, and two fields say which
  * is which: `kind` is `campus` for something that is on around you, and `from`
  * says which record a block can be moved by, which is also the only thing that
- * separates a deadline from an appointment. A block with neither came from a
- * syllabus's meeting pattern or from a standing commitment — the timetable
- * either way, which is the classes bucket.
+ * separates work to hand in — a deadline or a task — from an appointment. A
+ * block with neither came from a syllabus's meeting pattern or from a standing
+ * commitment — the timetable either way, which is the classes bucket.
  *
  * Here rather than in the view because the week grid and the day rail have to
  * agree, and the way they came to disagree in the first place was each having
  * its own copy of the question.
  */
 export function keepBlock(
-  block: { kind?: string | null; from?: { kind: 'appointment' | 'item' } } | undefined,
+  block:
+    | { kind?: string | null; from?: { kind: 'appointment' | 'item' | 'task' } }
+    | undefined,
   on: Shows,
 ): boolean {
   if (block?.kind === CAMPUS_KIND) return on.campus;
   if (!block?.from) return on.classes;
-  return block.from.kind === 'item' ? on.deadlines : on.classes;
+  // A deadline and a task are both work to hand in — the doc above puts them
+  // in the same bucket, and a task drawn on the grid has to obey it or the
+  // Due chip would show your tasks in the list under the week and hide the
+  // ones with an hour on them.
+  return block.from.kind === 'appointment' ? on.classes : on.deadlines;
 }
 
 /*

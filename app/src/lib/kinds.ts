@@ -95,16 +95,20 @@ export function kindTint(id: string | null | undefined, light: boolean): string 
 }
 
 /**
- * What a block's kind is called, including the two that are not in the picker.
+ * What a block's kind is called, including the three that are not in the picker.
  *
  * `null` is the app's way of saying "a class" — it comes from a syllabus
- * rather than from a person, which is why it is not in `EVENT_KINDS` — and
- * `campus` is somebody else's date, drawn on the grids and belonging to
- * nobody's list of kinds either. Both are said in words here so a grid does
- * not have to know that a missing kind means anything at all.
+ * rather than from a person, which is why it is not in `EVENT_KINDS`.
+ * `'task'` is a thing you wrote down rather than a category of event you
+ * chose, and `kindOf` would call it "Other", which is a word for a shift
+ * nobody filed and not for a to-do. `campus` is somebody else's date, drawn
+ * on the grids and belonging to nobody's list of kinds either. All three are
+ * said in words here so a grid does not have to know what a missing kind, or
+ * a kind that is not in the table, means.
  */
 export function kindLabel(id: string | null | undefined): string {
   if (id === null || id === undefined) return 'Class';
+  if (id === 'task') return 'Task';
   if (id === CAMPUS_KIND) return 'Campus';
   return kindOf(id).label;
 }

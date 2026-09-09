@@ -15,6 +15,13 @@ describe('blockLabel', () => {
     expect(blockLabel('ECON 1020', undefined, '9:05')).toBe('ECON 1020. Class. 9:05.');
   });
 
+  it('calls a task a task rather than "Other"', () => {
+    // The other kind that is not in `EVENT_KINDS`: a task is a thing you
+    // wrote down, not a category of event you chose, and `kindOf` falls back
+    // to Other — a word for an unfiled shift, not for a to-do.
+    expect(blockLabel('Draft the memo', 'task', '2:00')).toBe('Draft the memo. Task. 2:00.');
+  });
+
   it('includes the meta line when there is one', () => {
     expect(blockLabel('ECON 1020', null, '9:05', 'Buttrick 101')).toBe(
       'ECON 1020. Class. 9:05. Buttrick 101.',
