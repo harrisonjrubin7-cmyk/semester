@@ -40,7 +40,7 @@ const PRINT: Record<string, string> = {
   term: 'Print the term',
 };
 
-export function Reports({ bare = false }: { bare?: boolean } = {}) {
+export function Reports() {
   const { state, dispatch } = useStore();
   const grain = state.report;
 
@@ -66,24 +66,13 @@ export function Reports({ bare = false }: { bare?: boolean } = {}) {
   );
 
   /*
-   * Two callers, one body.
+   * One caller, one body.
    *
-   * Standalone this is a screen and takes the app's frame: the padding, the
-   * search box, the space above the tab bar. On Today it is the "Report" tab
-   * inside somebody else's `<Page>`, and a second frame there would mean a
-   * second search box on the same screen, filtering nothing. See the note at
-   * the top of `components/Page.tsx`.
-   *
-   * The trailing spacer goes with the frame, so it is written by hand only on
-   * the embedded path.
+   * There were two: Today rendered this as its "Report" tab, which meant a
+   * second render path that dropped the `<Page>` frame so it could sit inside
+   * somebody else's. That tab is gone and this is a screen again, so the frame
+   * is unconditional — see the note at the top of `components/Page.tsx` for
+   * why an embedded screen could not keep its own.
    */
-  if (bare) {
-    return (
-      <div>
-        {body}
-        <div style={{ height: 26 }} />
-      </div>
-    );
-  }
   return <Page bottom={26}>{body}</Page>;
 }
