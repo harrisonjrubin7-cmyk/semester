@@ -13,7 +13,7 @@ import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
-import { usePrefersContrast, usePrefersDark } from './lib/prefers';
+import { scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
 import { ground, homeTitle, resolveGround, scaleOf, tokensFor, type Look } from './lib/look';
 
@@ -727,7 +727,7 @@ function TabBar() {
               // in the reducer, so nothing else would happen at all.
               if (state.screen === id) {
                 forget(id);
-                document.querySelector('.scrollarea')?.scrollTo({ top: 0, behavior: 'smooth' });
+                scrollKindly(document.querySelector('.scrollarea'), { top: 0 });
                 return;
               }
               dispatch({ type: 'go', screen: id });
@@ -972,7 +972,7 @@ function Rail() {
               // in the reducer, so nothing else would happen at all.
               if (state.screen === id) {
                 forget(id);
-                document.querySelector('.scrollarea')?.scrollTo({ top: 0, behavior: 'smooth' });
+                scrollKindly(document.querySelector('.scrollarea'), { top: 0 });
                 return;
               }
               dispatch({ type: 'go', screen: id });

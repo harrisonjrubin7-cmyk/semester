@@ -49,6 +49,63 @@ export function usePrefersContrast(): boolean {
   return more;
 }
 
+/**
+ * Whether the device asks for less movement.
+ *
+ * `app.css` already answers this for CSS: one block flattens every animation
+ * and transition in the app to a millisecond. What that block cannot reach is
+ * a scroll the app performs itself. `scrollTo({ behavior: 'smooth' })` is a
+ * script calling for motion, not a style declaring it, and the media query
+ * does not apply to it — so five places went on flying the page hundreds of
+ * pixels for somebody who had asked the operating system, in as many words,
+ * for that not to happen.
+ *
+ * Which is the case the setting exists for. Reduced motion is not a matter of
+ * taste: large sweeping movement is what triggers nausea and dizziness in
+ * vestibular disorders, and a page travelling its whole length under its own
+ * power is the largest movement this app makes.
+ *
+ * Read live, like the other two here, and answering "yes, reduce" wherever
+ * `matchMedia` cannot be asked — a server render, an old browser. The wrong
+ * answer in that direction is a jump instead of a glide; in the other it is a
+ * symptom.
+ */
+export function prefersLessMotion(): boolean {
+  return motion()?.matches ?? false;
+}
+
+/**
+ * Scroll the way the person has asked to be scrolled.
+ *
+ * The one place the app decides how a scroll moves, so that a new caller gets
+ * the setting for free rather than having to remember it — the same bargain
+ * `lib/arrange.ts` makes for dragging.
+ */
+export function scrollKindly(
+  el: Element | null | undefined,
+  to: ScrollToOptions,
+): void {
+  el?.scrollTo({ ...to, behavior: prefersLessMotion() ? 'auto' : 'smooth' });
+}
+
+/** The same, for bringing an element into view rather than a position. */
+export function revealKindly(
+  el: Element | null | undefined,
+  how: Omit<ScrollIntoViewOptions, 'behavior'> = {},
+): void {
+  el?.scrollIntoView({ ...how, behavior: prefersLessMotion() ? 'auto' : 'smooth' });
+}
+
+function motion(): MediaQueryList | null {
+  try {
+    return typeof matchMedia === 'function'
+      ? matchMedia('(prefers-reduced-motion: reduce)')
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function contrast(): MediaQueryList | null {
   try {
     return typeof matchMedia === 'function' ? matchMedia('(prefers-contrast: more)') : null;
