@@ -231,19 +231,9 @@ export function Courses() {
           })
           )}
 
-          <button
-            type="button"
-            className="btn btn-secondary btn-block"
-            onClick={() => dispatch({ type: 'go', screen: 'import' })}
-            style={{
-              height: 46,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: 'var(--sp-3)',
-            }}
-          >
-            + Add a course from a syllabus
-          </button>
+          {/* No "add a course" button here. The header's + is that button —
+              see `lib/adding.ts`. Two of them on one screen is the doubling
+              this app keeps removing. */}
           <div style={{ height: 12 }} />
         </>
       )}
