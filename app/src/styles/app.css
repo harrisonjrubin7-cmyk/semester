@@ -774,6 +774,127 @@ a:hover {
 }
 
 /*
+ * ── The task index ────────────────────────────────────────────────────────
+ *
+ * Progress → By task files forty-nine screens under nine headings, and a
+ * screen appears under every intention it serves, so the list is eighty-four
+ * rows long. One column of those is about five screenfuls, which is a
+ * directory nobody reads twice: you scroll, you lose the heading that told
+ * you why a row was there, and you scroll back.
+ *
+ * Three things fix that and all three are here rather than in the screen,
+ * because all three are questions about how much room there is.
+ *
+ *   `.task-bar`   the filter and the jump chips, pinned to the top of the
+ *                 scroller so the nine headings are reachable from anywhere
+ *                 in the list rather than only from the top of it.
+ *   `.task-rows`  the rows of one section, in as many columns as fit.
+ *   `.task-blurb` the sentence under a label, capped at two lines so a
+ *                 narrow column cannot turn a 44px row into a paragraph.
+ *
+ * A container query, not a media query, and the difference matters here. The
+ * list sits inside `.pane-body`, whose width is `--measure` minus whatever
+ * the navigation rail is taking — 700px on a 1000px window with the rail out,
+ * the full 960 on a large monitor with it hidden. A `min-width` on the window
+ * would be answering a question about the window when the question is about
+ * the column. Where `container-type` is not supported nothing matches and the
+ * list is one column, which is what it was.
+ */
+.task-list {
+  container-type: inline-size;
+  container-name: tasks;
+}
+.task-rows {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+@container tasks (min-width: 620px) {
+  .task-rows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* The hairline between the columns. A row draws its own underline and
+       nothing drew the join, so two columns read as two lists that happened
+       to line up. Inset from the text on both sides, like the row's own. */
+    column-gap: var(--sp-7);
+  }
+}
+/* Three only on a large monitor, where `--measure` steps up to 960 and a
+   third column is still 320px of row rather than a truncated sentence. */
+@container tasks (min-width: 940px) {
+  .task-rows {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/*
+ * Pinned, and only where there is room to give up.
+ *
+ * On a phone the bar is a filter field and a scrolling chip row, and pinning
+ * it costs about a fifth of a short screen for something you use once. Above
+ * that it is the reason you are not scrolling: the nine headings stay on
+ * screen while the list under them moves.
+ *
+ * `top` is 0 because the scroller starts under the app's own header, which is
+ * outside it. The negative inline margin and the padding that pays it back
+ * are what let the backdrop reach the page gutter — a pinned bar that stops
+ * short of the edge lets rows slide up the sides of it.
+ */
+@media (min-width: 760px) {
+  .task-bar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin-inline: calc(-1 * var(--page-pad));
+    padding-inline: var(--page-pad);
+    padding-block: var(--sp-4);
+    background: var(--app-bg);
+    border-bottom: 1px solid var(--app-line-soft);
+  }
+
+  /*
+   * And the chips wrap rather than scroll.
+   *
+   * Nine headings in a row that scrolls sideways is nine headings you cannot
+   * read at once, which is the thing they exist to fix — the first draft cut
+   * "Handle campus life" off mid-word and hid two more behind it. A sideways
+   * scroll is the right answer on a phone, where nothing else fits; on
+   * anything wider they wrap onto two lines and the overview is an overview.
+   */
+  .task-chips {
+    overflow-x: visible;
+  }
+  .task-chips > div {
+    flex-wrap: wrap;
+    padding-right: 0;
+  }
+
+  /*
+   * Where a jump lands.
+   *
+   * The bar is pinned, so a heading scrolled to the very top of the scroller
+   * arrives underneath it. `scroll-margin` is the browser's own answer to
+   * that and it applies to the smooth scroll and to a `:target` alike.
+   */
+  .task-anchor {
+    scroll-margin-block-start: 116px;
+  }
+}
+
+/*
+ * Two lines, then an ellipsis.
+ *
+ * `-webkit-line-clamp` is the only thing that does this and it is supported
+ * everywhere the app runs; without it the text simply wraps, which is the
+ * behaviour this replaced and not a broken layout.
+ */
+.task-blurb {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/*
  * ── The month grid's cells ───────────────────────────────────────────────
  *
  * The one part of the app whose *shape* differs between a phone and a
