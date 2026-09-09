@@ -207,6 +207,24 @@ export function persist(next: Partial<Persisted>): void {
   }, SETTLE_MS);
 }
 
+/**
+ * Stop writing, for good.
+ *
+ * One caller: `lib/erase.ts`. `persist()` settles a quarter of a second after
+ * the last change, so at the moment somebody presses Erase there is very
+ * likely a write in flight — and a write that lands after the stores are
+ * emptied puts a row back into an emptied store. The app reloads immediately
+ * afterwards, so there is nothing to turn back on.
+ */
+export function stopWriting(): void {
+  ready = false;
+  pending = null;
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+}
+
 /** Write whatever is owing right now. For a tab closing, and for tests. */
 export async function flushNow(): Promise<void> {
   if (timer) {
