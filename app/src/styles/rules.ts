@@ -237,16 +237,24 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 675,
+  type: 674,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 219,
+  leading: 218,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 516,
+  space: 515,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 499,
+  shorthand: 498,
 };
 
 /*
+ * The Tools tab became a home screen, and its four are folded into every
+ * measurement below rather than added to any of them: thirteen cards drawn by
+ * hand in `screens/Study.tsx` — each with its own padding, its own 13.5px
+ * blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes live in
+ * `app.css` on the scales. The one value the grid sets by hand, the 11.5px
+ * icon name, is inside the numbers. Measured rather than derived, like every
+ * note below: 674/218/515/498 is what `counts()` reports on the merged tree.
+ *
  * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
  * chat. Two numbers down and none up, and neither by reformatting: the
  * panel's transcript, opening, header and footer are now the same components
