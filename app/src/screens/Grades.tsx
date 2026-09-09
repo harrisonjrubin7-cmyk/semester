@@ -23,7 +23,7 @@ import { ScoreField } from '../components/ScoreField';
  * reachable, which is worth knowing in October rather than December.
  */
 export function Grades() {
-  const { state, dispatch, catalog, school } = useStore();
+  const { state, dispatch, catalog, school, tint } = useStore();
   // The hairline this row wears, in whichever layout is on. Spread rather
   // than wrapped so the row keeps its own insides. See `useRowStyle`.
   const rowFlush = useRowStyle(0);
@@ -82,7 +82,7 @@ export function Grades() {
               </div>
               {s.current !== null && (
                 <div style={{ marginTop: 'var(--sp-5)' }}>
-                  <Meter pct={Math.min(100, Math.round(s.current))} />
+                  <Meter pct={Math.min(100, Math.round(s.current))} fill={tint(c.id).fill} />
                 </div>
               )}
               {s.extraCredit > 0 && (

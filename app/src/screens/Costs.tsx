@@ -21,6 +21,7 @@ import {
   type Kind,
 } from '../lib/cost';
 import { readTerm } from '../lib/term';
+import { CourseTag } from '../components/CourseTag';
 
 /**
  * What this term cost.
@@ -107,9 +108,7 @@ export function Costs() {
               // so this list follows the layout setting.
               <CustomRow key={c.id}>
                 <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
-                  <span className="tag tag-accent" style={{ flex: 'none' }}>
-                    {c.code}
-                  </span>
+                  <CourseTag id={c.id} style={{ flex: 'none' }} />
                   <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>
                     {theirs.length === 0
                       ? 'nothing recorded'
