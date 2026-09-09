@@ -150,6 +150,7 @@ export function Courses() {
             const next = ahead.find((i) => i.c === c.id);
             return (
               <Blueprint
+                plain
                 key={c.id}
                 onClick={() => dispatch({ type: 'openCourse', id: c.id })}
                 style={{
