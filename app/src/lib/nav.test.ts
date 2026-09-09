@@ -327,9 +327,24 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    /*
+     * The screen to drop is taken from the registry rather than written down.
+     *
+     * It was `grades` for as long as there was a Grades screen. When that
+     * folded into the Courses tab the name left the `Screen` union, and this
+     * line stopped compiling — `tsc` refusing a comparison that can never be
+     * true. Which is right, and useless: a type error about the example a
+     * test picked, in a test about something else, failing the build for
+     * everybody. The next screen to leave would have done it again.
+     *
+     * So it asks the task view for something it is showing today. That also
+     * makes the assertion mean more than it did: a literal naming a screen
+     * the view had stopped listing would have passed while proving nothing.
+     */
+    const gone = byTask(DESTINATIONS).flatMap((s) => s.rows)[0].screen;
+    const short = DESTINATIONS.filter((d) => d.screen !== gone);
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === gone)).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
