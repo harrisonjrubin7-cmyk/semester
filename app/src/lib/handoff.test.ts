@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PACK_VERSION, packCourse, packName, packSummary, provenance, readPack } from './handoff';
 import type { CourseModule } from './types';
+import { allCards, weakestUnit } from '../data/catalog';
 
 const module_ = {
   course: {
@@ -297,6 +298,71 @@ describe('a course that arrived without its grading', () => {
       stance: 'limited',
       note: 'Cite any use.',
     });
+  });
+});
+
+/**
+ * The guide was the last thing here passed through with a spread.
+ *
+ * Same failure as the grading above, on the object the most screens read.
+ * Measured before this: every shape below was accepted with no trouble
+ * reported, and then `allCards` threw on the study screens — a white page
+ * from opening a file somebody sent you, which is what this whole file is
+ * written against. Truncation by a chat client, which `tidyItems` names as a
+ * scenario, produces the first of them.
+ */
+describe('a guide that arrived damaged', () => {
+  const withGuide = (guide: unknown) =>
+    readPack(
+      JSON.stringify({
+        kind: 'semester.course',
+        version: 1,
+        module: { ...module_, guide },
+      }),
+    );
+
+  it('is an empty guide rather than a shape that throws', () => {
+    for (const shape of [{}, { units: 'lots' }, { units: null }, true, 'hello', 42, []]) {
+      const out = withGuide(shape);
+      expect(out.trouble, `guide ${JSON.stringify(shape)}`).toBe('');
+      expect(out.module?.guide.units, `guide ${JSON.stringify(shape)}`).toEqual([]);
+      // The shape every study screen already draws properly.
+      expect(() => allCards(out.module!.guide)).not.toThrow();
+      expect(weakestUnit(out.module!.guide)).toBeNull();
+    }
+  });
+
+  it('rebuilds a unit that is missing its parts', () => {
+    const out = withGuide({ units: [{ name: 'One' }, { cards: [{ q: 'Q', a: 'A' }] }] });
+    expect(out.module?.guide.units).toEqual([
+      { name: 'One', mastery: 0, cards: [] },
+      { name: '', mastery: 0, cards: [{ q: 'Q', a: 'A' }] },
+    ]);
+  });
+
+  it('drops a card with no question, which the drill would show blank', () => {
+    const out = withGuide({ units: [{ name: 'One', cards: [{ a: 'only an answer' }, { q: 'Q', a: 'A' }] }] });
+    expect(out.module?.guide.units[0].cards).toEqual([{ q: 'Q', a: 'A' }]);
+  });
+
+  it('holds mastery to a percentage', () => {
+    const out = withGuide({ units: [{ name: 'One', mastery: 5000 }, { name: 'Two', mastery: 'lots' }] });
+    expect(out.module?.guide.units.map((u) => u.mastery)).toEqual([100, 0]);
+  });
+
+  it('leaves an empty extra off rather than setting it to nothing', () => {
+    // Three screens test `guide.frames && guide.frames.length`, so an empty
+    // array that reads as present is how an empty heading gets drawn.
+    const out = withGuide({ units: [], frames: [], selfTest: [], cases: [] });
+    expect(out.module?.guide.frames).toBeUndefined();
+    expect(out.module?.guide.selfTest).toBeUndefined();
+    expect(out.module?.guide.cases).toBeUndefined();
+  });
+
+  it('keeps a guide that arrived whole', () => {
+    const out = readPack(packCourse(module_));
+    expect(out.module?.guide.units).toEqual(module_.guide.units);
+    expect(out.module?.guide.name).toBe(module_.guide.name);
   });
 });
 

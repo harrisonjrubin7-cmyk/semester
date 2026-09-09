@@ -31,7 +31,7 @@
  * own generated course goes through rather than landing silently.
  */
 
-import type { CourseModule, Item, RecurringBlock } from './types';
+import type { CourseModule, Guide, Item, RecurringBlock, StudyCard, Term, Unit } from './types';
 
 /** Bumped when the shape changes in a way an older app cannot read. */
 export const PACK_VERSION = 1;
@@ -59,7 +59,7 @@ function justTheCourse(m: CourseModule): CourseModule {
     course: tidyCourse(m.course),
     items: m.items.map((i) => ({ ...i })),
     schedule: m.schedule.map((b) => ({ ...b })),
-    guide: m.guide,
+    guide: tidyGuide(m.guide),
     planMinutes: m.planMinutes,
     frameLabel: m.frameLabel,
   };
@@ -159,6 +159,86 @@ function tidyItems(raw: unknown, courseId: string): { items: Item[]; dropped: nu
   }
 
   return { items, dropped };
+}
+
+/**
+ * The guide, made safe to render, and it is the last thing here that was not.
+ *
+ * `justTheCourse` names every field it copies and `tidyCourse` and `tidyItems`
+ * rebuild theirs one at a time — because, as the comment above says, a spread
+ * "does not guarantee what arrives". The guide went through as `m.guide`,
+ * whole and unexamined, and it is the object the most screens read.
+ *
+ * `readPack` only asked whether it was truthy. Measured, every one of these
+ * was accepted with no trouble reported and then threw on the study screens:
+ *
+ *     { }                     allCards: reading 'forEach' of undefined
+ *     { units: 'lots' }       guide.units.forEach is not a function
+ *     { units: null }         reading 'forEach' of null
+ *     true                    reading 'forEach' of undefined
+ *     'hello'                 reading 'forEach' of undefined
+ *
+ * The same failure `tidyCourse` records for a missing `grading` — a white
+ * page from opening a file somebody sent you — and truncation by a chat
+ * client, which `tidyItems` names as a scenario, produces exactly the first
+ * of these.
+ *
+ * Nothing is dropped and counted the way an item is. An item is one deadline
+ * and losing it silently matters; a malformed unit is a shape, and the honest
+ * repair is the empty one the app already has a name for — a course whose
+ * guide arrives damaged reads as a course with nothing to study yet, which is
+ * a state every study screen already draws properly.
+ */
+function tidyGuide(raw: unknown): Guide {
+  const g = (raw && typeof raw === 'object' ? raw : {}) as Partial<Guide>;
+  const text = (v: unknown) => (typeof v === 'string' ? v : '');
+  const score = (v: unknown) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
+  };
+
+  const units: Unit[] = Array.isArray(g.units)
+    ? g.units.map((u) => ({
+        name: text((u as Partial<Unit>)?.name),
+        mastery: score((u as Partial<Unit>)?.mastery),
+        cards: cards((u as Partial<Unit>)?.cards),
+      }))
+    : [];
+
+  const out: Guide = {
+    code: text(g.code),
+    name: text(g.name),
+    blurb: text(g.blurb),
+    source: text(g.source),
+    mastery: score(g.mastery),
+    audio: g.audio === true,
+    units,
+    terms: Array.isArray(g.terms)
+      ? g.terms.map((t) => ({ t: text((t as Partial<Term>)?.t), d: text((t as Partial<Term>)?.d) }))
+      : [],
+  };
+
+  // Left off entirely when there are none, rather than set to an empty array:
+  // three screens test `guide.frames && guide.frames.length`, and an empty
+  // array that reads as present is how an empty section heading is drawn.
+  // Same argument as `mergeGuide` in `lib/live.ts`.
+  if (Array.isArray(g.frames) && g.frames.length) out.frames = g.frames;
+  const test = cards(g.selfTest);
+  if (test.length) out.selfTest = test;
+  if (Array.isArray(g.cases) && g.cases.length) out.cases = g.cases;
+  return out;
+}
+
+/** A unit's cards, with both sides guaranteed to be strings. */
+function cards(raw: unknown): StudyCard[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((c) => ({
+      q: typeof (c as Partial<StudyCard>)?.q === 'string' ? (c as StudyCard).q : '',
+      a: typeof (c as Partial<StudyCard>)?.a === 'string' ? (c as StudyCard).a : '',
+    }))
+    // A card with no question is a card the drill would show blank.
+    .filter((c) => c.q !== '');
 }
 
 /**
