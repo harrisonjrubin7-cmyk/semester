@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESTINATIONS, GROUPS, TASKS, byTask, destinationsFor, destinationsIn, lately, saysFor, shelfOf, type TaskTag } from './nav';
+import { DESTINATIONS, GROUPS, TASKS, byTask, destinationsFor, destinationsIn, lately, narrowTasks, saysFor, shelfOf, taskMatch, type TaskTag } from './nav';
 import { NO_SCHOOL, type Capabilities } from './school';
 import { BUNDLED } from '../data/schools';
 
@@ -312,6 +312,95 @@ describe('by task', () => {
   it('keeps the sections in the order the headings are written', () => {
     const order = byTask(DESTINATIONS).map((s) => s.tag);
     expect(order).toEqual(TASKS.map(([id]) => id).filter((id) => order.includes(id as TaskTag)));
+  });
+});
+
+/*
+ * The filter over the task view.
+ *
+ * Eighty-four rows under nine headings is a directory somebody has to be able
+ * to narrow, and the narrowing has to be the one thing this view cannot
+ * afford to get wrong: a row that disappears when it should not is worse than
+ * no filter, because the app is then denying that a screen exists.
+ */
+describe('narrowing the task index', () => {
+  const all = byTask(DESTINATIONS);
+  const rowsIn = (sections: ReturnType<typeof byTask>) => sections.flatMap((s) => s.rows);
+
+  it('gives everything back for an empty filter', () => {
+    expect(narrowTasks(all, '')).toBe(all);
+    expect(narrowTasks(all, '   ')).toBe(all);
+  });
+
+  it('finds a screen by its own name', () => {
+    const rows = rowsIn(narrowTasks(all, 'calendar'));
+    expect(rows.some((d) => d.screen === 'calendar')).toBe(true);
+  });
+
+  it('finds a screen by a word only its keywords carry', () => {
+    // The whole reason the keywords are in the haystack: nothing about the
+    // Reports screen says "retrospective" on the row itself.
+    const rows = rowsIn(narrowTasks(all, 'retrospective'));
+    expect(rows.some((d) => d.screen === 'brief')).toBe(true);
+  });
+
+  it('takes the words in any order', () => {
+    const one = rowsIn(narrowTasks(all, 'exam paper')).map((d) => d.screen);
+    const other = rowsIn(narrowTasks(all, 'paper exam')).map((d) => d.screen);
+    expect(one).toEqual(other);
+    expect(one.length).toBeGreaterThan(0);
+  });
+
+  it('keeps a whole section when the heading itself is what was typed', () => {
+    // Somebody typing "campus" is naming the intention, not a screen, and
+    // answering that with the rows whose blurbs happen to say "campus" would
+    // be the app pretending not to know what it was asked.
+    const whole = all.find((s) => s.tag === 'campus')!;
+    const narrowed = narrowTasks(all, 'handle campus life');
+    expect(narrowed).toHaveLength(1);
+    expect(narrowed[0].rows).toEqual(whole.rows);
+  });
+
+  it('drops a heading with nothing left under it', () => {
+    for (const section of narrowTasks(all, 'calendar')) {
+      expect(section.rows.length, section.tag).toBeGreaterThan(0);
+    }
+  });
+
+  it('never reorders a section or a row', () => {
+    const narrowed = narrowTasks(all, 'a');
+    expect(narrowed.map((s) => s.tag)).toEqual(
+      all.map((s) => s.tag).filter((t) => narrowed.some((s) => s.tag === t)),
+    );
+    for (const section of narrowed) {
+      const whole = all.find((s) => s.tag === section.tag)!.rows.map((d) => d.screen);
+      const kept = section.rows.map((d) => d.screen);
+      expect(kept).toEqual(whole.filter((screen) => kept.includes(screen)));
+    }
+  });
+
+  it('returns nothing rather than everything for a word nobody wrote', () => {
+    expect(narrowTasks(all, 'monopoly parsnip')).toEqual([]);
+  });
+
+  it('ignores case', () => {
+    expect(rowsIn(narrowTasks(all, 'CALENDAR')).map((d) => d.screen)).toEqual(
+      rowsIn(narrowTasks(all, 'calendar')).map((d) => d.screen),
+    );
+  });
+
+  it('matches the school’s own word for a row, not the registry’s', () => {
+    /*
+     * The meal row is "Meal plan" in the registry and something else at a
+     * university that calls it something else — `saysFor` is what draws it,
+     * so it has to be what the filter reads. A filter that searched the
+     * registry's words would fail on the only words on screen.
+     */
+    const meals = DESTINATIONS.find((d) => d.screen === 'meals');
+    if (!meals) return;
+    const said = saysFor(meals, vanderbilt);
+    const word = said.label.split(/\s+/)[0].toLowerCase();
+    expect(taskMatch(meals, word, vanderbilt)).toBe(true);
   });
 });
 

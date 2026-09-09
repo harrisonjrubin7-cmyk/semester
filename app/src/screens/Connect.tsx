@@ -6,6 +6,8 @@ import { configured, modelLabel, routeLabel } from '../lib/claude';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';
+import { fetchCalendar, isCalendar, notCalendar, readLink } from '../lib/feedlink';
+import { cloudConfigured, fetchIcsVia } from '../lib/cloud';
 import {
   PROVIDERS,
   addEvent,
@@ -55,7 +57,7 @@ import type { FeedSource } from '../lib/types';
  * send one to.
  */
 export function Connect() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, account } = useStore();
   const rowTen = useRowStyle(10);
   const rowEleven = useRowStyle(11);
   const [busy, setBusy] = useState<string>('');
@@ -77,6 +79,9 @@ export function Connect() {
   // the button, not scrolled off above the accounts.
   const [sent, setSent] = useState('');
   const [sendTo, setSendTo] = useState<ProviderId>('google');
+  // Whether a file is being dragged over the card, so the drop target is
+  // visible before the mouse is let go rather than after.
+  const [dropping, setDropping] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const live = tokens();
 
@@ -87,45 +92,146 @@ export function Connect() {
   // first one still connected answers for it.
   const out = outbound.includes(sendTo) ? sendTo : outbound[0];
 
-  const addIcsText = (text: string, name: string, from: string, kind: FeedSource['kind']) => {
+  /**
+   * One calendar's worth of text, in — however it arrived.
+   *
+   * Returns how many events landed, so a caller adding several files can say
+   * one thing at the end rather than four things that overwrite each other.
+   *
+   * Reading the same calendar twice is a **refresh, not a second copy**. A
+   * subscribed link is matched on its address and an imported file on its name,
+   * because the alternative is a student who pastes the Brightspace link again
+   * next month and finds every deadline listed twice with no way to tell which
+   * is which.
+   */
+  const addIcsText = (text: string, name: string, from: string, kind: FeedSource['kind']): number => {
+    /** "1 event", never "1 events" — the count is read, not skimmed. */
+    const said = (n: number) => `${n} ${n === 1 ? 'event' : 'events'}`;
+    // A sign-in page is not an empty calendar, and saying "no events" for one
+    // sends somebody looking for the fault in their calendar rather than in
+    // their link.
+    if (!isCalendar(text)) {
+      setNote(notCalendar(text));
+      return 0;
+    }
     const { events, name: calName } = parseIcs(catalog.courses, text);
+    const title = calName || name;
     if (events.length === 0) {
-      setNote('No events in that calendar. It may be the wrong link — the feed has to be the .ics one.');
-      return;
+      setNote(
+        `${title} was read, but there is nothing dated in it. That is usually the wrong one of several calendars rather than an empty term.`,
+      );
+      return 0;
+    }
+    const already = from
+      ? state.feeds.find((f) => f.url === from)
+      : state.feeds.find((f) => !f.url && f.name === title);
+    if (already) {
+      dispatch({ type: 'syncFeed', id: already.id, events, status: said(events.length) });
+      setNote(`${title} refreshed — ${said(events.length)}, replacing what was there.`);
+      return events.length;
     }
     dispatch({
       type: 'addFeed',
       feed: {
         kind,
-        name: calName || name,
+        name: title,
         url: from,
         synced: Date.now(),
-        status: `${events.length} events read`,
+        status: `${said(events.length)} read`,
         count: events.length,
       },
       events,
     });
-    setNote(`${events.length} events from ${calName || name}.`);
+    setNote(`${said(events.length)} from ${title}.`);
+    return events.length;
   };
 
-  const subscribe = async (kind: FeedSource['kind']) => {
-    // webcal:// is what Apple, Outlook and half the campus systems hand you.
-    // It is an https address wearing a different scheme.
-    const target = url.trim().replace(/^webcal:\/\//i, 'https://');
-    if (!target) return;
+  /** What the field currently holds, read as a link. Drives the hint and the button. */
+  const reading = url.trim() ? readLink(url) : null;
+
+  /*
+   * The routes a fetch may take, worked out once.
+   *
+   * The account's forwarder is offered only when there is an account to sign
+   * the call: `fetchCalendar` tries the calendar itself and the dev server
+   * first and only reaches for this on a deployed build, which is exactly
+   * where the other two are not there.
+   */
+  const routes = { account: cloudConfigured && account ? fetchIcsVia : undefined };
+
+  /**
+   * The pasted link, whoever published it.
+   *
+   * Brightspace is the one the card names because it is the one every student
+   * here has, but nothing below is about Brightspace: `readLink` works out who
+   * published it from the address, and the connected list is labelled with what
+   * it found.
+   */
+  const subscribe = async () => {
+    const read = readLink(url);
+    if (!read.ok) {
+      setNote(read.why);
+      return;
+    }
+    const { url: target, kind, name } = read.link;
     setBusy('feed');
     try {
-      // A calendar server sends no CORS headers, so the fetch goes through the
-      // dev proxy. Without it, the file route is the one that works.
-      const res = await fetch(`/feed?url=${encodeURIComponent(target)}`);
-      if (!res.ok) throw new Error(`The feed answered ${res.status}.`);
-      const text = await res.text();
-      addIcsText(text, 'Subscribed calendar', target, kind);
-      setUrl('');
+      const { text } = await fetchCalendar(target, routes);
+      if (addIcsText(text, name, target, kind) > 0) setUrl('');
     } catch (e) {
-      setNote(
-        `${describe(e)} A subscribed link needs the dev proxy running. Downloading the .ics and adding the file works either way.`,
-      );
+      setNote(describe(e));
+    } finally {
+      setBusy('');
+    }
+  };
+
+  /** A subscribed link, fetched again. The events it had are replaced, not added to. */
+  const refresh = async (feed: FeedSource) => {
+    setBusy(feed.id);
+    try {
+      // `fetchCalendar` has already refused anything that is not a calendar,
+      // so what comes back here is one.
+      const { text } = await fetchCalendar(feed.url, routes);
+      const { events } = parseIcs(catalog.courses, text);
+      const said = `${events.length} ${events.length === 1 ? 'event' : 'events'}`;
+      dispatch({ type: 'syncFeed', id: feed.id, events, status: said });
+      setNote(`${feed.name}: ${said}.`);
+    } catch (e) {
+      const message = describe(e);
+      dispatch({ type: 'failFeed', id: feed.id, status: 'could not be reached' });
+      setNote(message);
+    } finally {
+      setBusy('');
+    }
+  };
+
+  /**
+   * Files, from the button or from a drop.
+   *
+   * Several at once because a student exporting a term usually has one file per
+   * calendar, and `.ics` is not the only extension the exports carry — Outlook
+   * writes `.ics`, some systems write `.ical`, and a few hand over a file with
+   * no extension at all and the right contents. What decides is `isCalendar`
+   * inside `addIcsText`, not the name.
+   */
+  const addFiles = async (chosen: File[]) => {
+    const files = chosen.filter((f) => f.size > 0);
+    if (files.length === 0) return;
+    setBusy('file');
+    try {
+      let total = 0;
+      for (const file of files) {
+        total += addIcsText(await file.text(), file.name.replace(/\.[^.]+$/, ''), '', 'ics');
+      }
+      if (files.length > 1) {
+        setNote(
+          total > 0
+            ? `${total} ${total === 1 ? 'event' : 'events'} from ${files.length} files.`
+            : `Nothing dated in any of those ${files.length} files.`,
+        );
+      }
+    } catch (e) {
+      setNote(`That file could not be read. ${describe(e)}`);
     } finally {
       setBusy('');
     }
@@ -244,31 +350,88 @@ export function Connect() {
         </Blueprint>
       )}
 
-      {/* ── Brightspace ─────────────────────────────────────────────────── */}
-      <SectionLabel>Brightspace</SectionLabel>
-      <Blueprint style={{ padding: '14px 15px' }}>
+      {/* ── a calendar link, from anywhere ──────────────────────────────── */}
+      {/*
+        One field for every calendar, rather than one card per system.
+
+        This card was Brightspace's alone, and the code behind it filed whatever
+        was pasted as Brightspace whatever it was — so an Outlook link arrived
+        labelled as something it is not, and there was no way to fetch it again
+        later. Nothing about pasting a link is Brightspace-specific: the address
+        says who published it (`lib/feedlink.ts`), so the app reads it off the
+        address and says what it found before anybody presses anything.
+
+        Brightspace still leads the copy, because it is the one calendar every
+        student here already has and the instructions for finding its link are
+        worth stating exactly.
+      */}
+      <SectionLabel>Calendars</SectionLabel>
+      <Blueprint
+        style={{ padding: '14px 15px', outline: dropping ? '2px dashed var(--app-ink)' : undefined }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDropping(true);
+        }}
+        onDragLeave={() => setDropping(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDropping(false);
+          void addFiles([...e.dataTransfer.files]);
+        }}
+      >
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
-          Vanderbilt Brightspace
+          Paste a calendar link
         </div>
         <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
           In Brightspace, open <strong>Calendar</strong>, click <strong>Subscribe</strong>, and copy
           the link it gives you. It already carries your access — no password, and nothing to
-          install. Paste it below. Any other calendar link works here too, including a{' '}
-          <code style={{ fontSize: 'var(--type-xs)' }}>webcal://</code> one from iCloud or Outlook.
+          install. <strong>Outlook, Google, iCloud, Canvas and Zoom</strong> all publish the same
+          kind of link, and all of them work here: paste it below and the app works out whose it is.
+          A <code style={{ fontSize: 'var(--type-xs)' }}>webcal://</code> link is fine, and so is one
+          with the <code style={{ fontSize: 'var(--type-xs)' }}>https://</code> missing off the front.
         </div>
         <input
           className="input"
+          type="url"
+          inputMode="url"
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          aria-label="Calendar link"
           placeholder="https://brightspace.vanderbilt.edu/d2l/le/calendar/feed/user/feed.ics?token=…"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
+          onKeyDown={(e) => {
+            // Enter is what a pasted address ends with on a phone keyboard.
+            if (e.key === 'Enter' && url.trim() && busy !== 'feed') void subscribe();
+          }}
           style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-5)' }}
         />
+        {/*
+          What the app makes of the link, before it is asked to fetch it.
+
+          A typo in a pasted URL is the commonest failure on this screen, and the
+          cheapest moment to say so is while the field is still in front of you.
+        */}
+        {reading && (
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              opacity: 0.7,
+              lineHeight: 'var(--leading-normal)',
+              marginTop: 'var(--sp-3)',
+              textWrap: 'pretty',
+            }}
+          >
+            {reading.ok ? `Looks like ${reading.link.name}.` : reading.why}
+          </div>
+        )}
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
           <button
             type="button"
             className="btn btn-primary"
-            disabled={!url.trim() || busy === 'feed'}
-            onClick={() => void subscribe('brightspace')}
+            disabled={!reading?.ok || busy === 'feed'}
+            onClick={() => void subscribe()}
             style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             {busy === 'feed' ? 'Reading…' : 'Subscribe'}
@@ -276,21 +439,33 @@ export function Connect() {
           <button
             type="button"
             className="btn btn-secondary"
+            disabled={busy === 'file'}
             onClick={() => fileInput.current?.click()}
             style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
-            Add an .ics file
+            {busy === 'file' ? 'Reading…' : 'Add an .ics file'}
           </button>
+        </div>
+        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
+          {dropping
+            ? 'Let go to read it.'
+            : 'A downloaded .ics works the same way, and needs nothing of the network — pick one, several at once, or drag them onto this card. Adding the same calendar again refreshes it rather than duplicating it.'}
         </div>
         <input
           ref={fileInput}
           type="file"
-          accept=".ics,text/calendar"
+          multiple
+          aria-label="Calendar files to add"
+          accept=".ics,.ical,.ifb,text/calendar"
           style={{ display: 'none' }}
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            addIcsText(await file.text(), file.name.replace(/\.ics$/i, ''), '', 'ics');
+          onChange={(e) => {
+            const chosen = [...(e.target.files ?? [])];
+            // Cleared before the read, not after: a file input holds on to what
+            // was picked, and re-picking the very same file fires no change
+            // event at all — which is exactly what somebody does after
+            // re-exporting a calendar under the same name.
+            e.target.value = '';
+            void addFiles(chosen);
           }}
         />
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
@@ -667,6 +842,21 @@ export function Connect() {
                   {f.kind} · {f.status}
                 </span>
               </span>
+              {/*
+                A subscribed link is worth fetching again; an imported file has
+                nowhere to fetch from, so it gets no button that would fail.
+              */}
+              {f.url && !(f.url in PROVIDERS) && (
+                <button
+                  type="button"
+                  className="bare"
+                  disabled={busy !== ''}
+                  onClick={() => void refresh(f)}
+                  style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                >
+                  {busy === f.id ? 'READING…' : 'REFRESH'}
+                </button>
+              )}
               <button
                 type="button"
                 className="bare"

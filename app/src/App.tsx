@@ -277,7 +277,7 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: `${source} · ${MONTHS[state.calMonth]}`, title: 'Calendar' };
     }
     case 'event': {
-      const event = datedEvents(now).find((e) => e.id === state.eventId);
+      const event = datedEvents(now, state.schoolId, state.sample).find((e) => e.id === state.eventId);
       return {
         kicker: event?.kind ?? 'Event',
         title: event ? `${event.mon} ${event.day}` : 'Event',
