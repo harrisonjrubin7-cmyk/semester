@@ -1,4 +1,4 @@
-import { useRef, useState, type HTMLAttributes } from 'react';
+import { useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
@@ -37,11 +37,21 @@ import {
   railFor,
 } from '../lib/select';
 import { timeLabel, useDragToMove } from '../lib/drag';
-import { keepBlock, shows, sourceName, type CalSource } from '../lib/calsource';
+import {
+  EVENT_KINDS,
+  eventFilter,
+  keepBlock,
+  keepEvent,
+  keepFeedEvent,
+  shows,
+  sourceName,
+  type CalSource,
+  type EvFilter,
+} from '../lib/calsource';
 import { useRowStyle } from '../components/shell/useShell';
 import { useCalendarMove, type Movable } from './calendar/Move';
 import { AddHere } from './calendar/AddHere';
-import type { CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
+import type { CourseId, DatedEvent, DatedItem, FeedEvent, PersonalTask } from '../lib/types';
 import { Folding } from '../components/Fold';
 
 /**
@@ -62,8 +72,6 @@ const SOURCES = [
 ] as const;
 
 type Source = CalSource;
-
-const EV_FILTERS = ['All', 'Athletics', 'Clubs', 'University', 'Saved'] as const;
 
 /*
  * Courses used to be told apart here by opacity: one accent at 100, 78, 56 and
@@ -159,15 +167,20 @@ function DayView() {
   const due = on.deadlines
     ? datedItems(catalog, now).filter((i) => sameDay(i.date, day))
     : [];
+  // The campus kind chips, which apply in every view now rather than only on
+  // the month's list. `eventFilter` is what makes them apply nowhere else.
+  const kind = eventFilter(source, state.evFilter as EvFilter);
   const events = on.campus
-    ? datedEvents(now, state.sample).filter((e) => sameDay(e.date, day))
+    ? datedEvents(now, state.schoolId, state.sample).filter(
+        (e) => sameDay(e.date, day) && keepEvent(e, kind, state.saved),
+      )
     : [];
   const myTasks = on.deadlines ? state.tasks.filter((t) => t.date === dateToIso(day)) : [];
 
   // Anything a connected calendar says is on — Brightspace, Outlook, Zoom.
   // It sits in its own section, labelled, so a feed can never be mistaken for
   // a date the syllabus stated.
-  const feedToday = on.campus ? feedEventsOn(state.feedEvents, day) : [];
+  const feedToday = on.campus && keepFeedEvent(kind) ? feedEventsOn(state.feedEvents, day) : [];
 
   const empty =
     rail.length === 0 &&
@@ -654,12 +667,16 @@ function WeekView() {
   const weekEnd = new Date(start);
   weekEnd.setDate(start.getDate() + 7);
   const inWeek = (d: Date) => d >= start && d < weekEnd;
+  const kind = eventFilter(state.calSource, state.evFilter as EvFilter);
   const campus = on.campus
-    ? datedEvents(now, state.sample).filter((e) => inWeek(e.date))
+    ? datedEvents(now, state.schoolId, state.sample).filter(
+        (e) => inWeek(e.date) && keepEvent(e, kind, state.saved),
+      )
     : [];
-  const feedWeek = on.campus
-    ? state.feedEvents.filter((e) => inWeek(isoToDate(e.date)))
-    : [];
+  const feedWeek =
+    on.campus && keepFeedEvent(kind)
+      ? state.feedEvents.filter((e) => inWeek(isoToDate(e.date)))
+      : [];
 
   const step = (delta: number) => {
     const to = new Date(start);
@@ -999,10 +1016,15 @@ function MonthView() {
     );
   }
   if (on.campus) {
-    datedEvents(now, state.sample).forEach((e) => add(e.date, { c: null, kind: 'event', title: e.title }));
-    state.feedEvents.forEach((e) =>
-      add(isoToDate(e.date), { c: e.courseId, kind: 'feed', title: e.title }),
-    );
+    const filter = eventFilter(calSource, state.evFilter as EvFilter);
+    datedEvents(now, state.schoolId, state.sample)
+      .filter((e) => keepEvent(e, filter, state.saved))
+      .forEach((e) => add(e.date, { c: null, kind: 'event', title: e.title }));
+    if (keepFeedEvent(filter)) {
+      state.feedEvents.forEach((e) =>
+        add(isoToDate(e.date), { c: e.courseId, kind: 'feed', title: e.title }),
+      );
+    }
   }
   if (calSource === 'classes') {
     // Mark every day that has a class on it, so a term's teaching days show up.
@@ -1465,6 +1487,9 @@ function MonthView() {
 
 // ── Semester ──────────────────────────────────────────────────────────────
 
+/** What a week row lists under its bar — deadlines, then what is on. */
+const WEEK_LIST: CSSProperties = { fontSize: 'var(--type-sm)', opacity: 0.72, lineHeight: 1.35 };
+
 /**
  * The whole term on one screen, week by week.
  *
@@ -1506,11 +1531,26 @@ function SemesterView() {
   });
 
   const on = shows(source);
+  const kind = eventFilter(source, state.evFilter as EvFilter);
   const items = on.deadlines ? datedItems(catalog, now) : [];
-  const events = on.campus ? datedEvents(now, state.sample) : [];
+  const events = on.campus
+    ? datedEvents(now, state.schoolId, state.sample).filter((e) => keepEvent(e, kind, state.saved))
+    : [];
+  /*
+   * What the calendars you have connected say, which this view alone left out.
+   *
+   * Day, week and month all draw feed entries under the campus source; the
+   * semester drew only the bundled listings, so a student whose campus events
+   * all arrive by .ics got "Nothing to plot" across a term that was full.
+   */
+  const feed = on.campus && keepFeedEvent(kind) ? state.feedEvents : [];
 
   // Weeks from the first Sunday on or before the earliest thing, to the last.
-  const dates = [...items.map((i) => i.date), ...events.map((e) => e.date)];
+  const dates = [
+    ...items.map((i) => i.date),
+    ...events.map((e) => e.date),
+    ...feed.map((e) => isoToDate(e.date)),
+  ];
   /*
    * The term's teaching, which this view had no branch for at all.
    *
@@ -1552,7 +1592,13 @@ function SemesterView() {
   const start = new Date(first);
   start.setDate(start.getDate() - start.getDay());
 
-  const weeks: { start: Date; items: DatedItem[]; events: DatedEvent[]; classes: number }[] = [];
+  const weeks: {
+    start: Date;
+    items: DatedItem[];
+    events: DatedEvent[];
+    feed: FeedEvent[];
+    classes: number;
+  }[] = [];
   for (let cursor = new Date(start); cursor <= last; cursor.setDate(cursor.getDate() + 7)) {
     const weekStart = new Date(cursor);
     const weekEnd = new Date(cursor);
@@ -1569,6 +1615,10 @@ function SemesterView() {
       start: weekStart,
       items: items.filter((i) => i.date >= weekStart && i.date < weekEnd),
       events: events.filter((e) => e.date >= weekStart && e.date < weekEnd),
+      feed: feed.filter((e) => {
+        const d = isoToDate(e.date);
+        return d >= weekStart && d < weekEnd;
+      }),
       classes,
     });
   }
@@ -1598,7 +1648,8 @@ function SemesterView() {
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
         {[
           on.deadlines && `${items.length} ${items.length === 1 ? 'deadline' : 'deadlines'}`,
-          on.campus && `${events.length} ${events.length === 1 ? 'event' : 'events'}`,
+          on.campus &&
+            `${events.length + feed.length} ${events.length + feed.length === 1 ? 'event' : 'events'}`,
           on.classes &&
             (teachingVaries
               ? `${weeks.reduce((n, w) => n + w.classes, 0)} class meetings`
@@ -1668,7 +1719,10 @@ function SemesterView() {
                     marginBottom: 'var(--sp-3)',
                   }}
                 >
-                  {w.items.length === 0 && w.events.length === 0 && w.classes === 0 ? (
+                  {w.items.length === 0 &&
+                  w.events.length === 0 &&
+                  w.feed.length === 0 &&
+                  w.classes === 0 ? (
                     <div
                       style={{ flex: 1, background: 'var(--app-track)', opacity: 0.4, height: 2, alignSelf: 'center' }}
                     />
@@ -1686,7 +1740,7 @@ function SemesterView() {
                           }}
                         />
                       ))}
-                      {w.events.map((e) => (
+                      {[...w.events, ...w.feed].map((e) => (
                         <div
                           key={e.id}
                           title={e.title}
@@ -1723,7 +1777,7 @@ function SemesterView() {
                 </div>
 
                 {w.items.length > 0 && (
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.72, lineHeight: 1.35 }}>
+                  <div style={WEEK_LIST}>
                     {w.items.slice(0, 3).map((it) => (
                       <button
                         key={it.id}
@@ -1754,6 +1808,45 @@ function SemesterView() {
                     ))}
                     {w.items.length > 3 && (
                       <div style={{ opacity: 0.5 }}>+{w.items.length - 3} more</div>
+                    )}
+                  </div>
+                )}
+
+                {/*
+                  * The week's events, said out loud.
+                  *
+                  * A campus event was a 6px ring on the bar and nothing else,
+                  * so Semester + Campus drew sixteen rows of dots under a line
+                  * claiming sixteen events — every one of them unreadable, and
+                  * the football schedule is the one thing on this view people
+                  * go looking for by name. Titles, on the same rule the
+                  * deadlines use: three, then a count.
+                  */}
+                {w.events.length + w.feed.length > 0 && (
+                  <div style={WEEK_LIST}>
+                    {w.events.slice(0, 3).map((e) => (
+                      <button
+                        key={e.id}
+                        type="button"
+                        className="bare"
+                        onClick={() => dispatch({ type: 'openEvent', id: e.id })}
+                        style={{ width: 'auto', display: 'block', textAlign: 'left' }}
+                      >
+                        <span style={{ opacity: 0.55 }}>{e.dow}</span>{' '}
+                        {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
+                      </button>
+                    ))}
+                    {w.events.length < 3 &&
+                      w.feed.slice(0, 3 - w.events.length).map((e) => (
+                        <div key={e.id}>
+                          <span style={{ opacity: 0.55 }}>{DOW[isoToDate(e.date).getDay()]}</span>{' '}
+                          {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
+                        </div>
+                      ))}
+                    {w.events.length + w.feed.length > 3 && (
+                      <div style={{ opacity: 0.5 }}>
+                        +{w.events.length + w.feed.length - 3} more
+                      </div>
                     )}
                   </div>
                 )}
@@ -1796,27 +1889,77 @@ function SemesterView() {
 
 // ── Campus list (unchanged behaviour, now reachable as a source) ───────────
 
+/**
+ * The date stamp down the left of a campus row.
+ *
+ * One component because there are two kinds of row in this list now — the
+ * university's own listings and the entries a connected calendar supplies —
+ * and a date column written out twice is a date column that drifts.
+ */
+const STAMP: CSSProperties = {
+  fontSize: 'calc(10px * var(--text-scale, 1))',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  opacity: 0.5,
+};
+
+const STACK: CSSProperties = {
+  width: 44,
+  flex: 'none',
+  fontFamily: 'var(--font-heading)',
+  lineHeight: 1,
+};
+
+const CAMPUS_ROW: CSSProperties = {
+  display: 'flex',
+  gap: 13,
+  padding: '13px 14px',
+  alignItems: 'flex-start',
+};
+
+function DateStamp({ mon, day, dow }: { mon: string; day: number; dow: string }) {
+  return (
+    <>
+      <div style={STAMP}>{mon}</div>
+      <div style={{ fontSize: 'var(--type-xl)' }}>{day}</div>
+      <div style={STAMP}>{dow}</div>
+    </>
+  );
+}
+
 function CampusList() {
   const { state, dispatch, now } = useStore();
-  const events = datedEvents(now, state.sample).filter((e) => {
-    if (state.evFilter === 'All') return !e.isPast;
-    if (state.evFilter === 'Saved') return !!state.saved[e.id];
-    return e.kind === (state.evFilter as EventKind) && !e.isPast;
-  });
+  const filter = state.evFilter as EvFilter;
+  /*
+   * Saved is the one filter that looks backwards. Everything else is a list of
+   * what is on — a season that has moved on is not an answer to "what is
+   * there" — but a game you kept is yours whether or not it has been played.
+   */
+  const events = datedEvents(now, state.schoolId, state.sample).filter(
+    (e) => keepEvent(e, filter, state.saved) && (filter === 'Saved' || !e.isPast),
+  );
+  /*
+   * What the calendars you have connected say is on, which this list left out
+   * entirely while the day, week and month views all drew it. For anyone whose
+   * campus events arrive by .ics rather than from the bundled listings, Campus
+   * was an empty screen with a working filter row above it.
+   *
+   * Its own section, labelled, on the same rule the day view states: a feed
+   * entry must never be mistaken for something the university published.
+   */
+  const today = dateToIso(now);
+  const feed = keepFeedEvent(filter)
+    ? state.feedEvents
+        .filter((e) => e.date >= today)
+        .sort((a, b) => a.date.localeCompare(b.date) || (a.at ?? 0) - (b.at ?? 0))
+    : [];
+  const total = events.length + feed.length;
 
   return (
     <>
-      <div style={{ padding: '14px 0 10px 18px', borderBottom: '1px solid var(--app-line)' }}>
-        <ChipRow
-          options={EV_FILTERS}
-          value={state.evFilter as (typeof EV_FILTERS)[number]}
-          onChange={(f) => dispatch({ type: 'setEvFilter', filter: f })}
-        />
-      </div>
-
       <div style={{ padding: '14px 18px' }}>
         <div className="section-label" style={{ marginBottom: 'var(--sp-6)' }}>
-          {events.length} {events.length === 1 ? 'event' : 'events'}
+          {total} {total === 1 ? 'event' : 'events'}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
@@ -1826,21 +1969,15 @@ function CampusList() {
               <Blueprint
                 plain
                 key={e.id}
-                style={{ display: 'flex', gap: 13, padding: '13px 14px', alignItems: 'flex-start' }}
+                style={CAMPUS_ROW}
               >
                 <button
                   type="button"
                   className="bare"
                   onClick={() => dispatch({ type: 'openEvent', id: e.id })}
-                  style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}
+                  style={STACK}
                 >
-                  <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.5 }}>
-                    {e.mon}
-                  </div>
-                  <div style={{ fontSize: 'var(--type-xl)' }}>{e.day}</div>
-                  <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.5 }}>
-                    {e.dow}
-                  </div>
+                  <DateStamp mon={e.mon} day={e.day} dow={e.dow} />
                 </button>
                 <button
                   type="button"
@@ -1884,21 +2021,51 @@ function CampusList() {
           })}
         </div>
 
-        {events.length === 0 && (
+        {feed.length > 0 && (
+          <>
+            <SectionLabel style={{ marginTop: 'var(--sp-7)', marginBottom: 'var(--sp-3)' }}>
+              From your calendars
+            </SectionLabel>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+              {feed.map((e) => {
+                const on = isoToDate(e.date);
+                return (
+                  <Blueprint plain key={e.id} style={CAMPUS_ROW}>
+                    <div style={STACK}>
+                      <DateStamp
+                        mon={MONTHS[on.getMonth()]}
+                        day={on.getDate()}
+                        dow={DOW[on.getDay()]}
+                      />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 'var(--type-lg)' }}>{e.title}</div>
+                      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+                        {[e.time, e.where].filter(Boolean).join(' · ')}
+                      </div>
+                    </div>
+                  </Blueprint>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {total === 0 && (
           <EmptyState
-            title={state.evFilter === 'Saved' ? 'Nothing saved yet.' : 'Nothing coming up.'}
+            title={filter === 'Saved' ? 'Nothing saved yet.' : 'Nothing coming up.'}
             body={
-              state.evFilter === 'Saved'
+              filter === 'Saved'
                 ? 'Hit save on a game and it lands on your Today rail.'
                 : 'Nothing under this filter — the season may have moved on.'
             }
             // Both roads lead back to All: from Saved, to find something worth
             // saving; from a kind with nothing in it, to see what there is.
             action={
-              state.evFilter === 'All'
+              filter === 'All'
                 ? undefined
                 : {
-                    label: state.evFilter === 'Saved' ? 'Browse what is on' : 'Show everything',
+                    label: filter === 'Saved' ? 'Browse what is on' : 'Show everything',
                     onClick: () => dispatch({ type: 'setEvFilter', filter: 'All' }),
                   }
             }
@@ -1957,6 +2124,25 @@ export function Calendar() {
         />
       </div>
 
+      {/*
+       * The campus kinds, on the screen rather than inside one view of it.
+       *
+       * This row used to be drawn by the campus list, which is what Campus +
+       * Month becomes — so Athletics existed on the month and nowhere else,
+       * and a day, a week or a semester of campus events could not be narrowed
+       * to the games at all. It is one row, above whichever view is drawn, and
+       * all four read it through `eventFilter` in `lib/calsource.ts`.
+       */}
+      {state.calSource === 'campus' && (
+        <div style={{ padding: '8px 0 0 18px' }}>
+          <ChipRow
+            options={EVENT_KINDS}
+            value={state.evFilter as EvFilter}
+            onChange={(f) => dispatch({ type: 'setEvFilter', filter: f })}
+          />
+        </div>
+      )}
+
       {/* Campus on its own is better as the browsable list than as a grid. */}
       {state.calSource === 'campus' && state.calView === 'month' ? (
         <CampusList />
@@ -1975,7 +2161,7 @@ export function Calendar() {
 
 export function EventDetail() {
   const { state, dispatch, now } = useStore();
-  const all = datedEvents(now, state.sample);
+  const all = datedEvents(now, state.schoolId, state.sample);
   const event = all.find((e) => e.id === state.eventId) ?? all[0];
   if (!event) return null;
   const saved = !!state.saved[event.id];

@@ -1,5 +1,5 @@
 import { blocksFor, classNote, codeOf, type Catalog } from '../data/catalog';
-import { EVENTS } from '../data/events';
+import { CAMPUS_CALENDARS } from '../data/events';
 import {
   dateToIso,
   daysBetween,
@@ -16,6 +16,7 @@ import { punchline as tonePunchline, type Tone } from './tone';
 import type {
   Appointment,
   Block,
+  CampusEvent,
   CourseId,
   DatedEvent,
   DatedItem,
@@ -49,13 +50,25 @@ export function datedItems(cat: Catalog, now: Date): DatedItem[] {
     .sort((a, b) => a.date.getTime() - b.date.getTime() || a.dueAt - b.dueAt);
 }
 
-export function datedEvents(now: Date, include = true): DatedEvent[] {
-  // The campus calendar is Vanderbilt's, and ships with the sample semester
-  // rather than with every account.
-  if (!include) return [];
-  return EVENTS.map((e) => decorateEvent(e, now)).sort(
-    (a, b) => a.date.getTime() - b.date.getTime(),
-  );
+/**
+ * The campus calendar this student actually has.
+ *
+ * Keyed by where they study rather than by whether the sample semester is on:
+ * the listings are one university's, and a Vanderbilt student who imports
+ * their own syllabi is still at Vanderbilt. See `data/events.ts`.
+ *
+ * The sample stays a way in for somebody who has set no school and is only
+ * looking around — it is a Vanderbilt semester, so it carries Vanderbilt's
+ * calendar with it.
+ */
+export function campusCalendar(schoolId: string, sample = false): CampusEvent[] {
+  return CAMPUS_CALENDARS[schoolId] ?? (sample ? CAMPUS_CALENDARS.vanderbilt : []);
+}
+
+export function datedEvents(now: Date, schoolId = '', sample = false): DatedEvent[] {
+  return campusCalendar(schoolId, sample)
+    .map((e) => decorateEvent(e, now))
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
 export function itemsDueToday(cat: Catalog, now: Date): DatedItem[] {
