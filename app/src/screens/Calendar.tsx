@@ -29,6 +29,7 @@ import {
   shiftIso,
 } from '../lib/date';
 import {
+  appointmentsOn,
   campusHours,
   datedEvents,
   datedItems,
@@ -1093,6 +1094,18 @@ function MonthView() {
   const selDate = new Date(calYear, calMonth, selectedDay);
   const selEvents = campus.filter((e) => sameDay(e.date, selDate));
   const selFeed = feedAll.filter((e) => e.date === iso(selectedDay));
+  /*
+   * Your own appointments, which the grid above marks and the panel left out.
+   *
+   * A day holding one reads "Wednesday 16 September. 1 appointment." on the
+   * cell, and said "Nothing due this day" the moment you tapped it — the same
+   * disagreement the campus calendar had above, on the one kind of thing on
+   * this grid the student put there themselves.
+   *
+   * Gated on `on.classes` to match the marks exactly, so a chip that takes
+   * appointments off the grid takes them out of the panel too.
+   */
+  const selAppts = on.classes ? appointmentsOn(state.appointments, selDate) : [];
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
@@ -1494,6 +1507,47 @@ function MonthView() {
         </div>
       )}
 
+      {/* Your own appointments that day, in the row the campus list uses: a
+          kind, a title, the hour and the place. Tapping one opens the list it
+          lives in, which is where it can be edited. */}
+      {selAppts.length > 0 && (
+        <>
+          <SectionLabel>Yours</SectionLabel>
+          {selAppts.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              className="bare tappable"
+              onClick={() => {
+                dispatch({ type: 'setMineTab', tab: 'appointments' });
+                dispatch({ type: 'go', screen: 'mine' });
+              }}
+              style={{
+                display: 'flex',
+                gap: 'var(--sp-5)',
+                alignItems: 'center',
+                width: '100%',
+                textAlign: 'left',
+                ...monthTaskRow,
+              }}
+            >
+              <span className="tag tag-outline">{kindOf(a.kind).label}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
+                  {a.title}
+                </span>
+                {[a.time, a.where].filter(Boolean).length > 0 && (
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                    {[a.time, a.where].filter(Boolean).join(' \u00b7 ')}
+                  </span>
+                )}
+              </span>
+              <ChevronRight size={14} style={{ opacity: 0.4, flex: 'none' }} />
+            </button>
+          ))}
+        </>
+      )}
+
       {/* What is on around campus that day, in the same row the day view
           draws: a kind, a title, the hour and the place. Tapping it opens the
           listing, which is where the ticket line and the detail are. */}
@@ -1553,6 +1607,7 @@ function MonthView() {
 
       {selItems.length === 0 &&
         selTasks.length === 0 &&
+        selAppts.length === 0 &&
         selEvents.length === 0 &&
         selFeed.length === 0 && (
           <EmptyState inline title="Nothing due this day" body="Double-tap it to put something there." />
