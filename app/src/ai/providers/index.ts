@@ -60,6 +60,7 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   runway: study.runway,
   tonight: study.tonight,
   drill: study.drillLike,
+  meet: study.meet,
 
   // Make — the screens that produce something.
   draw: make.draw,

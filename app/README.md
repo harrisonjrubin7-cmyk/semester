@@ -29,7 +29,7 @@ own application.
 
 ## What is in it
 
-<!--tabs-->Five<!--/--> tabs, <!--screens-->forty-eight<!--/--> screens. The tabs
+<!--tabs-->Five<!--/--> tabs, <!--screens-->forty-nine<!--/--> screens. The tabs
 are below; the screens are the registry in `src/lib/nav.ts`, which is also what
 the directory, the search box and the home-screen icons are drawn from — there
 is one list, and it is that one.
@@ -60,7 +60,10 @@ the registries and the test only checks that it was run. See
   **Slides** (the unit as a deck), **Doc** (the guide as .docx, .pdf, or
   printed), **Quiz** (ten multiple choice, decoys drawn from other units),
   **Figures**, **Cases**, **Cram** and **Listen**. They are one list too —
-  `src/lib/modes.ts`.
+  `src/lib/modes.ts`. **Where courses meet** is the one study screen that is
+  not one course at a time: the terms two of your courses both use, with both
+  definitions side by side and the evidence graded, because it matches words
+  rather than ideas — `src/lib/meet.ts`.
 - **Calendar** — a month grid of deadlines, and a Campus tab for athletics,
   clubs and university events.
 - **Mine** — your own tasks, appointments, notes and files, kept visibly apart

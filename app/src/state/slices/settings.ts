@@ -128,6 +128,16 @@ export function settings(state: State, action: Action): State | null {
     case 'setPieces':
       return { ...state, pieces: { ...state.pieces, [action.key]: action.text } };
 
+    // Emptied rather than set to '' — an exam nobody has said anything about
+    // should leave no record, so clearing the box puts the runway back to
+    // saying it has not been told rather than to a stored blank.
+    case 'setExamCovers': {
+      const covers = { ...state.examCovers };
+      if (action.text.trim()) covers[action.id] = action.text.slice(0, 80);
+      else delete covers[action.id];
+      return { ...state, examCovers: covers };
+    }
+
     case 'setDrop':
       return { ...state, drops: { ...state.drops, [action.key]: readDrop(action.drop) } };
 
