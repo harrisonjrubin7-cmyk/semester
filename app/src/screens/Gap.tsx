@@ -139,7 +139,7 @@ function Run({ win }: { win: GapWindow }) {
 
   if (over) {
     return (
-      <div style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: '70vh' }}>
+      <div style={{ padding: 'var(--page-pad)', display: 'flex', flexDirection: 'column', minHeight: '70vh' }}>
         <div style={{ flex: 1, paddingTop: 40 }}>
           <div className="chrome-text" style={{ fontSize: 'calc(46px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             {runLine(idx, got)}

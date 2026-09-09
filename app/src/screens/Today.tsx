@@ -1072,7 +1072,7 @@ function FeedHome() {
         />
       </div>
 
-      <div style={{ padding: 18 }}>
+      <div style={{ padding: 'var(--page-pad)' }}>
         <NextClassCard />
 
         <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column' }}>

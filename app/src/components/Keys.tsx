@@ -17,14 +17,14 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { SHORTCUTS, keyLabel, shortcutFor } from '../lib/keys';
 import { useAI } from '../ai/store';
-import { DESKTOP, useMedia } from '../lib/media';
+import { WIDE, useMedia } from '../lib/media';
 import { useSitting } from '../lib/sitting.hook';
 import { hold, running } from '../lib/session';
 
 export function Keys() {
   const { state, dispatch } = useStore();
   const ai = useAI();
-  const wide = useMedia(DESKTOP);
+  const wide = useMedia(WIDE);
   const [open, setOpen] = useState(false);
   const [sitting, setSitting] = useSitting();
 

@@ -113,7 +113,7 @@ export function Drill() {
           ? 'Solid.'
           : 'Come back tonight.';
     return (
-      <div style={{ padding: 18 }}>
+      <div style={{ padding: 'var(--page-pad)' }}>
         <div style={{ padding: '40px 0 0', textAlign: 'center' }}>
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
             {got}/{pool.length}
@@ -220,7 +220,7 @@ export function Drill() {
   return (
     <div
       style={{
-        padding: 18,
+        padding: 'var(--page-pad)',
         display: 'flex',
         flexDirection: 'column',
         minHeight: 620,
@@ -473,7 +473,7 @@ export function Quiz() {
     const verdict =
       score >= n - 1 ? 'Exam-ready.' : score >= n * 0.6 ? 'Nearly there.' : 'Read the units again.';
     return (
-      <div style={{ padding: 18 }}>
+      <div style={{ padding: 'var(--page-pad)' }}>
         <div style={{ padding: '40px 0 0', textAlign: 'center' }}>
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 1 }}>
             {score}/{n}
@@ -517,13 +517,13 @@ export function Quiz() {
   }
 
   if (!current) {
-    return <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6 }}>Building the quiz…</div>;
+    return <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', opacity: 0.6 }}>Building the quiz…</div>;
   }
 
   const answered = state.quizPicked !== null;
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 'var(--page-pad)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
         <div style={{ flex: 1, height: 3, background: 'var(--app-track)' }}>
           <div

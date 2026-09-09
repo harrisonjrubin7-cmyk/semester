@@ -241,27 +241,22 @@ export const BUDGET = {
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 216,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 512,
+  space: 490,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 491,
+  shorthand: 487,
 };
 
 /*
- * The numbers above are measured on the merged tree. Several notes below
- * landed on branches that ran alongside each other, so what each one names is
- * its own branch's count rather than a step in one line.
+ * 673/218/515/498 → 673/218/490/494 with the three layouts.
  *
- * Eleven hand-written "nothing here yet" blocks became `EmptyState` — each had
- * set its own padding, opacity and line height, and the component sets none of
- * them per screen. Two of the eleven gained the thing the component exists
- * for: the button that would put something there.
- *
- * The second directory was deleted and its one surviving view moved into
- * Progress, drawn with the `Panel` and rows that tab already used, so what
- * went with the screen was its own hand-drawn heading.
- *
- * The code with no caller was cut: two of the off-scale sizes were inside row
- * components nothing rendered.
+ * Twenty-five spacing values and four shorthands gone, none of them
+ * reformatted: they were the twenty-four `padding: 18` a screen wrote to mean
+ * "the page gutter" and the settings pages' `'0 16px'` meaning the same
+ * thing. There is one gutter now — `--page-pad` in `styles/app.css` — and it
+ * is a different number on a phone, a tablet and a desktop, which is a thing
+ * a literal 18 cannot be. Every one of those sites was a screen that could
+ * not follow the layout it was in. Measured on the merged tree, like every
+ * note below.
  *
  * 674/218/515/498 → 673/218/515/498 when Study's Revise tab was rebuilt and
  * the Tools grid grew the two or three cards that say which tile to press
@@ -278,7 +273,7 @@ export const BUDGET = {
  * blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes live in
  * `app.css` on the scales. The one value the grid sets by hand, the 11.5px
  * icon name, is inside the numbers. Measured rather than derived, like every
- * note below: 674/218/515/498 is what `counts()` reports on the merged tree.
+ * note below: 674/218/515/498 is what `counts()` reported on that tree.
  *
  * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
  * chat. Two numbers down and none up, and neither by reformatting: the

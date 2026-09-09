@@ -786,7 +786,7 @@ export function NoteEditor() {
   }, [note?.fileIds.length]);
 
   if (!note) {
-    return <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6 }}>Note not found.</div>;
+    return <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', opacity: 0.6 }}>Note not found.</div>;
   }
 
   const attached = files.filter((f) => note.fileIds.includes(f.id));
