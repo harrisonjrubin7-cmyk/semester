@@ -32,7 +32,7 @@ import { hasTime, readDue } from '../lib/duetime';
 import { clockOf } from '../lib/atrisk';
 import { nowAt, readDay, worthMarking } from '../lib/rail';
 import { said } from '../lib/arrive';
-import { datedEvents, datedItems } from '../lib/select';
+import { campusHours, datedEvents, datedItems } from '../lib/select';
 import { overdueCount } from '../lib/standing';
 import { ordered, sectionLabel, visible } from '../lib/feed';
 import { MOVE_HINT, useMovable } from '../lib/arrange';
@@ -1390,8 +1390,21 @@ function HoursToday() {
    * an hour to appeared nowhere on any grid in the app. `hoursFor` takes them
    * now, so this tab, the day view and the week grid all get them from the
    * same place rather than three of them being taught separately.
+   *
+   * And the campus calendar, plus any feed you have connected: on the grid
+   * rather than only in a card further down the screen, which is the rule the
+   * calendar's day and week grids follow. See `campusHours` in
+   * `lib/select.ts`.
    */
-  const blocks = hoursFor(catalog, now, state.appointments, state.commitments, [], state.tasks);
+  const blocks = [
+    ...hoursFor(catalog, now, state.appointments, state.commitments, [], state.tasks),
+    ...campusHours(datedEvents(now, state.schoolId, state.sample), state.feedEvents, now).map(
+      (b) => ({
+        ...b,
+        onClick: b.eventId ? () => dispatch({ type: 'openEvent', id: b.eventId! }) : undefined,
+      }),
+    ),
+  ];
   /*
    * The rest of today's tasks: the ones whose time is not a clock.
    *
@@ -1406,7 +1419,7 @@ function HoursToday() {
     <>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-3)' }}>
         Classes from your syllabi, in the app's own colour. Anything you add is tinted by what it
-        is for.
+        is for, and what is on around campus carries its own.
       </div>
       <KindKey />
       {blocks.length === 0 && untimed.length === 0 ? (

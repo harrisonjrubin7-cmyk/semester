@@ -12,6 +12,7 @@ import {
 } from './date';
 import { blocksOn, type Commitment } from './activities';
 import { hasTime, readDue } from './duetime';
+import { CAMPUS_KIND } from './kinds';
 import { punchline as tonePunchline, type Tone } from './tone';
 import type {
   Appointment,
@@ -469,6 +470,85 @@ export function hoursFor(
     c: b.c ?? null,
     canceled: b.canceled,
   }));
+}
+
+/**
+ * One thing on around campus, as an hour grid draws it.
+ *
+ * The same shape `hoursFor` returns, plus the listing it came from: a tap on
+ * the block opens the event, and only the university's own listings have a
+ * screen to open — an entry out of a connected .ics is a title and a time and
+ * nothing else to read.
+ */
+export interface CampusHour {
+  id: string;
+  title: string;
+  meta: string;
+  at: number;
+  minutes: number;
+  kind: string;
+  c: null;
+  /** The campus listing behind this block, where there is one. */
+  eventId: string | null;
+}
+
+/**
+ * What is on around campus, as blocks a grid can draw.
+ *
+ * The calendar knew about campus events in all four views and drew them on
+ * none of them: they were a list under the week, a list under the day, a dot
+ * on the month and a ring on the semester bar — so the one question a
+ * timetable is for, *does this collide with anything*, could not be asked of
+ * the involvement fair at four. A game at six is an hour of a Saturday in
+ * exactly the way a shift is, and the grid is where hours live.
+ *
+ * Two rules keep it honest:
+ *
+ *  - **Only when a time was stated.** A listing whose time is "TBD" — which
+ *    the football schedule is full of until the television window is set —
+ *    gets no block, the same way a deadline whose wording names no hour is
+ *    listed under the grid rather than drawn at midnight on it. The lists
+ *    below the grids still carry every one of them.
+ *  - **An hour long, and no claim beyond that.** A listing states when it
+ *    starts and not when it ends. An hour is long enough to read the title in
+ *    and short enough not to assert how long a fair or a game runs.
+ *
+ * They are never movable: a campus event is somebody else's date, and the
+ * grids refuse a drag on one and say so — see `screens/calendar/Move.tsx`.
+ */
+export function campusHours(events: DatedEvent[], feed: FeedEvent[], date: Date): CampusHour[] {
+  const iso = dateToIso(date);
+  const listings = events
+    .filter((e) => sameDay(e.date, date))
+    .map((e) => ({ e, at: readDue(e.time) }))
+    .filter((x): x is { e: DatedEvent; at: number } => x.at !== null)
+    .map(({ e, at }) => ({
+      id: `campus-${e.id}`,
+      title: e.title,
+      meta: [e.kind, e.where].filter(Boolean).join(' · '),
+      at,
+      minutes: 60,
+      kind: CAMPUS_KIND,
+      c: null,
+      eventId: e.id,
+    }));
+
+  // An all-day entry from a feed has `at: null` and stays in the list, for the
+  // same reason a "TBD" listing does: there is no hour to draw it at.
+  const feeds = feed
+    .filter((e) => e.date === iso && e.at !== null)
+    .map((e) => ({
+      id: `feed-${e.id}`,
+      title: e.title,
+      meta: e.where || 'From a connected calendar',
+      at: e.at as number,
+      minutes: 60,
+      kind: CAMPUS_KIND,
+      c: null,
+      eventId: null,
+    }));
+
+  return [...listings, ...feeds].sort((a, b) => a.at - b.at);
 }
 
 /**

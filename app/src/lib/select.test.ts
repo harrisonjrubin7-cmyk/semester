@@ -3,6 +3,7 @@ import { buildCatalog, EMPTY_CATALOG } from '../data/catalog';
 import {
   appointmentsOn,
   campusCalendar,
+  campusHours,
   datedEvents,
   datedItems,
   feed,
@@ -644,6 +645,79 @@ describe('lengthOf', () => {
   it('falls back for a block belonging to no course, and for a course that has gone', () => {
     expect(lengthOf(CAT, { time: '', at: 900, title: '', meta: '', c: null })).toBe(50);
     expect(lengthOf(CAT, { time: '', at: 900, title: '', meta: '', c: 'deleted' })).toBe(50);
+  });
+});
+
+describe('campusHours', () => {
+  // September 9th: the involvement fair at four, which states a time. The
+  // feed fixtures below are dated onto the same day.
+  const DAY = new Date(2026, 8, 9);
+  const events = datedEvents(new Date(2026, 8, 9), 'vanderbilt');
+
+  const feedEvent = (over: Partial<FeedEvent> & { id: string }): FeedEvent => ({
+    sourceId: 'f',
+    title: 'Something',
+    date: '2026-09-09',
+    at: 15 * 60,
+    time: '3:00 PM',
+    where: '',
+    note: '',
+    courseId: null,
+    ...over,
+  });
+
+  it('reads the hour a listing states', () => {
+    const fair = datedEvents(new Date(2026, 8, 9), 'vanderbilt').find(
+      (e) => e.title === 'Anchor Down Involvement Fair',
+    )!;
+    const [block] = campusHours([fair], [], fair.date);
+    expect(block.at).toBe(16 * 60);
+    expect(block.title).toBe('Anchor Down Involvement Fair');
+    // An hour: a listing says when it starts and not when it ends, and the
+    // grid must not invent a length for a fair or a game.
+    expect(block.minutes).toBe(60);
+    expect(block.meta).toBe('Clubs · Student Life Center');
+    expect(block.eventId).toBe(fair.id);
+  });
+
+  it('draws nothing for a listing whose time is not settled', () => {
+    // Half the football schedule says TBD until the television window is set.
+    // Midnight would be a lie; the lists under the grids still carry it.
+    const tbd = events.filter((e) => e.time === 'TBD');
+    expect(tbd.length).toBeGreaterThan(0);
+    for (const e of tbd) expect(campusHours([e], [], e.date)).toEqual([]);
+  });
+
+  it('takes only what is on the day it was asked about', () => {
+    const drawn = campusHours(events, [], DAY);
+    expect(drawn.length).toBeGreaterThan(0);
+    const ids = drawn.map((b) => b.eventId);
+    for (const e of events) {
+      if (ids.includes(e.id)) expect(e.date.getDate()).toBe(9);
+    }
+  });
+
+  it('draws a feed entry that states a time and lists an all-day one', () => {
+    const timed = feedEvent({ id: 'f1', title: 'Office hours', where: 'Calhoun 202' });
+    const allDay = feedEvent({ id: 'f2', title: 'Reading day', at: null, time: 'All day' });
+    const drawn = campusHours([], [timed, allDay], DAY);
+    expect(drawn.map((b) => b.title)).toEqual(['Office hours']);
+    expect(drawn[0].at).toBe(15 * 60);
+    expect(drawn[0].meta).toBe('Calhoun 202');
+    // A feed entry has no listing behind it, so there is nothing to open.
+    expect(drawn[0].eventId).toBeNull();
+  });
+
+  it('marks every block campus, so a grid colours it as nobody’s choice', () => {
+    const drawn = campusHours(events, [feedEvent({ id: 'f1' })], DAY);
+    expect(drawn.every((b) => b.kind === 'campus' && b.c === null)).toBe(true);
+  });
+
+  it('gives every block its own id, and puts the day in order', () => {
+    const drawn = campusHours(events, [feedEvent({ id: 'f1' })], DAY);
+    expect(new Set(drawn.map((b) => b.id)).size).toBe(drawn.length);
+    const times = drawn.map((b) => b.at);
+    expect([...times].sort((a, b) => a - b)).toEqual(times);
   });
 });
 

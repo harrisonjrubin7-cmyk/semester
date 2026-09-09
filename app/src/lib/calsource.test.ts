@@ -65,24 +65,27 @@ describe('sourceName', () => {
 });
 
 describe('keepBlock', () => {
-  const item = { kind: 'item' as const };
-  const appointment = { kind: 'appointment' as const };
-  const task = { kind: 'task' as const };
+  const clas = undefined;
+  const item = { from: { kind: 'item' as const } };
+  const appointment = { from: { kind: 'appointment' as const } };
+  const task = { from: { kind: 'task' as const } };
+  const event = { kind: 'campus', at: 16 * 60 };
 
   it('keeps everything under All', () => {
     const on = shows('all');
-    expect(keepBlock(undefined, on)).toBe(true);
+    expect(keepBlock(clas, on)).toBe(true);
     expect(keepBlock(item, on)).toBe(true);
     expect(keepBlock(appointment, on)).toBe(true);
     expect(keepBlock(task, on)).toBe(true);
+    expect(keepBlock(event, on)).toBe(true);
   });
 
   it('treats a block with no record behind it as the timetable', () => {
     // A class from a syllabus, or a standing commitment: neither can be moved,
     // and both are hours in the day rather than work to hand in.
-    expect(keepBlock(undefined, shows('classes'))).toBe(true);
-    expect(keepBlock(undefined, shows('deadlines'))).toBe(false);
-    expect(keepBlock(undefined, shows('campus'))).toBe(false);
+    expect(keepBlock(clas, shows('classes'))).toBe(true);
+    expect(keepBlock(clas, shows('deadlines'))).toBe(false);
+    expect(keepBlock(clas, shows('campus'))).toBe(false);
   });
 
   it('files a deadline under Due and an appointment under Classes', () => {
@@ -102,11 +105,19 @@ describe('keepBlock', () => {
     expect(keepBlock(task, shows('campus'))).toBe(false);
   });
 
-  it('draws nothing on a grid under Campus', () => {
-    // Nothing on an hour grid is a campus event — they are listed beside it,
-    // which is why choosing Campus empties the grid rather than filtering it.
+  it('files a campus event under Campus, wherever it is drawn', () => {
+    // A game at six is an hour of the day like any other and is drawn on the
+    // grids now. It is still the campus calendar's, not the timetable's — so
+    // Classes and Due must not draw it, and Campus must.
+    expect(keepBlock(event, shows('campus'))).toBe(true);
+    expect(keepBlock(event, shows('classes'))).toBe(false);
+    expect(keepBlock(event, shows('deadlines'))).toBe(false);
+  });
+
+  it('leaves the timetable off the grid under Campus', () => {
+    // Campus draws what is on around you and nothing of the timetable's.
     const on = shows('campus');
-    expect([undefined, item, appointment, task].some((f) => keepBlock(f, on))).toBe(false);
+    expect([clas, item, appointment, task].some((b) => keepBlock(b, on))).toBe(false);
   });
 });
 
