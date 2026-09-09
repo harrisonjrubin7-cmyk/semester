@@ -167,7 +167,15 @@ figcaption {
   color: color-mix(in srgb, var(--color-text) 70%, transparent);
 }
 .input {
-  width: 100%; min-height: 36px; padding: 6px 10px; font: inherit;
+  /*
+   * 44, not 36. A form field is the one control on a screen somebody is
+   * certain to aim at, and 36px is under the fingertip a phone gives it.
+   * Unlike a chip or a segmented tab, a field stands alone in its row and
+   * grows into its own whitespace, so nothing below it can be stolen by the
+   * extra eight pixels — which is why this is safe here and is not a rule
+   * for every control (see `ChipRow` in `components/ui.tsx`).
+   */
+  width: 100%; min-height: 44px; padding: 6px 10px; font: inherit;
   font-size: 14px; color: var(--color-text); caret-color: var(--color-accent);
   background: var(--color-surface);
   border: 1px solid var(--color-divider); border-radius: var(--radius-md);
