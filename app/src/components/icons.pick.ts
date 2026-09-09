@@ -88,7 +88,6 @@ const SHELF: Record<Group, Glyph> = {
   // Life is the term around the coursework, and Mine is the largest thing on
   // it, so it lends its glyph the way Study and Make do.
   Life: NotesIcon,
-  You: Person,
   // Upkeep's glyph outlived Upkeep. Data is what that shelf actually held —
   // the accounts, the copies, the export — so it keeps the wrench.
   Data: UpkeepIcon,

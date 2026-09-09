@@ -173,7 +173,7 @@ describe('the shelves the directory is arranged on', () => {
     }
   });
 
-  it('holds the eight shelves in the order they are shown', () => {
+  it('holds the seven shelves in the order they are shown', () => {
     // Order is the thing a student learns by position, so it is asserted
     // rather than left to however the registry happens to be written.
     expect(GROUPS).toEqual([
@@ -183,7 +183,6 @@ describe('the shelves the directory is arranged on', () => {
       'Make',
       'Campus',
       'Life',
-      'You',
       'Data',
     ]);
   });
@@ -326,10 +325,17 @@ describe('the promise', () => {
     }
   });
 
+  /*
+   * Taken from the registry rather than written down. This named `grades`,
+   * and when `grades` left the registry the test stopped compiling — a screen
+   * leaving is the ordinary thing this file exists to tolerate, so the test
+   * should not be the thing that breaks when one does.
+   */
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    const gone = DESTINATIONS[0].screen;
+    const short = DESTINATIONS.filter((d) => d.screen !== gone);
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === gone)).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
