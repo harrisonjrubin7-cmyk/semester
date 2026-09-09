@@ -226,18 +226,40 @@ is student-run and the work has to be yours.
 
 ## Phone, iPad, laptop, or its own window
 
-One build, four shapes:
+One build, three layouts and a way of installing it. The two boundaries are
+written once, in `app/src/lib/media.ts`, and repeated in the media queries of
+`app/src/styles/app.css` because a stylesheet cannot import a constant —
+`lib/tiers.test.ts` fails if the two copies ever disagree.
 
-- **Phone** — as drawn, filling the screen.
-- **iPad** — from 760px the tab bar unrolls into a rail beside the column, so
-  every iPad in portrait (768–834pt) gets it, and landscape and Split View
+- **Phone** (under 760px) — as drawn, filling the screen: one column, the tab
+  bar under the thumb, an 18px gutter.
+- **Tablet** (760–1179px) — the tab bar unrolls into a rail beside the content,
+  so every iPad in portrait (768–834pt) gets it, and landscape and Split View
   follow the window live. An iPad mini upright, and any half-width split, stay
-  on the phone layout at full height.
-- **Laptop** — the same rail, with the column framed and centred.
+  on the phone layout at full height. The touch sizes do not change: the finger
+  holding an iPad is the finger that held the phone. The content column fills
+  whatever the rail leaves, up to a 760px cap so a list row on a landscape iPad
+  is not a metre of hairline with its value stranded at the far end.
+- **Desktop** (1180px and up) — a window rather than a phone propped up. A
+  wider sidebar with room for its labels; the app filling the window instead of
+  a 560px column with black either side; a measured reading column with the
+  header's title aligned to it; a wider canvas for the screens that are
+  genuinely grids; a visible scrollbar; and the screens that have something to
+  compare — the courses, the settings index — laid out in as many columns as
+  there is room for. The month grid turns landscape and names what is on each
+  day instead of drawing four dots under the numeral, which is also what stops
+  the last week of the month falling off the bottom of a laptop screen. A
+  fourth step at 1600px widens the measure again rather than stranding the
+  layout in the middle of a large monitor.
 - **Installed** — a manifest, PNG icons (iOS ignores an SVG tile) and a service
   worker make it a real window on macOS or Windows and an icon on a home screen,
   with the app shell and anything you have played working offline. Audio is
   never pre-cached: what you played is kept, and nothing else.
+
+Every difference between the three is a value in one block at the top of
+`app/src/styles/app.css` — the gutter, the measure, the canvas, the rail's
+width, the standalone column, how square a day in the month is — so a screen
+asks for "the page gutter" and never asks which layout it is in.
 
 ## Not yet in
 
