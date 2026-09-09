@@ -294,6 +294,10 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
    * days again.
    */
   const replaced = new Map<string, Set<string>>();
+  const onward = new Map<string, Onward[]>();
+  const described = new Set<string>();
+  for (const raw of raws) if (!raw['RECURRENCE-ID']) described.add(raw.UID?.value ?? '');
+
   for (const raw of raws) {
     const at = raw['RECURRENCE-ID'];
     if (!at) continue;
@@ -308,17 +312,85 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
      * put it, which is what the reader did before it knew about overrides at
      * all, and the smaller wrong answer of the two.
      */
-    if (!raw.DTSTART || !parseWhen(raw.DTSTART)) continue;
+    const moved = raw.DTSTART && parseWhen(raw.DTSTART);
+    if (!moved) continue;
     const uid = raw.UID?.value ?? '';
+
+    /*
+     * `RANGE=THISANDFUTURE` changes the rest of the series, not one week of it
+     * — the class that moves to Thursday for good, rather than the one Monday
+     * that clashed with a holiday. Taking back only the week it names left
+     * every later week sitting on the day the class no longer meets, which is
+     * the same wrong answer this whole section exists to stop, only quieter
+     * for lasting the rest of term.
+     *
+     * The change is carried as a whole number of days between the week it
+     * names and the day it moved to, and applied to each later occurrence by
+     * that count — not by adding milliseconds to a Date. A class is a wall
+     * clock: two o'clock stays two o'clock across the weekend the clocks go
+     * back, and an offset in milliseconds would make it one.
+     */
+    if ((at.params.RANGE ?? '').toUpperCase() === 'THISANDFUTURE') {
+      const list = onward.get(uid) ?? [];
+      list.push({
+        from: iso(day.date),
+        shift: Math.round((dayOf(moved.date).getTime() - dayOf(day.date).getTime()) / 86400000),
+        clockAt: moved.date,
+        allDay: moved.allDay,
+        look: lookOf(courses, raw),
+        /*
+         * Nothing draws it on its own: the occurrence it names is one of the
+         * ones the rule already makes, and this moves that one along with the
+         * rest. Where the entry it changes is not in the file at all there is
+         * no series to move, so it falls through and is drawn once, which is
+         * the only thing left that does not lose it.
+         */
+        alone: !described.has(uid),
+      });
+      onward.set(uid, list);
+      continue;
+    }
+
     const days = replaced.get(uid) ?? new Set<string>();
     days.add(iso(day.date));
     replaced.set(uid, days);
   }
 
+  for (const list of onward.values()) list.sort((a, b) => a.from.localeCompare(b.from));
+
   const events: FeedEvent[] = [];
-  for (const raw of raws) events.push(...toEvents(courses, raw, sourceId, replaced));
+  for (const raw of raws) events.push(...toEvents(courses, raw, sourceId, replaced, onward));
 
   return { events, name };
+}
+
+/** Midnight of a date, so a difference between two of them counts whole days. */
+function dayOf(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+interface Look {
+  title: string;
+  where: string;
+  note: string;
+  courseId: string | null;
+}
+
+function lookOf(courses: Course[], raw: RawEvent): Look {
+  const title = unescape(raw.SUMMARY?.value ?? 'Untitled');
+  const where = unescape(raw.LOCATION?.value ?? '');
+  const note = unescape(raw.DESCRIPTION?.value ?? '').slice(0, 400);
+  return { title, where, note, courseId: matchCourse(courses, `${title} ${where} ${note}`) };
+}
+
+/** A change an entry makes to its series from one week onward. */
+interface Onward {
+  from: string;
+  shift: number;
+  clockAt: Date;
+  allDay: boolean;
+  look: Look;
+  alone: boolean;
 }
 
 function toEvents(
@@ -326,28 +398,26 @@ function toEvents(
   raw: RawEvent,
   sourceId: string,
   replaced: Map<string, Set<string>>,
+  onward: Map<string, Onward[]>,
 ): FeedEvent[] {
   const startField = raw.DTSTART;
   if (!startField) return [];
   const when = parseWhen(startField);
   if (!when) return [];
 
-  const title = unescape(raw.SUMMARY?.value ?? 'Untitled');
-  const where = unescape(raw.LOCATION?.value ?? '');
-  const note = unescape(raw.DESCRIPTION?.value ?? '').slice(0, 400);
-  const uid = raw.UID?.value ?? `${title}-${when.date.getTime()}`;
-  const courseId = matchCourse(courses, `${title} ${where} ${note}`);
+  const look = lookOf(courses, raw);
+  const uid = raw.UID?.value ?? `${look.title}-${when.date.getTime()}`;
 
-  const draw = (date: Date, id: string): FeedEvent => ({
+  const draw = (date: Date, id: string, as: Look = look, allDay = when.allDay): FeedEvent => ({
     id,
     sourceId,
-    title,
+    title: as.title,
     date: iso(date),
-    at: when.allDay ? null : date.getHours() * 60 + date.getMinutes(),
-    time: when.allDay ? 'All day' : clock(date),
-    where,
-    note,
-    courseId,
+    at: allDay ? null : date.getHours() * 60 + date.getMinutes(),
+    time: allDay ? 'All day' : clock(date),
+    where: as.where,
+    note: as.note,
+    courseId: as.courseId,
   });
 
   /*
@@ -355,15 +425,37 @@ function toEvents(
    * class of its own, so it is drawn once, on its own date, and its rule — if
    * it even carries one — is not expanded.
    *
-   * Its id is the week it replaces, not a position in a series. `${uid}-0` is
-   * what the first occurrence of the master entry is called, and an override
-   * of the first week is exactly the common case, so numbering this one would
-   * have given two entries the same id. That is not only untidy: `union` in
+   * Its id is the week it replaces — the RECURRENCE-ID, not the day it moved
+   * to. Two reasons, and the second is the one that is easy to get wrong.
+   *
+   * `${uid}-0` is what the first occurrence of the master entry is called, and
+   * an override of the first week is exactly the common case, so numbering
+   * this one would have given two entries the same id. `union` in
    * `lib/merge.ts` keeps one row per id, so the first sync silently dropped
    * one of the two, and re-reading the feed only recreated the collision.
+   *
+   * And the week it replaces is the only part of an override that does not
+   * change. Name it after the day it moved to and moving that same week a
+   * second time — the professor settling on Friday after trying Thursday —
+   * renames the row, so `union` cannot match what the other device already
+   * holds and keeps both: the class drawn on Thursday *and* Friday. The
+   * RECURRENCE-ID is what this entry is about, and it is the same on every
+   * reading.
+   *
+   * A RECURRENCE-ID this reader cannot read a date out of leaves nothing
+   * stable to use, so the moved day stands in. The entry is still drawn: it
+   * names a real day and dropping it would lose a class outright, which is the
+   * trade made where `replaced` is built, in the other direction.
    */
   const at = raw['RECURRENCE-ID'];
-  if (at) return [draw(when.date, `${uid}-at-${iso(when.date)}`)];
+  if (at) {
+    const original = parseWhen(at);
+    // A change to the rest of the series is drawn by the entry it changes, not
+    // here — unless that entry is not in the file, when this is all there is.
+    const range = (at.params.RANGE ?? '').toUpperCase() === 'THISANDFUTURE';
+    if (range && !(onward.get(uid) ?? []).some((o) => o.alone)) return [];
+    return [draw(when.date, `${uid}-at-${iso((original ?? when).date)}`)];
+  }
 
   /*
    * Weeks the calendar has taken back — the class was cancelled, or it moved
@@ -386,8 +478,33 @@ function toEvents(
    * one already synced to another device; renumbering would make every later
    * week of the term look like a new entry, and leave the old ones behind.
    */
+  /*
+   * A week changed for good keeps the id of the occurrence it came from: it is
+   * the same class on a new day, so the row a device already holds is updated
+   * rather than joined by a second one. The last change that has come into
+   * force by that week is the one that applies, so a class moved twice ends
+   * where it was moved to last.
+   */
+  const changes = onward.get(uid) ?? [];
+  const changeOn = (day: string): Onward | undefined => {
+    let found: Onward | undefined;
+    for (const c of changes) if (c.from <= day) found = c;
+    return found;
+  };
+
   return all
     .map((date, i) => ({ date, id: `${uid}-${i}` }))
     .filter((o) => !gone.has(iso(o.date)))
-    .map((o) => draw(o.date, o.id));
+    .map((o) => {
+      const change = changeOn(iso(o.date));
+      if (!change) return draw(o.date, o.id);
+      const moved = new Date(
+        o.date.getFullYear(),
+        o.date.getMonth(),
+        o.date.getDate() + change.shift,
+        change.clockAt.getHours(),
+        change.clockAt.getMinutes(),
+      );
+      return draw(moved, o.id, change.look, change.allDay);
+    });
 }

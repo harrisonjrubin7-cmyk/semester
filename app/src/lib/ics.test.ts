@@ -588,6 +588,250 @@ describe('a repeating class that changes', () => {
     }
   });
 
+  it('keeps one row when the same week is moved twice', () => {
+    /*
+     * The professor tries Thursday, then settles on Friday. Named after the day
+     * it moved to, the row is renamed by the second move, so `union` cannot
+     * match what the other device already holds and keeps both — the class
+     * drawn on Thursday and Friday. The week it replaces is the only part of an
+     * override that does not change.
+     */
+    const movedTo = (to: string) =>
+      parseIcs(
+        COURSES,
+        cal(
+          [
+            event(
+              'UID:econ1020@vanderbilt.edu',
+              'SUMMARY:ECON 1020 lecture',
+              'DTSTART:20260907T140000',
+              'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+            ),
+            event('UID:econ1020@vanderbilt.edu', 'RECURRENCE-ID:20260921T140000', `DTSTART:${to}T140000`, 'SUMMARY:Moved'),
+          ].join('\r\n'),
+        ),
+      ).events;
+
+    const first = movedTo('20260924');
+    const again = movedTo('20260925');
+    const moved = (list: typeof first) => list.filter((e) => e.title === 'Moved');
+    expect(moved(first)[0].id).toBe(moved(again)[0].id);
+    expect(moved(union(first, again) as typeof first).map((e) => e.date)).toEqual(['2026-09-25']);
+  });
+
+  it('still draws a moved week whose RECURRENCE-ID cannot be read', () => {
+    // Nothing stable is left to name it by, so the moved day stands in — but
+    // the entry names a real day, and dropping it would lose a class outright.
+    const ics = cal(
+      [
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20260907T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+        ),
+        event('UID:econ1020@vanderbilt.edu', 'RECURRENCE-ID:banana', 'DTSTART:20260924T140000', 'SUMMARY:Moved'),
+      ].join('\r\n'),
+    );
+    const { events } = parseIcs(COURSES, ics);
+    expect(events.find((e) => e.title === 'Moved')?.date).toBe('2026-09-24');
+    expect(new Set(events.map((e) => e.id)).size).toBe(events.length);
+  });
+
+  it('moves the rest of the term when the change is for good', () => {
+    /*
+     * RANGE=THISANDFUTURE is the class that moves to Thursday for good, not
+     * the one Monday that clashed with a holiday. Taking back only the week it
+     * names left every later week on the day the class no longer meets.
+     */
+    const ics = cal(
+      [
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20260907T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+        ),
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000',
+          'DTSTART:20260917T140000',
+          'SUMMARY:ECON 1020 lecture',
+          'LOCATION:Buttrick 101',
+        ),
+      ].join('\r\n'),
+    );
+    const { events } = parseIcs(COURSES, ics);
+    // Monday the 7th stands; from the 14th onward the class is a Thursday.
+    expect(events.map((e) => e.date)).toEqual(['2026-09-07', '2026-09-17', '2026-09-24', '2026-10-01']);
+    // The override's own details reach the weeks it changed, and only those.
+    expect(events.filter((e) => e.where === 'Buttrick 101').map((e) => e.date)).toEqual([
+      '2026-09-17',
+      '2026-09-24',
+      '2026-10-01',
+    ]);
+  });
+
+  it('keeps each moved week on the id it already had', () => {
+    // The same class on a new day, so a device that synced before the change
+    // updates its row rather than being handed a second one.
+    const before = parseIcs(
+      COURSES,
+      cal(
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20260907T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+        ),
+      ),
+    ).events;
+    const after = parseIcs(
+      COURSES,
+      cal(
+        [
+          event(
+            'UID:econ1020@vanderbilt.edu',
+            'SUMMARY:ECON 1020 lecture',
+            'DTSTART:20260907T140000',
+            'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+          ),
+          event(
+            'UID:econ1020@vanderbilt.edu',
+            'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000',
+            'DTSTART:20260917T140000',
+            'SUMMARY:ECON 1020 lecture',
+          ),
+        ].join('\r\n'),
+      ),
+    ).events;
+    expect(after.map((e) => e.id)).toEqual(before.map((e) => e.id));
+    expect((union(before, after) as typeof before).map((e) => e.date)).toEqual(after.map((e) => e.date));
+  });
+
+  it('holds the hour across the weekend the clocks change', () => {
+    /*
+     * The move is a whole number of days, not a number of milliseconds. A
+     * class is a wall clock: two o'clock stays two o'clock across the weekend
+     * the clocks go back, and an offset in milliseconds would make it one.
+     */
+    const ics = cal(
+      [
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20261026T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=3',
+        ),
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'RECURRENCE-ID;RANGE=THISANDFUTURE:20261026T140000',
+          'DTSTART:20261029T140000',
+          'SUMMARY:ECON 1020 lecture',
+        ),
+      ].join('\r\n'),
+    );
+    const { events } = parseIcs(COURSES, ics);
+    expect(events.map((e) => e.date)).toEqual(['2026-10-29', '2026-11-05', '2026-11-12']);
+    expect(new Set(events.map((e) => e.time))).toEqual(new Set(['2:00p']));
+  });
+
+  it('takes the hour it moved to, not the hour it had', () => {
+    // A class that changes day *and* time for good: the moved weeks keep the
+    // override's clock, not the one the rule started from.
+    const ics = cal(
+      [
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20261026T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=3',
+        ),
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'RECURRENCE-ID;RANGE=THISANDFUTURE:20261026T140000',
+          'DTSTART:20261029T093000',
+          'SUMMARY:ECON 1020 lecture',
+        ),
+      ].join('\r\n'),
+    );
+    const { events } = parseIcs(COURSES, ics);
+    expect(events.map((e) => `${e.date} ${e.time}`)).toEqual([
+      '2026-10-29 9:30a',
+      '2026-11-05 9:30a',
+      '2026-11-12 9:30a',
+    ]);
+    expect(new Set(events.map((e) => e.at))).toEqual(new Set([570]));
+  });
+
+  it('takes the later of two changes for good', () => {
+    const ics = cal(
+      [
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20260907T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+        ),
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000',
+          'DTSTART:20260917T140000',
+          'SUMMARY:Thursdays now',
+        ),
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'RECURRENCE-ID;RANGE=THISANDFUTURE:20260928T140000',
+          'DTSTART:20260930T140000',
+          'SUMMARY:Wednesdays now',
+        ),
+      ].join('\r\n'),
+    );
+    const { events } = parseIcs(COURSES, ics);
+    expect(events.map((e) => `${e.date} ${e.title}`)).toEqual([
+      '2026-09-07 ECON 1020 lecture',
+      '2026-09-17 Thursdays now',
+      '2026-09-24 Thursdays now',
+      '2026-09-30 Wednesdays now',
+    ]);
+  });
+
+  it('draws a change for good whose class is not in the file', () => {
+    // There is no series to move, so drawing it once is the only thing left
+    // that does not lose it.
+    const ics = cal(
+      event(
+        'UID:elsewhere@vanderbilt.edu',
+        'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000',
+        'DTSTART:20260917T140000',
+        'SUMMARY:Moved for good',
+      ),
+    );
+    expect(parseIcs(COURSES, ics).events.map((e) => e.date)).toEqual(['2026-09-17']);
+  });
+
+  it('draws a change for good once, not beside the week it changed', () => {
+    const ics = cal(
+      [
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'SUMMARY:ECON 1020 lecture',
+          'DTSTART:20260907T140000',
+          'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=2',
+        ),
+        event(
+          'UID:econ1020@vanderbilt.edu',
+          'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000',
+          'DTSTART:20260917T140000',
+          'SUMMARY:ECON 1020 lecture',
+        ),
+      ].join('\r\n'),
+    );
+    const { events } = parseIcs(COURSES, ics);
+    expect(events).toHaveLength(2);
+    expect(new Set(events.map((e) => e.id)).size).toBe(2);
+  });
+
   it('leaves a class with no exceptions exactly as it was', () => {
     expect(days(weekly())).toEqual(['2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28']);
     expect(parseIcs(COURSES, weekly()).events.map((e) => e.id)).toEqual([
