@@ -821,14 +821,41 @@ a:hover {
   }
 }
 
-/* iOS zooms the page when a field under 16px takes focus, which on an iPad
-   leaves the layout scrolled sideways with no way back. Only touch pointers
-   need the larger type, so a mouse keeps the drawn sizes. */
+/*
+ * iOS zooms the page when a field under 16px takes focus, which on a phone or
+ * an iPad leaves the layout scrolled sideways with no way back. Only touch
+ * pointers need the larger type, so a mouse keeps the drawn sizes.
+ *
+ * ## Why this carries `!important`, which almost nothing here does
+ *
+ * Because without it the rule was dead everywhere it mattered. About a
+ * hundred fields in this app set their own `fontSize` inline — `var(--type-md)`
+ * on a score box, `calc(13.5px * …)` on the settings search — and an inline
+ * style beats a stylesheet rule of any specificity. Measured against the
+ * deployed build on an iPhone 14 Pro profile: seventeen score boxes on Grades
+ * at 14px and the settings search at 13.5px, every one of them a field that
+ * zooms the page in when you tap it. The rule had been sitting here doing
+ * nothing on the exact screens it was written for.
+ *
+ * `!important` inside a `pointer: coarse` query is the narrowest thing that
+ * fixes it: it reaches only touch devices, only form controls, and only the
+ * one property. The alternative — routing a hundred inline sizes through a
+ * token — is a hundred edits to say what one line says.
+ *
+ * ## And why `max()` rather than a flat 16px
+ *
+ * A flat 16 would be a floor and a ceiling at once, and this app has a text
+ * size setting. At Largest, `--type-md` is 16.52px: every other word on the
+ * screen grows and the field somebody is typing into would have been pinned
+ * back to 16. The floor is what iOS needs; the scale is what the setting
+ * needs; `max()` is both. At Compact, Normal and Large the floor wins at 16px
+ * and nothing zooms.
+ */
 @media (pointer: coarse) {
   .device input,
   .device textarea,
   .device select {
-    font-size: 16px;
+    font-size: max(16px, var(--type-md)) !important;
   }
 }
 
