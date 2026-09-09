@@ -13,6 +13,7 @@ import { CheckIt } from '../components/CheckIt';
 import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
 import { PrintButton } from '../components/PrintButton';
+import { Folding } from '../components/Fold';
 
 /**
  * Everything you added yourself.
@@ -350,12 +351,14 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
       {groups.map((g) =>
         g.tasks.length === 0 ? null : (
           <div key={g.label}>
+            <Folding name="Tasks">
             <SectionLabel>{g.label}</SectionLabel>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
               {g.tasks.map((t) => (
                 <TaskRow key={t.id} task={t} />
               ))}
             </div>
+            </Folding>
           </div>
         ),
       )}
@@ -652,6 +655,7 @@ function Files() {
 
   return (
     <div>
+      <Folding name="Files">
       <input
         ref={input}
         type="file"
@@ -733,6 +737,7 @@ function Files() {
         </>
       )}
       <div style={{ height: 22 }} />
+      </Folding>
     </div>
   );
 }

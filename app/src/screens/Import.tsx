@@ -24,6 +24,7 @@ import {
 } from '../lib/rediff';
 import { arrivedByShare, forgetShare, takeShared } from '../lib/shared';
 import { blankCourse } from '../lib/edit';
+import { Folding } from '../components/Fold';
 
 /**
  * Upload a syllabus, get a course.
@@ -458,6 +459,7 @@ function ByHand() {
 
   return (
     <Blueprint style={{ padding: 14, marginTop: 'var(--sp-6)' }}>
+      <Folding name="ByHand">
       <SectionLabel>Add it by hand</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'stretch' }}>
         <input
@@ -503,6 +505,7 @@ function ByHand() {
              is due — you fill in next, and you can import the syllabus over this later without
              losing anything you have ticked off.`}
       </div>
+      </Folding>
     </Blueprint>
   );
 }
@@ -541,7 +544,7 @@ function Rediff({
   );
 
   return (
-    <>
+    <Folding name="Rediff">
       <SectionLabel>You already have {code}</SectionLabel>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 1.2, textWrap: 'pretty' }}>
@@ -606,7 +609,7 @@ function Rediff({
           {changes.fields.map((f) => line(f.field, `${f.before || '—'} → ${f.after || '—'}`))}
         </>
       )}
-    </>
+    </Folding>
   );
 }
 
@@ -631,7 +634,7 @@ function Preview({
   const keeping = m.items.filter((i) => !dropped.has(i.id)).length;
 
   return (
-    <>
+    <Folding name="Preview">
       <SectionLabel>What came back</SectionLabel>
       <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
         <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.1 }}>
@@ -774,6 +777,6 @@ function Preview({
           ? ` The ${dropped.size} you took off ${dropped.size === 1 ? 'is' : 'are'} not added at all — re-import the syllabus to get ${dropped.size === 1 ? 'it' : 'them'} back.`
           : ''}
       </div>
-    </>
+    </Folding>
   );
 }

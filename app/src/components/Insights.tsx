@@ -5,6 +5,7 @@ import { SectionLabel } from './ui';
 import { forScope, insights, type Insight, type Scope } from '../insights';
 import { useAI } from '../ai/store';
 import { factsFrom } from '../insights/facts';
+import { Folding } from './Fold';
 
 /**
  * What the app noticed, and the one thing to do about each.
@@ -69,7 +70,7 @@ export function Insights({
   };
 
   return (
-    <>
+    <Folding name="Insights">
       <SectionLabel>{heading}</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {found.map((f) => (
@@ -184,6 +185,6 @@ export function Insights({
           </Blueprint>
         ))}
       </div>
-    </>
+    </Folding>
   );
 }

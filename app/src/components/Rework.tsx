@@ -5,6 +5,7 @@ import { SectionLabel } from './ui';
 import { ask, configured } from '../lib/claude';
 import { SYSTEM, brief, readPlan, survey, verdict, type Plan, type Survey } from '../lib/rework';
 import type { CourseId, CourseUpdate, Guide } from '../lib/types';
+import { Folding } from './Fold';
 
 /**
  * Rebuild the guide around everything added since.
@@ -82,7 +83,7 @@ export function Rework({
   };
 
   return (
-    <>
+    <Folding name="Rework">
       <SectionLabel>Rebuild the guide around this</SectionLabel>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Everything you have added already shows up in every study format. This goes further and
@@ -188,6 +189,6 @@ export function Rework({
           </div>
         </Blueprint>
       )}
-    </>
+    </Folding>
   );
 }

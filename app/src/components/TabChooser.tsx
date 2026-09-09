@@ -33,6 +33,7 @@ import {
 } from '../lib/tabbar';
 import type { Screen } from '../lib/types';
 import { useRowStyle } from './shell/useShell';
+import { Folding } from './Fold';
 
 // The shelves, from the one list in lib/nav.ts rather than a fourth copy.
 const SHELVES = GROUPS;
@@ -137,7 +138,7 @@ export function TabChooser() {
   })).filter((s) => s.items.length > 0);
 
   return (
-    <>
+    <Folding name="TabChooser">
       <SectionLabel
         style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}
       >
@@ -285,6 +286,6 @@ export function TabChooser() {
           The bar is full. Take one out to put another in.
         </div>
       )}
-    </>
+    </Folding>
   );
 }

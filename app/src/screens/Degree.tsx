@@ -38,6 +38,7 @@ import {
   spare,
   type Taken,
 } from '../lib/degree';
+import { Folding } from '../components/Fold';
 
 export function Degree() {
   const { state } = useStore();
@@ -99,7 +100,7 @@ function WhatIsLeft() {
 
   if (list.length === 0) {
     return (
-      <>
+      <Folding name="WhatIsLeft">
         <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.55, textWrap: 'pretty' }}>
           Nothing recorded yet. Add your requirements under Requirements — one row per line of
           your audit — and the courses you have taken under Taken.
@@ -121,16 +122,17 @@ function WhatIsLeft() {
             </div>
           </>
         ) : null}
-      </>
+      </Folding>
     );
   }
 
   return (
-    <>
+    <Folding name="WhatIsLeft">
       {list.map((p) => {
         const r = rollup(state.requirements, state.taken, p);
         return (
           <div key={p} style={{ marginBottom: 20 }}>
+            <Folding name="WhatIsLeft">
             <SectionLabel style={{ margin: '0 0 6px' }}>{p}</SectionLabel>
             <div
               style={{
@@ -183,6 +185,7 @@ function WhatIsLeft() {
                 </div>
               ))}
             </div>
+            </Folding>
           </div>
         );
       })}
@@ -205,7 +208,7 @@ function WhatIsLeft() {
           </div>
         </>
       ) : null}
-    </>
+    </Folding>
   );
 }
 
@@ -234,7 +237,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
   };
 
   return (
-    <>
+    <Folding name="Transcript">
       <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
           className="input"
@@ -356,7 +359,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
           </div>
         </>
       ) : null}
-    </>
+    </Folding>
   );
 }
 
@@ -385,7 +388,7 @@ function Rules() {
   };
 
   return (
-    <>
+    <Folding name="Rules">
       <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
           className="input"
@@ -484,6 +487,6 @@ function Rules() {
           </div>
         </>
       ) : null}
-    </>
+    </Folding>
   );
 }

@@ -21,6 +21,7 @@ import {
   whenLine,
   type Snapshot,
 } from '../lib/snapshots';
+import { Folding } from './Fold';
 
 /**
  * Going back a day.
@@ -79,142 +80,144 @@ export function Snapshots() {
   const rows = picked ? changed(mine, picked.counts) : [];
 
   return (
-    <div>
-      <SectionLabel>Go back a day</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
-        {LOCAL_LINE}
-      </div>
-
-      {list === null ? null : list.length === 0 ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-          {NONE_LINE}
+    <Folding name="Snapshots">
+      <div>
+        <SectionLabel>Go back a day</SectionLabel>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
+          {LOCAL_LINE}
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {list.map((s) => (
+
+        {list === null ? null : list.length === 0 ? (
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+            {NONE_LINE}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {list.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setSaid('');
+                  setPicked(picked?.id === s.id ? null : s);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  justifyContent: 'space-between',
+                  gap: 'var(--sp-5)',
+                  width: '100%',
+                  minHeight: 44,
+                  background: 'transparent',
+                  border: 'none',
+                  ...row,
+                  color: 'inherit',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{ fontSize: 'var(--type-base)' }}>
+                  {reasonLabel(s.reason)}
+                  <span style={{ opacity: 0.55 }}> · {whenLine(s.at, now)}</span>
+                </span>
+                <span
+                  style={{
+                    fontSize: 'var(--type-xs)',
+                    opacity: 0.45,
+                    flex: 'none',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {formatBytes(s.bytes)}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {picked && (
+          <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
+            <div className="kicker">
+              {reasonLabel(picked.reason)} · {whenLine(picked.at, now)}
+            </div>
+            <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+              {costLine(rows)}
+            </div>
+            {rows.length > 0 && (
+              <ul style={{ margin: '8px 0 0', paddingLeft: 17, fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.6 }}>
+                {rows.map((r) => (
+                  <li key={r.line} style={{ opacity: r.loses ? 1 : 0.6 }}>
+                    {r.line}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+              {RESTORE_LINE}
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={busy}
+                onClick={() => setPicked(null)}
+                style={{ flex: 1, height: 42 }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={busy}
+                onClick={() => void restore(picked)}
+                style={{ flex: 1, height: 42 }}
+              >
+                Go back to this
+              </button>
+            </div>
             <button
-              key={s.id}
               type="button"
               disabled={busy}
               onClick={() => {
-                setSaid('');
-                setPicked(picked?.id === s.id ? null : s);
+                void dropSnapshot(picked.id).then(() => {
+                  setPicked(null);
+                  refresh();
+                });
               }}
               style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                justifyContent: 'space-between',
-                gap: 'var(--sp-5)',
-                width: '100%',
-                minHeight: 44,
+                marginTop: 'var(--sp-5)',
+                minHeight: 32,
                 background: 'transparent',
                 border: 'none',
-                ...row,
                 color: 'inherit',
-                textAlign: 'left',
+                opacity: 0.5,
+                fontSize: 'calc(11.5px * var(--text-scale, 1))',
                 cursor: 'pointer',
+                padding: 0,
               }}
             >
-              <span style={{ fontSize: 'var(--type-base)' }}>
-                {reasonLabel(s.reason)}
-                <span style={{ opacity: 0.55 }}> · {whenLine(s.at, now)}</span>
-              </span>
-              <span
-                style={{
-                  fontSize: 'var(--type-xs)',
-                  opacity: 0.45,
-                  flex: 'none',
-                  fontVariantNumeric: 'tabular-nums',
-                }}
-              >
-                {formatBytes(s.bytes)}
-              </span>
+              Delete this copy
             </button>
-          ))}
-        </div>
-      )}
+          </Blueprint>
+        )}
 
-      {picked && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
-          <div className="kicker">
-            {reasonLabel(picked.reason)} · {whenLine(picked.at, now)}
-          </div>
-          <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-            {costLine(rows)}
-          </div>
-          {rows.length > 0 && (
-            <ul style={{ margin: '8px 0 0', paddingLeft: 17, fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.6 }}>
-              {rows.map((r) => (
-                <li key={r.line} style={{ opacity: r.loses ? 1 : 0.6 }}>
-                  {r.line}
-                </li>
-              ))}
-            </ul>
-          )}
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-            {RESTORE_LINE}
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              disabled={busy}
-              onClick={() => setPicked(null)}
-              style={{ flex: 1, height: 42 }}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              disabled={busy}
-              onClick={() => void restore(picked)}
-              style={{ flex: 1, height: 42 }}
-            >
-              Go back to this
-            </button>
-          </div>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => {
-              void dropSnapshot(picked.id).then(() => {
-                setPicked(null);
-                refresh();
-              });
-            }}
-            style={{
-              marginTop: 'var(--sp-5)',
-              minHeight: 32,
-              background: 'transparent',
-              border: 'none',
-              color: 'inherit',
-              opacity: 0.5,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            Delete this copy
-          </button>
-        </Blueprint>
-      )}
+        <button
+          type="button"
+          className="btn btn-secondary btn-block"
+          disabled={busy}
+          onClick={() => void take()}
+          style={{ height: 44, marginTop: 'var(--sp-6)' }}
+        >
+          Take a copy now
+        </button>
 
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
-        disabled={busy}
-        onClick={() => void take()}
-        style={{ height: 44, marginTop: 'var(--sp-6)' }}
-      >
-        Take a copy now
-      </button>
-
-      {said ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', opacity: 0.85, textWrap: 'pretty' }}>
-          {said}
-        </div>
-      ) : null}
-    </div>
+        {said ? (
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', opacity: 0.85, textWrap: 'pretty' }}>
+            {said}
+          </div>
+        ) : null}
+      </div>
+    </Folding>
   );
 }

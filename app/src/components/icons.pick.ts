@@ -29,7 +29,6 @@ import {
   Person,
   ProofIcon,
   RunwayIcon,
-  Search,
   SolveIcon,
   SourcesIcon,
   StudyIcon,
@@ -62,7 +61,6 @@ const OWN: Partial<Record<Screen, Glyph>> = {
   mine: NotesIcon,
   me: Person,
   notifs: Bell,
-  search: Search,
 
   ask: AskIcon,
   work: WorkIcon,
@@ -88,7 +86,6 @@ const SHELF: Record<Group, Glyph> = {
   // Life is the term around the coursework, and Mine is the largest thing on
   // it, so it lends its glyph the way Study and Make do.
   Life: NotesIcon,
-  You: Person,
   // Upkeep's glyph outlived Upkeep. Data is what that shelf actually held —
   // the accounts, the copies, the export — so it keeps the wrench.
   Data: UpkeepIcon,

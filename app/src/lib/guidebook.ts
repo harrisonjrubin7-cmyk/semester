@@ -58,7 +58,7 @@ export interface Guidebook {
 /** What each area is for. The one piece of prose per group. */
 const AREA: Record<Group, string> = {
   Semester:
-    'What is happening and when, and how it is going. Everything here is built from your syllabi — the dates, the weights, the readings — so it is only as right as what was imported, and every screen here will show you the sentence it came from. It also holds the questions worth asking once a week rather than once a day: what each course is running at, and which weeks went by without being ticked off.',
+    'What is happening and when, and how it is going — the term itself, and your load across it. Everything here is built from your syllabi — the dates, the weights, the readings — so it is only as right as what was imported, and every screen here will show you the sentence it came from. It also holds the questions worth asking once a week rather than once a day: what each course is running at, and which weeks went by without being ticked off.',
   Study:
     'Turning what a course holds into something you can be tested on. One guide per course, and several ways through it: cards, a quiz, a read-through, a cram sheet, slides. They all read the same material, so adding a reading updates every one of them at once.',
   Make:
@@ -69,9 +69,8 @@ const AREA: Record<Group, string> = {
     'The parts of university that are not coursework — where a building is, what is on your meal plan, where you live, what is on this week.',
   Life:
     'The term around the coursework. Your own notes and tasks, the hours you sit down for, the people, the applications, what it is all costing.',
-  You: 'Your account, how the app looks, and what it is allowed to do.',
   Data:
-    'Where your semester is kept and what reaches it. The accounts you have connected, the copies held off this device, everything exportable, and what the app will and will not send.',
+    'Where your semester is kept, what reaches it, and how the app behaves. The accounts you have connected, the copies held off this device, everything exportable, what the app will and will not send, and the settings and alerts that decide the rest.',
 };
 
 /**

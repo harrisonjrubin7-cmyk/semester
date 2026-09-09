@@ -29,6 +29,7 @@ import { badge, overdueLine, split, standingOf } from '../lib/standing';
 import { isUnderway, openLine, underway, underwayLine } from '../lib/underway';
 import type { Course } from '../lib/types';
 import { CourseTag } from '../components/CourseTag';
+import { Folding } from '../components/Fold';
 
 /** The one switcher, so the three views cannot drift apart. */
 function CoursesTabs({
@@ -460,6 +461,7 @@ export function CourseDetail() {
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
+      <Folding name="CourseDetail">
       <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{nameFor(course, state.yours)}</div>
       {/* The syllabus name stays visible under a nickname. This screen is
           where somebody checks what a course actually is — dropping the real
@@ -632,6 +634,7 @@ export function CourseDetail() {
         Imported from {course.source}
       </div>
       <div style={{ height: 22 }} />
+      </Folding>
     </div>
   );
 }
@@ -646,6 +649,7 @@ export function ItemDetail() {
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
+      <Folding name="ItemDetail">
       <Blueprint style={{ padding: 'var(--sp-7)' }}>
         <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
           <CourseTag id={item.c} />
@@ -841,6 +845,7 @@ export function ItemDetail() {
         <Timer id={item.id} courseId={item.c} kind={item.kind} title={item.title} />
       )}
       <div style={{ height: 22 }} />
+      </Folding>
     </div>
   );
 }

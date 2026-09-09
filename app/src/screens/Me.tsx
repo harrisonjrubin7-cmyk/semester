@@ -11,8 +11,6 @@ import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { Bell } from '../components/Icons';
 import { NOTIFICATIONS } from '../data/misc';
 import { datedItems, loadByCourse } from '../lib/select';
-import { countHits, findEverything, type Hit } from '../lib/find';
-import { openHit } from '../lib/openhit';
 import {
   GROUPS,
   byTask,
@@ -248,6 +246,20 @@ export function Me() {
   const where = whereYouStand({ courses: catalog.courses, items: dated, done: state.done, now });
 
   /*
+   * The two shares the meters below draw, rounded once.
+   *
+   * Named rather than inlined because each is wanted twice — to decide
+   * whether the bar is worth drawing at all, and then to draw it — and the
+   * term's is wanted a third time in the sentence under it. Rounding it in
+   * three places is how a bar and the number beside it come to disagree.
+   *
+   * `weekPct` is null when nothing falls in the week: no denominator, and
+   * no bar either way.
+   */
+  const weekPct = where.week.due > 0 ? Math.round((where.week.done / where.week.due) * 100) : null;
+  const termPct = where.through === null ? 0 : Math.round(where.through * 100);
+
+  /*
    * The drilling record, counted against the decks that actually exist.
    *
    * `tally` over the whole review map would have had the same fault `Done`
@@ -431,9 +443,23 @@ export function Me() {
           </div>
           <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{weekLine(where.week)}</div>
         </div>
-        {where.week.due > 0 && (
+        {/*
+          A meter with nothing in it is a hairline, not a chart.
+
+          This was gated on there being something *due*, which drew a full-width
+          empty track for the ordinary case of a week you have not started —
+          and the line beside it already says "0 of 5 done", so the bar was
+          repeating that in the one form that reads as a rendering fault. Gated
+          on progress instead, which is the rule the Cards row below already
+          follows: the bar appears when it has a share to show.
+
+          Not a rule for `Meter` itself. Load by course draws 0% on purpose —
+          an empty bar there is a course with nothing left on it, which is the
+          best thing that row can say.
+        */}
+        {weekPct !== null && weekPct > 0 && (
           <div style={{ marginTop: 'var(--sp-3)' }}>
-            <Meter pct={Math.round((where.week.done / where.week.due) * 100)} />
+            <Meter pct={weekPct} />
           </div>
         )}
       </button>
@@ -448,11 +474,16 @@ export function Me() {
               {where.done} of {where.total} done
             </div>
           </div>
-          <div style={{ marginTop: 'var(--sp-3)' }}>
-            <Meter pct={Math.round(where.through * 100)} />
-          </div>
+          {/* Same rule, and the same case: before the first deadline the term
+              is 0% through, which is a fact the sentence below states and a
+              bar cannot draw. */}
+          {termPct > 0 && (
+            <div style={{ marginTop: 'var(--sp-3)' }}>
+              <Meter pct={termPct} />
+            </div>
+          )}
           <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-            {Math.round(where.through * 100)}% of the way from the first deadline on your syllabi to
+            {termPct}% of the way from the first deadline on your syllabi to
             the last. The app has not been told a term's dates, so that span is the term it knows.
           </div>
         </div>
@@ -726,93 +757,6 @@ export function Me() {
             ))}
           </nav>
         </>
-      )}
-    </Page>
-  );
-}
-
-/**
- * Search, across the whole app rather than the deadlines alone.
- *
- * It also finds screens, so somebody who wants their Gmail readings does not
- * have to know that the thing they want is called "Connect accounts" and lives
- * two taps under Me. Typing what you want is allowed to be the way you get
- * there.
- */
-export function Search() {
-  const { state, dispatch, now, catalog, school } = useStore();
-  const rowTwelve = useRowStyle(12);
-  const groups = findEverything(catalog, now, state.query, state.notes, state.tasks, school.capabilities, state.updates);
-  const total = countHits(groups);
-  const typed = state.query.trim().length > 0;
-
-  // Shared with the search overlay rather than repeated. Two copies drift the
-  // first time a kind of hit is added, and a result that opens from one place
-  // and not the other reads as the app being broken. See `lib/openhit.ts`.
-  const open = (hit: Hit) => openHit(hit, dispatch);
-
-  return (
-    <Page>
-      <input
-        className="input"
-        value={state.query}
-        onChange={(e) => dispatch({ type: 'setQuery', query: e.target.value })}
-        placeholder="A course, a topic, a deadline, a screen…"
-        style={{ height: 44, fontSize: 'var(--type-lg)' }}
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
-        aria-label="Search everything"
-      />
-
-      {typed && total > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)' }}>
-          {total} {total === 1 ? 'result' : 'results'}
-        </div>
-      )}
-
-      {groups.map((group) => (
-        <div key={group.label}>
-          <SectionLabel style={{ margin: 'calc(18px * var(--density, 1)) 0 calc(4px * var(--density, 1))' }}>{group.label}</SectionLabel>
-          {group.hits.map((hit) => (
-            <button
-              key={`${hit.kind}-${hit.title}-${hit.sub}`}
-              type="button"
-              className="bare tappable"
-              onClick={() => open(hit)}
-              style={{
-                display: 'flex',
-                gap: 'var(--sp-5)',
-                alignItems: 'center',
-                textAlign: 'left',
-                ...rowTwelve,
-              }}
-            >
-              <span className={hit.kind === 'screen' ? 'tag tag-outline' : 'tag tag-accent'}>
-                {hit.tag}
-              </span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{hit.title}</span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, lineHeight: 1.35 }}>
-                  {hit.sub}
-                </span>
-              </span>
-            </button>
-          ))}
-        </div>
-      ))}
-
-      {typed && total === 0 && (
-        <EmptyState
-          title={`Nothing matches “${state.query}”.`}
-          body="Try a course code, a topic from a guide, a professor, or the name of a screen."
-        />
-      )}
-
-      {!typed && (
-        <EmptyState
-          title="Search everything."
-          body="Deadlines, courses, study units, your own notes and tasks — and the app's own screens, so you can type where you want to go instead of hunting for it."
-        />
       )}
     </Page>
   );

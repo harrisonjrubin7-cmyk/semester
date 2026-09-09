@@ -24,6 +24,7 @@ import {
   type ActivityKind,
   type Commitment,
 } from '../lib/activities';
+import { Folding } from '../components/Fold';
 
 /**
  * Everything you do that is not a class.
@@ -273,7 +274,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
   const ready = name.trim().length > 1 && (fixed ? days.length > 0 && at !== null : hours !== '');
 
   return (
-    <>
+    <Folding name="AddOne">
       <SectionLabel>What is it</SectionLabel>
       <input
         className="input"
@@ -440,7 +441,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
       >
         Add it
       </ActionButton>
-    </>
+    </Folding>
   );
 }
 
@@ -467,7 +468,7 @@ function FindThings() {
   const [taken, setTaken] = useState<string[]>([]);
 
   return (
-    <>
+    <Folding name="FindThings">
       <SectionLabel>Where things are</SectionLabel>
       {LINKS.map((l) => (
         <a key={l.id} href={l.url} target="_blank" rel="noreferrer" className="bare">
@@ -580,6 +581,6 @@ function FindThings() {
           </div>
         </>
       )}
-    </>
+    </Folding>
   );
 }
