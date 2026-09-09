@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   cardKey,
   tallyBy,
+  comeRound,
   dueCount,
+  neverMet,
   dueFirst,
   emptyReview,
   score,
   strength,
   tally,
+  tallyKeys,
   unitMastery,
   type Reviews,
 } from './review';
@@ -166,6 +169,31 @@ describe('dueCount', () => {
     expect(dueCount(['a', 'b'], {}, T0)).toBe(2);
   });
 
+describe('comeRound and neverMet', () => {
+  it('does not call a card you have never seen a card that came round', () => {
+    // The whole point: nothing went out, so nothing came back.
+    expect(comeRound(['a', 'b'], {}, T0)).toBe(0);
+    expect(neverMet(['a', 'b'], {})).toBe(2);
+  });
+
+  it('counts one answered before and due again', () => {
+    expect(comeRound(['a'], { a: { ...pass(2), due: T0 - 1 } }, T0)).toBe(1);
+  });
+
+  it('leaves out one answered and scheduled ahead', () => {
+    expect(comeRound(['a'], { a: pass(2) }, T0)).toBe(0);
+    expect(neverMet(['a'], { a: pass(2) })).toBe(0);
+  });
+
+  it('adds up to what the lumped count says', () => {
+    const reviews = { a: pass(2), b: { ...pass(1), due: T0 - 1 } };
+    const keys = ['a', 'b', 'c'];
+    expect(comeRound(keys, reviews, T0) + neverMet(keys, reviews)).toBe(
+      dueCount(keys, reviews, T0),
+    );
+  });
+});
+
   it('excludes a card scheduled into the future', () => {
     expect(dueCount(['a'], { a: pass(2) }, T0)).toBe(0);
   });
@@ -183,6 +211,28 @@ describe('tally', () => {
 
   it('does not divide by zero on an empty history', () => {
     expect(tally({}).pct).toBe(0);
+  });
+});
+
+describe('tallying a named set of cards', () => {
+  it('counts only the keys it was handed', () => {
+    // The third row is the answer left behind by a course since removed. A
+    // screen reporting this term's studying must not see it, which is the
+    // whole reason this exists beside `tally`.
+    const reviews: Reviews = { a: pass(3), b: score(undefined, false, T0), ghost: pass(9) };
+    const t = tallyKeys(['a', 'b'], reviews);
+    expect(t.cards).toBe(2);
+    expect(t.right).toBe(3);
+    expect(t.pct).toBe(75);
+  });
+
+  it('is silent about a key with no history at all', () => {
+    expect(tallyKeys(['never-drilled'], {})).toEqual({ cards: 0, right: 0, wrong: 0, pct: 0 });
+  });
+
+  it('agrees with `tally` when the keys are every key', () => {
+    const reviews: Reviews = { a: pass(3), b: score(undefined, false, T0) };
+    expect(tallyKeys(Object.keys(reviews), reviews)).toEqual(tally(reviews));
   });
 });
 

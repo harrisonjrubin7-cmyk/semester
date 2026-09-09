@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ALLOWED, BUDGET, check, counts, multipliers } from './rules';
+import { ALLOWED, check, counts, countsByFile, multipliers, overBudget, render } from './rules';
+import { BUDGET } from './budget';
 
 /**
  * The style rule, from the test suite's side.
@@ -32,11 +33,19 @@ describe('the style rule', () => {
     expect(multipliers(css).map((p) => `${p.found} ${p.says}`)).toEqual([]);
   });
 
-  it('holds the budgets exactly, with no slack to spend', () => {
-    const now = counts(src);
-    for (const [name, cap] of Object.entries(BUDGET)) {
-      expect(`${name} ${now[name as keyof typeof BUDGET]}`).toBe(`${name} ${cap}`);
-    }
+  it('holds every file to its own count, with no slack to spend', () => {
+    // Named, not counted, and per file rather than four totals: a failure has
+    // to say which screen grew, because "type 675" said only that somebody,
+    // somewhere, had added one — and under a single total a file could grow by
+    // five while another shrank by five and this never fired at all.
+    expect(overBudget(src, BUDGET).map((p) => `${p.file} ${p.found}`)).toEqual([]);
+  });
+
+  it('keeps the generated ledger byte-for-byte what the tree measures', () => {
+    // The ledger is generated, so the thing that can rot is the generator: a
+    // hand-edit that happens to be arithmetically right would pass the check
+    // above and still be a file nobody can regenerate without a diff.
+    expect(render(countsByFile(src))).toBe(readFileSync(join(src, 'styles', 'budget.ts'), 'utf8'));
   });
 
   it('exempts nothing, and says so where an exemption would go', () => {
@@ -110,5 +119,94 @@ export const d = <i style={{ fontSize: '0.92em' }} />;`),
   it('reports the line the problem is on, after blanking comments', () => {
     const [p] = on(`/* a\n   comment\n   here */\nexport const x = <i style={{ fontSize: 9 }} />;`);
     expect(p.line).toBe(4);
+  });
+});
+
+/**
+ * The ledger, doing the three things it is for.
+ *
+ * Written against a temporary tree rather than the app's, because every one of
+ * these needs a file that is over, under or absent — and introducing any of
+ * those into a real screen to watch the rule fire is how a test ends up
+ * committed alongside the drift it was demonstrating.
+ */
+describe('the per-file ledger', () => {
+  /** A one-file tree, and the ledger you claim describes it. */
+  const tree = (text: string) => {
+    const dir = mkdtempSync(join(tmpdir(), 'ledger-'));
+    mkdirSync(join(dir, 'src'));
+    writeFileSync(join(dir, 'src', 'Probe.tsx'), text);
+    return join(dir, 'src');
+  };
+
+  // Two off-scale values, in the two axes, so a test can move one at a time.
+  const DRIFT = `export const x = <i style={{ padding: 14, lineHeight: 1.35 }} />;`;
+
+  it('passes a file that owes exactly what the ledger says', () => {
+    expect(overBudget(tree(DRIFT), { 'Probe.tsx': { leading: 1, space: 1 } })).toEqual([]);
+  });
+
+  it('fails a file that grew, and says which axis and by how much', () => {
+    const [p] = overBudget(tree(DRIFT), { 'Probe.tsx': { leading: 1 } });
+    expect(p.file).toBe('Probe.tsx');
+    expect(p.found).toBe('space 1, and 0 allowed');
+    expect(p.says).toContain('1 more than this file is allowed');
+  });
+
+  /*
+   * The case a single total could not see at all.
+   *
+   * Under four numbers for the whole app, a screen that gained two values and
+   * another that lost two summed to no change and the rule stayed silent. This
+   * is that exact shape — one file up two, one file down two — and it has to
+   * produce two findings, not zero.
+   */
+  it('sees a file grow even where another shrank by the same amount', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ledger-'));
+    mkdirSync(join(dir, 'src'));
+    writeFileSync(join(dir, 'src', 'Grew.tsx'), `export const a = <i style={{ padding: 14, marginTop: 18 }} />;`);
+    writeFileSync(join(dir, 'src', 'Shrank.tsx'), `export const b = <i style={{ padding: 14 }} />;`);
+    const found = overBudget(join(dir, 'src'), { 'Grew.tsx': {}, 'Shrank.tsx': { space: 3 } });
+    expect(found.map((p) => `${p.file} ${p.found}`)).toEqual([
+      'Grew.tsx space 2, and 0 allowed',
+      'Shrank.tsx space 1, and 3 allowed',
+    ]);
+  });
+
+  it('fails a file that shrank, pointing at --fix rather than at the author', () => {
+    const [p] = overBudget(tree(DRIFT), { 'Probe.tsx': { leading: 1, space: 4 } });
+    expect(p.says).toContain('the good direction');
+    expect(p.says).toContain('--fix');
+  });
+
+  it('fails an entry for a file that no longer owes anything', () => {
+    const [p] = overBudget(tree(`export const x = <i style={{ gap: 'var(--sp-4)' }} />;`), {
+      'Probe.tsx': { space: 1 },
+    });
+    expect(p.found).toBe('Probe.tsx');
+    expect(p.says).toContain('tidied, renamed or deleted');
+  });
+
+  it('allows a file that is not on the ledger nothing at all', () => {
+    // The rule for new code: a file nobody has written a debt for owes none.
+    const [p] = overBudget(tree(DRIFT), {});
+    expect(p.file).toBe('Probe.tsx');
+    expect(p.says).toContain('more than this file is allowed');
+  });
+
+  it('leaves a clean file off the ledger rather than writing it as zeroes', () => {
+    expect(countsByFile(tree(`export const x = <i style={{ gap: 'var(--sp-4)' }} />;`))).toEqual({});
+  });
+
+  it('totals the same numbers it files per screen', () => {
+    const dir = tree(DRIFT);
+    expect(counts(dir)).toEqual({ type: 0, leading: 1, space: 1, shorthand: 0 });
+  });
+
+  it('renders a ledger that parses back to the counts it was made from', () => {
+    const written = render({ 'a/B.tsx': { type: 2, shorthand: 1 }, 'A.tsx': { space: 3 } });
+    // Sorted by path, so the line a branch changes is the file it touched.
+    expect(written).toContain("  'A.tsx': { space: 3 },\n  'a/B.tsx': { type: 2, shorthand: 1 },");
+    expect(written).toContain('do not edit');
   });
 });

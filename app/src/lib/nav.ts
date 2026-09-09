@@ -858,6 +858,29 @@ export function saysFor(d: Destination, c: Capabilities): { label: string; blurb
  * Capability-gated like everything else: a screen visited before somebody
  * changed school must not come back through this door.
  */
+/**
+ * The tag sections, each with the screens that carry it, in registry order.
+ *
+ * The shelves (`GROUPS`) answer "where is the thing called X"; this answers
+ * "what would I use this for". A screen appears under every intention it
+ * serves, so several appear more than once — `taskTags` is a list, not a
+ * category, and a view showing each screen once would be the shelves with
+ * different headings.
+ *
+ * It lived in `lib/everything.ts`, which was that screen's own module: eight
+ * exports, seven of which the screen was the only caller of. When the screen
+ * folded into Progress this was the one thing that came with it, which left a
+ * two-hundred-line file holding one seven-line function that imports `TASKS`
+ * and `taskLabel` from here. It is here now, and that file is gone.
+ */
+export function byTask(rows: Destination[]): { tag: TaskTag; label: string; rows: Destination[] }[] {
+  return TASKS.map(([tag]) => ({
+    tag,
+    label: taskLabel(tag),
+    rows: rows.filter((d) => d.taskTags.includes(tag)),
+  })).filter((s) => s.rows.length > 0);
+}
+
 export function lately(
   recent: string[],
   onBar: string[],

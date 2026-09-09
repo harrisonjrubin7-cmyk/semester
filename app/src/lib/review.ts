@@ -190,7 +190,15 @@ export function dueFirst<T extends { key: string }>(cards: T[], reviews: Reviews
   });
 }
 
-/** How many of these are due right now. Drives "N cards waiting" copy. */
+/**
+ * How many of these are waiting: never met, or come round again.
+ *
+ * The lumped number, and the right one for a queue — a drill has the same
+ * work to do either way, which is why `Drill` counts with this and calls it
+ * "waiting".
+ *
+ * It is the wrong number to call *due*. See {@link comeRound}.
+ */
 export function dueCount(keys: string[], reviews: Reviews, now: number): number {
   return keys.filter((k) => {
     const r = reviews[k];
@@ -198,9 +206,61 @@ export function dueCount(keys: string[], reviews: Reviews, now: number): number 
   }).length;
 }
 
+/**
+ * Cards that have genuinely come round: answered before, and due again now.
+ *
+ * The distinction {@link dueCount} deliberately does not make, and the one any
+ * sentence with the word "due" or "review" in it has to. A card you have never
+ * seen has not come round — nothing went out, so nothing came back — and a
+ * course where you have answered one card of a hundred and seven was being
+ * told that a hundred and one had "come round for review", which is a backlog
+ * the student created by studying. The first answer in a course should not
+ * produce a hundred-card debt.
+ */
+export function comeRound(keys: string[], reviews: Reviews, now: number): number {
+  return keys.filter((k) => {
+    const r = reviews[k];
+    return !!r && r.seen > 0 && r.due <= now;
+  }).length;
+}
+
+/** Cards nobody has answered yet — new material rather than a backlog. */
+export function neverMet(keys: string[], reviews: Reviews): number {
+  return keys.filter((k) => {
+    const r = reviews[k];
+    return !r || r.seen === 0;
+  }).length;
+}
+
+export interface Tally {
+  /** Distinct cards answered at least once. Never more than the deck holds. */
+  cards: number;
+  right: number;
+  wrong: number;
+  /** Right as a share of every answer given, rounded. Zero when none were. */
+  pct: number;
+}
+
 /** Totals for a progress read-out: reviewed, right, and the running accuracy. */
-export function tally(reviews: Reviews): { cards: number; right: number; wrong: number; pct: number } {
-  const rows = Object.values(reviews).filter((r) => r.seen > 0);
+export function tally(reviews: Reviews): Tally {
+  return totals(Object.values(reviews));
+}
+
+/**
+ * The same totals for a named set of cards.
+ *
+ * `tally` reads the whole review map, which is right for a diagnostics dump
+ * and wrong for a screen: the map keeps the answers you gave to a course you
+ * removed in September, and a screen reporting this term's studying would
+ * count them. Hand over the keys of the decks that exist and it cannot.
+ */
+export function tallyKeys(keys: string[], reviews: Reviews): Tally {
+  return totals(keys.map((k) => reviews[k]).filter((r): r is CardReview => Boolean(r)));
+}
+
+/** The arithmetic both of the above are, so there is one copy of it. */
+function totals(all: CardReview[]): Tally {
+  const rows = all.filter((r) => r.seen > 0);
   const right = rows.reduce((n, r) => n + r.right, 0);
   const wrong = rows.reduce((n, r) => n + r.wrong, 0);
   const answered = right + wrong;

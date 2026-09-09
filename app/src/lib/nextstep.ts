@@ -13,8 +13,8 @@
  *
  * ## Recommended, not decided
  *
- * Every rule below reads something the student did — cards falling due, an
- * exam approaching, a unit they have not touched — and nothing is hidden by
+ * Every rule below reads something the student did — cards falling due, a
+ * test approaching, a unit they have not touched — and nothing is hidden by
  * it. The chips are still there under "All ways", in the same order, doing the
  * same thing. This ranks; it does not gate.
  *
@@ -44,10 +44,34 @@ export interface StepInput {
   ways: Way[];
   /** The merged guide, for its units and mastery. */
   guide: Guide;
-  /** Cards whose review has come round. From `dueCount`. */
+  /**
+   * Cards that have genuinely come round. From `comeRound`, not `dueCount`.
+   *
+   * The difference is the whole reason `lib/review.ts` grew a second counter:
+   * the lumped count calls a card nobody has met "due", so a course where one
+   * card of a hundred and seven had been answered recommended "Review 101
+   * cards" and said they had "come round for review". They had not. Unmet
+   * cards fall to the weakest-unit rule below, which is what they are for.
+   */
   due: number;
-  /** Days until this course's next exam, or null if none is known. */
-  examIn: number | null;
+  /**
+   * Days until this course's next test, or null if none is known.
+   *
+   * Was `examIn`, and was fed the *app's* next exam rather than this course's:
+   * whichever course held the nearest exam in the whole semester got the
+   * countdown and every other course was told it had none. A course examined
+   * in eight days looked identical to one examined in April. See `testedIn` in
+   * `lib/select.ts`, which answers this per course.
+   */
+  testIn: number | null;
+  /**
+   * What that test is — "Exam", "Midterm", "Quiz".
+   *
+   * Carried so the reason can name it. A quiz called an exam is a small lie
+   * that costs the whole line its credibility, and quizzes outnumber exams in
+   * most courses by a factor of five.
+   */
+  testKind: string | null;
   /** True once any card in this course has been answered at all. */
   started: boolean;
 }
@@ -64,6 +88,21 @@ export interface Step {
 /** How close an exam has to be before it outranks ordinary revision. */
 export const EXAM_SOON = 10;
 
+/**
+ * The same, for a quiz.
+ *
+ * Shorter on purpose. A week and a half out, an exam is worth turning an
+ * evening over to and a Thursday quiz is not — cramming for one nine days
+ * early costs the evening that ordinary revision would have had, and ordinary
+ * revision is what makes the quiz easy anyway.
+ */
+export const QUIZ_SOON = 4;
+
+/** How near a test has to be to change what tonight is for. */
+export function testHorizon(kind: string | null): number {
+  return (kind ?? '').toLowerCase() === 'quiz' ? QUIZ_SOON : EXAM_SOON;
+}
+
 /** How many alternatives sit beside the recommendation before "All ways". */
 export const BESIDE = 3;
 
@@ -77,7 +116,7 @@ const has = (ways: Way[], id: StudyMode) => ways.some((w) => w.id === id);
  * talking for the sake of it.
  */
 export function nextStep(input: StepInput): Step | null {
-  const { ways, guide, due, examIn, started } = input;
+  const { ways, guide, due, testIn, testKind, started } = input;
   if (ways.length === 0) return null;
 
   // Before anything about cards. A card that has never been seen counts as
@@ -105,14 +144,15 @@ export function nextStep(input: StepInput): Step | null {
     };
   }
 
-  // An exam close enough to change what tonight is for.
-  if (examIn !== null && examIn >= 0 && examIn <= EXAM_SOON) {
-    const when = examIn === 0 ? 'today' : examIn === 1 ? 'tomorrow' : `in ${examIn} days`;
+  // A test close enough to change what tonight is for.
+  if (testIn !== null && testIn >= 0 && testIn <= testHorizon(testKind)) {
+    const when = testIn === 0 ? 'today' : testIn === 1 ? 'tomorrow' : `in ${testIn} days`;
+    const what = (testKind ?? 'exam').toLowerCase();
     if (has(ways, 'cram')) {
-      return { id: 'cram', label: 'Open the cram sheet', why: `The exam is ${when}.` };
+      return { id: 'cram', label: 'Open the cram sheet', why: `The ${what} is ${when}.` };
     }
     if (has(ways, 'quiz')) {
-      return { id: 'quiz', label: 'Sit a practice quiz', why: `The exam is ${when}.` };
+      return { id: 'quiz', label: 'Sit a practice quiz', why: `The ${what} is ${when}.` };
     }
   }
 
