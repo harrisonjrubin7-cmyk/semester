@@ -179,7 +179,7 @@ describe('which tab lights up', () => {
 describe('which tab the rail lights', () => {
   // What the rail draws below the bar, and so what it must not file under a
   // tab. Same list App.tsx builds, minus anything already in the bar.
-  const LISTED: Screen[] = ['ask', 'import', 'account', 'connect', 'cloud', 'settings'];
+  const LISTED: Screen[] = ['ask', 'import', 'account', 'connect', 'settings'];
 
   it('lights no tab for a screen the rail lists itself', () => {
     // The bug this exists for. `rootOf('settings')` is 'me', which the rail

@@ -154,6 +154,21 @@ export interface Item extends Envelope {
    * see.
    */
   dueAt?: string;
+  /**
+   * The date the source document stated, where the student has since moved it.
+   *
+   * `dueAt` is the date in force; this is the one the syllabus gave. They are
+   * only ever different because somebody deliberately moved a deadline — see
+   * `movedFrom` on the app's own `Item` — and the difference is the whole
+   * point of carrying it: this app's premise is that a deadline is the
+   * syllabus's rather than the app's, and every item travels with the sentence
+   * and page it came from. A second client receiving only `dueAt` would show a
+   * date the document does not give, beside a quote that contradicts it, with
+   * nothing saying which to believe.
+   *
+   * Absent on everything nobody has moved, which is almost every item.
+   */
+  statedDueAt?: string;
   /** The syllabus's own words for the time, when it gave no clock time. */
   dueText?: string;
   startAt?: string;

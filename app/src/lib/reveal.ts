@@ -140,8 +140,6 @@ export const UNLOCKS: Record<string, (f: Facts) => boolean> = {
   // Archiving one term means nothing until there are two.
   ahead: (f) => f.terms > 1 || f.courses > 0,
 
-  // Sync only matters with an account.
-  cloud: (f) => f.signedIn,
   connect: (f) => f.courses > 0,
 };
 

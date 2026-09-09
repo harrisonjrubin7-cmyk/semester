@@ -1,9 +1,7 @@
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
 import { DESTINATIONS, TASKS, taskLabel, type Destination, type TaskTag } from './nav';
-import { SHORTCUTS } from './keys';
 import type { Screen } from './types';
-import { has } from './search';
 import { dayOf } from './date';
 
 /**
@@ -137,7 +135,6 @@ export const WHY: Partial<Record<Screen, string>> = {
   maps: 'A building code is not a location, and ten minutes between classes is not much.',
   yes: 'Registration opens at a time, and the good sections go in the first hour.',
   mail: 'The email you are putting off is usually four sentences.',
-  cloud: 'A reading in Drive is a reading you have to remember to go and get.',
   connect: 'The calendar you already keep can feed this one instead of being retyped.',
   clocks: 'A countdown you can see is the difference between a study hour and an evening.',
   export: 'It is your data, and being able to leave is what makes staying a choice.',
@@ -199,79 +196,6 @@ export function byTask(rows: Destination[]): { tag: TaskTag; label: string; rows
 
 /** Which of the four views a hit came from, so a result can say so. */
 export type View = 'area' | 'task' | 'untried' | 'keys';
-
-export interface Found {
-  view: View;
-  /** The section it sits in — a shelf, a task heading, or the key list. */
-  where: string;
-  screen?: Screen;
-  title: string;
-  sub: string;
-}
-
-/**
- * Every row in all four views, once, as one array.
- *
- * `<Page>`'s filter takes an array and a match, which is exactly the shape
- * this screen needs once you stop thinking of it as four lists and start
- * thinking of it as one list that knows which list each row belongs to. The
- * frame then owns the box, the count, the empty state and the `/` key, and
- * this file owns what a row is — which is the division everywhere else in the
- * app already uses.
- *
- * A screen appears once under its shelf, once per task tag it carries, and
- * once more if it is untried. That is not duplication in the registry sense:
- * it is the same `Destination` seen from three angles, and every angle is
- * derived here rather than written down.
- */
-export function allRows(
-  rows: Destination[],
-  says: (d: Destination) => { label: string; blurb: string },
-  notYet: Destination[],
-): Found[] {
-  const out: Found[] = [];
-
-  for (const d of rows) {
-    const { label, blurb } = says(d);
-    out.push({ view: 'area', where: d.group, screen: d.screen, title: label, sub: blurb });
-  }
-
-  for (const section of byTask(rows)) {
-    for (const d of section.rows) {
-      const { label, blurb } = says(d);
-      out.push({ view: 'task', where: section.label, screen: d.screen, title: label, sub: blurb });
-    }
-  }
-
-  for (const d of notYet) {
-    const { label, blurb } = says(d);
-    out.push({
-      view: 'untried',
-      where: 'Not tried yet',
-      screen: d.screen,
-      title: label,
-      sub: WHY[d.screen] ?? blurb,
-    });
-  }
-
-  for (const s of SHORTCUTS) {
-    out.push({ view: 'keys', where: 'Shortcuts', title: s.does, sub: `Press ${s.key}` });
-  }
-
-  return out;
-}
-
-/**
- * Whether a row answers the query.
- *
- * The keywords are in here, which is the point: the registry carries them for
- * every screen and they are the words somebody arrives with rather than the
- * ones the label happens to use. The task heading is too — "plan my week" is
- * a thing people type and it is nobody's keyword.
- */
-export function matches(f: Found, q: string, keywordsFor: (s: Screen) => string): boolean {
-  return has(q, f.title, f.sub, f.where, f.screen ? keywordsFor(f.screen) : '');
-}
 
 /** Every screen in the registry, for callers that do not filter by school. */
 export function everyScreen(): Destination[] {

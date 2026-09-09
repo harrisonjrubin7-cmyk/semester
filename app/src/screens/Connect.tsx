@@ -15,15 +15,20 @@ import { SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';
 import {
   PROVIDERS,
+  addEvent,
+  addTask,
   beginAuth,
   describe,
   forget,
   listRemoteFiles,
   pullCalendar,
   tokens,
+  writable,
   type ProviderId,
   type RemoteFile,
 } from '../lib/connect';
+import { datedItems, railFor } from '../lib/select';
+import { dateToIso } from '../lib/date';
 import type { FeedSource } from '../lib/types';
 
 /**
@@ -218,7 +223,7 @@ function ClaudeAccount() {
 }
 
 export function Connect() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const rowTen = useRowStyle(10);
   const rowEleven = useRowStyle(11);
   const [busy, setBusy] = useState<string>('');
@@ -235,8 +240,20 @@ export function Connect() {
   });
   const [url, setUrl] = useState('');
   const [files, setFiles] = useState<{ id: ProviderId; list: RemoteFile[] } | null>(null);
+  // Kept apart from `note`, which is read at the top of a long screen: a send
+  // is started from a button near the bottom and its answer has to be next to
+  // the button, not scrolled off above the accounts.
+  const [sent, setSent] = useState('');
+  const [sendTo, setSendTo] = useState<ProviderId>('google');
   const fileInput = useRef<HTMLInputElement>(null);
   const live = tokens();
+
+  // Who can be written to, which is not the same question as who publishes a
+  // calendar — see `writable` in `lib/connect.ts` for the one that bit.
+  const outbound = writable(live);
+  // A stale pick cannot survive a disconnect: if the chosen one is gone, the
+  // first one still connected answers for it.
+  const out = outbound.includes(sendTo) ? sendTo : outbound[0];
 
   const addIcsText = (text: string, name: string, from: string, kind: FeedSource['kind']) => {
     const { events, name: calName } = parseIcs(catalog.courses, text);
@@ -307,6 +324,67 @@ export function Connect() {
     }
   };
 
+  /** One send, with its own busy word and its answer beside the buttons. */
+  const sending = async (what: string, fn: (id: ProviderId) => Promise<string>) => {
+    if (!out) return;
+    setBusy(`send-${what}`);
+    setSent('');
+    try {
+      setSent(await fn(out));
+    } catch (e) {
+      setSent(describe(e));
+    } finally {
+      setBusy('');
+    }
+  };
+
+  /** Everything ahead, onto the calendar you actually use. */
+  const sendDeadlines = () =>
+    sending('deadlines', async (id) => {
+      const ahead = datedItems(catalog, now).filter((i) => !i.isPast);
+      for (const item of ahead) {
+        await addEvent(id, {
+          title: `${catalog.byId[item.c].code} — ${item.title}`,
+          date: dateToIso(item.date),
+          at: null,
+          minutes: 0,
+          note: [item.detail, item.weight, item.quote && `“${item.quote}”`]
+            .filter(Boolean)
+            .join('\n\n'),
+        });
+      }
+      return `${ahead.length} deadlines added to ${PROVIDERS[id].name}. They are all-day entries, so they sit at the top of the day rather than blocking an hour.`;
+    });
+
+  const sendWeek = () =>
+    sending('week', async (id) => {
+      let added = 0;
+      for (let ahead = 0; ahead < 7; ahead += 1) {
+        const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + ahead);
+        for (const block of railFor(catalog, day, [])) {
+          if (block.canceled || block.optional) continue;
+          await addEvent(id, {
+            title: block.title,
+            date: dateToIso(day),
+            at: block.at,
+            minutes: 50,
+            note: block.meta,
+          });
+          added += 1;
+        }
+      }
+      return `${added} classes added for the next seven days. Repeat it next week, or subscribe to the campus calendar feed above instead.`;
+    });
+
+  const sendTasks = () =>
+    sending('tasks', async (id) => {
+      const mine = state.tasks.filter((t) => !t.done);
+      for (const t of mine) {
+        await addTask(id, { title: t.title, date: t.date, note: t.note });
+      }
+      return `${mine.length} of your own tasks sent to ${id === 'google' ? 'Google Tasks' : 'Microsoft To Do'}.`;
+    });
+
   const browse = async (id: ProviderId) => {
     setBusy(`${id}-files`);
     try {
@@ -331,23 +409,6 @@ export function Connect() {
       {note && (
         <Blueprint style={{ padding: '12px 14px', marginTop: 14, background: 'var(--app-hero)' }}>
           <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>{note}</div>
-        </Blueprint>
-      )}
-
-      {Object.keys(live).length > 0 && (
-        <Blueprint
-          onClick={() => dispatch({ type: 'go', screen: 'cloud' })}
-          style={{ padding: '13px 15px', marginTop: 14, display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
-        >
-          <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
-          <span style={{ flex: 1, minWidth: 0 }}>
-            <span className="kicker" style={{ display: 'block' }}>
-              Use what is connected
-            </span>
-            <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-1)' }}>
-              Documents into a course, course mail, deadlines onto your real calendar
-            </span>
-          </span>
         </Blueprint>
       )}
 
@@ -619,6 +680,116 @@ export function Connect() {
               </a>
             </div>
           ))}
+        </>
+      )}
+
+      {/* ── send out ─────────────────────────────────────────────────────── */}
+      {/*
+        What a connected account is for, in the other direction.
+
+        This was the third tab of a screen called Files & mail, and that
+        screen is gone: its Files tab listed what this screen lists a few
+        inches above, its Mail tab read an inbox that Write an email is the
+        screen for, and it sat in the directory one row below this one, which
+        is how somebody ends up opening both to find out which is which.
+
+        Pushing dates out is the part that had nowhere else to live, so it
+        lives here, under the accounts it writes to. Nothing on this screen
+        deletes anything at either end.
+      */}
+      {out && (
+        <>
+          <SectionLabel>Send out</SectionLabel>
+          <div
+            style={{
+              fontSize: 'var(--type-base)',
+              opacity: 0.68,
+              lineHeight: 'var(--leading-relaxed)',
+              textWrap: 'pretty',
+            }}
+          >
+            Your dates onto the calendar and task list you already live in. These add rather than
+            sync — running one twice makes duplicates, and nothing here removes anything.
+          </div>
+
+          {outbound.length > 1 && (
+            <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
+              {outbound.map((id) => {
+                const on = id === out;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    className="btn"
+                    onClick={() => setSendTo(id)}
+                    aria-pressed={on}
+                    style={{
+                      flex: 'none',
+                      fontSize: 'var(--type-xs)',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      background: on ? 'var(--chrome)' : 'transparent',
+                      color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
+                      borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
+                    }}
+                  >
+                    {PROVIDERS[id].name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            disabled={busy !== ''}
+            onClick={() => void sendDeadlines()}
+            style={{ height: 44, marginTop: 'var(--sp-5)' }}
+          >
+            {busy === 'send-deadlines'
+              ? 'Sending…'
+              : `Add ${datedItems(catalog, now).filter((i) => !i.isPast).length} deadlines to ${PROVIDERS[out].name}`}
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            disabled={busy !== ''}
+            onClick={() => void sendWeek()}
+            style={{ height: 44, marginTop: 'var(--sp-4)' }}
+          >
+            {busy === 'send-week' ? 'Sending…' : 'Add the next seven days of classes'}
+          </button>
+
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            disabled={busy !== '' || state.tasks.filter((t) => !t.done).length === 0}
+            onClick={() => void sendTasks()}
+            style={{ height: 44, marginTop: 'var(--sp-4)' }}
+          >
+            {busy === 'send-tasks'
+              ? 'Sending…'
+              : `Send ${state.tasks.filter((t) => !t.done).length} unfinished to ${
+                  out === 'google' ? 'Google Tasks' : 'Microsoft To Do'
+                }`}
+          </button>
+
+          {sent && (
+            <Blueprint style={{ marginTop: 'var(--sp-5)', background: 'var(--app-hero)' }}>
+              <div
+                style={{
+                  fontSize: 'var(--type-base)',
+                  lineHeight: 'var(--leading-relaxed)',
+                  textWrap: 'pretty',
+                  padding: 'var(--sp-6)',
+                }}
+              >
+                {sent}
+              </div>
+            </Blueprint>
+          )}
         </>
       )}
 

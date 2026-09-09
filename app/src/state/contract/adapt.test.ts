@@ -103,6 +103,49 @@ describe('the crossing', () => {
     expect(item.dueAt?.slice(0, 10)).toBe('2026-09-09');
   });
 
+  it('carries the date the syllabus gave, where somebody has moved it', () => {
+    /*
+     * The whole premise of the app is that a deadline is the syllabus's rather
+     * than the app's, and every item travels with the sentence and page it came
+     * from. Sending only the date in force would hand a second client a date
+     * the document does not give, beside a quote that contradicts it, with
+     * nothing saying which to believe.
+     */
+    const base = course();
+    const moved = state({
+      courses: [
+        {
+          ...base,
+          items: [{ ...base.items[0], month: 8, day: 16, movedFrom: { month: 8, day: 9, year: 2026 } }],
+        },
+      ],
+    });
+    const item = toContract(moved).items[0];
+    expect(item.dueAt).toBe(dayAt(2026, 8, 16));
+    expect(item.statedDueAt).toBe(dayAt(2026, 8, 9));
+  });
+
+  it('leaves it off everything nobody has moved, which is almost everything', () => {
+    // Present on every item would read as "the syllabus agrees", which is a
+    // claim rather than the absence of one.
+    expect(toContract(state()).items[0].statedDueAt).toBeUndefined();
+  });
+
+  it('falls back to the item’s own year for a move recorded without one', () => {
+    // `movedFrom.year` is optional for the same reason `year` is: an item
+    // written before the field existed has none.
+    const base = course();
+    const moved = state({
+      courses: [
+        {
+          ...base,
+          items: [{ ...base.items[0], month: 8, day: 16, movedFrom: { month: 8, day: 9 } }],
+        },
+      ],
+    });
+    expect(toContract(moved).items[0].statedDueAt).toBe(dayAt(2026, 8, 9));
+  });
+
   it('says "unstated" for an unrecorded AI policy, never an empty string', () => {
     // The app treats absent as a no. An empty string reads as "no
     // restrictions", which is the opposite.

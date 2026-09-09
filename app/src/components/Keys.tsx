@@ -16,7 +16,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { SHORTCUTS, keyLabel, shortcutFor } from '../lib/keys';
-import { focusBox } from '../lib/screenbox';
 import { useAI } from '../ai/store';
 import { DESKTOP, useMedia } from '../lib/media';
 import { useSitting } from '../lib/sitting.hook';
@@ -53,23 +52,16 @@ export function Keys() {
       switch (hit.action) {
         case 'search':
           /*
-           * The box in front of you first, the whole app second.
+           * One key, one answer.
            *
-           * Every screen now carries a filter box, but only the ones with a
-           * list of their own actually filter with it — see `<Page>`. So this
-           * asks: if the screen in front of you has a real filter, the caret
-           * goes there, because searching what you are looking at is the
-           * commoner intention and the overlay is one press of Enter further
-           * on. If it does not, focusing a box that filters nothing would be
-           * a worse answer than the overlay, which is what people meant.
-           *
-           * Both used to happen at once. See `lib/screenbox.ts`.
+           * It used to ask the screen in front of you first, and open its own
+           * filter where it had one — which meant `/` did different things on
+           * Grades and on Today, and the app had two searches to explain.
+           * There is one now, and this opens it: an overlay rather than a
+           * screen, because looking something up should not cost you the page
+           * you were reading. See `components/Command.tsx`.
            */
-          if (!focusBox()) {
-            // An overlay rather than a screen: looking something up should not
-            // cost you the page you were reading. See `components/Command.tsx`.
-            dispatch({ type: 'finder', open: true });
-          }
+          dispatch({ type: 'finder', open: true });
           break;
         case 'assistant':
           // The sheet over the screen you are on, which is the whole point of

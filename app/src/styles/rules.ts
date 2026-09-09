@@ -237,16 +237,34 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 688,
+  type: 680,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 224,
+  leading: 221,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 534,
+  space: 521,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 539,
+  shorthand: 509,
 };
 
 /*
+ * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
+ * down and none up: the tab was a second copy of what the map already is, and
+ * the one thing only it could do — standing somewhere and naming it — moved to
+ * `screens/Maps.tsx` as it was rather than being redrawn, so the panel's own
+ * off-scale values went with it and the tab's list rows did not come back.
+ *
+ * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
+ * One down, none up, and only one because the filter field lived in `<Page>`
+ * rather than in the fifteen screens that used it: what went with it here was
+ * that field's own `padding: '0 2px'` on the clear button. The screens lost an
+ * adapter each, which is prose, not spacing.
+ *
+ * 688/224/534/549 → 682/222/524/545 when Files & mail was deleted. All four
+ * down and none up: the screen listed Drive files and inbox messages in rows
+ * it drew by hand, and Connect accounts already lists the same files. What it
+ * did that nothing else does — pushing deadlines out to Google or Microsoft —
+ * went with it rather than being moved, so nothing was reformatted here.
+ *
  * 689/537/551 → 688/534/549 when the Ask tab became the conversation: the
  * screen that was a key form is a settings page built from `Group` and
  * `CustomRow`, which carry the scale, and the sizes and gaps it used to set by
@@ -272,7 +290,7 @@ export const BUDGET = {
  * between the waiting dots, and the send button's clearance inside the
  * composer — are drawing measurements and are inside the new number.
  *
- * `shorthand` went 549 → 539 when the courses got their own colours. The Look
+ * `shorthand` went 519 → 509 when the courses got their own colours. The Look
  * settings page wrote the same section-label margin twelve times — one string,
  * twelve copies, eleven chances to be a pixel out — and it is one `CAP`
  * constant now. The thirteenth section, the course palette, uses it too rather

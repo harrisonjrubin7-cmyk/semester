@@ -176,15 +176,6 @@ export const connect: Provide = (look) => {
   };
 };
 
-/** Files & mail — pulling a reading out of Drive or OneDrive. */
-export const cloud: Provide = () => ({
-  summary:
-    'Pulling a reading out of a connected drive, or turning an announcement into a change set. Files are read in this browser; their contents are never part of a question.',
-  visible: [],
-  actions: ['open_screen'],
-  suggestions: ['How do I get a reading in from Drive?', 'What happens to a file after I import it?'],
-});
-
 /** Take it with you — the export. */
 export const exportScreen: Provide = (look) => ({
   summary: `Taking your data with you — ${Math.round(bytesOf(pickPersisted(look.state)) / 1024)} KB, as one file. Nothing is uploaded to make it.`,
