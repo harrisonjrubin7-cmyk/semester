@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { countHits, findEverything } from './find';
+import { countHits, findEverything, spelled } from './find';
 import type { CourseUpdate } from './types';
 import ECON from '../data/courses/econ';
 import { buildCatalog } from '../data/catalog';
@@ -90,5 +90,88 @@ describe('material added since the courses were imported', () => {
     expect(findEverything(cat, new Date(), q, [], [], undefined, [])).toEqual(
       findEverything(cat, new Date(), q, [], []),
     );
+  });
+});
+
+describe('a word typed wrong', () => {
+  const cat = buildCatalog([ECON]);
+  const screens = (q: string) =>
+    findEverything(cat, new Date(), q, [], [])
+      .flatMap((g) => g.hits)
+      .filter((h) => h.kind === 'screen')
+      .map((h) => h.screen);
+  const units = (q: string) =>
+    findEverything(cat, new Date(), q, [], [])
+      .flatMap((g) => g.hits)
+      .filter((h) => h.kind === 'unit')
+      .map((h) => h.title);
+
+  it('still finds the screen', () => {
+    // Every one of these returned nothing at all, under a reply suggesting the
+    // person try a course code, a topic, a professor or the name of a screen.
+    expect(screens('calender')).toContain('calendar');
+    expect(screens('gradess')).toContain('courses');
+  });
+
+  it('forgives the typo in one word of a sentence', () => {
+    expect(screens('delete my acount')).toContain('privacy');
+  });
+
+  it('does not outrank a word spelled right', () => {
+    // A near miss is the last tier of all, so anything actually typed wins.
+    const hits = findEverything(cat, new Date(), 'calendar', [], [])
+      .flatMap((g) => g.hits)
+      .filter((h) => h.kind === 'screen');
+    expect(hits[0]?.screen).toBe('calendar');
+  });
+
+  it('does not dilute a query that found something', () => {
+    // The spelling pass runs only when the strict one came back empty, so a
+    // word spelled right never drags in the things it is one letter from.
+    const hits = findEverything(cat, new Date(), 'grades', [], []).flatMap((g) => g.hits);
+    expect(hits.length).toBeGreaterThan(0);
+    expect(hits.every((h) => h.score >= 10)).toBe(true);
+  });
+
+  it('puts the near miss on the name above the near miss in the blurb', () => {
+    // "calender" means the Calendar screen, not the several other screens
+    // whose description happens to mention a calendar.
+    expect(screens('calender')[0]).toBe('calendar');
+  });
+
+  it('forgives a slip, not a different word', () => {
+    expect(screens('parsnip')).toEqual([]);
+    expect(units('monopoly parsnip')).toEqual([]);
+  });
+
+  it('leaves short words alone', () => {
+    // At four letters a single edit reaches half the dictionary, so these are
+    // held to exactness rather than turned into each other.
+    expect(findEverything(cat, new Date(), 'exan', [], [])).toEqual([]);
+  });
+
+  it('finds a study unit by its course as well as its name', () => {
+    // "1020 monopoly" is how somebody with two courses covering monopoly says
+    // which one they mean.
+    expect(units('1020 monopoly')).toContain('12 · Monopoly');
+  });
+});
+
+describe('saying that the results are a guess', () => {
+  const cat = buildCatalog([ECON]);
+  const at = (q: string) => findEverything(cat, new Date(), q, [], []);
+
+  it('is true when nothing was spelled the way it is stored', () => {
+    expect(spelled(at('calender'))).toBe(true);
+  });
+
+  it('is false when the query matched', () => {
+    expect(spelled(at('calendar'))).toBe(false);
+  });
+
+  it('is false when there is nothing at all', () => {
+    // Nothing to be a guess about, and the screen says so in its own words.
+    expect(at('parsnip velocity brigade')).toEqual([]);
+    expect(spelled(at('parsnip velocity brigade'))).toBe(false);
   });
 });

@@ -135,6 +135,13 @@ them, your own notes and tasks, and the app's own screens. Type `monopoly` and
 you land on that unit with it already open; type `gmail` and you get **Files &
 mail**, without having to know that is what it is called.
 
+Typed wrong, it still lands. `calender` reaches the calendar and `assignmnets`
+the work screen, because when a query matches nothing exactly the search tries
+again allowing a letter or two out of place — and says that is what it did,
+rather than presenting a guess as a match. Only then: a query that found
+something is never diluted with the words it is one letter from. See
+[`app/src/lib/near.ts`](app/src/lib/near.ts).
+
 The tab bar stays put while you move around — going into a guide no longer
 leaves Back as the only exit — and **Me** is a directory of everything the app
 can do, grouped, with a line under each saying what it is for.
