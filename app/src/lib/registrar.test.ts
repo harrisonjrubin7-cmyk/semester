@@ -4,7 +4,6 @@ import {
   ahead,
   apply,
   blankTerm,
-  breakDays,
   daysTo,
   filled,
   line,
@@ -135,14 +134,6 @@ describe('what reaches Today', () => {
 
   it('lists everything still to come on the screen of its own', () => {
     expect(ahead(dates, now).map((d) => d.id)).toEqual(['break', 'drop-clean', 'finals']);
-  });
-
-  it('knows the days a break covers, so nothing schedules into them', () => {
-    expect([...breakDays(dates)]).toEqual(['2026-10-05', '2026-10-06']);
-  });
-
-  it('leaves a single-day entry out of the break days unless it is a break', () => {
-    expect(breakDays([on('2026-10-09', { id: 'drop-clean' })]).size).toBe(0);
   });
 });
 

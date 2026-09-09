@@ -1255,9 +1255,7 @@ function MonthView() {
       </div>
 
       {selItems.length === 0 && selTasks.length === 0 && (
-        <div style={{ padding: '12px 0 2px', fontSize: 'var(--type-md)', opacity: 0.55 }}>
-          Nothing due this day. Double-tap it to put something there.
-        </div>
+        <EmptyState inline title="Nothing due this day" body="Double-tap it to put something there." />
       )}
 
       {moving.notice}

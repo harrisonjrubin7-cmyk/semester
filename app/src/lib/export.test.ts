@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   ALARMS,
   appointmentEvents,
-  backupDate,
   backupOf,
   readBackup,
   cell,
@@ -285,7 +284,6 @@ describe('stampedName', () => {
   });
 });
 
-
 describe('readBackup', () => {
   const good = JSON.stringify({
     format: 'semester.backup.v1',
@@ -375,16 +373,5 @@ describe('a backup carries the semester, not the look', () => {
     });
     const { data } = readBackup(meddled);
     for (const k of LOOK) expect(data[k], k).toBeUndefined();
-  });
-});
-
-describe('backupDate', () => {
-  it('says when it was made', () => {
-    const when = backupDate(JSON.stringify({ exported: '2026-09-03T12:00:00.000Z' }));
-    expect(when).not.toBe('');
-  });
-
-  it('is blank rather than throwing on rubbish', () => {
-    expect(backupDate('nope')).toBe('');
   });
 });

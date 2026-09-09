@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../../state/store';
 import { Blueprint } from '../../components/Blueprint';
-import { ActionButton, SectionLabel } from '../../components/ui';
+import { ActionButton, EmptyState, SectionLabel } from '../../components/ui';
 import { Trouble } from '../../components/Trouble';
 import { useTrouble } from '../../lib/trouble';
 import { ask, configured, provider } from '../../lib/claude';
@@ -158,10 +158,11 @@ export function FromText() {
             {found.length === 0 ? 'Nothing changed' : `${found.length} proposed`}
           </SectionLabel>
           {found.length === 0 ? (
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
-              Nothing in that changes a deadline — which is a perfectly ordinary answer for an
-              announcement about a room, a reading or a reminder.
-            </div>
+            <EmptyState
+              inline
+              title="Nothing changed"
+              body="Nothing in that changes a deadline — which is a perfectly ordinary answer for an announcement about a room, a reading or a reminder."
+            />
           ) : (
             <>
               {found.map((c, i) => (

@@ -152,11 +152,6 @@ export function sourceLine(source: Source, school: School | null): string {
   return 'Assumed cutoffs — not from your syllabus. Set them here if it differs.';
 }
 
-/** Whether a scale is worth showing a "no targets" explanation for. */
-export function hasCutoffs(system: GradeSystem): boolean {
-  return targetsOf(system).length > 0;
-}
-
 /** What to say when a scale carries no cutoffs at all. */
 export const NO_CUTOFFS =
   'No percentage cutoffs here — this course is marked out of points, or the scale only states grade points. Enter the cutoffs from your syllabus and the targets come back.';

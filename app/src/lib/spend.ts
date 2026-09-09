@@ -37,8 +37,6 @@ export interface Usage {
   cacheRead: number;
 }
 
-export const NO_USAGE: Usage = { input: 0, output: 0, cacheWrite: 0, cacheRead: 0 };
-
 /**
  * List prices per million tokens, and when they were read.
  *

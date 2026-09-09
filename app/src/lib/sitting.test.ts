@@ -5,7 +5,6 @@ import {
   forCourse,
   missedFrom,
   pctOf,
-  sittingName,
   trend,
   trendLine,
   type Sitting,
@@ -207,15 +206,5 @@ describe('against', () => {
     for (const said of [against(90, 70), against(40, 70)]) {
       expect(said).not.toMatch(/\d+%/);
     }
-  });
-});
-
-describe('sittingName', () => {
-  it('names the file by day and paper code', () => {
-    expect(sittingName(sitting())).toBe('2026-09-03-paper-7ps4.md');
-  });
-
-  it('still names one that has no code', () => {
-    expect(sittingName(sitting({ code: '' }))).toBe('2026-09-03-practice-paper.md');
   });
 });

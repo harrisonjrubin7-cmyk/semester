@@ -378,24 +378,7 @@ export const CORE_GUIDE: Guide = {
   ],
 };
 
-/** Reflection prompts already scheduled, from the syllabus. */
-export const CORE_REFLECTION_PROMPTS = [
-  '#1 Should play be more serious?',
-  '#2 Are elite athletes super-humans?',
-  '#3 How do sports reflect cultural norms?',
-  '#4 Sports and the virtue of transcendence',
-  '#5 Responsibility for structural inequality',
-  '#7 What is caring?',
-  '#9 Care, accepting, embracing',
-  '#10 Addressing reality',
-  '#11 Inspiration',
-  '#12 Perspective, kindness, fairness',
-  '#13 Humility in sports talk',
-  'Final: Ultrarealism and human flourishment',
-];
-
-/** The VIA 24 character strengths, grouped by virtue — the vocabulary reflections want. */
-export const VIA_STRENGTHS: { virtue: string; strengths: string[] }[] = [
+[] = [
   { virtue: 'Wisdom', strengths: ['Creativity', 'Curiosity', 'Judgment', 'Love of learning', 'Perspective'] },
   { virtue: 'Courage', strengths: ['Bravery', 'Perseverance', 'Honesty', 'Zest'] },
   { virtue: 'Humanity', strengths: ['Love', 'Kindness', 'Social intelligence'] },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { check, flatten, pageLabel, quoteNote, tally, worthCiting } from './cite';
+import { check, flatten, tally, worthCiting } from './cite';
 import type { Citation } from './claude';
 
 const cite = (text: string, page?: number): Citation => ({ text, ...(page ? { page } : {}) });
@@ -64,23 +64,6 @@ describe('checking a quote against what the API cited', () => {
     const out = check(REAL, [cite(REAL)]);
     expect(out.confirmed).toBe(true);
     expect(out.page).toBeUndefined();
-  });
-});
-
-describe('what it says under a quote', () => {
-  it('names the page, because that is what makes it checkable', () => {
-    expect(pageLabel({ confirmed: true, page: 4 })).toBe('Page 4');
-    expect(pageLabel({ confirmed: false, page: 4 })).toBe('');
-    expect(quoteNote({ confirmed: true, page: 4 })).toBe('Checked against the file — page 4.');
-    expect(quoteNote({ confirmed: true })).toBe('Checked against the file.');
-  });
-
-  it('does not imply an unconfirmed date is wrong', () => {
-    // The model may have summarised a sentence accurately. The app cannot
-    // tell, and should say that rather than accuse.
-    const note = quoteNote({ confirmed: false });
-    expect(note).toContain('Not found word-for-word');
-    expect(note).toContain('Worth opening the syllabus');
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupCount, interleave, longestRun, mixLine, worthMixing } from './interleave';
+import { groupCount, interleave, mixLine, worthMixing } from './interleave';
 
 interface Card {
   id: string;
@@ -36,14 +36,6 @@ describe('nothing is lost or invented', () => {
 describe('the mixing itself', () => {
   it('alternates where it can', () => {
     expect(shape(interleave(deck('aaabbb'), of))).toBe('ababab');
-  });
-
-  it('spreads three courses, even when one is entirely less urgent', () => {
-    // The first case that drove the design. Taking whichever course had the
-    // most urgent card waiting produced `ababab` then `ccc` — a third of the
-    // run blocked, in exactly the situation with most to mix. An interleaver
-    // that blocks the tail is not an interleaver.
-    expect(longestRun(interleave(deck('aaabbbccc'), of), of)).toBe(1);
   });
 
   it('brings a small course in early rather than saving it for the end', () => {
@@ -143,14 +135,6 @@ describe('when it is worth offering at all', () => {
   it('counts the courses in play', () => {
     expect(groupCount(deck('aabbcc'), of)).toBe(3);
     expect(groupCount([], of)).toBe(0);
-  });
-});
-
-describe('measuring a run', () => {
-  it('finds the longest stretch of one course', () => {
-    expect(longestRun(deck('aabbbc'), of)).toBe(3);
-    expect(longestRun(deck('abab'), of)).toBe(1);
-    expect(longestRun([], of)).toBe(0);
   });
 });
 

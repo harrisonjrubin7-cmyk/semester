@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { EmptyState } from './ui';
 import { useStore } from '../state/store';
 import { everySchool } from '../data/schools';
 import {
@@ -224,10 +225,11 @@ export function SchoolPicker() {
           />
         ))}
         {found.length === 0 && (
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, padding: '6px 0', lineHeight: 'var(--leading-normal)' }}>
-            Nothing here by that name. Add it — it takes about a minute, and every question is
-            optional.
-          </div>
+          <EmptyState
+            inline
+            title="Nothing here by that name"
+            body="Add it — it takes about a minute, and every question is optional."
+          />
         )}
       </div>
 

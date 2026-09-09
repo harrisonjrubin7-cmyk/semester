@@ -541,6 +541,20 @@ export function EmptyState({
  * `type="button"` is fixed, which is the one thing this cannot express: a
  * submit button inside a form is a different control and `screens/Account.tsx`
  * still writes its own.
+ *
+ * ## Why `className` and `type` are not passable
+ *
+ * `...rest` is spread after both, so a call site that passed either would win
+ * — and the two it could overwrite are the two that make this button what it
+ * is. `className` carries the tone and `btn-block`; `type` is fixed by the
+ * paragraph above. Worse than the appearance changing, `lib/onecontrol.test.ts`
+ * recognises a hand-written copy of this button by exactly that markup, so a
+ * call site that overrode either would be a copy the guard could not see.
+ *
+ * `style` stays passable and stays spread last, deliberately: that is the
+ * documented way to disagree about a height or a margin. These two are not a
+ * disagreement, they are a different control — and the type says so, so it is
+ * a compile error rather than a review note.
  */
 /** The one height. See the note above for why it is not a prop. */
 export const HEIGHT = 46;
@@ -556,7 +570,7 @@ export function ActionButton({
   spacing?: string;
   style?: CSSProperties;
   children: ReactNode;
-} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'style' | 'children'>) {
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'style' | 'children' | 'className' | 'type'>) {
   return (
     <button
       type="button"

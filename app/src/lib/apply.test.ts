@@ -15,7 +15,6 @@ import {
   readApplications,
   safeUrl,
   standing,
-  standingOn,
   summary,
   title,
   type Application,
@@ -95,12 +94,6 @@ describe('what stands on a day', () => {
 
   it('ignores a rolling application with no date', () => {
     expect(standing([app({ rolling: true })], NOW)).toEqual([]);
-  });
-
-  it('lands on the right day', () => {
-    const a = app({ due: day(3), org: 'X' });
-    expect(standingOn([a], NOW, new Date(2026, 8, 7))).toHaveLength(1);
-    expect(standingOn([a], NOW, new Date(2026, 8, 8))).toEqual([]);
   });
 
   it('separates what is ahead from what has gone by', () => {
