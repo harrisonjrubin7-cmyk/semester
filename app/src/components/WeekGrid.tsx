@@ -7,6 +7,7 @@ import { DOW_INITIALS, clock } from '../lib/date';
 import type { HourBlock } from './HourGrid';
 import { lanesOf } from '../lib/weekpage';
 import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
+import { placeBlock } from '../lib/hourplace';
 
 /**
  * A week, by the hour — the timetable shape.
@@ -186,6 +187,17 @@ export function WeekGrid({
             const tint = own ? courseTint(b.c).fill : kindTint(b.kind, light);
             const { lane, of } = lanes[b.id] ?? { lane: 0, of: 1 };
             const slot = `((${col} - 3px) / ${of})`;
+            // Clamped rather than trusted: a deadline at 11:59pm used to be
+            // drawn below the last row, over the text under the grid. See
+            // `lib/hourplace.ts`.
+            const box = placeBlock({
+              at: b.at,
+              minutes: b.minutes,
+              startHour: lo,
+              endHour: hi,
+              rowPx: ROW,
+              minHeight: 15,
+            });
             return (
               <div
                 key={`${di}-${b.id}`}
@@ -200,10 +212,10 @@ export function WeekGrid({
                 aria-label={blockLabel(b.title, b.kind, clock(b.at), b.meta, b.canceled)}
                 style={{
                   position: 'absolute',
-                  top: top(b.at) + 1,
+                  top: box.top,
                   left: `calc(${GUTTER}px + ${di} * ${col} + 1px + ${lane} * ${slot})`,
                   width: `calc(${slot})`,
-                  height: Math.max(15, (b.minutes / 60) * ROW - 3),
+                  height: box.height,
                   overflow: 'hidden',
                   padding: '2px 3px',
                   borderLeft: `2px solid ${tint}`,
