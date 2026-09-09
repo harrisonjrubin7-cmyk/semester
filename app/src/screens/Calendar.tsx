@@ -1087,7 +1087,7 @@ function MonthView() {
       )}
 
       <div
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1, marginBottom: 'var(--sp-3)' }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 1, marginBottom: 'var(--sp-3)' }}
         aria-hidden="true"
       >
         {DOW_INITIALS.map((d, i) => (
@@ -1137,7 +1137,7 @@ function MonthView() {
           dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${move.day}` });
           setChasing(move.day);
         }}
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 1 }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 1 }}
       >
         {/*
           One row element per week. `display: contents` keeps the seven-column

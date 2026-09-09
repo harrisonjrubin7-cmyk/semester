@@ -10,6 +10,7 @@ import { PrintButton } from '../components/PrintButton';
 import { datedItems } from '../lib/select';
 import { cardKey } from '../lib/review';
 import { forCourse } from '../lib/sitting';
+import { coverage, coverageLine, worthSaying } from '../lib/covers';
 import { CAMPUS_LINKS } from '../data/campus';
 import { longLabel } from '../lib/date';
 import {
@@ -50,13 +51,34 @@ export function Runway() {
 
   const { guide } = useLive(exam?.c ?? state.guideId);
 
+  /*
+   * What is actually on the paper.
+   *
+   * Every count below is over these units and not over the course, which is
+   * the difference between a midterm the syllabus scopes to eight units and
+   * the fourteen this screen used to count. `lib/covers.ts` decides, and says
+   * on whose authority — the syllabus's words, yours, or nobody's.
+   */
+  const covers = useMemo(
+    () =>
+      exam
+        ? coverage({
+            exam: { title: exam.title, detail: exam.detail, quote: exam.quote },
+            units: guide.units,
+            yours: state.examCovers[exam.id],
+          })
+        : null,
+    [exam, guide, state.examCovers],
+  );
+
   // What has been done to each unit, as counts rather than as a percentage.
   const units: UnitState[] = useMemo(() => {
-    if (!exam) return [];
+    if (!exam || !covers) return [];
     // The store's clock, not the wall clock: `now` ticks on the minute and is
     // the same value every other screen counts against.
     const at = now.getTime();
-    return guide.units.map((u) => {
+    const on = new Set(covers.units);
+    return guide.units.filter((_, i) => on.has(i)).map((u) => {
       let seen = 0;
       let due = 0;
       for (const card of u.cards) {
@@ -67,7 +89,7 @@ export function Runway() {
       }
       return { name: u.name, cards: u.cards.length, seen, due };
     });
-  }, [guide, exam, state.reviews, now]);
+  }, [guide, exam, covers, state.reviews, now]);
 
   const r = useMemo(
     () =>
@@ -238,6 +260,37 @@ export function Runway() {
       </button>
 
       <SectionLabel>Unit by unit</SectionLabel>
+      {covers && worthSaying(guide.units.length) ? (
+        <div style={{ marginBottom: 'var(--sp-5)' }}>
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              opacity: covers.source === 'whole' ? 0.6 : 0.75,
+              lineHeight: 'var(--leading-relaxed)',
+              textWrap: 'pretty',
+            }}
+          >
+            {coverageLine(covers, guide.units.length)}
+          </div>
+          {/*
+            One box, and it takes what a person would say out loud — "1 to 8",
+            "5-9", "all". Parsed by the same reader that reads the syllabus, so
+            there is one place where a span is understood rather than two that
+            can disagree. Blank puts it back to the default and stores nothing.
+          */}
+          <input
+            className="input"
+            type="text"
+            value={state.examCovers[exam.id] ?? ''}
+            onChange={(e) =>
+              dispatch({ type: 'setExamCovers', id: exam.id, text: e.target.value })
+            }
+            placeholder="What it covers — “units 1 to 8”, “5-9”, “all”"
+            aria-label={`What ${exam.title} covers`}
+            style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'var(--type-base)' }}
+          />
+        </div>
+      ) : null}
       {r.units.length === 0 ? (
         <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)' }}>
           This course has no study guide yet, so there is nothing to count. Add the readings and

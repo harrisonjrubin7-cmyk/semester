@@ -115,6 +115,32 @@ export function scaleOf(id: string | undefined): number {
   return SIZES.find((s) => s.id === id)?.scale ?? 1;
 }
 
+/** The root font size this app's type was drawn against. */
+export const DRAWN_AT = 16;
+
+/**
+ * What the app's px sizes have to be multiplied by, given the root it is on.
+ *
+ * Every font size in this app is `calc(Npx * var(--text-scale, 1))` — the six
+ * tokens and about twelve hundred inline ones — and `App.tsx` used to set the
+ * root to a flat `16 * scale` px. That is not merely ignoring the browser's
+ * own font size: it *overwrites* it. Measured against Chromium with its
+ * default raised from 16 to 24, which is the ordinary way somebody with low
+ * vision makes the web readable and is what a great many people use instead
+ * of zoom: the app rendered pixel for pixel the same, root font size forced
+ * back to 16, body text 12px in both. Every other site they had made bigger;
+ * this one quietly undid it.
+ *
+ * So the root is now a percentage of whatever the browser was already using,
+ * and this converts the size that produces back into the multiplier the px
+ * sizes need. At the 16px default it returns exactly the scale that was there
+ * before, so nothing about the app moves for anybody who has not changed the
+ * setting — which is the condition for a change this wide being safe.
+ */
+export function scaleFrom(rootPx: number): number {
+  return rootPx > 0 ? rootPx / DRAWN_AT : 1;
+}
+
 // ── The ground ───────────────────────────────────────────────────────────
 
 export interface Ground {
@@ -876,6 +902,56 @@ export function hueToHex(deg: number, lum: number, sat = 0.42): string {
 }
 
 /**
+ * The one colour in a silver interface, mixed for the ground it is read on.
+ *
+ * `--app-warn` marks a deadline that has gone by, and it was the last fixed
+ * hex in the palette — one mid-tone (#c8785f) worn unchanged by all thirteen
+ * grounds while every other token here is derived per ground.
+ *
+ * Measured against each ground's own surfaces it was the least legible ink in
+ * the app, in the place that most needed reading. It is body text: `Rework`
+ * colours a whole line of prose with it and `Walks` a tight office hour.
+ *
+ *   fog 2.09 · bone 2.53 · paper 2.57 · parchment 2.63 · industry 2.70
+ *   industry-dark 3.01 · graphite 3.53
+ *
+ * against WCAG's 4.5:1. The five light grounds are the ones somebody reads in
+ * daylight, and they are the worst — but two *dark* grounds fail too, which is
+ * why this derives rather than swapping one fixed hex for two. A single darker
+ * value would have fixed the daylight case and left Graphite and Industry Dark
+ * exactly as they were.
+ *
+ * Same hue and saturation; only the lightness moves, and only as far as it has
+ * to. It walks away from the original in whichever direction the ground needs
+ * and stops at the first value that clears the bar, so Ink — which already
+ * passed at 4.55 — barely moves, and Fog moves as far as Fog requires.
+ */
+export function warnFor(g: Ground): string {
+  const HUE = 14;
+  const SAT = 0.5;
+  // A little past WCAG's 4.5 rather than exactly on it. Stopping at the first
+  // passing value put three grounds at 4.50 flat, where a later tweak to a
+  // ramp drops them under without anyone touching this.
+  const TARGET = 4.6;
+  const worst = (hex: string) =>
+    g.ramp.reduce((low, surface) => Math.min(low, wcagContrast(hex, surface) ?? 99), 99);
+
+  // Darker on a light ground, lighter on a dark one — the same direction the
+  // accent's `shade` takes, and for the same reason.
+  const step = g.light ? -0.01 : 0.01;
+  let lum = 0.58; // #c8785f, where this started
+  for (let i = 0; i < 90; i += 1) {
+    const hex = hueToHex(HUE, lum, SAT);
+    if (worst(hex) >= TARGET) return hex;
+    lum += step;
+    if (lum <= 0.04 || lum >= 0.96) break;
+  }
+  // Nothing in the sweep cleared it: hand back the end of the ramp rather
+  // than a colour that fails, so a ground added later is legible by default.
+  return g.light ? '#000000' : '#ffffff';
+}
+
+/**
  * A whole accent from one hue.
  *
  * All four shades, not just the main one. `shade` in particular is not a
@@ -1036,6 +1112,12 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     // On a light ground the accent has to darken to stay legible as text —
     // the same metal, three steps down — and the wash has to be mixed from
     // that darker shade or it is a selection state you cannot see.
+    // The one colour in a silver interface, mixed for the ground it is read
+    // on rather than the one fixed hex it used to be. See `warnFor`.
+    '--app-warn': warnFor(g),
+    '--app-warn-line': fade(warnFor(g), 0.45),
+    '--app-warn-wash': fade(warnFor(g), 0.09),
+
     '--app-accent': g.light ? a.shade : a.base,
     '--app-accent-bright': g.light ? a.shade : a.bright,
     '--app-accent-deep': g.light ? a.shade : a.deep,

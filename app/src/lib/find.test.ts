@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { countHits, findEverything, spelled } from './find';
-import type { CourseUpdate } from './types';
+import type { CourseUpdate, PersonalTask } from './types';
 import ECON from '../data/courses/econ';
 import { buildCatalog } from '../data/catalog';
 
@@ -173,5 +173,40 @@ describe('saying that the results are a guess', () => {
     // Nothing to be a guess about, and the screen says so in its own words.
     expect(at('parsnip velocity brigade')).toEqual([]);
     expect(spelled(at('parsnip velocity brigade'))).toBe(false);
+  });
+});
+
+describe('a task in the results', () => {
+  const cat = buildCatalog([]);
+  const task = (over: Partial<PersonalTask> = {}): PersonalTask => ({
+    id: 't1',
+    title: 'Read Chapter 7',
+    date: '2026-09-10',
+    time: '9:00 PM',
+    note: '',
+    done: false,
+    created: 1,
+    courseId: null,
+    ...over,
+  });
+  const sub = (now: Date, over = {}) =>
+    findEverything(cat, now, 'chapter 7', [], [task(over)])
+      .flatMap((g) => g.hits)
+      .find((h) => h.kind === 'task')?.sub;
+
+  it('says its date the way the rest of the app does', () => {
+    // It used to print the stored value — "2026-09-10 · 9:00 PM" — which is
+    // the one machine date on any screen: Personal writes the same task as
+    // "Thu Sep 10", and the deadlines in the group above it read "Tomorrow".
+    expect(sub(new Date('2026-09-01T12:00:00'))).toBe('Thu Sep 10 · 9:00 PM');
+  });
+
+  it('uses the near words when the date is near', () => {
+    expect(sub(new Date('2026-09-10T08:00:00'))).toBe('Today · 9:00 PM');
+    expect(sub(new Date('2026-09-09T08:00:00'))).toBe('Tomorrow · 9:00 PM');
+  });
+
+  it('still says Someday for a task with no date', () => {
+    expect(sub(new Date('2026-09-01T12:00:00'), { date: null, time: '' })).toBe('Someday');
   });
 });

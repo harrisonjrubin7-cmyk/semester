@@ -61,6 +61,8 @@ import { isExam } from './runway';
 import { behindLine, howBehind } from './behind';
 import { WAKING_HOURS, hoursOn } from './windows';
 import { tally } from './review';
+import { liveGuide } from './live';
+import { meetings, pairings } from './meet';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
 
@@ -435,6 +437,40 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
 
     case 'degree':
       return holds('Courses taken', state.taken.length, 'course taken', 'courses taken');
+
+    /*
+     * The count, computed the same way the screen computes it.
+     *
+     * A header saying five while the list below it holds four would be worse
+     * than no header, so this reaches for the same live guides rather than the
+     * compiled ones. It is the one case here that touches the catalogue's
+     * contents, and it is why: the fact this screen is about does not exist
+     * anywhere in `state`.
+     */
+    case 'meet': {
+      const found = meetings(
+        catalog.courses.map((c) => ({
+          courseId: c.id,
+          code: c.code,
+          guide: state.updates.length
+            ? liveGuide(catalog, c.id, state.updates)
+            : catalog.guides[c.id],
+        })).filter((s2) => s2.guide),
+      );
+      const pairs = pairings(found);
+      return {
+        hero: {
+          label: 'Places they meet',
+          meta: count(courses, 'course'),
+          figure: num(found.length),
+          foot:
+            found.length === 0
+              ? 'No words in common yet'
+              : `${count(pairs.length, 'pair')} of courses`,
+        },
+        stats: term,
+      };
+    }
 
     case 'behind': {
       // The hours are the student's own, and the sentence is the one the

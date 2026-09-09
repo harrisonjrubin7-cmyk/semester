@@ -33,6 +33,17 @@ import type { Mode } from './mode';
  * `PICK` names every field that may go, one line each, with what it is for. A
  * denylist would let a field added next year travel by default, and the field
  * added next year is exactly the one nobody thought about.
+ *
+ * ## The second door, and why the list still holds
+ *
+ * This file decides what travels *with* a question, before anything has read
+ * it. `lib/lookup.ts` is the other way in: read-only tools the model can call
+ * mid-answer, whose results go back in a second request. That is a change in
+ * *who asks* — grades for a course the model named, rather than for a course
+ * the question happened to spell — and not a change in *what may be asked
+ * for*. Every lookup is one of the `onDemand` lines below, which is why they
+ * are worded by category rather than by trigger. Nothing in that file reaches
+ * a `never`, and its own test seeds all four and proves it.
  */
 
 /**
@@ -73,6 +84,19 @@ export const PICK = {
     'Grades and weights for a course the question names.',
     'Attendance counts and the policy for a course the question names.',
     'Unit names and mastery for a course the question names.',
+    /*
+     * The three that only a lookup reaches, listed here because this is the
+     * list, not the list of things this file happens to assemble.
+     *
+     * Titles and dates off the student's own list, and which classes meet on
+     * a day. Both were unreachable before `lib/lookup.ts` and are the same
+     * kind of thing as the four above — the shape of a term, not its private
+     * contents. A task's `note` is not among them, for the same reason a
+     * note's body is not.
+     */
+    'Titles, dates and times from the student’s own task list. Never a task’s note.',
+    'Which classes meet on a given day, and when.',
+    'A course’s study cards, terms and cases, searched for a topic and capped.',
     /*
      * The cards, and only under all three conditions at once.
      *

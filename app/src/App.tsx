@@ -15,7 +15,7 @@ import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
 import { scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
-import { ground, homeTitle, resolveGround, scaleOf, tokensFor, type Look } from './lib/look';
+import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensFor, type Look } from './lib/look';
 
 /**
  * Every screen but the first, fetched when it is opened.
@@ -42,6 +42,7 @@ const Tonight = lazy(() => import('./screens/Tonight').then((m) => ({ default: m
 const Behind = lazy(() => import('./screens/Behind').then((m) => ({ default: m.Behind })));
 const Degree = lazy(() => import('./screens/Degree').then((m) => ({ default: m.Degree })));
 const People = lazy(() => import('./screens/People').then((m) => ({ default: m.People })));
+const Meet = lazy(() => import('./screens/Meet').then((m) => ({ default: m.Meet })));
 const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
 const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
@@ -355,6 +356,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Counted, not felt', title: 'When you are behind' };
     case 'degree':
       return { kicker: 'Four years, not four months', title: 'The degree' };
+    case 'meet':
+      return { kicker: 'Words in common, not ideas', title: 'Where courses meet' };
     case 'people':
       return { kicker: 'Started late, invisibly', title: 'People and letters' };
     case 'brief':
@@ -884,6 +887,8 @@ function CurrentScreen() {
       return <Behind />;
     case 'degree':
       return <Degree />;
+    case 'meet':
+      return <Meet />;
     case 'people':
       return <People />;
     case 'brief':
@@ -1084,14 +1089,37 @@ export default function App() {
     const tokens = tokensFor(JSON.parse(lookKey) as Look, moreContrast);
     for (const [name, value] of Object.entries(tokens)) root.style.setProperty(name, value);
     const scale = scaleOf(state.textSize);
-    root.style.fontSize = `${16 * scale}px`;
-    // The setting used to reach almost nothing. The root font size scales
-    // anything in `rem`, and this app writes `fontSize: 14` inline, in px, in
-    // about twelve hundred places — so "Largest" moved the handful of sizes
-    // that came from the stylesheet and left every screen the same. Rewriting
-    // twelve hundred sites as rem would also rewrite twelve hundred layouts;
-    // multiplying them through one variable moves the type and nothing else.
-    root.style.setProperty('--text-scale', String(scale));
+    /*
+     * A percentage of the font size the browser was already using, not a
+     * pixel count of our own.
+     *
+     * `${16 * scale}px` did not ignore somebody's browser font size — it
+     * overwrote it. Driven against Chromium with its default raised from 16
+     * to 24, the app came out pixel for pixel identical: root forced back to
+     * 16, body text 12px either way. Raising the default font size is how a
+     * great many people with low vision read the web, more often than zoom,
+     * and this app was the one that undid it.
+     *
+     * A percentage multiplies what was inherited instead of replacing it, so
+     * 24px at Largest is 28.3 rather than 18.9.
+     */
+    root.style.fontSize = `${scale * 100}%`;
+    /*
+     * And the px sizes follow it.
+     *
+     * The root font size only reaches what is written in `rem`, and this app
+     * writes `fontSize: 14` inline, in px, in about twelve hundred places —
+     * so on its own the line above would move the handful of sizes that come
+     * from the stylesheet and leave every screen the same. Rewriting twelve
+     * hundred sites as rem would rewrite twelve hundred layouts; reading back
+     * what the percentage actually produced and multiplying it through the
+     * one variable they all share moves the type and nothing else.
+     *
+     * Read rather than computed, because the percentage resolves against the
+     * browser's setting, which is the number this needs and cannot know.
+     */
+    const rootPx = parseFloat(getComputedStyle(root).fontSize) || DRAWN_AT * scale;
+    root.style.setProperty('--text-scale', String(scaleFrom(rootPx)));
     // The browser paints its own chrome — the scrollbar, the overscroll edge,
     // form controls — from this, and a light theme with a dark scrollbar is
     // the tell that a theme was only half done.

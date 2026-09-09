@@ -205,6 +205,30 @@ export function Study() {
           >
             {(() => {
               const guide = liveGuide(catalog, exam.item.c, state.updates, state.reviews);
+              /*
+               * Which units are cold is a real question with a real answer,
+               * and only once there is one.
+               *
+               * A unit's mastery is `unitMastery`'s blend, and before the
+               * first answer in a course the blend is entirely the figure the
+               * guide declared. So this sentence — the one telling somebody
+               * what to drill the week of an exam — was ranking units by
+               * numbers nobody had earned: "4 are cold, drill those first" for
+               * a course never opened, and, for a course whose declared
+               * figures all sit above the line, "all 11 units are above 40%,
+               * keep them warm" about units nobody has ever seen. The second
+               * is the one that would cost somebody a grade.
+               *
+               * Nothing is measured until something is answered, so until then
+               * this says the true thing instead, which is also the useful
+               * one: it is all ahead of you, and where you start matters less
+               * than starting.
+               */
+              const keys = allCards(guide).map((card) => cardKey(exam.item.c, card.q));
+              const cards = keys.length;
+              if (!keys.some((k) => state.reviews[k])) {
+                return `${guide.units.length} units on it and ${cards} cards, none of them answered yet. Nothing here knows what you know until you drill some — start with the first unit.`;
+              }
               const coldUnits = guide.units.filter((u) => u.mastery < 40);
               if (coldUnits.length === 0) {
                 return `All ${guide.units.length} units in ${guide.code} are above 40%. Keep them warm.`;
@@ -441,8 +465,30 @@ export function Study() {
                 </div>
               </div>
               <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-1)' }}>{g.blurb}</div>
+              {/*
+                Nothing measured, nothing claimed.
+
+                `unitMastery` blends what you have answered with what the guide
+                declared, and the declared figure stands in for every card you
+                have not answered — which, before the first answer, is all of
+                them. So this meter sat at 49% for a course nobody had opened,
+                three lines above the recommendation on the same card saying
+                "Nothing answered in this course yet." Both were drawn from the
+                same state and they disagreed.
+
+                The seeded number is right for what it was built for — it keeps
+                a part-answered course moving by one card's worth per answer —
+                and this changes none of that. It changes the one case where
+                the blend is not a blend: nothing on this side of it is
+                measured, so the meter shows nothing rather than an estimate
+                wearing a measurement's clothes.
+              */}
               <div style={{ marginTop: 11 }}>
-                <Meter pct={g.mastery} fill={tint(c.id).fill} label={`Mastery, ${c.code}`} />
+                <Meter
+                  pct={started ? g.mastery : 0}
+                  fill={tint(c.id).fill}
+                  label={`Mastery, ${c.code}`}
+                />
               </div>
               {/*
                 What is true of this course today, beside what is true of it
@@ -466,7 +512,7 @@ export function Study() {
                   textTransform: 'uppercase',
                 }}
               >
-                {g.mastery}% mastered
+                {started ? `${g.mastery}% mastered` : 'Not started'}
                 {due > 0 && ` · ${due} due`}
                 {started && due === 0 && ' · nothing due'}
                 {fresh > 0 && ` · ${fresh} unseen`}

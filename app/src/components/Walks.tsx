@@ -73,14 +73,14 @@ export function Walks({ date }: { date?: Date }) {
           onClick={() => dispatch({ type: 'go', screen: 'maps' })}
           style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
         >
-          Name the buildings you use
+          Find the buildings you use
         </button>
       )}
 
       <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         {pressed.length > 0
           ? 'Measured between places you saved, at an unhurried eighty metres a minute — slow on purpose, since an estimate that says you will make it and is wrong costs more than one that says you will not.'
-          : 'Measured between places you saved. The app never geocodes an address, so a building it has no place for gets no distance rather than a guessed one.'}
+          : 'Measured between places you saved, and a building you have not placed gets no distance rather than a guessed one. The map can look up every building this semester names in one tap.'}
       </div>
     </Folding>
   );

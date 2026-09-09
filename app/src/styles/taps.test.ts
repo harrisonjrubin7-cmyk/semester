@@ -87,11 +87,12 @@ describe('tap targets', () => {
       // other control's taps. Half the target is off the left edge of the
       // screen, which is what the page's own margin leaves room for.
       'src/screens/Today.tsx',
-      // 38×17, and the one the original audit could not reach: it is drawn
-      // only inside a running gap session, behind a start button and behind
-      // a browser that can speak, so a walk of the screens never saw it.
-      // Found later by an axe pass driven into the session itself. `tap-y`,
-      // because the card counter shares its row.
+      // 38×17, and it survived the audit that took 104 targets under 30px
+      // down to none — because a walk of the screens never sees it. It is
+      // drawn only inside a running gap session, behind a start button and
+      // behind a browser that can speak. `tap-y` rather than `tap`, for the
+      // reason the audit itself gives: the card counter shares its row, and
+      // a target that grew sideways would reach across the gap towards it.
       'src/screens/Gap.tsx',
     ]) {
       expect(used, `${must} lost its tap class`).toContain(must);

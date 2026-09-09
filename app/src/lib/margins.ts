@@ -1,60 +1,94 @@
 import type { CSSProperties } from 'react';
 
 /**
- * A style object with the `margin` shorthand written out as its four sides.
+ * A style object with its `margin` shorthand written out as four longhands.
  *
- * ## The bug this exists for
+ * ## Why this has to exist
  *
- * React applies an inline style property by property, and it diffs the object
- * it was given last render against the one it has now. That is fine until one
- * object holds both a shorthand and one of the longhands it contains, because
- * then the two are separate properties as far as the diff is concerned and
- * React removes one of them without putting the other back. It says so, in a
- * development warning nobody has a console open for:
+ * React applies inline styles one property at a time and diffs the last
+ * render against this one. A shorthand and one of its own longhands are two
+ * unrelated names to it, so when a longhand goes away it clears that property
+ * and does not put the shorthand's value back.
  *
- *     Removing a style property during rerender (marginBottom) when a
- *     conflicting property is set (margin) can lead to styling bugs.
+ * `SectionLabel` writes the app's whole vertical rhythm as one `margin`
+ * shorthand. `Fold` tightens only the bottom of it, as a longhand, because
+ * the bottom is the only side it means. Measured on one heading:
  *
- * It is not a theoretical bug here. `SectionLabel` writes its own margins as
- * a shorthand — one declaration for the app's whole vertical rhythm, scaled
- * by `--density` — and `components/Fold.tsx` tightens the bottom one when a
- * section is folded shut, as a longhand, because the bottom is the only side
- * it means. Fold a section and open it again and the *whole* shorthand is
- * gone from the element: measured, a heading went 26px above / 12px below,
- * to 26/6 shut, to no inline margin at all on reopening. Every foldable
- * section in the app loses its spacing the first time somebody closes it.
- * `components/shell/Rows.tsx` does the same thing to the grouped shell's
- * group headings, so both shells had it.
+ *   open        margin: 26px 0 12px          bottom 12px
+ *   folded      marginBottom: var(--sp-3)    bottom 6px
+ *   reopened    nothing at all               bottom 6.8px  ← from the
+ *                                                            stylesheet
  *
- * Splitting the shorthand once, on the merged object, means only longhands
- * ever reach the DOM: an override of one side is then a plain overwrite of
- * one property, which is exactly what React's diff handles well.
+ * The heading never gets its rhythm back until the element unmounts. React
+ * warns about exactly this, in a console nobody has open.
  *
- * ## Why it parses rather than just picking one
+ * Splitting on the merged object rather than choosing one form at each site
+ * is what makes it stable: ninety-five call sites write their own shorthand,
+ * and any of them can be handed a longhand override by `Fold`. Once only
+ * longhands reach the DOM, overriding one side is a plain overwrite.
  *
- * The values are `calc()` and `var()`, which contain spaces of their own —
- * `calc(26px * var(--density, 1)) 0 calc(12px * var(--density, 1))` is three
- * values, not seven — so the split has to count brackets rather than trust
- * whitespace. Ninety-five call sites write their own margin shorthand and
- * they are not all going to be rewritten by hand.
+ * ## Why the split counts brackets
+ *
+ * The values are `calc(26px * var(--density, 1)) 0 calc(12px * var(--density,
+ * 1))` — three values, not seven. Splitting on whitespace would tear the
+ * `calc()` apart, and the comma inside `var(--density, 1)` means a naive
+ * comma split is wrong too.
  */
-export function longMargins(style: CSSProperties): CSSProperties {
-  const { margin, ...rest } = style;
-  if (margin === undefined || margin === null) return style;
-
-  // A bare number is pixels to React and unitless nonsense to CSS, so it is
-  // kept a number rather than stringified — `margin: 8` has to stay 8px on
-  // all four sides and not become the invalid `margin-top: 8`.
-  if (typeof margin === 'number') {
-    return { marginTop: margin, marginRight: margin, marginBottom: margin, marginLeft: margin, ...rest };
+export function splitMargin(value: string): [string, string, string, string] | null {
+  const parts: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (const ch of value.trim()) {
+    if (ch === '(') depth += 1;
+    if (ch === ')') depth -= 1;
+    if (depth === 0 && /\s/.test(ch)) {
+      if (current) parts.push(current);
+      current = '';
+      continue;
+    }
+    current += ch;
   }
+  if (current) parts.push(current);
 
-  const sides = fourSides(margin);
+  // CSS's own rule: one value is every side, two are vertical then
+  // horizontal, three name the bottom separately, four go clockwise.
+  const [a, b, c, d] = parts;
+  if (parts.length === 1) return [a, a, a, a];
+  if (parts.length === 2) return [a, b, a, b];
+  if (parts.length === 3) return [a, b, c, b];
+  if (parts.length === 4) return [a, b, c, d];
+  return null;
+}
+
+/**
+ * The same style object, with any `margin` shorthand expanded in place.
+ *
+ * Anything already set as a longhand wins, since it was written later and
+ * means the side it names. A value this cannot parse is left as the shorthand
+ * rather than dropped — a heading with its original spacing is better than
+ * one with none.
+ */
+export function longhandMargins(style: CSSProperties | undefined): CSSProperties | undefined {
+  if (!style) return style;
+  /*
+   * A number is the other way this gets written, and it has the same bug.
+   *
+   * React reads a bare number as pixels, so `margin: 0` is a shorthand as much
+   * as the string form — and `screens/Guide.tsx` hands exactly that to a
+   * `SectionLabel`, which is the component this file exists for. It has to
+   * stay a number rather than being stringified: `margin: 8` written out as
+   * `margin-top: 8` is invalid CSS and the heading loses its spacing a
+   * different way.
+   */
+  if (typeof style.margin === 'number') {
+    const { margin: all, ...rest } = style;
+    return { marginTop: all, marginRight: all, marginBottom: all, marginLeft: all, ...rest };
+  }
+  if (typeof style.margin !== 'string') return style;
+  const sides = splitMargin(style.margin);
   if (!sides) return style;
-
+  const { margin: _shorthand, ...rest } = style;
   const [top, right, bottom, left] = sides;
-  // The four sides first, then whatever longhands the caller already wrote,
-  // so an explicit `marginBottom` still wins over the shorthand it came with.
   return {
     marginTop: top,
     marginRight: right,
@@ -62,42 +96,4 @@ export function longMargins(style: CSSProperties): CSSProperties {
     marginLeft: left,
     ...rest,
   };
-}
-
-/**
- * `margin`'s one-to-four values expanded to top, right, bottom, left.
- *
- * Null for anything that is not one of those four shapes — a global keyword
- * (`inherit`, `unset`) means something the four sides cannot say between
- * them, and is left alone rather than approximated.
- */
-function fourSides(value: string): [string, string, string, string] | null {
-  const v = value.trim();
-  if (!v || /^(inherit|initial|unset|revert|revert-layer)$/i.test(v)) return null;
-
-  const parts = splitTopLevel(v);
-  if (parts.length === 1) return [parts[0], parts[0], parts[0], parts[0]];
-  if (parts.length === 2) return [parts[0], parts[1], parts[0], parts[1]];
-  if (parts.length === 3) return [parts[0], parts[1], parts[2], parts[1]];
-  if (parts.length === 4) return [parts[0], parts[1], parts[2], parts[3]];
-  return null;
-}
-
-/** Split on whitespace, but not inside `calc(…)` or `var(…, …)`. */
-function splitTopLevel(value: string): string[] {
-  const out: string[] = [];
-  let depth = 0;
-  let current = '';
-  for (const ch of value) {
-    if (ch === '(') depth += 1;
-    else if (ch === ')') depth -= 1;
-    if (depth === 0 && /\s/.test(ch)) {
-      if (current) out.push(current);
-      current = '';
-      continue;
-    }
-    current += ch;
-  }
-  if (current) out.push(current);
-  return out;
 }

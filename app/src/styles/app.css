@@ -46,9 +46,16 @@
      a deadline that has gone by. Oxidised rather than red — it has to be
      legible as a warning without turning a sterling interface into a
      dashboard. Nothing else in the app is allowed to use it. */
-  --app-warn: #c8785f;
-  --app-warn-line: rgba(200, 120, 95, 0.45);
-  --app-warn-wash: rgba(200, 120, 95, 0.09);
+  /*
+   * A fallback only. The real values are written per ground by `warnFor` in
+   * `lib/look.ts` — this one hex was the least legible ink in the app on five
+   * light grounds and two dark ones, because it never changed with the ground
+   * under it. These stay so the colour exists before the first paint applies
+   * a ground, and so a stylesheet-only render is not colourless.
+   */
+  --app-warn: #9d4d34;
+  --app-warn-line: rgba(157, 77, 52, 0.45);
+  --app-warn-wash: rgba(157, 77, 52, 0.09);
 
   /* Two edge weights, because light has a direction. A raised surface catches
      it along the top and loses it underneath; drawing both is the cheapest
@@ -1560,12 +1567,23 @@ a:hover {
    convention every reader already knows. */
 .leaflet-control-attribution a {
   color: var(--app-dim) !important;
-  /* `!important` for the same reason the colour above needs it: leaflet.css
-     is imported by the map component and so lands after this file, and its
-     own `.leaflet-control-attribution a { text-decoration: none }` has the
-     identical specificity. Without it the underline is set and then quietly
-     taken away again. */
+  /*
+   * Underlined, because colour alone is all that told it apart.
+   *
+   * The link is `--app-dim` and the words either side are `--app-faint` —
+   * two fades of the same ink, measuring 1.96:1 against each other. WCAG
+   * 1.4.1 asks for 3:1 or a second signal, and lifting the colour far enough
+   * would make the credit louder than the map it credits. So: the second
+   * signal.
+   *
+   * `!important` for the same reason the colour above already needs it, not
+   * as a shortcut. `leaflet.css` is imported by the map component and lands
+   * after this file, and its own `.leaflet-control-attribution a` rule sets
+   * `text-decoration: none` at identical specificity — so without this the
+   * underline is applied and then quietly taken away again.
+   */
   text-decoration: underline !important;
+  text-underline-offset: 2px;
 }
 .leaflet-bar a {
   background: var(--app-raise) !important;

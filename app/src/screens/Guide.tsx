@@ -4,7 +4,8 @@ import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
-import { useLive } from '../lib/live';
+import { liveGuide, useLive } from '../lib/live';
+import { alsoLine, elsewhere, meetings, type Also } from '../lib/meet';
 import { Blueprint } from '../components/Blueprint';
 import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
 import { ActionButton, ChipRow, Meter, SectionLabel } from '../components/ui';
@@ -1048,9 +1049,31 @@ function Cases() {
 
 function Cram() {
   const shortRow = useRowStyle(11);
-  const { state, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
   const { guide, updates } = useLive(state.guideId);
   const notes = updates.filter((u) => u.body);
+
+  /*
+   * Which of these terms your other courses also carry.
+   *
+   * The comparison screen is where two courses are read against each other;
+   * this is the half that arrives unasked. Nobody reading a cram sheet the
+   * night before opens a comparison screen speculatively — but a line on the
+   * row they are already reading, saying BUS defines this word too, is a
+   * decision they can make in a second. Same computation as that screen, so
+   * the two can never disagree about what meets what.
+   */
+  const also = useMemo(() => {
+    if (catalog.courses.length < 2) return new Map<string, Also[]>();
+    const sides = catalog.courses
+      .map((c) => ({
+        courseId: c.id,
+        code: c.code,
+        guide: state.updates.length ? liveGuide(catalog, c.id, state.updates) : catalog.guides[c.id],
+      }))
+      .filter((s2) => s2.guide);
+    return elsewhere(meetings(sides), state.guideId);
+  }, [catalog, state.updates, state.guideId]);
 
   return (
     <Folding name="Cram">
@@ -1084,12 +1107,35 @@ function Cram() {
       )}
 
       <SectionLabel>Terms you keep missing</SectionLabel>
-      {guide.terms.map((t, i) => (
-        <div key={`${i}:${t.t}`} style={shortRow}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{t.t}</div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.72, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}>{t.d}</div>
-        </div>
-      ))}
+      {guide.terms.map((t, i) => {
+        const others = also.get(t.t);
+        return (
+          <div key={`${i}:${t.t}`} style={shortRow}>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{t.t}</div>
+            <div style={{ fontSize: 'var(--type-base)', opacity: 0.72, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}>{t.d}</div>
+            {others && others.length > 0 && (
+              // A button rather than a note, because the useful next move is
+              // the other course's own words for it, and they are one tap away.
+              <button
+                type="button"
+                className="bare tappable"
+                onClick={() => dispatch({ type: 'go', screen: 'meet' })}
+                style={{
+                  display: 'block',
+                  marginTop: 'var(--sp-2)',
+                  fontSize: 'var(--type-xs)',
+                  opacity: 0.62,
+                  textAlign: 'left',
+                  textDecoration: 'underline',
+                  textUnderlineOffset: '2px',
+                }}
+              >
+                {alsoLine(others)}
+              </button>
+            )}
+          </div>
+        );
+      })}
 
       {notes.length > 0 && (
         <>

@@ -65,6 +65,43 @@ export const ACTING =
   'message to somebody in a class, "classmates". Say which one, and offer to open it.';
 
 /*
+ * The other half of the tool set, and the opposite rule.
+ *
+ * `ACTING` is about the tools that change something: nothing happens, a card
+ * appears, the student decides. These do not change anything — they read what
+ * is already on the device — so they run at once and their answers come back.
+ *
+ * The paragraph exists because of a specific failure. What travels with a
+ * question is decided by `lib/context.ts` before anything has read the
+ * question properly, from keywords, and when those keywords miss the model was
+ * left saying "I do not have your grades" about numbers two hundred
+ * milliseconds away. It has to be told plainly that it can go and get them,
+ * and told that saying "I do not have that" without looking is the error —
+ * otherwise it will do the polite thing and apologise for a gap it could have
+ * closed itself.
+ *
+ * The last sentence is the one that keeps the rest honest. A lookup returning
+ * nothing is an answer: it means the student's material does not cover this,
+ * and saying so is worth more than a fluent paragraph from general knowledge
+ * wearing their course's name.
+ */
+export const READING =
+  'You can also look things up. find_deadlines, read_grades, read_attendance, ' +
+  'search_material, read_tasks and read_timetable read this student\u2019s own records on ' +
+  'the device and return the answer to you straight away. Nothing they do is shown to the ' +
+  'student as a choice and nothing they do changes anything.\n' +
+  '- Use them whenever you need a date, an id, a weight, a number of absences or something ' +
+  'from their course material that you were not given. What is above may be only part of ' +
+  'what the app holds; it is what a keyword match guessed the question needed.\n' +
+  '- Never say you do not have their schedule, their grades or their material without ' +
+  'looking first. Never do arithmetic on a grade from memory of the conversation when you ' +
+  'can read the weights.\n' +
+  '- Look up before proposing. Do not offer to add a task they already have, and do not tick ' +
+  'off a deadline whose id you did not read.\n' +
+  '- A lookup that comes back empty is an answer. Say what their records do not contain, ' +
+  'plainly and once, and then answer what you can.';
+
+/*
  * No inference about how somebody is feeling.
  *
  * The app holds a workload and a schedule, and those describe a term rather
@@ -158,13 +195,13 @@ export function systemPrompt(read: Mode, drawn: string): string {
       "You are answering a question about this student's own courses and records, and about " +
       'the screen they are looking at. Answer from what is below and say which part you used. ' +
       'Each deadline carries its id in brackets; use those ids when a tool needs one, and ' +
-      `never invent one.\n\n${BOUNDS}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
+      `never invent one.\n\n${BOUNDS}\n\n${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
     );
   }
   return (
     'You are helping a university student. Answer the question they asked, well and directly — ' +
     'a concept, a piece of code, a piece of writing, a decision, whatever it is. Do not narrow ' +
     `it to their coursework and do not refuse because it is not about a course.\n\n` +
-    `${BOUNDS}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
+    `${BOUNDS}\n\n${READING}\n\n${ACTING}\n\n${NEVER}\n\n${drawn}`
   );
 }

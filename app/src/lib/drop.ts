@@ -26,43 +26,38 @@
 import { readScore } from './grades';
 
 /**
- * A column of scores, as typed. Newlines, commas and semicolons separate.
+ * A column of scores, as typed. Commas, spaces or newlines all separate.
  *
- * Whitespace cannot be a separator outright, because a score is allowed to
- * contain some: `readScore` reads "17 out of 20", which is how a person says
- * a fraction and how a rubric writes one. So a piece is split off on the
- * punctuation first and read whole.
+ * The line above has always said spaces and the split never did them: it cut
+ * on newlines, commas and semicolons only, so a row copied out of a gradebook
+ * — which is tab-separated — and a column typed from one — as often `88 92 76`
+ * as `88, 92, 76` — read as a single unparseable piece. The field showed
+ * nothing, with no error and no clue why.
  *
- * What that missed is the paste. A row copied out of a gradebook arrives
- * tab-separated, and a column typed from one arrives "88 92 76" as often as
- * "88, 92, 76" — neither holds a comma, so the whole thing came back as one
- * unreadable piece and the field silently showed nothing at all. Losing
- * somebody's grades without saying so is the worst way to be wrong about
- * them.
+ * It cannot split on whitespace outright, which is why it did not: `readScore`
+ * reads "17 out of 20", and that is the point of it. So whitespace is a second
+ * chance rather than a separator. A piece that reads whole is taken whole; only
+ * one that cannot be read at all is broken up and its parts tried separately.
  *
- * So a piece that cannot be read on its own is split on whitespace and its
- * parts read separately. Strictly a second chance: anything that parsed
- * before parses identically now, and "88, missed, 92" still drops the word
- * rather than inventing a score for it.
+ * Strictly an addition: everything that parsed before parses identically, and
+ * "88, not sat yet, 92" still drops the words rather than inventing a score
+ * for them.
  */
 export function readScores(text: string): number[] {
-  const out: number[] = [];
-  for (const raw of text.split(/[\n,;]+/)) {
-    const piece = raw.trim();
-    if (!piece) continue;
+  const whole = (piece: string): number[] => {
+    const one = readScore(piece);
+    if (one !== null) return [one];
+    // Only now, and only because the piece said nothing as it stands.
+    const parts = piece.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return [];
+    return parts.map((part) => readScore(part)).filter((n): n is number => n !== null);
+  };
 
-    const whole = readScore(piece);
-    if (whole !== null) {
-      out.push(whole);
-      continue;
-    }
-
-    for (const part of piece.split(/\s+/)) {
-      const one = readScore(part);
-      if (one !== null) out.push(one);
-    }
-  }
-  return out;
+  return text
+    .split(/[\n,;]+/)
+    .map((piece) => piece.trim())
+    .filter(Boolean)
+    .flatMap(whole);
 }
 
 export interface Kept {

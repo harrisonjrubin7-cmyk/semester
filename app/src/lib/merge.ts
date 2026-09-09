@@ -187,6 +187,9 @@ export const STRATEGY: Record<string, Strategy> = {
   attendPolicy: 'ticks',
   pieces: 'ticks',
   drops: 'ticks',
+  // Keyed by deadline id, and what a student typed on one device about what an
+  // exam covers is as true on the other. See `lib/covers.ts`.
+  examCovers: 'ticks',
   dayBudget: 'theirs',
   // A countdown belongs to the device it is counting on: a timer running on a
   // phone in a kitchen means nothing on a laptop in the library, and syncing

@@ -12,7 +12,7 @@ import {
   rgbOf,
   type Check,
 } from './contrast';
-import { ACCENTS, GROUNDS, readLook, tokensFor } from './look';
+import { ACCENTS, GROUNDS, readLook, tokensFor, warnFor } from './look';
 
 describe('the arithmetic', () => {
   it('reads both hex forms', () => {
@@ -345,3 +345,83 @@ function alphaOf(token: string): number {
   const m = /rgba?\([^)]*?,\s*([0-9.]+)\s*\)$/.exec(token.trim());
   return m ? Number(m[1]) : 1;
 }
+
+/*
+ * The one colour in a silver interface, held to the bar on every ground.
+ *
+ * `--app-warn` marks a deadline that has gone by. It was the last fixed hex
+ * in the palette — one mid-tone worn unchanged by all thirteen grounds while
+ * every other token is derived per ground — and measured against each
+ * ground's own surfaces it was the least legible ink in the app, in the place
+ * that most needed reading. It is body text: `Rework` colours a whole line of
+ * prose with it, `Walks` a tight office hour.
+ *
+ *   fog 2.09 · bone 2.53 · paper 2.57 · parchment 2.63 · industry 2.70
+ *   industry-dark 3.01 · graphite 3.53
+ *
+ * Two of those are *dark* grounds, which is why the fix derives rather than
+ * swapping one fixed hex for two: a single darker value would have fixed the
+ * daylight case and left Graphite and Industry Dark exactly as they were.
+ *
+ * Held here rather than trusted, so a ground added later cannot quietly do
+ * this again — the failure names the ground and the ratio.
+ */
+describe('the warning colour, on every ground', () => {
+  it('is legible as body text wherever it is read', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      const warn = warnFor(g);
+      for (const surface of g.ramp) {
+        const c = contrast(warn, surface);
+        if (c === null) { failures.push(`${g.id}: ${warn} on ${surface} unreadable`); continue; }
+        if (c < 4.5) failures.push(`${g.id}: ${warn} on ${surface} is ${c.toFixed(2)}:1`);
+      }
+    }
+    expect(failures, 'WCAG asks 4.5:1 of body text').toEqual([]);
+  });
+
+  it('still looks like the colour it was', () => {
+    // Guards the above: black on every light ground and white on every dark
+    // one would pass the ratio and lose the one colour the app has.
+    for (const g of GROUNDS) {
+      const warn = warnFor(g);
+      const [r, gr, b] = [1, 3, 5].map((i) => parseInt(warn.slice(i, i + 2), 16));
+      expect(r, `${g.id}: the warm end should lead`).toBeGreaterThan(gr);
+      expect(gr, `${g.id}: still a warm orange-red, not a pure red`).toBeGreaterThan(b);
+    }
+  });
+});
+
+/*
+ * The map's attribution link was told apart from the words beside it by
+ * colour alone.
+ *
+ * The link is `--app-dim`, the text either side `--app-faint` — two fades of
+ * the same ink, measuring about 1.96:1 against each other. WCAG 1.4.1 asks
+ * for 3:1 or a second visual signal, and lifting the colour far enough would
+ * make the credit louder than the map it credits. So it is underlined.
+ *
+ * The `!important` is load-bearing, not a shortcut: `leaflet.css` is imported
+ * by the map component and lands after `app.css`, and its own
+ * `.leaflet-control-attribution a` rule sets `text-decoration: none` at
+ * identical specificity. Without it the underline is applied and then quietly
+ * taken away again.
+ */
+describe('the map credit, which is the licence', () => {
+  const css = () => readFileSync('src/styles/app.css', 'utf8');
+  const rule = () => {
+    const src = css();
+    const at = src.indexOf('.leaflet-control-attribution a {');
+    expect(at, 'the attribution link rule has moved').toBeGreaterThan(-1);
+    return src.slice(at, src.indexOf('}', at));
+  };
+
+  it('carries a second signal, since the colour is not one', () => {
+    expect(rule()).toMatch(/text-decoration:\s*underline/);
+  });
+
+  it('keeps the underline against leaflet’s own rule', () => {
+    // Same specificity, loaded later — so this has to win explicitly.
+    expect(rule()).toMatch(/text-decoration:\s*underline\s*!important/);
+  });
+});

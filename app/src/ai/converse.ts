@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useStore } from '../state/store';
-import { ask, provider, settings, type Turn } from '../lib/claude';
+import { ask, provider, settings, type ToolCall, type Turn } from '../lib/claude';
+import type { Usage } from '../lib/spend';
 import { build as buildContext } from '../lib/context';
 import { readMode, type Mode } from '../lib/mode';
 import type { Thread } from '../lib/threads';
@@ -8,6 +9,7 @@ import { systemPrompt } from './prompt';
 import { answerLocally, type Local } from '../lib/localask';
 import { monthStart, read as readSpend, record, since, total } from '../lib/spend';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
+import { isLookup, LOOKUPS, MOST_ROUNDS, runLookups } from '../lib/lookup';
 import { currentLook } from '../state/shape';
 import { datedItems } from '../lib/select';
 import { useTrouble } from '../lib/trouble';
@@ -50,6 +52,8 @@ export interface Conversation {
   mode: Mode | null;
   /** Which of your records the last answer drew on. */
   used: string[];
+  /** What it is reading right now, while it reads it. Empty the rest of the time. */
+  looking: string[];
   /** What the app itself could say, with no request behind it. */
   locally: Local | null;
   /** Offers waiting on a tap. Nothing here has happened. */
@@ -119,11 +123,13 @@ export function useConversation(): Conversation {
    * `useState`'s signature so everything downstream is unchanged.
    */
   const live = useLive();
-  const { turns, streaming, busy, mode, used, locally, proposals, applied, spend, dropped } = live;
+  const { turns, streaming, busy, mode, used, looking, locally, proposals, applied, spend, dropped } =
+    live;
   const setStreaming = (v: string) => setLive('streaming', v);
   const setBusy = (v: boolean) => setLive('busy', v);
   const setMode = (v: Mode | null) => setLive('mode', v);
   const setUsed = (v: string[]) => setLive('used', v);
+  const setLooking = (v: string[]) => setLive('looking', v);
   const setLocally = (v: Local | null) => setLive('locally', v);
   const setProposals = (v: Proposal[] | ((was: Proposal[]) => Proposal[])) =>
     setLive('proposals', v);
@@ -244,6 +250,20 @@ export function useConversation(): Conversation {
       setBusy(true);
       flight.abort = new AbortController();
       let sofar = '';
+      /*
+       * What the whole question cost, added up rather than filed one row per
+       * round.
+       *
+       * The meter says "2 answers this month", and a question that looked
+       * something up used to make that read 2 after one question — two
+       * requests, but one answer, and the label is about answers. The dollars
+       * are identical either way; what differs is whether the count beside
+       * them means anything.
+       *
+       * Declared out here rather than beside the loop so the `finally` below
+       * can reach it: the rounds before a Stop have been paid for too.
+       */
+      let spent: Usage | null = null;
       try {
         const read = readMode(text);
         setMode(read.mode);
@@ -279,46 +299,152 @@ export function useConversation(): Conversation {
          */
         const seen = ai.look();
         const drawn = buildContext(text, read.mode, state, catalog, now, state.screen, seen.text);
+        /** Everything this answer drew on: what travelled, plus what it fetched. */
+        const drew = new Set(drawn.used);
         setUsed(drawn.used);
 
-        const reply = await ask({
-          system: systemFor(read.mode, drawn.text),
-          messages: next,
+        /*
+         * The conversation as the next request will see it, which is not
+         * always the conversation on screen.
+         *
+         * A question that needs something `lib/context.ts` did not send grows
+         * two turns per round — the answer's tool calls, and this app's
+         * replies to them — and the API requires both to travel. They are
+         * kept here rather than in the transcript because they are wire
+         * bookkeeping: nobody wants to scroll past "read_grades: ECON 1010"
+         * to reread what they were told.
+         */
+        let sending: Turn[] = next;
+        let reply = '';
+        /*
+         * Whether the answer stopped because it ran out of room.
+         *
+         * The one stop reason a reader cannot see for themselves. An answer
+         * cut off at the ceiling arrives looking finished — it ends on a full
+         * sentence about as often as not — and the transcript already has a
+         * way to say otherwise, the same one Stop uses. Without this the
+         * model is later sent a truncated answer as though it were complete
+         * and reasons on from a conclusion it never reached.
+         */
+        let ranOut = false;
+
+        for (let round = 0; ; round += 1) {
+          /** Read-only calls this round asked for. See `lib/lookup.ts`. */
+          const wants: ToolCall[] = [];
+
+          const said = await ask({
+            system: systemFor(read.mode, drawn.text),
+            messages: sending,
+            /*
+             * Room for an answer that also proposes something.
+             *
+             * The default is 1,400, which was set when this was prose in and
+             * prose out. A grounded answer that explains a grade projection and
+             * then offers two tool calls spends a good part of that on the
+             * calls, and an answer cut off mid-sentence is the one failure a
+             * student cannot work around.
+             */
+            maxTokens: 3000,
+            cache: true,
+            /*
+             * Both sets, and they are not the same kind of thing.
+             *
+             * `TOOLS` are proposals — they change something, so each becomes a
+             * card with a button and nothing goes back to the model.
+             * `LOOKUPS` read — they change nothing, so they run at once and
+             * their answers go back in the next round. `isLookup` is the only
+             * thing that decides which branch a call takes, so a tool cannot
+             * be quietly in both.
+             */
+            tools:
+              /*
+               * Not in app mode, and not once the rounds are spent.
+               *
+               * App mode answers from the guidebook and nothing else — that
+               * narrowness is what stops it inventing a feature, and a model
+               * that can pull the student's grades into "where do I set my
+               * grade scale" is no longer in the mode the prompt describes.
+               * `prompt.test.ts` holds the other half of this.
+               */
+              read.mode === 'app' || round >= MOST_ROUNDS ? TOOLS : [...TOOLS, ...LOOKUPS],
+            onToolUse: (call) => {
+              if (isLookup(call.name)) {
+                wants.push(call);
+                return;
+              }
+              const p = readProposal(call, held);
+              if (!p) return;
+              // A view change on the screen you are already looking at runs now:
+              // you can see the filter land and see it go, so a card asking
+              // permission to narrow the list in front of you is pure friction.
+              if (p.sort === 'view' && p.screen === state.screen) {
+                if (p.search) dispatch({ type: 'setQuery', query: p.search });
+                return;
+              }
+              setProposals((was) => (was.some((q) => q.id === p.id) ? was : [...was, p]));
+            },
+            onUsage: (u) => {
+              spent = {
+                input: (spent?.input ?? 0) + u.input,
+                output: (spent?.output ?? 0) + u.output,
+                cacheWrite: (spent?.cacheWrite ?? 0) + u.cacheWrite,
+                cacheRead: (spent?.cacheRead ?? 0) + u.cacheRead,
+              };
+            },
+            signal: flight.abort.signal,
+            onStop: (why) => {
+              ranOut = why === 'max_tokens';
+            },
+            onText: (chunk) => {
+              // The first word of the round is the end of the pause the
+              // lookup line was explaining.
+              if (round > 0 && chunk.trim()) setLooking([]);
+              sofar += chunk;
+              setStreaming(sofar);
+            },
+          });
+
+          // Whatever it said before asking to read something is kept. It is
+          // usually nothing, and where it is not, dropping the model's own
+          // words to tidy the transcript is not this app's call to make.
+          reply = reply ? `${reply}\n\n${said}`.trim() : said;
+          if (wants.length === 0) break;
+
           /*
-           * Room for an answer that also proposes something.
+           * The lookups, run here and only here.
            *
-           * The default is 1,400, which was set when this was prose in and
-           * prose out. A grounded answer that explains a grade projection and
-           * then offers two tool calls spends a good part of that on the
-           * calls, and an answer cut off mid-sentence is the one failure a
-           * student cannot work around.
+           * Nothing in `lib/lookup.ts` can dispatch, write or fetch — it takes
+           * state and returns strings — which is why these need no
+           * confirmation. A card asking permission to read a number the
+           * student is looking at on the next screen would protect nobody.
            */
-          maxTokens: 3000,
-          cache: true,
-          tools: TOOLS,
-          onToolUse: (call) => {
-            const p = readProposal(call, held);
-            if (!p) return;
-            // A view change on the screen you are already looking at runs now:
-            // you can see the filter land and see it go, so a card asking
-            // permission to narrow the list in front of you is pure friction.
-            if (p.sort === 'view' && p.screen === state.screen) {
-              if (p.search) dispatch({ type: 'setQuery', query: p.search });
-              return;
-            }
-            setProposals((was) => (was.some((q) => q.id === p.id) ? was : [...was, p]));
-          },
-          onUsage: (u) => {
-            record({ at: Date.now(), model: settings().model, from: state.screen, use: u });
-            setSpend(readSpend());
-          },
-          signal: flight.abort.signal,
-          onText: (chunk) => {
-            sofar += chunk;
-            setStreaming(sofar);
-          },
-        });
-        remember([...next, { role: 'assistant', content: reply }]);
+          const found = runLookups(wants, { state, catalog, now });
+          for (const u of found.used) drew.add(u);
+          setUsed([...drew]);
+          sending = [
+            ...sending,
+            { role: 'assistant', content: said, calls: wants },
+            { role: 'user', content: '', results: found.results },
+          ];
+          // The next round writes after a blank line rather than butting up
+          // against the sentence before the lookup.
+          if (said.trim()) sofar += '\n\n';
+          /*
+           * Said while the next round is in flight, not while the lookup runs.
+           *
+           * Reading state takes no measurable time — the whole of the pause is
+           * the second request. Setting this after the read and clearing it on
+           * the first word back means the line is on screen for exactly the
+           * wait it is explaining, rather than flickering for a millisecond
+           * and leaving the real pause unaccounted for.
+           */
+          setLooking(found.saying);
+        }
+
+        remember([
+          ...next,
+          { role: 'assistant', content: reply, ...(ranOut ? { incomplete: true } : {}) },
+        ]);
       } catch (e) {
         // Pressing Stop is a decision, not a failure. Keep what had arrived.
         if (e instanceof DOMException && e.name === 'AbortError') {
@@ -331,7 +457,20 @@ export function useConversation(): Conversation {
           trouble.failed(e, () => void sender.run(text));
         }
       } finally {
+        /*
+         * In `finally`, so a question stopped between rounds is still counted.
+         *
+         * The first round has been paid for whether or not the second one
+         * finished, and a meter that quietly forgets the rounds before a Stop
+         * is a meter that reads low exactly when somebody is watching it
+         * because they are worried about the bill.
+         */
+        if (spent) {
+          record({ at: Date.now(), model: settings().model, from: state.screen, use: spent });
+          setSpend(readSpend());
+        }
         setStreaming('');
+        setLooking([]);
         setBusy(false);
       }
     },
@@ -389,6 +528,7 @@ export function useConversation(): Conversation {
     busy,
     mode,
     used,
+    looking,
     locally,
     proposals,
     applied,

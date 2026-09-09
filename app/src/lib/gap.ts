@@ -146,12 +146,20 @@ export function addSample(samples: number[], seconds: number): number[] {
   return [...samples, Math.round(seconds)].slice(-KEEP);
 }
 
-/** "23 minutes before you set off for ECON 1020." */
-export function gapLine(gap: Gap): string {
-  const m = `${gap.minutes} ${gap.minutes === 1 ? 'minute' : 'minutes'}`;
-  return gap.walkKnown
-    ? `${m} before you set off for ${gap.title}.`
-    : `${m} until ${gap.title}.`;
+/**
+ * The offer's headline: what fits, and what it is before.
+ *
+ * It used to be the countdown — "13 minutes until BUS 1600." — printed
+ * directly above the next-class card saying "IN 13 MIN · 11:00A · BUS 1600".
+ * The same sentence twice, a centimetre apart, and neither of them the thing
+ * this card is actually for. The card below owns *when*; this one owns *what
+ * to do with the time until then*, so it leads with that. The window itself is
+ * still here, once, in the line underneath.
+ */
+export function fitsLine(gap: Gap, cards: number): string {
+  return cards === 1
+    ? `One card fits before ${gap.title}.`
+    : `${cards} cards fit before ${gap.title}.`;
 }
 
 /** What the app did and did not know about getting there. */
@@ -165,13 +173,22 @@ export function walkLine(gap: Gap): string {
   return `The app has not been told where ${gap.where || 'that'} is, so none of this is walking time. Save the building on the map and it will take the walk off.`;
 }
 
-/** What fits, and whose number that is. */
-export function budgetLine(cards: number, samples: number[]): string {
+/**
+ * The terms under the headline: how long the window is, and whose seconds
+ * these are.
+ *
+ * "Before you set off" where the walk is known and has been taken off, "until
+ * it starts" where it is not — the difference matters, and it is the one
+ * number on this card that a person plans around.
+ */
+export function termsLine(gap: Gap, samples: number[]): string {
   const { seconds, measured } = cardSeconds(samples);
-  const n = `${cards} ${cards === 1 ? 'card' : 'cards'}`;
+  const window = `${gap.minutes} ${gap.minutes === 1 ? 'minute' : 'minutes'} ${
+    gap.walkKnown ? 'before you set off' : 'until it starts'
+  }`;
   return measured
-    ? `${n}, at the ${seconds} seconds a card you actually take.`
-    : `${n}, at ${seconds} seconds each — the app's guess until it has watched you do a few.`;
+    ? `${window}, at the ${seconds} seconds a card you actually take.`
+    : `${window}, at ${seconds} seconds each — the app's guess until it has watched you do a few.`;
 }
 
 /** The line that ends the run. */
