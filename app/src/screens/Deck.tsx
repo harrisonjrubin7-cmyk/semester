@@ -166,7 +166,7 @@ export function Deck() {
             style={{ width: '100%' }}
           >
             {guide.units.map((u, i) => (
-              <option key={u.name} value={i}>
+              <option key={`${i}:${u.name}`} value={i}>
                 {u.name}
               </option>
             ))}

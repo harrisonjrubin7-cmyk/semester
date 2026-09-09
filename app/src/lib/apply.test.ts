@@ -207,6 +207,63 @@ describe('reading a stored list', () => {
     expect(readApplications(null)).toEqual([]);
     expect(readApplications('x')).toEqual([]);
   });
+
+  /*
+   * The fields a spread never promised.
+   *
+   * `readApplications` used to be `{ ...a }` with three repairs on top, so
+   * every other field was whatever storage happened to hold. An application
+   * saved by an older build has no `url`, `safeUrl` calls `.trim()` on
+   * undefined, and the screen that lists them goes white.
+   */
+  it('gives a row every string field, whatever storage held', () => {
+    const [a] = readApplications([{ id: 'x', stage: 'sent', kind: 'job', created: AT }]);
+    expect(a.url).toBe('');
+    expect(a.org).toBe('');
+    expect(a.role).toBe('');
+    expect(a.where).toBe('');
+    expect(a.due).toBe('');
+    expect(a.next).toBe('');
+    expect(a.nextBy).toBe('');
+    expect(a.note).toBe('');
+    // And every one of them survives the render path that crashed.
+    expect(safeUrl(a.url)).toBe('');
+    expect(() => line(a, NOW)).not.toThrow();
+    expect(() => title(a)).not.toThrow();
+    expect(() => standing([a], NOW)).not.toThrow();
+  });
+
+  it('refuses a field of the wrong type rather than passing it on', () => {
+    const [a] = readApplications([
+      { ...app({}), url: 42, org: null, note: { x: 1 }, rolling: 'yes', due: ['2026-09-04'] },
+    ]);
+    expect(a.url).toBe('');
+    expect(a.org).toBe('');
+    expect(a.note).toBe('');
+    expect(a.due).toBe('');
+    // `rolling` decides whether a deadline is shown at all, so a truthy
+    // string must not become a boolean by accident.
+    expect(a.rolling).toBe(false);
+  });
+
+  it('keeps a row that is genuinely filled in', () => {
+    const full = app({ org: 'Brookings', role: 'RA', url: 'x.example/y', note: 'n' }, AT);
+    expect(readApplications([full])).toEqual([full]);
+  });
+
+  it('gives every row an id, so two blank ones are two rows', () => {
+    const rows = readApplications([{ stage: 'found' }, { stage: 'found' }]);
+    expect(rows).toHaveLength(2);
+    expect(new Set(rows.map((r) => r.id)).size).toBe(2);
+  });
+
+  it('drops a move that is not one, and dates one that has no date', () => {
+    const [a] = readApplications([
+      { ...app({}, AT), moves: [null, 'sent', { stage: 'nope', at: 1 }, { stage: 'sent' }] },
+    ]);
+    expect(a.moves).toEqual([{ stage: 'sent', at: AT }]);
+    expect(daysInStage(a, new Date(AT + 5 * 86_400_000))).toBe(5);
+  });
 });
 
 describe('the same shape as coursework', () => {

@@ -751,8 +751,8 @@ function Preview({
 
       <SectionLabel>The first unit</SectionLabel>
       <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))' }}>{m.guide.units[0]?.name}</div>
-      {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c) => (
-        <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
+      {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c, i) => (
+        <div key={`${i}:${c.q}`} style={{ marginTop: 'var(--sp-4)' }}>
           <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
           <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>{c.a}</div>
         </div>

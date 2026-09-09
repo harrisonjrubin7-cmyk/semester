@@ -90,7 +90,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
       <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 'var(--sp-4)' }}>
         {units.map((u, i) => (
           <button
-            key={u.name}
+            key={`${i}:${u.name}`}
             type="button"
             className="bare tappable"
             aria-pressed={draft.units.includes(i)}

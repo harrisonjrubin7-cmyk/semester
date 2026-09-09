@@ -128,7 +128,7 @@ export function Grades() {
               // The index is the grade's key, so it comes from the row's
               // position in the course's own list and nothing may renumber it.
               .map((r, i) => (
-              <div key={r.what} style={rowFlush}>
+              <div key={`${i}:${r.what}`} style={rowFlush}>
               <div
                 style={{
                   display: 'flex',

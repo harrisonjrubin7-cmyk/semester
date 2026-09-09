@@ -561,8 +561,8 @@ export function CourseDetail() {
       <SectionLabel style={{ margin: '24px 0 6px' }}>How the grade is built</SectionLabel>
       <table className="table">
         <tbody>
-          {course.grading.map((g) => (
-            <tr key={g.what}>
+          {course.grading.map((g, i) => (
+            <tr key={`${i}:${g.what}`}>
               <td style={{ fontSize: 'var(--type-base)' }}>{g.what}</td>
               <td
                 style={{

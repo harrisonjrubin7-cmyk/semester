@@ -564,7 +564,7 @@ export function AddMaterial() {
         </button>
         {guide.units.map((u, i) => (
           <button
-            key={u.name}
+            key={`${i}:${u.name}`}
             type="button"
             className="bare tappable"
             onClick={() => setUnit(i)}
@@ -760,8 +760,8 @@ export function AddMaterial() {
 
       {parsed.cards.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 'var(--sp-6)' }}>
-          {parsed.cards.slice(0, 3).map((c) => (
-            <Blueprint plain key={c.q} style={{ padding: '11px 13px' }}>
+          {parsed.cards.slice(0, 3).map((c, i) => (
+            <Blueprint plain key={`${i}:${c.q}`} style={{ padding: '11px 13px' }}>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 1.2 }}>
                 {c.q}
               </div>

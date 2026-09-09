@@ -204,7 +204,7 @@ export function Guide() {
 
           <SectionLabel>Units</SectionLabel>
           {guide.units.map((u, i) => (
-            <div key={u.name}>
+            <div key={`${i}:${u.name}`}>
             <button
               type="button"
               className="bare tappable"
@@ -377,7 +377,7 @@ export function Guide() {
             const open = state.openUnit === i;
             const fig = figMap[i];
             return (
-              <div key={u.name} style={tallRow}>
+              <div key={`${i}:${u.name}`} style={tallRow}>
                 <button
                   type="button"
                   className="bare"
@@ -425,7 +425,7 @@ export function Guide() {
                       // something you added, and says so.
                       const isNew = ci >= (guide.baseCards[i] ?? u.cards.length);
                       return (
-                        <div key={c.q}>
+                        <div key={`${ci}:${c.q}`}>
                           {isNew && <span className="tag tag-accent">Added</span>}
                           <div
                             style={{
@@ -582,7 +582,7 @@ function Watch() {
           const added = onUnit(i).reduce((n, up) => n + up.cards.length, 0);
           return (
             <button
-              key={u.name}
+              key={`${i}:${u.name}`}
               type="button"
               className="bare tappable"
               disabled={!lesson}
@@ -715,7 +715,7 @@ function Decks() {
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: 14 }}>
         {guide.units.map((u, i) => (
           <button
-            key={u.name}
+            key={`${i}:${u.name}`}
             type="button"
             className="bare tappable"
             onClick={() => dispatch({ type: 'openDeck', unit: i })}
@@ -869,12 +869,12 @@ function Documents() {
 
       <SectionLabel>The whole guide, in order</SectionLabel>
       {guide.units.map((u, i) => (
-        <div key={u.name} style={{ marginTop: 14 }}>
+        <div key={`${i}:${u.name}`} style={{ marginTop: 14 }}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.2 }}>
             {i + 1}. {u.name}
           </div>
-          {u.cards.map((c) => (
-            <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
+          {u.cards.map((c, ci) => (
+            <div key={`${ci}:${c.q}`} style={{ marginTop: 'var(--sp-4)' }}>
               <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
               <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>
                 {c.a}
@@ -1061,8 +1061,8 @@ function Cram() {
             <div style={SINCE}>{addedLine(guide.addedLong.frames, 'framings')}</div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
-            {guide.frames.map((f) => (
-              <Blueprint key={f.t} plain style={{ padding: '13px 14px' }}>
+            {guide.frames.map((f, i) => (
+              <Blueprint key={`${i}:${f.t}`} plain style={{ padding: '13px 14px' }}>
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.15 }}>
                   {f.t}
                 </div>
@@ -1084,8 +1084,8 @@ function Cram() {
       )}
 
       <SectionLabel>Terms you keep missing</SectionLabel>
-      {guide.terms.map((t) => (
-        <div key={t.t} style={shortRow}>
+      {guide.terms.map((t, i) => (
+        <div key={`${i}:${t.t}`} style={shortRow}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{t.t}</div>
           <div style={{ fontSize: 'var(--type-base)', opacity: 0.72, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}>{t.d}</div>
         </div>
@@ -1130,7 +1130,7 @@ function Cram() {
           )}
           {guide.selfTest.map((c, i) => (
             <details
-              key={c.q}
+              key={`${i}:${c.q}`}
               style={shortRow}
             >
               <summary

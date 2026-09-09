@@ -244,9 +244,9 @@ export function Runway() {
           the guide builds itself.
         </div>
       ) : (
-        r.units.map((u) => (
+        r.units.map((u, i) => (
           <div
-            key={u.name}
+            key={`${i}:${u.name}`}
             style={{
               display: 'flex',
               gap: 'var(--sp-5)',

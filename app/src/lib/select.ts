@@ -314,7 +314,10 @@ export function feedEventsOn(events: FeedEvent[], date: Date): FeedEvent[] {
 /** Appointments on a given day, in time order. */
 export function appointmentsOn(appointments: Appointment[], date: Date): Appointment[] {
   const iso = dateToIso(date);
-  return appointments.filter((a) => a.date === iso).sort((a, b) => a.at - b.at);
+  // `at` the same way `feedEventsOn` above treats it: a record without an
+  // hour sorts to the front of its day rather than making every comparison
+  // NaN, which leaves the list in whatever order storage happened to hold.
+  return appointments.filter((a) => a.date === iso).sort((a, b) => (a.at ?? -1) - (b.at ?? -1));
 }
 
 /**

@@ -169,8 +169,8 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
       {milestones.length > 0 && (
         <Blueprint style={{ padding: '11px 13px', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Working back from it</div>
-          {milestones.map((m) => (
-            <div key={m.what} style={{ display: 'flex', gap: 'var(--sp-5)', padding: '5px 0' }}>
+          {milestones.map((m, i) => (
+            <div key={`${i}:${m.what}`} style={{ display: 'flex', gap: 'var(--sp-5)', padding: '5px 0' }}>
               <span
                 style={{
                   flex: 'none',

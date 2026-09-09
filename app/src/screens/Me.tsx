@@ -563,7 +563,7 @@ export function Me() {
       */}
       {bars.map((b) => (
         <button
-          key={b.code}
+          key={b.id}
           type="button"
           className="bare tappable"
           onClick={() => dispatch({ type: 'openCourse', id: b.id })}

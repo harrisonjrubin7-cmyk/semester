@@ -121,7 +121,7 @@ export function FieldGuide() {
       <SectionLabel>Contents</SectionLabel>
       {guide.units.map((u, i) => (
         <button
-          key={u.name}
+          key={`${i}:${u.name}`}
           type="button"
           className="bare tappable"
           onClick={() => revealKindly(sections.current[i], { block: 'start' })}
@@ -166,7 +166,7 @@ export function FieldGuide() {
         const base = guide.baseCards[i] ?? u.cards.length;
         return (
           <div
-            key={u.name}
+            key={`${i}:${u.name}`}
             ref={(el) => {
               sections.current[i] = el;
             }}
@@ -208,7 +208,7 @@ export function FieldGuide() {
             )}
 
             {u.cards.map((c, ci) => (
-              <div key={c.q} style={{ marginTop: 17 }}>
+              <div key={`${ci}:${c.q}`} style={{ marginTop: 17 }}>
                 {ci >= base && (
                   <span className="tag tag-accent" style={{ marginBottom: 'var(--sp-3)', display: 'inline-block' }}>
                     Added
@@ -254,9 +254,9 @@ export function FieldGuide() {
             <div style={SINCE}>{addedLine(guide.addedLong.frames, 'framings')}</div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-            {guide.frames.map((f) => (
+            {guide.frames.map((f, i) => (
               <div
-                key={f.t}
+                key={`${i}:${f.t}`}
                 style={{
                   borderLeft: '2px solid var(--app-accent)',
                   paddingLeft: 13,
@@ -292,8 +292,8 @@ export function FieldGuide() {
             <div style={SINCE}>{addedLine(guide.addedLong.cases, 'pairings')}</div>
           )}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}>
-            {guide.cases.map((c) => (
-              <Blueprint key={c.title} plain style={{ padding: '15px 15px' }}>
+            {guide.cases.map((c, i) => (
+              <Blueprint key={`${i}:${c.title}`} plain style={{ padding: '15px 15px' }}>
                 <div className="kicker">{c.when}</div>
                 <div
                   style={{
@@ -362,8 +362,8 @@ export function FieldGuide() {
       {guide.terms.length > 0 && (
         <>
           <SectionLabel style={{ margin: '36px 0 6px' }}>Glossary</SectionLabel>
-          {guide.terms.map((t) => (
-            <div key={t.t} style={termRow}>
+          {guide.terms.map((t, i) => (
+            <div key={`${i}:${t.t}`} style={termRow}>
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(15.5px * var(--text-scale, 1))' }}>{t.t}</div>
               <div
                 style={{
@@ -395,7 +395,7 @@ export function FieldGuide() {
             </div>
           )}
           {guide.selfTest.map((c, i) => (
-            <div key={c.q} style={askRow}>
+            <div key={`${i}:${c.q}`} style={askRow}>
               <div style={{ display: 'flex', gap: 11 }}>
                 <span
                   style={{

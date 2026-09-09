@@ -382,21 +382,73 @@ export function order(apps: Application[], now: Date): Application[] {
   });
 }
 
-/** A stored list made safe to render from. */
+/** A string field, guaranteed to be one. */
+function text(v: unknown): string {
+  return typeof v === 'string' ? v : '';
+}
+
+/**
+ * A stored list made safe to render from.
+ *
+ * Rebuilt field by field rather than spread. This started as `{ ...a }` with
+ * three fields repaired on top — `stage`, `kind`, `moves` — and that was the
+ * hole: everything else was assumed to be there because a list this build
+ * wrote would have it. Storage is not a trusted input, and the app opens
+ * whatever it finds: an application written by an older build, or by a sync
+ * that stopped halfway, arrives without `url`, and `safeUrl` calls `.trim()`
+ * on it and the applications screen goes white. Measured, with a row missing
+ * `url`: `TypeError: Cannot read properties of undefined (reading 'trim')`.
+ *
+ * It is the same lesson `lib/handoff.ts` writes down about `tidyCourse`, and
+ * it is the same sentence in both directions — a spread does not guarantee
+ * what arrives any more than it limits what leaves.
+ */
 export function readApplications(raw: unknown): Application[] {
   if (!Array.isArray(raw)) return [];
   const stages = new Set(STAGES.map((s) => s.id));
   const kinds = new Set(KINDS.map((k) => k.id));
-  return raw
-    .filter((a): a is Application => Boolean(a) && typeof a === 'object')
-    .map((a) => ({
-      ...a,
-      stage: stages.has(a.stage) ? a.stage : 'found',
-      kind: kinds.has(a.kind) ? a.kind : 'other',
-      moves: Array.isArray(a.moves) ? a.moves.filter((m) => stages.has(m?.stage)) : [],
+  const out: Application[] = [];
+
+  for (const a of raw) {
+    if (!a || typeof a !== 'object') continue;
+    const row = a as Partial<Application> & Record<string, unknown>;
+    const stage: Stage = stages.has(row.stage as Stage) ? (row.stage as Stage) : 'found';
+    // An id is what every list here keys off. Without one two rows collide as
+    // React children, which is the failure that omits a row rather than
+    // reporting anything.
+    const id = typeof row.id === 'string' && row.id ? row.id : `ap${out.length}${text(row.org)}`;
+    const created = typeof row.created === 'number' && Number.isFinite(row.created)
+      ? row.created
+      : 0;
+    const moves = Array.isArray(row.moves)
+      ? row.moves
+          .filter((m): m is Move => Boolean(m) && typeof m === 'object')
+          .filter((m) => stages.has(m.stage))
+          .map((m) => ({
+            stage: m.stage,
+            at: typeof m.at === 'number' && Number.isFinite(m.at) ? m.at : created,
+          }))
+      : [];
+
+    out.push({
+      id,
+      org: text(row.org),
+      role: text(row.role),
+      kind: kinds.has(row.kind as ApplyKind) ? (row.kind as ApplyKind) : 'other',
+      url: text(row.url),
+      where: text(row.where),
+      due: text(row.due),
+      rolling: row.rolling === true,
+      stage,
+      next: text(row.next),
+      nextBy: text(row.nextBy),
+      note: text(row.note),
+      created,
       // An application with no `moves` at all — from an older build, or a
       // half-written sync — would report zero days in every stage, which reads
       // as "just moved" and is the opposite of the truth.
-    }))
-    .map((a) => (a.moves.length > 0 ? a : { ...a, moves: [{ stage: a.stage, at: a.created }] }));
+      moves: moves.length > 0 ? moves : [{ stage, at: created }],
+    });
+  }
+  return out;
 }

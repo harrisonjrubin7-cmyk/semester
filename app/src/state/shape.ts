@@ -33,6 +33,7 @@ import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
 import { readApplications, type Application, type Stage } from '../lib/apply';
+import { readAppointments } from '../lib/appointment';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
 import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
@@ -1007,7 +1008,7 @@ export function loadPersisted(): Persisted {
       saved: saved.saved ?? DEFAULT_PERSISTED.saved,
       picked: { ...DEFAULT_PERSISTED.picked, ...(saved.picked ?? {}) },
       tasks: list(saved.tasks),
-      appointments: list(saved.appointments),
+      appointments: readAppointments(saved.appointments),
       notes: list(saved.notes),
       updates: list(saved.updates),
       feeds: list(saved.feeds),

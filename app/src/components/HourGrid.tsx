@@ -19,6 +19,40 @@ import { usePrefersDark } from '../lib/prefers';
  * length, so an empty afternoon is visibly empty rather than collapsed away.
  */
 
+/**
+ * The hours a grid draws, from the blocks it was given.
+ *
+ * The arithmetic was written out twice, identically, in this file and in
+ * `WeekGrid` — and it had the same hole in both. `Math.min(8 * 60, ...starts)`
+ * is NaN if a single one of those starts is, and `lo` then poisons everything
+ * derived from it: `hours` is `Array.from({ length: NaN })`, which is empty, so
+ * the grid draws no hour lines at all, and every block gets `top: NaN`, which
+ * React reports as "`NaN` is an invalid value for the `top` css style property"
+ * and the browser ignores, stacking the whole day at zero.
+ *
+ * One malformed block is enough. Measured, with an appointment carrying no
+ * `at`: the calendar's hour grid lost its axis and every block in it, including
+ * the classes, which were fine.
+ *
+ * `at` is not guaranteed. `state/shape.ts` reads every one of these lists with
+ * a bare `Array.isArray` cast, so an appointment written by a build before `at`
+ * existed — `kind` on the same record is documented as optional for exactly
+ * that reason — arrives without one and the app opens it. The blocks are
+ * filtered rather than the window clamped, because a block with no hour has no
+ * place on an hour grid; it is left out of the axis and draws where it says.
+ */
+export function hourWindow(
+  blocks: { at: number; minutes: number }[],
+  latest: number,
+): { lo: number; hi: number } {
+  const real = blocks.filter((b) => Number.isFinite(b.at));
+  const starts = real.map((b) => b.at);
+  const ends = real.map((b) => b.at + (Number.isFinite(b.minutes) ? b.minutes : 0));
+  const lo = Math.max(0, Math.floor(Math.min(8 * 60, ...starts) / 60) - 1);
+  const hi = Math.min(24, Math.ceil(Math.max(latest * 60, ...ends) / 60) + 1);
+  return { lo, hi };
+}
+
 export interface HourBlock {
   id: string;
   title: string;
@@ -99,10 +133,7 @@ export function HourGrid({
   // The window is the day's own, not a fixed 7-to-11: a day with an 8am lab and
   // nothing after four should not draw seven empty evening rows. An hour of
   // padding either side keeps the first and last block off the edge.
-  const starts = blocks.map((b) => b.at);
-  const ends = blocks.map((b) => b.at + b.minutes);
-  const lo = Math.max(0, Math.floor(Math.min(8 * 60, ...starts) / 60) - 1);
-  const hi = Math.min(24, Math.ceil(Math.max(18 * 60, ...ends) / 60) + 1);
+  const { lo, hi } = hourWindow(blocks, 18);
   const hours = Array.from({ length: hi - lo }, (_, i) => lo + i);
   const top = (minutes: number) => ((minutes - lo * 60) / 60) * ROW;
 
