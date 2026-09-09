@@ -271,7 +271,7 @@ export function Deck() {
             <ActionButton
               onClick={() => void make()}
               disabled={busy}
-              tone="primary" height={46}
+              tone="primary"
               style={{ marginTop: 18 }}
             >
               {busy ? 'Planning it…' : plan ? 'Plan it again' : 'Plan the deck'}
@@ -329,7 +329,7 @@ export function Deck() {
           <ActionButton
             onClick={() => void save()}
             disabled={saving}
-            tone="primary" height={46}
+            tone="primary"
             style={{ marginTop: 14 }}
           >
             {saving ? 'Writing the file…' : 'Save as PowerPoint'}

@@ -341,7 +341,7 @@ export function Maps() {
                 });
                 setLabel('');
                 }}
-                tone="primary" height={42}
+                tone="primary"
                 style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)' }}
               >
                 Save this spot

@@ -147,7 +147,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
             dispatch({ type: 'setCutoffs', courseId, system: typed });
             setOpen(false);
             }}
-            tone="primary" height={42}
+            tone="primary"
             style={{ marginTop: 'var(--sp-2)', fontSize: 'var(--type-base)', opacity: typed === null ? 0.45 : 1 }}
           >
             {typed === null ? 'Nothing to save yet' : `Use these for ${code}`}

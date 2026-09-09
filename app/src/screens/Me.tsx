@@ -598,7 +598,7 @@ export function Notifications() {
       ))}
       <ActionButton
         onClick={() => dispatch({ type: 'clearNotifs' })}
-        height={42} spacing="0.12em"
+        spacing="0.12em"
         style={{ marginTop: 'var(--sp-4)' }}
       >
         Clear all
@@ -637,7 +637,6 @@ export function Reminders() {
       {perm === 'default' && (
         <ActionButton
           onClick={() => void requestPermission().then(setPerm)}
-          height={40}
           style={{ marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)' }}
         >
           Allow notifications

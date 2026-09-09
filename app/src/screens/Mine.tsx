@@ -334,7 +334,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
       ) : (
         <ActionButton
           onClick={() => setOpen(true)}
-          tone="primary" height={46}
+          tone="primary"
         >
           + New task
         </ActionButton>
@@ -497,7 +497,7 @@ function Appointments() {
       ) : (
         <ActionButton
           onClick={() => setOpen(true)}
-          tone="primary" height={46}
+          tone="primary"
         >
           + New appointment
         </ActionButton>
@@ -576,7 +576,7 @@ function Notes({ rows }: { rows?: Note[] }) {
     <div>
       <ActionButton
         onClick={() => dispatch({ type: 'newNote', courseId: null })}
-        tone="primary" height={46}
+        tone="primary"
       >
         + New note
       </ActionButton>
@@ -665,7 +665,7 @@ function Files() {
       <ActionButton
         onClick={() => input.current?.click()}
         disabled={busy}
-        tone="primary" height={46}
+        tone="primary"
       >
         {busy ? 'Adding…' : '+ Add files'}
       </ActionButton>
@@ -914,7 +914,6 @@ export function NoteEditor() {
 
       <ActionButton
         onClick={() => input.current?.click()}
-        height={44}
         style={{ marginTop: 'var(--sp-6)' }}
       >
         <Plus size={15} /> Attach a file
@@ -925,7 +924,7 @@ export function NoteEditor() {
         dispatch({ type: 'deleteNote', id: note.id });
         dispatch({ type: 'back' });
         }}
-        tone="ghost" height={40} spacing="0.12em"
+        tone="ghost" spacing="0.12em"
         style={{ marginTop: 18, opacity: 0.7 }}
       >
         Delete note

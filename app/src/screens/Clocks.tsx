@@ -395,7 +395,7 @@ function Alarms() {
 
       <ActionButton
         onClick={add}
-        height={44} spacing="0.09em"
+        spacing="0.09em"
         style={{ marginTop: 'var(--sp-6)' }}
       >
         Add alarm

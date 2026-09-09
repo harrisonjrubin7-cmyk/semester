@@ -1235,7 +1235,6 @@ function MonthView() {
         });
         dispatch({ type: 'setCalView', view: 'day' });
         }}
-        height={42}
         style={{ fontSize: 'var(--type-xs)', marginTop: 14 }}
       >
         See classes and events that day

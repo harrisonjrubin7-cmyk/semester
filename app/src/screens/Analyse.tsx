@@ -328,7 +328,7 @@ export function Analyse() {
           <ActionButton
             onClick={() => void interpret()}
             disabled={busy}
-            tone="primary" height={46}
+            tone="primary"
             style={{ marginTop: 'var(--sp-7)' }}
           >
             {busy ? 'Reading them…' : 'What do these say?'}

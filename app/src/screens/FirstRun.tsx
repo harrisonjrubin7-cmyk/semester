@@ -57,7 +57,6 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
         <>
           <ActionButton
             onClick={() => dispatch({ type: 'setSample', on: true })}
-            height={44}
             style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-6)' }}
           >
             Look at the sample semester

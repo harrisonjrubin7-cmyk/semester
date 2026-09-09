@@ -168,7 +168,6 @@ export function RecordButton({
       {state === 'idle' && (
         <ActionButton
           onClick={() => void start()}
-          height={44}
           style={{ fontSize: 'var(--type-xs)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
         >
           <span
@@ -306,7 +305,6 @@ export function RecordButton({
             .writeText(asText(paragraphs(segments), stamps))
             .catch(() => setError('The browser would not give the app the clipboard.'));
             }}
-            height={40}
             style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)' }}
           >
             Copy the transcript

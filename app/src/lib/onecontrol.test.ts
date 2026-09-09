@@ -65,12 +65,56 @@ function handWritten(text: string): boolean {
 /** Exported shape for the string cases below. */
 const INLINE = { test: handWritten };
 
+/**
+ * `<ActionButton ... style={{ height: N }}>` — the drift, coming back the other way.
+ *
+ * The opening tag only, by a brace-balanced scan rather than a regex. The
+ * first attempt searched between `<ActionButton` and `</ActionButton>` and
+ * flagged `components/RecordButton.tsx`, whose button contains a ten-pixel
+ * recording dot: `<span style={{ width: 10, height: 10 }}>`. A height on a
+ * child is not this button's height.
+ */
+function heightOverride(text: string): boolean {
+  for (const m of text.matchAll(/<ActionButton\b/g)) {
+    let i = m.index + '<ActionButton'.length;
+    let depth = 0;
+    for (; i < text.length; i += 1) {
+      const c = text[i];
+      if (c === '{') depth += 1;
+      else if (c === '}') depth -= 1;
+      else if (c === '>' && depth === 0) break;
+    }
+    if (/height:\s*\d/.test(text.slice(m.index, i))) return true;
+  }
+  return false;
+}
+
+const HEIGHT_OVERRIDE = { test: heightOverride };
+
 describe('the block action button has one implementation', () => {
   it('is not written out by hand anywhere else', () => {
     const offenders = sources(SRC)
       .filter((f) => !f.path.endsWith(OWNER))
       .filter((f) => INLINE.test(withoutComments(f.text)))
       // Named, not counted: "3 problems" is what somebody greps around.
+      .map((f) => f.path.slice(f.path.indexOf('/src/') + 5));
+    expect(offenders).toEqual([]);
+  });
+
+  /*
+   * And one height.
+   *
+   * Nine were in use before `HEIGHT`, which is what happens when every call
+   * site may name its own. The prop is gone, so the only way back is `style`,
+   * which is spread last and therefore wins — deliberately, since a call site
+   * that truly needs a different height should be able to say so. This makes
+   * saying so a decision somebody has to take past a failing test rather than
+   * one they can take without noticing.
+   */
+  it('is not given a height back through style', () => {
+    const offenders = sources(SRC)
+      .filter((f) => !f.path.endsWith(OWNER))
+      .filter((f) => HEIGHT_OVERRIDE.test(withoutComments(f.text)))
       .map((f) => f.path.slice(f.path.indexOf('/src/') + 5));
     expect(offenders).toEqual([]);
   });
@@ -103,6 +147,26 @@ describe('what it catches', () => {
 
   it('leaves a button that is not block alone', () => {
     expect(INLINE.test(btn('btn btn-primary'))).toBe(false);
+  });
+
+  it('catches a height put back through style', () => {
+    expect(
+      HEIGHT_OVERRIDE.test(
+        `<ActionButton onClick={go} style={{ marginTop: 8, height: 52 }}>Go</ActionButton>`,
+      ),
+    ).toBe(true);
+  });
+
+  it('leaves an ActionButton with an honest style alone', () => {
+    expect(
+      HEIGHT_OVERRIDE.test(
+        `<ActionButton onClick={go} style={{ marginTop: 'var(--sp-6)' }}>Go</ActionButton>`,
+      ),
+    ).toBe(false);
+    // A height on some *other* element between two ActionButtons is not this.
+    expect(
+      HEIGHT_OVERRIDE.test(`<ActionButton onClick={go}>A</ActionButton>\n<div style={{ height: 22 }} />`),
+    ).toBe(false);
   });
 
   it('leaves a block button with no uppercase alone', () => {

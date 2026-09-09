@@ -321,7 +321,7 @@ export function Exam() {
 
             <ActionButton
               onClick={fromCards}
-              tone="primary" height={46}
+              tone="primary"
               style={{ marginTop: 'var(--sp-7)' }}
             >
               Sit it
@@ -336,7 +336,7 @@ export function Exam() {
           <ActionButton
             onClick={() => void write()}
             disabled={busy}
-            tone="primary" height={46}
+            tone="primary"
             style={{ marginTop: 'var(--sp-7)' }}
           >
             {busy ? 'Writing the paper…' : 'Write the paper'}
@@ -719,7 +719,7 @@ export function Exam() {
             setStage('marking');
             window.scrollTo(0, 0);
             }}
-            tone="primary" height={46}
+            tone="primary"
             style={{ marginTop: 22 }}
           >
             Finish and mark it

@@ -265,7 +265,7 @@ export function Study() {
                   <>
                     <ActionButton
                       onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: step.id })}
-                      tone="primary" height={42} spacing="0.08em"
+                      tone="primary" spacing="0.08em"
                     >
                       {step.label}
                     </ActionButton>

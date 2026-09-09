@@ -1023,7 +1023,6 @@ function HoursToday() {
         dispatch({ type: 'setMineTab', tab: 'appointments' });
         dispatch({ type: 'go', screen: 'mine' });
         }}
-        height={44}
         style={{ marginTop: 18, fontSize: 'var(--type-xs)' }}
       >
         + Add something to the day

@@ -485,7 +485,7 @@ export function CourseDetail() {
 
       <ActionButton
         onClick={() => dispatch({ type: 'openGuide', id: course.id })}
-        tone="primary" height={46}
+        tone="primary"
         style={{ marginTop: 'var(--sp-7)' }}
       >
         Study this course

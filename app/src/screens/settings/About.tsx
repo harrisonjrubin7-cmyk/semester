@@ -58,7 +58,6 @@ export function SettingsAbout() {
 
               <ActionButton
                 onClick={() => dispatch({ type: 'restartOnboarding' })}
-                height={44}
                 style={{ marginTop: 24 }}
               >
                 Replay onboarding
