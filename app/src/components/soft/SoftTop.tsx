@@ -1,27 +1,25 @@
 /**
- * The hero, the stat row and the bottom bar, for whichever screen is open.
+ * The hero and the stat row, for whichever screen is open.
  *
  * One component in `App.tsx` rather than a block inside fifty-five screen
  * files. Which facts to show is `lib/softtop.ts`; this is only the wiring —
  * it reads the store, hands the registry the state, and renders what comes
- * back with the parts built in step 2.
+ * back.
  *
- * ## Why the bar is a sibling of the screen and not part of it
+ * ## There was a `SoftBar` here
  *
- * The bar has to sit under the content and above the tab bar, and the element
- * that scrolls is `.scrollarea` in `ScrollArea`. A bar rendered inside a
- * screen is inside whatever that screen's own layout is — `Page` sets its own
- * padding and several screens set a width — so `position: sticky` measured
- * against the wrong box, which is exactly the failure step 2 recorded and
- * left open. Rendered here it is a direct child of the scrolling element, and
- * sticky means what it says.
+ * It drew the registry's bar as a sticky pill at the foot of the scroller,
+ * and it is gone with the bar itself — the reasoning is in `lib/softtop.ts`,
+ * where the facts live. What it leaves behind is worth stating: this file no
+ * longer touches `dispatch`, because the registry describes what a screen is
+ * about and never anywhere to go. Navigation is the navigation's job.
  */
 
 import { useMemo } from 'react';
 import { useStore } from '../../state/store';
 import { softTop, type TopStat } from '../../lib/softtop';
 import { useSoft } from '../shell/useShell';
-import { Hero, Stat, StatRow, BottomBar } from './Soft';
+import { Hero, Stat, StatRow } from './Soft';
 
 /*
  * What each sync state is called on a stat card.
@@ -84,26 +82,5 @@ export function SoftTop() {
         </StatRow>
       ) : null}
     </div>
-  );
-}
-
-export function SoftBar() {
-  const soft = useSoft();
-  const { dispatch } = useStore();
-  const top = useTop();
-  if (!soft || !top.bar) return null;
-
-  return (
-    <BottomBar
-      status={top.bar.status}
-      primary={top.bar.primary.label}
-      onPrimary={() => {
-        // `also` first, so the screen paints with its switch already where the
-        // action promised — "Check the dates" must not land on the half about
-        // pasted emails. See `TopAction` in `lib/softtop.ts`.
-        if (top.bar!.primary.also) dispatch(top.bar!.primary.also);
-        dispatch({ type: 'go', screen: top.bar!.primary.screen });
-      }}
-    />
   );
 }

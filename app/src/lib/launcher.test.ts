@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { GROUPS, destinationsFor } from './nav';
-import { afterDrag, readOrder, reorder, tilesFor, writeOrder } from './launcher';
+import { readOrder, tilesFor, writeOrder } from './launcher';
+import { dropped } from './arrange';
 import type { Capabilities } from './school';
 import type { Screen } from './types';
 
@@ -84,21 +85,19 @@ describe('the tiles on a shelf', () => {
 });
 
 describe('dropping one tile on another', () => {
-  it('takes the position rather than swapping', () => {
-    // The distinction the comment in `reorder` is about: dragging the last
-    // onto the first should put it first, not exchange the two ends.
-    expect(reorder([1, 2, 3, 4], 4, 1)).toEqual([4, 1, 2, 3]);
-    expect(reorder([1, 2, 3, 4], 1, 3)).toEqual([2, 3, 1, 4]);
-  });
-
-  it('does nothing when a tile is dropped on itself, or on a stranger', () => {
-    expect(reorder([1, 2, 3], 2, 2)).toEqual([1, 2, 3]);
-    expect(reorder([1, 2, 3], 9, 1)).toEqual([1, 2, 3]);
+  /*
+   * The shelf's half of a drag: the arithmetic is `arrange.dropped` and is
+   * tested there, and what matters here is what the shelf does with it — the
+   * whole shelf written down, every screen still on it, and a look key that
+   * reads back as the thing the finger drew.
+   */
+  const afterDrag = (g: (typeof GROUPS)[number], moved: Screen, onto: Screen) => ({
+    [g]: dropped(tilesFor(g, CAPS, {}).map((d) => d.screen), moved, onto) as Screen[],
   });
 
   it('writes the whole shelf down, not just the pair that moved', () => {
     const all = screens('Make');
-    const next = afterDrag('Make', CAPS, {}, all[3], all[0]);
+    const next = afterDrag('Make', all[3], all[0]);
     expect(next.Make).toHaveLength(all.length);
     expect(next.Make![0]).toBe(all[3]);
   });
@@ -107,14 +106,14 @@ describe('dropping one tile on another', () => {
     for (const g of GROUPS) {
       const all = screens(g);
       if (all.length < 2) continue;
-      const next = afterDrag(g, CAPS, {}, all[all.length - 1], all[0]);
+      const next = afterDrag(g, all[all.length - 1], all[0]);
       expect(new Set(next[g])).toEqual(new Set(all));
     }
   });
 
   it('round-trips through the look key it will be stored in', () => {
     const all = screens('Courses');
-    const next = afterDrag('Courses', CAPS, {}, all[2], all[0]);
+    const next = afterDrag('Courses', all[2], all[0]);
     expect(tilesFor('Courses', CAPS, readOrder(writeOrder(next))).map((d) => d.screen)).toEqual(
       next.Courses,
     );

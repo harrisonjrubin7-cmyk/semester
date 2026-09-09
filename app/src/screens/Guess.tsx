@@ -5,6 +5,7 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { NUDGE, invite, pick, verdict } from '../lib/pretest';
 import { unitName } from '../lib/unit';
+import { ActionButton } from '../components/ui';
 
 /**
  * Guess first, then read.
@@ -53,21 +54,20 @@ export function Guess() {
         <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 'var(--sp-5)', lineHeight: 1.55, textWrap: 'pretty' }}>
           {verdict(state.guessRight, asked.length)}
         </div>
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
+        <ActionButton
           onClick={() =>
-            dispatch({
-              type: 'guessDone',
-              courseId: state.guideId,
-              unit: state.guessUnit,
-              at: now.getTime(),
-            })
+          dispatch({
+          type: 'guessDone',
+          courseId: state.guideId,
+          unit: state.guessUnit,
+          at: now.getTime(),
+          })
           }
-          style={{ height: 48, marginTop: 22, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          tone="primary"
+          style={{ marginTop: 22 }}
         >
           Now read the unit
-        </button>
+        </ActionButton>
       </Page>
     );
   }
@@ -110,14 +110,13 @@ export function Guess() {
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {NUDGE}
           </div>
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={() => dispatch({ type: 'guessShow' })}
-            style={{ height: 48, marginTop: 14, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            tone="primary"
+            style={{ marginTop: 14 }}
           >
             Show me
-          </button>
+          </ActionButton>
         </>
       ) : (
         <>

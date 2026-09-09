@@ -686,21 +686,6 @@ a:hover {
   padding-bottom: var(--assistant-strip);
 }
 
-/*
- * Except where the soft shell's bar is the last thing in the column.
- *
- * A sticky element cannot leave its containing block, and the block ends at
- * the content edge — so with the padding on the scroller the pinned bar came
- * to rest exactly one strip short of the bottom, with the page scrolling
- * visibly through the gap beneath it. The strip is still reserved; the bar
- * carries it in its own padding instead, which puts the bar's background
- * over the whole width and its buttons above the assistant's, which is what
- * the padding was reserving the room for in the first place.
- */
-.scrollarea:has(> .soft-bar) {
-  padding-bottom: 0;
-}
-
 .app-tabs {
   flex: none;
   display: flex;
@@ -1552,6 +1537,98 @@ input[type='search'].input {
   color: var(--tile-ink);
 }
 
+/* ── The home screen ──────────────────────────────────────────────────────
+   The Tools tab, drawn the way a phone draws its apps: a fixed four-column
+   grid of icons with the name under each. See `components/nav/AppGrid.tsx`
+   for why a grid and not the list it replaced.
+
+   `auto-fill` rather than a hard `repeat(4, 1fr)`: four is right on a phone
+   and wrong on the tablet width the app also runs at, where four columns of
+   180px each would be four icons lost in a field. The minimum is the tile
+   plus its label's breathing room, so the row count follows the width.
+
+   And a ceiling on the whole grid, because the other end is just as wrong: on
+   a laptop the same rule gives nine across and one short row under it, which
+   is a strip of icons rather than a home screen. Capped, the thirteen fall
+   five, five and three — a block the eye takes in at once, which is the only
+   thing a grid is doing for you that a list was not. */
+.appgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(74px, 1fr));
+  gap: calc(18px * var(--density, 1)) var(--sp-4);
+  margin-top: var(--sp-6);
+  max-width: 460px;
+}
+
+.appicon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.appicon-tile {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  background: var(--app-raise);
+  border: 1px solid var(--app-line);
+  color: var(--app-accent);
+  /* The one thing borrowed from iOS, and it still answers to the Corners
+     setting: a reader who asked for Square gets square icons rather than the
+     single place in the app that overrules them. */
+  border-radius: min(14px, calc(var(--r-lg) * 4));
+  box-shadow: var(--lift-1);
+  transition: transform var(--fast), background var(--fast), border-color var(--fast);
+}
+
+.appicon:hover .appicon-tile {
+  background: var(--app-hero);
+  border-color: var(--app-accent-wash);
+}
+
+/* The press, which on a home screen is the whole of the feedback. */
+.appicon:active .appicon-tile {
+  transform: scale(0.92);
+}
+
+.appicon:focus-visible {
+  outline: none;
+}
+.appicon:focus-visible .appicon-tile {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 2px;
+}
+
+/* Two lines at most, centred, and it never widens the column: an icon whose
+   name pushes its neighbours out of line has broken the grid the grid is for. */
+.appicon-name {
+  max-width: 100%;
+  font-size: calc(11.5px * var(--text-scale, 1));
+  line-height: var(--leading-tight);
+  text-align: center;
+  color: var(--app-dim);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appicon:active .appicon-tile {
+    transform: none;
+  }
+}
+
 /*
  * The change strip: what just moved, at the top, for five seconds.
  *
@@ -1737,14 +1814,52 @@ input[type='search'].input {
   touch-action: none;
 }
 
-/* The tile in your hand, and the one it is about to take the place of. */
-.soft-folder-tile.is-held {
+/*
+ * Anything that can be dragged into a different place in its list.
+ *
+ * One pair of rules rather than one per list. These were written for the
+ * folder's tiles and are now what every movable row uses — the bottom bar,
+ * your courses, the sections of Today, the directory — because the answer to
+ * "what is in my hand, and where would it land" should not be a different
+ * drawing on every screen. See `lib/arrange.ts`.
+ *
+ * The held row dims rather than lifting: a row that follows the finger has to
+ * leave a hole behind it, and a hole in a list of settings is a list that
+ * jumps while you are reading it. Dimming keeps every other row exactly where
+ * it was, so the outline on the target is the only thing that moves.
+ */
+.movable.is-held {
   opacity: 0.55;
 }
 
-.soft-folder-tile.is-over {
+.movable.is-over {
   outline: 2px solid var(--app-accent);
   outline-offset: 2px;
+}
+
+/*
+ * The handle, where a thing is dragged by one rather than by itself.
+ *
+ * Today's sections are the case: a hold inside one already asks the assistant
+ * about the row under your thumb, so the section is what a drop lands on and
+ * this is the only thing that starts a drag. It sits out in the page's margin
+ * at a third opacity — present enough to find when you go looking, quiet
+ * enough that eighteen of them down a page are not a column of furniture —
+ * and comes up to meet a pointer or the focus ring.
+ */
+.grip {
+  opacity: 0.3;
+  cursor: grab;
+}
+
+.grip:hover,
+.grip:focus-visible {
+  opacity: 0.75;
+}
+
+.movable.is-held .grip {
+  opacity: 0.75;
+  cursor: grabbing;
 }
 
 /*
@@ -1763,63 +1878,6 @@ input[type='search'].input {
   gap: var(--sp-5);
 }
 
-.soft-bar {
-  /*
-   * Pinned, now that the two-row navigation has decided what owns the bottom.
-   *
-   * Step 2 left this a block at the foot of the content, because sticky
-   * measured against the wrong box: the bar was inside a screen, and a screen
-   * is inside `Page`'s own frame. `SoftTop.tsx` renders it as a direct child
-   * of `.scrollarea` instead — the element that actually scrolls — so
-   * `bottom: 0` is the bottom of the scrollport and lands above the tab bar
-   * rather than over it. Sticky rather than fixed for the same reason as
-   * before: fixed would cover the one piece of furniture the app cannot.
-   */
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  margin-top: var(--sp-5);
-  /* 18 on the left to line up with `Page`, and the assistant's footprint on
-     the right. Reserving it below instead made the bar a fifth of a phone
-     screen tall with a floating button in the empty half of it; reserving it
-     beside puts the button at the end of the bar's own row, where it reads as
-     the last control on the bar rather than something dropped on top. */
-  padding: var(--sp-6) calc(18px + var(--assistant-strip)) var(--sp-6) 18px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  background: var(--app-bg);
-  border-top: 1px solid var(--app-line);
-}
-
-.soft-bar-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
-}
-
-.soft-bar-primary {
-  flex: 1;
-  padding: calc(13px * var(--density, 1));
-  border-radius: 999px;
-  background: var(--app-accent-fill);
-  color: var(--chrome-ink);
-  border: 1px solid var(--app-accent-fill);
-  font-family: var(--font-heading);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: calc(12px * var(--text-scale, 1));
-}
-
-.soft-bar-second {
-  flex: none;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-}
-
 /* Same floor as step 1: geometry, not colour, is what survives forced colours. */
 @media (prefers-contrast: more) {
   /* A wash exists to be seen through, which is exactly what somebody who
@@ -1833,7 +1891,7 @@ input[type='search'].input {
   .soft-step,
   .soft-tile,
   .soft-dark,
-  .soft-bar-second {
+  .appicon-tile {
     box-shadow: none;
     border-color: var(--app-fg);
   }
@@ -1845,8 +1903,7 @@ input[type='search'].input {
   .soft-step,
   .soft-tile,
   .soft-dark,
-  .soft-bar-primary,
-  .soft-bar-second {
+  .appicon-tile {
     box-shadow: none;
     border: 1px solid CanvasText;
   }
@@ -1855,17 +1912,6 @@ input[type='search'].input {
   .soft-dark {
     background: Canvas;
     color: CanvasText;
-  }
-
-  /*
-   * The pinned bar has to stay opaque, or the content scrolls through it.
-   * `--app-bg` is one of the colours forced colours throws away, so it is
-   * named again here as the system's own ground, with a rule along the top
-   * edge — the seam is what says "this is furniture, not more page".
-   */
-  .soft-bar {
-    background: Canvas;
-    border-top: 1px solid CanvasText;
   }
 
   /*
@@ -1879,11 +1925,6 @@ input[type='search'].input {
     border: 1px solid CanvasText;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
-  }
-
-  .soft-bar-primary {
-    border-width: 3px;
-    font-weight: 700;
   }
 
   .soft-step-n {

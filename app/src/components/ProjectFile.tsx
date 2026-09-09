@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Produced } from './Produced';
 import { Blueprint } from './Blueprint';
-import { SectionLabel } from './ui';
+import { ActionButton, SectionLabel } from './ui';
 import { PrintButton } from './PrintButton';
 import { ask } from '../lib/claude';
 import { download } from '../lib/deliver';
@@ -225,15 +225,14 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         citation looks exactly like a real one, and it goes in under your name.
       </div>
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => void make()}
         disabled={busy || !dueDate}
-        style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        tone="primary"
+        style={{ marginTop: 'var(--sp-7)' }}
       >
         {busy ? 'Building it…' : out ? 'Build it again' : 'Build the project file'}
-      </button>
+      </ActionButton>
       {!dueDate ? (
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)' }}>
           Needs a due date — the schedule is the half of this that saves you.

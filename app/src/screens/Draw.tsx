@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { ActionButton, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
@@ -144,15 +144,14 @@ export function Draw() {
         drawing is labelled rather than guessed.
       </div>
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => void draw()}
         disabled={busy || !prompt.trim()}
-        style={{ height: 46, marginTop: 14, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        tone="primary"
+        style={{ marginTop: 14 }}
       >
         {busy ? 'Drawing…' : code ? 'Draw it again' : 'Draw it'}
-      </button>
+      </ActionButton>
 
       <Trouble said={trouble.said} onRetry={trouble.again} />
 

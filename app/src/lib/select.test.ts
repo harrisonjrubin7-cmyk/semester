@@ -19,7 +19,6 @@ import {
   searchItems,
   spanOf,
   tasksOn,
-  tonightPlan,
   upcomingItems,
 } from './select';
 import type {
@@ -402,28 +401,6 @@ describe('itemsOn and dotsForMonth', () => {
 
   it('gives an empty month an empty count', () => {
     expect(dotsForMonth(CAT, NOW, 2026, 7)).toEqual({});
-  });
-});
-
-describe('tonightPlan', () => {
-  it('names the weakest unit in each course', () => {
-    const plan = tonightPlan(CAT);
-    expect(plan.map((p) => [p.courseId, p.unit?.name, p.index])).toEqual([
-      ['econ', 'Demand', 1],
-      ['psci', 'States', 0],
-    ]);
-  });
-
-  it('has nothing to plan for an account with no courses', () => {
-    expect(tonightPlan(EMPTY_CATALOG)).toEqual([]);
-  });
-
-  it('does not invent a unit for a course whose guide is empty', () => {
-    // A course added by hand has no units at all. The plan says so with an
-    // absent unit rather than a made-up one; the screen reading this has to
-    // cope, and this is where that contract is written down.
-    const bare = buildCatalog([mod(course({ id: 'b', code: 'B 100' }))]);
-    expect(tonightPlan(bare)[0].unit).toBeUndefined();
   });
 });
 

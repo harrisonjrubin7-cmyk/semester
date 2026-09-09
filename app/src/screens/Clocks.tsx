@@ -24,7 +24,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { chime } from '../lib/chime';
 import {
   PRESETS,
@@ -394,14 +394,13 @@ function Alarms() {
         {daysLine(days) === 'Once' ? 'No days chosen — it rings once, at the next one.' : daysLine(days)}
       </div>
 
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={add}
-        style={{ height: 44, marginTop: 'var(--sp-6)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        spacing="0.09em"
+        style={{ marginTop: 'var(--sp-6)' }}
       >
         Add alarm
-      </button>
+      </ActionButton>
 
       {state.alarms.length > 0 ? (
         <>

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useStore } from '../../state/store';
 import { Blueprint } from '../../components/Blueprint';
-import { SectionLabel } from '../../components/ui';
+import { ActionButton, SectionLabel } from '../../components/ui';
 import { Trouble } from '../../components/Trouble';
 import { useTrouble } from '../../lib/trouble';
 import { ask, configured, provider } from '../../lib/claude';
@@ -123,15 +123,14 @@ export function FromText() {
       />
 
       {configured() ? (
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
+        <ActionButton
           onClick={() => void read()}
           disabled={busy || !text.trim()}
-          style={{ height: 46, marginTop: 'var(--sp-6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          tone="primary"
+          style={{ marginTop: 'var(--sp-6)' }}
         >
           {busy ? 'Reading it…' : 'What does this change?'}
-        </button>
+        </ActionButton>
       ) : (
         <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
           Needs a key first — set one under Settings → The assistant.

@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { ActionButton, SectionLabel } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { cloudConfigured } from '../lib/cloud';
 import {
@@ -144,22 +144,21 @@ export function Classmates() {
           placeholder="Harrison R"
           style={{ width: '100%' }}
         />
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
+        <ActionButton
           disabled={busy || handle.trim().length < 2}
           onClick={() => {
-            setBusy(true);
-            setError('');
-            void saveProfile(account.id, handle, '')
-              .then(refresh)
-              .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
-              .finally(() => setBusy(false));
+          setBusy(true);
+          setError('');
+          void saveProfile(account.id, handle, '')
+          .then(refresh)
+          .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+          .finally(() => setBusy(false));
           }}
-          style={{ height: 46, marginTop: 'var(--sp-6)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          tone="primary"
+          style={{ marginTop: 'var(--sp-6)' }}
         >
           {busy ? 'Saving…' : 'That is me'}
-        </button>
+        </ActionButton>
         {error ? <Problem>{error}</Problem> : null}
       </Page>
     );

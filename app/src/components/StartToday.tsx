@@ -21,7 +21,7 @@ import { adjustedLine, calibrate } from '../lib/worth';
 import { Folding } from './Fold';
 
 export function StartToday() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   const bias = calibrate(
     state.spent
       .filter((s) => typeof s.guess === 'number')
@@ -79,9 +79,10 @@ export function StartToday() {
                 textWrap: 'pretty',
               }}
             >
-              {[catalog.byId[s.courseId]?.code, `due in ${s.daysAway}d`, s.says]
-                .filter(Boolean)
-                .join(' · ')}
+              <span style={{ color: tint(s.courseId).ink, opacity: 1 }}>
+                {catalog.byId[s.courseId]?.code}
+              </span>
+              {[`due in ${s.daysAway}d`, s.says].filter(Boolean).map((part) => ` · ${part}`)}
             </span>
             <span
               style={{
@@ -132,7 +133,7 @@ export function StartToday() {
  * Ordered by start date rather than by deadline, which is the entire point.
  */
 export function StartList() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   const bias = calibrate(
     state.spent
       .filter((s) => typeof s.guess === 'number')
@@ -219,9 +220,12 @@ export function StartList() {
                   textWrap: 'pretty',
                 }}
               >
-                {[catalog.byId[s.courseId]?.code, `due in ${s.daysAway}d`, s.says]
-                  .filter(Boolean)
-                  .join(' · ')}
+                {/* The code in its course's colour. It is the first thing on
+                    the line and the only word on it that says whose this is. */}
+                <span style={{ color: tint(s.courseId).ink, opacity: 1 }}>
+                  {catalog.byId[s.courseId]?.code}
+                </span>
+                {[`due in ${s.daysAway}d`, s.says].filter(Boolean).map((part) => ` · ${part}`)}
               </span>
             </span>
             {s.minutes ? (

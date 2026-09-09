@@ -32,10 +32,11 @@
  * what makes "over the launcher" true rather than approximately true.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../state/store';
-import { afterDrag, readOrder, writeOrder } from '../../lib/launcher';
+import { readOrder, writeOrder } from '../../lib/launcher';
+import { MOVE_HINT, useMovable } from '../../lib/arrange';
 import { currentLook } from '../../state/shape';
 import type { Destination, Group } from '../../lib/nav';
 import type { Screen } from '../../lib/types';
@@ -57,23 +58,11 @@ export function Folder({
   says: (d: Destination) => { label: string; blurb: string };
   onClose: () => void;
 }) {
-  const { state, dispatch, school } = useStore();
-  const caps = school.capabilities;
+  const { state, dispatch } = useStore();
   const box = useRef<HTMLDivElement>(null);
   const shut = useRef<HTMLButtonElement>(null);
   const came = useRef<Element | null>(null);
-  const [held, setHeld] = useState<Screen | null>(null);
-  const [over, setOver] = useState<Screen | null>(null);
   const down = useRef(0);
-  /*
-   * Whether the press that is ending was a drag.
-   *
-   * `setPointerCapture` sends the pointerup back to the tile the press
-   * started on, so the browser sees a press and a release on one element and
-   * synthesises a click — and the drag ended by opening the screen it had
-   * just been dropped on top of. This is what tells the click to stand down.
-   */
-  const dragged = useRef(false);
 
   /* Remember where focus was, take it, and give it back on the way out. */
   useEffect(() => {
@@ -85,18 +74,31 @@ export function Folder({
     };
   }, []);
 
-  const move = (moved: Screen, onto: Screen) => {
-    if (moved === onto) return;
-    const order = afterDrag(group, caps, readOrder(currentLook(state).groupOrder), moved, onto);
-    dispatch({ type: 'setLook', look: { groupOrder: writeOrder(order) } });
-  };
-
-  /** One step left or right, for a keyboard. Clamped at both ends. */
-  const nudge = (screen: Screen, by: number) => {
-    const at = tiles.findIndex((d) => d.screen === screen);
-    const onto = tiles[at + by];
-    if (onto) move(screen, onto.screen);
-  };
+  /*
+   * The gesture, and the keyboard that has to do the same job.
+   *
+   * Both are `lib/arrange.ts`'s now rather than this file's. What was here
+   * was the app's first drag-to-arrange, and it had learned three things the
+   * hard way — a press is a drag only once it is held, a drop ends in a click
+   * that has to be told to stand down, and Alt with the arrow keys does the
+   * same job without a pointer. Every list that has since become movable
+   * would otherwise have had to learn all three again.
+   *
+   * `tiles` is the shelf as drawn, so the whole of it is written down on
+   * every move rather than the pair that swapped: a partial order leaves the
+   * rest at the mercy of a registry edit, which is the one thing somebody who
+   * has arranged their tiles does not expect.
+   */
+  const shelf = useMovable<Screen>({
+    items: tiles.map((d) => d.screen),
+    onMove: (moved) => {
+      const order = readOrder(currentLook(state).groupOrder);
+      dispatch({
+        type: 'setLook',
+        look: { groupOrder: writeOrder({ ...order, [group]: moved }) },
+      });
+    },
+  });
 
   const sheet = (
     <div
@@ -149,53 +151,19 @@ export function Folder({
       <div className="soft-folder-grid">
         {tiles.map((d) => {
           const said = says(d);
-          const on = over === d.screen && held !== null && held !== d.screen;
           return (
             <Blueprint
               plain
               as="button"
               key={d.screen}
-              className={`soft-tile surface soft-folder-tile${held === d.screen ? ' is-held' : ''}${on ? ' is-over' : ''}`}
-              data-screen={d.screen}
-              aria-label={`${said.label}. Alt with the arrow keys moves this tile.`}
+              {...shelf.props(d.screen, { className: 'soft-tile surface soft-folder-tile' })}
+              aria-label={`${said.label}. ${MOVE_HINT}`}
               onClick={() => {
-                if (dragged.current) {
-                  dragged.current = false;
-                  return;
-                }
+                // A drop ends in a click on the tile it started from, so
+                // without this the drag would open what it landed on.
+                if (shelf.tookDrop()) return;
                 dispatch({ type: 'go', screen: d.screen });
                 onClose();
-              }}
-              onKeyDown={(e) => {
-                if (!e.altKey) return;
-                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                  e.preventDefault();
-                  nudge(d.screen, e.key === 'ArrowRight' ? 1 : -1);
-                }
-              }}
-              onPointerDown={(e) => {
-                dragged.current = false;
-                setHeld(d.screen);
-                e.currentTarget.setPointerCapture(e.pointerId);
-              }}
-              onPointerMove={(e) => {
-                if (held !== d.screen) return;
-                const under = document.elementFromPoint(e.clientX, e.clientY);
-                const tile = under?.closest<HTMLElement>('[data-screen]');
-                setOver((tile?.dataset.screen as Screen) ?? null);
-              }}
-              onPointerUp={() => {
-                if (held && over && held !== over) {
-                  move(held, over);
-                  dragged.current = true;
-                }
-                setHeld(null);
-                setOver(null);
-              }}
-              onPointerCancel={() => {
-                setHeld(null);
-                setOver(null);
-                dragged.current = false;
               }}
             >
               <div className="soft-tile-glyph">

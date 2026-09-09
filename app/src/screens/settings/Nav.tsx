@@ -10,6 +10,7 @@ import { Reorder } from '../../components/Reorder';
 import { LayoutPicker, NavPicker } from '../../components/Appearance';
 import { BADGES, DIRECTORIES, FEEDS, LABELS, directoryOf } from '../../lib/look';
 import { SECTIONS, move, ordered } from '../../lib/feed';
+import { MOVE_HINT, useMovable } from '../../lib/arrange';
 
 const HINT = {
   fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -49,6 +50,20 @@ export function SettingsNav() {
   const { state, dispatch, facts } = useStore();
   const row = useRowStyle(0);
   const drawn = directoryOf(state.directory, state.shell);
+
+  /*
+   * Dragging a section of Today into place.
+   *
+   * Against the order as drawn, which is what `ordered()` resolves — a saved
+   * order can be partial or predate a section, and both controls have to move
+   * a row past what is actually next to it on screen. The arrows stay: they
+   * are the only visible sign this list has an order at all, and the only way
+   * to move a row without a pointer.
+   */
+  const feed = useMovable<string>({
+    items: ordered(state.feedOrder),
+    onMove: (order) => dispatch({ type: 'setFeedOrder', order }),
+  });
 
   return (
     <SettingsPage
@@ -141,12 +156,14 @@ export function SettingsNav() {
                 return (
                   <div
                     key={id}
-                    style={{
-                      display: 'flex',
-                      gap: 'var(--sp-4)',
-                      alignItems: 'center',
-                      ...row,
-                    }}
+                    {...feed.props(id, {
+                      style: {
+                        display: 'flex',
+                        gap: 'var(--sp-4)',
+                        alignItems: 'center',
+                        ...row,
+                      },
+                    })}
                   >
                     <button
                       type="button"
@@ -157,7 +174,15 @@ export function SettingsNav() {
                     >
                       <TickBox on={on} />
                     </button>
-                    <div style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : 0.5 }}>
+                    {/* Focusable, because a row that can be moved has to be
+                        reachable to be moved with Alt and the arrow keys —
+                        the tick box and the two arrows are their own
+                        controls, not the row. */}
+                    <div
+                      tabIndex={0}
+                      aria-label={`${section?.label ?? id}. ${MOVE_HINT}`}
+                      style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : 0.5 }}
+                    >
                       <div style={{ fontSize: 'var(--type-md)' }}>{section?.label ?? id}</div>
                       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>{section?.blurb}</div>
                     </div>

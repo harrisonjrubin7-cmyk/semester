@@ -237,27 +237,35 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 675,
+  type: 674,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 221,
+  leading: 218,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 517,
+  space: 515,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 503,
+  shorthand: 498,
 };
 
 /*
- * 513 → 509 on main (the corner-mark pass) and → 503 on the merged tree: both
- * sides removed shorthand padding from rows this branch also touched, so the
- * overlap counts once and neither number is the answer on its own. Measured,
- * like the ones below it.
+ * The Tools tab became a home screen, and its four are folded into every
+ * measurement below rather than added to any of them: thirteen cards drawn by
+ * hand in `screens/Study.tsx` — each with its own padding, its own 13.5px
+ * blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes live in
+ * `app.css` on the scales. The one value the grid sets by hand, the 11.5px
+ * icon name, is inside the numbers. Measured rather than derived, like every
+ * note below: 674/218/515/498 is what `counts()` reports on the merged tree.
  *
- * Two ratchets landed at once and this is their merge, measured rather than
- * added up: the Places tab left Personal on main, and on this branch the Claude
- * key stopped being on two screens and the second chip idiom got a name. Both
- * started from 682/222/524/544 and neither's arithmetic survives the other, so
- * the numbers above are what `counts()` reports on the merged tree:
- * 675/221/517/513, which is below both.
+ * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
+ * chat. Two numbers down and none up, and neither by reformatting: the
+ * panel's transcript, opening, header and footer are now the same components
+ * and the same measure the Ask tab uses, so the hand-set gap and the four
+ * `'12px 16px'`-shaped paddings it drew for itself went with the layout they
+ * belonged to. See `ai/Assistant.tsx`.
+ *
+ * It also took out two loose 1.4 line heights, which do not show above: the
+ * row pass landed `leading` on 219 from the other side, and these counts are
+ * of what is left in the tree rather than of what each branch removed. Two
+ * changes can take the same number to the same place.
  *
  * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
  * down and none up: the tab was a second copy of what the map already is, and

@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
@@ -268,20 +268,14 @@ export function Deck() {
           </div>
 
           {configured() ? (
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
+            <ActionButton
               onClick={() => void make()}
               disabled={busy}
-              style={{
-                height: 46,
-                marginTop: 18,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-              }}
+              tone="primary"
+              style={{ marginTop: 18 }}
             >
               {busy ? 'Planning it…' : plan ? 'Plan it again' : 'Plan the deck'}
-            </button>
+            </ActionButton>
           ) : (
             <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
               Needs a key first — set one under Settings → The assistant. Building a deck from a unit
@@ -332,15 +326,14 @@ export function Deck() {
             </div>
           )}
 
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={() => void save()}
             disabled={saving}
-            style={{ height: 46, marginTop: 14, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            tone="primary"
+            style={{ marginTop: 14 }}
           >
             {saving ? 'Writing the file…' : 'Save as PowerPoint'}
-          </button>
+          </ActionButton>
 
           {plan && (
             <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
