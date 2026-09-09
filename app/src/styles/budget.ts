@@ -72,7 +72,7 @@ export const BUDGET: Budget = {
   'components/Rework.tsx': { type: 4, leading: 2, space: 3, shorthand: 3 },
   'components/Ringing.tsx': { type: 2, space: 2 },
   'components/Running.tsx': { type: 1, space: 1, shorthand: 1 },
-  'components/SampleMark.tsx': { type: 1, shorthand: 2 },
+  'components/SampleMark.tsx': { type: 1, shorthand: 1 },
   'components/SayIt.tsx': { type: 2, space: 1 },
   'components/ScanIsbn.tsx': { type: 2 },
   'components/SchoolPicker.tsx': { type: 6, leading: 2, space: 8, shorthand: 4 },
