@@ -241,9 +241,9 @@ export const BUDGET = {
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 221,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 523,
+  space: 521,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 544,
+  shorthand: 519,
 };
 
 /*

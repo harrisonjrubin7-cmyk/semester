@@ -37,6 +37,7 @@ import {
   railFor,
 } from '../lib/select';
 import { timeLabel, useDragToMove } from '../lib/drag';
+import { useRowStyle } from '../components/shell/useShell';
 import { useCalendarMove, type Movable } from './calendar/Move';
 import { AddHere } from './calendar/AddHere';
 import type { Course, CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
@@ -75,6 +76,8 @@ function courseTint(courses: Course[], id: CourseId | null): string {
 // ── Day ───────────────────────────────────────────────────────────────────
 
 function DayView() {
+  // A row's padding and hairline, from the layout rather than hard-coded.
+  const dayRow = useRowStyle(12);
   const { state, dispatch, now, catalog, say } = useStore();
   const moving = useCalendarMove();
   const [addAt, setAddAt] = useState<number | null>(null);
@@ -365,8 +368,7 @@ function DayView() {
                 display: 'flex',
                 gap: 'var(--sp-5)',
                 alignItems: 'center',
-                padding: '12px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...dayRow,
               }}
             >
               <span className="tag tag-outline">{e.kind}</span>
@@ -393,8 +395,7 @@ function DayView() {
                   display: 'flex',
                   gap: 'var(--sp-5)',
                   alignItems: 'center',
-                  padding: '12px 0',
-                  borderBottom: '1px solid var(--app-line)',
+                  ...dayRow,
                 }}
               >
                 <span
@@ -456,6 +457,7 @@ function DayView() {
  * from. See `screens/calendar/Move.tsx`.
  */
 function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<HTMLElement> }) {
+  const taskRow = useRowStyle(8);
   const { dispatch, courseCode, say } = useStore();
   if (!t.date) return null;
 
@@ -472,8 +474,7 @@ function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<
         display: 'flex',
         gap: 'var(--sp-5)',
         alignItems: 'center',
-        padding: '8px 0',
-        borderBottom: '1px solid var(--app-line)',
+        ...taskRow,
         opacity: t.done ? 0.45 : 1,
       }}
     >
@@ -722,6 +723,7 @@ function WeekView() {
 // ── Month ─────────────────────────────────────────────────────────────────
 
 function MonthView() {
+  const monthTaskRow = useRowStyle('var(--sp-5) 0');
   const { state, dispatch, now, catalog } = useStore();
   const { calYear, calMonth, calSource } = state;
   const cells = monthGrid(calYear, calMonth);
@@ -1169,8 +1171,7 @@ function MonthView() {
             alignItems: 'baseline',
             width: '100%',
             textAlign: 'left',
-            padding: 'var(--sp-5) 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...monthTaskRow,
             opacity: drag.held && 'id' in drag.held && drag.held.id === t.id ? 0.4 : 1,
           }}
         >
@@ -1252,6 +1253,7 @@ function MonthView() {
  * something new.
  */
 function SemesterView() {
+  const weekRow = useRowStyle(10);
   const { state, dispatch, now, catalog } = useStore();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<string | null>(null);
@@ -1353,8 +1355,7 @@ function SemesterView() {
                 display: 'flex',
                 gap: 'var(--sp-6)',
                 alignItems: 'flex-start',
-                padding: '10px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...weekRow,
                 background: isNow ? 'var(--app-panel)' : 'transparent',
                 outline: drag.over === `w:${i}` ? '2px solid var(--app-accent)' : undefined,
                 outlineOffset: -2,
