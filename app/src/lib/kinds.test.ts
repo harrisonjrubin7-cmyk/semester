@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EVENT_KINDS, blockLabel, kindOf, kindTint } from './kinds';
+import { CAMPUS_KIND, CAMPUS_TINT, EVENT_KINDS, blockLabel, kindOf, kindTint } from './kinds';
 import { AA_LARGE, contrast } from './contrast';
 import { GROUNDS } from './look';
 import { satOf } from './tint';
@@ -61,6 +61,26 @@ describe('a kind drawn for the ground it is on', () => {
           AA_LARGE,
         );
       }
+    }
+  });
+
+  it('gives campus a colour of its own, not one of the seven', () => {
+    // A campus event is drawn on the grids now, and it is neither a class nor
+    // a kind anybody chose. Falling back to Other would have made "what is on
+    // around campus" and "uncategorised thing I added" the same grey.
+    expect(kindTint(CAMPUS_KIND, false)).toBe(CAMPUS_TINT);
+    expect(EVENT_KINDS.map((k) => k.tint)).not.toContain(CAMPUS_TINT);
+    expect(blockLabel('Football vs. Delaware', CAMPUS_KIND, '6:00')).toBe(
+      'Football vs. Delaware. Campus. 6:00.',
+    );
+  });
+
+  it('keeps campus visible on a light ground too', () => {
+    for (const g of GROUNDS.filter((x) => x.light)) {
+      expect(
+        contrast(kindTint(CAMPUS_KIND, true), g.ramp[2]) ?? 0,
+        `Campus on ${g.label}`,
+      ).toBeGreaterThanOrEqual(AA_LARGE);
     }
   });
 

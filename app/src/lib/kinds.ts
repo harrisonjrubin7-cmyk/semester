@@ -56,6 +56,25 @@ export function kindOf(id: string | undefined): KindDef {
 export const CLASS_TINT = 'var(--app-accent)';
 
 /**
+ * What is on around campus — and what a calendar you connected says is on.
+ *
+ * Not one of the seven above, and deliberately not in the picker: a kind is
+ * what *you* say something of yours is for, and a football game or an
+ * involvement fair is neither yours nor a class. It is somebody else's date
+ * that you might want to be at, and now that the grids draw those rather than
+ * only listing them beside the day, it needs a colour that is not one of the
+ * seven and not a course's.
+ *
+ * The hue is the gap in the set — the seven sit at roughly 9°, 35°, 146°,
+ * 210°, 214°, 246° and 319°, and this is at 82°, further from any of them than
+ * any two of them are from each other. Same low saturation, same lightness, so
+ * it is still the same metal.
+ */
+export const CAMPUS_KIND = 'campus';
+
+export const CAMPUS_TINT = '#b4c98f';
+
+/**
  * A kind's colour, drawn for the ground it is actually on.
  *
  * The table above is one set of values, mixed for a dark screen, and on
@@ -71,8 +90,23 @@ export const CLASS_TINT = 'var(--app-accent)';
  * category meaning "uncategorised" into a blue.
  */
 export function kindTint(id: string | null | undefined, light: boolean): string {
-  const tint = kindOf(id ?? undefined).tint;
+  const tint = id === CAMPUS_KIND ? CAMPUS_TINT : kindOf(id ?? undefined).tint;
   return light ? hueToHex(hueOf(tint), LIGHT_GROUND_LUM, satOf(tint)) : tint;
+}
+
+/**
+ * What a block's kind is called, including the two that are not in the picker.
+ *
+ * `null` is the app's way of saying "a class" — it comes from a syllabus
+ * rather than from a person, which is why it is not in `EVENT_KINDS` — and
+ * `campus` is somebody else's date, drawn on the grids and belonging to
+ * nobody's list of kinds either. Both are said in words here so a grid does
+ * not have to know that a missing kind means anything at all.
+ */
+export function kindLabel(id: string | null | undefined): string {
+  if (id === null || id === undefined) return 'Class';
+  if (id === CAMPUS_KIND) return 'Campus';
+  return kindOf(id).label;
 }
 
 /**
@@ -95,9 +129,7 @@ export function blockLabel(
   meta = '',
   canceled = false,
 ): string {
-  // `null` is the app's way of saying "a class", which is the one kind that is
-  // not in `EVENT_KINDS` because it comes from a syllabus rather than a person.
-  const what = kind === null || kind === undefined ? 'Class' : kindOf(kind).label;
+  const what = kindLabel(kind);
   const bits = [title, what, when];
   if (meta.trim()) bits.push(meta.trim());
   if (canceled) bits.push('Cancelled');

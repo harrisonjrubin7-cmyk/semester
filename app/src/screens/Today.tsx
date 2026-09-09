@@ -32,7 +32,7 @@ import { hasTime } from '../lib/duetime';
 import { clockOf } from '../lib/atrisk';
 import { nowAt, readDay, worthMarking } from '../lib/rail';
 import { said } from '../lib/arrive';
-import { datedEvents, datedItems } from '../lib/select';
+import { campusHours, datedEvents, datedItems } from '../lib/select';
 import { overdueCount } from '../lib/standing';
 import { ordered, sectionLabel, visible } from '../lib/feed';
 import { MOVE_HINT, useMovable } from '../lib/arrange';
@@ -1320,13 +1320,26 @@ function DoneToday() {
  */
 function HoursToday() {
   const { state, dispatch, now, catalog } = useStore();
-  const blocks = hoursFor(catalog, now, state.appointments, state.commitments);
+  // The campus calendar and any feed you have connected, on the grid rather
+  // than only in a card further down the screen — the same rule the calendar's
+  // day and week grids follow. See `campusHours` in `lib/select.ts`.
+  const blocks = [
+    ...hoursFor(catalog, now, state.appointments, state.commitments),
+    ...campusHours(
+      datedEvents(now, state.schoolId, state.sample),
+      state.feedEvents,
+      now,
+    ).map((b) => ({
+      ...b,
+      onClick: b.eventId ? () => dispatch({ type: 'openEvent', id: b.eventId! }) : undefined,
+    })),
+  ];
 
   return (
     <>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-3)' }}>
         Classes from your syllabi, in the app's own colour. Anything you add is tinted by what it
-        is for.
+        is for, and what is on around campus carries its own.
       </div>
       <KindKey />
       {blocks.length === 0 ? (
