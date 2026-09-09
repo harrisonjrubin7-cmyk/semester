@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { ActionButton, SectionLabel } from '../components/ui';
 import { STANCES, stanceLine } from '../lib/essay';
 import { readClock } from '../lib/officehours';
 import { SEASONS, readTerm, termId, yearFor } from '../lib/term';
@@ -87,27 +87,20 @@ export function EditCourse() {
             is nothing to change yet. Take the semester on and all four become yours — editable,
             shareable, and keeping everything you have already ticked off.
           </div>
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             /*
-             * No navigation. This *is* the edit screen: `adopt()` makes the
-             * course an owned one, `owned` becomes truthy on the next render
-             * and the editor below draws. Going to `edit` from `edit` pushed a
-             * history entry, so Back landed somebody back on the screen they
-             * had just pressed Back from.
-             */
+            * No navigation. This *is* the edit screen: `adopt()` makes the
+            * course an owned one, `owned` becomes truthy on the next render
+            * and the editor below draws. Going to `edit` from `edit` pushed a
+            * history entry, so Back landed somebody back on the screen they
+            * had just pressed Back from.
+            */
             onClick={adopt}
-            style={{
-              height: 46,
-              marginTop: 14,
-              fontSize: 'var(--type-sm)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-            }}
+            tone="primary"
+            style={{ marginTop: 14, fontSize: 'var(--type-sm)' }}
           >
             Make these mine
-          </button>
+          </ActionButton>
         </Blueprint>
       </Page>
     );
@@ -521,15 +514,14 @@ export function EditCourse() {
         + Add a deadline
       </button>
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={save}
         disabled={!dirty}
-        style={{ height: 46, marginTop: 18, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        tone="primary"
+        style={{ marginTop: 18 }}
       >
         {dirty ? 'Save the changes' : saved ? 'Saved' : 'Nothing changed'}
-      </button>
+      </ActionButton>
       {dirty ? (
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Nothing is saved until you press that. A half-typed date would otherwise flow straight

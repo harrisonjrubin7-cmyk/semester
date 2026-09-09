@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { DOCK, PAGES, dockFor, labelFor, matches, pagesFor, placed, searchable } from './springboard';
+import {
+  DOCK,
+  DOCK_KEY,
+  PAGES,
+  afterMove,
+  arrangedDock,
+  arrangedPages,
+  dockFor,
+  folderKey,
+  keyOf,
+  labelFor,
+  matches,
+  pageKey,
+  pagesFor,
+  placed,
+  searchable,
+} from './springboard';
 import { DESTINATIONS, offered } from './nav';
 import type { Capabilities } from './school';
 
@@ -96,7 +112,7 @@ describe('capability gating comes free', () => {
 
   it('leaves the universal screens alone', () => {
     const shown = flat(pagesFor(NONE));
-    for (const s of ['home', 'courses', 'study', 'grades', 'registrar']) {
+    for (const s of ['home', 'courses', 'study', 'registrar']) {
       expect(shown, s).toContain(s);
     }
   });
@@ -155,5 +171,90 @@ describe('searching the springboard', () => {
   it('searches only what this school has', () => {
     expect(searchable(ALL)).toContain('meals');
     expect(searchable(NONE)).not.toContain('meals');
+  });
+});
+
+/**
+ * The home screen after somebody has moved an icon.
+ *
+ * The promise is the one every arrangement in this app makes: a saved order
+ * is a preference *over* the pages and never a replacement for them. It can
+ * put icons in an odd sequence; it can never hide one, invent one, or bring
+ * back one the school gate has switched off. Every case below is a way of
+ * checking that a stale key — and this one goes stale the moment a screen is
+ * added to `PAGES` — stays harmless.
+ */
+describe('an arrangement somebody dragged', () => {
+  const keysOn = (caps: Capabilities, saved: string, page = 0) =>
+    arrangedPages(caps, saved)[page].items.map(keyOf);
+
+  it('is the built-in arrangement when nothing has been dragged', () => {
+    expect(arrangedPages(ALL, '')).toEqual(pagesFor(ALL));
+    expect(arrangedDock(ALL, undefined)).toEqual(dockFor(ALL));
+  });
+
+  it('puts a page in the order it was dragged into', () => {
+    const first = keysOn(ALL, '');
+    const moved = [first[3], ...first.filter((k) => k !== first[3])];
+    expect(keysOn(ALL, afterMove('', pageKey(0), moved))).toEqual(moved);
+  });
+
+  it('keeps every icon on the page it was arranged on', () => {
+    const first = keysOn(ALL, '');
+    const saved = afterMove('', pageKey(0), [first[first.length - 1], first[0]]);
+    expect(new Set(keysOn(ALL, saved))).toEqual(new Set(first));
+  });
+
+  it('cannot hide an icon by leaving it out of the saved order', () => {
+    // The case that will actually happen: a screen added to `PAGES` months
+    // after somebody arranged their home screen.
+    const first = keysOn(ALL, '');
+    const saved = afterMove('', pageKey(0), [first[2]]);
+    expect(keysOn(ALL, saved)[0]).toBe(first[2]);
+    expect(keysOn(ALL, saved)).toHaveLength(first.length);
+  });
+
+  it('cannot bring back a screen this school does not have', () => {
+    const only = new Set(keysOn(NONE, ''));
+    const saved = afterMove('', pageKey(0), ['maps', 'meals', 'housing']);
+    for (const key of keysOn(NONE, saved)) expect(only.has(key)).toBe(true);
+  });
+
+  it('arranges a folder by its own name, not its page position', () => {
+    const pages = arrangedPages(ALL, '');
+    const at = pages.findIndex((p) => p.items.some((i) => typeof i !== 'string'));
+    const folder = pages[at].items.find((i) => typeof i !== 'string')!;
+    const last = folder.screens[folder.screens.length - 1];
+    const saved = afterMove('', folderKey(folder.label), [last]);
+    const after = arrangedPages(ALL, saved)[at].items.find(
+      (i) => typeof i !== 'string' && i.label === folder.label,
+    );
+    expect(typeof after !== 'string' && after!.screens[0]).toBe(last);
+    expect(typeof after !== 'string' && after!.screens).toHaveLength(folder.screens.length);
+  });
+
+  it('arranges the dock without letting it grow', () => {
+    const dock = dockFor(ALL);
+    const saved = afterMove('', DOCK_KEY, [dock[2], 'essay']);
+    expect(arrangedDock(ALL, saved)).toEqual([dock[2], ...dock.filter((s) => s !== dock[2])]);
+  });
+
+  it('keeps one list without disturbing the others', () => {
+    const first = keysOn(ALL, '');
+    const dock = dockFor(ALL);
+    const saved = afterMove(afterMove('', pageKey(0), [first[1]]), DOCK_KEY, [dock[3]]);
+    expect(keysOn(ALL, saved)[0]).toBe(first[1]);
+    expect(arrangedDock(ALL, saved)[0]).toBe(dock[3]);
+  });
+
+  it('survives a key that has gone to rubbish', () => {
+    // A hand-edited look key, or one from a version that wrote it differently.
+    expect(arrangedPages(ALL, 'p0|:|,,,')).toEqual(pagesFor(ALL));
+  });
+
+  it('names a folder distinctly from a screen, so neither moves the other', () => {
+    // `+Make` and `make` would be the same name in the same list without this.
+    expect(keyOf({ label: 'Make', screens: ['draw'] })).not.toBe('make');
+    expect(keyOf('make')).toBe('make');
   });
 });

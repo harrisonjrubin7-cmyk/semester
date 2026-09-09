@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import type { CoursesTab } from '../lib/types';
 import { nameFor, renamed } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
 import { Timer } from '../components/Timer';
@@ -13,12 +14,13 @@ import { standing } from '../lib/grades';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
+import { Grades } from './Grades';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { CameBack } from '../components/CameBack';
 import { BreakItUp } from '../components/BreakItUp';
 import { AskForTime } from '../components/AskForTime';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { longLabel } from '../lib/date';
 import { appleMapsUrl, directionsUrl, fromRoom, prefersApple, type Destination } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
@@ -33,14 +35,15 @@ function CoursesTabs({
   value,
   onChange,
 }: {
-  value: 'courses' | 'due';
-  onChange: (t: 'courses' | 'due') => void;
+  value: CoursesTab;
+  onChange: (t: CoursesTab) => void;
 }) {
   return (
     <Segmented
       options={[
         { id: 'courses', label: 'Courses' },
         { id: 'due', label: 'Coming up' },
+        { id: 'grades', label: 'Grades' },
       ]}
       value={value}
       onChange={onChange}
@@ -65,6 +68,15 @@ export function Courses() {
   if (catalog.empty) return <FirstRun where="in your courses" />;
   const tab = state.coursesTab;
 
+  if (tab === 'grades') {
+    return (
+      <Page bottom={0}>
+        <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
+        <Grades />
+      </Page>
+    );
+  }
+
   if (tab === 'due') {
     return (
       <Page>
@@ -76,12 +88,13 @@ export function Courses() {
 
   return (
     /*
-      Two returns, two shells.
+      Three returns, three shells.
 
       A "screen" in the registry is not always one component: this one has a
-      branch per tab. There was a third, and it rendered the Grades screen
-      bare — the same table the Grades destination is, reached a second way.
-      Grades kept its own screen and this lost the copy.
+      branch per tab. The grades branch was drawing a copy of the `grades`
+      destination — the same table with two homes — and the answer here is the
+      other way round from the one #42 took: the table is a view of these four
+      courses, so the destination went and this branch is where it lives.
     */
     <Page
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}
@@ -209,11 +222,45 @@ export function Courses() {
           })
           )}
 
-          {/* No "add a course" button here. It was a full-width one under
-              the last card, and it was the second add-affordance on a screen
-              that already has a + in its header. Adding a course is reached
-              by name in search, by `n`, and by the soft layout's own bar —
-              see `lib/nav.ts`, `lib/keys.ts` and `lib/softtop.ts`. */}
+          {/*
+            One quiet way to add a course, at the end of the courses.
+
+            Not the full-width uppercase button this used to be: that read as
+            the screen's main action when it is the rarest thing you do here —
+            four times a semester against a list you open weekly. And not
+            nothing either, which is what it was briefly: the + in the header
+            captures a deadline, so with no link here the courses screen was
+            the one place that talked about courses and could not add one,
+            leaving `n` and search as the only routes on a phone.
+
+            `tap-x`: it is the last item in a vertical list, so the room is
+            beside it — reaching up would claim the last card's own tap area.
+          */}
+          <button
+            type="button"
+            className="bare tap-x"
+            onClick={() => dispatch({ type: 'go', screen: 'import' })}
+            style={{
+              width: 'auto',
+              // Longhand and on the scale: `padding` as a shorthand puts two
+              // raw pixel values past the style budget. 16 + 16 either side of
+              // a --type-sm line is already a fingertip tall, so the tap
+              // overlay adds nothing vertically and cannot reach the card.
+              paddingTop: 'var(--sp-7)',
+              paddingBottom: 'var(--sp-7)',
+              paddingLeft: 'var(--sp-1)',
+              paddingRight: 'var(--sp-1)',
+              marginTop: 'var(--sp-1)',
+              textAlign: 'left',
+              fontSize: 'var(--type-sm)',
+              opacity: 0.6,
+              textDecoration: 'underline dotted',
+              textUnderlineOffset: 3,
+              textDecorationColor: 'currentColor',
+            }}
+          >
+            Add a course from a syllabus
+          </button>
           <div style={{ height: 12 }} />
         </>
     </Page>
@@ -436,19 +483,13 @@ export function CourseDetail() {
         <span className="tag tag-neutral">{course.credits}</span>
       </div>
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => dispatch({ type: 'openGuide', id: course.id })}
-        style={{
-          height: 46,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: 'var(--sp-7)',
-        }}
+        tone="primary"
+        style={{ marginTop: 'var(--sp-7)' }}
       >
         Study this course
-      </button>
+      </ActionButton>
 
       <button
         type="button"

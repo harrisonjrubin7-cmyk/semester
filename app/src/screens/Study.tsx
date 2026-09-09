@@ -8,13 +8,13 @@ import { FirstRun } from './FirstRun';
 import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
 import { modesFor } from '../lib/modes';
 import { Blueprint } from '../components/Blueprint';
-import { Meter, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, Meter, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
+import { AppGrid } from '../components/nav/AppGrid';
 import { nextExam, testedIn } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
 import { cardKey, dueCount } from '../lib/review';
-import { destinationsIn, type Group } from '../lib/nav';
-import { heldBy } from '../lib/everything';
+import { destinationsIn } from '../lib/nav';
 import { suggest, type Coming } from '../lib/toolnow';
 import { codeOf } from '../data/catalog';
 import { upcomingItems } from '../lib/select';
@@ -48,18 +48,6 @@ const BUDGETS = [10, 25, 45];
  */
 const PLAN_ROWS = 8;
 
-/**
- * The two shelves the Tools tab is drawn on.
- *
- * The registry's own groups, with the registry's own words for what somebody
- * is doing on each — Study is learning from what you have, Make is producing
- * something that leaves the app. Not a third opinion about where a screen
- * belongs: a tool filed under either lands in the right half by itself.
- */
-const TOOL_SHELVES: { group: Group; label: string }[] = [
-  { group: 'Study', label: 'Study for something' },
-  { group: 'Make', label: 'Write or make something' },
-];
 
 /**
  * Study, in the shape Calendar and Mine already use.
@@ -175,15 +163,6 @@ export function Study() {
     (d) => d.screen !== 'study',
   );
   const toolByScreen = new Map(tools.map((d) => [d.screen, d]));
-  const picked = new Set(picks.map((p) => p.screen));
-  /*
-   * A tool appears once on the tab. One promoted to the top with a reason is
-   * not also listed below without one — that is the same door twice, which is
-   * the thing the audit keeps finding.
-   */
-  const shelfRows = (group: Group) =>
-    tools.filter((d) => d.group === group && !picked.has(d.screen));
-
   if (catalog.empty) return <FirstRun where="to study" />;
   const tab = state.studyTab;
 
@@ -256,21 +235,31 @@ export function Study() {
       {tab === 'ask' && (
         <>
           {/*
-            Generated from the directory rather than written out here.
-            This tab used to be two hand-written cards, Ask Claude and Work on
+            A home screen, generated from the directory.
+
+            Two changes, and the second is what the first was for. Generated:
+            this tab used to be two hand-written cards, Ask Claude and Work on
             it, and every tool added afterwards — the diagram drawer, the
             problem solver, the data analysis, the deck builder, the drafting
             tool, the practice paper — was reachable only through search or
-            three taps into Me. Six features nobody would ever find. Reading
-            the list from `lib/nav.ts` means the next one appears here the day
-            it is added, without anybody remembering to come back.
+            three taps into Me. Reading the list from `lib/nav.ts` means the
+            next one appears here the day it is added, without anybody
+            remembering to come back.
 
-            What generation could not fix is that thirteen cards in registry
-            order say what each tool *is* and never what it is *for, now*. At
-            eleven at night four days before a midterm, "Practice paper" and
-            "Draw it" are not equally likely, and the app holds every fact
-            needed to know which — so the top of the tab is read off the
-            fortnight ahead and the rest is the directory. See `lib/toolnow.ts`.
+            And drawn as a grid rather than a column, because generating the
+            list made it thirteen rows and a row of a card each is 68px — four
+            tools on screen and nine below the fold, which is the same
+            unfindability the tab was built to end. Icons with names under
+            them put twelve in the space four were using, and give each one a
+            position you can point at rather than read for. See
+            `components/nav/AppGrid.tsx`.
+
+            What neither fixed is that a grid, like the list before it, says
+            what each tool *is* and never what it is *for, now*. At eleven at
+            night four days before a midterm, "Practice paper" and "Draw it"
+            are not equally likely, and the app holds every fact needed to
+            know which — so two or three tiles are said out loud above the
+            grid, with the deadline that asked for them. See `lib/toolnow.ts`.
           */}
           <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
             Everything the app can do with a course. What is at the top is picked from what you
@@ -289,7 +278,7 @@ export function Study() {
                     key={p.screen}
                     onClick={() => dispatch({ type: 'go', screen: p.screen, courseId: p.courseId })}
                     style={{
-                      padding: '13px 15px',
+                      padding: 'var(--sp-6) var(--sp-7)',
                       marginTop: 'var(--sp-5)',
                       display: 'flex',
                       gap: 'var(--sp-6)',
@@ -334,79 +323,18 @@ export function Study() {
           )}
 
           {/*
-            The rest, on two shelves rather than one run of thirteen.
-
-            The shelves are the registry's own — Study is learning from what
-            you have, Make is producing something that leaves the app — so
-            nothing here is a third opinion about where a screen belongs, and a
-            tool added to either shelf lands in the right half on its own.
+            The grid keeps every tool, including the two or three said above
+            it. That is deliberate and it is the one place this tab does not
+            follow "one thing, one door": a grid's value is positional — Email
+            is bottom-left and stays bottom-left — and a tile that moves
+            because a deadline moved is a grid you have to read again every
+            night. So the cards above are a shortcut past the grid, never a
+            hole in it.
           */}
-          {TOOL_SHELVES.map((shelf) => {
-            const rows = shelfRows(shelf.group);
-            if (rows.length === 0) return null;
-            return (
-              <div key={shelf.group}>
-                <SectionLabel>{shelf.label}</SectionLabel>
-                {rows.map((d) => {
-                  // What the screen is holding, where that is a real answer —
-                  // "6 sources", "empty". Read from `lib/everything.ts` rather
-                  // than counted again here: a tool with nothing in it looked
-                  // exactly like one with everything, which is the problem
-                  // `lib/modes.ts` had already solved for the study modes.
-                  const held = heldBy(d.screen, state, catalog);
-                  return (
-                    <button
-                      key={d.screen}
-                      type="button"
-                      className="bare tappable"
-                      onClick={() => dispatch({ type: 'go', screen: d.screen })}
-                      style={{
-                        display: 'flex',
-                        gap: 'var(--sp-6)',
-                        alignItems: 'center',
-                        width: '100%',
-                        textAlign: 'left',
-                        ...rowTwelve,
-                      }}
-                    >
-                      <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
-                          {d.label}
-                        </span>
-                        <span
-                          style={{
-                            display: 'block',
-                            fontSize: 'var(--type-xs)',
-                            opacity: 0.6,
-                            marginTop: 'var(--sp-1)',
-                            lineHeight: 'var(--leading-normal)',
-                            textWrap: 'pretty',
-                          }}
-                        >
-                          {d.blurb}
-                        </span>
-                      </span>
-                      {held && (
-                        <span
-                          style={{
-                            flex: 'none',
-                            fontFamily: 'var(--font-heading)',
-                            fontSize: 'var(--type-xs)',
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
-                            opacity: held === 'empty' ? 0.35 : 0.55,
-                          }}
-                        >
-                          {held}
-                        </span>
-                      )}
-                      <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
+          <AppGrid
+            apps={tools}
+            onOpen={(d) => dispatch({ type: 'go', screen: d.screen })}
+          />
         </>
       )}
 
@@ -528,14 +456,12 @@ export function Study() {
               >
                 {step && (
                   <>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-block"
+                    <ActionButton
                       onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: step.id })}
-                      style={{ height: 42, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                      tone="primary" spacing="0.08em"
                     >
                       {step.label}
-                    </button>
+                    </ActionButton>
                     {/* The fact it rests on. A recommendation with no reason
                         is an instruction, and an instruction from software
                         about how to study is worth nothing. */}
@@ -697,14 +623,9 @@ export function Study() {
               : 'Everything here is answered and scheduled ahead. Come back when something comes round — or drill it anyway, below.'}
           </div>
           {mine.length > 0 && (
-            <button
-              type="button"
-              className="btn btn-secondary btn-block"
-              onClick={() => startStretch(mine[0])}
-              style={{ height: 42, marginTop: 'var(--sp-6)' }}
-            >
+            <ActionButton onClick={() => startStretch(mine[0])} style={{ marginTop: 'var(--sp-6)' }}>
               Drill {mine[0].code} anyway
-            </button>
+            </ActionButton>
           )}
         </Blueprint>
       ) : (
@@ -716,14 +637,13 @@ export function Study() {
 
           {/* One tap to the first card. The rows below are the same plan
               entered anywhere in the middle, for a student who disagrees. */}
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
+            tone="primary"
             onClick={() => startStretch(plan[0])}
-            style={{ height: 44, marginTop: 'var(--sp-5)', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+            style={{ marginTop: 'var(--sp-5)' }}
           >
             Start — {plan[0].code}, {plan[0].minutes} min
-          </button>
+          </ActionButton>
 
           <div style={{ marginTop: 'var(--sp-5)' }}>
             {plan.slice(0, PLAN_ROWS).map((s, i) => (
@@ -832,17 +752,15 @@ export function Study() {
       */}
       {mixable && (
         <>
-          <button
-            type="button"
-            className="btn btn-secondary btn-block"
+          <ActionButton
             onClick={() => {
               dispatch({ type: 'mixCourses', on: true });
               dispatch({ type: 'startDrill', unit: null });
             }}
-            style={{ height: 42, marginTop: 'var(--sp-6)' }}
+            style={{ marginTop: 'var(--sp-6)' }}
           >
             Mix every course in one run
-          </button>
+          </ActionButton>
           <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Cards from all your courses, shuffled together, due ones first. Harder than one
             course at a time, and closer to what an exam asks of you.
@@ -874,15 +792,14 @@ export function Study() {
           plan is the answer, and this is the working. */}
       {alsoRanked.length > 0 && (
         <>
-          <button
-            type="button"
-            className="btn btn-block"
+          <ActionButton
+            tone="ghost"
             onClick={() => setShowRest((was) => !was)}
             aria-expanded={showRest}
-            style={{ height: 40, marginTop: 'var(--sp-5)', background: 'transparent' }}
+            style={{ marginTop: 'var(--sp-5)' }}
           >
             {showRest ? 'Hide what did not fit' : `What did not fit (${alsoRanked.length})`}
-          </button>
+          </ActionButton>
           {showRest &&
             alsoRanked.map((s) => (
               <button

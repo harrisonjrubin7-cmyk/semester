@@ -23,7 +23,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, PickChips, SectionLabel, Segmented } from '../components/ui';
 import {
   countingIn,
   forProgramme,
@@ -295,14 +295,13 @@ function Transcript({ rows }: { rows?: Taken[] }) {
           Taking it now
         </button>
       </div>
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={add}
-        style={{ height: 44, marginTop: 'var(--sp-6)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        spacing="0.09em"
+        style={{ marginTop: 'var(--sp-6)' }}
       >
         Add the course
-      </button>
+      </ActionButton>
 
       {state.taken.length > 0 ? (
         <>
@@ -414,24 +413,7 @@ function Rules() {
           aria-label="How many"
           style={{ width: 64, height: 40, textAlign: 'center' }}
         />
-        {(['courses', 'hours'] as const).map((n) => (
-          <button
-            key={n}
-            type="button"
-            className="bare tappable"
-            aria-pressed={need === n}
-            onClick={() => setNeed(n)}
-            style={{
-              width: 'auto',
-              padding: '9px 13px',
-              borderRadius: 'var(--r-sm)',
-              border: `1px solid ${need === n ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            }}
-          >
-            {n}
-          </button>
-        ))}
+        <PickChips options={['courses', 'hours'] as const} value={need} onChange={setNeed} />
       </div>
       <textarea
         className="input"
@@ -448,14 +430,13 @@ function Rules() {
           lineHeight: 'var(--leading-relaxed)',
         }}
       />
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={add}
-        style={{ height: 44, marginTop: 'var(--sp-5)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        spacing="0.09em"
+        style={{ marginTop: 'var(--sp-5)' }}
       >
         Add the requirement
-      </button>
+      </ActionButton>
 
       {state.requirements.length > 0 ? (
         <>

@@ -38,7 +38,15 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   // Semester — what is happening and when.
   home: semester.home,
   brief: semester.brief,
-  courses: core.courses,
+  /*
+   * Courses, or the grade table, depending on the grain.
+   *
+   * Grades was a screen with a provider of its own until it became the third
+   * tab of Courses. The assistant answers about what is *on screen*, and on
+   * that tab what is on screen is the table — so the grain picks the provider
+   * rather than the tab bar deciding for it.
+   */
+  courses: (look) => (look.state.coursesTab === 'grades' ? core.grades(look) : core.courses(look)),
   calendar: core.calendar,
   registrar: semester.registrar,
 
@@ -64,7 +72,6 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   import: upkeep.importer,
   edit: upkeep.edit,
   announce: upkeep.announce,
-  grades: core.grades,
   ahead: upkeep.ahead,
   behind: upkeep.behind,
   degree: upkeep.degree,

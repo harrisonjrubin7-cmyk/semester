@@ -124,6 +124,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // does — having to drag the tiles back into place on the laptop is exactly
   // the work the look keys exist to avoid.
   groupOrder: 'theirs',
+  // The home screen's icons, for exactly the same reason: dragging them back
+  // into place on the second device is the work these keys exist to avoid.
+  boardOrder: 'theirs',
   // Ergonomics: about the screen in front of you, not about you. See `mine`.
   textSize: 'mine',
   // `mine` like every other look setting: how this device phrases things is a
@@ -243,6 +246,10 @@ export const STRATEGY: Record<string, Strategy> = {
   showAll: 'theirs',
   cleared: 'theirs',
   waysOpen: 'theirs',
+  // Whether the calendar's colour key is unrolled. Learned once, on whichever
+  // device you learned it on, so it follows you rather than staying open on
+  // the laptop because that is where you first opened the calendar.
+  keyOpen: 'theirs',
   accessLeadDays: 'theirs',
   // Where you have been lately, newest first. Interleaving two devices'
   // histories would make it a list of nowhere in particular.

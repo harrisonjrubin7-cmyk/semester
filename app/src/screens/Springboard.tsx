@@ -16,23 +16,74 @@
  * Every icon resolves through `lib/nav.ts`, so a screen added or renamed there
  * appears here without anyone remembering to. A screen the school has no
  * equivalent of never appears at all — no error, no gap.
+ *
+ * ## And the icons move
+ *
+ * Hold one and drag it where it goes — on a page, inside a folder, along the
+ * dock. This is the screen where a person's expectations are loudest: every
+ * phone they have ever owned has taught them that a home screen is theirs to
+ * arrange, and one that answered a hold with nothing was a picture of a home
+ * screen. Where it lands is a look key; the arithmetic and the guarantees are
+ * in `lib/springboard.ts`, the gesture is in `lib/arrange.ts`.
+ *
+ * The three grids each arrange their own list, which is why the drag is set
+ * up three times below rather than once around everything: an icon dragged
+ * out of a folder and onto the page behind it is a different operation —
+ * moving something *between* lists — and doing it half-way would be worse
+ * than not offering it.
  */
 
-import { useState } from 'react';
+import { useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { TabGlyph } from '../components/TabIcon';
-import { dockFor, labelFor, matches, pagesFor, searchable, type Folder } from '../lib/springboard';
+import {
+  DOCK_KEY,
+  afterMove,
+  arrangedDock,
+  arrangedPages,
+  folderKey,
+  keyOf,
+  labelFor,
+  matches,
+  pageKey,
+  searchable,
+  type Folder,
+} from '../lib/springboard';
+import { MOVE_HINT, useMovable } from '../lib/arrange';
+import { currentLook } from '../state/shape';
 import { lately } from '../lib/nav';
 import type { Screen } from '../lib/types';
 
 const ICON = 58;
 
-function Icon({ screen, onOpen }: { screen: string; onOpen: (s: string) => void }) {
+function Icon({
+  screen,
+  onOpen,
+  /**
+   * The handlers that make this icon movable, on the grids where it is.
+   *
+   * Passed in rather than taken here because the hook belongs to the grid —
+   * one grid, one list, one saved order — and an icon does not know which of
+   * the three it is drawn in. The search results and the Lately row pass
+   * nothing: those are answers to a question, not an arrangement, and an
+   * order somebody dragged into a search result would last until they typed
+   * the next letter.
+   */
+  drag,
+}: {
+  screen: string;
+  onOpen: (s: string) => void;
+  drag?: HTMLAttributes<HTMLElement> & { 'data-drop'?: string };
+}) {
   return (
     <button
       type="button"
-      className="bare tappable"
+      {...drag}
+      // Merged rather than overwritten: the drag brings `movable` and the
+      // state class with it, and the icon still has to look like a button.
+      className={`bare tappable${drag?.className ? ` ${drag.className}` : ''}`}
       onClick={() => onOpen(screen)}
+      aria-label={drag ? `${labelFor(screen)}. ${MOVE_HINT}` : undefined}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -40,6 +91,7 @@ function Icon({ screen, onOpen }: { screen: string; onOpen: (s: string) => void 
         gap: 'var(--sp-3)',
         width: '100%',
         padding: 0,
+        ...drag?.style,
       }}
     >
       <span
@@ -82,16 +134,47 @@ function Icon({ screen, onOpen }: { screen: string; onOpen: (s: string) => void 
  * Opens in place rather than on its own screen: a folder that navigates
  * somewhere has stopped being a folder and become another list.
  */
-function FolderTile({ folder, onOpen }: { folder: Folder; onOpen: (s: string) => void }) {
+function FolderTile({
+  folder,
+  onOpen,
+  drag,
+  tookDrop,
+  onArrange,
+}: {
+  folder: Folder;
+  onOpen: (s: string) => void;
+  /** The folder's own place on the page, which is the page grid's business. */
+  drag?: HTMLAttributes<HTMLElement> & { 'data-drop'?: string };
+  tookDrop?: () => boolean;
+  /** Its icons' order, which is this folder's. */
+  onArrange?: (screens: string[]) => void;
+}) {
   const [open, setOpen] = useState(false);
+  /*
+   * The folder's contents are a grid of icons like any other and arrange the
+   * same way. Its own list, saved under its own name — a folder is where the
+   * one screen somebody opens it for should be first rather than fourth.
+   */
+  const inside = useMovable<string>({
+    items: folder.screens,
+    onMove: (next) => onArrange?.(next),
+    disabled: !onArrange,
+  });
   return (
     <>
       <button
         type="button"
-        className="bare tappable"
+        {...drag}
+        className={`bare tappable${drag?.className ? ` ${drag.className}` : ''}`}
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-3)', width: '100%', padding: 0 }}
+        aria-label={drag ? `${folder.label} folder. ${MOVE_HINT}` : undefined}
+        // A drop lands as a click on the tile it started from, and without
+        // this the folder you have just moved also opens under your finger.
+        onClick={() => {
+          if (tookDrop?.()) return;
+          setOpen((o) => !o);
+        }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-3)', width: '100%', padding: 0, ...drag?.style }}
       >
         <span
           className="iconshape"
@@ -133,7 +216,15 @@ function FolderTile({ folder, onOpen }: { folder: Folder; onOpen: (s: string) =>
           }}
         >
           {folder.screens.map((s) => (
-            <Icon key={s} screen={s} onOpen={onOpen} />
+            <Icon
+              key={s}
+              screen={s}
+              onOpen={(screen) => {
+                if (inside.tookDrop()) return;
+                onOpen(screen);
+              }}
+              drag={onArrange ? inside.props(s) : undefined}
+            />
           ))}
         </div>
       )}
@@ -146,13 +237,31 @@ export function Springboard() {
   const [page, setPage] = useState(0);
   const [query, setQuery] = useState('');
 
-  const pages = pagesFor(school.capabilities);
-  const dock = dockFor(school.capabilities);
+  const look = currentLook(state);
+  const pages = arrangedPages(school.capabilities, look.boardOrder);
+  const dock = arrangedDock(school.capabilities, look.boardOrder);
   const open = (screen: string) => dispatch({ type: 'go', screen: screen as Screen });
+
+  /** One list of the arrangement, written back whole. See `afterMove`. */
+  const arrange = (list: string, items: string[]) =>
+    dispatch({ type: 'setLook', look: { boardOrder: afterMove(look.boardOrder, list, items) } });
+
+  // Clamped the same way `here` is: a page index past the end after the
+  // school gate has emptied one would save an arrangement under a page
+  // nobody is looking at.
+  const at = Math.max(0, Math.min(page, pages.length - 1));
+  const grid = useMovable<string>({
+    items: (pages[at]?.items ?? []).map(keyOf),
+    onMove: (items) => arrange(pageKey(at), items),
+  });
+  const inDock = useMovable<string>({
+    items: dock,
+    onMove: (items) => arrange(DOCK_KEY, items),
+  });
 
   const searching = query.trim().length > 0;
   const found = searchable(school.capabilities).filter((s) => matches(s, query));
-  const here = pages[Math.min(page, pages.length - 1)];
+  const here = pages[at];
 
   const due = catalog.items.filter((i) => !state.done[i.id]).length;
   // Against the dock rather than the tab bar: this layout's own navigation is
@@ -252,9 +361,26 @@ export function Springboard() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 18 }}>
             {here?.items.map((item) =>
               typeof item === 'string' ? (
-                <Icon key={item} screen={item} onOpen={open} />
+                <Icon
+                  key={item}
+                  screen={item}
+                  // A drop ends in a click on the icon it started from, so
+                  // the screen it was dragged over would otherwise open.
+                  onOpen={(screen) => {
+                    if (grid.tookDrop()) return;
+                    open(screen);
+                  }}
+                  drag={grid.props(item)}
+                />
               ) : (
-                <FolderTile key={item.label} folder={item} onOpen={open} />
+                <FolderTile
+                  key={item.label}
+                  folder={item}
+                  onOpen={open}
+                  drag={grid.props(keyOf(item))}
+                  tookDrop={grid.tookDrop}
+                  onArrange={(screens) => arrange(folderKey(item.label), screens)}
+                />
               ),
             )}
           </div>
@@ -291,7 +417,9 @@ export function Springboard() {
 
       <div style={{ flex: 1, minHeight: 12 }} />
 
-      {/* The dock does not move between pages, which is the whole point of it. */}
+      {/* The dock does not move between pages, which is the whole point of
+          it. What is in it does: four icons, and which four in what order is
+          the only thing the dock is for. */}
       <div
         style={{
           display: 'grid',
@@ -305,7 +433,15 @@ export function Springboard() {
         }}
       >
         {dock.map((s) => (
-          <Icon key={s} screen={s} onOpen={open} />
+          <Icon
+            key={s}
+            screen={s}
+            onOpen={(screen) => {
+              if (inDock.tookDrop()) return;
+              open(screen);
+            }}
+            drag={inDock.props(s)}
+          />
         ))}
       </div>
     </div>
