@@ -36,6 +36,46 @@ self.addEventListener('install', (event) => {
   );
 });
 
+/*
+ * Cache what the first load already used.
+ *
+ * A worker does not exist while the page that registers it is loading, so the
+ * document and its bundles never pass through the handler below — and nothing
+ * asks again, because this app routes on the hash and a hash change does not
+ * reload. Measured on the production build: install one visit, lose signal,
+ * reload, and the shell came back from cache with every one of its scripts
+ * 404ing around it — eight failed requests and an empty `#root`.
+ *
+ * So the promise on the front of the README held for anybody who came back a
+ * second time online, and broke for anybody who installed it and lost signal
+ * first — which is the case it is for.
+ *
+ * The page sends the list, because the page is the only one that knows what it
+ * actually loaded: the bundles are hashed and code-split, so no list written
+ * here could stay right. See `src/lib/warm.ts`.
+ *
+ * `ignoreVary` on the lookup: a bundle fetched by the page as a module carries
+ * different request headers from one this worker fetches, and a strict `Vary`
+ * match treats those as different entries — so without it the same file is
+ * fetched and stored again on every warm, and the offline lookup still misses.
+ */
+self.addEventListener('message', (event) => {
+  const urls = event.data && event.data.type === 'warm' ? event.data.urls : null;
+  if (!Array.isArray(urls)) return;
+  event.waitUntil(
+    caches.open(SHELL).then(async (cache) => {
+      for (const url of urls) {
+        try {
+          if (await cache.match(url, { ignoreVary: true })) continue;
+          await cache.add(url);
+        } catch {
+          // One asset that will not cache must not stop the rest.
+        }
+      }
+    }),
+  );
+});
+
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
@@ -108,7 +148,7 @@ self.addEventListener('fetch', (event) => {
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request).catch(() =>
-        caches.match(`${BASE}index.html`).then((r) => r || fetch(request)),
+        caches.match(`${BASE}index.html`, { ignoreVary: true }).then((r) => r || fetch(request)),
       ),
     );
     return;
@@ -134,7 +174,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then((hit) => {
+    caches.match(request, { ignoreVary: true }).then((hit) => {
       const live = fetch(request)
         .then((res) => {
           if (res.ok) {
