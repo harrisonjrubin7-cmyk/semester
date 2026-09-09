@@ -2,6 +2,7 @@ import { datedItems } from '../../lib/select';
 import { cardKey, dueCount } from '../../lib/review';
 import type { Provide } from '../shape';
 import { guideNow } from '../shape';
+import { coverage } from '../../lib/covers';
 import { meetings, pairings } from '../../lib/meet';
 import { pct } from './core';
 
@@ -135,16 +136,38 @@ export const runway: Provide = (look) => {
   const exams = datedItems(catalog, now)
     .filter((i) => !i.isPast && /exam|final|midterm/i.test(i.title))
     .slice(0, 8)
-    .map((i) => ({
-      course: catalog.byId[i.c]?.code,
-      what: i.title,
-      date: i.dueShort,
-      inDays: i.daysAway,
-      weight: i.weight,
-      ...(guideNow(look, i.c)
-        ? { unitsToCover: guideNow(look, i.c)!.units.length, coldest: coldest(guideNow(look, i.c)!) }
-        : {}),
-    }));
+    .map((i) => {
+      const guide = guideNow(look, i.c);
+      /*
+       * What the exam covers, not what the course contains.
+       *
+       * The screen counts the units on the paper — `lib/covers.ts`, from the
+       * syllabus's words or the student's — and an assistant told the course
+       * has fourteen units while the screen says eight is an assistant that
+       * looks wrong on the one number the student can see.
+       */
+      const on = guide
+        ? coverage({
+            exam: { title: i.title, detail: i.detail, quote: i.quote },
+            units: guide.units,
+            yours: state.examCovers[i.id],
+          })
+        : null;
+      return {
+        course: catalog.byId[i.c]?.code,
+        what: i.title,
+        date: i.dueShort,
+        inDays: i.daysAway,
+        weight: i.weight,
+        ...(guide && on
+          ? {
+              unitsToCover: on.units.length,
+              coverage: on.source === 'whole' ? 'not stated — counting the whole course' : on.source,
+              coldest: coldest({ units: on.units.map((u) => guide.units[u]) }),
+            }
+          : {}),
+      };
+    });
   if (exams.length === 0) return null;
   return {
     summary: `The runway to ${exams.length} ${exams.length === 1 ? 'exam' : 'exams'}, nearest in ${exams[0].inDays} days. ${state.dayBudget} hours a day is what you have told the app you have.`,

@@ -127,6 +127,26 @@ right in one place and stale in another.
 | Doc | The guide as a real .docx and .pdf, plus a print view. |
 | Listen | The podcast editions, with chapter marks that seek. |
 
+## What the exam actually covers
+
+The exam runway counted the whole course. For a final that is fair; for the
+midterm PSCI 1104's syllabus describes as "units 1 to 8" it was wrong in the
+direction that hurts — fourteen units counted where eight are examinable, six of
+them inflating the "untouched" figure, and a weakest-unit recommendation that
+could point at material the paper will not ask about.
+
+**Exam runway → Unit by unit** now says what is on the paper, and on whose
+authority: what the syllabus said, in its own words, read out of the deadline the
+app already keeps verbatim; what you said, in a box that takes "units 1 to 8",
+"5-9" or "all"; or nobody, in which case it counts everything exactly as before
+and says that is what it is doing.
+
+What it will not do is guess. Three exams and fourteen units could be split
+evenly by arithmetic, and a student told "Midterm 2 covers 6 to 10" will revise 6
+to 10 — so when the real split was 5 to 9 the app has caused the failure it
+exists to prevent. A default that is visibly a default costs nothing. See
+[`app/src/lib/covers.ts`](app/src/lib/covers.ts).
+
 ## What this term does to your GPA
 
 The app held every number for this and never did the sum. `lib/degree.ts`
