@@ -327,9 +327,16 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    // Whichever screen the task view happens to put first, rather than one
+    // named here. This test named `grades`, which stopped being a `Screen`
+    // when the registry dropped it — so the assertion that exists to prove
+    // the view follows the registry was the thing the registry broke, and it
+    // broke as a type error rather than a failure. Nothing to keep in step
+    // now: the subject is read out of the same list the assertion is about.
+    const gone = byTask(DESTINATIONS)[0].rows[0].screen;
+    const short = DESTINATIONS.filter((d) => d.screen !== gone);
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === gone)).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
