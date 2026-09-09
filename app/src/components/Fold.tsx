@@ -425,15 +425,7 @@ export function FoldAll({ style }: { style?: CSSProperties }) {
     <div style={{ display: 'flex', justifyContent: 'flex-end', ...style }}>
       <button
         type="button"
-        /*
-         * `no-print` because this one is a control wearing `tappable`.
-         *
-         * The print rule stopped hiding `.tappable` buttons — in this app a
-         * deadline row, a task and a campus listing are all buttons, and they
-         * were coming off the paper with the chrome. This is the other kind:
-         * a thing to press, and pressing it means nothing on a page.
-         */
-        className="bare tappable tap-x no-print"
+        className="bare tappable tap-x"
         onClick={press}
         style={{
           width: 'auto',

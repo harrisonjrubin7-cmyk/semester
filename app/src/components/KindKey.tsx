@@ -77,10 +77,7 @@ export function KindKey({ compact = false, lead }: { compact?: boolean; lead?: R
     <div style={{ marginTop: compact ? 8 : 10 }}>
       <button
         type="button"
-        // A control, not a row: on paper the key cannot be opened, so the
-        // line offering to open it is an instruction that cannot be followed.
-        // See the print rule in app.css on why `.tappable` is otherwise kept.
-        className="bare tappable no-print"
+        className="bare tappable"
         onClick={() => dispatch({ type: 'toggleKey' })}
         aria-expanded={open}
         style={{

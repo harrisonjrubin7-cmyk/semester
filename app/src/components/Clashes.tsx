@@ -153,7 +153,7 @@ export function DayBudget() {
       <span style={{ display: 'flex', gap: 'var(--sp-3)', marginLeft: 'auto' }}>
         <button
           type="button"
-          className="bare tappable no-print"
+          className="bare tappable"
           onClick={() => step(-0.5)}
           disabled={hours <= 1}
           aria-label="Fewer hours before a day counts as heavy"
@@ -163,7 +163,7 @@ export function DayBudget() {
         </button>
         <button
           type="button"
-          className="bare tappable no-print"
+          className="bare tappable"
           onClick={() => step(0.5)}
           disabled={hours >= 16}
           aria-label="More hours before a day counts as heavy"
