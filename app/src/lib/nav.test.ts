@@ -327,10 +327,20 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    // The screen is taken from the registry rather than typed in. This said
-    // 'grades', and when that screen moved the comparison stopped compiling —
-    // a test whose whole subject is "the registry decides" should not carry a
-    // copy of one of its rows.
+    /*
+     * The screen is taken from the registry rather than named.
+     *
+     * It was `grades`, and that is the case this test describes happening to
+     * the test itself: #76 took the grade table out of the registry, the name
+     * here stopped being a `Screen`, and the file stopped typechecking. The
+     * suite stayed green either way — vitest does not typecheck — so what
+     * caught it was `tsc`, which is why CI runs both.
+     *
+     * Naming a different screen fixes today and leaves the same trap for
+     * whichever screen moves next. A test whose whole subject is "the registry
+     * decides what exists" should not carry a copy of one of its rows, so this
+     * asks the registry for one.
+     */
     const gone = DESTINATIONS[0].screen;
     const short = DESTINATIONS.filter((d) => d.screen !== gone);
     const rows = byTask(short).flatMap((s) => s.rows);
