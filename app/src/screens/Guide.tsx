@@ -1,5 +1,5 @@
 import { allCards, weakestUnit } from '../data/catalog';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
@@ -7,7 +7,7 @@ import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
-import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel } from '../components/ui';
+import { ActionButton, ChipRow, Meter, SectionLabel } from '../components/ui';
 import { addedLine } from '../lib/study';
 import { ModePicker } from '../components/ModePicker';
 import { modeInfo, modesFor } from '../lib/modes';
@@ -18,6 +18,7 @@ import { FigureCard } from '../components/FigureCard';
 import { buildQuiz } from '../lib/quiz';
 import { asset } from '../lib/asset';
 import { Folding } from '../components/Fold';
+import { hasTranscript, load, readingTime, speaker, type Transcript } from '../lib/transcript';
 
 /** The note under a heading saying part of what follows arrived later. */
 const SINCE = {
@@ -143,23 +144,28 @@ export function Guide() {
         </div>
       )}
 
-      {/*
-        A course can genuinely have nothing to study yet: adding one by hand
-        makes a real course with an empty guide, and so does importing a
-        syllabus before any reading is attached. That used to draw "Drill all
-        0 cards" over an empty unit list — and, until `weakestUnit` learned to
-        say so, threw on the weakest unit of nothing and put the error screen
-        in front of somebody who had done nothing wrong.
-      */}
-      {state.mode === 'cards' && cards.length === 0 && (
-        <EmptyState
-          inline
-          title="Nothing to drill yet"
-          body="Add a reading, a handout or a photograph of the board and the cards come with it."
-        />
+      {state.mode === 'cards' && !weak && (
+        /*
+         * A course typed in by hand has a guide with no units in it, which is
+         * the ordinary state of one until a syllabus is imported — not an
+         * error, and not worth an empty "Units" heading over a button
+         * offering to drill all nought cards.
+         */
+        <div
+          style={{
+            fontSize: 'var(--type-base)',
+            opacity: 0.6,
+            lineHeight: 'var(--leading-normal)',
+            marginTop: 'var(--sp-7)',
+            textWrap: 'pretty',
+          }}
+        >
+          Nothing to drill yet. Import a syllabus for this course and its units
+          and cards arrive with it.
+        </div>
       )}
 
-      {state.mode === 'cards' && cards.length > 0 && (
+      {state.mode === 'cards' && weak && (
         <>
           <ActionButton
             onClick={() => dispatch({ type: 'startDrill', unit: null })}
@@ -169,7 +175,6 @@ export function Guide() {
             Drill all {cards.length} cards
           </ActionButton>
 
-          {weak && (
           <Blueprint
             onClick={() => dispatch({ type: 'startDrill', unit: weak.index })}
             style={{
@@ -196,9 +201,8 @@ export function Guide() {
             </span>
             <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
           </Blueprint>
-          )}
 
-          {guide.units.length > 0 && <SectionLabel>Units</SectionLabel>}
+          <SectionLabel>Units</SectionLabel>
           {guide.units.map((u, i) => (
             <div key={u.name}>
             <button
@@ -226,7 +230,7 @@ export function Guide() {
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{u.name}</span>
                 <span style={{ display: 'block', marginTop: 'var(--sp-3)' }}>
-                  <Meter pct={u.mastery} height={5} />
+                  <Meter pct={u.mastery} height={5} label={`Mastery, ${u.name}`} />
                 </span>
               </span>
               <span
@@ -1160,6 +1164,134 @@ function Cram() {
   );
 }
 
+/**
+ * The episode, in words, under the chapters that play it.
+ *
+ * The recording and this are the same document — `audio/synth.py` spoke the
+ * script that `npm run transcripts` writes into `data/transcripts/`, so
+ * nothing here is a paraphrase of the audio. See `lib/transcript.ts` for why
+ * it is loaded rather than bundled, and why a Full read has none.
+ *
+ * It is a `SectionLabel`, so `Folding` makes it a section that folds and
+ * remembers — which is the answer to "four thousand words on a phone" that
+ * does not involve building a second disclosure for one screen.
+ */
+function Script({ courseId, episodeId }: { courseId: string; episodeId: string }) {
+  const [script, setScript] = useState<Transcript | null>(null);
+  const wanted = hasTranscript(courseId, episodeId);
+
+  useEffect(() => {
+    if (!wanted) {
+      setScript(null);
+      return;
+    }
+    let live = true;
+    void load(courseId).then((t) => {
+      // The episode is checked as well as the course: an edition without a
+      // script must not be given the podcast's, which would be a transcript
+      // of a different recording presented as this one's.
+      if (live) setScript(t?.episode === episodeId ? t : null);
+    });
+    return () => {
+      live = false;
+    };
+  }, [courseId, episodeId, wanted]);
+
+  if (!wanted) return null;
+
+  return (
+    <>
+      <SectionLabel style={{ margin: 'var(--sp-7) 0 var(--sp-2)' }}>Transcript</SectionLabel>
+      {!script ? (
+        /* A live region, because this arrives after the page has settled and
+           a reader that has already passed this point is told nothing by a
+           paragraph quietly appearing behind it. */
+        <div
+          role="status"
+          aria-live="polite"
+          style={{ fontSize: 'var(--type-base)', opacity: 0.6, padding: 'var(--sp-4) 0' }}
+        >
+          Fetching the words…
+        </div>
+      ) : (
+        script.chapters.map((c) => (
+          <div key={c.name} style={{ marginTop: 'var(--sp-7)' }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: 'var(--sp-4)',
+                alignItems: 'baseline',
+                justifyContent: 'space-between',
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  fontFamily: 'var(--font-heading)',
+                  fontSize: 'var(--type-lg)',
+                  lineHeight: 'var(--leading-tight)',
+                  fontWeight: 'inherit',
+                }}
+              >
+                {c.name}
+              </h3>
+              <span
+                style={{
+                  flex: 'none',
+                  fontSize: 'var(--type-xs)',
+                  opacity: 0.55,
+                  letterSpacing: '0.08em',
+                }}
+              >
+                {readingTime(c.said)}
+              </span>
+            </div>
+            {c.said.map((line, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  gap: 'var(--sp-4)',
+                  marginTop: 'var(--sp-5)',
+                  alignItems: 'baseline',
+                }}
+              >
+                {/* The name, not a colour or an indent: who is speaking has
+                    to survive being read aloud, and an alignment does not. */}
+                <span
+                  style={{
+                    width: 62,
+                    flex: 'none',
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: 'var(--type-xs)',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: 'var(--app-accent)',
+                  }}
+                >
+                  {speaker(line.who)}
+                </span>
+                <p
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    margin: 0,
+                    fontSize: 'var(--type-base)',
+                    lineHeight: 'var(--leading-relaxed)',
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {line.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        ))
+      )}
+    </>
+  );
+}
+
 function Listen() {
   const shortRow = useRowStyle(11);
   const { state, dispatch, catalog } = useStore();
@@ -1243,9 +1375,7 @@ function Listen() {
             preload="metadata"
             src={asset(episode.file)}
             style={{ width: '100%', marginTop: 14, height: 36 }}
-          >
-            <track kind="captions" />
-          </audio>
+          />
         ) : (
           <div
             style={{
@@ -1309,6 +1439,8 @@ function Listen() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{c.name}</span>
         </button>
       ))}
+
+      <Script courseId={state.guideId} episodeId={episode.id} />
     </Folding>
   );
 }

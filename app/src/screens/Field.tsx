@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { revealKindly } from '../lib/prefers';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
@@ -123,7 +124,7 @@ export function FieldGuide() {
           key={u.name}
           type="button"
           className="bare tappable"
-          onClick={() => sections.current[i]?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          onClick={() => revealKindly(sections.current[i], { block: 'start' })}
           style={{
             display: 'flex',
             gap: 'var(--sp-6)',

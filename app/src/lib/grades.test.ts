@@ -380,3 +380,54 @@ describe('a syllabus that states points rather than percentages', () => {
     expect(standing(vague, {}).rows[0].weight).toBeNull();
   });
 });
+
+/*
+ * A plus between two things is not extra credit.
+ *
+ * `readWeight` tested for a bare `+` anywhere in the weight. Right for
+ * "+3% EC"; wrong for the ordinary way a syllabus joins two things — "Exams
+ * 1 + 2, 40%", "Midterm + final, 45%". That column carries prose, so those
+ * are inputs to expect.
+ *
+ * The cost of reading one as a bonus is not a wrong label, it is a wrong
+ * grade: `standing` counts only the rows that are not extra, so the weight
+ * leaves the denominator. A course marked out of 100 becomes one marked out
+ * of 60 and every band on the screen is confidently wrong, which is why this
+ * is held here at both ends — the joins that must not read as bonuses, and
+ * the bonuses that must still read as bonuses.
+ */
+describe('a plus in a weight', () => {
+  it('joins two things without making them extra credit', () => {
+    for (const pct of [
+      'Exams 1 + 2, 40%',
+      'Midterm + final, 45%',
+      'Homework + quizzes, 20%',
+      'Exams 1+2, 40%',
+      'Labs + participation, 15%',
+    ]) {
+      const r = readWeight(pct);
+      expect(r.extra, `${pct} is two things added together, not a bonus`).toBe(false);
+      expect(r.weight, `${pct} keeps its weight`).not.toBeNull();
+    }
+  });
+
+  it('still reads a bonus stuck to its own figure', () => {
+    // Guards the above: a rule that answered false always would pass the
+    // first test and lose extra credit entirely.
+    expect(readWeight('+3% EC').extra).toBe(true);
+    expect(readWeight('+5%').extra).toBe(true);
+    expect(readWeight('5% extra credit').extra).toBe(true);
+    expect(readWeight('Bonus, 2%').extra).toBe(true);
+    expect(readWeight('3% EC').extra).toBe(true);
+  });
+
+  it('keeps the weight in the denominator, which is what the bug cost', () => {
+    // The reading is only the mechanism; this is the harm. `standing` counts
+    // rows that are not extra, so a misread join shrinks what the course is
+    // marked out of.
+    const joined = readWeight('Exams 1 + 2, 40%');
+    const bonus = readWeight('+3% EC');
+    const counted = [joined, bonus].filter((r) => !r.extra).reduce((n, r) => n + (r.weight ?? 0), 0);
+    expect(counted, 'the 40% counts and the 3% bonus does not').toBe(40);
+  });
+});

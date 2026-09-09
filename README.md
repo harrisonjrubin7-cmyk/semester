@@ -280,6 +280,16 @@ written once, in `app/src/lib/media.ts`, and repeated in the media queries of
   with the app shell and anything you have played working offline. Audio is
   never pre-cached: what you played is kept, and nothing else.
 
+With no signal the app says which of the two kinds of missing it has hit. A
+screen is fetched the first time it is opened, so one you have never opened is
+not on the device — and that used to be reported as *this app was updated,
+reload to pick up the new version*, which was false and prescribed the one
+action that cannot work without a connection. It now says the screen has not
+been downloaded and puts Today, which is on the device, first. The map is the
+other one: its tiles are the single thing on that screen needing a connection,
+and rather than drawing an empty panel it says so, over the map, until a tile
+arrives. See [`app/src/lib/fault.ts`](app/src/lib/fault.ts).
+
 Every difference between the three is a value in one block at the top of
 `app/src/styles/app.css` — the gutter, the measure, the canvas, the rail's
 width, the standalone column, how square a day in the month is — so a screen

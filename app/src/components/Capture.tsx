@@ -175,7 +175,7 @@ export function Capture({
       )}
 
       {errors.length > 0 && (
-        <Blueprint plain style={{ padding: '10px 12px', marginTop: 'var(--sp-5)' }}>
+        <Blueprint plain style={{ padding: '10px 12px', marginTop: 'var(--sp-5)' }} role="alert">
           {errors.map((e) => (
             <div
               key={e}
