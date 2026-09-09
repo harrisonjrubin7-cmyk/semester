@@ -86,7 +86,8 @@ export function Grades() {
               </div>
               {s.current !== null && (
                 <div style={{ marginTop: 'var(--sp-5)' }}>
-                  <Meter pct={Math.min(100, Math.round(s.current))} fill={tint(c.id).fill} />
+                  {/* The grade itself is printed above, with its letter. */}
+                  <Meter pct={Math.min(100, Math.round(s.current))} fill={tint(c.id).fill} label={null} />
                 </div>
               )}
               {s.extraCredit > 0 && (

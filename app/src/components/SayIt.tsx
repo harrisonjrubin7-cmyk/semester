@@ -133,7 +133,7 @@ export function SayIt({
       ) : null}
 
       {error ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-4)', textAlign: 'center' }}>{error}</div>
+        <div role="alert" style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-4)', textAlign: 'center' }}>{error}</div>
       ) : null}
     </div>
   );
