@@ -876,6 +876,56 @@ export function hueToHex(deg: number, lum: number, sat = 0.42): string {
 }
 
 /**
+ * The one colour in a silver interface, mixed for the ground it is read on.
+ *
+ * `--app-warn` marks a deadline that has gone by, and it was the last fixed
+ * hex in the palette — one mid-tone (#c8785f) worn unchanged by all thirteen
+ * grounds while every other token here is derived per ground.
+ *
+ * Measured against each ground's own surfaces it was the least legible ink in
+ * the app, in the place that most needed reading. It is body text: `Rework`
+ * colours a whole line of prose with it and `Walks` a tight office hour.
+ *
+ *   fog 2.09 · bone 2.53 · paper 2.57 · parchment 2.63 · industry 2.70
+ *   industry-dark 3.01 · graphite 3.53
+ *
+ * against WCAG's 4.5:1. The five light grounds are the ones somebody reads in
+ * daylight, and they are the worst — but two *dark* grounds fail too, which is
+ * why this derives rather than swapping one fixed hex for two. A single darker
+ * value would have fixed the daylight case and left Graphite and Industry Dark
+ * exactly as they were.
+ *
+ * Same hue and saturation; only the lightness moves, and only as far as it has
+ * to. It walks away from the original in whichever direction the ground needs
+ * and stops at the first value that clears the bar, so Ink — which already
+ * passed at 4.55 — barely moves, and Fog moves as far as Fog requires.
+ */
+export function warnFor(g: Ground): string {
+  const HUE = 14;
+  const SAT = 0.5;
+  // A little past WCAG's 4.5 rather than exactly on it. Stopping at the first
+  // passing value put three grounds at 4.50 flat, where a later tweak to a
+  // ramp drops them under without anyone touching this.
+  const TARGET = 4.6;
+  const worst = (hex: string) =>
+    g.ramp.reduce((low, surface) => Math.min(low, wcagContrast(hex, surface) ?? 99), 99);
+
+  // Darker on a light ground, lighter on a dark one — the same direction the
+  // accent's `shade` takes, and for the same reason.
+  const step = g.light ? -0.01 : 0.01;
+  let lum = 0.58; // #c8785f, where this started
+  for (let i = 0; i < 90; i += 1) {
+    const hex = hueToHex(HUE, lum, SAT);
+    if (worst(hex) >= TARGET) return hex;
+    lum += step;
+    if (lum <= 0.04 || lum >= 0.96) break;
+  }
+  // Nothing in the sweep cleared it: hand back the end of the ramp rather
+  // than a colour that fails, so a ground added later is legible by default.
+  return g.light ? '#000000' : '#ffffff';
+}
+
+/**
  * A whole accent from one hue.
  *
  * All four shades, not just the main one. `shade` in particular is not a
@@ -1036,6 +1086,12 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     // On a light ground the accent has to darken to stay legible as text —
     // the same metal, three steps down — and the wash has to be mixed from
     // that darker shade or it is a selection state you cannot see.
+    // The one colour in a silver interface, mixed for the ground it is read
+    // on rather than the one fixed hex it used to be. See `warnFor`.
+    '--app-warn': warnFor(g),
+    '--app-warn-line': fade(warnFor(g), 0.45),
+    '--app-warn-wash': fade(warnFor(g), 0.09),
+
     '--app-accent': g.light ? a.shade : a.base,
     '--app-accent-bright': g.light ? a.shade : a.bright,
     '--app-accent-deep': g.light ? a.shade : a.deep,
@@ -1059,43 +1115,6 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     '--app-line-soft': `rgba(${edge}, ${moreContrast ? LOUD.lineSoft : g.light ? 0.09 : 0.06})`,
     '--app-track': `rgba(${edge}, ${moreContrast ? LOUD.track : g.light ? 0.12 : 0.09})`,
 
-    /*
-     * The one colour, darkened for the five light grounds.
-     *
-     * `--app-warn` is the app's only colour and it is spent on its most
-     * important sentence — a deadline has gone by. It was a fixed #c8785f
-     * that every ground wore unchanged, which is the mistake the accent
-     * ramp exists to avoid: an oxidised mid-tone drawn for near-black is a
-     * pale smear on Parchment. Measured, it was the *least* legible ink on
-     * the screen exactly where it mattered most —
-     *
-     *   ground      as text, worst step of the ramp
-     *   Fog                 2.54:1
-     *   Bone                2.75:1
-     *   Industry            2.98:1
-     *   Parchment           2.95:1
-     *   Paper               3.02:1
-     *
-     * — against 4.5:1 for body text, and it is body text: `DeadlineRow`
-     * colours the date with it, `Rework` a whole line of prose. The eight
-     * dark grounds measure 4.2–6.3:1 and were never the problem, which is
-     * why nobody saw this: the app is drawn on Ink.
-     *
-     * The fix is the one the accent already uses — the same hue and
-     * saturation, three steps down, so it is the same colour rather than a
-     * different one. #9d4c33 is #c8785f at the same 14° hue and within two
-     * per cent of its saturation, and measures 4.55:1 on the worst step of
-     * the worst light ground. `lib/contrast.test.ts` holds all thirteen to
-     * that bar now, the way it already holds the 143 accent pairings.
-     *
-     * The edge alpha rises with it for the same reason `--app-line` does:
-     * 0.45 of the pale warn on near-black draws a 2.06:1 hairline, and 0.5
-     * of the darker one on the light grounds draws 2.02–2.14:1 — the same
-     * edge, not a heavier one. Nothing moves on a dark ground.
-     */
-    '--app-warn': g.light ? '#9d4c33' : '#c8785f',
-    '--app-warn-line': g.light ? 'rgba(157, 76, 51, 0.5)' : 'rgba(200, 120, 95, 0.45)',
-    '--app-warn-wash': g.light ? 'rgba(157, 76, 51, 0.09)' : 'rgba(200, 120, 95, 0.09)',
 
     /*
      * The soft shell's elevation, derived rather than written once.

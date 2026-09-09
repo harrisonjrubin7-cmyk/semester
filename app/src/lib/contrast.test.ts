@@ -12,7 +12,7 @@ import {
   rgbOf,
   type Check,
 } from './contrast';
-import { ACCENTS, GROUNDS, readLook, tokensFor } from './look';
+import { ACCENTS, GROUNDS, readLook, tokensFor, warnFor } from './look';
 
 describe('the arithmetic', () => {
   it('reads both hex forms', () => {
@@ -196,36 +196,6 @@ describe('every combination the app will wear', () => {
         needs: AA_TEXT,
       },
 
-      /*
-       * The one colour, which is text.
-       *
-       * `--app-warn` was the last fixed hex in the palette — one mid-tone
-       * worn unchanged by all thirteen grounds — and it is spent on the
-       * app's most important sentence. `DeadlineRow` colours a late date
-       * with it and `Rework` a whole line of prose, so it is body text and
-       * takes the body-text bar. It measured 2.54:1 on Fog and 2.75:1 on
-       * Bone: the least legible ink on the screen, in the place that most
-       * needed reading, on five of thirteen grounds. Held here so a later
-       * ground cannot arrive and quietly do it again.
-       *
-       * The edge and the wash are not on this list, and deliberately. A
-       * hairline round a card is not a mark that carries meaning on its own
-       * — the warn-coloured text inside it is — and the dark grounds' own
-       * edge measures 2.06:1, so a 3:1 bar here would be a bar the app has
-       * never met and would be raised by weakening the thing it protects.
-       * What the edge does have to be is the *same* edge on every ground,
-       * and that is what the alpha in `tokensFor` is set from.
-       */
-      {
-        what: `${where} · a late date, on panel`,
-        ratio: contrast(t['--app-warn'], panel) ?? 0,
-        needs: AA_TEXT,
-      },
-      {
-        what: `${where} · a late date, on the ground`,
-        ratio: contrast(t['--app-warn'], bg) ?? 0,
-        needs: AA_TEXT,
-      },
     ];
   };
 
@@ -350,3 +320,49 @@ function alphaOf(token: string): number {
   const m = /rgba?\([^)]*?,\s*([0-9.]+)\s*\)$/.exec(token.trim());
   return m ? Number(m[1]) : 1;
 }
+
+/*
+ * The one colour in a silver interface, held to the bar on every ground.
+ *
+ * `--app-warn` marks a deadline that has gone by. It was the last fixed hex
+ * in the palette — one mid-tone worn unchanged by all thirteen grounds while
+ * every other token is derived per ground — and measured against each
+ * ground's own surfaces it was the least legible ink in the app, in the place
+ * that most needed reading. It is body text: `Rework` colours a whole line of
+ * prose with it, `Walks` a tight office hour.
+ *
+ *   fog 2.09 · bone 2.53 · paper 2.57 · parchment 2.63 · industry 2.70
+ *   industry-dark 3.01 · graphite 3.53
+ *
+ * Two of those are *dark* grounds, which is why the fix derives rather than
+ * swapping one fixed hex for two: a single darker value would have fixed the
+ * daylight case and left Graphite and Industry Dark exactly as they were.
+ *
+ * Held here rather than trusted, so a ground added later cannot quietly do
+ * this again — the failure names the ground and the ratio.
+ */
+describe('the warning colour, on every ground', () => {
+  it('is legible as body text wherever it is read', () => {
+    const failures: string[] = [];
+    for (const g of GROUNDS) {
+      const warn = warnFor(g);
+      for (const surface of g.ramp) {
+        const c = contrast(warn, surface);
+        if (c === null) { failures.push(`${g.id}: ${warn} on ${surface} unreadable`); continue; }
+        if (c < 4.5) failures.push(`${g.id}: ${warn} on ${surface} is ${c.toFixed(2)}:1`);
+      }
+    }
+    expect(failures, 'WCAG asks 4.5:1 of body text').toEqual([]);
+  });
+
+  it('still looks like the colour it was', () => {
+    // Guards the above: black on every light ground and white on every dark
+    // one would pass the ratio and lose the one colour the app has.
+    for (const g of GROUNDS) {
+      const warn = warnFor(g);
+      const [r, gr, b] = [1, 3, 5].map((i) => parseInt(warn.slice(i, i + 2), 16));
+      expect(r, `${g.id}: the warm end should lead`).toBeGreaterThan(gr);
+      expect(gr, `${g.id}: still a warm orange-red, not a pure red`).toBeGreaterThan(b);
+    }
+  });
+});

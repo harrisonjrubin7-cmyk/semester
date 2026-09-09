@@ -277,7 +277,26 @@ export function Springboard() {
    * second one, directly above, filtering a different thing.
    */
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: '10px 14px 0' }}>
+    /*
+     * A `<nav>`, like the other three.
+     *
+     * The tab bar and the rail are `<nav aria-label="Sections">` and the
+     * shelves are `<nav aria-label="Screens">`. This one — the whole of it,
+     * because the whole of it is the navigation: a field that searches
+     * *screens*, a grid of icons that open them, and the dock, which the note
+     * on `recent` above calls "this layout's own navigation" — was a plain
+     * `<div>`. So choosing the home screen left the app with no navigation
+     * landmark at all, and "jump to the navigation" found nothing on any
+     * screen.
+     *
+     * The same label as the bar and the rail, because it is the same job. A
+     * search box inside a nav is not a contradiction here: what it finds is
+     * places to go, not content.
+     */
+    <nav
+      aria-label="Sections"
+      style={{ display: 'flex', flexDirection: 'column', minHeight: '100%', padding: '10px 14px 0' }}
+    >
       <input
         className="input"
         value={query}
@@ -444,6 +463,6 @@ export function Springboard() {
           />
         ))}
       </div>
-    </div>
+    </nav>
   );
 }

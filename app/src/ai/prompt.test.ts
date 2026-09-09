@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { ACTING, BOUNDS } from './prompt';
+import { ACTING, BOUNDS, READING, systemPrompt } from './prompt';
 import { TOOLS } from '../lib/tools';
+import { LOOKUPS } from '../lib/lookup';
 import { DESTINATIONS } from '../lib/nav';
 
 /**
@@ -62,5 +63,59 @@ describe('what it may claim to have done', () => {
     expect(ACTING).toContain('Nothing you call happens');
     expect(ACTING).toContain('future tense, never as done');
     expect(ACTING).toContain('Never say you have done something you have not');
+  });
+});
+
+
+/**
+ * The other half of the tool set, and the promise it makes instead.
+ *
+ * `ACTING` promises restraint: nothing you call happens. `READING` promises
+ * the opposite and has to be just as exact about it — these run at once and
+ * their answers come straight back, which is only safe because not one of
+ * them can change anything. The tests below hold the prompt to naming tools
+ * that exist, and hold that set to being read-only.
+ */
+describe('being able to look things up', () => {
+  it('names tools that exist, and no tool that does not', () => {
+    // A prompt that promises a lookup the API was never told about produces
+    // a model that says it is checking and then invents the answer.
+    for (const tool of LOOKUPS) expect(READING).toContain(tool.name);
+    for (const word of READING.split(/[\s,.]+/).filter((w) => /^[a-z]+_[a-z_]+$/.test(w))) {
+      expect(LOOKUPS.some((t) => t.name === word), word).toBe(true);
+    }
+  });
+
+  it('says the answer comes back rather than becoming a card', () => {
+    // The two halves must not be confused in the model's head either: a
+    // lookup described as a proposal is a lookup it will announce and wait on.
+    expect(READING).toContain('return the answer to you straight away');
+    expect(READING).toContain('nothing they do changes anything');
+  });
+
+  it('forbids the refusal it exists to prevent', () => {
+    expect(READING).toContain('Never say you do not have their schedule');
+    expect(READING).toContain('looking first');
+  });
+
+  it('treats an empty lookup as an answer rather than a reason to improvise', () => {
+    expect(READING).toContain('comes back empty is an answer');
+  });
+
+  it('reaches a question about their term and a question about the world', () => {
+    // Grounded is obvious. General matters too: "explain elasticity" is often
+    // followed by "and where is that in my course", in the same breath.
+    for (const mode of ['grounded', 'general'] as const) {
+      expect(systemPrompt(mode, 'CONTEXT'), mode).toContain('find_deadlines');
+    }
+  });
+
+  it('is not offered on a question about the app itself', () => {
+    /*
+     * The app mode answers from the guidebook and nothing else — that is what
+     * stops it inventing a feature. Offering it the student's grades there
+     * would widen the one mode deliberately kept narrow.
+     */
+    expect(systemPrompt('app', 'CONTEXT')).not.toContain('find_deadlines');
   });
 });

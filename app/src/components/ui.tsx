@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 import { ChevronRight } from './Icons';
 import { useRowStyle } from './shell/useShell';
+import { longhandMargins } from '../lib/margins';
 
 /** The uppercase rule that opens a section. */
 /**
@@ -45,14 +46,29 @@ export function SectionLabel({
     <h2
       className="section-label"
       style={{
-        margin: 'calc(26px * var(--density, 1)) 0 calc(12px * var(--density, 1))',
+        // Written as four longhands, not a `margin` shorthand.
+        //
+        // `Fold` tightens the bottom of this heading when a section is shut,
+        // as a longhand — and React treats a shorthand and one of its own
+        // longhands as unrelated names, so reopening cleared the longhand and
+        // never put the shorthand back. The heading lost its rhythm on the
+        // first fold and did not get it back. See `lib/margins.ts`.
+        marginTop: 'calc(26px * var(--density, 1))',
+        marginRight: 0,
+        marginBottom: 'calc(12px * var(--density, 1))',
+        marginLeft: 0,
         fontSize: 'var(--type-sm)',
         fontWeight: 'inherit',
         // Wide enough for the whole line when something shares it, so the
         // fold control reaches as far as the words do rather than stopping
         // where they stop.
         ...(aside === undefined ? null : { flex: 1, minWidth: 0 }),
-        ...style,
+        // A caller's own `margin` is expanded too, for the same reason: about
+        // ninety-five sites write one, and any of them can be handed a
+        // longhand override by `Fold`. Only longhands reach the DOM, so
+        // overriding one side is a plain overwrite rather than two names
+        // fighting.
+        ...longhandMargins(style),
       }}
     >
       {children}
