@@ -14,7 +14,17 @@ import {
   type Found,
   type Scope,
 } from '../lib/findplace';
-import { explainPlaceError, far, here, locationSupported, metresBetween } from '../lib/place';
+import {
+  DEFAULT_RADIUS,
+  explainPlaceError,
+  far,
+  here,
+  locationSupported,
+  metresBetween,
+  placeAt,
+  type Fix,
+} from '../lib/place';
+import { FindPlace } from '../components/FindPlace';
 import {
   CAMPUS_MAP,
   CITY_MAP,
@@ -59,7 +69,7 @@ interface Row {
  * tool for the job.
  */
 export function Maps() {
-  const { state, now, catalog } = useStore();
+  const { state, dispatch, now, catalog } = useStore();
   const [mode, setMode] = useState<Travel>('walking');
   const [scope, setScope] = useState<Scope>('campus');
   const [query, setQuery] = useState('');
@@ -67,7 +77,8 @@ export function Maps() {
   const [picked, setPicked] = useState<Found | null>(null);
   const [searching, setSearching] = useState(false);
   const trouble = useTrouble();
-  const [you, setYou] = useState<{ lat: number; lon: number; accuracy: number } | null>(null);
+  const [you, setYou] = useState<Fix | null>(null);
+  const [label, setLabel] = useState('');
   const [centre, setCentre] = useState(CENTRES.campus);
   const [zoom, setZoom] = useState(CENTRES.campus.zoom);
   const abort = useRef<AbortController | null>(null);
@@ -95,7 +106,9 @@ export function Maps() {
   const saved: Row[] = state.places.map((p) => ({
     key: p.id,
     label: p.label,
-    where: 'Saved by you',
+    // Once the map knows where you are, how far a saved place is beats the
+    // fact that you saved it, which you already know.
+    where: you ? `${far(metresBetween(you, p))} away · ${p.radius} m across` : `${p.radius} m across`,
     // A place you stood in has real coordinates, which beat any search.
     dest: { query: p.label, lat: p.lat, lon: p.lon },
   }));
@@ -125,6 +138,10 @@ export function Maps() {
     }
     return list;
   }, [state.places, hits, you]);
+
+  // Whether the fix is inside somewhere already named, which decides between
+  // telling you where you are and offering to name it.
+  const at = you ? placeAt(you, state.places) : null;
 
   const search = async () => {
     const text = query.trim();
@@ -160,7 +177,7 @@ export function Maps() {
     trouble.clear();
     try {
       const fix = await here();
-      setYou({ lat: fix.lat, lon: fix.lon, accuracy: fix.accuracy });
+      setYou(fix);
       setCentre({ lat: fix.lat, lon: fix.lon, zoom: 17 });
       setZoom(17);
     } catch (e) {
@@ -287,6 +304,52 @@ export function Maps() {
         )}
       </div>
 
+      {/*
+        Standing somewhere and naming it is the app's own route to a place, and
+        it belongs next to the map rather than in a tab of its own. Nothing is
+        looked up: the coordinates come from the device, the name comes from
+        you, and the pair never leaves this browser.
+      */}
+      {you && (
+        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-6)', background: 'var(--app-hero)' }}>
+          <div className="kicker">{at ? 'You are at' : 'Somewhere new'}</div>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
+            {at ? at.label : 'Not a place you have named'}
+          </div>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-2)' }}>
+            Accurate to about {far(you.accuracy)}.
+          </div>
+
+          {!at && (
+            <>
+              <input
+                className="input"
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                placeholder="Alumni Hall, Central Library, home…"
+                aria-label="Name this place"
+                style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-6)' }}
+              />
+              <button
+                type="button"
+                className="btn btn-primary btn-block"
+                disabled={!label.trim()}
+                onClick={() => {
+                  dispatch({
+                    type: 'addPlace',
+                    place: { label: label.trim(), lat: you.lat, lon: you.lon, radius: DEFAULT_RADIUS },
+                  });
+                  setLabel('');
+                }}
+                style={{ height: 42, marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+              >
+                Save this spot
+              </button>
+            </>
+          )}
+        </Blueprint>
+      )}
+
       <Trouble said={trouble.said} onRetry={trouble.again} busy={Boolean(searching)} />
 
       {hits.length > 0 && (
@@ -367,7 +430,24 @@ export function Maps() {
       {saved.length > 0 && (
         <>
           <SectionLabel>Your places</SectionLabel>
-          {saved.map(row)}
+          {/*
+            The one list of places you named, and the one place to unname one.
+            The row is still a link to directions; REMOVE sits beside it rather
+            than on a screen of its own.
+          */}
+          {saved.map((item) => (
+            <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>{row(item)}</div>
+              <button
+                type="button"
+                className="bare"
+                onClick={() => dispatch({ type: 'removePlace', id: item.key })}
+                style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+              >
+                REMOVE
+              </button>
+            </div>
+          ))}
         </>
       )}
 
@@ -418,10 +498,17 @@ export function Maps() {
 
       {saved.length === 0 && !query && (
         <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
-          Name a few places under Mine → Places and they appear on the map with exact coordinates,
-          which route better than any search for a building name.
+          Tap “Where am I” while you are somewhere that matters and give it a name. Places you saved
+          appear on the map with exact coordinates, which route better than any search for a
+          building name.
         </div>
       )}
+
+      {/* The other route to a place, for the addresses you cannot stand in
+          front of. Off until switched on — see `lib/geocode.ts`. */}
+      <div style={{ marginTop: 26 }}>
+        <FindPlace />
+      </div>
     </>
     </Page>
   );
