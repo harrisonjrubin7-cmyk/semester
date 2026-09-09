@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { ReactNode } from 'react';
 import { StoreProvider } from '../state/store';
+import { loadSeed } from '../data/seed';
 import { Quiz } from './Drill';
 import { Mine, NoteEditor } from './Mine';
 
@@ -88,6 +89,26 @@ function key(label: string, name: string) {
     el.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true }));
   });
 }
+
+/*
+ * The sample semester, fetched before anything renders.
+ *
+ * `StoreProvider` pulls the four shipped courses in with a dynamic import and
+ * does not await it — right, in an app, where the screen fills in when they
+ * land. In a test it is a promise still in flight when the file ends, and
+ * Vitest tears the environment down underneath it: every assertion passes and
+ * the run still exits non-zero on `EnvironmentTeardownError`. Intermittently,
+ * which is the worst version — it depends on whether the import happens to
+ * resolve first.
+ *
+ * `loadSeed` caches its promise, so awaiting it once here means the store's
+ * own call is already resolved by the time it makes it, and there is nothing
+ * outstanding to tear down. `lib/transcript.test.ts` awaits it for its own
+ * reasons; this is the same call.
+ */
+beforeAll(async () => {
+  await loadSeed();
+});
 
 beforeEach(() => {
   localStorage.clear();
