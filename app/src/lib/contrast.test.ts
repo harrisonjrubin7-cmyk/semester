@@ -365,3 +365,37 @@ describe('the warning colour, on every ground', () => {
     }
   });
 });
+
+/*
+ * The map's attribution link was told apart from the words beside it by
+ * colour alone.
+ *
+ * The link is `--app-dim`, the text either side `--app-faint` — two fades of
+ * the same ink, measuring about 1.96:1 against each other. WCAG 1.4.1 asks
+ * for 3:1 or a second visual signal, and lifting the colour far enough would
+ * make the credit louder than the map it credits. So it is underlined.
+ *
+ * The `!important` is load-bearing, not a shortcut: `leaflet.css` is imported
+ * by the map component and lands after `app.css`, and its own
+ * `.leaflet-control-attribution a` rule sets `text-decoration: none` at
+ * identical specificity. Without it the underline is applied and then quietly
+ * taken away again.
+ */
+describe('the map credit, which is the licence', () => {
+  const css = () => readFileSync('src/styles/app.css', 'utf8');
+  const rule = () => {
+    const src = css();
+    const at = src.indexOf('.leaflet-control-attribution a {');
+    expect(at, 'the attribution link rule has moved').toBeGreaterThan(-1);
+    return src.slice(at, src.indexOf('}', at));
+  };
+
+  it('carries a second signal, since the colour is not one', () => {
+    expect(rule()).toMatch(/text-decoration:\s*underline/);
+  });
+
+  it('keeps the underline against leaflet’s own rule', () => {
+    // Same specificity, loaded later — so this has to win explicitly.
+    expect(rule()).toMatch(/text-decoration:\s*underline\s*!important/);
+  });
+});

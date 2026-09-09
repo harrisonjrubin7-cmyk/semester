@@ -223,7 +223,18 @@ function Run({ win }: { win: GapWindow }) {
           {canSpeak() ? (
             <button
               type="button"
-              className="bare"
+              /*
+               * `tap-y`, not `tap`. This drew 38x17 — a fingertip and a half
+               * short — and survived the audit that took 104 targets under
+               * 30px down to none, because a walk of the screens never sees
+               * it: it is drawn only inside a running gap session, behind a
+               * start button and behind a browser that can speak.
+               *
+               * Vertical only, for the reason that audit gives: the card
+               * counter shares this row, and a target that grew sideways
+               * would reach across the gap towards it.
+               */
+              className="bare tap-y"
               aria-pressed={aloud}
               aria-label={aloud ? 'Stop reading cards aloud' : 'Read cards aloud'}
               onClick={() => {

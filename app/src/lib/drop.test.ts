@@ -120,3 +120,45 @@ describe('reading a stored rule', () => {
     expect(readDrop(9999)).toBe(40);
   });
 });
+
+/*
+ * A row copied out of a gradebook came back empty.
+ *
+ * `readScores` split on newlines, commas and semicolons only — while its own
+ * doc comment said "commas, spaces or newlines all separate". A row copied
+ * from a gradebook is tab-separated and a column typed from one is as often
+ * `88 92 76` as `88, 92, 76`; neither holds a comma, so the whole entry read
+ * as one unparseable piece and the field showed nothing, with no error and no
+ * clue why.
+ *
+ * It cannot split on whitespace outright, which is why it did not: `readScore`
+ * reads "17 out of 20", and that is the point of it. Whitespace is a second
+ * chance instead — a piece that reads whole is taken whole, and only one that
+ * says nothing at all is broken up.
+ */
+describe('a column of scores as people actually paste it', () => {
+  it('reads a row separated by tabs or spaces', () => {
+    expect(readScores('88\t92\t76')).toEqual([88, 92, 76]);
+    expect(readScores('88 92 76')).toEqual([88, 92, 76]);
+    expect(readScores('88   92\t\t76')).toEqual([88, 92, 76]);
+  });
+
+  it('still reads everything it read before, identically', () => {
+    // The whole claim of the change: strictly an addition.
+    expect(readScores('88, 92, 76')).toEqual([88, 92, 76]);
+    expect(readScores('88\n92\n76')).toEqual([88, 92, 76]);
+    expect(readScores('88; 92; 76')).toEqual([88, 92, 76]);
+  });
+
+  it('does not tear apart a piece that reads whole', () => {
+    // This is why whitespace could never be a plain separator: three words
+    // that mean one score.
+    expect(readScores('17 out of 20')).toEqual([85]);
+    expect(readScores('17 out of 20, 18 out of 20')).toEqual([85, 90]);
+  });
+
+  it('drops words rather than inventing a score for them', () => {
+    expect(readScores('88, not sat yet, 92')).toEqual([88, 92]);
+    expect(readScores('not sat yet')).toEqual([]);
+  });
+});
