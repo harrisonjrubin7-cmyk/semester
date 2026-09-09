@@ -989,9 +989,58 @@ export function primePersisted(state: Persisted | null): void {
  * Empty rather than throwing, for the reason the whole file is written this
  * way: an app that opens with one list missing is recoverable, and an app
  * that will not open is not.
+ *
+ * ## The holes inside it, which this used to let through
+ *
+ * The guard was one level short. `[null]` is an array, so it passed, and the
+ * first consumer to reach into a member died the same death the container
+ * check was written to stop — this time with no boundary above it either,
+ * because the readers are app-wide. Measured: storage holding
+ * `{"timers":[null]}` rendered zero characters and threw
+ * `Cannot read properties of null (reading 'endsAt')` from `Ringing`, which
+ * is drawn beside every screen; a reload does not help, because the value
+ * that kills it is the value being read.
+ *
+ * Null and undefined only, rather than "keep the objects". Two of the
+ * nineteen lists through here hold strings — `courseOrder` and `recent` —
+ * and a filter for objects would silently empty both. Those two are also
+ * why this cannot be a schema: `list` is the reader for the fields that
+ * have no per-row parser, and the ones that do have one go through
+ * `readList` in `lib/stored.ts` instead. What is left is the one member
+ * that throws on any property access at all, which is exactly the crash.
  */
 function list<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
+  return Array.isArray(value)
+    ? (value.filter((row) => row !== null && row !== undefined) as T[])
+    : [];
+}
+
+/**
+ * A keyed record from storage, with the holes taken out of it.
+ *
+ * `list`'s counterpart, and it exists for the same crash found the same way:
+ * `reviews: saved.reviews ?? {}` guards the container and not what is under
+ * the keys, so `{"reviews":{"econ-1":null}}` opened on a blank page with
+ * `Cannot read properties of null (reading 'seen')`. A record's values are
+ * read exactly as often as a list's rows and were guarded one level less.
+ *
+ * Values, not shapes. What is behind a key here is a tick, a grade, a URL or
+ * a card's review, and no one rule fits them — the readers that do know a
+ * shape (`readOverrides`, `readPretested`, `readWanted`) are called on their
+ * own fields below. This takes out the one value that throws whatever the
+ * shape was meant to be.
+ *
+ * A non-object — a string, a number, an array where an object belongs —
+ * comes back empty rather than spread into `{0:'x'}`, which is what
+ * `{...saved.picked}` was quietly making of it.
+ */
+function record<T>(value: unknown): Record<string, T> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return {};
+  const out: Record<string, T> = {};
+  for (const [key, row] of Object.entries(value)) {
+    if (row !== null && row !== undefined) out[key] = row as T;
+  }
+  return out;
 }
 
 export function loadPersisted(): Persisted {
@@ -1014,17 +1063,17 @@ export function loadPersisted(): Persisted {
     return {
       ...DEFAULT_PERSISTED,
       ...saved,
-      notifs: { ...DEFAULT_PERSISTED.notifs, ...(saved.notifs ?? {}) },
-      done: saved.done ?? {},
-      saved: saved.saved ?? DEFAULT_PERSISTED.saved,
-      picked: { ...DEFAULT_PERSISTED.picked, ...(saved.picked ?? {}) },
+      notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
+      done: record(saved.done),
+      saved: record(saved.saved ?? DEFAULT_PERSISTED.saved),
+      picked: { ...DEFAULT_PERSISTED.picked, ...record(saved.picked) },
       tasks: list(saved.tasks),
       appointments: list(saved.appointments),
       notes: list(saved.notes),
       updates: list(saved.updates),
       feeds: list(saved.feeds),
       feedEvents: list(saved.feedEvents),
-      linkUrls: saved.linkUrls ?? {},
+      linkUrls: record(saved.linkUrls),
       extraLinks: list(saved.extraLinks),
       // Not `list()`: that checks the list is a list and casts what is in it.
       // The catalogue is built from these before any screen is drawn, so there
@@ -1035,11 +1084,20 @@ export function loadPersisted(): Persisted {
       // ones; it keeps them, or the app would look wiped on the next load. A
       // genuinely new account starts empty.
       sample: saved.sample ?? saved.courses === undefined,
-      term: saved.term ?? LEGACY_TERM,
-    waysOpen: saved.waysOpen ?? true,
+      /*
+       * A term id names a term; anything else is not one.
+       *
+       * `?? LEGACY_TERM` catches null and undefined only, so a term that came
+       * back as an array or an object went into the app as the id of the term
+       * being shown, and the first lookup on it threw
+       * `(id ?? "").trim is not a function` — before a screen, so blank, and
+       * on every reload, because the id that kills it is the id being read.
+       */
+      term: typeof saved.term === 'string' ? saved.term : LEGACY_TERM,
+      waysOpen: saved.waysOpen ?? true,
       keyOpen: saved.keyOpen ?? false,
-      reviews: saved.reviews ?? {},
-      grades: saved.grades ?? {},
+      reviews: record(saved.reviews),
+      grades: record(saved.grades),
       gradeSystems: readOverrides(saved.gradeSystems),
       mySchools: Array.isArray(saved.mySchools)
         ? saved.mySchools.map(readSchool).filter((s) => s.id && s.name)
