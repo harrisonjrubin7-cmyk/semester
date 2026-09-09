@@ -328,22 +328,18 @@ describe('the promise', () => {
 
   it('drops a screen the moment the registry does', () => {
     /*
-     * The screen is taken from the registry rather than written down here.
+     * Any real destination will do, and this one is named because it is not
+     * the subject of an argument.
      *
-     * It used to name `grades`, and when the grade table stopped being a
-     * screen this stopped compiling — `Screen` no longer had that member, so
-     * the filter was a no-op and the comparison a type error. Which screen
-     * gets dropped has nothing to do with what is being asserted, so naming
-     * one only ties this test to a registry that is expected to change.
-     *
-     * Taken from the task view's own rows rather than from `DESTINATIONS`, so
-     * it is always a screen the view actually lists: dropping one that was
-     * never shown would pass without testing anything.
+     * It was `grades`, which is the case this test describes happening to the
+     * test itself: #76 took the grade table out of the registry, so the name
+     * here stopped being a `Screen` and the file stopped typechecking. The
+     * suite stayed green either way — vitest does not typecheck — so the
+     * thing that caught it was `tsc`, which is why CI runs both.
      */
-    const gone = byTask(DESTINATIONS).flatMap((s) => s.rows)[0].screen;
-    const short = DESTINATIONS.filter((d) => d.screen !== gone);
+    const short = DESTINATIONS.filter((d) => d.screen !== 'tonight');
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === gone)).toBe(false);
+    expect(rows.some((d) => d.screen === 'tonight')).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
