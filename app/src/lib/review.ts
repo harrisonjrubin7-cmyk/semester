@@ -198,9 +198,35 @@ export function dueCount(keys: string[], reviews: Reviews, now: number): number 
   }).length;
 }
 
+export interface Tally {
+  /** Distinct cards answered at least once. Never more than the deck holds. */
+  cards: number;
+  right: number;
+  wrong: number;
+  /** Right as a share of every answer given, rounded. Zero when none were. */
+  pct: number;
+}
+
 /** Totals for a progress read-out: reviewed, right, and the running accuracy. */
-export function tally(reviews: Reviews): { cards: number; right: number; wrong: number; pct: number } {
-  const rows = Object.values(reviews).filter((r) => r.seen > 0);
+export function tally(reviews: Reviews): Tally {
+  return totals(Object.values(reviews));
+}
+
+/**
+ * The same totals for a named set of cards.
+ *
+ * `tally` reads the whole review map, which is right for a diagnostics dump
+ * and wrong for a screen: the map keeps the answers you gave to a course you
+ * removed in September, and a screen reporting this term's studying would
+ * count them. Hand over the keys of the decks that exist and it cannot.
+ */
+export function tallyKeys(keys: string[], reviews: Reviews): Tally {
+  return totals(keys.map((k) => reviews[k]).filter((r): r is CardReview => Boolean(r)));
+}
+
+/** The arithmetic both of the above are, so there is one copy of it. */
+function totals(all: CardReview[]): Tally {
+  const rows = all.filter((r) => r.seen > 0);
   const right = rows.reduce((n, r) => n + r.right, 0);
   const wrong = rows.reduce((n, r) => n + r.wrong, 0);
   const answered = right + wrong;
