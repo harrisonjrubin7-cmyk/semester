@@ -107,7 +107,6 @@ export const BUDGET: Budget = {
   'components/Windows.tsx': { type: 2, leading: 1, space: 3, shorthand: 2, dim: 1 },
   'components/WorkWindows.tsx': { type: 4, shorthand: 3, dim: 5 },
   'components/YourCourses.tsx': { type: 2, space: 4, shorthand: 4, dim: 2 },
-  'components/nav/ByTask.tsx': { dim: 4 },
   'components/shell/Rows.tsx': { type: 3, leading: 2, space: 1, dim: 6 },
   'components/ui.tsx': { type: 2, space: 1, shorthand: 5, dim: 1 },
   'screens/Account.tsx': { type: 8, leading: 7, space: 4, dim: 13 },

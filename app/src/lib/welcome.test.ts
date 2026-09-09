@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { welcomeLead, welcomeLine } from './welcome';
+import { greeting, welcomeLead, welcomeLine } from './welcome';
 import { buildCatalog, type Catalog } from '../data/catalog';
 import type { CourseModule, Item } from './types';
 
@@ -99,5 +99,23 @@ describe('the lead paragraph', () => {
   it('describes what will happen when nothing is loaded, and what did when something is', () => {
     expect(welcomeLead(buildCatalog([]))).toContain('goes in as a PDF');
     expect(welcomeLead(catalogOf([]))).toContain('came out of the PDFs');
+  });
+});
+
+/**
+ * The line the opening screen says over the app's own mark.
+ *
+ * Three buckets and no fourth. The small hours belong to the evening on
+ * purpose — somebody opening this at 2am is working, and an app that answers
+ * "good night" is an app telling them to stop.
+ */
+describe('the greeting on the opening screen', () => {
+  it('reads the hour, and keeps the small hours out of the night', () => {
+    expect(greeting(new Date(2026, 8, 7, 0, 5))).toBe('Good morning');
+    expect(greeting(new Date(2026, 8, 7, 11, 59))).toBe('Good morning');
+    expect(greeting(new Date(2026, 8, 7, 12, 0))).toBe('Good afternoon');
+    expect(greeting(new Date(2026, 8, 7, 17, 59))).toBe('Good afternoon');
+    expect(greeting(new Date(2026, 8, 7, 18, 0))).toBe('Good evening');
+    expect(greeting(new Date(2026, 8, 7, 23, 59))).toBe('Good evening');
   });
 });
