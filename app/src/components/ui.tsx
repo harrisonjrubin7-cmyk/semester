@@ -101,6 +101,81 @@ export function ChipRow<T extends string>({
   );
 }
 
+/**
+ * The app's other chip, named at last.
+ *
+ * There are two chip idioms here and only one of them had a component. This is
+ * the second: an outlined pick, accented when chosen, drawn at a size a finger
+ * can hit. Ten screens were each writing the same twenty lines of it — "how
+ * long have you got" on Tonight, the unit picker on a reading, the course
+ * picker on Check the writing, two on The degree — with the padding drifting
+ * between 7px and 9px and the radius between `--r-sm` and `--r-md`, because
+ * the fastest way to write a chip was to copy the nearest one.
+ *
+ * ## Why this is not `ChipRow`
+ *
+ * `ChipRow` above is a filled, uppercase, 29px chip that scrolls sideways in
+ * one row, and its comment explains at length why it must *not* grow to 44px:
+ * the calendar stacks a `Segmented` directly above one, and at 44px their
+ * targets overlapped by 4px, in which band the lower row silently won taps
+ * meant for the upper. That argument is right and it is specific to a chip
+ * that sits in a scrolling row under another control.
+ *
+ * These are not that. They wrap onto several lines and stand alone under a
+ * heading, so nothing is stacked above them to collide with, and they are
+ * drawn at about 37px rather than 29 — comfortably clear of the 24×24 that
+ * WCAG 2.2 AA asks for, without needing `tap-y` either. Folding them into
+ * `ChipRow` would shrink them, uppercase them and put them in a row that
+ * scrolls sideways, which is three changes nobody asked for. Two components,
+ * because they are two controls — the same rule that keeps two screens apart
+ * when they answer two questions.
+ *
+ * (`tappable` on each is the cursor and hover treatment, not a target: the
+ * growth classes are `tap`, `tap-x` and `tap-y` in `app.css`, and these do
+ * not need one.)
+ */
+export function PickChips<T extends string | number>({
+  options,
+  value,
+  onChange,
+  labels,
+  style,
+}: {
+  options: readonly T[];
+  value: T;
+  onChange: (next: T) => void;
+  /** What to show instead of the option, where the two differ. */
+  labels?: (option: T) => string;
+  style?: CSSProperties;
+}) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', ...style }}>
+      {options.map((o) => {
+        const on = o === value;
+        return (
+          <button
+            key={String(o)}
+            type="button"
+            className="bare tappable"
+            aria-pressed={on}
+            onClick={() => onChange(o)}
+            style={{
+              width: 'auto',
+              padding: 'var(--sp-4) var(--sp-6)',
+              borderRadius: 'var(--r-sm)',
+              border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
+              fontSize: 'var(--type-sm)',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {labels ? labels(o) : String(o)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** An equal-width segmented control — Deadlines / Campus, Tabs / Feed. */
 export function Segmented<T extends string>({
   options,

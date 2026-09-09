@@ -28,11 +28,23 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { capture, enough, readBack } from '../lib/capture';
 import { ActionButton } from './ui';
+import { DESKTOP, useMedia } from '../lib/media';
+
+/**
+ * How wide the box gets, the same measure the whole-app search uses.
+ *
+ * Both are overlays that are a field and what the field produced, and on a
+ * wide window both cover the whole thing — so a different width for each
+ * would be two answers to one question. It never binds on a phone, where the
+ * app is already narrower than this.
+ */
+const COLUMN = 620;
 
 export function QuickAdd({ onClose }: { onClose: () => void }) {
   const { catalog, dispatch, now } = useStore();
   const [text, setText] = useState('');
   const [said, setSaid] = useState('');
+  const wide = useMedia(DESKTOP);
   const box = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -66,7 +78,29 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
       role="dialog"
       aria-label="Add something quickly"
       style={{
-        position: 'absolute',
+        /*
+         * Where the box ends, which is not the same edge on both layouts.
+         *
+         * This is mounted inside `.device` because that is where the app's
+         * controls are drawn — `.input`, `.btn` and `.bare` are every one of
+         * them scoped to it, and mounted beside the pane this reached none of
+         * them: the field a student types the whole capture into was a white
+         * browser textbox with a blue focus ring, on a laptop.
+         *
+         * Below 760px `.device` is a column with ground either side, and the
+         * box fills the column, as it always has. At 760px and up the pane is
+         * a strip in the middle of the window and shrinking to it would leave
+         * the box hanging in the middle of the screen, so it is `fixed` there
+         * and covers the window — which is what it did before this moved.
+         * The content draws itself in a column either way, which is the other
+         * half of what was wrong on a wide window: with nothing capping it,
+         * the explanation ran the full 1280px in one line.
+         *
+         * Safe because nothing above this transforms; a transformed ancestor
+         * would become the containing block and this would go back to
+         * covering the pane.
+         */
+        position: wide ? 'fixed' : 'absolute',
         inset: 0,
         zIndex: 80,
         background: 'var(--app-bg)',
@@ -75,6 +109,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         padding: 18,
       }}
     >
+      <div style={{ width: '100%', maxWidth: COLUMN, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
         <span className="kicker" style={{ flex: 1 }}>
           One line
@@ -180,6 +215,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           syllabus said it.
         </div>
       ) : null}
+      </div>
     </div>
   );
 }

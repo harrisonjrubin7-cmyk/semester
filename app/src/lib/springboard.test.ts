@@ -96,7 +96,7 @@ describe('capability gating comes free', () => {
 
   it('leaves the universal screens alone', () => {
     const shown = flat(pagesFor(NONE));
-    for (const s of ['home', 'courses', 'study', 'grades', 'registrar']) {
+    for (const s of ['home', 'courses', 'study', 'registrar']) {
       expect(shown, s).toContain(s);
     }
   });

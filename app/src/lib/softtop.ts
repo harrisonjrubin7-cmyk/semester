@@ -326,6 +326,29 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
 
     // ── Courses ───────────────────────────────────────────────────────────
     case 'courses': {
+      /*
+       * The grades grain says what it is about, not what the tab bar is about.
+       *
+       * Grades was a screen with a case of its own here, and it kept this hero
+       * when it became a grain of Courses: somebody looking at a grade table
+       * wants the running grade above it, not the term's progress. One screen,
+       * two headers, chosen by the grain — the tab is the screen now, so the
+       * top has to know which one it is drawing.
+       */
+      if (state.coursesTab === 'grades') {
+        const g = runningGrade(input);
+        return {
+          hero: g
+            ? { label: 'Running grade', meta: count(g.scored, 'course'), figure: `${g.pct}%`, foot: 'across everything entered' }
+            : { label: 'Grades', said: 'No scores entered yet, so there is nothing to average.', foot: count(courses, 'course') + ' waiting' },
+          stats: [
+            { label: 'Scored', value: num(Object.keys(state.grades).length) },
+            { label: 'Courses', value: num(courses), fraction: courses && g ? g.scored / courses : undefined },
+            { label: 'Overdue', value: num(overdue) },
+          ],
+          bar: { primary: { label: 'The degree', screen: 'degree' } },
+        };
+      }
       const through = termProgress(dated, now);
       return {
         hero: through === null
@@ -471,22 +494,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     case 'sources':
       return holds('Sources', state.sources.length, 'source', { label: 'Draft it', screen: 'essay' });
 
-    // ── Standing ──────────────────────────────────────────────────────────
-    case 'grades': {
-      const g = runningGrade(input);
-      return {
-        hero: g
-          ? { label: 'Running grade', meta: count(g.scored, 'course'), figure: `${g.pct}%`, foot: 'across everything entered' }
-          : { label: 'Grades', said: 'No scores entered yet, so there is nothing to average.', foot: count(courses, 'course') + ' waiting' },
-        stats: [
-          { label: 'Scored', value: num(Object.keys(state.grades).length) },
-          { label: 'Courses', value: num(courses), fraction: courses && g ? g.scored / courses : undefined },
-          { label: 'Overdue', value: num(overdue) },
-        ],
-        bar: { primary: { label: 'The degree', screen: 'degree' } },
-      };
-    }
-
     case 'degree':
       return holds('Courses taken', state.taken.length, 'course taken', { label: 'Registration', screen: 'yes' }, 'courses taken');
 
@@ -612,7 +619,24 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           { label: 'Account', value: input.sync ?? '—' },
           { label: 'Alerts on', value: num(Object.values(state.notifs).filter(Boolean).length) },
         ],
-        bar: { primary: { label: 'Your data', screen: 'data' } },
+        /*
+         * No bar here.
+         *
+         * Every screen the soft shell draws gets one because the bar is where
+         * the next thing to do lives — on a screen that shows you a fact, the
+         * action that fact implies is somewhere else. Settings is not that
+         * screen. Its whole body is the list of places you can go, so the bar
+         * could only ever offer one of the rows already on it, and it did:
+         * "Your data" sat in a filled pill under a "Your data" row four
+         * hundred pixels above it. Two routes to one screen, one screen apart
+         * — the exact duplication the index was rebuilt to remove.
+         *
+         * So the index keeps its stats, which say something the rows do not,
+         * and loses the bar. `SOFT_NO_BAR` in `softtop.test.ts` is the list
+         * of screens allowed to do this, so a second one cannot appear
+         * without somebody saying why.
+         */
+        bar: null,
       };
     }
 

@@ -136,10 +136,10 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    const short = DESTINATIONS.filter((d) => d.screen !== 'tonight');
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
-    expect(untried(short, {}, {}, NOW).some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === 'tonight')).toBe(false);
+    expect(untried(short, {}, {}, NOW).some((d) => d.screen === 'tonight')).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {

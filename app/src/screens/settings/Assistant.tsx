@@ -2,7 +2,16 @@ import { useState } from 'react';
 import { SettingsPage } from './Page';
 import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
-import { MODELS, configured, modelLabel, route, routeLabel, saveSettings, settings } from '../../lib/claude';
+import {
+  MODELS,
+  checkKey,
+  configured,
+  modelLabel,
+  route,
+  routeLabel,
+  saveSettings,
+  settings,
+} from '../../lib/claude';
 import { OPENAI_MODELS } from '../../lib/openai';
 import { money, monthStart, read as readSpend, since, total, RATES_READ } from '../../lib/spend';
 import { ActionButton } from '../../components/ui';
@@ -21,10 +30,42 @@ import { ActionButton } from '../../components/ui';
  * It is something to check, not something to read every time — and putting it
  * where checking happens is what makes it read as a claim the app stands
  * behind rather than a notice it is clearing its throat with.
+ *
+ * ## The second copy, folded in
+ *
+ * Connect accounts carried its own key field, model picker and `saveSettings`
+ * call until `/simplify` found them — two implementations of one setting, which
+ * is a setting that can disagree with itself. That copy is gone and the two
+ * things it had which this did not came across: the check-the-key button below,
+ * and the sentence in the footer saying there is no "sign in with Claude" to
+ * look for. Both were the answer to somebody hunting for a login button, and
+ * that hunt now ends on this page rather than on a screen about calendars.
  */
 export function SettingsAssistant() {
   const [config, setConfig] = useState(settings());
   const [saved, setSaved] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; detail: string } | null>(null);
+
+  /*
+   * Checked by using it, before it is saved.
+   *
+   * Came from the second copy of this form, which lived on Connect accounts
+   * until the two were merged. The reason it is worth keeping is the one that
+   * copy gave: the alternative is discovering a typo halfway through
+   * generating a course from a syllabus that took five minutes to upload.
+   */
+  const verify = async () => {
+    setChecking(true);
+    setResult(null);
+    const got = await checkKey(config.apiKey);
+    setResult(got);
+    if (got.ok) {
+      saveSettings(config);
+      setSaved(true);
+    }
+    setChecking(false);
+  };
   const spend = readSpend();
   const month = total(since(spend, monthStart(new Date())));
 
@@ -52,7 +93,7 @@ export function SettingsAssistant() {
                 ? 'Two providers, so a lapsed account or an outage the night before a midterm does not stop the app working. Nothing above this setting knows which one answered.'
                 : route() === 'shared'
                   ? 'Signed in, so this is already working — the shared key lives in a server function, metered per account, and never reaches this browser. Add your own key below only if you want past the monthly limit.'
-                  : 'A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed about it: anything running in this browser can read a key in this browser. Signing in uses the shared key instead, and a proxy you run is better still — the proxy field wins when both are filled in.'
+                  : 'There is no “sign in with Claude”: Anthropic publishes no consumer login for other apps, so a claude.ai Pro or Max subscription cannot be linked here by any app. What works is a key from console.anthropic.com → API keys, billed separately per use. A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed about it: anything running in this browser can read a key in this browser. Signing in uses the shared key instead, and a proxy you run is better still — the proxy field wins when both are filled in.'
             }
             lit={lights('provider claude openai chatgpt anthropic key api model', lit)}
           >
@@ -162,6 +203,32 @@ export function SettingsAssistant() {
               >
                 {saved ? 'Saved on this device' : 'Save on this device'}
               </ActionButton>
+              {config.provider !== 'openai' && config.apiKey.trim() !== '' && (
+                <>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-block"
+                    disabled={checking}
+                    onClick={() => void verify()}
+                    style={{ height: 42, marginTop: 'var(--sp-4)' }}
+                  >
+                    {checking ? 'Checking…' : 'Check this key works'}
+                  </button>
+                  {result && (
+                    <div
+                      style={{
+                        fontSize: 'var(--type-sm)',
+                        marginTop: 'var(--sp-4)',
+                        lineHeight: 'var(--leading-normal)',
+                        color: result.ok ? 'var(--app-fg)' : 'var(--app-accent)',
+                        textWrap: 'pretty',
+                      }}
+                    >
+                      {result.detail}
+                    </div>
+                  )}
+                </>
+              )}
               {configured() && (
                 <div className="kicker" style={{ marginTop: 'var(--sp-4)' }}>
                   {modelLabel()} · {routeLabel()}
