@@ -2,6 +2,7 @@ import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
 import type { Screen } from '../lib/types';
 import { liveGuide, type LiveGuide } from '../lib/live';
+import { anyAnswered, cardKey } from '../lib/review';
 
 /**
  * What a screen tells the assistant about what you are looking at.
@@ -69,6 +70,30 @@ export type Provide = (look: Look) => ScreenContext | null;
 export function guideNow(look: Look, courseId: string): LiveGuide | undefined {
   if (!look.catalog.guides[courseId]) return undefined;
   return liveGuide(look.catalog, courseId, look.state.updates, look.state.reviews);
+}
+
+/**
+ * Has this course been answered at all?
+ *
+ * `guideNow` returns the merged guide, and a unit's mastery on it is
+ * `unitMastery`'s blend of what has been answered with what the guide
+ * declared — so before the first answer it is the declared figure and nothing
+ * about the figure says so. Every provider below that *tells the model* a
+ * mastery number asks this first, and says "not started" instead of a
+ * percentage nobody has earned.
+ *
+ * It matters more here than on a screen. A number on a card is read by
+ * somebody who can see the rest of the card; a number in the context is read
+ * by a model that will answer "what should I drill first?" out of it, in a
+ * sentence carrying all the confidence of the rest of the answer.
+ */
+export function startedNow(look: Look, courseId: string, guide?: LiveGuide): boolean {
+  const g = guide ?? guideNow(look, courseId);
+  if (!g) return false;
+  return anyAnswered(
+    g.units.flatMap((u) => u.cards.map((card) => cardKey(courseId, card.q))),
+    look.state.reviews,
+  );
 }
 
 /**

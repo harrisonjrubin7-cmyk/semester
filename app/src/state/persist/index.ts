@@ -168,12 +168,26 @@ let last: Partial<Persisted> | null = null;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let inFlight: Promise<void> = Promise.resolve();
 
+/**
+ * Who to tell once a write has actually landed.
+ *
+ * Carried alongside `pending` rather than passed through, because the calls
+ * coalesce: five keystrokes make one write, and the callback of the last one
+ * is the one that matters. Cleared as the write goes out, so a settled write
+ * with nothing following it tells nobody twice.
+ */
+let told: (() => void) | null = null;
+
 async function flush(): Promise<void> {
   const next = pending;
+  const tell = told;
   pending = null;
+  told = null;
   if (!next || !last) return;
   const writes = writesFor(last, next);
   last = next;
+  // Nothing to write is not something to announce. A tab told to re-read a
+  // disk that did not change is the first step of a loop, not an update.
   if (writes.length === 0) return;
   try {
     await write(writes);
@@ -182,7 +196,12 @@ async function flush(): Promise<void> {
     // the old localStorage copy is still on disk, and the next change tries
     // again — this is the one place where carrying on is better than saying
     // so, because there is nothing the person could do about it mid-keystroke.
+    //
+    // It tells nobody either: a tab sent to re-read a disk that did not take
+    // the change would spread the failure rather than leave it where it is.
+    return;
   }
+  tell?.();
 }
 
 /** What the app last read or wrote, so the first diff has something to be against. */
@@ -196,10 +215,20 @@ export function prime(state: Partial<Persisted>): void {
  * Debounced and coalesced: typing a note produces one write a quarter of a
  * second after the typing stops, not one per keystroke. Asynchronous
  * throughout, so nothing here can block a render.
+ *
+ * `onWrote` runs after the write has landed, and only when there was
+ * something to write. It exists for the other tabs, and the ordering is the
+ * whole point of it: `lib/tabs.ts` reasons that there is "no ordering problem
+ * between a broadcast and a write", which is true of the localStorage path,
+ * where the write is synchronous and finished before anyone is told. It is
+ * not true of this one. Announcing on the way in sends the other tab to read
+ * a disk that is still a quarter of a second behind, and what it reads it
+ * writes back — over the change that had not landed yet.
  */
-export function persist(next: Partial<Persisted>): void {
+export function persist(next: Partial<Persisted>, onWrote?: () => void): void {
   if (!ready) return;
   pending = next;
+  told = onWrote ?? null;
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
     timer = null;
@@ -219,6 +248,7 @@ export function persist(next: Partial<Persisted>): void {
 export function stopWriting(): void {
   ready = false;
   pending = null;
+  told = null;
   if (timer) {
     clearTimeout(timer);
     timer = null;

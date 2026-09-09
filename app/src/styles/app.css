@@ -1518,6 +1518,23 @@ a:hover {
 }
 .leaflet-control-attribution a {
   color: var(--app-dim) !important;
+  /*
+   * Underlined, because colour alone is all that told it apart.
+   *
+   * The link is `--app-dim` and the words either side are `--app-faint` —
+   * two fades of the same ink, measuring 1.96:1 against each other. WCAG
+   * 1.4.1 asks for 3:1 or a second signal, and lifting the colour far enough
+   * would make the credit louder than the map it credits. So: the second
+   * signal.
+   *
+   * `!important` for the same reason the colour above already needs it, not
+   * as a shortcut. `leaflet.css` is imported by the map component and lands
+   * after this file, and its own `.leaflet-control-attribution a` rule sets
+   * `text-decoration: none` at identical specificity — so without this the
+   * underline is applied and then quietly taken away again.
+   */
+  text-decoration: underline !important;
+  text-underline-offset: 2px;
 }
 .leaflet-bar a {
   background: var(--app-raise) !important;

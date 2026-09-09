@@ -2,7 +2,7 @@ import { DESTINATIONS } from '../../lib/nav';
 import { datedItems } from '../../lib/select';
 import { tally } from '../../lib/review';
 import type { Provide } from '../shape';
-import { guideNow } from '../shape';
+import { guideNow, startedNow } from '../shape';
 
 /**
  * The three screens the registry keeps outside its groups.
@@ -86,13 +86,17 @@ export const me: Provide = (look) => {
   const t = tally(state.reviews);
   const rows = catalog.courses.map((c) => {
     const guide = guideNow(look, c.id);
+    // An average of declared figures is still a declared figure. See
+    // `startedNow`: before the first answer in a course there is nothing here
+    // to average, and a percentage would be read as though there were.
+    const started = guide ? startedNow(look, c.id, guide) : false;
     const mastery = guide
       ? Math.round(guide.units.reduce((n, u) => n + u.mastery, 0) / Math.max(1, guide.units.length))
       : 0;
     return {
       course: catalog.byId[c.id].code,
       units: guide?.units.length ?? 0,
-      averageMastery: `${mastery}%`,
+      averageMastery: started ? `${mastery}%` : 'not started',
       ahead: datedItems(catalog, now).filter((i) => i.c === c.id && !i.isPast).length,
     };
   });
