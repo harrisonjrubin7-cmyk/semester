@@ -9,7 +9,7 @@ import { ReadingsOnTheGo } from '../components/ReadingProgress';
 import { ClosingWindows } from '../components/Windows';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { ActionButton, ChipRow, DateRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import { homeShape } from '../lib/chrome';
 import {
@@ -26,7 +26,9 @@ import {
   upcomingItems,
   type FeedFilter,
 } from '../lib/select';
-import { minutesNow } from '../lib/date';
+import { MONTHS, clock, minutesNow } from '../lib/date';
+import { dueByDay, weekDates, weekLabel, weekLine } from '../lib/weekpage';
+import { hasTime } from '../lib/duetime';
 import { clockOf } from '../lib/atrisk';
 import { nowAt, readDay, worthMarking } from '../lib/rail';
 import { said } from '../lib/arrive';
@@ -265,46 +267,56 @@ function OverdueBanner() {
 }
 
 /** Nav mode 1A — a fixed sequence: next class, checklist, rail, campus, week. */
-function TabHome() {
-  // Today's own sections derive what they need themselves, so what is left
-  // here is only what the week tab and the switcher use.
-  const { state, dispatch, now, catalog, tint } = useStore();
-  const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
+/**
+ * The week ahead, as a week rather than as the next five things.
+ *
+ * The tab was called "This week" and showed an unbounded list of what was
+ * coming, cut off at five rows with nothing to say it had been cut. On the
+ * semester this app ships with that is three of the five falling on one
+ * Tuesday and the sixth thing invisible — so the tab hid both facts a week
+ * view exists for: which days are loaded, and which are clear.
+ *
+ * Seven days from today, every one of them listed. The empty ones are the
+ * point as much as the full ones: a Wednesday with nothing on it is a place
+ * to put something, and it cannot be seen in a list that only prints the days
+ * that are busy.
+ *
+ * The arithmetic is `dueByDay` from `lib/weekpage.ts` — the same function
+ * behind the printed week on the Calendar, so the two cannot come to disagree
+ * about what a week is. What differs is the presentation: there a page you
+ * pin up, here rows you tap to open.
+ */
+function ThisWeek() {
+  const { state, dispatch, now, catalog, tint, courseCode } = useStore();
+  const row = useRowStyle(9);
   const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
-  const tab = state.homeTab;
+
+  const days = useMemo(() => dueByDay(datedItems(catalog, now), now), [catalog, now]);
+  // Everything still ahead that the seven days do not reach, and the date it
+  // is "after" — written out, because "after 14" is not a date.
+  const last = weekDates(now)[6];
+  const lastDay = `${MONTHS[last.getMonth()]} ${last.getDate()}`;
+  const beyond = useMemo(
+    () => upcomingItems(catalog, now).filter((i) => i.date > last).length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [catalog, now],
+  );
+  // Counted from the syllabi rather than from anything drawn, and cancelled
+  // meetings left out — the same rule the Calendar's own week line uses.
+  const classes = useMemo(
+    () =>
+      weekDates(now).reduce(
+        (n, date) => n + railFor(catalog, date, []).filter((b) => b.c && !b.canceled).length,
+        0,
+      ),
+    [catalog, now],
+  );
 
   return (
-    <Page bottom={26}>
-      {/*
-        Four tabs, not five. The fifth was Report, and it rendered the Reports
-        screen inline — the same body, sharing the same `state.report` grain,
-        so pressing it and opening Reports were two doors onto one room. The
-        screen kept its own, the way Settings did when Progress stopped
-        carrying a copy of it.
-
-        "This week" is back at full length because of it: the label was cut to
-        "Week" only because a fifth tab made the switcher wrap to two lines on
-        every Today view.
-      */}
-      <Segmented
-        options={[
-          { id: 'today', label: 'Today' },
-          { id: 'hours', label: 'Hours' },
-          { id: 'week', label: 'This week' },
-          { id: 'done', label: 'Done' },
-        ]}
-        value={tab}
-        onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
-        style={{ margin: '0 0 16px' }}
-      />
-
-      {tab === 'today' && <TodayFeed />}
-
-      {tab === 'week' && (
-        <>
+    <>
       {nextEvent && (
         <>
-          <SectionLabel style={{ margin: '14px 0 12px' }}>On campus</SectionLabel>
+          <SectionLabel>On campus</SectionLabel>
           <Blueprint
             onClick={() => dispatch({ type: 'openEvent', id: nextEvent.id })}
             style={{ padding: '13px 14px', display: 'flex', gap: 13, alignItems: 'center' }}
@@ -335,22 +347,159 @@ function TabHome() {
         </>
       )}
 
-      <SectionLabel>What’s coming</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {ahead.slice(0, 5).map((u) => (
-          <DateRow
-            key={u.id}
-            top={u.dow}
-            bottom={String(u.day)}
-            title={u.title}
-            meta={`${catalog.byId[u.c].code} · ${u.weight}`}
-            edge={tint(u.c).edge}
-            onClick={() => dispatch({ type: 'openItem', id: u.id })}
-          />
-        ))}
+      <SectionLabel>The next seven days</SectionLabel>
+      <div
+        style={{
+          fontSize: 'var(--type-sm)',
+          opacity: 0.6,
+          marginBottom: 'var(--sp-4)',
+          lineHeight: 'var(--leading-relaxed)',
+        }}
+      >
+        {weekLabel(now)} · {weekLine(days, classes)}
       </div>
-        </>
+
+      {days.map((d, i) => (
+        <div
+          key={d.date.toISOString()}
+          style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'baseline', ...row }}
+        >
+          <span
+            style={{
+              flex: 'none',
+              width: 52,
+              fontFamily: 'var(--font-heading)',
+              fontSize: 'var(--type-xs)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              opacity: d.items.length > 0 ? 0.8 : 0.35,
+            }}
+          >
+            {i === 0 ? 'Today' : d.label}
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {d.items.length === 0 ? (
+              <span style={{ fontSize: 'var(--type-sm)', opacity: 0.3 }}>Clear</span>
+            ) : (
+              d.items.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="bare tappable"
+                  onClick={() => dispatch({ type: 'openItem', id: item.id })}
+                  style={{
+                    display: 'flex',
+                    gap: 'var(--sp-5)',
+                    alignItems: 'flex-start',
+                    textAlign: 'left',
+                    width: '100%',
+                    padding: 'var(--sp-2) 0',
+                  }}
+                >
+                  <span
+                    style={{
+                      flex: 'none',
+                      width: 2,
+                      alignSelf: 'stretch',
+                      background: tint(item.c).edge,
+                    }}
+                  />
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span
+                      style={{
+                        display: 'block',
+                        fontSize: 'var(--type-base)',
+                        lineHeight: 'var(--leading-normal)',
+                        opacity: state.done[item.id] ? 0.45 : 1,
+                        textDecoration: state.done[item.id] ? 'line-through' : 'none',
+                      }}
+                    >
+                      {item.title}
+                    </span>
+                    <span
+                      style={{
+                        display: 'block',
+                        fontSize: 'var(--type-xs)',
+                        opacity: 0.55,
+                        marginTop: 'var(--sp-1)',
+                      }}
+                    >
+                      {[courseCode(item.c), item.weight, hasTime(item.dueTime) ? clock(item.dueAt) : item.dueTime.trim()]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                  </span>
+                  <ChevronRight size={14} style={{ opacity: 0.3, flex: 'none' }} />
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      ))}
+
+      {/*
+        What a seven-day window cannot show, said out loud.
+        The list this replaced was cut off at five rows with nothing to mark
+        the cut, so a midterm the following Tuesday was simply absent. A window
+        has the same failure unless it names what falls outside it.
+      */}
+      {beyond > 0 && (
+        <button
+          type="button"
+          className="bare tappable"
+          onClick={() => dispatch({ type: 'go', screen: 'calendar' })}
+          style={{
+            display: 'block',
+            width: '100%',
+            textAlign: 'left',
+            marginTop: 'var(--sp-5)',
+            fontSize: 'var(--type-sm)',
+            opacity: 0.6,
+            lineHeight: 'var(--leading-normal)',
+          }}
+        >
+          {beyond === 1 ? 'One deadline falls' : `${beyond} deadlines fall`} after {lastDay} — the
+          calendar has the rest →
+        </button>
       )}
+    </>
+  );
+}
+
+function TabHome() {
+  // Today's own sections derive what they need themselves, and so does the
+  // week's, so what is left here is the switcher.
+  const { state, dispatch } = useStore();
+  const tab = state.homeTab;
+
+  return (
+    <Page bottom={26}>
+      {/*
+        Four tabs, not five. The fifth was Report, and it rendered the Reports
+        screen inline — the same body, sharing the same `state.report` grain,
+        so pressing it and opening Reports were two doors onto one room. The
+        screen kept its own, the way Settings did when Progress stopped
+        carrying a copy of it.
+
+        "This week" is back at full length because of it: the label was cut to
+        "Week" only because a fifth tab made the switcher wrap to two lines on
+        every Today view.
+      */}
+      <Segmented
+        options={[
+          { id: 'today', label: 'Today' },
+          { id: 'hours', label: 'Hours' },
+          { id: 'week', label: 'This week' },
+          { id: 'done', label: 'Done' },
+        ]}
+        value={tab}
+        onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
+        style={{ margin: '0 0 16px' }}
+      />
+
+      {tab === 'today' && <TodayFeed />}
+
+      {tab === 'week' && <ThisWeek />}
 
       {tab === 'hours' && <HoursToday />}
 
@@ -427,8 +576,12 @@ function Feed_due() {
             {today.length === 0 ? 'Nothing due today.' : 'Nothing left today.'}
           </div>
           <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 'var(--sp-2)' }}>
+            {/* Not lowercased. It was, to make the date sit inside the
+                sentence, and "tue sep 15" reads as a typo rather than as
+                prose — a date is a name, and the app writes it one way
+                everywhere else. */}
             {ahead[0]
-              ? `Next up is ${ahead[0].title}, ${ahead[0].dueShort.toLowerCase()}.`
+              ? `Next up is ${ahead[0].title}, ${ahead[0].dueShort}.`
               : 'The semester is clear.'}
           </div>
         </Blueprint>
