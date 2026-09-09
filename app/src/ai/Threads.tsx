@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useModal } from '../a11y/modal';
 import { foundIn, grouped, nameOf, search, startedOn, type Thread } from '../lib/threads';
 import { destination } from '../lib/nav';
 import type { Screen } from '../lib/types';
@@ -476,23 +477,22 @@ export function ThreadsOver({
   onClose,
   ...rest
 }: Parameters<typeof Threads>[0] & { onClose: () => void }) {
-  const box = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    box.current?.querySelector<HTMLElement>('button')?.focus();
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  /*
+   * Escape moves off the window and onto the dialog.
+   *
+   * A `window` listener closes this from anywhere on the page, including from
+   * inside whatever else is open — and it fired while focus was somewhere
+   * this dialog does not own. The dialog's own handler is the narrower and
+   * more honest claim, and it arrives with the tab ring and the focus return
+   * this had neither of.
+   */
+  const modal = useModal<HTMLDivElement>({ onClose });
 
   return (
     <div
-      ref={box}
+      ref={modal.ref}
+      onKeyDown={modal.onKeyDown}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Your conversations"

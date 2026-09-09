@@ -21,6 +21,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { useModal } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { chime } from '../lib/chime';
 import {
@@ -105,6 +106,11 @@ export function Ringing() {
     }
   });
 
+  // Before the early return, because that is where a hook has to be. `on`
+  // is what makes "the alarm went off" the moment focus moves, rather than
+  // app start, which is when this component mounts.
+  const modal = useModal<HTMLDivElement>({ on: all.length > 0 });
+
   if (all.length === 0) return null;
 
   const stop = () => {
@@ -120,6 +126,19 @@ export function Ringing() {
     <div
       role="alertdialog"
       aria-label="Something is going off"
+      /*
+       * It covers the app — `inset: 0` at the top of the stack — so a reader
+       * still offering the screen underneath is describing something nobody
+       * can see, and Tab still reaching it is the same thing for a keyboard.
+       *
+       * No `onClose`, for the reason `Adopting` has none: Stop is the answer
+       * and it is one button away. An alarm that a stray Escape silences is
+       * an alarm that did not go off.
+       */
+      aria-modal="true"
+      ref={modal.ref}
+      onKeyDown={modal.onKeyDown}
+      tabIndex={-1}
       style={{
         position: 'absolute',
         inset: 0,

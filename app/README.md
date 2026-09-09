@@ -305,6 +305,7 @@ where the app goes back to one metal throughout.
 
 ```
 src/
+  a11y/         The rules a keyboard and a screen reader depend on, as tests
   ai/           The assistant: prompt, tools, providers, the chat surface
   components/   Blueprint frame, icons, diagrams, shared UI
   data/         Courses, items, schedule, guides, figures, events, audio, copy
@@ -340,8 +341,40 @@ prevent.
 | The spacing, type and leading scales every screen is held to | `styles/rules.ts` |
 | What each screen is still owed off those scales, per file | `styles/budget.ts` (generated: `npm run lint:styles -- --fix`) |
 | How a list is dragged into a different order, and what an arrow means | `lib/arrange.ts` |
+| Which controls a screen reader can name | `a11y/labels.ts` (run by `npm run lint`) |
+| How a dialog keeps the Tab key, and gives focus back | `a11y/modal.ts` |
+| What the browser tab, the history entry and the installed window are called | `a11y/title.ts` |
 
 If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen
 shows. If a screen is unreachable, `lib/nav.ts` is why — and
 `lib/findable.test.ts` fails until every screen is either in that registry or
 named there as one you arrive at from somewhere else.
+
+### Reachable without a pointer, and without sight
+
+Four things hold the app together for somebody on a keyboard or a screen
+reader, and each is one implementation rather than a habit.
+
+- **Every screen has a landmark, a heading and a name.** `<main>` is the one
+  scrolling element, the header is a real `<header>`, and the screen's name is
+  the page's `<h1>` — with focus moving to that heading on every navigation, so
+  pressing a tab lands you *in* what you opened rather than leaving you in the
+  bar you pressed. The same name is what the browser tab, the history entry and
+  the installed window say (`a11y/title.ts`). Before that they all read
+  "Semester", which is the one thing you already knew: fifty screens, fifty
+  identical history entries, and three tabs you could only tell apart by
+  opening them.
+- **`aria-modal` is a promise the app keeps.** The attribute tells a reader
+  that nothing outside the dialog exists; what it does not do is confine the
+  Tab key, and that is the author's job. `a11y/modal.ts` is the one trap — it
+  keeps Tab inside, takes focus on open, and gives it back to whatever opened
+  it. Seven overlays declare the attribute and six were not keeping it: two had
+  hand-rolled a ring each, with different selectors and different bugs, and the
+  rest had none, so one press of Tab walked out of a dialog the markup had just
+  called the only thing on the page. `a11y/modal.test.ts` fails if a dialog
+  declares it without the trap, or if a third copy of the ring appears.
+- **Every control has a name.** `a11y/labels.ts` runs as part of `npm run
+  lint`: a `<select>` with a heading above it looks labelled and is not.
+- **Every outcome is announced.** One live region, in `components/Said.tsx`,
+  for the things that happened because somebody acted and are otherwise
+  visible only as something on the screen having changed.

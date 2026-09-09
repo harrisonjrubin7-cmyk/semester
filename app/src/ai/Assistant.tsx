@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
@@ -367,19 +368,21 @@ export function Assistant() {
   const onTab = useCallback(
     (e: React.KeyboardEvent) => {
       if (!full || e.key !== 'Tab' || !sheet.current) return;
-      const focusable = sheet.current.querySelectorAll<HTMLElement>(
-        'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
-      );
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
+      /*
+       * The ring is `a11y/modal.ts`'s rather than this file's.
+       *
+       * Only the ring: this sheet is open and shut by `ai.open` rather than
+       * by mounting, and it is a modal only at full height, so `useModal`'s
+       * other half — take focus on open, give it back on close — would be
+       * fighting the effect above that already does exactly that on the
+       * right signal. What was here was a second copy of the arithmetic, and
+       * it had the bug a second copy gets: no `[disabled]`, so a Send button
+       * greyed out until you type was a dead stop at the end of the ring.
+       */
+      const to = nextInRing(focusablesIn(sheet.current), document.activeElement, e.shiftKey);
+      if (!to) return;
+      e.preventDefault();
+      to.focus();
     },
     [full],
   );
