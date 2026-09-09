@@ -423,3 +423,72 @@ describe('what sits above the buttons', () => {
     expect(proposalsLine([])).toBe('');
   });
 });
+
+/**
+ * A confirmation line the student can read and act on.
+ *
+ * The whole safety of this file is one sentence at the top of it: nothing here
+ * executes, a tool call becomes "one line saying exactly what would happen,
+ * with a button — and the student decides". That is only true while the line
+ * says what will happen. Three ways it did not.
+ */
+describe('the line a proposal is decided from', () => {
+  const NOW = new Date(2026, 8, 9);
+  const said = (name: string, input: Record<string, unknown>) =>
+    readProposal(call(name, input), known, NOW)?.said ?? null;
+
+  /*
+   * `isoToDate` does not refuse 31 February, it answers it — with 3 March. So
+   * a model that got a date slightly wrong put a task on a day nobody had
+   * named. `lib/generate.ts` and `lib/handoff.ts` already hold syllabus dates
+   * to `realDate` for exactly this; this file held them to a regex.
+   */
+  it('refuses a date that is shaped like one and is not one', () => {
+    expect(said('add_task', { title: 'Draft', date: '2026-02-31' })).toBe('Add “Draft” to your list');
+    expect(said('add_task', { title: 'Draft', date: '2026-13-45' })).toBe('Add “Draft” to your list');
+    expect(said('add_task', { title: 'Draft', date: '2026-00-00' })).toBe('Add “Draft” to your list');
+    expect(said('add_task', { title: 'Draft', date: '2027-02-29' })).toBe('Add “Draft” to your list');
+    // A leap day that is one is kept.
+    expect(said('add_task', { title: 'Draft', date: '2028-02-29' })).toContain('February 29');
+    // And a move, which has no meaning at all without a date, is refused whole.
+    expect(said('move_task', { id: 't1', date: '2026-02-31' })).toBeNull();
+    expect(said('mark_attendance', { courseId: 'econ', date: '2026-02-31', mark: 'absent' })).toBeNull();
+  });
+
+  it('refuses a year the calendar will not give back', () => {
+    // `new Date` maps a year under 100 into the 1900s, so `0000-01-01` is a
+    // real 1 January that lands in 1900, where nothing will show it again.
+    expect(said('add_task', { title: 'Draft', date: '0000-01-01' })).toBe('Add “Draft” to your list');
+    expect(said('add_task', { title: 'Draft', date: '0099-06-01' })).toBe('Add “Draft” to your list');
+  });
+
+  /*
+   * The line read "Thursday, September 10" whether the model meant this
+   * September, the last one, or 2124. The year is the one part a person cannot
+   * work out from the rest of the sentence, and it was the one part left off.
+   */
+  it('names the year when it is not this one, and not when it is', () => {
+    expect(said('add_task', { title: 'Draft', date: '2026-09-10' })).toBe(
+      'Add “Draft” to your list for Thursday, September 10',
+    );
+    expect(said('add_task', { title: 'Draft', date: '2025-09-10' })).toContain('2025');
+    expect(said('add_task', { title: 'Draft', date: '2027-09-10' })).toContain('2027');
+  });
+
+  /*
+   * A title is the model's text and can be any length. At four thousand
+   * characters the button is below the fold and the sentence meant to be read
+   * before deciding cannot be. The same string is the button's `aria-label`,
+   * which a screen reader says in full, so a CSS clamp would not have done.
+   */
+  it('keeps the line short enough to read, and on one line', () => {
+    const long = said('add_task', { title: 'A'.repeat(4000) });
+    expect(long!.length).toBeLessThan(200);
+    expect(long).toContain('…');
+    expect(said('add_task', { title: 'One\nTwo\nThree' })).toBe('Add “One Two Three” to your list');
+  });
+
+  it('leaves an ordinary title exactly as it is', () => {
+    expect(said('add_task', { title: 'Read chapter 3' })).toBe('Add “Read chapter 3” to your list');
+  });
+});

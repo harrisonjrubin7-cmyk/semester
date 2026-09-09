@@ -50,6 +50,7 @@ import { STAGES, type Application, type Stage } from './apply';
 import type { ToolCall, ToolSpec } from './claude';
 import type { Action, Persisted } from '../state/shape';
 import type { Attended } from './attend';
+import { dateToIso, isoToDate, realDate } from './date';
 import type { CourseId, PersonalTask, Screen } from './types';
 
 /** The screens a proposal may send you to. Everything else is out of bounds. */
@@ -383,17 +384,73 @@ function num(input: Record<string, unknown>, key: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** A date the app can actually store, or nothing. */
+/**
+ * A date the app can actually store, or nothing.
+ *
+ * Shaped *and* real. The check was `/^\d{4}-\d{2}-\d{2}$/` alone, which says
+ * yes to 31 February and to 2026-13-45 — and `isoToDate` does not refuse
+ * those, it answers them: the first becomes 3 March and the second becomes 14
+ * February 2027. So a model that got a date slightly wrong produced a task on
+ * a day nobody had named, with a confirmation line that either read
+ * confidently about the wrong day or showed the raw `2026-13-45` while the
+ * task went somewhere else entirely.
+ *
+ * `realDate` is the check this app already wrote for exactly this, and
+ * `lib/generate.ts` and `lib/handoff.ts` already use it. The rule there is that
+ * an unreal date is dropped rather than guessed at; here dropping the date
+ * refuses the proposal, which is what this file does with every argument it
+ * cannot describe honestly.
+ */
 function iso(value: string): string {
-  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!m) return '';
+  if (!realDate(Number(m[2]) - 1, Number(m[3]), Number(m[1]))) return '';
+  /*
+   * And then the round trip, which is the property the confirmation line
+   * actually rests on: the day the app will store is the day the model named.
+   * `realDate` cannot see the last shape on its own — `new Date` maps a year
+   * under 100 into the 1900s, so `0000-01-01` is a real 1 January and lands in
+   * 1900, where nothing will ever show it again.
+   */
+  return dateToIso(isoToDate(value)) === value ? value : '';
 }
 
-/** A readable day, so a confirmation line is a sentence rather than a field. */
-function day(value: string): string {
+/**
+ * A readable day, so a confirmation line is a sentence rather than a field.
+ *
+ * The year is named when it is not this one, and left off when it is. Leaving
+ * it off always was the bug: "Add “Draft” to your list for Thursday, September
+ * 10" is the same sentence whether the model meant this September, last one, or
+ * 2124 — and a proposal whose whole safety is that somebody reads the line and
+ * decides cannot hide the one part that is wrong. Named always would be noise
+ * on the ordinary case, which is a date inside the term you are in.
+ */
+function day(value: string, now: Date): string {
   const d = new Date(`${value}T12:00:00`);
-  return Number.isNaN(d.getTime())
-    ? value
-    : d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  if (Number.isNaN(d.getTime())) return value;
+  const sameYear = d.getFullYear() === now.getFullYear();
+  return d.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  });
+}
+
+/**
+ * How much of a model's own words a confirmation line will carry.
+ *
+ * A title is the model's text and can be any length. At four thousand
+ * characters the line is four thousand characters, the button is somewhere
+ * below the fold, and the thing the student is meant to read before deciding
+ * is unreadable. Trimmed here rather than clamped in CSS, because the same
+ * string is the button's `aria-label`, which a screen reader will say in full.
+ */
+const SAID_MAX = 120;
+
+function short(text: string): string {
+  const oneLine = text.replace(/\s+/g, ' ').trim();
+  return oneLine.length <= SAID_MAX ? oneLine : `${oneLine.slice(0, SAID_MAX - 1)}…`;
 }
 
 /**
@@ -405,7 +462,7 @@ function day(value: string): string {
  * of the four. A proposal that cannot be described exactly is not shown at
  * all — silence is better than a button whose label is a guess.
  */
-export function readProposal(call: ToolCall, known: Known): Proposal | null {
+export function readProposal(call: ToolCall, known: Known, now = new Date()): Proposal | null {
   const { id } = call;
 
   if (call.name === 'tick_deadline') {
@@ -416,8 +473,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     if (!real) return null;
     return {
       id,
-      said: `Tick off “${real.title}” as done`,
-      did: `“${real.title}” is ticked off`,
+      said: `Tick off “${short(real.title)}” as done`,
+      did: `“${short(real.title)}” is ticked off`,
       verb: 'Tick it',
       sort: 'write',
       action: { type: 'toggleDone', id: which },
@@ -432,8 +489,10 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     const when = iso(str(call.input, 'date'));
     return {
       id,
-      said: when ? `Add “${title}” to your list for ${day(when)}` : `Add “${title}” to your list`,
-      did: `“${title}” is on your list`,
+      said: when
+        ? `Add “${short(title)}” to your list for ${day(when, now)}`
+        : `Add “${short(title)}” to your list`,
+      did: `“${short(title)}” is on your list`,
       verb: 'Add it',
       sort: 'write',
       action: {
@@ -451,8 +510,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     if (!task || !when) return null;
     return {
       id,
-      said: `Move “${task.title}” to ${day(when)}`,
-      did: `“${task.title}” is now on ${day(when)}`,
+      said: `Move “${short(task.title)}” to ${day(when, now)}`,
+      did: `“${short(task.title)}” is now on ${day(when, now)}`,
       verb: 'Move it',
       sort: 'write',
       action: { type: 'editTask', id: which, patch: { date: when } },
@@ -476,8 +535,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     if (was === mark) return null;
     return {
       id,
-      said: `Mark you ${mark} for ${course.code} on ${day(date)}`,
-      did: `${course.code} on ${day(date)} is marked ${mark}`,
+      said: `Mark you ${mark} for ${course.code} on ${day(date, now)}`,
+      did: `${course.code} on ${day(date, now)} is marked ${mark}`,
       verb: 'Record it',
       sort: 'write',
       action: { type: 'markAttendance', courseId, date, mark },
@@ -492,7 +551,7 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     const whole = Math.round(minutes);
     return {
       id,
-      said: label ? `Start a ${whole}-minute timer for ${label}` : `Start a ${whole}-minute timer`,
+      said: label ? `Start a ${whole}-minute timer for ${short(label)}` : `Start a ${whole}-minute timer`,
       did: `A ${whole}-minute timer is running`,
       verb: 'Start it',
       sort: 'write',
@@ -513,8 +572,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     const course = known.courses.find((c) => c.id === courseId);
     return {
       id,
-      said: `Keep “${title}” as a note${course ? ` on ${course.code}` : ''} — ${body.length} characters`,
-      did: `“${title}” is in your notes`,
+      said: `Keep “${short(title)}” as a note${course ? ` on ${course.code}` : ''} — ${body.length} characters`,
+      did: `“${short(title)}” is in your notes`,
       verb: 'Keep it',
       sort: 'write',
       action: { type: 'keepNote', title, body, courseId: course ? courseId : null },
@@ -529,7 +588,7 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     const course = known.courses.find((c) => c.id === courseId);
     return {
       id,
-      said: `Add “${raw}” to your sources${course ? ` for ${course.code}` : ''}`,
+      said: `Add “${short(raw)}” to your sources${course ? ` for ${course.code}` : ''}`,
       did: 'The source is in your list',
       verb: 'Add it',
       sort: 'write',
@@ -564,8 +623,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     const due = iso(str(call.input, 'due'));
     return {
       id,
-      said: `Track ${role} at ${org}${due ? `, due ${day(due)}` : ''}`,
-      did: `${role} at ${org} is being tracked`,
+      said: `Track ${short(role)} at ${short(org)}${due ? `, due ${day(due, now)}` : ''}`,
+      did: `${short(role)} at ${short(org)} is being tracked`,
       verb: 'Track it',
       sort: 'write',
       action: { type: 'addApplication', patch: { org, role, due, rolling: !due } },
@@ -622,8 +681,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     const was = STAGES.find((s) => s.id === app.stage)?.label ?? app.stage;
     return {
       id,
-      said: `Move ${app.role} at ${app.org} from ${was} to ${named}`,
-      did: `${app.role} at ${app.org} is at ${named}`,
+      said: `Move ${short(app.role)} at ${short(app.org)} from ${was} to ${named}`,
+      did: `${short(app.role)} at ${short(app.org)} is at ${named}`,
       verb: 'Move it',
       sort: 'write',
       action: { type: 'moveApplication', id: app.id, stage },
@@ -639,8 +698,8 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     const by = iso(str(call.input, 'by'));
     return {
       id,
-      said: `On ${app.role} at ${app.org}, set the next step to "${next}"${by ? `, by ${day(by)}` : ''}`,
-      did: `The next step on ${app.org} is "${next}"`,
+      said: `On ${short(app.role)} at ${short(app.org)}, set the next step to "${short(next)}"${by ? `, by ${day(by, now)}` : ''}`,
+      did: `The next step on ${short(app.org)} is "${short(next)}"`,
       verb: 'Set it',
       sort: 'write',
       action: { type: 'patchApplication', id: app.id, patch: { next, nextBy: by } },
