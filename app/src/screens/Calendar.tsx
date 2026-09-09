@@ -139,7 +139,7 @@ function DayView() {
     feedToday.length === 0;
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 'var(--page-pad)' }}>
       <div
         style={{
           display: 'flex',
@@ -603,7 +603,7 @@ function WeekView() {
   const total = days.reduce((n, d) => n + d.blocks.length, 0);
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 'var(--page-pad)' }}>
       <div
         style={{
           display: 'flex',
@@ -818,28 +818,30 @@ function MonthView() {
     );
 
   // What lands on each day of this month, per the current source filter.
-  const marks: Record<number, { c: CourseId | null; kind: string; tint?: string }[]> = {};
-  const add = (d: Date, mark: { c: CourseId | null; kind: string; tint?: string }) => {
+  const marks: Record<number, { c: CourseId | null; kind: string; tint?: string; title?: string }[]> = {};
+  const add = (d: Date, mark: { c: CourseId | null; kind: string; tint?: string; title?: string }) => {
     if (d.getFullYear() !== calYear || d.getMonth() !== calMonth) return;
     (marks[d.getDate()] ??= []).push(mark);
   };
 
   if (calSource === 'all' || calSource === 'deadlines') {
-    datedItems(catalog, now).forEach((i) => add(i.date, { c: i.c, kind: 'due' }));
+    datedItems(catalog, now).forEach((i) => add(i.date, { c: i.c, kind: 'due', title: i.title }));
     state.tasks.forEach((t) => {
-      if (t.date) add(isoToDate(t.date), { c: t.courseId, kind: 'mine' });
+      if (t.date) add(isoToDate(t.date), { c: t.courseId, kind: 'mine', title: t.title });
     });
   }
   // Your own events, in the colour the day and week grids give them, so the
   // three views agree about what a colour means.
   if (calSource === 'all' || calSource === 'classes') {
     state.appointments.forEach((a) =>
-      add(isoToDate(a.date), { c: null, kind: 'appt', tint: kindOf(a.kind).tint }),
+      add(isoToDate(a.date), { c: null, kind: 'appt', tint: kindOf(a.kind).tint, title: a.title }),
     );
   }
   if (calSource === 'all' || calSource === 'campus') {
-    datedEvents(now, state.sample).forEach((e) => add(e.date, { c: null, kind: 'event' }));
-    state.feedEvents.forEach((e) => add(isoToDate(e.date), { c: e.courseId, kind: 'feed' }));
+    datedEvents(now, state.sample).forEach((e) => add(e.date, { c: null, kind: 'event', title: e.title }));
+    state.feedEvents.forEach((e) =>
+      add(isoToDate(e.date), { c: e.courseId, kind: 'feed', title: e.title }),
+    );
   }
   if (calSource === 'classes') {
     // Mark every day that has a class on it, so a term's teaching days show up.
@@ -864,7 +866,7 @@ function MonthView() {
   const selTasks = state.tasks.filter((t) => t.date === iso(selectedDay) && !t.done);
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 'var(--page-pad)' }}>
       <div
         style={{
           display: 'flex',
@@ -967,7 +969,10 @@ function MonthView() {
                 key={i}
                 role="gridcell"
                 aria-hidden="true"
-                style={{ aspectRatio: '1', background: 'var(--app-bg)' }}
+                /* The same cell shape as a real day, or the week a month
+                   begins mid-way through is a row of its own height. */
+                className="mcell"
+                style={{ background: 'var(--app-bg)' }}
               />
             );
           }
@@ -978,7 +983,6 @@ function MonthView() {
             <button
               key={i}
               type="button"
-              className="bare"
               role="gridcell"
               // The whole sentence, so the weekday, the standing and what is on
               // the day all survive without the colour.
@@ -1012,8 +1016,17 @@ function MonthView() {
                 dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${d}` });
                 setAdding(d);
               }}
+              /*
+               * The cell's shape is a class, not an inline style, because it
+               * is the one thing about this grid that differs between a phone
+               * and a desktop: a square that holds a numeral and four dots at
+               * 55px, and a landscape cell with room to name what is on the
+               * day at 170. An inline style cannot be answered by a media
+               * query — it wins over every selector — so what varies lives in
+               * `.mcell` and only what depends on this day stays here.
+               */
+              className="bare mcell"
               style={{
-                aspectRatio: '1',
                 // Where a dragged thing would land, drawn on the cell under
                 // the finger. A drag with no target is a guess.
                 outline:
@@ -1022,15 +1035,11 @@ function MonthView() {
                     : undefined,
                 outlineOffset: -2,
                 background: isSelected ? 'var(--app-hero)' : 'var(--app-bg)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 3,
                 border: isToday ? '1px solid var(--app-accent)' : 'none',
               }}
             >
               <span
+                className="mcell-day"
                 style={{
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'var(--type-lg)',
@@ -1040,7 +1049,7 @@ function MonthView() {
               >
                 {d}
               </span>
-              <span aria-hidden="true" style={{ display: 'flex', gap: 'var(--sp-1)', height: 4 }}>
+              <span aria-hidden="true" className="mcell-dots">
                 {dots.map((m, k) => (
                   <span
                     key={k}
@@ -1056,6 +1065,38 @@ function MonthView() {
                     }}
                   />
                 ))}
+              </span>
+              {/*
+                What is actually on the day, for a cell wide enough to say it.
+                Drawn in the markup at every width and shown by `.mcell-names`
+                only on a desktop: three spans per cell is nothing, and the
+                alternative — a width read in JavaScript — is a second source
+                of truth about the same breakpoint.
+
+                `aria-hidden`, because the cell's own label already reads the
+                whole day out and a screen reader saying it twice is worse
+                than a dot.
+              */}
+              <span aria-hidden="true" className="mcell-names">
+                {(marks[d] ?? [])
+                  .filter((m) => m.title)
+                  .slice(0, 3)
+                  .map((m, k) => (
+                    <span key={k} className="mcell-name">
+                      <i
+                        style={{
+                          background: m.kind === 'mine' ? 'transparent' : (m.tint ?? tint(m.c).fill),
+                          border: m.kind === 'mine' ? '1px solid var(--app-accent)' : 'none',
+                        }}
+                      />
+                      <span>{m.title}</span>
+                    </span>
+                  ))}
+                {(marks[d] ?? []).filter((m) => m.title).length > 3 && (
+                  <span className="mcell-more">
+                    +{(marks[d] ?? []).filter((m) => m.title).length - 3} more
+                  </span>
+                )}
               </span>
             </button>
           );
@@ -1293,7 +1334,7 @@ function SemesterView() {
   const dates = [...items.map((i) => i.date), ...events.map((e) => e.date)];
   if (dates.length === 0) {
     return (
-      <div style={{ padding: 18 }}>
+      <div style={{ padding: 'var(--page-pad)' }}>
         {/* Only the filtered case reaches here. A calendar with nothing on it
             at all is caught further up by the screen's own empty state, which
             offers "Add your first course" — so there is no unfiltered branch
@@ -1330,7 +1371,7 @@ function SemesterView() {
   weeksRef.current = weeks;
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 'var(--page-pad)' }}>
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
         {items.length} deadlines and {events.length} events across {weeks.length} weeks. The bar is
         how loaded each week is; exams are marked.

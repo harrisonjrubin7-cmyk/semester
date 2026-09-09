@@ -32,7 +32,7 @@ export function Guess() {
 
   if (!unit || asked.length === 0) {
     return (
-      <div style={{ padding: 18, fontSize: 'var(--type-md)', opacity: 0.6 }}>
+      <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', opacity: 0.6 }}>
         Nothing to guess at in this unit.
       </div>
     );
@@ -73,7 +73,7 @@ export function Guess() {
   }
 
   return (
-    <div style={{ padding: 18, display: 'flex', flexDirection: 'column', minHeight: 620 }}>
+    <div style={{ padding: 'var(--page-pad)', display: 'flex', flexDirection: 'column', minHeight: 620 }}>
       <div className="kicker">
         {unitName(unit.name)} · {state.guessIdx + 1} of {asked.length}
       </div>

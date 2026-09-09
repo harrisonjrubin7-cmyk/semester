@@ -6,13 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint src && node scripts/styles.mjs",
+    "lint": "oxlint src && node scripts/styles.mjs && node scripts/labels.mjs",
     "lint:styles": "node scripts/styles.mjs",
     "mirror": "node scripts/mirror.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:zones": "TZ=America/Chicago vitest run && TZ=Pacific/Kiritimati vitest run"
+    "test:zones": "TZ=America/Chicago vitest run && TZ=Pacific/Kiritimati vitest run",
+    "lint:labels": "node scripts/labels.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0",
