@@ -54,7 +54,13 @@ describe('every navigation is a landmark', () => {
   it('marks the bar, the rail, the shelves and the home screen', () => {
     expect(find('App.tsx').src, 'the tab bar').toContain('<nav ref={bar}');
     expect(find('App.tsx').src, 'the rail').toContain('<nav className="rail"');
-    expect(find('nav/ShelfNav.tsx').src, 'the shelves').toMatch(/<nav className="shelf-nav"/);
+    // `[ "]` rather than a closing quote: the assertion is that the shelves
+    // are a `<nav>` carrying their own class, not that the class is alone on
+    // the element. It already is not — `pane-strip` joined it, which is what
+    // puts the pills on the content column at desktop widths — and a landmark
+    // test that fails when a second class arrives is a test people edit
+    // without reading rather than one that catches a lost landmark.
+    expect(find('nav/ShelfNav.tsx').src, 'the shelves').toMatch(/<nav className="shelf-nav[ "]/);
     // The whole screen: a field that searches screens, the icons, and the
     // dock its own comment calls "this layout's own navigation".
     expect(find('Springboard.tsx').src, 'the home screen').toMatch(/<nav\s+aria-label="Sections"/);

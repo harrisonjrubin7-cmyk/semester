@@ -12,7 +12,7 @@ import { gather } from '../lib/bundle';
 import { extractText, type Extracted } from '../lib/extract';
 import { generateCourse, type GenerationResult } from '../lib/generate';
 import { packSummary, provenance, readPack } from '../lib/handoff';
-import { configured, provider } from '../lib/claude';
+import { configured } from '../lib/claude';
 import { readTerm } from '../lib/term';
 import {
   diff,
@@ -25,6 +25,7 @@ import {
 import { arrivedByShare, forgetShare, takeShared } from '../lib/shared';
 import { blankCourse } from '../lib/edit';
 import { Folding } from '../components/Fold';
+import { NeedsKey } from '../components/NeedsKey';
 
 /**
  * Upload a syllabus, get a course.
@@ -360,10 +361,7 @@ export function Import() {
       )}
 
       {!configured() && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-          Building a course asks {provider()} to read the documents, which needs a key. Set one under{' '}
-          <strong>Settings → The assistant</strong>, or sign in and use the shared one.
-        </div>
+        <NeedsKey also="Building a course asks it to read the documents you gave it." />
       )}
 
       {/* The files are still read and still in state, so the retry costs

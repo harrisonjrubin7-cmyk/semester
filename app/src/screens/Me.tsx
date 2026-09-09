@@ -296,9 +296,9 @@ export function Me() {
    * a red number you learn to stop seeing — and Credits gives its place up
    * when it does, because five columns at 402px is five columns nobody reads.
    */
-  const stats: { n: string; l: string; to?: Screen }[] = [
+  const stats: { n: string; l: string; to?: Screen; late?: boolean }[] = [
     { n: String(where.ahead), l: 'Ahead', to: 'ahead' },
-    ...(where.late > 0 ? [{ n: String(where.late), l: 'Late', to: 'behind' as Screen }] : []),
+    ...(where.late > 0 ? [{ n: String(where.late), l: 'Late', to: 'behind' as Screen, late: true }] : []),
     { n: String(where.done), l: 'Done' },
     ...(where.late === 0 && where.credits > 0 ? [{ n: String(where.credits), l: 'Credits' }] : []),
     { n: String(where.courses), l: 'Courses', to: 'courses' },
@@ -366,7 +366,14 @@ export function Me() {
         {stats.map((s, i) => {
           const cell = (
             <>
-              <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1 }}>
+              {/* Late is the only one of the four that is a warning, and the
+                  note above already calls it "a red number" — see
+                  `.chrome-text.is-late` in app.css for why the gradient has
+                  to come off for the colour to land. */}
+              <div
+                className={s.late ? 'chrome-text is-late' : 'chrome-text'}
+                style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1 }}
+              >
                 {s.n}
               </div>
               <div

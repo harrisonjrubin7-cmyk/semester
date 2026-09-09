@@ -289,7 +289,7 @@ function OverdueBanner() {
 function ThisWeek() {
   const { state, dispatch, now, catalog, tint, courseCode } = useStore();
   const row = useRowStyle(9);
-  const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
+  const nextEvent = datedEvents(now, state.schoolId, state.sample).find((e) => !e.isPast);
 
   // Your own tasks alongside the deadlines, day by day. Same reason as
   // everywhere else in this change: a week that shows only what a syllabus

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { buildCatalog, EMPTY_CATALOG } from '../data/catalog';
 import {
   appointmentsOn,
+  campusCalendar,
+  datedEvents,
   datedItems,
   feed,
   feedEventsOn,
@@ -642,5 +644,46 @@ describe('lengthOf', () => {
   it('falls back for a block belonging to no course, and for a course that has gone', () => {
     expect(lengthOf(CAT, { time: '', at: 900, title: '', meta: '', c: null })).toBe(50);
     expect(lengthOf(CAT, { time: '', at: 900, title: '', meta: '', c: 'deleted' })).toBe(50);
+  });
+});
+
+describe('campusCalendar and datedEvents', () => {
+  const NOW = new Date(2026, 8, 9);
+
+  it('gives a Vanderbilt student the campus calendar, sample or no sample', () => {
+    // The regression this is here for: importing your own four syllabi turns
+    // the sample semester off, and the campus calendar used to hang off that
+    // flag — so the Campus chip answered Athletics, Clubs, University and
+    // Saved with nothing at all, on a screen that had been full the day
+    // before. It hangs off where you study now, which is what it is about.
+    expect(campusCalendar('vanderbilt', false).length).toBeGreaterThan(0);
+    expect(campusCalendar('vanderbilt', true)).toEqual(campusCalendar('vanderbilt', false));
+    expect(datedEvents(NOW, 'vanderbilt').length).toBeGreaterThan(0);
+  });
+
+  it('carries the sample semester in for somebody who has set no school', () => {
+    // The sample is a Vanderbilt semester, so it brings Vanderbilt's calendar.
+    expect(campusCalendar('', true)).toEqual(campusCalendar('vanderbilt', false));
+  });
+
+  it('offers nobody else somebody else’s football', () => {
+    expect(campusCalendar('', false)).toEqual([]);
+    expect(campusCalendar('somewhere-else', false)).toEqual([]);
+    expect(datedEvents(NOW, 'somewhere-else')).toEqual([]);
+  });
+
+  it('dates every event and puts them in order', () => {
+    const events = datedEvents(NOW, 'vanderbilt');
+    const times = events.map((e) => e.date.getTime());
+    expect([...times].sort((a, b) => a - b)).toEqual(times);
+    expect(events.every((e) => e.kind && e.title)).toBe(true);
+  });
+
+  it('has an event of every kind the chips offer', () => {
+    // Athletics, Clubs and University are chips somebody can choose. A chip
+    // that can only ever answer "nothing" is a broken control, so the
+    // listings have to cover the row.
+    const kinds = new Set(campusCalendar('vanderbilt', false).map((e) => e.kind));
+    expect(kinds).toEqual(new Set(['Athletics', 'Clubs', 'University']));
   });
 });
