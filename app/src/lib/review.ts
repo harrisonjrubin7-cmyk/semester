@@ -190,11 +190,45 @@ export function dueFirst<T extends { key: string }>(cards: T[], reviews: Reviews
   });
 }
 
-/** How many of these are due right now. Drives "N cards waiting" copy. */
+/**
+ * How many of these are waiting: never met, or come round again.
+ *
+ * The lumped number, and the right one for a queue — a drill has the same
+ * work to do either way, which is why `Drill` counts with this and calls it
+ * "waiting".
+ *
+ * It is the wrong number to call *due*. See {@link comeRound}.
+ */
 export function dueCount(keys: string[], reviews: Reviews, now: number): number {
   return keys.filter((k) => {
     const r = reviews[k];
     return !r || r.seen === 0 || r.due <= now;
+  }).length;
+}
+
+/**
+ * Cards that have genuinely come round: answered before, and due again now.
+ *
+ * The distinction {@link dueCount} deliberately does not make, and the one any
+ * sentence with the word "due" or "review" in it has to. A card you have never
+ * seen has not come round — nothing went out, so nothing came back — and a
+ * course where you have answered one card of a hundred and seven was being
+ * told that a hundred and one had "come round for review", which is a backlog
+ * the student created by studying. The first answer in a course should not
+ * produce a hundred-card debt.
+ */
+export function comeRound(keys: string[], reviews: Reviews, now: number): number {
+  return keys.filter((k) => {
+    const r = reviews[k];
+    return !!r && r.seen > 0 && r.due <= now;
+  }).length;
+}
+
+/** Cards nobody has answered yet — new material rather than a backlog. */
+export function neverMet(keys: string[], reviews: Reviews): number {
+  return keys.filter((k) => {
+    const r = reviews[k];
+    return !r || r.seen === 0;
   }).length;
 }
 
