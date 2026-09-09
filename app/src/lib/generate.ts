@@ -23,6 +23,7 @@
 import { ask, type Citation, type Doc } from './claude';
 import type { Course, CourseModule, GradeRow, Item, RecurringBlock } from './types';
 import { check, flatten, tally, worthCiting, type Checked } from './cite';
+import { tidyGuide } from './guide';
 
 export interface GenerationInput {
   /**
@@ -175,7 +176,20 @@ function validate(
   }
 
   if (!raw.course?.code) throw new Error('No course code came back — the document may not be a syllabus.');
-  if (!raw.guide?.units?.length) throw new Error('No study guide came back. Try adding the readings.');
+  /*
+   * Rebuilt before it is judged, not after.
+   *
+   * The test used to be `raw.guide?.units?.length`, which catches an object —
+   * there is a case below pinning that — and misses a string, because a
+   * string has a length too. "three units" passed it and then hit
+   * `.map is not a function`: a raw TypeError, where this file writes a
+   * sentence for everything else it refuses. The same comment further down
+   * records that exact mistake being fixed for `items` and `grading`; the
+   * guide was the one left. See `lib/guide.ts`, which the shared-course
+   * reader uses for the same reason.
+   */
+  const given = tidyGuide(raw.guide);
+  if (given.units.length === 0) throw new Error('No study guide came back. Try adding the readings.');
 
   const id = slug(raw.course.id || raw.course.code);
   const source = input.documents[0]?.name ?? 'uploaded document';
@@ -296,18 +310,26 @@ function validate(
     }));
   if (schedule.length === 0) notes.push('No meeting pattern was stated, so the day rail will be empty.');
 
+  // A unit with nothing to drill is not a unit. Said rather than done
+  // quietly: this file's rule is that what it drops, it says it dropped.
+  const units = given.units.filter((u) => u.cards.length > 0);
+  const lost = given.units.length - units.length;
+  if (lost > 0) {
+    notes.push(
+      `${lost} unit${lost === 1 ? '' : 's'} came back with no usable cards, so ` +
+        `${lost === 1 ? 'it was' : 'they were'} left out.`,
+    );
+  }
+
   const guide = {
-    ...raw.guide,
+    ...given,
     code: course.code,
     source,
+    // Never the model's figure: mastery is measured here, from what has
+    // actually been answered.
     mastery: 0,
     audio: false,
-    units: raw.guide.units.map((u) => ({
-      name: u.name ?? 'Unit',
-      mastery: 0,
-      cards: (u.cards ?? []).filter((c) => c?.q && c?.a),
-    })).filter((u) => u.cards.length > 0),
-    terms: raw.guide.terms ?? [],
+    units: units.map((u) => ({ ...u, name: u.name || 'Unit', mastery: 0 })),
   };
 
   const cards = guide.units.reduce((n, u) => n + u.cards.length, 0);

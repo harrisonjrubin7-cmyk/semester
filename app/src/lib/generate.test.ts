@@ -383,6 +383,57 @@ describe('a reply of the wrong shape', () => {
     expect(out.notes.join(' ')).toMatch(/No meeting pattern/i);
   });
 
+  /*
+   * The same mistake as `items` and `grading` above, on the guide.
+   *
+   * A string has a length, so `raw.guide?.units?.length` waved these through
+   * and the student got a raw TypeError where this file writes a sentence for
+   * everything else it refuses. Measured before the fix:
+   *
+   *     { units: 'three units' }         raw.guide.units.map is not a function
+   *     { units: [{ cards: 'lots' }] }   (u.cards ?? []).filter is not a function
+   */
+  it('refuses a guide whose units are a string, not only an object', async () => {
+    await expect(run(course({ guide: { units: 'three units' } }))).rejects.toThrow(
+      /No study guide/i,
+    );
+  });
+
+  it('takes a unit whose cards are not a list as a unit with none', async () => {
+    const out = await run(
+      course({
+        guide: { units: [{ name: 'Broken', cards: 'lots' }, { name: 'Fine', cards: [{ q: 'q', a: 'a' }] }] },
+      }),
+    );
+    expect(out.module.guide.units.map((u) => u.name)).toEqual(['Fine']);
+  });
+
+  it('says so when a unit was left out, rather than dropping it quietly', async () => {
+    // The rule this file states for everything else it throws away.
+    const out = await run(
+      course({
+        guide: { units: [{ name: 'Empty', cards: [] }, { name: 'Full', cards: [{ q: 'q', a: 'a' }] }] },
+      }),
+    );
+    expect(out.notes.join(' ')).toMatch(/1 unit came back with no usable cards/);
+  });
+
+  it('will not take terms or frames that are not lists', async () => {
+    // Stored as strings, these threw later: the glossary maps over `terms`,
+    // and three screens test `frames && frames.length` before mapping it.
+    const out = await run(
+      course({
+        guide: {
+          units: [{ name: 'U', cards: [{ q: 'q', a: 'a' }] }],
+          terms: 'a glossary',
+          frames: 'some frames',
+        },
+      }),
+    );
+    expect(out.module.guide.terms).toEqual([]);
+    expect(out.module.guide.frames).toBeUndefined();
+  });
+
   it('still refuses a guide whose units are not a list', async () => {
     // This one was already right, and stays that way: an object has no
     // length, so the friendly refusal fires rather than a TypeError.
