@@ -29,7 +29,6 @@ import {
   Person,
   ProofIcon,
   RunwayIcon,
-  Search,
   SolveIcon,
   SourcesIcon,
   StudyIcon,
@@ -62,7 +61,6 @@ const OWN: Partial<Record<Screen, Glyph>> = {
   mine: NotesIcon,
   me: Person,
   notifs: Bell,
-  search: Search,
 
   ask: AskIcon,
   work: WorkIcon,

@@ -482,7 +482,6 @@ export type Screen =
   | 'calendar'
   | 'event'
   | 'me'
-  | 'search'
   | 'notifs'
   | 'settings'
   | 'import'

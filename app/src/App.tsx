@@ -84,7 +84,6 @@ const Notifications = lazy(() => import('./screens/Me').then((m) => ({ default: 
 const Quiz = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Quiz })));
 const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
 const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
-const Search = lazy(() => import('./screens/Me').then((m) => ({ default: m.Search })));
 const Settings = lazy(() => import('./screens/settings/Index').then((m) => ({ default: m.Settings })));
 // The settings pages. Lazy like every other screen: somebody who never opens
 // settings should not download the colour picker.
@@ -262,8 +261,6 @@ function useHeader(): { kicker: string; title: string } {
     }
     case 'me':
       return { kicker: load, title: 'Progress' };
-    case 'search':
-      return { kicker: 'Anything in the app', title: 'Search' };
     case 'notifs':
       return { kicker: 'Today', title: 'Alerts' };
     case 'settings':
@@ -443,9 +440,11 @@ function Header() {
   const canGoBack = state.history.length > 0;
   // Search used to appear on two screens out of twenty-five, so the one tool
   // that finds anything was itself the hardest thing to find. It is now on
-  // every screen except the one it opens. Alerts stay at the top level, where
-  // a header is not already competing with a Back button and a long title.
-  const showActions = state.screen !== 'search';
+  // every screen, with no exception to make: search is an overlay over the
+  // screen you are on rather than a screen of its own, so there is no longer
+  // one it must hide on. Alerts stay at the top level, where a header is not
+  // already competing with a Back button and a long title.
+  const showActions = true;
   const atRoot = rootOf(state.screen) === state.screen;
 
   /*
@@ -585,11 +584,27 @@ function Header() {
           >
             <Plus size={19} />
           </button>
+          {/*
+            The one search, opened over whatever you were reading.
+
+            This used to navigate to a `search` screen that ran the same
+            `findEverything` over the same `openHit` and drew the same tagged
+            rows as `components/Command.tsx` — one search behind two doors,
+            and which one you got depended on the width of your window. `/`
+            opened the overlay, and `Keys` is mounted only on the wide layout,
+            so a phone could reach the screen and never the overlay.
+
+            The overlay is the one that survives, for the reason its own file
+            gives: looking something up should not cost you the page you were
+            reading, and a lookup you can abandon is one people actually make.
+            The screen it replaced could only be left by going back.
+          */}
           <button
             type="button"
             className="btn btn-ghost btn-icon tap"
-            onClick={() => dispatch({ type: 'go', screen: 'search' })}
-            aria-label="Search"
+            onClick={() => dispatch({ type: 'finder', open: true })}
+            aria-label="Search everything"
+            aria-keyshortcuts="/"
           >
             <SearchIcon size={19} />
           </button>
@@ -768,8 +783,6 @@ function CurrentScreen() {
       return <EventDetail />;
     case 'me':
       return <Me />;
-    case 'search':
-      return <Search />;
     case 'notifs':
       return <Notifications />;
     case 'settings':

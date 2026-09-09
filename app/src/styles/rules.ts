@@ -237,16 +237,22 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 671,
+  type: 670,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 216,
+  leading: 214,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
   space: 490,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 487,
+  shorthand: 486,
 };
 
 /*
+ * 671/216/490/487 → 670/214/490/486 when the search screen was deleted. Three
+ * down and none up, and none of it by reformatting: the screen drew its own
+ * result rows — a size, two line heights and a padding shorthand — beside the
+ * overlay that draws the same rows from the same `findEverything`. The one
+ * that survives was already on the scale. See `components/Command.tsx`.
+ *
  * 673/218/515/498 → 673/218/490/494 with the three layouts.
  *
  * Twenty-five spacing values and four shorthands gone, none of them
