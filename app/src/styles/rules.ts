@@ -237,18 +237,19 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 674,
+  type: 673,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 218,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 515,
+  space: 490,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 497,
+  shorthand: 493,
 };
 
 /*
- * .../498 → .../497 when the Everything screen was folded into Progress. One
- * down and none up, from a 575-line screen deleted rather than reformatted:
+ * 673/218/490/494 → 673/218/490/493 when the Everything screen was folded
+ * into Progress. One down and none up, from a 575-line screen deleted rather
+ * than reformatted:
  * two of its four views were already the Progress directory and a third was
  * the `?` sheet, so only "by task" moved, and it moved onto the `Group` and
  * `Destination` rows Progress already draws. The other three do not move,
@@ -256,13 +257,33 @@ export const BUDGET = {
  */
 
 /*
+ * 673/218/515/498 → 673/218/490/494 with the three layouts.
+ *
+ * Twenty-five spacing values and four shorthands gone, none of them
+ * reformatted: they were the twenty-four `padding: 18` a screen wrote to mean
+ * "the page gutter" and the settings pages' `'0 16px'` meaning the same
+ * thing. There is one gutter now — `--page-pad` in `styles/app.css` — and it
+ * is a different number on a phone, a tablet and a desktop, which is a thing
+ * a literal 18 cannot be. Every one of those sites was a screen that could
+ * not follow the layout it was in. Measured on the merged tree, like every
+ * note below.
+ *
+ * 674/218/515/498 → 673/218/515/498 when Study's Revise tab was rebuilt and
+ * the Tools grid grew the two or three cards that say which tile to press
+ * tonight. One down, none up. The Revise tab's hand-set 11.5px captions, a
+ * 1.25 line height and an 11px padding went with the rows that carried them;
+ * the new cards above the grid set their padding from `--sp-*` and their
+ * headings take `SectionLabel`'s own margin rather than overriding it, so
+ * neither the spacing nor the shorthand count moved. Measured on the merged
+ * tree, like the note below and for the same reason.
+ *
  * The Tools tab became a home screen, and its four are folded into every
  * measurement below rather than added to any of them: thirteen cards drawn by
  * hand in `screens/Study.tsx` — each with its own padding, its own 13.5px
  * blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes live in
  * `app.css` on the scales. The one value the grid sets by hand, the 11.5px
  * icon name, is inside the numbers. Measured rather than derived, like every
- * note below: 674/218/515/498 is what `counts()` reports on the merged tree.
+ * note below: 674/218/515/498 is what `counts()` reported on that tree.
  *
  * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
  * chat. Two numbers down and none up, and neither by reformatting: the

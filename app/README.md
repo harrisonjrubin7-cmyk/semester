@@ -29,7 +29,9 @@ own application.
 
 ## What is in it
 
-Five sections, twenty screens.
+Five tabs, forty-nine screens. The tabs are below; the forty-nine are the registry in
+`src/lib/nav.ts`, which is also what the directory, the search box and the
+home-screen icons are drawn from — there is one list, and it is that one.
 
 - **Today** — the next class with a live countdown, what is due today as a
   checklist, the day's rail of classes, the next campus event, and what is
@@ -37,12 +39,14 @@ Five sections, twenty screens.
 - **Courses** — the four syllabi, how each grade is built, and every dated
   obligation with the syllabus line it came from.
 - **Study** — an exam radar, a guide per course, "tonight's 25 minutes" built
-  from your weakest unit in each, and **Ask Claude**. Each guide has nine modes:
-  **Cards** (tap-to-flip drill), **Read** (the guide as prose), **Watch** (a
-  narrated lesson per unit with slides that follow the voice), **Slides** (the
-  unit as a deck), **Doc** (the guide as .docx, .pdf, or printed), **Quiz** (ten
-  multiple choice, decoys drawn from other units), **Figures**, **Cases**,
-  **Cram** and **Listen**.
+  from your weakest unit in each, and **Ask Claude**. Each guide has eleven
+  modes: **Cards** (tap-to-flip drill), **Read** (the guide as prose), **Field
+  guide** (the whole thing as the published document, masthead and all),
+  **Watch** (a narrated lesson per unit with slides that follow the voice),
+  **Slides** (the unit as a deck), **Doc** (the guide as .docx, .pdf, or
+  printed), **Quiz** (ten multiple choice, decoys drawn from other units),
+  **Figures**, **Cases**, **Cram** and **Listen**. They are one list too —
+  `src/lib/modes.ts`.
 - **Calendar** — a month grid of deadlines, and a Campus tab for athletics,
   clubs and university events.
 - **Mine** — your own tasks, appointments, notes and files, kept visibly apart
@@ -163,7 +167,7 @@ If you add a unit to a guide, check the figure keys — they are unit indices.
 
 ## Audio
 
-`public/audio` holds five recordings, wired into each guide's **Listen** mode
+`public/audio` holds eight recordings, wired into each guide's **Listen** mode
 with chapter marks that seek.
 
 - `econ-guide.mp3`, `psci-condensed.mp3`, `psci-full.mp3`, `core-full.mp3` —
@@ -238,11 +242,20 @@ Clear it from the console with `localStorage.removeItem('semester.v1')`.
 
 ## Design system
 
-`src/styles/industry.css` is the Industry design system, copied verbatim from
-the handoff — it is the source of truth for tokens and component classes.
-`src/styles/app.css` is the app layer over it: a stealth-chrome treatment with a
-near-black ground, sterling hairlines and a brushed-metal gradient on display
-type and primary actions.
+`src/styles/industry.css` is the Industry design system, copied from the handoff
+with one line changed — it is the source of truth for tokens and component
+classes. `src/styles/app.css` is the app layer over it: a stealth-chrome
+treatment with a near-black ground, sterling hairlines and a brushed-metal
+gradient on display type and primary actions.
+
+The changed line is the font import. Both sheets used to open with an
+`@import` of fonts.googleapis.com; the faces are now in
+`src/styles/typefaces.css` and served from this origin, which is what makes
+three of the app's own claims true — *signed out, nothing leaves the device at
+all* on the Privacy screen, "keeps working with no signal" above (the service
+worker leaves cross-origin requests alone by design, so the fonts were never
+cached), and a first paint that does not wait on two more hosts. The reasoning
+is written out at the top of that file.
 
 Everything visual is a token. Screens read `var(--app-*)`, never a hex. If you
 want a different look, retune the tokens at the top of `app.css` and the whole
@@ -276,7 +289,7 @@ src/
   lib/          Types, date maths, selectors, the registries below
   screens/      One file per area
   state/        Reducer, persistence, the live clock
-  styles/       industry.css (the system) + app.css (this app)
+  styles/       industry.css (the system) + app.css (this app) + typefaces.css
 ```
 
 Data is plain TypeScript, not fetched.

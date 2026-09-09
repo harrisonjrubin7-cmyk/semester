@@ -500,6 +500,7 @@ export type Screen =
   | 'links'
   | 'ask'
   | 'work'
+  | 'grades'
   | 'maps'
   | 'mail'
   | 'export'
@@ -546,18 +547,15 @@ export type Screen =
   | 'setAssistant';
 
 /**
- * The report's grain, the post a changed date arrived in, and the grain of
- * Courses.
+ * The report's grain, and the post a changed date arrived in.
  *
  * Here rather than in `state/shape.ts` because they are not only state: a URL
- * names one. Three screens merged into the report, two into the changes
- * screen and one — the grade table — into Courses, and a link to a retired one
- * has to say *which part* of its survivor it meant: `#/weekly` landing on
- * today's report, or `#/grades` on the course list, is the link not kept.
+ * names one. Three screens merged into the report and two into the changes
+ * screen, and a link to a retired one has to say *which part* of its survivor
+ * it meant — `#/weekly` landing on today's report is the link not kept.
  */
 export type ReportGrain = 'day' | 'week' | 'term';
 export type ChangeSource = 'told' | 'feed';
-export type CoursesTab = 'courses' | 'due' | 'grades';
 
 export type StudyMode =
   | 'cards'

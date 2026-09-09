@@ -54,9 +54,7 @@ describe('what it puts first', () => {
   it('puts the screen first when the question names it', () => {
     expect(first('where is the meal plan')).toBe('meals');
     expect(first('what does the exam runway do')).toBe('runway');
-    // Courses, on its grades grain — see `lib/nav.ts`, where the keywords of
-    // the screen that was merged into it now live.
-    expect(first('where do I see my grades')).toBe('courses');
+    expect(first('where do I see my grades')).toBe('grades');
   });
 
   it('has the right screen in the list when two are genuinely close', () => {
@@ -74,7 +72,7 @@ describe('what it puts first', () => {
   it('matches a plural against a singular', () => {
     // "Grades" is the label; people type "grade". Prefix matching from four
     // characters, which is what the endings that actually come up need.
-    expect(first('what is my grade')).toBe('courses');
+    expect(first('what is my grade')).toBe('grades');
     expect(first('set a timer')).toBe('clocks');
   });
 });

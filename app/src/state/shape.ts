@@ -15,7 +15,6 @@ import type {
   Appointment,
   CampusLink,
   ChangeSource,
-  CoursesTab,
   CourseId,
   CourseModule,
   CourseUpdate,
@@ -593,7 +592,7 @@ export interface Ephemeral {
    */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done';
-  coursesTab: CoursesTab;
+  coursesTab: 'courses' | 'due';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all' | 'task';
   /** Which shelf of the directory is showing under Everything. */
@@ -1241,7 +1240,17 @@ export function pickPersisted(state: State): Persisted {
 }
 
 export type Action =
-  | { type: 'go'; screen: Screen }
+  /**
+   * Go to a screen.
+   *
+   * `courseId` is optional and sets which course the screen opens on — every
+   * course-bound tool (the paper, the solver, the deck, the diagram, the
+   * runway, the breakdown) reads `guideId`, so a tool suggested *because* of
+   * one course's deadline can arrive on that course instead of on whichever
+   * guide was last looked at. It sets `guideId` only; `courseId`, which is the
+   * course *page*, is not a tool's idea of where it is.
+   */
+  | { type: 'go'; screen: Screen; courseId?: CourseId }
   | { type: 'back' }
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }
@@ -1376,7 +1385,16 @@ export type Action =
   | { type: 'restartOnboarding' }
   | { type: 'finishOnboarding' }
   | { type: 'setLoadStep'; step: number }
-  | { type: 'startDrill'; unit: number | null }
+  /**
+   * Start a run of cards.
+   *
+   * `courseId` is optional and means what it says: drill *that* course's unit,
+   * rather than whichever guide happens to be open. Revise ranks units across
+   * the whole catalogue, so the course it wants is usually not the one last
+   * looked at — without this it had to open the guide first and the student
+   * arrived at a screen they did not ask for on the way to the cards.
+   */
+  | { type: 'startDrill'; unit: number | null; courseId?: CourseId }
   | { type: 'flip' }
   | { type: 'markCard'; got: boolean; key: string; sure?: Sure; courseId?: string }
   /** An answer recorded against a card, with no drill run around it. */
@@ -1404,7 +1422,7 @@ export type Action =
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
-  | { type: 'setCoursesTab'; tab: CoursesTab }
+  | { type: 'setCoursesTab'; tab: 'courses' | 'due' }
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'task' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }

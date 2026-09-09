@@ -7,7 +7,7 @@ import { blobOf, numbered, zipOf } from './deliver';
 import { clockOf, explainMicError, micSupported, recordingName } from './mic';
 import { MAX_SHOTS, ShotError, weigh } from './shots';
 import { chime } from './chime';
-import { DESKTOP } from './media';
+import { WIDE } from './media';
 
 /**
  * The thin layer between the app and the browser.
@@ -300,12 +300,12 @@ describe('chime', () => {
   });
 });
 
-describe('DESKTOP', () => {
+describe('WIDE', () => {
   it('lets an iPad in portrait have the rail', () => {
     // The 11-inch is 834pt wide, the 10.9-inch 820, the 9.7-inch 768. Below
     // that — an iPad mini upright at 744, and every phone — the app is the
     // phone it was drawn as.
-    const px = Number(/(\d+)/.exec(DESKTOP)?.[1]);
+    const px = Number(/(\d+)/.exec(WIDE)?.[1]);
     expect(px).toBeLessThanOrEqual(768);
     expect(px).toBeGreaterThan(744);
   });

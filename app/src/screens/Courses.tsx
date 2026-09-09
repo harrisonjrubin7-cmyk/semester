@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import type { CoursesTab } from '../lib/types';
 import { nameFor, renamed } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
 import { Timer } from '../components/Timer';
@@ -14,7 +13,6 @@ import { standing } from '../lib/grades';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
-import { Grades } from './Grades';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { CameBack } from '../components/CameBack';
 import { BreakItUp } from '../components/BreakItUp';
@@ -35,15 +33,14 @@ function CoursesTabs({
   value,
   onChange,
 }: {
-  value: CoursesTab;
-  onChange: (t: CoursesTab) => void;
+  value: 'courses' | 'due';
+  onChange: (t: 'courses' | 'due') => void;
 }) {
   return (
     <Segmented
       options={[
         { id: 'courses', label: 'Courses' },
         { id: 'due', label: 'Coming up' },
-        { id: 'grades', label: 'Grades' },
       ]}
       value={value}
       onChange={onChange}
@@ -68,15 +65,6 @@ export function Courses() {
   if (catalog.empty) return <FirstRun where="in your courses" />;
   const tab = state.coursesTab;
 
-  if (tab === 'grades') {
-    return (
-      <Page bottom={0}>
-        <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
-        <Grades />
-      </Page>
-    );
-  }
-
   if (tab === 'due') {
     return (
       <Page>
@@ -88,13 +76,12 @@ export function Courses() {
 
   return (
     /*
-      Three returns, three shells.
+      Two returns, two shells.
 
       A "screen" in the registry is not always one component: this one has a
-      branch per tab. The grades branch was drawing a copy of the `grades`
-      destination — the same table with two homes — and the answer here is the
-      other way round from the one #42 took: the table is a view of these four
-      courses, so the destination went and this branch is where it lives.
+      branch per tab. There was a third, and it rendered the Grades screen
+      bare — the same table the Grades destination is, reached a second way.
+      Grades kept its own screen and this lost the copy.
     */
     <Page
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}
@@ -146,7 +133,15 @@ export function Courses() {
               })}
             </div>
           ) : (
-          catalog.courses.map((c) => {
+          /*
+            One column on a phone, as many as fit on a desktop.
+            `.cards` is the whole of it — see `styles/app.css`. Four course
+            cards down the middle of a 1440px window were four rows of mostly
+            nothing; the same four in two columns are a semester you can see
+            at once, and on a phone the class does nothing at all.
+          */
+          <div className="cards">
+          {catalog.courses.map((c) => {
             const next = ahead.find((i) => i.c === c.id);
             return (
               <Blueprint
@@ -219,7 +214,8 @@ export function Courses() {
                 </div>
               </Blueprint>
             );
-          })
+          })}
+          </div>
           )}
 
           {/*
@@ -450,7 +446,7 @@ export function CourseDetail() {
   const mineOpen = underway(ours, state.started, state.done);
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 'var(--page-pad)' }}>
       <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{nameFor(course, state.yours)}</div>
       {/* The syllabus name stays visible under a nickname. This screen is
           where somebody checks what a course actually is — dropping the real
@@ -636,7 +632,7 @@ export function ItemDetail() {
   const going = isUnderway(item.id, state.started, state.done);
 
   return (
-    <div style={{ padding: 18 }}>
+    <div style={{ padding: 'var(--page-pad)' }}>
       <Blueprint style={{ padding: 'var(--sp-7)' }}>
         <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
           <CourseTag id={item.c} />

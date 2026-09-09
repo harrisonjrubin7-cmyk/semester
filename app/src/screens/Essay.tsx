@@ -183,6 +183,7 @@ export function Essay() {
           <SectionLabel>Which course</SectionLabel>
           <select
             className="input"
+            aria-label="Which course"
             value={courseId}
             onChange={(e) => {
               setCourseId(e.target.value);
