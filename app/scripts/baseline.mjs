@@ -183,18 +183,27 @@ const press = (page, text, notNav = true) =>
  * gets no rows to walk and reaches one screen.
  */
 async function set(page, { ground, largest } = {}) {
-  /** Click the first button whose first line matches. */
-  const pick = (what, test) =>
+  /*
+   * Click the button whose FIRST LINE is exactly this label.
+   *
+   * It used to be a regex over the whole `innerText`, and the soft layout was
+   * matched as `^Soft\b[\s\S]*Cards lifted` — the label plus a phrase from
+   * the blurb underneath it. Blurbs get rewritten; that one was, and the
+   * match then failed silently, so every shot in the run was taken in the
+   * wrong layout with one line of explanation buried in the problem list.
+   * The label is the stable half, so match only that.
+   */
+  const pick = (what, label) =>
     page.evaluate(
       (t) => {
-        const el = [...document.querySelectorAll('button')].find((e) =>
-          new RegExp(t).test((e.innerText || '').trim()),
+        const el = [...document.querySelectorAll('button')].find(
+          (e) => (e.innerText || '').trim().split('\n')[0].trim() === t,
         );
         if (!el) return false;
         el.click();
         return true;
       },
-      test,
+      label,
     ).then((ok) => {
       if (!ok) problems.push(`could not choose ${what}`);
       return page.waitForTimeout(700);
@@ -202,14 +211,14 @@ async function set(page, { ground, largest } = {}) {
 
   await page.goto(`${B}/?screen=setNav`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1400);
-  await pick('the soft layout', '^Soft\\b[\\s\\S]*Cards lifted');
-  await pick('the shelf navigation', '^Shelves\\b');
+  await pick('the soft layout', 'Soft');
+  await pick('the shelf navigation', 'Shelves');
 
   if (ground || largest) {
     await page.goto(`${B}/?screen=setLook`, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1400);
-    if (ground) await pick(`the ${ground} ground`, `^${ground}(\\n|$)`);
-    if (largest) await pick('the largest text size', '^LARGEST$');
+    if (ground) await pick(`the ${ground} ground`, ground);
+    if (largest) await pick('the largest text size', 'LARGEST');
   }
 }
 
@@ -344,6 +353,53 @@ for (const [tag, opts] of [
   await ctx.close();
 }
 
+/*
+ * Every shelf's own row, at both ends of its scroll.
+ *
+ * The row is the whole navigation in the Shelves setting and it does not fit
+ * a phone: standing on Semester you see four pills of eight, and the screens
+ * on the shelf you are standing on scroll past the right edge. One frame of
+ * it is half a picture, so each shelf gets its start and its end.
+ *
+ * It also checks the rule `lib/nav.ts` keeps and `nav.test.ts` asserts — no
+ * shelf below five or above eight — because the unit test reads the registry
+ * and this reads what a browser actually drew from it. A shelf can be the
+ * right length in the registry and still come out short here, since what is
+ * drawn is gated on the school's capabilities.
+ */
+console.log('· each shelf row, both ends');
+{
+  const { ctx, page } = await open(WIDTHS[0]);
+  await set(page, { ground: 'Ink' });
+  await page.goto(`${B}/?screen=home`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(1500);
+  const shelves = await page.evaluate(() =>
+    [...document.querySelectorAll('.shelf-nav-row [role="tab"]')].map((e) => e.innerText.trim()),
+  );
+  for (const [i, name] of shelves.entries()) {
+    await page.evaluate((j) => document.querySelectorAll('.shelf-nav-row [role="tab"]')[j].click(), i);
+    await page.waitForTimeout(700);
+    const on = await page.evaluate(() => {
+      const row = document.querySelectorAll('.shelf-nav-row')[1];
+      if (row) row.scrollLeft = 0;
+      return [...(row?.querySelectorAll('button') ?? [])].map((e) => e.innerText.trim());
+    });
+    if (on.length === 0) problems.push(`${name}: no screens on the shelf`);
+    else if (on.length < 5 || on.length > 8) {
+      problems.push(`${name}: ${on.length} screens, outside the five-to-eight rule`);
+    }
+    await page.waitForTimeout(300);
+    await capture(page, name, `shelf-${name.toLowerCase()}-start`);
+    await page.evaluate(() => {
+      const row = document.querySelectorAll('.shelf-nav-row')[1];
+      if (row) row.scrollLeft = row.scrollWidth;
+    });
+    await page.waitForTimeout(450);
+    await capture(page, name, `shelf-${name.toLowerCase()}-end`);
+  }
+  await ctx.close();
+}
+
 console.log('· the launcher, a shelf opened, and onboarding');
 {
   const { ctx, page } = await open(WIDTHS[0]);
@@ -358,7 +414,10 @@ console.log('· the launcher, a shelf opened, and onboarding');
   });
   await page.waitForTimeout(400);
   const tiles = await page.evaluate(() => document.querySelectorAll('.soft-dark').length);
-  if (tiles !== 9) problems.push(`the launcher has ${tiles} tiles, expected 9`);
+  const wantTiles = await shelfCount();
+  if (tiles !== wantTiles) {
+    problems.push(`the launcher has ${tiles} tiles, expected ${wantTiles}`);
+  }
   await capture(page, 'Launcher', 'launcher');
 
   await page.evaluate(() => document.querySelectorAll('.soft-dark')[1].click());
