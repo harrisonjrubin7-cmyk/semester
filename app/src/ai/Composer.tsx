@@ -99,11 +99,28 @@ export function Composer({
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    /*
+     * One rounded field with the button inside it, rather than a rectangle
+     * with a button parked on top.
+     *
+     * The old shape was a `.input` at the app's 6px radius with the send
+     * button absolutely positioned over its bottom-right corner, which is
+     * what a search box looks like. A composer is the one control on the
+     * screen you are meant to reach for, and every chat anybody has used
+     * draws it as a single pill: the field, the button and the ring around
+     * them are one object, and the focus ring goes round the whole thing
+     * rather than round the text area inside it.
+     *
+     * The class does the drawing (`.ai-composer` in `styles/app.css`) so the
+     * ring, the hover and the three grounds are stated once in the same place
+     * as every other control's, rather than as inline styles that only this
+     * component knows how to keep in step with the themes.
+     */
+    <div className="ai-composer">
       <textarea
         ref={box}
         id="ai-composer"
-        className="input"
+        className="input ai-composer-field"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKey}
@@ -115,8 +132,6 @@ export function Composer({
         aria-label="Your question"
         style={{
           margin: 0,
-          minHeight: 44,
-          paddingRight: 52,
           resize: 'none',
           fontSize: 'var(--type-sm)',
           lineHeight: 'var(--leading-relaxed)',
@@ -124,23 +139,12 @@ export function Composer({
       />
       <button
         type="button"
-        className="btn btn-primary"
+        className="btn btn-primary ai-send"
         // Never disabled while answering — Stop has to be reachable, including
         // by keyboard, and a disabled button is not.
         disabled={busy ? false : !value.trim()}
         onClick={() => (busy ? onStop() : onSend())}
         aria-label={busy ? 'Stop answering' : 'Send your question'}
-        style={{
-          position: 'absolute',
-          right: 6,
-          bottom: 6,
-          width: 34,
-          height: 32,
-          padding: 0,
-          display: 'grid',
-          placeItems: 'center',
-          fontSize: 'var(--type-sm)',
-        }}
       >
         <span aria-hidden>{busy ? '■' : '↑'}</span>
       </button>

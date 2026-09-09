@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { useStore } from '../state/store';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
+import { chromeFor } from '../lib/chrome';
+import { useKeyboardInset } from '../lib/keyboard';
 import { useConversation, provider } from './converse';
 import { configured, modelLabel } from '../lib/claude';
 import { Composer, sendHint } from './Composer';
@@ -27,12 +29,49 @@ import { Trouble } from '../components/Trouble';
  * right there and wrong here. This has the page to itself, so the answer gets
  * the measure, the composer gets the bottom of the window, and there is no
  * chrome saying what is behind — because nothing is.
+ *
+ * ## And it ends at the bottom of the window
+ *
+ * A chat is a log that scrolls and a composer that does not, and the composer
+ * sits on the bottom edge. That is not a stylistic preference — it is the
+ * only arrangement where the thing you type into is in the same place after
+ * every answer, which is why every chat anybody has used is shaped this way.
+ *
+ * The shell used to break it: `.scrollarea` reserves 76px under every screen
+ * for the assistant's floating button, and this is the one screen where that
+ * button is not drawn, so the reservation was a band of empty ground between
+ * the composer and the tab bar — the chat floating in the upper two-thirds of
+ * an otherwise empty phone. `shell/exempt.ts` names this screen as one that
+ * fills its box and `.scrollarea.is-filled` takes the reservation back.
  */
 export function Chat() {
-  const { dispatch, now } = useStore();
+  const { state, dispatch, now } = useStore();
   const talk = useConversation();
   const touch = useMedia(TOUCH);
   const wide = useMedia(WIDE);
+  /*
+   * What else the shell is drawing, which decides two things here.
+   *
+   * The home indicator: with a tab bar under the composer the bar is what
+   * clears it, and paying for it twice leaves a finger's width of ground
+   * below the pill. With no bar — one feed, a springboard — the composer *is*
+   * the bottom edge and has to clear it itself.
+   *
+   * And the way out: "back to app" is the only exit from a navigation that
+   * has none of its own, and pure clutter beside a tab bar that is already
+   * showing five of them.
+   */
+  const chrome = chromeFor(state.nav, state.screen, wide);
+  /*
+   * And how much of the window the keyboard is standing on.
+   *
+   * Mounted here rather than in the shell because this is the screen it is
+   * for: a composer on the bottom edge is the one control an iOS keyboard
+   * covers completely. Everywhere else a focused field is somewhere in a
+   * scrolling column and the browser scrolls it into view by itself, which is
+   * the behaviour this deliberately does not touch on forty-nine screens.
+   */
+  useKeyboardInset();
   const [draft, setDraft] = useState('');
   /** The history, when there is no room for it beside the conversation. */
   const [listing, setListing] = useState(false);
@@ -97,10 +136,44 @@ export function Chat() {
         role="log"
         aria-live="polite"
         aria-label="Conversation"
-        style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--sp-7) 0' }}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          padding: 'var(--sp-7) 0',
+          /*
+           * An empty conversation is centred; a conversation is not.
+           *
+           * The first screen used to be pinned to the top with the whole rest
+           * of the window empty under it — three suggestions and a paragraph,
+           * then eight inches of ground, then the composer. Centring puts the
+           * greeting where the eye already is and the suggestions within a
+           * thumb's reach of the box you would otherwise type in.
+           *
+           * Only while it is empty. Once there are turns the log is a
+           * transcript and a transcript starts at the top, or a two-line
+           * first answer would sit stranded in the middle of the screen.
+           */
+          display: empty ? 'flex' : 'block',
+          flexDirection: 'column',
+          /*
+           * `safe center`, not `center`.
+           *
+           * A centred flex item taller than its box overflows *both* ends,
+           * and the top end of a scroller cannot be reached — the greeting
+           * gets its head cut off with no way to scroll up to it. That is not
+           * hypothetical here: raise the keyboard on a phone and the log is
+           * suddenly 200px tall with the same opening in it. `safe` says
+           * centre while it fits and fall back to the start when it does not,
+           * which is the whole of what was wanted. A browser too old for it
+           * drops the declaration and top-aligns, which is where this screen
+           * started.
+           */
+          justifyContent: 'safe center',
+        }}
       >
         <div style={COLUMN}>
-          {empty && <Opening onPick={(q) => ask(q)} />}
+          {empty && <Opening onPick={(q) => ask(q)} big />}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--sp-7) * 1.6)' }}>
             <Dropped n={talk.dropped} />
@@ -209,7 +282,23 @@ export function Chat() {
         </div>
       )}
 
-      <div style={{ borderTop: '1px solid var(--app-line)', padding: 'var(--sp-5) 0 var(--sp-6)' }}>
+      {/*
+        The dock: the composer, and one quiet line under it.
+
+        `.chat-dock` in `styles/app.css` owns the padding, because the bottom
+        of it is the bottom of the window and only `env()` knows how much of
+        that a home indicator is taking. `--dock-safe` is 0 where a tab bar is
+        already clearing it — otherwise the two both pay and the composer
+        floats a finger's width up from the edge.
+      */}
+      <div
+        className="chat-dock"
+        style={
+          {
+            ['--dock-safe' as string]: chrome.tabs ? '0px' : 'env(safe-area-inset-bottom, 0px)',
+          } as CSSProperties
+        }
+      >
         <div style={COLUMN}>
           <Composer
             value={draft}
@@ -227,29 +316,80 @@ export function Chat() {
             placeholder={sendHint(touch)}
             autoFocus={!touch}
           />
+          {/*
+            One line, centred, under the pill — the shape every chat has, and
+            not the four-button toolbar this was.
+
+            It used to be a row justified to both edges: BACK TO APP and the
+            model on the left, CONVERSATIONS and NEW pushed to the right. Four
+            controls of equal weight strung across the foot of the screen read
+            as a toolbar, which made the composer above them look like one
+            field in a form rather than the thing the screen is for. Centred
+            and separated by dots they read as what they are: the small print
+            under the box.
+
+            Each of them earns its place or is not drawn. Back to app only
+            where the navigation has no other way out — beside a tab bar
+            showing five destinations it is a fifth wheel. The history only
+            where the panel beside the conversation is not already the
+            history. New only when there is something to start again from.
+          */}
           <div
             style={{
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'baseline',
-              gap: 'var(--sp-6)',
+              justifyContent: 'center',
+              gap: 'var(--sp-4)',
               marginTop: 'var(--sp-4)',
             }}
           >
-            <button
-              type="button"
-              className="bare"
-              onClick={() => dispatch({ type: 'back' })}
-              style={QUIET}
-            >
-              ← BACK TO APP
-            </button>
+            {!chrome.tabs && !chrome.rail && !chrome.shelves && (
+              <>
+                <button
+                  type="button"
+                  className="bare"
+                  onClick={() => dispatch({ type: 'back' })}
+                  style={QUIET}
+                >
+                  ← BACK
+                </button>
+                <Dot />
+              </>
+            )}
+            {/* Only where the panel is not already showing the list. */}
+            {!wide && (
+              <>
+                <button
+                  type="button"
+                  className="bare"
+                  onClick={() => setListing(true)}
+                  style={QUIET}
+                >
+                  {talk.threads.filter((t) => t.turns.length > 0).length > 1
+                    ? `${talk.threads.filter((t) => t.turns.length > 0).length} CHATS`
+                    : 'CHATS'}
+                </button>
+                <Dot />
+              </>
+            )}
+            {talk.turns.length > 0 && !talk.busy && (
+              <>
+                <button type="button" className="bare" onClick={talk.clear} style={QUIET}>
+                  NEW
+                </button>
+                <Dot />
+              </>
+            )}
             {/*
               Where the key, the model and the cost went.
 
               This tab used to *be* that form, which is the thing the rewrite
               undid — but somebody who wants to change the model should not
               have to guess that it is under Settings now, so the way there is
-              one tap from the conversation it changes.
+              one tap from the conversation it changes. Last in the line
+              because it is the one you touch least, and because an unset key
+              is the one thing here worth reading twice.
             */}
             <button
               type="button"
@@ -259,32 +399,20 @@ export function Chat() {
             >
               {configured() ? modelLabel().toUpperCase() : 'SET A KEY'}
             </button>
-            <span style={{ flex: 1 }} />
-            {/* Only where the panel is not already showing the list. */}
-            {!wide && (
-              <button
-                type="button"
-                className="bare"
-                onClick={() => setListing(true)}
-                style={QUIET}
-              >
-                {talk.threads.filter((t) => t.turns.length > 0).length > 1
-                  ? `${talk.threads.filter((t) => t.turns.length > 0).length} CONVERSATIONS`
-                  : 'CONVERSATIONS'}
-              </button>
-            )}
-            {talk.turns.length > 0 && !talk.busy && (
-              <button type="button" className="bare" onClick={talk.clear} style={QUIET}>
-                NEW
-              </button>
-            )}
           </div>
           {/* A failed request, and the retry for it. The sheet has had this
               since the assistant shipped; the chat did not, so a request that
               failed on this surface said nothing at all. */}
           <Trouble said={talk.said} onRetry={talk.again} busy={talk.busy} />
           {talk.cost.asks > 0 && (
-            <div style={{ fontSize: 'var(--type-xs)', opacity: 0.4, marginTop: 'var(--sp-3)' }}>
+            <div
+              style={{
+                fontSize: 'var(--type-xs)',
+                opacity: 0.4,
+                marginTop: 'var(--sp-3)',
+                textAlign: 'center',
+              }}
+            >
               {talk.cost.asks} {talk.cost.asks === 1 ? 'answer' : 'answers'} this month. Estimated.
             </div>
           )}
@@ -302,6 +430,15 @@ const QUIET = {
   letterSpacing: '0.1em',
   opacity: 0.55,
 } as const;
+
+/** The separator between two of those. Decoration, so no reader hears it. */
+function Dot() {
+  return (
+    <span aria-hidden style={{ fontSize: 'var(--type-xs)', opacity: 0.25 }}>
+      ·
+    </span>
+  );
+}
 
 /**
  * The reading measure, and the reason for it.

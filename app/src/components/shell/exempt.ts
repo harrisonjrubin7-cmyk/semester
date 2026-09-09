@@ -71,3 +71,24 @@ export const CANVAS: Screen[] = ['calendar', 'maps', 'draw'];
 export function isCanvas(screen: Screen): boolean {
   return CANVAS.includes(screen);
 }
+
+/**
+ * Screens whose body is the whole box, and does its own scrolling.
+ *
+ * A third question about a screen's body, kept beside the other two because
+ * it is asked about the same thing and the three must agree. Exempt asks "is
+ * this a list?"; canvas asks "does it want the room?"; this asks "does it end
+ * at the bottom edge?".
+ *
+ * Nearly every screen is a column of content that stops somewhere and lets
+ * `.scrollarea` scroll it. The chat is not: it is a log that scrolls and a
+ * composer pinned under it, and the composer belongs on the bottom edge the
+ * way it does in every other chat anybody has used. So the shell must not
+ * reserve space beneath it — see `.scrollarea.is-filled` in `styles/app.css`
+ * for what that reservation was doing there and why it is wrong here.
+ */
+export const FILLS: Screen[] = ['ask'];
+
+export function fills(screen: Screen): boolean {
+  return FILLS.includes(screen);
+}
