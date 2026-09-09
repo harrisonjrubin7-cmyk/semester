@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { HIGHLIGHT_MS, pageTitle, sectionOf, takeLooking } from '../../lib/settings';
 import type { Screen } from '../../lib/types';
 
@@ -8,10 +8,12 @@ import type { Screen } from '../../lib/types';
  * Three things, and each of them is the kind that gets forgotten once per
  * page rather than once per app if it is not written down here.
  *
- * **Focus lands on the heading.** Pushing a page moves what is on screen and
- * nothing else; a screen reader stays where it was and reads the old page. The
- * heading takes `tabIndex={-1}` and is focused on arrival, so the first thing
- * announced is where you now are.
+ * **Focus lands on the heading — the shell's, not this page's.** Pushing a
+ * page moves what is on screen and nothing else, so a screen reader would
+ * stay where it was and read the old page. `Header` in `App.tsx` moves focus
+ * to the screen's `<h1>` on every navigation, this one included; this page
+ * used to do it a second time, to a second `<h1>` of its own, and the two
+ * effects raced on the only screens in the app where that could happen.
  *
  * **The group search was after lights up.** The word that matched travels from
  * the index in `lib/settings.ts`, and is taken here — read once, then gone.
@@ -43,14 +45,12 @@ export function SettingsPage({
   children: (lit: string) => ReactNode;
 }) {
   const title = pageTitle(screen);
-  const heading = useRef<HTMLHeadingElement>(null);
   // Taken during the first render rather than in an effect, so the group is
   // already lit on the frame the page appears on instead of flashing plain
   // and then highlighting.
   const [lit, setLit] = useState(takeLooking);
 
   useEffect(() => {
-    heading.current?.focus();
     if (!lit) return;
     const id = setTimeout(() => setLit(''), HIGHLIGHT_MS);
     return () => clearTimeout(id);
@@ -75,7 +75,17 @@ export function SettingsPage({
      * at the grouped one, on the very screen where the choice is made and the
      * previews are drawn. One layout, everywhere, including here.
      */
-    <main style={{ paddingBottom: 'calc(24px * var(--density, 1))' }}>
+    /*
+     * A `<div>`, not a `<main>`.
+     *
+     * This was written as a standalone document and then mounted inside a
+     * shell that already is one: `ScrollArea` renders `<main id="main">`
+     * around every screen, so each settings page put a second `<main>` inside
+     * the first. That is invalid — a `<main>` may not descend from a `<main>`
+     * — and it gave a reader two main landmarks on the eight pages where the
+     * skip link's target is least ambiguous elsewhere.
+     */
+    <div style={{ paddingBottom: 'calc(24px * var(--density, 1))' }}>
       <div style={{ padding: '0 var(--page-pad) calc(12px * var(--density, 1))' }}>
         <div
           style={{
@@ -88,25 +98,31 @@ export function SettingsPage({
         >
           {sectionOf(screen) || 'Settings'}
         </div>
-        <h1
-          ref={heading}
-          tabIndex={-1}
+        {/*
+          An `<h2>`, and no longer a landing point.
+
+          Both halves were this page being a document rather than a screen.
+          The shell's header already prints the page's name as the `<h1>` —
+          from `settingsTitle`, the same registry this reads — so every
+          settings page carried two, saying nearly the same thing twice:
+          "About" over "About", "Colour" over "Colour and type". And both were
+          `tabIndex={-1}` and both were focused on arrival, by two effects
+          that raced, on the only screens in the app where that happened.
+
+          Drawn exactly as it was: the styles are inline, so the tag is the
+          whole of the change.
+        */}
+        <h2
           style={{
             margin: '4px 0 0',
             fontSize: 'calc(21px * var(--text-scale, 1))',
             fontFamily: 'var(--font-heading)',
             fontWeight: 'var(--font-heading-weight)' as never,
             lineHeight: 1.2,
-            // No ring. The app's focus style is right for something somebody
-            // tabbed to; this is a landing point moved to on arrival, is not
-            // in the tab order, and drawn around a heading the ring reads as
-            // an empty text field. A screen reader still announces it.
-            outline: 'none',
-            boxShadow: 'none',
           }}
         >
           {title}
-        </h1>
+        </h2>
         {blurb ? (
           <p
             style={{
@@ -125,6 +141,6 @@ export function SettingsPage({
           own — every screen supplies its own page padding, and this is
           settings' — so this is what makes the panels read as inset. */}
       <div style={{ padding: '0 var(--page-pad)' }}>{children(lit)}</div>
-    </main>
+    </div>
   );
 }

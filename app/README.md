@@ -355,7 +355,7 @@ named there as one you arrive at from somewhere else.
 
 ### Reachable without a pointer, and without sight
 
-Eight things hold the app together for somebody on a keyboard, a screen
+Nine things hold the app together for somebody on a keyboard, a screen
 reader, or a body that does not want to be moved, and each is one
 implementation rather than a habit.
 
@@ -417,3 +417,21 @@ implementation rather than a habit.
   wrong password did nothing a reader could tell you about. They carry
   `role="alert"` now, which changes nothing about how any of them looks.
   `a11y/tellings.test.ts` holds both of these, and fails on a thirteenth.
+- **One main, one h1, and a navigation you can jump to.** Landmarks are how
+  somebody moves around a page without reading it, and three places did not
+  hold — all three the same mistake, a part written as though it were the whole
+  page and then mounted inside a shell that already provided what it was
+  providing. The home screen was a plain `<div>` where the bar, the rail and
+  the shelves are all a `<nav>`, so choosing it left the app with no navigation
+  landmark anywhere; and every settings page opened a second `<main>` *inside*
+  `ScrollArea`'s (which is invalid — a `<main>` may not descend from one),
+  printed a second `<h1>` under the header's, and made it a second focus target,
+  so two effects raced to say where you were. `a11y/landmarks.test.ts` holds
+  all three, reading the source with its comments stripped — the first draft
+  failed on four files that were *describing* landmarks rather than opening
+  them, including the paragraphs above the fixes.
+
+  The one feed is deliberately not in that list: it draws no navigation chrome
+  at all on a phone — its only fixed control is an Import button — and marking
+  its filter row as a `<nav>` would be calling a filter a navigation. How you
+  leave the feed is a design question, not a labelling one.
