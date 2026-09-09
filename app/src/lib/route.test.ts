@@ -116,6 +116,9 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/worked')?.screen).toBe('brief');
     expect(fromHash('#/check')?.screen).toBe('announce');
     expect(fromHash('#/chat')?.screen).toBe('ask');
+    // A settings page rather than a destination, and the same rule: it counted
+    // the same bytes the Data screen counts.
+    expect(fromHash('#/setStorage')?.screen).toBe('data');
   });
 
   it('says which part of the survivor the link meant', () => {
@@ -124,8 +127,10 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/weekly')?.opens).toEqual({ report: 'week' });
     expect(fromHash('#/worked')?.opens).toEqual({ report: 'term' });
     expect(fromHash('#/check')?.opens).toEqual({ changes: 'feed' });
-    // Nothing to disambiguate: the chat was the whole of what Ask now is.
+    // Nothing to disambiguate: the chat was the whole of what Ask now is, and
+    // the Data screen has no sections to open.
     expect(fromHash('#/chat')?.opens).toBeUndefined();
+    expect(fromHash('#/setStorage')?.opens).toBeUndefined();
     expect(fromHash('#/brief')?.opens).toBeUndefined();
   });
 

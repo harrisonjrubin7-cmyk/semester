@@ -133,11 +133,16 @@ export const SETTINGS: SettingsSection[] = [
           'privacy data policy gdpr delete erase what is stored sent tracking analytics rights api key anthropic security',
       },
       {
-        screen: 'setStorage',
+        // Not a settings page of its own: the Data screen measures every byte
+        // this app holds, and a second page counting a different subset of the
+        // same three places is how the two totals came to disagree. Export
+        // holds the copies and the restore, which is the other half of what
+        // this row used to open.
+        screen: 'data',
         label: 'Storage and backup',
         holds: 'Space used, copies, export and restore',
         keywords:
-          'storage space full quota backup copies snapshot restore export download zip json save room disk drafts',
+          'storage space full quota backup copies snapshot restore export download zip json save room disk drafts attachments',
       },
       {
         screen: 'connect',

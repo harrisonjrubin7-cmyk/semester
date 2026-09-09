@@ -247,6 +247,10 @@ export const BUDGET = {
 };
 
 /*
+ * Unchanged when Settings stopped counting the bytes a second time: the two
+ * rows that moved to the Data screen are drawn with `ItemRow` rather than
+ * copied, so the page that went took its own numbers with it.
+ *
  * 682/222/524/544 → 680/222/524/544 when the code with no caller was cut. Two
  * sizes down, none up, and neither by reformatting: they were inside two of
  * the row components nothing rendered.

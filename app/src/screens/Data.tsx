@@ -5,7 +5,10 @@ import { SectionLabel } from '../components/ui';
 import { useStore } from '../state/store';
 import { pickPersisted } from '../state/shape';
 import { bytesOf, inventory, space, type Row, type Space } from '../lib/inventory';
-import { formatBytes } from '../lib/files';
+import { formatBytes, totalSize } from '../lib/files';
+import { ItemRow } from '../components/shell/Rows';
+import { weigh } from '../lib/keep';
+import { DRAFTS_KEY } from '../lib/draft';
 
 /**
  * What data exists, and whether the app is healthy.
@@ -27,6 +30,17 @@ import { formatBytes } from '../lib/files';
  *
  * They link to each other instead, and `privacy` gives up the label "Your
  * data" — which described this screen and not that one.
+ *
+ * ## What came here from Settings
+ *
+ * Settings had a Storage page measuring the same bytes: the store, the drafts,
+ * the attachments and the browser's own total, against this screen's
+ * collection-by-collection list and the same browser total. Two totals of one
+ * thing, and they did not agree, because each counted a different set of the
+ * three places this app writes. So the two outside the store — drafts and
+ * attachments — are measured here now, under the collections, and Settings
+ * points at this screen. The other half of that page was `Snapshots` and a row
+ * to Export, both of which the Export screen already had.
  */
 export function DataScreen() {
   const { state, dispatch } = useStore();
@@ -35,11 +49,37 @@ export function DataScreen() {
 
   const store = useMemo(() => inventory(pickPersisted(state)), [state]);
 
+  /*
+   * The two the store does not hold.
+   *
+   * A draft in progress is its own localStorage key so that a half-typed essay
+   * survives a crash without going through the store, and attachments are in
+   * IndexedDB because they are too big for it. Both are this app's bytes and
+   * neither is in the list above, which is what made the old Storage page's
+   * total disagree with this one.
+   */
+  const [drafts] = useState(() => {
+    try {
+      return weigh(localStorage.getItem(DRAFTS_KEY) ?? '');
+    } catch {
+      // A private window with storage switched off has nothing to measure.
+      return 0;
+    }
+  });
+  const [files, setFiles] = useState<number | null>(null);
+
   useEffect(() => {
     let alive = true;
     void space().then((s) => {
       if (alive) setRoom(s);
     });
+    void totalSize()
+      .then((n) => {
+        if (alive) setFiles(n);
+      })
+      .catch(() => {
+        if (alive) setFiles(null);
+      });
     return () => {
       alive = false;
     };
@@ -95,6 +135,30 @@ export function DataScreen() {
               {new Date(store.span.to).toLocaleDateString()}.
             </div>
           )}
+
+          <SectionLabel>Outside the store</SectionLabel>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+            Written by this app, in their own places, and counted in the browser's total below.
+          </div>
+          {/* Through the shared row rather than a hand-drawn one: this screen
+              is about numbers agreeing, and a row that draws its own hairline
+              is the same drift one level down. See `components/shell/Rows`. */}
+          <ItemRow
+            title="Drafts in progress"
+            trailing={
+              <span style={{ opacity: 0.75, fontVariantNumeric: 'tabular-nums' }}>
+                {drafts ? formatBytes(drafts) : 'None'}
+              </span>
+            }
+          />
+          <ItemRow
+            title="Attachments"
+            trailing={
+              <span style={{ opacity: 0.75, fontVariantNumeric: 'tabular-nums' }}>
+                {files === null ? 'Not available' : formatBytes(files)}
+              </span>
+            }
+          />
 
           <SectionLabel>Room</SectionLabel>
           {room === null ? (

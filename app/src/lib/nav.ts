@@ -719,7 +719,6 @@ const NESTED: Partial<Record<Screen, Screen>> = {
   setCourses: 'me',
   setGrading: 'me',
   setWorkload: 'me',
-  setStorage: 'me',
   setAbout: 'me',
   setAssistant: 'me',
 };

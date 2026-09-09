@@ -96,7 +96,10 @@ describe('searching it', () => {
     expect(findSetting('dark')[0].row.screen).toBe('setLook');
     expect(findSetting('font')[0].row.screen).toBe('setLook');
     expect(findSetting('notifications')[0].row.screen).toBe('setAlerts');
-    expect(findSetting('backup')[0].row.screen).toBe('setStorage');
+    // "Backup" lands on the screen that measures the bytes and links the
+    // copies, which is the Data screen since Settings stopped counting them
+    // a second time.
+    expect(findSetting('backup')[0].row.screen).toBe('data');
     expect(findSetting('gpa')[0].row.screen).toBe('setGrading');
   });
 

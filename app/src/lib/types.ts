@@ -543,7 +543,6 @@ export type Screen =
   | 'setCourses'
   | 'setGrading'
   | 'setWorkload'
-  | 'setStorage'
   | 'setAbout'
   | 'setAssistant';
 

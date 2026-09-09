@@ -94,7 +94,6 @@ const SettingsAlerts = lazy(() => import('./screens/settings/Alerts').then((m) =
 const SettingsCourses = lazy(() => import('./screens/settings/Courses').then((m) => ({ default: m.SettingsCourses })));
 const SettingsGrading = lazy(() => import('./screens/settings/Grading').then((m) => ({ default: m.SettingsGrading })));
 const SettingsWorkload = lazy(() => import('./screens/settings/Workload').then((m) => ({ default: m.SettingsWorkload })));
-const SettingsStorage = lazy(() => import('./screens/settings/Storage').then((m) => ({ default: m.SettingsStorage })));
 const SettingsAbout = lazy(() => import('./screens/settings/About').then((m) => ({ default: m.SettingsAbout })));
 const SettingsAssistant = lazy(() => import('./screens/settings/Assistant').then((m) => ({ default: m.SettingsAssistant })));
 const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
@@ -287,7 +286,6 @@ function useHeader(): { kicker: string; title: string } {
     case 'setCourses':
     case 'setGrading':
     case 'setWorkload':
-    case 'setStorage':
     case 'setAbout':
       return { kicker: 'Settings', title: settingsTitle(state.screen) };
     case 'mine':
@@ -782,8 +780,6 @@ function CurrentScreen() {
       return <SettingsGrading />;
     case 'setWorkload':
       return <SettingsWorkload />;
-    case 'setStorage':
-      return <SettingsStorage />;
     case 'setAbout':
       return <SettingsAbout />;
     case 'setAssistant':

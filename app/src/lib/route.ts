@@ -93,6 +93,10 @@ const RETIRED: Record<string, { screen: Screen; opens?: Route['opens'] }> = {
   check: { screen: 'announce' as Screen, opens: { changes: 'feed' } },
   // The chat was a second door into the conversation the Ask tab now is.
   chat: { screen: 'ask' as Screen },
+  // Settings had a page counting the same bytes as the Data screen. The
+  // measurements are there now; the copies and the restore are on Export,
+  // which had them already.
+  setStorage: { screen: 'data' as Screen },
 };
 
 /** A screen id is already url-safe; an account's own ids may not be. */
