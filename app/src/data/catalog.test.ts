@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCatalog, blocksFor, weakestUnit } from './catalog';
+import { buildCatalog, blocksFor, NO_PODCAST, weakestUnit } from './catalog';
 import { blankCourse } from '../lib/edit';
 import type { CourseModule } from '../lib/types';
 import { decorateItem } from '../lib/date';
@@ -231,3 +231,25 @@ describe('a term stops teaching', () => {
   });
 });
 
+
+/**
+ * A course that is not in the catalogue at all.
+ *
+ * `EMPTY_GUIDE` in `lib/live.ts` says why this matters: "a course that has
+ * gone — deleted while its guide was open, say. Rendering an empty guide
+ * beats throwing on a screen the person is already looking at." Every lookup
+ * in that file ends in `?? something` for the same reason, and one in
+ * `screens/Guide.tsx` did not — so Listen was the only one of the eleven
+ * study modes that took the screen down on a guide id the catalogue does not
+ * hold.
+ */
+describe('a course the catalogue does not hold', () => {
+  it('answers nothing for a podcast, in the shape a course with none has', () => {
+    const cat = buildCatalog([mod({ month: 8, day: 4 })]);
+    expect(cat.podcast['nope']).toBeUndefined();
+    // The fallback the screen uses, and the same one the builder writes for a
+    // course that simply has no recordings.
+    expect(cat.podcast['nope'] ?? NO_PODCAST).toEqual({ blurb: '', editions: [] });
+    expect(cat.podcast['c1']).toEqual(NO_PODCAST);
+  });
+});

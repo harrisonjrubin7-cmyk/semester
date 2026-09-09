@@ -1,4 +1,4 @@
-import { allCards, weakestUnit } from '../data/catalog';
+import { allCards, NO_PODCAST, weakestUnit } from '../data/catalog';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
@@ -1297,7 +1297,11 @@ function Listen() {
   const { state, dispatch, catalog } = useStore();
   const { guide, updates } = useLive(state.guideId);
   const addedSince = updates.reduce((n, u) => n + u.cards.length, 0);
-  const pod = catalog.podcast[state.guideId];
+  // The fallback the catalogue itself uses. Without it a guide id the
+  // catalogue does not hold — a deleted course, a saved link to one you no
+  // longer have — reached `.editions` on undefined and took the screen down;
+  // Listen was the only one of the eleven modes that did. See `NO_PODCAST`.
+  const pod = catalog.podcast[state.guideId] ?? NO_PODCAST;
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const episode = useMemo(() => {

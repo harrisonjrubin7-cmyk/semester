@@ -59,6 +59,25 @@ export interface Catalog {
 const index = <T,>(modules: CourseModule[], pick: (m: CourseModule) => T): Record<CourseId, T> =>
   Object.fromEntries(modules.map((m) => [m.course.id, pick(m)]));
 
+/**
+ * A course with nothing recorded — and the answer for a course that is not
+ * here at all.
+ *
+ * Exported because it is needed in both places, and it was written out in one
+ * of them and simply missing from the other. `Listen` in `screens/Guide.tsx`
+ * read `catalog.podcast[state.guideId]` with no fallback, so a guide id the
+ * catalogue does not hold — a course deleted while its guide was open, or a
+ * link saved to one you no longer have — reached `pod.editions` on undefined
+ * and took the screen down. It was the only one of the eleven study modes
+ * that did: every other lookup in `lib/live.ts` ends in `?? something`, and
+ * `EMPTY_GUIDE` there says why in as many words — "rendering an empty guide
+ * beats throwing on a screen the person is already looking at".
+ *
+ * `lib/modes.ts` already guarded its own read of the same field, which is how
+ * the picker could say Listen was empty while the screen it opened crashed.
+ */
+export const NO_PODCAST: CoursePodcast = { blurb: '', editions: [] };
+
 export function buildCatalog(modules: CourseModule[]): Catalog {
   return {
     modules,
@@ -69,7 +88,7 @@ export function buildCatalog(modules: CourseModule[]): Catalog {
     figures: index(modules, (m) => m.figures ?? {}),
     extraFigures: index(modules, (m) => m.extraFigures ?? []),
     examples: index(modules, (m) => m.examples ?? []),
-    podcast: index(modules, (m) => m.podcast ?? { blurb: '', editions: [] }),
+    podcast: index(modules, (m) => m.podcast ?? NO_PODCAST),
     lessons: index(modules, (m) => m.lessons ?? {}),
     planMinutes: index(modules, (m) => m.planMinutes),
     frameLabels: index(modules, (m) => m.frameLabel),
