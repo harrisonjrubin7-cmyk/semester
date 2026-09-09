@@ -289,7 +289,15 @@ a:hover {
   height: 100%;
   margin: 0 auto;
   width: 100%;
-  max-width: 402px;
+  /*
+   * The standalone column: onboarding, a drill, a lesson, a deck — the
+   * screens that keep the whole display and so are not inside the desk's
+   * pane. 402 is the artboard the app was drawn on and is right on a phone;
+   * on a 27-inch monitor it is a phone propped up in the middle of a wall,
+   * which is exactly what a flashcard should not be. `--device-max` steps it
+   * with the layout — see the three-layout block below.
+   */
+  max-width: var(--device-max);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -324,6 +332,113 @@ a:hover {
   z-index: 1;
 }
 
+/*
+ * Except the skip link, which is absolute and has to stay that way.
+ *
+ * The rule above is a blanket `position: relative` on every direct child, it
+ * comes later in this sheet than `.skip-link`, and both weigh the same — so
+ * the link that is meant to hover invisibly over the top-left corner was laid
+ * out in the flow instead, holding a 42px band of empty black above the
+ * header on every phone screen in the app. It was invisible, so it read as a
+ * design decision: the header simply began an inch down. Only the phone
+ * layout had it — in the wide layout the link is a child of `.desk` and never
+ * met this rule — which is why it survived a redesign of the wide one.
+ */
+.device > .skip-link {
+  position: absolute;
+}
+
+/* ── The three layouts ────────────────────────────────────────────────────
+ *
+ * The app is drawn as a phone, and at phone size that is what it is. Above
+ * 760px it gains the rail; above 1180px it stops being a phone held up and
+ * becomes a desktop window. The two boundaries are the same numbers as
+ * `lib/media.ts`, which is where the components read them, and
+ * `tiers.test.ts` asserts the two copies agree — a stylesheet cannot import a
+ * constant, so the next best thing is a test that fails when one of them
+ * moves without the other.
+ *
+ * Every difference between the three is a value in this block, not a rule
+ * written twice. A screen asks for the page gutter and gets the phone's 18px
+ * or the desktop's 30; it does not ask which layout it is in. That is what
+ * makes "the desktop layout" a thing that can be changed here rather than a
+ * hundred media queries filed under the screens that happened to need one.
+ *
+ *   --page-pad    the gutter down each side of a screen's own content
+ *   --chrome-pad  the same for the header and the tab bar
+ *   --measure     how wide ordinary content — rows, cards, prose — may run
+ *   --canvas      how wide a grid or a map may run, which is more
+ *   --rail-w      the navigation column, 0 where there is none
+ *   --device-max  the standalone column: onboarding, a drill, a lesson
+ *   --cell-aspect how square a day in the month grid is
+ */
+
+:root {
+  --page-pad: 18px;
+  --chrome-pad: 18px;
+  --measure: 100%;
+  --canvas: 100%;
+  --rail-w: 0px;
+  --device-max: 402px;
+  --cell-aspect: 1;
+}
+
+/* Tablet. The rail arrives; the touch sizes do not change, because the finger
+   holding an iPad is the same finger that held the phone. The column fills
+   whatever the rail leaves rather than sitting at a fixed 560 with a band of
+   black beside it — at 834 that band was 88px of nothing. */
+@media (min-width: 760px) {
+  :root {
+    --page-pad: 20px;
+    --chrome-pad: 20px;
+    --rail-w: clamp(196px, 23vw, 232px);
+    --device-max: 560px;
+    /* A 55px day is square; a 120px one does not have to be, and six square
+       rows of it push the last week of the month off the bottom. */
+    --cell-aspect: 1.15;
+    /*
+     * A cap, which on a tablet held upright never comes into play: 834 minus
+     * the rail is 638 and the column simply fills. Turned the long way round
+     * — an iPad in landscape at 1112, a laptop window not quite wide enough
+     * for the desktop layout — it is what stops a list row running to 880px
+     * with its value stranded at the far end. The grids are not capped here;
+     * a week grid on a landscape tablet wants every pixel it can have.
+     */
+    --measure: 760px;
+  }
+}
+
+/* Desktop. A window, with a mouse in it: a wider rail with room for its
+   labels, a measured reading column so a settings row is not a metre of
+   hairline with a chevron at the end of it, and a canvas for the screens that
+   are genuinely grids — the month, the week, a map — which have more to say
+   the more room they get. */
+@media (min-width: 1180px) {
+  :root {
+    --page-pad: 30px;
+    --chrome-pad: 30px;
+    --measure: 880px;
+    --canvas: 1240px;
+    --rail-w: 248px;
+    --device-max: 860px;
+    /* Six rows of these plus the header and the legend come to about 640px,
+       which clears the 900px-tall window a 1440 laptop actually has. */
+    --cell-aspect: 1.6;
+  }
+}
+
+/* And a step for a large monitor, where the same layout in the middle of a
+   27-inch screen reads as a window somebody forgot to maximise. Stepped
+   rather than fluid: a column that grows continuously with the window puts
+   the line length somewhere different on every machine. */
+@media (min-width: 1600px) {
+  :root {
+    --measure: 960px;
+    --canvas: 1440px;
+    --rail-w: 272px;
+  }
+}
+
 /* The framed, floating column is for a desktop browser window. A tablet held
    upright — an iPad mini at 744, or any iPad in Split View — is a device, not a
    window, so the column runs the full height there instead of hovering in the
@@ -341,18 +456,16 @@ a:hover {
 }
 
 /* ── The desk ─────────────────────────────────────────────────────────────
-   From 760px the phone column keeps its width — the type and touch targets
-   were drawn for it — and gains a rail beside it, so an iPad or a laptop shows
-   the navigation instead of hiding it behind a tab bar that only fits a thumb.
-   760 rather than 900 because an iPad in portrait is 768–834pt wide, and on a
-   tablet held upright the rail is the whole point. Below that the app is the
-   phone it was. */
+   From 760px the rail sits beside the content, so an iPad or a laptop shows
+   the navigation instead of hiding it behind a tab bar that only fits a
+   thumb. 760 rather than 900 because an iPad in portrait is 768–834pt wide,
+   and on a tablet held upright the rail is the whole point. Below that the
+   app is the phone it was. */
 
 .desk {
   height: 100%;
   display: grid;
-  /* Narrows on a portrait tablet so the reading column keeps its width. */
-  grid-template-columns: clamp(168px, 22vw, 232px) minmax(0, 1fr);
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
   background: var(--app-void);
 }
 
@@ -415,28 +528,297 @@ a:hover {
 }
 
 /*
- * The content column on a desktop.
+ * A rail label wraps and the row it is in grows a second line, which on a
+ * portrait tablet happened to "Connect accounts" and to nothing else — one
+ * pill a head taller than its neighbours. The tracking is what makes these
+ * wide, so it comes off a little where the column is narrow rather than the
+ * words being shortened for the one width that cannot hold them.
+ */
+.rail .rail-item {
+  white-space: nowrap;
+  min-width: 0;
+}
+.rail .rail-item > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 1179px) {
+  .rail .rail-quiet {
+    letter-spacing: 0.08em;
+  }
+}
+
+/* On a desktop the rail is a sidebar rather than a strip: more air at the
+   top, a heavier mark, and rows tall enough to aim at with a mouse without
+   being the 48px a thumb needs. */
+@media (min-width: 1180px) {
+  .rail {
+    padding: 30px 0 24px;
+  }
+  .rail-mark {
+    font-size: 22px;
+    padding: 0 24px 22px;
+  }
+  .rail .rail-item {
+    padding: 12px 22px;
+    margin-inline: 10px;
+  }
+  .rail .rail-quiet {
+    padding: 10px 22px;
+  }
+}
+
+/*
+ * The content column, at each of the three widths.
  *
- * 560px inside a 1440px window left most of the screen empty — the app read
- * as a phone someone had propped up rather than something to plan a semester
- * on. A month grid, a week grid and a course list all have more to say when
- * they are given room.
- *
- * Reading screens do not widen with it, and do not need to be exempted here:
- * `.prose` already caps the guide, the brief and the weekly report at the
- * `readingWidth` setting, so they stay where they were however wide this gets.
+ * On a phone the pane is the window. On a tablet and a desktop it fills
+ * whatever the rail leaves — it used to stop at 560px, then 820, with the
+ * rest of the window left as black margin, which is what made a 1440px screen
+ * read as a phone somebody had propped up. The width of the *content* is a
+ * separate question from the width of the app, and it is answered by
+ * `--measure` on the body inside, not by starving the frame.
  */
 .device-pane {
-  max-width: 560px;
+  max-width: none;
+  width: 100%;
   height: 100%;
   margin: 0 auto;
   box-shadow: none;
   border: 0;
-  border-inline: 1px solid var(--app-line);
-  /* The pane fills its column between two rules; the floating-window radius
-     belongs to the standalone phone frame, not here. */
+  /* The pane fills its column; the floating-window radius belongs to the
+     standalone phone frame, not here. */
   border-radius: 0;
   margin-block: 0;
+}
+
+/*
+ * ── The measure ──────────────────────────────────────────────────────────
+ *
+ * Every screen's body sits in this, and it is the one place the reading width
+ * is decided. Below 1180 it is `100%` and this does nothing at all; above it,
+ * ordinary content — a list of rows, a stack of cards, a form — stops at
+ * `--measure` and centres, and a screen whose body is a grid or a map takes
+ * `--canvas` instead.
+ *
+ * `shell/ShellBody.tsx` is what puts the class on, from the same list that
+ * decides which screens are drawn full-bleed, so the two answers cannot
+ * disagree: nothing is a list here and a grid there.
+ */
+.pane-body {
+  max-width: var(--measure);
+  margin-inline: auto;
+  /* Only the width is claimed. A screen that lays itself out in a flex
+     column still does; this is a cap, not a layout. */
+  width: 100%;
+  /*
+   * And the height is passed straight through.
+   *
+   * A wrapper between the scrolling area and the screen is a new link in the
+   * percentage-height chain, and a link with `height: auto` breaks it: the
+   * chat's `height: 100%` column, the springboard's `min-height: 100%` and
+   * the slide frame all resolve against their parent, and with an auto-height
+   * one in between they collapse to the height of their own content. The
+   * chat came out as a panel floating in the top half of an empty screen.
+   * Content taller than this still overflows and still scrolls — the scroller
+   * is `.scrollarea`, and it counts what overflows its descendants.
+   */
+  height: 100%;
+}
+.pane-body.is-canvas {
+  max-width: var(--canvas);
+}
+
+/*
+ * And the header lines up with it.
+ *
+ * The header spans the pane — its hairline is the edge of the app, and an
+ * edge that stops short of the window looks like a rendering fault. What has
+ * to line up is the title inside it, which sits at the page gutter on a phone
+ * and at the content column's own left edge on a desktop. `max()` is both
+ * statements at once: never less than the gutter, and past that, whatever
+ * centres it over the same column the content is in.
+ */
+@media (min-width: 1180px) {
+  /* `.device-pane` on the front, because `.app-header` sets `padding-inline`
+     itself further down this sheet and a later rule of equal weight wins:
+     without the extra class this one is dead and the title sits at the window
+     edge while the content it names sits 150px to the right of it. */
+  .device-pane .app-header {
+    /* Plus the page gutter: the content column is `--measure` wide and its
+       own text starts one gutter inside that, so a header that stopped at
+       the column's edge sat 30px to the left of the title it names. */
+    padding-inline: max(
+      var(--chrome-pad),
+      calc((100% - var(--measure)) / 2 + var(--page-pad))
+    );
+  }
+  .device-pane.has-canvas .app-header {
+    padding-inline: max(
+      var(--chrome-pad),
+      calc((100% - var(--canvas)) / 2 + var(--page-pad))
+    );
+  }
+}
+
+/*
+ * The scrollbar, which a desktop expects to be able to see.
+ *
+ * It is hidden everywhere else on purpose — a phone draws its own over the
+ * content and takes it away again — but on a desktop a scrolling region with
+ * no bar is a region nobody knows is scrollable, and the mouse has nothing to
+ * grab. Drawn in the app's own hairlines rather than the browser's, which on
+ * a near-black ground is the difference between a scrollbar and a stripe of
+ * grey.
+ */
+@media (min-width: 1180px) and (pointer: fine) {
+  .scrollarea {
+    scrollbar-width: thin;
+    scrollbar-color: var(--app-track) transparent;
+  }
+  .scrollarea::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .scrollarea::-webkit-scrollbar-thumb {
+    background: var(--app-track);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+  }
+  .scrollarea::-webkit-scrollbar-thumb:hover {
+    background: var(--app-line);
+    background-clip: padding-box;
+  }
+  .scrollarea::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/*
+ * ── Cards, in as many columns as there is room for ────────────────────────
+ *
+ * The one thing a wide screen is actually for. A list of four course cards
+ * down the middle of a 1440px window is four rows of mostly nothing; the same
+ * four in two columns is a semester you can see at once.
+ *
+ * A screen opts in by putting `.cards` on the container it was already
+ * stacking things in, and gets one column below 1180 — exactly what it had —
+ * and as many as fit above it. `auto-fill` with a floor rather than a fixed
+ * count so a two-card screen does not stretch two cards across a monitor.
+ */
+.cards {
+  display: grid;
+  gap: var(--sp-6);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 1180px) {
+  .cards {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  }
+}
+
+/*
+ * ── The month grid's cells ───────────────────────────────────────────────
+ *
+ * The one part of the app whose *shape* differs between a phone and a
+ * desktop rather than only its size. At 55px a cell holds a numeral and up to
+ * four coloured dots, and that is the right answer — there is no room for a
+ * word. At 170px a square cell is a hole with a dot at the bottom of it, and
+ * six rows of them do not fit on a laptop screen at all: the month ran off
+ * the bottom and had to be scrolled, which is the one thing a month view
+ * exists not to make you do.
+ *
+ * So above 1180 the cell turns landscape, the dots become the names of what
+ * is on the day, and the whole month fits again. The markup is identical at
+ * both — `Calendar.tsx` draws the names always and this hides them — because
+ * the alternative is reading the window width in JavaScript and having two
+ * places that believe different things about where a desktop starts.
+ */
+.mcell {
+  aspect-ratio: var(--cell-aspect);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.mcell-dots {
+  display: flex;
+  gap: var(--sp-1);
+  height: 4px;
+}
+.mcell-names {
+  display: none;
+}
+
+@media (min-width: 1180px) {
+  .mcell {
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 7px 8px 6px;
+    gap: 4px;
+    text-align: left;
+    overflow: hidden;
+  }
+  .mcell-day {
+    align-self: flex-start;
+  }
+  .mcell-dots {
+    display: none;
+  }
+  .mcell-names {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .mcell-name {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    font-size: var(--type-xs);
+    line-height: var(--leading-tight);
+    opacity: 0.85;
+  }
+  /* The title itself is what has to be cut, so it is what carries the
+     clipping. A flex row cannot ellipsize a bare text node — it has nothing
+     to apply the rule to — and the name ran on into Thursday. */
+  .mcell-name > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* The dot the dots used to be, keeping the colour that says which course. */
+  .mcell-name > i {
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 1px;
+  }
+  .mcell-more {
+    font-size: var(--type-xs);
+    opacity: 0.5;
+  }
+}
+
+/*
+ * The same idea for a run of panels that are read rather than compared — a
+ * settings index, a list of sections. Columns rather than a grid: the
+ * sections are different heights and a grid would leave a hole under the
+ * short one, where a column flow just carries on.
+ */
+@media (min-width: 1180px) {
+  .flow-cols {
+    columns: 2;
+    column-gap: 26px;
+  }
+  .flow-cols > * {
+    break-inside: avoid;
+  }
 }
 
 /* iOS zooms the page when a field under 16px takes focus, which on an iPad
@@ -1148,16 +1530,13 @@ a:hover {
 /*
  * Room to plan on, once the window has room to give.
  *
- * Stepped rather than fluid: a column that grows continuously with the window
- * puts the line length somewhere different on every machine, and 820 is about
- * where a seven-column month grid stops feeling cramped without the day cells
- * becoming billboards.
+ * This used to be the whole of the desktop layout: the pane stepped from 560
+ * to 820 and the rest of the window stayed black. It is `--measure` and
+ * `--canvas` now, at the top of this sheet, applied to the body inside the
+ * pane rather than to the pane itself — so the app fills the window and the
+ * *reading* stays the width it should be, which were always two questions
+ * being answered by one number.
  */
-@media (min-width: 1180px) {
-  .device-pane {
-    max-width: 820px;
-  }
-}
 
 /*
  * The browser's own clear button on a search field.

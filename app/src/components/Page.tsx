@@ -111,11 +111,21 @@ export function Page({
         'not screens of their own. See the note in components/Page.tsx.',
     );
   }
-  const side = wide ? { padding: '0 18px' } : undefined;
+  /*
+   * The gutter is a token, not an 18.
+   *
+   * A phone's side padding and a desktop's are different numbers — 18 down
+   * each side of a 390px screen is right, and the same 18 beside a reading
+   * column on a 27-inch monitor is a page that starts at the very edge of its
+   * own column. `--page-pad` is that number per layout, set once in
+   * `styles/app.css` and read here, which is the only place fifty-seven
+   * screens agree on anything about their frame.
+   */
+  const side = wide ? { padding: '0 var(--page-pad)' } : undefined;
 
   return (
     <Inside.Provider value>
-    <div className={className} style={{ padding: wide ? '0 0 0' : 18, ...style }}>
+    <div className={className} style={{ padding: wide ? '0' : 'var(--page-pad)', ...style }}>
       {blurb !== undefined && (
         <div
           style={{
