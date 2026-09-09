@@ -39,9 +39,10 @@ import { atRiskToday } from '../lib/atrisk';
 import { myReminders } from '../lib/myrules';
 import { datedItems, railFor } from '../lib/select';
 import { save, trouble } from '../lib/keep';
-import { CHECK_EVERY_MS, room, roomLine } from '../lib/quota';
+import { CHECK_EVERY_MS, WRITE_FAILED, room, roomLine } from '../lib/quota';
 import {
   available as dbAvailable,
+  whileWriting,
   flushNow,
   load as loadFromDb,
   persist as persistToDb,
@@ -325,6 +326,30 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * then a reload took the lot with nothing having suggested a problem.
    */
   const [saveTrouble, setSaveTrouble] = useState('');
+  /*
+   * Two things can fill that banner, and a failed write outranks a full-ish
+   * disk: one is what is about to happen and the other is what is happening.
+   * Kept apart so clearing either does not clear the other — a write landing
+   * again should not take down a "getting full" warning that is still true.
+   */
+  const [roomSaid, setRoomSaid] = useState('');
+  const [writeFailing, setWriteFailing] = useState(false);
+  useEffect(() => {
+    setSaveTrouble(writeFailing ? WRITE_FAILED : roomSaid);
+  }, [writeFailing, roomSaid]);
+  /*
+   * The writer says whether it is landing.
+   *
+   * Measured before this, with the database refusing writes the way a full
+   * disk refuses them: a task added through the quick-add sheet drew, stayed
+   * in memory, and was gone after a reload — nothing on screen either time.
+   * The banner in `App.tsx` was written for exactly that case and could only
+   * be turned on by an estimate. See `state/persist/index.ts`.
+   */
+  useEffect(() => {
+    whileWriting((failing) => setWriteFailing(failing));
+    return () => whileWriting(null);
+  }, []);
 
   /**
    * The first-sign-in question, while it is waiting to be answered.
@@ -403,7 +428,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         checkedRoom.current = now;
         void room().then((r) => {
           const said = roomLine(r);
-          setSaveTrouble((was) => (was === said ? was : said));
+          setRoomSaid((was) => (was === said ? was : said));
         });
       }
       return;
