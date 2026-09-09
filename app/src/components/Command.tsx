@@ -31,7 +31,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
-import { countHits, findEverything } from '../lib/find';
+import { countHits, findEverything, spelled } from '../lib/find';
 import { flatten, hitKey, openHit } from '../lib/openhit';
 import { DESKTOP, useMedia } from '../lib/media';
 
@@ -77,6 +77,16 @@ export function Command({ onClose }: { onClose: () => void }) {
   const groups = found;
   const hits = flatten(groups);
   const total = countHits(groups);
+  /*
+   * Whether what is on screen is a guess at the spelling.
+   *
+   * `findEverything` falls back to a near-miss pass when the strict one finds
+   * nothing, so "calender" reaches the Calendar screen. Saying "5 results" for
+   * that would be a small lie about a query the person may well know they
+   * mistyped — and one that makes the one case where the guess is wrong
+   * baffling rather than obvious.
+   */
+  const guessed = spelled(groups);
   // Clamped rather than reset: the selection following the results down as
   // somebody types is what makes Enter safe to press without looking.
   const cursor = Math.min(at, Math.max(0, hits.length - 1));
@@ -199,7 +209,9 @@ export function Command({ onClose }: { onClose: () => void }) {
       >
         {text.trim() === ''
           ? 'Deadlines, courses, study units, your own notes and tasks — and the app’s own screens.'
-          : `${total} ${total === 1 ? 'result' : 'results'}`}
+          : guessed
+            ? `Nothing spelled that way. ${total} ${total === 1 ? 'thing' : 'things'} close to it:`
+            : `${total} ${total === 1 ? 'result' : 'results'}`}
       </div>
 
       <div
