@@ -16,6 +16,7 @@
  */
 
 import type { Screen } from './types';
+import { settingsTitle } from './settings';
 import { allowed, cardName, lmsName, showsCash, showsSwipes, swipeUnit, type Capabilities } from './school';
 import { showing, type Facts } from './reveal';
 
@@ -743,6 +744,56 @@ export function rootOf(screen: Screen): Screen {
 
 export function destination(screen: Screen): Destination | undefined {
   return BY_SCREEN.get(screen);
+}
+
+/**
+ * What to call a screen the registry does not list.
+ *
+ * Twenty of the sixty-nine screens are not destinations, on purpose: eight
+ * settings pages, which are pages *under* Settings, and twelve you reach from
+ * something rather than go to — a course, a deadline, a study guide, the
+ * slides. Their names live in the header switch and in `lib/settings.ts`,
+ * neither of which is importable from a component that only has a `Screen`.
+ *
+ * So callers that needed a name did `DESTINATIONS.find(…)?.label ?? screen`,
+ * and the identifier is what a person then heard: the assistant button
+ * announced itself as "Ask about setNav" on every settings page, "Ask about
+ * drill" inside a drill, and the sheet it opens said "Looking at: setLook".
+ * A screen id is a thing in the source, not a thing on the screen.
+ *
+ * These read as the object of "Ask about ___" and of "Looking at: ___",
+ * which is what both callers write, and the settings pages take the same
+ * short name the header bar shows rather than a second copy of it.
+ */
+const NESTED_NAMES: Partial<Record<Screen, string>> = {
+  onboarding: 'setting up',
+  course: 'this course',
+  item: 'this deadline',
+  event: 'this event',
+  guide: 'this study guide',
+  quiz: 'this quiz',
+  drill: 'this drill',
+  guess: 'these predictions',
+  gap: 'this gap between classes',
+  lesson: 'this lesson',
+  note: 'this note',
+  slides: 'these slides',
+};
+
+/**
+ * The name of a screen, wherever that name is kept.
+ *
+ * The registry first, then the settings registry, then the nested screens
+ * above. The last resort is the id, which `nav.test.ts` holds to be
+ * unreachable — every member of the `Screen` union is named by one of the
+ * three, and a screen added without a name fails there rather than turning up
+ * in an aria-label.
+ */
+export function screenName(screen: Screen): string {
+  const own = BY_SCREEN.get(screen)?.label;
+  if (own) return own;
+  if (/^set[A-Z]/.test(screen)) return settingsTitle(screen);
+  return NESTED_NAMES[screen] ?? screen;
 }
 
 /**
