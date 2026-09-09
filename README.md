@@ -54,6 +54,13 @@ Three things were decided rather than inherited:
   navigation**, with a drawing of each option. See
   [`app/src/lib/chrome.ts`](app/src/lib/chrome.ts) for the rule and the test that
   holds every combination to it.
+- **Nothing with an order is static.** Every ordered list in the app can be
+  dragged into a different order — the home screen's icons, folders and dock,
+  the tiles on a shelf, the directory's rows, the tabs in the bar, your
+  courses, the sections of Today (by the grip beside each heading, on Today
+  itself), and everything on the calendar. One gesture,
+  one implementation, in [`app/src/lib/arrange.ts`](app/src/lib/arrange.ts),
+  with Alt and the arrow keys doing the same job without a pointer.
 - **The date is live.** The prototype pinned itself to Thursday 3 September.
   Here every relative label, the class rail, the countdown and the exam radar are
   derived from the real clock, with that Thursday's specifics kept as dated
@@ -61,6 +68,15 @@ Three things were decided rather than inherited:
 - **The study content is the real guides**, not the prototype's condensed
   summaries — the three published field-guide artifacts plus the ECON study-guide
   PDF, with their full text, glossaries, exam frames and self-tests.
+
+A fourth decision came later, once there were four courses to keep apart: **each
+course wears its own colour**, and it is your accent turned rather than a box of
+crayons. One hue anchors the wheel — whichever you chose, on whichever ground —
+and your classes divide the rest of it between them, so a deadline row, a class
+block, a calendar dot and a load bar all say whose they are before you read a
+word. Every hue is held to WCAG's contrast bars against all thirteen grounds by
+arithmetic rather than by eye. See
+[`app/src/lib/tint.ts`](app/src/lib/tint.ts).
 
 ## Audio
 

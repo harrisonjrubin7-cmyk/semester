@@ -343,7 +343,8 @@ describe('readBackup', () => {
  * before and after Command 2. They do, and the reason is worth pinning down
  * rather than re-checking by hand every time a look key is added: a backup
  * carries the semester, not the way it is drawn. No accent, no ground, no
- * shell — and so no `groupOrder`, the arrangement key the launcher added.
+ * shell — and so neither `groupOrder` nor `boardOrder`, the arrangement keys
+ * the launcher and the home screen added.
  *
  * That is the right line and it is easy to cross by accident, because a look
  * key is a field on the same `Persisted` object as everything a backup does
@@ -354,7 +355,7 @@ describe('a backup carries the semester, not the look', () => {
   const LOOK = [
     'accent', 'textSize', 'ground', 'density', 'corners', 'typeface', 'bodyface',
     'lineHeight', 'readingWidth', 'iconShape', 'labels', 'badges', 'feed', 'shell',
-    'groupOrder', 'hue',
+    'groupOrder', 'boardOrder', 'hue',
   ];
 
   it('names no look key', () => {

@@ -15,6 +15,7 @@ import type {
   Appointment,
   CampusLink,
   ChangeSource,
+  CoursesTab,
   CourseId,
   CourseModule,
   CourseUpdate,
@@ -414,6 +415,14 @@ export interface Persisted {
   tone: Tone;
   badges: string;
   feed: string;
+  /**
+   * `on` or `off`. Whether each course is drawn in its own turn of the accent.
+   *
+   * Part of the look and stored with it, so it syncs with the account and
+   * survives a reinstall like every other appearance choice. The colours it
+   * decides are `lib/tint.ts`.
+   */
+  courseColours: string;
   /** `plain`, `grouped` or `soft`. Which layout every screen is drawn in. */
   shell: string;
   /**
@@ -433,6 +442,15 @@ export interface Persisted {
    * `lib/launcher.ts`, which owns the format.
    */
   groupOrder: string;
+  /**
+   * How the home screen's icons are arranged, where somebody has moved one.
+   *
+   * The same kind of key, owned by `lib/springboard.ts`. Separate from
+   * `groupOrder` because they arrange different things — shelves of screens
+   * against pages of icons — and one string holding both would make a shelf
+   * called `dock` a real possibility.
+   */
+  boardOrder: string;
   /** A dragged accent hue, 0–360, or -1 for "use the named accent". */
   hue: number;
   /**
@@ -444,6 +462,17 @@ export interface Persisted {
    * is a preference, and it remembers.
    */
   waysOpen: boolean;
+  /**
+   * Whether the calendar's colour key is unrolled.
+   *
+   * Closed to begin with, and it persists. The key explains eleven marks —
+   * four courses and seven kinds — which on a phone is two or three lines
+   * above the grid, every time you open the calendar, forever. It is read
+   * once or twice while the colours are being learned and then never again,
+   * so it folds to one line and stays where you left it. See
+   * `components/KindKey.tsx`.
+   */
+  keyOpen: boolean;
   done: Record<string, boolean>;
   saved: Record<string, boolean>;
   notifs: Record<NotifKey, boolean>;
@@ -564,7 +593,7 @@ export interface Ephemeral {
    */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done';
-  coursesTab: 'courses' | 'due';
+  coursesTab: CoursesTab;
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all' | 'task';
   /** Which shelf of the directory is showing under Everything. */
@@ -612,7 +641,7 @@ export interface Ephemeral {
    * had one open yesterday is an app that has misread what a search is for.
    */
   finder: boolean;
-  studyTab: 'guides' | 'tonight' | 'ask';
+  studyTab: 'guides' | 'revise' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
   /** Unit whose lesson is playing. */
@@ -744,6 +773,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   sample: true,
   term: LEGACY_TERM,
   waysOpen: true,
+  keyOpen: false,
   reviews: {},
   grades: {},
   gradeSystems: {},
@@ -811,12 +841,14 @@ export const DEFAULT_PERSISTED: Persisted = {
   labels: 'on',
   badges: 'due',
   feed: 'cards',
+  courseColours: 'on',
   shell: 'plain',
   // Not `list`. Writing a default in here made "never chosen" unreachable —
   // the first save stamped `list` on everybody, and `directoryOf`'s soft
   // fallback could never fire again for anyone who had opened the app once.
   directory: '',
   groupOrder: '',
+  boardOrder: '',
   hue: -1,
 };
 
@@ -836,9 +868,11 @@ export function currentLook(state: Persisted): Look {
     labels: state.labels,
     badges: state.badges,
     feed: state.feed,
+    courseColours: state.courseColours,
     shell: state.shell,
     directory: state.directory,
     groupOrder: state.groupOrder,
+    boardOrder: state.boardOrder,
     hue: state.hue,
   };
 }
@@ -987,6 +1021,7 @@ export function loadPersisted(): Persisted {
       sample: saved.sample ?? saved.courses === undefined,
       term: saved.term ?? LEGACY_TERM,
     waysOpen: saved.waysOpen ?? true,
+      keyOpen: saved.keyOpen ?? false,
       reviews: saved.reviews ?? {},
       grades: saved.grades ?? {},
       gradeSystems: readOverrides(saved.gradeSystems),
@@ -1123,6 +1158,7 @@ export function pickPersisted(state: State): Persisted {
     sample: state.sample,
     term: state.term,
     waysOpen: state.waysOpen,
+    keyOpen: state.keyOpen,
     reviews: state.reviews,
     grades: state.grades,
     gradeSystems: state.gradeSystems,
@@ -1195,9 +1231,11 @@ export function pickPersisted(state: State): Persisted {
     labels: state.labels,
     badges: state.badges,
     feed: state.feed,
+    courseColours: state.courseColours,
     shell: state.shell,
     directory: state.directory,
     groupOrder: state.groupOrder,
+    boardOrder: state.boardOrder,
     hue: state.hue,
   };
 }
@@ -1217,6 +1255,7 @@ export type Action =
   | { type: 'togglePick'; id: string }
   | { type: 'setNav'; nav: NavMode }
   | { type: 'toggleWays' }
+  | { type: 'toggleKey' }
   | { type: 'setGrade'; key: string; value: string }
   // `system` null clears the override, so a course falls back to the school's
   // scale rather than being stuck with a corrected one forever.
@@ -1365,7 +1404,7 @@ export type Action =
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
-  | { type: 'setCoursesTab'; tab: 'courses' | 'due' }
+  | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'task' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
@@ -1394,7 +1433,7 @@ export type Action =
       to?: string;
       incoming?: string;
     }
-  | { type: 'setStudyTab'; tab: 'guides' | 'tonight' | 'ask' }
+  | { type: 'setStudyTab'; tab: 'guides' | 'revise' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
   /**
    * Change a task after it exists.

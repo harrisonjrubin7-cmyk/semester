@@ -603,6 +603,25 @@ export const BADGES = [
 ];
 
 /**
+ * Whether each course gets its own turn of the accent.
+ *
+ * On by default, because the question every list in this app is asked is
+ * "which class is this", and a colour answers it before anything is read. Off
+ * is not a lesser version: it is the app as it was, one metal throughout, for
+ * somebody who reads the codes and would rather the screen stayed quiet. The
+ * colours themselves are `lib/tint.ts`, and they are the reader's own accent
+ * turned rather than a box of crayons.
+ */
+export const COURSE_COLOURS = [
+  { id: 'on', label: 'A colour per course', blurb: 'Your accent, divided between your classes.' },
+  { id: 'off', label: 'One accent throughout', blurb: 'Every course drawn in the same metal.' },
+];
+
+export function courseColoursOf(id: string | undefined): string {
+  return COURSE_COLOURS.find((c) => c.id === id)?.id ?? 'on';
+}
+
+/**
  * How the feed on Today is drawn.
  *
  * Three genuinely different readings of the same day, not three skins. Cards
@@ -896,6 +915,12 @@ export interface Look {
   labels?: string;
   badges?: string;
   feed?: string;
+  /**
+   * `on` or `off` — whether each course is drawn in its own turn of the
+   * accent. See `COURSE_COLOURS`, and `lib/tint.ts` for the colours it
+   * decides.
+   */
+  courseColours?: string;
   /** Which of the three layouts every screen is drawn in. See `SHELLS`. */
   shell?: string;
   /** Whether the directory of everything is a list or tiles. See `DIRECTORIES`. */
@@ -908,6 +933,16 @@ export interface Look {
    * density, and belongs with them rather than in a slice of its own.
    */
   groupOrder?: string;
+  /**
+   * How the home screen's own icons are arranged, where somebody has dragged
+   * one.
+   *
+   * The same kind of string, owned and parsed by `lib/springboard.ts`. A
+   * second key rather than more names inside `groupOrder`: the two arrange
+   * different things — shelves of screens against pages of icons — and one
+   * string holding both would make a shelf called `dock` a real possibility.
+   */
+  boardOrder?: string;
   /**
    * A hue for the accent, 0–360, or -1 for "use the named accent".
    *
@@ -1138,6 +1173,7 @@ export function readLook(saved: Look | undefined): Required<Look> {
     labels: LABELS.find((l) => l.id === saved?.labels)?.id ?? 'on',
     badges: BADGES.find((b) => b.id === saved?.badges)?.id ?? 'due',
     feed: feedStyleOf(saved?.feed),
+    courseColours: courseColoursOf(saved?.courseColours),
     shell: shellOf(saved?.shell),
     // Kept unresolved on purpose, unlike every other key here. An unrecognised
     // value falls back to empty rather than to a style, because empty is a
@@ -1151,6 +1187,8 @@ export function readLook(saved: Look | undefined): Required<Look> {
     // registry every time it reads, so a stale string can only arrange
     // things oddly — never hide one.
     groupOrder: typeof saved?.groupOrder === 'string' ? saved.groupOrder : '',
+    // Unvalidated for the same reason, and read back the same way.
+    boardOrder: typeof saved?.boardOrder === 'string' ? saved.boardOrder : '',
     // -1 rather than 0, because 0 is red.
     hue: typeof saved?.hue === 'number' && saved.hue >= 0 && saved.hue <= 360 ? saved.hue : -1,
   };

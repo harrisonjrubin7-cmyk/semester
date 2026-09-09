@@ -6,7 +6,7 @@ import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { ActionButton, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
@@ -325,15 +325,14 @@ export function Analyse() {
 
       {xSummary && configured() && (
         <>
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={() => void interpret()}
             disabled={busy}
-            style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            tone="primary" height={46}
+            style={{ marginTop: 'var(--sp-7)' }}
           >
             {busy ? 'Reading them…' : 'What do these say?'}
-          </button>
+          </ActionButton>
           {reading ? (
             <Produced style={{ marginTop: 'var(--sp-6)', background: 'var(--app-panel)' }}>
               {reading}

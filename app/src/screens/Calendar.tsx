@@ -7,7 +7,7 @@ import { ApplyingOn } from '../components/Applying';
 import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
@@ -40,7 +40,7 @@ import { timeLabel, useDragToMove } from '../lib/drag';
 import { useRowStyle } from '../components/shell/useShell';
 import { useCalendarMove, type Movable } from './calendar/Move';
 import { AddHere } from './calendar/AddHere';
-import type { Course, CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
+import type { CourseId, DatedEvent, DatedItem, EventKind, PersonalTask } from '../lib/types';
 
 /**
  * The calendar has two independent axes.
@@ -63,22 +63,22 @@ type Source = (typeof SOURCES)[number]['id'];
 
 const EV_FILTERS = ['All', 'Athletics', 'Clubs', 'University', 'Saved'] as const;
 
-/** Colour a course consistently wherever it appears on the calendar. */
-function courseTint(courses: Course[], id: CourseId | null): string {
-  if (!id) return 'var(--app-accent-deep)';
-  const index = courses.findIndex((c) => c.id === id);
-  // A single accent, stepped in opacity — the system is mono by design, so
-  // courses are distinguished by weight rather than by inventing new hues.
-  const steps = [1, 0.78, 0.56, 0.38];
-  return `color-mix(in srgb, var(--app-accent) ${(steps[index % steps.length] ?? 0.5) * 100}%, transparent)`;
-}
+/*
+ * Courses used to be told apart here by opacity: one accent at 100, 78, 56 and
+ * 38 percent. It was the honest thing to do while the app had one colour, and
+ * it did not work — the third and fourth course are a pair of greys, the steps
+ * repeat at the fifth course, and a dot at 38% on a month grid is a dot nobody
+ * sees at all. The palette is `lib/tint.ts` now, it is the reader's own accent
+ * turned rather than four new colours, and it is the same in every view
+ * instead of being the calendar's private scheme. Ask the store: `tint(id)`.
+ */
 
 // ── Day ───────────────────────────────────────────────────────────────────
 
 function DayView() {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const dayRow = useRowStyle(12);
-  const { state, dispatch, now, catalog, say } = useStore();
+  const { state, dispatch, now, catalog, say, tint } = useStore();
   const moving = useCalendarMove();
   const [addAt, setAddAt] = useState<number | null>(null);
   const day = state.calDay ? isoToDate(state.calDay) : now;
@@ -285,7 +285,7 @@ function DayView() {
                         ? 'var(--app-track)'
                         : b.mine
                           ? 'transparent'
-                          : courseTint(catalog.courses, b.c),
+                          : tint(b.c).fill,
                       border: b.mine ? '1px solid var(--app-accent)' : 'none',
                     }}
                   />
@@ -724,7 +724,7 @@ function WeekView() {
 
 function MonthView() {
   const monthTaskRow = useRowStyle('var(--sp-5) 0');
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   const { calYear, calMonth, calSource } = state;
   const cells = monthGrid(calYear, calMonth);
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -1050,7 +1050,7 @@ function MonthView() {
                       background:
                         m.kind === 'mine'
                           ? 'transparent'
-                          : (m.tint ?? courseTint(catalog.courses, m.c)),
+                          : (m.tint ?? tint(m.c).fill),
                       border: m.kind === 'mine' ? '1px solid var(--app-accent)' : 'none',
                       borderRadius: m.kind === 'event' || m.kind === 'appt' ? '50%' : 0,
                     }}
@@ -1070,37 +1070,46 @@ function MonthView() {
         them: a square meant a deadline in that course's colour, a circle meant
         a campus event, an outline meant something of your own. Nobody was ever
         going to work that out, which made the whole month view decorative.
+
+        Handed to `KindKey` rather than drawn above it: this and the colours
+        are one key about one grid, and two stacked legends — each with its own
+        fold, or worse one folded and one not — is the shape of a screen nobody
+        maintained. One tap opens both. It is also the same key the day and
+        week grids carry, so a colour means the same thing in every view
+        rather than three private schemes.
       */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '6px 14px',
-          marginTop: 'var(--sp-5)',
-          fontSize: 'calc(10.5px * var(--text-scale, 1))',
-          fontFamily: 'var(--font-heading)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          opacity: 0.5,
-        }}
-      >
-        {(
-          [
-            ['Due', { background: 'var(--app-accent)' }],
-            ['Campus', { background: 'var(--app-accent)', borderRadius: '50%' }],
-            ['Yours', { border: '1px solid var(--app-accent)' }],
-          ] as const
-        ).map(([label, mark]) => (
-          <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 5, height: 5, flex: 'none', ...mark }} />
-            {label}
-          </span>
-        ))}
-        <span style={{ opacity: 0.8 }}>Colour = course</span>
-      </div>
-      {/* The same key the day and week grids carry, so a colour means the same
-          thing in every view rather than three private schemes. */}
-      <KindKey compact />
+      <KindKey
+        compact
+        lead={
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '6px 14px',
+              marginTop: 'var(--sp-3)',
+              fontSize: 'calc(10.5px * var(--text-scale, 1))',
+              fontFamily: 'var(--font-heading)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              opacity: 0.5,
+            }}
+          >
+            {(
+              [
+                ['Due', { background: 'var(--app-accent)' }],
+                ['Campus', { background: 'var(--app-accent)', borderRadius: '50%' }],
+                ['Yours', { border: '1px solid var(--app-accent)' }],
+              ] as const
+            ).map(([label, mark]) => (
+              <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 5, height: 5, flex: 'none', ...mark }} />
+                {label}
+              </span>
+            ))}
+            <span style={{ opacity: 0.8 }}>Colour = course</span>
+          </div>
+        }
+      />
 
       <SectionLabel style={{ margin: '20px 0 6px' }}>
         {DOW[new Date(calYear, calMonth, selectedDay).getDay()]} · {MONTHS[calMonth]}{' '}
@@ -1216,26 +1225,19 @@ function MonthView() {
 
       {/* Always offered, including on an empty day: this list is deadlines
           only, and classes and anything of your own live in the day view. */}
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => {
-          dispatch({
-            type: 'setCalDay',
-            date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
-          });
-          dispatch({ type: 'setCalView', view: 'day' });
+        dispatch({
+        type: 'setCalDay',
+        date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
+        });
+        dispatch({ type: 'setCalView', view: 'day' });
         }}
-        style={{
-          height: 42,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          fontSize: 'var(--type-xs)',
-          marginTop: 14,
-        }}
+        height={42}
+        style={{ fontSize: 'var(--type-xs)', marginTop: 14 }}
       >
         See classes and events that day
-      </button>
+      </ActionButton>
       <div style={{ height: 22 }} />
     </div>
   );
@@ -1252,7 +1254,7 @@ function MonthView() {
  */
 function SemesterView() {
   const weekRow = useRowStyle(10);
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<string | null>(null);
   const source = state.calSource;
@@ -1398,7 +1400,7 @@ function SemesterView() {
                           style={{
                             flex: 1,
                             maxWidth: `${100 / busiest}%`,
-                            background: courseTint(catalog.courses, it.c),
+                            background: tint(it.c).fill,
                             border: it.kind === 'Exam' ? '1px solid var(--app-accent-bright)' : 'none',
                           }}
                         />

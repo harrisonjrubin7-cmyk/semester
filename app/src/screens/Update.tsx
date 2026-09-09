@@ -21,7 +21,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
-import { SectionLabel } from '../components/ui';
+import { ActionButton, SectionLabel } from '../components/ui';
 import { addFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
 import { describeParse, parseMaterial } from '../lib/parse';
@@ -673,21 +673,14 @@ export function AddMaterial() {
         <>
           {claudeReady ? (
             <>
-              <button
-                type="button"
-                className="btn btn-secondary btn-block"
+              <ActionButton
                 disabled={studying}
                 onClick={() => void readInto()}
-                style={{
-                  height: 42,
-                  marginTop: 'var(--sp-6)',
-                  fontSize: 'var(--type-sm)',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                }}
+                height={42}
+                style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)' }}
               >
                 {studying ? 'Reading it…' : 'Make cards and terms from this'}
-              </button>
+              </ActionButton>
               <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 {provider()} reads what you pasted or attached and writes cards and definitions from
                 what is in it — nothing from general knowledge. Optional: the text is kept as the
@@ -801,21 +794,14 @@ export function AddMaterial() {
           </div>
           <Capture shots={shots} onChange={setShots} label="Use the camera" />
           {shots.length > 0 && (
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
+            <ActionButton
               disabled={reading}
               onClick={() => void readPhotos()}
-              style={{
-                height: 44,
-                marginTop: 'var(--sp-6)',
-                fontSize: 'var(--type-sm)',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-              }}
+              tone="primary" height={44}
+              style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)' }}
             >
               {reading ? 'Reading the photos…' : `Read ${shots.length === 1 ? 'it' : 'them'}`}
-            </button>
+            </ActionButton>
           )}
           {readNote && (
             <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
@@ -882,14 +868,13 @@ export function AddMaterial() {
         onChange={(e) => void pick(e.target.files)}
         style={{ display: 'none' }}
       />
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => fileInput.current?.click()}
-        style={{ height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        height={42}
+        style={{ fontSize: 'var(--type-sm)' }}
       >
         {busy ? 'Reading…' : 'Attach slides, a PDF, a photo of the board, or a zip'}
-      </button>
+      </ActionButton>
       {files.map((f) => (
         <div
           key={f.id}
@@ -925,22 +910,14 @@ export function AddMaterial() {
           Change something above to add it as a separate piece, or leave it — it is all still here.
         </div>
       )}
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         disabled={empty || Boolean(already)}
         onClick={review}
-        style={{
-          height: 50,
-          fontSize: 'var(--type-lg)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: already ? 'var(--sp-4)' : 'var(--sp-7)',
-          opacity: empty || already ? 0.4 : 1,
-        }}
+        tone="primary" height={50}
+        style={{ fontSize: 'var(--type-lg)', marginTop: already ? 'var(--sp-4)' : 'var(--sp-7)', opacity: empty || already ? 0.4 : 1 }}
       >
         {already ? 'Already added' : `Review and add to ${guide.code}`}
-      </button>
+      </ActionButton>
 
       <Rework courseId={courseId} guide={guide} updates={updates} />
 

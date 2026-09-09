@@ -57,6 +57,9 @@ import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
 import { resolveSchool } from '../data/schools';
+import { ACCENT_TINT, anchorHue, tintsFor, type CourseTint } from '../lib/tint';
+import { ground as groundOf, resolveGround } from '../lib/look';
+import { usePrefersDark } from '../lib/prefers';
 import { USAGE_KEY, note as noteUsage, read as readUsage } from '../lib/usage';
 import { countRows, decide, type Choice, type Sides } from '../lib/adopt';
 import type { Facts } from '../lib/reveal';
@@ -124,6 +127,18 @@ interface Store {
    * this rather than the catalogue.
    */
   courseCode: (id: string) => string;
+  /**
+   * The colour this course is drawn in, everywhere it appears.
+   *
+   * On the store rather than worked out per screen because it depends on
+   * three things a screen has no business gathering — the whole course list,
+   * the reader's accent, and which ground is actually resolved right now —
+   * and because a course that was one colour on Today and another on the
+   * calendar would be worse than no colour at all. Anything with no course
+   * (a personal task, a university event) asks with `null` and gets the plain
+   * accent, which is what those have always been drawn in. See `lib/tint.ts`.
+   */
+  tint: (id: string | null | undefined) => CourseTint;
   account: Account | null;
   sync: { status: SyncStatus; at: number; error: string };
   /**
@@ -230,6 +245,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         // survivor it meant — see `RETIRED` in `lib/route.ts`.
         ...(landed.opens?.report ? { report: landed.opens.report } : {}),
         ...(landed.opens?.changes ? { changes: landed.opens.changes } : {}),
+        ...(landed.opens?.courses ? { coursesTab: landed.opens.courses } : {}),
         ...(landed.opens?.meTab ? { meTab: landed.opens.meTab } : {}),
       };
     }
@@ -809,6 +825,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // somebody. Same rule as the cold-start branch above and as `Tapped`.
       if (asked.opens?.report) dispatch({ type: 'setReport', grain: asked.opens.report });
       if (asked.opens?.changes) dispatch({ type: 'setChanges', source: asked.opens.changes });
+      if (asked.opens?.courses) dispatch({ type: 'setCoursesTab', tab: asked.opens.courses });
       dispatch({ type: 'landed', screen: asked.screen, id: asked.id, mode: asked.mode });
     };
     window.addEventListener('popstate', moved);
@@ -867,14 +884,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () => ({
       courses: catalog.courses.length,
       hasExam: catalog.items.some((i) => /exam|midterm|final/i.test(`${i.kind} ${i.title}`)),
-      hasGrades: Object.keys(state.grades ?? {}).length > 0,
       notes: state.notes.length,
       sittings: state.sittings.length,
       ownThings: state.tasks.length + state.appointments.length,
       terms: terms.length || 1,
       signedIn: Boolean(account),
     }),
-    [catalog, state.grades, state.notes, state.sittings, state.tasks, state.appointments, terms, account],
+    [catalog, state.notes, state.sittings, state.tasks, state.appointments, terms, account],
   );
 
   /**
@@ -948,9 +964,51 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [dispatch],
   );
 
+  /*
+   * The course palette, worked out once per look and once per course list.
+   *
+   * `prefersDark` is read here for the same reason `App.tsx` reads it: the
+   * stored ground can be "match my device", and a tint drawn for a light
+   * ground on a dark screen is the one failure this whole file is arranged to
+   * avoid.
+   */
+  const prefersDark = usePrefersDark();
+  const tints = useMemo(
+    () =>
+      tintsFor(
+        catalog.courses.map((c) => c.id),
+        {
+          accent: state.accent,
+          hue: state.hue,
+          light: groundOf(resolveGround(state.ground, prefersDark)).light,
+          on: state.courseColours !== 'off',
+          /*
+           * A colour somebody chose for a course themselves.
+           *
+           * `state.yours` has held one since long before the palette existed —
+           * an accent id, opt-in, and drawn on exactly two screens. It is the
+           * override now rather than a second scheme: the accent names a hue,
+           * the hue joins the palette, and the course wears it everywhere the
+           * derived ones are worn. One home for "this course is orange", which
+           * is the home it was already in.
+           */
+          pinned: Object.fromEntries(
+            Object.entries(state.yours)
+              .filter(([, mine]) => mine?.tint)
+              .map(([id, mine]) => [id, anchorHue(mine.tint, -1)]),
+          ),
+        },
+      ),
+    [catalog, state.accent, state.hue, state.ground, prefersDark, state.courseColours, state.yours],
+  );
+  const tint = useCallback(
+    (id: string | null | undefined): CourseTint => (id ? (tints[id] ?? ACCENT_TINT) : ACCENT_TINT),
+    [tints],
+  );
+
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
-    [state, now, catalog, terms, courseCode, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
+    () => ({ state, dispatch, now, catalog, terms, courseCode, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
+    [state, now, catalog, terms, courseCode, tint, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

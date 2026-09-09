@@ -106,7 +106,7 @@ export const TASKS: { task: string; why: string; steps: Screen[] }[] = [
   {
     task: 'I want to know where I stand',
     why: 'Grades from your own entries and weights from the syllabus; nothing is fetched.',
-    steps: ['grades', 'behind', 'brief'],
+    steps: ['courses', 'behind', 'brief'],
   },
   {
     task: 'I want to plan my week',

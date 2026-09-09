@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { learned, showSpan } from '../lib/pace';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
-import { EmptyState, Meter, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, EmptyState, Meter, SectionLabel, Segmented } from '../components/ui';
 import { NotYetOpened } from '../components/NotYetOpened';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { Bell } from '../components/Icons';
@@ -13,14 +13,18 @@ import { NOTIFICATIONS } from '../data/misc';
 import { loadByCourse, upcomingItems } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
-import { GROUPS, destinationsIn, lately, listed, offered, saysFor } from '../lib/nav';
+import { GROUPS, destinationsIn, lately, listed, offered, saysFor, type Group as Shelves } from '../lib/nav';
 import { byTask } from '../lib/everything';
+import { arranged, useMovable } from '../lib/arrange';
+import { readOrder, tilesFor, writeOrder } from '../lib/launcher';
+import { currentLook } from '../state/shape';
 import { Launcher } from '../components/nav/Launcher';
 import { directoryOf } from '../lib/look';
 
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
 import { TypeToConfirm } from '../components/TypeToConfirm';
+import { CourseTag } from '../components/CourseTag';
 
 /**
  * The shelves, in the order they read: what you study, what you make with it,
@@ -51,9 +55,14 @@ const HIDE_IN_ME: Screen[] = ['home', 'me', 'notifs'];
 function Destination({
   to,
   account,
+  drag,
+  tookDrop,
 }: {
   to: ReturnType<typeof destinationsIn>[number];
   account: { email: string } | null;
+  /** Its place on the shelf, on the shelves where that is the student's. */
+  drag?: HTMLAttributes<HTMLElement> & { 'data-drop'?: string };
+  tookDrop?: () => boolean;
 }) {
   const { dispatch, school } = useStore();
   // The directory in the school's own words. See `lib/nav.ts` — the meal row
@@ -63,8 +72,75 @@ function Destination({
     <NavRow
       label={to.screen === 'account' && account ? 'Account · synced' : said.label}
       sub={to.screen === 'account' && !account ? 'Not signed in — this device only.' : said.blurb}
-      onClick={() => dispatch({ type: 'go', screen: to.screen })}
+      drag={drag}
+      // A drop ends in a click on the row it started from, so without this
+      // the row you have just moved also opens.
+      onClick={() => {
+        if (tookDrop?.()) return;
+        dispatch({ type: 'go', screen: to.screen });
+      }}
     />
+  );
+}
+
+/**
+ * One shelf of the directory, in the order the student put it in.
+ *
+ * The same look key the launcher's tiles and the Everything screen's rows are
+ * dragged into — one arrangement, honoured wherever the shelf is drawn. Three
+ * lists of the same shelf that disagreed about its order would be the app
+ * arguing with itself.
+ *
+ * Its own component because a drag is a hook, and a hook cannot be set up
+ * inside a loop over the shelves.
+ *
+ * ## What is dropped on is not always all there is
+ *
+ * `reveal.ts` hides rows that are real but not useful yet, so this list can be
+ * a subset of the shelf. The drop is worked out against the *whole* shelf and
+ * only drawn from the visible part: moving Costs above Books then leaves
+ * anything hidden between them where it was, rather than silently sending it
+ * to the end of the shelf the moment it comes back.
+ */
+function Shelf({
+  group,
+  rows,
+  account,
+}: {
+  group: Shelves;
+  rows: ReturnType<typeof destinationsIn>;
+  account: { email: string } | null;
+}) {
+  const { state, dispatch, school } = useStore();
+  const order = readOrder(currentLook(state).groupOrder);
+  const whole = tilesFor(group, school.capabilities, order).map((d) => d.screen);
+  const shown = arranged(
+    rows.map((d) => d.screen),
+    whole,
+  );
+
+  const drag = useMovable<Screen>({
+    items: whole,
+    onMove: (moved) =>
+      dispatch({
+        type: 'setLook',
+        look: { groupOrder: writeOrder({ ...order, [group]: moved }) },
+      }),
+  });
+
+  const byScreen = new Map(rows.map((d) => [d.screen, d]));
+  return (
+    <Panel header={group}>
+      {shown.map((screen) => (
+        <Destination
+          key={screen}
+          to={byScreen.get(screen)!}
+          account={account}
+          drag={drag.props(screen)}
+          tookDrop={drag.tookDrop}
+        />
+      ))}
+    </Panel>
   );
 }
 
@@ -140,7 +216,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
 }
 
 export function Me() {
-  const { state, dispatch, now, catalog, account , courseCode, school, facts } = useStore();
+  const { state, dispatch, now, catalog, account , courseCode, school, facts, tint } = useStore();
   const rowNine = useRowStyle(9);
   const rowTen = useRowStyle(10);
   const ahead = upcomingItems(catalog, now);
@@ -231,7 +307,10 @@ export function Me() {
             <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{b.n} left</div>
           </div>
           <div style={{ marginTop: 'var(--sp-3)' }}>
-            <Meter pct={b.pct} />
+            {/* Four bars in one metal are four bars you have to read the label
+                of. In their courses' colours they are the same four facts,
+                comparable at a glance and matched to every other list. */}
+            <Meter pct={b.pct} fill={tint(b.id).fill} />
           </div>
         </div>
       ))}
@@ -258,9 +337,9 @@ export function Me() {
                 ...rowNine,
               }}
             >
-              <span className="tag tag-accent" style={{ flex: 'none' }}>
+              <CourseTag id={r.courseId} style={{ flex: 'none' }}>
                 {courseCode(r.courseId)}
-              </span>
+              </CourseTag>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{r.kind}</span>
               <span style={{ flex: 'none', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{showSpan(r.minutes / 60)}</span>
               <span style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.45, minWidth: 46, textAlign: 'right' }}>
@@ -368,13 +447,7 @@ export function Me() {
               (d) => !HIDE_IN_ME.includes(d.screen),
             );
             if (rows.length === 0) return null;
-            return (
-              <Panel key={group} header={group}>
-                {rows.map((d) => (
-                  <Destination key={d.screen} to={d} account={account} />
-                ))}
-              </Panel>
-            );
+            return <Shelf key={group} group={group} rows={rows} account={account} />;
           })}
         </nav>
         </>
@@ -568,19 +641,13 @@ export function Notifications() {
           <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-1)' }}>{n.body}</div>
         </Blueprint>
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => dispatch({ type: 'clearNotifs' })}
-        style={{
-          height: 42,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          marginTop: 'var(--sp-4)',
-        }}
+        height={42} spacing="0.12em"
+        style={{ marginTop: 'var(--sp-4)' }}
       >
         Clear all
-      </button>
+      </ActionButton>
     </Page>
   );
 }
@@ -613,14 +680,13 @@ export function Reminders() {
         as a nudge while you are working, not an alarm clock.
       </div>
       {perm === 'default' && (
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
+        <ActionButton
           onClick={() => void requestPermission().then(setPerm)}
-          style={{ height: 40, marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          height={40}
+          style={{ marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)' }}
         >
           Allow notifications
-        </button>
+        </ActionButton>
       )}
     </div>
   );

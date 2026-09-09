@@ -237,38 +237,51 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 678,
+  type: 672,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 219,
+  leading: 216,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 518,
+  space: 512,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 512,
+  shorthand: 491,
 };
 
 /*
- * 678/219/518/512 is what the merged tree counts, measured after this branch
- * and the Places-tab pass met. The two notes below each name their own
- * branch's numbers.
+ * The numbers above are measured on the merged tree. Several notes below
+ * landed on branches that ran alongside each other, so what each one names is
+ * its own branch's count rather than a step in one line.
  *
- * 680/222/524/543 → 680/220/521/537 when eleven hand-written "nothing here yet"
- * blocks became `EmptyState`. Three down and none up, none of it by
- * reformatting: each of those blocks set its own padding, opacity and line
- * height, and the component sets none of them per screen. Two of the eight
- * gained the thing the component exists for — the button that would put
- * something there.
+ * Eleven hand-written "nothing here yet" blocks became `EmptyState` — each had
+ * set its own padding, opacity and line height, and the component sets none of
+ * them per screen. Two of the eleven gained the thing the component exists
+ * for: the button that would put something there.
  *
- * 680/222/524/544 → 680/222/524/543 when the second directory was deleted. The
- * view that survived it is drawn with the `Panel` and rows the first directory
- * already used, so what went with the screen was its own hand-drawn heading.
+ * The second directory was deleted and its one surviving view moved into
+ * Progress, drawn with the `Panel` and rows that tab already used, so what
+ * went with the screen was its own hand-drawn heading.
  *
- * Unchanged when Settings stopped counting the bytes a second time: the two
- * rows that moved to the Data screen are drawn with `ItemRow` rather than
- * copied, so the page that went took its own numbers with it.
+ * The code with no caller was cut: two of the off-scale sizes were inside row
+ * components nothing rendered.
  *
- * 682/222/524/544 → 680/222/524/544 when the code with no caller was cut. Two
- * sizes down, none up, and neither by reformatting: they were inside two of
- * the row components nothing rendered.
+ * The Tools tab became a home screen, and its four are folded into every
+ * measurement below rather than added to any of them: thirteen cards drawn by
+ * hand in `screens/Study.tsx` — each with its own padding, its own 13.5px
+ * blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes live in
+ * `app.css` on the scales. The one value the grid sets by hand, the 11.5px
+ * icon name, is inside the numbers. Measured rather than derived, like every
+ * note below: 674/218/515/498 is what `counts()` reports on the merged tree.
+ *
+ * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
+ * chat. Two numbers down and none up, and neither by reformatting: the
+ * panel's transcript, opening, header and footer are now the same components
+ * and the same measure the Ask tab uses, so the hand-set gap and the four
+ * `'12px 16px'`-shaped paddings it drew for itself went with the layout they
+ * belonged to. See `ai/Assistant.tsx`.
+ *
+ * It also took out two loose 1.4 line heights, which do not show above: the
+ * row pass landed `leading` on 219 from the other side, and these counts are
+ * of what is left in the tree rather than of what each branch removed. Two
+ * changes can take the same number to the same place.
  *
  * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
  * down and none up: the tab was a second copy of what the map already is, and
@@ -276,9 +289,15 @@ export const BUDGET = {
  * `screens/Maps.tsx` as it was rather than being redrawn, so the panel's own
  * off-scale values went with it and the tab's list rows did not come back.
  *
- * The two above landed either side of a merge, so the numbers each names are
- * its own branch's. What the merged tree actually counts is the block at the
- * top of this file, measured rather than added up.
+ * 682/222/524/544 → 679/222/522/542 when the Claude key stopped being on two
+ * screens. Three down, none up, and none by reformatting: Connect accounts'
+ * copy of the key form drew its own model list by hand, and Settings already
+ * had one built from `CustomRow`.
+ *
+ * 679/222/522/542 → 677/222/520/538 when the second chip idiom got a name.
+ * Five sites were drawing an outlined pick chip by hand with the padding
+ * drifting between 7px and 9px and the radius between two tokens; `PickChips`
+ * draws one on the spacing scale, so the drift is gone rather than moved.
  *
  * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
  * One down, none up, and only one because the filter field lived in `<Page>`
@@ -316,6 +335,12 @@ export const BUDGET = {
  * six spacing decisions anybody made. The two the chat added — a 3px gap
  * between the waiting dots, and the send button's clearance inside the
  * composer — are drawing measurements and are inside the new number.
+ *
+ * `shorthand` went 519 → 509 when the courses got their own colours. The Look
+ * settings page wrote the same section-label margin twelve times — one string,
+ * twelve copies, eleven chances to be a pixel out — and it is one `CAP`
+ * constant now. The thirteenth section, the course palette, uses it too rather
+ * than adding the thirteenth copy, which is the whole reason to have counted.
  *
  * Set to what is there, not to what a grep said.
  *

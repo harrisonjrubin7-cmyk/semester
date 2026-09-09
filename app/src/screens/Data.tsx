@@ -6,7 +6,6 @@ import { useStore } from '../state/store';
 import { pickPersisted } from '../state/shape';
 import { bytesOf, inventory, space, type Row, type Space } from '../lib/inventory';
 import { formatBytes, totalSize } from '../lib/files';
-import { ItemRow } from '../components/shell/Rows';
 import { weigh } from '../lib/keep';
 import { DRAFTS_KEY } from '../lib/draft';
 
@@ -30,33 +29,20 @@ import { DRAFTS_KEY } from '../lib/draft';
  *
  * They link to each other instead, and `privacy` gives up the label "Your
  * data" — which described this screen and not that one.
- *
- * ## What came here from Settings
- *
- * Settings had a Storage page measuring the same bytes: the store, the drafts,
- * the attachments and the browser's own total, against this screen's
- * collection-by-collection list and the same browser total. Two totals of one
- * thing, and they did not agree, because each counted a different set of the
- * three places this app writes. So the two outside the store — drafts and
- * attachments — are measured here now, under the collections, and Settings
- * points at this screen. The other half of that page was `Snapshots` and a row
- * to Export, both of which the Export screen already had.
  */
 export function DataScreen() {
   const { state, dispatch } = useStore();
   const [room, setRoom] = useState<Space | null>(null);
   const [open, setOpen] = useState<string | null>(null);
-
-  const store = useMemo(() => inventory(pickPersisted(state)), [state]);
-
   /*
-   * The two the store does not hold.
+   * The two things the app holds that are not in the store.
    *
-   * A draft in progress is its own localStorage key so that a half-typed essay
-   * survives a crash without going through the store, and attachments are in
-   * IndexedDB because they are too big for it. Both are this app's bytes and
-   * neither is in the list above, which is what made the old Storage page's
-   * total disagree with this one.
+   * Came from Settings → Storage, which measured them beside a second copy of
+   * the quota figure below. The quota is now measured once, by `space()`, and
+   * these two moved here rather than being lost with that copy: a screen that
+   * answers "what is this app holding" and omits the attachments is answering
+   * it wrongly. Drafts are a string this app wrote, so their size is exact;
+   * attachments are asked of IndexedDB and can decline to answer.
    */
   const [drafts] = useState(() => {
     try {
@@ -67,6 +53,8 @@ export function DataScreen() {
     }
   });
   const [files, setFiles] = useState<number | null>(null);
+
+  const store = useMemo(() => inventory(pickPersisted(state)), [state]);
 
   useEffect(() => {
     let alive = true;
@@ -136,29 +124,26 @@ export function DataScreen() {
             </div>
           )}
 
-          <SectionLabel>Outside the store</SectionLabel>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
-            Written by this app, in their own places, and counted in the browser's total below.
+          {/*
+            Outside the store, and said so.
+
+            These are not collections and must not be added into the total
+            above, which is the size of one string this app writes. Kept
+            beside it because the question people arrive with is "what is
+            this app taking up", and the answer is all three.
+          */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+            <span>Drafts in progress</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {drafts ? formatBytes(drafts) : 'None'}
+            </span>
           </div>
-          {/* Through the shared row rather than a hand-drawn one: this screen
-              is about numbers agreeing, and a row that draws its own hairline
-              is the same drift one level down. See `components/shell/Rows`. */}
-          <ItemRow
-            title="Drafts in progress"
-            trailing={
-              <span style={{ opacity: 0.75, fontVariantNumeric: 'tabular-nums' }}>
-                {drafts ? formatBytes(drafts) : 'None'}
-              </span>
-            }
-          />
-          <ItemRow
-            title="Attachments"
-            trailing={
-              <span style={{ opacity: 0.75, fontVariantNumeric: 'tabular-nums' }}>
-                {files === null ? 'Not available' : formatBytes(files)}
-              </span>
-            }
-          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-2)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+            <span>Attachments</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {files === null ? 'Not available' : formatBytes(files)}
+            </span>
+          </div>
 
           <SectionLabel>Room</SectionLabel>
           {room === null ? (

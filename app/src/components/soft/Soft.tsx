@@ -1,10 +1,14 @@
 /**
- * The soft shell's seven parts.
+ * The soft shell's six parts.
  *
- * Hero, stat, pill, numbered step, light tile, dark tile, bottom bar. Thin
- * components over the classes in app.css: the markup is here so a screen does
- * not hand-roll it, and every colour is a per-ground token so the same markup
- * is right on Bone, Ink and Parchment.
+ * Hero, stat, pill, numbered step, light tile, dark tile. Thin components over
+ * the classes in app.css: the markup is here so a screen does not hand-roll
+ * it, and every colour is a per-ground token so the same markup is right on
+ * Bone, Ink and Parchment.
+ *
+ * There were eight. `BottomBar` and the round `BarButton` beside it drew the
+ * pill at the foot of every screen, and went when the bar did — see
+ * `lib/softtop.ts` for why.
  *
  * ## Built on Blueprint, not on `.card`
  *
@@ -195,38 +199,3 @@ export function DarkTile({
     </button>
   );
 }
-
-/**
- * The bottom bar: a status line, a segmented row, one primary and its
- * secondaries.
- *
- * Sticky rather than fixed. Fixed would sit over the tab bar on a phone,
- * which is the one piece of furniture the app cannot cover.
- */
-export function BottomBar({
-  status,
-  segments,
-  primary,
-  onPrimary,
-  secondaries,
-}: {
-  status?: ReactNode;
-  segments?: ReactNode;
-  primary: ReactNode;
-  onPrimary?: () => void;
-  secondaries?: ReactNode;
-}) {
-  return (
-    <div className="soft-bar">
-      {status ? <Caps quiet>{status}</Caps> : null}
-      {segments ? <div className="soft-bar-row">{segments}</div> : null}
-      <div className="soft-bar-row">
-        <button type="button" className="bare soft-bar-primary" onClick={onPrimary}>
-          {primary}
-        </button>
-        {secondaries}
-      </div>
-    </div>
-  );
-}
-

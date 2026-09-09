@@ -27,8 +27,26 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * instant it was touched would be unusable. With a mouse there is no scroll to
  * protect, so {@link SLOP} pixels of movement is enough and there is no wait.
  *
- * `touch-action: none` goes on the dragged element *only while it is held*.
- * Set permanently it would stop the page scrolling under the finger.
+ * ## Why `touch-action` is not enough, and what is
+ *
+ * The first version of this said `touch-action: none` on the held element was
+ * the answer. It is not, and the drag did not work on a phone at all: the
+ * browser decides whether a touch is a pan when the finger *lands*, and
+ * `touch-action` set after the hold has fired is a sentence read out after the
+ * verdict. What actually happened was `pointerdown, pointermove,
+ * pointercancel` — the pan started, the pointer was cancelled, and the row
+ * stayed where it was. It worked with a mouse, which is why it shipped.
+ *
+ * What says no is a `touchmove` listener registered **non-passively** and
+ * calling `preventDefault`, and it has to be attached at the moment the drag
+ * arms rather than from an effect afterwards — an effect runs a render later,
+ * which is long enough for the finger to move and the pan to start. It is
+ * removed the moment nothing is held, so a flick with no hold still scrolls
+ * the page normally.
+ *
+ * `touch-action: none` stays on the held element as well. It is not what
+ * rescues the gesture, but it costs nothing and keeps the browser from
+ * changing its mind mid-drag.
  *
  * ## The page scrolls itself at the edges
  *
@@ -164,6 +182,32 @@ export function specOf(el: HTMLElement): GridSpec | null {
   return { rowPx, gutterPx, startHour, columns };
 }
 
+/**
+ * Tell the browser this finger is not scrolling the page.
+ *
+ * Exported and taking its target because the rule it enforces is the one that
+ * was wrong for a whole release and is invisible when it breaks: without it a
+ * drag on a phone ends in `pointercancel` before anything moves, and every
+ * mouse-driven check still passes. `drag.test.ts` holds it to the two things
+ * that matter — that the listener is registered **non-passively**, since a
+ * passive one cannot prevent anything, and that it only prevents an event the
+ * browser is still willing to have prevented.
+ *
+ * On the document rather than the dragged element: a drag crosses out of the
+ * row it started in, onto a month cell or an hour grid, and a listener bound
+ * to the row would stop preventing the pan the moment the finger left it.
+ */
+export function holdAgainstPan(target: Pick<Document, 'addEventListener' | 'removeEventListener'>): () => void {
+  const held = (e: Event) => {
+    // A pan the browser has already committed to sends touchmoves that cannot
+    // be prevented; calling `preventDefault` on one is a warning and nothing
+    // else.
+    if (e.cancelable) e.preventDefault();
+  };
+  target.addEventListener('touchmove', held, { passive: false });
+  return () => target.removeEventListener('touchmove', held);
+}
+
 /** How close to an edge starts the scroll, and how fast it goes at the edge. */
 const EDGE_PX = 72;
 const EDGE_SPEED = 14;
@@ -215,14 +259,32 @@ export function useDragToMove<T>({ onDrop, grid, disabled }: DragOptions<T>) {
   /** Set on a drop, read by the click that follows it, then cleared. */
   const moved = useRef(false);
 
+  /**
+   * Undoes the pan block, or null when nothing is held.
+   *
+   * A ref rather than state because it is attached from inside a timer
+   * callback and a pointer handler — both of which run before React has
+   * rendered anything — and the whole point is that it lands before the next
+   * touch event rather than a render later.
+   */
+  const unblock = useRef<(() => void) | null>(null);
+
   /** The box being auto-scrolled, and the frame doing it. */
   const scroller = useRef<HTMLElement | null>(null);
   const frame = useRef<number | null>(null);
   const edge = useRef(0);
 
+  /** See {@link holdAgainstPan}. Held in a ref so it can be released anywhere. */
+  const blockPan = useCallback(() => {
+    if (unblock.current) return;
+    unblock.current = holdAgainstPan(document);
+  }, []);
+
   const stop = useCallback(() => {
     if (timer.current !== null) window.clearTimeout(timer.current);
     timer.current = null;
+    unblock.current?.();
+    unblock.current = null;
     if (frame.current !== null) cancelAnimationFrame(frame.current);
     frame.current = null;
     scroller.current = null;
@@ -251,6 +313,8 @@ export function useDragToMove<T>({ onDrop, grid, disabled }: DragOptions<T>) {
   useEffect(() => () => {
     if (timer.current !== null) window.clearTimeout(timer.current);
     if (frame.current !== null) cancelAnimationFrame(frame.current);
+    unblock.current?.();
+    unblock.current = null;
   }, []);
 
   /**
@@ -318,6 +382,9 @@ export function useDragToMove<T>({ onDrop, grid, disabled }: DragOptions<T>) {
         // A finger is usually scrolling. Hold it still to mean something else.
         timer.current = window.setTimeout(() => {
           armed.current = true;
+          // Before anything else in this callback: the next touchmove may be
+          // the one the browser would have panned on.
+          blockPan();
           setHeld(payload);
           setAt({ x: from.current?.x ?? 0, y: from.current?.y ?? 0 });
           try {

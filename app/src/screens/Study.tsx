@@ -8,28 +8,33 @@ import { FirstRun } from './FirstRun';
 import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
 import { modesFor } from '../lib/modes';
 import { Blueprint } from '../components/Blueprint';
-import { Meter, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, Meter, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
+import { AppGrid } from '../components/nav/AppGrid';
 import { nextExam, tonightPlan } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
 import { cardKey, dueCount } from '../lib/review';
 import { destinationsIn } from '../lib/nav';
-import { tintFor } from '../lib/yours';
 
 /**
  * Study, in the shape Calendar and Mine already use.
  *
- * It was one long scroll: exam radar, two Claude cards, the guides, then
- * tonight's plan at the very bottom where nobody reached it. The three are
- * different errands — pick a course to work through, be told what to do
- * tonight, ask something — so they are three views of the same subject rather
- * than a queue you scroll past.
+ * It was one long scroll: exam radar, two Claude cards, the guides, then the
+ * revision plan at the very bottom where nobody reached it. The three are
+ * different errands — pick a course to work through, be told what to revise,
+ * ask something — so they are three views of the same subject rather than a
+ * queue you scroll past.
+ *
+ * The middle one was called Tonight until the app had a screen of that name
+ * doing something else: ordering everything outstanding by points of final
+ * grade per hour. This one picks the unit you are weakest at and opens its
+ * cards. Both are real and neither is the other, so only one keeps the word.
  *
  * The exam countdown stays above the switcher, because it is true whichever
  * view you are on and it is the thing you want to see without looking.
  */
 export function Study() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   /**
    * Courses whose full list of ways has been asked for.
    *
@@ -89,7 +94,12 @@ export function Study() {
       <Segmented
         options={[
           { id: 'guides', label: 'Guides' },
-          { id: 'tonight', label: 'Tonight' },
+          // Not "Tonight": that is a screen of its own, and it answers a
+          // different question — which of tonight's hours are worth most
+          // against a grade, across everything outstanding. This is one short
+          // sitting on the unit you are weakest at. Two jobs sharing a word
+          // meant the tab and the screen were a coin toss from the directory.
+          { id: 'revise', label: 'Revise' },
           { id: 'ask', label: 'Tools' },
         ]}
         value={tab}
@@ -107,53 +117,32 @@ export function Study() {
       {tab === 'ask' && (
         <>
           {/*
-            Generated from the directory rather than written out here.
-            This tab used to be two hand-written cards, Ask Claude and Work on
+            A home screen, generated from the directory.
+
+            Two changes, and the second is what the first was for. Generated:
+            this tab used to be two hand-written cards, Ask Claude and Work on
             it, and every tool added afterwards — the diagram drawer, the
             problem solver, the data analysis, the deck builder, the drafting
             tool, the practice paper — was reachable only through search or
-            three taps into Me. Six features nobody would ever find. Reading
-            the list from `lib/nav.ts` means the next one appears here the day
-            it is added, without anybody remembering to come back.
+            three taps into Me. Reading the list from `lib/nav.ts` means the
+            next one appears here the day it is added, without anybody
+            remembering to come back.
+
+            And drawn as a grid rather than a column, because generating the
+            list made it thirteen rows and a row of a card each is 68px — four
+            tools on screen and nine below the fold, which is the same
+            unfindability the tab was built to end. Icons with names under
+            them put twelve in the space four were using, and give each one a
+            position you can point at rather than read for. See
+            `components/nav/AppGrid.tsx`.
           */}
           <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
             Everything the app can do with a course, in one place.
           </div>
-          {[...destinationsIn('Study'), ...destinationsIn('Make')]
-            .filter((d) => d.screen !== 'study')
-            .map((d) => (
-              <Blueprint
-                plain
-                key={d.screen}
-                onClick={() => dispatch({ type: 'go', screen: d.screen })}
-                style={{
-                  padding: '13px 15px',
-                  marginTop: 'var(--sp-5)',
-                  display: 'flex',
-                  gap: 'var(--sp-6)',
-                  alignItems: 'center',
-                }}
-              >
-                <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span className="kicker" style={{ display: 'block' }}>
-                    {d.label}
-                  </span>
-                  <span
-                    style={{
-                      display: 'block',
-                      fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                      lineHeight: 1.35,
-                      marginTop: 3,
-                      textWrap: 'pretty',
-                    }}
-                  >
-                    {d.blurb}
-                  </span>
-                </span>
-                <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
-              </Blueprint>
-            ))}
+          <AppGrid
+            apps={[...destinationsIn('Study'), ...destinationsIn('Make')].filter((d) => d.screen !== 'study')}
+            onOpen={(d) => dispatch({ type: 'go', screen: d.screen })}
+          />
         </>
       )}
 
@@ -197,10 +186,8 @@ export function Study() {
                 // The same stripe as the Courses list, for the same reason:
                 // this is the other screen where four codes have to be told
                 // apart at a glance.
-                borderLeft: tintFor(state.yours, c.id)
-                  ? `3px solid ${tintFor(state.yours, c.id)?.base}`
-                  : undefined,
-                paddingLeft: tintFor(state.yours, c.id) ? 12 : 15,
+                borderLeft: `3px solid ${tint(c.id).edge}`,
+                paddingLeft: 'var(--sp-6)',
               }}
             >
               <button
@@ -241,7 +228,7 @@ export function Study() {
               </div>
               <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-1)' }}>{g.blurb}</div>
               <div style={{ marginTop: 11 }}>
-                <Meter pct={g.mastery} />
+                <Meter pct={g.mastery} fill={tint(c.id).fill} />
               </div>
               <div
                 style={{
@@ -276,14 +263,12 @@ export function Study() {
               >
                 {step && (
                   <>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-block"
+                    <ActionButton
                       onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: step.id })}
-                      style={{ height: 42, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                      tone="primary" height={42} spacing="0.08em"
                     >
                       {step.label}
-                    </button>
+                    </ActionButton>
                     {/* The fact it rests on. A recommendation with no reason
                         is an instruction, and an instruction from software
                         about how to study is worth nothing. */}
@@ -368,7 +353,7 @@ export function Study() {
         </>
       )}
 
-      {tab === 'tonight' && (
+      {tab === 'revise' && (
         <>
       <SectionLabel style={{ margin: '20px 0 4px' }}>Tonight’s 25 minutes</SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-6)', textWrap: 'pretty' }}>

@@ -118,7 +118,7 @@ export const SETTINGS: SettingsSection[] = [
         short: 'Assistant',
         holds: 'Which provider answers, which model, what it costs and what it sees',
         keywords:
-          'claude ai assistant chat gpt chatgpt openai anthropic api key proxy model sonnet opus haiku provider cost spend money tokens billing what it can see privacy context',
+          'claude ai assistant chat gpt chatgpt openai anthropic api key proxy model sonnet opus haiku provider cost spend money tokens billing what it can see privacy context sign in with claude login console check my key',
       },
     ],
   },
@@ -140,7 +140,12 @@ export const SETTINGS: SettingsSection[] = [
         // this row used to open.
         screen: 'data',
         label: 'Storage and backup',
-        holds: 'Space used, copies, export and restore',
+        // Not "space used" any more: the measuring is Your data's, and this
+        // page is the two ways of getting something back. The `space` and
+        // `quota` keywords stay, because those are still the words somebody
+        // types when their phone says it is full — and this page carries the
+        // row that takes them there.
+        holds: 'Copies, export and restore — and where to see the space used',
         keywords:
           'storage space full quota backup copies snapshot restore export download zip json save room disk drafts attachments',
       },

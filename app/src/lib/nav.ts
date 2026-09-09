@@ -198,8 +198,13 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'courses',
     label: 'Courses',
-    blurb: 'Every course, its deadlines, its grading and its professor.',
-    keywords: 'class syllabus professor office hours grading credits',
+    // Three grains, and the third is the one people search for by name:
+    // Grades was a destination of its own until it turned out to be this
+    // screen's third tab as well. Its keywords came here with it, so "what do
+    // i need on the final" still lands somewhere.
+    blurb: 'Every course, what it is asking of you, and what you have scored so far.',
+    keywords:
+      'class syllabus professor office hours grading credits grade grades gpa mark score final exam what do i need weighting rubric percent average',
     group: 'Courses',
     taskTags: ['due', 'stand'],
     root: 'courses',
@@ -524,15 +529,6 @@ export const DESTINATIONS: Destination[] = [
     root: 'home',
   },
   {
-    screen: 'grades',
-    label: 'Grades',
-    blurb: 'What you have so far, and what the rest has to average.',
-    keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
-    group: 'Semester',
-    taskTags: ['stand'],
-    root: 'courses',
-  },
-  {
     screen: 'applying',
     label: 'Applications',
     short: 'Apply',
@@ -632,7 +628,7 @@ export const DESTINATIONS: Destination[] = [
     label: 'Connect accounts',
     short: 'Connect',
     blurb: 'Your course site, Outlook, Google, Zoom — calendars and links in.',
-    keywords: 'brightspace outlook microsoft google zoom apple icloud ics feed subscribe calendar claude anthropic api key sign in with claude',
+    keywords: 'brightspace outlook microsoft google zoom apple icloud ics feed subscribe calendar drive onedrive send deadlines to my calendar',
     group: 'Data',
     taskTags: ['data'],
     root: 'me',

@@ -86,6 +86,37 @@ choosing that layout drew its pills *on top of* the tab bar or the rail — two
 live navigations in one window. They are a navigation now, available in all
 three layouts, and no layout draws navigation of its own.
 
+## Nothing with an order is static
+
+Anything the app draws as an ordered list can be dragged into a different
+order: the icons, folders and dock on the home screen, the tiles inside a
+shelf, the rows of the directory in Me and in Everything, the tabs in the
+bottom bar, your courses, the sections of Today — on Today itself, by the
+grip beside each heading — and everything on the calendar. Hold it, move it,
+let go.
+
+One gesture and one arithmetic, in [`lib/arrange.ts`](src/lib/arrange.ts) over
+the pointer handling in [`lib/drag.ts`](src/lib/drag.ts) — a press is a drag
+only once it is held, so a finger on a list still scrolls it; a drop ends in a
+click that is told to stand down; and Alt with the arrow keys does the same
+move without a pointer, because a list whose only ordering gesture is a drag is
+a list some people cannot order at all. The ↑ ↓ arrows stay wherever they were:
+they are the visible sign that a list has an order.
+
+A movable thing is usually its own handle. Today's sections are the exception
+and the reason is worth knowing: a hold inside one already asks the assistant
+about the row under your thumb, and two press-and-hold gestures on one element
+cannot both win. So the section is what a drop lands on, a grip in the margin
+beside its heading is what starts the drag, and everything inside it answers a
+hold exactly as it did. `zone` and `grip` on the hook are those two halves.
+
+Where the order is a preference rather than data, it is a look key —
+`groupOrder` for the shelves, `boardOrder` for the home screen — and both are
+read as a preference *over* the registry, never as a replacement for it. A
+screen the school gate has switched off does not come back because an old
+order names it; one added since the order was saved appears at the end rather
+than not at all.
+
 ## The date is real
 
 The prototype pinned itself to Thursday 3 September so its screenshots would be
@@ -217,6 +248,24 @@ Everything visual is a token. Screens read `var(--app-*)`, never a hex. If you
 want a different look, retune the tokens at the top of `app.css` and the whole
 app follows.
 
+### A colour per course
+
+One exception, and it proves the rule: a course's colour cannot be a token,
+because there is one token set and there are as many courses as you have. So
+`src/lib/tint.ts` derives it. Your accent anchors a wheel and your courses
+divide the rest of it between them — same saturation, same lightness, drawn for
+whichever ground is actually on — so four classes are four colours that still
+read as one family, and moving from Sterling to Copper takes the whole set with
+you. Every deadline row, class block, calendar dot, load bar and course code
+wears it, which turns "whose is this?" from something you read into something
+you see.
+
+Nothing was picked by eye: `tint.test.ts` runs WCAG's arithmetic over every hue
+at five-degree steps against all thirteen grounds — a course code at 4.5:1, a
+mark at 3:1. Hold a course to a particular colour under **Settings → Your
+courses, your way**, or turn the whole thing off under **Settings → Look**,
+where the app goes back to one metal throughout.
+
 ## Where things live
 
 ```
@@ -245,6 +294,7 @@ prevent.
 | Which navigation is drawn, and when | `lib/chrome.ts` |
 | The four navigations and the three layouts, with their names and blurbs | `lib/look.ts` (`NAVS`, `SHELLS`) |
 | Every colour, ground, typeface, size and spacing token | `lib/look.ts` (`tokensFor`) |
+| Which colour each course wears, everywhere it appears | `lib/tint.ts` |
 | Which settings pages exist and what each holds | `lib/settings.ts` (`SETTINGS`) |
 | What Today shows, and in what order | `lib/feed.ts` (`SECTIONS`) |
 | Which screens a new account sees before it has earned the rest | `lib/reveal.ts` |
@@ -253,6 +303,7 @@ prevent.
 | What the date turns into on screen — labels, "today", countdowns | `lib/select.ts` |
 | What the assistant can do | `ai/providers/` |
 | The spacing, type and leading scales every screen is held to | `styles/rules.ts` |
+| How a list is dragged into a different order, and what an arrow means | `lib/arrange.ts` |
 
 If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen
 shows. If a screen is unreachable, `lib/nav.ts` is why — and

@@ -35,30 +35,47 @@ function input(over: Partial<State> = {}, courses: State['courses'] = []): TopIn
 
 const SCREENS = DESTINATIONS.map((d) => d.screen);
 
+/**
+ * The screens the registry answers with nothing above them.
+ *
+ * A tool you type into and a page of prose have no dominant fact, so a hero
+ * would have to invent one. That is a real answer rather than a hole, and it
+ * is spelled out here so it stays a decision: a screen on this list must come
+ * back empty, and every screen off it must carry a hero or a stat row.
+ *
+ * There is no bar on any of the fifty-five now — `lib/softtop.ts` has why —
+ * so "covered" can no longer mean "has at least a bar", which is what it
+ * quietly meant for the seven prose screens before.
+ */
+const UNADORNED = new Set<(typeof SCREENS)[number]>([
+  'essay',
+  'proof',
+  'draw',
+  'deck',
+  'mail',
+  'help',
+  'privacy',
+]);
+
 describe('every screen in the registry', () => {
   it('is covered — none falls through to the unadorned default', () => {
     for (const screen of SCREENS) {
+      if (UNADORNED.has(screen)) continue;
       const top = softTop(screen, input());
       expect(
-        top.hero !== null || top.stats.length > 0 || top.bar !== null,
+        top.hero !== null || top.stats.length > 0,
         `${screen} has no soft top at all`,
       ).toBe(true);
     }
   });
 
-  it('keeps a bottom bar, prose screens included', () => {
-    // The handoff is explicit that a prose screen loses the hero and the
-    // tiles and keeps the bar: it is where the next thing to do lives.
-    for (const screen of SCREENS) {
-      expect(softTop(screen, input()).bar, `${screen} has no bar`).not.toBeNull();
-    }
-  });
-
-  it('sends its bar somewhere other than where you already are', () => {
-    for (const screen of SCREENS) {
-      const bar = softTop(screen, input()).bar!;
-      expect(bar.primary.screen, `${screen} points its bar at itself`).not.toBe(screen);
-      expect(bar.primary.label.length).toBeGreaterThan(0);
+  it('draws nothing above the screens that have no fact to show', () => {
+    // The other half of the rule above, so an empty answer stays a decision
+    // rather than a screen that quietly stopped having one.
+    for (const screen of UNADORNED) {
+      const top = softTop(screen, input());
+      expect(top.hero, `${screen} grew a hero`).toBeNull();
+      expect(top.stats, `${screen} grew a stat row`).toHaveLength(0);
     }
   });
 });
@@ -128,7 +145,6 @@ describe('an account with something in it', () => {
   it('still obeys every rule', () => {
     for (const screen of SCREENS) {
       const top = softTop(screen, full());
-      expect(top.bar).not.toBeNull();
       if (top.hero) {
         expect((top.hero.figure ?? '').trim() !== '' || (top.hero.said ?? '').trim() !== '').toBe(true);
       }
