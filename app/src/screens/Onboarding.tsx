@@ -6,12 +6,14 @@ import { NOTIF_DEFS } from '../data/misc';
 import { Check } from '../components/Icons';
 import type { Catalog } from '../data/catalog';
 import { SchoolPicker } from '../components/SchoolPicker';
+import { Credentials } from '../components/Credentials';
+import { cloudConfigured } from '../lib/cloud';
 import { useSoft } from '../components/shell/useShell';
 import { Step } from '../components/soft/Soft';
 import { welcomeLead, welcomeLine } from '../lib/welcome';
 
 /**
- * The first three screens, written from what is actually loaded.
+ * The first two screens, written from what is actually loaded.
  *
  * These used to be four fixed sentences about one student's four PDFs — a new
  * user was told "We found 38 dated obligations across four courses" before
@@ -20,7 +22,10 @@ import { welcomeLead, welcomeLine } from '../lib/welcome';
  * with a semester. Now it counts what is there, and when nothing is there it
  * says what will happen instead of pretending it already has.
  */
-function steps(cat: Catalog, tone: Tone) {
+function steps(cat: Catalog, tone: Tone, hasAccount: boolean) {
+  // A build with no project configured has nothing to sign in to, and saying
+  // so is better than a form that answers every press with a service error.
+  const offline = !cloudConfigured;
   const n = cat.courses.length;
   const items = cat.items.length;
   const empty = n === 0;
@@ -35,7 +40,7 @@ function steps(cat: Catalog, tone: Tone) {
       cta: empty ? 'Show me' : 'Set it up',
     },
     {
-      k: 'Step 2 of 4',
+      k: 'Step 2 of 5',
       t: empty ? 'Drop one in.' : 'Dropped in. Read.',
       b: empty
         ? 'A syllabus goes in as a PDF, a Word file or pasted text. What comes back is checked before you see it — dates forced into the real calendar, and every quote tested against your own document.'
@@ -43,7 +48,7 @@ function steps(cat: Catalog, tone: Tone) {
       cta: empty ? 'Good' : 'Looks right',
     },
     {
-      k: 'Step 3 of 4',
+      k: 'Step 3 of 5',
       t: 'Where do you study?',
       /*
        * Asked, and genuinely optional.
@@ -57,7 +62,33 @@ function steps(cat: Catalog, tone: Tone) {
       cta: 'Next',
     },
     {
-      k: 'Step 4 of 4',
+      k: 'Step 4 of 5',
+      /*
+       * The account, asked for once, where somebody will actually see it.
+       *
+       * It used to live in Settings → Account and nowhere else, which meant a
+       * first run never mentioned that an account existed — and the people who
+       * most need one are the people who have not gone looking through
+       * Settings yet. It comes fourth rather than first because a password is
+       * a bad thing to ask for before somebody knows what the app is, and
+       * before the alerts rather than after because a reminder the server
+       * sends has to belong to an account: signing in here is what lets the
+       * next screen's switches reach a phone that is asleep.
+       */
+      t: offline
+        ? 'This one stays on the device.'
+        : hasAccount
+          ? 'That is the account done.'
+          : 'One semester, every device.',
+      b: offline
+        ? 'This build has no account service switched on, so there is nothing to sign in to. Everything you do is saved here and goes no further — which is the whole app, minus the copy that follows you to a laptop.'
+        : hasAccount
+          ? 'Your courses, notes, tasks and ticked boxes are on the account now, and the laptop gets the same semester the moment you sign in there.'
+          : 'An email address and a password, and the semester follows you to the laptop and back. Skip it and everything still works — it just stays on this device.',
+      cta: offline || hasAccount ? 'Next' : 'Not now',
+    },
+    {
+      k: 'Step 5 of 5',
       t: askReminders(tone),
       b: 'Change any of this later. Nothing here is permanent.',
       cta: empty ? 'Get started' : 'Start the semester',
@@ -65,11 +96,11 @@ function steps(cat: Catalog, tone: Tone) {
   ];
 }
 
-/** Four screens: the promise, what it read, where you study, and the alerts. */
+/** Five screens: the promise, what it read, where you study, the account, the alerts. */
 export function Onboarding() {
-  const { state, dispatch, catalog, now } = useStore();
+  const { state, dispatch, catalog, now, account } = useStore();
   const soft = useSoft();
-  const all = steps(catalog, state.tone);
+  const all = steps(catalog, state.tone, Boolean(account));
   const step = all[state.onb] ?? all[0];
 
   /*
@@ -243,7 +274,29 @@ export function Onboarding() {
         </div>
       )}
 
-      {state.onb === 3 && (
+      {/*
+        The form, or the sentence that says it is already done.
+
+        `onDone` moves the run on by itself: somebody who has just watched a
+        button say "Working…" and then nothing has no way to tell a made
+        account from a broken one. It fires only when a session actually
+        exists — with email confirmation switched on there is a message about
+        an inbox to read instead, and moving off it would be hiding the one
+        instruction that matters.
+      */}
+      {state.onb === 3 && cloudConfigured && (
+        <div style={{ marginTop: 'var(--sp-7)' }}>
+          {account ? (
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}>
+              Signed in as {account.email}.
+            </div>
+          ) : (
+            <Credentials onDone={() => dispatch({ type: 'onbNext' })} />
+          )}
+        </div>
+      )}
+
+      {state.onb === 4 && (
         <div style={{ marginTop: 26, display: 'flex', flexDirection: 'column' }}>
           {NOTIF_DEFS.map((n) => (
             <Toggle
@@ -266,7 +319,7 @@ export function Onboarding() {
         was missing was a way from here to the guide, which is this — and
         `restartOnboarding`, on the guide, is the way back.
       */}
-      {state.onb === 3 && (
+      {state.onb === 4 && (
         <button
           type="button"
           className="bare tappable"
@@ -287,9 +340,12 @@ export function Onboarding() {
 
       <div style={{ flex: 1, minHeight: 24 }} />
 
+      {/* Secondary on the account step, where the primary action is the
+          form's own button and two primaries would be two answers to one
+          question. */}
       <ActionButton
         onClick={() => dispatch({ type: 'onbNext' })}
-        tone="primary"
+        tone={state.onb === 3 && cloudConfigured && !account ? 'secondary' : 'primary'}
         style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}
       >
         {step.cta}
