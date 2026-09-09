@@ -524,6 +524,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // The shared key is only available to a signed-in account, and this is
       // what proves the account to the function.
       setSessionToken(s?.access_token ?? null);
+      // A session is proof there is an account, however it was arrived at —
+      // the Google round trip, a confirmation link opened in another tab, or a
+      // browser that still held one from last term. The credentials form marks
+      // this too, because with email confirmation on there is no session at
+      // the moment the account is made. See `state/shape.ts`.
+      if (s) dispatch({ type: 'registered' });
     };
 
     let stop: (() => void) | null = null;
