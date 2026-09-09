@@ -246,6 +246,10 @@ export const STRATEGY: Record<string, Strategy> = {
   showAll: 'theirs',
   cleared: 'theirs',
   waysOpen: 'theirs',
+  // Whether the calendar's colour key is unrolled. Learned once, on whichever
+  // device you learned it on, so it follows you rather than staying open on
+  // the laptop because that is where you first opened the calendar.
+  keyOpen: 'theirs',
   accessLeadDays: 'theirs',
   // Where you have been lately, newest first. Interleaving two devices'
   // histories would make it a list of nowhere in particular.
