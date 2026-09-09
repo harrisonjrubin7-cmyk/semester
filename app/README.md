@@ -29,16 +29,17 @@ own application.
 
 ## What is in it
 
-Five tabs, and every screen behind them. The tabs are below; the screens are
-the registry in `src/lib/nav.ts`, which is also what the directory, the search
-box and the home-screen icons are drawn from — there is one list, and it is
-that one.
+<!--tabs-->Five<!--/--> tabs, <!--screens-->forty-eight<!--/--> screens. The tabs
+are below; the screens are the registry in `src/lib/nav.ts`, which is also what
+the directory, the search box and the home-screen icons are drawn from — there
+is one list, and it is that one.
 
-Not a count, deliberately. It was one, and it was wrong for months — "twenty
-screens" while there were fifty — and then, once a test held it to the
-registry, it was right and *fragile*: the number moves most weeks, so the
-sentence spent more effort staying true than it was worth. A pointer at the
-list cannot go stale.
+Both numbers are generated. They were hand-written once and wrong for months —
+"twenty screens" while there were fifty — and then, once a test held them to
+the registry, right and *fragile*: the screen count moved twice in one evening
+and three branches raced to correct it. So `npm run counts` writes them from
+the registries and the test only checks that it was run. See
+`src/lib/counts.ts`.
 
 - **Today** — the next class with a live countdown, what is due today as a
   checklist, the day's rail of classes, the next campus event, and what is
@@ -52,7 +53,7 @@ list cannot go stale.
   then fills the time you say you have — ten minutes, twenty-five or
   forty-five — and starts the cards. **Tools** is every tool the app has as a
   home screen, with the two or three this fortnight's deadlines actually ask
-  for said out loud above it. Each guide has eleven
+  for said out loud above it. Each guide has <!--modes-->eleven<!--/-->
   modes: **Cards** (tap-to-flip drill), **Read** (the guide as prose), **Field
   guide** (the whole thing as the published document, masthead and all),
   **Watch** (a narrated lesson per unit with slides that follow the voice),
@@ -188,8 +189,8 @@ If you add a unit to a guide, check the figure keys — they are unit indices.
 
 ## Audio
 
-`public/audio` holds eight recordings, wired into each guide's **Listen** mode
-with chapter marks that seek.
+`public/audio` holds <!--recordings-->eight<!--/--> recordings, wired into each
+guide's **Listen** mode with chapter marks that seek.
 
 - `econ-guide.mp3`, `psci-condensed.mp3`, `psci-full.mp3`, `core-full.mp3` —
   your own recordings.
@@ -204,7 +205,7 @@ follow the guide's section order and are marked approximate in the data.
 
 ## Lessons
 
-`public/audio/lessons/<course>/unit-<n>.mp3` — forty-four narrated lessons, one
+`public/audio/lessons/<course>/unit-<n>.mp3` — <!--lessons-->forty-four<!--/--> narrated lessons, one
 per unit, rendered by `../pipeline/lessons.py`. The slides are not in the audio:
 each course's `lessons.ts` carries a cue list giving the second each beat
 begins, and **Watch** draws the slide from it. Real type at the device's own
