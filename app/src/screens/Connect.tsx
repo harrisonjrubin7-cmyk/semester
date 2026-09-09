@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { configured, modelLabel, routeLabel } from '../lib/claude';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, SectionLabel } from '../components/ui';
+import { ChipRow, FilePick, SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';
 import { fetchCalendar, isCalendar, notCalendar, readLink } from '../lib/feedlink';
 import { cloudConfigured, fetchIcsVia } from '../lib/cloud';
@@ -82,7 +82,6 @@ export function Connect() {
   // Whether a file is being dragged over the card, so the drop target is
   // visible before the mouse is let go rather than after.
   const [dropping, setDropping] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
   const live = tokens();
 
   // Who can be written to, which is not the same question as who publishes a
@@ -436,38 +435,21 @@ export function Connect() {
           >
             {busy === 'feed' ? 'Reading…' : 'Subscribe'}
           </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
+          <FilePick
             disabled={busy === 'file'}
-            onClick={() => fileInput.current?.click()}
-            style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            block={false}
+            accept=".ics,.ical,.ifb,text/calendar"
+            onPick={(chosen) => void addFiles(chosen)}
+            style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)' }}
           >
             {busy === 'file' ? 'Reading…' : 'Add an .ics file'}
-          </button>
+          </FilePick>
         </div>
         <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
           {dropping
             ? 'Let go to read it.'
             : 'A downloaded .ics works the same way, and needs nothing of the network — pick one, several at once, or drag them onto this card. Adding the same calendar again refreshes it rather than duplicating it.'}
         </div>
-        <input
-          ref={fileInput}
-          type="file"
-          multiple
-          aria-label="Calendar files to add"
-          accept=".ics,.ical,.ifb,text/calendar"
-          style={{ display: 'none' }}
-          onChange={(e) => {
-            const chosen = [...(e.target.files ?? [])];
-            // Cleared before the read, not after: a file input holds on to what
-            // was picked, and re-picking the very same file fires no change
-            // event at all — which is exactly what somebody does after
-            // re-exporting a calendar under the same name.
-            e.target.value = '';
-            void addFiles(chosen);
-          }}
-        />
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
           <a
             href={state.linkUrls.brightspace || 'https://brightspace.vanderbilt.edu/d2l/home'}

@@ -98,7 +98,6 @@ export function Import() {
    */
   const [dropped, setDropped] = useState<Set<string>>(new Set());
   const abort = useRef<AbortController | null>(null);
-  const shared = useRef<HTMLInputElement>(null);
   /** Whether a file is being dragged over the screen right now. */
   const [over, setOver] = useState(false);
   /** The paste box, which is the way in when there is no file to pick. */
@@ -383,16 +382,6 @@ export function Import() {
           exactly the same review as a course generated here, including the
           diff against a course you already hold, because a shared course can
           be from a different section with different dates. */}
-      <input
-        ref={shared}
-        type="file"
-        accept="application/json,.json"
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          void openShared(e.target.files?.[0] ?? null);
-          e.target.value = '';
-        }}
-      />
       <button
         type="button"
         className="bare tappable"
@@ -437,15 +426,16 @@ export function Import() {
         </>
       )}
 
-      <button
-        type="button"
-        className="bare tappable"
-        onClick={() => shared.current?.click()}
+      <FilePick
+        accept="application/json,.json"
+        multiple={false}
         disabled={busy !== ''}
+        tone="bare"
+        onPick={([file]) => void openShared(file)}
         style={QUIET}
       >
         …or open a course somebody shared with you
-      </button>
+      </FilePick>
 
       <ByHand />
 
