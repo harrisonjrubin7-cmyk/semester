@@ -302,9 +302,10 @@ ruled that `grades` stays a screen; this is the second door to it.
   minutes": weakest unit per course, ordered by mastery, opening a card drill.
   The screen is points of final grade per hour over outstanding deadlines. Two
   questions — *what should I revise* and *how do I spend the evening* — that
-  happen to share a word. Kept, per the rule about two things that look alike.
-  **The shared name is a real cost and is recorded here as a naming collision,
-  not a duplication.**
+  happen to share a word. Both kept, per the rule about two things that look
+  alike. **The shared name was the real cost, and it is the half that could be
+  fixed without merging anything: the tab is "Revise" (T3). Two jobs, two
+  names, both still there.**
 - **Progress → "Everything" is not the `everything` screen.** `Everything.tsx`
   argues this out in its own file comment and section 1 Cluster D accepted it:
   "where is the thing called X" versus "what would I use this for, and what
@@ -319,6 +320,7 @@ ruled that `grades` stays a screen; this is the second door to it.
 | --- | --- | --- | --- | --- |
 | T1 | Today's "Report" tab → the `brief` screen | −1 | 0 | ✅ `0ec5044` |
 | T2 | Courses' "Grades" tab → the `grades` screen | −1 | 0 | ✅ `0ec5044` |
+| T3 | Study's "Tonight" tab renamed "Revise" | 0 | 0 | ✅ |
 
 ### After T1 and T2
 
