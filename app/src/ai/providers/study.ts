@@ -2,6 +2,7 @@ import { datedItems } from '../../lib/select';
 import { cardKey, dueCount } from '../../lib/review';
 import type { Provide } from '../shape';
 import { guideNow } from '../shape';
+import { meetings, pairings } from '../../lib/meet';
 import { pct } from './core';
 
 /**
@@ -215,5 +216,53 @@ export const drillLike: Provide = (look) => {
     visible: it.guide.units.map((u) => ({ name: u.name, cards: u.cards.length, mastered: `${u.mastery}%` })),
     actions: ['start_timer', 'open_screen'],
     suggestions: ['Explain the one I keep getting wrong.', 'Which unit should I do next?'],
+  };
+};
+
+/**
+ * Where two courses meet, handed over as the pairs and not as the guides.
+ *
+ * The interesting question on this screen is one no arithmetic can answer:
+ * *are these two definitions the same idea?* `lib/meet.ts` deliberately
+ * refuses to guess, so the assistant is the right place to ask it — and it can
+ * only answer if it is given both courses' own words for the term, which is
+ * what a "defines" side carries.
+ *
+ * Definitions travel; cards do not. A glossary entry is one line the student
+ * is looking at on this screen, which is the rule `visible` already follows.
+ * The card decks behind them are the thing `lib/context.ts` guards, and this
+ * does not reach for them.
+ */
+export const meet: Provide = (look) => {
+  const sides = look.catalog.courses.map((c) => ({
+    courseId: c.id,
+    code: c.code,
+    guide: guideNow(look, c.id) ?? look.catalog.guides[c.id],
+  }));
+  const found = meetings(sides.filter((s) => s.guide));
+  if (found.length === 0) return null;
+  const rows = found.slice(0, 24).map((m) => ({
+    term: m.label,
+    evidence: m.why,
+    courses: m.sides.map((s) => ({
+      course: s.code,
+      has: s.kind,
+      ...(s.term ? { theirWords: s.term.d } : {}),
+      where: s.where,
+    })),
+  }));
+  const pairs = pairings(found)
+    .map((p) => `${p.a} and ${p.b} (${p.count})`)
+    .join(', ');
+  return {
+    summary: `${found.length} places where the courses use the same words: ${pairs}. Word matches, not established connections.`,
+    focus: rows[0],
+    visible: rows,
+    actions: ['open_screen', 'add_note'],
+    suggestions: [
+      'Are these two definitions actually the same idea?',
+      'Which of these overlaps is worth revising once instead of twice?',
+      'Where would these two courses disagree on an exam?',
+    ],
   };
 };

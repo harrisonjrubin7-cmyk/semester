@@ -236,6 +236,18 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'meet',
+    label: 'Where courses meet',
+    short: 'Overlap',
+    blurb: 'The same term in two of your courses, with both definitions side by side.',
+    keywords:
+      'overlap shared same term glossary between across courses connections links compare ' +
+      'crossover common concept both twice repeated elsewhere',
+    group: 'Study',
+    taskTags: ['study', 'stand'],
+    root: 'study',
+  },
+  {
     screen: 'ask',
     label: 'Ask Claude',
     short: 'Ask',

@@ -127,6 +127,37 @@ right in one place and stale in another.
 | Doc | The guide as a real .docx and .pdf, plus a print view. |
 | Listen | The podcast editions, with chapter marks that seek. |
 
+## Where two courses meet
+
+Every other study screen is one course at a time, which is how a term is
+organised and how an exam is sat — and it makes four courses look like four
+sealed boxes. **Study → Where courses meet** compares them against each other:
+PSCI 1104 and BUS 1600 both define *margin of error*, ECON 1020's elasticity is
+the elasticity BUS prices with, and until now nothing said so. A term you have
+already learned once, met again in a second context, is the cheapest revision
+there is; two courses using one word for two things is one of the commonest ways
+to get a question wrong.
+
+It is matching words, not ideas, and the screen is built around admitting that.
+There is no model and no embedding — it is string work on the glossaries, the
+cards, the frames and the case files. So it never says two things are the same.
+Where both courses define the term, **both definitions are shown side by side**
+and the judgement is yours; where one course merely uses the word, the sentence
+it was found in is quoted rather than paraphrased. The four grades of evidence —
+both define it, one phrase inside the other, defined here and used there, one
+word in common — are separate headings rather than one mixed list.
+
+A shared word has to earn its row. Generic academic furniture — *data*, *model*,
+*value*, *effect* — joins every course to every other and says nothing, so it is
+refused; a single word needs six characters or has to be an acronym; and a course
+never meets itself. Four courses in four departments sharing nothing is a real
+answer, and the screen says that rather than padding itself out. See
+[`app/src/lib/meet.ts`](app/src/lib/meet.ts).
+
+Asking Claude from this screen hands over the pairs and both courses' own words
+for them, because *are these actually the same idea?* is the one question here
+that no arithmetic can answer.
+
 ## Finding things
 
 The search icon is in the header of every screen, and it searches the whole
