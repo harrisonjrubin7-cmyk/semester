@@ -34,6 +34,7 @@ import { useStore } from '../state/store';
 import { countHits, findEverything } from '../lib/find';
 import { scopesFor } from '../lib/scoped';
 import { flatten, hitKey, openHit } from '../lib/openhit';
+import { DESKTOP, useMedia } from '../lib/media';
 
 /** How wide the search column gets, matching the app's own pane. */
 const COLUMN = 620;
@@ -43,6 +44,7 @@ export function Command({ onClose }: { onClose: () => void }) {
   // Seeded when a screen's own search escalated to here, so "search everywhere
   // for this" arrives with the query rather than asking for it again.
   const [text, setText] = useState(state.finderSeed);
+  const wide = useMedia(DESKTOP);
   const [at, setAt] = useState(0);
   const box = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
@@ -111,7 +113,34 @@ export function Command({ onClose }: { onClose: () => void }) {
       aria-label="Search everything"
       aria-modal="true"
       style={{
-        position: 'absolute',
+        /*
+         * Where "everything" ends, which is not the same box on both layouts.
+         *
+         * This is mounted inside `.device` because that is where the app's
+         * controls are drawn — `.input`, `.tag` and `.bare` are every one of
+         * them scoped to it, and mounted beside the pane this overlay reached
+         * none: its field was a white browser textbox with a blue focus ring
+         * and its course tags were pale rectangles, on the one overlay that is
+         * nothing but a field and a list of tagged rows.
+         *
+         * Which leaves what it covers, and `absolute` answers it correctly on
+         * exactly one of the two layouts. On a phone `.device` is the app, so
+         * `absolute` fills it — and on a browser window between 402 and 760px
+         * the app is a *column* with ground either side, where a search
+         * spilling across the ground would be the only thing in the app that
+         * does. On a desk `.device-pane` is a 560px strip in a 1280px window,
+         * and shrinking to it would leave the rail live behind a dialog that
+         * says `aria-modal`, which is a promise this would then be breaking.
+         *
+         * So: the column below 760px, the window above it. The content draws
+         * itself in a 620px column either way, which is why covering the whole
+         * window reads as a search and not as a stretched screen.
+         *
+         * `fixed` is safe here because nothing above this transforms — a
+         * transformed ancestor would become the containing block and this
+         * would silently go back to covering the pane.
+         */
+        position: wide ? 'fixed' : 'absolute',
         inset: 0,
         zIndex: 80,
         background: 'var(--app-bg)',

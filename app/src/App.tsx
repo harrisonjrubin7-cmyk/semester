@@ -1126,7 +1126,6 @@ export default function App() {
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
-      {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
         {chrome.rail && <Rail />}
         <div className="device device-pane">
           {/*
@@ -1144,6 +1143,18 @@ export default function App() {
             hidden` does not reach them.
           */}
           <Assistant />
+          {/*
+            The whole-app search, inside the pane for the same reason the
+            assistant is: `.device .input`, `.device .tag` and `.device .bare`
+            are where this app's controls are drawn, and beside the pane it
+            reached none of them. Its field was a white browser textbox with a
+            blue focus ring and its course tags were pale rectangles — on the
+            one overlay whose entire content is a field and a list of tagged
+            rows. What it covers is decided in the component, which is not the
+            same box on both layouts — see the note on its own `position` in
+            `components/Command.tsx`.
+          */}
+          {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
           <Header />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
