@@ -4,6 +4,7 @@ import { useStore } from '../../state/store';
 import { Blueprint } from '../../components/Blueprint';
 import { isoToDate, longLabel } from '../../lib/date';
 import { timeLabel } from '../../lib/drag';
+import type { Catalog } from '../../data/catalog';
 import type { CourseId } from '../../lib/types';
 
 /**
@@ -35,6 +36,40 @@ export type Movable =
   | { kind: 'task'; id: string; title: string }
   | { kind: 'appointment'; id: string; title: string; minutes: number }
   | { kind: 'item'; id: string; courseId: CourseId; title: string; code: string };
+
+/**
+ * The record behind a block on an hour grid, as something a drag can carry.
+ *
+ * The day grid and the week grid each had this written out as a ternary on
+ * `from.kind`, which was two copies of one rule — and the moment a third kind
+ * of thing was drawn on those grids, the ternary is exactly what gets taught
+ * in one view and forgotten in the other. It is one function now, and a block
+ * nothing can move returns null rather than a half-built move.
+ */
+export function movableOf(
+  block: {
+    title: string;
+    meta: string;
+    at: number;
+    from?: { kind: 'appointment' | 'item' | 'task'; id: string };
+  },
+  catalog: Catalog,
+): Movable | null {
+  const from = block.from;
+  if (!from) return null;
+  if (from.kind === 'appointment') {
+    return { kind: 'appointment', id: from.id, title: block.title, minutes: block.at };
+  }
+  if (from.kind === 'task') return { kind: 'task', id: from.id, title: block.title };
+  return {
+    kind: 'item',
+    id: from.id,
+    courseId: catalog.items.find((i) => i.id === from.id)?.c ?? ('' as CourseId),
+    title: block.title,
+    // The meta line is "PSCI 1104 · Response"; the code is its first half.
+    code: block.meta.split(' · ')[0] ?? '',
+  };
+}
 
 /** Where a drop landed: a day, and an hour when the view has one. */
 export interface Landing {
@@ -94,8 +129,28 @@ export function useCalendarMove() {
     const when = longLabel(isoToDate(to.date));
 
     if (what.kind === 'task') {
-      dispatch({ type: 'moveTask', id: what.id, date: to.date });
-      say(`Moved · ${what.title} to ${when}.`, 'mine');
+      /*
+       * A task dropped on a grid with an hour axis keeps that hour.
+       *
+       * It used to take only the day, which on the day and week grids meant
+       * picking a task up off eleven o'clock, putting it down at four, and
+       * watching it snap back to eleven — a gesture that appears to do
+       * nothing, which is the one thing a drag must never do. A month cell has
+       * no hour in it and sends none, and there the time is left exactly as
+       * you wrote it.
+       */
+      dispatch({
+        type: 'moveTask',
+        id: what.id,
+        date: to.date,
+        ...(to.at === undefined ? {} : { time: timeLabel(to.at) }),
+      });
+      say(
+        to.at === undefined
+          ? `Moved · ${what.title} to ${when}.`
+          : `Moved · ${what.title} to ${when}, ${timeLabel(to.at)}.`,
+        'mine',
+      );
       return;
     }
 
