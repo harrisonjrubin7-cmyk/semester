@@ -81,6 +81,13 @@ export function settings(state: State, action: Action): State | null {
       return { ...state, gradeSystems: next };
     }
 
+    // Unrolled it explains eleven marks; rolled up it is one line saying it
+    // is there. Both are right at different points in a semester — the first
+    // week and the tenth — which is what makes it a preference rather than a
+    // guess. Same shape as `toggleWays`.
+    case 'toggleKey':
+      return { ...state, keyOpen: !state.keyOpen };
+
     case 'setFeedOrder':
       return { ...state, feedOrder: action.order };
 

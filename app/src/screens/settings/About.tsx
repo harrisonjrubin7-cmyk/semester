@@ -3,7 +3,7 @@ import { SettingsPage } from './Page';
 import { CustomRow, Group, ValueRow } from '../../components/shell/Rows';
 import { useRowStyle } from '../../components/shell/useShell';
 import { lights } from '../../lib/settings';
-import { SectionLabel } from '../../components/ui';
+import { ActionButton, SectionLabel } from '../../components/ui';
 import { SOURCES } from '../../data/misc';
 import { SUPPORT } from '../../lib/privacy';
 
@@ -56,19 +56,12 @@ export function SettingsAbout() {
           >
             <CustomRow>
 
-              <button
-                type="button"
-                className="btn btn-secondary btn-block"
+              <ActionButton
                 onClick={() => dispatch({ type: 'restartOnboarding' })}
-                style={{
-                  height: 44,
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  marginTop: 24,
-                }}
+                style={{ marginTop: 24 }}
               >
                 Replay onboarding
-              </button>
+              </ActionButton>
             </CustomRow>
           </Group>
 

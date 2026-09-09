@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Blueprint } from './Blueprint';
 import { Recorder, clockOf, micSupported, recordingName } from '../lib/mic';
 import { addFile, formatBytes, type FileMeta } from '../lib/files';
+import { ActionButton } from './ui';
 import {
   Scribe,
   asText,
@@ -165,20 +166,9 @@ export function RecordButton({
       )}
 
       {state === 'idle' && (
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
+        <ActionButton
           onClick={() => void start()}
-          style={{
-            height: 44,
-            fontSize: 'var(--type-xs)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 9,
-          }}
+          style={{ fontSize: 'var(--type-xs)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
         >
           <span
             style={{
@@ -190,7 +180,7 @@ export function RecordButton({
             }}
           />
           {wantText && liveSupported() ? 'Record and transcribe' : 'Record audio'}
-        </button>
+        </ActionButton>
       )}
 
       {(state === 'recording' || state === 'paused' || state === 'saving') && (
@@ -309,18 +299,16 @@ export function RecordButton({
             value={asText(paragraphs(segments), stamps)}
             style={{ width: '100%', minHeight: 150, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
           />
-          <button
-            type="button"
-            className="btn btn-secondary btn-block"
+          <ActionButton
             onClick={() => {
-              void navigator.clipboard
-                .writeText(asText(paragraphs(segments), stamps))
-                .catch(() => setError('The browser would not give the app the clipboard.'));
+            void navigator.clipboard
+            .writeText(asText(paragraphs(segments), stamps))
+            .catch(() => setError('The browser would not give the app the clipboard.'));
             }}
-            style={{ height: 40, marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)' }}
           >
             Copy the transcript
-          </button>
+          </ActionButton>
         </div>
       )}
 

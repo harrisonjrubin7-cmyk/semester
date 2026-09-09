@@ -15,6 +15,7 @@ import type {
   Appointment,
   CampusLink,
   ChangeSource,
+  CoursesTab,
   CourseId,
   CourseModule,
   CourseUpdate,
@@ -441,6 +442,15 @@ export interface Persisted {
    * `lib/launcher.ts`, which owns the format.
    */
   groupOrder: string;
+  /**
+   * How the home screen's icons are arranged, where somebody has moved one.
+   *
+   * The same kind of key, owned by `lib/springboard.ts`. Separate from
+   * `groupOrder` because they arrange different things — shelves of screens
+   * against pages of icons — and one string holding both would make a shelf
+   * called `dock` a real possibility.
+   */
+  boardOrder: string;
   /** A dragged accent hue, 0–360, or -1 for "use the named accent". */
   hue: number;
   /**
@@ -452,6 +462,17 @@ export interface Persisted {
    * is a preference, and it remembers.
    */
   waysOpen: boolean;
+  /**
+   * Whether the calendar's colour key is unrolled.
+   *
+   * Closed to begin with, and it persists. The key explains eleven marks —
+   * four courses and seven kinds — which on a phone is two or three lines
+   * above the grid, every time you open the calendar, forever. It is read
+   * once or twice while the colours are being learned and then never again,
+   * so it folds to one line and stays where you left it. See
+   * `components/KindKey.tsx`.
+   */
+  keyOpen: boolean;
   done: Record<string, boolean>;
   saved: Record<string, boolean>;
   notifs: Record<NotifKey, boolean>;
@@ -572,7 +593,7 @@ export interface Ephemeral {
    */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done';
-  coursesTab: 'courses' | 'due';
+  coursesTab: CoursesTab;
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all';
   /** Which shelf of the directory is showing under Everything. */
@@ -752,6 +773,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   sample: true,
   term: LEGACY_TERM,
   waysOpen: true,
+  keyOpen: false,
   reviews: {},
   grades: {},
   gradeSystems: {},
@@ -826,6 +848,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   // fallback could never fire again for anyone who had opened the app once.
   directory: '',
   groupOrder: '',
+  boardOrder: '',
   hue: -1,
 };
 
@@ -849,6 +872,7 @@ export function currentLook(state: Persisted): Look {
     shell: state.shell,
     directory: state.directory,
     groupOrder: state.groupOrder,
+    boardOrder: state.boardOrder,
     hue: state.hue,
   };
 }
@@ -997,6 +1021,7 @@ export function loadPersisted(): Persisted {
       sample: saved.sample ?? saved.courses === undefined,
       term: saved.term ?? LEGACY_TERM,
     waysOpen: saved.waysOpen ?? true,
+      keyOpen: saved.keyOpen ?? false,
       reviews: saved.reviews ?? {},
       grades: saved.grades ?? {},
       gradeSystems: readOverrides(saved.gradeSystems),
@@ -1133,6 +1158,7 @@ export function pickPersisted(state: State): Persisted {
     sample: state.sample,
     term: state.term,
     waysOpen: state.waysOpen,
+    keyOpen: state.keyOpen,
     reviews: state.reviews,
     grades: state.grades,
     gradeSystems: state.gradeSystems,
@@ -1209,6 +1235,7 @@ export function pickPersisted(state: State): Persisted {
     shell: state.shell,
     directory: state.directory,
     groupOrder: state.groupOrder,
+    boardOrder: state.boardOrder,
     hue: state.hue,
   };
 }
@@ -1228,6 +1255,7 @@ export type Action =
   | { type: 'togglePick'; id: string }
   | { type: 'setNav'; nav: NavMode }
   | { type: 'toggleWays' }
+  | { type: 'toggleKey' }
   | { type: 'setGrade'; key: string; value: string }
   // `system` null clears the override, so a course falls back to the school's
   // scale rather than being stuck with a corrected one forever.
@@ -1385,7 +1413,7 @@ export type Action =
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
-  | { type: 'setCoursesTab'; tab: 'courses' | 'due' }
+  | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'all' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }

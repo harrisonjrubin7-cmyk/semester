@@ -17,7 +17,7 @@ import { useState } from 'react';
 import { Panel } from './Produced';
 import { useStore } from '../state/store';
 import { extent, isReading } from '../lib/reading';
-import { SectionLabel } from './ui';
+import { PickChips, SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import {
   far,
@@ -176,26 +176,12 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
           aria-label={`How long ${item.title} is`}
           style={{ width: 84, height: 36, textAlign: 'center' }}
         />
-        {UNITS.map((u) => (
-          <button
-            key={u.id}
-            type="button"
-            className="bare tappable"
-            aria-pressed={p.unit === u.id}
-            onClick={() =>
-              dispatch({ type: 'setReadingLength', id: item.id, unit: u.id, total: p.total })
-            }
-            style={{
-              width: 'auto',
-              padding: '7px 11px',
-              borderRadius: 'var(--r-sm)',
-              border: `1px solid ${p.unit === u.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            }}
-          >
-            {u.label}
-          </button>
-        ))}
+        <PickChips
+          options={UNITS.map((u) => u.id)}
+          value={p.unit}
+          onChange={(unit) => dispatch({ type: 'setReadingLength', id: item.id, unit, total: p.total })}
+          labels={(id) => UNITS.find((u) => u.id === id)?.label ?? id}
+        />
       </div>
       {p.total === 0 ? (
         <div

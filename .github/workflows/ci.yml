@@ -20,10 +20,28 @@ on:
   pull_request:
     branches: ['main']
 
-# A newer push makes an in-flight run pointless.
+# A newer push to a branch makes an in-flight run of it pointless, so a pull
+# request cancels its own older runs. Main does not, and the difference is the
+# whole point of this block.
+#
+# It used to cancel everything, main included, and at the merge rate this repo
+# actually runs at that meant main was mostly unverified: three pull requests
+# merged inside two minutes, and each merge killed the run checking the one
+# before it. The commit that shipped the arrangement work (#39) never got a
+# completed run at all — cancelled, which reads as neither pass nor fail, and
+# is the worst of the three because nobody notices it.
+#
+# Grouping main by commit rather than turning cancelling off, because
+# `cancel-in-progress: false` would not have fixed it. Only one run per group
+# may be pending: a third merge arriving while the second waits cancels the
+# second, so a queue behind one shared group still loses the middle of a run
+# of merges. A group per commit has nothing to contend with, so every commit
+# on main is checked and none of them can cancel another.
+#
+# `push` here is only ever main — see the trigger above.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref }}${{ github.event_name == 'push' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
 
 jobs:
   build:

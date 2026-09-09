@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { DESKTOP, TOUCH, useMedia } from '../lib/media';
-import { useAI } from './store';
 import { useConversation, provider } from './converse';
 import { configured, modelLabel } from '../lib/claude';
 import { Composer, sendHint } from './Composer';
 import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
 import { Threads, ThreadsOver } from './Threads';
+import { Opening } from './Opening';
 import { Applied, Locally, Proposals } from './Actions';
 import { Trouble } from '../components/Trouble';
 
@@ -320,73 +320,4 @@ const COLUMN = {
 /** The streaming answer, with no controls under it until it has finished. */
 function Answering({ text }: { text: string }) {
   return <Reply text={text} />;
-}
-
-/**
- * A new thread, which is not a blank page.
- *
- * What it can see, three or four things worth asking from the screen you came
- * from, and one line about what it can do. The suggestions come from that
- * screen's own provider, so they are about what is actually on it rather than
- * a fixed list that would be wrong four screens out of five.
- */
-function Opening({ onPick }: { onPick: (q: string) => void }) {
-  const ai = useAI();
-  const suggestions = ai.suggestions().slice(0, 4);
-
-  /*
-   * What it is looking at — unless the answer is this page.
-   *
-   * The sheet's version of this line is the point of the sheet: it comes up
-   * over Grades and says so, because the question you are about to ask is
-   * about what is behind it. Here there is nothing behind it, and the first
-   * draft printed "You are on Chat." — the assistant telling you that you
-   * have opened the assistant. So on this screen the line says what it can
-   * see rather than where you are, which is the thing that was actually
-   * worth saying.
-   */
-  const seen = ai.screen === 'ask' ? null : ai.look().label;
-
-  return (
-    <div style={{ marginBottom: 'calc(var(--sp-7) * 1.6)' }}>
-      <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
-        {seen ? `You are on ${seen}.` : 'Ask about your term.'}
-      </div>
-      {suggestions.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => onPick(s)}
-              style={{
-                height: 'auto',
-                padding: 'var(--sp-5) var(--sp-6)',
-                textAlign: 'left',
-                justifyContent: 'flex-start',
-                fontSize: 'var(--type-sm)',
-                lineHeight: 'var(--leading-normal)',
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      )}
-      <div
-        style={{
-          fontSize: 'var(--type-xs)',
-          opacity: 0.5,
-          lineHeight: 'var(--leading-normal)',
-          marginTop: 'var(--sp-6)',
-          textWrap: 'pretty',
-        }}
-      >
-        {seen ? 'It sees what this screen is showing, your ' : 'It sees your '}
-        deadlines and your grades — never your notes, your drafts or anyone in People. It can offer
-        to change something, and nothing happens until you tap it.
-      </div>
-    </div>
-  );
 }

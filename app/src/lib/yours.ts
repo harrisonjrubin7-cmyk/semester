@@ -32,6 +32,7 @@
  * second course rather than an update to this one.
  */
 
+import { nudged } from './arrange';
 import { ACCENTS, type Accent } from './look';
 
 /** What the student has said about one course. */
@@ -167,13 +168,7 @@ export function arrange<T extends { course: { id: string } }>(
  * order, so the first move also fixes everything that was implicit.
  */
 export function reorder(shown: string[], id: string, by: -1 | 1): string[] {
-  const at = shown.indexOf(id);
-  const to = at + by;
-  if (at === -1 || to < 0 || to >= shown.length) return shown;
-  const out = [...shown];
-  out.splice(at, 1);
-  out.splice(to, 0, id);
-  return out;
+  return nudged(shown, id, by);
 }
 
 /** A one-line summary of what has been changed, for the settings row. */
