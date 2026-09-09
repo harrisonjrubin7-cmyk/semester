@@ -8,6 +8,7 @@ import {
   score,
   strength,
   tally,
+  tallyKeys,
   unitMastery,
   type Reviews,
 } from './review';
@@ -183,6 +184,28 @@ describe('tally', () => {
 
   it('does not divide by zero on an empty history', () => {
     expect(tally({}).pct).toBe(0);
+  });
+});
+
+describe('tallying a named set of cards', () => {
+  it('counts only the keys it was handed', () => {
+    // The third row is the answer left behind by a course since removed. A
+    // screen reporting this term's studying must not see it, which is the
+    // whole reason this exists beside `tally`.
+    const reviews: Reviews = { a: pass(3), b: score(undefined, false, T0), ghost: pass(9) };
+    const t = tallyKeys(['a', 'b'], reviews);
+    expect(t.cards).toBe(2);
+    expect(t.right).toBe(3);
+    expect(t.pct).toBe(75);
+  });
+
+  it('is silent about a key with no history at all', () => {
+    expect(tallyKeys(['never-drilled'], {})).toEqual({ cards: 0, right: 0, wrong: 0, pct: 0 });
+  });
+
+  it('agrees with `tally` when the keys are every key', () => {
+    const reviews: Reviews = { a: pass(3), b: score(undefined, false, T0) };
+    expect(tallyKeys(Object.keys(reviews), reviews)).toEqual(tally(reviews));
   });
 });
 
