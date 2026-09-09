@@ -350,7 +350,7 @@ export function Cloud() {
             Find course mail
           </button>
           {mail.filter((m) => showsMail(m.id)).map((m) => (
-            <Blueprint key={m.id} style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
+            <Blueprint plain key={m.id} style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
               <div className="kicker">
                 {m.courseId ? catalog.byId[m.courseId]?.code : 'Unmatched'} · {m.date}
               </div>

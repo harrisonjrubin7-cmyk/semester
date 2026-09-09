@@ -154,6 +154,7 @@ export function Locally({
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
         {locally.matches.map((m) => (
           <Blueprint
+            plain
             key={m.screen}
             onClick={() => onGo(m.screen)}
             style={{ padding: 'var(--sp-4) var(--sp-5)', textAlign: 'left' }}

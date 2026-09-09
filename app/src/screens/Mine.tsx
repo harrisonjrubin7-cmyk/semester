@@ -703,7 +703,7 @@ function Files() {
             {files.map((f) => {
               const usedBy = state.notes.filter((n) => n.fileIds.includes(f.id)).length;
               return (
-                <Blueprint key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '12px 14px' }}>
+                <Blueprint plain key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '12px 14px' }}>
                   <button
                     type="button"
                     className="bare"
@@ -1083,7 +1083,7 @@ export function NoteEditor() {
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {attached.map((f) => (
-          <Blueprint key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '11px 13px' }}>
+          <Blueprint plain key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '11px 13px' }}>
             <button
               type="button"
               className="bare"

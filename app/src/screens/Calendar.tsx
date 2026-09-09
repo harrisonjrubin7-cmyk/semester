@@ -1514,6 +1514,7 @@ function CampusList() {
             const saved = !!state.saved[e.id];
             return (
               <Blueprint
+                plain
                 key={e.id}
                 style={{ display: 'flex', gap: 13, padding: '13px 14px', alignItems: 'flex-start' }}
               >
