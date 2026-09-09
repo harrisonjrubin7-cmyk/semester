@@ -47,6 +47,23 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+/*
+ * How a cached asset is found again.
+ *
+ * `ignoreVary`, because a lookup honours `Vary` by default and that is the
+ * difference between a cache that works and one that fills up and never
+ * answers. Vite marks its module scripts `crossorigin`; a server that answers
+ * those with `Vary: Origin` — `vite preview` does, and a CDN may — makes the
+ * *same file* two different cache keys depending on how it was asked for. The
+ * asset is then in the cache, the page still fails offline, and nothing
+ * anywhere reports a problem.
+ *
+ * Safe here because of the two guards above this: only GET, and only this
+ * origin. A file this app serves to itself is the same bytes however it was
+ * requested, whatever the header says about it.
+ */
+const MATCH = { ignoreVary: true };
+
 const isMedia = (url) =>
   /\/(audio|decks|handouts)\//.test(url.pathname) ||
   /\.(mp3|mp4|pptx|docx|pdf)$/i.test(url.pathname);
@@ -116,7 +133,7 @@ self.addEventListener('fetch', (event) => {
 
   if (isMedia(url)) {
     event.respondWith(
-      caches.match(request).then(
+      caches.match(request, MATCH).then(
         (hit) =>
           hit ||
           fetch(request).then((res) => {
@@ -134,7 +151,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then((hit) => {
+    caches.match(request, MATCH).then((hit) => {
       const live = fetch(request)
         .then((res) => {
           if (res.ok) {

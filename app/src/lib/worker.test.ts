@@ -57,4 +57,44 @@ describe('the service worker', () => {
     // In dev the worker would serve yesterday's bundle back.
     expect(bootSource()).toMatch(/import\.meta\.env\.PROD && 'serviceWorker' in navigator/);
   });
+
+  /*
+   * The next layer of the same bug, and it took the same method to find:
+   * driving the production build and pulling the network out from under it.
+   *
+   * Registering the worker is not the same as the worker having anything.
+   * Nothing it needs is fetched through it on the visit that registers it —
+   * the document and its bundles were requested before there was a handler —
+   * and nothing asks for them again, because a hash change routes without
+   * reloading. Measured: first visit, then offline, and the shell HTML came
+   * back from cache with `#root` empty and five requests failing.
+   *
+   * So `warmShell` asks again once the worker is in control. Held here rather
+   * than only in `warm.test.ts` because the failure was never in that
+   * function; it was in nobody calling one.
+   */
+  it('warms the cache with what the page booted from', () => {
+    expect(
+      bootSource(),
+      'main.tsx registers the worker but never fills its cache — the first ' +
+        'offline visit is then a blank page',
+    ).toMatch(/warmShell\(\)/);
+  });
+
+  it('looks a cached asset up without letting Vary hide it', () => {
+    /*
+     * `caches.match` honours `Vary` by default. Vite marks its module scripts
+     * `crossorigin`, and a server that answers those `Vary: Origin` — `vite
+     * preview` does — turns one file into two cache keys depending on how it
+     * was asked for. The asset is then in the cache, the page still fails
+     * offline, and nothing reports a problem. Safe to ignore because the
+     * handler is already down to same-origin GETs by this point.
+     */
+    const sw = readFileSync('public/sw.js', 'utf8');
+    expect(sw).toMatch(/ignoreVary:\s*true/);
+    expect(
+      sw.match(/caches\.match\(request\)/g) ?? [],
+      'a lookup that still honours Vary is one that can miss what it has',
+    ).toEqual([]);
+  });
 });

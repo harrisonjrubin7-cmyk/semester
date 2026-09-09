@@ -1,4 +1,5 @@
 import { StrictMode } from 'react';
+import { warmShell } from './lib/warm';
 import { createRoot } from 'react-dom/client';
 // The typefaces both sheets below name, declared once and served from this
 // origin rather than from Google — see `styles/typefaces.css` for why.
@@ -86,6 +87,20 @@ completeAuth()
       const register = () => {
         const base = import.meta.env.BASE_URL || '/';
         void navigator.serviceWorker.register(`${base}sw.js`, { scope: base });
+        /*
+         * And then ask again for what this page booted from.
+         *
+         * The worker did not exist while those were being fetched, so none of
+         * them passed through its handler and none of them is in its cache —
+         * and nothing asks for them a second time, because a hash change
+         * routes without reloading. Measured on the production build: a first
+         * visit followed by going offline restored the shell HTML from cache
+         * and left `#root` empty, with the entry bundle and four of its
+         * static imports failing. Right from the second visit on, and wrong
+         * for exactly the person the promise was written for — the one who
+         * installed it and lost signal before coming back. See `lib/warm.ts`.
+         */
+        void warmShell();
       };
       if (document.readyState === 'complete') register();
       else window.addEventListener('load', register, { once: true });
