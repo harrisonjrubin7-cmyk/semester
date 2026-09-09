@@ -23,6 +23,16 @@
  * updated underneath them, a reload is the whole fix, and saying so is the
  * difference between a dead end and a button.
  *
+ * ## The same failure with a second cause
+ *
+ * A missing chunk also means "there is no connection and this screen was never
+ * downloaded", and that was told as the update story too — measured with the
+ * network off: "A new version was published while this was open… a reload is
+ * the whole fix." Nothing had been published, and the reload came back to the
+ * same message. A confident false story, prescribing the one action that
+ * cannot work, in an app whose whole promise is that it keeps working with no
+ * signal. `lib/fault.ts` separates the two and this says the right one.
+ *
  * ## Why it wraps the screen and not the app
  *
  * Inside the header and the navigation rather than around them, so a screen
@@ -37,19 +47,27 @@
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { LOG_KEY, add, entry, read } from '../lib/diagnose';
+import { faultOf, type Fault } from '../lib/fault';
+import { offline } from '../lib/offline';
 
-/** Did the app update underneath us, rather than break? */
-function isStale(error: Error): boolean {
-  // Every engine words it differently and none of them has a code: Chrome
-  // says "Failed to fetch dynamically imported module", Safari "Importing a
-  // module script failed", Firefox "error loading dynamically imported
-  // module". Vite's own preload helper throws with `.name` of ChunkLoadError
-  // in some setups. Matching loosely is right here — the cost of a false
-  // positive is offering a reload that does not help, and the cost of a false
-  // negative is telling somebody their app is broken when it is merely old.
-  const text = `${error.name} ${error.message}`;
-  return /dynamically imported module|importing a module script|ChunkLoadError|Failed to fetch module/i.test(text);
-}
+/** What each of the three failures is called, and what it says. */
+const SAYS: Record<Fault, { kicker: string; heading: string; body: string }> = {
+  absent: {
+    kicker: 'No connection',
+    heading: 'This screen has not been downloaded.',
+    body: 'Everything you have opened before works with no signal, and this part of the app has never been fetched — so there is nothing on this device to draw. It will open as soon as there is a connection. Nothing is lost: everything you have is saved here.',
+  },
+  stale: {
+    kicker: 'This app was updated',
+    heading: 'Reload to pick up the new version.',
+    body: 'A new version was published while this was open, so the file this screen needed is no longer the one being served. Nothing is lost — everything you have is saved on this device — and a reload is the whole fix.',
+  },
+  broken: {
+    kicker: 'This screen stopped',
+    heading: 'Something on this screen went wrong.',
+    body: 'Your work is safe: everything is saved on this device as you go, and nothing on this screen writes anything. The rest of the app still works, so you can carry on somewhere else.',
+  },
+};
 
 interface Props {
   children: ReactNode;
@@ -89,7 +107,13 @@ export class ScreenTrouble extends Component<Props, State> {
     const { error } = this.state;
     if (!error) return this.props.children;
 
-    const stale = isStale(error);
+    /*
+     * Read at render rather than when the error was caught: a person who has
+     * walked back into signal and pressed nothing should not still be reading
+     * that they are offline.
+     */
+    const fault = faultOf(error, !offline());
+    const says = SAYS[fault];
 
     return (
       <div style={{ paddingTop: 'var(--sp-7)', paddingBottom: 'var(--sp-7)', paddingLeft: 'var(--sp-7)', paddingRight: 'var(--sp-7)', maxWidth: 460 }} role="alert">
@@ -102,7 +126,7 @@ export class ScreenTrouble extends Component<Props, State> {
             opacity: 0.5,
           }}
         >
-          {stale ? 'This app was updated' : 'This screen stopped'}
+          {says.kicker}
         </div>
         <h2
           style={{
@@ -114,7 +138,7 @@ export class ScreenTrouble extends Component<Props, State> {
             textWrap: 'pretty',
           }}
         >
-          {stale ? 'Reload to pick up the new version.' : 'Something on this screen went wrong.'}
+          {says.heading}
         </h2>
         <p
           style={{
@@ -125,36 +149,48 @@ export class ScreenTrouble extends Component<Props, State> {
             textWrap: 'pretty',
           }}
         >
-          {stale
-            ? 'A new version was published while this was open, so the file this screen needed is no longer the one being served. Nothing is lost — everything you have is saved on this device — and a reload is the whole fix.'
-            : 'Your work is safe: everything is saved on this device as you go, and nothing on this screen writes anything. The rest of the app still works, so you can carry on somewhere else.'}
+          {says.body}
         </p>
 
+        {/* Both buttons in every case, in the order of which one works.
+            With no connection a reload cannot fetch what was never fetched and
+            Today is on the device already, so leaving leads — and the reload
+            is still offered, because it is the right press the moment the
+            signal is back. Written as an order rather than as a row-reverse:
+            the first button a keyboard reaches should be the first one drawn.
+            */}
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-7)', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => window.location.reload()}
-            style={{ minHeight: 44 }}
-          >
-            Reload
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => {
-              this.setState({ error: null });
-              this.props.onLeave();
-            }}
-            style={{ minHeight: 44 }}
-          >
-            Go to Today
-          </button>
+          {(fault === 'absent' ? ['leave', 'reload'] : ['reload', 'leave']).map((which, i) =>
+            which === 'reload' ? (
+              <button
+                key="reload"
+                type="button"
+                className={i === 0 ? 'btn btn-primary' : 'btn btn-secondary'}
+                onClick={() => window.location.reload()}
+                style={{ minHeight: 44 }}
+              >
+                Reload
+              </button>
+            ) : (
+              <button
+                key="leave"
+                type="button"
+                className={i === 0 ? 'btn btn-primary' : 'btn btn-secondary'}
+                onClick={() => {
+                  this.setState({ error: null });
+                  this.props.onLeave();
+                }}
+                style={{ minHeight: 44 }}
+              >
+                Go to Today
+              </button>
+            ),
+          )}
         </div>
 
         {/* The message itself, last and quiet. Somebody reporting this needs
             it, and hiding it entirely means the report says "it broke". */}
-        {!stale && (
+        {fault === 'broken' && (
           <p
             style={{
               marginTop: 'var(--sp-7)',

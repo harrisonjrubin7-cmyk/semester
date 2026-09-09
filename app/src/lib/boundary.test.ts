@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { faultOf } from './fault';
 
 /**
  * A screen that falls over does not take the app with it.
@@ -53,24 +54,29 @@ describe('the screen boundary', () => {
   });
 
   it('knows an app that was updated from an app that is broken', () => {
-    // Every engine words this differently and none has a code, so the match
-    // is deliberately loose: a false positive offers a reload that does not
-    // help, a false negative tells somebody their app is broken when it is
-    // merely old.
-    const stale = /function isStale[\s\S]*?\n}/.exec(boundary)?.[0] ?? '';
-    for (const wording of [
-      'Failed to fetch dynamically imported module',      // Chrome
-      'Importing a module script failed',                 // Safari
-      'error loading dynamically imported module',        // Firefox
-      'ChunkLoadError',
-    ]) {
-      const re = /\/(.+)\/i\.test/.exec(stale);
-      expect(re, 'isStale should match on a regular expression').toBeTruthy();
-      expect(new RegExp(re![1], 'i').test(wording), `${wording} should read as stale`).toBe(true);
-    }
-    // And an ordinary bug must not be mistaken for one.
-    const re = /\/(.+)\/i\.test/.exec(stale)!;
-    expect(new RegExp(re[1], 'i').test("Cannot read properties of undefined (reading 'code')")).toBe(false);
+    // The reading itself moved to `lib/fault.ts`, where it is tested against
+    // each engine's wording directly rather than by pulling a regular
+    // expression back out of this file's source. What is left to check here
+    // is that the boundary asks it, and asks it with the connection — which
+    // is what separates "the app was updated" from "there is no signal and
+    // this was never downloaded".
+    expect(boundary).toContain('faultOf(error, !offline())');
+    expect(faultOf(new Error('Failed to fetch dynamically imported module'), true)).toBe('stale');
+    expect(faultOf(new Error("Cannot read properties of undefined (reading 'code')"), true)).toBe(
+      'broken',
+    );
+  });
+
+  it('says the right one of three, and offers what works first', () => {
+    // A missing file with no connection was told as the update story: "a new
+    // version was published… a reload is the whole fix", when nothing had
+    // been published and the reload came back to the same message.
+    expect(faultOf(new Error('Failed to fetch dynamically imported module'), false)).toBe('absent');
+    expect(boundary).toContain('No connection');
+    expect(boundary).toContain('This screen has not been downloaded.');
+    // Offline the reload cannot fetch what was never fetched, so leaving is
+    // the press that works and it goes first.
+    expect(boundary).toMatch(/fault === 'absent' \? \['leave', 'reload'\] : \['reload', 'leave'\]/);
   });
 
   it('offers both a reload and a way off the screen', () => {
