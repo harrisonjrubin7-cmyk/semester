@@ -186,8 +186,3 @@ export function against(practice: number, needed: number | null): string {
   return `Well under what the rest has to average — ${Math.abs(gap)} points under.`;
 }
 
-/** A file name for a sitting, when one is exported. */
-export function sittingName(s: Sitting): string {
-  const day = new Date(s.at).toISOString().slice(0, 10);
-  return `${day}-${s.code ? `paper-${s.code.toLowerCase()}` : 'practice-paper'}.md`;
-}

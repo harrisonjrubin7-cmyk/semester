@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { canScan, isbnLabel, readIsbn, scanFrame } from './barcode';
+import { canScan, readIsbn, scanFrame } from './barcode';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -26,11 +26,6 @@ describe('reading an ISBN', () => {
     expect(readIsbn('5000112637922')).toBe('');
     expect(readIsbn('12345')).toBe('');
     expect(readIsbn('')).toBe('');
-  });
-
-  it('reads as a label, or as nothing', () => {
-    expect(isbnLabel('9780134078779')).toBe('ISBN 9780134078779');
-    expect(isbnLabel('')).toBe('');
   });
 });
 

@@ -93,19 +93,6 @@ export const UNDOABLE: Record<string, Undoable> = {
   dropSitting: { label: 'Paper removed', fields: ['sittings'] },
 };
 
-/**
- * Actions that take more than a row, and are asked about instead.
- *
- * Removing a course takes its deadlines, its guide, its cards and every answer
- * recorded against them. An undo could put the rows back and could not put
- * back the confidence somebody has in an app that lost their term, so these
- * ask first — by typing, because a button people have learned to click through
- * has stopped being a question.
- */
-export const TYPE_TO_CONFIRM: Record<string, string> = {
-  removeCourse: 'the course code',
-};
-
 /** How long the toast stays up. Long enough to notice, short enough to ignore. */
 export const SHOWN_FOR = 8000;
 

@@ -144,7 +144,6 @@ export const WHY: Partial<Record<Screen, string>> = {
   help: 'Written from the app itself, so it cannot describe a feature that is not there.',
   settings: 'The defaults were somebody else’s guess about how you work.',
   notifs: 'The things the app would have poked you about, if you had let it.',
-  everything: 'This screen — the one you are on.',
 };
 
 /** How long ago, in the plainest words that are still true. */

@@ -734,69 +734,6 @@ export async function ask(options: AskOptions): Promise<string> {
 }
 
 /**
- * Ask for study cards and get back cards, or nothing.
- *
- * The prompt asks for JSON and the parser refuses anything else. A card that
- * cannot be read cleanly is dropped rather than half-guessed — these go into
- * the drill, and a wrong card is worse than a missing one.
- */
-export async function makeCards(
-  material: string,
-  context: string,
-  signal?: AbortSignal,
-): Promise<StudyCard[]> {
-  const reply = await ask({
-    signal,
-    maxTokens: 2000,
-    cache: true,
-    // The one path with no document to cite, so nothing is given up by
-    // constraining the shape. The parser below stays either way: it is what
-    // runs when a gateway will not pass the parameter through.
-    format: {
-      type: 'json_schema',
-      schema: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['cards'],
-        properties: {
-          cards: {
-            type: 'array',
-            items: {
-              type: 'object',
-              additionalProperties: false,
-              required: ['q', 'a'],
-              properties: { q: { type: 'string' }, a: { type: 'string' } },
-            },
-          },
-        },
-      },
-    },
-    system:
-      'You write study cards for a university student, from material they give you. ' +
-      'Reply with JSON only: {"cards":[{"q":"…","a":"…"}]}. ' +
-      'Each q is a question an exam could actually ask. Each a is the full answer in prose, ' +
-      'with the specific numbers, names and mechanisms in it — never a hint, never a topic label. ' +
-      'Use only what the material says. If it does not support a card, leave it out. ' +
-      'Between 3 and 15 cards.',
-    messages: [
-      { role: 'user', content: `Course context:\n${context}\n\nMaterial:\n${material}` },
-    ],
-  });
-
-  const start = reply.indexOf('{');
-  const end = reply.lastIndexOf('}');
-  if (start === -1 || end === -1) return [];
-  try {
-    const parsed = JSON.parse(reply.slice(start, end + 1)) as { cards?: StudyCard[] };
-    return (parsed.cards ?? [])
-      .filter((c) => typeof c?.q === 'string' && typeof c?.a === 'string' && c.q && c.a)
-      .map((c) => ({ q: c.q.trim(), a: c.a.trim() }));
-  } catch {
-    return [];
-  }
-}
-
-/**
  * Check a key by using it, before it is saved.
  *
  * A key typed with a trailing space, or a project id pasted by mistake, fails

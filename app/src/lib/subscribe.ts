@@ -107,28 +107,12 @@ export const SHARE_WARNING =
 export const REPLACED_LINE =
   'The old link is dead. Any calendar still subscribed to it will stop updating and eventually say the feed is gone, so re-subscribe on each device with the new one.';
 
-/** Carried inside the calendar, where somebody reading it in Apple Calendar sees it. */
-export const FEED_NOTE =
-  'Published by Semester. It updates when a signed-in device syncs, not continuously.';
-
 export interface Published {
   token: string;
   /** Milliseconds. When the app last uploaded the rendered calendar. */
   updatedAt?: number;
   /** How many entries went up, so the screen can say what is in it. */
   events?: number;
-}
-
-/** Read a published-feed record back off a store that may hold anything. */
-export function readPublished(value: unknown): Published | null {
-  if (typeof value !== 'object' || value === null) return null;
-  const row = value as Record<string, unknown>;
-  if (typeof row.token !== 'string' || !looksLikeToken(row.token)) return null;
-  return {
-    token: row.token,
-    updatedAt: typeof row.updatedAt === 'number' ? row.updatedAt : undefined,
-    events: typeof row.events === 'number' ? row.events : undefined,
-  };
 }
 
 /**

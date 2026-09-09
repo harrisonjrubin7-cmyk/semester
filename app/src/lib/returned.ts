@@ -169,21 +169,6 @@ export function closing(
     });
 }
 
-/**
- * How much of the term's graded work has actually come back.
- *
- * A count, and a useful one at the moment somebody is trying to work out where
- * they stand: a projection built on two returned pieces out of eleven is not
- * wrong, but it is resting on very little, and this is the sentence that says
- * so.
- */
-export function backLine(all: Returned[], gradedItems: number): string {
-  if (gradedItems <= 0) return '';
-  const n = all.length;
-  if (n === 0) return 'Nothing marked has come back yet.';
-  return `${n} of ${gradedItems} graded ${gradedItems === 1 ? 'piece' : 'pieces'} back so far.`;
-}
-
 /** A stored list made safe to render from. */
 export function readReturned(raw: unknown): Returned[] {
   if (!Array.isArray(raw)) return [];

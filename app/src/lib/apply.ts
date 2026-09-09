@@ -40,7 +40,6 @@
  * means.
  */
 
-import { dateToIso } from './date';
 import type { CourseId, DatedItem } from './types';
 
 /** What kind of thing is being applied for. */
@@ -273,12 +272,6 @@ export function asItems(apps: Application[], now: Date): DatedItem[] {
       daysAway: s.daysAway,
     };
   });
-}
-
-/** What is standing on one day. */
-export function standingOn(apps: Application[], now: Date, day: Date): Standing[] {
-  const iso = dateToIso(day);
-  return standing(apps, now).filter((s) => s.date === iso);
 }
 
 /** What is due in the next `days`, still ahead. */

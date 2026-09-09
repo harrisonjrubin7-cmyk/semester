@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
-import { DESKTOP, TOUCH, useMedia } from '../lib/media';
+import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { DESTINATIONS } from '../lib/nav';
 import { useConversation, provider } from './converse';
 import { AskSelection } from './AskAbout';
@@ -176,7 +176,7 @@ export function Assistant() {
   const { state, dispatch } = useStore();
   const ai = useAI();
   const seed = useSeed();
-  const wide = useMedia(DESKTOP);
+  const wide = useMedia(WIDE);
   const touch = useMedia(TOUCH);
   const [corner, setCorner] = useState<Corner>(savedCorner);
   const [full, setFull] = useState(false);

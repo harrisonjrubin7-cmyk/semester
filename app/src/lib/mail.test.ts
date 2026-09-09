@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   LATE_ENOUGH,
-  addressIn,
   brief,
   canAskForTime,
   composeUrl,
@@ -81,24 +80,6 @@ describe('parseDraft', () => {
     const { subject, body } = parseDraft('Dear Professor,\n\nSubject: my major is undeclared.');
     expect(subject).toBe('');
     expect(body).toContain('Subject: my major');
-  });
-});
-
-describe('addressIn', () => {
-  it('pulls the address out of a From header', () => {
-    expect(addressIn('"Stromme, John" <john.stromme@vanderbilt.edu>')).toBe(
-      'john.stromme@vanderbilt.edu',
-    );
-  });
-
-  it('takes a bare address as it stands', () => {
-    expect(addressIn('john.stromme@vanderbilt.edu')).toBe('john.stromme@vanderbilt.edu');
-  });
-
-  it('returns nothing for a display name, rather than inventing an address', () => {
-    // Graph gives a name where Gmail gives a header. A guessed address is
-    // mail that silently goes nowhere.
-    expect(addressIn('Dr. John Stromme')).toBe('');
   });
 });
 

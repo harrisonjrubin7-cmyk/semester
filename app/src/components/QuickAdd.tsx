@@ -106,7 +106,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         background: 'var(--app-bg)',
         display: 'flex',
         flexDirection: 'column',
-        padding: 18,
+        padding: 'var(--page-pad)',
       }}
     >
       <div style={{ width: '100%', maxWidth: COLUMN, margin: '0 auto' }}>

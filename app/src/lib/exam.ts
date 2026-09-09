@@ -144,10 +144,6 @@ export function total(questions: Question[]): number {
   return questions.reduce((sum, q) => sum + q.points, 0);
 }
 
-export function pointsFor(kind: Kind): number {
-  return WORTH[kind].points;
-}
-
 // ── Marking ──────────────────────────────────────────────────────────────
 
 /** What you said, and — for a written answer — how you marked it. */

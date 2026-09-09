@@ -169,7 +169,16 @@ export function Study() {
   return (
     <Page>
       {exam && (
-        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
+        <Blueprint
+          style={{
+            padding: 'var(--sp-7)',
+            background: 'var(--app-hero)',
+            // The whole card is one course's exam — the countdown, the title,
+            // the units that are cold are all its. So it wears that course's
+            // colour, like the next-class card on Today does.
+            borderLeft: `3px solid ${tint(exam.item.c).edge}`,
+          }}
+        >
           <div className="kicker">Exam radar</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
             <div className="chrome-text" style={{ fontSize: 'calc(38px * var(--text-scale, 1))', lineHeight: 1 }}>
@@ -867,7 +876,20 @@ export function Study() {
                 type="button"
                 className="bare tappable"
                 onClick={() => startStretch(s)}
-                style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'center', width: '100%', textAlign: 'left', ...rowTwelve }}
+                // The same edge the rows above carry. They are one list read
+                // in one go — the split is only how many fit before "more" —
+                // and a list that colours its first four rows and not its
+                // fifth looks like the colour means something it does not.
+                style={{
+                  display: 'flex',
+                  gap: 'var(--sp-6)',
+                  alignItems: 'center',
+                  width: '100%',
+                  textAlign: 'left',
+                  borderLeft: `3px solid ${tint(s.courseId).edge}`,
+                  paddingLeft: 'var(--sp-5)',
+                  ...rowTwelve,
+                }}
               >
                 <span style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-md)', opacity: 0.45 }}>
                   {s.minutes}m

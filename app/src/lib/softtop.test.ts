@@ -153,9 +153,10 @@ describe('an account with something in it', () => {
   });
 
   it('takes its numbers from the app’s own derivations, not a second copy', () => {
-    // Everything's figure is the registry's length. Typing 55 here would be a
-    // number that goes stale the next time a screen is added.
-    expect(softTop('everything', input()).hero?.figure).toBe(String(DESTINATIONS.length));
+    // Progress counts the term's deadlines out of the catalogue rather than
+    // carrying a number of its own — the same rule the Everything screen's
+    // figure followed before that screen merged into this one's tabs.
+    expect(softTop('me', input()).hero?.figure).toBe('0');
   });
 
   it('counts a finished deadline once, not once per list it appears in', () => {

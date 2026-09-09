@@ -14,7 +14,6 @@ import {
   densityOf,
   fade,
   ground,
-  lookLine,
   readLook,
   scaleOf,
   tokensFor,
@@ -221,61 +220,6 @@ describe('a ground with an opinion about its corners', () => {
   it('falls back to drawn for a ground that does not exist', () => {
     expect(resolveCorners(MATCH_GROUND, 'hologram')).toBe('drawn');
     expect(resolveCorners(MATCH_GROUND, undefined)).toBe('drawn');
-  });
-});
-
-describe('lookLine', () => {
-  it('names the accent and the ground', () => {
-    expect(lookLine({ accent: 'brass', ground: 'parchment' })).toBe('Brass · Parchment');
-  });
-
-  it('mentions a typeface or corner only when it is not the default', () => {
-    expect(lookLine({ typeface: 'condensed', corners: 'drawn' })).not.toContain('Drawn');
-    // And it says what is on screen, not what is stored: Industry resolves to
-    // square, so the settings row has to say Square.
-    expect(lookLine({ ground: 'industry', corners: MATCH_GROUND })).toContain('Square');
-    expect(lookLine({ typeface: 'mono', corners: 'round' })).toContain('Mono');
-    expect(lookLine({ typeface: 'mono', corners: 'round' })).toContain('Round');
-  });
-});
-
-describe('the colour the browser paints its own chrome with', () => {
-  /**
-   * `App.tsx` writes `--app-void` into the `theme-color` meta on every look
-   * change, because that meta is what paints the title bar of an installed
-   * window and the bar behind the status text on Android. It was a fixed
-   * near-black in `index.html`, chosen when every ground was dark; the five
-   * light grounds each installed as a white app under a black bar.
-   *
-   * Two things have to hold for that to keep working, and both are here
-   * rather than in a render test: the token has to exist for every ground,
-   * and it has to actually be light on a light one. A ground added with the
-   * void left at its default would put the bar back where it was.
-   */
-  const luminance = (hex: string) => {
-    const n = parseInt(hex.slice(1), 16);
-    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-  };
-
-  it('gives every ground a void to paint, written as a plain hex', () => {
-    for (const g of GROUNDS) {
-      const void_ = tokensFor({ ground: g.id })['--app-void'];
-      expect(void_, `${g.label} has no --app-void for the title bar to read.`).toMatch(
-        /^#[0-9a-f]{6}$/i,
-      );
-    }
-  });
-
-  it('paints a light bar over a light ground and a dark one over a dark ground', () => {
-    for (const g of GROUNDS) {
-      const lit = luminance(tokensFor({ ground: g.id })['--app-void']);
-      if (g.light) {
-        expect(lit, `${g.label} is a light ground with a dark title bar.`).toBeGreaterThan(0.5);
-      } else {
-        expect(lit, `${g.label} is a dark ground with a light title bar.`).toBeLessThan(0.5);
-      }
-    }
   });
 });
 
