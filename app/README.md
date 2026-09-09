@@ -29,17 +29,30 @@ own application.
 
 ## What is in it
 
-Five tabs, forty-nine screens. The tabs are below; the forty-nine are the registry in
-`src/lib/nav.ts`, which is also what the directory, the search box and the
-home-screen icons are drawn from — there is one list, and it is that one.
+Five tabs, and every screen behind them. The tabs are below; the screens are
+the registry in `src/lib/nav.ts`, which is also what the directory, the search
+box and the home-screen icons are drawn from — there is one list, and it is
+that one.
+
+Not a count, deliberately. It was one, and it was wrong for months — "twenty
+screens" while there were fifty — and then, once a test held it to the
+registry, it was right and *fragile*: the number moves most weeks, so the
+sentence spent more effort staying true than it was worth. A pointer at the
+list cannot go stale.
 
 - **Today** — the next class with a live countdown, what is due today as a
   checklist, the day's rail of classes, the next campus event, and what is
   coming.
 - **Courses** — the four syllabi, how each grade is built, and every dated
   obligation with the syllabus line it came from.
-- **Study** — an exam radar, a guide per course, "tonight's 25 minutes" built
-  from your weakest unit in each, and **Ask Claude**. Each guide has eleven
+- **Study** — an exam radar and three views of the same four courses.
+  **Guides** is a card per course saying what is due, what is unseen and what
+  to do next, with every way into it a tap away. **Revise** ranks every unit in
+  every course by what has come round, how cold it is and what is tested soon,
+  then fills the time you say you have — ten minutes, twenty-five or
+  forty-five — and starts the cards. **Tools** is every tool the app has as a
+  home screen, with the two or three this fortnight's deadlines actually ask
+  for said out loud above it. Each guide has eleven
   modes: **Cards** (tap-to-flip drill), **Read** (the guide as prose), **Field
   guide** (the whole thing as the published document, masthead and all),
   **Watch** (a narrated lesson per unit with slides that follow the voice),
