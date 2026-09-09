@@ -266,6 +266,19 @@ The tab bar stays put while you move around — going into a guide no longer
 leaves Back as the only exit — and **Me** is a directory of everything the app
 can do, grouped, with a line under each saying what it is for.
 
+Beside the search icon is a grid of nine squares, and it is the other half of
+the same job. Search finds a screen if you can name it; the grid is for the
+half of the app you have seen once and cannot — the practice paper, the deck
+builder, the thing that draws a diagram. It opens every screen the app has as
+an icon with its name under it, filed under the shelf it lives on, over
+whatever you were reading rather than instead of it: choose one and you are
+there, change your mind and you are back on the page you were on.
+
+It is on every screen, including the ones three levels into a course, which is
+where the directory on **Progress** is furthest away. The order inside a shelf
+is whatever you dragged your tiles into on **Progress → Everything**, so the
+two cannot disagree about where you put something.
+
 ## Folding a screen down to what you came for
 
 Every section heading in the app, on every tab, is a control: tap it and that

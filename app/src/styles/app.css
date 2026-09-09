@@ -2580,6 +2580,31 @@ input[type='search'].input {
   gap: var(--sp-5);
 }
 
+/* The other thing a sheet can hold: shelves that lay themselves out, each a
+   caps heading over a grid of icons. The gap is a step wider than the tile
+   grid's because what it separates is a section rather than a tile — at
+   `--sp-5` the heading of one shelf sat as close to the row above it as to
+   its own icons, which reads as one long grid with words in it. */
+.soft-folder-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-7);
+  /* A column, not the width of a laptop. The sheet is as wide as the pane,
+     and left to fill it the icons run nine and ten across — which is a strip
+     of icons rather than the block the eye takes in at once. Seven is the
+     ceiling this works out to, and a phone is nowhere near it. */
+  max-width: 620px;
+}
+
+/* `.appgrid` carries a top margin for the tab it was written for, where it
+   follows a paragraph. Under a caps heading that is a second gap on top of
+   the one the heading already has — and its own 460px ceiling is the Tools
+   tab's, inside a body that already has one. */
+.soft-folder-body .appgrid {
+  margin-top: var(--sp-4);
+  max-width: none;
+}
+
 /*
  * A grid of tiles, two across on a phone.
  *
