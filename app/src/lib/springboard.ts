@@ -55,7 +55,7 @@ export const DOCK = ['home', 'calendar', 'study', 'me'];
 export const PAGES: Page[] = [
   {
     widgets: true,
-    items: ['home', 'brief', 'calendar', 'courses', 'grades', 'runway', 'work', 'ask'],
+    items: ['home', 'brief', 'calendar', 'courses', 'runway', 'work', 'ask'],
   },
   {
     widgets: false,

@@ -23,7 +23,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { PickChips, SectionLabel, Segmented } from '../components/ui';
 import {
   countingIn,
   forProgramme,
@@ -414,24 +414,7 @@ function Rules() {
           aria-label="How many"
           style={{ width: 64, height: 40, textAlign: 'center' }}
         />
-        {(['courses', 'hours'] as const).map((n) => (
-          <button
-            key={n}
-            type="button"
-            className="bare tappable"
-            aria-pressed={need === n}
-            onClick={() => setNeed(n)}
-            style={{
-              width: 'auto',
-              padding: '9px 13px',
-              borderRadius: 'var(--r-sm)',
-              border: `1px solid ${need === n ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            }}
-          >
-            {n}
-          </button>
-        ))}
+        <PickChips options={['courses', 'hours'] as const} value={need} onChange={setNeed} />
       </div>
       <textarea
         className="input"

@@ -1,58 +1,33 @@
-import { useEffect, useState } from 'react';
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, NavRow, Group, ValueRow } from '../../components/shell/Rows';
+import { CustomRow, NavRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { Snapshots } from '../../components/Snapshots';
-import { formatBytes, totalSize } from '../../lib/files';
-import { weigh } from '../../lib/keep';
-import { STORAGE_KEY } from '../../state/shape';
-import { DRAFTS_KEY } from '../../lib/draft';
-
-/** Exactly, not estimated: this is a string the app wrote and can measure. */
-function sizeOf(key: string): number {
-  try {
-    return weigh(localStorage.getItem(key) ?? '');
-  } catch {
-    // A private window with storage switched off has nothing to measure.
-    return 0;
-  }
-}
 
 /**
- * What the app is taking up, and how to get any of it back.
+ * How to get space back, and where to go to see how much there is.
  *
- * The numbers are measured rather than estimated where they can be: the store
- * and the drafts are strings this app wrote, so their size is known exactly.
- * Attachments are asked of IndexedDB. The browser's own total is offered
- * beside them because a device can refuse a write while all three of these
- * look small — see `lib/keep.ts` for what happens then.
+ * This page used to measure as well — your semester, the drafts, the
+ * attachments and the browser's quota, the last of those by calling
+ * `navigator.storage.estimate()` inline. Your data was already reporting the
+ * same quota through `space()` in `lib/inventory.ts`, which asks the same
+ * browser API and also knows whether the data is evictable and which backend
+ * is live. Two measurements of one number, on two screens, is a number that
+ * can disagree with itself — and it is the one number somebody opens either
+ * screen to check.
+ *
+ * So the measuring is Your data's job now, all of it, and this page keeps what
+ * is genuinely a settings job: the two ways of getting something back. The
+ * drafts and attachments figures went with the measuring rather than being
+ * dropped.
  */
 export function SettingsStorage() {
   const { dispatch, saveTrouble } = useStore();
-  const [files, setFiles] = useState<number | null>(null);
-  const [quota, setQuota] = useState<{ used: number; total: number } | null>(null);
-  // Read during the first render rather than in an effect: these are two
-  // synchronous string reads, and setting them afterwards would paint a zero
-  // and then correct it.
-  const [mine] = useState(() => sizeOf(STORAGE_KEY));
-  const [drafts] = useState(() => sizeOf(DRAFTS_KEY));
-
-  useEffect(() => {
-    void totalSize().then(setFiles).catch(() => setFiles(null));
-    // Not every browser offers this, and the ones that do round it heavily.
-    if (navigator.storage?.estimate) {
-      void navigator.storage
-        .estimate()
-        .then((e) => setQuota({ used: e.usage ?? 0, total: e.quota ?? 0 }))
-        .catch(() => setQuota(null));
-    }
-  }, []);
 
   return (
     <SettingsPage
       screen="setStorage"
-      blurb="What this app is holding on the device, and the three ways to get it back out."
+      blurb="The two ways to get back something you have lost. What the app is holding is on Your data."
     >
       {(lit) => (
         <>
@@ -64,18 +39,11 @@ export function SettingsStorage() {
             }
             lit={lights('storage space used quota full disk room size', lit)}
           >
-            <ValueRow label="Your semester" value={formatBytes(mine)} />
-            <ValueRow label="Drafts in progress" value={drafts ? formatBytes(drafts) : 'None'} />
-            <ValueRow
-              label="Attachments"
-              value={files === null ? 'Not available' : formatBytes(files)}
+            <NavRow
+              label="Your data"
+              sub="Every record, what it weighs, and how much room is left"
+              onClick={() => dispatch({ type: 'go', screen: 'data' })}
             />
-            {quota ? (
-              <ValueRow
-                label="This browser, in total"
-                value={`${formatBytes(quota.used)} of ${formatBytes(quota.total)}`}
-              />
-            ) : null}
           </Group>
 
           <Group
