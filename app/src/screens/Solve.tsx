@@ -232,7 +232,7 @@ export function Solve() {
       <ActionButton
         onClick={() => void run()}
         disabled={!!busy || !problem.trim()}
-        tone="primary" height={46}
+        tone="primary"
         style={{ marginTop: 'var(--sp-7)' }}
       >
         {busy === 'Working…' ? 'Working…' : out ? 'Do it again' : a.label}

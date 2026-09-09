@@ -258,7 +258,7 @@ export function Work() {
             }, signal);
             })
             }
-            tone="primary" height={44}
+            tone="primary"
             style={{ marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)' }}
           >
             {busy ? 'Reading…' : 'Read it'}
@@ -270,7 +270,6 @@ export function Work() {
               <ActionButton
                 onClick={() => keepAsNote(`Feedback · ${guide.code}`, feedback)}
                 disabled={kept}
-                height={40}
                 style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-xs)' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
@@ -338,7 +337,6 @@ export function Work() {
               <ActionButton
                 onClick={() => keepAsNote(prompt.slice(0, 60), output)}
                 disabled={kept}
-                height={40}
                 style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-xs)' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
@@ -351,7 +349,7 @@ export function Work() {
       {busy && (
         <ActionButton
           onClick={() => abort.current?.abort()}
-          tone="ghost" height={36} spacing="0.12em"
+          tone="ghost" spacing="0.12em"
           style={{ marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)' }}
         >
           Stop
@@ -490,7 +488,7 @@ function PlanView({
           <ActionButton
             disabled={saved > 0}
             onClick={onKeep}
-            tone="primary" height={44}
+            tone="primary"
             style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-4)' }}
           >
             {saved > 0 ? <Check size={14} /> : <Plus size={14} />}

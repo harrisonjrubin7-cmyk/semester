@@ -494,15 +494,24 @@ export function EmptyState({
  * places to fix the next thing wrong with it, which is the argument
  * `components/Reorder.tsx` already makes about two arrows and three copies.
  *
- * ## What it does not decide
+ * ## The height, settled
  *
- * The height. Nine were in use — 34, 36, 40, 42, 44, 46, 48, 50 and 52 — and
- * folding them into one would move a button on about forty screens, which is a
- * change to how the app looks rather than to how it is built. So `height` is
- * required and every call site kept the number it had. The nine are now nine
- * arguments in one place instead of nine literals in forty-two files, which is
- * what makes settling them a decision somebody can take later by reading this
- * file rather than an audit somebody has to run again.
+ * `HEIGHT`, and there is no prop for it. Nine were in use when these were
+ * gathered — 34, 36, 40, 42, 44, 46, 48, 50 and 52 — which is what seventy
+ * separate decisions look like rather than a scale anybody designed. 46 was
+ * already thirty of the seventy and is the number kept.
+ *
+ * Two of the nine were below the tap-target minimum: Onboarding's "Skip" at 34
+ * and Work's "Stop" at 36, neither wearing a `tap` overlay. `styles/taps.test.ts`
+ * puts a fingertip at about 44px, so those two were not a smaller size of this
+ * button, they were this button too small to hit. Both are `tone="ghost"` with
+ * their own `fontSize` and opacity, so what made them quiet was never the
+ * height, and they stay quiet at 46.
+ *
+ * There is deliberately no `height` prop. A prop with a default is a prop
+ * somebody passes, and seventy call sites each passing "just this once" is how
+ * the nine happened. A call site that genuinely needs a different height can
+ * still say so in `style`, which is spread last — but it has to mean it.
  *
  * `spacing` is the same story at smaller scale: 0.1em on fifty-seven of the
  * seventy, and the other four values kept as they were. Note that `.btn` in
@@ -517,17 +526,17 @@ export function EmptyState({
  * submit button inside a form is a different control and `screens/Account.tsx`
  * still writes its own.
  */
+/** The one height. See the note above for why it is not a prop. */
+export const HEIGHT = 46;
+
 export function ActionButton({
   tone = 'secondary',
-  height,
   spacing = '0.1em',
   style,
   children,
   ...rest
 }: {
   tone?: 'primary' | 'secondary' | 'ghost';
-  /** Required, because there is no right answer yet. See above. */
-  height: number;
   spacing?: string;
   style?: CSSProperties;
   children: ReactNode;
@@ -536,7 +545,7 @@ export function ActionButton({
     <button
       type="button"
       className={`btn btn-${tone} btn-block`}
-      style={{ height, letterSpacing: spacing, textTransform: 'uppercase', ...style }}
+      style={{ height: HEIGHT, letterSpacing: spacing, textTransform: 'uppercase', ...style }}
       {...rest}
     >
       {children}

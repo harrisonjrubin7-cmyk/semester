@@ -96,7 +96,7 @@ export function EditCourse() {
             * had just pressed Back from.
             */
             onClick={adopt}
-            tone="primary" height={46}
+            tone="primary"
             style={{ marginTop: 14, fontSize: 'var(--type-sm)' }}
           >
             Make these mine
@@ -517,7 +517,7 @@ export function EditCourse() {
       <ActionButton
         onClick={save}
         disabled={!dirty}
-        tone="primary" height={46}
+        tone="primary"
         style={{ marginTop: 18 }}
       >
         {dirty ? 'Save the changes' : saved ? 'Saved' : 'Nothing changed'}

@@ -190,7 +190,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                     dispatch({ type: 'addVisit', patch: { personId: p.id, what } });
                     setWhat('');
                     }}
-                    height={40} spacing="0.09em"
+                    spacing="0.09em"
                     style={{ marginTop: 'var(--sp-4)' }}
                   >
                     Record it

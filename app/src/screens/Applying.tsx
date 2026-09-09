@@ -430,7 +430,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
 
       <ActionButton
         onClick={add}
-        height={46} spacing="0.09em"
+        spacing="0.09em"
         style={{ marginTop: 14 }}
       >
         Add it

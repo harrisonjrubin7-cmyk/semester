@@ -259,7 +259,6 @@ export function Import() {
       <ActionButton
         onClick={() => input.current?.click()}
         disabled={busy !== ''}
-        height={46}
         style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-7)' }}
       >
         {busy ? busy : 'Choose files — PDF, Word, text, or a zip of them'}
@@ -340,7 +339,7 @@ export function Import() {
           <ActionButton
             disabled={busy !== ''}
             onClick={() => void build()}
-            tone="primary" height={50}
+            tone="primary"
             style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
           >
             {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${words.toLocaleString()} words`}
@@ -758,7 +757,7 @@ function Preview({
 
       <ActionButton
         onClick={onSave}
-        tone="primary" height={50}
+        tone="primary"
         style={{ fontSize: 'var(--type-lg)', marginTop: 18 }}
       >
         {/* The count on the button, because it is the number that changed

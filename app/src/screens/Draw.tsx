@@ -147,7 +147,7 @@ export function Draw() {
       <ActionButton
         onClick={() => void draw()}
         disabled={busy || !prompt.trim()}
-        tone="primary" height={46}
+        tone="primary"
         style={{ marginTop: 14 }}
       >
         {busy ? 'Drawing…' : code ? 'Draw it again' : 'Draw it'}
