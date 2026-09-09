@@ -3,6 +3,7 @@ import {
   addItem,
   blankCourse,
   blankItem,
+  courseId,
   dropItem,
   fromInputDate,
   gaps,
@@ -197,13 +198,33 @@ describe('withGrading', () => {
   });
 });
 
-describe('blankCourse', () => {
-  it('gives the same id an import of that code would', () => {
+describe('courseId', () => {
+  it('is the code, and nothing else', () => {
     // This is the whole point of slugging rather than generating an id: type
-    // the course today, import the syllabus next week, keep every tick.
-    expect(blankCourse('ECON 1020').course.id).toBe('econ1020');
-    expect(blankCourse('  psci 1104 ').course.id).toBe('psci1104');
+    // the course today, import the syllabus next week, keep every tick. The
+    // two paths disagreed until now — "econ1020" here and "econ-1020" out of
+    // the importer — so the sentence above was a comment rather than a fact.
+    expect(courseId('ECON 1020')).toBe('econ-1020');
+    expect(courseId('  psci 1104 ')).toBe('psci-1104');
+    expect(blankCourse('ECON 1020').course.id).toBe(courseId('ECON 1020'));
   });
+
+  it('steps aside for an id already in use', () => {
+    // The bug this exists to stop: every PSCI syllabus the model read came
+    // back wanting the id `psci`, so a second PSCI course landed on top of the
+    // first and every screen keyed by course id served one course's office
+    // hours, deadlines and guide under the other's name.
+    expect(courseId('PSCI 2200', ['psci-2200'])).toBe('psci-2200-2');
+    expect(courseId('PSCI 2200', ['psci-2200', 'psci-2200-2'])).toBe('psci-2200-3');
+    expect(blankCourse('PSCI 2200', undefined, ['psci-2200']).course.id).toBe('psci-2200-2');
+  });
+
+  it('leaves an unrelated id alone', () => {
+    expect(courseId('ECON 1020', ['psci-1104', 'core-2500'])).toBe('econ-1020');
+  });
+});
+
+describe('blankCourse', () => {
 
   it('states no grade weights it was not told', () => {
     // An invented "Exams 50%" would be read as fact by every grade screen.

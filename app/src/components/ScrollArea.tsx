@@ -28,16 +28,29 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { keep, opensAt } from '../lib/scrollback';
 import { PullDown } from './PullDown';
+import { fills } from './shell/exempt';
+import type { Screen } from '../lib/types';
 
 /** How long to keep waiting for a lazy screen to become tall enough. */
 const WAIT_FOR = 1500;
 
-export function ScrollArea({ screen, children }: { screen: string; children: ReactNode }) {
+export function ScrollArea({ screen, children }: { screen: Screen; children: ReactNode }) {
   const box = useRef<HTMLElement>(null);
+  /*
+   * A screen that scrolls inside itself does not scroll here.
+   *
+   * The chat is the one: its log is the scroller and its composer sits on the
+   * bottom edge. This element still exists around it — it is what every
+   * screen is mounted in — but it must not reserve room under it or offer a
+   * second place to scroll. See `.scrollarea.is-filled`, and `shell/exempt.ts`
+   * for the list. Nothing below this line applies either: there is no
+   * position to remember on an element that cannot move.
+   */
+  const filled = fills(screen);
 
   useLayoutEffect(() => {
     const node = box.current;
-    if (!node) return;
+    if (!node || filled) return;
 
     const most = () => Math.max(0, node.scrollHeight - node.clientHeight);
     const want = opensAt(screen, Date.now(), Number.MAX_SAFE_INTEGER);
@@ -74,7 +87,7 @@ export function ScrollArea({ screen, children }: { screen: string; children: Rea
     tryIt();
 
     return stop;
-  }, [screen]);
+  }, [screen, filled]);
 
   /*
    * The position is followed as it moves, and written down on the way out.
@@ -93,7 +106,7 @@ export function ScrollArea({ screen, children }: { screen: string; children: Rea
    */
   useEffect(() => {
     const node = box.current;
-    if (!node) return;
+    if (!node || filled) return;
     const at = { top: node.scrollTop, moved: false };
     const follow = () => {
       at.top = node.scrollTop;
@@ -104,13 +117,16 @@ export function ScrollArea({ screen, children }: { screen: string; children: Rea
       node.removeEventListener('scroll', follow);
       if (at.moved) keep(screen, at.top, Date.now());
     };
-  }, [screen]);
+  }, [screen, filled]);
 
   return (
-    <main id="main" className="scrollarea" ref={box}>
+    <main id="main" className={filled ? 'scrollarea is-filled' : 'scrollarea'} ref={box}>
       {/* Inside, at the top, so it pushes the screen down the way a pulled
-          sheet of paper would. It owns the gesture; this owns the element. */}
-      <PullDown area={box} />
+          sheet of paper would. It owns the gesture; this owns the element.
+          Not on a filled screen: pull-to-refresh reads a scroll position, and
+          there is none — on the chat the gesture would fire from anywhere in
+          the transcript. */}
+      {!filled && <PullDown area={box} />}
       {children}
     </main>
   );
