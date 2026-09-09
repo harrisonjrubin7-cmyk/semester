@@ -1,7 +1,5 @@
 import { useStore } from '../state/store';
-import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
-import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
 import { key, needCaveat, needFor, reaches, standing } from '../lib/grades';
@@ -23,15 +21,15 @@ import { ScoreField } from '../components/ScoreField';
  * reachable, which is worth knowing in October rather than December.
  */
 /**
- * @param bare - rendered inside the Courses switcher, which already supplies
- *   the page padding and the empty-state guard. Standalone it supplies its own.
+ * Rendered by the Courses switcher, which supplies the page, the padding and
+ * the empty-state guard. There is no standalone path: see the note at the foot
+ * of this file.
  */
-export function Grades({ bare = false }: { bare?: boolean } = {}) {
-  const { state, dispatch, catalog, school } = useStore();
+export function Grades() {
+  const { state, dispatch, catalog, school, tint } = useStore();
   // The hairline this row wears, in whichever layout is on. Spread rather
   // than wrapped so the row keeps its own insides. See `useRowStyle`.
   const rowFlush = useRowStyle(0);
-  if (catalog.empty) return <FirstRun where="to track grades" />;
 
   const intro = (
     <>
@@ -86,7 +84,7 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
               </div>
               {s.current !== null && (
                 <div style={{ marginTop: 'var(--sp-5)' }}>
-                  <Meter pct={Math.min(100, Math.round(s.current))} />
+                  <Meter pct={Math.min(100, Math.round(s.current))} fill={tint(c.id).fill} />
                 </div>
               )}
               {s.extraCredit > 0 && (
@@ -323,32 +321,29 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
   );
 
   /*
-   * Two callers, one body.
+   * One caller, one frame.
    *
-   * Standalone this is a screen and takes the app's frame: the padding, the
-   * search box, the space above the tab bar. Inside the Courses switcher it is
-   * a panel on somebody else's screen — that `<Page>` has already drawn the
-   * frame, and a second one would put a second search box on it, filtering
-   * nothing. See the note at the top of `components/Page.tsx`.
+   * There were two: this as a screen with its own `<Page>`, and this as the
+   * Grades tab of Courses, which needed a second render path with no `<Page>`
+   * of its own since that screen had already drawn the frame. The same table
+   * twice, so "what do I need on the final" had two homes and the directory
+   * pointed at the one nobody was on.
+   *
+   * Courses is where it lives — a view of the same four courses, next to the
+   * courses themselves and to what they are asking of you — so this draws the
+   * panel and never the frame. There is no prop to choose between them, which
+   * is what `lib/onehome.test.ts` is watching for.
    *
    * The trailing spacer belongs to whoever owns the frame, which is why
-   * `Courses` passes `bottom={0}` and it is written by hand only here.
+   * `Courses` passes `bottom={0}` and it is written by hand here.
    */
-  if (bare) {
-    return (
-      <div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-          {intro}
-        </div>
-        {/* No filter on the embedded path: the Courses switcher owns the frame
-            and its box already filters courses. A second one inside it would
-            be two boxes filtering overlapping things on one screen. */}
-        {body(catalog.courses)}
-        <div style={{ height: 22 }} />
-      </div>
-    );
-  }
   return (
-    <Page blurb={intro}>{body(catalog.courses)}</Page>
+    <div>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        {intro}
+      </div>
+      {body(catalog.courses)}
+      <div style={{ height: 22 }} />
+    </div>
   );
 }

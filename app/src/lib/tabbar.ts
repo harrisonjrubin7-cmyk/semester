@@ -21,6 +21,7 @@
  * Everything else is theirs, between two and six of them.
  */
 
+import { nudged } from './arrange';
 import { DESTINATIONS, destination, rootOf } from './nav';
 import type { Screen } from './types';
 
@@ -140,12 +141,8 @@ export function whyNot(chosen: Screen[], screen: Screen): string {
 /** Move one up or down the bar. Out-of-range moves leave the list alone. */
 export function moveTab(chosen: Screen[], screen: Screen, by: -1 | 1): Screen[] {
   const picked = chosen.filter((s) => s !== PINNED);
-  const at = picked.indexOf(screen);
-  const to = at + by;
-  if (at === -1 || to < 0 || to >= picked.length) return chosen;
-  const out = [...picked];
-  out.splice(at, 1);
-  out.splice(to, 0, screen);
+  const out = nudged(picked, screen, by);
+  if (out === picked) return chosen;
   return [...out, PINNED];
 }
 

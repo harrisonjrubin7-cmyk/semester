@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import { nameFor, renamed, tintFor } from '../lib/yours';
+import type { CoursesTab } from '../lib/types';
+import { nameFor, renamed } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
 import { Timer } from '../components/Timer';
 import { ShareCourse } from '../components/ShareCourse';
@@ -13,28 +14,29 @@ import { standing } from '../lib/grades';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
+import { Grades } from './Grades';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { CameBack } from '../components/CameBack';
 import { BreakItUp } from '../components/BreakItUp';
 import { AskForTime } from '../components/AskForTime';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { longLabel } from '../lib/date';
-import { Grades } from './Grades';
 import { appleMapsUrl, directionsUrl, fromRoom, prefersApple, type Destination } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
 import { DeadlineRow } from '../components/DeadlineRow';
 import { badge, overdueLine, split, standingOf } from '../lib/standing';
 import { isUnderway, openLine, underway, underwayLine } from '../lib/underway';
 import type { Course } from '../lib/types';
+import { CourseTag } from '../components/CourseTag';
 
 /** The one switcher, so the three views cannot drift apart. */
 function CoursesTabs({
   value,
   onChange,
 }: {
-  value: 'courses' | 'due' | 'grades';
-  onChange: (t: 'courses' | 'due' | 'grades') => void;
+  value: CoursesTab;
+  onChange: (t: CoursesTab) => void;
 }) {
   return (
     <Segmented
@@ -60,9 +62,8 @@ function CoursesTabs({
  * different questions.
  */
 export function Courses() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   const soft = useSoft();
-  const tint = (id: string) => tintFor(state.yours, id);
   const ahead = upcomingItems(catalog, now);
   if (catalog.empty) return <FirstRun where="in your courses" />;
   const tab = state.coursesTab;
@@ -71,7 +72,7 @@ export function Courses() {
     return (
       <Page bottom={0}>
         <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
-        <Grades bare />
+        <Grades />
       </Page>
     );
   }
@@ -90,11 +91,10 @@ export function Courses() {
       Three returns, three shells.
 
       A "screen" in the registry is not always one component: this one has a
-      branch per tab, and two of them are somebody else's screen rendered
-      bare. Only the third is a list, so only the third declares an adapter —
-      the other two get the box and send what is typed to the whole app, which
-      is the honest answer for a grade table and for a deadline list that
-      already has its own three-way split.
+      branch per tab. The grades branch was drawing a copy of the `grades`
+      destination — the same table with two homes — and the answer here is the
+      other way round from the one #42 took: the table is a view of these four
+      courses, so the destination went and this branch is where it lives.
     */
     <Page
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}
@@ -129,7 +129,7 @@ export function Courses() {
                   <LightTile
                     key={c.id}
                     label={c.code}
-                    tint={tint(c.id)?.base}
+                    tint={tint(c.id).fill}
                     // A course with nothing entered has no grade, and a dash
                     // is not a grade. It says so instead.
                     figure={mark === null ? undefined : `${Math.round(mark)}%`}
@@ -150,6 +150,7 @@ export function Courses() {
             const next = ahead.find((i) => i.c === c.id);
             return (
               <Blueprint
+                plain
                 key={c.id}
                 onClick={() => dispatch({ type: 'openCourse', id: c.id })}
                 style={{
@@ -157,10 +158,11 @@ export function Courses() {
                   display: 'block',
                   // The colour is a stripe down the edge rather than a tint on the
                   // whole card: four tinted cards is a dashboard, and the whole point
-                  // of the look is that it is not one. A course with no colour
-                  // keeps the card exactly as it was.
-                  borderLeft: tint(c.id) ? `3px solid ${tint(c.id)?.base}` : undefined,
-                  paddingLeft: tint(c.id) ? 13 : 16,
+                  // of the look is that it is not one. Every course has one now —
+                  // the stripe used to appear only for a course somebody had
+                  // coloured by hand, which is to say almost never.
+                  borderLeft: `3px solid ${tint(c.id).edge}`,
+                  paddingLeft: 13,
                 }}
               >
                 <div
@@ -220,9 +222,45 @@ export function Courses() {
           })
           )}
 
-          {/* No "add a course" button here. The header's + is that button —
-              see `lib/adding.ts`. Two of them on one screen is the doubling
-              this app keeps removing. */}
+          {/*
+            One quiet way to add a course, at the end of the courses.
+
+            Not the full-width uppercase button this used to be: that read as
+            the screen's main action when it is the rarest thing you do here —
+            four times a semester against a list you open weekly. And not
+            nothing either, which is what it was briefly: the + in the header
+            captures a deadline, so with no link here the courses screen was
+            the one place that talked about courses and could not add one,
+            leaving `n` and search as the only routes on a phone.
+
+            `tap-x`: it is the last item in a vertical list, so the room is
+            beside it — reaching up would claim the last card's own tap area.
+          */}
+          <button
+            type="button"
+            className="bare tap-x"
+            onClick={() => dispatch({ type: 'go', screen: 'import' })}
+            style={{
+              width: 'auto',
+              // Longhand and on the scale: `padding` as a shorthand puts two
+              // raw pixel values past the style budget. 16 + 16 either side of
+              // a --type-sm line is already a fingertip tall, so the tap
+              // overlay adds nothing vertically and cannot reach the card.
+              paddingTop: 'var(--sp-7)',
+              paddingBottom: 'var(--sp-7)',
+              paddingLeft: 'var(--sp-1)',
+              paddingRight: 'var(--sp-1)',
+              marginTop: 'var(--sp-1)',
+              textAlign: 'left',
+              fontSize: 'var(--type-sm)',
+              opacity: 0.6,
+              textDecoration: 'underline dotted',
+              textUnderlineOffset: 3,
+              textDecorationColor: 'currentColor',
+            }}
+          >
+            Add a course from a syllabus
+          </button>
           <div style={{ height: 12 }} />
         </>
     </Page>
@@ -445,19 +483,13 @@ export function CourseDetail() {
         <span className="tag tag-neutral">{course.credits}</span>
       </div>
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => dispatch({ type: 'openGuide', id: course.id })}
-        style={{
-          height: 46,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: 'var(--sp-7)',
-        }}
+        tone="primary"
+        style={{ marginTop: 'var(--sp-7)' }}
       >
         Study this course
-      </button>
+      </ActionButton>
 
       <button
         type="button"
@@ -607,7 +639,7 @@ export function ItemDetail() {
     <div style={{ padding: 18 }}>
       <Blueprint style={{ padding: 'var(--sp-7)' }}>
         <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
-          <span className="tag tag-accent">{catalog.byId[item.c].code}</span>
+          <CourseTag id={item.c} />
           <span
             style={{
               fontSize: 'var(--type-xs)',

@@ -24,7 +24,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { chime } from '../lib/chime';
 import {
   PRESETS,
@@ -393,21 +393,20 @@ function Alarms() {
         {daysLine(days) === 'Once' ? 'No days chosen — it rings once, at the next one.' : daysLine(days)}
       </div>
 
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={add}
-        style={{ height: 44, marginTop: 'var(--sp-6)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
+        spacing="0.09em"
+        style={{ marginTop: 'var(--sp-6)' }}
       >
         Add alarm
-      </button>
+      </ActionButton>
 
       {state.alarms.length > 0 ? (
         <>
           <SectionLabel style={{ margin: '24px 0 10px' }}>Set</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
             {state.alarms.map((a) => (
-              <Blueprint key={a.id} style={{ padding: '12px 14px' }}>
+              <Blueprint plain key={a.id} style={{ padding: '12px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-6)' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div

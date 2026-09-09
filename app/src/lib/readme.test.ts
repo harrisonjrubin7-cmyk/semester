@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DESTINATIONS } from './nav';
+import { DEFAULT_TABS } from './tabbar';
 import { modesFor } from './modes';
 import { buildCatalog } from '../data/catalog';
 import type { CourseModule, Guide } from './types';
@@ -27,8 +28,20 @@ import type { CourseModule, Guide } from './types';
 
 const README = readFileSync(join(process.cwd(), 'README.md'), 'utf8');
 
+/**
+ * The same text, on one line and in lower case.
+ *
+ * A count can start a sentence — "Five tabs, forty-nine screens." — so
+ * matching it case-sensitively would ask the README to be written wrong. And
+ * flattened, because these sentences wrap: "eleven\n  modes" is the same
+ * claim as "eleven modes" and only one of them is greppable.
+ */
+const SAID = README.replace(/\s+/g, ' ').toLowerCase();
+
 /** The number words the README uses. It writes counts as words, not digits. */
 const WORDS: Record<number, string> = {
+  4: 'four',
+  5: 'five',
   8: 'eight',
   9: 'nine',
   10: 'ten',
@@ -39,6 +52,7 @@ const WORDS: Record<number, string> = {
   30: 'thirty',
   40: 'forty',
   44: 'forty-four',
+  49: 'forty-nine',
   50: 'fifty',
   60: 'sixty',
   70: 'seventy',
@@ -103,15 +117,26 @@ describe('the README counts', () => {
   it('says how many screens there are', () => {
     const n = DESTINATIONS.length;
     expect(
-      README,
+      SAID,
       `lib/nav.ts has ${n} destinations, so the README should say "${inWords(n)} screens".`,
     ).toContain(`${inWords(n)} screens`);
+  });
+
+  it('says how many tabs the bar opens with', () => {
+    // Distinct from the screen count, and easy to conflate: Today's own
+    // switcher went from five segments to four while this was being written,
+    // which is a different five.
+    const n = DEFAULT_TABS.length;
+    expect(
+      SAID,
+      `lib/tabbar.ts opens with ${n} tabs, so the README should say "${inWords(n)} tabs".`,
+    ).toContain(`${inWords(n)} tabs`);
   });
 
   it('says how many ways there are to read a guide', () => {
     const n = MODES.length;
     expect(
-      README.replace(/\s+/g, ' '),
+      SAID,
       `lib/modes.ts offers ${n} modes, so the README should say "${inWords(n)} modes".`,
     ).toContain(`${inWords(n)} modes`);
   });
@@ -120,7 +145,7 @@ describe('the README counts', () => {
     const audio = join(process.cwd(), 'public', 'audio');
     const n = readdirSync(audio).filter((f) => f.endsWith('.mp3')).length;
     expect(
-      README.replace(/\s+/g, ' '),
+      SAID,
       `public/audio holds ${n} .mp3 files, so the README should say "${inWords(n)} recordings".`,
     ).toContain(`${inWords(n)} recordings`);
   });
@@ -133,7 +158,7 @@ describe('the README counts', () => {
       .filter((d) => d.isDirectory())
       .reduce((total, d) => total + readdirSync(join(lessons, d.name)).filter((f) => f.endsWith('.mp3')).length, 0);
     expect(
-      README.replace(/\s+/g, ' '),
+      SAID,
       `public/audio/lessons holds ${n} .mp3 files, so the README should say "${inWords(n)} narrated lessons".`,
     ).toContain(`${inWords(n)} narrated lessons`);
   });
@@ -141,12 +166,11 @@ describe('the README counts', () => {
   it('lists every mode it says there are', () => {
     // The count and the list drifted apart once already — nine claimed, ten
     // written, eleven real. Both halves, or neither is worth checking.
-    const flat = README.replace(/\s+/g, ' ');
-    const listed = flat.slice(flat.indexOf('modes: **Cards**'));
+    const listed = SAID.slice(SAID.indexOf('modes: **cards**'));
     expect(listed, 'The README no longer has a mode list to check.').not.toBe('');
     for (const mode of MODES) {
       expect(listed, `The README's mode list is missing ${mode.label}.`).toContain(
-        `**${mode.label}**`,
+        `**${mode.label.toLowerCase()}**`,
       );
     }
   });

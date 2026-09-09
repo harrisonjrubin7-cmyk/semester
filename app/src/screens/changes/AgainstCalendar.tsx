@@ -177,7 +177,7 @@ export function AgainstCalendar() {
               {report.moved.map((m) => {
                 const done = applied[m.item.id];
                 return (
-                  <Blueprint key={m.item.id} style={{ padding: '13px 14px', marginBottom: 9 }}>
+                  <Blueprint plain key={m.item.id} style={{ padding: '13px 14px', marginBottom: 9 }}>
                     <div className="kicker">{code(m.item.c)}</div>
                     <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)', textWrap: 'pretty' }}>
                       {m.item.title}

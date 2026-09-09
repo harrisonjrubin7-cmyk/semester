@@ -26,7 +26,7 @@ import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Trouble } from './Trouble';
 import { useTrouble } from '../lib/trouble';
-import { SectionLabel } from './ui';
+import { ActionButton, SectionLabel } from './ui';
 import { DEFAULT_RADIUS } from '../lib/place';
 import {
   NEARBY,
@@ -123,19 +123,13 @@ export function FindPlace() {
             anywhere. Switching this on lets you search for an address instead —{' '}
             {whatIsSent(g.service, false)}
           </p>
-          <button
-            type="button"
-            className="btn btn-secondary btn-block"
+          <ActionButton
             onClick={() => dispatch({ type: 'setGeocode', patch: { on: true } })}
-            style={{
-              height: 44,
-              marginTop: 'var(--sp-5)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.09em',
-            }}
+            spacing="0.09em"
+            style={{ marginTop: 'var(--sp-5)' }}
           >
             Turn address lookup on
-          </button>
+          </ActionButton>
         </>
       ) : (
         <>
@@ -306,20 +300,14 @@ export function FindPlace() {
               {whatIsSent(g.service, true)}
             </p>
             {g.reverseOn ? (
-              <button
-                type="button"
-                className="btn btn-secondary btn-block"
+              <ActionButton
                 onClick={whereAmI}
                 disabled={busy}
-                style={{
-                  height: 42,
-                  marginTop: 9,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.09em',
-                }}
+                spacing="0.09em"
+                style={{ marginTop: 9 }}
               >
                 What is here?
-              </button>
+              </ActionButton>
             ) : null}
           </div>
 

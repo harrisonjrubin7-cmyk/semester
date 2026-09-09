@@ -10,16 +10,13 @@ import {
   SEMESTER_YEAR,
   untilLabel,
 } from './date';
-import type { Reviews } from './review';
 import { blocksOn, type Commitment } from './activities';
 import { hasTime } from './duetime';
 import { punchline as tonePunchline, type Tone } from './tone';
-import { liveGuide } from './live';
 import type {
   Appointment,
   Block,
   CourseId,
-  CourseUpdate,
   DatedEvent,
   DatedItem,
   FeedEvent,
@@ -218,6 +215,36 @@ export function nextExam(cat: Catalog, now: Date) {
   };
 }
 
+/**
+ * Kinds of deadline that are a test — the ones revising is *for*.
+ *
+ * A quiz counts. Most courses set far more quizzes than exams, so a plan that
+ * only knew about exams was blind to the thing most weeks are actually
+ * building toward, which is how "your weakest unit" could sit above a unit
+ * being quizzed on Thursday.
+ */
+const TESTS = new Set(['Exam', 'Midterm', 'Quiz', 'Final']);
+
+/**
+ * A course's next test: how many days off, and what kind it is.
+ *
+ * Separate from {@link nextExam}, which answers a different question — the one
+ * exam nearest across the whole semester, for the radar at the top of Study.
+ * This is per course, because ranking one course's units against another's
+ * needs to know that ECON is examined on Thursday and HIST is not.
+ *
+ * The kind comes back with it so the sentence built from this can say "quiz in
+ * two days" rather than promoting every quiz to an exam.
+ */
+export function testedIn(
+  cat: Catalog,
+  now: Date,
+  courseId: CourseId,
+): { days: number; kind: string } | null {
+  const next = upcomingItems(cat, now).find((i) => i.c === courseId && TESTS.has(i.kind));
+  return next ? { days: Math.max(0, daysBetween(now, next.date)), kind: next.kind } : null;
+}
+
 /** How many unfinished deadlines each course is carrying. */
 export function loadByCourse(cat: Catalog, now: Date, done: Record<string, boolean>) {
   const ahead = upcomingItems(cat, now);
@@ -266,30 +293,6 @@ export function dotsForMonth(cat: Catalog, now: Date, year: number, month: numbe
     }
   });
   return counts;
-}
-
-/**
- * "Tonight's 25 minutes" — the weakest unit in each course, time-boxed.
- *
- * Takes the updates so a unit you have just added a reading to counts as
- * colder than it was, which is the whole point of adding it.
- */
-export function tonightPlan(cat: Catalog, updates: CourseUpdate[] = [], reviews: Reviews = {}) {
-  return cat.courses.map((c) => {
-    // Always through liveGuide now: even with no added material, mastery is
-    // measured from your answers rather than read off the guide, so the plan
-    // changes as you study instead of naming the same unit every night.
-    const guide = liveGuide(cat, c.id, updates, reviews);
-    let weakest = guide.units[0];
-    let index = 0;
-    guide.units.forEach((u, i) => {
-      if (u.mastery < weakest.mastery) {
-        weakest = u;
-        index = i;
-      }
-    });
-    return { courseId: c.id, code: guide.code, unit: weakest, index };
-  });
 }
 
 // ── Your own things, folded into the day ──────────────────────────────────
@@ -389,6 +392,8 @@ export function hoursFor(
   at: number;
   minutes: number;
   kind: string | null;
+  /** Which course a class belongs to, so the grid can colour it. */
+  c: CourseId | null;
   canceled?: boolean;
   /** The record this block was drawn from, where there is one that can move. */
   from?: { kind: 'appointment' | 'item'; id: string };
@@ -403,6 +408,9 @@ export function hoursFor(
     meta: b.meta,
     at: b.at,
     kind: b.mine ? (b.kind ?? 'other') : null,
+    // A class's course, carried through so the grid can draw it in that
+    // course's colour. `railFor` has always known it; the grid never got it.
+    c: b.c ?? null,
     canceled: b.canceled,
   }));
 }

@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
-import { EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
@@ -332,14 +332,12 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
           </div>
         </Blueprint>
       ) : (
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
+        <ActionButton
           onClick={() => setOpen(true)}
-          style={{ height: 46, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+          tone="primary"
         >
           + New task
-        </button>
+        </ActionButton>
       )}
 
       {state.tasks.length === 0 && !open && (
@@ -497,14 +495,12 @@ function Appointments() {
           </div>
         </Blueprint>
       ) : (
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
+        <ActionButton
           onClick={() => setOpen(true)}
-          style={{ height: 46, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+          tone="primary"
         >
           + New appointment
-        </button>
+        </ActionButton>
       )}
 
       {upcoming.length === 0 && !open && (
@@ -578,14 +574,12 @@ function Notes({ rows }: { rows?: Note[] }) {
 
   return (
     <div>
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => dispatch({ type: 'newNote', courseId: null })}
-        style={{ height: 46, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+        tone="primary"
       >
         + New note
-      </button>
+      </ActionButton>
 
       {all.length === 0 ? (
         <EmptyState
@@ -668,15 +662,13 @@ function Files() {
           e.target.value = '';
         }}
       />
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => input.current?.click()}
         disabled={busy}
-        style={{ height: 46, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+        tone="primary"
       >
         {busy ? 'Adding…' : '+ Add files'}
-      </button>
+      </ActionButton>
 
       {files.length === 0 ? (
         <EmptyState
@@ -692,7 +684,7 @@ function Files() {
             {files.map((f) => {
               const usedBy = state.notes.filter((n) => n.fileIds.includes(f.id)).length;
               return (
-                <Blueprint key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '12px 14px' }}>
+                <Blueprint plain key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '12px 14px' }}>
                   <button
                     type="button"
                     className="bare"
@@ -886,7 +878,7 @@ export function NoteEditor() {
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {attached.map((f) => (
-          <Blueprint key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '11px 13px' }}>
+          <Blueprint plain key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '11px 13px' }}>
             <button
               type="button"
               className="bare"
@@ -920,32 +912,23 @@ export function NoteEditor() {
         ))}
       </div>
 
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => input.current?.click()}
-        style={{ height: 44, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 'var(--sp-6)' }}
+        style={{ marginTop: 'var(--sp-6)' }}
       >
         <Plus size={15} /> Attach a file
-      </button>
+      </ActionButton>
 
-      <button
-        type="button"
-        className="btn btn-ghost btn-block"
+      <ActionButton
         onClick={() => {
-          dispatch({ type: 'deleteNote', id: note.id });
-          dispatch({ type: 'back' });
+        dispatch({ type: 'deleteNote', id: note.id });
+        dispatch({ type: 'back' });
         }}
-        style={{
-          height: 40,
-          textTransform: 'uppercase',
-          letterSpacing: '0.12em',
-          marginTop: 18,
-          opacity: 0.7,
-        }}
+        tone="ghost" spacing="0.12em"
+        style={{ marginTop: 18, opacity: 0.7 }}
       >
         Delete note
-      </button>
+      </ActionButton>
     </Page>
   );
 }

@@ -5,7 +5,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Snapshots } from '../components/Snapshots';
 import { Subscribe } from '../components/Subscribe';
-import { SectionLabel, TickBox } from '../components/ui';
+import { ActionButton, SectionLabel, TickBox } from '../components/ui';
 import { PROVIDERS, tokens, type ProviderId } from '../lib/connect';
 import { datedItems } from '../lib/select';
 import {
@@ -260,15 +260,13 @@ export function Export() {
       ))}
 
       <SectionLabel>Where it goes</SectionLabel>
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         disabled={!!busy}
         onClick={saveZip}
-        style={{ height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        tone="primary"
       >
         {busy === 'Packing…' ? 'Packing…' : 'Download as one zip'}
-      </button>
+      </ActionButton>
       <button
         type="button"
         className="btn btn-secondary btn-block"

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { STEP_MINUTES, clockOf, pointIn, snapMinutes, timeLabel, type GridSpec } from './drag';
+import { STEP_MINUTES, clockOf, holdAgainstPan, pointIn, snapMinutes, timeLabel, type GridSpec } from './drag';
 
 /**
  * The arithmetic behind a drop, which is the part that can be wrong invisibly.
@@ -123,5 +123,70 @@ describe('writing a time back out', () => {
     expect(timeLabel(13 * 60 + 15)).toBe('1:15p');
     expect(timeLabel(12 * 60)).toBe('12p');
     expect(timeLabel(0)).toBe('12a');
+  });
+});
+
+describe('keeping the browser from panning mid-drag', () => {
+  /**
+   * The rule that was wrong for a whole release.
+   *
+   * `touch-action: none` on the held element does not do this: the browser
+   * decides whether a touch is a pan when the finger lands, and the class is
+   * only set once the hold has already fired. What the drag actually did on a
+   * phone was `pointerdown, pointermove, pointercancel` — and every check
+   * driven with a mouse passed, because a mouse never goes through that
+   * arbitration at all.
+   *
+   * So the two things worth holding are the two that were got wrong: that the
+   * listener can prevent anything, and that it does not shout at a pan the
+   * browser has already committed to.
+   */
+  const spy = () => {
+    const calls: { type: string; opts: unknown }[] = [];
+    let handler: ((e: Event) => void) | null = null;
+    const target = {
+      addEventListener: (type: string, fn: (e: Event) => void, opts: unknown) => {
+        calls.push({ type, opts });
+        handler = fn;
+      },
+      removeEventListener: (type: string) => {
+        calls.push({ type: `off:${type}`, opts: null });
+        handler = null;
+      },
+    };
+    return { target, calls, fire: (e: Event) => handler?.(e) };
+  };
+
+  it('registers for touchmove, and non-passively', () => {
+    // A passive listener cannot call preventDefault, so a passive one here is
+    // the same as no listener at all — and it fails silently.
+    const { target, calls } = spy();
+    holdAgainstPan(target as never);
+    expect(calls[0].type).toBe('touchmove');
+    expect(calls[0].opts).toEqual({ passive: false });
+  });
+
+  it('prevents a touchmove the browser will still listen to', () => {
+    const { target, fire } = spy();
+    holdAgainstPan(target as never);
+    let prevented = false;
+    fire({ cancelable: true, preventDefault: () => { prevented = true; } } as unknown as Event);
+    expect(prevented).toBe(true);
+  });
+
+  it('leaves an uncancelable one alone', () => {
+    // Once a pan is under way its touchmoves cannot be prevented, and calling
+    // preventDefault on one is a console warning and nothing else.
+    const { target, fire } = spy();
+    holdAgainstPan(target as never);
+    let prevented = false;
+    fire({ cancelable: false, preventDefault: () => { prevented = true; } } as unknown as Event);
+    expect(prevented).toBe(false);
+  });
+
+  it('takes the listener off again, so a flick still scrolls', () => {
+    const { target, calls } = spy();
+    holdAgainstPan(target as never)();
+    expect(calls.map((c) => c.type)).toEqual(['touchmove', 'off:touchmove']);
   });
 });

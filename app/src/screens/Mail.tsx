@@ -6,7 +6,7 @@ import { DraftNote } from '../components/DraftNote';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { CheckIt } from '../components/CheckIt';
-import { ChipRow, SectionLabel } from '../components/ui';
+import { ActionButton, ChipRow, SectionLabel } from '../components/ui';
 import { ask, configured, provider } from '../lib/claude';
 import { datedItems } from '../lib/select';
 import {
@@ -250,15 +250,14 @@ export function Mail() {
         style={{ width: '100%' }}
       />
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => void write()}
         disabled={busy || !canDraft}
-        style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        tone="primary"
+        style={{ marginTop: 'var(--sp-7)' }}
       >
         {busy ? 'Writing…' : body ? 'Write it again' : 'Draft it'}
-      </button>
+      </ActionButton>
 
       {!canDraft && (
         <div

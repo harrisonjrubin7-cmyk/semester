@@ -51,6 +51,17 @@ import {
  * but rows of a control and a sentence saying what it does, and the twelfth
  * copy of the same four properties is where they start drifting apart.
  */
+/**
+ * The gap above a section label inside a settings group.
+ *
+ * Twelve identical copies of one margin string, which is eleven chances for
+ * the next one to be written a pixel out. The same reason `HINT` below is a
+ * constant rather than the twelfth inline copy of four properties.
+ */
+const CAP: CSSProperties = {
+  margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))',
+};
+
 const HINT: CSSProperties = {
   fontSize: 'calc(11.5px * var(--text-scale, 1))',
   opacity: 0.5,
@@ -71,7 +82,7 @@ function HuePicker() {
 
   return (
     <>
-      <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+      <SectionLabel style={CAP}>
         Your own accent
       </SectionLabel>
       <Toggle
@@ -144,6 +155,57 @@ function HuePicker() {
 }
 
 /**
+ * A colour per course, and what it will look like.
+ *
+ * A toggle with nothing under it would be a setting somebody has to turn on
+ * and then go and find out about. The swatches are the actual palette for the
+ * courses actually in the catalogue, drawn for the ground actually resolved —
+ * so the answer to "what does this do" is on the same screen as the question,
+ * and turning it off shows the same row in one metal.
+ */
+function CoursePalette() {
+  const { state, dispatch, catalog, tint } = useStore();
+  const on = state.courseColours !== 'off';
+
+  return (
+    <>
+      <SectionLabel style={CAP}>
+        Your courses
+      </SectionLabel>
+      <Toggle
+        label="Give each course its own colour"
+        on={on}
+        onChange={() => dispatch({ type: 'setLook', look: { courseColours: on ? 'off' : 'on' } })}
+      />
+      {catalog.empty ? (
+        <div style={HINT}>
+          Nothing to colour yet. Add a course and it takes a place on the wheel.
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+            {catalog.courses.map((c) => (
+              <span
+                key={c.id}
+                className="tag"
+                style={{ background: tint(c.id).wash, color: tint(c.id).ink }}
+              >
+                {catalog.short[c.id]}
+              </span>
+            ))}
+          </div>
+          <div style={HINT}>
+            {on
+              ? 'Your accent, divided between your classes and worn by every deadline, block and dot that belongs to one. Hold a course to a particular colour under Your courses, your way.'
+              : 'One metal throughout. Which class a thing belongs to is said in words only.'}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+/**
  * What the app is made of: its colour, its type, its edges, its voice.
  *
  * Sixteen sections that used to be scattered through one long screen, grouped
@@ -170,10 +232,13 @@ export function SettingsLook() {
           <Group
             header="Colour"
             footer="The accent being a metal rather than a colour is most of why the app looks drawn instead of like a dashboard."
-            lit={lights('accent ground colour color dark light theme mode parchment fog ink paper device', lit)}
+            lit={lights(
+              'accent ground colour color dark light theme mode parchment fog ink paper device course courses class classes palette',
+              lit,
+            )}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>The accent</SectionLabel>
+              <SectionLabel style={CAP}>The accent</SectionLabel>
               <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
                 All metals and stones. The accent being a metal rather than a colour is most of why the
                 app looks drawn instead of like a dashboard, so these change the shade and not that.
@@ -217,7 +282,7 @@ export function SettingsLook() {
               <HuePicker />
             </CustomRow>
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>The ground</SectionLabel>
+              <SectionLabel style={CAP}>The ground</SectionLabel>
               {/*
                 Above the forty-two, because it is the answer for most people and
                 because a device on a light-and-dark schedule otherwise means coming
@@ -301,6 +366,9 @@ export function SettingsLook() {
                 </div>
               )}
             </CustomRow>
+            <CustomRow>
+              <CoursePalette />
+            </CustomRow>
           </Group>
 
           <Group
@@ -309,7 +377,7 @@ export function SettingsLook() {
             lit={lights('font fonts typeface heading body text size larger bigger smaller line height spacing reading width', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Headings</SectionLabel>
+              <SectionLabel style={CAP}>Headings</SectionLabel>
               <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
                 {TYPEFACES.map((t) => {
                   const on = state.typeface === t.id;
@@ -338,7 +406,7 @@ export function SettingsLook() {
               </div>
             </CustomRow>
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Body text</SectionLabel>
+              <SectionLabel style={CAP}>Body text</SectionLabel>
               <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
                 {BODYFACES.map((b) => {
                   const on = state.bodyface === b.id;
@@ -367,7 +435,7 @@ export function SettingsLook() {
               </div>
             </CustomRow>
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Line spacing</SectionLabel>
+              <SectionLabel style={CAP}>Line spacing</SectionLabel>
               <Segmented
                 options={LINE_HEIGHTS.map((l) => ({ id: l.id, label: l.label }))}
                 value={state.lineHeight}
@@ -379,7 +447,7 @@ export function SettingsLook() {
               </div>
             </CustomRow>
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Reading width</SectionLabel>
+              <SectionLabel style={CAP}>Reading width</SectionLabel>
               <Segmented
                 options={READING_WIDTHS.map((w) => ({ id: w.id, label: w.label }))}
                 value={state.readingWidth}
@@ -394,7 +462,7 @@ export function SettingsLook() {
               </div>
             </CustomRow>
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Text size</SectionLabel>
+              <SectionLabel style={CAP}>Text size</SectionLabel>
               <Segmented
                 options={SIZES.map((z) => ({ id: z.id, label: z.label }))}
                 value={state.textSize}
@@ -428,7 +496,7 @@ export function SettingsLook() {
             lit={lights('corners rounded square spacing density icon shape badges tab bar labels feed style', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Corners</SectionLabel>
+              <SectionLabel style={CAP}>Corners</SectionLabel>
               <Segmented
                 options={[
                   // First, and the default. Two of the twelve grounds were
@@ -450,7 +518,7 @@ export function SettingsLook() {
               </div>
             </CustomRow>
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Spacing</SectionLabel>
+              <SectionLabel style={CAP}>Spacing</SectionLabel>
               <Segmented
                 options={DENSITIES.map((d) => ({ id: d.id, label: d.label }))}
                 value={state.density}
@@ -463,7 +531,7 @@ export function SettingsLook() {
               </div>
             </CustomRow>
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Icon shape</SectionLabel>
+              <SectionLabel style={CAP}>Icon shape</SectionLabel>
               <Segmented
                 options={ICON_SHAPES.map((i) => ({ id: i.id, label: i.label }))}
                 value={state.iconShape}

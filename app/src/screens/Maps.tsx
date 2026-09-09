@@ -1,11 +1,12 @@
 import { Suspense, lazy, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
 import type { Pin } from '../components/LiveMap';
-import { ChipRow, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, ChipRow, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import {
   CENTRES,
@@ -70,6 +71,8 @@ interface Row {
  */
 export function Maps() {
   const { state, dispatch, now, catalog } = useStore();
+  // A row's padding and hairline, from the layout rather than hard-coded.
+  const linkRow = useRowStyle(13);
   const [mode, setMode] = useState<Travel>('walking');
   const [scope, setScope] = useState<Scope>('campus');
   const [query, setQuery] = useState('');
@@ -199,8 +202,7 @@ export function Maps() {
         display: 'flex',
         gap: 'var(--sp-6)',
         alignItems: 'center',
-        padding: '13px 0',
-        borderBottom: '1px solid var(--app-line)',
+        ...linkRow,
         textDecoration: 'none',
         color: 'inherit',
       }}
@@ -330,21 +332,20 @@ export function Maps() {
                 aria-label="Name this place"
                 style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-6)' }}
               />
-              <button
-                type="button"
-                className="btn btn-primary btn-block"
+              <ActionButton
                 disabled={!label.trim()}
                 onClick={() => {
-                  dispatch({
-                    type: 'addPlace',
-                    place: { label: label.trim(), lat: you.lat, lon: you.lon, radius: DEFAULT_RADIUS },
-                  });
-                  setLabel('');
+                dispatch({
+                type: 'addPlace',
+                place: { label: label.trim(), lat: you.lat, lon: you.lon, radius: DEFAULT_RADIUS },
+                });
+                setLabel('');
                 }}
-                style={{ height: 42, marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                tone="primary"
+                style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)' }}
               >
                 Save this spot
-              </button>
+              </ActionButton>
             </>
           )}
         </Blueprint>
@@ -461,6 +462,7 @@ export function Maps() {
       <SectionLabel>The official maps</SectionLabel>
       <a href={CAMPUS_MAP} target="_blank" rel="noreferrer" className="bare">
         <Blueprint
+          plain
           style={{ padding: '14px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
         >
           <span style={{ flex: 1, minWidth: 0 }}>
@@ -476,6 +478,7 @@ export function Maps() {
       </a>
       <a href={CITY_MAP} target="_blank" rel="noreferrer" className="bare">
         <Blueprint
+          plain
           style={{
             padding: '14px 15px',
             marginTop: 'var(--sp-5)',

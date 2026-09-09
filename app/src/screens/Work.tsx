@@ -9,7 +9,9 @@ import { useTrouble } from '../lib/trouble';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { ProjectFile } from '../components/ProjectFile';
-import { ChipRow, SectionLabel } from '../components/ui';
+import { ActionButton, ChipRow, SectionLabel } from '../components/ui';
+import { ItemRow } from '../components/shell/Rows';
+import { useRowStyle } from '../components/shell/useShell';
 import { Check, Plus } from '../components/Icons';
 import { extractText } from '../lib/extract';
 import { breakDown, critique, type Breakdown } from '../lib/assignment';
@@ -244,37 +246,34 @@ export function Work() {
             aria-label="Your draft"
           />
           <DraftNote field={draftField} />
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             disabled={busy || draft.trim().length < 80}
             onClick={() =>
-              void run(async (signal) => {
-                setFeedback('');
-                let sofar = '';
-                await critique(draft, instructions, context, (chunk) => {
-                  sofar += chunk;
-                  setFeedback(sofar);
-                }, signal);
-              })
+            void run(async (signal) => {
+            setFeedback('');
+            let sofar = '';
+            await critique(draft, instructions, context, (chunk) => {
+            sofar += chunk;
+            setFeedback(sofar);
+            }, signal);
+            })
             }
-            style={{ height: 44, marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            tone="primary"
+            style={{ marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)' }}
           >
             {busy ? 'Reading…' : 'Read it'}
-          </button>
+          </ActionButton>
           {feedback && (
             <>
               <SectionLabel>Feedback</SectionLabel>
               <Prose text={feedback} />
-              <button
-                type="button"
-                className="btn btn-secondary btn-block"
+              <ActionButton
                 onClick={() => keepAsNote(`Feedback · ${guide.code}`, feedback)}
                 disabled={kept}
-                style={{ height: 40, marginTop: 'var(--sp-6)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-xs)' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
-              </button>
+              </ActionButton>
             </>
           )}
         </>
@@ -335,29 +334,26 @@ export function Work() {
             <>
               <SectionLabel>Result</SectionLabel>
               <Prose text={output} />
-              <button
-                type="button"
-                className="btn btn-secondary btn-block"
+              <ActionButton
                 onClick={() => keepAsNote(prompt.slice(0, 60), output)}
                 disabled={kept}
-                style={{ height: 40, marginTop: 'var(--sp-6)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-xs)' }}
               >
                 {kept ? 'Saved to Mine → Notes' : 'Keep as a note'}
-              </button>
+              </ActionButton>
             </>
           )}
         </>
       )}
 
       {busy && (
-        <button
-          type="button"
-          className="btn btn-ghost btn-block"
+        <ActionButton
           onClick={() => abort.current?.abort()}
-          style={{ height: 36, marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+          tone="ghost" spacing="0.12em"
+          style={{ marginTop: 'var(--sp-5)', fontSize: 'var(--type-xs)' }}
         >
           Stop
-        </button>
+        </ActionButton>
       )}
 
       <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
@@ -388,13 +384,19 @@ function PlanView({
   saved: number;
   onKeep: () => void;
 }) {
+  /*
+   * A numbered step keeps its own markup and takes the row's metrics.
+   *
+   * `ItemRow` is a title with a subtitle under it; this is three tiers of text
+   * beside a big ordinal, and flattening it into two would lose the ordering
+   * the whole section is about. What it was missing was not a component but
+   * the layout's own padding and hairline, which is exactly what this hook is
+   * for — before it, this row drew a fixed 12px and a plain border whatever
+   * layout the app was set to.
+   */
+  const stepRow = useRowStyle(12);
   const row = (label: string, body: string, key: string) => (
-    <div key={key} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
-      <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{label}</div>
-      {body && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3, lineHeight: 'var(--leading-normal)' }}>{body}</div>
-      )}
-    </div>
+    <ItemRow key={key} title={label} meta={body || undefined} />
   );
 
   return (
@@ -423,30 +425,24 @@ function PlanView({
         <>
           <SectionLabel>How it is marked</SectionLabel>
           {plan.rubric.map((r, i) => (
-            <div key={`r${i}`} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
-              <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
-                <div style={{ fontSize: 'var(--type-md)', flex: 1, minWidth: 0, lineHeight: 'var(--leading-tight)' }}>
-                  {r.criterion}
-                </div>
-                {r.weight && (
-                  <div
+            <ItemRow
+              key={`r${i}`}
+              title={r.criterion}
+              meta={r.means || undefined}
+              trailing={
+                r.weight ? (
+                  <span
                     style={{
                       fontFamily: 'var(--font-heading)',
                       fontSize: 'var(--type-sm)',
                       color: 'var(--app-accent)',
-                      flex: 'none',
                     }}
                   >
                     {r.weight}
-                  </div>
-                )}
-              </div>
-              {r.means && (
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
-                  {r.means}
-                </div>
-              )}
-            </div>
+                  </span>
+                ) : undefined
+              }
+            />
           ))}
         </>
       )}
@@ -455,7 +451,7 @@ function PlanView({
         <>
           <SectionLabel>A way through it</SectionLabel>
           {plan.steps.map((s, i) => (
-            <div key={`s${i}`} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '12px 0', borderBottom: '1px solid var(--app-line)' }}>
+            <div key={`s${i}`} style={{ display: 'flex', gap: 'var(--sp-6)', ...stepRow }}>
               <div
                 style={{
                   width: 26,
@@ -489,26 +485,15 @@ function PlanView({
               </div>
             </div>
           ))}
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             disabled={saved > 0}
             onClick={onKeep}
-            style={{
-              height: 44,
-              marginTop: 'var(--sp-6)',
-              fontSize: 'var(--type-sm)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 'var(--sp-4)',
-            }}
+            tone="primary"
+            style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-4)' }}
           >
             {saved > 0 ? <Check size={14} /> : <Plus size={14} />}
             {saved > 0 ? `${saved} tasks added` : `Add ${plan.steps.length} steps as tasks`}
-          </button>
+          </ActionButton>
         </>
       )}
 

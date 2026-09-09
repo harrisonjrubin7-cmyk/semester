@@ -6,6 +6,7 @@ import { allCards } from '../data/catalog';
 import { datedItems } from '../lib/select';
 import { tallyBy } from '../lib/review';
 import { isOfficeHours, nextSitting, whenLine, worthGoing } from '../lib/officehours';
+import { CourseTag } from './CourseTag';
 
 /**
  * "This is the week to go", when the app can say why.
@@ -67,9 +68,9 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
         const when = whenLine(next, now);
 
         return (
-          <Blueprint key={r.courseId} style={{ padding: '13px 14px', marginBottom: 'var(--sp-4)' }}>
+          <Blueprint plain key={r.courseId} style={{ padding: '13px 14px', marginBottom: 'var(--sp-4)' }}>
             <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
-              <span className="tag tag-accent">{mod?.course.code ?? r.courseId}</span>
+              <CourseTag id={r.courseId}>{mod?.course.code ?? r.courseId}</CourseTag>
               {when ? (
                 <span style={{ flex: 1, textAlign: 'right', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
                   {when}

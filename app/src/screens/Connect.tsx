@@ -2,16 +2,9 @@ import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
-import {
-  MODELS,
-  checkKey,
-  route,
-  saveSettings,
-  settings,
-  type ClaudeSettings,
-} from '../lib/claude';
+import { configured, modelLabel, routeLabel } from '../lib/claude';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { ChipRow, SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';
 import {
   PROVIDERS,
@@ -61,167 +54,6 @@ import type { FeedSource } from '../lib/types';
  * The app never asks for a password to any of these, and there is no server to
  * send one to.
  */
-/**
- * Your own Claude, connected.
- *
- * Worth being exact about what this is, because the obvious expectation is
- * wrong: there is no "sign in with Claude". Anthropic publishes no consumer
- * OAuth, so a claude.ai Pro or Max subscription cannot be attached to a
- * third-party app by anybody — that capability does not exist to be built. An
- * API key from the developer console is a separate thing on separate billing,
- * and it is what actually works. The screen says so instead of leaving someone
- * hunting for a login button that was never going to be there.
- *
- * The key is checked by using it before it is saved, because the alternative
- * is discovering a typo halfway through generating a course from a syllabus
- * that took five minutes to upload.
- */
-function ClaudeAccount() {
-  const rowTwelve = useRowStyle(12);
-  const [config, setConfig] = useState(settings());
-  const [checking, setChecking] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; detail: string } | null>(null);
-  const taking = route(config);
-
-  const save = (next: ClaudeSettings) => {
-    setConfig(next);
-    saveSettings(next);
-  };
-
-  const verify = async () => {
-    setChecking(true);
-    setResult(null);
-    const got = await checkKey(config.apiKey);
-    setResult(got);
-    if (got.ok) save(config);
-    setChecking(false);
-  };
-
-  const routeLine =
-    taking === 'proxy'
-      ? 'Going through your proxy, which holds the key server-side. Nothing below is used.'
-      : taking === 'own'
-        ? 'Going through your own key, on this device.'
-        : taking === 'shared'
-          ? 'Going through the shared key, because you are signed in. Add your own below to bypass its monthly limit.'
-          : 'Nothing connected yet, so the parts of the app that need Claude are switched off.';
-
-  return (
-    <>
-      <SectionLabel>Claude</SectionLabel>
-      <Blueprint style={{ padding: '14px 15px' }}>
-        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>Your own Claude key</div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
-          There is no “sign in with Claude” — Anthropic publishes no consumer login for other apps,
-          so a claude.ai Pro or Max subscription cannot be linked here by any app. What works is an
-          API key from <strong>console.anthropic.com → API keys</strong>, which is billed
-          separately, per use. It powers reading a photograph of the board, generating a course
-          from a syllabus, taking an assignment apart, and asking questions about a course.
-        </div>
-
-        <input
-          className="input"
-          type="password"
-          autoComplete="off"
-          placeholder="sk-ant-…"
-          value={config.apiKey}
-          onChange={(e) => setConfig({ ...config, apiKey: e.target.value })}
-          aria-label="Anthropic API key"
-          style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-6)' }}
-        />
-        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
-          <button
-            type="button"
-            className="btn btn-primary"
-            disabled={checking || !config.apiKey.trim()}
-            onClick={() => void verify()}
-            style={{ flex: 1, height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-          >
-            {checking ? 'Checking…' : 'Check and save'}
-          </button>
-          {config.apiKey && (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => {
-                save({ ...config, apiKey: '' });
-                setResult(null);
-              }}
-              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
-            >
-              Remove
-            </button>
-          )}
-        </div>
-
-        {result && (
-          <div
-            style={{
-              fontSize: 'calc(12.5px * var(--text-scale, 1))',
-              marginTop: 'var(--sp-5)',
-              lineHeight: 'var(--leading-relaxed)',
-              whiteSpace: 'pre-wrap',
-              color: result.ok ? 'var(--app-fg)' : 'var(--app-accent)',
-            }}
-          >
-            {result.ok ? 'Key works. Saved on this device.' : result.detail}
-          </div>
-        )}
-
-        <div
-          style={{
-            marginTop: 'var(--sp-6)',
-            paddingTop: 11,
-            borderTop: '1px solid var(--app-line)',
-            fontSize: 'var(--type-sm)',
-            opacity: 0.7,
-            lineHeight: 'var(--leading-normal)',
-          }}
-        >
-          {routeLine}
-        </div>
-      </Blueprint>
-
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-        A key kept in a browser can be read by anything running in that browser. That is a real
-        risk and the reason the shared key lives in a server function instead. If you would rather
-        not hold one here, sign in and use the shared one, or run a proxy and put its address in
-        Settings.
-      </div>
-
-      <SectionLabel style={{ margin: '22px 0 6px' }}>Which model</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {MODELS.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            className="bare tappable"
-            onClick={() => save({ ...config, model: m.id })}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--sp-6)',
-              ...rowTwelve,
-              textAlign: 'left',
-            }}
-          >
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
-                {m.label}
-              </span>
-              <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
-                {m.note}
-              </span>
-            </span>
-            {config.model === m.id && <span className="tag tag-accent">In use</span>}
-          </button>
-        ))}
-      </div>
-
-    </>
-  );
-}
-
 export function Connect() {
   const { state, dispatch, now, catalog } = useStore();
   const rowTen = useRowStyle(10);
@@ -492,7 +324,37 @@ export function Connect() {
       </Blueprint>
 
       {/* ── OAuth providers ─────────────────────────────────────────────── */}
-      <ClaudeAccount />
+      {/*
+        Where the Claude settings were.
+
+        Connect accounts had its own key field, model picker and `saveSettings`
+        call, and so did Settings → The assistant — two implementations of one
+        setting, which is a setting that can disagree with itself. Settings won
+        because it is the superset: two providers, the routing between them, and
+        what the month has cost. What this screen had and that one did not — the
+        check-the-key button, and the sentence saying there is no "sign in with
+        Claude" to hunt for — moved there rather than dying with the copy.
+
+        A row rather than nothing at all: this is where the key lived for a year,
+        and somebody coming back for it should be told where it went.
+      */}
+      <SectionLabel>Claude</SectionLabel>
+      <Blueprint
+        onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
+        style={{ padding: '13px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
+      >
+        <span style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
+            The assistant
+          </span>
+          <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)', textWrap: 'pretty' }}>
+            {configured()
+              ? `${modelLabel()} · ${routeLabel()}. Change it in Settings.`
+              : 'No key yet, so the parts of the app that need Claude are switched off. Set one in Settings.'}
+          </span>
+        </span>
+      </Blueprint>
+
 
       <SectionLabel>Accounts</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
@@ -501,7 +363,7 @@ export function Connect() {
           const token = live[id];
           const feed = state.feeds.find((f) => f.kind === (id === 'microsoft' ? 'microsoft' : 'ics') && f.url === id);
           return (
-            <Blueprint key={id} style={{ padding: '14px 15px' }}>
+            <Blueprint plain key={id} style={{ padding: '14px 15px' }}>
               <div
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}
               >
@@ -713,31 +575,13 @@ export function Connect() {
           </div>
 
           {outbound.length > 1 && (
-            <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
-              {outbound.map((id) => {
-                const on = id === out;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    className="btn"
-                    onClick={() => setSendTo(id)}
-                    aria-pressed={on}
-                    style={{
-                      flex: 'none',
-                      fontSize: 'var(--type-xs)',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      background: on ? 'var(--chrome)' : 'transparent',
-                      color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
-                      borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
-                    }}
-                  >
-                    {PROVIDERS[id].name}
-                  </button>
-                );
-              })}
-            </div>
+            <ChipRow
+              options={outbound}
+              value={out}
+              onChange={setSendTo}
+              labels={Object.fromEntries(outbound.map((id) => [id, PROVIDERS[id].name]))}
+              style={{ marginTop: 'var(--sp-5)' }}
+            />
           )}
 
           <button

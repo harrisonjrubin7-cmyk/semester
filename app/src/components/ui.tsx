@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 import { ChevronRight } from './Icons';
 import { useRowStyle } from './shell/useShell';
 
@@ -101,6 +101,81 @@ export function ChipRow<T extends string>({
   );
 }
 
+/**
+ * The app's other chip, named at last.
+ *
+ * There are two chip idioms here and only one of them had a component. This is
+ * the second: an outlined pick, accented when chosen, drawn at a size a finger
+ * can hit. Ten screens were each writing the same twenty lines of it — "how
+ * long have you got" on Tonight, the unit picker on a reading, the course
+ * picker on Check the writing, two on The degree — with the padding drifting
+ * between 7px and 9px and the radius between `--r-sm` and `--r-md`, because
+ * the fastest way to write a chip was to copy the nearest one.
+ *
+ * ## Why this is not `ChipRow`
+ *
+ * `ChipRow` above is a filled, uppercase, 29px chip that scrolls sideways in
+ * one row, and its comment explains at length why it must *not* grow to 44px:
+ * the calendar stacks a `Segmented` directly above one, and at 44px their
+ * targets overlapped by 4px, in which band the lower row silently won taps
+ * meant for the upper. That argument is right and it is specific to a chip
+ * that sits in a scrolling row under another control.
+ *
+ * These are not that. They wrap onto several lines and stand alone under a
+ * heading, so nothing is stacked above them to collide with, and they are
+ * drawn at about 37px rather than 29 — comfortably clear of the 24×24 that
+ * WCAG 2.2 AA asks for, without needing `tap-y` either. Folding them into
+ * `ChipRow` would shrink them, uppercase them and put them in a row that
+ * scrolls sideways, which is three changes nobody asked for. Two components,
+ * because they are two controls — the same rule that keeps two screens apart
+ * when they answer two questions.
+ *
+ * (`tappable` on each is the cursor and hover treatment, not a target: the
+ * growth classes are `tap`, `tap-x` and `tap-y` in `app.css`, and these do
+ * not need one.)
+ */
+export function PickChips<T extends string | number>({
+  options,
+  value,
+  onChange,
+  labels,
+  style,
+}: {
+  options: readonly T[];
+  value: T;
+  onChange: (next: T) => void;
+  /** What to show instead of the option, where the two differ. */
+  labels?: (option: T) => string;
+  style?: CSSProperties;
+}) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', ...style }}>
+      {options.map((o) => {
+        const on = o === value;
+        return (
+          <button
+            key={String(o)}
+            type="button"
+            className="bare tappable"
+            aria-pressed={on}
+            onClick={() => onChange(o)}
+            style={{
+              width: 'auto',
+              padding: 'var(--sp-4) var(--sp-6)',
+              borderRadius: 'var(--r-sm)',
+              border: `1px solid ${on ? 'var(--app-accent)' : 'var(--app-line)'}`,
+              fontSize: 'var(--type-sm)',
+              fontVariantNumeric: 'tabular-nums',
+            }}
+          >
+            {labels ? labels(o) : String(o)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** An equal-width segmented control — Deadlines / Campus, Tabs / Feed. */
 export function Segmented<T extends string>({
   options,
@@ -154,12 +229,22 @@ export function DateRow({
   title,
   meta,
   onClick,
+  edge,
 }: {
   top: string;
   bottom: string;
   title: string;
   meta: string;
   onClick?: () => void;
+  /**
+   * A colour for the spine at the row's left — the course this belongs to.
+   *
+   * Passed in rather than looked up, so this stays a row that draws what it is
+   * given. Five of these stacked is the "What's coming" list, and without it
+   * five rows from four courses are five identical rows whose only difference
+   * is a course code set in 11px caps at the end of a meta line.
+   */
+  edge?: string;
 }) {
   // Spread rather than wrapped: the whole button is the tap target, and
   // `CustomRow` would put the padding outside it.
@@ -176,6 +261,12 @@ export function DateRow({
         ...row,
       }}
     >
+      {edge ? (
+        <span
+          aria-hidden
+          style={{ width: 3, alignSelf: 'stretch', flex: 'none', borderRadius: 2, background: edge }}
+        />
+      ) : null}
       <div style={{ width: 46, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}>
         <div
           style={{
@@ -292,7 +383,16 @@ export function TickBox({ on, size = 20 }: { on: boolean; size?: number }) {
 }
 
 /** A progress bar in brushed metal. */
-export function Meter({ pct, height = 6 }: { pct: number; height?: number }) {
+export function Meter({
+  pct,
+  height = 6,
+  fill,
+}: {
+  pct: number;
+  height?: number;
+  /** The bar's colour. Defaults to the brushed metal every other meter is. */
+  fill?: string;
+}) {
   // Named so Windows High Contrast can give it an edge: forced colours drop
   // both of these backgrounds, and a bar drawn only in colour disappears
   // entirely. See `styles/app.css`.
@@ -302,7 +402,7 @@ export function Meter({ pct, height = 6 }: { pct: number; height?: number }) {
         style={{
           height: '100%',
           width: `${Math.max(0, Math.min(100, pct))}%`,
-          background: 'var(--chrome)',
+          background: fill ?? 'var(--chrome)',
         }}
       />
     </div>
@@ -396,5 +496,75 @@ export function EmptyState({
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * The button that does the thing, across the width of the screen.
+ *
+ * Written out seventy times before this — "Save a backup and go ahead", "Build
+ * the project file", "Add the requirement", "+ New note" — as the same
+ * `type="button"`, the same `btn btn-* btn-block`, the same
+ * `textTransform: 'uppercase'` and the same `letterSpacing`, with only the
+ * height and the words differing. Seventy copies of a control is seventy
+ * places to fix the next thing wrong with it, which is the argument
+ * `components/Reorder.tsx` already makes about two arrows and three copies.
+ *
+ * ## The height, settled
+ *
+ * `HEIGHT`, and there is no prop for it. Nine were in use when these were
+ * gathered — 34, 36, 40, 42, 44, 46, 48, 50 and 52 — which is what seventy
+ * separate decisions look like rather than a scale anybody designed. 46 was
+ * already thirty of the seventy and is the number kept.
+ *
+ * Two of the nine were below the tap-target minimum: Onboarding's "Skip" at 34
+ * and Work's "Stop" at 36, neither wearing a `tap` overlay. `styles/taps.test.ts`
+ * puts a fingertip at about 44px, so those two were not a smaller size of this
+ * button, they were this button too small to hit. Both are `tone="ghost"` with
+ * their own `fontSize` and opacity, so what made them quiet was never the
+ * height, and they stay quiet at 46.
+ *
+ * There is deliberately no `height` prop. A prop with a default is a prop
+ * somebody passes, and seventy call sites each passing "just this once" is how
+ * the nine happened. A call site that genuinely needs a different height can
+ * still say so in `style`, which is spread last — but it has to mean it.
+ *
+ * `spacing` is the same story at smaller scale: 0.1em on fifty-seven of the
+ * seventy, and the other four values kept as they were. Note that `.btn` in
+ * `app.css` sets 0.08em, so almost every one of these is an override — the
+ * default here is the one the app actually uses, not the one the stylesheet
+ * declares.
+ *
+ * Anything else — `marginTop`, `fontSize` — stays the caller's, through
+ * `style`, and is spread last so a call site that needs to disagree still can.
+ *
+ * `type="button"` is fixed, which is the one thing this cannot express: a
+ * submit button inside a form is a different control and `screens/Account.tsx`
+ * still writes its own.
+ */
+/** The one height. See the note above for why it is not a prop. */
+export const HEIGHT = 46;
+
+export function ActionButton({
+  tone = 'secondary',
+  spacing = '0.1em',
+  style,
+  children,
+  ...rest
+}: {
+  tone?: 'primary' | 'secondary' | 'ghost';
+  spacing?: string;
+  style?: CSSProperties;
+  children: ReactNode;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'style' | 'children'>) {
+  return (
+    <button
+      type="button"
+      className={`btn btn-${tone} btn-block`}
+      style={{ height: HEIGHT, letterSpacing: spacing, textTransform: 'uppercase', ...style }}
+      {...rest}
+    >
+      {children}
+    </button>
   );
 }

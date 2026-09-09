@@ -67,7 +67,6 @@ const EventDetail = lazy(() => import('./screens/Calendar').then((m) => ({ defau
 const Exam = lazy(() => import('./screens/Exam').then((m) => ({ default: m.Exam })));
 const Export = lazy(() => import('./screens/Export').then((m) => ({ default: m.Export })));
 const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap })));
-const Grades = lazy(() => import('./screens/Grades').then((m) => ({ default: m.Grades })));
 const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ default: m.Groupwork })));
 const Guide = lazy(() => import('./screens/Guide').then((m) => ({ default: m.Guide })));
 const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
@@ -113,12 +112,11 @@ import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
 import { settingsTitle } from './lib/settings';
 import { chromeFor, homeShape } from './lib/chrome';
-import { addingOn } from './lib/adding';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
 import { ShelfNav } from './components/nav/ShelfNav';
-import { SoftBar, SoftTop } from './components/soft/SoftTop';
+import { SoftTop } from './components/soft/SoftTop';
 import { litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
@@ -306,8 +304,6 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: `${provider()} · this term`, title: 'Ask Claude' };
     case 'work':
       return { kicker: about('assignments'), title: 'Work on it' };
-    case 'grades':
-      return { kicker: 'Weights from your syllabi', title: 'Grades' };
     case 'maps':
       return { kicker: 'Campus, city, and how to get there', title: 'Getting there' };
     case 'mail':
@@ -449,7 +445,6 @@ function Header() {
   // every screen except the one it opens. Alerts stay at the top level, where
   // a header is not already competing with a Back button and a long title.
   const showActions = state.screen !== 'search';
-  const adding = addingOn(state.screen);
   const atRoot = rootOf(state.screen) === state.screen;
 
   /*
@@ -562,20 +557,20 @@ function Header() {
           {/* Before the icons, because it is the only thing here that is
               counting. Renders nothing at all unless a timer is running. */}
           <Running />
-          {/* The one +, and it adds what the screen is a list of: a course
-              on the courses list, a deadline everywhere else. See
-              `lib/adding.ts` — the courses list used to carry a second,
-              full-width "add a course" button under its last card because
-              this one could not make a course. */}
+          {/* One line, from anywhere. The alternative to this button is four
+              taps through two pickers, which is why nobody adds the thing
+              they were told about walking out of a lecture.
+
+              The same thing on every screen, deliberately. It briefly opened
+              the importer on the courses list — the + adding what the screen
+              lists — and that made the one control whose meaning you can rely
+              on into one you have to check. Adding a course has its own
+              routes: by name in search, `n`, and the soft layout's bar. */}
           <button
             type="button"
             className="btn btn-ghost btn-icon"
-            onClick={() =>
-              adding.kind === 'course'
-                ? dispatch({ type: 'go', screen: 'import' })
-                : dispatch({ type: 'quickAdd', open: true })
-            }
-            aria-label={adding.label}
+            onClick={() => dispatch({ type: 'quickAdd', open: true })}
+            aria-label="Add something in one line"
           >
             <Plus size={19} />
           </button>
@@ -816,8 +811,6 @@ function CurrentScreen() {
       return <Ask />;
     case 'work':
       return <Work />;
-    case 'grades':
-      return <Grades />;
     case 'maps':
       return <Maps />;
     case 'mail':
@@ -1151,14 +1144,42 @@ export default function App() {
         {/* Offers the last removal back, from wherever it happened. */}
         <Replaced />
       <Undone />
-        {/* One assistant, in the shell rather than on a screen. See `ai/`. */}
-        <Assistant />
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
-        {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
-      {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
         {chrome.rail && <Rail />}
         <div className="device device-pane">
+          {/*
+            One assistant, in the shell rather than on a screen — but inside
+            the pane, not beside it.
+
+            Every control primitive in `app.css` is scoped `.device .btn`,
+            `.device .input`, `.device .bare`. Mounted as a sibling of the pane
+            the panel was outside all of them, so on a wide window its
+            suggestion chips had no border and its composer was a white browser
+            textarea with a blue focus ring — the one place in the app that did
+            not look like the app. Nothing else changes: the panel and the
+            button are `position: fixed`, so they are laid out against the
+            viewport wherever they are mounted, and the pane's `overflow:
+            hidden` does not reach them.
+          */}
+          <Assistant />
+          {/*
+            The whole-app search, inside the pane for the same reason the
+            assistant is: `.device .input`, `.device .tag` and `.device .bare`
+            are where this app's controls are drawn, and beside the pane it
+            reached none of them. Its field was a white browser textbox with a
+            blue focus ring and its course tags were pale rectangles — on the
+            one overlay whose entire content is a field and a list of tagged
+            rows. What it covers is decided in the component, which is not the
+            same box on both layouts — see the note on its own `position` in
+            `components/Command.tsx`.
+          */}
+          {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
+          {/* And the capture box, for the same reason and with the same
+              answer: its one field was a white browser textbox out here, and
+              with nothing capping it its explanation ran the full width of a
+              laptop in a single line. See its own `position`. */}
+          {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
           <Header />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
@@ -1185,7 +1206,6 @@ export default function App() {
                 </ShellBody>
               </ScreenTrouble>
             </Suspense>
-            <SoftBar />
           </ScrollArea>
         </div>
       </div>
@@ -1237,7 +1257,6 @@ export default function App() {
             </ShellBody>
           </ScreenTrouble>
         </Suspense>
-        <SoftBar />
       </ScrollArea>
       {chrome.tabs && <TabBar />}
       {chrome.fab && (

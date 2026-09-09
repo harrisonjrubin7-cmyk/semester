@@ -165,7 +165,7 @@ export function Sources() {
               {list.map((s) => {
                 const missing = gaps(s);
                 return (
-                  <Blueprint key={s.id} style={{ padding: '12px 13px', marginBottom: 'var(--sp-4)' }}>
+                  <Blueprint plain key={s.id} style={{ padding: '12px 13px', marginBottom: 'var(--sp-4)' }}>
                     <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>{s.raw}</div>
                     {s.role.trim() ? (
                       <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>

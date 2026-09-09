@@ -1,6 +1,9 @@
 import type { CSSProperties } from 'react';
-import { CLASS_TINT, blockLabel, kindOf } from '../lib/kinds';
+import { blockLabel, kindTint } from '../lib/kinds';
 import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
+import { useStore } from '../state/store';
+import { ground as groundOf, resolveGround } from '../lib/look';
+import { usePrefersDark } from '../lib/prefers';
 
 /**
  * A day, by the hour.
@@ -26,6 +29,16 @@ export interface HourBlock {
   minutes: number;
   /** An event kind id, or null for a class. */
   kind: string | null;
+  /**
+   * The course this belongs to, for a class.
+   *
+   * Carried so the grid can draw the block in that course's colour rather
+   * than in one accent for every class on the screen — which is the state a
+   * Tuesday with four of them was in. Null for anything of yours: a shift, a
+   * dinner, a deadline you moved onto the grid. Those are coloured by kind,
+   * which is what `kind` is for.
+   */
+  c?: string | null;
   canceled?: boolean;
   onClick?: () => void;
   /**
@@ -128,6 +141,10 @@ export function HourGrid({
   settle();
 
   const spec = { rowPx: ROW, gutterPx: GUTTER, startHour: lo, columns: 1 };
+  const { state, tint: courseTint } = useStore();
+  // The ground as resolved, not as stored: on "match my device" the kind
+  // colours have to be mixed for the screen somebody is actually looking at.
+  const light = groundOf(resolveGround(state.ground, usePrefersDark())).light;
   const drag = useDragToMove<HourBlock>({
     grid: spec,
     disabled: !onMove,
@@ -207,7 +224,9 @@ export function HourGrid({
       )}
 
       {sorted.map((b, i) => {
-        const tint = b.kind === null ? CLASS_TINT : kindOf(b.kind).tint;
+        // A class is its course's colour; anything of yours is its kind's.
+        const own = b.kind === null;
+        const tint = own ? courseTint(b.c).fill : kindTint(b.kind, light);
         const lane = laneOf[i];
         const width = `calc((100% - ${GUTTER}px) / ${widthOf[i]})`;
         const Tag = b.onClick ? 'button' : 'div';
@@ -244,6 +263,24 @@ export function HourGrid({
               borderLeft: `2px solid ${tint}`,
               borderRadius: 'var(--r-sm)',
               background: 'var(--app-panel)',
+              /*
+               * A class is washed in its course's colour; anything of yours
+               * carries its kind on the edge and nothing more.
+               *
+               * Both were a panel with a tinted edge, which was fine while
+               * every class shared one edge colour and stopped being fine the
+               * moment they did not: a shift tinted for Work and a class
+               * tinted for a course that happens to sit near that hue read as
+               * the same kind of thing. Filled versus outlined is a
+               * difference that survives the two colours being close, and it
+               * says the true thing about them — one is the syllabus's, the
+               * other is yours.
+               *
+               * Layered rather than replacing the panel, so the wash lands on
+               * the surface the block actually sits on. `tint.test.ts` holds
+               * the title's contrast over it.
+               */
+              backgroundImage: own ? `linear-gradient(${courseTint(b.c).wash}, ${courseTint(b.c).wash})` : undefined,
               boxShadow: '0 1px 0 var(--app-line-top) inset',
               opacity: holding ? 0.4 : b.canceled ? 0.45 : 1,
               // Only while held, so the page still scrolls under a finger.

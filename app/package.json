@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint src && node scripts/styles.mjs && node scripts/labels.mjs",
     "lint:styles": "node scripts/styles.mjs",
+    "mirror": "node scripts/mirror.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

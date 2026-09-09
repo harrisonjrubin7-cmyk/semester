@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, TickBox } from '../components/ui';
+import { ActionButton, SectionLabel, TickBox } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { byCourse, clock, idFor, meetsLine, readSchedule } from '../lib/yes';
 import type { CourseId, CourseModule } from '../lib/types';
@@ -77,6 +77,7 @@ export function Yes() {
       {LINKS.map((l) => (
         <a key={l.id} href={l.url} target="_blank" rel="noreferrer" className="bare">
           <Blueprint
+            plain
             style={{
               padding: '14px 15px',
               marginBottom: 9,
@@ -170,19 +171,13 @@ export function Yes() {
             );
           })}
 
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={create}
-            style={{
-              height: 46,
-              marginTop: 14,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-            }}
+            tone="primary"
+            style={{ marginTop: 14 }}
           >
             Add them to the semester
-          </button>
+          </ActionButton>
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 9, lineHeight: 'var(--leading-normal)' }}>
             They arrive with their timetable and no deadlines. YES knows when your classes meet and
             nothing about when your essays are due — that comes from the syllabus.

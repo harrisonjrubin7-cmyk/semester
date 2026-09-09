@@ -1,4 +1,4 @@
-import { useId, type CSSProperties, type ReactNode } from 'react';
+import { useId, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
 import { ChevronRight } from '../Icons';
 import { ForcedProvider, InsetProvider, SIDE, useGrouped } from './useShell';
 import { Blueprint } from '../Blueprint';
@@ -198,6 +198,7 @@ function Row({
   ariaChecked,
   ariaLabel,
   tall = false,
+  drag,
 }: {
   children: ReactNode;
   onClick?: () => void;
@@ -206,6 +207,15 @@ function Row({
   ariaChecked?: boolean;
   ariaLabel?: string;
   tall?: boolean;
+  /**
+   * The handlers that make this row movable, on the lists where it is.
+   *
+   * Passed in rather than taken here: the hook belongs to the list, because a
+   * list is what has an order. See `lib/arrange.ts`. Most rows never get one
+   * — a settings row has a place in an argument, not a position somebody
+   * chose — and those are unchanged by its being here.
+   */
+  drag?: HTMLAttributes<HTMLElement> & { 'data-drop'?: string };
 }) {
   const grouped = useGrouped();
   const style: CSSProperties = {
@@ -230,12 +240,20 @@ function Row({
 
   if (as === 'button') {
     return (
-      <button type="button" onClick={onClick} role={role} aria-checked={ariaChecked} aria-label={ariaLabel} style={style}>
+      <button
+        type="button"
+        {...drag}
+        onClick={onClick}
+        role={role}
+        aria-checked={ariaChecked}
+        aria-label={ariaLabel}
+        style={{ ...style, ...drag?.style }}
+      >
         {children}
       </button>
     );
   }
-  return <div style={style}>{children}</div>;
+  return <div {...drag} style={{ ...style, ...drag?.style }}>{children}</div>;
 }
 
 function Label({ label, sub }: { label: ReactNode; sub?: ReactNode }) {
@@ -287,15 +305,17 @@ export function NavRow({
   value,
   onClick,
   tall = false,
+  drag,
 }: {
   label: ReactNode;
   sub?: ReactNode;
   value?: ReactNode;
   onClick: () => void;
   tall?: boolean;
+  drag?: HTMLAttributes<HTMLElement> & { 'data-drop'?: string };
 }) {
   return (
-    <Row as="button" onClick={onClick} tall={tall}>
+    <Row as="button" onClick={onClick} tall={tall} drag={drag}>
       <Label label={label} sub={sub} />
       {value ? <Value>{value}</Value> : null}
       <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />

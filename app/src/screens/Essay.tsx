@@ -6,7 +6,7 @@ import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
@@ -342,15 +342,14 @@ export function Essay() {
       />
 
       {configured() ? (
-        <button
-          type="button"
-          className="btn btn-primary btn-block"
+        <ActionButton
           onClick={() => void make()}
           disabled={busy || !verdict.ok}
-          style={{ height: 46, marginTop: 18, letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          tone="primary"
+          style={{ marginTop: 18 }}
         >
           {busy ? 'Drafting…' : out ? 'Draft it again' : 'Write the draft'}
-        </button>
+        </ActionButton>
       ) : (
         <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
           Needs a key first — set one under Settings → The assistant.

@@ -5,7 +5,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { backupOf } from '../lib/export';
 import { takeSnapshot } from '../lib/snapshots';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, TickBox } from '../components/ui';
+import { ActionButton, SectionLabel, TickBox } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { troubleOf, useTrouble } from '../lib/trouble';
 import { gather } from '../lib/bundle';
@@ -256,15 +256,13 @@ export function Import() {
         style={{ display: 'none' }}
         onChange={(e) => void add(e.target.files)}
       />
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => input.current?.click()}
         disabled={busy !== ''}
-        style={{ height: 46, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 'var(--sp-7)' }}
+        style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-7)' }}
       >
         {busy ? busy : 'Choose files — PDF, Word, text, or a zip of them'}
-      </button>
+      </ActionButton>
 
       {/* The other door in. A course somebody has already generated arrives
           as a file and needs no upload and no request — but it goes through
@@ -338,21 +336,14 @@ export function Import() {
             style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
           />
 
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             disabled={busy !== ''}
             onClick={() => void build()}
-            style={{
-              height: 50,
-              fontSize: 'var(--type-lg)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: 14,
-            }}
+            tone="primary"
+            style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
           >
             {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${words.toLocaleString()} words`}
-          </button>
+          </ActionButton>
 
           {busy && !busy.startsWith('Reading ') && (
             <button
@@ -764,24 +755,17 @@ function Preview({
         </div>
       ))}
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={onSave}
-        style={{
-          height: 50,
-          fontSize: 'var(--type-lg)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: 18,
-        }}
+        tone="primary"
+        style={{ fontSize: 'var(--type-lg)', marginTop: 18 }}
       >
         {/* The count on the button, because it is the number that changed
             and the button is what commits it. */}
         {replacing
           ? `Replace ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`
           : `Add ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`}
-      </button>
+      </ActionButton>
       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
         {replacing
           ? 'The changes above are what this replaces. Your ticks and your drill history stay where they are.'
