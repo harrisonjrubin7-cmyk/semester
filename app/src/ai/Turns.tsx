@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Answer } from './Answer';
 
 /**
@@ -324,11 +324,23 @@ export function Looked({ said, detail }: { said: string; detail: string }) {
  * a decision rather than something that happens to you.
  */
 export function useFollowing(deps: unknown[]) {
-  const box = useRef<HTMLDivElement>(null);
+  /*
+   * The element in state, not in a ref, and that is not a style choice.
+   *
+   * A ref is null on the first run of every effect, and an effect with an
+   * empty dependency list only ever gets that one run. On the tab, where the
+   * transcript is mounted for as long as the screen is, that is harmless —
+   * the box happens to exist by the time React commits. In the assistant's
+   * panel it is not: the transcript is mounted when the panel opens, several
+   * renders after this hook first ran, so the scroll listener was attached to
+   * nothing, `following` never turned off, and the way back down never
+   * appeared however far you scrolled up. A callback ref runs when the node
+   * arrives and when it goes, which is exactly when the listener should.
+   */
+  const [el, setEl] = useState<HTMLDivElement | null>(null);
   const [following, setFollowing] = useState(true);
 
   useEffect(() => {
-    const el = box.current;
     if (!el) return;
     const onScroll = () => {
       // Sixty pixels of slack: "at the bottom" has to survive the last line of
@@ -336,22 +348,24 @@ export function useFollowing(deps: unknown[]) {
       const atEnd = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
       setFollowing(atEnd);
     };
+    // A panel that opens on an old conversation opens at the end of it, which
+    // is where the last answer is. Re-following on mount also undoes a
+    // `following` left false by the previous time it was open.
+    setFollowing(true);
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [el]);
 
   useEffect(() => {
-    if (!following) return;
-    const el = box.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!following || !el) return;
+    el.scrollTop = el.scrollHeight;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [el, following, ...deps]);
 
   const toEnd = () => {
-    const el = box.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     setFollowing(true);
   };
 
-  return { box, following, toEnd };
+  return { box: setEl, following, toEnd };
 }

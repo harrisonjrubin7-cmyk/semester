@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { ActionButton } from './ui';
 import {
   COMMON_LETTER,
   fromTyped,
@@ -139,26 +140,18 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
               <span style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>%</span>
             </div>
           ))}
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             disabled={typed === null}
             onClick={() => {
-              if (!typed) return;
-              dispatch({ type: 'setCutoffs', courseId, system: typed });
-              setOpen(false);
+            if (!typed) return;
+            dispatch({ type: 'setCutoffs', courseId, system: typed });
+            setOpen(false);
             }}
-            style={{
-              height: 42,
-              marginTop: 'var(--sp-2)',
-              fontSize: 'var(--type-base)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              opacity: typed === null ? 0.45 : 1,
-            }}
+            tone="primary"
+            style={{ marginTop: 'var(--sp-2)', fontSize: 'var(--type-base)', opacity: typed === null ? 0.45 : 1 }}
           >
             {typed === null ? 'Nothing to save yet' : `Use these for ${code}`}
-          </button>
+          </ActionButton>
         </div>
       )}
     </div>

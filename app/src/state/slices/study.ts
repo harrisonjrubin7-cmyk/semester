@@ -72,7 +72,23 @@ export function study(state: State, action: Action): State | null {
 
     case 'startDrill':
       return push(
-        { ...state, drillUnit: action.unit, drillIdx: 0, drillGot: 0, revealed: false },
+        {
+          ...state,
+          // Named course or the open guide. The drill reads its deck from
+          // `guideId`, so a run started from a screen that ranks every course
+          // has to say which one it meant.
+          guideId: action.courseId ?? state.guideId,
+          // The unit the drill is about is also the unit the guide should be
+          // open at when you come back out of it.
+          openUnit: action.unit ?? state.openUnit,
+          drillUnit: action.unit,
+          drillIdx: 0,
+          drillGot: 0,
+          revealed: false,
+          // A run on one named unit is not a mixed run. Leaving this on would
+          // silently ignore both the course and the unit just chosen.
+          drillMix: action.courseId ? false : state.drillMix,
+        },
         'drill',
       );
 

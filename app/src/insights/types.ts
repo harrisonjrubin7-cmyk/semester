@@ -1,4 +1,4 @@
-import type { Screen } from '../lib/types';
+import type { CoursesTab, Screen } from '../lib/types';
 
 /**
  * One thing the data supports saying, and the record it rests on.
@@ -50,7 +50,14 @@ export interface Insight {
    */
   confidence: 'firm' | 'tentative';
   sampleSize: number;
-  action?: { label: string; screen: Screen };
+  /**
+   * Where to go, and — where the screen has grains — which one.
+   *
+   * The grain exists because the grade table stopped being a screen and became
+   * the third tab of Courses: an action that named `courses` alone would land
+   * a projection about a grade on whichever tab was last open.
+   */
+  action?: { label: string; screen: Screen; tab?: CoursesTab };
   /** Lower sorts first. Impact, never recency. */
   rank: number;
 }

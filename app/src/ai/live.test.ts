@@ -251,6 +251,36 @@ describe('nobody keeps a second copy', () => {
       expect(source(file)).toContain("from './Composer'");
     }
   });
+
+  it('and the same first screen', () => {
+    // The opening is the screen a student sees most often, and it was the
+    // last piece the two surfaces drew differently: the tab greeted you with
+    // a sentence about what it can see and the panel with four naked buttons.
+    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+      expect(source(file)).toContain("from './Opening'");
+    }
+  });
+
+  it('and both follow the stream rather than writing off the bottom edge', () => {
+    // The panel was a plain overflow box: a long answer scrolled itself out
+    // of sight while the reader sat looking at their own question. Sticking
+    // to the bottom — and letting go the moment somebody scrolls up — is one
+    // rule in `Turns.tsx`, and a surface that does not use it is not a chat.
+    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+      expect(source(file)).toContain('useFollowing(');
+      // The way back down, for after you have scrolled up out of the stream.
+      expect(source(file)).toContain('toEnd');
+    }
+  });
+
+  it('and both put an answer\'s offers inside the answer that made them', () => {
+    // `extra` is `Reply`'s slot for the action cards. The panel used to hang
+    // them under the whole transcript, which put a live "add a reminder"
+    // button several screens below the sentence that offered it.
+    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+      expect(source(file)).toMatch(/extra=\{/);
+    }
+  });
 });
 
 describe('where a conversation was started', () => {

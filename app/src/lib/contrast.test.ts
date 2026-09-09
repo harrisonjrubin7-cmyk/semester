@@ -251,8 +251,8 @@ describe('the stylesheet uses the tokens the audit passed', () => {
 
   it('sets the quiet caps in dim, not faint', () => {
     // `--app-faint` is held to 3:1, which is a hairline's bar. This is small
-    // uppercase text — the hero's meta note, the bar's status line, the count
-    // under a folder's name — and it was failing on all 143 pairings.
+    // uppercase text — the hero's meta note, the count under a folder's name —
+    // and it was failing on all 143 pairings.
     expect(ruleFor('.soft-caps-quiet')).toContain('var(--app-dim)');
     expect(ruleFor('.soft-caps-quiet')).not.toContain('var(--app-faint)');
   });
@@ -262,11 +262,12 @@ describe('the stylesheet uses the tokens the audit passed', () => {
     // about 2.4:1. `--app-accent-fill` is `shade` on a light ground, which is
     // where the 4.5:1 above comes from — naming `--app-accent-deep` here
     // would pass every test in this file and fail every reader.
-    for (const rule of ['.soft-bar-primary', '.pill-soft.is-on']) {
-      const body = ruleFor(rule);
-      expect(body, rule).toContain('var(--app-accent-fill)');
-      expect(body, rule).not.toContain('var(--app-accent-deep)');
-    }
+    //
+    // `.soft-bar-primary` was the other filled pill and is checked no longer:
+    // the bar it sat in is gone from every screen. See `lib/softtop.ts`.
+    const body = ruleFor('.pill-soft.is-on');
+    expect(body).toContain('var(--app-accent-fill)');
+    expect(body).not.toContain('var(--app-accent-deep)');
   });
 
   it('paints the dark tile from the tile stops rather than the panel', () => {

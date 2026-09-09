@@ -7,7 +7,7 @@ import { ApplyingOn } from '../components/Applying';
 import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
@@ -1111,37 +1111,46 @@ function MonthView() {
         them: a square meant a deadline in that course's colour, a circle meant
         a campus event, an outline meant something of your own. Nobody was ever
         going to work that out, which made the whole month view decorative.
+
+        Handed to `KindKey` rather than drawn above it: this and the colours
+        are one key about one grid, and two stacked legends — each with its own
+        fold, or worse one folded and one not — is the shape of a screen nobody
+        maintained. One tap opens both. It is also the same key the day and
+        week grids carry, so a colour means the same thing in every view
+        rather than three private schemes.
       */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '6px 14px',
-          marginTop: 'var(--sp-5)',
-          fontSize: 'calc(10.5px * var(--text-scale, 1))',
-          fontFamily: 'var(--font-heading)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          opacity: 0.5,
-        }}
-      >
-        {(
-          [
-            ['Due', { background: 'var(--app-accent)' }],
-            ['Campus', { background: 'var(--app-accent)', borderRadius: '50%' }],
-            ['Yours', { border: '1px solid var(--app-accent)' }],
-          ] as const
-        ).map(([label, mark]) => (
-          <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 5, height: 5, flex: 'none', ...mark }} />
-            {label}
-          </span>
-        ))}
-        <span style={{ opacity: 0.8 }}>Colour = course</span>
-      </div>
-      {/* The same key the day and week grids carry, so a colour means the same
-          thing in every view rather than three private schemes. */}
-      <KindKey compact />
+      <KindKey
+        compact
+        lead={
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '6px 14px',
+              marginTop: 'var(--sp-3)',
+              fontSize: 'calc(10.5px * var(--text-scale, 1))',
+              fontFamily: 'var(--font-heading)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              opacity: 0.5,
+            }}
+          >
+            {(
+              [
+                ['Due', { background: 'var(--app-accent)' }],
+                ['Campus', { background: 'var(--app-accent)', borderRadius: '50%' }],
+                ['Yours', { border: '1px solid var(--app-accent)' }],
+              ] as const
+            ).map(([label, mark]) => (
+              <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 5, height: 5, flex: 'none', ...mark }} />
+                {label}
+              </span>
+            ))}
+            <span style={{ opacity: 0.8 }}>Colour = course</span>
+          </div>
+        }
+      />
 
       <SectionLabel style={{ margin: '20px 0 6px' }}>
         {DOW[new Date(calYear, calMonth, selectedDay).getDay()]} · {MONTHS[calMonth]}{' '}
@@ -1259,26 +1268,18 @@ function MonthView() {
 
       {/* Always offered, including on an empty day: this list is deadlines
           only, and classes and anything of your own live in the day view. */}
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => {
-          dispatch({
-            type: 'setCalDay',
-            date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
-          });
-          dispatch({ type: 'setCalView', view: 'day' });
+        dispatch({
+        type: 'setCalDay',
+        date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
+        });
+        dispatch({ type: 'setCalView', view: 'day' });
         }}
-        style={{
-          height: 42,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          fontSize: 'var(--type-xs)',
-          marginTop: 14,
-        }}
+        style={{ fontSize: 'var(--type-xs)', marginTop: 14 }}
       >
         See classes and events that day
-      </button>
+      </ActionButton>
       <div style={{ height: 22 }} />
     </div>
   );

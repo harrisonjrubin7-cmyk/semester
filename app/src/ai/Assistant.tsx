@@ -6,26 +6,54 @@ import { DESTINATIONS } from '../lib/nav';
 import { useConversation, provider } from './converse';
 import { AskSelection } from './AskAbout';
 import { Composer, sendHint } from './Composer';
-import { Dropped, Question, Reply, Waiting } from './Turns';
+import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
+import { Opening } from './Opening';
 import { money } from '../lib/spend';
+import { configured, modelLabel } from '../lib/claude';
+import { nameOf } from '../lib/threads';
 import { Trouble } from '../components/Trouble';
 import { Applied, Locally, Proposals } from './Actions';
 
 /**
  * The assistant, everywhere.
  *
- * A button in the corner and a sheet that comes up over whatever you were
- * looking at — mounted once in the shell rather than rendered by a screen,
- * so there is exactly one of it and it can never disagree with itself about
- * where you are.
+ * A button in the corner and a chat panel that comes up over whatever you
+ * were looking at — mounted once in the shell rather than rendered by a
+ * screen, so there is exactly one of it and it can never disagree with itself
+ * about where you are.
  *
- * ## The sheet is partial on purpose
+ * ## It is the chat, not a preview of it
  *
- * It comes up to about three-fifths and the screen behind stays visible and
- * usable. That is the whole difference between an assistant that is part of
- * the app and a chat window that happens to float: you can read your grades
- * while you ask about them, and tap a row behind it without dismissing
- * anything. Full height is a swipe or a tap away for a long answer.
+ * There is one destination for the assistant — the Ask tab — and one
+ * conversation behind both of them, held in `ai/live.ts` and read through
+ * `useConversation`. This panel is the way *in* to that conversation from
+ * wherever you happen to be standing, carrying that screen's context with it.
+ *
+ * So it is shaped like the thing it is: a titled header, a transcript at a
+ * reading measure that follows the stream and lets you scroll back out of it,
+ * the answer's own offers in the flow of the answer, and a composer pinned to
+ * the bottom. Every one of those pieces is the *same component* the tab
+ * draws — `Turns.tsx`, `Opening.tsx`, `Composer.tsx`, `Actions.tsx` — because
+ * a panel that rendered its own smaller version of a message is how one
+ * conversation starts reading as two products.
+ *
+ * What it does not have is the history list. Twelve rows inside a panel sized
+ * to leave the screen behind it visible would be the panel; `ALL CHATS` opens
+ * the tab, which is a navigation and not a handoff, since there was only ever
+ * one log.
+ *
+ * ## Partial on purpose, and a card on a laptop
+ *
+ * On a phone it comes up to about three-fifths and the screen behind stays
+ * visible and usable. That is the whole difference between an assistant that
+ * is part of the app and a chat window that happens to float: you can read
+ * your grades while you ask about them, and tap a row behind it without
+ * dismissing anything. Full height is a swipe, a drag or a tap away.
+ *
+ * On a wide window a strip across the bottom of a laptop would be neither —
+ * the measure is wrong and the composer ends up a long way from the answer —
+ * so it docks as a card in the corner it was opened from. Opened out, both
+ * become a modal over a wash, and only then is the app behind it inert.
  *
  * ## Where the button sits
  *
@@ -40,6 +68,15 @@ const PART = 0.6;
 
 /** How far the button lifts when something it would cover is underneath. */
 const LIFT = 58;
+
+/**
+ * How far the handle has to travel before a tap becomes a drag.
+ *
+ * Forty pixels rather than five: a tap on a phone moves the finger a little,
+ * and a sheet that treated four pixels of that as "drag down" would close
+ * itself on every attempt to expand it.
+ */
+const DRAG = 40;
 
 /**
  * Whether an element is something a person would tap.
@@ -173,6 +210,97 @@ export function Assistant() {
     [ai.screen],
   );
 
+  /** Nothing asked in this thread yet, so the opening stands in for it. */
+  const empty = talk.turns.length === 0 && !talk.busy;
+
+  /**
+   * What the panel is called: the conversation you are in.
+   *
+   * The thread's own name if it has been renamed, otherwise its first
+   * question — the same string the history list shows, so opening the tab
+   * finds the row you were just reading under the name you were just reading.
+   * A new thread has no question yet and says who is answering instead.
+   */
+  const open = talk.threads.find((t) => t.id === talk.openId);
+  const title = open && open.turns.length > 0 ? nameOf(open) : `Ask ${provider()}`;
+
+  /**
+   * Follows the stream, and stops the moment you scroll up.
+   *
+   * The sheet had neither. It was a plain overflow box, so a streaming answer
+   * wrote itself past the bottom edge while the reader sat looking at their
+   * own question — the one bug in this panel that made it read as not being a
+   * chat at all. `useFollowing` is the tab's rule and this is the same one.
+   */
+  const { box, following, toEnd } = useFollowing([
+    talk.turns.length,
+    talk.streaming,
+    talk.busy,
+    ai.open,
+  ]);
+
+  /** Where a drag on the handle started, or null when it is a tap. */
+  const grab = useRef<number | null>(null);
+
+  /*
+   * The one corner it must not take.
+   *
+   * Today already puts the import button bottom-right when the feed nav is
+   * on. Stacking on it would bury a primary action behind a floating one,
+   * which is the failure the brief calls out by name, so the assistant takes
+   * the other side there instead of arguing about z-index.
+   */
+  const taken = state.nav === 'feed' && state.screen === 'home' && !wide;
+  const side: Corner = taken && corner === 'right' ? 'left' : corner;
+
+  /**
+   * The panel's geometry, which is three shapes and not one.
+   *
+   * On a phone it is a bottom sheet: full-bleed, three-fifths of the height,
+   * rounded at the top, and the screen behind it still visible. That is the
+   * embedded assistant, and it is what the corner button is for.
+   *
+   * On a wide window a full-bleed strip across the bottom of a laptop is
+   * neither: the measure is wrong, the composer is a metre from the answer,
+   * and it covers a screen that had the room to keep showing. So there it
+   * docks as a card in the corner it was opened from — the shape every
+   * embedded assistant on the web has settled on, for the reason they all
+   * settled on it.
+   *
+   * Opened out, both become the same thing: a modal over a wash, capped at a
+   * reading width on a wide window rather than stretched across it.
+   */
+  const shape = useMemo((): React.CSSProperties => {
+    if (!wide) {
+      return {
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: full ? '100%' : `${Math.round(PART * 100)}%`,
+        borderRadius: full ? 0 : 'var(--r-lg) var(--r-lg) 0 0',
+        borderInline: full ? 0 : undefined,
+        borderBottom: full ? 0 : undefined,
+      };
+    }
+    if (full) {
+      return {
+        top: 24,
+        bottom: 24,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 'min(980px, calc(100vw - 48px))',
+        borderRadius: 'var(--r-lg)',
+      };
+    }
+    return {
+      [side]: 20,
+      bottom: 20,
+      width: 'min(440px, calc(100vw - 40px))',
+      height: 'min(700px, calc(100vh - 96px))',
+      borderRadius: 'var(--r-lg)',
+    };
+  }, [wide, full, side]);
+
   /*
    * Cmd/Ctrl+K, and Escape while the sheet is up.
    *
@@ -264,17 +392,6 @@ export function Assistant() {
       /* the position is a convenience, not a setting worth failing over */
     }
   };
-
-  /*
-   * The one corner it must not take.
-   *
-   * Today already puts the import button bottom-right when the feed nav is
-   * on. Stacking on it would bury a primary action behind a floating one,
-   * which is the failure the brief calls out by name, so the assistant takes
-   * the other side there instead of arguing about z-index.
-   */
-  const taken = state.nav === 'feed' && state.screen === 'home' && !wide;
-  const side: Corner = taken && corner === 'right' ? 'left' : corner;
 
   /*
    * Lifted, when the screen puts something tappable under it.
@@ -384,7 +501,12 @@ export function Assistant() {
              * have sat on top of the bar at the largest one, so the shell
              * measures it and writes `--tabbar-h`.
              */
-            bottom: `calc(var(--tabbar-h, 76px) + ${12 + lift}px)`,
+            /*
+             * A wide window has no tab bar — the rail replaces it and the
+             * shell removes `--tabbar-h` — so the fallback would strand the
+             * button 76px above nothing.
+             */
+            bottom: wide ? 20 + lift : `calc(var(--tabbar-h, 76px) + ${12 + lift}px)`,
             width: 52,
             height: 52,
             borderRadius: '50%',
@@ -408,279 +530,546 @@ export function Assistant() {
       )}
 
       {ai.open && assembled && (
-        <div
-          ref={sheet}
-          role="dialog"
-          aria-label={`Ask about ${assembled.label}`}
-          aria-modal={full}
-          onKeyDown={onTab}
-          style={{
-            position: 'fixed',
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 70,
-            height: full ? '100%' : `${Math.round(PART * 100)}%`,
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'var(--app-panel)',
-            borderTop: '1px solid var(--app-line-top)',
-            borderRadius: full ? 0 : 'var(--r-lg) var(--r-lg) 0 0',
-            boxShadow: '0 -18px 40px rgba(0,0,0,0.45)',
-          }}
-        >
-          {/* The grab handle doubles as the full-height toggle, which is what
-              a swipe would do and what a keyboard cannot swipe for. */}
-          <button
-            type="button"
-            className="bare"
-            onClick={() => setFull((was) => !was)}
-            aria-label={full ? 'Shrink the assistant' : 'Expand the assistant'}
-            aria-expanded={full}
-            style={{ width: '100%', padding: '9px 0 4px', display: 'grid', placeItems: 'center' }}
-          >
-            <span
-              aria-hidden
-              style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--app-line-top)' }}
-            />
-          </button>
+        <>
+          {/*
+            The wash, at full height only.
 
-          <div style={{ padding: '4px 16px 0', display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
-            {/* What it can see, in the header, tappable to see exactly what.
-                Nothing hidden — an answer whose basis you cannot check is one
-                you either swallow or ignore. */}
+            At the partial height the screen behind is meant to stay readable
+            and tappable — that is the whole difference between an assistant
+            embedded in the app and a chat window that floats over it, and a
+            scrim would take it away. At full height the panel is a real modal
+            and the wash is what says so; tapping it closes, which is what
+            everybody tries first.
+          */}
+          {full && (
             <button
               type="button"
               className="bare"
-              onClick={() => setShowing((was) => !was)}
-              aria-expanded={showing}
+              aria-label="Close the assistant"
+              onClick={() => ai.hide()}
               style={{
-                flex: 1,
-                width: 'auto',
-                textAlign: 'left',
-                fontFamily: 'var(--font-heading)',
-                fontSize: 'var(--type-xs)',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                opacity: 0.65,
+                position: 'fixed',
+                inset: 0,
+                zIndex: 69,
+                width: '100%',
+                background: 'var(--scrim)',
+                border: 0,
+                cursor: 'default',
+              }}
+            />
+          )}
+          <div
+            ref={sheet}
+            role="dialog"
+            aria-label={`Ask about ${assembled.label}`}
+            aria-modal={full}
+            onKeyDown={onTab}
+            style={{
+              position: 'fixed',
+              zIndex: 70,
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+              background: 'var(--app-panel)',
+              border: '1px solid var(--app-line)',
+              boxShadow: 'var(--lift-2), 0 -18px 40px rgba(0,0,0,0.45)',
+              ...shape,
+            }}
+          >
+            {/*
+              The grab handle, on the surface that has a grab.
+
+              A phone sheet is dragged; a panel docked in the corner of a
+              laptop is not, and a handle there is a decoration pretending to
+              be a control. It doubles as the full-height toggle, which is
+              what a swipe would do and what a keyboard cannot swipe for.
+            */}
+            {!wide && (
+              <button
+                type="button"
+                className="bare"
+                onClick={() => setFull((was) => !was)}
+                onPointerDown={(e) => {
+                  grab.current = e.clientY;
+                }}
+                onPointerUp={(e) => {
+                  const from = grab.current;
+                  grab.current = null;
+                  if (from === null) return;
+                  const moved = e.clientY - from;
+                  // A drag, not a tap. Up opens it out, down puts it back and
+                  // then closes it — the two gestures every sheet on a phone
+                  // already answers to.
+                  if (moved < -DRAG) setFull(true);
+                  else if (moved > DRAG) {
+                    if (full) setFull(false);
+                    else ai.hide();
+                  }
+                }}
+                aria-label={full ? 'Shrink the assistant' : 'Expand the assistant'}
+                aria-expanded={full}
+                style={{
+                  width: '100%',
+                  padding: '9px 0 5px',
+                  display: 'grid',
+                  placeItems: 'center',
+                  touchAction: 'none',
+                }}
+              >
+                <span
+                  aria-hidden
+                  style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--app-line-top)' }}
+                />
+              </button>
+            )}
+
+            {/*
+              The header a chat has: who is answering, and what to do with the
+              conversation. Two rows rather than one, because the two things
+              it has to say are of different ranks — the title is the thread
+              you are in, and "looking at" is the context that thread carries.
+              Folding them into one line made the second read as a subtitle of
+              the app rather than as a statement about this question.
+            */}
+            <div
+              style={{
+                flex: 'none',
+                padding: wide ? 'var(--sp-6) var(--sp-6) var(--sp-4)' : 'var(--sp-3) var(--sp-6) var(--sp-4)',
+                borderBottom: '1px solid var(--app-line-soft)',
               }}
             >
-              {/*
-                What it is actually about, which is not always the screen.
-                A long press on a deadline says "Looking at: that deadline";
-                saying "Looking at: Courses" while the question is scoped to
-                one row is the header telling the student something untrue
-                about their own question.
-              */}
-              Looking at:{' '}
-              {assembled.extra.length > 0
-                ? assembled.extra[0].summary.replace(/\.$/, '')
-                : `${assembled.label}${
-                    assembled.own ? ` — ${assembled.own.summary.replace(/\.$/, '')}` : ' — nothing of its own'
-                  }`}
-              {' '}
-              <span aria-hidden>{showing ? '▾' : '▸'}</span>
-            </button>
-            <button
-              type="button"
-              className="bare"
-              onClick={() => ai.hide()}
-              aria-label="Close the assistant"
-              style={{ flex: 'none', width: 'auto', opacity: 0.5, fontSize: 'var(--type-lg)' }}
-            >
-              ×
-            </button>
-          </div>
-
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '12px 16px 0' }}>
-            {showing && (
-              <div style={{ marginBottom: 14 }}>
-                <div className="kicker">Exactly what goes with your question</div>
-                <pre
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
+                <span
+                  aria-hidden
                   style={{
-                    marginTop: 'var(--sp-3)',
-                    padding: 'var(--sp-5)',
-                    borderRadius: 'var(--r-sm)',
+                    flex: 'none',
+                    width: 24,
+                    height: 24,
+                    borderRadius: '50%',
+                    display: 'grid',
+                    placeItems: 'center',
+                    background: 'var(--app-accent-wash)',
                     border: '1px solid var(--app-line)',
-                    background: 'var(--app-hero)',
+                    fontFamily: 'var(--font-heading)',
                     fontSize: 'var(--type-xs)',
-                    lineHeight: 'var(--leading-normal)',
-                    whiteSpace: 'pre-wrap',
-                    overflowX: 'auto',
                   }}
                 >
-                  {assembled.text || 'This screen tells the assistant nothing of its own.'}
-                </pre>
-                {assembled.dropped > 0 && (
-                  <div style={{ fontSize: 'var(--type-xs)', opacity: 0.6, marginTop: 5 }}>
-                    {assembled.dropped} more rows did not fit and were left out. The assistant is
-                    told that too, so it will not count from a partial list.
+                  ✦
+                </span>
+                <div
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    fontFamily: 'var(--font-heading)',
+                    fontSize: 'var(--type-md)',
+                    lineHeight: 'var(--leading-tight)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {title}
+                </div>
+                {/* New, expand, close — in that order, because that is the
+                    order of how often they are wanted and the close button
+                    belongs at the edge where a thumb reaches for it. */}
+                {talk.turns.length > 0 && !talk.busy && (
+                  <button
+                    type="button"
+                    className="bare tap"
+                    onClick={talk.clear}
+                    aria-label="New conversation"
+                    style={ICON}
+                  >
+                    <span aria-hidden>＋</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="bare tap"
+                  onClick={() => setFull((was) => !was)}
+                  aria-label={full ? 'Shrink the assistant' : 'Expand the assistant'}
+                  aria-expanded={full}
+                  style={ICON}
+                >
+                  <span aria-hidden>{full ? '⤡' : '⤢'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="bare tap"
+                  onClick={() => ai.hide()}
+                  aria-label="Close the assistant"
+                  style={{ ...ICON, fontSize: 'var(--type-lg)' }}
+                >
+                  <span aria-hidden>×</span>
+                </button>
+              </div>
+
+              {/* What it can see, tappable to see exactly what. Nothing
+                  hidden — an answer whose basis you cannot check is one you
+                  either swallow or ignore.
+
+                  The chevron leads the line rather than following it: the
+                  summary is one line and is often longer than the panel, so a
+                  trailing marker was the first thing the ellipsis ate, and the
+                  only sign that this was a control at all disappeared exactly
+                  when there was most to disclose. */}
+              <button
+                type="button"
+                className="bare"
+                onClick={() => setShowing((was) => !was)}
+                aria-expanded={showing}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  marginTop: 'var(--sp-2)',
+                  paddingLeft: 'calc(24px + var(--sp-4))',
+                  fontSize: 'var(--type-xs)',
+                  lineHeight: 'var(--leading-normal)',
+                  opacity: 0.55,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {/*
+                  What it is actually about, which is not always the screen.
+                  A long press on a deadline says "Looking at: that deadline";
+                  saying "Looking at: Courses" while the question is scoped to
+                  one row is the header telling the student something untrue
+                  about their own question.
+                */}
+                <span aria-hidden>{showing ? '▾' : '▸'}</span> Looking at:{' '}
+                {assembled.extra.length > 0
+                  ? assembled.extra[0].summary.replace(/\.$/, '')
+                  : `${assembled.label}${
+                      assembled.own
+                        ? ` — ${assembled.own.summary.replace(/\.$/, '')}`
+                        : ' — nothing of its own'
+                    }`}
+              </button>
+            </div>
+
+            <div
+              ref={box}
+              /*
+               * `log`, not `feed`, and the same region the full chat uses.
+               *
+               * A log is a live region whose new entries are announced in
+               * order, which is what a transcript is. `polite` so a completed
+               * answer waits for the reader to pause rather than cutting
+               * across them — and the streaming text below is deliberately
+               * marked hidden, so tokens do not announce one at a time.
+               */
+              role="log"
+              aria-live="polite"
+              aria-label="Conversation"
+              style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--sp-7) 0' }}
+            >
+              <div style={COLUMN}>
+                {showing && (
+                  <div style={{ marginBottom: 'var(--sp-7)' }}>
+                    <div className="kicker">Exactly what goes with your question</div>
+                    <pre
+                      style={{
+                        marginTop: 'var(--sp-3)',
+                        padding: 'var(--sp-5)',
+                        borderRadius: 'var(--r-sm)',
+                        border: '1px solid var(--app-line)',
+                        background: 'var(--app-hero)',
+                        fontSize: 'var(--type-xs)',
+                        lineHeight: 'var(--leading-normal)',
+                        whiteSpace: 'pre-wrap',
+                        overflowX: 'auto',
+                      }}
+                    >
+                      {assembled.text || 'This screen tells the assistant nothing of its own.'}
+                    </pre>
+                    {assembled.dropped > 0 && (
+                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.6, marginTop: 5 }}>
+                        {assembled.dropped} more rows did not fit and were left out. The assistant
+                        is told that too, so it will not count from a partial list.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Nothing asked yet. The same opening the tab draws, from
+                    `Opening.tsx` — a sentence about what it can see and four
+                    things worth asking here, rather than four naked buttons. */}
+                {empty && <Opening onPick={(q) => void talk.send(q)} tight />}
+
+                {/*
+                  The same two components the full chat draws, from
+                  `Turns.tsx`, laid out the same way: the question in a tinted
+                  block, the answer as prose at the reading measure, and the
+                  turns a clear distance apart. Not a second implementation of
+                  them — the sheet and the tab are two views of one
+                  conversation, and a turn that looked like one thing here and
+                  another there would make opening the tab read as having gone
+                  somewhere else. The shapes and the reasons are in that file.
+                */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'calc(var(--sp-7) * 1.6)',
+                  }}
+                >
+                  <Dropped n={talk.dropped} />
+                  {talk.turns.map((t, i) =>
+                    t.role === 'user' ? (
+                      <Question
+                        key={i}
+                        text={t.content}
+                        onEdit={
+                          i === talk.turns.length - 2 && !talk.busy
+                            ? (next) => void talk.send(next, talk.turns.slice(0, i))
+                            : undefined
+                        }
+                      />
+                    ) : (
+                      <Reply
+                        key={i}
+                        text={t.content}
+                        incomplete={t.incomplete}
+                        onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
+                        /*
+                         * The offers belong to the answer that made them.
+                         *
+                         * They used to sit in a tray under the whole
+                         * transcript here, which put a live "add a reminder"
+                         * button several screens below the sentence that
+                         * offered it. The tab has had them in the flow since
+                         * it was written; this is the same arrangement.
+                         */
+                        extra={
+                          i === talk.turns.length - 1 && !talk.busy ? (
+                            <>
+                              {talk.used.length > 0 && (
+                                <Looked
+                                  said={`Read ${talk.used.length} ${
+                                    talk.used.length === 1 ? 'part' : 'parts'
+                                  } of your records`}
+                                  detail={talk.used.join('\n')}
+                                />
+                              )}
+                              <Locally
+                                locally={talk.locally}
+                                onGo={(screen) => {
+                                  dispatch({ type: 'go', screen });
+                                  ai.hide();
+                                }}
+                              />
+                              <Proposals
+                                proposals={talk.proposals}
+                                line={talk.proposalsLine}
+                                onRun={talk.run}
+                                onDismiss={talk.dismiss}
+                              />
+                              <Applied applied={talk.applied} onTakeBack={talk.takeBack} />
+                            </>
+                          ) : undefined
+                        }
+                      />
+                    ),
+                  )}
+
+                  {/*
+                    Hidden from the reader, on purpose.
+
+                    A live region containing the streaming text would announce
+                    every token — a paragraph read one word at a time as it
+                    arrives, which is unusable. The completed turn is announced
+                    by the log when it lands; this is the sighted view of it
+                    arriving.
+                  */}
+                  {talk.busy && (
+                    <div aria-hidden style={{ fontSize: 'var(--type-sm)' }}>
+                      {talk.streaming ? (
+                        <Reply text={talk.streaming} />
+                      ) : (
+                        <Waiting who={provider()} />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Never yanks anybody back down: it appears, and it waits. The
+                sheet had no such rule at all — it did not follow the stream
+                either, so a long answer wrote itself off the bottom edge
+                while you sat looking at the question. */}
+            {!following && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={toEnd}
+                  style={{
+                    position: 'absolute',
+                    bottom: 'var(--sp-4)',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    height: 32,
+                    padding: '0 var(--sp-6)',
+                    fontSize: 'var(--type-xs)',
+                    letterSpacing: '0.08em',
+                    borderRadius: 'var(--r-lg)',
+                    boxShadow: 'var(--lift-2)',
+                    background: 'var(--app-panel)',
+                    zIndex: 2,
+                  }}
+                >
+                  ↓ Latest
+                </button>
+              </div>
+            )}
+
+            <div
+              style={{
+                flex: 'none',
+                borderTop: '1px solid var(--app-line)',
+                padding: 'var(--sp-5) 0',
+                paddingBottom: wide
+                  ? 'var(--sp-5)'
+                  : 'max(var(--sp-5), env(safe-area-inset-bottom))',
+              }}
+            >
+              <div style={COLUMN}>
+                {/*
+                  The same box the full chat uses, from `Composer.tsx`, so
+                  Enter means the same thing on both — including on a touch
+                  keyboard, where it makes a new line and the arrow sends.
+                */}
+                <Composer
+                  value={draft}
+                  onChange={setDraft}
+                  onSend={ask}
+                  onStop={talk.stop}
+                  onRecall={() => {
+                    // The last thing *you* asked, not the last thing said.
+                    for (let i = talk.turns.length - 1; i >= 0; i -= 1) {
+                      if (talk.turns[i].role === 'user') return talk.turns[i].content;
+                    }
+                    return null;
+                  }}
+                  busy={talk.busy}
+                  placeholder={`Ask about ${assembled.label} — ${sendHint(touch)}`}
+                  autoFocus
+                />
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 'var(--sp-6)',
+                    marginTop: 'var(--sp-4)',
+                  }}
+                >
+                  {/*
+                    Where the key, the model and the cost live. One tap from
+                    the conversation they change, because somebody who wants a
+                    different model should not have to guess it is in Settings.
+                  */}
+                  <button
+                    type="button"
+                    className="bare"
+                    onClick={() => {
+                      ai.hide();
+                      dispatch({ type: 'go', screen: 'setAssistant' });
+                    }}
+                    style={QUIET}
+                  >
+                    {configured() ? modelLabel().toUpperCase() : 'SET A KEY'}
+                  </button>
+                  <span style={{ flex: 1 }} />
+                  {/* The same conversation, with the page to itself. Not a
+                      handoff and nothing is copied — both surfaces read the
+                      one conversation in `ai/live.ts`, so this is a
+                      navigation.
+
+                      This is what the sheet is *for*, now that there is one
+                      destination: it is the way in from wherever you were
+                      standing, holding that screen's context, and the tab is
+                      where the history of every conversation lives. The list
+                      is there rather than here because twelve rows inside a
+                      panel sized to leave the screen behind it visible would
+                      fill the panel. */}
+                  <button
+                    type="button"
+                    className="bare"
+                    onClick={() => {
+                      ai.hide();
+                      dispatch({ type: 'go', screen: 'ask' });
+                    }}
+                    style={QUIET}
+                  >
+                    ALL CHATS ↗
+                  </button>
+                </div>
+                {/* A failed request, and the retry for it. */}
+                <Trouble said={talk.said} onRetry={talk.again} busy={talk.busy} />
+                {/* The running cost, in small print. Silent when nothing was
+                    measured — a zero would read as "this was free". See
+                    `lib/spend.ts`. */}
+                {talk.cost.asks > 0 && (
+                  <div
+                    style={{
+                      fontSize: 'var(--type-xs)',
+                      opacity: 0.45,
+                      marginTop: 'var(--sp-3)',
+                      lineHeight: 'var(--leading-normal)',
+                    }}
+                  >
+                    About {money(talk.cost.dollars)} this month, over {talk.cost.asks}{' '}
+                    {talk.cost.asks === 1 ? 'answer' : 'answers'}
+                    {talk.cost.unpriced > 0 ? ` (${talk.cost.unpriced} unpriced)` : ''}. Estimated.
                   </div>
                 )}
               </div>
-            )}
-
-            {/* Nothing asked yet: what is worth asking here, from this
-                screen's own provider. */}
-            {talk.turns.length === 0 && !talk.streaming && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-                {ai.suggestions().map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={() => void talk.send(s)}
-                    style={{
-                      height: 'auto',
-                      padding: '10px 12px',
-                      textAlign: 'left',
-                      justifyContent: 'flex-start',
-                      fontSize: 'var(--type-sm)',
-                      lineHeight: 1.4,
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/*
-              The same two components the full chat draws, from `Turns.tsx`.
-
-              Not a second implementation of them. The sheet and the chat are
-              two views of one conversation, and a turn that looked like one
-              thing on the sheet and another on the chat would make expanding
-              read as having gone somewhere else. The shapes and the reasons
-              for them are in that file's header.
-            */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-7)' }}>
-              <Dropped n={talk.dropped} />
-              {talk.turns.map((t, i) =>
-                t.role === 'user' ? (
-                  <Question
-                    key={i}
-                    text={t.content}
-                    onEdit={
-                      i === talk.turns.length - 2 && !talk.busy
-                        ? (next) => void talk.send(next, talk.turns.slice(0, i))
-                        : undefined
-                    }
-                  />
-                ) : (
-                  <Reply
-                    key={i}
-                    text={t.content}
-                    incomplete={t.incomplete}
-                    onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
-                  />
-                ),
-              )}
-
-              {/* Streaming, and before the first token arrives — a sheet that
-                  sits blank for two seconds reads as one that did nothing. */}
-              {talk.busy && (
-                <div style={{ fontSize: 'var(--type-sm)' }}>
-                  {talk.streaming ? <Reply text={talk.streaming} /> : <Waiting who={provider()} />}
-                </div>
-              )}
             </div>
-
-            {/* Announced once, on completion — not per token, which would
-                read every fragment of a paragraph out loud. */}
-            <div aria-live="polite" className="sr-only">
-              {talk.busy ? '' : talk.turns.at(-1)?.role === 'assistant' ? 'Answer ready.' : ''}
-            </div>
-
-            {/*
-              The offers, the undo, and what the app can say by itself — the
-              same components the full chat draws, from `Actions.tsx`.
-
-              These used to be written out here, which is how the chat came to
-              have no action cards at all: the model would propose adding a
-              reminder, `talk.proposals` would fill, and the other surface
-              rendered none of it.
-            */}
-            <Locally locally={talk.locally} onGo={(screen) => { dispatch({ type: 'go', screen }); ai.hide(); }} />
-            <Proposals
-              proposals={talk.busy ? [] : talk.proposals}
-              line={talk.proposalsLine}
-              onRun={talk.run}
-              onDismiss={talk.dismiss}
-            />
-            <Applied applied={talk.applied} onTakeBack={talk.takeBack} />
-
-            <Trouble said={talk.said} onRetry={talk.again} busy={talk.busy} />
           </div>
-
-          <div style={{ padding: '10px 16px', borderTop: '1px solid var(--app-line)' }}>
-            {/*
-              The same box the full chat uses, from `Composer.tsx`.
-
-              This used to be its own textarea that grew by counting newlines,
-              which is wrong for the commonest case — a long question with no
-              newlines in it wraps to four lines and the count says one — and
-              it sent on Enter even on a phone, where there is no Shift+Enter
-              and so no way to type a second sentence. Both are fixed there,
-              once, for both surfaces.
-            */}
-            <Composer
-              value={draft}
-              onChange={setDraft}
-              onSend={ask}
-              onStop={talk.stop}
-              busy={talk.busy}
-              placeholder={`Ask about ${assembled.label} — ${sendHint(touch)}`}
-              autoFocus
-            />
-
-            {talk.turns.length > 0 && !talk.busy && (
-              <div style={{ display: 'flex', gap: 'var(--sp-6)', marginTop: 'var(--sp-4)' }}>
-                <button
-                  type="button"
-                  className="bare"
-                  onClick={talk.clear}
-                  style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.55 }}
-                >
-                  NEW CONVERSATION
-                </button>
-                {/* The same conversation, with the page to itself. Not a
-                    handoff and nothing is copied — both surfaces read the one
-                    conversation in `ai/live.ts`, so this is a navigation.
-
-                    This is what the sheet is *for*, now that there is one
-                    destination: it is the way in from wherever you were
-                    standing, holding that screen's context, and the tab is
-                    where the conversation it started lives. The history is
-                    there rather than here because a list of twelve
-                    conversations inside a panel sized to leave the screen
-                    behind it visible would fill the panel. */}
-                <button
-                  type="button"
-                  className="bare"
-                  onClick={() => {
-                    ai.hide();
-                    dispatch({ type: 'go', screen: 'ask' });
-                  }}
-                  style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.55 }}
-                >
-                  OPEN FULL CHAT
-                </button>
-              </div>
-            )}
-            {/* The running cost, in the header's own row of small print.
-                Silent when nothing was measured — a zero would read as
-                "this was free". See `lib/spend.ts`. */}
-            {talk.cost.asks > 0 && (
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
-                About {money(talk.cost.dollars)} this month, over {talk.cost.asks}{' '}
-                {talk.cost.asks === 1 ? 'answer' : 'answers'}
-                {talk.cost.unpriced > 0 ? ` (${talk.cost.unpriced} unpriced)` : ''}. Estimated.
-              </div>
-            )}
-          </div>
-        </div>
+        </>
       )}
     </>
   );
 }
+
+/** A header control: square, named, and quiet until you reach for it. */
+const ICON = {
+  flex: 'none',
+  width: 28,
+  height: 28,
+  display: 'grid',
+  placeItems: 'center',
+  borderRadius: 'var(--r-sm)',
+  fontSize: 'var(--type-md)',
+  opacity: 0.6,
+} as const;
+
+const QUIET = {
+  width: 'auto',
+  flex: 'none',
+  fontSize: 'var(--type-xs)',
+  letterSpacing: '0.1em',
+  opacity: 0.55,
+} as const;
+
+/**
+ * The reading measure, the same one the tab uses.
+ *
+ * Around sixty-eight characters — the width a paragraph is comfortable at,
+ * which is the whole point of not putting answers in a bubble. The panel is
+ * narrower than that on a phone and at the docked width, so this only bites
+ * when the sheet is opened out on a wide window, which is exactly where an
+ * answer would otherwise run the full width of a laptop.
+ *
+ * `--reading-width` is the reader's own setting, so somebody who set the guide
+ * wider gets this wider too rather than two different measures in one app.
+ */
+const COLUMN = {
+  maxWidth: 'min(100%, var(--reading-width, 68ch))',
+  margin: '0 auto',
+  padding: '0 var(--sp-7)',
+} as const;

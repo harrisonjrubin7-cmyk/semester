@@ -237,31 +237,61 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 680,
+  type: 674,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 221,
+  leading: 218,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 496,
+  space: 490,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 505,
+  shorthand: 494,
 };
 
 /*
- * 680/221/521/509 → 680/221/496/505 with the three layouts.
+ * 674/218/515/498 → 674/218/490/494 with the three layouts.
  *
- * Twenty-five spacing values and four shorthands gone, none of them
- * reformatted: they were the twenty-four `padding: 18` a screen wrote to mean
- * "the page gutter" and the settings pages' `'0 16px'` meaning the same
- * thing. There is one gutter now — `--page-pad` in `styles/app.css` — and it
- * is a different number on a phone, a tablet and a desktop, which is a thing
- * a literal 18 cannot be. Every one of those sites was a screen that could
- * not follow the layout it was in.
+ * Twenty-five spacing values and four shorthands gone, none of them reformatted: they were the
+ * twenty-four `padding: 18` a screen wrote to mean "the page gutter" and the
+ * settings pages' `'0 16px'` meaning the same thing. There is one gutter now
+ * — `--page-pad` in `styles/app.css` — and it is a different number on a
+ * phone, a tablet and a desktop, which is a thing a literal 18 cannot be.
+ * Every one of those sites was a screen that could not follow the layout it
+ * was in. Measured on the merged tree, like every note below.
+ *
+ * The Tools tab became a home screen, and its four are folded into every
+ * measurement below rather than added to any of them: thirteen cards drawn by
+ * hand in `screens/Study.tsx` — each with its own padding, its own 13.5px
+ * blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes live in
+ * `app.css` on the scales. The one value the grid sets by hand, the 11.5px
+ * icon name, is inside the numbers. Measured rather than derived, like every
+ * note below: 674/218/515/498 is what `counts()` reported on that tree.
+ *
+ * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
+ * chat. Two numbers down and none up, and neither by reformatting: the
+ * panel's transcript, opening, header and footer are now the same components
+ * and the same measure the Ask tab uses, so the hand-set gap and the four
+ * `'12px 16px'`-shaped paddings it drew for itself went with the layout they
+ * belonged to. See `ai/Assistant.tsx`.
+ *
+ * It also took out two loose 1.4 line heights, which do not show above: the
+ * row pass landed `leading` on 219 from the other side, and these counts are
+ * of what is left in the tree rather than of what each branch removed. Two
+ * changes can take the same number to the same place.
  *
  * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
  * down and none up: the tab was a second copy of what the map already is, and
  * the one thing only it could do — standing somewhere and naming it — moved to
  * `screens/Maps.tsx` as it was rather than being redrawn, so the panel's own
  * off-scale values went with it and the tab's list rows did not come back.
+ *
+ * 682/222/524/544 → 679/222/522/542 when the Claude key stopped being on two
+ * screens. Three down, none up, and none by reformatting: Connect accounts'
+ * copy of the key form drew its own model list by hand, and Settings already
+ * had one built from `CustomRow`.
+ *
+ * 679/222/522/542 → 677/222/520/538 when the second chip idiom got a name.
+ * Five sites were drawing an outlined pick chip by hand with the padding
+ * drifting between 7px and 9px and the radius between two tokens; `PickChips`
+ * draws one on the spacing scale, so the drift is gone rather than moved.
  *
  * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
  * One down, none up, and only one because the filter field lived in `<Page>`

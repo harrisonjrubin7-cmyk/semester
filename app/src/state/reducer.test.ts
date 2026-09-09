@@ -468,6 +468,15 @@ describe('the look', () => {
     expect(reducer(blank(), { type: 'setLook', look: { courseColours: 'plaid' } }).courseColours).toBe('on');
   });
 
+  it('folds the calendar key away and remembers that it was opened', () => {
+    // Closed to begin with: eleven marks above the grid on every calendar
+    // view, every time, is a key that is read twice and then in the way.
+    expect(blank().keyOpen).toBe(false);
+    const open = reducer(blank(), { type: 'toggleKey' });
+    expect(open.keyOpen).toBe(true);
+    expect(reducer(open, { type: 'toggleKey' }).keyOpen).toBe(false);
+  });
+
   it('changes one part without disturbing the rest', () => {
     const s = reducer(blank(), { type: 'setLook', look: { accent: 'copper' } });
     expect(s.accent).toBe('copper');

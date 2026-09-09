@@ -7,7 +7,7 @@ import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
-import { ChipRow, Meter, SectionLabel } from '../components/ui';
+import { ActionButton, ChipRow, Meter, SectionLabel } from '../components/ui';
 import { addedLine } from '../lib/study';
 import { ModePicker } from '../components/ModePicker';
 import { modeInfo, modesFor } from '../lib/modes';
@@ -144,20 +144,13 @@ export function Guide() {
 
       {state.mode === 'cards' && (
         <>
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={() => dispatch({ type: 'startDrill', unit: null })}
-            style={{
-              height: 48,
-              fontSize: 'var(--type-lg)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: 14,
-            }}
+            tone="primary"
+            style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
           >
             Drill all {cards.length} cards
-          </button>
+          </ActionButton>
 
           <Blueprint
             onClick={() => dispatch({ type: 'startDrill', unit: weak.index })}
@@ -323,22 +316,15 @@ export function Guide() {
             and <strong>marked as you go</strong>, so a wrong answer is corrected while you still
             remember why you chose it.
           </div>
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
+          <ActionButton
             onClick={() =>
-              dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })
+            dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })
             }
-            style={{
-              height: 48,
-              fontSize: 'var(--type-lg)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: 14,
-            }}
+            tone="primary"
+            style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
           >
             Start quiz
-          </button>
+          </ActionButton>
 
           {/*
             The two used to be separate systems that did not know about each
@@ -823,20 +809,13 @@ function Documents() {
         </div>
       )}
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => window.print()}
-        style={{
-          height: 46,
-          fontSize: 'var(--type-base)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: 14,
-        }}
+        tone="primary"
+        style={{ fontSize: 'var(--type-base)', marginTop: 14 }}
       >
         Print this screen
-      </button>
+      </ActionButton>
 
       <button
         type="button"
