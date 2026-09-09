@@ -4,8 +4,8 @@
  * Three things were each carrying their own private idea of what this app
  * contains: the tab bar knew six screens, the Me screen listed seven buttons,
  * and search knew about deadlines only. So a screen could exist and be
- * reachable and still be unfindable — Files & mail was two taps down a list of
- * identical grey buttons, and typing "email" found nothing at all.
+ * reachable and still be unfindable — Connect accounts was two taps down a
+ * list of identical grey buttons, and typing "email" found nothing at all.
  *
  * This is the one list. The tab bar reads it to know which tab to light up for
  * a screen nested under it, the Me screen renders it as a directory with a
@@ -34,17 +34,40 @@ import { showing, type Facts } from './reveal';
  * calendar — and Upkeep is the six you go to when something needs correcting,
  * adding or checking. Nobody opens "Check the dates" as part of their day.
  *
- * Nine now, because six could not be drawn. Yours had grown to fifteen, which
+ * Nine then, because six could not be drawn. Yours had grown to fifteen, which
  * is not a row of pills on a phone at any text size — it is a scroll with no
  * end in sight, which is the thing shelves exist to stop. Upkeep held "how am
  * I doing" beside "fix my data", two questions asked on different days;
- * Standing takes the first and Data the second. Study held learning and
+ * Standing took the first and Data the second. Study held learning and
  * producing together, so Make takes the producing.
  *
  * Grouped by what the student is doing rather than by where a screen was
  * filed before, so several cross the old boundaries: Tonight and Ahead answer
  * "what now" and sit under Semester; Mail is drafting, so it sits beside
  * Draft it under Make; Costs is money rather than a campus service.
+ *
+ * ## Eight, because Standing wore out
+ *
+ * Standing was three screens and shrinking — the assistant screens moved to
+ * Study and the calendar work moved to Semester, and what was left was Grades,
+ * The degree and When you are behind. A shelf of three is worse than no shelf:
+ * it costs a pill in the row and a tile in the grid to hold a third of what
+ * every other shelf holds, and "which of these nine is it under" gets harder
+ * for every shelf that exists, not just the full ones.
+ *
+ * Grades and When you are behind fold into Semester, where the question was
+ * already being asked — Reports is a Semester screen and carries the `stand`
+ * tag. Semester is your term, and how it is going is part of your term. It
+ * also puts The week ahead and When you are behind next to each other, which
+ * is where two screens that answer the same question in opposite directions
+ * should always have been.
+ *
+ * The degree goes to Courses instead. It was the one of the three that is not
+ * about this term — what is left of a major, what each course counts towards,
+ * where the hours stand — and Semester is a term. Courses is where the things
+ * it counts are, and it sits directly under the course list for that reason:
+ * the four courses, then what they add up to, then the admin that keeps them
+ * true.
  *
  * The largest is eight and the smallest five, which is what keeps any one
  * shelf drawable as a single row.
@@ -54,7 +77,6 @@ export type Group =
   | 'Courses'
   | 'Study'
   | 'Make'
-  | 'Standing'
   | 'Campus'
   | 'Life'
   | 'You'
@@ -74,7 +96,6 @@ export const GROUPS: Group[] = [
   'Courses',
   'Study',
   'Make',
-  'Standing',
   'Campus',
   'Life',
   'You',
@@ -182,6 +203,16 @@ export const DESTINATIONS: Destination[] = [
     group: 'Courses',
     taskTags: ['due', 'stand'],
     root: 'courses',
+  },
+  {
+    screen: 'degree',
+    label: 'The degree',
+    short: 'Degree',
+    blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
+    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
+    group: 'Courses',
+    taskTags: ['ahead', 'stand'],
+    root: 'me',
   },
   {
     screen: 'calendar',
@@ -412,13 +443,14 @@ export const DESTINATIONS: Destination[] = [
     root: 'home',
   },
   {
-    screen: 'grades',
-    label: 'Grades',
-    blurb: 'What you have so far, and what the rest has to average.',
-    keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
-    group: 'Standing',
-    taskTags: ['stand'],
-    root: 'courses',
+    screen: 'behind',
+    label: 'When you are behind',
+    short: 'Behind',
+    blurb: 'What has gone by, what still fits, and the moves that are not working harder.',
+    keywords: 'behind late overdue missed catch up caught up triage bad week overwhelmed stressed stress panic drowning too much falling behind help extension late policy recover crisis sick',
+    group: 'Semester',
+    taskTags: ['due', 'week', 'stand'],
+    root: 'home',
   },
   {
     screen: 'maps',
@@ -483,26 +515,6 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
-    screen: 'degree',
-    label: 'The degree',
-    short: 'Degree',
-    blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
-    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
-    group: 'Standing',
-    taskTags: ['ahead', 'stand'],
-    root: 'me',
-  },
-  {
-    screen: 'behind',
-    label: 'When you are behind',
-    short: 'Behind',
-    blurb: 'What has gone by, what still fits, and the moves that are not working harder.',
-    keywords: 'behind late overdue missed catch up caught up triage bad week overwhelmed stressed stress panic drowning too much falling behind help extension late policy recover crisis sick',
-    group: 'Standing',
-    taskTags: ['due', 'week', 'stand'],
-    root: 'home',
-  },
-  {
     screen: 'tonight',
     label: 'Tonight',
     blurb: 'How long you have, and where those hours buy the most against your grade.',
@@ -510,6 +522,15 @@ export const DESTINATIONS: Destination[] = [
     group: 'Semester',
     taskTags: ['study', 'week'],
     root: 'home',
+  },
+  {
+    screen: 'grades',
+    label: 'Grades',
+    blurb: 'What you have so far, and what the rest has to average.',
+    keywords: 'grade gpa mark score final exam what do i need weighting rubric percent average',
+    group: 'Semester',
+    taskTags: ['stand'],
+    root: 'courses',
   },
   {
     screen: 'applying',
@@ -566,10 +587,22 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'account',
+    /*
+     * Data rather than You, which is where it sat while carrying the `data`
+     * tag — the file already thought this was a data screen and shelved it
+     * with Progress and Settings anyway.
+     *
+     * Signing in is the decision about whether this term leaves the device
+     * at all, which is the question the other four on that shelf answer:
+     * what comes in (Connect accounts), what is held (Your data), what is
+     * sent (Privacy), and how to take it out (Take it with you). The move
+     * also puts Data back over the five-screen floor after Files & mail was
+     * deleted, and leaves You on five rather than six.
+     */
     label: 'Account',
     blurb: 'Sign in so the same semester is on your phone and your laptop.',
     keywords: 'sign in log in register sync devices password email',
-    group: 'You',
+    group: 'Data',
     taskTags: ['data'],
     root: 'me',
   },
@@ -591,16 +624,6 @@ export const DESTINATIONS: Destination[] = [
     keywords: 'brightspace outlook microsoft google zoom apple icloud ics feed subscribe calendar claude anthropic api key sign in with claude',
     group: 'Data',
     taskTags: ['data'],
-    root: 'me',
-  },
-  {
-    screen: 'cloud',
-    label: 'Files & mail',
-    short: 'Cloud',
-    blurb: 'Pull a reading out of Drive or OneDrive; turn announcements into cards.',
-    keywords: 'gmail email drive onedrive sharepoint documents attachments send tasks',
-    group: 'Data',
-    taskTags: ['data', 'study'],
     root: 'me',
   },
   {

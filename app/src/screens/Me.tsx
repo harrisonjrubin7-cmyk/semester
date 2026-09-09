@@ -23,7 +23,6 @@ import { directoryOf } from '../lib/look';
 import type { CourseModule, Screen } from '../lib/types';
 import { cardKey } from '../lib/review';
 import { TypeToConfirm } from '../components/TypeToConfirm';
-import { SettingsIndex } from './settings/Index';
 
 /**
  * The shelves, in the order they read: what you study, what you make with it,
@@ -38,9 +37,11 @@ import { SettingsIndex } from './settings/Index';
 
 
 /** Already a tab on the phone, so listing them again is noise. */
-// Settings is a tab of this screen now, so listing it in the directory would
-// send you to a separate copy of what is one tap to the left.
-const HIDE_IN_ME: Screen[] = ['home', 'me', 'notifs', 'settings'];
+// Settings is not hidden: it is a screen of its own, and this row is the one
+// way in from here. It used to be a third tab of this screen as well, which
+// meant the same index existed twice — once inline, once as the screen the
+// Settings button opens — and the tab was the copy that had to go.
+const HIDE_IN_ME: Screen[] = ['home', 'me', 'notifs'];
 
 /**
  * One row of the directory.
@@ -247,19 +248,21 @@ export function Me() {
         long scroll in the app — a stats card, then a chart, then five headed
         lists of links — which meant Settings was below five sections of things
         that are not settings.
+
+        Two tabs, not three. Settings was the third, and it rendered the very
+        index the Settings screen is: pressing the tab and pressing the
+        Settings button landed on the same list, so the app had two homes for
+        one thing. The screen kept its own — this keeps the row that opens it.
       */}
       <Segmented
         options={[
           { id: 'you', label: 'You' },
           { id: 'all', label: 'Everything' },
-          { id: 'settings', label: 'Settings' },
         ]}
         value={tab}
         onChange={(next) => dispatch({ type: 'setMeTab', tab: next })}
         style={{ marginBottom: 'var(--sp-7)' }}
       />
-
-      {tab === 'settings' && <Settings bare />}
 
       {tab === 'you' && (
         <>
@@ -353,7 +356,8 @@ export function Me() {
       {/*
         This used to be seven identical grey buttons in a column, each labelled
         with two words and explaining nothing. "Files & mail" and "Connect
-        accounts" sound like the same thing until you have opened both. Now
+        accounts" sounded like the same thing until you had opened both — and
+        largely were, which is why only Connect accounts is left. Now
         everything is grouped and says what it is for, which is most of what
         made the app hard to find your way around.
       */}
@@ -452,8 +456,9 @@ export function Me() {
  * Search, across the whole app rather than the deadlines alone.
  *
  * It also finds screens, so somebody who wants their Gmail readings does not
- * have to know that the thing they want is called "Files & mail" and lives two
- * taps under Me. Typing what you want is allowed to be the way you get there.
+ * have to know that the thing they want is called "Connect accounts" and lives
+ * two taps under Me. Typing what you want is allowed to be the way you get
+ * there.
  */
 export function Search() {
   const { state, dispatch, now, catalog, school } = useStore();
@@ -645,19 +650,3 @@ export function Reminders() {
   );
 }
 
-/**
- * Settings.
- *
- * The screen itself is now an index of pages — see `screens/settings/`. This
- * is left here as the entry point the tab of Me and the router both already
- * import, so nothing had to learn a new name.
- *
- * @param bare - rendered inside Me, which has already padded the page.
- */
-export function Settings({ bare = false }: { bare?: boolean } = {}) {
-  return (
-    <div style={{ padding: bare ? '0' : '18px 0 0' }}>
-      <SettingsIndex />
-    </div>
-  );
-}

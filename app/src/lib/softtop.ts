@@ -591,15 +591,9 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
 
     case 'connect':
-      return holds('Feeds', state.feeds.length, 'feed', { label: 'Files & mail', screen: 'cloud' });
-
-    case 'cloud':
-      // Not the feed count — that is Connect accounts' fact, and the two
-      // screens were showing the same hero. This one is what has come in.
-      return holds('Announcements', state.feedEvents.length, 'announcement', {
-        label: 'Connect accounts',
-        screen: 'connect',
-      });
+      // Where a feed ends up, rather than a second accounts screen: what a
+      // subscribed calendar is for is the dates showing on the day rail.
+      return holds('Feeds', state.feeds.length, 'feed', { label: 'Calendar', screen: 'calendar' });
 
     case 'settings': {
       /*

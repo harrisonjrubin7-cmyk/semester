@@ -20,7 +20,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { has } from '../lib/search';
 import { Suggested } from '../components/Suggested';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -66,20 +65,7 @@ export function Applying() {
 
   return (
     <Page
-      search={
-        tab === 'add'
-          ? undefined
-          : {
-              placeholder: 'Find an application — organisation, role, next step',
-              select: () => showing,
-              // The next step is searchable because it is where the specifics
-              // live: "email Priya about the referral" is how somebody
-              // remembers which of these this is.
-              match: (a, q) => has(q, a.org, a.role, a.next, a.where, a.note),
-            }
-      }
     >
-      {(shown) => (
         <>
       <Blueprint style={{ padding: '14px 15px' }}>
         <div className="kicker">Where it stands</div>
@@ -107,7 +93,7 @@ export function Applying() {
       {tab === 'open' ? (
         open.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
-            {shown.map((a) => (
+            {showing.map((a) => (
               <Row key={a.id} a={a} />
             ))}
           </div>
@@ -130,7 +116,7 @@ export function Applying() {
       {tab === 'closed' ? (
         closed.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
-            {shown.map((a) => (
+            {showing.map((a) => (
               <Row key={a.id} a={a} />
             ))}
           </div>
@@ -144,7 +130,6 @@ export function Applying() {
       <Suggested />
 
     </>
-      )}
     </Page>
   );
 }

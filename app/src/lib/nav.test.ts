@@ -169,7 +169,7 @@ describe('the shelves the directory is arranged on', () => {
     }
   });
 
-  it('holds the nine shelves in the order they are shown', () => {
+  it('holds the eight shelves in the order they are shown', () => {
     // Order is the thing a student learns by position, so it is asserted
     // rather than left to however the registry happens to be written.
     expect(GROUPS).toEqual([
@@ -177,7 +177,6 @@ describe('the shelves the directory is arranged on', () => {
       'Courses',
       'Study',
       'Make',
-      'Standing',
       'Campus',
       'Life',
       'You',
@@ -187,6 +186,52 @@ describe('the shelves the directory is arranged on', () => {
 
   it('names each shelf once', () => {
     expect(new Set(GROUPS).size).toBe(GROUPS.length);
+  });
+
+  /*
+   * The size rule the shelves were built to, asserted rather than described.
+   *
+   * `nav.ts` has always said "the largest is eight and the smallest five",
+   * and Standing drifted down to three without anything noticing — screens
+   * moved off it one release at a time and the shelf stayed, costing a pill
+   * in the row and a tile in the grid to hold a third of what its neighbours
+   * hold. A shelf that thin should fail here and be folded into another, the
+   * way Standing folded into Semester.
+   *
+   * The floor is what matters and the ceiling comes with it: past eight, a
+   * shelf is no longer one row of pills, which is the whole reason shelves
+   * exist.
+   */
+  it('keeps every shelf between five and eight screens', () => {
+    for (const group of GROUPS) {
+      const n = destinationsIn(group).length;
+      expect(n, `${group} holds ${n}`).toBeGreaterThanOrEqual(5);
+      expect(n, `${group} holds ${n}`).toBeLessThanOrEqual(8);
+    }
+  });
+
+  it('put the standing screens where the question is asked', () => {
+    // Reports already asked "how is it going" from Semester — it carries the
+    // `stand` tag — so the two about this term sit with it.
+    const semester = destinationsIn('Semester').map((d) => d.screen);
+    expect(semester).toContain('grades');
+    expect(semester).toContain('behind');
+    expect(DESTINATIONS.find((d) => d.screen === 'brief')?.taskTags).toContain('stand');
+
+    // The degree is the one that is not about this term, and Semester is a
+    // term. It goes where the things it counts are, under the course list.
+    const courses = destinationsIn('Courses').map((d) => d.screen);
+    expect(courses).toContain('degree');
+    expect(courses.indexOf('degree')).toBe(courses.indexOf('courses') + 1);
+    expect(semester).not.toContain('degree');
+  });
+
+  it('puts the week ahead next to when you are behind', () => {
+    // Two screens answering the same question in opposite directions, split
+    // across two shelves until Standing folded. Order on a shelf is array
+    // order in the registry, so this is what a reader actually meets.
+    const on = destinationsIn('Semester').map((d) => d.screen);
+    expect(on.indexOf('behind')).toBe(on.indexOf('ahead') + 1);
   });
 });
 

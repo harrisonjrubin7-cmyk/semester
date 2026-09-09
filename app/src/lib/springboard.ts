@@ -73,7 +73,7 @@ export const PAGES: Page[] = [
         screens: ['meals', 'housing', 'maps', 'classmates', 'groupwork', 'costs', 'yes', 'mail', 'activities'],
       },
       { label: 'Upkeep', screens: ['import', 'edit', 'update', 'announce', 'brief'] },
-      { label: 'Yours', screens: ['mine', 'account', 'connect', 'cloud', 'export', 'notifs'] },
+      { label: 'Yours', screens: ['mine', 'account', 'connect', 'export', 'notifs'] },
     ],
   },
   {

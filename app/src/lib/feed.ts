@@ -106,14 +106,26 @@ const KNOWN = new Set(DEFAULT_ORDER);
  * failure people would report as "the app lost my tasks" when in fact it was
  * only never listed.
  */
-export function ordered(saved: string[] | undefined): string[] {
-  const out = (saved ?? []).filter((id, i, all) => KNOWN.has(id) && all.indexOf(id) === i);
+export function ordered(saved: unknown): string[] {
+  // `Array.isArray`, not `?? []`. This function's whole job is to make a
+  // stored order safe to render from, and it was reading it with a guard that
+  // catches null and undefined only — so an order that came back a string
+  // reached `.filter` and threw. Measured with `{"feedOrder":"today"}` in
+  // storage: Today rendered the screen boundary instead of the day.
+  //
+  // `unknown` rather than `string[] | undefined` on purpose: the old type was
+  // a promise the caller could not keep, since the value comes from storage
+  // and storage does not typecheck.
+  const list = Array.isArray(saved) ? (saved as unknown[]) : [];
+  const out = list
+    .filter((id): id is string => typeof id === 'string')
+    .filter((id, i, all) => KNOWN.has(id) && all.indexOf(id) === i);
   for (const id of DEFAULT_ORDER) if (!out.includes(id)) out.push(id);
   return out;
 }
 
 /** The order actually drawn — hidden ones taken out. */
-export function visible(saved: string[] | undefined, hidden: Record<string, boolean>): string[] {
+export function visible(saved: unknown, hidden: Record<string, boolean>): string[] {
   return ordered(saved).filter((id) => !hidden[id]);
 }
 

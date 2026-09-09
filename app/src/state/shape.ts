@@ -571,11 +571,11 @@ export interface Ephemeral {
    * the app — so Today, Courses and Study use it too rather than each being a
    * single long scroll with everything on it.
    */
-  mineTab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files';
+  mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done' | 'brief';
   coursesTab: 'courses' | 'due' | 'grades';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
-  meTab: 'you' | 'all' | 'settings';
+  meTab: 'you' | 'all';
   /** Which shelf of the directory is showing under Everything. */
   meGroup: string;
   /**
@@ -621,18 +621,6 @@ export interface Ephemeral {
    * had one open yesterday is an app that has misread what a search is for.
    */
   finder: boolean;
-  /**
-   * What the overlay opens with, when a screen handed it a query.
-   *
-   * A page-level search that finds nothing offers the whole app, and the way
-   * out has to carry what was typed — otherwise "search everywhere for this"
-   * opens an empty box and asks for it again.
-   *
-   * Ephemeral for the same reason `finder` is, and one more: a search query is
-   * the most incidental thing a person types. Keeping it would sync what
-   * somebody was looking for at midnight to every device they own.
-   */
-  finderSeed: string;
   studyTab: 'guides' | 'tonight' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
@@ -898,7 +886,6 @@ export function initialEphemeral(now: Date): Ephemeral {
     dueTab: 'ahead',
     mailSeed: null,
     finder: false,
-    finderSeed: '',
     studyTab: 'guides',
     noteId: null,
     lessonUnit: 0,
@@ -946,6 +933,32 @@ export function primePersisted(state: Persisted | null): void {
   primed = state;
 }
 
+/**
+ * An array from storage, or an empty one.
+ *
+ * `list(saved.tasks)` looks like it guards this and does not: `??` only
+ * catches null and undefined, so a `tasks` that came back as a string, a
+ * number or an object went straight through into the app, and the first
+ * `.map` on it killed the whole page. Measured: storage holding
+ * `{"tasks":"none"}` rendered zero characters and threw
+ * `e.tasks.map is not a function` — before any boundary could catch it,
+ * because it happens while the store is being built rather than while a
+ * screen is being drawn.
+ *
+ * Storage is not a trusted input. It holds whatever an older build wrote, a
+ * half-finished sync left behind, a quota error truncated, or somebody typed
+ * into devtools. `readTabs` and `navOf` already read their fields back
+ * defensively; there were twenty-three arrays that did not, and this is the
+ * same idea applied to all of them at once.
+ *
+ * Empty rather than throwing, for the reason the whole file is written this
+ * way: an app that opens with one list missing is recoverable, and an app
+ * that will not open is not.
+ */
+function list<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
 export function loadPersisted(): Persisted {
   if (primed) return primed;
   try {
@@ -970,15 +983,15 @@ export function loadPersisted(): Persisted {
       done: saved.done ?? {},
       saved: saved.saved ?? DEFAULT_PERSISTED.saved,
       picked: { ...DEFAULT_PERSISTED.picked, ...(saved.picked ?? {}) },
-      tasks: saved.tasks ?? [],
-      appointments: saved.appointments ?? [],
-      notes: saved.notes ?? [],
-      updates: saved.updates ?? [],
-      feeds: saved.feeds ?? [],
-      feedEvents: saved.feedEvents ?? [],
+      tasks: list(saved.tasks),
+      appointments: list(saved.appointments),
+      notes: list(saved.notes),
+      updates: list(saved.updates),
+      feeds: list(saved.feeds),
+      feedEvents: list(saved.feedEvents),
       linkUrls: saved.linkUrls ?? {},
-      extraLinks: saved.extraLinks ?? [],
-      courses: saved.courses ?? [],
+      extraLinks: list(saved.extraLinks),
+      courses: list(saved.courses),
       // An install that predates courses-as-data was running the four built-in
       // ones; it keeps them, or the app would look wiped on the next load. A
       // genuinely new account starts empty.
@@ -998,10 +1011,10 @@ export function loadPersisted(): Persisted {
         ? saved.archivedTerms.filter((t): t is string => typeof t === 'string')
         : [],
       lastSync: readLastSync(saved.lastSync),
-      places: saved.places ?? [],
-      commitments: saved.commitments ?? [],
-      timers: saved.timers ?? [],
-      alarms: saved.alarms ?? [],
+      places: list(saved.places),
+      commitments: list(saved.commitments),
+      timers: list(saved.timers),
+      alarms: list(saved.alarms),
       applications: readApplications(saved.applications),
       progress: readProgress(saved.progress),
       returned: readReturned(saved.returned),
@@ -1020,7 +1033,11 @@ export function loadPersisted(): Persisted {
         saved.scale && typeof saved.scale === 'object' && Object.keys(saved.scale).length > 0
           ? (saved.scale as Scale)
           : { ...COMMON_SCALE },
-      feedOrder: saved.feedOrder ?? DEFAULT_ORDER,
+      // Not `?? DEFAULT_ORDER`: that catches a missing order and passes a
+      // corrupted one straight through. `ordered` drops what it does not
+      // know and appends what is missing, so an empty list becomes the
+      // default anyway — see `lib/feed.ts`.
+      feedOrder: Array.isArray(saved.feedOrder) ? saved.feedOrder : DEFAULT_ORDER,
       feedHidden: saved.feedHidden ?? {},
       // Not `?? DEFAULT_TABS`: a stored list can be stale, duplicated by a
       // sync, or one entry long, and any of those renders a broken bar.
@@ -1053,28 +1070,28 @@ export function loadPersisted(): Persisted {
       drops: Object.fromEntries(
         Object.entries(saved.drops ?? {}).map(([k, v]) => [k, readDrop(v)]),
       ),
-      courseOrder: saved.courseOrder ?? [],
-      recent: saved.recent ?? [],
+      courseOrder: list(saved.courseOrder),
+      recent: list(saved.recent),
       // Seeded from `recent` for anybody upgrading: without this the app
       // would tell somebody who has used it all term that they have never
       // opened Today, which is both wrong and the sort of wrong that makes
       // the rest of the sentence untrustworthy.
       visited:
         saved.visited ??
-        Object.fromEntries((saved.recent ?? []).map((s: Screen) => [s, true])),
+        Object.fromEntries(list<Screen>(saved.recent).map((s) => [s, true])),
       // No seeding from `recent`, unlike `visited` above: `recent` carries no
       // times, so any date invented here would be today's, and "opened
       // today" beside a screen somebody last saw in August is worse than
       // "opened at some point", which is what an empty entry says.
       lastOpened: saved.lastOpened ?? {},
-      sittings: saved.sittings ?? [],
-      sources: saved.sources ?? [],
-      registrar: saved.registrar ?? [],
-      spent: saved.spent ?? [],
-      windows: saved.windows ?? [],
-      costs: saved.costs ?? [],
-      balances: saved.balances ?? [],
-      residences: saved.residences ?? [],
+      sittings: list(saved.sittings),
+      sources: list(saved.sources),
+      registrar: list(saved.registrar),
+      spent: list(saved.spent),
+      windows: list(saved.windows),
+      costs: list(saved.costs),
+      balances: list(saved.balances),
+      residences: list(saved.residences),
       accessLeadDays: saved.accessLeadDays ?? 0,
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
@@ -1292,7 +1309,7 @@ export type Action =
   | { type: 'undo' }
   | { type: 'forgetUndo' }
   | { type: 'quickAdd'; open: boolean }
-  | { type: 'finder'; open: boolean; seed?: string }
+  | { type: 'finder'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }
@@ -1358,10 +1375,10 @@ export type Action =
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
-  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
+  | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
-  | { type: 'setMeTab'; tab: 'you' | 'all' | 'settings' }
+  | { type: 'setMeTab'; tab: 'you' | 'all' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
   /**

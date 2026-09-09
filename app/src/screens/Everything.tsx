@@ -10,13 +10,10 @@ import { readOrder, writeOrder } from '../lib/launcher';
 import { currentLook } from '../state/shape';
 import {
   WHY,
-  allRows,
   byTask,
   heldBy,
-  matches,
   openedLabel,
   untried,
-  type Found,
   type View,
 } from '../lib/everything';
 import type { Screen } from '../lib/types';
@@ -92,12 +89,6 @@ export function Everything() {
     () => untried(rows, state.visited, state.lastOpened, now.getTime()),
     [rows, state.visited, state.lastOpened, now],
   );
-  const universe = useMemo(() => allRows(rows, says, notYet), [rows, says, notYet]);
-  const keywordsFor = useMemo(() => {
-    const by = new Map(rows.map((d) => [d.screen, d.keywords]));
-    return (screen: Screen) => by.get(screen) ?? '';
-  }, [rows]);
-
   const choose = (next: View) => {
     setView(next);
     rememberView(next);
@@ -105,44 +96,29 @@ export function Everything() {
   const go = (screen: Screen) => dispatch({ type: 'go', screen });
 
   return (
-    <Page
-      blurb="Every screen in the app, what it does, and whether you have used it. Built from the same list the tab bar and search read, so nothing here can describe something that is not there."
-      /*
-       * One box, the frame's.
-       *
-       * Adding a second field at the top of this screen was the obvious first
-       * shape and the wrong one: `<Page>` already puts a box on every screen,
-       * `/` focuses it, and two boxes one above the other is exactly the
-       * confusion the frame exists to remove. So the four views are flattened
-       * into one array of rows that each know which view they came from, and
-       * the frame filters that. See `allRows` in `lib/everything.ts`.
-       */
-      search={{
-        placeholder: 'Search every screen, task and shortcut',
-        select: () => universe,
-        match: (f: Found, q: string) => matches(f, q, keywordsFor),
-        empty: (q) => `Nothing in the app matches “${q}” — not a screen, a task or a shortcut.`,
-      }}
-    >
-      {(shown, query) =>
-        query ? (
-          <Results found={shown} go={go} />
-        ) : (
-          <>
-            <Switcher value={view} onChange={choose} />
-            <div id={`panel-${view}`} role="tabpanel" aria-labelledby={`tab-${view}`}>
-              {view === 'area' && (
-                <ByArea rows={rows} says={says} state={state} catalog={catalog} now={now} go={go} />
-              )}
-              {view === 'task' && <ByTask rows={rows} says={says} go={go} />}
-              {view === 'untried' && (
-                <NotTried rows={notYet} says={says} onArea={() => choose('area')} go={go} />
-              )}
-              {view === 'keys' && <Shortcuts />}
-            </div>
-          </>
-        )
-      }
+    <Page blurb="Every screen in the app, what it does, and whether you have used it. Built from the same list the tab bar and search read, so nothing here can describe something that is not there.">
+      {/*
+        Four views and no search field.
+
+        There was one, the frame's, and it flattened all four views into a
+        single array of rows so that typing here searched the directory rather
+        than whichever view you were on. It went with every other in-screen
+        filter: the header's icon searches this app's screens as well as its
+        records — `lib/find.ts` ranks screens alongside deadlines and notes —
+        so a directory that also searched itself was a second answer to a
+        question already answered.
+      */}
+      <Switcher value={view} onChange={choose} />
+      <div id={`panel-${view}`} role="tabpanel" aria-labelledby={`tab-${view}`}>
+        {view === 'area' && (
+          <ByArea rows={rows} says={says} state={state} catalog={catalog} now={now} go={go} />
+        )}
+        {view === 'task' && <ByTask rows={rows} says={says} go={go} />}
+        {view === 'untried' && (
+          <NotTried rows={notYet} says={says} onArea={() => choose('area')} go={go} />
+        )}
+        {view === 'keys' && <Shortcuts />}
+      </div>
     </Page>
   );
 }
@@ -591,66 +567,5 @@ function Shortcuts() {
         ))}
       </section>
     </>
-  );
-}
-
-function Results({ found, go }: { found: Found[]; go: (screen: Screen) => void }) {
-  const row = useRowStyle(0);
-  const label: Record<View, string> = {
-    area: 'By area',
-    task: 'By task',
-    untried: 'Not tried',
-    keys: 'Shortcuts',
-  };
-
-  return (
-    <div>
-      {found.map((f, i) => (
-        <div key={`${f.view}-${f.screen ?? f.title}-${i}`} style={{ padding: 'var(--sp-5) 0', ...row }}>
-          {/* Which view and which section, because a result lifted out of a
-              directory is a result you cannot place — and placing it is how
-              somebody learns where the thing lives for next time. */}
-          <div
-            style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: 'var(--type-xs)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              opacity: 0.45,
-            }}
-          >
-            {label[f.view]} · {f.where}
-          </div>
-          {f.screen ? (
-            <button
-              type="button"
-              className="bare tappable"
-              onClick={() => go(f.screen as Screen)}
-              style={{ display: 'block', width: '100%', textAlign: 'left', marginTop: 'var(--sp-2)' }}
-            >
-              <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
-                {f.title}
-              </span>
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: 'var(--type-sm)',
-                  opacity: 0.65,
-                  lineHeight: 'var(--leading-normal)',
-                  marginTop: 'var(--sp-1)',
-                }}
-              >
-                {f.sub}
-              </span>
-            </button>
-          ) : (
-            <div style={{ marginTop: 'var(--sp-2)' }}>
-              <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{f.title}</div>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-1)' }}>{f.sub}</div>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
   );
 }

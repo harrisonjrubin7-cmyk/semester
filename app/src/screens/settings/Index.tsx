@@ -131,3 +131,19 @@ export function SettingsIndex() {
     </div>
   );
 }
+
+/**
+ * Settings, as a screen.
+ *
+ * The router's entry point, and now the only one: this used to live in
+ * `screens/Me.tsx` because Me rendered the same index as a tab of itself, so
+ * loading the settings screen dragged the whole Progress screen in with it.
+ * The tab is gone — there is one Settings, and it is here.
+ */
+export function Settings() {
+  return (
+    <div style={{ paddingTop: 'var(--sp-7)' }}>
+      <SettingsIndex />
+    </div>
+  );
+}

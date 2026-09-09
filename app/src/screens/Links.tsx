@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
-import { has } from '../lib/search';
 import { SectionLabel } from '../components/ui';
 import { Blueprint } from '../components/Blueprint';
 import { CAMPUS_LINKS } from '../data/campus';
@@ -63,15 +62,7 @@ export function Links() {
 
   return (
     <Page
-      search={{
-        placeholder: 'Find a link',
-        select: () => links,
-        // The address as well as the name: people look for "brightspace"
-        // and people look for "the one on vanderbilt.edu that is not YES".
-        match: (l, q) => has(q, l.name, l.group, addressOf(l), host(addressOf(l))),
-      }}
     >
-      {(shown) => (
         <>
           {/*
             Grouped rather than one flat list. Eleven links under a single
@@ -79,7 +70,7 @@ export function Links() {
             different errands and you are only ever on one of them.
           */}
           {GROUPS.map((group) => {
-            const inGroup = shown.filter((l) => (l.group ?? 'Campus') === group);
+            const inGroup = links.filter((l) => (l.group ?? 'Campus') === group);
             if (inGroup.length === 0) return null;
             return (
               <div key={group}>
@@ -268,7 +259,6 @@ export function Links() {
             than pretending to read them. Correct any address here and the correction is what sticks.
           </div>
         </>
-      )}
     </Page>
   );
 }
