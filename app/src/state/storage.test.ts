@@ -145,6 +145,33 @@ describe('opening the app on a row that is missing a field', () => {
     expect(state.spent[0]).toMatchObject({ courseId: 'econ', kind: 'paper', minutes: 90 });
   });
 
+  it('gives a place a label, and leaves out one with nowhere to be', () => {
+    const { places } = withStorage(thin('places'), () => loadPersisted());
+    expect(places).toEqual([]);
+    const kept = withStorage(
+      JSON.stringify({ places: [{ id: 'p1', lat: 36.1, lon: -86.8 }] }),
+      () => loadPersisted(),
+    ).places;
+    expect(typeof kept[0].label).toBe('string');
+  });
+
+  it('gives a source the project name the screen groups by', () => {
+    const { sources } = withStorage(thin('sources'), () => loadPersisted());
+    expect(typeof sources[0].project).toBe('string');
+  });
+
+  it('gives a timer an end it can be paused by, not a clock face of NaN', () => {
+    const { timers } = withStorage(thin('timers'), () => loadPersisted());
+    expect(timers[0].endsAt).toBeNull();
+    expect(Number.isFinite(timers[0].seconds)).toBe(true);
+  });
+
+  it('leaves an alarm off unless it was saved on', () => {
+    const { alarms } = withStorage(thin('alarms'), () => loadPersisted());
+    expect(alarms[0].on).toBe(false);
+    expect(Array.isArray(alarms[0].days)).toBe(true);
+  });
+
   /*
    * `lib/migrate.ts` loads a copy written by a newer build and says of it "the
    * app reads what it recognises and ignores the rest". Ignoring a field is not

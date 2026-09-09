@@ -15,6 +15,8 @@
  * the only thing that ever sees your position is the arithmetic below.
  */
 
+import { num, rows, str } from './stored';
+
 export interface SavedPlace {
   id: string;
   label: string;
@@ -102,6 +104,34 @@ export function metresBetween(a: { lat: number; lon: number }, b: { lat: number;
  * "you are at Alumni Hall" when the phone is only sure to fifty metres would
  * make the feature useless indoors, which is where lectures happen.
  */
+/**
+ * The saved places, with the fields a match and a distance are worked out from.
+ *
+ * `lib/rooms.ts` reads `p.label.trim()` to match a room against a building —
+ * a place saved without a label was a caught TypeError and the whole Maps
+ * screen was replaced by a panel. `radius`, `lat` and `lon` are the same
+ * problem drawn instead of thrown: `metresBetween` on an undefined coordinate
+ * is NaN, and a NaN distance sorts a list into no order at all and shows as
+ * "NaN m" in the row.
+ *
+ * A place with no coordinates gets none — zero would put it off the coast of
+ * Africa, which is a real place and not this one, and `nearest` would then
+ * offer it as somewhere you might be standing.
+ */
+export function readPlaces(raw: unknown): SavedPlace[] {
+  return rows<SavedPlace>(raw, 'pl')
+    .map((p) => ({
+      ...p,
+      id: p.id as string,
+      label: str(p.label),
+      lat: num(p.lat, NaN),
+      lon: num(p.lon, NaN),
+      radius: num(p.radius, DEFAULT_RADIUS),
+      created: num(p.created),
+    }))
+    .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lon)) as SavedPlace[];
+}
+
 export function placeAt(fix: Fix, places: SavedPlace[]): SavedPlace | null {
   let best: SavedPlace | null = null;
   let bestDistance = Infinity;

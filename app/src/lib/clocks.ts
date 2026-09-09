@@ -39,6 +39,8 @@ import { dateToIso } from './date';
  */
 
 /** A countdown. */
+import { num, nums, rows, str } from './stored';
+
 export interface Timer {
   id: string;
   /** What it is for. Optional — most timers are just a number. */
@@ -140,6 +142,57 @@ export function readDuration(text: string): number | null {
 function clampDuration(seconds: number): number | null {
   if (!Number.isFinite(seconds) || seconds <= 0) return null;
   return Math.min(LONGEST, Math.max(SHORTEST, Math.round(seconds)));
+}
+
+/**
+ * The saved timers, with the numbers a clock face is made of.
+ *
+ * `remaining` asks `t.endsAt === null` and gets false for `undefined`, then
+ * subtracts it: NaN seconds, which `clockFace` renders as "NaN:NaN" and
+ * `lengthLine` as "NaNh NaNm". Measured with one timer carrying only its id —
+ * drawn on Today, on Clocks and in Field, all three at once, because a running
+ * timer follows you across the app. Nothing threw; it just said NaN.
+ *
+ * `running` has the same shape of mistake in it: `t.endsAt !== null` is true of
+ * `undefined`, so such a timer reads as running for ever and never as paused.
+ * Both are answered by there being no `undefined` to read.
+ */
+export function readTimers(raw: unknown): Timer[] {
+  return rows<Timer>(raw, 'tm').map((t) => ({
+    ...t,
+    id: t.id as string,
+    label: str(t.label),
+    seconds: num(t.seconds),
+    // Null is the real state and means paused, which is the safe reading for a
+    // timer whose end nobody can work out.
+    endsAt: typeof t.endsAt === 'number' && Number.isFinite(t.endsAt) ? t.endsAt : null,
+    left: num(t.left),
+    rangAt: typeof t.rangAt === 'number' && Number.isFinite(t.rangAt) ? t.rangAt : null,
+    created: num(t.created),
+  })) as Timer[];
+}
+
+/**
+ * The saved alarms, with the fields the next ring is worked out from.
+ *
+ * `nextRing` and `alarmDue` both read `a.days.length` and `a.days.includes`.
+ * Neither crashed on a thin row only because both return early on `!a.on`, and
+ * an alarm saved as on without its days would not have that luck. `on` is the
+ * one field read as false when absent rather than true: an alarm the app is
+ * not sure about is one that should not go off.
+ */
+export function readAlarms(raw: unknown): Alarm[] {
+  return rows<Alarm>(raw, 'al').map((a) => ({
+    ...a,
+    id: a.id as string,
+    label: str(a.label),
+    at: num(a.at),
+    days: nums(a.days),
+    on: a.on === true,
+    lastRang: str(a.lastRang),
+    ringingAt: num(a.ringingAt),
+    created: num(a.created),
+  })) as Alarm[];
 }
 
 /** "25:00", "1:05:00", "0:09". Always at least mm:ss, the way a clock reads. */

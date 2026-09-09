@@ -27,6 +27,8 @@
  * rather than filled in.
  */
 
+import { num, rows, str } from './stored';
+
 export interface Source {
   id: string;
   /** Exactly as you entered it, and never overwritten by the parser. */
@@ -99,6 +101,32 @@ export function parse(raw: string): Omit<NewSource, 'role' | 'courseId' | 'proje
 export function forCourse(all: Source[], courseId: string | null): Source[] {
   const list = courseId === null ? all : all.filter((s) => s.courseId === courseId);
   return [...list].sort((a, b) => b.created - a.created);
+}
+
+/**
+ * The saved sources, with the fields the screen groups and sorts by.
+ *
+ * `projects` just below reads `s.project.trim()` on every row to build the
+ * grouping — a source saved before that field existed was a caught TypeError
+ * and the whole Sources screen was replaced by a panel. Every other field here
+ * is drawn as text, and `raw` is the one that always has something in it,
+ * because it is what was pasted.
+ */
+export function readSources(raw: unknown): Source[] {
+  return rows<Source>(raw, 'sr').map((s) => ({
+    ...s,
+    id: s.id as string,
+    raw: str(s.raw),
+    author: str(s.author),
+    year: str(s.year),
+    title: str(s.title),
+    container: str(s.container),
+    url: str(s.url),
+    role: str(s.role),
+    courseId: typeof s.courseId === 'string' ? s.courseId : null,
+    project: str(s.project),
+    created: num(s.created),
+  })) as Source[];
 }
 
 /** The distinct project names in a list, for grouping. */

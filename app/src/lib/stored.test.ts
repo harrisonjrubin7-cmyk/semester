@@ -11,6 +11,10 @@ import { hoursOn, hoursAWeek } from './windows';
 import { hoursOf, weeklyHours } from './activities';
 import { learned } from './pace';
 import { isoToDate } from './date';
+import { readPlaces, DEFAULT_RADIUS } from './place';
+import { matchPlace } from './rooms';
+import { projects, readSources } from './sources';
+import { clockFace, lengthLine, nextRing, readAlarms, readTimers, remaining, running } from './clocks';
 
 /**
  * A row carrying nothing but its id.
@@ -185,6 +189,78 @@ describe('a stored registrar sheet', () => {
     // reached `daysTo`, came back NaN, and sorted the list by NaN.
     const rows = readTermDates([{ id: 'a', iso: 'some time in October' }, { id: 'b', iso: '2026-10-08' }]);
     expect(filled(rows).map((d) => d.id)).toEqual(['b']);
+  });
+});
+
+describe('a stored place', () => {
+  it('always has the label a room is matched against', () => {
+    const [p] = readPlaces([{ id: 'p1', lat: 36.1, lon: -86.8 }]);
+    expect(p.label).toBe('');
+    expect(matchPlace('Buttrick Hall 101', [p])).toBeNull();
+  });
+
+  it('leaves out a place with no coordinates, rather than offering one at NaN', () => {
+    // A distance from an undefined coordinate is NaN, which sorts a list into
+    // no order and shows as "NaN m"; zero would be a real place off the coast
+    // of Africa and `nearest` would offer it as where you might be standing.
+    expect(readPlaces([{ id: 'p1', label: 'Buttrick' }])).toEqual([]);
+    expect(readPlaces([{ id: 'p2', label: 'B', lat: 36.1, lon: -86.8 }])).toHaveLength(1);
+  });
+
+  it('gives a place with no radius the default one', () => {
+    expect(readPlaces([{ id: 'p1', label: 'B', lat: 1, lon: 2 }])[0].radius).toBe(DEFAULT_RADIUS);
+  });
+});
+
+describe('a stored source', () => {
+  it('always has the project name the screen groups by', () => {
+    const [s] = readSources([thin]);
+    expect(s.project).toBe('');
+    expect(() => projects([s])).not.toThrow();
+    expect(projects([s])).toEqual([]);
+  });
+
+  it('keeps the line that was pasted', () => {
+    const [s] = readSources([{ id: 's1', raw: 'Keynes (1936)', project: 'Essay 2' }]);
+    expect(s.raw).toBe('Keynes (1936)');
+    expect(projects([s])).toEqual(['Essay 2']);
+  });
+});
+
+describe('a stored timer', () => {
+  /*
+   * Nothing threw here; it just said NaN — on Today, on Clocks and in Field at
+   * once, because a running timer follows you across the app.
+   */
+  it('reads as paused rather than as a clock face of NaN', () => {
+    const [t] = readTimers([thin]);
+    expect(t.endsAt).toBeNull();
+    expect(remaining(t, Date.now())).toBe(0);
+    expect(clockFace(remaining(t, Date.now()))).toBe('0:00');
+    expect(lengthLine(t.seconds)).not.toContain('NaN');
+    // `t.endsAt !== null` is true of undefined, so such a timer used to read
+    // as running for ever and never as paused.
+    expect(running(t)).toBe(false);
+  });
+
+  it('keeps a timer that is genuinely running', () => {
+    const at = Date.now();
+    const [t] = readTimers([{ id: 't1', label: 'Pomodoro', seconds: 1500, endsAt: at + 60_000, left: 1500 }]);
+    expect(running(t)).toBe(true);
+    expect(remaining(t, at)).toBe(60);
+  });
+});
+
+describe('a stored alarm', () => {
+  it('always has the days the next ring is worked out from', () => {
+    const [a] = readAlarms([{ ...thin, on: true }]);
+    expect(a.days).toEqual([]);
+    expect(() => nextRing(a, new Date(2026, 8, 9, 6, 0))).not.toThrow();
+  });
+
+  it('is off unless it was saved on, because an alarm in doubt must not fire', () => {
+    expect(readAlarms([thin])[0].on).toBe(false);
+    expect(readAlarms([{ ...thin, on: 'yes' }])[0].on).toBe(false);
   });
 });
 

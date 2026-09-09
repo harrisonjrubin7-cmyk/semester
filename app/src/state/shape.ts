@@ -38,7 +38,10 @@ import { readCommitments } from '../lib/activities';
 import { readFeedEvents } from '../lib/ics';
 import { readUpdates } from '../lib/updates';
 import { readSpent } from '../lib/pace';
+import { readAlarms, readTimers } from '../lib/clocks';
+import { readPlaces } from '../lib/place';
 import { readTermDates } from '../lib/registrar';
+import { readSources } from '../lib/sources';
 import { readWindows as readStudyWindows } from '../lib/windows';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
@@ -1042,10 +1045,10 @@ export function loadPersisted(): Persisted {
         ? saved.archivedTerms.filter((t): t is string => typeof t === 'string')
         : [],
       lastSync: readLastSync(saved.lastSync),
-      places: list(saved.places),
+      places: readPlaces(saved.places),
       commitments: readCommitments(saved.commitments),
-      timers: list(saved.timers),
-      alarms: list(saved.alarms),
+      timers: readTimers(saved.timers),
+      alarms: readAlarms(saved.alarms),
       applications: readApplications(saved.applications),
       progress: readProgress(saved.progress),
       returned: readReturned(saved.returned),
@@ -1116,7 +1119,7 @@ export function loadPersisted(): Persisted {
       // "opened at some point", which is what an empty entry says.
       lastOpened: saved.lastOpened ?? {},
       sittings: list(saved.sittings),
-      sources: list(saved.sources),
+      sources: readSources(saved.sources),
       registrar: readTermDates(saved.registrar),
       spent: readSpent(saved.spent),
       windows: readStudyWindows(saved.windows),
