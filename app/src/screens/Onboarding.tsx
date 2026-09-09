@@ -1,7 +1,7 @@
 import { useStore } from '../state/store';
 import { askReminders, type Tone } from '../lib/tone';
 import { Blueprint } from '../components/Blueprint';
-import { Toggle } from '../components/ui';
+import { ActionButton, Toggle } from '../components/ui';
 import { NOTIF_DEFS } from '../data/misc';
 import { Check } from '../components/Icons';
 import type { Catalog } from '../data/catalog';
@@ -287,28 +287,20 @@ export function Onboarding() {
 
       <div style={{ flex: 1, minHeight: 24 }} />
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => dispatch({ type: 'onbNext' })}
-        style={{ height: 52, fontSize: 'calc(16px * var(--text-scale, 1))', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        tone="primary" height={52}
+        style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}
       >
         {step.cta}
-      </button>
-      <button
-        type="button"
-        className="btn btn-ghost btn-block"
+      </ActionButton>
+      <ActionButton
         onClick={() => dispatch({ type: 'finishOnboarding' })}
-        style={{
-          height: 34,
-          fontSize: 'var(--type-sm)',
-          letterSpacing: '0.14em',
-          textTransform: 'uppercase',
-          opacity: 0.55,
-        }}
+        tone="ghost" height={34} spacing="0.14em"
+        style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}
       >
         Skip
-      </button>
+      </ActionButton>
     </main>
   );
 }

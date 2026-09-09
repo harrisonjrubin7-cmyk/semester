@@ -8,7 +8,7 @@ import { FirstRun } from './FirstRun';
 import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
 import { modesFor } from '../lib/modes';
 import { Blueprint } from '../components/Blueprint';
-import { Meter, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, Meter, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { nextExam, tonightPlan } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
@@ -283,14 +283,12 @@ export function Study() {
               >
                 {step && (
                   <>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-block"
+                    <ActionButton
                       onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: step.id })}
-                      style={{ height: 42, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                      tone="primary" height={42} spacing="0.08em"
                     >
                       {step.label}
-                    </button>
+                    </ActionButton>
                     {/* The fact it rests on. A recommendation with no reason
                         is an instruction, and an instruction from software
                         about how to study is worth nothing. */}

@@ -18,7 +18,7 @@ import { CameBack } from '../components/CameBack';
 import { BreakItUp } from '../components/BreakItUp';
 import { AskForTime } from '../components/AskForTime';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { longLabel } from '../lib/date';
 import { appleMapsUrl, directionsUrl, fromRoom, prefersApple, type Destination } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
@@ -436,19 +436,13 @@ export function CourseDetail() {
         <span className="tag tag-neutral">{course.credits}</span>
       </div>
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => dispatch({ type: 'openGuide', id: course.id })}
-        style={{
-          height: 46,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          marginTop: 'var(--sp-7)',
-        }}
+        tone="primary" height={46}
+        style={{ marginTop: 'var(--sp-7)' }}
       >
         Study this course
-      </button>
+      </ActionButton>
 
       <button
         type="button"

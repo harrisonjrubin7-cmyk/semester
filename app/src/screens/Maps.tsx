@@ -6,7 +6,7 @@ import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { Blueprint } from '../components/Blueprint';
 import type { Pin } from '../components/LiveMap';
-import { ChipRow, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, ChipRow, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import {
   CENTRES,
@@ -332,21 +332,20 @@ export function Maps() {
                 aria-label="Name this place"
                 style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-6)' }}
               />
-              <button
-                type="button"
-                className="btn btn-primary btn-block"
+              <ActionButton
                 disabled={!label.trim()}
                 onClick={() => {
-                  dispatch({
-                    type: 'addPlace',
-                    place: { label: label.trim(), lat: you.lat, lon: you.lon, radius: DEFAULT_RADIUS },
-                  });
-                  setLabel('');
+                dispatch({
+                type: 'addPlace',
+                place: { label: label.trim(), lat: you.lat, lon: you.lon, radius: DEFAULT_RADIUS },
+                });
+                setLabel('');
                 }}
-                style={{ height: 42, marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+                tone="primary" height={42}
+                style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)' }}
               >
                 Save this spot
-              </button>
+              </ActionButton>
             </>
           )}
         </Blueprint>

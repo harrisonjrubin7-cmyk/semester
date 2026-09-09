@@ -7,7 +7,7 @@ import { ApplyingOn } from '../components/Applying';
 import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
@@ -1218,26 +1218,19 @@ function MonthView() {
 
       {/* Always offered, including on an empty day: this list is deadlines
           only, and classes and anything of your own live in the day view. */}
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => {
-          dispatch({
-            type: 'setCalDay',
-            date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
-          });
-          dispatch({ type: 'setCalView', view: 'day' });
+        dispatch({
+        type: 'setCalDay',
+        date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
+        });
+        dispatch({ type: 'setCalView', view: 'day' });
         }}
-        style={{
-          height: 42,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          fontSize: 'var(--type-xs)',
-          marginTop: 14,
-        }}
+        height={42}
+        style={{ fontSize: 'var(--type-xs)', marginTop: 14 }}
       >
         See classes and events that day
-      </button>
+      </ActionButton>
       <div style={{ height: 22 }} />
     </div>
   );

@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 import { ChevronRight } from './Icons';
 import { useRowStyle } from './shell/useShell';
 
@@ -405,5 +405,66 @@ export function EmptyState({
         </button>
       )}
     </div>
+  );
+}
+
+/**
+ * The button that does the thing, across the width of the screen.
+ *
+ * Written out seventy times before this — "Save a backup and go ahead", "Build
+ * the project file", "Add the requirement", "+ New note" — as the same
+ * `type="button"`, the same `btn btn-* btn-block`, the same
+ * `textTransform: 'uppercase'` and the same `letterSpacing`, with only the
+ * height and the words differing. Seventy copies of a control is seventy
+ * places to fix the next thing wrong with it, which is the argument
+ * `components/Reorder.tsx` already makes about two arrows and three copies.
+ *
+ * ## What it does not decide
+ *
+ * The height. Nine were in use — 34, 36, 40, 42, 44, 46, 48, 50 and 52 — and
+ * folding them into one would move a button on about forty screens, which is a
+ * change to how the app looks rather than to how it is built. So `height` is
+ * required and every call site kept the number it had. The nine are now nine
+ * arguments in one place instead of nine literals in forty-two files, which is
+ * what makes settling them a decision somebody can take later by reading this
+ * file rather than an audit somebody has to run again.
+ *
+ * `spacing` is the same story at smaller scale: 0.1em on fifty-seven of the
+ * seventy, and the other four values kept as they were. Note that `.btn` in
+ * `app.css` sets 0.08em, so almost every one of these is an override — the
+ * default here is the one the app actually uses, not the one the stylesheet
+ * declares.
+ *
+ * Anything else — `marginTop`, `fontSize` — stays the caller's, through
+ * `style`, and is spread last so a call site that needs to disagree still can.
+ *
+ * `type="button"` is fixed, which is the one thing this cannot express: a
+ * submit button inside a form is a different control and `screens/Account.tsx`
+ * still writes its own.
+ */
+export function ActionButton({
+  tone = 'secondary',
+  height,
+  spacing = '0.1em',
+  style,
+  children,
+  ...rest
+}: {
+  tone?: 'primary' | 'secondary' | 'ghost';
+  /** Required, because there is no right answer yet. See above. */
+  height: number;
+  spacing?: string;
+  style?: CSSProperties;
+  children: ReactNode;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'style' | 'children'>) {
+  return (
+    <button
+      type="button"
+      className={`btn btn-${tone} btn-block`}
+      style={{ height, letterSpacing: spacing, textTransform: 'uppercase', ...style }}
+      {...rest}
+    >
+      {children}
+    </button>
   );
 }

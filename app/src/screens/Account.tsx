@@ -4,7 +4,7 @@ import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { StorageRoom } from '../components/StorageRoom';
 import { syncLine } from '../lib/merge';
-import { SectionLabel } from '../components/ui';
+import { ActionButton, SectionLabel } from '../components/ui';
 import { cloudConfigured, sendReset, signIn, signInWith, signOut, signUp } from '../lib/cloud';
 
 /**
@@ -162,21 +162,14 @@ export function AccountScreen() {
           survives. The app would rather say so than pretend.
         </div>
 
-        <button
-          type="button"
-          className="btn btn-secondary btn-block"
+        <ActionButton
           disabled={busy}
           onClick={() => void run(signOut)}
-          style={{
-            height: 44,
-            fontSize: 'var(--type-sm)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            marginTop: 20,
-          }}
+          height={44}
+          style={{ fontSize: 'var(--type-sm)', marginTop: 20 }}
         >
           Sign out (keeps data on this device)
-        </button>
+        </ActionButton>
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
