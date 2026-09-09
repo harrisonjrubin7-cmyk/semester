@@ -71,6 +71,17 @@ export async function deleteFile(id: string): Promise<void> {
   await tx('readwrite', (s) => s.delete(id));
 }
 
+/**
+ * Every file at once, for "erase from this device".
+ *
+ * Through the store's own `clear` rather than a delete per id: the point of
+ * the erase is that nothing is left, and a loop over ids that half-fails
+ * leaves a set of files nobody can see and nothing can name.
+ */
+export async function clearFiles(): Promise<void> {
+  await tx('readwrite', (s) => s.clear());
+}
+
 /** Total bytes held, so the UI can say how much room the files are taking. */
 export async function totalSize(): Promise<number> {
   const files = await listFiles();
