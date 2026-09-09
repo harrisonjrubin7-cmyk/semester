@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DESTINATIONS, GROUPS, TASKS, byTask, destinationsFor, destinationsIn, lately, narrowTasks, saysFor, shelfOf, taskMatch, type TaskTag } from './nav';
+import { DESTINATIONS, GROUPS, TASKS, byTask, destinationsFor, destinationsIn, lately, narrowTasks, saysFor, screenName, shelfOf, taskMatch, type TaskTag } from './nav';
+import { readFileSync } from 'node:fs';
 import { NO_SCHOOL, type Capabilities } from './school';
 import { BUNDLED } from '../data/schools';
 
@@ -444,5 +445,53 @@ describe('the promise', () => {
     };
     const rows = byTask([...DESTINATIONS, extra]).flatMap((s) => s.rows);
     expect(rows.some((d) => (d.screen as string) === 'somethingNew')).toBe(true);
+  });
+});
+
+/**
+ * Every screen has a name a person would recognise.
+ *
+ * The assistant button is named for where you are — "Ask about Today", "Ask
+ * about Getting there" — and it built that name from the registry alone, with
+ * the screen id as the fallback. Twenty of the sixty-nine screens are not in
+ * the registry on purpose: the eight settings pages, and the twelve you reach
+ * from something rather than go to. So on every one of them the fallback was
+ * the answer, and a screen reader heard the identifier: "Ask about setNav",
+ * "Ask about drill", and, in the sheet it opens, "Looking at: setLook".
+ *
+ * `screenName` reads all three places a name is kept. This walks the `Screen`
+ * union out of the source rather than a hand-written list, so a screen added
+ * to the type and to none of the three registries fails here — where the
+ * fallback is a test failure — instead of on a phone, where it is an
+ * identifier read aloud.
+ */
+describe('every screen is named, not identified', () => {
+  const screens = (() => {
+    const src = readFileSync('src/lib/types.ts', 'utf8');
+    const union = /export type Screen =([\s\S]*?);/.exec(src);
+    if (!union) throw new Error('the Screen union has moved; point this test at it.');
+    return [...union[1].matchAll(/'([A-Za-z]+)'/g)].map((m) => m[1] as Screen);
+  })();
+
+  type Screen = Parameters<typeof screenName>[0];
+
+  it('finds the union, so the walk below is not walking nothing', () => {
+    expect(screens.length).toBeGreaterThan(40);
+    expect(screens).toContain('home');
+    expect(screens).toContain('setAssistant');
+  });
+
+  it('never gives a screen id back as its name', () => {
+    const bare = screens.filter((s) => screenName(s) === s);
+    expect(bare, `${bare.join(', ')} would be read aloud as an identifier`).toEqual([]);
+  });
+
+  it('names the settings pages the way the header bar does', () => {
+    expect(screenName('setNav' as Screen)).toBe('Layout');
+    expect(screenName('setAssistant' as Screen)).toBe('Assistant');
+  });
+
+  it('leaves a registry screen wearing its registry label', () => {
+    for (const d of DESTINATIONS) expect(screenName(d.screen)).toBe(d.label);
   });
 });
