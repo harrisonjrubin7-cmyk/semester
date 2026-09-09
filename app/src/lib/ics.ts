@@ -309,8 +309,16 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
      * put it, which is what the reader did before it knew about overrides at
      * all, and the smaller wrong answer of the two.
      */
+    /*
+     * A week is only taken back by an entry that puts something in its place —
+     * or says outright that nothing happens. A cancellation is that second
+     * case and needs no replacement day, which is why it is tested for before
+     * the DTSTART is: an entry marked off with no date is not malformed, it is
+     * a class that is not meeting.
+     */
+    const off = calledOff(raw);
     const moved = raw.DTSTART && parseWhen(raw.DTSTART);
-    if (!moved) continue;
+    if (!off && !moved) continue;
     const uid = raw.UID?.value ?? '';
 
     /*
@@ -331,10 +339,13 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
       const list = onward.get(uid) ?? [];
       list.push({
         from: iso(day.date),
-        shift: Math.round((dayOf(moved.date).getTime() - dayOf(day.date).getTime()) / 86400000),
-        clockAt: moved.date,
-        allDay: moved.allDay,
+        // A cancellation moves nothing; the figures below are never read for
+        // one, and are given the week it names so they are never nonsense.
+        shift: off || !moved ? 0 : Math.round((dayOf(moved.date).getTime() - dayOf(day.date).getTime()) / 86400000),
+        clockAt: moved ? moved.date : day.date,
+        allDay: moved ? moved.allDay : false,
         look: lookOf(courses, raw),
+        cancels: off,
         raw,
       });
       onward.set(uid, list);
@@ -382,6 +393,21 @@ interface Look {
   courseId: string | null;
 }
 
+/**
+ * Whether the calendar has called this off.
+ *
+ * `STATUS:CANCELLED` is the other way a calendar says a class is not
+ * happening, and the one this reader knew nothing about. EXDATE takes a week
+ * out of a rule; a cancelled entry is the week still written down and marked
+ * off, which is what Outlook and Exchange send rather than an EXDATE. It says
+ * it in five places and the app drew the class in all five: one week of a
+ * series, a whole series, a single event, this-and-all-following, and a
+ * cancellation with no replacement day at all.
+ */
+function calledOff(raw: RawEvent): boolean {
+  return (raw.STATUS?.value ?? '').trim().toUpperCase() === 'CANCELLED';
+}
+
 function lookOf(courses: Course[], raw: RawEvent): Look {
   const title = unescape(raw.SUMMARY?.value ?? 'Untitled');
   const where = unescape(raw.LOCATION?.value ?? '');
@@ -396,6 +422,8 @@ interface Onward {
   clockAt: Date;
   allDay: boolean;
   look: Look;
+  /** True where the change is a cancellation: those weeks stop, not move. */
+  cancels: boolean;
   /** The entry that stated it, so it can ask whether anything took it up. */
   raw: RawEvent;
 }
@@ -408,6 +436,11 @@ function toEvents(
   onward: Map<string, Onward[]>,
   taken: Set<RawEvent>,
 ): FeedEvent[] {
+  // Called off, so there is nothing to draw — a single event, a whole series,
+  // or the one week an entry was written to mark off. What it takes back it
+  // has already said where `replaced` and `onward` are built.
+  if (calledOff(raw)) return [];
+
   const startField = raw.DTSTART;
   if (!startField) return [];
   const when = parseWhen(startField);
@@ -520,10 +553,14 @@ function toEvents(
   return all
     .map((date, i) => ({ date, id: `${uid}-${i}` }))
     .filter((o) => !gone.has(iso(o.date)))
-    .map((o) => {
+    .flatMap((o) => {
       const change = changeOn(iso(o.date));
-      if (!change) return draw(o.date, o.id);
+      if (!change) return [draw(o.date, o.id)];
+      // Taken up either way: a cancellation for good has been acted on here
+      // just as a move has, and must not go looking for somewhere else to be
+      // drawn.
       taken.add(change.raw);
+      if (change.cancels) return [];
       const moved = new Date(
         o.date.getFullYear(),
         o.date.getMonth(),
@@ -531,6 +568,6 @@ function toEvents(
         change.clockAt.getHours(),
         change.clockAt.getMinutes(),
       );
-      return draw(moved, o.id, change.look, change.allDay);
+      return [draw(moved, o.id, change.look, change.allDay)];
     });
 }

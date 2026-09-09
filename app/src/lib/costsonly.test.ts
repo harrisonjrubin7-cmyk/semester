@@ -35,6 +35,8 @@ const MASTERS: Record<string, { lines: string[]; draws: boolean; cancelled?: boo
   everyWeekOff: { lines: ['UID:x@v', 'SUMMARY:Class', 'DTSTART:20260907T140000', 'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=2', 'EXDATE:20260907T140000,20260914T140000'], draws: false, cancelled: true },
   alarmed: { lines: ['UID:x@v', 'SUMMARY:Class', 'DTSTART:20260907T140000', 'BEGIN:VALARM', 'DESCRIPTION:reminder', 'END:VALARM'], draws: true },
   torn: { lines: ['UID:x@v', 'SUMMARY:Class', 'DTSTART:20260907T140000', 'BEGIN:VALARM', 'ACTION:DISPLAY'], draws: true },
+  // Called off outright, so it draws nothing and nothing is broken about it.
+  calledOff: { lines: ['UID:x@v', 'SUMMARY:Class', 'DTSTART:20260907T140000', 'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4', 'STATUS:CANCELLED'], draws: false, cancelled: true },
   none: { lines: [], draws: false },
 };
 
@@ -48,6 +50,9 @@ const CHANGES: Record<string, { lines: string[]; draws: boolean; day?: string }>
   goodNoStart: { lines: ['UID:x@v', 'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000', 'SUMMARY:For good'], draws: false },
   goodBadStart: { lines: ['UID:x@v', 'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000', 'DTSTART:banana', 'SUMMARY:For good'], draws: false },
   goodBadId: { lines: ['UID:x@v', 'RECURRENCE-ID;RANGE=THISANDFUTURE:banana', 'DTSTART:20260917T140000', 'SUMMARY:For good'], draws: true, day: '2026-09-17' },
+  oneOff: { lines: ['UID:x@v', 'RECURRENCE-ID:20260914T140000', 'DTSTART:20260914T140000', 'SUMMARY:Off', 'STATUS:CANCELLED'], draws: false },
+  oneOffNoStart: { lines: ['UID:x@v', 'RECURRENCE-ID:20260914T140000', 'SUMMARY:Off', 'STATUS:CANCELLED'], draws: false },
+  goodOff: { lines: ['UID:x@v', 'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000', 'DTSTART:20260914T140000', 'SUMMARY:Off', 'STATUS:CANCELLED'], draws: false },
   none: { lines: [], draws: false },
 };
 
@@ -139,7 +144,8 @@ describe('a broken entry costs only itself', () => {
      * other rule here is satisfied while a lecture has quietly gone.
      */
     const thinned = pairs
-      .filter(({ cv }) => !cv.draws && cv.lines.length)
+      // A cancellation removes a week on purpose; that is the whole of it.
+      .filter(({ c, cv }) => !cv.draws && cv.lines.length && !c.endsWith('Off') && !c.endsWith('OffNoStart'))
       .filter(({ mv, cv }) => both(mv.lines, cv.lines).some((r) => mine(r).length < mine(read([mv.lines, []])).length))
       .map(({ m, c }) => `${m} + ${c}`);
     expect(thinned, `a week went missing for: ${thinned.join(', ')}`).toEqual([]);

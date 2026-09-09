@@ -858,6 +858,110 @@ describe('a repeating class that changes', () => {
     }
   });
 
+  describe('a class the calendar has called off', () => {
+    /*
+     * STATUS:CANCELLED is the other way a calendar says a class is not
+     * happening — the week still written down and marked off, rather than
+     * struck from the rule with an EXDATE. It is what Outlook and Exchange
+     * send, and the reader knew nothing about it in any of the five places it
+     * appears.
+     */
+    const weekly = (...extra: string[]) =>
+      event(
+        'UID:econ1020@vanderbilt.edu',
+        'SUMMARY:ECON 1020 lecture',
+        'DTSTART:20260907T140000',
+        'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4',
+        ...extra,
+      );
+    const days = (ics: string) => parseIcs(COURSES, ics).events.map((e) => e.date);
+
+    it('leaves out the one week it marks off', () => {
+      const ics = cal(
+        [
+          weekly(),
+          event(
+            'UID:econ1020@vanderbilt.edu',
+            'RECURRENCE-ID:20260914T140000',
+            'DTSTART:20260914T140000',
+            'SUMMARY:ECON 1020 lecture',
+            'STATUS:CANCELLED',
+          ),
+        ].join('\r\n'),
+      );
+      expect(days(ics)).toEqual(['2026-09-07', '2026-09-21', '2026-09-28']);
+    });
+
+    it('leaves out the week even where nothing replaces it', () => {
+      // A cancellation needs no replacement day: nothing is happening. The
+      // guard that keeps a malformed override from deleting a lecture must not
+      // catch this, which is a lecture deleted on purpose.
+      const ics = cal(
+        [
+          weekly(),
+          event('UID:econ1020@vanderbilt.edu', 'RECURRENCE-ID:20260914T140000', 'SUMMARY:ECON 1020 lecture', 'STATUS:CANCELLED'),
+        ].join('\r\n'),
+      );
+      expect(days(ics)).toEqual(['2026-09-07', '2026-09-21', '2026-09-28']);
+    });
+
+    it('leaves out every week from the one it calls off onward', () => {
+      const ics = cal(
+        [
+          weekly(),
+          event(
+            'UID:econ1020@vanderbilt.edu',
+            'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000',
+            'DTSTART:20260914T140000',
+            'SUMMARY:ECON 1020 lecture',
+            'STATUS:CANCELLED',
+          ),
+        ].join('\r\n'),
+      );
+      expect(days(ics)).toEqual(['2026-09-07']);
+    });
+
+    it('leaves out a whole series it calls off', () => {
+      expect(days(cal(weekly('STATUS:CANCELLED')))).toEqual([]);
+    });
+
+    it('leaves out a single event it calls off', () => {
+      const ics = cal(event('UID:guest@v', 'SUMMARY:Guest lecture', 'DTSTART:20260918T140000', 'STATUS:CANCELLED'));
+      expect(days(ics)).toEqual([]);
+    });
+
+    it('draws one it has confirmed, and one it says nothing about', () => {
+      for (const status of ['STATUS:CONFIRMED', 'STATUS:TENTATIVE', '']) {
+        const lines = ['UID:guest@v', 'SUMMARY:Guest lecture', 'DTSTART:20260918T140000'];
+        const ics = cal(event(...(status ? [...lines, status] : lines)));
+        expect(days(ics), status || 'no status').toEqual(['2026-09-18']);
+      }
+    });
+
+    it('does not leave the cancelled week visible by way of the class itself', () => {
+      /*
+       * The trap in fixing this. Skipping a cancelled entry when the weeks it
+       * takes back are worked out — rather than only when it is drawn — stops
+       * it suppressing its own week, and the lecture stays on the calendar,
+       * drawn by the rule instead of by the entry. Cancelled and visible looks
+       * exactly like fixed.
+       */
+      const ics = cal(
+        [
+          weekly(),
+          event(
+            'UID:econ1020@vanderbilt.edu',
+            'RECURRENCE-ID:20260914T140000',
+            'DTSTART:20260914T140000',
+            'SUMMARY:ECON 1020 lecture',
+            'STATUS:CANCELLED',
+          ),
+        ].join('\r\n'),
+      );
+      expect(days(ics)).not.toContain('2026-09-14');
+    });
+  });
+
   it('leaves a class with no exceptions exactly as it was', () => {
     expect(days(weekly())).toEqual(['2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28']);
     expect(parseIcs(COURSES, weekly()).events.map((e) => e.id)).toEqual([
