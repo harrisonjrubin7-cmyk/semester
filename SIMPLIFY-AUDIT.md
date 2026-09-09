@@ -222,3 +222,78 @@ and the assistant is a different command.
 Every merge must carry: the survivor's `keywords` widened with the dead
 screen's, a `state/shape.ts` migration so a saved `screen` that no longer
 exists lands on the survivor, and a test for that migration.
+
+---
+
+# The second pass: a screen rendered inside another screen
+
+The first pass counted **routes** — how many places dispatch `go` at a
+destination — and concluded that most of them were contextual actions rather
+than second front doors. That was right, and it looked past the duplication
+that was actually there.
+
+A destination can also be duplicated by being **rendered whole inside another
+screen**. Progress had a Settings tab that drew the settings index; the
+Settings button drew the same index as a screen. Two homes for one thing, and
+the route count for `settings` was 1, so section 2 above never saw it.
+
+## How this pass counted
+
+The tell is a screen component taking a prop that strips its own frame, so it
+can be drawn inside somebody else's:
+
+```
+$ grep -rn "<[A-Z][A-Za-z]* bare\b\|bare = false" app/src/screens app/src/components
+screens/Courses.tsx:75:        <Grades bare />
+screens/Grades.tsx:30:export function Grades({ bare = false }…
+screens/Reports.tsx:43:export function Reports({ bare = false }…
+screens/Today.tsx:273:      {tab === 'brief' && <Reports bare />}
+```
+
+Three, and one of them — `<Settings bare />` on Progress — had already gone.
+Cross-checked against every cross-screen import, which turns up only shared
+empty states and study modes:
+
+```
+$ grep -rn "^import .* from './[A-Z]" app/src/screens/*.tsx
+→ FirstRun ×7 (a shared empty state, no directory row)
+→ Guide → FieldGuide  (`field` is a StudyMode, not a Screen)
+→ Today → GapOffer    (`gap` has no directory row: it is entered from a gap)
+→ Courses → Grades, Today → Reports   ← the two duplicates
+```
+
+| Duplicate | Verdict |
+| --- | --- |
+| `settings` — the index, as a tab of Progress and as its own screen | **merged** · the tab went, the screen stayed |
+| `grades` — the table, as a tab of Courses and as its own screen | **merged** · the screen went, the tab stayed |
+| `brief` — the report, as a tab of Today and as its own screen | **merged** · the tab went, the screen stayed |
+
+The survivor is not the same shape in the three, and that is the point rather
+than an inconsistency. Grades is genuinely one of three views of the same four
+courses — Courses' own comment said so — so it became a grain and the
+destination went. The report and the settings index are each a screen with a
+switcher of their own, and a switcher nested inside a switcher is not a view of
+its host: "what is on now" and "how did it go" are asked on different days.
+
+## What this pass also checked and cleared
+
+**Duplicated controls.** Every `set*` action in `state/slices/settings.ts`,
+against every file that dispatches it: 18 actions, and exactly one — `setLook`
+— is written from more than one file. Those four writes touch different keys
+(colour and type on Settings › Appearance, the shell and nav pickers through
+the shared `Appearance` component, the springboard's arrangement in
+`nav/Folder`). No control has a second copy.
+
+**Routes per destination**, recounted:
+
+```
+$ grep -rn "type: 'go', screen: '…'" app/src --include=*.tsx --include=*.ts
+edit 5 · import 4 · mine 3 · everything else ≤ 2
+```
+
+Unchanged from the first pass and left alone for its reasons: these are empty
+states and contextual next-actions, and the soft shell's action bar is one of
+several navigations of which exactly one is on screen at a time.
+
+**50 → 49 destinations.** `grades` is the one that went; `brief` and `settings`
+each lost a duplicate rather than a home.
