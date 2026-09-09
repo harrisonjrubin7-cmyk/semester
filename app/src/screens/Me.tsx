@@ -1,23 +1,19 @@
-import { useMemo, useState, type HTMLAttributes } from 'react';
+import { useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
-import { learned, showSpan } from '../lib/pace';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
-import { ActionButton, EmptyState, Meter, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, EmptyState, Segmented } from '../components/ui';
 import { NotYetOpened } from '../components/NotYetOpened';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { Bell } from '../components/Icons';
 import { NOTIFICATIONS } from '../data/misc';
-import { datedItems, loadByCourse } from '../lib/select';
 import {
   GROUPS,
-  byTask,
   destinationsIn,
   lately,
   listed,
-  offered,
   saysFor,
   type Group as Shelves,
 } from '../lib/nav';
@@ -25,16 +21,13 @@ import { arranged, useMovable } from '../lib/arrange';
 import { readOrder, tilesFor, writeOrder } from '../lib/launcher';
 import { currentLook } from '../state/shape';
 import { Launcher } from '../components/nav/Launcher';
+import { ByTask } from '../components/nav/ByTask';
 import { directoryOf } from '../lib/look';
 
 import type { CourseModule, Screen } from '../lib/types';
-import { cardKey, dueCount, tallyKeys } from '../lib/review';
+import { cardKey } from '../lib/review';
 import { TypeToConfirm } from '../components/TypeToConfirm';
-import { CourseTag } from '../components/CourseTag';
-import { Insights } from '../components/Insights';
-import { weekLine, whereYouStand } from '../lib/you';
-import { allCards } from '../data/catalog';
-import { liveGuide } from '../lib/live';
+import { You } from './me/You';
 
 /**
  * The shelves, in the order they read: what you study, what you make with it,
@@ -226,83 +219,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
 }
 
 export function Me() {
-  const { state, dispatch, now, catalog, account , courseCode, school, facts, tint } = useStore();
-  const rowNine = useRowStyle(9);
-  const rowTen = useRowStyle(10);
-  const bars = loadByCourse(catalog, now, state.done);
-  const pace = learned(state.spent);
-
-  /*
-   * One pass over the deadlines, and every figure on this tab comes out of it.
-   *
-   * The arithmetic is in `lib/you.ts` rather than here, and the header of that
-   * file says why at length. The short version is that this screen has now got
-   * a headline number wrong twice, and both times inline: `Credits` was once
-   * the literal string '11', and `Done` counted the whole `state.done` map,
-   * which keeps the ticks of courses you have since removed and so could
-   * report more finished deadlines than the app holds.
-   */
-  const dated = datedItems(catalog, now);
-  const where = whereYouStand({ courses: catalog.courses, items: dated, done: state.done, now });
-
-  /*
-   * The two shares the meters below draw, rounded once.
-   *
-   * Named rather than inlined because each is wanted twice — to decide
-   * whether the bar is worth drawing at all, and then to draw it — and the
-   * term's is wanted a third time in the sentence under it. Rounding it in
-   * three places is how a bar and the number beside it come to disagree.
-   *
-   * `weekPct` is null when nothing falls in the week: no denominator, and
-   * no bar either way.
-   */
-  const weekPct = where.week.due > 0 ? Math.round((where.week.done / where.week.due) * 100) : null;
-  const termPct = where.through === null ? 0 : Math.round(where.through * 100);
-
-  /*
-   * The drilling record, counted against the decks that actually exist.
-   *
-   * `tally` over the whole review map would have had the same fault `Done`
-   * had — an answer given to a course you removed in September is not part of
-   * this term's record — so every deck's keys are recomputed and `tallyKeys`
-   * is handed those, which is what it was added for.
-   *
-   * Two numbers rather than one, because they answer different questions and
-   * a screen showing only the second flatters you. `seen` is how much of the
-   * deck you have been through at all; `pct` is how you did on it. 90% right
-   * across nine of three hundred cards is not a report on the term, and
-   * putting the coverage first is what stops it reading as one.
-   */
-  const cards = useMemo(() => {
-    const keys = catalog.courses.flatMap((c) =>
-      allCards(liveGuide(catalog, c.id, state.updates, state.reviews)).map((q) => cardKey(c.id, q.q)),
-    );
-    const t = tallyKeys(keys, state.reviews);
-    return {
-      deck: keys.length,
-      seen: t.cards,
-      pct: t.pct,
-      due: dueCount(keys, state.reviews, now.getTime()),
-    };
-  }, [catalog, state.updates, state.reviews, now]);
-
-  /*
-   * Four cells at most, and every one of them a door.
-   *
-   * They used to be four dead numbers, which is the difference between a
-   * dashboard and a screen: reading "3 ahead" and then having to remember
-   * which tab shows you the three is the app asking you to do its job. Late
-   * appears only when something is late — a permanent zero in that column is
-   * a red number you learn to stop seeing — and Credits gives its place up
-   * when it does, because five columns at 402px is five columns nobody reads.
-   */
-  const stats: { n: string; l: string; to?: Screen; late?: boolean }[] = [
-    { n: String(where.ahead), l: 'Ahead', to: 'ahead' },
-    ...(where.late > 0 ? [{ n: String(where.late), l: 'Late', to: 'behind' as Screen, late: true }] : []),
-    { n: String(where.done), l: 'Done' },
-    ...(where.late === 0 && where.credits > 0 ? [{ n: String(where.credits), l: 'Credits' }] : []),
-    { n: String(where.courses), l: 'Courses', to: 'courses' },
-  ];
+  const { state, dispatch, account, school, facts } = useStore();
 
   const tab = state.meTab;
 
@@ -336,301 +253,7 @@ export function Me() {
         style={{ marginBottom: 'var(--sp-7)' }}
       />
 
-      {tab === 'you' && (
-        <>
-      {/*
-        Nothing imported yet, so there is nothing to report.
-
-        This tab used to answer a fresh install with four zeroes and then stop
-        — no chart, no pace, no advice, because every one of those sections
-        hides itself when it has nothing. Four zeroes and white space is the
-        app's own progress screen telling somebody it is broken, when what is
-        actually true is that it has not been given a syllabus yet. So it says
-        that, and offers the one thing that would fix it.
-
-        `EmptyState` rather than the `FirstRun` the eight other empty screens
-        return, and not by preference: `FirstRun` opens its own `<Page>`, and
-        this is a tab inside one that already has the Everything directory in
-        its other half. A screen that swapped itself wholesale for the first
-        run would take the app's index off the tab that holds it.
-      */}
-      {catalog.empty ? (
-        <EmptyState
-          title="Nothing to report yet"
-          body="This is where the semester gets counted back to you — what is left, what is late, how the drilling is going and how long things actually take you. All of it comes off a syllabus."
-          action={{ label: 'Add a course', onClick: () => dispatch({ type: 'go', screen: 'import' }) }}
-        />
-      ) : (
-        <>
-      <Blueprint style={{ padding: 'var(--sp-7)', display: 'flex' }}>
-        {stats.map((s, i) => {
-          const cell = (
-            <>
-              {/* Late is the only one of the four that is a warning, and the
-                  note above already calls it "a red number" — see
-                  `.chrome-text.is-late` in app.css for why the gradient has
-                  to come off for the colour to land. */}
-              <div
-                className={s.late ? 'chrome-text is-late' : 'chrome-text'}
-                style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1 }}
-              >
-                {s.n}
-              </div>
-              <div
-                style={{
-                  fontSize: 'calc(10px * var(--text-scale, 1))',
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  opacity: 0.5,
-                  fontFamily: 'var(--font-heading)',
-                  marginTop: 'var(--sp-2)',
-                }}
-              >
-                {s.l}
-              </div>
-            </>
-          );
-          const frame = {
-            flex: 1,
-            textAlign: 'center' as const,
-            borderLeft: i === 0 ? 'none' : '1px solid var(--app-line)',
-          };
-          // A cell with somewhere to go is a button; one without stays a div
-          // rather than becoming a button that does nothing when pressed.
-          return s.to ? (
-            <button
-              key={s.l}
-              type="button"
-              className="bare tappable"
-              onClick={() => dispatch({ type: 'go', screen: s.to as Screen })}
-              style={{ ...frame, width: 'auto' }}
-            >
-              {cell}
-            </button>
-          ) : (
-            <div key={s.l} style={frame}>
-              {cell}
-            </div>
-          );
-        })}
-      </Blueprint>
-
-      {/*
-        What the app noticed, and the one thing to do about each.
-
-        The engine has existed in `src/insights/` since the reports were built
-        and ran on two screens, neither of which is the one called Progress.
-        That was the gap: somebody who wants to know how the term is going
-        opens this tab, and this tab was four counts and a chart — true, and
-        none of it advice. `Insights` renders nothing when it has nothing, so
-        no placeholder arrives with it.
-      */}
-      <Insights most={3} />
-
-      {/*
-        The two spans that matter — the week you are in, and the term around it.
-
-        One heading over both because they are one question asked at two
-        zooms, and because a screen of six headings is a screen you scroll
-        past. The week is tappable and the term is not: there is a screen that
-        shows the next seven days in hours, and there is no screen that shows
-        a semester, so only one of them is a door.
-      */}
-      <SectionLabel>Where you stand</SectionLabel>
-
-      <button
-        type="button"
-        className="bare tappable"
-        onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
-        style={{ ...rowTen, display: 'block', textAlign: 'left', width: '100%' }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
-            This week
-          </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{weekLine(where.week)}</div>
-        </div>
-        {/*
-          A meter with nothing in it is a hairline, not a chart.
-
-          This was gated on there being something *due*, which drew a full-width
-          empty track for the ordinary case of a week you have not started —
-          and the line beside it already says "0 of 5 done", so the bar was
-          repeating that in the one form that reads as a rendering fault. Gated
-          on progress instead, which is the rule the Cards row below already
-          follows: the bar appears when it has a share to show.
-
-          Not a rule for `Meter` itself. Load by course draws 0% on purpose —
-          an empty bar there is a course with nothing left on it, which is the
-          best thing that row can say.
-        */}
-        {weekPct !== null && weekPct > 0 && (
-          <div style={{ marginTop: 'var(--sp-3)' }}>
-            {/* `weekLine` beside it already says "3 of 5 done". */}
-            <Meter pct={weekPct} label={null} />
-          </div>
-        )}
-      </button>
-
-      {where.through !== null && (
-        <div style={rowTen}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
-              The term
-            </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>
-              {where.done} of {where.total} done
-            </div>
-          </div>
-          {/* Same rule, and the same case: before the first deadline the term
-              is 0% through, which is a fact the sentence below states and a
-              bar cannot draw. */}
-          {termPct > 0 && (
-            <div style={{ marginTop: 'var(--sp-3)' }}>
-              {/* The sentence under it reads "{termPct}% of the way…". */}
-              <Meter pct={termPct} label={null} />
-            </div>
-          )}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-            {termPct}% of the way from the first deadline on your syllabi to
-            the last. The app has not been told a term's dates, so that span is the term it knows.
-          </div>
-        </div>
-      )}
-
-      {/*
-        The drilling, told back in three numbers.
-
-        Cards answered rather than cards owned: a deck of two hundred you have
-        never opened says nothing about you. The percentage is every answer
-        ever given and not a rolling window, which is why it moves slowly and
-        why it is worth trusting. Due is the one number here you can act on
-        this minute, so the row opens Study.
-      */}
-      {cards.deck > 0 && (
-        <>
-          <SectionLabel>Cards</SectionLabel>
-          <button
-            type="button"
-            className="bare tappable"
-            onClick={() => dispatch({ type: 'go', screen: 'study' })}
-            style={{ ...rowTen, display: 'block', textAlign: 'left', width: '100%' }}
-          >
-            <div style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'baseline' }}>
-              <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', fontFamily: 'var(--font-heading)' }}>
-                {cards.seen === 0
-                  ? `${cards.deck} cards, none answered yet`
-                  : `${cards.seen} of ${cards.deck} seen · ${cards.pct}% right`}
-              </div>
-              {/*
-                Silent until it says something the headline has not.
-
-                Before a single card is answered every card is due, so the row
-                read "325 cards, none answered yet · 325 due" — one number
-                twice, and the second copy dressed as a backlog somebody has
-                fallen behind on. It is a full deck, which is what a full deck
-                looks like.
-              */}
-              {cards.seen > 0 && (
-                <div style={{ flex: 'none', fontSize: 'var(--type-sm)', opacity: 0.55 }}>
-                  {cards.due === 0 ? 'None due' : `${cards.due} due`}
-                </div>
-              )}
-            </div>
-            {/*
-              The bar is coverage, not accuracy.
-
-              Accuracy is already the second half of the line above it, and a
-              bar drawn at 73% beside "73% right" is the same fact twice. What
-              the line does not show is how much of the deck that 73% rests
-              on, which is the thing a bar is good at.
-            */}
-            {cards.seen > 0 && (
-              <div style={{ marginTop: 'var(--sp-3)' }}>
-                {/* Coverage, which the comment above says the line does not
-                    carry — so the bar has to say it out loud. */}
-                <Meter
-                  pct={Math.round((cards.seen / cards.deck) * 100)}
-                  label="Share of the deck seen"
-                />
-              </div>
-            )}
-          </button>
-        </>
-      )}
-
-      {/* An empty section headed "Load by course" is worse than no section. */}
-      {bars.length > 0 && <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Load by course</SectionLabel>}
-      {/*
-        A bar per course, and each one opens its course.
-        
-        The bars were the only chart in the app you could not press. Reading
-        "MATH 3620 · 5 left" and then having to find the course by hand in
-        another tab is the same fault the stat cells had, drawn in colour.
-      */}
-      {bars.map((b) => (
-        <button
-          key={b.code}
-          type="button"
-          className="bare tappable"
-          onClick={() => dispatch({ type: 'openCourse', id: b.id })}
-          style={{ ...rowTen, display: 'block', textAlign: 'left', width: '100%' }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{b.code}</div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{b.n} left</div>
-          </div>
-          <div style={{ marginTop: 'var(--sp-3)' }}>
-            {/* Four bars in one metal are four bars you have to read the label
-                of. In their courses' colours they are the same four facts,
-                comparable at a glance and matched to every other list. */}
-            <Meter pct={b.pct} fill={tint(b.id).fill} label={`Share of what is left, ${b.code}`} />
-          </div>
-        </button>
-      ))}
-
-      {/*
-        What the app has learned about your pace, shown back to you.
-
-        Only appears once there is something in it, and every row says how many
-        reports it rests on — a median of one is a data point wearing a
-        median's clothes, and hiding that would make the list look surer than
-        it is. There is no comparison with anybody else and no score: it is
-        your own arithmetic, told back.
-      */}
-      {pace.length > 0 && (
-        <>
-          <SectionLabel>How long things take you</SectionLabel>
-          {pace.map((r) => (
-            <div
-              key={`${r.courseId}-${r.kind}`}
-              style={{
-                display: 'flex',
-                gap: 'var(--sp-5)',
-                alignItems: 'baseline',
-                ...rowNine,
-              }}
-            >
-              <CourseTag id={r.courseId} style={{ flex: 'none' }}>
-                {courseCode(r.courseId)}
-              </CourseTag>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{r.kind}</span>
-              <span style={{ flex: 'none', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{showSpan(r.minutes / 60)}</span>
-              <span style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.45, minWidth: 46, textAlign: 'right' }}>
-                {r.from === 1 ? 'from 1' : `from ${r.from}`}
-              </span>
-            </div>
-          ))}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
-            The middle figure of what you reported, so one all-nighter does not move it. Tick
-            something off and the app asks once — it stops asking a kind of work after five.
-          </div>
-        </>
-      )}
-        </>
-      )}
-        </>
-      )}
+      {tab === 'you' && <You />}
 
       {tab === 'all' && (
         <>
@@ -730,48 +353,27 @@ export function Me() {
         </>
       )}
 
-      {tab === 'task' && (
-        <>
-          {/*
-            The same screens, filed under what somebody is trying to do.
+      {/*
+        The same screens, filed under what somebody is trying to do.
 
-            This was a screen of its own — Everything — whose four views were
-            these task headings, the shelves above, the never-opened list that
-            `NotYetOpened` already draws, and the shortcut sheet that `?` and
-            the guide already carry. Three of the four were this tab with
-            different headings, so the screen went and the one view that was
-            genuinely its own came here, drawn with the same `Panel` and the
-            same rows as the shelves beside it.
+        This was a screen of its own — Everything — whose four views were
+        these task headings, the shelves above, the never-opened list that
+        `NotYetOpened` already draws, and the shortcut sheet that `?` and the
+        guide already carry. Three of the four were this tab with different
+        headings, so the screen went and the one view that was genuinely its
+        own came here.
 
-            A screen appears under every task it serves, so several appear more
-            than once. That is the difference from the shelves, where a screen
-            sits on exactly one: a shelf is where a thing lives, and a task is
-            what you wanted when you went looking for it.
-          */}
-          <p
-            style={{
-              fontSize: 'var(--type-sm)',
-              opacity: 0.6,
-              lineHeight: 'var(--leading-normal)',
-              margin: '0 0 var(--sp-6)',
-            }}
-          >
-            The same screens, filed under what you would be trying to do. Several appear more than
-            once, because they answer more than one question.
-          </p>
-          <nav aria-label="By task" style={{ margin: '0 -18px' }}>
-            {byTask(
-              offered(school.capabilities).filter((d) => !HIDE_IN_ME.includes(d.screen)),
-            ).map((section) => (
-              <Panel key={section.tag} header={section.label}>
-                {section.rows.map((d) => (
-                  <Destination key={d.screen} to={d} account={account} />
-                ))}
-              </Panel>
-            ))}
-          </nav>
-        </>
-      )}
+        Its own component now rather than fifty lines inline, because it grew
+        a filter, a jump bar and a column rule of its own and none of those
+        are things the You tab or the Everything tab has any use for.
+        `components/nav/ByTask.tsx` says what each is for. A screen appears
+        under every task it serves, so several appear more than once — that is
+        the difference from the shelves, where a screen sits on exactly one: a
+        shelf is where a thing lives, and a task is what you wanted when you
+        went looking for it.
+      */}
+      {tab === 'task' && <ByTask />}
+
     </Page>
   );
 }

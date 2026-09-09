@@ -65,7 +65,19 @@ describe('every bar that carries a number', () => {
     const calls = FILES.flatMap(({ file, src }) =>
       [...src.matchAll(/<Meter[\s\S]{0,320}?\/>/g)].map((m) => ({ file, text: m[0] })),
     );
-    expect(calls.length, 'the meters have moved or been renamed').toBeGreaterThanOrEqual(7);
+    /*
+     * Six, and it was seven.
+     *
+     * The seventh was Progress's week bar — one length for "2 of 5 done",
+     * which is the same picture whether the five are spread over seven days
+     * or all land on Thursday. It is seven columns now, one per day, and each
+     * one is a button carrying its own date and counts in words rather than a
+     * bar with a label. See `screens/me/You.tsx`.
+     *
+     * The floor is a canary for a renamed component, not the rule: the rule is
+     * `mute` below, and it is what fails when a bar ships with nothing to say.
+     */
+    expect(calls.length, 'the meters have moved or been renamed').toBeGreaterThanOrEqual(6);
     const mute = calls.filter((c) => !/\blabel=/.test(c.text)).map((c) => c.file);
     expect(mute, 'a bar with no label decision').toEqual([]);
   });

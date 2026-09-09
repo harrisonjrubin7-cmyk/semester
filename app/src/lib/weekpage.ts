@@ -28,13 +28,22 @@
  * alike, grouped by the day they fall on.
  */
 
-import { DOW, MONTHS, sameDay } from './date';
-import type { DatedItem } from './types';
+import { DOW, MONTHS, dateToIso, sameDay } from './date';
+import type { DatedItem, PersonalTask } from './types';
 
 export interface DayDue {
   date: Date;
   label: string;
   items: DatedItem[];
+  /**
+   * Your own tasks dated on that day.
+   *
+   * Kept apart from `items` rather than merged into them, because the whole
+   * habit of this app is not letting the two blur: a deadline is what a
+   * syllabus said and a task is what you decided, and a printed week that
+   * cannot tell them apart is a week you cannot check against the PDF.
+   */
+  tasks: PersonalTask[];
 }
 
 /** The seven dates of a week, from whatever the view is showing as its first. */
@@ -46,17 +55,25 @@ export function weekDates(start: Date): Date[] {
 }
 
 /**
- * The week's deadlines, by day.
+ * The week's deadlines and your own tasks, by day.
  *
  * Every day is returned, empty ones included, because a sheet of paper wants
  * a row to write on for Thursday whether or not anything is already due then.
+ *
+ * The tasks are here because the week grid can only draw a task that names an
+ * hour, and most do not — "before work" is a real answer to when. Without
+ * this, a week of things you had written down printed as a blank sheet.
  */
-export function dueByDay(items: DatedItem[], start: Date): DayDue[] {
-  return weekDates(start).map((date) => ({
-    date,
-    label: `${DOW[date.getDay()]} ${date.getDate()}`,
-    items: items.filter((i) => sameDay(i.date, date)),
-  }));
+export function dueByDay(items: DatedItem[], start: Date, tasks: PersonalTask[] = []): DayDue[] {
+  return weekDates(start).map((date) => {
+    const iso = dateToIso(date);
+    return {
+      date,
+      label: `${DOW[date.getDay()]} ${date.getDate()}`,
+      items: items.filter((i) => sameDay(i.date, date)),
+      tasks: tasks.filter((t) => t.date === iso),
+    };
+  });
 }
 
 /** "Sep 7 – 13" — or "Sep 28 – Oct 4" where the week crosses a month. */
@@ -78,11 +95,16 @@ export function weekLabel(start: Date): string {
  */
 export function weekLine(days: DayDue[], classes: number): string {
   const due = days.reduce((n, d) => n + d.items.length, 0);
-  if (due === 0 && classes === 0) return 'Nothing on this week.';
+  const mine = days.reduce((n, d) => n + d.tasks.length, 0);
+  if (due === 0 && classes === 0 && mine === 0) return 'Nothing on this week.';
   const parts: string[] = [];
   if (classes > 0) parts.push(`${classes} ${classes === 1 ? 'class' : 'classes'}`);
   if (due > 0) parts.push(`${due} ${due === 1 ? 'deadline' : 'deadlines'}`);
-  return `${parts.join(' and ')} this week.`;
+  // Counted separately and named as yours, for the same reason they are held
+  // in their own field above: three deadlines and two things you wrote down
+  // is not five deadlines.
+  if (mine > 0) parts.push(`${mine} of your own`);
+  return `${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0]} this week.`;
 }
 
 export interface Lane {

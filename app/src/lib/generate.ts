@@ -22,6 +22,7 @@ import { realMonthDay } from './date';
  */
 
 import { ask, type Citation, type Doc } from './claude';
+import { courseId } from './edit';
 import type { Course, CourseModule, GradeRow, Item, RecurringBlock } from './types';
 import { check, flatten, tally, worthCiting, type Checked } from './cite';
 
@@ -39,6 +40,14 @@ export interface GenerationInput {
   hint: string;
   /** Year the semester falls in — dates in a syllabus rarely carry one. */
   year: number;
+  /**
+   * Course ids the account already holds, so this one does not land on top.
+   *
+   * A course id keys everything filed against a course — deadlines, office
+   * hours, grades, notes, the guide, the colour. Two courses under one id are
+   * one course to every screen in the app. See `courseId` in `lib/edit.ts`.
+   */
+  taken?: string[];
 }
 
 export interface GenerationResult {
@@ -178,7 +187,10 @@ function validate(
   if (!raw.course?.code) throw new Error('No course code came back — the document may not be a syllabus.');
   if (!raw.guide?.units?.length) throw new Error('No study guide came back. Try adding the readings.');
 
-  const id = slug(raw.course.id || raw.course.code);
+  // From the code, never from the model's own `id`: the prompt asks it for
+  // "a short lowercase slug, e.g. econ" and it obliges, so every PSCI syllabus
+  // came back wanting to be `psci`. See `courseId` for what that cost.
+  const id = courseId(raw.course.code, input.taken ?? []);
   const source = input.documents[0]?.name ?? 'uploaded document';
 
   /*
@@ -245,7 +257,22 @@ function validate(
       notes.push(`Dropped "${it.title ?? 'an item'}" — its date (${it.month}/${it.day}) is not a real one.`);
       continue;
     }
-    let itemId = slug(it.id || `${id}-${it.title ?? n}`);
+    /*
+     * Prefixed with this course, always.
+     *
+     * A tick is stored against an item id and nothing else, so two courses
+     * with an item of the same id share a tick — and the model names items
+     * after the course id it proposed, which is the same short word for every
+     * course in a department. `psci-q1` from a PSCI 2200 syllabus would tick
+     * the PSCI 1104 quiz. The prefix the model chose is dropped where it put
+     * one, so the id stays readable rather than becoming `psci-2200-psci-q1`.
+     */
+    const proposed = slug(raw.course.id ?? '');
+    const stem = slug(String(it.id || it.title || n)).replace(
+      proposed ? new RegExp(`^${proposed}-`) : /^$/,
+      '',
+    );
+    let itemId = stem.startsWith(`${id}-`) ? stem : `${id}-${stem || n}`;
     while (seen.has(itemId)) itemId = `${itemId}-${n}`;
     seen.add(itemId);
 
