@@ -182,6 +182,7 @@ export function Mail() {
 
       <SectionLabel>To</SectionLabel>
       <input
+        aria-label="Who it goes to"
         className="input"
         type="email"
         value={address}
@@ -219,6 +220,7 @@ export function Mail() {
         <>
           <SectionLabel>The message you are replying to</SectionLabel>
           <textarea
+            aria-label="The message you are replying to"
             className="input"
             value={incoming}
             onChange={(e) => setIncoming(e.target.value)}
@@ -234,6 +236,7 @@ export function Mail() {
         rather than invent a reason for you.
       </div>
       <textarea
+        aria-label="In your own words"
         className="input"
         value={facts}
         onChange={(e) => setFacts(e.target.value)}
@@ -243,6 +246,7 @@ export function Mail() {
 
       <SectionLabel>Sign it</SectionLabel>
       <input
+        aria-label="Sign it"
         className="input"
         value={from}
         placeholder="Your name"
@@ -281,6 +285,7 @@ export function Mail() {
         <>
           <SectionLabel>The draft — yours to change</SectionLabel>
           <input
+            aria-label="The subject line"
             className="input"
             value={subject}
             placeholder={fallbackSubject(p, ctx)}

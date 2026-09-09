@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { SHORTCUTS, keyLabel, shortcutFor } from '../lib/keys';
 import { useAI } from '../ai/store';
@@ -170,7 +171,7 @@ export function Keys() {
         How the rest of it works
       </button>
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         Nothing fires while you are typing, and anything with ⌘ or Ctrl stays the browser's.
         {state.nav === 'feed' ? ' The screens are the same ones the feed filter reaches.' : ''}
       </div>

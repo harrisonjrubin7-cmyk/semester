@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { CustomRow, Group } from '../components/shell/Rows';
@@ -215,7 +216,7 @@ export function Meals() {
         </Group>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
         Nothing is fetched. The balance page is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The app reports a rate and a date and stops; it has no idea whether you

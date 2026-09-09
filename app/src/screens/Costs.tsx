@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { ScanIsbn } from '../components/ScanIsbn';
 import { useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
@@ -301,7 +302,7 @@ export function Costs() {
         </a>
       ) : null}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
         Nothing here is looked up. Prices differ by edition, by seller and by the week, and a wrong
         one shown confidently is worse than a blank field — so you type what you paid, and the app
         remembers it for the August when you are deciding again.

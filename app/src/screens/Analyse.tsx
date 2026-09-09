@@ -186,6 +186,7 @@ export function Analyse() {
         Open a CSV
       </button>
       <textarea
+        aria-label="Your marks, pasted"
         className="input"
         value={text}
         onChange={(e) => {

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { canPush, enrol, enrolled, leave, markRefilled, PUSH_NOTE, queueFor } from '../lib/push';
 import { atRiskToday } from '../lib/atrisk';
@@ -103,7 +104,7 @@ export function PushSwitch() {
         </div>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>{PUSH_NOTE}</div>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>{PUSH_NOTE}</div>
     </div>
   );
 }

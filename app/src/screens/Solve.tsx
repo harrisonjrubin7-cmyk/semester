@@ -158,6 +158,7 @@ export function Solve() {
 
       <SectionLabel>The problem</SectionLabel>
       <textarea
+        aria-label="The problem"
         className="input"
         value={problem}
         onChange={(e) => setProblem(e.target.value)}
@@ -195,6 +196,7 @@ export function Solve() {
         <>
           <SectionLabel>What you did</SectionLabel>
           <textarea
+            aria-label="What you did"
             className="input"
             value={work}
             onChange={(e) => setWork(e.target.value)}
@@ -209,6 +211,7 @@ export function Solve() {
         <>
           <SectionLabel>The answer you expected</SectionLabel>
           <input
+            aria-label="The answer you expected"
             className="input"
             value={expected}
             onChange={(e) => setExpected(e.target.value)}

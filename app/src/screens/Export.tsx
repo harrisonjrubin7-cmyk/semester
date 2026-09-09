@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -249,7 +250,7 @@ export function Export() {
                 {part.format}
               </span>
               {counts[part.id] > 0 && part.id !== 'backup' && (
-                <span style={{ fontSize: 'var(--type-xs)', opacity: 0.45 }}>{counts[part.id]}</span>
+                <span style={{ fontSize: 'var(--type-xs)', ...secondLine() }}>{counts[part.id]}</span>
               )}
             </div>
             <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>

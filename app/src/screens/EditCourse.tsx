@@ -232,6 +232,7 @@ export function EditCourse() {
         })}
       </div>
       <textarea
+        aria-label="The AI rule, in the syllabus’s own words"
         className="input"
         value={draft.course.ai?.note ?? ''}
         placeholder="The rule in the syllabus’s own words, so you can check it later."
@@ -245,6 +246,7 @@ export function EditCourse() {
       {draft.course.grading.map((row, i) => (
         <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-4)' }}>
           <input
+            aria-label="What this part of the grade is"
             className="input"
             value={row.what}
             placeholder="Exams"
@@ -261,6 +263,7 @@ export function EditCourse() {
             style={{ flex: 1, minWidth: 0 }}
           />
           <input
+            aria-label="What that part is worth"
             className="input"
             value={row.pct}
             placeholder="40%"
@@ -367,6 +370,7 @@ export function EditCourse() {
               style={{ width: 92, flex: 'none' }}
             />
             <input
+              aria-label="What the block is"
               className="input"
               value={block.title}
               placeholder="Lecture"
@@ -448,6 +452,7 @@ export function EditCourse() {
       {draft.items.map((i) => (
         <Blueprint plain key={i.id} style={{ padding: '12px 13px', marginBottom: 9 }}>
           <input
+            aria-label="What is due"
             className="input"
             value={i.title}
             placeholder="What is due"
@@ -467,6 +472,7 @@ export function EditCourse() {
               style={{ flex: 1, minWidth: 0 }}
             />
             <input
+              aria-label="The time it is due"
               className="input"
               value={i.dueTime}
               placeholder="11:59p"
@@ -489,6 +495,7 @@ export function EditCourse() {
               ))}
             </select>
             <input
+              aria-label="What it is worth"
               className="input"
               value={i.weight}
               placeholder="15%"

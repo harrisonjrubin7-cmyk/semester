@@ -24,6 +24,7 @@
  */
 
 import { useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
@@ -178,7 +179,7 @@ function Row({
           style={{
             fontFamily: 'var(--font-heading)',
             fontSize: 'var(--type-lg)',
-            opacity: 0.45,
+            ...secondLine(),
             minWidth: 14,
           }}
         >

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { ClashList, DayBudget } from '../components/Clashes';
@@ -314,7 +315,7 @@ export function Ahead() {
             {mine}
           </div>
         ) : null}
-        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {basisLine(w.shape)} The coursework estimate is built only from work you have timed
           yourself — the app still invents nothing, and anything it has never seen the like of is
           counted as unknown rather than guessed at.
