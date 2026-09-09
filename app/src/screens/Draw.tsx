@@ -2,14 +2,14 @@ import { Suspense, lazy, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
-import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
-import { ask, configured, provider } from '../lib/claude';
+import { ask, configured } from '../lib/claude';
 import { KINDS, drawingName, kind as kindById, systemFor, unfence } from '../lib/diagram';
 import { download } from '../lib/deliver';
+import { NeedsKey } from '../components/NeedsKey';
 
 const Drawing = lazy(() =>
   import('../components/Drawing').then((m) => ({ default: m.Drawing })),
@@ -78,18 +78,7 @@ export function Draw() {
     }
   };
 
-  if (!configured()) {
-    return (
-      <Page>
-        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
-          <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
-            Sign in to use the shared key, or add your own under Settings → The assistant.
-          </div>
-        </Blueprint>
-      </Page>
-    );
-  }
+  if (!configured()) return <NeedsKey frame />;
 
   return (
     <Page bottom={26}>

@@ -289,7 +289,7 @@ function OverdueBanner() {
 function ThisWeek() {
   const { state, dispatch, now, catalog, tint, courseCode } = useStore();
   const row = useRowStyle(9);
-  const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
+  const nextEvent = datedEvents(now, state.schoolId, state.sample).find((e) => !e.isPast);
 
   const days = useMemo(() => dueByDay(datedItems(catalog, now), now), [catalog, now]);
   // Everything still ahead that the seven days do not reach, and the date it

@@ -33,6 +33,7 @@ import {
   type Question,
 } from '../lib/exam';
 import { UseSources, appendTo } from '../components/UseSources';
+import { NeedsKey } from '../components/NeedsKey';
 
 type Stage = 'setup' | 'sitting' | 'marking';
 
@@ -342,10 +343,7 @@ export function Exam() {
             {busy ? 'Writing the paper…' : 'Write the paper'}
           </ActionButton>
         ) : (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
-            Needs a key first — set one under Settings → The assistant. A paper from your cards needs
-            no key at all.
-          </div>
+          <NeedsKey also="A paper from your cards needs no key at all." />
         )}
       </Page>
     );

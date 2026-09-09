@@ -657,12 +657,47 @@ a:hover {
  * statements at once: never less than the gutter, and past that, whatever
  * centres it over the same column the content is in.
  */
+/*
+ * And so does every other strip that spans the pane.
+ *
+ * `.pane-strip` is the header's rule, named, because the header was not the
+ * only thing wearing this shape and was the only thing that had been fixed.
+ * A strip here is a full-width band under the header — the sample-semester
+ * banner, the shelves — whose *background and hairline* have to reach both
+ * edges of the pane, for the reason written above, and whose *words* have to
+ * line up with the column they are about.
+ *
+ * Measured at 1600px with the rail, where the content column runs 456–1416:
+ * the banner's label started at 288 and its two answers ended at 1584, so a
+ * ten-point caps sentence was set on a 1,124px line with its own buttons a
+ * hundred and sixty-eight pixels outside the column on either side. The
+ * shelves' pills started at 14. Neither is a judgement call about taste —
+ * they are the one thing on the screen not lined up with anything.
+ *
+ * No base declaration, deliberately. Below 1180px each strip keeps whatever
+ * padding it already had, so nothing moves on a phone or a tablet; this only
+ * ever adds the gutter a wide window needs.
+ */
+/* The banner's own gutter below 1180px, where `.pane-strip` does nothing.
+   In the sheet rather than inline on the element: an inline padding beats a
+   media query, and the strip would have stayed exactly where it was.
+
+   `--chrome-pad` rather than the `--sp-7` it was written as, so it is the
+   header's gutter at every width and not only at the two the strip rule
+   reaches. They were two pixels apart on a phone — a banner and the title
+   directly above it, not quite in line, which is the sort of thing you see
+   without being able to say what you are looking at. */
+.sample-mark {
+  padding-inline: var(--chrome-pad);
+}
+
 @media (min-width: 1180px) {
   /* `.device-pane` on the front, because `.app-header` sets `padding-inline`
      itself further down this sheet and a later rule of equal weight wins:
      without the extra class this one is dead and the title sits at the window
      edge while the content it names sits 150px to the right of it. */
-  .device-pane .app-header {
+  .device-pane .app-header,
+  .device-pane .pane-strip {
     /* Plus the page gutter: the content column is `--measure` wide and its
        own text starts one gutter inside that, so a header that stopped at
        the column's edge sat 30px to the left of the title it names. */
@@ -671,7 +706,8 @@ a:hover {
       calc((100% - var(--measure)) / 2 + var(--page-pad))
     );
   }
-  .device-pane.has-canvas .app-header {
+  .device-pane.has-canvas .app-header,
+  .device-pane.has-canvas .pane-strip {
     padding-inline: max(
       var(--chrome-pad),
       calc((100% - var(--canvas)) / 2 + var(--page-pad))
@@ -1063,6 +1099,35 @@ a:hover {
   overflow-x: auto;
   scrollbar-width: none;
 }
+/*
+ * And it says which way there is more.
+ *
+ * The scrollbar is hidden above, which is right for a row of pills and left
+ * the row unable to say it scrolls at all: on Exam runway the fourth chip was
+ * cut through the middle of a course code at the screen edge, which reads as
+ * a clipping fault rather than as an invitation. The same `mask-image` the
+ * shelves use, and for the reason written there.
+ *
+ * Told which end, rather than fading both like the shelves do, because the
+ * first chip in one of these is usually the selected one and a permanent fade
+ * across a chrome-filled chip looks like a rendering bug. `data-more` is set
+ * from the row's own scroll position — see `useEdges` in `components/ui.tsx`
+ * — and is absent wherever nothing measured, which leaves the row exactly as
+ * it has always been.
+ *
+ * 26px: two-thirds of a chip's height, enough to read as a fade rather than
+ * as a soft edge, and short enough that a chip fully inside the row is never
+ * touched by it.
+ */
+.chiprow[data-more='end'] {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
+}
+.chiprow[data-more='start'] {
+  mask-image: linear-gradient(90deg, transparent, #000 26px);
+}
+.chiprow[data-more='both'] {
+  mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+}
 .chiprow::-webkit-scrollbar {
   width: 0;
   height: 0;
@@ -1090,7 +1155,14 @@ a:hover {
    * and every device got 58px whether it had a notch or not. Two rules
    * setting the same property on the same element, one of them dead.
    */
-  padding-inline: 18px;
+  /*
+   * `--chrome-pad`, which is what 18 was: the token is 18 on a phone, 20 on a
+   * tablet and 30 on a desktop, and this was the literal. The desktop rule
+   * above overrode it there, so the two pixels only ever showed on a tablet —
+   * a title sitting just left of the screen it names, at the one width where
+   * nobody was looking for it.
+   */
+  padding-inline: var(--chrome-pad);
   padding-bottom: 11px;
   background: color-mix(in srgb, var(--app-bg) 82%, transparent);
   border-bottom: 1px solid var(--app-line-soft);
@@ -1594,6 +1666,32 @@ a:hover {
    was set and type that merely fitted. */
 .chrome-text {
   text-wrap: balance;
+}
+
+/*
+ * The same display figure, in the one colour, for the one thing it is for.
+ *
+ * Progress draws four numbers in a row — Ahead, Late, Done, Courses — and
+ * drew them identically, so "6 late" and "42 ahead" arrived at the same
+ * weight and the one you needed to see was the one you had to read to find.
+ * The screen's own comment already assumed otherwise: "a permanent zero in
+ * that column is a red number you learn to stop seeing" is why Late is
+ * omitted at nothing rather than shown as 0, and the number it describes was
+ * never coloured.
+ *
+ * It is not a new use of the colour. `--app-warn` is a passed deadline
+ * everywhere else in the app — Today's banner, a late date in a deadline row,
+ * a unit nothing has touched on the runway — and this cell is the count of
+ * exactly that fact. It was the one place the app said it in silver.
+ *
+ * The gradient has to go for the colour to arrive at all: `.chrome-text`
+ * paints the brushed metal through the glyphs and fills them with
+ * transparent, so a `color` alone would be invisible under it.
+ */
+.chrome-text.is-late {
+  background: none;
+  color: var(--app-warn);
+  -webkit-text-fill-color: var(--app-warn);
 }
 .device h1,
 .device h2,
@@ -2538,6 +2636,23 @@ input[type='search'].input {
   flex: none;
   width: auto;
   white-space: nowrap;
+}
+
+/*
+ * On a wide window the gutter is the strip's, not the row's.
+ *
+ * `.shelf-nav` wears `pane-strip`, so above 1180px the nav's own padding is
+ * whatever puts its contents on the content column. The 14px below belongs
+ * to a phone, where the strip rule does nothing, and adding it to the
+ * column's gutter would leave the pills fourteen pixels right of everything
+ * they navigate to. Zeroed on the two children rather than folded into the
+ * nav, because the scroller and its fade have to end where the column does.
+ */
+@media (min-width: 1180px) {
+  .device-pane .shelf-nav-row,
+  .device-pane .shelf-nav-said {
+    padding-inline: 0;
+  }
 }
 
 .shelf-nav-said {

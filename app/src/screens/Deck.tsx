@@ -24,6 +24,7 @@ import {
   type Planned,
 } from '../lib/deck';
 import { UseSources, appendTo } from '../components/UseSources';
+import { NeedsKey } from '../components/NeedsKey';
 
 /**
  * A deck you can hand in, from a unit or from a brief.
@@ -278,10 +279,7 @@ export function Deck() {
               {busy ? 'Planning it…' : plan ? 'Plan it again' : 'Plan the deck'}
             </ActionButton>
           ) : (
-            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
-              Needs a key first — set one under Settings → The assistant. Building a deck from a unit
-              needs no key at all.
-            </div>
+            <NeedsKey also="Building a deck from a unit needs no key at all." />
           )}
         </>
       )}

@@ -36,6 +36,14 @@ export function SampleMark() {
 
   return (
     <div
+      /*
+       * `pane-strip` is what lines its words up with the column on a wide
+       * window; the background and the hairline still reach both edges of
+       * the pane. Its own gutter below that breakpoint is `.sample-mark` in
+       * app.css rather than an inline style, because an inline padding wins
+       * over the media query and the strip would stay where it was.
+       */
+      className="sample-mark pane-strip"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -50,7 +58,6 @@ export function SampleMark() {
          * of it could be reached.
          */
         paddingBlock: 'var(--sp-6)',
-        paddingInline: 'var(--sp-7)',
         background: 'var(--app-hero)',
         borderBottom: '1px solid var(--app-line)',
         fontFamily: 'var(--font-heading)',

@@ -195,6 +195,7 @@ describe('every combination the app will wear', () => {
         ratio: contrast(g.fg, bg) ?? 0,
         needs: AA_TEXT,
       },
+
     ];
   };
 

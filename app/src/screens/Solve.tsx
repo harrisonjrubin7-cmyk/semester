@@ -6,14 +6,14 @@ import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
 import { useLive } from '../lib/live';
-import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
-import { ask, configured, provider } from '../lib/claude';
+import { ask, configured } from '../lib/claude';
 import { MAX_SHOTS, toShots } from '../lib/shots';
 import { APPROACHES, READ_SYSTEM, SYSTEM, approach as byId, brief } from '../lib/solve';
+import { NeedsKey } from '../components/NeedsKey';
 
 /**
  * Work the problem.
@@ -110,18 +110,7 @@ export function Solve() {
     }
   };
 
-  if (!configured()) {
-    return (
-      <Page>
-        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
-          <div className="kicker">Needs {provider()}</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
-            Sign in to use the shared key, or add your own under Settings → The assistant.
-          </div>
-        </Blueprint>
-      </Page>
-    );
-  }
+  if (!configured()) return <NeedsKey frame />;
 
   return (
     <Page bottom={26}>

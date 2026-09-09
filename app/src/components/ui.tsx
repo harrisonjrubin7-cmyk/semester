@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 import { useRowStyle } from './shell/useShell';
 import { longhandMargins } from '../lib/margins';
@@ -82,6 +83,58 @@ export function SectionLabel({
   );
 }
 
+/**
+ * Which ends of a sideways-scrolling row have more beyond them.
+ *
+ * `.chiprow` hides its scrollbar — right for a row of pills, and it left the
+ * row with no way at all to say that it scrolls. On Exam runway the fourth
+ * chip was cut through the middle of "PSCI 1104" at the screen edge, which
+ * reads as a clipping bug rather than as an invitation, and the exam nobody
+ * could see was the one furthest out. It gets worse with every course added:
+ * four fit, six do not.
+ *
+ * The shelves already answered this — `.shelf-nav-row` fades both ends with a
+ * `mask-image`, and its comment says why: "the fade says there is more this
+ * way without drawing a scrollbar over the pills". This is the same fade, told
+ * which end needs it, because a `ChipRow`'s first chip is usually the selected
+ * one and a permanent fade across a chrome-filled chip reads as a rendering
+ * fault rather than as an edge.
+ *
+ * The first measurement comes from the observer rather than from a call here:
+ * `ResizeObserver` fires once on `observe`, so the state is set from an event
+ * either way, and where there is no observer at all — jsdom, in the suite —
+ * the row simply keeps the unmasked default it has always had.
+ */
+type Edge = 'none' | 'start' | 'end' | 'both';
+
+function useEdges(count: number) {
+  const row = useRef<HTMLDivElement>(null);
+  const [at, setAt] = useState<Edge>('none');
+
+  useEffect(() => {
+    const el = row.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const read = () => {
+      // A sub-pixel row is not a row that scrolls: `scrollWidth` and
+      // `clientWidth` disagree by a fraction on plenty of layouts that fit.
+      const over = el.scrollWidth - el.clientWidth;
+      if (over <= 1) return setAt('none');
+      const start = el.scrollLeft <= 1;
+      const end = el.scrollLeft >= over - 1;
+      setAt(start ? 'end' : end ? 'start' : 'both');
+    };
+    const watch = new ResizeObserver(read);
+    watch.observe(el);
+    el.addEventListener('scroll', read, { passive: true });
+    return () => {
+      watch.disconnect();
+      el.removeEventListener('scroll', read);
+    };
+  }, [count]);
+
+  return [row, at] as const;
+}
+
 /** A horizontally scrolling row of filter chips. */
 export function ChipRow<T extends string>({
   options,
@@ -103,8 +156,10 @@ export function ChipRow<T extends string>({
    */
   labels?: Record<string, string>;
 }) {
+  const [row, more] = useEdges(options.length);
+
   return (
-    <div className="chiprow" style={style}>
+    <div className="chiprow" data-more={more} ref={row} style={style}>
       <div style={{ display: 'flex', gap: 'var(--sp-3)', paddingRight: 18 }}>
         {options.map((o) => {
           const on = o === value;
