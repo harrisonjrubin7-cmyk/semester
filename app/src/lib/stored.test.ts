@@ -12,6 +12,7 @@ import { hoursOf, weeklyHours } from './activities';
 import { learned } from './pace';
 import { isoToDate } from './date';
 import { readPlaces, DEFAULT_RADIUS } from './place';
+import { readTasks } from './task';
 import { matchPlace } from './rooms';
 import { projects, readSources } from './sources';
 import { clockFace, lengthLine, nextRing, readAlarms, readTimers, remaining, running } from './clocks';
@@ -189,6 +190,31 @@ describe('a stored registrar sheet', () => {
     // reached `daysTo`, came back NaN, and sorted the list by NaN.
     const rows = readTermDates([{ id: 'a', iso: 'some time in October' }, { id: 'b', iso: '2026-10-08' }]);
     expect(filled(rows).map((d) => d.id)).toEqual(['b']);
+  });
+});
+
+describe('a stored task', () => {
+  /*
+   * `date` is `string | null` and the null half is a real state, so every
+   * reader tests truthiness before splitting. That answers "is there a date"
+   * and not "is it one": a date stored as a number is truthy, and `isoToDate`
+   * then calls `.split` on it.
+   */
+  it('has a date that is a string or nothing, so the guards mean what they say', () => {
+    expect(readTasks([{ id: 't1', date: 9 }])[0].date).toBeNull();
+    expect(readTasks([{ id: 't1', date: '' }])[0].date).toBeNull();
+    expect(readTasks([thin])[0].date).toBeNull();
+    expect(readTasks([{ id: 't1', date: '2026-09-10' }])[0].date).toBe('2026-09-10');
+  });
+
+  it('is not done unless it was saved done', () => {
+    expect(readTasks([{ id: 't1', done: 'yes' }])[0].done).toBe(false);
+    expect(readTasks([{ id: 't1', done: true }])[0].done).toBe(true);
+  });
+
+  it('keeps a task that is genuinely filled in', () => {
+    const [t] = readTasks([{ id: 't1', title: 'Email advisor', date: '2026-09-10', time: 'before work', note: 'n', done: false, created: 5, courseId: 'econ' }]);
+    expect(t).toMatchObject({ title: 'Email advisor', time: 'before work', courseId: 'econ', created: 5 });
   });
 });
 

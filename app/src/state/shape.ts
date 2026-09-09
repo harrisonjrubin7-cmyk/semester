@@ -43,6 +43,7 @@ import { readModules } from '../lib/handoff';
 import { readPlaces } from '../lib/place';
 import { readTermDates } from '../lib/registrar';
 import { readSources } from '../lib/sources';
+import { readTasks } from '../lib/task';
 import { readWindows as readStudyWindows } from '../lib/windows';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
@@ -1017,7 +1018,7 @@ export function loadPersisted(): Persisted {
       done: saved.done ?? {},
       saved: saved.saved ?? DEFAULT_PERSISTED.saved,
       picked: { ...DEFAULT_PERSISTED.picked, ...(saved.picked ?? {}) },
-      tasks: list(saved.tasks),
+      tasks: readTasks(saved.tasks),
       appointments: readAppointments(saved.appointments),
       notes: list(saved.notes),
       updates: readUpdates(saved.updates),

@@ -145,6 +145,15 @@ describe('opening the app on a row that is missing a field', () => {
     expect(state.spent[0]).toMatchObject({ courseId: 'econ', kind: 'paper', minutes: 90 });
   });
 
+  it('gives a task a date that is a string or nothing', () => {
+    // `if (t.date)` answers "is there a date", not "is it one": a number is
+    // truthy and `isoToDate` splits it.
+    const raw = JSON.stringify({ tasks: [{ id: 't1', date: 9 }, { id: 't2', date: '2026-09-10' }] });
+    const { tasks } = withStorage(raw, () => loadPersisted());
+    expect(tasks[0].date).toBeNull();
+    expect(tasks[1].date).toBe('2026-09-10');
+  });
+
   it('gives a place a label, and leaves out one with nowhere to be', () => {
     const { places } = withStorage(thin('places'), () => loadPersisted());
     expect(places).toEqual([]);
