@@ -525,6 +525,24 @@ as a finding — and one of them was a null result for the wrong reason.
 
 ---
 
+
+### T2, a third time — the destination comes back, on Semester
+
+Reversed again, by the person the app is for. The reasoning in this section
+is about *which of Courses and the tab* is the copy, and it answers that
+well. It does not answer the question actually being asked, which is whether
+"how am I doing" is a thing you go to or a thing you find while looking at
+something else.
+
+It goes back to being a destination, and to Semester rather than Courses:
+the shelf that already holds Reports and When you are behind, which are the
+other two ways of asking it. `root` stays `courses`, so the tab bar still
+lights Courses when you are on it — the answer above about which screen it
+is a view of was never in dispute.
+
+The tab goes, so there is still exactly one way in. That is the half of §5
+and §6 that has held through all three turns: whatever the grade table is,
+it should not be two things at once.
 ## Appendix — the first pass, resolved
 
 Run at `ac5a2c8` against 59 destinations. Kept because the verdicts still hold
