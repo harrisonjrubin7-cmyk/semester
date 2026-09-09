@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { secondLine } from '../../lib/dim';
 import { HIGHLIGHT_MS, pageTitle, sectionOf, takeLooking } from '../../lib/settings';
 import type { Screen } from '../../lib/types';
 
@@ -93,7 +94,7 @@ export function SettingsPage({
             fontFamily: 'var(--font-heading)',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
-            opacity: 0.45,
+            ...secondLine(),
           }}
         >
           {sectionOf(screen) || 'Settings'}

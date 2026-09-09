@@ -596,6 +596,7 @@ export function AddMaterial() {
 
       <SectionLabel>What it is</SectionLabel>
       <input
+        aria-label="What it is"
         className="input"
         placeholder="Trounstine ch. 4"
         value={title}
@@ -603,6 +604,7 @@ export function AddMaterial() {
         style={{ fontSize: 'var(--type-md)' }}
       />
       <input
+        aria-label="Where it came from"
         className="input"
         placeholder="Where it came from — Brightspace, Oct 8 lecture"
         value={source}

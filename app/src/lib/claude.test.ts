@@ -1,6 +1,17 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ask, readCitation, readMaterial, withAttachments, asSent, wire, CUT_OFF } from './claude';
+import {
+  ask,
+  configured,
+  readCitation,
+  readMaterial,
+  route,
+  routeLabel,
+  withAttachments,
+  asSent,
+  wire,
+  CUT_OFF,
+} from './claude';
 import type { Turn } from './claude';
 
 const user = [{ role: 'user' as const, content: 'What is due first?' }];
@@ -158,6 +169,7 @@ beforeEach(() => {
 afterEach(() => {
   localStorage.clear();
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 function catchRequest(events: object[]) {
@@ -713,5 +725,100 @@ describe('why the model stopped', () => {
       expect(text).toBe('All of it');
       expect(why).not.toBe('cut');
     }
+  });
+});
+
+/**
+ * Where a question goes, and what travels with it.
+ *
+ * Four routes reach the same API and only one of them keeps the key out of the
+ * browser without an account: a proxy the build was pointed at, which on a
+ * clone of this repo is the dev server holding ANTHROPIC_API_KEY from
+ * app/.env.local. What has to be true of it is that it answers when nothing
+ * has been typed into the app, that the request carries no key, and that it
+ * still gives way to anything the person using the app chose for themselves.
+ */
+describe('which route a question takes', () => {
+  /** The headers as well as the body, which is the point of these. */
+  let call: { url: string; headers: Record<string, string> } | null = null;
+
+  function catchHeaders() {
+    call = null;
+    vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+      call = { url: String(url), headers: (init.headers ?? {}) as Record<string, string> };
+      return Promise.resolve(stream([said('ok')]));
+    });
+  }
+
+  const on = (device: Partial<{ apiKey: string; proxy: string }>) =>
+    localStorage.setItem(
+      'semester.claude.v1',
+      JSON.stringify({ provider: 'anthropic', model: 'claude-opus-5', apiKey: '', proxy: '', ...device }),
+    );
+
+  it('uses the build\'s proxy when nothing has been typed into the app', async () => {
+    on({});
+    vi.stubEnv('VITE_CLAUDE_PROXY', '/anthropic');
+
+    expect(configured()).toBe(true);
+    expect(route()).toBe('proxy');
+
+    catchHeaders();
+    await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(call!.url).toBe('/anthropic/v1/messages');
+    // The whole reason for this route: the key is on the server, so there is
+    // nothing here for anything running in the browser to read.
+    expect(call!.headers['x-api-key']).toBeUndefined();
+  });
+
+  it('does not mind a trailing slash on the address', async () => {
+    on({});
+    vi.stubEnv('VITE_CLAUDE_PROXY', 'https://proxy.example.com/');
+    catchHeaders();
+    await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(call!.url).toBe('https://proxy.example.com/v1/messages');
+  });
+
+  it('gives way to a key set on this device', async () => {
+    // An env var set once in a file should not quietly take over from a key
+    // somebody went and typed on the settings screen.
+    on({ apiKey: 'sk-ant-mine' });
+    vi.stubEnv('VITE_CLAUDE_PROXY', '/anthropic');
+
+    expect(route()).toBe('own');
+    catchHeaders();
+    await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(call!.url).toBe('https://api.anthropic.com/v1/messages');
+    expect(call!.headers['x-api-key']).toBe('sk-ant-mine');
+  });
+
+  it('gives way to a proxy set on this device', async () => {
+    on({ proxy: 'https://mine.example.com', apiKey: 'sk-ant-mine' });
+    vi.stubEnv('VITE_CLAUDE_PROXY', '/anthropic');
+
+    expect(route()).toBe('proxy');
+    catchHeaders();
+    await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(call!.url).toBe('https://mine.example.com/v1/messages');
+  });
+
+  it('says which proxy is answering, since one of them is not your doing', () => {
+    on({});
+    vi.stubEnv('VITE_CLAUDE_PROXY', '/anthropic');
+    expect(routeLabel()).toBe('the proxy this build points at');
+
+    on({ proxy: 'https://mine.example.com' });
+    expect(routeLabel()).toBe('your proxy');
+  });
+
+  it('is still nothing when the build was given nothing', async () => {
+    on({});
+    vi.stubEnv('VITE_CLAUDE_PROXY', '');
+
+    expect(configured()).toBe(false);
+    expect(route()).toBe('none');
+    await expect(ask({ system: 's', messages: [{ role: 'user', content: 'q' }] })).rejects.toThrow(
+      /No key yet/,
+    );
   });
 });

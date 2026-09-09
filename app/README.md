@@ -266,6 +266,14 @@ server-side so the .p8 never reaches the browser.
 with the course guide as system context, and a card-maker that refuses anything
 it cannot parse cleanly rather than inventing a card.
 
+It reaches the API by four routes, preferred in this order: a proxy typed on
+this device, a key typed on this device, a proxy this build was pointed at
+(`VITE_CLAUDE_PROXY`), and the shared key that comes with signing in. The third
+is what makes a fresh clone answer — put `ANTHROPIC_API_KEY` in
+`app/.env.local` and `vite.config.ts` serves that proxy at `/anthropic`, adding
+the key to each call and streaming the reply back, so the key stays in the dev
+server and the page holds only an address. See [SETUP.md](../SETUP.md#the-assistant-on-your-own-machine).
+
 ### Two kinds of tool, and the rule that tells them apart
 
 The assistant has two tool sets and they are opposites, split by risk.

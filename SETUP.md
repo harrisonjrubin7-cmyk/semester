@@ -21,6 +21,40 @@ npm install
 npm run dev            # http://localhost:5173
 ```
 
+### The assistant, on your own machine
+
+Everything except the assistant works with nothing further. To have Claude
+answer — study cards from a reading, a syllabus turned into deadlines, the Ask
+tab — put a key from [console.anthropic.com](https://console.anthropic.com) →
+**API keys** in `app/.env.local`:
+
+```
+ANTHROPIC_API_KEY=sk-ant-…
+```
+
+Restart `npm run dev` and the app answers, with nothing to type into it: the
+dev server holds the key and adds it to each call, and the page is told only
+the address of that proxy (`/anthropic`), never the key. Settings → The
+assistant says as much where the key box would otherwise sit empty and
+unexplained.
+
+Two things to be exact about, because both are ways a key gets away from you:
+
+- **The name has no `VITE_` on the front, and that is the whole point.**
+  Anything named `VITE_…` is compiled into the page and handed to everyone who
+  loads the site. `ANTHROPIC_API_KEY` is read by the dev server and stays in
+  that process.
+- **`app/.env.local` is gitignored, and a key that has been pasted anywhere
+  else is spent.** A key in a commit, a screenshot or a chat window should be
+  rotated at console.anthropic.com rather than reasoned about.
+
+This route is development only — `vite build` neither runs the proxy nor tells
+the built page it exists. A deployed copy uses the Edge Function in step 3,
+which does the same job with an account check and a monthly cap in front of it.
+Somewhere else that holds a key — your own proxy in front of the Messages API —
+goes in `VITE_CLAUDE_PROXY`, which is an address rather than a secret and so
+does survive a build.
+
 ## 2 · Accounts and sync — Supabase
 
 1. **Create a project** at [supabase.com](https://supabase.com). Any region;
@@ -154,6 +188,13 @@ Email confirmation is on by default. To let a new account sign in immediately
 while you are testing, Authentication → Providers → Email → turn off *Confirm
 email*.
 
+That setting decides what the first run does, because the fourth of its five
+screens is where an account is made: with *Confirm email* on, somebody is told
+to check their inbox and the run waits there with the sign-in form; with it
+off, the account is live and the run moves itself on. Either way the screen is
+skippable and the app works signed out — an account only decides whether the
+semester follows somebody to a second device.
+
 ### Google and Apple sign-in (optional)
 
 Authentication → Providers, switch on what you want, and paste each provider's
@@ -163,9 +204,11 @@ immediately.
 
 ## 3 · The shared Claude key (optional)
 
-Without this, each user pastes their own API key under **Ask Claude →
-Settings** and the app works fine. With it, a signed-in user can generate a
-course with no key at all.
+Without this, each user pastes their own API key under **Settings → The
+assistant** and the app works fine. With it, a signed-in user can generate a
+course with no key at all. This is the deployed counterpart of the dev server's
+key above: same idea, same key never reaching a browser, with an account check
+and a monthly cap added because this one is reachable from the internet.
 
 **From the dashboard, no tooling required:**
 

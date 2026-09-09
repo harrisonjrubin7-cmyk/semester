@@ -22,16 +22,21 @@
  * screen is drawn, never what it contains. It still borrows the soft parts
  * below — `DarkTile` is a good tile in every layout, and a second one drawn
  * to look almost the same would be the duplication this release is about.
+ *
+ * The tile, the cluster of glyphs and the sheet that opens over the grid are
+ * shared with Progress → By task, which files the same screens under what
+ * somebody is trying to do rather than where the thing lives. Two grids drawn
+ * to almost the same measurements would be that duplication again.
  */
 
 import { useState } from 'react';
 import { useStore } from '../../state/store';
-import { GROUPS, destinationsFor, saysFor, type Destination, type Group } from '../../lib/nav';
+import { GROUPS, destinationsFor, saysFor, type Group } from '../../lib/nav';
 import { readOrder, tilesFor } from '../../lib/launcher';
-import { softTop } from '../../lib/softtop';
 import { currentLook } from '../../state/shape';
 import { TabGlyph } from '../TabIcon';
-import { glyphFor } from '../icons.pick';
+import { distinctGlyphs } from '../icons.pick';
+import { firstFigure } from '../../lib/softtop';
 import { DarkTile } from '../soft/Soft';
 import { Folder } from './Folder';
 
@@ -49,35 +54,11 @@ import { Folder } from './Folder';
  */
 function valueFor(group: Group, store: ReturnType<typeof useStore>): string {
   const { state, catalog, now, school } = store;
-  const caps = school.capabilities;
-  const on = destinationsFor(group, caps);
-  for (const d of on) {
-    const figure = softTop(d.screen, { state, catalog, now, caps }).hero?.figure;
-    if (figure) return figure;
-  }
-  return String(on.length);
-}
-
-/**
- * Up to three screens whose glyphs differ.
- *
- * Ten of the fifty-five screens have a glyph of their own; the rest fall back
- * to their shelf's. So the first three screens on a shelf are usually the
- * same drawing three times, which reads as a decorative flourish rather than
- * as a cluster of what is inside. One glyph is a truer answer than three
- * copies of it.
- */
-function distinct(on: Destination[]): Destination[] {
-  const out: Destination[] = [];
-  const seen = new Set<unknown>();
-  for (const d of on) {
-    const glyph = glyphFor(d.screen);
-    if (seen.has(glyph)) continue;
-    seen.add(glyph);
-    out.push(d);
-    if (out.length === 3) break;
-  }
-  return out;
+  const on = destinationsFor(group, school.capabilities);
+  return (
+    firstFigure(on.map((d) => d.screen), { state, catalog, now, caps: school.capabilities }) ??
+    String(on.length)
+  );
 }
 
 export function Launcher() {
@@ -96,8 +77,9 @@ export function Launcher() {
           return (
             <div key={group} className="soft-grid-cell" role="listitem">
               <DarkTile
-                glyphs={distinct(on).map((d) => (
-                  <TabGlyph key={d.screen} screen={d.screen} size={15} />
+                label={`${group} — ${on.length === 1 ? '1 screen' : `${on.length} screens`}`}
+                glyphs={distinctGlyphs(on.map((d) => d.screen)).map((screen) => (
+                  <TabGlyph key={screen} screen={screen} size={15} />
                 ))}
                 value={valueFor(group, store)}
                 onClick={() => setOpen(group)}

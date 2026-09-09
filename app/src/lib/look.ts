@@ -1109,6 +1109,21 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     '--app-dim': fade(g.fg, moreContrast ? Math.max(g.dimAlpha, LOUD.dim) : g.dimAlpha),
     '--app-faint': fade(g.fg, moreContrast ? Math.max(g.faintAlpha, LOUD.faint) : g.faintAlpha),
 
+    /*
+     * The dim rung as a bare number, for the one job a colour cannot do.
+     *
+     * A row that is ticked off, gone by or cancelled dims as a whole — its
+     * course tag and its coloured edge with it — and that is an `opacity`,
+     * not a `color`. Written as a token rather than as the 0.40, 0.42 and
+     * 0.45 five call sites had each picked, because the alpha at which text
+     * stays readable is a property of the ground: on Ink 0.5 is comfortable
+     * and on Parchment it is 3.28:1, since dark ink on a light page fades
+     * faster than light ink on a dark one. `dimAlpha` is the figure already
+     * audited per ground for exactly this, and it rises with the contrast
+     * setting, which a hand-written opacity never did. See `lib/dim.ts`.
+     */
+    '--app-row-dim': String(moreContrast ? Math.max(g.dimAlpha, LOUD.dim) : g.dimAlpha),
+
     // On a light ground the accent has to darken to stay legible as text —
     // the same metal, three steps down — and the wash has to be mixed from
     // that darker shade or it is a selection state you cannot see.

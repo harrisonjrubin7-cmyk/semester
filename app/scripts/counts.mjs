@@ -2,9 +2,12 @@
  * The README's counts, written from the registries they count.
  *
  * `npm run counts`. Reads `src/lib/counts.ts` — the same module
- * `readme.test.ts` reads — and rewrites every marked number in the README, so
- * a screen added to `lib/nav.ts` is a screen the README says exists without
+ * `readme.test.ts` reads — and rewrites every marked number in both READMEs,
+ * so a screen added to `lib/nav.ts` is a screen the README says exists without
  * anybody having to remember the word for fifty-one.
+ *
+ * Both, because there are two: `app/README.md` and the repository's front
+ * page. `STATED` in `src/lib/counts.ts` says which counts each one carries.
  *
  * `--check` writes nothing and fails if it would have. Nothing runs it in CI —
  * `readme.test.ts` is that check, and one is enough — but it is what to run
@@ -51,42 +54,56 @@ const vite = await createServer({
 
 let all;
 let fill;
+let stated;
+let statedIn;
 try {
   const mod = await vite.ssrLoadModule('/src/lib/counts.ts');
   all = mod.counts(root);
   fill = mod.fill;
+  stated = mod.STATED;
+  statedIn = mod.statedIn;
 } finally {
   await vite.close();
 }
 
-const path = join(root, 'README.md');
-const before = readFileSync(path, 'utf8');
-const { text: after, missing } = fill(before, all);
+// `root` is `app/`, and one of the two files is its parent's. Every path in
+// `STATED` is from the repository root for that reason.
+const repo = join(root, '..');
 const named = all.map((c) => `${c.key} ${c.said} (${c.from})`).join(' · ');
 
-if (missing.length > 0) {
-  console.error(
-    `The README has no place to put: ${missing.join(', ')}.\n` +
-      `    Every generated number sits between markers, like\n` +
-      `    <!--screens-->forty-nine<!--/--> screens.\n` +
-      `    Add the marker where the number belongs, or drop the count from\n` +
-      `    src/lib/counts.ts if the README no longer states it.\n`,
-  );
-  process.exit(1);
+const written = [];
+for (const file of stated) {
+  const path = join(repo, file.path);
+  const before = readFileSync(path, 'utf8');
+  const { text: after, missing } = fill(before, statedIn(all, file));
+
+  if (missing.length > 0) {
+    console.error(
+      `${file.path} has no place to put: ${missing.join(', ')}.\n` +
+        `    Every generated number sits between markers, like\n` +
+        `    <!--screens-->forty-nine<!--/--> screens.\n` +
+        `    Add the marker where the number belongs, or drop the count from\n` +
+        `    the file's entry in src/lib/counts.ts if it no longer states it.\n`,
+    );
+    process.exit(1);
+  }
+
+  if (after === before) continue;
+
+  if (process.argv.includes('--check')) {
+    console.error(
+      `${file.path}'s counts are out of date: ${named}.\n` +
+        `    Run \`npm run counts\` and commit what it writes.\n`,
+    );
+    process.exit(1);
+  }
+
+  writeFileSync(path, after);
+  written.push(file.path);
 }
 
-if (after === before) {
-  console.log(`counts ok — ${named}`);
-  process.exit(0);
-}
-
-if (process.argv.includes('--check')) {
-  console.error(
-    `The README's counts are out of date: ${named}.\n` +
-      `    Run \`npm run counts\` and commit what it writes.\n`,
-  );
-  process.exit(1);
-}
-
-writeFileSync(path, after);
-console.log(`counts written — ${named}`);
+console.log(
+  written.length === 0
+    ? `counts ok — ${named}`
+    : `counts written to ${written.join(', ')} — ${named}`,
+);

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -216,7 +217,7 @@ export function Runway() {
               Open Student Access →
             </a>
           ) : null}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Weekends only — the app has no holiday calendar and will not invent one, so a lead
             time crossing a public holiday is a day short.
           </div>
@@ -366,7 +367,7 @@ export function Runway() {
       )}
 
       <PrintButton label="Print the runway" style={{ marginTop: 14 }} />
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         Every number here is counted from your own drilling and your own deadlines. There is no
         readiness score and there will not be one — it would be believed, and the app cannot know.
       </div>

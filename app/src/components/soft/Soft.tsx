@@ -185,14 +185,25 @@ export function LightTile({
 export function DarkTile({
   glyphs,
   value,
+  label,
   onClick,
 }: {
   glyphs: ReactNode;
   value: ReactNode;
+  /**
+   * What the tile is, for anybody who cannot see it.
+   *
+   * The name sits on the ground beneath the tile rather than inside it, so
+   * what the button actually contains is a cluster of little drawings and a
+   * number — read aloud, that is "button, 8%". The caller passes the name and
+   * the count it is showing beside it, which is the same sentence a sighted
+   * reader gets from the tile and the two lines under it.
+   */
+  label?: string;
   onClick?: () => void;
 }) {
   return (
-    <button type="button" className="bare soft-dark" onClick={onClick}>
+    <button type="button" className="bare soft-dark" aria-label={label} onClick={onClick}>
       <div className="soft-dark-glyphs">{glyphs}</div>
       <div className="soft-dark-rule" />
       <div className="soft-dark-value">{value}</div>

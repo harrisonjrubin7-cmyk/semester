@@ -68,7 +68,7 @@ import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
-import { readList, readModule, readWindow } from '../lib/stored';
+import { list, readList, readModule, readWindow, record } from '../lib/stored';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -490,6 +490,20 @@ export interface Persisted {
   picked: Record<string, boolean>;
   seenOnboarding: boolean;
   /**
+   * Whether an account has ever been made or signed into on this device.
+   *
+   * Not a session and not a claim about being signed in — `store.account` is
+   * that, and it is deliberately not persisted. This is the one bit the sign-in
+   * form needs and cannot ask anybody for: whether the person in front of it
+   * has an account yet. Without it the form has to guess, and a form that opens
+   * on "sign in" for somebody who has never registered is a wall with no door
+   * in it.
+   *
+   * It only ever goes from false to true. Signing out does not un-make the
+   * account, so it does not clear this either.
+   */
+  registered: boolean;
+  /**
    * Which university, as an id rather than a name.
    *
    * Empty is a normal state, not an error: it means the universal eighty per
@@ -748,6 +762,7 @@ export const DEFAULT_PERSISTED: Persisted = {
     return a;
   }, {}),
   seenOnboarding: false,
+  registered: false,
   // Vanderbilt by default, because that is who this was built for and a fresh
   // install should be the app they already have. Changed in Settings.
   schoolId: 'vanderbilt',
@@ -968,31 +983,19 @@ export function primePersisted(state: Persisted | null): void {
   primed = state;
 }
 
-/**
- * An array from storage, or an empty one.
+/*
+ * The two readers every list and record on this screen's state goes through
+ * are `list` and `record` in `lib/stored.ts`, imported above.
  *
- * `list(saved.tasks)` looks like it guards this and does not: `??` only
- * catches null and undefined, so a `tasks` that came back as a string, a
- * number or an object went straight through into the app, and the first
- * `.map` on it killed the whole page. Measured: storage holding
- * `{"tasks":"none"}` rendered zero characters and threw
- * `e.tasks.map is not a function` — before any boundary could catch it,
- * because it happens while the store is being built rather than while a
- * screen is being drawn.
+ * They used to live here, and the file they live in now is the one written
+ * about this exact bug one layer down — so keeping a second copy here meant
+ * the rule was stated twice and applied at one door out of three. A backup
+ * somebody opens and a sync from another device never touch `loadPersisted`
+ * at all; they arrive through `readIncoming`, which is where the rule had to
+ * be if it was going to be the rule.
  *
- * Storage is not a trusted input. It holds whatever an older build wrote, a
- * half-finished sync left behind, a quota error truncated, or somebody typed
- * into devtools. `readTabs` and `navOf` already read their fields back
- * defensively; there were twenty-three arrays that did not, and this is the
- * same idea applied to all of them at once.
- *
- * Empty rather than throwing, for the reason the whole file is written this
- * way: an app that opens with one list missing is recoverable, and an app
- * that will not open is not.
+ * What they do, and why, is written over each of them there.
  */
-function list<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
-}
 
 export function loadPersisted(): Persisted {
   if (primed) return primed;
@@ -1014,17 +1017,17 @@ export function loadPersisted(): Persisted {
     return {
       ...DEFAULT_PERSISTED,
       ...saved,
-      notifs: { ...DEFAULT_PERSISTED.notifs, ...(saved.notifs ?? {}) },
-      done: saved.done ?? {},
-      saved: saved.saved ?? DEFAULT_PERSISTED.saved,
-      picked: { ...DEFAULT_PERSISTED.picked, ...(saved.picked ?? {}) },
+      notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
+      done: record(saved.done),
+      saved: record(saved.saved ?? DEFAULT_PERSISTED.saved),
+      picked: { ...DEFAULT_PERSISTED.picked, ...record(saved.picked) },
       tasks: list(saved.tasks),
       appointments: list(saved.appointments),
       notes: list(saved.notes),
       updates: list(saved.updates),
       feeds: list(saved.feeds),
       feedEvents: list(saved.feedEvents),
-      linkUrls: saved.linkUrls ?? {},
+      linkUrls: record(saved.linkUrls),
       extraLinks: list(saved.extraLinks),
       // Not `list()`: that checks the list is a list and casts what is in it.
       // The catalogue is built from these before any screen is drawn, so there
@@ -1035,11 +1038,20 @@ export function loadPersisted(): Persisted {
       // ones; it keeps them, or the app would look wiped on the next load. A
       // genuinely new account starts empty.
       sample: saved.sample ?? saved.courses === undefined,
-      term: saved.term ?? LEGACY_TERM,
-    waysOpen: saved.waysOpen ?? true,
+      /*
+       * A term id names a term; anything else is not one.
+       *
+       * `?? LEGACY_TERM` catches null and undefined only, so a term that came
+       * back as an array or an object went into the app as the id of the term
+       * being shown, and the first lookup on it threw
+       * `(id ?? "").trim is not a function` — before a screen, so blank, and
+       * on every reload, because the id that kills it is the id being read.
+       */
+      term: typeof saved.term === 'string' ? saved.term : LEGACY_TERM,
+      waysOpen: saved.waysOpen ?? true,
       keyOpen: saved.keyOpen ?? false,
-      reviews: saved.reviews ?? {},
-      grades: saved.grades ?? {},
+      reviews: record(saved.reviews),
+      grades: record(saved.grades),
       gradeSystems: readOverrides(saved.gradeSystems),
       mySchools: Array.isArray(saved.mySchools)
         ? saved.mySchools.map(readSchool).filter((s) => s.id && s.name)
@@ -1166,6 +1178,7 @@ export function pickPersisted(state: State): Persisted {
     notifs: state.notifs,
     picked: state.picked,
     seenOnboarding: state.seenOnboarding,
+    registered: state.registered,
     cleared: state.cleared,
     tasks: state.tasks,
     appointments: state.appointments,
@@ -1405,6 +1418,15 @@ export type Action =
    * your colours changed.
    */
   | { type: 'wipeLocalForAdopt' }
+  /**
+   * An account was made, or signed into, on this device.
+   *
+   * Idempotent and one-way: it is dispatched by the credentials form the
+   * moment either call comes back without an error, and again by the store
+   * when a session arrives from anywhere else — the OAuth round trip, or a
+   * confirmation link opened in another tab.
+   */
+  | { type: 'registered' }
   | { type: 'onbNext' }
   | { type: 'restartOnboarding' }
   | { type: 'finishOnboarding' }

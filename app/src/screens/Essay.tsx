@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { Produced } from '../components/Produced';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -272,6 +273,7 @@ export function Essay() {
 
       <SectionLabel>Who reads it</SectionLabel>
       <input
+        aria-label="Who reads it"
         className="input"
         value={audience}
         onChange={(e) => setAudience(e.target.value)}
@@ -281,6 +283,7 @@ export function Essay() {
 
       <SectionLabel>What it has to do</SectionLabel>
       <textarea
+        aria-label="What it has to do"
         className="input"
         value={purpose}
         onChange={(e) => setPurpose(e.target.value)}
@@ -290,6 +293,7 @@ export function Essay() {
 
       <SectionLabel>The facts it may use</SectionLabel>
       <textarea
+        aria-label="The facts it may use"
         className="input"
         value={facts}
         onChange={(e) => setFacts(e.target.value)}
@@ -303,6 +307,7 @@ export function Essay() {
 
       <SectionLabel>What they asked for</SectionLabel>
       <textarea
+        aria-label="What they asked for"
         className="input"
         value={instructions}
         onChange={(e) => setInstructions(e.target.value)}
@@ -313,6 +318,7 @@ export function Essay() {
 
       <SectionLabel>Sources, if it needs any</SectionLabel>
       <textarea
+        aria-label="Sources, if it needs any"
         className="input"
         value={sources}
         onChange={(e) => setSources(e.target.value)}
@@ -416,7 +422,7 @@ export function Essay() {
             </button>
           </div>
           <PrintButton label="Print it" style={{ marginTop: 'var(--sp-4)' }} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             The saved file carries a line at the bottom saying it was drafted and edited. Take it
             off if you like — it is there so that in a month you can still tell.
           </div>
