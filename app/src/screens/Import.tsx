@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { backupOf } from '../lib/export';
 import { takeSnapshot } from '../lib/snapshots';
 import { Blueprint } from '../components/Blueprint';
-import { ActionButton, SectionLabel, TickBox } from '../components/ui';
+import { ActionButton, FilePick, SectionLabel, TickBox } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { troubleOf, useTrouble } from '../lib/trouble';
-import { gather } from '../lib/bundle';
-import { extractText, type Extracted } from '../lib/extract';
+import { intakeFiles, intakeText, type Intake } from '../lib/intake';
 import { generateCourse, type GenerationResult } from '../lib/generate';
 import { packSummary, provenance, readPack } from '../lib/handoff';
 import { configured } from '../lib/claude';
@@ -28,6 +28,42 @@ import { Folding } from '../components/Fold';
 import { NeedsKey } from '../components/NeedsKey';
 
 /**
+ * What the picker will offer.
+ *
+ * Every extension `lib/extract.ts` can actually read, and it had drifted: the
+ * list offered PDF, Word, text and zip while `extract.ts` had grown a slide
+ * reader, and `.pptx` is the commonest thing a professor posts after the
+ * syllabus itself. A format missing from here is not refused with a sentence —
+ * it is greyed out in the operating system's own dialog, which reads as the
+ * app being broken rather than as an answer.
+ *
+ * The wildcards stay at the end for the mobile pickers that ignore extensions.
+ */
+const ACCEPT =
+  '.pdf,.docx,.pptx,.txt,.md,.markdown,.csv,.tsv,.rtf,.html,.htm,.zip,' +
+  'text/*,application/pdf,application/zip';
+
+/**
+ * The quiet "…or" lines under the picker.
+ *
+ * `display: block` matters and is the whole reason this is shared. `.bare`
+ * sets `width: 100%`, so each of these overrides it to `auto` — and a
+ * `<button>` is inline-level, so on any screen wide enough for two of them the
+ * three doors ran together as one sentence: "…or open a course somebody shared
+ * with you…or add a course by hand, with no syllabus". Three ways in, reading
+ * as one broken line.
+ */
+const QUIET: CSSProperties = {
+  display: 'block',
+  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+  opacity: 0.65,
+  marginTop: 'var(--sp-5)',
+  width: 'auto',
+  padding: '6px 0',
+  textAlign: 'left',
+};
+
+/**
  * Upload a syllabus, get a course.
  *
  * The prototype faked this screen — a progress bar and a canned list of dates.
@@ -39,9 +75,9 @@ import { NeedsKey } from '../components/NeedsKey';
  * deadlines and a topic list; the readings are where the cards come from.
  */
 export function Import() {
-  const { state, dispatch, say } = useStore();
+  const { state, dispatch, say, catalog } = useStore();
   const rowEleven = useRowStyle(11);
-  const [files, setFiles] = useState<Extracted[]>([]);
+  const [files, setFiles] = useState<Intake[]>([]);
   const [hint, setHint] = useState('');
   const [busy, setBusy] = useState('');
   const trouble = useTrouble();
@@ -61,9 +97,13 @@ export function Import() {
    * whenever a new result arrives and the default is always "take all of it".
    */
   const [dropped, setDropped] = useState<Set<string>>(new Set());
-  const input = useRef<HTMLInputElement>(null);
   const abort = useRef<AbortController | null>(null);
   const shared = useRef<HTMLInputElement>(null);
+  /** Whether a file is being dragged over the screen right now. */
+  const [over, setOver] = useState(false);
+  /** The paste box, which is the way in when there is no file to pick. */
+  const [pasting, setPasting] = useState(false);
+  const [pasted, setPasted] = useState('');
 
   // A syllabus shared in from Brightspace or Mail arrives here already
   // chosen. Runs once: `takeShared` deletes as it reads, so a second pass
@@ -82,43 +122,89 @@ export function Import() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** The picker hands back a FileList; a share hands back an array. */
-  const add = (list: FileList | null) => (list?.length ? addFiles(Array.from(list)) : undefined);
-
+  /**
+   * Read what was chosen, however it arrived.
+   *
+   * Through `intakeFiles`, which is the app's one reader: it unpacks a zip,
+   * reads PDFs, Word files and slide decks, and names everything it could not
+   * read with a sentence saying why. This screen used to do that itself, in a
+   * copy that had drifted — it refused slide decks the reader handles, and
+   * handed a photograph to the text extractor to fail with the wrong message.
+   *
+   * One unreadable file never abandons the other nine: whatever was read is
+   * kept and the rest is reported.
+   */
   const addFiles = async (chosen: File[]) => {
     if (chosen.length === 0) return;
     trouble.clear();
     setBusy('Opening what you picked…');
-
-    // A zip is unpacked rather than refused: nobody has one syllabus, they
-    // have a download folder and whatever the professor posted.
-    const got = await gather(chosen);
-    if (got.skipped.length > 0) {
-      // Picking them again would skip them again — a .pages file is still a
-      // .pages file on the second go — so this is said without a retry.
-      trouble.wrong(
-        `Left out: ${got.skipped.map((sk) => `${sk.name} (${sk.why})`).join('; ')}.`,
+    try {
+      const got = await intakeFiles(chosen, (done, total) =>
+        setBusy(total > 1 ? `Reading ${done + 1} of ${total}…` : 'Reading it…'),
       );
-    }
-
-    for (const piece of got.files) {
-      setBusy(`Reading ${piece.name}…`);
-      try {
-        const extracted = await extractText(piece.file);
-        setFiles((f) => [...f.filter((x) => x.name !== extracted.name), extracted]);
-      } catch (e) {
-        // One unreadable file should not abandon the other nine, so this is
-        // added to whatever is already showing rather than replacing it.
-        trouble.add(`${piece.name}: ${troubleOf(e) ?? 'could not be read.'}`);
+      if (got.read.length > 0) {
+        setFiles((f) => [
+          ...f.filter((x) => !got.read.some((r) => r.name === x.name)),
+          ...got.read,
+        ]);
       }
+      if (got.refused.length > 0) {
+        // Choosing them again would refuse them again — a .pages file is still
+        // a .pages file on the second go — so this is said without a retry.
+        trouble.wrong(`Left out: ${got.refused.map((r) => `${r.name} (${r.why})`).join('; ')}.`);
+      } else if (got.read.length === 0) {
+        trouble.wrong('Nothing readable came out of that. Paste the text in instead.');
+      }
+    } catch (e) {
+      trouble.wrong(troubleOf(e) ?? 'Those files could not be opened.');
+    } finally {
+      setBusy('');
     }
-    setBusy('');
+  };
+
+  /**
+   * The syllabus as text, when there is no file to give.
+   *
+   * Two error messages in `lib/extract.ts` and the line under "Add your first
+   * course" have told people to paste the text in since before there was
+   * anywhere to paste it. This is that place. It is also the way in that
+   * cannot fail: a scanned PDF, a schedule that only exists inside a
+   * Brightspace page, a phone that will not open its own file picker — all of
+   * them end with the words on screen and nothing to upload.
+   */
+  const takePasted = () => {
+    const read = intakeText(pasted, 'paste');
+    if (!read) return;
+    trouble.clear();
+    setFiles((f) => [...f.filter((x) => x.name !== read.name), read]);
+    setPasted('');
+    setPasting(false);
+    say(`${read.words.toLocaleString()} words taken. Build the course when you are ready.`);
   };
 
   // The term a new course lands in. Defaults to the one the app is showing,
   // which is what somebody importing in September means, and is changeable
   // before it is saved because August imports of a spring course happen.
   const term = readTerm(state.term);
+
+  /**
+   * Every course id already spoken for, so a new one cannot land on top.
+   *
+   * Both lists, because both are real to the student: `state.courses` is what
+   * the account holds, and `catalog.modules` also carries the shipped semester
+   * while the sample is switched on. A course id keys deadlines, office hours,
+   * grades and the guide, so an import that reused one produced a course
+   * wearing another course's material. See `courseId` in `lib/edit.ts`.
+   */
+  const taken = useMemo(
+    () => [
+      ...new Set([
+        ...state.courses.map((c: (typeof state.courses)[number]) => c.course.id),
+        ...catalog.modules.map((m) => m.course.id),
+      ]),
+    ],
+    [state.courses, catalog.modules],
+  );
 
   /**
    * A shared course, opened.
@@ -165,7 +251,7 @@ export function Import() {
     abort.current = new AbortController();
     try {
       const built = await generateCourse(
-        { documents: files, hint, year: term.year },
+        { documents: files, hint, year: term.year, taken },
         abort.current.signal,
       );
       setDropped(new Set());
@@ -242,6 +328,36 @@ export function Import() {
 
   return (
     <Page>
+      {/*
+        Dropping a folder on the screen works, and says so while you hold it.
+
+        The one gesture everybody tries with a download folder open beside the
+        browser, and the app used to ignore it — worse than ignore it, because
+        an unhandled drop navigates the tab to the PDF and loses whatever was
+        already picked. This takes the drop wherever it lands on the screen.
+      */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (busy === '') setOver(true);
+        }}
+        onDragLeave={(e) => {
+          // Only when the pointer has actually left the screen, not on every
+          // crossing between the children inside it.
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setOver(false);
+          if (busy !== '') return;
+          void addFiles(Array.from(e.dataTransfer.files));
+        }}
+        style={
+          over
+            ? { outline: '2px dashed var(--app-accent-deep)', outlineOffset: 6, borderRadius: 'var(--r-md)' }
+            : undefined
+        }
+      >
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         Upload it. Walk away.
       </div>
@@ -250,21 +366,17 @@ export function Import() {
         study guide too — cards, terms and a self-test made from what they actually argue.
       </div>
 
-      <input
-        ref={input}
-        type="file"
-        multiple
-        accept=".pdf,.docx,.txt,.md,.csv,.html,.zip,text/*,application/pdf,application/zip"
-        style={{ display: 'none' }}
-        onChange={(e) => void add(e.target.files)}
-      />
-      <ActionButton
-        onClick={() => input.current?.click()}
+      {/* The input is the button — see `FilePick`. Nothing here calls
+          `.click()` on a hidden input, which is what used to make this the one
+          press in the app that could silently do nothing. */}
+      <FilePick
+        accept={ACCEPT}
         disabled={busy !== ''}
+        onPick={(picked) => void addFiles(picked)}
         style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-7)' }}
       >
-        {busy ? busy : 'Choose files — PDF, Word, text, or a zip of them'}
-      </ActionButton>
+        {busy || (over ? 'Drop them here' : 'Choose files — PDF, Word, slides, text, or a zip')}
+      </FilePick>
 
       {/* The other door in. A course somebody has already generated arrives
           as a file and needs no upload and no request — but it goes through
@@ -284,16 +396,53 @@ export function Import() {
       <button
         type="button"
         className="bare tappable"
+        onClick={() => setPasting((was) => !was)}
+        aria-expanded={pasting}
+        style={QUIET}
+      >
+        …or paste the syllabus in as text
+      </button>
+
+      {pasting && (
+        <>
+          <label
+            htmlFor="paste-syllabus"
+            className="section-label"
+            style={{ display: 'block', marginTop: 'var(--sp-4)' }}
+          >
+            Paste the syllabus
+          </label>
+          <textarea
+            id="paste-syllabus"
+            className="input"
+            rows={7}
+            autoFocus
+            value={pasted}
+            onChange={(e) => setPasted(e.target.value)}
+            placeholder="The schedule, the grading, the dates — however it is written."
+            style={{
+              fontSize: 'calc(13.5px * var(--text-scale, 1))',
+              lineHeight: 'var(--leading-normal)',
+              height: 'auto',
+              resize: 'vertical',
+            }}
+          />
+          <ActionButton
+            onClick={takePasted}
+            disabled={pasted.trim() === ''}
+            style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}
+          >
+            Take this text
+          </ActionButton>
+        </>
+      )}
+
+      <button
+        type="button"
+        className="bare tappable"
         onClick={() => shared.current?.click()}
         disabled={busy !== ''}
-        style={{
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
-          opacity: 0.65,
-          marginTop: 'var(--sp-5)',
-          width: 'auto',
-          padding: '6px 0',
-          textAlign: 'left',
-        }}
+        style={QUIET}
       >
         …or open a course somebody shared with you
       </button>
@@ -397,6 +546,7 @@ export function Import() {
           }
         />
       )}
+      </div>
     </Page>
   );
 }
@@ -417,18 +567,30 @@ export function Import() {
  * against it survives the upgrade.
  */
 function ByHand() {
-  const { state, dispatch, say } = useStore();
+  const { state, dispatch, say, catalog } = useStore();
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState('');
   const term = readTerm(state.term);
-  const taken = state.courses.some(
-    (c) => c.course.id === blankCourse(code).course.id && code.trim() !== '',
-  );
+  /*
+   * Matched on the code, not on the slug of it.
+   *
+   * This compared `blankCourse(code).course.id` against the ids held, which
+   * asks the wrong question twice over: the shipped ECON 1020 is filed under
+   * `econ`, so typing "ECON 1020" here read as a course nobody had and added
+   * a second one — and it never saw the sample semester at all, which is
+   * where the four courses in front of the student actually are.
+   */
+  const held = [...state.courses, ...catalog.modules];
+  const taken =
+    code.trim() !== '' &&
+    held.some((c) => c.course.code.trim().toLowerCase() === code.trim().toLowerCase());
 
   const make = () => {
     const clean = code.trim();
     if (!clean || taken) return;
-    const module = blankCourse(clean, term.id);
+    // Never on top of an id already in use: two courses under one id are one
+    // course to every screen that reads a course id. See `courseId`.
+    const module = blankCourse(clean, term.id, held.map((c) => c.course.id));
     dispatch({ type: 'addCourse', module });
     say(`${clean} added. Fill in the rest here — nothing is required.`);
     dispatch({ type: 'openCourse', id: module.course.id });
@@ -441,14 +603,7 @@ function ByHand() {
         type="button"
         className="bare tappable"
         onClick={() => setOpen(true)}
-        style={{
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
-          opacity: 0.65,
-          marginTop: 'var(--sp-2)',
-          width: 'auto',
-          padding: '6px 0',
-          textAlign: 'left',
-        }}
+        style={{ ...QUIET, marginTop: 'var(--sp-2)' }}
       >
         …or add a course by hand, with no syllabus
       </button>
