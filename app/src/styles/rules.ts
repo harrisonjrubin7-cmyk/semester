@@ -243,11 +243,11 @@ export const BUDGET = {
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
   space: 520,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 518,
+  shorthand: 508,
 };
 
 /*
- * 680/221/521/519 → 679/220/520/518 when the Tools tab became a home screen.
+ * 680/221/521/509 → 679/220/520/508 when the Tools tab became a home screen.
  * All four down, none up, and none of it by reformatting: thirteen cards
  * drawn by hand in `screens/Study.tsx` — each with its own padding, its own
  * 13.5px blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes
@@ -296,6 +296,12 @@ export const BUDGET = {
  * six spacing decisions anybody made. The two the chat added — a 3px gap
  * between the waiting dots, and the send button's clearance inside the
  * composer — are drawing measurements and are inside the new number.
+ *
+ * `shorthand` went 519 → 509 when the courses got their own colours. The Look
+ * settings page wrote the same section-label margin twelve times — one string,
+ * twelve copies, eleven chances to be a pixel out — and it is one `CAP`
+ * constant now. The thirteenth section, the course palette, uses it too rather
+ * than adding the thirteenth copy, which is the whole reason to have counted.
  *
  * Set to what is there, not to what a grep said.
  *
