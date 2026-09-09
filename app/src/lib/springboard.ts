@@ -226,6 +226,68 @@ export function dockFor(caps: Capabilities): string[] {
   return DOCK.filter((s) => can.has(s));
 }
 
+/**
+ * The home screen's arrangement, as flat lists something can put arrows on.
+ *
+ * The board is arranged by dragging its icons, and dragging was the only way:
+ * `boardOrder` is written from `Springboard.tsx` and from nowhere else. That
+ * leaves out anybody who can work a pointer but cannot hold one still while
+ * moving it — a tremor, a head pointer, an eye tracker — and on a tablet
+ * there is no keyboard to fall back on either, so Alt with the arrow keys is
+ * not the answer it is for a laptop. WCAG 2.2 puts it plainly at 2.5.7: what
+ * a drag does, a single pointer has to be able to do without dragging.
+ *
+ * Three other orderings in this app already had one, all three by way of the
+ * `Reorder` arrows — the courses, the tab bar, and Today's sections, that last
+ * one on the settings page rather than on Today. This is the same answer for
+ * the board: name every list it holds, and let the settings page draw them.
+ *
+ * A page's icons, each folder on that page, and the dock are separate lists
+ * with separate keys, because that is how they are stored — see the note on
+ * `pageKey` above for why the arrangement cannot be one flat list.
+ */
+export interface BoardList {
+  /** The key this list is saved under: `p0`, `+Study`, `dock`. */
+  key: string;
+  /** What to call it on the settings page. */
+  label: string;
+  /** The screen ids in it, in their arranged order, with their captions. */
+  items: { id: string; label: string }[];
+}
+
+export function boardLists(caps: Capabilities, saved: string | undefined): BoardList[] {
+  const out: BoardList[] = [];
+  arrangedPages(caps, saved).forEach((page, i) => {
+    out.push({
+      key: pageKey(i),
+      label: `Page ${i + 1}`,
+      items: page.items.map((item) =>
+        isFolder(item)
+          ? { id: folderKey(item.label), label: `${item.label} (folder)` }
+          : { id: item, label: labelFor(item) },
+      ),
+    });
+    // A folder's own icons are a list of their own, and the one somebody
+    // opens it for should not be stuck fourth because it cannot be dragged.
+    for (const item of page.items) {
+      if (!isFolder(item)) continue;
+      out.push({
+        key: folderKey(item.label),
+        label: `${item.label} folder`,
+        items: item.screens.map((s) => ({ id: s, label: labelFor(s) })),
+      });
+    }
+  });
+  out.push({
+    key: DOCK_KEY,
+    label: 'Dock',
+    items: arrangedDock(caps, saved).map((s) => ({ id: s, label: labelFor(s) })),
+  });
+  // A list of one cannot be reordered, and a row of arrows that can never do
+  // anything is worse than no row at all.
+  return out.filter((l) => l.items.length > 1);
+}
+
 /** A screen's label for an icon, from the one directory. */
 export function labelFor(screen: string): string {
   const d = DESTINATIONS.find((x) => x.screen === screen);

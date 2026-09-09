@@ -383,6 +383,7 @@ prevent.
 | How the app scrolls, for somebody who asked for less movement | `lib/prefers.ts` |
 | Whether a bar speaks its value or repeats the words beside it | `components/ui.tsx` (`Meter`), decided per call site |
 | How big the type is, and whose setting decides | `lib/look.ts` (`SIZES`, `scaleFrom`) over the root in `App.tsx` |
+| The lists the settings page can rearrange with arrows | `lib/springboard.ts` (`boardLists`) and `lib/launcher.ts` (`shelfLists`) |
 | The words in the podcasts | `audio/scripts/` → `npm run transcripts` → `data/transcripts/` |
 
 If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen
@@ -392,9 +393,10 @@ named there as one you arrive at from somewhere else.
 
 ### Reachable without a pointer, and without sight
 
-Ten things hold the app together for somebody on a keyboard, a screen reader,
-a body that does not want to be moved, or eyes that need bigger words, and
-each is one implementation rather than a habit.
+Eleven things hold the app together for somebody on a keyboard, a screen
+reader, a body that does not want to be moved, eyes that need bigger words, or
+a hand that cannot hold a drag — and each is one implementation rather than a
+habit.
 
 - **Every screen has a landmark, a heading and a name.** `<main>` is the one
   scrolling element, the header is a real `<header>`, and the screen's name is
@@ -478,6 +480,20 @@ each is one implementation rather than a habit.
   twelve hundred inline sizes all multiply through — is read back from what
   that produced, so at the 16px default it is arithmetically the number that
   was there before and nothing moves. `a11y/type.test.ts` holds it.
+- **What a drag does, a single pointer can do without dragging.** A drag is a
+  press held still enough to travel, and a tremor, a head pointer or an eye
+  tracker can put a pointer exactly where it needs to go and cannot hold it
+  there while moving — and on a tablet there is no keyboard, so Alt with the
+  arrow keys is an answer for a laptop and not for the device this app is
+  mostly used on. WCAG 2.2 asks for it at 2.5.7. Three of the five orderings
+  already had it, all by way of the `Reorder` arrows; the home screen and the
+  shelves did not, and are now arranged from **Settings → Layout and
+  navigation** beside Today's sections — arrows rather than a grid of them on
+  forty-odd icons, and off the directory rows, which are each a single
+  `<button>` that could not hold a pair. `a11y/dragging.test.ts` follows each
+  handler one hop through its helpers to see which order it writes: two
+  weaker drafts of that rule passed even with the whole shelves section
+  deleted, which is the worst thing a rule can do.
 
   The one feed is deliberately not in that list: it draws no navigation chrome
   at all on a phone — its only fixed control is an Import button — and marking

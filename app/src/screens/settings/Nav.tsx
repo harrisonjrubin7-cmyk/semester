@@ -10,7 +10,13 @@ import { Reorder } from '../../components/Reorder';
 import { LayoutPicker, NavPicker } from '../../components/Appearance';
 import { BADGES, DIRECTORIES, FEEDS, LABELS, directoryOf } from '../../lib/look';
 import { SECTIONS, move, ordered } from '../../lib/feed';
-import { MOVE_HINT, useMovable } from '../../lib/arrange';
+import { MOVE_HINT, nudged, useMovable } from '../../lib/arrange';
+import { afterMove, boardLists } from '../../lib/springboard';
+import { readOrder, shelfLists, writeOrder } from '../../lib/launcher';
+// Aliased: `Group` is already the settings page's own panel component.
+import type { Group as Shelf } from '../../lib/nav';
+import type { Screen } from '../../lib/types';
+import { currentLook } from '../../state/shape';
 
 const HINT = {
   fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -47,7 +53,7 @@ const LABEL_STYLE = {
  * drawn, then what the first screen holds.
  */
 export function SettingsNav() {
-  const { state, dispatch, facts } = useStore();
+  const { state, dispatch, facts, school } = useStore();
   const row = useRowStyle(0);
   const drawn = directoryOf(state.directory, state.shell);
 
@@ -64,6 +70,30 @@ export function SettingsNav() {
     items: ordered(state.feedOrder),
     onMove: (order) => dispatch({ type: 'setFeedOrder', order }),
   });
+
+  /*
+   * One step on one of the board's lists.
+   *
+   * `nudged` rather than a fourth copy of the same arithmetic: it is what the
+   * drag and Alt with the arrow keys already move a row by, so the arrows
+   * cannot disagree with them about what "up" does at the ends of a list.
+   * `afterMove` writes the whole of the list that moved, for the reason its
+   * own note gives.
+   */
+  /** The same, for a shelf. `groupOrder` is keyed by the shelf's name. */
+  const moveOnShelf = (group: Shelf, items: Screen[], id: Screen, step: -1 | 1) => {
+    const order = readOrder(currentLook(state).groupOrder);
+    dispatch({
+      type: 'setLook',
+      look: { groupOrder: writeOrder({ ...order, [group]: nudged(items, id, step) }) },
+    });
+  };
+
+  const moveOnBoard = (list: string, items: string[], id: string, step: -1 | 1) =>
+    dispatch({
+      type: 'setLook',
+      look: { boardOrder: afterMove(currentLook(state).boardOrder, list, nudged(items, id, step)) },
+    });
 
   return (
     <SettingsPage
@@ -127,6 +157,96 @@ export function SettingsNav() {
                 attention, and an app that puts one on everything has made them all mean nothing.
               </div>
             </CustomRow>
+          </Group>
+
+          {/*
+            The home screen's arrangement, with arrows.
+
+            `boardOrder` was written from one place — dragging an icon on the
+            springboard — so somebody who can work a pointer but cannot hold
+            one still while moving it had no way to arrange their own home
+            screen at all. A tremor, a head pointer, an eye tracker; and on a
+            tablet there is no keyboard, so Alt with the arrow keys is not the
+            answer it is on a laptop. WCAG 2.2 asks for this at 2.5.7: what a
+            drag does, a single pointer has to do without dragging.
+
+            Here rather than on the springboard because a pair of arrows on
+            each of forty-odd icons is a grid nobody can read, and because
+            this page is already where the other two arranged lists live —
+            Today's sections directly below, the tab bar above. Same `Reorder`
+            arrows, same `nudged` arithmetic the drag itself uses.
+
+            Shown whichever navigation is chosen, like the tab bar's chooser
+            above it: the choice that turns the springboard on is on this page
+            too, and a list that appears only after you have switched is one
+            you cannot arrange before you switch.
+          */}
+          <Group
+            header="The home screen"
+            footer="The same order the icons are dragged into. A folder’s own icons are a list of their own, and the dock is the four along the bottom."
+            lit={lights('home screen springboard icons dock folder order rearrange move up down arrange', lit)}
+          >
+            {boardLists(school.capabilities, currentLook(state).boardOrder).map((list) => (
+              <CustomRow key={list.key}>
+                <SectionLabel style={LABEL_STYLE}>{list.label}</SectionLabel>
+                {list.items.map((item, i, all) => (
+                  <div
+                    key={item.id}
+                    style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', ...row }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0, padding: 'var(--sp-6) 0', fontSize: 'var(--type-md)' }}>
+                      {item.label}
+                    </div>
+                    <Reorder
+                      label={item.label}
+                      atStart={i === 0}
+                      atEnd={i === all.length - 1}
+                      onUp={() => moveOnBoard(list.key, all.map((x) => x.id), item.id, -1)}
+                      onDown={() => moveOnBoard(list.key, all.map((x) => x.id), item.id, 1)}
+                    />
+                  </div>
+                ))}
+              </CustomRow>
+            ))}
+          </Group>
+
+          {/*
+            And the shelves, for the same reason.
+
+            `groupOrder` is dragged in two places — the tiles inside a folder
+            on the shelves navigation, and the directory rows on Me — and
+            neither offered any way to move a row without dragging it. Drawn
+            here beside the board rather than on either of them: a directory
+            row is a single `<button>`, and a pair of arrows inside a button is
+            a button inside a button.
+          */}
+          <Group
+            header="The shelves"
+            footer="Where each screen sits on its shelf — the same order the tiles and the directory rows are dragged into."
+            lit={lights('shelves shelf order rearrange move up down directory tiles arrange', lit)}
+          >
+            {shelfLists(school.capabilities, currentLook(state).groupOrder).map((list) => (
+              <CustomRow key={list.group}>
+                <SectionLabel style={LABEL_STYLE}>{list.label}</SectionLabel>
+                {list.items.map((item, i, all) => (
+                  <div
+                    key={item.id}
+                    style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', ...row }}
+                  >
+                    <div style={{ flex: 1, minWidth: 0, padding: 'var(--sp-6) 0', fontSize: 'var(--type-md)' }}>
+                      {item.label}
+                    </div>
+                    <Reorder
+                      label={item.label}
+                      atStart={i === 0}
+                      atEnd={i === all.length - 1}
+                      onUp={() => moveOnShelf(list.group, all.map((x) => x.id), item.id, -1)}
+                      onDown={() => moveOnShelf(list.group, all.map((x) => x.id), item.id, 1)}
+                    />
+                  </div>
+                ))}
+              </CustomRow>
+            ))}
           </Group>
 
           <Group
