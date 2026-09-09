@@ -165,6 +165,7 @@ export function Draw() {
           <SectionLabel>The code — yours to edit</SectionLabel>
           <textarea
             className="input"
+            aria-label="The code — yours to edit"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             spellCheck={false}

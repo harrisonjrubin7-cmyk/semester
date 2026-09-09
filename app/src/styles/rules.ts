@@ -310,6 +310,15 @@ export const AXIS_SAYS: Record<Axis, string> = {
  * merged five times in twenty minutes, conflicting on these four numbers
  * every single time. Which is what the per-file ledger above was written for.
  *
+ * 674/218/515/498 → 673/218/515/498 when Study's Revise tab was rebuilt and
+ * the Tools grid grew the two or three cards that say which tile to press
+ * tonight. One down, none up. The Revise tab's hand-set 11.5px captions, a
+ * 1.25 line height and an 11px padding went with the rows that carried them;
+ * the new cards above the grid set their padding from `--sp-*` and their
+ * headings take `SectionLabel`'s own margin rather than overriding it, so
+ * neither the spacing nor the shorthand count moved. Measured on the merged
+ * tree, like the note below and for the same reason.
+ *
  * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
  * chat. Two numbers down and none up, and neither by reformatting: the
  * panel's transcript, opening, header and footer are now the same components
