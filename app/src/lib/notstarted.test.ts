@@ -86,8 +86,8 @@ describe('the advice beside the next exam', () => {
     // opened, and — where the declared figures all sit above the line —
     // "all 11 units are above 40%, keep them warm" about units nobody had
     // seen. The second would cost somebody a grade.
-    expect(study).toContain("none of them answered yet");
-    expect(study).toMatch(/if \(!keys\.some\(\(k\) => state\.reviews\[k\]\)\)/);
+    expect(study).toContain('none of them answered yet');
+    expect(study).toMatch(/if \(!anyAnswered\(keys, state\.reviews\)\)/);
   });
 
   it('still says which are cold once some are', () => {

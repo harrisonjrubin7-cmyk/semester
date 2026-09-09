@@ -1,7 +1,7 @@
 import { datedItems } from '../../lib/select';
 import { cardKey, dueCount } from '../../lib/review';
 import type { Provide } from '../shape';
-import { guideNow } from '../shape';
+import { guideNow, startedNow } from '../shape';
 import { coverage } from '../../lib/covers';
 import { meetings, pairings } from '../../lib/meet';
 import { pct } from './core';
@@ -163,7 +163,7 @@ export const runway: Provide = (look) => {
           ? {
               unitsToCover: on.units.length,
               coverage: on.source === 'whole' ? 'not stated — counting the whole course' : on.source,
-              coldest: coldest({ units: on.units.map((u) => guide.units[u]) }),
+              coldest: coldest({ units: on.units.map((u) => guide.units[u]) }, startedNow(look, i.c, guide)),
             }
           : {}),
       };
@@ -182,8 +182,16 @@ export const runway: Provide = (look) => {
   };
 };
 
-/** The unit with the least mastery, named. */
-function coldest(guide: { units: { name: string; mastery: number }[] }): string {
+/**
+ * The unit with the least mastery, named — once least means anything.
+ *
+ * Sorting by mastery before the first answer sorts by the figures the guide
+ * declared, so "the coldest unit" was whichever the author happened to write
+ * the lowest number beside. The model is then asked to explain that one as if
+ * you had not read it, which is a fine answer to a question nobody asked.
+ */
+function coldest(guide: { units: { name: string; mastery: number }[] }, started: boolean): string {
+  if (!started) return 'nothing answered yet — no unit is colder than another';
   const cold = [...guide.units].sort((a, b) => a.mastery - b.mastery)[0];
   return cold ? `${cold.name} (${cold.mastery}%)` : '';
 }
@@ -212,7 +220,7 @@ export const tonight: Provide = (look) => {
     return {
       course: catalog.byId[c.id].code,
       cardsDue: ready,
-      coldest: guide ? coldest(guide) : '',
+      coldest: guide ? coldest(guide, startedNow(look, c.id, guide)) : '',
       ...(next ? { nextDeadline: `${next.title}, ${next.dueShort}` } : {}),
     };
   });
@@ -233,10 +241,19 @@ export const drillLike: Provide = (look) => {
   const it = open(look);
   if (!it) return null;
   const unit = it.guide.units[look.state.drillUnit ?? look.state.openUnit ?? 0];
+  const started = startedNow(look, it.course.id, it.guide);
   return {
-    summary: `Drilling ${it.course.code}${unit ? ` — ${unit.name}, ${pct(unit.mastery)} mastered` : ''}.`,
-    focus: unit ? { unit: unit.name, cards: unit.cards.length, mastery: unit.mastery } : undefined,
-    visible: it.guide.units.map((u) => ({ name: u.name, cards: u.cards.length, mastered: `${u.mastery}%` })),
+    summary: `Drilling ${it.course.code}${
+      unit ? ` — ${unit.name}, ${started ? `${pct(unit.mastery)} mastered` : 'nothing answered yet'}` : ''
+    }.`,
+    focus: unit
+      ? { unit: unit.name, cards: unit.cards.length, ...(started ? { mastery: unit.mastery } : {}) }
+      : undefined,
+    visible: it.guide.units.map((u) => ({
+      name: u.name,
+      cards: u.cards.length,
+      mastered: started ? `${u.mastery}%` : 'not started',
+    })),
     actions: ['start_timer', 'open_screen'],
     suggestions: ['Explain the one I keep getting wrong.', 'Which unit should I do next?'],
   };
