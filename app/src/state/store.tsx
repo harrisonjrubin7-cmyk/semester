@@ -42,6 +42,7 @@ import { save, trouble } from '../lib/keep';
 import { CHECK_EVERY_MS, room, roomLine } from '../lib/quota';
 import {
   available as dbAvailable,
+  flushNow,
   load as loadFromDb,
   persist as persistToDb,
 } from './persist';
@@ -345,6 +346,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     latest.current = state;
   });
 
+  /**
+   * Whether the next write is this tab's own change or another tab's.
+   *
+   * `lib/tabs.ts` states the rule: "A tab that receives a nudge takes what is
+   * on disk. It never pushes back, never merges, and never argues." Answering
+   * a nudge with a nudge is pushing back, and two tabs doing it to each other
+   * is a loop with no exit — measured at about forty-three round trips a
+   * second with both tabs sitting idle.
+   *
+   * The cost is not the noise. `persist` clears its timer on every call, so at
+   * that rate the quarter second never elapsed, `flush` never ran, and a note
+   * typed in either tab was drawn on screen, held in memory, and gone on
+   * reload. Closing the second tab started saving again, which is what made it
+   * possible to disbelieve.
+   *
+   * A ref rather than state: it is read by the effect that the same dispatch
+   * schedules, and it must not itself cause a render.
+   */
+  const fromOtherTab = useRef(false);
+
   const [asking, setAsking] = useState<{
     sides: Sides;
     say: string;
@@ -366,7 +387,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
      * stop being normal. See `state/persist/`.
      */
     if (dbAvailable()) {
-      persistToDb(picked);
+      // Whether this write is allowed to tell anyone, decided now and spent
+      // by the write itself: a run caused by taking another tab's change
+      // still writes — the merge may have kept something of this tab's own —
+      // but it stays quiet. See `fromOtherTab` above.
+      const quiet = fromOtherTab.current;
+      fromOtherTab.current = false;
+      persistToDb(picked, quiet ? undefined : tellOtherTabs);
       // Occasionally, because the number moves slowly and a warning somebody
       // sees every day is one they stop reading. Nothing is shed on this path
       // — this is a warning while there is still room to act on it, which is
@@ -379,12 +406,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setSaveTrouble((was) => (was === said ? was : said));
         });
       }
-      tellOtherTabs();
       return;
     }
     // Unchanged text means nothing to write, which is what the string dep used
     // to give for free before the database path took the dep over.
     if (persisted === wrote.current) return;
+    const quiet = fromOtherTab.current;
+    fromOtherTab.current = false;
     wrote.current = persisted;
     const result = save(persisted, (value) => localStorage.setItem(STORAGE_KEY, value));
     const said = trouble(result);
@@ -394,9 +422,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // A second tab of this app is now told, so it can re-read rather than
     // sit on a deadline you ticked a minute ago somewhere else. Only the
     // fact is sent; the disk stays the single copy both tabs agree on. See
-    // `lib/tabs.ts`.
-    tellOtherTabs();
+    // `lib/tabs.ts`. This write is synchronous and already finished, so
+    // unlike the database path there is nothing to wait for.
+    if (!quiet) tellOtherTabs();
   }, [picked, persisted]);
+
+  /**
+   * Ask for the last write before the page goes away.
+   *
+   * `flushNow` was written for exactly this — its own docblock says "For a tab
+   * closing, and for tests" — and until now only the tests called it. A write
+   * settles a quarter of a second after the last change, so a note typed and
+   * the tab closed 120ms later came back with an empty title: the row was
+   * there, because creating the note had settled, and the words were not.
+   *
+   * `visibilitychange` rather than `beforeunload` alone, for the reason
+   * `lib/draft.hook.ts` already gives about the same hazard: backgrounding on
+   * a phone fires `visibilitychange` and may never fire anything else before
+   * the page is discarded.
+   *
+   * No dependencies: this is about the page, not about what is in it, and
+   * `flushNow` writes whatever is owing at the moment it is called.
+   */
+  useEffect(() => {
+    const last = () => {
+      void flushNow();
+    };
+    const hidden = () => {
+      if (document.visibilityState === 'hidden') last();
+    };
+    window.addEventListener('beforeunload', last);
+    document.addEventListener('visibilitychange', hidden);
+    return () => {
+      window.removeEventListener('beforeunload', last);
+      document.removeEventListener('visibilitychange', hidden);
+    };
+  }, []);
 
   /**
    * Take what another tab wrote.
@@ -417,11 +478,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     () =>
       onOtherTab(() => {
         if (!dbAvailable()) {
+          fromOtherTab.current = true;
           dispatch({ type: 'hydrate', persisted: loadPersisted() });
           return;
         }
         void loadFromDb().then((fresh) => {
-          if (fresh) dispatch({ type: 'hydrate', persisted: fresh });
+          if (!fresh) return;
+          // Set immediately before the dispatch that the write effect will
+          // see, not when the nudge arrived: the read in between is
+          // asynchronous, and this tab's own edit landing during it would
+          // otherwise be silenced.
+          fromOtherTab.current = true;
+          dispatch({ type: 'hydrate', persisted: fresh });
         });
       }),
     [],
