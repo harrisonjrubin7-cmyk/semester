@@ -188,6 +188,49 @@ export function clock(minutes: number): string {
   return `${h}:${String(m).padStart(2, '0')}${h24 < 12 ? 'a' : 'p'}`;
 }
 
+/**
+ * How many days a month really has.
+ *
+ * Written because two files check a date by asking whether the day is between
+ * 1 and 31, and then hand it to `new Date(year, month, day)` — which does not
+ * refuse 31 April, it silently returns 1 May. So a deadline the syllabus never
+ * mentions appears on a day it never named, and nothing anywhere says so.
+ *
+ * `lib/generate.ts` already writes the sentence for this case — *Dropped
+ * "Essay 2" — its date (3/31) is not a real one* — so the intent was there and
+ * only four months of the check were missing. The README makes it a promise:
+ * "dates forced into the real calendar".
+ *
+ * The year is optional, and what it decides is February alone. Without one
+ * this answers 29 — the longest February there is — because a caller that
+ * cannot say which year it is should not be the one to throw away a date that
+ * might be real. Every other month is the same length in every year, so
+ * "31 April" and "30 February" are impossible with or without it, and those
+ * are the shapes a mis-read syllabus actually produces.
+ */
+export function daysInMonth(month: number, year?: number): number {
+  if (month === 1) {
+    if (year === undefined) return 29;
+    const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+    return leap ? 29 : 28;
+  }
+  // Day 0 of the next month is the last day of this one, and the Date
+  // constructor handles December rolling into January.
+  return new Date(year ?? 2000, month + 1, 0).getDate();
+}
+
+/**
+ * Whether a month and a day name a day that exists.
+ *
+ * The one question both callers were approximating. Months are 0-11, the way
+ * every date in this app carries them.
+ */
+export function realDate(month: number, day: number, year?: number): boolean {
+  if (!Number.isInteger(month) || !Number.isInteger(day)) return false;
+  if (month < 0 || month > 11 || day < 1) return false;
+  return day <= daysInMonth(month, year);
+}
+
 /** The days of a month grid, Sunday-first, padded to whole weeks. */
 export function monthGrid(year: number, month: number): (number | null)[] {
   const lead = new Date(year, month, 1).getDay();

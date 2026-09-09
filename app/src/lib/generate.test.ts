@@ -393,6 +393,39 @@ describe('a reply of the wrong shape', () => {
    *     { units: 'three units' }         raw.guide.units.map is not a function
    *     { units: [{ cards: 'lots' }] }   (u.cards ?? []).filter is not a function
    */
+  /*
+   * The sentence was already right; the check was not.
+   *
+   * "Dropped … its date (3/31) is not a real one" was written for exactly
+   * this, and `day <= 31` let four months' worth of unreal dates through —
+   * whereupon `new Date(year, month, day)` answers 31 April with 1 May rather
+   * than refusing. A syllabus with a date typo in it, which is a thing syllabi
+   * have, put a deadline on a day it never named and said nothing about it.
+   */
+  it('drops a date that is not a date, and says which', async () => {
+    const out = await run(
+      course({
+        items: [
+          { title: 'April 31', kind: 'Essay', month: 3, day: 31, dueTime: '11:59 PM' },
+          { title: 'February 30', kind: 'Essay', month: 1, day: 30, dueTime: '11:59 PM' },
+          { title: 'Real one', kind: 'Essay', month: 3, day: 30, dueTime: '11:59 PM' },
+        ],
+      }),
+    );
+    expect(out.module.items.map((i) => i.title)).toEqual(['Real one']);
+    expect(out.notes.join(' ')).toContain('its date (3/31) is not a real one');
+    expect(out.notes.join(' ')).toContain('its date (1/30) is not a real one');
+  });
+
+  it('keeps the 29th of February, having no year to judge it by', async () => {
+    // The import does not know the term yet, and a caller that cannot say
+    // which year it is should not throw away a date that might be real.
+    const out = await run(
+      course({ items: [{ title: 'Leap day', kind: 'Essay', month: 1, day: 29, dueTime: '11:59 PM' }] }),
+    );
+    expect(out.module.items.map((i) => i.title)).toEqual(['Leap day']);
+  });
+
   it('refuses a guide whose units are a string, not only an object', async () => {
     await expect(run(course({ guide: { units: 'three units' } }))).rejects.toThrow(
       /No study guide/i,

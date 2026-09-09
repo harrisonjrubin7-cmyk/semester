@@ -311,6 +311,40 @@ describe('a course that arrived without its grading', () => {
  * written against. Truncation by a chat client, which `tidyItems` names as a
  * scenario, produces the first of them.
  */
+/**
+ * The same unreal date, from the other direction.
+ *
+ * `tidyItems` checked `day <= 31` too, and here the course carries its term —
+ * so February can be judged exactly rather than given the benefit of the
+ * doubt the import has to give it.
+ */
+describe('a deadline on a day that does not exist', () => {
+  const withItems = (items: unknown[], term = '2027SP') =>
+    readPack(
+      JSON.stringify({
+        kind: 'semester.course',
+        version: 1,
+        module: { ...module_, course: { ...module_.course, term }, items },
+      }),
+    );
+  const at = (over: Record<string, unknown>) => ({
+    id: 'x', c: 'econ', title: 'A paper', kind: 'Essay', dueTime: '11:59 PM',
+    weight: '20%', where: '', detail: '', quote: '', source: '', ...over,
+  });
+
+  it('drops it and counts it, rather than letting the calendar move it', () => {
+    const out = withItems([at({ month: 3, day: 31 }), at({ id: 'y', month: 3, day: 30 })]);
+    expect(out.module?.items.map((i) => i.day)).toEqual([30]);
+    expect(out.dropped).toBe(1);
+  });
+
+  it('judges February against the course’s own term', () => {
+    // 2028 is a leap year and 2027 is not, and the pack says which it is.
+    expect(withItems([at({ month: 1, day: 29 })], '2028SP').dropped).toBe(0);
+    expect(withItems([at({ month: 1, day: 29 })], '2027SP').dropped).toBe(1);
+  });
+});
+
 describe('a guide that arrived damaged', () => {
   const withGuide = (guide: unknown) =>
     readPack(

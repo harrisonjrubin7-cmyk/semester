@@ -24,6 +24,7 @@ import { ask, type Citation, type Doc } from './claude';
 import type { Course, CourseModule, GradeRow, Item, RecurringBlock } from './types';
 import { check, flatten, tally, worthCiting, type Checked } from './cite';
 import { tidyGuide } from './guide';
+import { realDate } from './date';
 
 export interface GenerationInput {
   /**
@@ -254,7 +255,19 @@ function validate(
   for (const [n, it] of rawItems.entries()) {
     const month = Number(it.month);
     const day = Number(it.day);
-    if (!Number.isInteger(month) || month < 0 || month > 11 || !Number.isInteger(day) || day < 1 || day > 31) {
+    /*
+     * `realDate`, not `day <= 31`. The sentence below has always said "is not
+     * a real one", and the check let through four months' worth that are not:
+     * 31 April, 31 June, 31 September, 31 November and 30 February all passed,
+     * and `new Date(year, month, day)` does not refuse them — it rolls them
+     * into the next month. A syllabus with a date typo in it, which is a thing
+     * syllabi have, put a deadline on a day it never named and said nothing.
+     *
+     * No year to give it, so February keeps its 29th here: a caller that
+     * cannot say which year it is should not throw away a date that might be
+     * real. `lib/handoff.ts` has the term and passes the year.
+     */
+    if (!realDate(month, day)) {
       notes.push(`Dropped "${it.title ?? 'an item'}" — its date (${it.month}/${it.day}) is not a real one.`);
       continue;
     }

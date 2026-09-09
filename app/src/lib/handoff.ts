@@ -33,6 +33,8 @@
 
 import type { CourseModule, Item, RecurringBlock } from './types';
 import { tidyGuide } from './guide';
+import { realDate } from './date';
+import { readTerm, yearFor, type Term } from './term';
 
 /** Bumped when the shape changes in a way an older app cannot read. */
 export const PACK_VERSION = 1;
@@ -125,7 +127,7 @@ function tidyCourse(c: CourseModule['course']): CourseModule['course'] {
  * count of dropped items travels with the result, because a course quietly
  * missing two deadlines is the worst outcome available here.
  */
-function tidyItems(raw: unknown, courseId: string): { items: Item[]; dropped: number } {
+function tidyItems(raw: unknown, courseId: string, term: Term): { items: Item[]; dropped: number } {
   if (!Array.isArray(raw)) return { items: [], dropped: 0 };
   const items: Item[] = [];
   let dropped = 0;
@@ -139,7 +141,11 @@ function tidyItems(raw: unknown, courseId: string): { items: Item[]; dropped: nu
       dropped += 1;
       continue;
     }
-    if (month < 0 || month > 11 || day < 1 || day > 31) {
+    // `realDate` rather than `day <= 31`: 31 April and 30 February are not
+    // dates, and `new Date` answers them with 1 May and 2 March rather than
+    // refusing — a deadline on a day the syllabus never named, counted as
+    // kept. The year comes from the course's own term, so February is exact.
+    if (!realDate(month, day, yearFor(term, month))) {
       dropped += 1;
       continue;
     }
@@ -278,7 +284,7 @@ export function readPack(text: string): Opened {
     };
   }
 
-  const tidied = tidyItems(m.items, course.id);
+  const tidied = tidyItems(m.items, course.id, readTerm(course.term));
 
   return {
     // Rebuilt through the same boundary on the way in, so a hand-edited file

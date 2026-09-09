@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   dateToIso,
   daysBetween,
+  daysInMonth,
   dueLabel,
   isoToDate,
+  realDate,
   sameDay,
   shiftIso,
   startOfDay,
@@ -174,5 +176,58 @@ describe('across a daylight-saving change', () => {
     // And back again, which is where a millisecond-based shift would drift.
     expect(shiftIso(shiftIso('2026-03-01', 14), -14)).toBe('2026-03-01');
     expect(shiftIso(shiftIso('2026-09-20', 14), -14)).toBe('2026-09-20');
+  });
+});
+
+/**
+ * A date that is not a date.
+ *
+ * Two files checked one by asking whether the day was between 1 and 31, and
+ * then handed it to `new Date(year, month, day)` — which does not refuse 31
+ * April, it answers 1 May. `lib/generate.ts` was already writing the sentence
+ * for the case it was letting through: *its date (3/31) is not a real one*.
+ */
+describe('whether a day exists', () => {
+  it('knows the short months', () => {
+    // April, June, September, November — 30 in every year there has been.
+    for (const month of [3, 5, 8, 10]) {
+      expect(realDate(month, 30), `month ${month} day 30`).toBe(true);
+      expect(realDate(month, 31), `month ${month} day 31`).toBe(false);
+    }
+  });
+
+  it('keeps every day of a 31-day month', () => {
+    for (const month of [0, 2, 4, 6, 7, 9, 11]) {
+      expect(realDate(month, 31), `month ${month} day 31`).toBe(true);
+    }
+  });
+
+  it('refuses a February that never happens, whatever the year', () => {
+    expect(realDate(1, 30)).toBe(false);
+    expect(realDate(1, 31)).toBe(false);
+  });
+
+  it('reads the 29th against the year when it is given one', () => {
+    expect(realDate(1, 29, 2024)).toBe(true);
+    expect(realDate(1, 29, 2027)).toBe(false);
+    // The centuries, which is the whole reason the rule is not "every four".
+    expect(daysInMonth(1, 1900)).toBe(28);
+    expect(daysInMonth(1, 2000)).toBe(29);
+  });
+
+  it('keeps the 29th when no year was given', () => {
+    // A caller that cannot say which year it is should not be the one to
+    // throw away a date that might be real.
+    expect(realDate(1, 29)).toBe(true);
+    expect(daysInMonth(1)).toBe(29);
+  });
+
+  it('refuses a month or a day that is not a whole number in range', () => {
+    expect(realDate(-1, 5)).toBe(false);
+    expect(realDate(12, 5)).toBe(false);
+    expect(realDate(5, 0)).toBe(false);
+    expect(realDate(5.5, 5)).toBe(false);
+    expect(realDate(5, 2.5)).toBe(false);
+    expect(realDate(NaN, 5)).toBe(false);
   });
 });
