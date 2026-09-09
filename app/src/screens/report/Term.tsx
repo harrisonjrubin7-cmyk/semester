@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { secondLine } from '../../lib/dim';
 import { useStore } from '../../state/store';
 import { Group, ItemRow } from '../../components/shell/Rows';
 import { Blueprint } from '../../components/Blueprint';
@@ -207,7 +208,7 @@ export function TermReport() {
         </button>
       </div>
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-normal)' }}>
         Every line is counted from what this app recorded, and anything it could not support with
         enough observations was left out rather than softened. There is no score for the term, and no
         comparison with anybody else.

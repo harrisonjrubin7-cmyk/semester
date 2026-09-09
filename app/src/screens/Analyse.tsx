@@ -175,6 +175,7 @@ export function Analyse() {
         Open a CSV
       </FilePick>
       <textarea
+        aria-label="Your marks, pasted"
         className="input"
         value={text}
         onChange={(e) => {

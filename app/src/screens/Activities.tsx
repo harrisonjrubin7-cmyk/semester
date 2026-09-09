@@ -277,6 +277,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
     <Folding name="AddOne">
       <SectionLabel>What is it</SectionLabel>
       <input
+        aria-label="What is it"
         className="input"
         value={name}
         onChange={(e) => {
@@ -378,6 +379,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
       ) : (
         <>
           <input
+            aria-label="Hours a week"
             className="input"
             type="number"
             value={hours}
@@ -394,6 +396,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
 
       <SectionLabel>The rest, if you have it</SectionLabel>
       <input
+        aria-label="Your role"
         className="input"
         value={role}
         onChange={(e) => setRole(e.target.value)}
@@ -401,6 +404,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
         style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
       />
       <input
+        aria-label="Where it meets"
         className="input"
         value={where}
         onChange={(e) => setWhere(e.target.value)}
@@ -408,6 +412,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
         style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
       />
       <input
+        aria-label="Its page"
         className="input"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
@@ -505,6 +510,7 @@ function FindThings() {
         not.
       </div>
       <textarea
+        aria-label="Your involvement list, pasted"
         className="input"
         value={text}
         onChange={(e) => setText(e.target.value)}

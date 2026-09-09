@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Group, ItemRow } from '../components/shell/Rows';
@@ -257,7 +258,7 @@ export function Housing() {
         </Group>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
         Nothing is fetched. The housing portal is behind single sign-on and publishes no interface a
         student can use, so reading it would mean holding your university credentials — which this
         app will not do. The address the portal hands you carries your own session token in it;

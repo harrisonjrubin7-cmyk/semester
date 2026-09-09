@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
@@ -210,6 +211,7 @@ export function Deck() {
 
           <SectionLabel>What it is about</SectionLabel>
           <input
+            aria-label="What it is about"
             className="input"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
@@ -219,6 +221,7 @@ export function Deck() {
 
           <SectionLabel>The material it may use</SectionLabel>
           <textarea
+            aria-label="The material it may use"
             className="input"
             value={material}
             onChange={(e) => setMaterial(e.target.value)}
@@ -237,6 +240,7 @@ export function Deck() {
 
           <SectionLabel>What was asked for</SectionLabel>
           <textarea
+            aria-label="What was asked for"
             className="input"
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
@@ -246,6 +250,7 @@ export function Deck() {
 
           <SectionLabel>Who is in the room</SectionLabel>
           <input
+            aria-label="Who is in the room"
             className="input"
             value={audience}
             onChange={(e) => setAudience(e.target.value)}
@@ -369,7 +374,7 @@ export function Deck() {
             </div>
           )}
           <PrintButton label="Print the slides" style={{ marginTop: 'var(--sp-4)' }} />
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             The notes hold what you say over each slide, which is deliberately not what is written
             on it — a slide read aloud is a slide nobody listens to.
           </div>
