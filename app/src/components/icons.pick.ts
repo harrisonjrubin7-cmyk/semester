@@ -3,34 +3,56 @@
  *
  * Split out of `TabIcon.tsx` because two callers now need the answer and only
  * one of them wants a rendered element: the launcher's tiles carry a cluster
- * of glyphs and have to tell two apart, since only ten of the fifty-five
- * screens have one of their own and the rest fall back to their shelf's — a
- * cluster taken naively is the same little drawing three times.
+ * of glyphs and have to tell two apart, since most of the fifty-five screens
+ * have no drawing of their own and fall back to their shelf's — a cluster
+ * taken naively is the same little drawing three times.
  *
  * A module of its own rather than another export beside the component, so
  * fast refresh keeps working on the file that draws things.
  */
 
 import {
+  AnalyseIcon,
+  AskIcon,
   Bell,
   CalendarIcon,
   CampusIcon,
   CoursesIcon,
+  DeckIcon,
+  DrawIcon,
+  EssayIcon,
+  ExamIcon,
+  MailIcon,
   MakeIcon,
   MapIcon,
   NotesIcon,
   Person,
+  ProofIcon,
+  RunwayIcon,
   Search,
+  SolveIcon,
+  SourcesIcon,
   StudyIcon,
   TodayIcon,
+  UpdateIcon,
   UpkeepIcon,
+  WorkIcon,
 } from './Icons';
 import { destination, type Group } from '../lib/nav';
 import type { Screen } from '../lib/types';
 
 type Glyph = typeof TodayIcon;
 
-/** Screens with an icon of their own, mostly because they shipped in the bar. */
+/**
+ * Screens with an icon of their own.
+ *
+ * The first nine shipped in the bar. The thirteen after them are the tools,
+ * drawn when the Tools tab became a home screen: a grid of icons and names is
+ * only worth having if the icons differ, and thirteen screens falling back to
+ * a book and a pen nib would have been the same picture over and over. They
+ * are listed here rather than in that tab because the answer belongs to the
+ * screen — the bar and the launcher draw them now too.
+ */
 const OWN: Partial<Record<Screen, Glyph>> = {
   home: TodayIcon,
   courses: CoursesIcon,
@@ -41,6 +63,20 @@ const OWN: Partial<Record<Screen, Glyph>> = {
   me: Person,
   notifs: Bell,
   search: Search,
+
+  ask: AskIcon,
+  work: WorkIcon,
+  update: UpdateIcon,
+  analyse: AnalyseIcon,
+  draw: DrawIcon,
+  solve: SolveIcon,
+  exam: ExamIcon,
+  deck: DeckIcon,
+  sources: SourcesIcon,
+  essay: EssayIcon,
+  runway: RunwayIcon,
+  mail: MailIcon,
+  proof: ProofIcon,
 };
 
 const SHELF: Record<Group, Glyph> = {

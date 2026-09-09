@@ -1,15 +1,31 @@
 /**
- * What the soft shell puts above and below every screen.
+ * What the soft shell puts above every screen.
  *
- * The handoff's structure is the same on all fifty-five: a hero card carrying
- * one dominant fact, a row of two or three numbers that qualify it, the
- * screen's own content, and a bar at the foot with the action you came to
- * take. Only the facts differ.
+ * The structure is the same on all fifty-five: a hero card carrying one
+ * dominant fact, a row of two or three numbers that qualify it, then the
+ * screen's own content. Only the facts differ.
  *
  * So the facts are the registry and the structure is a component, the same
  * division `lib/nav.ts` already makes for the directory. Fifty-five screens
  * did not each grow a hand-rolled header: `components/soft/SoftTop.tsx`
  * renders whatever this returns, once, in `App.tsx`.
+ *
+ * ## There is no bar at the foot
+ *
+ * There was, on every screen: a filled pill holding "the action you came to
+ * take". The trouble is that the app already answers that question four
+ * times over — the tab bar or the springboard or the shelves, whichever
+ * navigation is on; the rows and cards of the screen you are reading; the
+ * search behind the header; the assistant. A fifth answer, in the largest
+ * control on the page, could only ever be one of the other four said again,
+ * and on an index screen it was demonstrably so: Settings drew "Your data"
+ * in a pill under a "Your data" row.
+ *
+ * A component that can only repeat what is already on screen is chrome, not
+ * navigation, and it cost a strip of every screen on a phone. So the bar is
+ * gone in all three shells and the registry holds facts only. `TopAction`
+ * and its `also` switch went with it — the registry no longer describes
+ * anywhere to go, which is why nothing here dispatches.
  *
  * ## Data, not markup
  *
@@ -22,8 +38,9 @@
  *
  * **Never an empty hero.** A hero renders a figure or a sentence, never a
  * dash. Where a screen has no number worth reading first, `said` carries the
- * fact instead — and where it has neither, it gets no hero at all, which is
- * what the handoff asks for on the prose screens.
+ * fact instead — and where it has neither, it gets no hero at all: a tool you
+ * type into and a page of prose have no number, and one invented for the slot
+ * would be worse than the empty space.
  *
  * **Never the blurb.** The description line under the tab rows already shows
  * it. A hero that repeats it has spent the biggest type on the page saying
@@ -31,7 +48,7 @@
  */
 
 import type { Catalog } from '../data/catalog';
-import type { Action, State } from '../state/shape';
+import type { State } from '../state/shape';
 import type { Screen } from './types';
 import type { Capabilities } from './school';
 import { swipeUnit } from './school';
@@ -66,32 +83,9 @@ export interface TopStat {
   fraction?: number;
 }
 
-/** One action, named by where it goes. The registry never holds a callback. */
-export interface TopAction {
-  label: string;
-  screen: Screen;
-  /**
-   * Set before the navigation, where the screen has more than one thing on it.
-   *
-   * A destination used to be one screen doing one thing, so a label and a
-   * screen name said everything. Two merges later some screens carry a switch
-   * — the report's grain, the source a changed date arrived in — and "Check
-   * the dates" landing on the half about pasted emails is the action not
-   * kept. Still no callback: this is an action object the registry describes
-   * and `SoftTop` dispatches.
-   */
-  also?: Action;
-}
-
-export interface TopBar {
-  status?: string;
-  primary: TopAction;
-}
-
 export interface SoftTop {
   hero: TopHero | null;
   stats: TopStat[];
-  bar: TopBar | null;
 }
 
 export interface TopInput {
@@ -108,17 +102,16 @@ export interface TopInput {
   sync?: string;
 }
 
-const nothing: SoftTop = { hero: null, stats: [], bar: null };
-
 /**
- * A screen with no number and no list: a tool you type into, or prose.
+ * No hero and no stats: the screen is drawn with nothing above it.
  *
- * It keeps the bar and loses the hero, which is what the handoff asks for —
- * "prose screens keep title, tab rows, description and bottom bar". A hero
- * over a blank compose box would have to invent its fact, and the only one to
- * hand is the blurb the description line is already showing.
+ * This used to mean "falls through the registry", because a screen with no
+ * numbers still kept a bar and so still returned something. With the bar gone
+ * it is a real answer as well — a compose box or a page of prose has no
+ * dominant fact — so the test that every screen is covered checks the switch
+ * rather than the shape of what comes back.
  */
-const prose = (primary: TopAction): SoftTop => ({ hero: null, stats: [], bar: { primary } });
+const nothing: SoftTop = { hero: null, stats: [] };
 
 /** `n` of a thing, pluralised, for a foot line rather than a figure. */
 function count(n: number, one: string, many = `${one}s`): string {
@@ -177,7 +170,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     label: string,
     n: number,
     one: string,
-    primary: TopAction,
     many?: string,
     /** Where the school names the thing — "board meals" rather than "meals". */
     note?: string,
@@ -189,14 +181,12 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       foot: n === 0 ? `No ${many ?? `${one}s`} yet` : count(n, one, many),
     },
     stats: term,
-    bar: { primary },
   });
 
   switch (screen) {
     // ── Semester ──────────────────────────────────────────────────────────
     case 'home': {
       const next = nextClass(catalog, now);
-      const first = due[0];
       return {
         hero: next
           ? {
@@ -207,12 +197,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
             }
           : { label: 'Today', said: 'No class today.', foot: count(due.length, 'thing') + ' still due' },
         stats: term,
-        bar: {
-          status: first ? `${count(due.length, 'thing')} left today` : 'Nothing left today',
-          primary: first
-            ? { label: 'Start the next thing', screen: 'work' }
-            : { label: 'Plan tonight', screen: 'tonight' },
-        },
       };
     }
 
@@ -233,14 +217,12 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         return {
           hero: { label: 'This week', meta: 'Last seven days', figure: num(lastWeek.length), foot: 'ticked off' },
           stats: term,
-          bar: { primary: { label: 'The week ahead', screen: 'ahead' } },
         };
       }
       if (state.report === 'term') {
         return {
           hero: { label: 'What worked', meta: 'This term', figure: num(ticked.length), foot: 'ticked off so far' },
           stats: term,
-          bar: { primary: { label: 'The week ahead', screen: 'ahead' } },
         };
       }
       return {
@@ -251,7 +233,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: due.length === 0 ? 'Nothing left today' : count(due.length, 'thing') + ' still due',
         },
         stats: term,
-        bar: { primary: { label: 'Plan tonight', screen: 'tonight' } },
       };
     }
 
@@ -264,13 +245,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: count(courses, 'course') + ' this term',
         },
         stats: term,
-        bar: {
-          primary: {
-            label: 'Check the dates',
-            screen: 'announce',
-            also: { type: 'setChanges', source: 'feed' },
-          },
-        },
       };
 
     case 'tonight': {
@@ -280,7 +254,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           ? { label: 'Tonight', figure: showHours(hours), foot: 'to spend on ' + count(soon.length + due.length, 'thing') }
           : { label: 'Tonight', said: 'Say how long you have, and this ranks the hours.', foot: count(due.length, 'thing') + ' due today' },
         stats: term,
-        bar: { primary: { label: 'Start the next thing', screen: 'work' } },
       };
     }
 
@@ -304,12 +277,33 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           { label: 'Promised', value: showHours(w.promised) },
           { label: 'Overdue', value: num(overdue) },
         ],
-        bar: { primary: { label: 'When you are behind', screen: 'behind' } },
       };
     }
 
     // ── Courses ───────────────────────────────────────────────────────────
     case 'courses': {
+      /*
+       * The grades grain says what it is about, not what the tab bar is about.
+       *
+       * Grades was a screen with a case of its own here, and it kept this hero
+       * when it became a grain of Courses: somebody looking at a grade table
+       * wants the running grade above it, not the term's progress. One screen,
+       * two headers, chosen by the grain — the tab is the screen now, so the
+       * top has to know which one it is drawing.
+       */
+      if (state.coursesTab === 'grades') {
+        const g = runningGrade(input);
+        return {
+          hero: g
+            ? { label: 'Running grade', meta: count(g.scored, 'course'), figure: `${g.pct}%`, foot: 'across everything entered' }
+            : { label: 'Grades', said: 'No scores entered yet, so there is nothing to average.', foot: count(courses, 'course') + ' waiting' },
+          stats: [
+            { label: 'Scored', value: num(Object.keys(state.grades).length) },
+            { label: 'Courses', value: num(courses), fraction: courses && g ? g.scored / courses : undefined },
+            { label: 'Overdue', value: num(overdue) },
+          ],
+        };
+      }
       const through = termProgress(dated, now);
       return {
         hero: through === null
@@ -325,16 +319,11 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           { label: 'Deadlines', value: num(catalog.items.length), fraction: through ?? undefined },
           { label: 'Overdue', value: num(overdue) },
         ],
-        bar: { primary: { label: 'Add a course', screen: 'import' } },
       };
     }
 
     case 'registrar':
-      return holds('Term deadlines', state.registrar.length, 'date', {
-        label: 'Check the dates',
-        screen: 'announce',
-        also: { type: 'setChanges', source: 'feed' },
-      });
+      return holds('Term deadlines', state.registrar.length, 'date');
 
     case 'import':
       return {
@@ -344,21 +333,16 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: courses === 0 ? 'Nothing loaded yet' : count(catalog.items.length, 'deadline') + ' between them',
         },
         stats: term,
-        bar: { primary: { label: 'Edit the course', screen: 'edit' } },
       };
 
     case 'edit':
       return {
         hero: { label: 'Courses', figure: num(courses), foot: count(catalog.items.length, 'deadline') + ' between them' },
         stats: term,
-        bar: { primary: { label: 'Back to courses', screen: 'courses' } },
       };
 
     case 'announce':
-      // Not "Check the dates" any more: that is this screen's other source, so
-      // the bar would offer the screen you are standing on. After a change is
-      // applied the next thing is the course it changed.
-      return holds('Folded in', state.updates.length, 'addition', { label: 'Edit the course', screen: 'edit' });
+      return holds('Folded in', state.updates.length, 'addition');
 
     // ── Study ─────────────────────────────────────────────────────────────
     case 'study': {
@@ -380,7 +364,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           { label: 'Cards seen', value: num(t.cards) },
           { label: 'Courses', value: num(courses) },
         ],
-        bar: { primary: { label: 'Ask about this course', screen: 'ask' } },
       };
     }
 
@@ -391,14 +374,13 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           said: courses === 0 ? 'No course loaded, so answers come without a guide in hand.' : `Answering with ${count(courses, 'course')} in hand.`,
         },
         stats: term,
-        bar: { primary: { label: 'Study', screen: 'study' } },
       };
 
     case 'update':
-      return holds('Additions', state.updates.length, 'addition', { label: 'Study', screen: 'study' });
+      return holds('Additions', state.updates.length, 'addition');
 
     case 'exam':
-      return holds('Papers sat', state.sittings.length, 'paper sat', { label: 'Exam runway', screen: 'runway' }, 'papers sat');
+      return holds('Papers sat', state.sittings.length, 'paper sat', 'papers sat');
 
     case 'runway': {
       // `isExam` is the app's own definition, shared with the runway screen —
@@ -409,7 +391,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           ? { label: 'Next exam', meta: nextExam.title, figure: `${nextExam.daysAway}d`, foot: 'to plan backwards from' }
           : { label: 'Exam runway', said: 'No exam on the calendar to count back from.', foot: count(soon.length, 'deadline') + ' in the next week' },
         stats: term,
-        bar: { primary: { label: 'Sit a practice paper', screen: 'exam' } },
       };
     }
 
@@ -421,7 +402,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           said: courses === 0 ? 'No course loaded, so the method comes without one.' : `Worked against ${count(courses, 'course')}.`,
         },
         stats: term,
-        bar: { primary: { label: 'Study', screen: 'study' } },
       };
 
     // ── Make ──────────────────────────────────────────────────────────────
@@ -434,45 +414,28 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: soon.length === 0 ? 'Nothing due this week' : 'due in the next seven days',
         },
         stats: term,
-        bar: { primary: { label: 'Tonight', screen: 'tonight' } },
       };
 
     case 'essay':
-      return prose({ label: 'Check the writing', screen: 'proof' });
+      return nothing;
 
     case 'proof':
-      return prose({ label: 'Draft it', screen: 'essay' });
+      return nothing;
 
     case 'draw':
-      return prose({ label: 'Make a deck', screen: 'deck' });
+      return nothing;
 
     case 'deck':
-      return prose({ label: 'Draw it', screen: 'draw' });
+      return nothing;
 
     case 'mail':
-      return prose({ label: 'Check the writing', screen: 'proof' });
+      return nothing;
 
     case 'sources':
-      return holds('Sources', state.sources.length, 'source', { label: 'Draft it', screen: 'essay' });
-
-    // ── Standing ──────────────────────────────────────────────────────────
-    case 'grades': {
-      const g = runningGrade(input);
-      return {
-        hero: g
-          ? { label: 'Running grade', meta: count(g.scored, 'course'), figure: `${g.pct}%`, foot: 'across everything entered' }
-          : { label: 'Grades', said: 'No scores entered yet, so there is nothing to average.', foot: count(courses, 'course') + ' waiting' },
-        stats: [
-          { label: 'Scored', value: num(Object.keys(state.grades).length) },
-          { label: 'Courses', value: num(courses), fraction: courses && g ? g.scored / courses : undefined },
-          { label: 'Overdue', value: num(overdue) },
-        ],
-        bar: { primary: { label: 'The degree', screen: 'degree' } },
-      };
-    }
+      return holds('Sources', state.sources.length, 'source');
 
     case 'degree':
-      return holds('Courses taken', state.taken.length, 'course taken', { label: 'Registration', screen: 'yes' }, 'courses taken');
+      return holds('Courses taken', state.taken.length, 'course taken', 'courses taken');
 
     case 'behind': {
       // The hours are the student's own, and the sentence is the one the
@@ -490,7 +453,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: b.needed > 0 ? `${showHours(b.needed)} of work against ${showHours(b.there)}` : undefined,
         },
         stats: term,
-        bar: { primary: { label: 'Tonight', screen: 'tonight' } },
       };
     }
 
@@ -498,56 +460,53 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     case 'meals':
       // The noun is the school's, not ours: "swipes" at one, "board meals" at
       // another, and "meals" where nothing has been declared.
-      return holds('Balances', state.balances.length, 'balance', { label: 'Costs', screen: 'costs' }, undefined, swipeUnit(caps));
+      return holds('Balances', state.balances.length, 'balance', undefined, swipeUnit(caps));
 
     case 'housing':
-      return holds('Rooms', state.residences.length, 'room', { label: 'Getting there', screen: 'maps' });
+      return holds('Rooms', state.residences.length, 'room');
 
     case 'maps':
-      return holds('Saved places', state.places.length, 'place', { label: 'Links', screen: 'links' });
+      return holds('Saved places', state.places.length, 'place');
 
     case 'yes':
       return {
         hero: { label: 'Registration', said: `${count(state.taken.length, 'course')} taken so far.`, foot: count(courses, 'course') + ' this term' },
         stats: term,
-        bar: { primary: { label: 'The degree', screen: 'degree' } },
       };
 
     case 'classmates':
       return {
         hero: { label: 'Classmates', figure: num(courses), foot: courses === 0 ? 'No courses to share yet' : 'rooms, one per class' },
         stats: term,
-        bar: { primary: { label: 'Group work', screen: 'groupwork' } },
       };
 
     case 'activities':
-      return holds('Commitments', state.commitments.length, 'commitment', { label: 'The week ahead', screen: 'ahead' });
+      return holds('Commitments', state.commitments.length, 'commitment');
 
     case 'groupwork':
       return {
         hero: { label: 'Group work', figure: num(courses), foot: 'courses that could carry a project' },
         stats: term,
-        bar: { primary: { label: 'Classmates', screen: 'classmates' } },
       };
 
     // ── Life ──────────────────────────────────────────────────────────────
     case 'mine':
-      return holds('Personal', state.tasks.length + state.notes.length + state.appointments.length, 'item', { label: 'Timers and alarms', screen: 'clocks' });
+      return holds('Personal', state.tasks.length + state.notes.length + state.appointments.length, 'item');
 
     case 'clocks':
-      return holds('Timers', state.timers.length + state.alarms.length, 'timer', { label: 'Tonight', screen: 'tonight' });
+      return holds('Timers', state.timers.length + state.alarms.length, 'timer');
 
     case 'applying':
-      return holds('Applications', state.applications.length, 'application', { label: 'People and letters', screen: 'people' });
+      return holds('Applications', state.applications.length, 'application');
 
     case 'people':
-      return holds('People', state.people.length + state.letters.length, 'record', { label: 'Applications', screen: 'applying' });
+      return holds('People', state.people.length + state.letters.length, 'record');
 
     case 'costs':
-      return holds('Costs', state.costs.length, 'cost', { label: 'Meal plan', screen: 'meals' });
+      return holds('Costs', state.costs.length, 'cost');
 
     case 'links':
-      return holds('Links', state.extraLinks.length, 'link', { label: 'Getting there', screen: 'maps' });
+      return holds('Links', state.extraLinks.length, 'link');
 
     // ── You ───────────────────────────────────────────────────────────────
     case 'me': {
@@ -560,7 +519,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: through === null ? 'deadlines this term' : 'of the term’s deadlines are behind you',
         },
         stats: term,
-        bar: { primary: { label: 'Everything', screen: 'everything' } },
       };
     }
 
@@ -571,13 +529,12 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           said: state.myName ? `Signed in as ${state.myName}.` : 'Not signed in, so this semester lives on this device only.',
         },
         stats: term,
-        bar: { primary: { label: 'Connect accounts', screen: 'connect' } },
       };
 
     case 'connect':
       // Where a feed ends up, rather than a second accounts screen: what a
       // subscribed calendar is for is the dates showing on the day rail.
-      return holds('Feeds', state.feeds.length, 'feed', { label: 'Calendar', screen: 'calendar' });
+      return holds('Feeds', state.feeds.length, 'feed');
 
     case 'settings': {
       /*
@@ -596,7 +553,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           { label: 'Account', value: input.sync ?? '—' },
           { label: 'Alerts on', value: num(Object.values(state.notifs).filter(Boolean).length) },
         ],
-        bar: { primary: { label: 'Your data', screen: 'data' } },
       };
     }
 
@@ -608,7 +564,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: 'kinds switched on',
         },
         stats: term,
-        bar: { primary: { label: 'Settings', screen: 'settings' } },
       };
 
     case 'everything':
@@ -620,11 +575,10 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: 'screens in the app',
         },
         stats: term,
-        bar: { primary: { label: 'How this works', screen: 'help' } },
       };
 
     case 'help':
-      return prose({ label: 'Everything', screen: 'everything' });
+      return nothing;
 
     // ── Data ──────────────────────────────────────────────────────────────
     case 'data':
@@ -637,7 +591,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: 'tasks, notes, appointments, sources and people',
         },
         stats: term,
-        bar: { primary: { label: 'Take it with you', screen: 'export' } },
       };
 
     case 'export':
@@ -648,11 +601,10 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           foot: count(courses, 'course') + ', ' + count(catalog.items.length, 'deadline'),
         },
         stats: term,
-        bar: { primary: { label: 'Your data', screen: 'data' } },
       };
 
     case 'privacy':
-      return prose({ label: 'Your data', screen: 'data' });
+      return nothing;
 
     default:
       return nothing;

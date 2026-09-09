@@ -16,7 +16,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import {
   ASKS,
   NOTICE,
@@ -184,18 +184,17 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                       lineHeight: 'var(--leading-relaxed)',
                     }}
                   />
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-block"
+                  <ActionButton
                     onClick={() => {
-                      if (!what.trim()) return;
-                      dispatch({ type: 'addVisit', patch: { personId: p.id, what } });
-                      setWhat('');
+                    if (!what.trim()) return;
+                    dispatch({ type: 'addVisit', patch: { personId: p.id, what } });
+                    setWhat('');
                     }}
-                    style={{ height: 40, marginTop: 'var(--sp-4)', textTransform: 'uppercase', letterSpacing: '0.09em' }}
+                    spacing="0.09em"
+                    style={{ marginTop: 'var(--sp-4)' }}
                   >
                     Record it
-                  </button>
+                  </ActionButton>
 
                   {theirs.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-6)' }}>

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle, useSoft } from '../components/shell/useShell';
@@ -9,7 +9,7 @@ import { ReadingsOnTheGo } from '../components/ReadingProgress';
 import { ClosingWindows } from '../components/Windows';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, ChipRow, DateRow, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import { homeShape } from '../lib/chrome';
 import {
@@ -28,7 +28,8 @@ import {
 import { minutesNow } from '../lib/date';
 import { datedEvents, datedItems } from '../lib/select';
 import { overdueCount } from '../lib/standing';
-import { visible } from '../lib/feed';
+import { ordered, sectionLabel, visible } from '../lib/feed';
+import { MOVE_HINT, useMovable } from '../lib/arrange';
 import { line, pressing, standing } from '../lib/registrar';
 import { HowLong } from '../components/HowLong';
 import { DropBy } from '../components/DropBy';
@@ -109,7 +110,7 @@ function NextClassCard() {
  * citation attached; this does not, and says so.
  */
 function YourTasks() {
-  const { state, dispatch, now, courseCode } = useStore();
+  const { state, dispatch, now, courseCode, tint } = useStore();
   const rowTen = useRowStyle(10);
   const mine = tasksOn(state.tasks, now);
   const appts = appointmentsOn(state.appointments, now);
@@ -183,7 +184,18 @@ function YourTasks() {
               </div>
               {(t.time || t.courseId) && (
                 <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
-                  {t.courseId ? `${courseCode(t.courseId)} · ` : ''}
+                  {/* The code in its course's colour rather than in the dim
+                      grey the time is set in: a task you filed against ECON
+                      belongs to ECON, and this is the only mark on the row
+                      that says so. */}
+                  {t.courseId ? (
+                    <>
+                      <span style={{ color: tint(t.courseId).ink, opacity: 1 }}>{courseCode(t.courseId)}</span>
+                      {' · '}
+                    </>
+                  ) : (
+                    ''
+                  )}
                   {t.time}
                 </div>
               )}
@@ -256,7 +268,7 @@ function OverdueBanner() {
 function TabHome() {
   // Today's own sections derive what they need themselves, so what is left
   // here is only what the week tab and the switcher use.
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
   const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
   const tab = state.homeTab;
@@ -332,6 +344,7 @@ function TabHome() {
             bottom={String(u.day)}
             title={u.title}
             meta={`${catalog.byId[u.c].code} · ${u.weight}`}
+            edge={tint(u.c).edge}
             onClick={() => dispatch({ type: 'openItem', id: u.id })}
           />
         ))}
@@ -745,8 +758,118 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   windows: ClosingWindows,
 };
 
+/**
+ * One section of Today, with the grip that moves it.
+ *
+ * ## Why a grip rather than the section itself
+ *
+ * Everywhere else in the app a movable row is its own handle: hold it
+ * anywhere and it moves. That cannot be the rule here, because a hold already
+ * means something inside these sections — it is how you ask the assistant
+ * about the deadline under your thumb, and two press-and-hold gestures on one
+ * element cannot both win. So the section is what a drop lands on, and a grip
+ * beside its heading is the only thing that starts a drag. Everything inside
+ * still answers a hold exactly as it did.
+ *
+ * ## Where the grip goes, and when it appears at all
+ *
+ * Beside the section's own first heading, found and measured rather than
+ * assumed: these eighteen sections were written over months and head
+ * themselves differently — `SectionLabel`, a kicker, or nothing at all — and
+ * a grip pinned to a guessed offset would sit beside the title on some and in
+ * mid-air on others.
+ *
+ * Most of them are also silent most days: `Feed_since` draws nothing within a
+ * sitting, `WorstDay` nothing on an ordinary fortnight. A grip floating above
+ * a section that drew nothing would be a control for a thing that is not
+ * there, so it appears only once the section has laid something out — which
+ * is a measurement too, because whether a section is empty today is a
+ * question only it can answer.
+ */
+function FeedPart({
+  id,
+  label,
+  feed,
+}: {
+  id: string;
+  label: string;
+  feed: ReturnType<typeof useMovable<string>>;
+}) {
+  const box = useRef<HTMLElement>(null);
+  const Part = FEED_PARTS[id];
+  /** Where the grip sits, or null while the section has drawn nothing. */
+  const [at, setAt] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const place = () => {
+      // Its own first heading, and only the first: the kicker inside a card
+      // further down is that card's, and a section that moved when you took
+      // hold of a line in the middle of it would be a surprise.
+      const head = el.querySelector<HTMLElement>('.section-label, .kicker');
+      const seen = head ?? (el.firstElementChild as HTMLElement | null);
+      if (!seen || el.getBoundingClientRect().height === 0) {
+        setAt(null);
+        return;
+      }
+      setAt(seen.getBoundingClientRect().top - el.getBoundingClientRect().top);
+    };
+    place();
+    // A section can fill in after its first paint — a fetch, a timer, a store
+    // change — and the grip has to arrive with it rather than at the next
+    // render that happens to touch this component.
+    const watch = new ResizeObserver(place);
+    watch.observe(el);
+    return () => watch.disconnect();
+  });
+
+  if (!Part) return null;
+
+  return (
+    <section
+      ref={box}
+      {...feed.zone(id, { style: { position: 'relative' } })}
+      aria-label={at === null ? undefined : label}
+    >
+      {at === null ? null : (
+        <button
+          type="button"
+          {...feed.grip(id, {
+            style: {
+              position: 'absolute',
+              // Level with the heading it belongs to, and out in the page's
+              // own margin so it never lands on the words: these headings
+              // carry a count or a link at their right-hand end.
+              top: at,
+              left: -17,
+              width: 17,
+              padding: 0,
+              border: 'none',
+              background: 'transparent',
+              color: 'inherit',
+              lineHeight: 'var(--leading-tight)',
+              fontSize: 'var(--type-sm)',
+              // How it looks, and what it does on hover and focus, is in
+              // `app.css` under `.grip`. No `touch-action: none` here, unlike
+              // the folder's tiles: a finger that lands on the grip and
+              // flicks is still scrolling the page, and only a hold means
+              // otherwise. What stops the page moving under a drag is in
+              // `lib/drag.ts`, and it starts when the hold does.
+            },
+          })}
+          aria-label={`Move ${label}. ${MOVE_HINT}`}
+        >
+          ⠿
+        </button>
+      )}
+      <Part />
+    </section>
+  );
+}
+
 function TodayFeed() {
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
   const soft = useSoft();
   /*
    * The soft shell's hero already is the next class, so the feed drops that
@@ -755,6 +878,23 @@ function TodayFeed() {
    * not a second feed.
    */
   const order = visible(state.feedOrder, state.feedHidden).filter((id) => !(soft && id === 'next'));
+
+  /*
+   * Arranging Today on Today.
+   *
+   * Against the *whole* order rather than what is on screen: sections that
+   * are switched off, and the one the soft shell drops, are still in it. Drag
+   * the checklist above the rail and anything hidden between them stays where
+   * it was, rather than being quietly sent to the end of the feed the moment
+   * it is switched back on.
+   *
+   * The same list is arranged in Settings, from the same key. Two places, one
+   * order — this is the one you are looking at when you decide.
+   */
+  const feed = useMovable<string>({
+    items: ordered(state.feedOrder),
+    onMove: (next) => dispatch({ type: 'setFeedOrder', order: next }),
+  });
 
   if (order.length === 0) {
     return (
@@ -766,10 +906,9 @@ function TodayFeed() {
 
   return (
     <>
-      {order.map((id) => {
-        const Part = FEED_PARTS[id];
-        return Part ? <Part key={id} /> : null;
-      })}
+      {order.map((id) => (
+        <FeedPart key={id} id={id} label={sectionLabel(id)} feed={feed} />
+      ))}
     </>
   );
 }
@@ -891,23 +1030,15 @@ function HoursToday() {
       ) : (
         <HourGrid blocks={blocks} now={minutesNow(now)} style={{ marginTop: 14 }} />
       )}
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
+      <ActionButton
         onClick={() => {
-          dispatch({ type: 'setMineTab', tab: 'appointments' });
-          dispatch({ type: 'go', screen: 'mine' });
+        dispatch({ type: 'setMineTab', tab: 'appointments' });
+        dispatch({ type: 'go', screen: 'mine' });
         }}
-        style={{
-          height: 44,
-          marginTop: 18,
-          fontSize: 'var(--type-xs)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-        }}
+        style={{ marginTop: 18, fontSize: 'var(--type-xs)' }}
       >
         + Add something to the day
-      </button>
+      </ActionButton>
       <div style={{ height: 22 }} />
     </>
   );

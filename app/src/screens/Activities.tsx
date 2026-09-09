@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
-import { SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { DAYS } from '../lib/edit';
 import { spanOf } from '../lib/select';
@@ -412,33 +412,32 @@ function AddOne({ onDone }: { onDone: () => void }) {
         style={{ width: '100%' }}
       />
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         disabled={!ready}
         onClick={() => {
-          dispatch({
-            type: 'addCommitment',
-            commitment: {
-              name: name.trim(),
-              kind,
-              role: role.trim(),
-              where: where.trim(),
-              url: url.trim(),
-              note: '',
-              days: fixed ? days : [],
-              at: fixed ? at : null,
-              minutes: Math.max(15, Number(minutes) || 60),
-              hours: fixed ? 0 : Math.max(0, Number(hours) || 0),
-              active: true,
-            },
-          });
-          onDone();
+        dispatch({
+        type: 'addCommitment',
+        commitment: {
+        name: name.trim(),
+        kind,
+        role: role.trim(),
+        where: where.trim(),
+        url: url.trim(),
+        note: '',
+        days: fixed ? days : [],
+        at: fixed ? at : null,
+        minutes: Math.max(15, Number(minutes) || 60),
+        hours: fixed ? 0 : Math.max(0, Number(hours) || 0),
+        active: true,
+        },
+        });
+        onDone();
         }}
-        style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        tone="primary"
+        style={{ marginTop: 'var(--sp-7)' }}
       >
         Add it
-      </button>
+      </ActionButton>
     </>
   );
 }

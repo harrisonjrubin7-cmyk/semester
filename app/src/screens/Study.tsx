@@ -8,8 +8,9 @@ import { FirstRun } from './FirstRun';
 import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
 import { modesFor } from '../lib/modes';
 import { Blueprint } from '../components/Blueprint';
-import { Meter, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, Meter, SectionLabel, Segmented } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
+import { AppGrid } from '../components/nav/AppGrid';
 import { nextExam, tonightPlan } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
 import { cardKey, dueCount } from '../lib/review';
@@ -116,53 +117,32 @@ export function Study() {
       {tab === 'ask' && (
         <>
           {/*
-            Generated from the directory rather than written out here.
-            This tab used to be two hand-written cards, Ask Claude and Work on
+            A home screen, generated from the directory.
+
+            Two changes, and the second is what the first was for. Generated:
+            this tab used to be two hand-written cards, Ask Claude and Work on
             it, and every tool added afterwards — the diagram drawer, the
             problem solver, the data analysis, the deck builder, the drafting
             tool, the practice paper — was reachable only through search or
-            three taps into Me. Six features nobody would ever find. Reading
-            the list from `lib/nav.ts` means the next one appears here the day
-            it is added, without anybody remembering to come back.
+            three taps into Me. Reading the list from `lib/nav.ts` means the
+            next one appears here the day it is added, without anybody
+            remembering to come back.
+
+            And drawn as a grid rather than a column, because generating the
+            list made it thirteen rows and a row of a card each is 68px — four
+            tools on screen and nine below the fold, which is the same
+            unfindability the tab was built to end. Icons with names under
+            them put twelve in the space four were using, and give each one a
+            position you can point at rather than read for. See
+            `components/nav/AppGrid.tsx`.
           */}
           <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
             Everything the app can do with a course, in one place.
           </div>
-          {[...destinationsIn('Study'), ...destinationsIn('Make')]
-            .filter((d) => d.screen !== 'study')
-            .map((d) => (
-              <Blueprint
-                plain
-                key={d.screen}
-                onClick={() => dispatch({ type: 'go', screen: d.screen })}
-                style={{
-                  padding: '13px 15px',
-                  marginTop: 'var(--sp-5)',
-                  display: 'flex',
-                  gap: 'var(--sp-6)',
-                  alignItems: 'center',
-                }}
-              >
-                <span style={{ width: 8, height: 34, background: 'var(--chrome)', flex: 'none' }} />
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span className="kicker" style={{ display: 'block' }}>
-                    {d.label}
-                  </span>
-                  <span
-                    style={{
-                      display: 'block',
-                      fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                      lineHeight: 1.35,
-                      marginTop: 3,
-                      textWrap: 'pretty',
-                    }}
-                  >
-                    {d.blurb}
-                  </span>
-                </span>
-                <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
-              </Blueprint>
-            ))}
+          <AppGrid
+            apps={[...destinationsIn('Study'), ...destinationsIn('Make')].filter((d) => d.screen !== 'study')}
+            onOpen={(d) => dispatch({ type: 'go', screen: d.screen })}
+          />
         </>
       )}
 
@@ -283,14 +263,12 @@ export function Study() {
               >
                 {step && (
                   <>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-block"
+                    <ActionButton
                       onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: step.id })}
-                      style={{ height: 42, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                      tone="primary" spacing="0.08em"
                     >
                       {step.label}
-                    </button>
+                    </ActionButton>
                     {/* The fact it rests on. A recommendation with no reason
                         is an instruction, and an instruction from software
                         about how to study is worth nothing. */}

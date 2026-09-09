@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
-import { SectionLabel } from '../components/ui';
+import { ActionButton, SectionLabel } from '../components/ui';
 import { Blueprint } from '../components/Blueprint';
 import { CAMPUS_LINKS } from '../data/campus';
 import type { CampusLink } from '../lib/types';
@@ -243,14 +243,12 @@ export function Links() {
               </div>
             </Blueprint>
           ) : (
-            <button
-              type="button"
-              className="btn btn-secondary btn-block"
+            <ActionButton
               onClick={() => setAdding(true)}
-              style={{ height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 'var(--sp-6)' }}
+              style={{ fontSize: 'var(--type-xs)', marginTop: 'var(--sp-6)' }}
             >
               Add a link of your own
-            </button>
+            </ActionButton>
           )}
 
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>

@@ -7,7 +7,7 @@ import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { ActionButton, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
@@ -229,15 +229,14 @@ export function Solve() {
         </>
       )}
 
-      <button
-        type="button"
-        className="btn btn-primary btn-block"
+      <ActionButton
         onClick={() => void run()}
         disabled={!!busy || !problem.trim()}
-        style={{ height: 46, marginTop: 'var(--sp-7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+        tone="primary"
+        style={{ marginTop: 'var(--sp-7)' }}
       >
         {busy === 'Working…' ? 'Working…' : out ? 'Do it again' : a.label}
-      </button>
+      </ActionButton>
 
       <Trouble said={trouble.said} onRetry={trouble.again} />
 
