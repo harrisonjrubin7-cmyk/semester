@@ -68,6 +68,7 @@ import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
+import { readList, readModule, readWindow } from '../lib/stored';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -1025,7 +1026,11 @@ export function loadPersisted(): Persisted {
       feedEvents: list(saved.feedEvents),
       linkUrls: saved.linkUrls ?? {},
       extraLinks: list(saved.extraLinks),
-      courses: list(saved.courses),
+      // Not `list()`: that checks the list is a list and casts what is in it.
+      // The catalogue is built from these before any screen is drawn, so there
+      // is no error boundary between a damaged course and a blank document.
+      // See `lib/stored.ts`.
+      courses: readList(saved.courses, readModule),
       // An install that predates courses-as-data was running the four built-in
       // ones; it keeps them, or the app would look wiped on the next load. A
       // genuinely new account starts empty.
@@ -1128,7 +1133,7 @@ export function loadPersisted(): Persisted {
       sources: list(saved.sources),
       registrar: list(saved.registrar),
       spent: list(saved.spent),
-      windows: list(saved.windows),
+      windows: readList(saved.windows, readWindow),
       costs: list(saved.costs),
       balances: list(saved.balances),
       residences: list(saved.residences),
