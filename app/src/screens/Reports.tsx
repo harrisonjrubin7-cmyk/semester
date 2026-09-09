@@ -40,7 +40,7 @@ const PRINT: Record<string, string> = {
   term: 'Print the term',
 };
 
-export function Reports({ bare = false }: { bare?: boolean } = {}) {
+export function Reports() {
   const { state, dispatch } = useStore();
   const grain = state.report;
 
@@ -66,24 +66,14 @@ export function Reports({ bare = false }: { bare?: boolean } = {}) {
   );
 
   /*
-   * Two callers, one body.
+   * One caller, one frame.
    *
-   * Standalone this is a screen and takes the app's frame: the padding, the
-   * search box, the space above the tab bar. On Today it is the "Report" tab
-   * inside somebody else's `<Page>`, and a second frame there would mean a
-   * second search box on the same screen, filtering nothing. See the note at
-   * the top of `components/Page.tsx`.
-   *
-   * The trailing spacer goes with the frame, so it is written by hand only on
-   * the embedded path.
+   * There were two: this screen, and a "Report" tab on Today that rendered the
+   * same body bare inside Today's own `<Page>`. That put the whole report in
+   * two places — a grain switcher nested inside Today's tab switcher — and
+   * made Today's bar five wide, which is where "This week" started wrapping.
+   * The report is not a view of today: "what is on now" and "how did it go"
+   * are asked on different days. So the tab went and the screen stayed.
    */
-  if (bare) {
-    return (
-      <div>
-        {body}
-        <div style={{ height: 26 }} />
-      </div>
-    );
-  }
   return <Page bottom={26}>{body}</Page>;
 }

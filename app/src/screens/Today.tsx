@@ -38,7 +38,6 @@ import { StartToday } from '../components/StartToday';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
 import { GapOffer } from './Gap';
 import { HomeWalk } from '../components/HomeWalk';
-import { Reports } from './Reports';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
 import { HourGrid } from '../components/HourGrid';
@@ -259,18 +258,13 @@ function TabHome() {
         options={[
           { id: 'today', label: 'Today' },
           { id: 'hours', label: 'Hours' },
-          // "This week" wrapped to two lines once Report made a fifth tab,
-          // which made the switcher taller on every Today view.
           { id: 'week', label: 'Week' },
           { id: 'done', label: 'Done' },
-          { id: 'brief', label: 'Report' },
         ]}
         value={tab}
         onChange={(next) => dispatch({ type: 'setHomeTab', tab: next })}
         style={{ margin: '0 0 16px' }}
       />
-
-      {tab === 'brief' && <Reports bare />}
 
       {tab === 'today' && <TodayFeed />}
 

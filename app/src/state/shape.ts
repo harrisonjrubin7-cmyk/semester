@@ -563,7 +563,7 @@ export interface Ephemeral {
    * single long scroll with everything on it.
    */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files';
-  homeTab: 'today' | 'hours' | 'week' | 'done' | 'brief';
+  homeTab: 'today' | 'hours' | 'week' | 'done';
   coursesTab: 'courses' | 'due' | 'grades';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all';
@@ -1364,7 +1364,7 @@ export type Action =
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'places' | 'files' }
-  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' | 'brief' }
+  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: 'courses' | 'due' | 'grades' }
   | { type: 'setMeTab'; tab: 'you' | 'all' }
   | { type: 'setMeGroup'; group: string }
