@@ -832,6 +832,32 @@ describe('a repeating class that changes', () => {
     expect(new Set(events.map((e) => e.id)).size).toBe(2);
   });
 
+  it('draws a change for good whose class cannot be read', () => {
+    /*
+     * The entry a change belongs to is in the file but the reader cannot draw
+     * it — no DTSTART, or one that is not a date. Counting it as present left
+     * neither drawn: it produces nothing for want of a date, and the change
+     * stood down for it. An entry the app cannot read should cost only itself.
+     */
+    for (const master of [
+      ['UID:econ1020@vanderbilt.edu', 'SUMMARY:ECON 1020 lecture', 'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4'],
+      ['UID:econ1020@vanderbilt.edu', 'SUMMARY:ECON 1020 lecture', 'DTSTART:banana', 'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4'],
+    ]) {
+      const ics = cal(
+        [
+          event(...master),
+          event(
+            'UID:econ1020@vanderbilt.edu',
+            'RECURRENCE-ID;RANGE=THISANDFUTURE:20260914T140000',
+            'DTSTART:20260917T140000',
+            'SUMMARY:Moved for good',
+          ),
+        ].join('\r\n'),
+      );
+      expect(parseIcs(COURSES, ics).events.map((e) => e.date), master.join(' ')).toEqual(['2026-09-17']);
+    }
+  });
+
   it('leaves a class with no exceptions exactly as it was', () => {
     expect(days(weekly())).toEqual(['2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28']);
     expect(parseIcs(COURSES, weekly()).events.map((e) => e.id)).toEqual([

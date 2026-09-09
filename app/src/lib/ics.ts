@@ -295,8 +295,28 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
    */
   const replaced = new Map<string, Set<string>>();
   const onward = new Map<string, Onward[]>();
+  /*
+   * The entries that describe a class in their own right — and can be drawn.
+   *
+   * Both halves matter. A change for good is not drawn on its own, because the
+   * occurrence it names is one the entry it changes already makes; it only
+   * falls back to drawing itself where there is no such entry. Counting one
+   * that cannot be read as though it were there left neither drawn: the entry
+   * it changes produces nothing for want of a date, and the change stood down
+   * for it. A readable move naming a real day and a real time, and the class
+   * gone from the calendar altogether.
+   *
+   * That is the third shape of the same mistake on this reader, and the shape
+   * is worth naming: an entry the app cannot read should cost only itself. It
+   * must not take a week, an id, or another entry down with it. The two
+   * before it are the guards on `replaced` below, and the fallback id where
+   * RECURRENCE-ID is unreadable.
+   */
   const described = new Set<string>();
-  for (const raw of raws) if (!raw['RECURRENCE-ID']) described.add(raw.UID?.value ?? '');
+  for (const raw of raws) {
+    if (raw['RECURRENCE-ID'] || !raw.DTSTART || !parseWhen(raw.DTSTART)) continue;
+    described.add(raw.UID?.value ?? '');
+  }
 
   for (const raw of raws) {
     const at = raw['RECURRENCE-ID'];
