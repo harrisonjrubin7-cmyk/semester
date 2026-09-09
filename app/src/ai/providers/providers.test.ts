@@ -4,9 +4,11 @@ import { ROOM, render } from '../shape';
 import { buildCatalog } from '../../data/catalog';
 import { DEFAULT_PERSISTED, initialEphemeral, type State } from '../../state/shape';
 import { DESTINATIONS } from '../../lib/nav';
+import type { Screen } from '../../lib/types';
 import BUS from '../../data/courses/bus';
 import ECON from '../../data/courses/econ';
 import type { Look } from '../shape';
+import { cardKey } from '../../lib/review';
 
 /**
  * What a screen tells the assistant about what is on it.
@@ -322,5 +324,73 @@ describe('what a rendered context looks like', () => {
     expect(out.dropped).toBeGreaterThan(0);
     expect(out.text).toContain('do not count from this list');
     expect(out.text.length).toBeLessThanOrEqual(ROOM + 200);
+  });
+});
+
+/**
+ * What the model is told about mastery, and when it is told nothing.
+ *
+ * A unit's mastery is `unitMastery`'s blend of what has been answered with
+ * what the guide declared, and before the first answer it is the declared
+ * figure entire. Sent as `mastered: "68%"` it is indistinguishable from a
+ * measurement — and these contexts sit directly beneath suggestions like
+ * "What should I drill first?" and "Explain the coldest unit as if I have not
+ * read it", so the model answers out of numbers nobody earned, in a sentence
+ * carrying the confidence of the rest of the answer.
+ *
+ * A wrong number on a card is read by somebody who can see the rest of the
+ * card. This one comes back as prose.
+ */
+describe('mastery in the context', () => {
+  const said = (screen: Screen, over: Partial<State> = {}) => {
+    const provide = providerFor(screen);
+    const ctx = provide?.(look(over));
+    return ctx ? JSON.stringify(ctx) : '';
+  };
+
+  /** One card of ECON's first unit, answered right. */
+  const answered = (): Partial<State> => {
+    const guide = catalog.guides['econ' as keyof typeof catalog.guides];
+    const now = NOW.getTime();
+    const key = cardKey('econ', guide!.units[0].cards[0].q);
+    return {
+      reviews: {
+        [key]: {
+          right: 1,
+          wrong: 0,
+          streak: 1,
+          ease: 2.5,
+          interval: 7,
+          seen: now,
+          due: now + 7 * 86_400_000,
+        },
+      },
+    } as Partial<State>;
+  };
+
+  it('says not started rather than a percentage, before the first answer', () => {
+    const ctx = said('study');
+    expect(ctx).toContain('not started');
+    expect(ctx).not.toMatch(/"mastered":"\d+%"/);
+  });
+
+  it('says so in the summary too, where a model reads first', () => {
+    expect(said('study')).toContain('Nothing in this course has been answered yet.');
+  });
+
+  it('gives the figure once one card has been answered', () => {
+    expect(said('study', answered())).toMatch(/"mastered":"\d+%"/);
+  });
+
+  it('does not name a coldest unit out of declared figures', () => {
+    // "Explain the coldest unit as if I have not read it" is one of this
+    // screen's own suggestions, and the coldest was whichever unit the author
+    // wrote the lowest number beside.
+    expect(said('tonight')).toContain('nothing answered yet');
+  });
+
+  it('does not average declared figures into one', () => {
+    expect(said('me')).toContain('not started');
+    expect(said('me')).not.toMatch(/"averageMastery":"\d+%"/);
   });
 });
