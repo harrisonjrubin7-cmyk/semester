@@ -612,7 +612,24 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           { label: 'Account', value: input.sync ?? '—' },
           { label: 'Alerts on', value: num(Object.values(state.notifs).filter(Boolean).length) },
         ],
-        bar: { primary: { label: 'Your data', screen: 'data' } },
+        /*
+         * No bar here.
+         *
+         * Every screen the soft shell draws gets one because the bar is where
+         * the next thing to do lives — on a screen that shows you a fact, the
+         * action that fact implies is somewhere else. Settings is not that
+         * screen. Its whole body is the list of places you can go, so the bar
+         * could only ever offer one of the rows already on it, and it did:
+         * "Your data" sat in a filled pill under a "Your data" row four
+         * hundred pixels above it. Two routes to one screen, one screen apart
+         * — the exact duplication the index was rebuilt to remove.
+         *
+         * So the index keeps its stats, which say something the rows do not,
+         * and loses the bar. `SOFT_NO_BAR` in `softtop.test.ts` is the list
+         * of screens allowed to do this, so a second one cannot appear
+         * without somebody saying why.
+         */
+        bar: null,
       };
     }
 
