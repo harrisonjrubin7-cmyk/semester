@@ -22,6 +22,7 @@ import {
   itemsDueToday,
   lengthOf,
   nextClass,
+  nothingYet,
   punchline,
   upcomingItems,
   type FeedFilter,
@@ -641,9 +642,15 @@ function Feed_due() {
                 sentence, and "tue sep 15" reads as a typo rather than as
                 prose — a date is a name, and the app writes it one way
                 everywhere else. */}
+            {/* Three cases, not two. This screen is reached with no courses
+                at all now — somebody who has added a task or an appointment
+                before their first syllabus — and "the semester is clear" is
+                not true of a semester the app has never been told about. */}
             {ahead[0]
               ? `Next up is ${ahead[0].title}, ${ahead[0].dueShort}.`
-              : 'The semester is clear.'}
+              : catalog.empty
+                ? 'No syllabus yet. Add one and its deadlines land here.'
+                : 'The semester is clear.'}
           </div>
         </Blueprint>
       )}
@@ -1598,7 +1605,7 @@ function FeedHome() {
 
 export function Today() {
   const { state, catalog } = useStore();
-  if (catalog.empty) return <FirstRun where="on today" />;
+  if (nothingYet(catalog, state)) return <FirstRun where="on today" />;
   // `homeShape` rather than a second `nav === 'feed'` written here. This test
   // and the one in `App.tsx` used to be separate, so a navigation added to
   // one and not the other got the feed's home screen inside the bar's chrome.

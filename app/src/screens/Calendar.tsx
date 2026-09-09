@@ -35,6 +35,7 @@ import {
   feedEventsOn,
   hoursFor,
   itemsOn,
+  nothingYet,
   railFor,
 } from '../lib/select';
 import { timeLabel, useDragToMove } from '../lib/drag';
@@ -2253,7 +2254,7 @@ function CampusList() {
 
 export function Calendar() {
   const { state, dispatch, catalog } = useStore();
-  if (catalog.empty) return <FirstRun where="on the calendar" />;
+  if (nothingYet(catalog, state)) return <FirstRun where="on the calendar" />;
 
   return (
     /*

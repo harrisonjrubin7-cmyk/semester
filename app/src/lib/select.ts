@@ -325,6 +325,39 @@ export function feedEventsOn(events: FeedEvent[], date: Date): FeedEvent[] {
     .sort((a, b) => (a.at ?? -1) - (b.at ?? -1));
 }
 
+/**
+ * Whether a screen that shows dated things has nothing at all to show.
+ *
+ * `catalog.empty` was the whole test, on seven screens. It is the right test
+ * for five of them — Courses, Study, Behind, Tonight and Meet are about
+ * graded coursework, and there is no such thing without a syllabus. It is the
+ * wrong test for the two that also show what the student put in themselves.
+ *
+ * Measured: with no courses, one task and one appointment dated today, the
+ * calendar said "Nothing on the calendar yet" and Today said "Nothing on
+ * today yet" — both entries made through this app's own screens, both dated,
+ * both denied. Only Personal showed them. That is the same failure the month
+ * panel had one level down, on the whole screen: the app telling somebody
+ * there is nothing there about a thing they put there.
+ *
+ * The campus calendar is deliberately not counted. It is not the student's
+ * doing — it is there for anybody with a school set, which is everybody by
+ * default — so counting it would make the first run unreachable on these two
+ * screens rather than fixing anything. A fresh install with no syllabi and
+ * nothing added still gets told where to start.
+ */
+export function nothingYet(
+  cat: Catalog,
+  own: { tasks: PersonalTask[]; appointments: Appointment[]; feedEvents: FeedEvent[] },
+): boolean {
+  return (
+    cat.empty &&
+    own.tasks.length === 0 &&
+    own.appointments.length === 0 &&
+    own.feedEvents.length === 0
+  );
+}
+
 /** Appointments on a given day, in time order. */
 export function appointmentsOn(appointments: Appointment[], date: Date): Appointment[] {
   const iso = dateToIso(date);
