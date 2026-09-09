@@ -36,6 +36,35 @@ describe('checking a quote against what the API cited', () => {
     expect(check(REAL, [cite('due Fridays at 11:59 PM on Gradescope', 4)]).confirmed).toBe(true);
   });
 
+  /*
+   * The other way a paraphrase gets in, which containment alone let through.
+   *
+   * Measured before this: an eighty-seven character quote confirmed by a
+   * fourteen character citation — sixteen per cent of it — and the app then
+   * showed the invented clause about late work as the syllabus's own words.
+   * See `MIN_COVERAGE`, including what it does not claim to do.
+   */
+  it('refuses a quote padded out around a real fragment', () => {
+    const padded =
+      'Late work is never accepted under any circumstances, and everything goes on Gradescope.';
+    expect(check(padded, [cite('on Gradescope.', 4)]).confirmed).toBe(false);
+    expect(
+      check('Attendance is mandatory and three absences fail the course; problem sets are due Fridays.', [
+        cite('problem sets are due Fridays', 4),
+      ]).confirmed,
+    ).toBe(false);
+  });
+
+  it('still confirms a quote the citation genuinely accounts for', () => {
+    // The legitimate shape of the same thing: the API cited most of the
+    // sentence the model quoted.
+    expect(
+      check('Problem sets are due Fridays at 11:59 PM on Gradescope.', [
+        cite('due Fridays at 11:59 PM on Gradescope', 4),
+      ]).confirmed,
+    ).toBe(true);
+  });
+
   it('refuses a paraphrase', () => {
     // The exact failure this exists to catch: a sentence that shares most of
     // its words and changes the one that matters.

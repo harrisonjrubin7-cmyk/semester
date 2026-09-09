@@ -59,13 +59,50 @@ export interface Checked {
 const MIN_LENGTH = 12;
 
 /**
+ * How much of a quote a shorter citation has to account for.
+ *
+ * ## The hole
+ *
+ * "Straight from the syllabus" is a claim about the whole sentence under it,
+ * and the containment test made that claim on the strength of any part of it.
+ * Measured: the eighty-seven character quote *"Late work is never accepted
+ * under any circumstances, and everything goes on Gradescope."* was confirmed
+ * by a fourteen character citation of "on Gradescope." — sixteen per cent of
+ * it — and the app showed the invented clause about late work as the
+ * syllabus's own words.
+ *
+ * That is the failure the paragraph at the top of this file describes,
+ * arriving by the one route containment left open, and it needs no model
+ * behaving badly: padding a real fragment out into a fuller-sounding sentence
+ * is an ordinary thing for one to do.
+ *
+ * ## Why the figure is low, and what it is not
+ *
+ * This is a floor, not a proof. It is set below every coverage the tests
+ * already assert — the lowest of them is 0.45, where the API cited part of
+ * one sentence of a two-sentence quote — because those are the legitimate
+ * shape of the same thing and an unconfirmed true quote is its own kind of
+ * wrong answer. So it closes the demonstrated case and narrows the rest
+ * rather than shutting it: a quote padded to twice the length of its citation
+ * still passes.
+ *
+ * Raising it is a judgment about which error costs more, and raising it far
+ * enough to be a proof would change a case this file's tests pin on purpose.
+ * That is a decision to take deliberately, not a number to tighten in
+ * passing.
+ */
+const MIN_COVERAGE = 0.4;
+
+/**
  * Whether the citations bear out a quote.
  *
- * Containment either way counts. The model may quote one sentence out of a
- * paragraph the API cited, or cite a fragment of a sentence the model quoted
- * in full; both mean the document says it. What does not count is overlap —
- * two strings sharing some words is how a paraphrase passes, which is the
- * exact failure this exists to catch.
+ * Containment either way counts, with one condition. The model may quote one
+ * sentence out of a paragraph the API cited — and then the whole quote is in
+ * the document, which is the strongest case there is. Or it may quote a
+ * sentence the API cited only part of, and then the part has to be most of
+ * it; see `MIN_COVERAGE`. What does not count is overlap — two strings
+ * sharing some words is how a paraphrase passes, which is the exact failure
+ * this exists to catch.
  */
 export function check(quote: string, citations: Citation[]): Checked {
   const needle = flatten(quote);
@@ -74,7 +111,12 @@ export function check(quote: string, citations: Citation[]): Checked {
   for (const c of citations) {
     const hay = flatten(c.text);
     if (hay.length < MIN_LENGTH) continue;
-    if (hay.includes(needle) || needle.includes(hay)) {
+    // The citation holds the whole quote: everything shown is in the document.
+    const whole = hay.includes(needle);
+    // The quote holds the citation: only the cited part is vouched for, so it
+    // has to be most of what is being shown.
+    const enough = needle.includes(hay) && hay.length >= needle.length * MIN_COVERAGE;
+    if (whole || enough) {
       return { confirmed: true, ...(c.page ? { page: c.page } : {}), source: c.text.trim() };
     }
   }
