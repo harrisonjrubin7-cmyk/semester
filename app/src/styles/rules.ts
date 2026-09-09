@@ -237,22 +237,34 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 682,
+  type: 680,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 220,
+  leading: 219,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 523,
+  space: 522,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 541,
+  shorthand: 540,
 };
 
 /*
- * 682/222/524/545 → 682/220/523/541 when the assistant's panel became the
+ * 680/221/523/544 → 680/219/522/540 when the assistant's panel became the
  * chat. Three numbers down and none up, and none of it by reformatting: the
  * panel's transcript, opening, header and footer are now the same components
  * and the same measure the Ask tab uses, so the two loose 1.4 line heights,
  * the hand-set gap and the four `'12px 16px'`-shaped paddings it drew for
  * itself went with the layout they belonged to. See `ai/Assistant.tsx`.
+ *
+ * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
+ * down and none up: the tab was a second copy of what the map already is, and
+ * the one thing only it could do — standing somewhere and naming it — moved to
+ * `screens/Maps.tsx` as it was rather than being redrawn, so the panel's own
+ * off-scale values went with it and the tab's list rows did not come back.
+ *
+ * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
+ * One down, none up, and only one because the filter field lived in `<Page>`
+ * rather than in the fifteen screens that used it: what went with it here was
+ * that field's own `padding: '0 2px'` on the clear button. The screens lost an
+ * adapter each, which is prose, not spacing.
  *
  * 688/224/534/549 → 682/222/524/545 when Files & mail was deleted. All four
  * down and none up: the screen listed Drive files and inbox messages in rows

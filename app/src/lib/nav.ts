@@ -55,11 +55,19 @@ import { showing, type Facts } from './reveal';
  * every other shelf holds, and "which of these nine is it under" gets harder
  * for every shelf that exists, not just the full ones.
  *
- * They fold into Semester, where the question was already being asked —
- * Reports is a Semester screen and carries the `stand` tag. Semester is your
- * term, and how it is going is part of your term. It also puts The week ahead
- * and When you are behind next to each other, which is where two screens that
- * answer the same question in opposite directions should always have been.
+ * Grades and When you are behind fold into Semester, where the question was
+ * already being asked — Reports is a Semester screen and carries the `stand`
+ * tag. Semester is your term, and how it is going is part of your term. It
+ * also puts The week ahead and When you are behind next to each other, which
+ * is where two screens that answer the same question in opposite directions
+ * should always have been.
+ *
+ * The degree goes to Courses instead. It was the one of the three that is not
+ * about this term — what is left of a major, what each course counts towards,
+ * where the hours stand — and Semester is a term. Courses is where the things
+ * it counts are, and it sits directly under the course list for that reason:
+ * the four courses, then what they add up to, then the admin that keeps them
+ * true.
  *
  * The largest is eight and the smallest five, which is what keeps any one
  * shelf drawable as a single row.
@@ -195,6 +203,16 @@ export const DESTINATIONS: Destination[] = [
     group: 'Courses',
     taskTags: ['due', 'stand'],
     root: 'courses',
+  },
+  {
+    screen: 'degree',
+    label: 'The degree',
+    short: 'Degree',
+    blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
+    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
+    group: 'Courses',
+    taskTags: ['ahead', 'stand'],
+    root: 'me',
   },
   {
     screen: 'calendar',
@@ -513,16 +531,6 @@ export const DESTINATIONS: Destination[] = [
     group: 'Semester',
     taskTags: ['stand'],
     root: 'courses',
-  },
-  {
-    screen: 'degree',
-    label: 'The degree',
-    short: 'Degree',
-    blurb: 'What is left of a major or a minor, what each course counts towards, and where the hours stand.',
-    keywords: 'degree audit major minor requirements axle distribution graduation graduate credits credit hours transcript gpa cumulative four year plan declare declaration advisor advising what is left electives double count',
-    group: 'Semester',
-    taskTags: ['ahead', 'stand'],
-    root: 'me',
   },
   {
     screen: 'applying',

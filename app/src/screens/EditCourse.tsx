@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import { has } from '../lib/search';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { STANCES, stanceLine } from '../lib/essay';
 import { readClock } from '../lib/officehours';
 import { SEASONS, readTerm, termId, yearFor } from '../lib/term';
-import { MONTHS } from '../lib/date';
 import {
   DAYS,
   KINDS,
@@ -153,25 +151,7 @@ export function EditCourse() {
   return (
     <Page
       bottom={26}
-      /*
-       * The deadline list is the long part of this screen — a semester's
-       * syllabus is twenty-odd rows, each an editable form — and the reason
-       * anybody opens it is usually one of them: the date that moved, the
-       * essay whose weighting is wrong. Scrolling twenty forms to find it is
-       * the errand, not the edit.
-       */
-      search={{
-        placeholder: 'Find a deadline to change',
-        select: () => draft.items,
-        // The month and day as they are written on the row, so "oct" and
-        // "14" find the same deadline the row shows — an `Item` keeps them as
-        // numbers, not as a date string.
-        match: (i, q) =>
-          has(q, i.title, i.kind, MONTHS[i.month] ?? '', String(i.day), i.dueTime, i.where, i.weight),
-        empty: (q) => `No deadline on this syllabus matches “${q}”. The rest of the screen is below.`,
-      }}
     >
-      {(shownItems, query) => (
     <>
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Everything a syllabus states, changeable. Dates move, weightings get corrected, rooms
@@ -470,9 +450,9 @@ export function EditCourse() {
       </div>
 
       <SectionLabel>
-        Deadlines{query && shownItems.length !== draft.items.length ? ` · ${shownItems.length} of ${draft.items.length}` : ''}
+        Deadlines
       </SectionLabel>
-      {shownItems.map((i) => (
+      {draft.items.map((i) => (
         <Blueprint key={i.id} style={{ padding: '12px 13px', marginBottom: 9 }}>
           <input
             className="input"
@@ -563,7 +543,6 @@ export function EditCourse() {
         </div>
       ) : null}
     </>
-      )}
     </Page>
   );
 }
