@@ -159,3 +159,60 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/../etc')).toBeNull();
   });
 });
+
+/**
+ * A hash somebody else wrote.
+ *
+ * A URL is the one input here that arrives from outside and is handled on the
+ * way — a chat client truncating a shared link at a `%`, a copy that lost its
+ * last two characters, somebody typing one by hand. `decodeURIComponent`
+ * throws `URIError: URI malformed` on a percent that is not a whole escape,
+ * and `fromHash` runs on every hash change and once while the store is being
+ * built.
+ *
+ * Measured before the guard. Landing on `#/guide/%` from a shared link:
+ * `#root` had no children at all — the throw happened before there was a
+ * screen, so there was no boundary either, just a white page. Changing the
+ * hash inside a running app was better and still wrong: two uncaught
+ * `URIError`s and a navigation that silently did not happen.
+ */
+describe('a hash that is not one of ours', () => {
+  it('does not throw on an escape that is not whole', () => {
+    for (const bad of ['#/guide/%', '#/course/%%%', '#/item/%E0%A4%A', '#/note/%zz']) {
+      expect(() => fromHash(bad), bad).not.toThrow();
+    }
+  });
+
+  it('keeps the raw segment, so it names nothing rather than nothing at all', () => {
+    expect(fromHash('#/guide/%')).toMatchObject({ screen: 'guide', id: '%' });
+    expect(fromHash('#/course/%%%')).toMatchObject({ screen: 'course', id: '%%%' });
+  });
+
+  it('still decodes an escape that is whole', () => {
+    expect(fromHash('#/note/a%20b')).toMatchObject({ screen: 'note', id: 'a b' });
+    expect(fromHash('#/course/%C3%A9')).toMatchObject({ screen: 'course', id: 'é' });
+  });
+
+  it('refuses a screen name this file would never have written', () => {
+    expect(fromHash('#/9screen')).toBeNull();
+    expect(fromHash('#/scr-een')).toBeNull();
+    expect(fromHash('#/__proto__')).toBeNull();
+  });
+
+  it('is nothing for the shapes that name no screen at all', () => {
+    for (const empty of ['#', '#/', '', '#//////', '#/?mode=x']) {
+      expect(fromHash(empty), empty).toBeNull();
+    }
+  });
+
+  it('round-trips every id it produces itself', () => {
+    for (const route of [
+      { screen: 'guide', id: 'econ' },
+      { screen: 'guide', id: 'a/b?c=d' },
+      { screen: 'note', id: '#weird' },
+      { screen: 'item', id: 'x y z' },
+    ] as const) {
+      expect(fromHash(toHash(route as never))).toMatchObject(route);
+    }
+  });
+});
