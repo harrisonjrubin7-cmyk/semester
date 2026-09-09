@@ -71,7 +71,7 @@ describe('the map itself', () => {
   });
 
   it('says plainly that a screen has no provider, rather than inventing one', () => {
-    expect(providerFor('courses')).not.toBeNull();
+    expect(providerFor('grades')).not.toBeNull();
     // Not in the registry at all, so nothing can be asked from it.
     expect(providerFor('onboarding')).toBeNull();
   });
@@ -100,11 +100,8 @@ describe('the map itself', () => {
   });
 });
 
-describe('grades — the grades grain of Courses', () => {
-  // Grades stopped being a screen and became the third tab of Courses, so its
-  // provider is reached the way the student reaches the table: `courses`, on
-  // the grain that draws it.
-  const ctx = () => providerFor('courses')!(look({ coursesTab: 'grades' }))!;
+describe('grades', () => {
+  const ctx = () => providerFor('grades')!(look())!;
 
   it('carries every component, its weight and whether it is back', () => {
     /*
@@ -112,7 +109,7 @@ describe('grades — the grades grain of Courses', () => {
      * has to answer without the course being named, which is only possible if
      * the weights and the outstanding rows travel.
      */
-    const text = render('courses', 'Grades', ctx()).text;
+    const text = render('grades', 'Grades', ctx()).text;
     expect(text).toContain('BUS 1600');
     expect(text).toContain('Final exam');
     expect(text).toContain('not back');
@@ -122,7 +119,7 @@ describe('grades — the grades grain of Courses', () => {
   it('rounds a weight rather than printing the arithmetic', () => {
     // A syllabus stating "ten points each" normalises to 34.78260869565217%,
     // which reads as a precision the syllabus never had.
-    const text = render('courses', 'Grades', ctx()).text;
+    const text = render('grades', 'Grades', ctx()).text;
     expect(text).not.toMatch(/\d\.\d{4}/);
   });
 
@@ -134,9 +131,9 @@ describe('grades — the grades grain of Courses', () => {
      * no course and returned nothing at all: the sheet said Grades had
      * nothing to say with four courses of grades on the screen behind it.
      */
-    const all = providerFor('courses')!(look({ coursesTab: 'grades', filter: 'All' }));
+    const all = providerFor('grades')!(look({ filter: 'All' }));
     expect(all?.visible).toHaveLength(2);
-    expect(providerFor('courses')!(look({ coursesTab: 'grades', filter: 'ECON' }))?.visible).toHaveLength(2);
+    expect(providerFor('grades')!(look({ filter: 'ECON' }))?.visible).toHaveLength(2);
   });
 
   it('suggests a question that could only be asked here', () => {
@@ -308,9 +305,9 @@ describe('what no provider may ever hand over', () => {
 
 describe('what a rendered context looks like', () => {
   it('names the screen, then the summary, then the rows', () => {
-    const out = render('courses', 'Grades', providerFor('courses')!(look({ coursesTab: 'grades' }))!);
+    const out = render('grades', 'Grades', providerFor('grades')!(look())!);
     const lines = out.text.split('\n');
-    expect(lines[0]).toBe('On screen: Grades (courses).');
+    expect(lines[0]).toBe('On screen: Grades (grades).');
     expect(lines[1]).toContain('Grades for 2 courses');
   });
 
