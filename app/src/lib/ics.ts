@@ -295,29 +295,6 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
    */
   const replaced = new Map<string, Set<string>>();
   const onward = new Map<string, Onward[]>();
-  /*
-   * The entries that describe a class in their own right — and can be drawn.
-   *
-   * Both halves matter. A change for good is not drawn on its own, because the
-   * occurrence it names is one the entry it changes already makes; it only
-   * falls back to drawing itself where there is no such entry. Counting one
-   * that cannot be read as though it were there left neither drawn: the entry
-   * it changes produces nothing for want of a date, and the change stood down
-   * for it. A readable move naming a real day and a real time, and the class
-   * gone from the calendar altogether.
-   *
-   * That is the third shape of the same mistake on this reader, and the shape
-   * is worth naming: an entry the app cannot read should cost only itself. It
-   * must not take a week, an id, or another entry down with it. The two
-   * before it are the guards on `replaced` below, and the fallback id where
-   * RECURRENCE-ID is unreadable.
-   */
-  const described = new Set<string>();
-  for (const raw of raws) {
-    if (raw['RECURRENCE-ID'] || !raw.DTSTART || !parseWhen(raw.DTSTART)) continue;
-    described.add(raw.UID?.value ?? '');
-  }
-
   for (const raw of raws) {
     const at = raw['RECURRENCE-ID'];
     if (!at) continue;
@@ -358,14 +335,7 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
         clockAt: moved.date,
         allDay: moved.allDay,
         look: lookOf(courses, raw),
-        /*
-         * Nothing draws it on its own: the occurrence it names is one of the
-         * ones the rule already makes, and this moves that one along with the
-         * rest. Where the entry it changes is not in the file at all there is
-         * no series to move, so it falls through and is drawn once, which is
-         * the only thing left that does not lose it.
-         */
-        alone: !described.has(uid),
+        raw,
       });
       onward.set(uid, list);
       continue;
@@ -378,8 +348,24 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
 
   for (const list of onward.values()) list.sort((a, b) => a.from.localeCompare(b.from));
 
+  /*
+   * The entries that describe a class are read first, and the changes after.
+   *
+   * A change for good stands down and lets the entry it changes draw the moved
+   * weeks — but only where a week was actually moved. A rule this reader does
+   * not expand (a monthly one, say) makes a single occurrence on its start
+   * day, so a change dated later than that has nothing to take it up, and
+   * standing down for it lost a readable day at a readable time. Which weeks a
+   * rule really produced is not knowable until it has been expanded, so the
+   * entries are read in that order and each change is told whether it was
+   * taken up.
+   */
   const events: FeedEvent[] = [];
-  for (const raw of raws) events.push(...toEvents(courses, raw, sourceId, replaced, onward));
+  const taken = new Set<RawEvent>();
+  const order = [...raws.filter((r) => !r['RECURRENCE-ID']), ...raws.filter((r) => r['RECURRENCE-ID'])];
+  for (const raw of order) {
+    events.push(...toEvents(courses, raw, sourceId, replaced, onward, taken));
+  }
 
   return { events, name };
 }
@@ -410,7 +396,8 @@ interface Onward {
   clockAt: Date;
   allDay: boolean;
   look: Look;
-  alone: boolean;
+  /** The entry that stated it, so it can ask whether anything took it up. */
+  raw: RawEvent;
 }
 
 function toEvents(
@@ -419,6 +406,7 @@ function toEvents(
   sourceId: string,
   replaced: Map<string, Set<string>>,
   onward: Map<string, Onward[]>,
+  taken: Set<RawEvent>,
 ): FeedEvent[] {
   const startField = raw.DTSTART;
   if (!startField) return [];
@@ -470,10 +458,27 @@ function toEvents(
   const at = raw['RECURRENCE-ID'];
   if (at) {
     const original = parseWhen(at);
-    // A change to the rest of the series is drawn by the entry it changes, not
-    // here — unless that entry is not in the file, when this is all there is.
+    /*
+     * A change to the rest of the series steps aside for the entry it changes
+     * — exactly when that entry took it up, and not a case more.
+     *
+     * Everything else this tried to test for was a way of guessing at that:
+     * whether the week it names could be read, whether an entry with its UID
+     * existed, whether that entry could be drawn. Each guess was wrong for
+     * some file — a RECURRENCE-ID that is not a date, a master with no start,
+     * a rule this reader does not expand and so cannot produce the week the
+     * change is dated to — and each time the change stepped aside for nothing
+     * and a readable day at a readable time went off the calendar. Four of
+     * those in one evening is enough: the question is not what should have
+     * taken it up, it is what did.
+     *
+     * `taken` answers that outright, because the entries that describe a class
+     * are read before the ones that change them and each says what it used.
+     * The guesses are gone rather than kept alongside, since a condition that
+     * cannot fail still reads like one that can.
+     */
     const range = (at.params.RANGE ?? '').toUpperCase() === 'THISANDFUTURE';
-    if (range && !(onward.get(uid) ?? []).some((o) => o.alone)) return [];
+    if (range && taken.has(raw)) return [];
     return [draw(when.date, `${uid}-at-${iso((original ?? when).date)}`)];
   }
 
@@ -518,6 +523,7 @@ function toEvents(
     .map((o) => {
       const change = changeOn(iso(o.date));
       if (!change) return draw(o.date, o.id);
+      taken.add(change.raw);
       const moved = new Date(
         o.date.getFullYear(),
         o.date.getMonth(),
