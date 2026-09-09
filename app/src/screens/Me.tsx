@@ -1,4 +1,4 @@
-import { useState, type HTMLAttributes } from 'react';
+import { useMemo, useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -10,7 +10,7 @@ import { NotYetOpened } from '../components/NotYetOpened';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { Bell } from '../components/Icons';
 import { NOTIFICATIONS } from '../data/misc';
-import { loadByCourse, upcomingItems } from '../lib/select';
+import { datedItems, loadByCourse } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
 import { GROUPS, destinationsIn, lately, listed, offered, saysFor, type Group as Shelves } from '../lib/nav';
@@ -22,9 +22,13 @@ import { Launcher } from '../components/nav/Launcher';
 import { directoryOf } from '../lib/look';
 
 import type { CourseModule, Screen } from '../lib/types';
-import { cardKey } from '../lib/review';
+import { cardKey, dueCount, tallyKeys } from '../lib/review';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { CourseTag } from '../components/CourseTag';
+import { Insights } from '../components/Insights';
+import { weekLine, whereYouStand } from '../lib/you';
+import { allCards } from '../data/catalog';
+import { liveGuide } from '../lib/live';
 
 /**
  * The shelves, in the order they read: what you study, what you make with it,
@@ -219,20 +223,65 @@ export function Me() {
   const { state, dispatch, now, catalog, account , courseCode, school, facts, tint } = useStore();
   const rowNine = useRowStyle(9);
   const rowTen = useRowStyle(10);
-  const ahead = upcomingItems(catalog, now);
   const bars = loadByCourse(catalog, now, state.done);
   const pace = learned(state.spent);
-  const doneCount = Object.values(state.done).filter(Boolean).length;
 
-  // Credits used to be the literal string '11', which stayed 11 for a new user
-  // with no courses at all. It is a sum, and when no syllabus states credits
-  // the column is dropped rather than shown as zero.
-  const credits = catalog.courses.reduce((sum, c) => sum + (parseFloat(c.credits) || 0), 0);
-  const stats = [
-    { n: String(catalog.courses.length), l: 'Courses' },
-    ...(credits > 0 ? [{ n: String(credits), l: 'Credits' }] : []),
-    { n: String(ahead.length), l: 'Ahead' },
-    { n: String(doneCount), l: 'Done' },
+  /*
+   * One pass over the deadlines, and every figure on this tab comes out of it.
+   *
+   * The arithmetic is in `lib/you.ts` rather than here, and the header of that
+   * file says why at length. The short version is that this screen has now got
+   * a headline number wrong twice, and both times inline: `Credits` was once
+   * the literal string '11', and `Done` counted the whole `state.done` map,
+   * which keeps the ticks of courses you have since removed and so could
+   * report more finished deadlines than the app holds.
+   */
+  const dated = datedItems(catalog, now);
+  const where = whereYouStand({ courses: catalog.courses, items: dated, done: state.done, now });
+
+  /*
+   * The drilling record, counted against the decks that actually exist.
+   *
+   * `tally` over the whole review map would have had the same fault `Done`
+   * had — an answer given to a course you removed in September is not part of
+   * this term's record — so every deck's keys are recomputed and `tallyKeys`
+   * is handed those, which is what it was added for.
+   *
+   * Two numbers rather than one, because they answer different questions and
+   * a screen showing only the second flatters you. `seen` is how much of the
+   * deck you have been through at all; `pct` is how you did on it. 90% right
+   * across nine of three hundred cards is not a report on the term, and
+   * putting the coverage first is what stops it reading as one.
+   */
+  const cards = useMemo(() => {
+    const keys = catalog.courses.flatMap((c) =>
+      allCards(liveGuide(catalog, c.id, state.updates, state.reviews)).map((q) => cardKey(c.id, q.q)),
+    );
+    const t = tallyKeys(keys, state.reviews);
+    return {
+      deck: keys.length,
+      seen: t.cards,
+      pct: t.pct,
+      due: dueCount(keys, state.reviews, now.getTime()),
+    };
+  }, [catalog, state.updates, state.reviews, now]);
+
+  /*
+   * Four cells at most, and every one of them a door.
+   *
+   * They used to be four dead numbers, which is the difference between a
+   * dashboard and a screen: reading "3 ahead" and then having to remember
+   * which tab shows you the three is the app asking you to do its job. Late
+   * appears only when something is late — a permanent zero in that column is
+   * a red number you learn to stop seeing — and Credits gives its place up
+   * when it does, because five columns at 402px is five columns nobody reads.
+   */
+  const stats: { n: string; l: string; to?: Screen }[] = [
+    { n: String(where.ahead), l: 'Ahead', to: 'ahead' },
+    ...(where.late > 0 ? [{ n: String(where.late), l: 'Late', to: 'behind' as Screen }] : []),
+    { n: String(where.done), l: 'Done' },
+    ...(where.late === 0 && where.credits > 0 ? [{ n: String(where.credits), l: 'Credits' }] : []),
+    { n: String(where.courses), l: 'Courses', to: 'courses' },
   ];
 
   const tab = state.meTab;
@@ -269,39 +318,211 @@ export function Me() {
 
       {tab === 'you' && (
         <>
+      {/*
+        Nothing imported yet, so there is nothing to report.
+
+        This tab used to answer a fresh install with four zeroes and then stop
+        — no chart, no pace, no advice, because every one of those sections
+        hides itself when it has nothing. Four zeroes and white space is the
+        app's own progress screen telling somebody it is broken, when what is
+        actually true is that it has not been given a syllabus yet. So it says
+        that, and offers the one thing that would fix it.
+
+        `EmptyState` rather than the `FirstRun` the eight other empty screens
+        return, and not by preference: `FirstRun` opens its own `<Page>`, and
+        this is a tab inside one that already has the Everything directory in
+        its other half. A screen that swapped itself wholesale for the first
+        run would take the app's index off the tab that holds it.
+      */}
+      {catalog.empty ? (
+        <EmptyState
+          title="Nothing to report yet"
+          body="This is where the semester gets counted back to you — what is left, what is late, how the drilling is going and how long things actually take you. All of it comes off a syllabus."
+          action={{ label: 'Add a course', onClick: () => dispatch({ type: 'go', screen: 'import' }) }}
+        />
+      ) : (
+        <>
       <Blueprint style={{ padding: 'var(--sp-7)', display: 'flex' }}>
-        {stats.map((s, i) => (
-          <div
-            key={s.l}
-            style={{
-              flex: 1,
-              textAlign: 'center',
-              borderLeft: i === 0 ? 'none' : '1px solid var(--app-line)',
-            }}
-          >
-            <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1 }}>
-              {s.n}
-            </div>
-            <div
-              style={{
-                fontSize: 'calc(10px * var(--text-scale, 1))',
-                letterSpacing: '0.14em',
-                textTransform: 'uppercase',
-                opacity: 0.5,
-                fontFamily: 'var(--font-heading)',
-                marginTop: 'var(--sp-2)',
-              }}
+        {stats.map((s, i) => {
+          const cell = (
+            <>
+              <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1 }}>
+                {s.n}
+              </div>
+              <div
+                style={{
+                  fontSize: 'calc(10px * var(--text-scale, 1))',
+                  letterSpacing: '0.14em',
+                  textTransform: 'uppercase',
+                  opacity: 0.5,
+                  fontFamily: 'var(--font-heading)',
+                  marginTop: 'var(--sp-2)',
+                }}
+              >
+                {s.l}
+              </div>
+            </>
+          );
+          const frame = {
+            flex: 1,
+            textAlign: 'center' as const,
+            borderLeft: i === 0 ? 'none' : '1px solid var(--app-line)',
+          };
+          // A cell with somewhere to go is a button; one without stays a div
+          // rather than becoming a button that does nothing when pressed.
+          return s.to ? (
+            <button
+              key={s.l}
+              type="button"
+              className="bare tappable"
+              onClick={() => dispatch({ type: 'go', screen: s.to as Screen })}
+              style={{ ...frame, width: 'auto' }}
             >
-              {s.l}
+              {cell}
+            </button>
+          ) : (
+            <div key={s.l} style={frame}>
+              {cell}
+            </div>
+          );
+        })}
+      </Blueprint>
+
+      {/*
+        What the app noticed, and the one thing to do about each.
+
+        The engine has existed in `src/insights/` since the reports were built
+        and ran on two screens, neither of which is the one called Progress.
+        That was the gap: somebody who wants to know how the term is going
+        opens this tab, and this tab was four counts and a chart — true, and
+        none of it advice. `Insights` renders nothing when it has nothing, so
+        no placeholder arrives with it.
+      */}
+      <Insights most={3} />
+
+      {/*
+        The two spans that matter — the week you are in, and the term around it.
+
+        One heading over both because they are one question asked at two
+        zooms, and because a screen of six headings is a screen you scroll
+        past. The week is tappable and the term is not: there is a screen that
+        shows the next seven days in hours, and there is no screen that shows
+        a semester, so only one of them is a door.
+      */}
+      <SectionLabel>Where you stand</SectionLabel>
+
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
+        style={{ ...rowTen, display: 'block', textAlign: 'left', width: '100%' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
+            This week
+          </div>
+          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{weekLine(where.week)}</div>
+        </div>
+        {where.week.due > 0 && (
+          <div style={{ marginTop: 'var(--sp-3)' }}>
+            <Meter pct={Math.round((where.week.done / where.week.due) * 100)} />
+          </div>
+        )}
+      </button>
+
+      {where.through !== null && (
+        <div style={rowTen}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
+              The term
+            </div>
+            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>
+              {where.done} of {where.total} done
             </div>
           </div>
-        ))}
-      </Blueprint>
+          <div style={{ marginTop: 'var(--sp-3)' }}>
+            <Meter pct={Math.round(where.through * 100)} />
+          </div>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            {Math.round(where.through * 100)}% of the way from the first deadline on your syllabi to
+            the last. The app has not been told a term's dates, so that span is the term it knows.
+          </div>
+        </div>
+      )}
+
+      {/*
+        The drilling, told back in three numbers.
+
+        Cards answered rather than cards owned: a deck of two hundred you have
+        never opened says nothing about you. The percentage is every answer
+        ever given and not a rolling window, which is why it moves slowly and
+        why it is worth trusting. Due is the one number here you can act on
+        this minute, so the row opens Study.
+      */}
+      {cards.deck > 0 && (
+        <>
+          <SectionLabel>Cards</SectionLabel>
+          <button
+            type="button"
+            className="bare tappable"
+            onClick={() => dispatch({ type: 'go', screen: 'study' })}
+            style={{ ...rowTen, display: 'block', textAlign: 'left', width: '100%' }}
+          >
+            <div style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'baseline' }}>
+              <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', fontFamily: 'var(--font-heading)' }}>
+                {cards.seen === 0
+                  ? `${cards.deck} cards, none answered yet`
+                  : `${cards.seen} of ${cards.deck} seen · ${cards.pct}% right`}
+              </div>
+              {/*
+                Silent until it says something the headline has not.
+
+                Before a single card is answered every card is due, so the row
+                read "325 cards, none answered yet · 325 due" — one number
+                twice, and the second copy dressed as a backlog somebody has
+                fallen behind on. It is a full deck, which is what a full deck
+                looks like.
+              */}
+              {cards.seen > 0 && (
+                <div style={{ flex: 'none', fontSize: 'var(--type-sm)', opacity: 0.55 }}>
+                  {cards.due === 0 ? 'None due' : `${cards.due} due`}
+                </div>
+              )}
+            </div>
+            {/*
+              The bar is coverage, not accuracy.
+
+              Accuracy is already the second half of the line above it, and a
+              bar drawn at 73% beside "73% right" is the same fact twice. What
+              the line does not show is how much of the deck that 73% rests
+              on, which is the thing a bar is good at.
+            */}
+            {cards.seen > 0 && (
+              <div style={{ marginTop: 'var(--sp-3)' }}>
+                <Meter pct={Math.round((cards.seen / cards.deck) * 100)} />
+              </div>
+            )}
+          </button>
+        </>
+      )}
 
       {/* An empty section headed "Load by course" is worse than no section. */}
       {bars.length > 0 && <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>Load by course</SectionLabel>}
+      {/*
+        A bar per course, and each one opens its course.
+        
+        The bars were the only chart in the app you could not press. Reading
+        "MATH 3620 · 5 left" and then having to find the course by hand in
+        another tab is the same fault the stat cells had, drawn in colour.
+      */}
       {bars.map((b) => (
-        <div key={b.code} style={rowTen}>
+        <button
+          key={b.code}
+          type="button"
+          className="bare tappable"
+          onClick={() => dispatch({ type: 'openCourse', id: b.id })}
+          style={{ ...rowTen, display: 'block', textAlign: 'left', width: '100%' }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{b.code}</div>
             <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{b.n} left</div>
@@ -312,7 +533,7 @@ export function Me() {
                 comparable at a glance and matched to every other list. */}
             <Meter pct={b.pct} fill={tint(b.id).fill} />
           </div>
-        </div>
+        </button>
       ))}
 
       {/*
@@ -353,7 +574,8 @@ export function Me() {
           </div>
         </>
       )}
-
+        </>
+      )}
         </>
       )}
 
