@@ -112,7 +112,7 @@ export function sources(dir: string): { path: string; text: string }[] {
  * would be a rule people delete rather than satisfy. Replaced with spaces
  * rather than removed so a reported line number is still the right one.
  */
-function withoutComments(text: string): string {
+export function withoutComments(text: string): string {
   return text
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
     .replace(/\/\/[^\n]*/g, (m) => ' '.repeat(m.length));
@@ -241,9 +241,9 @@ export const BUDGET = {
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 221,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 523,
+  space: 521,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 544,
+  shorthand: 519,
 };
 
 /*

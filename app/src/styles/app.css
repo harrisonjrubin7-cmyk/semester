@@ -594,8 +594,25 @@ a:hover {
 /* The prototype sat inside an iOS frame, so its header cleared a status bar
    and its tab bar cleared a home indicator. On real hardware that clearance
    is the safe-area inset instead. */
+/*
+ * Room for the notch, and no more than that.
+ *
+ * This was `max(58px, …)`, which is not a floor for the notch — it is a floor
+ * for everybody. `env(safe-area-inset-top)` is 0 in a browser tab, where the
+ * browser's own chrome already sits above the page, and 0 on a desktop; only
+ * an installed app on a notched phone reports 47–59px. So the 58px was right
+ * in exactly one case and was 44px of empty black in all the others.
+ *
+ * Measured on a 664px viewport before this: the header began 42px down, stood
+ * 112px tall, and the scrolling area got 391px — 59% of the screen for the
+ * app and 41% for its edges. The clause below gives the same result where the
+ * notch is real and hands the rest back everywhere else.
+ *
+ * 14px is the gap above the kicker, and stays a floor so the title is never
+ * jammed against the top edge.
+ */
 .safe-top {
-  padding-top: max(58px, calc(env(safe-area-inset-top) + 14px));
+  padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
 }
 .safe-bottom {
   padding-bottom: max(24px, env(safe-area-inset-bottom));
@@ -636,7 +653,17 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 58px 18px 11px;
+  /*
+   * No top value here, so `.safe-top` on the same element owns it.
+   *
+   * This read `padding: 58px 18px 11px`, and because it comes later in the
+   * file than `.safe-top` it silently won: the class whose whole job is to
+   * make room for the notch had no effect on the one element that wears it,
+   * and every device got 58px whether it had a notch or not. Two rules
+   * setting the same property on the same element, one of them dead.
+   */
+  padding-inline: 18px;
+  padding-bottom: 11px;
   background: color-mix(in srgb, var(--app-bg) 82%, transparent);
   border-bottom: 1px solid var(--app-line-soft);
   box-shadow: 0 1px 0 var(--app-line-top) inset;

@@ -22,11 +22,7 @@ import { ScoreField } from '../components/ScoreField';
  * the arithmetic is done — including when the answer is that an A is no longer
  * reachable, which is worth knowing in October rather than December.
  */
-/**
- * @param bare - rendered inside the Courses switcher, which already supplies
- *   the page padding and the empty-state guard. Standalone it supplies its own.
- */
-export function Grades({ bare = false }: { bare?: boolean } = {}) {
+export function Grades() {
   const { state, dispatch, catalog, school } = useStore();
   // The hairline this row wears, in whichever layout is on. Spread rather
   // than wrapped so the row keeps its own insides. See `useRowStyle`.
@@ -323,31 +319,13 @@ export function Grades({ bare = false }: { bare?: boolean } = {}) {
   );
 
   /*
-   * Two callers, one body.
+   * One caller, one body.
    *
-   * Standalone this is a screen and takes the app's frame: the padding, the
-   * search box, the space above the tab bar. Inside the Courses switcher it is
-   * a panel on somebody else's screen — that `<Page>` has already drawn the
-   * frame, and a second one would put a second search box on it, filtering
-   * nothing. See the note at the top of `components/Page.tsx`.
-   *
-   * The trailing spacer belongs to whoever owns the frame, which is why
-   * `Courses` passes `bottom={0}` and it is written by hand only here.
+   * There were two: Courses rendered this as its "Grades" tab, which needed a
+   * second render path with no `<Page>` of its own, since that screen had
+   * already drawn the frame. The tab is gone and the table is reached the one
+   * way — the Grades destination — so the frame is unconditional again.
    */
-  if (bare) {
-    return (
-      <div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
-          {intro}
-        </div>
-        {/* No filter on the embedded path: the Courses switcher owns the frame
-            and its box already filters courses. A second one inside it would
-            be two boxes filtering overlapping things on one screen. */}
-        {body(catalog.courses)}
-        <div style={{ height: 22 }} />
-      </div>
-    );
-  }
   return (
     <Page blurb={intro}>{body(catalog.courses)}</Page>
   );

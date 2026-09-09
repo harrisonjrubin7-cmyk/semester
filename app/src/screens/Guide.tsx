@@ -2,6 +2,7 @@ import { allCards, weakestUnit } from '../data/catalog';
 import { useMemo, useRef } from 'react';
 import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
+import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -26,6 +27,8 @@ const SINCE = {
 } as const;
 
 export function Guide() {
+  // A row's padding and hairline, from the layout rather than hard-coded.
+  const tallRow = useRowStyle(13);
   const { state, dispatch, catalog } = useStore();
 
   // A study guide is a long read with long pauses. See `lib/awake.ts`.
@@ -194,8 +197,7 @@ export function Guide() {
                 display: 'flex',
                 gap: 'var(--sp-6)',
                 alignItems: 'center',
-                padding: '13px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...tallRow,
               }}
             >
               <span
@@ -268,8 +270,7 @@ export function Guide() {
                 display: 'flex',
                 gap: 'var(--sp-6)',
                 alignItems: 'center',
-                padding: '13px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...tallRow,
               }}
             >
               <span
@@ -367,7 +368,7 @@ export function Guide() {
             const open = state.openUnit === i;
             const fig = figMap[i];
             return (
-              <div key={u.name} style={{ borderBottom: '1px solid var(--app-line)', padding: '13px 0' }}>
+              <div key={u.name} style={tallRow}>
                 <button
                   type="button"
                   className="bare"
@@ -446,7 +447,7 @@ export function Guide() {
                     {onUnit(i)
                       .filter((up) => up.body)
                       .map((up) => (
-                        <Blueprint key={up.id} style={{ padding: '13px 14px' }}>
+                        <Blueprint plain key={up.id} style={{ padding: '13px 14px' }}>
                           <div className="kicker">
                             Added{up.source ? ` · ${up.source}` : ''}
                           </div>
@@ -536,6 +537,8 @@ export function Guide() {
  * app should say so rather than let it look complete.
  */
 function Watch() {
+  // A row's padding and hairline, from the layout rather than hard-coded.
+  const tallRow = useRowStyle(13);
   const { state, dispatch } = useStore();
   const { guide, lessons, onUnit } = useLive(state.guideId);
   const made = Object.keys(lessons).length;
@@ -579,8 +582,7 @@ function Watch() {
                 display: 'flex',
                 gap: 'var(--sp-6)',
                 alignItems: 'center',
-                padding: '13px 0',
-                borderBottom: '1px solid var(--app-line)',
+                ...tallRow,
                 opacity: lesson ? 1 : 0.4,
                 textAlign: 'left',
               }}
@@ -624,6 +626,8 @@ function Watch() {
 
 /** Unit decks, for reading a unit through rather than drilling it. */
 function Decks() {
+  // A row's padding and hairline, from the layout rather than hard-coded.
+  const tallRow = useRowStyle(13);
   const { state, dispatch } = useStore();
   const { guide } = useLive(state.guideId);
 
@@ -710,8 +714,7 @@ function Decks() {
               display: 'flex',
               gap: 'var(--sp-6)',
               alignItems: 'center',
-              padding: '13px 0',
-              borderBottom: '1px solid var(--app-line)',
+              ...tallRow,
               textAlign: 'left',
             }}
           >
@@ -792,6 +795,7 @@ function Documents() {
           {files.map((f) => (
             <a key={f.label} href={f.href} target="_blank" rel="noreferrer" className="bare">
               <Blueprint
+                plain
                 style={{ padding: '14px 15px', display: 'flex', gap: 'var(--sp-6)', alignItems: 'center' }}
               >
                 <span
@@ -942,7 +946,7 @@ function Cases() {
           <SectionLabel>The debates, claim by claim</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
             {guide.cases.map((c) => (
-              <Blueprint key={c.title} style={{ padding: '14px 15px' }}>
+              <Blueprint plain key={c.title} style={{ padding: '14px 15px' }}>
                 <div className="kicker">{c.when}</div>
                 <div
                   style={{
@@ -1009,7 +1013,7 @@ function Cases() {
       <SectionLabel>Apply it</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {examples.map((e) => (
-          <Blueprint key={e.t} style={{ padding: '14px 15px' }}>
+          <Blueprint plain key={e.t} style={{ padding: '14px 15px' }}>
             <span className="tag tag-accent">{e.tag}</span>
             <div
               style={{
@@ -1041,6 +1045,7 @@ function Cases() {
 }
 
 function Cram() {
+  const shortRow = useRowStyle(11);
   const { state, catalog } = useStore();
   const { guide, updates } = useLive(state.guideId);
   const notes = updates.filter((u) => u.body);
@@ -1078,7 +1083,7 @@ function Cram() {
 
       <SectionLabel>Terms you keep missing</SectionLabel>
       {guide.terms.map((t) => (
-        <div key={t.t} style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}>
+        <div key={t.t} style={shortRow}>
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{t.t}</div>
           <div style={{ fontSize: 'var(--type-base)', opacity: 0.72, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}>{t.d}</div>
         </div>
@@ -1124,7 +1129,7 @@ function Cram() {
           {guide.selfTest.map((c, i) => (
             <details
               key={c.q}
-              style={{ padding: '11px 0', borderBottom: '1px solid var(--app-line)' }}
+              style={shortRow}
             >
               <summary
                 style={{
@@ -1158,6 +1163,7 @@ function Cram() {
 }
 
 function Listen() {
+  const shortRow = useRowStyle(11);
   const { state, dispatch, catalog } = useStore();
   const { guide, updates } = useLive(state.guideId);
   const addedSince = updates.reduce((n, u) => n + u.cards.length, 0);
@@ -1287,8 +1293,7 @@ function Listen() {
             display: 'flex',
             gap: 14,
             alignItems: 'baseline',
-            padding: '11px 0',
-            borderBottom: '1px solid var(--app-line)',
+            ...shortRow,
             cursor: episode.ready ? 'pointer' : 'default',
           }}
         >
