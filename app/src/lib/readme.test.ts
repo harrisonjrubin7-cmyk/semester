@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { DESTINATIONS } from './nav';
 import { DEFAULT_TABS } from './tabbar';
 import { modesFor } from './modes';
 import { buildCatalog } from '../data/catalog';
@@ -24,6 +23,24 @@ import type { CourseModule, Guide } from './types';
  *
  * So the numbers are read here, from the lists they are about. A registry can
  * still grow — this fails when it does, and the fix is the same diff.
+ *
+ * ## Why the screen count is not one of them
+ *
+ * It was, and it is the one that did not pay for itself. `DESTINATIONS` went
+ * from forty-nine to fifty inside a single review cycle: two pull requests
+ * open at once, touching different files, neither conflicting, one writing the
+ * count and the other changing it. Both merged clean and main went red on a
+ * word.
+ *
+ * That is the check working, but working at the wrong price. The others are
+ * about lists that barely move — a guide mode, a recording, a lesson per unit —
+ * and the drift they caught had been sitting in the README for months. The
+ * screen count moves most weeks, so it would spend its life failing on normal
+ * churn rather than on rot.
+ *
+ * The README no longer states it, which is the real fix: a number nobody
+ * checks is a number that goes wrong quietly, so the sentence points at
+ * `lib/nav.ts` instead of counting it.
  */
 
 const README = readFileSync(join(process.cwd(), 'README.md'), 'utf8');
@@ -31,8 +48,8 @@ const README = readFileSync(join(process.cwd(), 'README.md'), 'utf8');
 /**
  * The same text, on one line and in lower case.
  *
- * A count can start a sentence — "Five tabs, forty-nine screens." — so
- * matching it case-sensitively would ask the README to be written wrong. And
+ * A count can start a sentence — "Eight recordings ship in…" — so matching it
+ * case-sensitively would ask the README to be written wrong. And
  * flattened, because these sentences wrap: "eleven\n  modes" is the same
  * claim as "eleven modes" and only one of them is greppable.
  */
@@ -48,14 +65,7 @@ const WORDS: Record<number, string> = {
   11: 'eleven',
   12: 'twelve',
   13: 'thirteen',
-  20: 'twenty',
-  30: 'thirty',
-  40: 'forty',
   44: 'forty-four',
-  49: 'forty-nine',
-  50: 'fifty',
-  60: 'sixty',
-  70: 'seventy',
 };
 
 /**
@@ -114,14 +124,6 @@ const MODES = modesFor(buildCatalog([module_]), 'econ', {
 });
 
 describe('the README counts', () => {
-  it('says how many screens there are', () => {
-    const n = DESTINATIONS.length;
-    expect(
-      SAID,
-      `lib/nav.ts has ${n} destinations, so the README should say "${inWords(n)} screens".`,
-    ).toContain(`${inWords(n)} screens`);
-  });
-
   it('says how many tabs the bar opens with', () => {
     // Distinct from the screen count, and easy to conflate: Today's own
     // switcher went from five segments to four while this was being written,
