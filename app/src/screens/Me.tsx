@@ -13,8 +13,16 @@ import { NOTIFICATIONS } from '../data/misc';
 import { datedItems, loadByCourse } from '../lib/select';
 import { countHits, findEverything, type Hit } from '../lib/find';
 import { openHit } from '../lib/openhit';
-import { GROUPS, destinationsIn, lately, listed, offered, saysFor, type Group as Shelves } from '../lib/nav';
-import { byTask } from '../lib/everything';
+import {
+  GROUPS,
+  byTask,
+  destinationsIn,
+  lately,
+  listed,
+  offered,
+  saysFor,
+  type Group as Shelves,
+} from '../lib/nav';
 import { arranged, useMovable } from '../lib/arrange';
 import { readOrder, tilesFor, writeOrder } from '../lib/launcher';
 import { currentLook } from '../state/shape';

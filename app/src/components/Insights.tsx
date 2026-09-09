@@ -65,6 +65,7 @@ export function Insights({
     // guide opens on whatever was last looked at — which is the course this
     // finding is telling you that you have been ignoring.
     if (f.courseId) dispatch({ type: 'openGuide', id: f.courseId });
+    if (f.action.tab) dispatch({ type: 'setCoursesTab', tab: f.action.tab });
     dispatch({ type: 'go', screen: f.action.screen });
   };
 

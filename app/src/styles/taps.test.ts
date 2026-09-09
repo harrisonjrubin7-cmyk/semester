@@ -60,10 +60,15 @@ describe('tap targets', () => {
   });
 
   it('is actually worn by the controls that were measured too small', () => {
-    const used = tsx('src').filter((f) => /className="[^"]*\btap(-[xy])?\b/.test(readFileSync(f, 'utf8')));
-    // The eight the audit named. Fewer than this means one was reverted
-    // without the measurement being redone.
-    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(8);
+    // `className="… tap …"` or a `className:` on a props object — the grip on
+    // Today is spread onto its button rather than written as an attribute,
+    // and a regex that only knew the attribute form reported it as bare.
+    const used = tsx('src').filter((f) =>
+      /className[=:]\s*["'`][^"'`]*\btap(-[xy])?\b/.test(readFileSync(f, 'utf8')),
+    );
+    // The eight the audit named, plus Today's grip. Fewer than this means one
+    // was reverted without the measurement being redone.
+    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(9);
     for (const must of [
       'src/components/SampleMark.tsx',   // 112×20, on 65 screens
       'src/components/Reorder.tsx',      // 26×23, three lists
@@ -73,6 +78,14 @@ describe('tap targets', () => {
       'src/screens/Links.tsx',           // 30×17
       'src/screens/Account.tsx',         // 102×19
       'src/App.tsx',                     // 115×23, the way up to a course
+      // 17×16, one per section of Today, and the reason the measuring is
+      // written down twice: the first version of this grip was the size of
+      // the glyph, and on the first section its widened target came back
+      // clipped to 18×45 by the card frame painted over it. Re-measured at
+      // 390×844 against the running app: 32×45 for all five, stealing no
+      // other control's taps. Half the target is off the left edge of the
+      // screen, which is what the page's own margin leaves room for.
+      'src/screens/Today.tsx',
     ]) {
       expect(used, `${must} lost its tap class`).toContain(must);
     }

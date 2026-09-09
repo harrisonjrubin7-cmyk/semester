@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BESIDE, EXAM_SOON, beside, nextStep, rest, type StepInput, type Way } from './nextstep';
+import { BESIDE, EXAM_SOON, QUIZ_SOON, beside, nextStep, rest, type StepInput, type Way } from './nextstep';
 import type { Guide, StudyMode } from './types';
 
 const way = (id: StudyMode, label: string = id): Way => ({ id, label });
@@ -23,7 +23,8 @@ const input = (over: Partial<StepInput> = {}): StepInput => ({
   ways: ALL,
   guide: guide([80, 60]),
   due: 0,
-  examIn: null,
+  testIn: null,
+  testKind: 'Exam',
   started: true,
   ...over,
 });
@@ -36,7 +37,7 @@ describe('nothing to offer', () => {
 
 describe('cards that have come round', () => {
   it('beats everything else, and counts them', () => {
-    const s = nextStep(input({ due: 12, examIn: 2 }));
+    const s = nextStep(input({ due: 12, testIn: 2 }));
     expect(s).toMatchObject({ id: 'cards', label: 'Review 12 cards' });
     expect(s?.why).toBe('12 cards have come round for review.');
   });
@@ -53,29 +54,47 @@ describe('cards that have come round', () => {
   });
 });
 
-describe('an exam close enough to matter', () => {
+describe('a test close enough to matter', () => {
   it('offers the cram sheet and says when', () => {
-    const s = nextStep(input({ examIn: 6 }));
+    const s = nextStep(input({ testIn: 6 }));
     expect(s).toMatchObject({ id: 'cram', label: 'Open the cram sheet' });
     expect(s?.why).toBe('The exam is in 6 days.');
   });
 
   it('reads today and tomorrow as words', () => {
-    expect(nextStep(input({ examIn: 0 }))?.why).toBe('The exam is today.');
-    expect(nextStep(input({ examIn: 1 }))?.why).toBe('The exam is tomorrow.');
+    expect(nextStep(input({ testIn: 0 }))?.why).toBe('The exam is today.');
+    expect(nextStep(input({ testIn: 1 }))?.why).toBe('The exam is tomorrow.');
   });
 
   it('falls back to a quiz when there is no cram sheet', () => {
-    const s = nextStep(input({ examIn: 3, ways: ALL.filter((w) => w.id !== 'cram') }));
+    const s = nextStep(input({ testIn: 3, ways: ALL.filter((w) => w.id !== 'cram') }));
     expect(s?.id).toBe('quiz');
   });
 
   it('ignores an exam that is still far off', () => {
-    expect(nextStep(input({ examIn: EXAM_SOON + 1 }))?.id).not.toBe('cram');
+    expect(nextStep(input({ testIn: EXAM_SOON + 1 }))?.id).not.toBe('cram');
   });
 
   it('ignores an exam that has gone', () => {
-    expect(nextStep(input({ examIn: -2 }))?.id).not.toBe('cram');
+    expect(nextStep(input({ testIn: -2 }))?.id).not.toBe('cram');
+  });
+
+  it('calls a quiz a quiz', () => {
+    // Most courses set five quizzes for every exam, and a line that promotes
+    // one to an exam is a line nobody trusts the second time.
+    const s = nextStep(input({ testIn: 2, testKind: 'Quiz' }));
+    expect(s?.why).toBe('The quiz is in 2 days.');
+  });
+
+  it('gives a quiz a shorter runway than an exam', () => {
+    // Nine days out, an exam is worth an evening and a Thursday quiz is not.
+    expect(nextStep(input({ testIn: 9, testKind: 'Exam' }))?.id).toBe('cram');
+    expect(nextStep(input({ testIn: 9, testKind: 'Quiz' }))?.id).not.toBe('cram');
+    expect(nextStep(input({ testIn: QUIZ_SOON, testKind: 'Quiz' }))?.id).toBe('cram');
+  });
+
+  it('says exam when nobody said what the test was', () => {
+    expect(nextStep(input({ testIn: 3, testKind: null }))?.why).toBe('The exam is in 3 days.');
   });
 });
 
@@ -121,14 +140,14 @@ describe('the unit furthest behind', () => {
 
 describe('the reason', () => {
   it('is there for every recommendation drawn from evidence', () => {
-    for (const over of [{ due: 4 }, { examIn: 2 }, { started: false }, { guide: guide([90, 30]) }]) {
+    for (const over of [{ due: 4 }, { testIn: 2 }, { started: false }, { guide: guide([90, 30]) }]) {
       const s = nextStep(input(over));
       expect(s?.why, JSON.stringify(over)).not.toBe('');
     }
   });
 
   it('never shouts', () => {
-    for (const over of [{ due: 4 }, { examIn: 0 }, { started: false }]) {
+    for (const over of [{ due: 4 }, { testIn: 0 }, { started: false }]) {
       expect(`${nextStep(input(over))?.label} ${nextStep(input(over))?.why}`).not.toMatch(/!/);
     }
   });

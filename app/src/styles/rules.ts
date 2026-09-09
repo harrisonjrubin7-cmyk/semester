@@ -230,23 +230,86 @@ export function multipliers(css: string): Problem[] {
 /**
  * What is genuinely off the scales, and may not grow.
  *
- * 11.5 and 12.5 are half a pixel from a step and there are 436 of them; 14 is
- * the commonest spacing value and is not a step. Folding those in changes how
- * every screen looks, which is a decision to take on purpose. Until somebody
- * does, this stops there being more of them.
+ * 11.5 and 12.5 are half a pixel from a step and there are hundreds of them;
+ * 14 is the commonest spacing value and is not a step. Folding those in
+ * changes how every screen looks, which is a decision to take on purpose.
+ * Until somebody does, this stops there being more of them.
+ *
+ * ## Why it is counted per file
+ *
+ * It used to be four numbers for the whole app, and the rule was that
+ * `counts()` had to equal them exactly — no slack, because a budget with
+ * slack in it permits the next few.
+ *
+ * Exactness was right and the four numbers were the problem. Every branch
+ * that removed a hand-written size had to lower the same four lines, so every
+ * branch conflicted with every other branch there, whatever else it touched:
+ * one file, four lines, and the whole repository writing to them. On a day
+ * with a dozen branches in flight that is a conflict per pair, none of which
+ * is a disagreement about anything — both sides removed values, both are
+ * right, and the answer is not the sum of the two, because two branches can
+ * remove the same value and it only counts once. That last part is why the
+ * conflicts could not be resolved by arithmetic and had to be re-measured
+ * every time.
+ *
+ * So the ledger is per file, in `budget.ts`, and it is generated rather than
+ * written: `npm run lint:styles -- --fix` measures the tree and rewrites it.
+ * A branch that tidies `screens/Today.tsx` now edits the `screens/Today.tsx`
+ * line and nothing else, so two branches meet here only when they have both
+ * changed the same screen — which is a conflict they were going to have in
+ * that screen anyway.
+ *
+ * It is also stricter than the four numbers were, which is the part worth
+ * keeping. Under one global figure, five values added to Calendar were paid
+ * for by five removed from Study and the total never moved. Per file, each of
+ * those is its own answer: the removal is recorded where it happened, and the
+ * addition fails where it happened.
+ *
+ * A file with no entry may have none at all. That is the rule for new code,
+ * and it is why the generated list is a list of debts rather than of
+ * allowances — nothing is owed by a file that is not on it.
  */
-export const BUDGET = {
-  /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 671,
-  /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
-  leading: 216,
-  /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 490,
-  /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 487,
+
+/** The four things counted. Ordered, because the reports read in this order. */
+export const AXES = ['type', 'leading', 'space', 'shorthand'] as const;
+
+export type Axis = (typeof AXES)[number];
+
+/** What one file is owed, with the axes it owes nothing on left out. */
+export type Counted = Partial<Record<Axis, number>>;
+
+/** The ledger: path under `src/` to what that file is owed. */
+export type Budget = Record<string, Counted>;
+
+/** Why each axis is on the list, for the report and for anybody reading it. */
+export const AXIS_SAYS: Record<Axis, string> = {
+  type: 'font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail',
+  leading: 'line heights off the three — 1.55, 1.4, 1.35 and below',
+  space: 'spacing numbers off the seven steps — 14, 7, 9, 18 and a tail',
+  shorthand: "`padding: '11px 0'` and the like: two axes in one string",
 };
 
 /*
+ * ## The years of the four numbers, kept
+ *
+ * Everything below this line is the log of the single global budget, in the
+ * form `type/leading/space/shorthand`, from when there was one. Those four
+ * numbers no longer exist — `budget.ts` holds a count per file — so none of
+ * these figures can be looked up in the code any more.
+ *
+ * They are kept anyway, because each entry is the reason a screen looks the
+ * way it does: what was deleted, what was merged into what, and which of the
+ * removals were real rather than reformatting. That is the part a per-file
+ * ledger cannot say, since a generated file has no room for a sentence. The
+ * numbers are stale; the accounts of the changes are not.
+ *
+ * The last of them is where this ends. The Tools tab became a home screen —
+ * thirteen cards drawn by hand in `screens/Study.tsx`, each with its own
+ * padding, its own 13.5px blurb and its own 1.35 leading, became one
+ * `<AppGrid>` whose sizes live in `app.css` on the scales — and that change
+ * merged five times in twenty minutes, conflicting on these four numbers
+ * every single time. Which is what the per-file ledger above was written for.
+ *
  * 673/218/515/498 → 673/218/490/494 with the three layouts.
  *
  * Twenty-five spacing values and four shorthands gone, none of them
@@ -266,14 +329,6 @@ export const BUDGET = {
  * headings take `SectionLabel`'s own margin rather than overriding it, so
  * neither the spacing nor the shorthand count moved. Measured on the merged
  * tree, like the note below and for the same reason.
- *
- * The Tools tab became a home screen, and its four are folded into every
- * measurement below rather than added to any of them: thirteen cards drawn by
- * hand in `screens/Study.tsx` — each with its own padding, its own 13.5px
- * blurb and its own 1.35 leading — became one `<AppGrid>` whose sizes live in
- * `app.css` on the scales. The one value the grid sets by hand, the 11.5px
- * icon name, is inside the numbers. Measured rather than derived, like every
- * note below: 674/218/515/498 is what `counts()` reported on that tree.
  *
  * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
  * chat. Two numbers down and none up, and neither by reformatting: the
@@ -355,25 +410,180 @@ export const BUDGET = {
  * is the opposite of the point.
  */
 
-export function counts(dir: string): typeof BUDGET {
-  const files = sources(dir);
-  let type = 0,
-    leading = 0,
-    space = 0,
-    shorthand = 0;
-  for (const f of files) {
-    const code = withoutComments(f.text);
-    for (const m of code.matchAll(/calc\((\d+(?:\.\d+)?)px \* var\(--text-scale, 1\)\)/g))
-      if (!TYPE[m[1]]) type += 1;
-    for (const m of code.matchAll(/lineHeight: (\d+(?:\.\d+)?)(?![0-9.])/g)) if (!LEADING[m[1]]) leading += 1;
-    const SPACING =
-      /\b(?:gap|rowGap|columnGap|margin(?:Top|Bottom|Left|Right)|padding(?:Top|Bottom|Left|Right)?): (\d+)(?![0-9.])/g;
-    // `0` is not a spacing choice, it is the absence of one, and there is no
-    // step for it. Counting it as drift meant the budget crept up every time
-    // somebody wrote `padding: 0` to cancel a default, which is the opposite
-    // of what this watches for.
-    for (const m of code.matchAll(SPACING)) if (m[1] !== '0' && !SPACE[m[1]]) space += 1;
-    shorthand += [...code.matchAll(/\b(?:margin|padding): '[^']*px[^']*'/g)].length;
-  }
-  return { type, leading, space, shorthand };
+/** What one file's text is off the scales by, zero axes omitted. */
+function countIn(text: string): Counted {
+  const code = withoutComments(text);
+  const out: Counted = {};
+  const add = (axis: Axis, n: number) => {
+    if (n) out[axis] = (out[axis] ?? 0) + n;
+  };
+
+  let type = 0;
+  for (const m of code.matchAll(/calc\((\d+(?:\.\d+)?)px \* var\(--text-scale, 1\)\)/g))
+    if (!TYPE[m[1]]) type += 1;
+  add('type', type);
+
+  let leading = 0;
+  for (const m of code.matchAll(/lineHeight: (\d+(?:\.\d+)?)(?![0-9.])/g)) if (!LEADING[m[1]]) leading += 1;
+  add('leading', leading);
+
+  const SPACING =
+    /\b(?:gap|rowGap|columnGap|margin(?:Top|Bottom|Left|Right)|padding(?:Top|Bottom|Left|Right)?): (\d+)(?![0-9.])/g;
+  // `0` is not a spacing choice, it is the absence of one, and there is no
+  // step for it. Counting it as drift meant the budget crept up every time
+  // somebody wrote `padding: 0` to cancel a default, which is the opposite
+  // of what this watches for.
+  let space = 0;
+  for (const m of code.matchAll(SPACING)) if (m[1] !== '0' && !SPACE[m[1]]) space += 1;
+  add('space', space);
+
+  add('shorthand', [...code.matchAll(/\b(?:margin|padding): '[^']*px[^']*'/g)].length);
+
+  return out;
 }
+
+/** The path a report and the ledger both name a file by: relative to `src/`. */
+function relative(path: string): string {
+  return path.slice(path.indexOf('/src/') + 5);
+}
+
+/**
+ * The tree measured, one entry per file that owes anything.
+ *
+ * Files owing nothing are left out rather than written as four zeroes: the
+ * ledger is a list of debts, and a file that is clean should leave it when it
+ * becomes clean rather than sit on it forever as a row of noughts.
+ */
+export function countsByFile(dir: string): Budget {
+  const out: Budget = {};
+  for (const f of sources(dir)) {
+    const n = countIn(f.text);
+    if (Object.keys(n).length) out[relative(f.path)] = n;
+  }
+  return out;
+}
+
+/**
+ * The four totals, for the one line the linter prints when it passes.
+ *
+ * Derived from the per-file ledger rather than counted separately, so the
+ * summary and the rule can never disagree about what is in the tree.
+ */
+export function counts(dir: string): Record<Axis, number> {
+  const total: Record<Axis, number> = { type: 0, leading: 0, space: 0, shorthand: 0 };
+  for (const owed of Object.values(countsByFile(dir))) {
+    for (const axis of AXES) total[axis] += owed[axis] ?? 0;
+  }
+  return total;
+}
+
+/** Add up one side of the ledger, for a report that wants a single number. */
+export function owed(budget: Budget): Record<Axis, number> {
+  const total: Record<Axis, number> = { type: 0, leading: 0, space: 0, shorthand: 0 };
+  for (const entry of Object.values(budget)) {
+    for (const axis of AXES) total[axis] += entry[axis] ?? 0;
+  }
+  return total;
+}
+
+/**
+ * Where the tree and the ledger disagree, as problems that name the file.
+ *
+ * Three kinds, and the distinction is the whole value of this: **grew** is the
+ * failure the rule exists for and the only one a person has to think about;
+ * **shrank** and **stale** are bookkeeping, and each says the command that
+ * fixes it. Keeping them apart means the message for adding drift is not the
+ * same message as the one for removing it, which under the old single-number
+ * rule it was — both read "the budget is N", and the second was the far
+ * commoner, so the first stopped being read.
+ */
+export function overBudget(dir: string, budget: Budget): Problem[] {
+  const now = countsByFile(dir);
+  const out: Problem[] = [];
+  const paths = [...new Set([...Object.keys(now), ...Object.keys(budget)])].sort();
+
+  for (const file of paths) {
+    const has = now[file];
+    const may = budget[file];
+
+    if (!has) {
+      out.push({
+        file: 'styles/budget.ts',
+        line: 0,
+        found: file,
+        says:
+          `${file} is on the ledger and owes nothing — it was tidied, renamed or deleted.\n` +
+          '    Run `npm run lint:styles -- --fix` to drop the entry.',
+      });
+      continue;
+    }
+
+    for (const axis of AXES) {
+      const n = has[axis] ?? 0;
+      const cap = may?.[axis] ?? 0;
+      if (n === cap) continue;
+      if (n > cap) {
+        out.push({
+          file,
+          line: 0,
+          found: `${axis} ${n}, and ${cap} allowed`,
+          says:
+            `${n - cap} more than this file is allowed — ${AXIS_SAYS[axis]}.\n` +
+            '    Use a token, or a `calc(Npx * var(--text-scale, 1))` for a size that is\n' +
+            '    genuinely not on the scale. If the value has to stay, raise this file\n' +
+            '    with `npm run lint:styles -- --fix` and say why in the same diff.',
+        });
+      } else {
+        out.push({
+          file,
+          line: 0,
+          found: `${axis} ${n}, and ${cap} allowed`,
+          says:
+            `${cap - n} fewer than the ledger says, which is the good direction.\n` +
+            '    Run `npm run lint:styles -- --fix` so the ledger cannot be spent again.',
+        });
+      }
+    }
+  }
+
+  return out;
+}
+
+/**
+ * The ledger as the source of `budget.ts`, ready to write.
+ *
+ * Generated rather than hand-kept, and sorted by path so the file a branch
+ * touches is the line a branch changes — which is the property the whole
+ * per-file arrangement exists for.
+ */
+export function render(budget: Budget): string {
+  const rows = Object.keys(budget)
+    .sort()
+    .map((file) => {
+      const owed = AXES.filter((a) => budget[file][a])
+        .map((a) => `${a}: ${budget[file][a]}`)
+        .join(', ');
+      return `  '${file}': { ${owed} },`;
+    });
+
+  return `${HEADER}\nexport const BUDGET: Budget = {\n${rows.join('\n')}\n};\n`;
+}
+
+const HEADER = `import type { Budget } from './rules';
+
+/**
+ * What each file is still owed, off the three scales. Generated — do not edit.
+ *
+ *     npm run lint:styles -- --fix
+ *
+ * measures the tree and rewrites this. It is a list of debts: a file that is
+ * not here may have none at all, which is the rule new code is held to.
+ *
+ * Why it is a file per line rather than four numbers for the app, and why
+ * that is stricter rather than looser, is written where the rule is —
+ * \`rules.ts\`, under "Why it is counted per file". The short version is that
+ * four shared numbers meant every branch in the repository wrote to the same
+ * four lines, so every pair of branches conflicted here over a disagreement
+ * neither of them had.
+ */
+`;

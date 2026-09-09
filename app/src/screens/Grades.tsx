@@ -1,7 +1,5 @@
 import { useStore } from '../state/store';
-import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
-import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
 import { key, needCaveat, needFor, reaches, standing } from '../lib/grades';
@@ -23,12 +21,16 @@ import { Folding } from '../components/Fold';
  * the arithmetic is done — including when the answer is that an A is no longer
  * reachable, which is worth knowing in October rather than December.
  */
+/**
+ * Rendered by the Courses switcher, which supplies the page, the padding and
+ * the empty-state guard. There is no standalone path: see the note at the foot
+ * of this file.
+ */
 export function Grades() {
   const { state, dispatch, catalog, school, tint } = useStore();
   // The hairline this row wears, in whichever layout is on. Spread rather
   // than wrapped so the row keeps its own insides. See `useRowStyle`.
   const rowFlush = useRowStyle(0);
-  if (catalog.empty) return <FirstRun where="to track grades" />;
 
   const intro = (
     <>
@@ -322,14 +324,29 @@ export function Grades() {
   );
 
   /*
-   * One caller, one body.
+   * One caller, one frame.
    *
-   * There were two: Courses rendered this as its "Grades" tab, which needed a
-   * second render path with no `<Page>` of its own, since that screen had
-   * already drawn the frame. The tab is gone and the table is reached the one
-   * way — the Grades destination — so the frame is unconditional again.
+   * There were two: this as a screen with its own `<Page>`, and this as the
+   * Grades tab of Courses, which needed a second render path with no `<Page>`
+   * of its own since that screen had already drawn the frame. The same table
+   * twice, so "what do I need on the final" had two homes and the directory
+   * pointed at the one nobody was on.
+   *
+   * Courses is where it lives — a view of the same four courses, next to the
+   * courses themselves and to what they are asking of you — so this draws the
+   * panel and never the frame. There is no prop to choose between them, which
+   * is what `lib/onehome.test.ts` is watching for.
+   *
+   * The trailing spacer belongs to whoever owns the frame, which is why
+   * `Courses` passes `bottom={0}` and it is written by hand here.
    */
   return (
-    <Page blurb={intro}>{body(catalog.courses)}</Page>
+    <div>
+      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        {intro}
+      </div>
+      {body(catalog.courses)}
+      <div style={{ height: 22 }} />
+    </div>
   );
 }

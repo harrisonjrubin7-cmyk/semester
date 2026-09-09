@@ -599,6 +599,30 @@ is a view of was never in dispute.
 The tab goes, so there is still exactly one way in. That is the half of §5
 and §6 that has held through all three turns: whatever the grade table is,
 it should not be two things at once.
+
+### T2, a fourth time — the tab, and this one is the answer
+
+Asked for directly by the person the app is for: the grade table is the
+Grades tab of Courses, and `grades` is not a destination. This restores the
+state §6 and #44 left, and reverts the turn above.
+
+Nothing in the reasoning of the turn above is withdrawn — it is a fair
+argument, and it is left standing so this section stays the record of what
+was argued rather than only of what won. What settles it is not a better
+argument: it is that the question it turns on, whether "how am I doing" is a
+thing you go to or a thing you find while looking at something else, is a
+question about how one person uses their own app, and that person has now
+answered it. Three of the four turns here were an assistant reasoning from
+the code about a preference the code cannot contain.
+
+So the practical note for whoever reads this next: this row is closed. It has
+been reversed four times, twice in each direction, and each turn cost a
+migration of `#/grades`, the tab bar's `root`, the assistant's context and
+the projection insight. Reopening it needs a new instruction from the person
+whose app it is, not a fresh reading of `Courses.tsx`.
+
+What held through all four turns is still the only part that was never in
+dispute: whatever the grade table is, it is not two things at once.
 ## Appendix — the first pass, resolved
 
 Run at `ac5a2c8` against 59 destinations. Kept because the verdicts still hold

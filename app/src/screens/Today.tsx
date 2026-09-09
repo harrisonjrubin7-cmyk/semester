@@ -827,14 +827,59 @@ function FeedPart({
         <button
           type="button"
           {...feed.grip(id, {
+            /*
+             * `tap`, both ways, because this one really does stand alone.
+             *
+             * The drawn grip is 17×16 on a phone, which is the size the tap
+             * audit was about — a fingertip is 44px and does not shrink to
+             * meet a braille glyph. `tap` rather than `tap-x` or `tap-y`
+             * because the nearest other target is the next section's grip, a
+             * whole section away: there is room in every direction, which is
+             * the condition `app.css` names for using it.
+             */
+            className: 'tap',
             style: {
               position: 'absolute',
-              // Level with the heading it belongs to, and out in the page's
-              // own margin so it never lands on the words: these headings
-              // carry a count or a link at their right-hand end.
-              top: at,
-              left: -17,
+              /*
+               * Just above its heading, and inside the column rather than out
+               * in the page's margin.
+               *
+               * The margin was the obvious place — level with the heading,
+               * clear of the words, no layout to change — and it is the one
+               * band of a phone screen a control must not sit in. The
+               * leftmost strip is where iOS Safari's back-swipe starts, so a
+               * drag begun there is a gesture the browser takes before the
+               * page ever hears about it. A handle the system can quietly
+               * steal is a handle that does not work, and it fails in the way
+               * that teaches somebody the feature is broken.
+               *
+               * So the grip comes inside, to the column's own left edge, and
+               * moves up into the gap above the heading instead — which is
+               * empty on every section, being the margin that separates it
+               * from the one before. That keeps it out of both the swipe band
+               * and the heading's words, without indenting eighteen sections
+               * written by eighteen different hands.
+               *
+               * The offset is negative on purpose. A section's box begins at
+               * its heading — the gap above is margin, which is outside the
+               * box — so reaching into that gap means drawing above the box,
+               * and clamping at zero puts the grip back on top of the words.
+               */
+              top: at - 21,
+              left: 0,
               width: 17,
+              /*
+               * Above the section's own frame, or the widened target is not
+               * widened at all.
+               *
+               * Measured: without this the grip on the next-class section
+               * came back 18×45 while every other one was 32×45, because the
+               * card's frame is painted after it and takes the points to its
+               * right. Nothing interactive is there — the frame is a drawing
+               * — so lifting the grip over it costs no other control a tap,
+               * which is the thing that was checked rather than assumed.
+               */
+              zIndex: 1,
               padding: 0,
               border: 'none',
               background: 'transparent',
