@@ -97,7 +97,11 @@ export function blockLabel(
 ): string {
   // `null` is the app's way of saying "a class", which is the one kind that is
   // not in `EVENT_KINDS` because it comes from a syllabus rather than a person.
-  const what = kind === null || kind === undefined ? 'Class' : kindOf(kind).label;
+  // `'task'` is the other one outside that list: a task is not a category of
+  // event you chose, it is a thing you wrote down, and `kindOf` would call it
+  // "Other" — which is a word for a shift nobody filed, not for a to-do.
+  const what =
+    kind === null || kind === undefined ? 'Class' : kind === 'task' ? 'Task' : kindOf(kind).label;
   const bits = [title, what, when];
   if (meta.trim()) bits.push(meta.trim());
   if (canceled) bits.push('Cancelled');

@@ -67,12 +67,14 @@ describe('sourceName', () => {
 describe('keepBlock', () => {
   const item = { kind: 'item' as const };
   const appointment = { kind: 'appointment' as const };
+  const task = { kind: 'task' as const };
 
   it('keeps everything under All', () => {
     const on = shows('all');
     expect(keepBlock(undefined, on)).toBe(true);
     expect(keepBlock(item, on)).toBe(true);
     expect(keepBlock(appointment, on)).toBe(true);
+    expect(keepBlock(task, on)).toBe(true);
   });
 
   it('treats a block with no record behind it as the timetable', () => {
@@ -90,11 +92,21 @@ describe('keepBlock', () => {
     expect(keepBlock(appointment, shows('deadlines'))).toBe(false);
   });
 
+  it('files a task of yours under Due, where the doc above puts it', () => {
+    // The bucket the sentence at the top of `calsource.ts` promises: what is
+    // due is "the syllabus's dated obligations and your own tasks". A task
+    // drawn on a grid has to obey it, or the Due chip would list your tasks
+    // under the week and hide the ones you gave an hour to.
+    expect(keepBlock(task, shows('deadlines'))).toBe(true);
+    expect(keepBlock(task, shows('classes'))).toBe(false);
+    expect(keepBlock(task, shows('campus'))).toBe(false);
+  });
+
   it('draws nothing on a grid under Campus', () => {
     // Nothing on an hour grid is a campus event — they are listed beside it,
     // which is why choosing Campus empties the grid rather than filtering it.
     const on = shows('campus');
-    expect([undefined, item, appointment].some((f) => keepBlock(f, on))).toBe(false);
+    expect([undefined, item, appointment, task].some((f) => keepBlock(f, on))).toBe(false);
   });
 });
 

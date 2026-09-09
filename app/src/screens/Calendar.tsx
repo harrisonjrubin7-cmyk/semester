@@ -49,7 +49,7 @@ import {
   type EvFilter,
 } from '../lib/calsource';
 import { useRowStyle } from '../components/shell/useShell';
-import { useCalendarMove, type Movable } from './calendar/Move';
+import { movableOf, useCalendarMove, type Movable } from './calendar/Move';
 import { AddHere } from './calendar/AddHere';
 import type { CourseId, DatedEvent, DatedItem, FeedEvent, PersonalTask } from '../lib/types';
 import { Folding } from '../components/Fold';
@@ -176,6 +176,24 @@ function DayView() {
       )
     : [];
   const myTasks = on.deadlines ? state.tasks.filter((t) => t.date === dateToIso(day)) : [];
+  /*
+   * What the grid draws, as against what the rail beside it lists.
+   *
+   * The grid used to be built inline and drawn only when the *rail* had
+   * something on it — and the rail is the classes bucket. So under the Due
+   * chip a day of deadlines and tasks with real hours on them drew no grid at
+   * all, and a task you had given a time to appeared nowhere on any grid in
+   * the app. Built from the same arguments the week grid uses and filtered by
+   * the same rule, so one chip cannot mean two things across two views.
+   */
+  const gridBlocks = hoursFor(
+    catalog,
+    day,
+    on.classes ? state.appointments : [],
+    on.classes ? state.commitments : [],
+    on.deadlines ? datedItems(catalog, day).filter((i) => !state.done[i.id]) : [],
+    on.deadlines ? state.tasks : [],
+  ).filter((b) => keepBlock(b.from, on));
 
   // Anything a connected calendar says is on — Brightspace, Outlook, Zoom.
   // It sits in its own section, labelled, so a feed can never be mistaken for
@@ -184,6 +202,7 @@ function DayView() {
 
   const empty =
     rail.length === 0 &&
+    gridBlocks.length === 0 &&
     due.length === 0 &&
     events.length === 0 &&
     myTasks.length === 0 &&
@@ -254,18 +273,12 @@ function DayView() {
         and the list gives each thing room for its detail. Neither replaces the
         other, and the grid is the one you want first.
       */}
-      {rail.length > 0 && (
+      {gridBlocks.length > 0 && (
         <>
           <SectionLabel style={{ margin: '0 0 6px' }}>By the hour</SectionLabel>
           <KindKey compact />
           <HourGrid
-            blocks={hoursFor(
-              catalog,
-              day,
-              state.appointments,
-              state.commitments,
-              datedItems(catalog, day).filter((i) => !state.done[i.id]),
-            )}
+            blocks={gridBlocks}
             now={isToday ? minutesNow(now) : null}
             style={{ margin: '14px 0 26px' }}
             /*
@@ -276,23 +289,12 @@ function DayView() {
              */
             canMove={(b) => Boolean(b.from)}
             onMove={(b, minutes) => {
-              if (!b.from) {
+              const what = movableOf(b, catalog);
+              if (!what) {
                 moving.refuse('class');
                 return;
               }
-              moving.move(
-                b.from.kind === 'appointment'
-                  ? { kind: 'appointment', id: b.from.id, title: b.title, minutes: b.at }
-                  : {
-                      kind: 'item',
-                      id: b.from.id,
-                      courseId:
-                        catalog.items.find((i) => i.id === b.from!.id)?.c ?? ('' as CourseId),
-                      title: b.title,
-                      code: b.meta.split(' · ')[0] ?? '',
-                    },
-                { date: dateToIso(day), at: minutes },
-              );
+              moving.move(what, { date: dateToIso(day), at: minutes });
             }}
             onAddAt={(minutes) => setAddAt(minutes)}
           />
@@ -644,6 +646,10 @@ function WeekView() {
         on.classes ? state.appointments : [],
         on.classes ? state.commitments : [],
         on.deadlines ? datedItems(catalog, date).filter((i) => !state.done[i.id]) : [],
+        // Your own tasks, on the hours you gave them. The week is the view
+        // people plan in, and a week that draws four classes and none of the
+        // things you actually wrote down is a timetable, not a plan.
+        on.deadlines ? state.tasks : [],
         // Classes come out of the catalogue rather than out of the arguments
         // above, so the filter is what drops them. The rule is in
         // `lib/calsource.ts` so the day rail and this grid cannot disagree.
@@ -784,22 +790,12 @@ function WeekView() {
             onMove={(b, dayIndex, minutes) => {
               const to = days[dayIndex]?.date;
               if (!to) return;
-              if (!b.from) {
+              const what = movableOf(b, catalog);
+              if (!what) {
                 moving.refuse('class');
                 return;
               }
-              moving.move(
-                b.from.kind === 'appointment'
-                  ? { kind: 'appointment', id: b.from.id, title: b.title, minutes: b.at }
-                  : {
-                      kind: 'item',
-                      id: b.from.id,
-                      courseId: catalog.items.find((i) => i.id === b.from!.id)?.c ?? ('' as CourseId),
-                      title: b.title,
-                      code: b.meta.split(' · ')[0] ?? '',
-                    },
-                { date: dateToIso(to), at: minutes },
-              );
+              moving.move(what, { date: dateToIso(to), at: minutes });
             }}
             onAddAt={(dayIndex, minutes) => {
               const to = days[dayIndex]?.date;
@@ -1544,12 +1540,22 @@ function SemesterView() {
    * all arrive by .ics got "Nothing to plot" across a term that was full.
    */
   const feed = on.campus && keepFeedEvent(kind) ? state.feedEvents : [];
+  /*
+   * Your own tasks, which this view had no branch for at all.
+   *
+   * A term is the grain at which "how bad does October get" is asked, and it
+   * was answered from the syllabi alone — so a fortnight you had filled with
+   * your own work plotted as two empty bars. Undated tasks are not here:
+   * "someday" has no week to sit in.
+   */
+  const tasks = on.deadlines ? state.tasks.filter((t) => t.date !== null) : [];
 
   // Weeks from the first Sunday on or before the earliest thing, to the last.
   const dates = [
     ...items.map((i) => i.date),
     ...events.map((e) => e.date),
     ...feed.map((e) => isoToDate(e.date)),
+    ...tasks.map((t) => isoToDate(t.date as string)),
   ];
   /*
    * The term's teaching, which this view had no branch for at all.
@@ -1597,6 +1603,7 @@ function SemesterView() {
     items: DatedItem[];
     events: DatedEvent[];
     feed: FeedEvent[];
+    tasks: PersonalTask[];
     classes: number;
   }[] = [];
   for (let cursor = new Date(start); cursor <= last; cursor.setDate(cursor.getDate() + 7)) {
@@ -1611,6 +1618,8 @@ function SemesterView() {
         classes += railFor(catalog, date, []).filter((b) => b.c && !b.canceled).length;
       }
     }
+    const from = dateToIso(weekStart);
+    const to = dateToIso(weekEnd);
     weeks.push({
       start: weekStart,
       items: items.filter((i) => i.date >= weekStart && i.date < weekEnd),
@@ -1619,11 +1628,15 @@ function SemesterView() {
         const d = isoToDate(e.date);
         return d >= weekStart && d < weekEnd;
       }),
+      // Compared as ISO strings rather than as dates: a task's day is a
+      // string in the store, and turning seven of them into `Date`s per week
+      // to compare them back is arithmetic with a timezone in it.
+      tasks: tasks.filter((t) => t.date! >= from && t.date! < to),
       classes,
     });
   }
 
-  const busiest = Math.max(1, ...weeks.map((w) => w.items.length));
+  const busiest = Math.max(1, ...weeks.map((w) => w.items.length + w.tasks.length));
   // The fullest teaching week, so the rule below can be read against it. A
   // fixed width per meeting made every week the same length, which is a mark
   // that says "there are classes" and nothing a person did not already know.
@@ -1648,6 +1661,9 @@ function SemesterView() {
       <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
         {[
           on.deadlines && `${items.length} ${items.length === 1 ? 'deadline' : 'deadlines'}`,
+          // Counted apart from the deadlines, the way the whole app counts
+          // them apart: what you decided to do is not what a syllabus asked.
+          on.deadlines && tasks.length > 0 && `${tasks.length} of your own`,
           on.campus &&
             `${events.length + feed.length} ${events.length + feed.length === 1 ? 'event' : 'events'}`,
           on.classes &&
@@ -1722,6 +1738,7 @@ function SemesterView() {
                   {w.items.length === 0 &&
                   w.events.length === 0 &&
                   w.feed.length === 0 &&
+                  w.tasks.length === 0 &&
                   w.classes === 0 ? (
                     <div
                       style={{ flex: 1, background: 'var(--app-track)', opacity: 0.4, height: 2, alignSelf: 'center' }}
@@ -1737,6 +1754,21 @@ function SemesterView() {
                             maxWidth: `${100 / busiest}%`,
                             background: tint(it.c).fill,
                             border: it.kind === 'Exam' ? '1px solid var(--app-accent-bright)' : 'none',
+                          }}
+                        />
+                      ))}
+                      {/* Yours: outlined rather than filled, the same mark
+                          the month grid gives a task, so a bar and a cell
+                          cannot mean different things by one shape. */}
+                      {w.tasks.map((t) => (
+                        <div
+                          key={t.id}
+                          title={t.title}
+                          style={{
+                            flex: 1,
+                            maxWidth: `${100 / busiest}%`,
+                            background: 'transparent',
+                            border: `1px solid ${tint(t.courseId).fill}`,
                           }}
                         />
                       ))}
@@ -1847,6 +1879,45 @@ function SemesterView() {
                       <div style={{ opacity: 0.5 }}>
                         +{w.events.length + w.feed.length - 3} more
                       </div>
+                    )}
+                  </div>
+                )}
+
+                {w.tasks.length > 0 && (
+                  <div style={WEEK_LIST}>
+                    {w.tasks.slice(0, 3).map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className="bare"
+                        {...drag.handlers({
+                          kind: 'task',
+                          id: t.id,
+                          title: t.title,
+                          weekday: isoToDate(t.date as string).getDay(),
+                        })}
+                        onClick={() => {
+                          if (drag.tookDrop()) return;
+                          // A task has no detail screen of its own, so this
+                          // opens the list it lives on rather than pretending
+                          // to and doing nothing.
+                          dispatch({ type: 'setMineTab', tab: 'tasks' });
+                          dispatch({ type: 'go', screen: 'mine' });
+                        }}
+                        style={{
+                          width: 'auto',
+                          display: 'block',
+                          textAlign: 'left',
+                          opacity: drag.held?.id === t.id ? 0.4 : 1,
+                          textDecoration: t.done ? 'line-through' : 'none',
+                        }}
+                      >
+                        <span style={{ opacity: 0.55 }}>Yours</span>{' '}
+                        {t.title.length > 42 ? `${t.title.slice(0, 40)}…` : t.title}
+                      </button>
+                    ))}
+                    {w.tasks.length > 3 && (
+                      <div style={{ opacity: 0.5 }}>+{w.tasks.length - 3} more of your own</div>
                     )}
                   </div>
                 )}

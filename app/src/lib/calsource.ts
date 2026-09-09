@@ -85,9 +85,16 @@ export function sourceName(source: CalSource): string {
  * agree, and the way they came to disagree in the first place was each having
  * its own copy of the question.
  */
-export function keepBlock(from: { kind: 'appointment' | 'item' } | undefined, on: Shows): boolean {
+export function keepBlock(
+  from: { kind: 'appointment' | 'item' | 'task' } | undefined,
+  on: Shows,
+): boolean {
   if (!from) return on.classes;
-  return from.kind === 'item' ? on.deadlines : on.classes;
+  // A deadline and a task are both work to hand in — the doc above puts them
+  // in the same bucket, and a task drawn on the grid has to obey it or the
+  // Due chip would show your tasks in the list under the week and hide the
+  // ones with an hour on them.
+  return from.kind === 'appointment' ? on.classes : on.deadlines;
 }
 
 /*
