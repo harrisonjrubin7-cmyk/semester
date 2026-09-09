@@ -44,6 +44,7 @@ import {
   available as dbAvailable,
   load as loadFromDb,
   persist as persistToDb,
+  flushNow,
 } from './persist';
 import { backupOf } from '../lib/export';
 import { countsOf, takeDaily } from '../lib/snapshots';
@@ -344,6 +345,41 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     latest.current = state;
   });
+
+  /**
+   * Write what is owing before the page goes.
+   *
+   * `persist` settles a quarter of a second after the last change, so there is
+   * always a window where what is on screen is not yet on disk. `flushNow` was
+   * written for exactly this — its own docblock says "For a tab closing, and
+   * for tests" — and nothing called it. Only the tests did.
+   *
+   * Measured: a note typed and the tab closed 120ms later came back with an
+   * empty title. The row was there, because creating the note had settled; the
+   * words were not.
+   *
+   * The two listeners close different gaps, and `lib/draft.hook.ts` already
+   * uses the same pair for the draft text with the reason written out:
+   * backgrounding on a phone fires `visibilitychange` and may never fire
+   * anything else before the page is discarded, and `pagehide` catches the
+   * ordinary close. No `beforeunload` here — that file needs one because it
+   * asks the person whether to leave, and this has nothing to ask: it writes
+   * what is owing and gets out of the way.
+   */
+  useEffect(() => {
+    const leaving = () => {
+      void flushNow();
+    };
+    const hidden = () => {
+      if (document.visibilityState === 'hidden') leaving();
+    };
+    window.addEventListener('pagehide', leaving);
+    document.addEventListener('visibilitychange', hidden);
+    return () => {
+      window.removeEventListener('pagehide', leaving);
+      document.removeEventListener('visibilitychange', hidden);
+    };
+  }, []);
 
   /**
    * The next write came from another tab, so it must not be announced.

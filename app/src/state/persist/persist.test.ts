@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { readFileSync } from 'node:fs';
 import type { Persisted } from '../shape';
 
 /**
@@ -112,5 +113,45 @@ describe('telling the other tabs', () => {
     persist(state({ myName: 'Harrison' }));
     await flushNow();
     expect(written.length).toBe(1);
+  });
+});
+
+/**
+ * Somebody actually asks for the last write.
+ *
+ * The same shape of mistake as the service worker in `lib/worker.test.ts`:
+ * `flushNow` is written, correct, exported, and its own docblock says what it
+ * is for — "For a tab closing, and for tests" — and nothing but the tests ever
+ * called it. Nothing failed, because a write a quarter of a second late is
+ * invisible until the page does not last a quarter of a second.
+ *
+ * Measured in a browser: a note typed and the tab closed 120ms later came back
+ * with an empty title. The row was there, because creating the note had
+ * settled; the words were not.
+ *
+ * A source-level check, for the reason `worker.test.ts` gives about
+ * `main.tsx`: the store boots a DOM, a database and an OAuth redemption, so
+ * importing it in a unit test would test the harness. Reading it catches the
+ * shape of the mistake, which is the invisible part.
+ */
+describe('the write that is still owing when the page goes', () => {
+  const store = readFileSync('src/state/store.tsx', 'utf8');
+
+  it('is asked for by somebody', () => {
+    expect(
+      store,
+      'nothing calls flushNow, so a change made in the last quarter second ' +
+        'before a tab closes is never written',
+    ).toMatch(/flushNow\(\)/);
+  });
+
+  it('is asked for on both ways out of a page', () => {
+    // Backgrounding on a phone fires `visibilitychange` and may never fire
+    // anything else before the page is discarded; `pagehide` catches the
+    // ordinary close. `lib/draft.hook.ts` uses the same pair for the draft
+    // text and writes out why.
+    expect(store).toMatch(/addEventListener\('pagehide'/);
+    expect(store).toMatch(/addEventListener\('visibilitychange'/);
+    expect(store).toMatch(/visibilityState === 'hidden'/);
   });
 });
