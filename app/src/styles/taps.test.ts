@@ -66,9 +66,10 @@ describe('tap targets', () => {
     const used = tsx('src').filter((f) =>
       /className[=:]\s*["'`][^"'`]*\btap(-[xy])?\b/.test(readFileSync(f, 'utf8')),
     );
-    // The eight the audit named, plus Today's grip. Fewer than this means one
-    // was reverted without the measurement being redone.
-    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(10);
+    // The eight the audit named, plus Today's grip, plus the two screens that
+    // were built after it. Fewer than this means one was reverted without the
+    // measurement being redone.
+    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(12);
     for (const must of [
       'src/components/SampleMark.tsx',   // 112×20, on 65 screens
       'src/components/Reorder.tsx',      // 26×23, three lists
@@ -76,7 +77,9 @@ describe('tap targets', () => {
       'src/components/InsightCards.tsx', // 108×17 and 193×17
       'src/components/Insights.tsx',     // 24×17
       'src/screens/Links.tsx',           // 30×17
-      'src/screens/Account.tsx',         // 102×19
+      // 102×19 — the sign-in links, which moved off the account screen into
+      // the form both it and the first run now render.
+      'src/components/Credentials.tsx',
       'src/App.tsx',                     // 115×23, the way up to a course
       // 17×16, one per section of Today, and the reason the measuring is
       // written down twice: the first version of this grip was the size of
@@ -93,6 +96,23 @@ describe('tap targets', () => {
       // reason the audit itself gives: the card counter shares its row, and
       // a target that grew sideways would reach across the gap towards it.
       'src/screens/Gap.tsx',
+      /*
+       * Two screens the audit could not have seen, because neither existed
+       * when it ran, and both went straight back under the floor it cleared.
+       *
+       * The map's three controls — where you are, everything at once, bigger
+       * — measured 68×17, 43×17 and 42×17, and the "GO →" beside every stop
+       * 29×17. The chat's whole chrome — back, the history, a new thread, the
+       * key — is four more at 17px tall, and one of them, SET A KEY, is the
+       * control that makes the assistant work at all.
+       *
+       * Growing the map's row is also why it now sits at `--sp-7` rather than
+       * `--sp-4` below the map: Leaflet's attribution link is three pixels
+       * above the map's bottom edge, and a 44px target centred on a 17px
+       * label reached two pixels over it.
+       */
+      'src/screens/Maps.tsx',
+      'src/ai/Chat.tsx',
     ]) {
       expect(used, `${must} lost its tap class`).toContain(must);
     }

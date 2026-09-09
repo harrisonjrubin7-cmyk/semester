@@ -23,11 +23,11 @@
  * not seen rather than as a quote that is wrong.
  */
 
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { CheckIt } from '../components/CheckIt';
-import { PickChips, SectionLabel } from '../components/ui';
+import { FilePick, PickChips, SectionLabel } from '../components/ui';
 import { extractText } from '../lib/extract';
 import { liveGuide } from '../lib/live';
 import { checkDraft, report, sourcesFrom, verdictLine, type Source } from '../lib/quotes';
@@ -50,7 +50,6 @@ export function Proof() {
    */
   const [dropped, setDropped] = useState<Source[]>([]);
   const [reading, setReading] = useState(false);
-  const picker = useRef<HTMLInputElement>(null);
 
   const course = catalog.courses.find((c) => c.id === courseId);
   const stance = (course?.ai?.stance ?? 'unstated') as Stance;
@@ -83,12 +82,12 @@ export function Proof() {
 
   const quotes = useMemo(() => checkDraft(text, sources), [text, sources]);
 
-  const take = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const take = async (files: File[]) => {
+    if (files.length === 0) return;
     setReading(true);
     try {
       const read: Source[] = [];
-      for (const file of Array.from(files)) {
+      for (const file of files) {
         const out = await extractText(file);
         if (out.text.trim()) read.push({ label: out.name, text: out.text });
       }
@@ -164,31 +163,19 @@ export function Proof() {
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => picker.current?.click()}
-          style={{ height: 44 }}
+        <FilePick
+          accept=".pdf,.docx,.txt,.md,.markdown,.rtf,.pptx"
+          block={false}
+          onPick={(picked) => void take(picked)}
+          style={{ height: 44, textTransform: 'none', letterSpacing: 'normal' }}
         >
           {reading ? 'Reading…' : 'Add the reading itself'}
-        </button>
+        </FilePick>
         <span style={{ fontSize: 'var(--type-xs)', opacity: 0.55 }}>
           {dropped.length > 0
             ? `${dropped.map((d) => d.label).join(', ')} — kept only while this screen is open`
             : 'A PDF or Word file, read here and stored nowhere'}
         </span>
-        <input
-          ref={picker}
-          type="file"
-          multiple
-          accept=".pdf,.docx,.doc,.txt,.md,.rtf,.pptx"
-          aria-label="A reading to check the quotations against"
-          onChange={(e) => {
-            void take(e.target.files);
-            e.target.value = '';
-          }}
-          style={{ display: 'none' }}
-        />
       </div>
 
       {quotes.length > 0 && (

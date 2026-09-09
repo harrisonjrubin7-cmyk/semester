@@ -461,7 +461,10 @@ export function SelectRow<T extends string>({
         <span
           id={id}
           className="section-label"
-          style={{ flex: 1, fontSize: 'var(--type-xs)', opacity: 0.5 }}
+          // No opacity. `.section-label` is drawn in `--app-accent-deep`,
+          // which `contrast.test.ts` audits at exactly 4.5:1 on every ground;
+          // half of it is 2.56:1, and this is the name of the radio group.
+          style={{ flex: 1, fontSize: 'var(--type-xs)' }}
         >
           {label}
         </span>

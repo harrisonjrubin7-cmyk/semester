@@ -12,6 +12,7 @@ import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import { homeShape } from '../lib/chrome';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import {
   appointmentsOn,
   railFor,
@@ -174,7 +175,7 @@ function YourTasks() {
             >
               <TickBox on={t.done} />
             </button>
-            <div style={{ flex: 1, minWidth: 0, opacity: t.done ? 0.42 : 1 }}>
+            <div style={{ flex: 1, minWidth: 0, opacity: t.done ? DIMMED_ROW : 1 }}>
               <div
                 style={{
                   fontSize: 'var(--type-md)',
@@ -185,7 +186,7 @@ function YourTasks() {
                 {t.title}
               </div>
               {(t.time || t.courseId) && (
-                <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                <div style={{ fontSize: 'var(--type-xs)', ...secondLine(t.done), marginTop: 'var(--sp-1)' }}>
                   {/* The code in its course's colour rather than in the dim
                       grey the time is set in: a task you filed against ECON
                       belongs to ECON, and this is the only mark on the row
@@ -473,7 +474,7 @@ function ThisWeek() {
                       display: 'block',
                       fontSize: 'var(--type-base)',
                       lineHeight: 'var(--leading-normal)',
-                      opacity: t.done ? 0.45 : 1,
+                      opacity: t.done ? DIMMED_ROW : 1,
                       textDecoration: t.done ? 'line-through' : 'none',
                     }}
                   >
@@ -483,7 +484,7 @@ function ThisWeek() {
                     style={{
                       display: 'block',
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.55,
+                      ...secondLine(t.done),
                       marginTop: 'var(--sp-1)',
                     }}
                   >
@@ -678,14 +679,14 @@ function Feed_due() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'openItem', id: it.id })}
-                style={{ flex: 1, minWidth: 0, opacity: done ? 0.4 : 1 }}
+                style={{ flex: 1, minWidth: 0, opacity: done ? DIMMED_ROW : 1 }}
               >
                 <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 3 }}>
                   <CourseTag id={it.c} />
                   <span
                     style={{
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.55,
+                      ...secondLine(done),
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
@@ -703,7 +704,7 @@ function Feed_due() {
                 >
                   {it.title}
                 </div>
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3 }}>
+                <div style={{ fontSize: 'var(--type-sm)', ...secondLine(done), marginTop: 3 }}>
                   {it.dueTime} · {it.where}
                 </div>
               </button>
@@ -892,7 +893,7 @@ function Feed_rail() {
                     // Everything behind you at once — the hour, the dot and
                     // the words together — rather than the title alone, which
                     // left a column of bright times above a dimmed day.
-                    opacity: gone ? 0.45 : 1,
+                    opacity: gone ? DIMMED_ROW : 1,
                   }}
                 >
                   {/*
@@ -912,7 +913,7 @@ function Feed_rail() {
                       fontFamily: 'var(--font-heading)',
                       fontSize: 'var(--type-md)',
                       paddingTop: 'var(--sp-6)',
-                      opacity: 0.6,
+                      ...secondLine(gone),
                     }}
                   >
                     {b.from?.kind === 'item' ? said(b.at) : b.time}
@@ -949,13 +950,13 @@ function Feed_rail() {
                         fontFamily: 'var(--font-heading)',
                         fontSize: 'calc(19px * var(--text-scale, 1))',
                         lineHeight: 1.15,
-                        opacity: b.canceled ? 0.45 : 1,
+                        opacity: b.canceled ? DIMMED_ROW : 1,
                         textDecoration: b.canceled ? 'line-through' : 'none',
                       }}
                     >
                       {b.title}
                     </div>
-                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
+                    <div style={{ fontSize: 'var(--type-sm)', ...secondLine(gone || b.canceled) }}>
                       {b.mine && (
                         <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
                           Yours

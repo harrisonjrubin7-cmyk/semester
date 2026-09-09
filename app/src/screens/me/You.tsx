@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { secondLine } from '../../lib/dim';
 import { useStore } from '../../state/store';
 import { useRowStyle } from '../../components/shell/useShell';
 import { Blueprint } from '../../components/Blueprint';
@@ -454,7 +455,7 @@ export function You() {
           <div
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: 0.45,
+              ...secondLine(),
               marginTop: 'var(--sp-3)',
               lineHeight: 'var(--leading-normal)',
             }}
@@ -580,7 +581,7 @@ export function You() {
             <div
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.45,
+                ...secondLine(),
                 marginTop: 'var(--sp-3)',
                 lineHeight: 'var(--leading-normal)',
               }}
@@ -621,7 +622,7 @@ export function You() {
                 style={{
                   flex: 'none',
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.45,
+                  ...secondLine(),
                   minWidth: 46,
                   textAlign: 'right',
                 }}
@@ -633,7 +634,7 @@ export function You() {
           <div
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: 0.45,
+              ...secondLine(),
               marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-normal)',
             }}
