@@ -270,6 +270,34 @@ describe('toIcs', () => {
   });
 });
 
+describe('the lines toIcs refuses to write', () => {
+  const good = { uid: 'ok', summary: 'Fine', date: new Date(2026, 8, 10), minutes: 60 };
+
+  it('drops an event whose date is not a date, instead of writing NaNNaNNaN', () => {
+    // dateStamp pads three fields off the Date, so an Invalid Date came out as
+    // `DTSTART;VALUE=DATE:NaNNaNNaN` — a line no parser accepts, in a file a
+    // strict client then refuses whole.
+    const ics = toIcs([{ uid: 'broken', summary: 'Broken', date: new Date(NaN) }, good]);
+    expect(ics).not.toContain('NaN');
+    expect(ics).toContain('UID:ok@semester.app');
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+  });
+
+  it('treats an hour off the clock as no hour', () => {
+    // RFC 5545 gives the hour two digits, 00-23. 5000 minutes wrote hour 83.
+    for (const at of [-1, -600, 1440, 5000]) {
+      const ics = toIcs([{ ...good, at }]);
+      expect(ics).toContain('DTSTART;VALUE=DATE:20260910');
+      expect(ics).not.toMatch(/DTSTART:\d{8}T(?![01]\d|2[0-3])/);
+    }
+  });
+
+  it('keeps the hours that are on it', () => {
+    expect(toIcs([{ ...good, at: 0 }])).toContain('DTSTART:20260910T000000');
+    expect(toIcs([{ ...good, at: 1439 }])).toContain('DTSTART:20260910T235900');
+  });
+});
+
 describe('appointmentEvents', () => {
   const appt = {
     id: 'a1',
@@ -293,6 +321,42 @@ describe('appointmentEvents', () => {
     const [event] = appointmentEvents([appt]);
     expect(event.date.getDate()).toBe(2);
     expect(event.date.getMonth()).toBe(9);
+  });
+
+  /*
+   * The dates that are not dates.
+   *
+   * `readAppointments` gives an appointment saved without one `date: ''`, and
+   * `Number('')` is 0 rather than NaN, so the split-and-construct this used to
+   * do sailed past its own `|| 1` guards and produced 1 January 1900 — a
+   * confident entry, in the file, on a day nobody named.
+   */
+  it('leaves out an appointment with no date rather than inventing 1900', () => {
+    const none = { ...appt, id: 'a2', date: '' } as Appointment;
+    expect(appointmentEvents([none])).toEqual([]);
+    expect(toIcs(appointmentEvents([none]))).not.toContain('19000101');
+  });
+
+  it('leaves out a date the calendar does not have', () => {
+    // 31 February reads back as 3 March, which is a day the student never
+    // wrote down. Same for a month that does not exist.
+    for (const date of ['2026-02-31', '2026-13-01', '2026-10-2', 'soon']) {
+      expect(appointmentEvents([{ ...appt, date } as Appointment])).toEqual([]);
+    }
+  });
+
+  it('still exports the good ones beside a bad one', () => {
+    const ics = toIcs(appointmentEvents([{ ...appt, id: 'bad', date: '' } as Appointment, appt]));
+    expect(ics).toContain('UID:appt-a1@semester.app');
+    expect(ics).not.toContain('appt-bad');
+  });
+
+  it('writes an appointment with no recorded hour as all-day, not as hour -1', () => {
+    // -1 is what lib/appointment.ts stores when neither `at` nor `time` could
+    // be read. It used to reach the formatter and write `T-1-100`.
+    const ics = toIcs(appointmentEvents([{ ...appt, at: -1 } as Appointment]));
+    expect(ics).toContain('DTSTART;VALUE=DATE:20261002');
+    expect(ics).not.toMatch(/DTSTART:.*T-/);
   });
 });
 

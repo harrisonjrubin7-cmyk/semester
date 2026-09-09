@@ -17,7 +17,7 @@
  */
 
 import type { Catalog } from '../data/catalog';
-import { dateToIso } from './date';
+import { dateToIso, isoToDate, realIso } from './date';
 import type { Appointment, DatedItem, Note, PersonalTask } from './types';
 import { standingOf, type DoneMap } from './standing';
 import { NO_TIME } from './duetime';
@@ -263,10 +263,36 @@ export function toIcs(
   ];
 
   for (const e of events) {
+    /*
+     * A day that is not a day is left out, rather than written down.
+     *
+     * `dateStamp` reads three fields off the Date and pads them, so an
+     * Invalid Date — which is what `new Date(year, NaN, day)` is, and every
+     * caller here builds its Date out of fields that came from a syllabus or
+     * out of storage — produced `DTSTART;VALUE=DATE:NaNNaNNaN`. Measured.
+     * That is not a wrong date, it is a line no parser accepts, and a strict
+     * client refuses the *file*: one unreadable appointment takes a whole
+     * semester of deadlines down with it.
+     *
+     * Skipping is the smaller loss and the honest one. The event was already
+     * unshowable; what is saved is every other event in the export.
+     */
+    if (Number.isNaN(e.date.getTime())) continue;
     lines.push('BEGIN:VEVENT');
     lines.push(`UID:${e.uid}@semester.app`);
     lines.push(`DTSTAMP:${stamp}`);
-    if (e.at === undefined) {
+    /*
+     * And an hour outside the clock is no hour, which is a thing this file
+     * can already say. `at` is minutes past midnight; anything below 0 or at
+     * 1440 and above is a number that came out of a reader, not off a clock
+     * — `lib/appointment.ts` uses -1 for "no hour was recorded", and a
+     * hand-edited backup can hold any figure at all. Passed through, -1 wrote
+     * `DTSTART:19000101T-1-100` and 5000 wrote hour 83. All-day is what this
+     * function already does for a deadline whose hour nobody stated, and it
+     * is the same claim: the day is known and the time is not.
+     */
+    const at = Number.isInteger(e.at) && e.at! >= 0 && e.at! < 1440 ? e.at : undefined;
+    if (at === undefined) {
       const next = new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + 1);
       lines.push(`DTSTART;VALUE=DATE:${dateStamp(e.date)}`);
       lines.push(`DTEND;VALUE=DATE:${dateStamp(next)}`);
@@ -289,14 +315,14 @@ export function toIcs(
        * on the night the clocks go forward should still be half an hour
        * later on the clock.
        */
-      const total = e.at + Math.max(0, e.minutes ?? 60);
+      const total = at + Math.max(0, e.minutes ?? 60);
       const endDate = new Date(
         e.date.getFullYear(),
         e.date.getMonth(),
         e.date.getDate() + Math.floor(total / 1440),
       );
       const endAt = total % 1440;
-      lines.push(`DTSTART:${dateStamp(e.date)}T${pad(Math.floor(e.at / 60))}${pad(e.at % 60)}00`);
+      lines.push(`DTSTART:${dateStamp(e.date)}T${pad(Math.floor(at / 60))}${pad(at % 60)}00`);
       lines.push(`DTEND:${dateStamp(endDate)}T${pad(Math.floor(endAt / 60))}${pad(endAt % 60)}00`);
     }
     lines.push(`SUMMARY:${icsText(e.summary)}`);
@@ -345,18 +371,42 @@ export function deadlineEvents(
   }));
 }
 
+/**
+ * Appointments as calendar entries — the ones that name a day.
+ *
+ * The date was split into three numbers and handed to `new Date` unchecked,
+ * and both halves of that were wrong for a record that has been through
+ * storage. `Number('')` is 0, not NaN, so an appointment saved without a date
+ * — which `lib/appointment.ts` reads as `date: ''`, because blank is what the
+ * screens can draw — did not fall to the `|| 1` guards beside it: it became
+ * 1 January 1900 and went into the file as a real-looking entry on a day
+ * nobody named. And a date of the shape `2026-02-31`, which a syllabus reader
+ * or a hand-edited backup can hold, became 3 March the same silent way.
+ *
+ * So the day has to survive the round trip to be exported at all. An
+ * appointment with no usable date is dropped rather than placed: it is still
+ * in the app, on every screen that lists it, and the alternative is a
+ * confident wrong entry in someone's actual calendar, which is the failure
+ * this whole file is careful about — see the stable `uid` above, whose point
+ * is that a re-import corrects an entry instead of duplicating it.
+ */
 export function appointmentEvents(appts: Appointment[]): IcsEvent[] {
-  return appts.map((a) => {
-    const [y, m, d] = a.date.split('-').map(Number);
-    return {
+  const out: IcsEvent[] = [];
+  for (const a of appts) {
+    if (!realIso(a.date)) continue;
+    out.push({
       uid: `appt-${a.id}`,
       summary: a.title,
       description: a.kind ?? '',
-      date: new Date(y, (m || 1) - 1, d || 1),
+      date: isoToDate(a.date),
+      // -1 is `lib/appointment.ts` saying no hour was recorded. `toIcs` turns
+      // any hour off the clock into an all-day entry anyway; this keeps the
+      // sentinel from having to be understood twice.
       at: typeof a.at === 'number' ? a.at : undefined,
       minutes: 60,
-    };
-  });
+    });
+  }
+  return out;
 }
 
 // ── Naming ───────────────────────────────────────────────────────────────

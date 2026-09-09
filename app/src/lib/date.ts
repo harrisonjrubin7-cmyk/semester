@@ -231,6 +231,30 @@ export function realDate(month: number, day: number, year?: number): boolean {
   return day <= daysInMonth(month, year);
 }
 
+/**
+ * Whether an ISO string names a day the calendar has — and keeps.
+ *
+ * Six places in this app test a date with `/^\d{4}-\d{2}-\d{2}$/` and stop
+ * there, and that regex says yes to `2026-02-31` and to `2026-13-45`.
+ * `isoToDate` does not refuse either: it answers them, with 3 March and with
+ * 14 February 2027. So a date that is merely shaped right becomes a real day
+ * nobody named, silently, on a screen that then talks about it confidently.
+ *
+ * The round trip is the property that actually matters — the day read back is
+ * the day written down — and it catches the last shape `realDate` cannot see
+ * on its own: `new Date` maps a year under 100 into the 1900s, so `0000-01-01`
+ * is a real 1 January and lands in 1900, where nothing will ever show it.
+ *
+ * `lib/tools.ts` wrote this first, for a date a model proposed; it is the same
+ * question wherever a stored string is about to be treated as a day.
+ */
+export function realIso(value: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!m) return false;
+  if (!realDate(Number(m[2]) - 1, Number(m[3]), Number(m[1]))) return false;
+  return dateToIso(isoToDate(value)) === value;
+}
+
 /** The days of a month grid, Sunday-first, padded to whole weeks. */
 export function monthGrid(year: number, month: number): (number | null)[] {
   const lead = new Date(year, month, 1).getDay();

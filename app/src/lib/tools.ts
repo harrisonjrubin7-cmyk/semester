@@ -50,7 +50,7 @@ import { STAGES, type Application, type Stage } from './apply';
 import type { ToolCall, ToolSpec } from './claude';
 import type { Action, Persisted } from '../state/shape';
 import type { Attended } from './attend';
-import { dateToIso, isoToDate, realDate } from './date';
+import { realIso } from './date';
 import type { CourseId, PersonalTask, Screen } from './types';
 
 /** The screens a proposal may send you to. Everything else is out of bounds. */
@@ -387,32 +387,19 @@ function num(input: Record<string, unknown>, key: string): number | null {
 /**
  * A date the app can actually store, or nothing.
  *
- * Shaped *and* real. The check was `/^\d{4}-\d{2}-\d{2}$/` alone, which says
- * yes to 31 February and to 2026-13-45 — and `isoToDate` does not refuse
- * those, it answers them: the first becomes 3 March and the second becomes 14
- * February 2027. So a model that got a date slightly wrong produced a task on
- * a day nobody had named, with a confirmation line that either read
- * confidently about the wrong day or showed the raw `2026-13-45` while the
- * task went somewhere else entirely.
+ * Shaped *and* real — `realIso` in `lib/date.ts` is that question, and the
+ * reason it is not just the regex. A model that got a date slightly wrong
+ * produced a task on a day nobody had named, with a confirmation line that
+ * either read confidently about the wrong day or showed the raw `2026-13-45`
+ * while the task went somewhere else entirely.
  *
- * `realDate` is the check this app already wrote for exactly this, and
- * `lib/generate.ts` and `lib/handoff.ts` already use it. The rule there is that
- * an unreal date is dropped rather than guessed at; here dropping the date
- * refuses the proposal, which is what this file does with every argument it
- * cannot describe honestly.
+ * The rule `lib/generate.ts` and `lib/handoff.ts` follow is that an unreal
+ * date is dropped rather than guessed at; here dropping the date refuses the
+ * proposal, which is what this file does with every argument it cannot
+ * describe honestly.
  */
 function iso(value: string): string {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!m) return '';
-  if (!realDate(Number(m[2]) - 1, Number(m[3]), Number(m[1]))) return '';
-  /*
-   * And then the round trip, which is the property the confirmation line
-   * actually rests on: the day the app will store is the day the model named.
-   * `realDate` cannot see the last shape on its own — `new Date` maps a year
-   * under 100 into the 1900s, so `0000-01-01` is a real 1 January and lands in
-   * 1900, where nothing will ever show it again.
-   */
-  return dateToIso(isoToDate(value)) === value ? value : '';
+  return realIso(value) ? value : '';
 }
 
 /**
