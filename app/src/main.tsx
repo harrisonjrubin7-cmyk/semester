@@ -6,6 +6,7 @@ import './styles/typefaces.css';
 import './styles/industry.css';
 import './styles/app.css';
 import App from './App';
+import { Splash } from './components/Splash';
 import { askToPersist } from './lib/device';
 import { StoreProvider } from './state/store';
 import { AIProvider } from './ai/store';
@@ -104,6 +105,11 @@ completeAuth()
               thing across all fifty screens rather than a thing each screen
               mounts. See `ai/store.tsx`. */}
           <AIProvider>
+            {/* The curtain over the first half-second, mounted beside the app
+                rather than inside it: it belongs to opening the app, not to
+                any screen, and out here it cannot become a child of the desk's
+                grid on a wide window. See `components/Splash.tsx`. */}
+            <Splash />
             <App />
           </AIProvider>
         </StoreProvider>

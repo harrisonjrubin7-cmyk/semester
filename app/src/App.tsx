@@ -1231,9 +1231,6 @@ export default function App() {
         <Tapped />
         {/* Notices what goes wrong, on this device only. Draws nothing. */}
         <Watching />
-        {/* Offers the last removal back, from wherever it happened. */}
-        <Replaced />
-      <Undone />
         {/* The one question a first sign-in asks, and only when it is real. */}
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
         {chrome.rail && <Rail />}
@@ -1287,6 +1284,27 @@ export default function App() {
               than beside it: `.desk` is a two-column grid, and a bare element
               at its root takes the rail's column. */}
           <SampleMark />
+          {/*
+            The sync banner and the undo toast, in the pane for that same
+            reason — and they were the two that were still outside it.
+
+            `Replaced` is an ordinary block in the flow, so as a child of
+            `.desk` it was a grid item: it took the rail's column, pushed the
+            rail into the second one and the whole pane onto a second row.
+            Every launch after a sync from another device therefore opened on
+            a window with the navigation across the top right, the banner in a
+            column of its own, and the feed folded into the bottom-left
+            corner — which is what people were seeing instead of the app.
+
+            `Undone` never broke the grid, since an absolutely positioned
+            child is not a grid item, but it had no positioned ancestor out
+            there and so measured its `left: 12` and `right: 12` against the
+            whole window rather than the pane. In here `.device-pane` is
+            `position: relative` and the toast lands over the content it is
+            about, on both layouts.
+          */}
+          <Replaced />
+          <Undone />
           {trouble}
           {chrome.shelves && <ShelfNav />}
           <ScrollArea screen={state.screen} key={state.screen}>
