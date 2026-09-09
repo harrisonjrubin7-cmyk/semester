@@ -28,6 +28,13 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SAFEST, backupName, destructive, options, type Choice, type Sides } from '../lib/adopt';
+import { DESKTOP, useMedia } from '../lib/media';
+
+/**
+ * How wide the question gets, the same measure the app's other two overlays
+ * use. It never binds on a phone, where the app is narrower than this.
+ */
+const COLUMN = 620;
 
 export function Adopting({
   sides,
@@ -40,6 +47,7 @@ export function Adopting({
   onChoose: (choice: Choice, backup: string | null) => void;
 }) {
   const [picked, setPicked] = useState<Choice>(SAFEST);
+  const wide = useMedia(DESKTOP);
   const list = options(sides);
 
   const go = () => {
@@ -54,7 +62,25 @@ export function Adopting({
       aria-modal="true"
       aria-label="Which copy to keep"
       style={{
-        position: 'absolute',
+        /*
+         * What a blocking question covers, which is not the same box on both
+         * layouts.
+         *
+         * The portal below puts this inside `.device`, which is what makes it
+         * look like the app — that part was already right. What was not: on a
+         * wide window `.device` is the pane, a strip in the middle of the
+         * screen, so `absolute` left the rail and the assistant's button
+         * showing and clickable beside a dialog that says `aria-modal`. This
+         * is the one question the app asks before it will do anything, and
+         * "answer this first" is the whole of its meaning — a student who can
+         * walk into Courses instead has been told something untrue.
+         *
+         * So the window on a desk, and the app's own column below 760px,
+         * where `.device` is a column with ground either side and spilling
+         * across the ground would be the only thing in the app that does.
+         * Same rule and same breakpoint as the search and the capture box.
+         */
+        position: wide ? 'fixed' : 'absolute',
         inset: 0,
         zIndex: 88,
         background: 'var(--app-bg)',
@@ -65,6 +91,7 @@ export function Adopting({
         overflowY: 'auto',
       }}
     >
+      <div style={{ width: '100%', maxWidth: COLUMN, margin: '0 auto' }}>
       <div className="kicker">Signed in</div>
       <h2
         style={{
@@ -141,11 +168,15 @@ export function Adopting({
       >
         {picked === SAFEST ? 'Keep both' : 'Save a backup and go ahead'}
       </button>
+      </div>
     </div>
   );
 
   // On the device frame, like the app's other overlays — see `TypeToConfirm`,
   // where putting one inside a scrolling screen let the page show through.
+  // This decides where it is *drawn from*, and so what it looks like; what it
+  // covers is decided by `position` above, which on a wide window is the
+  // window rather than the frame.
   const frame = typeof document === 'undefined' ? null : document.querySelector('.device');
   return frame ? createPortal(sheet, frame) : sheet;
 }
