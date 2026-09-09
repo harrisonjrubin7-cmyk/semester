@@ -107,3 +107,96 @@ jobs:
       # the course modules as source.
       - name: Validate the course data
         run: node pipeline/validate.mjs
+
+  # ── Saying so when main is red ──────────────────────────────────────────
+  #
+  # A pull request that fails tells the person who opened it: the check sits
+  # on their PR, and they are looking at it. Main failing tells nobody. It
+  # blocks no merge, appears on no page anybody has open, and the next merge
+  # is already in flight.
+  #
+  # That is not hypothetical. On the night this was written `tsc` went red on
+  # main at 02:21 and four more merges landed on top of it — #76, #81, #87,
+  # #89 — before anybody looked. CI was right every time and said so four
+  # times into an empty room. The break itself was two correct pull requests
+  # landing nine minutes apart: one moved a test onto `nav.ts`'s file, the
+  # other removed the screen that test happened to name, and neither could
+  # have conflicted with the other.
+  #
+  # So this job is not another check. It is the existing one, addressed to
+  # somebody: an issue while main is red, closed when it goes green.
+  notify:
+    # `always()` because the interesting case is precisely the one where the
+    # job before this failed. Push only — see the trigger at the top, which
+    # makes that main.
+    if: always() && github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    # A notifier that can fail is a notifier that paints main red when main is
+    # green, which is worse than the silence it replaces. `build` decides the
+    # colour of this run; this job never does. The cost is that a notifier
+    # broken by permissions is quiet about it — if these issues stop arriving,
+    # read this job's log, and check Settings → Actions → Workflow permissions
+    # is "Read and write".
+    continue-on-error: true
+    steps:
+      - uses: actions/github-script@v7
+        env:
+          BUILD: ${{ needs.build.result }}
+        with:
+          script: |
+            const red = process.env.BUILD === 'failure';
+            const TITLE = 'main is red';
+            const { owner, repo } = context.repo;
+            const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const at = context.sha.slice(0, 7);
+
+            // One notice, reopened by commenting rather than replaced. A new
+            // issue per failed commit would be four issues for tonight, which
+            // is a different way of being ignored.
+            //
+            // `listForRepo` returns pull requests as issues, hence the filter.
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const notice = open.find((i) => !i.pull_request && i.title === TITLE);
+
+            if (red) {
+              const body = [
+                `\`main\` failed CI at ${at}.`,
+                '',
+                run,
+                '',
+                'Every branch cut from here inherits it, and every pull request',
+                'that merges onto it lands on a base that was already broken —',
+                'so this is worth clearing before merging anything else.',
+              ].join('\n');
+              if (notice) {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: notice.number,
+                  body: `Still red at ${at}.\n\n${run}`,
+                });
+              } else {
+                await github.rest.issues.create({ owner, repo, title: TITLE, body });
+              }
+            } else if (notice) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: notice.number,
+                body: `Green again at ${at}.\n\n${run}`,
+              });
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: notice.number,
+                state: 'closed',
+              });
+            }
