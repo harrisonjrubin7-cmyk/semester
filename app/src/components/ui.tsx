@@ -470,21 +470,62 @@ export function Meter({
   pct,
   height = 6,
   fill,
+  label,
 }: {
   pct: number;
   height?: number;
   /** The bar's colour. Defaults to the brushed metal every other meter is. */
   fill?: string;
+  /**
+   * What the bar measures, said in words — or `null` where the number is
+   * already in the text beside it.
+   *
+   * Required, and deliberately without a default. A bar is a number drawn as
+   * a length: somebody who cannot see the length has the number only if the
+   * words carry it, and four of this app's seven meters were the only place
+   * their figure appeared. Study's mastery bar sat beside "11 units · 68
+   * cards"; the deck-coverage bar on Me has a comment saying in as many words
+   * that it shows "what the line does not show". For a screen reader those
+   * facts did not exist.
+   *
+   * The other three are genuine restatements — the term bar has "62% of the
+   * way…" under it, the week bar has "3 of 5 done" beside it, the grade bar
+   * has the grade above it — and those pass `null`, which hides the bar from
+   * a reader rather than saying everything twice.
+   *
+   * No default, so the choice is made at each site rather than assumed. It is
+   * the same bargain `tap-x` and `tap-y` make in `app.css`: the one thing a
+   * shared component cannot know is what its caller means by it, and guessing
+   * produces either a silent bar or a stutter.
+   */
+  label: string | null;
 }) {
+  const value = Math.max(0, Math.min(100, pct));
+  const said = Math.round(value);
   // Named so Windows High Contrast can give it an edge: forced colours drop
   // both of these backgrounds, and a bar drawn only in colour disappears
   // entirely. See `styles/app.css`.
   return (
-    <div className="meter" style={{ height, background: 'var(--app-track)' }}>
+    <div
+      className="meter"
+      style={{ height, background: 'var(--app-track)' }}
+      {...(label === null
+        ? { 'aria-hidden': true }
+        : {
+            role: 'progressbar',
+            'aria-label': label,
+            'aria-valuemin': 0,
+            'aria-valuemax': 100,
+            'aria-valuenow': said,
+            // Without this a reader says "62" and leaves the unit to be
+            // guessed at. The bar is always a percentage of itself.
+            'aria-valuetext': `${said}%`,
+          })}
+    >
       <div
         style={{
           height: '100%',
-          width: `${Math.max(0, Math.min(100, pct))}%`,
+          width: `${value}%`,
           background: fill ?? 'var(--chrome)',
         }}
       />

@@ -442,7 +442,7 @@ export function Study() {
               </div>
               <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-1)' }}>{g.blurb}</div>
               <div style={{ marginTop: 11 }}>
-                <Meter pct={g.mastery} fill={tint(c.id).fill} />
+                <Meter pct={g.mastery} fill={tint(c.id).fill} label={`Mastery, ${c.code}`} />
               </div>
               {/*
                 What is true of this course today, beside what is true of it

@@ -344,6 +344,9 @@ prevent.
 | Which controls a screen reader can name | `a11y/labels.ts` (run by `npm run lint`) |
 | How a dialog keeps the Tab key, and gives focus back | `a11y/modal.ts` |
 | What the browser tab, the history entry and the installed window are called | `a11y/title.ts` |
+| How the app scrolls, for somebody who asked for less movement | `lib/prefers.ts` |
+| Whether a bar speaks its value or repeats the words beside it | `components/ui.tsx` (`Meter`), decided per call site |
+| The words in the podcasts | `audio/scripts/` → `npm run transcripts` → `data/transcripts/` |
 
 If a date looks wrong, `lib/select.ts` is where the clock becomes what a screen
 shows. If a screen is unreachable, `lib/nav.ts` is why — and
@@ -352,8 +355,9 @@ named there as one you arrive at from somewhere else.
 
 ### Reachable without a pointer, and without sight
 
-Four things hold the app together for somebody on a keyboard or a screen
-reader, and each is one implementation rather than a habit.
+Eight things hold the app together for somebody on a keyboard, a screen
+reader, or a body that does not want to be moved, and each is one
+implementation rather than a habit.
 
 - **Every screen has a landmark, a heading and a name.** `<main>` is the one
   scrolling element, the header is a real `<header>`, and the screen's name is
@@ -378,3 +382,38 @@ reader, and each is one implementation rather than a habit.
 - **Every outcome is announced.** One live region, in `components/Said.tsx`,
   for the things that happened because somebody acted and are otherwise
   visible only as something on the screen having changed.
+- **Every recording has its words.** The four podcasts are an hour and a half
+  of speech, and a study mode nobody deaf or hard of hearing could use. Every
+  line of it was already in this repository, in `audio/scripts/` — it is what
+  the synthesiser spoke to make the MP3s — so `npm run transcripts` writes it
+  into `data/transcripts/` and Listen shows it under the chapters that play
+  it. Generated, never edited: `transcript.test.ts` compares the words on the
+  page to the words in the script, so a re-recorded episode cannot go on
+  showing the old one's lines. Loaded as a chunk per course when Listen is
+  opened, because nineteen thousand words do not belong in front of a first
+  paint. (A Full read has none, and needs none — it is the study guide spoken,
+  and the guide is already in Read and Field guide.)
+- **Reduced motion reaches the scrolls the app makes itself.** `app.css` has
+  flattened every CSS animation and transition for a long time, which reads as
+  complete and is half the job: `scrollTo({ behavior: 'smooth' })` is a script
+  asking for motion, not a style declaring it, and no media query applies to
+  it. Five places went on sweeping the page its whole length for somebody who
+  had asked the operating system not to be moved like that — which is what
+  provokes nausea and vertigo in a vestibular disorder, not a matter of taste.
+  `scrollKindly` and `revealKindly` in `lib/prefers.ts` are the only way the
+  app scrolls now, and `a11y/motion.test.ts` fails on a raw `'smooth'`.
+- **Every bar says its number.** A meter is a number drawn as a length, and
+  four of the app's seven were the only place their figure appeared — Study's
+  mastery bar beside "11 units · 68 cards", the deck-coverage bar on Progress
+  whose own comment says it shows *what the line does not show*. A screen
+  reader met two nested `<div>`s. `Meter` takes a required `label` now: a
+  string for a bar that has to speak, an explicit `null` for one whose number
+  is already in the words, and no default — so the compiler asks the question
+  at every site rather than letting a silent bar ship.
+- **Every failure is announced.** `components/Trouble.tsx` had this right, and
+  said why: "a failure that is only visible is a failure half the people using
+  the app miss". Twelve other error messages did not — a plain `<div>` in the
+  warn colour, appearing where nothing was before, so pressing Sign in with a
+  wrong password did nothing a reader could tell you about. They carry
+  `role="alert"` now, which changes nothing about how any of them looks.
+  `a11y/tellings.test.ts` holds both of these, and fails on a thirteenth.

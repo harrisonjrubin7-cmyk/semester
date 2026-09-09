@@ -40,6 +40,8 @@ import {
   type Stop,
 } from '../lib/arrive';
 import { FindPlace } from '../components/FindPlace';
+import { FillPlaces } from '../components/FillPlaces';
+import { unplaced } from '../lib/locate';
 import {
   CAMPUS_MAP,
   CITY_MAP,
@@ -667,6 +669,14 @@ export function Maps() {
         </button>
       </div>
       <Trouble said={trouble.said} onRetry={trouble.again} busy={searching} />
+
+      {/*
+        The one tap that makes the rest of this screen work on a fresh install.
+        Everything above it — the walk, the leave-by, the pins — needs a
+        coordinate per building, and until this existed the only ways to get
+        one were to stand in the doorway or to search eight times by hand.
+      */}
+      <FillPlaces buildings={unplaced(everything)} />
 
       {/*
         One panel for whatever is selected, whether it was tapped on the map or

@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { OSM_CREDIT, TILES } from '../lib/findplace';
+import { offline, watchConnection } from '../lib/offline';
 
 export interface Pin {
   id: string;
@@ -55,6 +56,21 @@ export interface Pin {
  * flag: the screen bumps it when the person presses "Fit all", and a number
  * that changed is a request that happened, where a boolean that is still true
  * is indistinguishable from one nobody pressed.
+ *
+ * ## When the tiles cannot come
+ *
+ * The tiles are the one thing on this screen that needs a connection, and they
+ * are the one thing this app cannot keep on the device — a campus at every
+ * zoom is not something to download onto a phone plan. So with no signal
+ * Leaflet drew what it always draws: nothing. An empty panel with a zoom
+ * control in the corner, no word about why, on a screen called Getting there —
+ * which reads as a broken app rather than as a map that needs a connection,
+ * while today's classes, every room and the official maps below it are all
+ * still working.
+ *
+ * So the map says so, over the top of itself, and stops saying it the moment a
+ * tile arrives. Nothing else on the screen changes: this is a caption on one
+ * panel, not an offline mode.
  */
 export function LiveMap({
   pins,
@@ -74,6 +90,14 @@ export function LiveMap({
   const host = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
+  /*
+   * Starts true when the browser already says there is no connection, so the
+   * explanation is there with the panel rather than a few seconds of blank
+   * later. Otherwise it waits to be told by the tiles themselves — which is
+   * the honest test, and catches the case the flag never sees: a connection
+   * that exists and cannot reach OpenStreetMap.
+   */
+  const [blank, setBlank] = useState(offline);
 
   useEffect(() => {
     if (!host.current || map.current) return;
@@ -81,7 +105,14 @@ export function LiveMap({
       [centre.lat, centre.lon],
       zoom,
     );
-    L.tileLayer(TILES, { maxZoom: 19, attribution: OSM_CREDIT }).addTo(m);
+    const tiles = L.tileLayer(TILES, { maxZoom: 19, attribution: OSM_CREDIT });
+    // One tile that arrives is proof enough that the map is drawing, and one
+    // that fails is proof enough that it is not. Leaflet fires these per tile
+    // and React drops a set to the value already held, so the pair settles
+    // after the first of each rather than re-rendering per tile.
+    tiles.on('tileload', () => setBlank(false));
+    tiles.on('tileerror', () => setBlank(true));
+    tiles.addTo(m);
     layer.current = L.layerGroup().addTo(m);
     map.current = m;
     // Leaflet measures the container on creation, and this one is often still
@@ -96,6 +127,21 @@ export function LiveMap({
     // the person's business, so they are deliberately not dependencies.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /*
+   * The connection coming back is not something the tiles will report on their
+   * own: Leaflet only asks for a tile it has not got, and the failed ones are
+   * still in its cache as failed. So a return to signal clears the message and
+   * asks for them again — the same redraw a pan would have caused.
+   */
+  useEffect(
+    () =>
+      watchConnection((online) => {
+        setBlank(!online);
+        if (online) map.current?.eachLayer((l) => (l instanceof L.TileLayer ? l.redraw() : undefined));
+      }),
+    [],
+  );
 
   // Recentre only when told to, never on a re-render.
   useEffect(() => {
@@ -153,19 +199,56 @@ export function LiveMap({
   }, [fit]);
 
   return (
-    <div
-      ref={host}
-      role="application"
-      aria-label="Map"
-      style={{
-        height,
-        width: '100%',
-        borderRadius: 'var(--r-lg)',
-        overflow: 'hidden',
-        border: '1px solid var(--app-line)',
-        background: 'var(--app-panel)',
-      }}
-    />
+    <div style={{ position: 'relative', height, width: '100%' }}>
+      <div
+        ref={host}
+        role="application"
+        aria-label="Map"
+        style={{
+          height: '100%',
+          width: '100%',
+          borderRadius: 'var(--r-lg)',
+          overflow: 'hidden',
+          border: '1px solid var(--app-line)',
+          background: 'var(--app-panel)',
+        }}
+      />
+      {blank && (
+        /* Over the panel rather than in place of it, so the map is still
+           there — a tile that arrives while this is up takes it straight
+           down, with nothing to re-mount and no pan or zoom thrown away. */
+        <div
+          role="status"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            /* Over Leaflet's own furniture too. Its zoom buttons sit at a
+               z-index of 1000 and would otherwise float above this, offering
+               to zoom in on nothing. The attribution goes with them, and the
+               screen prints the same credit under the panel either way. */
+            zIndex: 1200,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 'var(--sp-3)',
+            padding: 'var(--sp-7)',
+            textAlign: 'center',
+            borderRadius: 'var(--r-lg)',
+            background: 'var(--app-panel)',
+            border: '1px solid var(--app-line)',
+          }}
+        >
+          <span style={{ fontSize: 'var(--type-base)', opacity: 0.75, textWrap: 'pretty' }}>
+            The map itself needs a connection.
+          </span>
+          <span style={{ fontSize: 'var(--type-xs)', opacity: 0.5, textWrap: 'pretty', lineHeight: 'var(--leading-normal)' }}>
+            Your classes, your rooms and the official maps are below, and they work
+            without one.
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
 

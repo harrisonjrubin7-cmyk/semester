@@ -603,7 +603,9 @@ function Note({ title, children }: { title: string; children: React.ReactNode })
 
 function Problem({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-6)', color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
+    // Announced when it appears. Three call sites share this one node, which
+    // is why the role belongs here rather than at each of them.
+    <div role="alert" style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-6)', color: 'var(--app-warn)', lineHeight: 'var(--leading-normal)' }}>
       {children}
     </div>
   );
