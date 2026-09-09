@@ -348,7 +348,7 @@ export function Chat() {
               <>
                 <button
                   type="button"
-                  className="bare"
+                  className="bare tap-y"
                   onClick={() => dispatch({ type: 'back' })}
                   style={QUIET}
                 >
@@ -362,7 +362,7 @@ export function Chat() {
               <>
                 <button
                   type="button"
-                  className="bare"
+                  className="bare tap-y"
                   onClick={() => setListing(true)}
                   style={QUIET}
                 >
@@ -375,7 +375,7 @@ export function Chat() {
             )}
             {talk.turns.length > 0 && !talk.busy && (
               <>
-                <button type="button" className="bare" onClick={talk.clear} style={QUIET}>
+                <button type="button" className="bare tap-y" onClick={talk.clear} style={QUIET}>
                   NEW
                 </button>
                 <Dot />
@@ -393,7 +393,7 @@ export function Chat() {
             */}
             <button
               type="button"
-              className="bare"
+              className="bare tap-y"
               onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
               style={QUIET}
             >
@@ -423,6 +423,18 @@ export function Chat() {
   );
 }
 
+/**
+ * The small print under the composer — and why each of the four wears
+ * `bare tap-y` beside this.
+ *
+ * Set as caps at `--type-xs` they are 17px tall: measured on the running app
+ * at 390×844, CHATS came out 38×17 and SET A KEY 60×17, against a fingertip's
+ * 44. They are the whole of the chat's chrome — the way back, the history, a
+ * new thread and the key — and every one of them was a miss. `tap-y` rather
+ * than `tap`, because they share one centred row and a target that grew
+ * sideways would reach across the dot into the control beside it. See the
+ * tap-target note in `styles/app.css`.
+ */
 const QUIET = {
   width: 'auto',
   flex: 'none',
