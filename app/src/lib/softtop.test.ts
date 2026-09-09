@@ -194,6 +194,53 @@ describe('an account with something in it', () => {
     expect(stats).not.toContain('Courses');
   });
 
+  /**
+   * The one screen whose whole point is that it is not the syllabus.
+   *
+   * Settings' fix, one screen along. `Mine.tsx` opens by saying why Personal
+   * is its own tab — a syllabus deadline is trustworthy because it came out
+   * of a PDF with a citation attached, and a task you typed is a different
+   * kind of thing — and the strip above it reported the term's three numbers
+   * regardless. On a fresh account that read "Personal · 0 · No items yet"
+   * beside "Overdue 6": six coursework deadlines, under a heading saying
+   * Personal, on a screen holding nothing of your own.
+   */
+  it('counts your own things on Personal, not the term\u2019s', () => {
+    const withBoth = () =>
+      input({
+        // Two of the student's own: one late, one for today and already done.
+        tasks: [
+          { id: 't1', title: 'Call the bank', date: '2026-09-01', time: '', note: '', done: false, created: 0, courseId: null },
+          { id: 't2', title: 'Wash the kit', date: '2026-09-07', time: '', note: '', done: true, created: 0, courseId: null },
+        ] as State['tasks'],
+        appointments: [
+          { id: 'a1', title: 'Dentist', date: '2026-09-07', at: 600, time: '10:00a', note: '', where: '', created: 0 },
+        ],
+      });
+
+    const stats = softTop('mine', withBoth()).stats;
+    const of = (label: string) => stats.find((s) => s.label === label)!;
+
+    // The appointment today; the task today is ticked off, so it is not due.
+    expect(of('Due today').value).toBe('1');
+    // One task today and it is ticked, so the meter is full — the dentist is
+    // still on the day and is not in the denominator, because an appointment
+    // is not a thing you tick and a meter that could never fill is worse than
+    // no meter.
+    expect(of('Due today').fraction).toBe(1);
+    // The task dated last week, still undone. The appointment in the past
+    // would be here too if an appointment could be late, and it cannot.
+    expect(of('Overdue').value).toBe('1');
+    expect(of('This week').value).toBe('0');
+  });
+
+  it('reports nothing of its own on an empty Personal, whatever the term is doing', () => {
+    // The failure this exists for: the term's numbers standing in for yours.
+    // `full()` has a registrar deadline and a grade in it; none of that is
+    // Personal's, so every one of these is a zero.
+    expect(softTop('mine', full()).stats.map((s) => s.value)).toEqual(['0', '0', '0']);
+  });
+
   it('says the size in a unit a person reads, and never an empty account', () => {
     const size = softTop('settings', input()).stats.find((s) => s.label === 'On this device')!;
     expect(size.value).toMatch(/^\d+(\.\d)? (KB|MB)$/);

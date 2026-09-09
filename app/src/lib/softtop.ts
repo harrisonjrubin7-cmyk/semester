@@ -65,6 +65,7 @@ import { liveGuide } from './live';
 import { meetings, pairings } from './meet';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
+import { dateToIso, shiftIso } from './date';
 
 export interface TopHero {
   label: string;
@@ -164,6 +165,58 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     { label: 'Due today', value: num(due.length), fraction: settledToday.length ? doneToday.length / settledToday.length : undefined },
     { label: 'This week', value: num(soon.length) },
     { label: 'Overdue', value: num(overdue) },
+  ];
+
+  /**
+   * The same three numbers, over your own things rather than the syllabus's.
+   *
+   * Personal exists to keep the two apart — `Mine.tsx` says so at the top, and
+   * the app's premise depends on it: a syllabus deadline is trustworthy
+   * because it came out of a PDF with a citation attached, and a task you
+   * typed is a different kind of thing. The strip above it reported `term`
+   * anyway, so the one screen in the app whose whole point is the separation
+   * opened on "Personal · 0 · No items yet" beside "Overdue 6" — six
+   * coursework deadlines, under a heading saying Personal, on a screen with
+   * nothing of your own in it at all.
+   *
+   * Settings had the same shape and the same fix: three true numbers about
+   * the semester, on the one screen that is not about the semester. See the
+   * test that holds it.
+   *
+   * **Why Overdue counts tasks only.** An appointment is not a thing you
+   * finish, it is a thing that happens, so one in the past is over rather
+   * than late — calling it overdue would invent work nobody has. It counts
+   * toward today and the week, where it genuinely is something on your day.
+   *
+   * **And why the fraction counts tasks only, for the same reason.** The
+   * meter under Due today is how much of the day you have ticked off, and an
+   * appointment cannot be ticked. Counting one in the denominator would leave
+   * a meter that could not fill on any day with something in the diary, which
+   * is worse than no meter.
+   */
+  const iso = dateToIso(now);
+  const weekEnd = shiftIso(iso, 7);
+  const mineToday = state.tasks.filter((k) => k.date === iso);
+  const mine: TopStat[] = [
+    {
+      label: 'Due today',
+      value: num(
+        mineToday.filter((k) => !k.done).length +
+          state.appointments.filter((a) => a.date === iso).length,
+      ),
+      fraction: mineToday.length ? mineToday.filter((k) => k.done).length / mineToday.length : undefined,
+    },
+    {
+      label: 'This week',
+      value: num(
+        state.tasks.filter((k) => !k.done && k.date !== null && k.date > iso && k.date <= weekEnd).length +
+          state.appointments.filter((a) => a.date > iso && a.date <= weekEnd).length,
+      ),
+    },
+    {
+      label: 'Overdue',
+      value: num(state.tasks.filter((k) => !k.done && k.date !== null && k.date < iso).length),
+    },
   ];
 
   /** A screen that keeps a list: its length is the fact, and zero is a fact too. */
@@ -526,7 +579,11 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
 
     // ── Life ──────────────────────────────────────────────────────────────
     case 'mine':
-      return holds('Personal', state.tasks.length + state.notes.length + state.appointments.length, 'item');
+      return {
+        ...holds('Personal', state.tasks.length + state.notes.length + state.appointments.length, 'item'),
+        // Your own three, not the term's. See `mine` above.
+        stats: mine,
+      };
 
     case 'clocks':
       return holds('Timers', state.timers.length + state.alarms.length, 'timer');

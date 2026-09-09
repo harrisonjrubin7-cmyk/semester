@@ -46,8 +46,22 @@ export function ShellBody({ screen, children }: { screen: Screen; children: Reac
     <FoldScope value={screen}>
       <div className={cls}>
         {/* The screen's own gutter, so it lines up with the headings it folds.
-            It draws nothing at all until there are two sections to fold. */}
-        <FoldAll style={{ paddingTop: 'var(--sp-5)', paddingLeft: '18px', paddingRight: '18px' }} />
+            It draws nothing at all until there are two sections to fold.
+
+            `--page-pad` rather than the 18 it was written as. 18 *is* the
+            gutter on a phone and is only the gutter on a phone: it goes to 20
+            on a tablet and 30 on a desktop, so on a laptop this row sat twelve
+            pixels outside the column and "Collapse all" was the one word on
+            the screen not aligned with anything. `Page.tsx` has taken the
+            token since the measure was added; this was the copy that did not
+            get it. */}
+        <FoldAll
+          style={{
+            paddingTop: 'var(--sp-5)',
+            paddingLeft: 'var(--page-pad)',
+            paddingRight: 'var(--page-pad)',
+          }}
+        />
         {isExempt(screen) ? <FullBleed>{children}</FullBleed> : children}
       </div>
     </FoldScope>

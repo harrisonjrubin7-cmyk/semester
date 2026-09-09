@@ -29,6 +29,7 @@ import {
   type Stance,
 } from '../lib/essay';
 import { UseSources, appendTo } from '../components/UseSources';
+import { NeedsKey } from '../components/NeedsKey';
 
 /**
  * Drafting, for the writing that is not coursework.
@@ -351,9 +352,7 @@ export function Essay() {
           {busy ? 'Drafting…' : out ? 'Draft it again' : 'Write the draft'}
         </ActionButton>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
-          Needs a key first — set one under Settings → The assistant.
-        </div>
+        <NeedsKey />
       )}
 
       <Trouble said={trouble.said} onRetry={trouble.again} />
