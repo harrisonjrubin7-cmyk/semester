@@ -37,7 +37,7 @@ import { Walks } from '../components/Walks';
 import { BehindOffer } from '../components/BehindOffer';
 import { StartToday } from '../components/StartToday';
 import { changes, line as sinceLine, shouldSpeak, sinceLabel } from '../lib/since';
-import { GapOffer } from './Gap';
+import { GapOffer } from './GapOffer';
 import { HomeWalk } from '../components/HomeWalk';
 import { tally } from '../lib/review';
 import { hoursFor } from '../lib/select';
