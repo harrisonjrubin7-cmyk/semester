@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { Produced } from './Produced';
 import { Blueprint } from './Blueprint';
 import { ActionButton, SectionLabel } from './ui';
@@ -185,7 +186,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>{m.what}</span>
             </div>
           ))}
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Counted here rather than by Claude, because dates are arithmetic.
           </div>
         </Blueprint>
@@ -193,6 +194,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
 
       <SectionLabel>The assignment instructions</SectionLabel>
       <textarea
+        aria-label="The assignment instructions"
         className="input"
         value={instructions}
         onChange={(e) => setInstructions(e.target.value)}
@@ -202,6 +204,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
 
       <SectionLabel>Your question, in your words</SectionLabel>
       <textarea
+        aria-label="Your question, in your words"
         className="input"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
@@ -211,6 +214,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
 
       <SectionLabel>Your sources</SectionLabel>
       <textarea
+        aria-label="Your sources"
         className="input"
         value={sources}
         onChange={(e) => setSources(e.target.value)}

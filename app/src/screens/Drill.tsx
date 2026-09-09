@@ -467,6 +467,30 @@ export function Quiz() {
   const over = state.quiz.length > 0 && state.quizIdx >= state.quiz.length;
   const current = state.quiz[state.quizIdx];
 
+  /*
+   * A quiz that is not in memory is built here rather than waited for.
+   *
+   * Starting one writes `#/quiz/econ` into the address bar, which makes it a
+   * refresh, a bookmark and a link somebody sent — see `lib/route.ts`. But the
+   * ten questions are ephemeral state, so all three arrive with `state.quiz`
+   * empty, and this screen used to sit on "Building the quiz…" forever with
+   * nothing on it to press: no back, no retry, no tenth question ever coming.
+   *
+   * The two entry points build the deck the same way, so building it here is
+   * the same screen arrived at differently rather than a new behaviour. The
+   * questions differ from the ones that were on screen before the refresh, and
+   * that is the honest answer — they are drawn at random every run by design,
+   * and there is nothing recorded to restore them from.
+   */
+  useEffect(() => {
+    if (state.quiz.length === 0 && allCards(guide).length > 0) {
+      dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) });
+    }
+    // Only ever on arriving at an empty quiz. Depending on the seed would
+    // rebuild the deck under the answer being read, since `startQuiz` moves it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.quiz.length, guide]);
+
   if (over) {
     const score = state.quizScore;
     const n = state.quiz.length;
@@ -516,8 +540,20 @@ export function Quiz() {
     );
   }
 
+  /*
+   * The effect above has a deck for anything with cards in it, so reaching
+   * here means the guide has none — a course uploaded from a syllabus the
+   * cards have not been written from yet. Say that, and offer the guide,
+   * rather than leaving a screen that says it is working when it is not.
+   */
   if (!current) {
-    return <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', opacity: 0.6 }}>Building the quiz…</div>;
+    return (
+      <EmptyState
+        title="No questions yet"
+        body={`${guide.code || 'This course'} has no cards to build ten questions from. Its guide is the place to start.`}
+        action={{ label: 'Open the guide', onClick: () => dispatch({ type: 'go', screen: 'guide' }) }}
+      />
+    );
   }
 
   const answered = state.quizPicked !== null;

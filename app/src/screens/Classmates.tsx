@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -138,6 +139,7 @@ export function Classmates() {
           your email, and it does not have to be your full name.
         </div>
         <input
+          aria-label="What classmates should call you"
           className="input"
           value={handle}
           onChange={(e) => setHandle(e.target.value)}
@@ -259,6 +261,7 @@ export function Classmates() {
       <SectionLabel>Another class</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
         <input
+          aria-label="Another class"
           className="input"
           value={adding}
           onChange={(e) => setAdding(e.target.value)}
@@ -521,6 +524,7 @@ function Room({
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
         <textarea
+          aria-label="Your message"
           className="input"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -543,7 +547,7 @@ function Room({
           Send
         </button>
       </div>
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         Everybody in {code} can read this, and it is not private to a group of friends. Messages
         cannot be edited — delete and say it again.
       </div>
