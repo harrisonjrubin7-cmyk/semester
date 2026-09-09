@@ -118,3 +118,20 @@ describe('which Today is being gated', () => {
     expect(nothingOnToday('feed', EMPTY_CATALOG, none)).toBe(true);
   });
 });
+
+describe('the launcher’s one line of summary', () => {
+  /*
+   * `outstanding` is tested in `select.test.ts`; this is the other half.
+   *
+   * A helper that counts correctly and a screen that does not call it is the
+   * failure the whole file is about, one screen further on: the springboard is
+   * the home screen under its navigation, so "Nothing outstanding." with a
+   * task on the list is the first sentence the app says to somebody who opens
+   * it. Reverting the call site alone left every test green.
+   */
+  it('counts through the helper rather than reaching past it', () => {
+    const src = readFileSync(new URL('./Springboard.tsx', import.meta.url), 'utf8');
+    expect(src).toMatch(/const due = outstanding\(/);
+    expect(src).not.toMatch(/const due = catalog\.items/);
+  });
+});

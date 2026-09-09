@@ -18,6 +18,7 @@ import {
   nextClass,
   nextExam,
   nothingYet,
+  outstanding,
   railFor,
   spanOf,
   tasksOn,
@@ -367,6 +368,46 @@ describe('itemsOn and dotsForMonth', () => {
   it('does not confuse the same day of another month or year', () => {
     expect(itemsOn(CAT, NOW, 2026, 9, 9)).toEqual([]);
     expect(itemsOn(CAT, NOW, 2025, 8, 9)).toEqual([]);
+  });
+});
+
+describe('outstanding', () => {
+  const task = (id: string, done = false): PersonalTask => ({
+    id,
+    title: id,
+    date: '2026-09-09',
+    time: '',
+    note: '',
+    done,
+    created: 0,
+    courseId: null,
+  });
+
+  /*
+   * The springboard's one line of summary counted the syllabus alone, so a
+   * launcher with a task on it said "Nothing outstanding." Measured under that
+   * navigation with one task and no courses — and it is the home screen there,
+   * so it is the first sentence the app says.
+   */
+  it('counts what the student wrote down, not only what a syllabus said', () => {
+    expect(outstanding(EMPTY_CATALOG, { done: {}, tasks: [task('t')] })).toBe(1);
+  });
+
+  it('leaves out what has been ticked off, on either side', () => {
+    expect(outstanding(EMPTY_CATALOG, { done: {}, tasks: [task('t', true)] })).toBe(0);
+    const one = CAT.items[0];
+    expect(outstanding(CAT, { done: {}, tasks: [] })).toBe(CAT.items.length);
+    expect(outstanding(CAT, { done: { [one.id]: true }, tasks: [] })).toBe(CAT.items.length - 1);
+  });
+
+  it('adds the two rather than choosing between them', () => {
+    expect(outstanding(CAT, { done: {}, tasks: [task('a'), task('b')] })).toBe(
+      CAT.items.length + 2,
+    );
+  });
+
+  it('is nothing when there is nothing', () => {
+    expect(outstanding(EMPTY_CATALOG, { done: {}, tasks: [] })).toBe(0);
   });
 });
 

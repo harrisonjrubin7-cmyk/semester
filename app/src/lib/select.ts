@@ -358,6 +358,28 @@ export function nothingYet(
   );
 }
 
+/**
+ * How much is still to do — the syllabus's and the student's, together.
+ *
+ * The springboard's one line of summary counted `catalog.items` alone, so a
+ * launcher with a task on it said "Nothing outstanding." That is the home
+ * screen under that navigation, which makes it the first sentence the app
+ * says to somebody who opens it.
+ *
+ * Appointments are deliberately not counted. An appointment is not
+ * outstanding work — it is a time you have to be somewhere — and a line
+ * calling it a thing to do would be the opposite error.
+ */
+export function outstanding(
+  cat: Catalog,
+  state: { done: Record<string, boolean>; tasks: PersonalTask[] },
+): number {
+  return (
+    cat.items.filter((i) => !state.done[i.id]).length +
+    state.tasks.filter((t) => !t.done).length
+  );
+}
+
 /** Appointments on a given day, in time order. */
 export function appointmentsOn(appointments: Appointment[], date: Date): Appointment[] {
   const iso = dateToIso(date);
