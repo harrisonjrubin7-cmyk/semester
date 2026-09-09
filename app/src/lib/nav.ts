@@ -332,11 +332,52 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'write',
+    label: 'Write a document',
+    short: 'Write',
+    blurb: 'A memo, a report or a handout — headings, tables and equations, out as a real Word file.',
+    keywords: 'document doc docx word write writing memo report handout paper page pages heading headings paragraph list bullets quotation table tables equation equations formula print pdf markdown letterhead outline compose editor',
+    group: 'Make',
+    taskTags: ['make'],
+    root: 'study',
+  },
+  {
+    screen: 'sheet',
+    label: 'Sheet or table',
+    short: 'Sheet',
+    blurb: 'A grid you can type into and add up — out as a real Excel file, a CSV, or a table for your document.',
+    keywords: 'sheet sheets spreadsheet excel xlsx csv table tables grid cell cells column columns row rows formula formulas sum average total gradebook grades budget marks numbers calculate calculator google sheets numbers app pivot data',
+    group: 'Make',
+    taskTags: ['make', 'data'],
+    root: 'study',
+  },
+  {
+    screen: 'equations',
+    label: 'Equations',
+    short: 'Maths',
+    blurb: 'Write a formula properly — on screen, into a document, or as a line you can paste anywhere.',
+    keywords: 'equation equations formula formulas maths math latex mathml notation fraction exponent superscript subscript square root sum sigma greek symbol elasticity standard deviation margin of error present value regression z score expected value statistics',
+    group: 'Make',
+    taskTags: ['make', 'study'],
+    root: 'study',
+  },
+  {
     screen: 'sources',
     label: 'Sources',
     blurb: 'Every reading you have kept, with what each is for — and out as BibTeX.',
     keywords: 'source sources citation citations bibliography reference references reading list bibtex zotero overleaf works cited quote author year paper article book cite',
-    group: 'Make',
+    /*
+     * Courses rather than Make, since the making screens arrived.
+     *
+     * Make was at ten with a shelf limit of eight, and of the ten this is the
+     * one that is least a thing you make: a source list is the readings your
+     * courses set, kept so a bibliography can be trusted. It sits with the
+     * other course upkeep — adding one, editing one, folding in what changed —
+     * and it is still tagged `make`, so it goes on turning up under that
+     * intention wherever tasks rather than shelves are what somebody is
+     * reading.
+     */
+    group: 'Courses',
     taskTags: ['make', 'study'],
     root: 'study',
   },
@@ -483,7 +524,17 @@ export const DESTINATIONS: Destination[] = [
     label: 'Email',
     blurb: 'Draft the email you have been putting off — extension, question, meeting.',
     keywords: 'email mail write draft professor reply extension office hours absence recommendation letter follow up gmail outlook compose message send',
-    group: 'Make',
+    /*
+     * Life rather than Make, since the making screens arrived.
+     *
+     * The second of the two Make had to give up, and the better home was
+     * already obvious: People and letters is on Life and is the screen about
+     * the humans in your term — who you have written to, whose letter you are
+     * waiting on — and an email to a professor is the same errand. It keeps
+     * its `make` tag, so it is still a drafting tool wherever the app groups
+     * by intention.
+     */
+    group: 'Life',
     taskTags: ['campus', 'make'],
     root: 'courses',
   },

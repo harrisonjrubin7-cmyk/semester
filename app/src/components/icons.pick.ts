@@ -20,6 +20,7 @@ import {
   CoursesIcon,
   DeckIcon,
   DrawIcon,
+  EquationsIcon,
   EssayIcon,
   ExamIcon,
   MailIcon,
@@ -29,6 +30,7 @@ import {
   Person,
   ProofIcon,
   RunwayIcon,
+  SheetIcon,
   SolveIcon,
   SourcesIcon,
   StudyIcon,
@@ -36,6 +38,7 @@ import {
   UpdateIcon,
   UpkeepIcon,
   WorkIcon,
+  WriteIcon,
 } from './Icons';
 import { destination, type Group } from '../lib/nav';
 import type { Screen } from '../lib/types';
@@ -70,6 +73,9 @@ const OWN: Partial<Record<Screen, Glyph>> = {
   solve: SolveIcon,
   exam: ExamIcon,
   deck: DeckIcon,
+  write: WriteIcon,
+  sheet: SheetIcon,
+  equations: EquationsIcon,
   sources: SourcesIcon,
   essay: EssayIcon,
   runway: RunwayIcon,

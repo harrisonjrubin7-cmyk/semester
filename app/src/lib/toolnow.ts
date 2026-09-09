@@ -106,6 +106,12 @@ const DATA = /\b(data|dataset|csv|regression|statistic|statistics|empirical|surv
 /** A title that names something you stand up and present. */
 const TALK = /\b(present|presentation|slides|deck|pitch|talk)\b/i;
 
+/** A title that names a document rather than an essay — the shape Write makes. */
+const DOCUMENT = /\b(memo|report|brief|briefing|handout|summary|one-?pager|proposal|case study)\b/i;
+
+/** A title that is arithmetic: something with a table and a total in it. */
+const SUMS = /\b(budget|spreadsheet|worksheet|model|forecast|calculation|calculations|table|figures|financials?)\b/i;
+
 /**
  * The two or three tools this fortnight asks for.
  *
@@ -202,6 +208,34 @@ export function suggest(
         courseId: it.courseId,
         score: 3 + soon,
         why: `“${named}” due ${it.when} — a real PowerPoint file, from a unit you already have.`,
+      });
+    }
+
+    /*
+     * The two making screens, off the title rather than the kind.
+     *
+     * A syllabus calls the same kind of thing a Paper and a Memo, and the two
+     * want different tools: one is prose, which is `work` and `proof`; the
+     * other is a document with headings and a table in it, which nothing
+     * suggested before this existed. Same for the arithmetic — a budget or a
+     * set of figures is a sheet, and nobody thinks to look for one under a
+     * study app.
+     */
+    if (DOCUMENT.test(it.title)) {
+      add({
+        screen: 'write',
+        courseId: it.courseId,
+        score: 2.9 + soon,
+        why: `“${named}” due ${it.when} — headings, a table and an equation, out as a Word file.`,
+      });
+    }
+
+    if (SUMS.test(it.title)) {
+      add({
+        screen: 'sheet',
+        courseId: it.courseId,
+        score: 2.7 + soon,
+        why: `“${named}” due ${it.when} — a grid that adds itself up, out as a real Excel file.`,
       });
     }
   }
