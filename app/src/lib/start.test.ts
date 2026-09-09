@@ -214,3 +214,140 @@ describe('the first action', () => {
     }
   });
 });
+
+/**
+ * The runway's promises, over shapes rather than at a worked example.
+ *
+ * `startFor` answers the one question this file exists for — the day to begin
+ * — and its docblock stakes out the ground: "Returns null where nothing can be
+ * estimated. Never a fallback: a made-up start date is the one number somebody
+ * would arrange a fortnight around." These are the things that must hold
+ * whatever windows somebody set, over three thousand generated shapes from one
+ * fixed seed.
+ */
+describe('when to begin, over many shapes', () => {
+  const due = new Date(2026, 10, 20); // Friday 20 November 2026
+  const window = (days: number[], from: number, to: number): Window => ({
+    id: `w${days.join('')}-${from}`,
+    label: 'w',
+    days,
+    from,
+    to,
+  });
+
+  const shapes = () => {
+    let s = 777;
+    const rnd = () => {
+      s = (s * 9301 + 49297) % 233280;
+      return s / 233280;
+    };
+    return Array.from({ length: 600 }, () => {
+      const n = Math.floor(rnd() * 4);
+      const windows: Window[] = [];
+      for (let i = 0; i < n; i++) {
+        const from = Math.floor(rnd() * 20) * 60;
+        windows.push(
+          window(
+            [0, 1, 2, 3, 4, 5, 6].filter(() => rnd() > 0.5),
+            from,
+            from + (1 + Math.floor(rnd() * 5)) * 60,
+          ),
+        );
+      }
+      return { windows, minutes: Math.round(rnd() * 3000) };
+    });
+  };
+
+  it('never says begin after the deadline, and never counts a negative runway', () => {
+    let checked = 0;
+    for (const { windows, minutes } of shapes()) {
+      const got = startFor(due, minutes, windows);
+      if (!got) continue;
+      checked++;
+      expect(got.on.getTime()).toBeLessThanOrEqual(due.getTime());
+      expect(got.runway).toBeGreaterThanOrEqual(0);
+    }
+    expect(checked).toBeGreaterThan(200);
+  });
+
+  /*
+   * Both halves. "Enough" alone is satisfied by any runway that is too long —
+   * a deliberate `back + 1` passes it — and a runway a day longer than the
+   * work needs is a day of somebody's life spent on a paper that did not need
+   * it. So the day before the answer must *not* hold the work.
+   */
+  it('gives a runway that holds the work, and not a day more', () => {
+    let checked = 0;
+    let tight = 0;
+    for (const { windows, minutes } of shapes()) {
+      const got = startFor(due, minutes, windows);
+      if (!got) continue;
+      checked++;
+
+      const hoursOver = (days: number) => {
+        let have = 0;
+        const day = new Date(due);
+        for (let i = 0; i <= days; i++) {
+          have += hoursFor(windows, day.getDay());
+          day.setDate(day.getDate() - 1);
+        }
+        return have;
+      };
+
+      expect(hoursOver(got.runway)).toBeGreaterThanOrEqual(minutes / 60 - 1e-9);
+      if (got.runway > 0) {
+        tight++;
+        expect(hoursOver(got.runway - 1)).toBeLessThan(minutes / 60);
+      }
+    }
+    expect(checked).toBeGreaterThan(200);
+    expect(tight).toBeGreaterThan(100);
+  });
+
+  it('never lets more work be started later', () => {
+    let checked = 0;
+    for (const { windows, minutes } of shapes()) {
+      const got = startFor(due, minutes, windows);
+      const more = startFor(due, minutes + 60, windows);
+      if (!got || !more) continue;
+      checked++;
+      expect(more.on.getTime()).toBeLessThanOrEqual(got.on.getTime());
+    }
+    expect(checked).toBeGreaterThan(200);
+  });
+
+  /*
+   * Within one regime only. Adding a window to an empty set is not "more
+   * hours": it moves the answer from the sixteen-hour waking day the app
+   * assumes when nobody has said, to only what they did say — which is the
+   * whole difference between a default and a measurement, and is stated on
+   * screen rather than passed off as one. A refactor that "helpfully" unified
+   * the two would pass every other test here.
+   */
+  it('never lets more hours start you earlier, once you have said any', () => {
+    let checked = 0;
+    for (const { windows, minutes } of shapes()) {
+      if (windows.length === 0) continue;
+      const got = startFor(due, minutes, windows);
+      const richer = startFor(due, minutes, [...windows, window([0, 1, 2, 3, 4, 5, 6], 480, 720)]);
+      if (!got || !richer) continue;
+      checked++;
+      expect(richer.on.getTime()).toBeGreaterThanOrEqual(got.on.getTime());
+    }
+    expect(checked).toBeGreaterThan(100);
+  });
+
+  it('answers nothing rather than a made-up day', () => {
+    // "Never a fallback: a made-up start date is the one number somebody would
+    // arrange a fortnight around."
+    expect(startFor(due, 0, [])).toBeNull();
+    expect(startFor(due, -60, [])).toBeNull();
+    expect(startFor(due, NaN, [])).toBeNull();
+    // More work than a term of windows holds.
+    expect(startFor(due, 1e9, [])).toBeNull();
+    // Windows that offer no hour at all: a day list with nothing in it, and a
+    // span that starts and ends at the same minute.
+    expect(startFor(due, 60, [window([], 0, 0)])).toBeNull();
+    expect(startFor(due, 60, [window([1, 2, 3, 4, 5], 540, 540)])).toBeNull();
+  });
+});
