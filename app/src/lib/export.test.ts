@@ -150,6 +150,67 @@ describe('toIcs', () => {
     expect(ics).not.toContain('DTSTART;VALUE=DATE:20260914');
   });
 
+  /*
+   * The DTSTART of this very item was already asserted above. Its DTEND was
+   * not, and it read `20260914T242900` — minutes past midnight printed as an
+   * hour, so anything ending after midnight wrote an hour of 24 or more.
+   * RFC 5545 gives the hour the range 00-23; that is a malformed time, not a
+   * late one, and a client may drop the event, drop its end, or refuse the
+   * file. 11:59 PM is the commonest deadline in any syllabus and this app's
+   * own default, so it was very nearly every timed export.
+   */
+  it('rolls a deadline that ends after midnight into the next day', () => {
+    expect(ics).toContain('DTSTART:20260914T235900');
+    expect(ics).toContain('DTEND:20260915T002900');
+    expect(ics).not.toMatch(/DTEND:\d{8}T(2[4-9]|[3-9]\d)/);
+  });
+
+  it('keeps an ordinary hour on its own day', () => {
+    const five = toIcs(deadlineEvents([item({ dueAt: 17 * 60, dueTime: '5:00p' })], code));
+    expect(five).toContain('DTSTART:20260914T170000');
+    expect(five).toContain('DTEND:20260914T173000');
+  });
+
+  it('writes no hour above 23 anywhere, whatever the length', () => {
+    // The wall clock is what an iCalendar time with no `Z` means, so the
+    // arithmetic is in whole days and leftover minutes rather than in
+    // milliseconds added to a Date.
+    for (const at of [0, 1, 12 * 60, 23 * 60 + 30, 23 * 60 + 59]) {
+      for (const minutes of [0, 30, 60, 90, 24 * 60, 3 * 24 * 60 + 5]) {
+        const out = toIcs([{ uid: 'u', summary: 's', date: new Date(2026, 8, 14), at, minutes }]);
+        for (const line of out.split('\r\n')) {
+          const m = /^DT(?:START|END):\d{8}T(\d{2})(\d{2})/.exec(line);
+          if (!m) continue;
+          expect(Number(m[1]), `${line} from at=${at} minutes=${minutes}`).toBeLessThan(24);
+          expect(Number(m[2])).toBeLessThan(60);
+        }
+      }
+    }
+  });
+
+  /*
+   * DTSTAMP is the field a calendar uses to decide which version of an event
+   * is newer, so a wrong one is a re-import that gets ignored — and that
+   * defeats the stable `uid` this file is careful about, whose whole job is
+   * that a deadline that moves updates the entry already in the calendar.
+   *
+   * The date came off the local calendar while the clock beside it was
+   * already UTC, under a `Z` that claims both are. Invisible on a UTC runner,
+   * which is why `npm run test:zones` exists — and why this assertion is
+   * about the date and not only the shape.
+   */
+  it('stamps in UTC, all of it, because the Z says so', () => {
+    // A fixed instant, so this says the same thing in every timezone. Late
+    // on the 14th in UTC is already the 15th anywhere past UTC+1, which is
+    // the disagreement the old line printed: the local date under a UTC
+    // clock, with a `Z` claiming both.
+    const at = new Date(Date.UTC(2026, 8, 14, 23, 30, 5));
+    const line = toIcs(deadlineEvents([item()], code), 'Semester', at)
+      .split('\r\n')
+      .find((l) => l.startsWith('DTSTAMP:'))!;
+    expect(line).toBe('DTSTAMP:20260914T233005Z');
+  });
+
   it('leaves a deadline with no stated hour all-day rather than at midnight', () => {
     // Midnight is wrong twice: some clients show it on the previous evening,
     // and it asserts a time nobody wrote.

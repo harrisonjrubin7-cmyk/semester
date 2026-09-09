@@ -214,11 +214,35 @@ export const ALARMS = [16 * 60, 60];
  * `METHOD:PUBLISH` marks this as a feed rather than an invitation, which stops
  * a mail client offering to RSVP to a problem set.
  */
-export function toIcs(events: IcsEvent[], name = 'Semester'): string {
-  const now = new Date();
+export function toIcs(
+  events: IcsEvent[],
+  name = 'Semester',
+  /*
+   * Defaulted here rather than read inside, so a test can pin it.
+   *
+   * The same argument `applyReviews` makes in `lib/live.ts`: the value
+   * genuinely belongs to the function that needs it. Without the seam the
+   * only assertion available about DTSTAMP is one that compares it to the
+   * clock it was just read from, which is true however wrong the field is —
+   * and the field was wrong.
+   */
+  now = new Date(),
+): string {
+  /*
+   * All of it in UTC, because the `Z` says it is.
+   *
+   * The date came off `dateStamp`, which reads the local calendar, while the
+   * clock beside it was already UTC — so any evening west of Greenwich, and
+   * any morning east of it, wrote a UTC time under the wrong day and put
+   * DTSTAMP hours out. It is the field a calendar uses to decide which
+   * version of an event is newer, and a stale-looking one is a re-import
+   * that gets ignored — which defeats the stable `uid` two functions down,
+   * whose whole job is that a deadline that moves updates the entry already
+   * in somebody's calendar.
+   */
   const stamp =
-    `${dateStamp(now)}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}` +
-    `${pad(now.getUTCSeconds())}Z`;
+    `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}` +
+    `T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
 
   const lines: string[] = [
     'BEGIN:VCALENDAR',
@@ -243,10 +267,33 @@ export function toIcs(events: IcsEvent[], name = 'Semester'): string {
       lines.push(`DTSTART;VALUE=DATE:${dateStamp(e.date)}`);
       lines.push(`DTEND;VALUE=DATE:${dateStamp(next)}`);
     } else {
-      const start = `${dateStamp(e.date)}T${pad(Math.floor(e.at / 60))}${pad(e.at % 60)}00`;
-      const end = e.at + (e.minutes ?? 60);
-      lines.push(`DTSTART:${start}`);
-      lines.push(`DTEND:${dateStamp(e.date)}T${pad(Math.floor(end / 60))}${pad(end % 60)}00`);
+      /*
+       * The end rolls into the next day, which it did not.
+       *
+       * The end was minutes-past-midnight formatted as an hour and a minute,
+       * so anything finishing after midnight wrote an hour of 24 or more:
+       * a deadline at 11:59 PM — the commonest time in any syllabus, and the
+       * app's own default — came out as `DTEND:20260904T242900`. RFC 5545
+       * gives the hour two digits and the range 00–23, so that is not a late
+       * time, it is a malformed one, and a client is free to drop the event,
+       * drop its end, or refuse the file. The tests here checked the DTSTART
+       * of exactly this item and never its DTEND.
+       *
+       * Counted in whole days and leftover minutes rather than by adding
+       * milliseconds to a Date: an iCalendar time with no `Z` is a wall clock,
+       * and wall clocks are what these are. Adding half an hour to 11:59 PM
+       * on the night the clocks go forward should still be half an hour
+       * later on the clock.
+       */
+      const total = e.at + Math.max(0, e.minutes ?? 60);
+      const endDate = new Date(
+        e.date.getFullYear(),
+        e.date.getMonth(),
+        e.date.getDate() + Math.floor(total / 1440),
+      );
+      const endAt = total % 1440;
+      lines.push(`DTSTART:${dateStamp(e.date)}T${pad(Math.floor(e.at / 60))}${pad(e.at % 60)}00`);
+      lines.push(`DTEND:${dateStamp(endDate)}T${pad(Math.floor(endAt / 60))}${pad(endAt % 60)}00`);
     }
     lines.push(`SUMMARY:${icsText(e.summary)}`);
     if (e.description) lines.push(`DESCRIPTION:${icsText(e.description)}`);
