@@ -590,7 +590,7 @@ export const DESTINATIONS: Destination[] = [
     // report and a directory. It is the second thing it does that people come
     // for, so the name says the first.
     label: 'Progress',
-    blurb: 'Your load at a glance, and everything else the app can do.',
+    blurb: 'What is late, what the week holds, and everything else the app can do.',
     // Three tabs' worth, because the Everything screen merged into this one:
     // "where does the thing live" is the shelves, "what am I trying to do" is
     // the task view, and both used to be a second directory of their own.

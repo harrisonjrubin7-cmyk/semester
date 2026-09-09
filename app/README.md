@@ -68,8 +68,11 @@ the registries and the test only checks that it was run. See
   clubs and university events.
 - **Mine** — your own tasks, appointments, notes and files, kept visibly apart
   from anything a syllabus produced.
-- **Me** — load by course, the account connections, settings and the syllabus
-  importer.
+- **Progress** — where you stand, in one sentence, with the two or three things
+  worth doing about it; the next seven days as a shape you can press a day of;
+  the term, the drilling, the load per course and how long work actually takes
+  you. Its other two tabs are the app's own directory — every screen by shelf,
+  and every screen by what you are trying to do.
 
 ## Two axes: how you move, and how a screen is drawn
 
