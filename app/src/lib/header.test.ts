@@ -82,3 +82,42 @@ describe('the header', () => {
     }
   });
 });
+
+/*
+ * The header's icon buttons are the app's most-pressed controls — back, add,
+ * search, alerts — and they are on almost every screen. They draw at 36px,
+ * which is under the 44px floor, so each carries a `.tap` overlay that grows
+ * the hit area without changing what you see.
+ *
+ * That overlay reaches 4px past the button on each side, so the row's gap
+ * decides whether the overlays sit side by side or fight. At the 2px gap this
+ * row shipped with, the pitch was 38px and they overlapped: measured on the
+ * live bundle at 390x844, a tap 21px right of Search's centre pressed Alerts.
+ * Eight puts the pitch at exactly 44.
+ *
+ * Neither half is visible in a screenshot and neither fails a type check, so
+ * both are held here: drop the class or tighten the gap and this says so.
+ */
+describe('the header buttons a thumb has to hit', () => {
+  const src = () => readFileSync('src/App.tsx', 'utf8');
+
+  it('grows every icon button to a 44px hit area', () => {
+    const withoutTap = [...src().matchAll(/className="btn btn-ghost btn-icon(?! tap)"/g)];
+    expect(withoutTap.map(() => 'btn-icon without .tap')).toEqual([]);
+  });
+
+  it('still has icon buttons to check', () => {
+    // Guards the assertion above: were the class string to change shape, the
+    // negative match would pass on nothing at all.
+    expect([...src().matchAll(/className="btn btn-ghost btn-icon tap"/g)].length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('keeps the action row wide enough that those areas do not overlap', () => {
+    // 36px button + 8px gap = 44px pitch, which is the overlay's own width.
+    // --sp-1 (2px) and --sp-2 (4px) both put the buttons back on top of one
+    // another; only --sp-4 and up clear it.
+    const row = /<div style=\{\{ display: 'flex', gap: '(var\(--sp-\d\))', flex: 'none', alignItems: 'center' \}\}>/.exec(src());
+    expect(row, 'the header action row has moved; point this test at it').not.toBeNull();
+    expect(row![1]).toBe('var(--sp-4)');
+  });
+});

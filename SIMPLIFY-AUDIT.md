@@ -413,14 +413,17 @@ ruled that `grades` stays a screen; this is the second door to it.
 
 ### Kept, with the reason
 
-- **Study → "Tonight" is not the `tonight` screen.** The tab is "Tonight's 25
-  minutes": weakest unit per course, ordered by mastery, opening a card drill.
-  The screen is points of final grade per hour over outstanding deadlines. Two
-  questions — *what should I revise* and *how do I spend the evening* — that
-  happen to share a word. Both kept, per the rule about two things that look
-  alike. **The shared name was the real cost, and it is the half that could be
-  fixed without merging anything: the tab is "Revise" (T3). Two jobs, two
-  names, both still there.**
+- **Study → "Tonight" is not the `tonight` screen.** The tab ranks every unit
+  in every course by what has come round in the review schedule, how cold it
+  is and what is tested soon, then fills the time you say you have and starts
+  the cards. The screen is points of final grade per hour over outstanding
+  deadlines. Two questions — *what should I revise* and *how do I spend the
+  evening* — that happen to share a word. Both kept, per the rule about two
+  things that look alike. **The shared name was the real cost, and it is the
+  half that could be fixed without merging anything: the tab is "Revise" (T3).
+  Two jobs, two names, both still there.** (The tab was "Tonight's 25 minutes"
+  — the weakest unit per course, sized by a fixed string in the course module —
+  until `lib/revise.ts`.)
 - **Progress → "Everything" is not the `everything` screen.** `Everything.tsx`
   argues this out in its own file comment and section 1 Cluster D accepted it:
   "where is the thing called X" versus "what would I use this for, and what
@@ -525,6 +528,24 @@ as a finding — and one of them was a null result for the wrong reason.
 
 ---
 
+
+### T2, a third time — the destination comes back, on Semester
+
+Reversed again, by the person the app is for. The reasoning in this section
+is about *which of Courses and the tab* is the copy, and it answers that
+well. It does not answer the question actually being asked, which is whether
+"how am I doing" is a thing you go to or a thing you find while looking at
+something else.
+
+It goes back to being a destination, and to Semester rather than Courses:
+the shelf that already holds Reports and When you are behind, which are the
+other two ways of asking it. `root` stays `courses`, so the tab bar still
+lights Courses when you are on it — the answer above about which screen it
+is a view of was never in dispute.
+
+The tab goes, so there is still exactly one way in. That is the half of §5
+and §6 that has held through all three turns: whatever the grade table is,
+it should not be two things at once.
 ## Appendix — the first pass, resolved
 
 Run at `ac5a2c8` against 59 destinations. Kept because the verdicts still hold
