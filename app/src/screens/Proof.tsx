@@ -15,8 +15,9 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { CheckIt } from '../components/CheckIt';
-import { SectionLabel } from '../components/ui';
+import { PickChips, SectionLabel } from '../components/ui';
 import type { Stance } from '../lib/essay';
+import type { CourseId } from '../lib/types';
 
 export function Proof() {
   const { catalog } = useStore();
@@ -56,26 +57,14 @@ export function Proof() {
       {catalog.courses.length > 0 ? (
         <>
           <SectionLabel style={{ margin: '22px 0 8px' }}>Is this for a course?</SectionLabel>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-            {[{ id: '', code: 'Not for a course' }, ...catalog.courses].map((c) => (
-              <button
-                key={c.id || 'none'}
-                type="button"
-                className="bare tappable"
-                aria-pressed={courseId === c.id}
-                onClick={() => setCourseId(c.id)}
-                style={{
-                  width: 'auto',
-                  padding: '8px 13px',
-                  borderRadius: 'var(--r-md)',
-                  border: `1px solid ${courseId === c.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-                  fontSize: 'var(--type-sm)',
-                }}
-              >
-                {c.code}
-              </button>
-            ))}
-          </div>
+          <PickChips
+            options={['', ...catalog.courses.map((c) => c.id)]}
+            value={courseId}
+            onChange={(id) => setCourseId(id as typeof courseId)}
+            labels={(id) =>
+              id === '' ? 'Not for a course' : (catalog.byId[id as CourseId]?.code ?? String(id))
+            }
+          />
           <p
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',

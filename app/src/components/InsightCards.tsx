@@ -110,7 +110,12 @@ function One({ insight }: { insight: Insight }) {
                `space-between`, so they sit at opposite ends and the room a
                thumb needs is above and below. */
             className="bare tappable tap-y"
-            onClick={() => dispatch({ type: 'go', screen: insight.action!.screen })}
+            onClick={() => {
+              // The grain first, so the screen paints on the part the finding
+              // is about rather than switching under somebody.
+              if (insight.action!.tab) dispatch({ type: 'setCoursesTab', tab: insight.action!.tab });
+              dispatch({ type: 'go', screen: insight.action!.screen });
+            }}
             style={{
               width: 'auto',
               flex: 'none',
