@@ -83,7 +83,30 @@ export function readWeight(pct: string): {
   /** The figure when the syllabus stated points rather than a percentage. */
   points: number | null;
 } {
-  const extra = /\+|\bEC\b|extra credit/i.test(pct);
+  /*
+   * A plus counts as a bonus only where it is attached to the figure.
+   *
+   * This tested for a bare `+` anywhere in the string. Right for "+3% EC" and
+   * wrong for the ordinary way a syllabus joins two things — "Exams 1 + 2,
+   * 40%", "Midterm + final, 45%". That column carries prose (this same
+   * function reads a weight out of "Best 2 of 3 exams, 60%"), so those are
+   * inputs to expect rather than malformed ones.
+   *
+   * Reading one as a bonus takes its weight out of the denominator, because
+   * `standing` counts only the rows that are not extra. A course marked out
+   * of 100 silently becomes a course marked out of 60, the "your weights add
+   * to 60%" caveat fires, and every band on the Grades screen is a confident
+   * wrong number — the worst shape a bug can take, since nothing looks broken.
+   *
+   * `(^|[^\d])\+\d` is the whole distinction: a plus stuck to its number,
+   * and not one already sitting after a number. "+3%" is a bonus; "1 + 2" and
+   * "1+2" are two things added together. Written without a lookbehind so it
+   * runs on every phone this ships to.
+   *
+   * The words a syllabus uses when it means a bonus are read too, since those
+   * say it outright and never need the punctuation.
+   */
+  const extra = /(^|[^\d])\+\d|\bEC\b|extra credit|\bbonus\b/i.test(pct);
 
   // A range first, and only when the two numbers are joined by a dash: real
   // tables write "25–30%" with a single per-cent sign at the end. Matching
