@@ -13,11 +13,9 @@ import { NOTIFICATIONS } from '../data/misc';
 import { datedItems, loadByCourse } from '../lib/select';
 import {
   GROUPS,
-  byTask,
   destinationsIn,
   lately,
   listed,
-  offered,
   saysFor,
   type Group as Shelves,
 } from '../lib/nav';
@@ -25,6 +23,7 @@ import { arranged, useMovable } from '../lib/arrange';
 import { readOrder, tilesFor, writeOrder } from '../lib/launcher';
 import { currentLook } from '../state/shape';
 import { Launcher } from '../components/nav/Launcher';
+import { ByTask } from '../components/nav/ByTask';
 import { directoryOf } from '../lib/look';
 
 import type { CourseModule, Screen } from '../lib/types';
@@ -723,48 +722,27 @@ export function Me() {
         </>
       )}
 
-      {tab === 'task' && (
-        <>
-          {/*
-            The same screens, filed under what somebody is trying to do.
+      {/*
+        The same screens, filed under what somebody is trying to do.
 
-            This was a screen of its own — Everything — whose four views were
-            these task headings, the shelves above, the never-opened list that
-            `NotYetOpened` already draws, and the shortcut sheet that `?` and
-            the guide already carry. Three of the four were this tab with
-            different headings, so the screen went and the one view that was
-            genuinely its own came here, drawn with the same `Panel` and the
-            same rows as the shelves beside it.
+        This was a screen of its own — Everything — whose four views were
+        these task headings, the shelves above, the never-opened list that
+        `NotYetOpened` already draws, and the shortcut sheet that `?` and the
+        guide already carry. Three of the four were this tab with different
+        headings, so the screen went and the one view that was genuinely its
+        own came here.
 
-            A screen appears under every task it serves, so several appear more
-            than once. That is the difference from the shelves, where a screen
-            sits on exactly one: a shelf is where a thing lives, and a task is
-            what you wanted when you went looking for it.
-          */}
-          <p
-            style={{
-              fontSize: 'var(--type-sm)',
-              opacity: 0.6,
-              lineHeight: 'var(--leading-normal)',
-              margin: '0 0 var(--sp-6)',
-            }}
-          >
-            The same screens, filed under what you would be trying to do. Several appear more than
-            once, because they answer more than one question.
-          </p>
-          <nav aria-label="By task" style={{ margin: '0 -18px' }}>
-            {byTask(
-              offered(school.capabilities).filter((d) => !HIDE_IN_ME.includes(d.screen)),
-            ).map((section) => (
-              <Panel key={section.tag} header={section.label}>
-                {section.rows.map((d) => (
-                  <Destination key={d.screen} to={d} account={account} />
-                ))}
-              </Panel>
-            ))}
-          </nav>
-        </>
-      )}
+        Its own component now rather than fifty lines inline, because it grew
+        a filter, a jump bar and a column rule of its own and none of those
+        are things the You tab or the Everything tab has any use for.
+        `components/nav/ByTask.tsx` says what each is for. A screen appears
+        under every task it serves, so several appear more than once — that is
+        the difference from the shelves, where a screen sits on exactly one: a
+        shelf is where a thing lives, and a task is what you wanted when you
+        went looking for it.
+      */}
+      {tab === 'task' && <ByTask />}
+
     </Page>
   );
 }
