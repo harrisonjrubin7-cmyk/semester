@@ -1,5 +1,5 @@
 import { budget, hasPolicy, tally } from './attend';
-import { standing } from './grades';
+import { extrasFor, standing } from './grades';
 import { datedItems } from './select';
 import type { Catalog } from '../data/catalog';
 import { liveGuide } from './live';
@@ -231,7 +231,11 @@ export function build(
 
     // Grades, only where something has been entered. An empty table teaches
     // the answer nothing and still costs a paragraph.
-    const s = standing(full, state.grades, { pieces: state.pieces, drops: state.drops });
+    // The extras every other caller uses. This file used to leave the
+    // attendance pair out and the comment below explains what that cost; see
+    // `extrasFor` in `lib/grades.ts`, which is now the only place they are
+    // assembled.
+    const s = standing(full, state.grades, extrasFor(course.id, state));
     const graded = s.rows.filter((r) => r.score !== null);
     if (graded.length > 0 && !already(course.code)) {
       parts.push(

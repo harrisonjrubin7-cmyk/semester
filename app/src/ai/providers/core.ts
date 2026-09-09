@@ -1,5 +1,5 @@
-import { NO_POLICY, pointsOff, rate, tally } from '../../lib/attend';
-import { standing } from '../../lib/grades';
+import { tally } from '../../lib/attend';
+import { extrasFor, standing } from '../../lib/grades';
 import { datedItems } from '../../lib/select';
 import { forScope, insights } from '../../insights';
 import { factsFrom } from '../../insights/facts';
@@ -92,14 +92,8 @@ export const grades: Provide = (look) => {
      * weights it makes it a row in the table, and leaving it out here would
      * produce a different total from the same data.
      */
-    const policy = state.attendPolicy[c.id] ?? NO_POLICY;
-    const t = tally(state.attendance, c.id);
-    const s = standing(full, state.grades, {
-      pieces: state.pieces,
-      drops: state.drops,
-      pointsOff: pointsOff(policy, t),
-      attendance: { worth: policy.worth, rate: rate(t) },
-    });
+    // One assembly for all four callers — see `extrasFor` in `lib/grades.ts`.
+    const s = standing(full, state.grades, extrasFor(c.id, state));
     return {
       course: full.code,
       running: pct(s.current),

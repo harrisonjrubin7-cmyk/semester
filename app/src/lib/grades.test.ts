@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TARGETS, key, needCaveat, needFor, reachFor, reaches, readScore, readWeight, standing } from './grades';
+import { TARGETS, extrasFor, key, needCaveat, needFor, reachFor, reaches, readScore, readWeight, standing } from './grades';
 import type { Standing } from './grades';
 import type { Course } from './types';
 
@@ -429,5 +429,70 @@ describe('a plus in a weight', () => {
     const bonus = readWeight('+3% EC');
     const counted = [joined, bonus].filter((r) => !r.extra).reduce((n, r) => n + (r.weight ?? 0), 0);
     expect(counted, 'the 40% counts and the 3% bonus does not').toBe(40);
+  });
+});
+
+/**
+ * Four callers, one answer.
+ *
+ * `screens/Grades.tsx`, `screens/Courses.tsx`, `ai/providers/core.ts` and
+ * `lib/context.ts` all ask `standing` about the same course, and two of them
+ * used to ask a different question — pieces and drops, with the attendance
+ * pair left out. On a syllabus that makes attendance a graded category, which
+ * BUS 1600 and PSCI 1104 both do:
+ *
+ *     with the extras     current 74.0%  weights 100  incomplete false
+ *     without them        current 76.7%  weights  90  incomplete true
+ *
+ * Two running grades for one course, on two screens one tap apart, and the
+ * tile is the one a student sees first.
+ */
+describe('the extras a grade is worked out from', () => {
+  const course = {
+    id: 'c',
+    code: 'HIST 1500',
+    grading: [
+      { what: 'Essays', pct: '60%' },
+      { what: 'Final', pct: '30%' },
+    ],
+  } as unknown as Parameters<typeof standing>[0];
+
+  const from = {
+    pieces: {},
+    drops: {},
+    attendance: [
+      { id: 'c:1', courseId: 'c', date: '2026-09-01', mark: 'absent', at: 0 },
+      { id: 'c:2', courseId: 'c', date: '2026-09-03', mark: 'absent', at: 0 },
+      { id: 'c:3', courseId: 'c', date: '2026-09-05', mark: 'absent', at: 0 },
+      { id: 'c:4', courseId: 'c', date: '2026-09-08', mark: 'present', at: 0 },
+      { id: 'c:5', courseId: 'c', date: '2026-09-10', mark: 'present', at: 0 },
+      { id: 'c:6', courseId: 'c', date: '2026-09-12', mark: 'present', at: 0 },
+    ],
+    attendPolicy: { c: { allowed: 2, penaltyPer: 0, worth: 10, note: '' } },
+  } as unknown as Parameters<typeof extrasFor>[1];
+
+  it('carries attendance as a category, so the weights add up', () => {
+    const s = standing(course, { 'c:0': '80', 'c:1': '70' }, extrasFor('c', from));
+    expect(Math.round(s.counted + s.remaining)).toBe(100);
+    expect(s.incomplete).toBe(false);
+    expect(s.current).toBeCloseTo(74, 1);
+  });
+
+  it('is what the callers that left it out used to disagree with', () => {
+    // The old shape, kept here as the thing the fix is against.
+    const without = standing(course, { 'c:0': '80', 'c:1': '70' }, { pieces: {}, drops: {} });
+    expect(Math.round(without.counted + without.remaining)).toBe(90);
+    expect(without.incomplete).toBe(true);
+    expect(without.current).toBeCloseTo(76.7, 1);
+  });
+
+  it('answers a course with no policy exactly as it did before', () => {
+    // Most courses. Nothing here may move for them.
+    const plain = { pieces: {}, drops: {}, attendance: [], attendPolicy: {} } as never;
+    const s = standing(course, { 'c:0': '80' }, extrasFor('c', plain));
+    const old = standing(course, { 'c:0': '80' }, { pieces: {}, drops: {} });
+    expect(s.current).toBe(old.current);
+    expect(s.counted).toBe(old.counted);
+    expect(s.incomplete).toBe(old.incomplete);
   });
 });

@@ -16,6 +16,7 @@
 
 import type { Course, GradeRow } from './types';
 import { afterDrops, readScores } from './drop';
+import { NO_POLICY, pointsOff, rate, tally, type AttendPolicy, type Attended } from './attend';
 
 export interface Weighted extends GradeRow {
   /** The weight as a number, or null when it could not be read. */
@@ -191,6 +192,52 @@ export interface Extras {
   pointsOff?: number;
   /** Attendance as a graded category: its weight and your rate. */
   attendance?: { worth: number; rate: number | null };
+}
+
+/**
+ * The extras one course's grade is worked out from, assembled once.
+ *
+ * Four places asked `standing` about the same course and three different
+ * questions. `screens/Grades.tsx` and `ai/providers/core.ts` passed all four
+ * extras; `screens/Courses.tsx` and `lib/context.ts` passed pieces and drops
+ * and left attendance out. On a syllabus that makes attendance a graded
+ * category — which BUS 1600 and PSCI 1104 both do, at 10% and 5% — that is
+ * not a rounding difference:
+ *
+ *     Grades tab   current 74.0%  weights 100  incomplete false
+ *     Courses tile current 76.7%  weights  90  incomplete true
+ *
+ * Two running grades for one course, on two screens one tap apart, and the
+ * tile is the one a student sees first.
+ *
+ * `lib/context.ts` already names the same problem in a comment and works
+ * around it — "the provider calls `standing` with the attendance extras the
+ * Grades screen passes; this file calls it without them … and then the model
+ * has two different running grades for one course and no way to choose". The
+ * workaround is to let the screen win where it has spoken, which leaves the
+ * case where it has not.
+ *
+ * So the assembly is one function and the disagreement has nowhere left to
+ * live. Structurally typed rather than taking a `State`, so this file keeps
+ * knowing nothing about the store.
+ */
+export function extrasFor(
+  courseId: string,
+  from: {
+    pieces: Record<string, string>;
+    drops: Record<string, number>;
+    attendance: Attended[];
+    attendPolicy: Record<string, AttendPolicy>;
+  },
+): Extras {
+  const policy = from.attendPolicy[courseId] ?? NO_POLICY;
+  const t = tally(from.attendance, courseId);
+  return {
+    pieces: from.pieces,
+    drops: from.drops,
+    pointsOff: pointsOff(policy, t),
+    attendance: { worth: policy.worth, rate: rate(t) },
+  };
 }
 
 export function standing(

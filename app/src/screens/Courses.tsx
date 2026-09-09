@@ -10,7 +10,7 @@ import { DropBy } from '../components/DropBy';
 import { Page } from '../components/Page';
 import { LightTile } from '../components/soft/Soft';
 import { useSoft } from '../components/shell/useShell';
-import { standing } from '../lib/grades';
+import { extrasFor, standing } from '../lib/grades';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
@@ -122,10 +122,10 @@ export function Courses() {
             <div className="soft-tiles">
               {catalog.courses.map((c) => {
                 const next = ahead.find((i) => i.c === c.id);
-                const mark = standing(c, state.grades, {
-                  pieces: state.pieces,
-                  drops: state.drops,
-                }).current;
+                // The same extras the Grades tab uses. Without the
+                // attendance pair this tile showed a different running grade
+                // for the same course — see `extrasFor`.
+                const mark = standing(c, state.grades, extrasFor(c.id, state)).current;
                 return (
                   <LightTile
                     key={c.id}

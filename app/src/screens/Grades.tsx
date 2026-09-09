@@ -2,8 +2,7 @@ import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
-import { key, needCaveat, needFor, reaches, standing } from '../lib/grades';
-import { NO_POLICY, pointsOff, rate, tally } from '../lib/attend';
+import { extrasFor, key, needCaveat, needFor, reaches, standing } from '../lib/grades';
 import { PiecesRow } from '../components/PiecesRow';
 import { against, forCourse, trend, trendLine } from '../lib/sitting';
 import { projectGrade, projectionLine } from '../lib/worth';
@@ -42,21 +41,18 @@ export function Grades() {
   const body = (shown: typeof catalog.courses) => (
     <>
       {shown.map((c) => {
-        // Everything the projection now needs beyond the syllabus: the
-        // absence penalty, attendance as a graded category, the individual
-        // pieces inside a category and how many of them the course drops.
-        const policy = state.attendPolicy[c.id] ?? NO_POLICY;
         // What earns an A here, and whether the app actually knows or is
         // assuming. See `lib/cutoffs.ts` — the two must not look alike.
         const { system, source } = systemFor(c.id, state.gradeSystems, school);
         const targets = targetsOf(system);
-        const t = tally(state.attendance, c.id);
-        const s = standing(c, state.grades, {
-          pieces: state.pieces,
-          drops: state.drops,
-          pointsOff: pointsOff(policy, t),
-          attendance: { worth: policy.worth, rate: rate(t) },
-        });
+        /*
+         * Everything the projection needs beyond the syllabus — the absence
+         * penalty, attendance as a graded category, the pieces inside a
+         * category and how many of them the course drops — assembled in one
+         * place, so the tile on Courses and the payload the assistant is
+         * given cannot answer differently. See `extrasFor`.
+         */
+        const s = standing(c, state.grades, extrasFor(c.id, state));
         return (
           <div key={c.id}>
             <Folding name="body">
