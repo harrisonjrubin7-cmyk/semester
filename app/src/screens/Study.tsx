@@ -13,7 +13,7 @@ import { ChevronRight } from '../components/Icons';
 import { AppGrid } from '../components/nav/AppGrid';
 import { nextExam, testedIn } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
-import { cardKey, dueCount } from '../lib/review';
+import { cardKey, comeRound, neverMet } from '../lib/review';
 import { destinationsIn } from '../lib/nav';
 import { suggest, type Coming } from '../lib/toolnow';
 import { codeOf } from '../data/catalog';
@@ -350,24 +350,36 @@ export function Study() {
           // Every way into this course that actually has something in it. They
           // used to be reachable only by opening the guide and then finding a
           // chip row that scrolled sideways, so most of them went unused.
-          const ways = modesFor(catalog, c.id, {
+          const every = modesFor(catalog, c.id, {
             guide: g,
             lessons: catalog.lessons[c.id] ?? {},
             figures: mergeFigures(catalog.figures[c.id] ?? {}, mine),
             extras: extraFigures(catalog.extraFigures[c.id] ?? [], mine, catalog.figures[c.id] ?? {}),
-          }).filter((m) => m.ready);
+          });
+          const ways = every.filter((m) => m.ready);
 
-          // Read rather than guessed: cards whose review has come round, this
-          // course's own next exam, and whether anything has been answered.
+          /*
+           * Read rather than guessed: cards whose review has come round, this
+           * course's own next test, and whether anything has been answered.
+           *
+           * `testedIn` rather than `nextExam`, which is the radar's question
+           * and the wrong one here — it is the nearest exam in the semester,
+           * so whichever course held it got a countdown and the other three
+           * were told they had none, however close their own was. It also only
+           * counted exams, so a quiz on Thursday changed nothing.
+           */
           const keys = allCards(g).map((card) => cardKey(c.id, card.q));
-          const due = dueCount(keys, state.reviews, now.getTime());
-          const mine_exam = nextExam(catalog, now);
+          const due = comeRound(keys, state.reviews, now.getTime());
+          const fresh = neverMet(keys, state.reviews);
+          const started = keys.some((k) => state.reviews[k]);
+          const test = testedIn(catalog, now, c.id);
           const step = nextStep({
             ways,
             guide: g,
             due,
-            examIn: mine_exam && mine_exam.item.c === c.id ? mine_exam.days : null,
-            started: keys.some((k) => state.reviews[k]),
+            testIn: test?.days ?? null,
+            testKind: test?.kind ?? null,
+            started,
           });
           return (
             <Blueprint
@@ -423,6 +435,18 @@ export function Study() {
               <div style={{ marginTop: 11 }}>
                 <Meter pct={g.mastery} fill={tint(c.id).fill} />
               </div>
+              {/*
+                What is true of this course today, beside what is true of it
+                always. The size of the guide is in the corner above and does
+                not change all term; these three do, and every one of them was
+                already being computed here and thrown away.
+
+                Due and new are counted apart, because they are different
+                work and the lumped number is a lie in one direction: a card
+                you have never met has not "come round", and calling it due
+                turned the first answer in a course into a hundred-card
+                backlog. See `comeRound` and `neverMet` in `lib/review.ts`.
+              */}
               <div
                 style={{
                   fontSize: 'var(--type-xs)',
@@ -434,6 +458,10 @@ export function Study() {
                 }}
               >
                 {g.mastery}% mastered
+                {due > 0 && ` · ${due} due`}
+                {started && due === 0 && ' · nothing due'}
+                {fresh > 0 && ` · ${fresh} unseen`}
+                {mine.length > 0 && ` · ${mine.length} added`}
               </div>
               </button>
 
@@ -454,6 +482,38 @@ export function Study() {
                   borderTop: '1px solid var(--app-line)',
                 }}
               >
+                {/*
+                  A course with no way into it — added by hand, or imported
+                  from a syllabus that listed no readings — used to draw this
+                  card with a meter at nothing, no recommendation, no chips and
+                  no explanation: the one card on the screen you could look at
+                  and not act on. `lib/modes.ts` has always known what is
+                  missing and what would fill it, so it says so, and the button
+                  is the thing that fixes it, on this course rather than on
+                  whichever guide was open last.
+                */}
+                {ways.length === 0 && (
+                  <>
+                    <div
+                      style={{
+                        fontSize: 'var(--type-base)',
+                        opacity: 0.7,
+                        marginBottom: 'var(--sp-5)',
+                        lineHeight: 'var(--leading-normal)',
+                        textWrap: 'pretty',
+                      }}
+                    >
+                      {every.find((m) => m.id === 'cards')?.missing ??
+                        'Nothing to study in this course yet.'}
+                    </div>
+                    <ActionButton
+                      onClick={() => dispatch({ type: 'openUpdate', courseId: c.id, unit: null })}
+                    >
+                      Add material to {g.code}
+                    </ActionButton>
+                  </>
+                )}
+
                 {step && (
                   <>
                     <ActionButton

@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   cardKey,
   tallyBy,
+  comeRound,
   dueCount,
+  neverMet,
   dueFirst,
   emptyReview,
   score,
@@ -165,6 +167,31 @@ describe('dueCount', () => {
   it('counts unseen cards as due — they have to be learned', () => {
     expect(dueCount(['a', 'b'], {}, T0)).toBe(2);
   });
+
+describe('comeRound and neverMet', () => {
+  it('does not call a card you have never seen a card that came round', () => {
+    // The whole point: nothing went out, so nothing came back.
+    expect(comeRound(['a', 'b'], {}, T0)).toBe(0);
+    expect(neverMet(['a', 'b'], {})).toBe(2);
+  });
+
+  it('counts one answered before and due again', () => {
+    expect(comeRound(['a'], { a: { ...pass(2), due: T0 - 1 } }, T0)).toBe(1);
+  });
+
+  it('leaves out one answered and scheduled ahead', () => {
+    expect(comeRound(['a'], { a: pass(2) }, T0)).toBe(0);
+    expect(neverMet(['a'], { a: pass(2) })).toBe(0);
+  });
+
+  it('adds up to what the lumped count says', () => {
+    const reviews = { a: pass(2), b: { ...pass(1), due: T0 - 1 } };
+    const keys = ['a', 'b', 'c'];
+    expect(comeRound(keys, reviews, T0) + neverMet(keys, reviews)).toBe(
+      dueCount(keys, reviews, T0),
+    );
+  });
+});
 
   it('excludes a card scheduled into the future', () => {
     expect(dueCount(['a'], { a: pass(2) }, T0)).toBe(0);
