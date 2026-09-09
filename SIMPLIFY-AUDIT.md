@@ -362,6 +362,79 @@ come out of both screens with the callers.
 
 ---
 
+## 6. T2, revisited — which home the grade table gets
+
+Section 5 found the two duplicate tabs and cut both, keeping the destination
+each time. T1 is right and stands. **T2 is reopened here and resolved the
+other way**: the tab stays and the `grades` destination goes.
+
+Nothing in section 5's evidence changed. What changed is the question it asked.
+"Which copy is the copy" has one answer when the two are a screen and an inline
+render of that screen — the tab is the copy, which is why #34 cut it for
+Settings and why T1 cuts it for the report. It has a different answer when the
+embedded screen is genuinely *a view of its host*:
+
+- `Courses.tsx` has said so in its own file comment since it was written:
+  "Three views of the same four courses: the courses themselves, everything
+  they are asking of you as one list, and what any of it is worth." The third
+  view is the grade table. Two of the three shipped as tabs and one shipped
+  twice.
+- `grades` had `root: 'courses'` in the registry, so even the directory filed
+  it under the screen it is a view of.
+- Courses is in `DEFAULT_TABS`. The tab is one tap; the destination is two
+  taps down a directory. "What do I need on the final" is not a two-tap
+  question in week ten.
+
+The report is the opposite case, and that is why the two go different ways: it
+has a grain switcher of its own, so as a tab of Today it was a switcher inside
+a switcher, and "what is on now" and "how did it go" are asked on different
+days by a different person.
+
+### What T2' carries
+
+Deleting a destination is more than deleting a tab, so:
+
+- `courses` takes the grades `keywords`, the plural included — "where are my
+  grades" matched `registrar` and nothing else until it did.
+- `#/grades` retires into `#/courses` on the grades grain, through a new
+  `opens.courses` alongside `opens.report` and `opens.changes`. The course id
+  the link used to carry went with it: the table lists every course and never
+  read it.
+- The soft shell's header and the assistant's context both read the grain, so
+  the running-grade hero and the grade rows follow the tab rather than being
+  lost with the `case 'grades'` they lived in.
+- The projection insight can name the grain it means.
+- `UNLOCKS.grades` and the now-unread `hasGrades` fact go: Courses is where the
+  first score is typed, and gating it would hide the way in.
+- A stored tab bar or `recent` entry naming `grades` is dropped, with a test
+  for each.
+
+`lib/onehome.test.ts` from section 5 still holds and is what keeps this honest:
+the tab renders `<Grades />` with no prop to choose a frame, because there is
+only one caller and one frame.
+
+**50 → 49 destinations.**
+
+### The rest of the sweep, which found nothing
+
+Two censuses run alongside T2', recorded because a null result is worth as much
+as a finding:
+
+- **Controls.** Every `set*` action in `state/slices/settings.ts` against every
+  file that dispatches it: 18 actions, and exactly one — `setLook` — is written
+  from more than one file. Those four writes touch different keys (colour and
+  type on Settings › Appearance, the shell and nav pickers through the shared
+  `Appearance` component, the springboard's arrangement in `nav/Folder`). No
+  control has a second copy.
+- **Routes, recounted.** `edit` 5, `import` 4, `mine` 3, everything else two or
+  fewer — unchanged from section 2 and left alone for its reasons.
+- **Screens imported by screens**, the other way a screen could hide inside
+  one: `FirstRun` (a shared empty state), `Guide → FieldGuide` (`field` is a
+  `StudyMode`, not a `Screen`) and `Today → GapOffer` (`gap` has no directory
+  row). None is a destination; none is a duplicate.
+
+---
+
 ## Appendix — the first pass, resolved
 
 Run at `ac5a2c8` against 59 destinations. Kept because the verdicts still hold
