@@ -237,16 +237,21 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 679,
+  type: 677,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 222,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 522,
+  space: 520,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 542,
+  shorthand: 538,
 };
 
 /*
+ * 679/222/522/542 → 677/222/520/538 when the second chip idiom got a name.
+ * Five sites were drawing an outlined pick chip by hand with the padding
+ * drifting between 7px and 9px and the radius between two tokens; `PickChips`
+ * draws one on the spacing scale, so the drift is gone rather than moved.
+ *
  * 682/222/524/544 → 679/222/522/542 when the Claude key stopped being on two
  * screens. Three down, none up, and none by reformatting: Connect accounts'
  * copy of the key form drew its own model list by hand, and Settings already

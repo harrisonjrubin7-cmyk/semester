@@ -4,7 +4,7 @@ import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { configured, modelLabel, routeLabel } from '../lib/claude';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { ChipRow, SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';
 import {
   PROVIDERS,
@@ -575,31 +575,13 @@ export function Connect() {
           </div>
 
           {outbound.length > 1 && (
-            <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
-              {outbound.map((id) => {
-                const on = id === out;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    className="btn"
-                    onClick={() => setSendTo(id)}
-                    aria-pressed={on}
-                    style={{
-                      flex: 'none',
-                      fontSize: 'var(--type-xs)',
-                      letterSpacing: '0.1em',
-                      textTransform: 'uppercase',
-                      background: on ? 'var(--chrome)' : 'transparent',
-                      color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
-                      borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
-                    }}
-                  >
-                    {PROVIDERS[id].name}
-                  </button>
-                );
-              })}
-            </div>
+            <ChipRow
+              options={outbound}
+              value={out}
+              onChange={setSendTo}
+              labels={Object.fromEntries(outbound.map((id) => [id, PROVIDERS[id].name]))}
+              style={{ marginTop: 'var(--sp-5)' }}
+            />
           )}
 
           <button
