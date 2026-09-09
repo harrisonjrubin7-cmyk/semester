@@ -56,7 +56,13 @@ export function SettingsGrading() {
             <NavRow
               label="Where you stand"
               sub="Type scores, and set drops per category"
-              onClick={() => dispatch({ type: 'go', screen: 'grades' })}
+              // Courses, on the grades grain — the tab is where the table
+              // lives now, and a link that only said `courses` would land on
+              // whichever tab was last open.
+              onClick={() => {
+                dispatch({ type: 'setCoursesTab', tab: 'grades' });
+                dispatch({ type: 'go', screen: 'courses' });
+              }}
             />
           </Group>
         </>

@@ -124,9 +124,17 @@ they are the visible sign that a list has an order.
 A movable thing is usually its own handle. Today's sections are the exception
 and the reason is worth knowing: a hold inside one already asks the assistant
 about the row under your thumb, and two press-and-hold gestures on one element
-cannot both win. So the section is what a drop lands on, a grip in the margin
-beside its heading is what starts the drag, and everything inside it answers a
-hold exactly as it did. `zone` and `grip` on the hook are those two halves.
+cannot both win. So the section is what a drop lands on, a grip just above its
+heading is what starts the drag, and everything inside it answers a hold
+exactly as it did. `zone` and `grip` on the hook are those two halves.
+
+The grip sits inside the column rather than out in the page's margin, which is
+where it started. The leftmost strip of a phone screen is where iOS Safari's
+back-swipe begins, and a handle the browser can take the gesture from is a
+handle that does not work — silently, and in a way that reads as the feature
+being broken. It moves up into the gap above the heading instead, which is
+empty on every section, so it clears both the swipe band and the words without
+indenting eighteen sections.
 
 Where the order is a preference rather than data, it is a look key —
 `groupOrder` for the shelves, `boardOrder` for the home screen — and both are

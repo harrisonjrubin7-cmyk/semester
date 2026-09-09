@@ -115,8 +115,8 @@ describe('the places you keep going back to', () => {
   const caps = vanderbilt;
 
   it('lists the most recent first', () => {
-    expect(lately(['grades', 'runway', 'essay'], [], caps).map((d) => d.screen)).toEqual([
-      'grades',
+    expect(lately(['tonight', 'runway', 'essay'], [], caps).map((d) => d.screen)).toEqual([
+      'tonight',
       'runway',
       'essay',
     ]);
@@ -125,26 +125,30 @@ describe('the places you keep going back to', () => {
   it('leaves out whatever this layout already puts one tap away', () => {
     // The tab bar and the springboard's dock hold different screens, which is
     // why the bar is a parameter rather than a constant.
-    expect(lately(['grades', 'runway'], ['grades'], caps).map((d) => d.screen)).toEqual(['runway']);
+    expect(lately(['tonight', 'runway'], ['tonight'], caps).map((d) => d.screen)).toEqual(['runway']);
   });
 
   it('leaves out a screen this school has no equivalent of', () => {
     // Visited before somebody changed school. It must not come back in
     // through this door when the directory has already dropped it.
-    expect(lately(['meals', 'grades'], [], nowhere).map((d) => d.screen)).toEqual(['grades']);
-    expect(lately(['meals', 'grades'], [], caps).map((d) => d.screen)).toContain('meals');
+    expect(lately(['meals', 'tonight'], [], nowhere).map((d) => d.screen)).toEqual(['tonight']);
+    expect(lately(['meals', 'tonight'], [], caps).map((d) => d.screen)).toContain('meals');
   });
 
   it('drops anything that is not a place in the app', () => {
-    expect(lately(['grades', 'nonsense'], [], caps).map((d) => d.screen)).toEqual(['grades']);
+    expect(lately(['tonight', 'nonsense'], [], caps).map((d) => d.screen)).toEqual(['tonight']);
+    // Including a screen that was a place until it merged into another: the
+    // grade table is the grades grain of Courses now, and `recent` is saved
+    // state that can still be carrying the old id.
+    expect(lately(['tonight', 'grades'], [], caps).map((d) => d.screen)).toEqual(['tonight']);
   });
 
   it('never lists the same screen twice', () => {
-    expect(lately(['grades', 'grades', 'runway'], [], caps)).toHaveLength(2);
+    expect(lately(['tonight', 'tonight', 'runway'], [], caps)).toHaveLength(2);
   });
 
   it('stops at four, because a list of twelve is the directory again', () => {
-    const many = ['grades', 'runway', 'essay', 'deck', 'exam', 'costs'];
+    const many = ['tonight', 'runway', 'essay', 'deck', 'exam', 'costs'];
     expect(lately(many, [], caps)).toHaveLength(4);
   });
 });
@@ -212,10 +216,12 @@ describe('the shelves the directory is arranged on', () => {
 
   it('put the standing screens where the question is asked', () => {
     // Reports already asked "how is it going" from Semester — it carries the
-    // `stand` tag — so the two about this term sit with it.
+    // `stand` tag — so the ones about this term sit with it. The grade table
+    // is not among them any more: it is the grades grain of Courses, and
+    // Courses carries the `stand` tag for it.
     const semester = destinationsIn('Semester').map((d) => d.screen);
-    expect(semester).toContain('grades');
     expect(semester).toContain('behind');
+    expect(DESTINATIONS.find((d) => d.screen === 'courses')?.taskTags).toContain('stand');
     expect(DESTINATIONS.find((d) => d.screen === 'brief')?.taskTags).toContain('stand');
 
     // The degree is the one that is not about this term, and Semester is a
@@ -321,9 +327,19 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    /*
+     * Any real destination will do, and this one is named because it is not
+     * the subject of an argument.
+     *
+     * It was `grades`, which is the case this test describes happening to the
+     * test itself: #76 took the grade table out of the registry, so the name
+     * here stopped being a `Screen` and the file stopped typechecking. The
+     * suite stayed green either way — vitest does not typecheck — so the
+     * thing that caught it was `tsc`, which is why CI runs both.
+     */
+    const short = DESTINATIONS.filter((d) => d.screen !== 'tonight');
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === 'tonight')).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
