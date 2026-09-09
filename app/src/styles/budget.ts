@@ -21,7 +21,6 @@ export const BUDGET: Budget = {
   'ai/Answer.tsx': { shorthand: 1 },
   'ai/AskAbout.tsx': { shorthand: 1 },
   'ai/Assistant.tsx': { type: 1, space: 1, shorthand: 1 },
-  'ai/Composer.tsx': { space: 1 },
   'ai/Turns.tsx': { space: 1 },
   'components/Adopting.tsx': { type: 1, space: 2, shorthand: 2 },
   'components/Appearance.tsx': { space: 1, shorthand: 4 },
