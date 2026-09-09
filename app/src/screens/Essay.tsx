@@ -344,7 +344,7 @@ export function Essay() {
         <ActionButton
           onClick={() => void make()}
           disabled={busy || !verdict.ok}
-          tone="primary" height={46}
+          tone="primary"
           style={{ marginTop: 18 }}
         >
           {busy ? 'Drafting…' : out ? 'Draft it again' : 'Write the draft'}

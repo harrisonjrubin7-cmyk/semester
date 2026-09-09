@@ -227,7 +227,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
       <ActionButton
         onClick={() => void make()}
         disabled={busy || !dueDate}
-        tone="primary" height={46}
+        tone="primary"
         style={{ marginTop: 'var(--sp-7)' }}
       >
         {busy ? 'Building it…' : out ? 'Build it again' : 'Build the project file'}

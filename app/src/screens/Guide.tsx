@@ -146,7 +146,7 @@ export function Guide() {
         <>
           <ActionButton
             onClick={() => dispatch({ type: 'startDrill', unit: null })}
-            tone="primary" height={48}
+            tone="primary"
             style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
           >
             Drill all {cards.length} cards
@@ -320,7 +320,7 @@ export function Guide() {
             onClick={() =>
             dispatch({ type: 'startQuiz', quiz: buildQuiz(guide, state.quizSeed) })
             }
-            tone="primary" height={48}
+            tone="primary"
             style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
           >
             Start quiz
@@ -811,7 +811,7 @@ function Documents() {
 
       <ActionButton
         onClick={() => window.print()}
-        tone="primary" height={46}
+        tone="primary"
         style={{ fontSize: 'var(--type-base)', marginTop: 14 }}
       >
         Print this screen

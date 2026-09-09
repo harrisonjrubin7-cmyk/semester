@@ -433,7 +433,7 @@ function AddOne({ onDone }: { onDone: () => void }) {
         });
         onDone();
         }}
-        tone="primary" height={46}
+        tone="primary"
         style={{ marginTop: 'var(--sp-7)' }}
       >
         Add it

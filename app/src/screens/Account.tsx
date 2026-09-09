@@ -165,7 +165,6 @@ export function AccountScreen() {
         <ActionButton
           disabled={busy}
           onClick={() => void run(signOut)}
-          height={44}
           style={{ fontSize: 'var(--type-sm)', marginTop: 20 }}
         >
           Sign out (keeps data on this device)

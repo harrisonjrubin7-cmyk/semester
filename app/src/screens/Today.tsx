@@ -110,7 +110,7 @@ function NextClassCard() {
  * citation attached; this does not, and says so.
  */
 function YourTasks() {
-  const { state, dispatch, now, courseCode } = useStore();
+  const { state, dispatch, now, courseCode, tint } = useStore();
   const rowTen = useRowStyle(10);
   const mine = tasksOn(state.tasks, now);
   const appts = appointmentsOn(state.appointments, now);
@@ -184,7 +184,18 @@ function YourTasks() {
               </div>
               {(t.time || t.courseId) && (
                 <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
-                  {t.courseId ? `${courseCode(t.courseId)} · ` : ''}
+                  {/* The code in its course's colour rather than in the dim
+                      grey the time is set in: a task you filed against ECON
+                      belongs to ECON, and this is the only mark on the row
+                      that says so. */}
+                  {t.courseId ? (
+                    <>
+                      <span style={{ color: tint(t.courseId).ink, opacity: 1 }}>{courseCode(t.courseId)}</span>
+                      {' · '}
+                    </>
+                  ) : (
+                    ''
+                  )}
                   {t.time}
                 </div>
               )}
@@ -257,7 +268,7 @@ function OverdueBanner() {
 function TabHome() {
   // Today's own sections derive what they need themselves, so what is left
   // here is only what the week tab and the switcher use.
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, now, catalog, tint } = useStore();
   const ahead = upcomingItems(catalog, now).filter((i) => !i.isToday);
   const nextEvent = datedEvents(now, state.sample).find((e) => !e.isPast);
   const tab = state.homeTab;
@@ -333,6 +344,7 @@ function TabHome() {
             bottom={String(u.day)}
             title={u.title}
             meta={`${catalog.byId[u.c].code} · ${u.weight}`}
+            edge={tint(u.c).edge}
             onClick={() => dispatch({ type: 'openItem', id: u.id })}
           />
         ))}
@@ -1023,7 +1035,6 @@ function HoursToday() {
         dispatch({ type: 'setMineTab', tab: 'appointments' });
         dispatch({ type: 'go', screen: 'mine' });
         }}
-        height={44}
         style={{ marginTop: 18, fontSize: 'var(--type-xs)' }}
       >
         + Add something to the day

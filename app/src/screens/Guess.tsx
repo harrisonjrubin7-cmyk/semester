@@ -63,7 +63,7 @@ export function Guess() {
           at: now.getTime(),
           })
           }
-          tone="primary" height={48}
+          tone="primary"
           style={{ marginTop: 22 }}
         >
           Now read the unit
@@ -112,7 +112,7 @@ export function Guess() {
           </div>
           <ActionButton
             onClick={() => dispatch({ type: 'guessShow' })}
-            tone="primary" height={48}
+            tone="primary"
             style={{ marginTop: 14 }}
           >
             Show me

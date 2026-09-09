@@ -298,7 +298,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
           <ActionButton
             onClick={() => void read()}
             disabled={busy}
-            tone="primary" height={46}
+            tone="primary"
             style={{ marginTop: 18 }}
           >
             {busy ? 'Reading it…' : 'What should I make of this?'}

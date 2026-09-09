@@ -252,7 +252,7 @@ export function Mail() {
       <ActionButton
         onClick={() => void write()}
         disabled={busy || !canDraft}
-        tone="primary" height={46}
+        tone="primary"
         style={{ marginTop: 'var(--sp-7)' }}
       >
         {busy ? 'Writing…' : body ? 'Write it again' : 'Draft it'}

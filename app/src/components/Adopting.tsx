@@ -136,7 +136,7 @@ export function Adopting({
 
       <ActionButton
         onClick={go}
-        tone="primary" height={46}
+        tone="primary"
         style={{ marginTop: 'var(--sp-7)' }}
       >
         {picked === SAFEST ? 'Keep both' : 'Save a backup and go ahead'}

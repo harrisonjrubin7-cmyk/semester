@@ -125,7 +125,7 @@ export function FindPlace() {
           </p>
           <ActionButton
             onClick={() => dispatch({ type: 'setGeocode', patch: { on: true } })}
-            height={44} spacing="0.09em"
+            spacing="0.09em"
             style={{ marginTop: 'var(--sp-5)' }}
           >
             Turn address lookup on
@@ -303,7 +303,7 @@ export function FindPlace() {
               <ActionButton
                 onClick={whereAmI}
                 disabled={busy}
-                height={42} spacing="0.09em"
+                spacing="0.09em"
                 style={{ marginTop: 9 }}
               >
                 What is here?

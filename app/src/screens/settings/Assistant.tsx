@@ -199,7 +199,7 @@ export function SettingsAssistant() {
                 saveSettings(config);
                 setSaved(true);
                 }}
-                tone="primary" height={44}
+                tone="primary"
               >
                 {saved ? 'Saved on this device' : 'Save on this device'}
               </ActionButton>

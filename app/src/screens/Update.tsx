@@ -676,7 +676,6 @@ export function AddMaterial() {
               <ActionButton
                 disabled={studying}
                 onClick={() => void readInto()}
-                height={42}
                 style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)' }}
               >
                 {studying ? 'Reading it…' : 'Make cards and terms from this'}
@@ -797,7 +796,7 @@ export function AddMaterial() {
             <ActionButton
               disabled={reading}
               onClick={() => void readPhotos()}
-              tone="primary" height={44}
+              tone="primary"
               style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-sm)' }}
             >
               {reading ? 'Reading the photos…' : `Read ${shots.length === 1 ? 'it' : 'them'}`}
@@ -870,7 +869,6 @@ export function AddMaterial() {
       />
       <ActionButton
         onClick={() => fileInput.current?.click()}
-        height={42}
         style={{ fontSize: 'var(--type-sm)' }}
       >
         {busy ? 'Reading…' : 'Attach slides, a PDF, a photo of the board, or a zip'}
@@ -913,7 +911,7 @@ export function AddMaterial() {
       <ActionButton
         disabled={empty || Boolean(already)}
         onClick={review}
-        tone="primary" height={50}
+        tone="primary"
         style={{ fontSize: 'var(--type-lg)', marginTop: already ? 'var(--sp-4)' : 'var(--sp-7)', opacity: empty || already ? 0.4 : 1 }}
       >
         {already ? 'Already added' : `Review and add to ${guide.code}`}

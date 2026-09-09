@@ -153,7 +153,7 @@ export function Classmates() {
           .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
           .finally(() => setBusy(false));
           }}
-          tone="primary" height={46}
+          tone="primary"
           style={{ marginTop: 'var(--sp-6)' }}
         >
           {busy ? 'Saving…' : 'That is me'}
