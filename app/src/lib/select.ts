@@ -389,6 +389,8 @@ export function hoursFor(
   at: number;
   minutes: number;
   kind: string | null;
+  /** Which course a class belongs to, so the grid can colour it. */
+  c: CourseId | null;
   canceled?: boolean;
   /** The record this block was drawn from, where there is one that can move. */
   from?: { kind: 'appointment' | 'item'; id: string };
@@ -403,6 +405,9 @@ export function hoursFor(
     meta: b.meta,
     at: b.at,
     kind: b.mine ? (b.kind ?? 'other') : null,
+    // A class's course, carried through so the grid can draw it in that
+    // course's colour. `railFor` has always known it; the grid never got it.
+    c: b.c ?? null,
     canceled: b.canceled,
   }));
 }

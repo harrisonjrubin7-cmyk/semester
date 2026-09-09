@@ -243,10 +243,15 @@ export const BUDGET = {
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
   space: 517,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 513,
+  shorthand: 503,
 };
 
 /*
+ * 513 → 509 on main (the corner-mark pass) and → 503 on the merged tree: both
+ * sides removed shorthand padding from rows this branch also touched, so the
+ * overlap counts once and neither number is the answer on its own. Measured,
+ * like the ones below it.
+ *
  * Two ratchets landed at once and this is their merge, measured rather than
  * added up: the Places tab left Personal on main, and on this branch the Claude
  * key stopped being on two screens and the second chip idiom got a name. Both
@@ -306,6 +311,12 @@ export const BUDGET = {
  * six spacing decisions anybody made. The two the chat added — a 3px gap
  * between the waiting dots, and the send button's clearance inside the
  * composer — are drawing measurements and are inside the new number.
+ *
+ * `shorthand` went 519 → 509 when the courses got their own colours. The Look
+ * settings page wrote the same section-label margin twelve times — one string,
+ * twelve copies, eleven chances to be a pixel out — and it is one `CAP`
+ * constant now. The thirteenth section, the course palette, uses it too rather
+ * than adding the thirteenth copy, which is the whole reason to have counted.
  *
  * Set to what is there, not to what a grep said.
  *

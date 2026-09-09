@@ -460,6 +460,14 @@ describe('the look', () => {
     expect(s.ground).toBe(DEFAULT_PERSISTED.ground);
   });
 
+  it('remembers whether the courses are coloured, and refuses a value it does not know', () => {
+    // On by default: the question every list is asked is which class a thing
+    // belongs to, and the colour answers it before anything is read.
+    expect(blank().courseColours).toBe('on');
+    expect(reducer(blank(), { type: 'setLook', look: { courseColours: 'off' } }).courseColours).toBe('off');
+    expect(reducer(blank(), { type: 'setLook', look: { courseColours: 'plaid' } }).courseColours).toBe('on');
+  });
+
   it('changes one part without disturbing the rest', () => {
     const s = reducer(blank(), { type: 'setLook', look: { accent: 'copper' } });
     expect(s.accent).toBe('copper');

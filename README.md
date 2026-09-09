@@ -62,6 +62,15 @@ Three things were decided rather than inherited:
   summaries — the three published field-guide artifacts plus the ECON study-guide
   PDF, with their full text, glossaries, exam frames and self-tests.
 
+A fourth decision came later, once there were four courses to keep apart: **each
+course wears its own colour**, and it is your accent turned rather than a box of
+crayons. One hue anchors the wheel — whichever you chose, on whichever ground —
+and your classes divide the rest of it between them, so a deadline row, a class
+block, a calendar dot and a load bar all say whose they are before you read a
+word. Every hue is held to WCAG's contrast bars against all thirteen grounds by
+arithmetic rather than by eye. See
+[`app/src/lib/tint.ts`](app/src/lib/tint.ts).
+
 ## Audio
 
 Five recordings ship in `app/public/audio`, wired into each guide's Listen mode
