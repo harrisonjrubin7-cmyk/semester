@@ -24,7 +24,8 @@
  * added here if this wrote into that list.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useModal } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { capture, enough, readBack } from '../lib/capture';
 import { ActionButton } from './ui';
@@ -46,10 +47,10 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
   const [said, setSaid] = useState('');
   const wide = useMedia(DESKTOP);
   const box = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    box.current?.focus();
-  }, []);
+  // The field, for the same reason the search palette opens on its own: a
+  // capture box that opens on its Close button is one you have to tab into
+  // before you can type the thing you opened it to say.
+  const modal = useModal<HTMLDivElement>({ onClose, initial: box });
 
   const named = catalog.courses.map((c) => ({ id: c.id, code: c.code, title: c.name ?? '' }));
   const caught = capture(text, named, now);
@@ -77,6 +78,16 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
     <div
       role="dialog"
       aria-label="Add something quickly"
+      /*
+       * `aria-modal` was missing, and would have been a lie before the trap
+       * was: this covers the whole app on a phone and the whole window on a
+       * desk, so a reader offering the screen underneath is describing
+       * something nobody can see or reach. It is true now.
+       */
+      aria-modal="true"
+      ref={modal.ref}
+      onKeyDown={modal.onKeyDown}
+      tabIndex={-1}
       style={{
         /*
          * Where the box ends, which is not the same edge on both layouts.
@@ -133,8 +144,9 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           setSaid('');
         }}
         onKeyDown={(e) => {
+          // Escape is the dialog's, not the field's — it was on this input
+          // alone, so pressing it with focus on Close did nothing at all.
           if (e.key === 'Enter') add();
-          if (e.key === 'Escape') onClose();
         }}
         placeholder="econ ps4 friday 5pm"
         aria-label="What to add"

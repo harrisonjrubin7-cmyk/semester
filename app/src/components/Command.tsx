@@ -29,9 +29,10 @@
  * one wrong Enter is unrecoverable.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { useModal } from '../a11y/modal';
 import { useStore } from '../state/store';
-import { countHits, findEverything } from '../lib/find';
+import { countHits, findEverything, spelled } from '../lib/find';
 import { flatten, hitKey, openHit } from '../lib/openhit';
 import { DESKTOP, useMedia } from '../lib/media';
 
@@ -47,10 +48,10 @@ export function Command({ onClose }: { onClose: () => void }) {
   const [at, setAt] = useState(0);
   const box = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    box.current?.focus();
-  }, []);
+  // The field, not the first button — opening a search anywhere but in its
+  // box is opening it wrong. `useModal` takes Escape and the tab ring; where
+  // focus starts stays this component's decision.
+  const modal = useModal<HTMLDivElement>({ onClose, initial: box });
 
   const found = useMemo(
     () => findEverything(catalog, now, text, state.notes, state.tasks, school.capabilities, state.updates),
@@ -77,6 +78,16 @@ export function Command({ onClose }: { onClose: () => void }) {
   const groups = found;
   const hits = flatten(groups);
   const total = countHits(groups);
+  /*
+   * Whether what is on screen is a guess at the spelling.
+   *
+   * `findEverything` falls back to a near-miss pass when the strict one finds
+   * nothing, so "calender" reaches the Calendar screen. Saying "5 results" for
+   * that would be a small lie about a query the person may well know they
+   * mistyped — and one that makes the one case where the guess is wrong
+   * baffling rather than obvious.
+   */
+  const guessed = spelled(groups);
   // Clamped rather than reset: the selection following the results down as
   // somebody types is what makes Enter safe to press without looking.
   const cursor = Math.min(at, Math.max(0, hits.length - 1));
@@ -128,13 +139,14 @@ export function Command({ onClose }: { onClose: () => void }) {
         display: 'flex',
         flexDirection: 'column',
       }}
+      ref={modal.ref}
+      tabIndex={-1}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          e.stopPropagation();
-          onClose();
-          return;
-        }
+        // Escape and Tab first, then this palette's own keys. `defaultPrevented`
+        // rather than a second copy of the Escape branch, so there is one
+        // answer to "what closes a dialog" and it is not written out here.
+        modal.onKeyDown(e);
+        if (e.defaultPrevented) return;
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
           e.preventDefault();
           if (hits.length === 0) return;
@@ -199,7 +211,9 @@ export function Command({ onClose }: { onClose: () => void }) {
       >
         {text.trim() === ''
           ? 'Deadlines, courses, study units, your own notes and tasks — and the app’s own screens.'
-          : `${total} ${total === 1 ? 'result' : 'results'}`}
+          : guessed
+            ? `Nothing spelled that way. ${total} ${total === 1 ? 'thing' : 'things'} close to it:`
+            : `${total} ${total === 1 ? 'result' : 'results'}`}
       </div>
 
       <div
