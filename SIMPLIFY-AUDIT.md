@@ -55,7 +55,7 @@ see S1.
 
 Verdict per cluster, with the evidence that decided it.
 
-### S1 — the directory, drawn twice · **MERGE**
+### S1 — the directory, drawn twice · **MERGE — done**
 
 `screens/Me.tsx` (the Progress tab) has two tabs: **You** and **Everything**.
 The Everything tab renders `Lately`, `NotYetOpened`, and then `GROUPS.map` — a
@@ -87,10 +87,29 @@ which is also the `?` sheet and a section of the guide).
 So: **By area** and **Not tried** go — Me already draws both. **By task**
 becomes a third tab of Me, or Everything survives holding only the two views
 that are its own. Either way one destination goes, and the row in the directory
-that opens the directory goes with it. This wants a decision, not a default —
-it is the one row in this audit where the survivor is arguable, because
+that opens the directory goes with it. This wanted a decision, not a default —
+it was the one row in this audit where the survivor was arguable, because
 Everything's own file comment argues for the split and that argument was written
 before Me grew an Everything tab.
+
+**Decided: the screen goes, By task becomes Progress's third tab.** Three of
+its four views were drawn elsewhere — By area and Not tried by Progress, and
+Shortcuts by the `?` sheet and the guidebook — which leaves the file comment's
+argument standing for one view rather than for a screen. 49 → 48 destinations.
+
+Two things fell out and are worth reading before the next pass:
+
+- `lib/everything.ts` held eight exports for that one screen. Seven had no
+  caller once it went, so `byTask` moved into `lib/nav.ts` beside the `TASKS`
+  and `taskLabel` it reads and the file was deleted. That is S3 arriving on its
+  own rather than being worked as a list.
+- **Personal moved from Life to You.** Not a preference: You sat exactly on the
+  floor of the five-to-eight shelf rule, the deletion took it to four, and
+  folding You into Data — what that rule's own comment prescribes — comes to
+  nine, one past the ceiling. With nine screens across two shelves there is no
+  split where both reach five, so one screen had to move in. Any later pass
+  that removes a `You` or `Data` screen hits the same wall, and should expect
+  to move one rather than to fold.
 
 ### S2 — what the app is storing, written twice · **MERGE — done**
 
@@ -299,7 +318,7 @@ named above.
 
 | # | Change | Destinations | Kind |
 | --- | --- | --- | --- |
-| S1 | The directory drawn twice — `everything`'s By-area and Not-tried views against Me's Everything tab | −1 | Merge, needs a decision on the survivor |
+| S1 | The directory drawn twice — `everything`'s By-area and Not-tried views against Me's Everything tab | −1 | ✅ Merged into Progress; By task is its third tab |
 | S2 | Settings → Storage becomes a row that opens `data` | 0 | Merge |
 | S3 | 76 exports with no caller — 26 dead outright, 50 read only by their own test | 0 | Cut |
 | S4 | An `EmptyState` component (96 hand-written), then `SectionLabel` for the 68 headings written longhand | 0 | Shared components |
