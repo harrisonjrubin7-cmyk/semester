@@ -123,6 +123,7 @@ export function Study() {
             .filter((d) => d.screen !== 'study')
             .map((d) => (
               <Blueprint
+                plain
                 key={d.screen}
                 onClick={() => dispatch({ type: 'go', screen: d.screen })}
                 style={{
@@ -188,6 +189,7 @@ export function Study() {
           });
           return (
             <Blueprint
+              plain
               key={c.id}
               style={{
                 padding: '14px 15px',
