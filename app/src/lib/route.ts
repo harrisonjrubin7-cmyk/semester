@@ -166,13 +166,3 @@ export function same(a: Route | null, b: Route | null): boolean {
   return a.screen === b.screen && a.id === b.id && (a.mode ?? '') === (b.mode ?? '');
 }
 
-/**
- * The full address, for a link somebody can send.
- *
- * Built from the current page rather than from a constant, because this app is
- * served from a subpath in one place and the root in another, and hardcoding
- * either produces links that work for exactly one of them.
- */
-export function linkTo(route: Route, here: { origin: string; pathname: string }): string {
-  return `${here.origin}${here.pathname}${toHash(route)}`;
-}

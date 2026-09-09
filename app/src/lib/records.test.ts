@@ -4,12 +4,9 @@ import {
   bury,
   contents,
   live,
-  mergeRows,
   pick,
   summarise,
-  summaryLine,
   unsent,
-  watermark,
   type Row,
 } from './records';
 
@@ -28,32 +25,6 @@ const row = (id: string, title: string, updatedAt: number, deletedAt = 0): Row<N
 });
 
 const ids = (rows: Row<Note>[]) => rows.map((r) => r.id).sort();
-
-describe('the thing a union could not do', () => {
-  it('a deletion on one device survives the trip to the other', () => {
-    // This is the whole point. `resurrect.test.ts` shows the same scenario
-    // under the current blob merge, where the note comes back.
-    const phone = [row('n1', 'Kept', T), row('n2', 'Deleted here', T + 10, T + 10)];
-    const laptop = [row('n1', 'Kept', T), row('n2', 'Deleted here', T)];
-    const merged = mergeRows(laptop, phone);
-    expect(ids(live(merged))).toEqual(['n1']);
-    expect(merged).toHaveLength(2);
-  });
-
-  it('still keeps what only one device has', () => {
-    // The union behaviour that was always right.
-    const merged = mergeRows([row('a', 'laptop', T)], [row('b', 'phone', T)]);
-    expect(ids(live(merged))).toEqual(['a', 'b']);
-  });
-
-  it('does not resurrect on a second round trip', () => {
-    // The laptop applied the deletion; now it syncs again. The tombstone has
-    // to still be there or the note walks back in.
-    const first = mergeRows([row('n', 'x', T)], [row('n', 'x', T + 5, T + 5)]);
-    const second = mergeRows(first, [row('n', 'x', T)]);
-    expect(live(second)).toEqual([]);
-  });
-});
 
 describe('which version wins', () => {
   it('the newer one', () => {
@@ -124,11 +95,6 @@ describe('what to send and what to ask for', () => {
   it('sends everything when nothing has been pushed', () => {
     expect(unsent(rows, 0)).toHaveLength(3);
   });
-
-  it('remembers the newest it has seen', () => {
-    expect(watermark(rows)).toBe(T + 20);
-    expect(watermark([])).toBe(0);
-  });
 });
 
 describe('the first run on a device that has only ever had the blob', () => {
@@ -163,17 +129,6 @@ describe('saying what a sync did', () => {
   it('does not count a tombstone that arrived as an addition', () => {
     const after = [...before, row('c', 'never seen', T + 1, T + 1)];
     expect(summarise(before, after).added).toBe(0);
-  });
-
-  it('says nothing when nothing moved', () => {
-    expect(summaryLine(summarise(before, before), 'Notes')).toBe('');
-  });
-
-  it('reads as a sentence when something did', () => {
-    const after = [row('a', 'x', T), row('b', 'y', T + 1, T + 1), row('c', 'new', T + 1)];
-    expect(summaryLine(summarise(before, after), 'Notes')).toBe(
-      'Notes: 1 new, 1 deleted elsewhere.',
-    );
   });
 });
 

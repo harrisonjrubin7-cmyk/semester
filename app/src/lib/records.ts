@@ -68,22 +68,6 @@ export function pick<T>(mine: Row<T>, theirs: Row<T>): Row<T> {
 }
 
 /**
- * Two devices' rows, reconciled.
- *
- * Anything only one side has is kept as it is — that is the union behaviour
- * that was always right. Anything both sides have goes through `pick`.
- */
-export function mergeRows<T>(mine: Row<T>[], theirs: Row<T>[]): Row<T>[] {
-  const byId = new Map<string, Row<T>>();
-  for (const r of mine) byId.set(r.id, r);
-  for (const r of theirs) {
-    const here = byId.get(r.id);
-    byId.set(r.id, here ? pick(here, r) : r);
-  }
-  return [...byId.values()];
-}
-
-/**
  * Mark a record deleted rather than removing it.
  *
  * `at` is a local guess that the database will overwrite on the next push.
@@ -98,11 +82,6 @@ export function bury<T>(rows: Row<T>[], id: string, at: number): Row<T>[] {
 /** What needs sending: everything this device changed since the last push. */
 export function unsent<T>(rows: Row<T>[], since: number): Row<T>[] {
   return rows.filter((r) => r.updatedAt > since);
-}
-
-/** The high-water mark to ask from next time. */
-export function watermark<T>(rows: Row<T>[]): number {
-  return rows.reduce((n, r) => Math.max(n, r.updatedAt), 0);
 }
 
 /**
@@ -141,12 +120,3 @@ export function summarise<T>(before: Row<T>[], after: Row<T>[]): Summary {
   return { added, updated, deleted };
 }
 
-/** That summary, in words, or empty when nothing moved. */
-export function summaryLine(s: Summary, what: string): string {
-  const bits: string[] = [];
-  if (s.added > 0) bits.push(`${s.added} new`);
-  if (s.updated > 0) bits.push(`${s.updated} updated`);
-  if (s.deleted > 0) bits.push(`${s.deleted} deleted elsewhere`);
-  if (bits.length === 0) return '';
-  return `${what}: ${bits.join(', ')}.`;
-}

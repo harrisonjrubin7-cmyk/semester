@@ -245,25 +245,6 @@ export function moveOut(data: SchoolData, lastExamEndsAt: number | null): number
   return lastExamEndsAt + hours * 3_600_000;
 }
 
-/** How the move-out rule reads, so a screen can say why it is that date. */
-export function moveOutWhy(data: SchoolData): string {
-  const rule = data.housing;
-  if (!rule) return '';
-  if (rule.moveOutRule === 'fixed_date') {
-    return rule.fixedDate ? 'A fixed date your school sets.' : '';
-  }
-  const hours = typeof rule.hoursAfterLastExam === 'number' ? rule.hoursAfterLastExam : 24;
-  return `${hours} hours after your last exam, which is how your school counts it.`;
-}
-
-/** The term calendar covering a date, or null. */
-export function termFor(data: SchoolData, onIso: string): TermCalendar | null {
-  for (const t of data.academicCalendar ?? []) {
-    if (onIso >= t.startsOn && onIso <= t.endsOn) return t;
-  }
-  return null;
-}
-
 /**
  * Anything unrecognised made safe to render from.
  *

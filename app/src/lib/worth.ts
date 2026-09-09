@@ -34,7 +34,7 @@
  */
 
 import { percentOf, type Standing } from './grades';
-import { estimate, showSpan, type Spent } from './pace';
+import { estimate, type Spent } from './pace';
 
 /** How much a run of scores has actually varied, in percentage points. */
 export function spread(scores: number[]): number | null {
@@ -192,23 +192,6 @@ export function calibrate(reports: Guessed[]): Calibration | null {
 }
 
 /**
- * The bias in one course, or overall when no course is named.
- *
- * Per course because they are not the same animal — somebody can have the
- * measure of their problem sets and be consistently wrong about their essays,
- * and one number averaged across both hides exactly that. Falls to null on a
- * course with too little of its own, rather than borrowing the overall figure
- * and calling it that course's.
- */
-export function calibrateFor<T extends Guessed>(
-  reports: T[],
-  courseOf: (r: T) => string,
-  courseId?: string,
-): Calibration | null {
-  return calibrate(courseId ? reports.filter((r) => courseOf(r) === courseId) : reports);
-}
-
-/**
  * What the correction is, said where a corrected number is shown.
  *
  * Short, because it sits under a list rather than being the point of a screen.
@@ -222,29 +205,6 @@ export function adjustedLine(c: Calibration | null): string {
   return `Adjusted for how long things actually take you — about ${off}% ${
     c.ratio > 1 ? 'longer' : 'less'
   } than you guess, across your last ${c.from}.`;
-}
-
-/**
- * The gap, in the plain form: what you say, what it takes, the ratio.
- *
- * `guessedHours` is the median of the guesses rather than of the work, so the
- * two halves of the sentence are about the same set of jobs.
- */
-export function guessLine(reports: Guessed[], c: Calibration | null): string {
-  if (!c) return '';
-  const recent = [...reports]
-    .filter((r) => r.guess > 0 && r.minutes > 0)
-    .sort((a, b) => (b.at ?? 0) - (a.at ?? 0))
-    .slice(0, LAST_REPORTS);
-  if (recent.length === 0) return '';
-  const mid = (ns: number[]) => {
-    const sorted = [...ns].sort((a, b) => a - b);
-    const i = Math.floor(sorted.length / 2);
-    return sorted.length % 2 ? sorted[i] : (sorted[i - 1] + sorted[i]) / 2;
-  };
-  const said = mid(recent.map((r) => r.guess)) / 60;
-  const took = mid(recent.map((r) => r.minutes)) / 60;
-  return `You estimate ${showSpan(said)}. You take about ${showSpan(took)}. A ratio of ${c.ratio}.`;
 }
 
 /** An estimate with the measured bias applied. */

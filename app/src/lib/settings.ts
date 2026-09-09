@@ -191,10 +191,6 @@ export function isSettingsPage(screen: Screen): boolean {
   return SETTINGS_SCREENS.includes(screen);
 }
 
-export function rowFor(screen: Screen): SettingsRow | undefined {
-  return SETTINGS.flatMap((s) => s.rows).find((r) => r.screen === screen);
-}
-
 /** Which section a page sits under, for the heading on the page itself. */
 export function sectionOf(screen: Screen): string {
   return SETTINGS.find((s) => s.rows.some((r) => r.screen === screen))?.header ?? '';

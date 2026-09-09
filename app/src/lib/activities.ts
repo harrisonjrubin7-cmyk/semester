@@ -26,8 +26,7 @@
  * place to keep what you are actually in, with the hours it actually costs.
  */
 
-import { dateToIso } from './date';
-import type { Appointment, Block } from './types';
+import type { Block } from './types';
 import type { EventKindId } from './kinds';
 
 export type ActivityKind =
@@ -294,17 +293,3 @@ export function guessKind(name: string): ActivityKind {
   return 'club';
 }
 
-/** Commitments as appointments, so anything that already reads appointments sees them. */
-export function asAppointments(list: Commitment[], date: Date): Appointment[] {
-  return blocksOn(list, date).map((b, i) => ({
-    id: `commitment-${date.toDateString()}-${i}`,
-    title: b.title,
-    kind: b.kind,
-    date: dateToIso(date),
-    at: b.at,
-    time: b.time,
-    where: b.meta,
-    note: '',
-    created: 0,
-  }));
-}

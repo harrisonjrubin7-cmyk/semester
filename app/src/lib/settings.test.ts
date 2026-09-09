@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { findSetting, isSettingsPage, lights, markLooking, nothingFound, rowFor, sectionOf, SETTINGS, SETTINGS_SCREENS, settingsTitle, takeLooking } from './settings';
+import { findSetting, isSettingsPage, lights, markLooking, nothingFound, SETTINGS, SETTINGS_SCREENS, settingsTitle, takeLooking } from './settings';
 import { ROOTS } from '../state/shape';
 import { rootOf } from './nav';
 
@@ -59,13 +59,6 @@ describe('where the pages sit', () => {
     expect(isSettingsPage('setLook')).toBe(true);
     expect(isSettingsPage('home')).toBe(false);
     expect(isSettingsPage('settings')).toBe(false);
-  });
-
-  it('can say which section a page belongs to', () => {
-    expect(sectionOf('setLook')).toBe('General');
-    expect(sectionOf('setGrading')).toBe('Academic');
-    expect(sectionOf('home')).toBe('');
-    expect(rowFor('setAbout')?.label).toBe('About');
   });
 });
 

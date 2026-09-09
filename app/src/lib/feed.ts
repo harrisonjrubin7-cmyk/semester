@@ -145,6 +145,3 @@ export function move(saved: string[] | undefined, id: string, by: -1 | 1): strin
   return next;
 }
 
-export function sectionLabel(id: string): string {
-  return SECTIONS.find((s) => s.id === id)?.label ?? id;
-}

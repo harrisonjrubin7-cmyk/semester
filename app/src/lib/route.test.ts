@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NAMED, fromHash, linkTo, replaces, same, toHash } from './route';
+import { NAMED, fromHash, replaces, same, toHash } from './route';
 import type { Screen } from './types';
 
 describe('writing an address', () => {
@@ -104,19 +104,6 @@ describe('comparing two', () => {
     expect(same({ screen: 'study', id: '' }, { screen: 'home', id: '' })).toBe(false);
     expect(same(null, { screen: 'home', id: '' })).toBe(false);
     expect(same(null, null)).toBe(true);
-  });
-});
-
-describe('a link somebody can send', () => {
-  it('keeps whatever subpath the app is served from', () => {
-    // Served from a subpath on Pages and from the root elsewhere. Hardcoding
-    // either produces links that work in exactly one of them.
-    expect(
-      linkTo({ screen: 'course', id: 'econ' }, { origin: 'https://x.github.io', pathname: '/semester/' }),
-    ).toBe('https://x.github.io/semester/#/course/econ');
-    expect(linkTo({ screen: 'home', id: '' }, { origin: 'http://localhost:5199', pathname: '/' })).toBe(
-      'http://localhost:5199/#/home',
-    );
   });
 });
 

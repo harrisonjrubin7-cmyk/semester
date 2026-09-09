@@ -157,23 +157,6 @@ export function salutation(prof: string): string {
   return `Dear Professor ${surname},`;
 }
 
-/**
- * The address inside a From line, when there is one.
- *
- * Graph hands back a display name and Gmail hands back a raw header, so the
- * same field is sometimes "Dr John Stromme" and sometimes
- * '"Stromme, John" <john.stromme@vanderbilt.edu>'. A name is not an address
- * and guessing one from it would produce mail that silently goes nowhere, so
- * when there is no @ in the string this returns nothing and the To box stays
- * empty for you to fill.
- */
-export function addressIn(from: string): string {
-  const angled = /<([^>]+@[^>]+)>/.exec(from);
-  if (angled) return angled[1].trim();
-  const bare = /[^\s<>,;:"']+@[^\s<>,;:"']+\.[^\s<>,;:"']+/.exec(from);
-  return bare ? bare[0].trim() : '';
-}
-
 /** Which mail client the draft is handed to. */
 export type MailApp = 'gmail' | 'outlook' | 'default';
 

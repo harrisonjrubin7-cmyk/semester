@@ -67,11 +67,6 @@ export function readIsbn(raw: string): string {
   return '';
 }
 
-/** "ISBN 978…" — how it reads next to what you paid. */
-export function isbnLabel(isbn: string): string {
-  return isbn ? `ISBN ${isbn}` : '';
-}
-
 /**
  * Look for a book barcode in one frame.
  *

@@ -130,12 +130,6 @@ export function appleMapsUrl(d: Destination, mode: Travel = 'walking'): string {
   return `https://maps.apple.com/?${params.toString()}`;
 }
 
-/** Just show me where this is, without routing to it. */
-export function placeUrl(d: Destination): string {
-  const params = new URLSearchParams({ api: '1', query: target(d) });
-  return `https://www.google.com/maps/search/?${params.toString()}`;
-}
-
 /**
  * Whether this device is likely to prefer Apple Maps.
  *

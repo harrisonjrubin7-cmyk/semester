@@ -7,7 +7,6 @@ import {
   decorateItem,
   minutesNow,
   sameDay,
-  SEMESTER_YEAR,
   untilLabel,
 } from './date';
 import type { Reviews } from './review';
@@ -228,44 +227,10 @@ export function loadByCourse(cat: Catalog, now: Date, done: Record<string, boole
   });
 }
 
-export function searchItems(cat: Catalog, now: Date, query: string): DatedItem[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  return datedItems(cat, now).filter((i) => {
-    const course = cat.byId[i.c];
-    const haystack = [
-      i.title,
-      i.kind,
-      i.where,
-      i.detail,
-      course?.code,
-      course?.name,
-      course?.prof,
-      i.dueShort,
-      i.mon,
-      i.dow,
-    ]
-      .join(' ')
-      .toLowerCase();
-    return haystack.includes(q);
-  });
-}
-
 /** Deadlines falling on a given day of the displayed month. */
 export function itemsOn(cat: Catalog, now: Date, year: number, month: number, day: number): DatedItem[] {
   const target = new Date(year, month, day);
   return datedItems(cat, now).filter((i) => sameDay(i.date, target));
-}
-
-/** One dot per deadline in the month grid, capped at three. */
-export function dotsForMonth(cat: Catalog, now: Date, year: number, month: number): Record<number, number> {
-  const counts: Record<number, number> = {};
-  datedItems(cat, now).forEach((i) => {
-    if (i.date.getFullYear() === year && i.date.getMonth() === month) {
-      counts[i.date.getDate()] = (counts[i.date.getDate()] ?? 0) + 1;
-    }
-  });
-  return counts;
 }
 
 /**
@@ -444,4 +409,3 @@ export function spanOf(meets: string): number | null {
   return span > 0 && span <= 5 * 60 ? span : null;
 }
 
-export const SEMESTER = { year: SEMESTER_YEAR };

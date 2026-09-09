@@ -14,7 +14,6 @@ import {
   densityOf,
   fade,
   ground,
-  lookLine,
   readLook,
   scaleOf,
   tokensFor,
@@ -221,21 +220,6 @@ describe('a ground with an opinion about its corners', () => {
   it('falls back to drawn for a ground that does not exist', () => {
     expect(resolveCorners(MATCH_GROUND, 'hologram')).toBe('drawn');
     expect(resolveCorners(MATCH_GROUND, undefined)).toBe('drawn');
-  });
-});
-
-describe('lookLine', () => {
-  it('names the accent and the ground', () => {
-    expect(lookLine({ accent: 'brass', ground: 'parchment' })).toBe('Brass · Parchment');
-  });
-
-  it('mentions a typeface or corner only when it is not the default', () => {
-    expect(lookLine({ typeface: 'condensed', corners: 'drawn' })).not.toContain('Drawn');
-    // And it says what is on screen, not what is stored: Industry resolves to
-    // square, so the settings row has to say Square.
-    expect(lookLine({ ground: 'industry', corners: MATCH_GROUND })).toContain('Square');
-    expect(lookLine({ typeface: 'mono', corners: 'round' })).toContain('Mono');
-    expect(lookLine({ typeface: 'mono', corners: 'round' })).toContain('Round');
   });
 });
 

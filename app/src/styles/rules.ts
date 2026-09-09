@@ -237,7 +237,7 @@ export function multipliers(css: string): Problem[] {
  */
 export const BUDGET = {
   /** Font sizes off the six steps — 11.5, 12.5, 13.5 and a display tail. */
-  type: 682,
+  type: 680,
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 222,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
@@ -247,6 +247,10 @@ export const BUDGET = {
 };
 
 /*
+ * 682/222/524/544 → 680/222/524/544 when the code with no caller was cut. Two
+ * sizes down, none up, and neither by reformatting: they were inside two of
+ * the row components nothing rendered.
+ *
  * 682/222/524/545 → 682/222/524/544 when the in-screen filters were deleted.
  * One down, none up, and only one because the filter field lived in `<Page>`
  * rather than in the fifteen screens that used it: what went with it here was

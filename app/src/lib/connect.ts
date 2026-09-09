@@ -665,17 +665,6 @@ export async function listRemoteFiles(id: ProviderId): Promise<RemoteFile[]> {
   }));
 }
 
-/** Fetch a remote document's text, for pasting into a course as material. */
-export async function fetchRemoteText(id: ProviderId, file: RemoteFile): Promise<string> {
-  if (!file.download) throw new Error('That one has no direct download.');
-  const token = await accessToken(id);
-  const res = await fetch(apiBase(id, file.download), {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error(`Could not read it (${res.status}).`);
-  return res.text();
-}
-
 // ── Mail ──────────────────────────────────────────────────────────────────
 // Course announcements arrive as email — a class cancelled, a reading swapped,
 // a deadline moved — and then get lost in an inbox. The app looks for the ones
@@ -692,94 +681,6 @@ export interface Message {
   date: string;
   link: string;
   courseId: CourseId | null;
-}
-
-function shortDate(d: Date): string {
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}-${m}-${day}`;
-}
-
-/**
- * Recent mail that mentions one of your courses.
- *
- * The search is done on the provider's side — Graph and Gmail both take a
- * query — so an inbox of forty thousand messages does not have to come down the
- * wire to find six.
- */
-export async function listMail(
-  courses: Course[],
-  id: ProviderId,
-  days = 45,
-): Promise<Message[]> {
-  if (courses.length === 0) return [];
-  const since = new Date(Date.now() - days * 24 * 3600 * 1000);
-  // Codes as the professor writes them, and as the registrar writes them.
-  const terms = courses.flatMap((c) => [c.code, c.code.replace(/\s+/g, '')]);
-
-  if (id === 'microsoft') {
-    type Mail = {
-      id: string;
-      subject?: string;
-      bodyPreview?: string;
-      receivedDateTime: string;
-      webLink?: string;
-      from?: { emailAddress?: { name?: string; address?: string } };
-    };
-    const search = terms.map((t) => `"${t}"`).join(' OR ');
-    const json = await get<{ value: Mail[] }>(
-      'microsoft',
-      `https://graph.microsoft.com/v1.0/me/messages?$search=${encodeURIComponent(search)}&$top=40`,
-    );
-    return json.value
-      .filter((m) => new Date(m.receivedDateTime) >= since)
-      .map((m) => ({
-        id: m.id,
-        from: m.from?.emailAddress?.name || m.from?.emailAddress?.address || '',
-        subject: m.subject ?? '(no subject)',
-        preview: (m.bodyPreview ?? '').slice(0, 400),
-        date: shortDate(new Date(m.receivedDateTime)),
-        link: m.webLink ?? '',
-        courseId: matchCourse(courses, `${m.subject ?? ''} ${m.bodyPreview ?? ''}`),
-      }));
-  }
-
-  if (id === 'google') {
-    type Ref = { id: string };
-    const query = `newer_than:${days}d (${terms.map((t) => `"${t}"`).join(' OR ')})`;
-    const list = await get<{ messages?: Ref[] }>(
-      'google',
-      `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=25&q=${encodeURIComponent(query)}`,
-    );
-    const out: Message[] = [];
-    for (const ref of list.messages ?? []) {
-      type Full = {
-        id: string;
-        snippet?: string;
-        internalDate?: string;
-        payload?: { headers?: { name: string; value: string }[] };
-      };
-      const full = await get<Full>(
-        'google',
-        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${ref.id}` +
-          '?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date',
-      );
-      const header = (name: string) =>
-        full.payload?.headers?.find((h) => h.name.toLowerCase() === name)?.value ?? '';
-      out.push({
-        id: full.id,
-        from: header('from'),
-        subject: header('subject') || '(no subject)',
-        preview: (full.snippet ?? '').slice(0, 400),
-        date: shortDate(new Date(Number(full.internalDate ?? Date.now()))),
-        link: `https://mail.google.com/mail/u/0/#inbox/${full.id}`,
-        courseId: matchCourse(courses, `${header('subject')} ${full.snippet ?? ''}`),
-      });
-    }
-    return out;
-  }
-
-  throw new Error(`${PROVIDERS[id].name} has no mail this app can read.`);
 }
 
 // ── Writing back ──────────────────────────────────────────────────────────

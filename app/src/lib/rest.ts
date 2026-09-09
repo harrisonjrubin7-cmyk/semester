@@ -36,7 +36,6 @@
  */
 
 import type { Window } from './windows';
-import { hoursOn } from './windows';
 
 /** Hours nobody should be planning into. Minutes past midnight. */
 export interface Floor {
@@ -269,7 +268,3 @@ export function readContract(raw: unknown): Contract {
   };
 }
 
-/** Hours a week the windows claim, before anything comes out. */
-export function claimedHours(windows: Window[]): number {
-  return [0, 1, 2, 3, 4, 5, 6].reduce((n, d) => n + hoursOn(windows, d), 0);
-}
