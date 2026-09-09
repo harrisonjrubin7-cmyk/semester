@@ -39,6 +39,7 @@ import { readFeedEvents } from '../lib/ics';
 import { readUpdates } from '../lib/updates';
 import { readSpent } from '../lib/pace';
 import { readAlarms, readTimers } from '../lib/clocks';
+import { readModules } from '../lib/handoff';
 import { readPlaces } from '../lib/place';
 import { readTermDates } from '../lib/registrar';
 import { readSources } from '../lib/sources';
@@ -1024,7 +1025,7 @@ export function loadPersisted(): Persisted {
       feedEvents: readFeedEvents(saved.feedEvents),
       linkUrls: saved.linkUrls ?? {},
       extraLinks: list(saved.extraLinks),
-      courses: list(saved.courses),
+      courses: readModules(saved.courses),
       // An install that predates courses-as-data was running the four built-in
       // ones; it keeps them, or the app would look wiped on the next load. A
       // genuinely new account starts empty.

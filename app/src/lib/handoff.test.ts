@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { PACK_VERSION, packCourse, packName, packSummary, provenance, readPack } from './handoff';
+import {
+  PACK_VERSION,
+  packCourse,
+  packName,
+  packSummary,
+  provenance,
+  readModules,
+  readPack,
+} from './handoff';
 import type { CourseModule } from './types';
 import { allCards, weakestUnit } from '../data/catalog';
 
@@ -410,5 +418,107 @@ describe('the line above the preview', () => {
 
   it('is empty when there is nothing to summarise', () => {
     expect(packSummary(readPack('nonsense'))).toBe('');
+  });
+});
+
+/**
+ * The same boundary, applied to storage — which is where it was missing.
+ *
+ * Everything above is about a file another person sent. A course read back out
+ * of `localStorage` is the same untrusted input by this file's own argument,
+ * and `state/shape.ts` was reading it with `list(saved.courses)`: a check that
+ * the list is a list.
+ *
+ * It is the worst of the lists to get that wrong on, because the catalogue is
+ * built from it before any screen is drawn — so four of the six shapes below
+ * were an uncaught TypeError and a blank document with no boundary to catch
+ * them, and clearing site data the only way back in. Each was measured in the
+ * browser with that one course in storage.
+ */
+describe('a course read back out of storage', () => {
+  const course = (over: Record<string, unknown> = {}) => ({
+    id: 'c1',
+    code: 'HIST 1500',
+    name: 'Modern Europe',
+    term: '2026FA',
+    grading: [{ what: 'Essay', pct: '50%' }],
+    ...over,
+  });
+  const stored = (over: Record<string, unknown> = {}) => ({
+    course: course(),
+    items: [],
+    schedule: [],
+    exceptions: [],
+    guide: { code: 'HIST 1500', name: 'M', blurb: '', source: '', mastery: 0, audio: false, units: [], terms: [] },
+    planMinutes: '45 min',
+    frameLabel: 'Exam frames',
+    ...over,
+  });
+
+  it('drops a module with nothing to address it by', () => {
+    // `store.tsx` reads `m.course.term` while the catalogue is being built.
+    expect(readModules([{ id: 'c1' }])).toEqual([]);
+    expect(readModules([{ course: { id: 'c1' } }])).toEqual([]);
+    expect(readModules([{ course: { code: 'HIST 1500' } }])).toEqual([]);
+    expect(readModules([null, 'x', 7])).toEqual([]);
+    expect(readModules('none')).toEqual([]);
+  });
+
+  it('gives a course the lists the catalogue maps over', () => {
+    // `teachingSpan` iterates `mod.items`; `blocksFor` reads `b.days`.
+    const [m] = readModules([{ course: course() }]);
+    expect(m.items).toEqual([]);
+    expect(m.schedule).toEqual([]);
+    expect(m.exceptions).toEqual([]);
+    expect(m.guide.units).toEqual([]);
+  });
+
+  it('gives a course the grading row the grade screen maps over', () => {
+    const [m] = readModules([stored({ course: course({ grading: undefined }) })]);
+    expect(m.course.grading).toEqual([]);
+  });
+
+  it('gives a grading row the two strings the weight is read from', () => {
+    // `readWeight` calls `.match` on the percentage.
+    const [m] = readModules([stored({ course: course({ grading: [{}] }) })]);
+    expect(m.course.grading).toEqual([{ what: '', pct: '' }]);
+  });
+
+  it('gives an item the kind and the time four screens read', () => {
+    const [m] = readModules([stored({ items: [{ id: 'i1', title: 'Essay', month: 8, day: 25 }] })]);
+    expect(m.items[0].kind).toBe('');
+    expect(m.items[0].dueTime).toBe('');
+    expect(m.items[0].c).toBe('c1');
+  });
+
+  it('leaves out a meeting with no days, which could never draw', () => {
+    const [m] = readModules([stored({ schedule: [{}, { days: [1, 3], at: 540 }] })]);
+    expect(m.schedule).toHaveLength(1);
+    expect(m.schedule[0].days).toEqual([1, 3]);
+  });
+
+  it('keeps a whole course exactly as it was saved', () => {
+    const saved = stored({
+      items: [{ id: 'i1', c: 'c1', title: 'Essay 1', kind: 'Paper', month: 8, day: 25, dueTime: '11:59p', weight: '50%' }],
+      schedule: [{ days: [1, 3, 5], at: 540, time: '9:00a', title: 'Lecture', meta: 'A1' }],
+    });
+    const [m] = readModules([saved]);
+    expect(m.course.code).toBe('HIST 1500');
+    expect(m.course.grading).toEqual([{ what: 'Essay', pct: '50%' }]);
+    expect(m.items).toHaveLength(1);
+    expect(m.items[0].title).toBe('Essay 1');
+    expect(m.schedule).toHaveLength(1);
+  });
+
+  /*
+   * Unlike `justTheCourse`, which narrows on purpose because it decides what
+   * leaves the device. Nothing leaves here, and `lib/migrate.ts` says of a copy
+   * from a newer build that "the app reads what it recognises and ignores the
+   * rest" — which is not the same as deleting it on the next save.
+   */
+  it('does not strip a field a newer build wrote', () => {
+    const [m] = readModules([stored({ course: course({ zoom: 'https://z.test' }), tutorials: ['a'] })]);
+    expect((m.course as unknown as { zoom: string }).zoom).toBe('https://z.test');
+    expect((m as unknown as { tutorials: string[] }).tutorials).toEqual(['a']);
   });
 });

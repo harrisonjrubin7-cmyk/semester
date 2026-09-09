@@ -172,6 +172,23 @@ describe('opening the app on a row that is missing a field', () => {
     expect(Array.isArray(alarms[0].days)).toBe(true);
   });
 
+  it('gives a stored course the lists the catalogue is built from', () => {
+    // The worst of them to get wrong: the catalogue is built before any screen
+    // is drawn, so this one was an uncaught TypeError and a blank document.
+    const raw = JSON.stringify({ courses: [{ course: { id: 'c1', code: 'HIST 1500' } }] });
+    const { courses } = withStorage(raw, () => loadPersisted());
+    expect(courses).toHaveLength(1);
+    expect(Array.isArray(courses[0].items)).toBe(true);
+    expect(Array.isArray(courses[0].schedule)).toBe(true);
+    expect(Array.isArray(courses[0].course.grading)).toBe(true);
+    expect(Array.isArray(courses[0].guide.units)).toBe(true);
+  });
+
+  it('leaves out a course with nothing to address it by', () => {
+    const raw = JSON.stringify({ courses: [{ id: 'c1' }, { course: { id: 'c2' } }] });
+    expect(withStorage(raw, () => loadPersisted()).courses).toEqual([]);
+  });
+
   /*
    * `lib/migrate.ts` loads a copy written by a newer build and says of it "the
    * app reads what it recognises and ignores the rest". Ignoring a field is not

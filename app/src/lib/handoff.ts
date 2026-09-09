@@ -198,6 +198,65 @@ function tidySchedule(raw: unknown): RecurringBlock[] {
   return out;
 }
 
+/**
+ * The saved courses, read back before the catalogue is built from them.
+ *
+ * The other direction of everything above, and the one that was missing. This
+ * file's whole argument is that a course arriving from somewhere the app does
+ * not control has to be rebuilt before anything maps over it — and a course
+ * read out of `localStorage` is exactly that. `state/shape.ts` had
+ * `courses: list(saved.courses)`, which checks that the list is a list.
+ *
+ * It is the worst of the lists to get wrong, because the catalogue is built
+ * from it before any screen is drawn: four of these six were an uncaught
+ * TypeError and a blank document rather than a screen's boundary. Measured,
+ * one stored course at a time:
+ *
+ *     { id }                        store          m.course.term      the app
+ *     course, nothing else          teachingSpan   mod.items          the app
+ *     schedule: [{}]                blocksFor      b.days.includes    the app
+ *     grading: [{}]                 readWeight     g.pct.match        the app
+ *     course without grading        standing       c.grading.map      <Grades>
+ *     items: [{ id }]               normalKind     i.kind.toLower     four screens
+ *
+ * A module with no `course`, or a course with no id or code, is dropped: it
+ * cannot be addressed, opened, or named, so there is nothing to draw. Anything
+ * with those two is repaired and kept, because a course is a term's work.
+ *
+ * The spread is kept and the guarantees written over it, unlike `justTheCourse`
+ * above — that one narrows deliberately, because it decides what leaves the
+ * device. Nothing leaves here, and `lib/migrate.ts` says of a copy from a newer
+ * build that "the app reads what it recognises and ignores the rest", which is
+ * not the same as deleting it.
+ */
+export function readModules(raw: unknown): CourseModule[] {
+  if (!Array.isArray(raw)) return [];
+  const out: CourseModule[] = [];
+  for (const value of raw) {
+    if (!value || typeof value !== 'object') continue;
+    const m = value as Partial<CourseModule>;
+    const c = m.course as Partial<CourseModule['course']> | undefined;
+    if (!c || typeof c !== 'object' || typeof c.id !== 'string' || !c.id) continue;
+    if (typeof c.code !== 'string' || !c.code) continue;
+
+    const term = readTerm(typeof c.term === 'string' ? c.term : undefined);
+    out.push({
+      ...(m as CourseModule),
+      course: {
+        ...(c as CourseModule['course']),
+        ...tidyCourse(c as CourseModule['course']),
+      },
+      items: tidyItems(m.items, c.id, term).items,
+      schedule: tidySchedule(m.schedule),
+      guide: tidyGuide(m.guide),
+      planMinutes: typeof m.planMinutes === 'string' ? m.planMinutes : '45 min',
+      frameLabel: typeof m.frameLabel === 'string' ? m.frameLabel : 'Exam frames',
+      exceptions: Array.isArray(m.exceptions) ? m.exceptions : [],
+    });
+  }
+  return out;
+}
+
 export function packCourse(module: CourseModule, at = Date.now()): string {
   const pack: Pack = {
     kind: 'semester.course',
