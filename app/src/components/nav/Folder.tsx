@@ -32,7 +32,8 @@
  * what makes "over the launcher" true rather than approximately true.
  */
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
+import { useModal } from '../../a11y/modal';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../state/store';
 import { readOrder, writeOrder } from '../../lib/launcher';
@@ -59,20 +60,20 @@ export function Folder({
   onClose: () => void;
 }) {
   const { state, dispatch } = useStore();
-  const box = useRef<HTMLDivElement>(null);
   const shut = useRef<HTMLButtonElement>(null);
-  const came = useRef<Element | null>(null);
   const down = useRef(0);
 
-  /* Remember where focus was, take it, and give it back on the way out. */
-  useEffect(() => {
-    came.current = document.activeElement;
-    shut.current?.focus();
-    return () => {
-      const back = came.current;
-      if (back instanceof HTMLElement && document.contains(back)) back.focus();
-    };
-  }, []);
+  /*
+   * Remember where focus was, take it, and give it back on the way out — and
+   * keep Tab inside while it is open.
+   *
+   * This was written here first, and was the only dialog in the app doing
+   * either half. It is `a11y/modal.ts` now, unchanged in what it does for
+   * this folder and fixing what its local copy could not know: that copy
+   * asked for `button:not([disabled])`, which is exactly right for a grid of
+   * buttons and skips the field in every other dialog that borrowed it.
+   */
+  const modal = useModal<HTMLDivElement>({ onClose, initial: shut });
 
   /*
    * The gesture, and the keyboard that has to do the same job.
@@ -106,28 +107,9 @@ export function Folder({
       role="dialog"
       aria-modal="true"
       aria-label={group}
-      ref={box}
-      onKeyDown={(e) => {
-        if (e.key === 'Escape') {
-          e.preventDefault();
-          e.stopPropagation();
-          onClose();
-          return;
-        }
-        if (e.key !== 'Tab') return;
-        // The trap. Two ends of the tab ring, wrapped by hand.
-        const focusable = box.current?.querySelectorAll<HTMLElement>('button:not([disabled])');
-        if (!focusable || focusable.length === 0) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }}
+      ref={modal.ref}
+      tabIndex={-1}
+      onKeyDown={modal.onKeyDown}
       onTouchStart={(e) => {
         down.current = e.touches[0]?.clientY ?? 0;
       }}
