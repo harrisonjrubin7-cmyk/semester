@@ -296,6 +296,7 @@ export function RecordButton({
           <textarea
             className="input"
             readOnly
+            aria-label="Transcript"
             value={asText(paragraphs(segments), stamps)}
             style={{ width: '100%', minHeight: 150, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
           />
