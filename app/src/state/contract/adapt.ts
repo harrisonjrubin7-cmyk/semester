@@ -227,9 +227,22 @@ function slug(s: string): string {
  * So: `dueAt` is the calendar day pinned to noon UTC (see `dayAt` for why
  * noon), and the syllabus's own wording travels in `dueText` rather than being
  * thrown away or turned into a clock time nobody was given.
+ *
+ * ## And the date it used to be on
+ *
+ * A deadline the student has moved carries `movedFrom` — the date the syllabus
+ * actually gave. Sending only the date in force would hand a second client a
+ * date the document does not state, beside the quote and page it came from,
+ * with nothing saying which to believe. So it crosses as `statedDueAt`.
+ *
+ * Nothing comes the other way yet: `fromContract` reads notes and grades back
+ * and does not rebuild courses, so there is no return path for this to be lost
+ * on. When there is one, it has to write `movedFrom` back — the note below in
+ * `fromContract` says so.
  */
 function toItem(item: AppItem, mod: CourseModule, now: string): Item {
   const year = item.year ?? new Date().getFullYear();
+  const moved = item.movedFrom;
   return {
     id: item.id,
     updatedAt: now,
@@ -238,6 +251,9 @@ function toItem(item: AppItem, mod: CourseModule, now: string): Item {
     kind: item.kind,
     title: item.title,
     dueAt: dayAt(year, item.month, item.day),
+    ...(moved
+      ? { statedDueAt: dayAt(moved.year ?? item.year ?? year, moved.month, moved.day) }
+      : {}),
     dueText: item.dueTime || undefined,
     weight: Number.parseFloat(item.weight) || undefined,
     status: 'todo',
@@ -356,6 +372,11 @@ function toAttend(a: Persisted['attendance'][number], now: string): Attend {
  * Tombstoned records are dropped on the way in. That is the deletion
  * propagating: the row is gone from the app's list even though the tombstone
  * stays in the synced set.
+ *
+ * Notes and grades only. Courses and their items do not come back this way,
+ * which is why nothing here reads `dueAt` or `statedDueAt` — whoever adds that
+ * path has to map `statedDueAt` onto `movedFrom`, or a deadline somebody moved
+ * returns from another device claiming the syllabus set the new date.
  */
 export function fromContract(state: Persisted, c: Contract): Persisted {
   const notes = c.notes

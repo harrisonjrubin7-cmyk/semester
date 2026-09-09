@@ -16,7 +16,6 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { SHORTCUTS, keyLabel, shortcutFor } from '../lib/keys';
-import { focusBox } from '../lib/screenbox';
 import { useAI } from '../ai/store';
 import { DESKTOP, useMedia } from '../lib/media';
 import { useSitting } from '../lib/sitting.hook';
@@ -53,22 +52,16 @@ export function Keys() {
       switch (hit.action) {
         case 'search':
           /*
-           * The list in front of you first, the whole app second.
+           * One key, one answer.
            *
-           * A screen with rows of its own opens its filter here — that is what
-           * the key is for on Sources or Grades, and the overlay is one press
-           * of Enter further on. Nothing is standing there waiting to be
-           * focused: no screen draws a filter field until it is asked for, so
-           * this opens one. On the screens that have no list, there is nothing
-           * to open and the whole-app search is what the key meant anyway.
-           *
-           * Both used to happen at once. See `lib/screenbox.ts`.
+           * It used to ask the screen in front of you first, and open its own
+           * filter where it had one — which meant `/` did different things on
+           * Grades and on Today, and the app had two searches to explain.
+           * There is one now, and this opens it: an overlay rather than a
+           * screen, because looking something up should not cost you the page
+           * you were reading. See `components/Command.tsx`.
            */
-          if (!focusBox()) {
-            // An overlay rather than a screen: looking something up should not
-            // cost you the page you were reading. See `components/Command.tsx`.
-            dispatch({ type: 'finder', open: true });
-          }
+          dispatch({ type: 'finder', open: true });
           break;
         case 'assistant':
           // The sheet over the screen you are on, which is the whole point of

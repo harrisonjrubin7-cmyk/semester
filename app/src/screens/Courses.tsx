@@ -10,7 +10,6 @@ import { Page } from '../components/Page';
 import { LightTile } from '../components/soft/Soft';
 import { useSoft } from '../components/shell/useShell';
 import { standing } from '../lib/grades';
-import { has } from '../lib/search';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
@@ -99,17 +98,7 @@ export function Courses() {
     */
     <Page
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}
-      search={{
-        placeholder: 'Find a course',
-        select: () => catalog.courses,
-        // The number as well as the name — "1020" is how people say a course
-        // out loud, and it is the half of the code they remember — and the
-        // professor and the room, because "the one in Buttrick" and "Stromme's"
-        // are the other two ways somebody names a course they are looking for.
-        match: (c, q) => has(q, c.code, c.name, c.prof, c.meets, c.room),
-      }}
     >
-      {(shown) => (
         <>
           <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
           {/* Absent until there is more than one term. See `components/TermSwitch`. */}
@@ -130,7 +119,7 @@ export function Courses() {
           */}
           {soft ? (
             <div className="soft-tiles">
-              {shown.map((c) => {
+              {catalog.courses.map((c) => {
                 const next = ahead.find((i) => i.c === c.id);
                 const mark = standing(c, state.grades, {
                   pieces: state.pieces,
@@ -157,7 +146,7 @@ export function Courses() {
               })}
             </div>
           ) : (
-          shown.map((c) => {
+          catalog.courses.map((c) => {
             const next = ahead.find((i) => i.c === c.id);
             return (
               <Blueprint
@@ -232,22 +221,13 @@ export function Courses() {
           })
           )}
 
-          <button
-            type="button"
-            className="btn btn-secondary btn-block"
-            onClick={() => dispatch({ type: 'go', screen: 'import' })}
-            style={{
-              height: 46,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginTop: 'var(--sp-3)',
-            }}
-          >
-            + Add a course from a syllabus
-          </button>
+          {/* No "add a course" button here. It was a full-width one under
+              the last card, and it was the second add-affordance on a screen
+              that already has a + in its header. Adding a course is reached
+              by name in search, by `n`, and by the soft layout's own bar —
+              see `lib/nav.ts`, `lib/keys.ts` and `lib/softtop.ts`. */}
           <div style={{ height: 12 }} />
         </>
-      )}
     </Page>
   );
 }

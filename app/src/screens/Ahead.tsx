@@ -324,8 +324,10 @@ export function Ahead() {
             type="button"
             className="btn btn-secondary btn-block"
             onClick={() => {
-              dispatch({ type: 'setMeTab', tab: 'settings' });
-              dispatch({ type: 'go', screen: 'me' });
+              // Straight to the page that holds the hours. It used to open
+              // Progress with its Settings tab selected, which was a second
+              // way into the same index; that tab no longer exists.
+              dispatch({ type: 'go', screen: 'setWorkload' });
             }}
             style={{ height: 38, marginTop: 'var(--sp-5)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
           >

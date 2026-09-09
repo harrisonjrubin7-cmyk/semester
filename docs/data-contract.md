@@ -84,7 +84,7 @@ export interface Record_ {
 |---|---|
 | `Term` | an academic term — id, name, startsOn?, endsOn?, status |
 | `Course` | id, termId, code, title, professor, credits, meetings, grading, aiPolicy, source |
-| `Item` | id, courseId, kind, title, dueAt?, startAt?, effortMin?, weight?, status, source, externalUid? |
+| `Item` | id, courseId, kind, title, dueAt?, statedDueAt?, dueText?, startAt?, effortMin?, weight?, status, source, externalUid? |
 | `Score` | id, courseId, itemId?, component, earned, possible |
 | `Unit` | id, courseId, title, body, order |
 | `Card` | id, unitId, front, back, sure?, outcome? |
@@ -116,7 +116,7 @@ Read out of `app/src/lib/types.ts`, `app/src/state/shape.ts`,
 |---|---|---|---|
 | `Term` | **none** | an academic term is a *string* (`'2026FA'`) on `Course.term`, plus `archivedTerms: string[]` | No record exists. `types.ts` *does* export `Term`, but it is `{t, d}` — a glossary term. **Name collision.** |
 | `Course` | `state.courses[].course` | nested inside `CourseModule`, not top-level | `name`→`title`, `prof`→`professor`, `credits` is a **string**, `meets` is one free-text string vs structured `meetings`, `term?` optional |
-| `Item` | `state.courses[].items[]` | nested in the module | `c`→`courseId`; date is **`{month (0-based), day, year?}` + `dueTime` free text**, not `dueAt`; `weight` is a string; no `status`, no `effortMin` |
+| `Item` | `state.courses[].items[]` | nested in the module | `c`→`courseId`; date is **`{month (0-based), day, year?}` + `dueTime` free text**, not `dueAt`; `movedFrom`→`statedDueAt`; `weight` is a string; no `status`, no `effortMin` |
 | `Score` | `state.grades` | `Record<string, string>`, key `` `${courseId}:${index}` `` | **Not records at all** — a flat map, string values, positional key. See §3.1. |
 | `Unit` | `state.courses[].guide` units | `{name, mastery, cards}` | **No `id`.** Order is array position. `mastery` is app-only. |
 | `Card` | `Unit.cards[]` → `StudyCard` | `{q, a}` | **No `id`, no `unitId`.** `sure`/`outcome` live separately in `state.reviews`. |
@@ -174,6 +174,24 @@ Resolution: `dueAt` is ISO where a real time exists; where the syllabus gives
 none, `dueAt` is the date at local midnight **and the original string is kept**
 in a client-local field. Losing "in class" to gain a fake `T00:00:00Z` would be
 a downgrade the user can see.
+
+There is a second date, and it is not a duplicate of the first. A student may
+move a deadline — a professor says so in class, an announcement lands, or the
+syllabus was simply wrong — and the app records the date the document gave in
+`movedFrom` rather than overwriting it, because every item is shown beside the
+sentence and page it came from and an item whose date silently contradicts its
+own quote is the app quietly editing its evidence.
+
+So `dueAt` is the date in force and `statedDueAt` is the one the syllabus gave,
+present only where they differ. A client receiving only `dueAt` would render a
+date the document does not state, next to a quote saying otherwise, with
+nothing to say which to believe.
+
+Nothing returns yet: `fromContract` reads notes and grades back and does not
+rebuild courses. Whoever adds that path must map `statedDueAt` onto
+`movedFrom` — otherwise a deadline somebody moved comes back from another
+device claiming the syllabus set the new date, which is the one failure this
+field exists to prevent.
 
 ### 3.3 `Term` is two different things
 

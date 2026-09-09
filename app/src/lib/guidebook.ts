@@ -58,13 +58,13 @@ export interface Guidebook {
 /** What each area is for. The one piece of prose per group. */
 const AREA: Record<Group, string> = {
   Semester:
-    'What is happening and when, and how it is going. Everything here is built from your syllabi — the dates, the weights, the readings — so it is only as right as what was imported, and every screen here will show you the sentence it came from. It also holds the questions worth asking once a week rather than once a day: what each course is running at, what that does to the degree, and which weeks went by without being ticked off.',
+    'What is happening and when, and how it is going. Everything here is built from your syllabi — the dates, the weights, the readings — so it is only as right as what was imported, and every screen here will show you the sentence it came from. It also holds the questions worth asking once a week rather than once a day: what each course is running at, and which weeks went by without being ticked off.',
   Study:
     'Turning what a course holds into something you can be tested on. One guide per course, and several ways through it: cards, a quiz, a read-through, a cram sheet, slides. They all read the same material, so adding a reading updates every one of them at once.',
   Make:
     'The tools that produce something — a practice paper, a deck, a diagram, a draft, a letter. These are the screens that ask for your own work rather than showing you the app’s.',
   Courses:
-    'The four courses themselves, and the ways their record is kept true. A syllabus moves, a professor sends an email, a date slips; nothing here changes anything without showing you what it would change first.',
+    'The four courses themselves, what they add up to towards a degree, and the ways their record is kept true. A syllabus moves, a professor sends an email, a date slips; nothing here changes anything without showing you what it would change first.',
   Campus:
     'The parts of university that are not coursework — where a building is, what is on your meal plan, where you live, what is on this week.',
   Life:

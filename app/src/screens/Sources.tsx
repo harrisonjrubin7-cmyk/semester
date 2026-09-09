@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
-import { has } from '../lib/search';
 import { EmptyState, SectionLabel, Segmented } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { download } from '../lib/deliver';
@@ -77,23 +76,7 @@ export function Sources() {
     <Page
       bottom={26}
       blurb="Nothing here invents a citation — every source is one you entered, kept exactly as you wrote it. The tools that ask for your sources read from this list instead of asking again."
-      search={{
-        placeholder: 'Find a source — author, title, what it is for',
-        select: () => list,
-        // The line as you typed it, plus what you said it was for and which
-        // project it belongs to. Searching a reading list by the author's
-        // name is what people do, and `raw` is where the name is.
-        match: (s, q) => has(q, s.raw, s.role, s.project),
-        // Named, because a source that is in the list but filed under
-        // another project looks identical to one that was never added, and
-        // the chips above are the difference.
-        empty: (q) =>
-          filter
-            ? `Nothing in “${filter}” matches “${q}”. Choose All above to search every project.`
-            : `No source matches “${q}”.`,
-      }}
     >
-      {(shown) => (
         <>
           <SectionLabel>Course</SectionLabel>
           <select
@@ -162,8 +145,8 @@ export function Sources() {
             Keep it
           </button>
 
-          {shown.length > 0 && <SectionLabel>{heading}</SectionLabel>}
-          {/* `list`, not `shown`: this is the screen saying you have no sources at
+          {list.length > 0 && <SectionLabel>{heading}</SectionLabel>}
+          {/* `list`, not `list`: this is the screen saying you have no sources at
               all. A search that matched nothing is a different thing, and
               `<Page>` says so itself — showing both was two answers to one
               question, one of them wrong. */}
@@ -176,9 +159,9 @@ export function Sources() {
           ) : (
             <>
               <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
-                {completeness(shown)}
+                {completeness(list)}
               </div>
-              {shown.map((s) => {
+              {list.map((s) => {
                 const missing = gaps(s);
                 return (
                   <Blueprint plain key={s.id} style={{ padding: '12px 13px', marginBottom: 'var(--sp-4)' }}>
@@ -247,7 +230,7 @@ export function Sources() {
                   onClick={() =>
                     download({
                       name: `${heading.toLowerCase().replace(/[^\w]+/g, '-')}.bib`,
-                      body: toBibtex(shown),
+                      body: toBibtex(list),
                       mime: 'text/plain',
                     })
                   }
@@ -261,7 +244,7 @@ export function Sources() {
                   onClick={() =>
                     download({
                       name: `${heading.toLowerCase().replace(/[^\w]+/g, '-')}.md`,
-                      body: toMarkdown(shown, heading),
+                      body: toMarkdown(list, heading),
                       mime: 'text/markdown',
                     })
                   }
@@ -274,7 +257,7 @@ export function Sources() {
                 type="button"
                 className="btn btn-secondary btn-block"
                 onClick={() => {
-                  void navigator.clipboard?.writeText(asLines(shown));
+                  void navigator.clipboard?.writeText(asLines(list));
                   setCopied(true);
                 }}
                 style={{ height: 42, marginTop: 'var(--sp-4)' }}
@@ -290,7 +273,6 @@ export function Sources() {
             </>
           )}
         </>
-      )}
     </Page>
   );
 }

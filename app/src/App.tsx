@@ -52,7 +52,6 @@ const Ask = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
 const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
 const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
 const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
-const Cloud = lazy(() => import('./screens/Cloud').then((m) => ({ default: m.Cloud })));
 const Connect = lazy(() => import('./screens/Connect').then((m) => ({ default: m.Connect })));
 const Links = lazy(() => import('./screens/Links').then((m) => ({ default: m.Links })));
 const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Costs })));
@@ -86,7 +85,7 @@ const Quiz = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Quiz
 const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
 const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
 const Search = lazy(() => import('./screens/Me').then((m) => ({ default: m.Search })));
-const Settings = lazy(() => import('./screens/Me').then((m) => ({ default: m.Settings })));
+const Settings = lazy(() => import('./screens/settings/Index').then((m) => ({ default: m.Settings })));
 // The settings pages. Lazy like every other screen: somebody who never opens
 // settings should not download the colour picker.
 const SettingsLook = lazy(() => import('./screens/settings/Look').then((m) => ({ default: m.SettingsLook })));
@@ -372,8 +371,6 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Yours, never invented', title: 'Sources' };
     case 'account':
       return { kicker: 'Your semester, everywhere', title: 'Account' };
-    case 'cloud':
-      return { kicker: 'Files, mail and your calendar', title: 'Your accounts' };
     case 'slides':
       return { kicker: about('deck'), title: 'Slides' };
     case 'import':
@@ -565,7 +562,13 @@ function Header() {
           <Running />
           {/* One line, from anywhere. The alternative to this button is four
               taps through two pickers, which is why nobody adds the thing
-              they were told about walking out of a lecture. */}
+              they were told about walking out of a lecture.
+
+              The same thing on every screen, deliberately. It briefly opened
+              the importer on the courses list — the + adding what the screen
+              lists — and that made the one control whose meaning you can rely
+              on into one you have to check. Adding a course has its own
+              routes: by name in search, `n`, and the soft layout's bar. */}
           <button
             type="button"
             className="btn btn-ghost btn-icon"
@@ -877,8 +880,6 @@ function CurrentScreen() {
       return <Sources />;
     case 'account':
       return <AccountScreen />;
-    case 'cloud':
-      return <Cloud />;
     case 'slides':
       return <SlideDeck />;
     default:
@@ -902,7 +903,7 @@ function Rail() {
   // a phone, which the rail is not on.
   // Taken from the one list of places, so the rail cannot drift out of step
   // with what Me and search know about.
-  const extras = ['ask', 'import', 'account', 'connect', 'cloud', 'settings']
+  const extras = ['ask', 'import', 'account', 'connect', 'settings']
     .map((s) => destination(s as Screen))
     .filter((d): d is NonNullable<typeof d> => Boolean(d))
     // Not twice. Four of these six can now be put in the bar, and the rail

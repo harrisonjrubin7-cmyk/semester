@@ -158,14 +158,14 @@ describe('an account with something in it', () => {
   });
 
   it('does not answer two different questions with the same hero', () => {
-    // Files & mail showed Connect accounts' feed count, and What worked
-    // showed the Weekly report's; a hero repeated across two screens is a
-    // hero that is not about either of them.
+    // Connect accounts showed the feed count and What worked showed the
+    // Weekly report's; a hero repeated across two screens is a hero that is
+    // not about either of them.
     const said = (s: (typeof SCREENS)[number]) => {
       const h = softTop(s, input()).hero;
       return h ? [h.label, h.meta, h.figure, h.said, h.foot].join('|') : null;
     };
-    expect(said('cloud')).not.toBe(said('connect'));
+    expect(said('connect')).not.toBe(said('brief'));
   });
 
   it('tells Settings about its storage and its account, not about the term', () => {

@@ -15,7 +15,6 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { has } from '../lib/search';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import {
@@ -32,35 +31,21 @@ import {
 } from '../lib/letters';
 
 export function People() {
-  const { state, catalog } = useStore();
+  const { state } = useStore();
   const [tab, setTab] = useState<'people' | 'letters'>('people');
 
   /*
-   * Only the People tab. Letters are a handful and are already grouped by
-   * the person they are about, so a box there would filter a list that fits
-   * on one screen.
+   * No filter on this screen, and none anywhere else either.
    *
-   * The filter runs here and nothing about it leaves the device — which is
-   * worth saying on this screen in particular, because it is the one the
-   * assistant is refused entirely: `lib/context.ts` sends nothing from
-   * `people` under any circumstance, and there is no provider for it.
-   * Searching your own list of professors locally is a different thing from
-   * a model being told who they are.
+   * There was one here, and it was the best case for the feature: a list of
+   * professors the whole-app search is refused — `lib/context.ts` sends
+   * nothing from `people` under any circumstance, and there is no provider
+   * for it. It still went with the rest, because a filter on one screen out
+   * of fifty-nine is a thing people find by accident. The list is grouped by
+   * course and most of it fits on a screen.
    */
-  const search =
-    tab === 'people'
-      ? {
-          placeholder: 'Find someone — name, role, course',
-          select: () => state.people,
-          match: (person: Person, q: string) =>
-            has(q, person.name, person.role, person.note, catalog.byId[person.courseId]?.code),
-        }
-      : undefined;
-
   return (
-    <Page search={search as never}>
-      {(shown: unknown[]) => (
-        <>
+    <Page>
       <Segmented
         options={[
           { id: 'people', label: `People${state.people.length ? ` (${state.people.length})` : ''}` },
@@ -70,9 +55,7 @@ export function People() {
         onChange={setTab}
         style={{ margin: '0 0 16px' }}
       />
-      {tab === 'people' ? <PeopleTab rows={shown as Person[]} /> : <LettersTab />}
-        </>
-      )}
+      {tab === 'people' ? <PeopleTab rows={state.people} /> : <LettersTab />}
     </Page>
   );
 }

@@ -3,7 +3,6 @@ import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
-import { has } from '../lib/search';
 import { SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { DAYS } from '../lib/edit';
@@ -88,13 +87,7 @@ export function Activities() {
   return (
     <Page
       bottom={26}
-      search={{
-        placeholder: 'Find something you are in',
-        select: () => mine,
-        match: (c, q) => has(q, c.name, c.kind, c.note, c.where),
-      }}
     >
-      {(shown) => (
         <>
           <Segmented
             options={[
@@ -155,7 +148,7 @@ export function Activities() {
               )}
 
               <SectionLabel>What you are in</SectionLabel>
-              {/* `mine`, not `shown`: this says you belong to nothing at all,
+              {/* `mine`, not `mine`: this says you belong to nothing at all,
                   which is not the same as a filter that matched nothing —
                   `<Page>` says that itself. */}
               {mine.length === 0 && (
@@ -164,7 +157,7 @@ export function Activities() {
                   alongside your classes.
                 </div>
               )}
-              {shown.map((c) => (
+              {mine.map((c) => (
                 <Row key={c.id} commitment={c} />
               ))}
             </>
@@ -173,7 +166,6 @@ export function Activities() {
           {tab === 'add' && <AddOne onDone={() => setTab('yours')} />}
           {tab === 'find' && <FindThings />}
         </>
-      )}
     </Page>
   );
 }
