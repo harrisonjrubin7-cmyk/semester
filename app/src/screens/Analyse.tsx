@@ -6,7 +6,7 @@ import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
-import { ActionButton, SectionLabel } from '../components/ui';
+import { ActionButton, FilePick, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
@@ -53,7 +53,6 @@ export function Analyse() {
   const [reading, setReading] = useState('');
   const [busy, setBusy] = useState(false);
   const trouble = useTrouble();
-  const file = useRef<HTMLInputElement>(null);
   const abort = useRef<AbortController | null>(null);
 
   const table: Table = useMemo(() => parseTable(text), [text]);
@@ -77,8 +76,8 @@ export function Analyse() {
     [table, xi, numericCols],
   );
 
-  const load = async (files: FileList | null) => {
-    const f = files?.[0];
+  const load = async (files: File[]) => {
+    const f = files[0];
     if (!f) return;
     trouble.clear();
     try {
@@ -167,24 +166,14 @@ export function Analyse() {
       </div>
 
       <SectionLabel>The data</SectionLabel>
-      <input
-        ref={file}
-        type="file"
+      <FilePick
         accept=".csv,.tsv,.txt,text/csv,text/plain"
-        hidden
-        onChange={(e) => {
-          void load(e.target.files);
-          e.target.value = '';
-        }}
-      />
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
-        onClick={() => file.current?.click()}
-        style={{ height: 44 }}
+        multiple={false}
+        onPick={(picked) => void load(picked)}
+        style={{ height: 44, textTransform: 'none', letterSpacing: 'normal' }}
       >
         Open a CSV
-      </button>
+      </FilePick>
       <textarea
         aria-label="Your marks, pasted"
         className="input"

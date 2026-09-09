@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
-import { ActionButton, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
+import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
@@ -638,15 +638,14 @@ function Files() {
   const { state } = useStore();
   const [files, setFiles] = useState<FileMeta[]>([]);
   const [busy, setBusy] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
 
   const refresh = () => void listFiles().then(setFiles);
   useEffect(refresh, []);
 
-  const onPick = async (list: FileList | null) => {
-    if (!list?.length) return;
+  const onPick = async (list: File[]) => {
+    if (list.length === 0) return;
     setBusy(true);
-    for (const f of Array.from(list)) await addFile(f, null);
+    for (const f of list) await addFile(f, null);
     setBusy(false);
     refresh();
   };
@@ -656,23 +655,9 @@ function Files() {
   return (
     <div>
       <Folding name="Files">
-      <input
-        ref={input}
-        type="file"
-        multiple
-        hidden
-        onChange={(e) => {
-          void onPick(e.target.files);
-          e.target.value = '';
-        }}
-      />
-      <ActionButton
-        onClick={() => input.current?.click()}
-        disabled={busy}
-        tone="primary"
-      >
+      <FilePick onPick={(picked) => void onPick(picked)} disabled={busy} tone="primary">
         {busy ? 'Adding…' : '+ Add files'}
-      </ActionButton>
+      </FilePick>
 
       {files.length === 0 ? (
         <EmptyState
@@ -784,7 +769,6 @@ export function NoteEditor() {
   const { state, dispatch } = useStore();
   const note = state.notes.find((n) => n.id === state.noteId);
   const [files, setFiles] = useState<FileMeta[]>([]);
-  const input = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     void listFiles().then(setFiles);
@@ -796,9 +780,9 @@ export function NoteEditor() {
 
   const attached = files.filter((f) => note.fileIds.includes(f.id));
 
-  const attach = async (list: FileList | null) => {
-    if (!list?.length) return;
-    for (const f of Array.from(list)) {
+  const attach = async (list: File[]) => {
+    if (list.length === 0) return;
+    for (const f of list) {
       const meta = await addFile(f, note.courseId);
       dispatch({ type: 'attachFile', noteId: note.id, fileId: meta.id });
     }
@@ -864,17 +848,6 @@ export function NoteEditor() {
         />
       </div>
 
-      <input
-        ref={input}
-        type="file"
-        multiple
-        hidden
-        onChange={(e) => {
-          void attach(e.target.files);
-          e.target.value = '';
-        }}
-      />
-
       <SectionLabel>Attachments</SectionLabel>
       {attached.length === 0 && (
         <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, marginBottom: 'var(--sp-5)' }}>
@@ -917,12 +890,9 @@ export function NoteEditor() {
         ))}
       </div>
 
-      <ActionButton
-        onClick={() => input.current?.click()}
-        style={{ marginTop: 'var(--sp-6)' }}
-      >
+      <FilePick onPick={(picked) => void attach(picked)} style={{ marginTop: 'var(--sp-6)' }}>
         <Plus size={15} /> Attach a file
-      </ActionButton>
+      </FilePick>
 
       <ActionButton
         onClick={() => {

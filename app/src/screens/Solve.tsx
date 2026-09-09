@@ -6,7 +6,7 @@ import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
 import { Dictate } from '../components/Dictate';
 import { useLive } from '../lib/live';
-import { ActionButton, SectionLabel } from '../components/ui';
+import { ActionButton, FilePick, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
@@ -47,17 +47,16 @@ export function Solve() {
   const [busy, setBusy] = useState('');
   const trouble = useTrouble();
   const abort = useRef<AbortController | null>(null);
-  const camera = useRef<HTMLInputElement>(null);
   const a = byId(aid);
 
   const course = catalog.courses.length > 0 ? `${guide.code} — ${guide.name}` : '';
 
-  const readPhoto = async (files: FileList | null) => {
-    if (!files?.length) return;
+  const readPhoto = async (files: File[]) => {
+    if (files.length === 0) return;
     trouble.clear();
     setBusy('Reading it…');
     try {
-      const { shots, errors } = await toShots(Array.from(files).slice(0, MAX_SHOTS));
+      const { shots, errors } = await toShots(files.slice(0, MAX_SHOTS));
       // Some of the photos would not open. Said alongside whatever happens to
       // the ones that did, because a transcription of three pages out of four
       // looks complete and is not.
@@ -166,27 +165,21 @@ export function Solve() {
         style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 1.55 }}
       />
       <Dictate compact current={problem} onText={setProblem} label="Read the problem out" />
-      <input
-        ref={camera}
-        type="file"
+      <FilePick
         accept="image/*"
         capture="environment"
-        multiple
-        hidden
-        onChange={(e) => {
-          void readPhoto(e.target.files);
-          e.target.value = '';
-        }}
-      />
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
-        onClick={() => camera.current?.click()}
         disabled={!!busy}
-        style={{ height: 42, marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm)', letterSpacing: '0.08em' }}
+        onPick={(picked) => void readPhoto(picked)}
+        style={{
+          height: 42,
+          marginTop: 'var(--sp-4)',
+          fontSize: 'var(--type-sm)',
+          letterSpacing: '0.08em',
+          textTransform: 'none',
+        }}
       >
         {busy === 'Reading it…' ? 'Reading it…' : 'Photograph the problem'}
-      </button>
+      </FilePick>
       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         Anything the photo cannot show clearly comes back as [?] rather than a guess — a guessed
         exponent turns it into a different problem without telling you.

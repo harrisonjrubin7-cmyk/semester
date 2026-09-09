@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -6,7 +6,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Snapshots } from '../components/Snapshots';
 import { Subscribe } from '../components/Subscribe';
-import { ActionButton, SectionLabel, TickBox } from '../components/ui';
+import { ActionButton, FilePick, SectionLabel, TickBox } from '../components/ui';
 import { PROVIDERS, tokens, type ProviderId } from '../lib/connect';
 import { datedItems } from '../lib/select';
 import {
@@ -94,7 +94,6 @@ export function Export() {
   const [offered, setOffered] = useState<{ parts: string[]; data: Record<string, unknown> } | null>(
     null,
   );
-  const restoreInput = useRef<HTMLInputElement>(null);
   const [done, setDone] = useState('');
   const [error, setError] = useState('');
 
@@ -322,15 +321,11 @@ export function Export() {
         A backup file from this app, from any device. An export nobody can import is a museum
         piece.
       </div>
-      <input
-        ref={restoreInput}
-        type="file"
+      <FilePick
         accept="application/json,.json"
-        hidden
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          e.target.value = '';
-          if (!file) return;
+        multiple={false}
+        disabled={!!busy}
+        onPick={([file]) => {
           setError('');
           setDone('');
           setOffered(null);
@@ -341,16 +336,10 @@ export function Export() {
               setError(err instanceof Error ? err.message : String(err)),
             );
         }}
-      />
-      <button
-        type="button"
-        className="btn btn-secondary btn-block"
-        disabled={!!busy}
-        onClick={() => restoreInput.current?.click()}
-        style={{ height: 44 }}
+        style={{ height: 44, textTransform: 'none', letterSpacing: 'normal' }}
       >
         Restore from a backup file
-      </button>
+      </FilePick>
 
       {offered && (
         <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>

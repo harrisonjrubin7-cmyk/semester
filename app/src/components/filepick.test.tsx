@@ -116,6 +116,21 @@ describe('FilePick', () => {
     expect(picked).toEqual([]);
   });
 
+  it('tells the screen the picker is opening, before anything is chosen', () => {
+    let opened = 0;
+    show(
+      <FilePick accept=".pdf" onPick={() => {}} onOpen={() => (opened += 1)}>
+        Choose files
+      </FilePick>,
+    );
+    // The press the browser sees. Import hangs its drop box off this, so the
+    // box is open behind the dialog and still there if the dialog is dropped.
+    act(() => {
+      input().dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    expect(opened).toBe(1);
+  });
+
   it('disables the input, not only the look of it', () => {
     show(
       <FilePick accept=".pdf" disabled onPick={() => {}}>

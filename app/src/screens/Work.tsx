@@ -9,7 +9,7 @@ import { useTrouble } from '../lib/trouble';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { ProjectFile } from '../components/ProjectFile';
-import { ActionButton, ChipRow, SectionLabel } from '../components/ui';
+import { ActionButton, ChipRow, FilePick, SectionLabel } from '../components/ui';
 import { ItemRow } from '../components/shell/Rows';
 import { useRowStyle } from '../components/shell/useShell';
 import { Check, Plus } from '../components/Icons';
@@ -68,7 +68,6 @@ export function Work() {
   const [kept, setKept] = useState(false);
   const [read, setRead] = useState('');
   const abort = useRef<AbortController | null>(null);
-  const file = useRef<HTMLInputElement>(null);
 
   const unitNames = useMemo(() => guide.units.map((u) => u.name), [guide]);
 
@@ -174,26 +173,16 @@ export function Work() {
           />
           <Dictate compact current={instructions} onText={setInstructions} label="Read the instructions out" />
 
-          <input
-            ref={file}
-            type="file"
-            accept=".pdf,.docx,.txt,.md,.html,text/*"
-            style={{ display: 'none' }}
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void upload(f);
-              e.target.value = '';
-            }}
-          />
           <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => file.current?.click()}
-              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            <FilePick
+              accept=".pdf,.docx,.pptx,.txt,.md,.markdown,.rtf,.html,.htm,text/*"
+              multiple={false}
+              block={false}
+              onPick={([f]) => void upload(f)}
+              style={{ flex: 'none', padding: '0 14px', height: 40, fontSize: 'var(--type-xs)' }}
             >
               Upload
-            </button>
+            </FilePick>
             <button
               type="button"
               className="btn btn-primary"

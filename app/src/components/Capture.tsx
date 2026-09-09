@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Blueprint } from './Blueprint';
 import { Plus } from './Icons';
+import { FilePick } from './ui';
 import { MAX_SHOTS, toShots, weigh, type ShotFile } from '../lib/shots';
 
 /**
@@ -24,8 +25,6 @@ export function Capture({
   onChange: (next: ShotFile[]) => void;
   label?: string;
 }) {
-  const camera = useRef<HTMLInputElement>(null);
-  const roll = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
 
@@ -39,12 +38,12 @@ export function Capture({
     };
   }, [shots]);
 
-  const take = async (list: FileList | null) => {
-    if (!list || list.length === 0) return;
+  const take = async (list: File[]) => {
+    if (list.length === 0) return;
     setBusy(true);
     setErrors([]);
     const room = MAX_SHOTS - shots.length;
-    const chosen = [...list].slice(0, Math.max(0, room));
+    const chosen = list.slice(0, Math.max(0, room));
     const { shots: made, errors: failed } = await toShots(chosen);
     if (list.length > room) {
       failed.push(`Only ${MAX_SHOTS} photos go in one batch — the rest were left out.`);
@@ -56,43 +55,27 @@ export function Capture({
 
   const drop = (i: number) => onChange(shots.filter((_, k) => k !== i));
 
+  const full = busy || shots.length >= MAX_SHOTS;
+
   return (
     <>
-      <input
-        ref={camera}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          void take(e.target.files);
-          e.target.value = '';
-        }}
-      />
-      <input
-        ref={roll}
-        type="file"
-        accept="image/*"
-        multiple
-        style={{ display: 'none' }}
-        onChange={(e) => {
-          void take(e.target.files);
-          e.target.value = '';
-        }}
-      />
-
+      {/* Two `FilePick`s rather than two refs and two hidden inputs. The
+          difference between them is still the one attribute it always was —
+          `capture` opens the rear camera, its absence opens the library — and
+          it is now the thing the markup says, rather than which of two
+          identical hidden inputs a click was forwarded to. */}
       <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={busy || shots.length >= MAX_SHOTS}
-          onClick={() => camera.current?.click()}
+        <FilePick
+          accept="image/*"
+          capture="environment"
+          multiple={false}
+          disabled={full}
+          block={false}
+          onPick={(picked) => void take(picked)}
           style={{
             flex: 1,
             height: 42,
             fontSize: 'var(--type-xs)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -101,22 +84,16 @@ export function Capture({
         >
           <Plus size={14} />
           {busy ? 'Reading…' : label}
-        </button>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          disabled={busy || shots.length >= MAX_SHOTS}
-          onClick={() => roll.current?.click()}
-          style={{
-            flex: 1,
-            height: 42,
-            fontSize: 'var(--type-xs)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-          }}
+        </FilePick>
+        <FilePick
+          accept="image/*"
+          disabled={full}
+          block={false}
+          onPick={(picked) => void take(picked)}
+          style={{ flex: 1, height: 42, fontSize: 'var(--type-xs)' }}
         >
           From photos
-        </button>
+        </FilePick>
       </div>
 
       {shots.length > 0 && (

@@ -9,7 +9,7 @@ import type { AppNotification } from '../lib/types';
  * as a literal `>= 2`, and adding a step would have ended the run one screen
  * early with the last one never shown.
  */
-export const ONB_STEPS = 4;
+export const ONB_STEPS = 5;
 
 export const NOTIF_DEFS = [
   { k: 'class', label: 'Class starting in 15 minutes' },
