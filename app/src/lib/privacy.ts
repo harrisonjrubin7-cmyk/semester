@@ -72,7 +72,12 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'What the AI features send, and to whom',
     body:
-      'Asking a question, generating a study guide from a syllabus, or drafting an essay sends that text to Anthropic to be answered. It is sent when you press the button and not before. Anthropic’s own terms govern what happens to it there. Nothing is sent to anyone else, and there is no third-party analytics in this app.',
+      'Asking a question, generating a study guide from a syllabus, or drafting an essay sends that text to Anthropic to be answered. It is sent when you press the button and not before. Anthropic’s own terms govern what happens to it there. None of it goes anywhere else, and there is no third-party analytics in this app.',
+  },
+  {
+    heading: 'The map, which is the one other thing off this device',
+    body:
+      'Getting there draws a real map, and its tiles come from OpenStreetMap as you look at them — so their servers see this device’s address and which part of the city is on screen, the same as opening any map. Nothing about your semester goes with it: no courses, no deadlines, no account, no identifier of any kind. It happens only while that screen is open, and on no other screen in the app. Looking a place up is separate and switched off until you switch it on: it sends the words you type, when you press Find, to whichever keyless service you pick — Nominatim, run by the OpenStreetMap Foundation, or Photon, run by Komoot on the same data. Turning your own position into a place name is a third switch, off by the same default, and it is the only one that sends a coordinate.',
   },
   {
     heading: 'Reminders, if you switch them on',

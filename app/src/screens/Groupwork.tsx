@@ -103,25 +103,51 @@ export function Groupwork() {
   const open = groups.find((g) => g.id === openId) ?? null;
   const iAmIn = members.some((m) => m.user_id === account?.id);
 
+  /*
+   * `account` first, and it is not a tidiness check.
+   *
+   * This screen already refuses to draw anything without one — the sign-in
+   * panel below says "a group is other people, so it needs an account" — but
+   * that return comes after the hooks, because it has to: a component cannot
+   * return before its effects are declared. So the effect ran on a signed-out
+   * device and asked the database for a room's groups while the screen was
+   * telling the person it does nothing without an account.
+   *
+   * Measured signed out, walking the app screen by screen with the network
+   * recorded: four requests to the account service from this screen, and none
+   * from anywhere else in the app. `lib/privacy.ts` makes the claim it broke,
+   * in as many words — "signed out, nothing leaves the device at all" — and a
+   * promise about what leaves a device is the one kind this app cannot be
+   * loose about. `Classmates` guards the same way, and was already right.
+   */
   const loadGroups = useCallback(async () => {
-    if (!code) return;
+    if (!account || !code) return;
     try {
       setGroups(await groupsIn(term, code));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [term, code]);
+  }, [account, term, code]);
 
-  /** One group's roster, on opening it and again after anything in it changes. */
-  const loadOne = useCallback(async (id: string) => {
-    if (!id) return;
-    try {
-      const [who, what] = await Promise.all([membersOf(id), partsOf(id)]);
-      setRoster({ id, members: who, parts: what });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
-  }, []);
+  /**
+   * One group's roster, on opening it and again after anything in it changes.
+   *
+   * Guarded for the same reason as `loadGroups` above: a group can only be
+   * open if it was loaded, but the guard belongs on every door rather than on
+   * the one somebody happened to measure.
+   */
+  const loadOne = useCallback(
+    async (id: string) => {
+      if (!account || !id) return;
+      try {
+        const [who, what] = await Promise.all([membersOf(id), partsOf(id)]);
+        setRoster({ id, members: who, parts: what });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      }
+    },
+    [account],
+  );
 
   useEffect(() => {
     void loadGroups();
