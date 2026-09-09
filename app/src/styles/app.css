@@ -1533,6 +1533,32 @@ a:hover {
 .chrome-text {
   text-wrap: balance;
 }
+
+/*
+ * The same display figure, in the one colour, for the one thing it is for.
+ *
+ * Progress draws four numbers in a row — Ahead, Late, Done, Courses — and
+ * drew them identically, so "6 late" and "42 ahead" arrived at the same
+ * weight and the one you needed to see was the one you had to read to find.
+ * The screen's own comment already assumed otherwise: "a permanent zero in
+ * that column is a red number you learn to stop seeing" is why Late is
+ * omitted at nothing rather than shown as 0, and the number it describes was
+ * never coloured.
+ *
+ * It is not a new use of the colour. `--app-warn` is a passed deadline
+ * everywhere else in the app — Today's banner, a late date in a deadline row,
+ * a unit nothing has touched on the runway — and this cell is the count of
+ * exactly that fact. It was the one place the app said it in silver.
+ *
+ * The gradient has to go for the colour to arrive at all: `.chrome-text`
+ * paints the brushed metal through the glyphs and fills them with
+ * transparent, so a `color` alone would be invisible under it.
+ */
+.chrome-text.is-late {
+  background: none;
+  color: var(--app-warn);
+  -webkit-text-fill-color: var(--app-warn);
+}
 .device h1,
 .device h2,
 .device h3 {
