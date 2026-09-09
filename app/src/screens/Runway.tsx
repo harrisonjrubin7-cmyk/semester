@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
-import { EmptyState } from '../components/ui';
+import { ChipRow, EmptyState } from '../components/ui';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -101,39 +101,38 @@ export function Runway() {
   }
 
   const code = (id: string) => catalog.byId[id]?.code ?? id;
+  // Six, as it has always been: past that a chip is a date nobody is
+  // steering by yet. Named because the row and its labels and the index
+  // the pick writes back all have to be the same list.
+  const next = exams.slice(0, 6);
   const worst = weakest(r);
   const book = bookBy(exam, state.accessLeadDays);
   const accessUrl = state.linkUrls.access || CAMPUS_LINKS.find((l) => l.id === 'access')?.url || '';
 
   return (
     <Page bottom={26}>
+      {/*
+        The next few. A runway more than a term away is "far" in every band,
+        so a chip for it is a chip that says nothing.
+
+        `ChipRow` rather than the copy of it this drew by hand: the same
+        `.btn`, the same chrome fill when chosen, the same `flex: none`, at
+        6px 11px instead of 5px 12px — the shape the note on `PickChips`
+        describes, where the fastest way to write a chip is to copy the
+        nearest one. It is also the row in the app most likely to overflow,
+        being one chip per exam, and it was the one row with no hidden
+        scrollbar and no fade: at four courses the fourth chip was cut through
+        the middle of a course code at the screen edge, with nothing saying
+        there was a fifth.
+      */}
       {exams.length > 1 && (
-        // The next few. A runway more than a term away is "far" in every band,
-        // so a chip for it is a chip that says nothing.
-        <div style={{ display: 'flex', gap: 'var(--sp-3)', overflowX: 'auto', marginBottom: 14 }}>
-          {exams.slice(0, 6).map((e, i) => {
-            const on = e.id === exam.id;
-            return (
-              <button
-                key={e.id}
-                type="button"
-                className="btn"
-                aria-pressed={on}
-                onClick={() => setPick(i)}
-                style={{
-                  flex: 'none',
-                  padding: '6px 11px',
-                  fontSize: 'var(--type-sm)',
-                  background: on ? 'var(--chrome)' : 'transparent',
-                  color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
-                  borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
-                }}
-              >
-                {code(e.c)} · {e.daysAway}d
-              </button>
-            );
-          })}
-        </div>
+        <ChipRow
+          options={next.map((e) => e.id)}
+          value={exam.id}
+          labels={Object.fromEntries(next.map((e) => [e.id, `${code(e.c)} · ${e.daysAway}d`]))}
+          onChange={(id) => setPick(next.findIndex((e) => e.id === id))}
+          style={{ marginBottom: 14 }}
+        />
       )}
 
       <Blueprint style={{ padding: '15px 16px' }}>

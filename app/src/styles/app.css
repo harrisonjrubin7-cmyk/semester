@@ -1085,6 +1085,35 @@ a:hover {
   overflow-x: auto;
   scrollbar-width: none;
 }
+/*
+ * And it says which way there is more.
+ *
+ * The scrollbar is hidden above, which is right for a row of pills and left
+ * the row unable to say it scrolls at all: on Exam runway the fourth chip was
+ * cut through the middle of a course code at the screen edge, which reads as
+ * a clipping fault rather than as an invitation. The same `mask-image` the
+ * shelves use, and for the reason written there.
+ *
+ * Told which end, rather than fading both like the shelves do, because the
+ * first chip in one of these is usually the selected one and a permanent fade
+ * across a chrome-filled chip looks like a rendering bug. `data-more` is set
+ * from the row's own scroll position — see `useEdges` in `components/ui.tsx`
+ * — and is absent wherever nothing measured, which leaves the row exactly as
+ * it has always been.
+ *
+ * 26px: two-thirds of a chip's height, enough to read as a fade rather than
+ * as a soft edge, and short enough that a chip fully inside the row is never
+ * touched by it.
+ */
+.chiprow[data-more='end'] {
+  mask-image: linear-gradient(90deg, #000 calc(100% - 26px), transparent);
+}
+.chiprow[data-more='start'] {
+  mask-image: linear-gradient(90deg, transparent, #000 26px);
+}
+.chiprow[data-more='both'] {
+  mask-image: linear-gradient(90deg, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+}
 .chiprow::-webkit-scrollbar {
   width: 0;
   height: 0;
