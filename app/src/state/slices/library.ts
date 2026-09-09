@@ -13,7 +13,7 @@ import { newId } from '../../lib/idb';
 import { withNotes } from '../../lib/merge';
 import { LANDMARKS, apply, sheet } from '../../lib/registrar';
 import type { CampusLink, FeedSource } from '../../lib/types';
-import { DEFAULT_PERSISTED, readRestore, type Action, type Persisted, type State } from '../shape';
+import { DEFAULT_PERSISTED, readIncoming, type Action, type Persisted, type State } from '../shape';
 
 export function library(state: State, action: Action): State | null {
   switch (action.type) {
@@ -268,7 +268,22 @@ export function library(state: State, action: Action): State | null {
     // you add to keep both sides, ticked boxes keep both ticks, settings take
     // the copy that synced later.
     case 'hydrate': {
-      const { merged: mergedRaw, notes } = withNotes(state, action.persisted, DEFAULT_PERSISTED);
+      /*
+       * Through the same reader as storage and a restore, and for a stronger
+       * reason than either: this one needs nobody to open anything. The blob
+       * is `remote.state as Partial<Persisted>` with
+       * `remote.courses.map((c) => c.data as CourseModule)` beside it — casts,
+       * both of them — and it arrives on sync from whichever build the other
+       * device was running. `withNotes` below takes the remote value whole
+       * wherever the two shapes disagree, so a `courses` holding a row with no
+       * `course` on it replaced the list and the catalogue read `.term` off
+       * nothing.
+       */
+      const { merged: mergedRaw, notes } = withNotes(
+        state,
+        readIncoming(action.persisted),
+        DEFAULT_PERSISTED,
+      );
       // Recorded on every hydrate, including the one another tab triggers —
       // what came in is what came in, whichever door it used.
       const merged = { ...mergedRaw, lastSync: { at: action.at ?? Date.now(), notes } };
@@ -321,7 +336,7 @@ export function library(state: State, action: Action): State | null {
        * notes alone.
        */
       const incoming = Object.fromEntries(
-        Object.entries(readRestore(action.persisted)).filter(
+        Object.entries(readIncoming(action.persisted)).filter(
           ([, v]) => v !== undefined && v !== null,
         ),
       ) as Partial<Persisted>;

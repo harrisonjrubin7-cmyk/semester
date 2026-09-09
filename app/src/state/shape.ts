@@ -1163,14 +1163,31 @@ export function loadPersisted(): Persisted {
 }
 
 /**
- * The fields a restore actually carries, read the same way storage is.
+ * A blob arriving from somewhere that is not this device's storage.
  *
- * A restore is a partial: it replaces the sections the file holds and leaves
- * everything else alone. So this reads the blob as a whole persisted state —
- * which is where every field's rules live — and then hands back only the keys
- * the blob actually had, so a backup with no `notes` does not wipe the notes.
+ * There are three doors into the persisted state and `loadPersisted` is only
+ * one of them. The other two are in `state/slices/library.ts`:
+ *
+ *  - `restore`, whose blob is a backup file somebody opened. `readBackup` in
+ *    `lib/export.ts` checks each section is an array or an object and its own
+ *    error says why — "restoring it could put nonsense into your account" —
+ *    and it could go no further without duplicating every rule here.
+ *  - `hydrate`, whose blob is the account as another device left it, cast
+ *    through as `remote.state as Partial<Persisted>` and
+ *    `remote.courses.map((c) => c.data as CourseModule)`. That one needs
+ *    nobody to open anything: it happens on sync.
+ *
+ * Both are the same untrusted input as storage, from a device running an older
+ * build or a write that stopped halfway. Measured against the reducer, a
+ * hydrate carrying `courses: [{ id: 'c1' }]` put a course with no `course` on
+ * it into the state, which is what the catalogue reads `.term` off.
+ *
+ * Both are partials: they replace or merge the sections the blob holds and
+ * leave the rest alone. So this reads the blob as a whole persisted state —
+ * which is where every field's rules live — and hands back only the keys it
+ * actually had, so a copy with no `notes` does not touch the notes.
  */
-export function readRestore(raw: Partial<Persisted>): Partial<Persisted> {
+export function readIncoming(raw: Partial<Persisted>): Partial<Persisted> {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
   const given = raw as Record<string, unknown>;
   const whole = readPersisted(raw) as unknown as Record<string, unknown>;

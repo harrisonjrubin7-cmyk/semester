@@ -314,6 +314,40 @@ describe('going back to a copy', () => {
     expect(Array.isArray(back.windows[0].days)).toBe(true);
   });
 
+  /*
+   * And the third door, which is the one nobody has to open.
+   *
+   * `hydrate` is the sync path. Its blob is `remote.state as
+   * Partial<Persisted>` with `remote.courses.map((c) => c.data as
+   * CourseModule)` beside it — two casts — arriving from whichever build the
+   * other device was running. `withNotes` takes the remote value whole
+   * wherever the two shapes disagree, so a damaged list replaced a good one
+   * and nothing had looked at it on the way in.
+   */
+  it('reads a synced blob the way it reads storage', () => {
+    const s = reducer(blank(), {
+      type: 'hydrate',
+      persisted: {
+        courses: [{ id: 'c1' }],
+        windows: [{ id: 'w1' }],
+        reviews: { 'a::b': null },
+        tasks: [{ id: 't1', date: 9 }],
+      } as never,
+    });
+    expect(s.courses).toEqual([]);
+    expect(Array.isArray(s.windows[0].days)).toBe(true);
+    expect(s.reviews).toEqual({});
+    expect(s.tasks[0].date).toBeNull();
+  });
+
+  it('still merges a good sync rather than replacing it', () => {
+    // The reader must not turn the union back into a replacement: two devices
+    // each writing a note offline have to keep both notes.
+    const mine = { ...blank(), notes: [note('a', 'Mine')] };
+    const s = reducer(mine, { type: 'hydrate', persisted: { notes: [note('b', 'Theirs')] } });
+    expect(s.notes.map((n) => n.id).sort()).toEqual(['a', 'b']);
+  });
+
   it('still restores a whole, good file exactly', () => {
     const s = { ...blank(), notes: [note('a', 'Yesterday'), note('b', 'This morning')] };
     const back = reducer(s, { type: 'restore', persisted: { notes: [note('a', 'Yesterday')] } });

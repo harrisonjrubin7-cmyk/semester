@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadPersisted, readRestore } from './shape';
+import { loadPersisted, readIncoming } from './shape';
 
 /**
  * Storage is not a trusted input, and the app opens whatever it finds.
@@ -230,13 +230,13 @@ describe('opening the app on a row that is missing a field', () => {
  * without going near any of it, and its blob is a file somebody opened — which
  * is a good deal easier to reach than editing devtools.
  *
- * `readPersisted` and `readRestore` are the same reader, so there is one list
+ * `readPersisted` and `readIncoming` are the same reader, so there is one list
  * of what a field means and both doors use it. A restore stays a partial: it
  * replaces the sections the file holds and leaves the rest alone.
  */
 describe('a blob handed to a restore', () => {
   it('is read the same way storage is', () => {
-    const back = readRestore({
+    const back = readIncoming({
       courses: [{ id: 'c1' }],
       windows: [{ id: 'w1' }],
       reviews: { 'a::b': null },
@@ -249,19 +249,19 @@ describe('a blob handed to a restore', () => {
   });
 
   it('hands back only the sections the file carried', () => {
-    const back = readRestore({ notes: [] } as never);
+    const back = readIncoming({ notes: [] } as never);
     expect(Object.keys(back)).toEqual(['notes']);
   });
 
   it('leaves out a section the file said nothing about', () => {
     // `restore` treats null as "not in this file"; repairing it into an empty
     // list here would blank a list the caller meant to leave alone.
-    expect(Object.keys(readRestore({ notes: null, tasks: undefined } as never))).toEqual([]);
+    expect(Object.keys(readIncoming({ notes: null, tasks: undefined } as never))).toEqual([]);
   });
 
   it('takes anything that is not an object as nothing', () => {
-    expect(readRestore('none' as never)).toEqual({});
-    expect(readRestore([1, 2] as never)).toEqual({});
-    expect(readRestore(null as never)).toEqual({});
+    expect(readIncoming('none' as never)).toEqual({});
+    expect(readIncoming([1, 2] as never)).toEqual({});
+    expect(readIncoming(null as never)).toEqual({});
   });
 });
