@@ -1829,14 +1829,52 @@ input[type='search'].input {
   touch-action: none;
 }
 
-/* The tile in your hand, and the one it is about to take the place of. */
-.soft-folder-tile.is-held {
+/*
+ * Anything that can be dragged into a different place in its list.
+ *
+ * One pair of rules rather than one per list. These were written for the
+ * folder's tiles and are now what every movable row uses — the bottom bar,
+ * your courses, the sections of Today, the directory — because the answer to
+ * "what is in my hand, and where would it land" should not be a different
+ * drawing on every screen. See `lib/arrange.ts`.
+ *
+ * The held row dims rather than lifting: a row that follows the finger has to
+ * leave a hole behind it, and a hole in a list of settings is a list that
+ * jumps while you are reading it. Dimming keeps every other row exactly where
+ * it was, so the outline on the target is the only thing that moves.
+ */
+.movable.is-held {
   opacity: 0.55;
 }
 
-.soft-folder-tile.is-over {
+.movable.is-over {
   outline: 2px solid var(--app-accent);
   outline-offset: 2px;
+}
+
+/*
+ * The handle, where a thing is dragged by one rather than by itself.
+ *
+ * Today's sections are the case: a hold inside one already asks the assistant
+ * about the row under your thumb, so the section is what a drop lands on and
+ * this is the only thing that starts a drag. It sits out in the page's margin
+ * at a third opacity — present enough to find when you go looking, quiet
+ * enough that eighteen of them down a page are not a column of furniture —
+ * and comes up to meet a pointer or the focus ring.
+ */
+.grip {
+  opacity: 0.3;
+  cursor: grab;
+}
+
+.grip:hover,
+.grip:focus-visible {
+  opacity: 0.75;
+}
+
+.movable.is-held .grip {
+  opacity: 0.75;
+  cursor: grabbing;
 }
 
 /*

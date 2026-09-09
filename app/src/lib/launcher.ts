@@ -31,6 +31,7 @@
  * can do is arrange things oddly, never hide one.
  */
 
+import { arranged, readLists, writeLists } from './arrange';
 import { destinationsFor, GROUPS, type Group } from './nav';
 import type { Capabilities } from './school';
 import type { Destination } from './nav';
@@ -39,34 +40,27 @@ import type { Screen } from './types';
 /** A saved arrangement: for each shelf, the screens on it, in order. */
 export type ShelfOrder = Partial<Record<Group, Screen[]>>;
 
-const SHELF_SEP = '|';
-const NAME_SEP = ':';
-const ITEM_SEP = ',';
-
-/** Parse the look key. Anything unrecognised is dropped rather than trusted. */
+/**
+ * Parse the look key. Anything unrecognised is dropped rather than trusted.
+ *
+ * The string itself is `lib/arrange.ts`'s — the home screen keeps its pages
+ * the same way — and what is added here is the one thing that is this file's
+ * business: a name in it has to be a shelf the app actually has.
+ */
 export function readOrder(saved: string | undefined): ShelfOrder {
   const out: ShelfOrder = {};
-  if (!saved) return out;
-  for (const chunk of saved.split(SHELF_SEP)) {
-    const at = chunk.indexOf(NAME_SEP);
-    if (at < 0) continue;
-    const name = chunk.slice(0, at) as Group;
-    if (!GROUPS.includes(name)) continue;
-    const screens = chunk
-      .slice(at + 1)
-      .split(ITEM_SEP)
-      .map((s) => s.trim())
-      .filter(Boolean) as Screen[];
-    if (screens.length > 0) out[name] = screens;
+  for (const [name, screens] of Object.entries(readLists(saved))) {
+    if (!GROUPS.includes(name as Group)) continue;
+    out[name as Group] = screens as Screen[];
   }
   return out;
 }
 
 /** Back to a look key. Empty shelves are left out rather than written blank. */
 export function writeOrder(order: ShelfOrder): string {
-  return GROUPS.filter((g) => (order[g]?.length ?? 0) > 0)
-    .map((g) => `${g}${NAME_SEP}${order[g]!.join(ITEM_SEP)}`)
-    .join(SHELF_SEP);
+  return writeLists(
+    Object.fromEntries(GROUPS.filter((g) => (order[g]?.length ?? 0) > 0).map((g) => [g, order[g]!])),
+  );
 }
 
 /**
@@ -79,53 +73,9 @@ export function writeOrder(order: ShelfOrder): string {
  */
 export function tilesFor(group: Group, caps: Capabilities, order: ShelfOrder): Destination[] {
   const real = destinationsFor(group, caps);
-  const wanted = order[group] ?? [];
   const byScreen = new Map(real.map((d) => [d.screen, d]));
-
-  const first: Destination[] = [];
-  for (const screen of wanted) {
-    const d = byScreen.get(screen);
-    // Named twice, or named and not on this shelf any more: skip it. The
-    // `delete` is what stops a duplicate name repeating the tile.
-    if (!d) continue;
-    first.push(d);
-    byScreen.delete(screen);
-  }
-  return [...first, ...real.filter((d) => byScreen.has(d.screen))];
-}
-
-/**
- * Drop `moved` onto `onto`: it takes that position and everything shifts.
- *
- * Insert-at rather than swap. Swapping two tiles is easy to implement and
- * wrong to use — dragging the last tile onto the first should put it first,
- * not exchange two things at opposite ends of the grid and leave the rest
- * where they were.
- */
-export function reorder<T>(list: T[], moved: T, onto: T): T[] {
-  if (moved === onto) return list;
-  const from = list.indexOf(moved);
-  const to = list.indexOf(onto);
-  if (from < 0 || to < 0) return list;
-  const out = list.filter((x) => x !== moved);
-  out.splice(to, 0, moved);
-  return out;
-}
-
-/**
- * The arrangement after a drag, ready to be written back to the look.
- *
- * The whole shelf is written down, not just the pair that moved — a partial
- * order would leave the rest at the mercy of a registry edit, which is the
- * one thing a person who has arranged their tiles does not expect.
- */
-export function afterDrag(
-  group: Group,
-  caps: Capabilities,
-  order: ShelfOrder,
-  moved: Screen,
-  onto: Screen,
-): ShelfOrder {
-  const screens = tilesFor(group, caps, order).map((d) => d.screen);
-  return { ...order, [group]: reorder(screens, moved, onto) };
+  return arranged(
+    real.map((d) => d.screen),
+    order[group] ?? [],
+  ).map((screen) => byScreen.get(screen)!);
 }

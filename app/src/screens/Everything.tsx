@@ -1,10 +1,13 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type HTMLAttributes } from 'react';
 import { Page } from '../components/Page';
 import { TabGlyph } from '../components/TabIcon';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { SHORTCUTS, keyLabel } from '../lib/keys';
-import { offered, saysFor, type Destination } from '../lib/nav';
+import { offered, saysFor, type Destination, type Group } from '../lib/nav';
+import { MOVE_HINT, arranged, useMovable } from '../lib/arrange';
+import { readOrder, writeOrder } from '../lib/launcher';
+import { currentLook } from '../state/shape';
 import {
   WHY,
   byTask,
@@ -203,6 +206,14 @@ function Row({
   held,
   when,
   go,
+  /**
+   * The handlers that make this row movable, on the view where it is.
+   *
+   * By area only. The other three views are answers to a question — what is
+   * this for, what have I not opened, what are the keys — and an order
+   * dragged into an answer is an order that lasts until the question changes.
+   */
+  drag,
 }: {
   screen: Screen;
   title: string;
@@ -210,13 +221,16 @@ function Row({
   held?: string | null;
   when?: string;
   go: (screen: Screen) => void;
+  drag?: HTMLAttributes<HTMLElement> & { 'data-drop'?: string };
 }) {
   const row = useRowStyle(0);
   return (
     <button
       type="button"
-      className="bare tappable"
+      {...drag}
+      className={`bare tappable${drag?.className ? ` ${drag.className}` : ''}`}
       onClick={() => go(screen)}
+      aria-label={drag ? `${title}. ${MOVE_HINT}` : undefined}
       style={{
         display: 'flex',
         gap: 'var(--sp-6)',
@@ -225,6 +239,7 @@ function Row({
         textAlign: 'left',
         padding: 'var(--sp-6) 0',
         ...row,
+        ...drag?.style,
       }}
     >
       <span style={{ flex: 'none', opacity: 0.75, marginTop: 'var(--sp-1)' }}>
@@ -303,8 +318,17 @@ function ByArea({
   now: Date;
   go: (screen: Screen) => void;
 }) {
-  // The shelves in registry order, and only the ones with something on them:
-  // a school with no meal plan should not be shown an empty Campus heading.
+  /*
+   * The shelves in registry order, and only the ones with something on them:
+   * a school with no meal plan should not be shown an empty Campus heading.
+   *
+   * Within a shelf the order is the student's, read from the same look key
+   * the launcher's tiles are dragged into. Two lists of the same shelf that
+   * disagreed about the order would be the app arguing with itself — and a
+   * row dragged here that the tiles ignored would be a control that appears
+   * to have done nothing.
+   */
+  const order = readOrder(currentLook(state).groupOrder);
   const shelves = useMemo(() => {
     const seen: string[] = [];
     for (const d of rows) if (!seen.includes(d.group)) seen.push(d.group);
@@ -314,25 +338,92 @@ function ByArea({
   return (
     <>
       {shelves.map(({ group, rows: shelf }) => (
-        <section key={group} aria-label={group}>
-          <Heading>{group}</Heading>
-          {shelf.map((d) => {
-            const { label, blurb } = says(d);
-            return (
-              <Row
-                key={d.screen}
-                screen={d.screen}
-                title={label}
-                sub={blurb}
-                held={heldBy(d.screen, state, catalog)}
-                when={openedLabel(state.lastOpened[d.screen], now.getTime())}
-                go={go}
-              />
-            );
-          })}
-        </section>
+        <Shelf
+          key={group}
+          group={group as Group}
+          rows={shelf}
+          wanted={order[group as Group] ?? []}
+          says={says}
+          state={state}
+          catalog={catalog}
+          now={now}
+          go={go}
+        />
       ))}
     </>
+  );
+}
+
+/**
+ * One shelf of the directory, in the order you dragged it into.
+ *
+ * Its own component because the drag is a hook and a hook cannot be set up
+ * inside a loop — and because a shelf is the unit that owns an order. The
+ * whole of the shelf as drawn is written back on every move, which is what
+ * keeps a stale saved order from deciding where the rest of it goes.
+ */
+function Shelf({
+  group,
+  rows,
+  wanted,
+  says,
+  state,
+  catalog,
+  now,
+  go,
+}: {
+  group: Group;
+  rows: Destination[];
+  wanted: Screen[];
+  says: (d: Destination) => { label: string; blurb: string };
+  state: ReturnType<typeof useStore>['state'];
+  catalog: ReturnType<typeof useStore>['catalog'];
+  now: Date;
+  go: (screen: Screen) => void;
+}) {
+  const { dispatch } = useStore();
+  const byScreen = new Map(rows.map((d) => [d.screen, d]));
+  const shelf = arranged(
+    rows.map((d) => d.screen),
+    wanted,
+  );
+
+  const drag = useMovable<Screen>({
+    items: shelf,
+    onMove: (moved) => {
+      const order = readOrder(currentLook(state).groupOrder);
+      dispatch({
+        type: 'setLook',
+        look: { groupOrder: writeOrder({ ...order, [group]: moved }) },
+      });
+    },
+  });
+
+  return (
+    <section aria-label={group}>
+      <Heading>{group}</Heading>
+      {shelf.map((screen) => {
+        const d = byScreen.get(screen)!;
+        const { label, blurb } = says(d);
+        return (
+          <Row
+            key={screen}
+            screen={screen}
+            title={label}
+            sub={blurb}
+            held={heldBy(screen, state, catalog)}
+            when={openedLabel(state.lastOpened[screen], now.getTime())}
+            // A drop ends in a click on the row it started from, so without
+            // this the drag would also open the screen it landed on.
+            go={(s) => {
+              if (drag.tookDrop()) return;
+              go(s);
+            }}
+            drag={drag.props(screen)}
+          />
+        );
+      })}
+    </section>
   );
 }
 
@@ -425,6 +516,15 @@ const GESTURES = [
   ['Select any text', 'Ask about the selection'],
   ['Swipe the assistant down', 'Put it away'],
   ['Drag the assistant button', 'Move it to either bottom corner'],
+  [
+    'Hold and drag anything in a list',
+    'Move it — icons on the home screen, tiles on a shelf, rows here, tabs in the bar, your courses, and anything on the calendar',
+  ],
+  [
+    'Drag the grip beside a heading on Today',
+    'Move that whole section up or down the day. A hold anywhere else in it still asks the assistant',
+  ],
+  ['Alt and the arrow keys', 'The same move, one step at a time, without a pointer'],
 ];
 
 function Shortcuts() {

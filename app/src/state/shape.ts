@@ -442,6 +442,15 @@ export interface Persisted {
    * `lib/launcher.ts`, which owns the format.
    */
   groupOrder: string;
+  /**
+   * How the home screen's icons are arranged, where somebody has moved one.
+   *
+   * The same kind of key, owned by `lib/springboard.ts`. Separate from
+   * `groupOrder` because they arrange different things — shelves of screens
+   * against pages of icons — and one string holding both would make a shelf
+   * called `dock` a real possibility.
+   */
+  boardOrder: string;
   /** A dragged accent hue, 0–360, or -1 for "use the named accent". */
   hue: number;
   /**
@@ -827,6 +836,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   // fallback could never fire again for anyone who had opened the app once.
   directory: '',
   groupOrder: '',
+  boardOrder: '',
   hue: -1,
 };
 
@@ -850,6 +860,7 @@ export function currentLook(state: Persisted): Look {
     shell: state.shell,
     directory: state.directory,
     groupOrder: state.groupOrder,
+    boardOrder: state.boardOrder,
     hue: state.hue,
   };
 }
@@ -1210,6 +1221,7 @@ export function pickPersisted(state: State): Persisted {
     shell: state.shell,
     directory: state.directory,
     groupOrder: state.groupOrder,
+    boardOrder: state.boardOrder,
     hue: state.hue,
   };
 }
