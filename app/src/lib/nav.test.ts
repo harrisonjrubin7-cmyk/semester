@@ -327,9 +327,21 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    /*
+     * The screen comes from the registry rather than being written here,
+     * which is the promise this describe is named for.
+     *
+     * It used to say `'grades'`. That screen stopped being a destination in
+     * #76 while the move of this block was open in #85 — neither red on its
+     * own, both red together — and the failure was a test about the registry
+     * being the one source of truth keeping a copy of one of its rows. Taking
+     * the row from `byTask` itself cannot go stale, and cannot pick a screen
+     * with no task tag, which would pass for the wrong reason.
+     */
+    const [gone] = byTask(DESTINATIONS)[0].rows;
+    const short = DESTINATIONS.filter((d) => d.screen !== gone.screen);
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === gone.screen)).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
