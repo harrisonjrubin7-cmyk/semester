@@ -337,6 +337,22 @@ export function useConversation(): Conversation {
         for (let round = 0; ; round += 1) {
           /** Read-only calls this round asked for. See `lib/lookup.ts`. */
           const wants: ToolCall[] = [];
+          /*
+           * Each round answers for itself.
+           *
+           * `ranOut` is set from `onStop`, and `lib/claude.ts` calls that only
+           * when the stream had something to report — a stream that closes
+           * cleanly with nothing to say says nothing, which its own test pins.
+           * So a round cut mid-answer set this true, and a later round that
+           * closed with `message_stop` and no `stop_reason` left it true: the
+           * finished answer was saved `incomplete`, drawn under "Stopped
+           * here.", and sent back to the model as a conclusion it never
+           * reached — when in fact it had.
+           *
+           * A normal `end_turn` round did clear it, which is why this needed a
+           * stream shape rather than an ordinary one to show up.
+           */
+          ranOut = false;
 
           const said = await ask({
             system: systemFor(read.mode, drawn.text),

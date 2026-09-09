@@ -459,6 +459,24 @@ describe('looking something up mid-answer', () => {
     expect(src).toContain('ranOut ? { incomplete: true } : {}');
   });
 
+  it('lets each round of lookups answer for itself', () => {
+    /*
+     * `ranOut` lives outside the round loop, and `onStop` is only called when
+     * the stream had something to report — `claude.test.ts` pins that a stream
+     * closing cleanly with nothing to say says nothing. So a round cut
+     * mid-answer set it true, and a later round closing with `message_stop`
+     * and no `stop_reason` left it true: a finished answer saved `incomplete`,
+     * drawn under "Stopped here.", and sent back to the model as a conclusion
+     * it never reached.
+     *
+     * A plain `end_turn` round did clear it, which is why this needed an
+     * unusual stream shape to show up at all rather than every conversation.
+     */
+    const src = converse();
+    const loop = src.slice(src.indexOf('for (let round = 0'));
+    expect(loop.slice(0, loop.indexOf('await ask('))).toContain('ranOut = false;');
+  });
+
   it('marks an answer whose stream stopped rather than ended, the same way', () => {
     /*
      * The same failure arriving a different way, and on a phone the ordinary

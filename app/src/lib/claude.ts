@@ -853,6 +853,23 @@ export async function ask(options: AskOptions): Promise<string> {
    * not better than the sentence saying the connection went.
    */
   let gave = false;
+  /*
+   * What the stream itself said went wrong, if it said anything.
+   *
+   * A streamed answer can fail after the 200: the connection is open, the
+   * headers are long sent, and the trouble arrives as an event —
+   * `{"type":"error","error":{"message":"Overloaded"}}`. Nothing here read
+   * those, so an overloaded server was reported as one of two lies depending
+   * on its timing. Before any text: "the answer never arrived", which says the
+   * model had nothing to say. After some: "stopped here", which says the
+   * connection dropped. Both send somebody to look at their own signal for a
+   * fault at the other end.
+   *
+   * Kept rather than thrown where it is read, because the `catch` around the
+   * parse exists to skip an event this build does not know — and it would
+   * swallow this throw along with them.
+   */
+  let failed = '';
   const count = (u: RawUsage | undefined) => {
     if (!u) return;
     counted = {
@@ -880,6 +897,7 @@ export async function ask(options: AskOptions): Promise<string> {
           message?: { usage?: RawUsage };
           usage?: RawUsage;
           content_block?: { type?: string; id?: string; name?: string };
+          error?: { type?: string; message?: string };
           delta?: {
             type?: string;
             text?: string;
@@ -889,6 +907,10 @@ export async function ask(options: AskOptions): Promise<string> {
           };
         };
 
+        if (event.type === 'error') {
+          failed = event.error?.message?.trim() || 'The service reported an error mid-answer.';
+          break;
+        }
         // Input counts open the stream; output counts close it.
         if (event.type === 'message_start') count(event.message?.usage);
         if (event.type === 'message_delta') {
@@ -946,7 +968,19 @@ export async function ask(options: AskOptions): Promise<string> {
         // A partial or unknown event. Skipping it is correct.
       }
     }
+    if (failed) break;
   }
+
+  /*
+   * The stream's own error, in the words every other failure here uses.
+   *
+   * Thrown before the two fallbacks below rather than after, because both of
+   * those describe a stream that went quiet, and this one did not — it said
+   * what was wrong on the way past. What had arrived goes with it: an
+   * overloaded server is a "try that again", and half an answer sitting under
+   * a button offering to try again is half an answer somebody may act on.
+   */
+  if (failed) throw new Error(explainAskError(taking, 0, failed));
 
   if (!closed) {
     /*

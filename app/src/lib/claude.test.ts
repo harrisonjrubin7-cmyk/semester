@@ -696,6 +696,45 @@ describe('why the model stopped', () => {
     expect(why).toBe('cut');
   });
 
+  /*
+   * A streamed answer can fail after the 200.
+   *
+   * The connection is open and the headers are long sent, so the trouble
+   * arrives as an event of its own. Nothing read those, and the result was one
+   * of two lies depending on when it came: before any text the stream looked
+   * empty and threw "the answer never arrived", which says the model had
+   * nothing to say; after some text it looked cut and reported `cut`, which
+   * says the connection dropped. Both send somebody to look at their own
+   * signal for a fault at the other end.
+   */
+  it('says what the stream said, when the stream said what went wrong', async () => {
+    catchRequest([{ type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } }]);
+    await expect(
+      ask({ system: 's', messages: [{ role: 'user', content: 'q' }] }),
+    ).rejects.toThrow(/Overloaded/);
+  });
+
+  it('does not call that a stream which merely stopped', async () => {
+    // The words that arrived first are not kept: an overloaded server is a
+    // "try that again", and half an answer under a button offering to try
+    // again is half an answer somebody may act on.
+    catchRequest([
+      said('Your three deadlines are'),
+      { type: 'error', error: { message: 'Overloaded' } },
+    ]);
+    let why = '';
+    await expect(
+      ask({
+        system: 's',
+        messages: [{ role: 'user', content: 'q' }],
+        onStop: (r) => {
+          why = r;
+        },
+      }),
+    ).rejects.toThrow(/Overloaded/);
+    expect(why).toBe('');
+  });
+
   it('throws rather than returning an empty answer when nothing arrived', async () => {
     // Measured in the browser before this: a 200 with an empty body, with
     // unparseable events, or cut mid-event all drew a finished turn with
