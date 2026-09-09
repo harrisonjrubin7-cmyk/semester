@@ -22,7 +22,9 @@ describe('a query that is a sentence', () => {
   });
 
   it('handles the words people put in between', () => {
-    expect(screens('where are my grades')).toContain('grades');
+    // The grade table is the grades grain of Courses, and Courses carries its
+    // keywords — so the question still lands on the screen that answers it.
+    expect(screens('where are my grades')).toContain('courses');
   });
 
   it('does not outrank a direct match', () => {
