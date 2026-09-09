@@ -60,6 +60,14 @@ describe('finding the date', () => {
     expect(matchDate('tues', NOW)?.date).toBe('2026-09-08');
   });
 
+  it('reads a counted number of weeks, as well as days', () => {
+    // "due in 2 weeks" is how the other half of these get said. Without it the
+    // line read as no date at all and kept the whole phrase in its title.
+    expect(matchDate('in 2 weeks', NOW)?.date).toBe('2026-09-18');
+    expect(matchDate('in 1 week', NOW)?.date).toBe('2026-09-11');
+    expect(capture('problem set 3 due in 2 weeks', COURSES, NOW).title).toBe('problem set 3');
+  });
+
   it('reads a counted number of days', () => {
     expect(matchDate('in 3 days', NOW)?.date).toBe('2026-09-07');
   });
@@ -149,6 +157,32 @@ describe('the whole line', () => {
 
   it('has nothing to make a row out of from nothing', () => {
     expect(enough(capture('   ', COURSES, NOW))).toBe(false);
+  });
+
+  /*
+   * The little words that only exist to point at the date.
+   *
+   * Measured through the sheet: these came out as tasks called "essay draft
+   * due" and "advisor meeting at", and read that way everywhere afterwards.
+   */
+  it('takes the word that introduced the date away with it', () => {
+    expect(capture('essay draft due friday 5pm', COURSES, NOW).title).toBe('essay draft');
+    expect(capture('advisor meeting oct 2 at 10:30am', COURSES, NOW).title).toBe('advisor meeting');
+    expect(capture('psci paper due 11/14', COURSES, NOW).title).toBe('paper');
+    expect(capture('pay tuition by friday', COURSES, NOW).title).toBe('pay tuition');
+    expect(capture('office hours from 2pm', COURSES, NOW).title).toBe('office hours');
+  });
+
+  it('leaves the same word alone where it is part of what the thing is called', () => {
+    // `on` here belongs to the essay and is nowhere near the date.
+    expect(capture('psci essay on federalism oct 6', COURSES, NOW).title).toBe(
+      'essay on federalism',
+    );
+    // And a word that merely ends in one of them is not one of them — without
+    // the word boundary, "marathon saturday" becomes a task called "marath".
+    expect(capture('marathon saturday', COURSES, NOW).title).toBe('marathon');
+    expect(capture('group chat friday', COURSES, NOW).title).toBe('group chat');
+    expect(capture('overdue library book friday', COURSES, NOW).title).toBe('overdue library book');
   });
 });
 
