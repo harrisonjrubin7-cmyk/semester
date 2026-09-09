@@ -212,6 +212,24 @@ body {
   font-family: var(--font-body);
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
+
+  /*
+   * A word longer than the column breaks, rather than the column giving way.
+   *
+   * Everything in this app is text somebody else wrote — a course title off a
+   * syllabus, a submission link pasted out of Brightspace, a professor's
+   * emailed room code. A URL has no spaces in it, so by default it is one
+   * word 100 characters wide, and the layout is 390: the card grew past the
+   * right edge of the screen and the whole scroller started moving sideways.
+   *
+   * `break-word` rather than `anywhere`, because the two differ in exactly
+   * the way that matters here: `anywhere` counts the break when working out
+   * how narrow a box may be, so every flex column in the app would become
+   * free to collapse to one letter, while `break-word` breaks the word only
+   * once the line it is on cannot hold it. Text that already fits is
+   * unaffected — which is why this can sit on `body`.
+   */
+  overflow-wrap: break-word;
 }
 
 a {

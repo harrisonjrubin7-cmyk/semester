@@ -677,8 +677,18 @@ export function ItemDetail() {
         >
           {item.title}
         </div>
+        {/*
+          A flex item will not go narrower than its own longest word unless it
+          is told it may — `min-width: auto` is the default, and `item.where`
+          is a submission link often enough that this mattered. Measured with
+          a pasted Brightspace URL: the right column took 465px of a 390px
+          screen, the card's border went off the edge, and the Due column
+          beside it was squeezed into a ribbon one word wide, reading "Fri /
+          Sep / 25" down the page. Both halves need it — either one can hold
+          the long value.
+        */}
         <div style={{ display: 'flex', borderTop: '1px solid var(--app-line)' }}>
-          <div style={{ flex: 1, padding: '11px 0' }}>
+          <div style={{ flex: 1, minWidth: 0, padding: '11px 0' }}>
             <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               Due
             </div>
@@ -686,7 +696,7 @@ export function ItemDetail() {
             <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>{item.dueTime}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
-          <div style={{ flex: 1, padding: '11px 0 11px 14px' }}>
+          <div style={{ flex: 1, minWidth: 0, padding: '11px 0 11px 14px' }}>
             <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               Weight
             </div>
