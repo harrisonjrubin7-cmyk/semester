@@ -173,7 +173,7 @@ describe('the shelves the directory is arranged on', () => {
     }
   });
 
-  it('holds the eight shelves in the order they are shown', () => {
+  it('holds the seven shelves in the order they are shown', () => {
     // Order is the thing a student learns by position, so it is asserted
     // rather than left to however the registry happens to be written.
     expect(GROUPS).toEqual([
@@ -183,7 +183,6 @@ describe('the shelves the directory is arranged on', () => {
       'Make',
       'Campus',
       'Life',
-      'You',
       'Data',
     ]);
   });

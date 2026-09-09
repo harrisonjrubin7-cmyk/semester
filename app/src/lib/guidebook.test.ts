@@ -60,7 +60,7 @@ describe('what happens when the app changes', () => {
       label: 'A screen the guide has never heard of',
       blurb: 'Added by a test.',
       keywords: 'test',
-      group: 'You',
+      group: 'Data',
       taskTags: ['app'],
       root: 'me',
     });
