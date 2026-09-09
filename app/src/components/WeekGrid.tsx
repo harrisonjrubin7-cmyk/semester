@@ -182,8 +182,11 @@ export function WeekGrid({
           // neither could be read. See `lib/weekpage.ts`.
           const lanes = lanesOf(d.blocks);
           return d.blocks.map((b) => {
+            // The day grid's rule, verbatim: the edge is the course's colour
+            // wherever a block names one — a task filed against a course
+            // included — and the wash is what says a block is a class.
             const own = b.kind === null;
-            const tint = own ? courseTint(b.c).fill : kindTint(b.kind, light);
+            const tint = b.c ? courseTint(b.c).fill : kindTint(b.kind, light);
             const { lane, of } = lanes[b.id] ?? { lane: 0, of: 1 };
             const slot = `((${col} - 3px) / ${of})`;
             return (
