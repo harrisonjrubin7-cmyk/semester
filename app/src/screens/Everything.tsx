@@ -518,7 +518,11 @@ const GESTURES = [
   ['Drag the assistant button', 'Move it to either bottom corner'],
   [
     'Hold and drag anything in a list',
-    'Move it — icons on the home screen, tiles on a shelf, rows here, tabs in the bar, your courses, the sections of Today, and anything on the calendar',
+    'Move it — icons on the home screen, tiles on a shelf, rows here, tabs in the bar, your courses, and anything on the calendar',
+  ],
+  [
+    'Drag the grip beside a heading on Today',
+    'Move that whole section up or down the day. A hold anywhere else in it still asks the assistant',
   ],
   ['Alt and the arrow keys', 'The same move, one step at a time, without a pointer'],
 ];

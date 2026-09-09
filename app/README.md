@@ -91,8 +91,9 @@ three layouts, and no layout draws navigation of its own.
 Anything the app draws as an ordered list can be dragged into a different
 order: the icons, folders and dock on the home screen, the tiles inside a
 shelf, the rows of the directory in Me and in Everything, the tabs in the
-bottom bar, your courses, the sections of Today, and everything on the
-calendar. Hold it, move it, let go.
+bottom bar, your courses, the sections of Today — on Today itself, by the
+grip beside each heading — and everything on the calendar. Hold it, move it,
+let go.
 
 One gesture and one arithmetic, in [`lib/arrange.ts`](src/lib/arrange.ts) over
 the pointer handling in [`lib/drag.ts`](src/lib/drag.ts) — a press is a drag
@@ -101,6 +102,13 @@ click that is told to stand down; and Alt with the arrow keys does the same
 move without a pointer, because a list whose only ordering gesture is a drag is
 a list some people cannot order at all. The ↑ ↓ arrows stay wherever they were:
 they are the visible sign that a list has an order.
+
+A movable thing is usually its own handle. Today's sections are the exception
+and the reason is worth knowing: a hold inside one already asks the assistant
+about the row under your thumb, and two press-and-hold gestures on one element
+cannot both win. So the section is what a drop lands on, a grip in the margin
+beside its heading is what starts the drag, and everything inside it answers a
+hold exactly as it did. `zone` and `grip` on the hook are those two halves.
 
 Where the order is a preference rather than data, it is a look key —
 `groupOrder` for the shelves, `boardOrder` for the home screen — and both are

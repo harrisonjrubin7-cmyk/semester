@@ -150,9 +150,37 @@ export interface RowExtras {
 }
 
 export interface Movable<T extends string> {
-  /** Spread onto the element that is the row. Merges what you pass it. */
+  /**
+   * Spread onto the element that is the row: it is both the handle and the
+   * thing a drop lands on, which is right wherever a row is a row.
+   */
   props: (id: T, extra?: RowExtras) => {
     'data-drop': T;
+    className: string;
+    style: CSSProperties | undefined;
+    onKeyDown: (e: KeyboardEvent) => void;
+    onPointerDown: (e: PointerEvent) => void;
+    onPointerMove: (e: PointerEvent) => void;
+    onPointerUp: (e: PointerEvent) => void;
+    onPointerCancel: () => void;
+    onLostPointerCapture: () => void;
+  };
+  /**
+   * The two halves of `props`, for the places where they belong on different
+   * elements: `zone` is what a drop lands on, `grip` is what starts a drag.
+   *
+   * A section of Today is the case that needs this. The rows inside one
+   * already answer a press-and-hold — that is how you ask the assistant about
+   * a deadline — and two hold gestures on the same element cannot both win.
+   * So the section is the target and a grip beside its heading is the handle,
+   * and holding anything inside it still means what it always did.
+   */
+  zone: (id: T, extra?: RowExtras) => {
+    'data-drop': T;
+    className: string;
+    style: CSSProperties | undefined;
+  };
+  grip: (id: T, extra?: RowExtras) => {
     className: string;
     style: CSSProperties | undefined;
     onKeyDown: (e: KeyboardEvent) => void;
@@ -206,35 +234,56 @@ export function useMovable<T extends string>({
     },
   });
 
+  /** How a row looks right now: in your hand, or about to be taken over. */
+  const state = (id: T) =>
+    held === id ? ' is-held'
+    : over === id && held !== null ? ' is-over'
+    : '';
+
+  const keys = (id: T, extra?: RowExtras) => (e: KeyboardEvent) => {
+    extra?.onKeyDown?.(e);
+    if (e.defaultPrevented || disabled || !e.altKey) return;
+    // Up and left both mean earlier, down and right both mean later, so one
+    // hook serves a column of rows and a grid of tiles without either having
+    // to say which it is.
+    const step =
+      e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
+      : e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
+      : 0;
+    if (step === 0) return;
+    e.preventDefault();
+    settle(nudged(items, id, step));
+  };
+
+  const merged = (extra: RowExtras | undefined, own: CSSProperties | undefined) =>
+    extra?.style || own ? { ...extra?.style, ...own } : undefined;
+
   return {
     held,
     over: over as T | null,
     tookDrop,
     props: (id, extra) => {
       const drag = handlers(id);
-      const state =
-        held === id ? ' is-held'
-        : over === id && held !== null ? ' is-over'
-        : '';
       return {
         ...drag,
         'data-drop': id,
-        className: `movable${state}${extra?.className ? ` ${extra.className}` : ''}`,
-        style: extra?.style || drag.style ? { ...extra?.style, ...drag.style } : undefined,
-        onKeyDown: (e: KeyboardEvent) => {
-          extra?.onKeyDown?.(e);
-          if (e.defaultPrevented || disabled || !e.altKey) return;
-          // Up and left both mean earlier, down and right both mean later, so
-          // one hook serves a column of rows and a grid of tiles without
-          // either having to say which it is.
-          const step =
-            e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1
-            : e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-            : 0;
-          if (step === 0) return;
-          e.preventDefault();
-          settle(nudged(items, id, step));
-        },
+        className: `movable${state(id)}${extra?.className ? ` ${extra.className}` : ''}`,
+        style: merged(extra, drag.style),
+        onKeyDown: keys(id, extra),
+      };
+    },
+    zone: (id, extra) => ({
+      'data-drop': id,
+      className: `movable${state(id)}${extra?.className ? ` ${extra.className}` : ''}`,
+      style: merged(extra, undefined),
+    }),
+    grip: (id, extra) => {
+      const drag = handlers(id);
+      return {
+        ...drag,
+        className: `grip${extra?.className ? ` ${extra.className}` : ''}`,
+        style: merged(extra, drag.style),
+        onKeyDown: keys(id, extra),
       };
     },
   };

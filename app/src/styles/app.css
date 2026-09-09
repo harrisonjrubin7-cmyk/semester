@@ -1734,6 +1734,31 @@ input[type='search'].input {
 }
 
 /*
+ * The handle, where a thing is dragged by one rather than by itself.
+ *
+ * Today's sections are the case: a hold inside one already asks the assistant
+ * about the row under your thumb, so the section is what a drop lands on and
+ * this is the only thing that starts a drag. It sits out in the page's margin
+ * at a third opacity — present enough to find when you go looking, quiet
+ * enough that eighteen of them down a page are not a column of furniture —
+ * and comes up to meet a pointer or the focus ring.
+ */
+.grip {
+  opacity: 0.3;
+  cursor: grab;
+}
+
+.grip:hover,
+.grip:focus-visible {
+  opacity: 0.75;
+}
+
+.movable.is-held .grip {
+  opacity: 0.75;
+  cursor: grabbing;
+}
+
+/*
  * The hero and the stat row, above whichever screen is open.
  *
  * Matches `Page`'s 18px so the hero lines up with the content under it, and

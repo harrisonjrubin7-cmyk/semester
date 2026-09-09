@@ -57,7 +57,8 @@ Three things were decided rather than inherited:
 - **Nothing with an order is static.** Every ordered list in the app can be
   dragged into a different order — the home screen's icons, folders and dock,
   the tiles on a shelf, the directory's rows, the tabs in the bar, your
-  courses, the sections of Today, and everything on the calendar. One gesture,
+  courses, the sections of Today (by the grip beside each heading, on Today
+  itself), and everything on the calendar. One gesture,
   one implementation, in [`app/src/lib/arrange.ts`](app/src/lib/arrange.ts),
   with Alt and the arrow keys doing the same job without a pointer.
 - **The date is live.** The prototype pinned itself to Thursday 3 September.
