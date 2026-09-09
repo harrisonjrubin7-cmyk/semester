@@ -324,11 +324,15 @@ export function Grades() {
    * One caller, one frame.
    *
    * There were two: this as a screen with its own `<Page>`, and this as the
-   * Grades tab of Courses rendered bare inside Courses' page. The same table
+   * Grades tab of Courses, which needed a second render path with no `<Page>`
+   * of its own since that screen had already drawn the frame. The same table
    * twice, so "what do I need on the final" had two homes and the directory
-   * pointed at the one nobody was on. Courses is where it lives now — a grain
-   * of the same four courses, next to the courses themselves and to what they
-   * are asking of you — and this draws the panel, never the frame.
+   * pointed at the one nobody was on.
+   *
+   * Courses is where it lives — a view of the same four courses, next to the
+   * courses themselves and to what they are asking of you — so this draws the
+   * panel and never the frame. There is no prop to choose between them, which
+   * is what `lib/onehome.test.ts` is watching for.
    *
    * The trailing spacer belongs to whoever owns the frame, which is why
    * `Courses` passes `bottom={0}` and it is written by hand here.

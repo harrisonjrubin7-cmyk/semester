@@ -14,6 +14,7 @@ import { standing } from '../lib/grades';
 import { TermSwitch } from '../components/TermSwitch';
 import { OfficeHours } from '../components/OfficeHours';
 import { FirstRun } from './FirstRun';
+import { Grades } from './Grades';
 import { ReadingProgress } from '../components/ReadingProgress';
 import { CameBack } from '../components/CameBack';
 import { BreakItUp } from '../components/BreakItUp';
@@ -21,7 +22,6 @@ import { AskForTime } from '../components/AskForTime';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
 import { longLabel } from '../lib/date';
-import { Grades } from './Grades';
 import { appleMapsUrl, directionsUrl, fromRoom, prefersApple, type Destination } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
 import { DeadlineRow } from '../components/DeadlineRow';
@@ -91,9 +91,10 @@ export function Courses() {
       Three returns, three shells.
 
       A "screen" in the registry is not always one component: this one has a
-      branch per tab. Grades used to be a screen of its own as well as a tab
-      here — the same table with two homes — and is now only this, so the
-      branch below is where it lives rather than a copy of somewhere else.
+      branch per tab. The grades branch was drawing a copy of the `grades`
+      destination — the same table with two homes — and the answer here is the
+      other way round from the one #42 took: the table is a view of these four
+      courses, so the destination went and this branch is where it lives.
     */
     <Page
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}
@@ -149,6 +150,7 @@ export function Courses() {
             const next = ahead.find((i) => i.c === c.id);
             return (
               <Blueprint
+                plain
                 key={c.id}
                 onClick={() => dispatch({ type: 'openCourse', id: c.id })}
                 style={{
@@ -219,9 +221,11 @@ export function Courses() {
           })
           )}
 
-          {/* No "add a course" button here. The header's + is that button —
-              see `lib/adding.ts`. Two of them on one screen is the doubling
-              this app keeps removing. */}
+          {/* No "add a course" button here. It was a full-width one under
+              the last card, and it was the second add-affordance on a screen
+              that already has a + in its header. Adding a course is reached
+              by name in search, by `n`, and by the soft layout's own bar —
+              see `lib/nav.ts`, `lib/keys.ts` and `lib/softtop.ts`. */}
           <div style={{ height: 12 }} />
         </>
     </Page>

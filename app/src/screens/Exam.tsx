@@ -487,7 +487,7 @@ export function Exam() {
 
             {marking && (
               <>
-                <Blueprint style={{ padding: '11px 13px', marginTop: 9 }}>
+                <Blueprint plain style={{ padding: '11px 13px', marginTop: 9 }}>
                   <div className="kicker">{q.kind === 'choice' ? 'Why' : 'The key'}</div>
                   <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.55, marginTop: 5, textWrap: 'pretty' }}>
                     {q.kind === 'choice'

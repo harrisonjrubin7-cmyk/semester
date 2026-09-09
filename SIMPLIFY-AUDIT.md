@@ -225,75 +225,180 @@ exists lands on the survivor, and a test for that migration.
 
 ---
 
-# The second pass: a screen rendered inside another screen
+## 5. Duplicate tabs — the axis this audit had not looked at
 
-The first pass counted **routes** — how many places dispatch `go` at a
-destination — and concluded that most of them were contextual actions rather
-than second front doors. That was right, and it looked past the duplication
-that was actually there.
+Counted against `app/src` at `659a424`: **50 destinations**, 57 screen files.
 
-A destination can also be duplicated by being **rendered whole inside another
-screen**. Progress had a Settings tab that drew the settings index; the
-Settings button drew the same index as a screen. Two homes for one thing, and
-the route count for `settings` was 1, so section 2 above never saw it.
+Sections 1–4 audited *screens* and *routes*. Neither catches a **tab that
+renders another screen**, because the tab adds no destination and no `go`
+dispatch — the grep in section 2 cannot see it. It is a second front door all
+the same, and it is the shape #34 removed for Settings.
 
-## How this pass counted
-
-The tell is a screen component taking a prop that strips its own frame, so it
-can be drawn inside somebody else's:
+The tell is a `bare` prop: a screen exported with a second render path that
+drops its own `<Page>` frame so it can sit inside somebody else's.
 
 ```
-$ grep -rn "<[A-Z][A-Za-z]* bare\b\|bare = false" app/src/screens app/src/components
-screens/Courses.tsx:75:        <Grades bare />
-screens/Grades.tsx:30:export function Grades({ bare = false }…
-screens/Reports.tsx:43:export function Reports({ bare = false }…
-screens/Today.tsx:273:      {tab === 'brief' && <Reports bare />}
+$ grep -rn "bare" --include=*.tsx app/src/screens | grep -v 'className'
+screens/Reports.tsx:43   export function Reports({ bare = false })
+screens/Today.tsx:273      {tab === 'brief' && <Reports bare />}
+screens/Grades.tsx:29    export function Grades({ bare = false })
+screens/Courses.tsx:74       <Grades bare />
 ```
 
-Three, and one of them — `<Settings bare />` on Progress — had already gone.
-Cross-checked against every cross-screen import, which turns up only shared
-empty states and study modes:
+Two, and the app has exactly two remaining. Both are destinations in their own
+right, so each is one job with two homes.
 
-```
-$ grep -rn "^import .* from './[A-Z]" app/src/screens/*.tsx
-→ FirstRun ×7 (a shared empty state, no directory row)
-→ Guide → FieldGuide  (`field` is a StudyMode, not a Screen)
-→ Today → GapOffer    (`gap` has no directory row: it is entered from a gap)
-→ Courses → Grades, Today → Reports   ← the two duplicates
-```
+### Every screen-level tab bar, and what each tab is
 
-| Duplicate | Verdict |
-| --- | --- |
-| `settings` — the index, as a tab of Progress and as its own screen | **merged** · the tab went, the screen stayed |
-| `grades` — the table, as a tab of Courses and as its own screen | **merged** · the screen went, the tab stayed |
-| `brief` — the report, as a tab of Today and as its own screen | **merged** · the tab went, the screen stayed |
+| Screen | Tabs | Any tab a destination? |
+| --- | --- | --- |
+| `home` Today | Today · Hours · Week · Done · **Report** | **Yes — `brief`** |
+| `courses` Courses | Courses · Coming up · **Grades** | **Yes — `grades`** |
+| `study` Study | Guides · Tonight · Tools | Name collision only — see below |
+| `me` Progress | You · Everything | Name collision only — see below |
+| `mine` Personal | Tasks · Events · Notes · Files | No (Places went in #35) |
+| `brief` Reports | Day · Week · Term | No — grains of one report |
+| `calendar` Calendar | Day · Week · Month · Semester | No — grains of one grid |
+| `degree` | What is left · Taken · Requirements | No |
+| `people` | People · Letters | No |
+| `clocks` | Timers · Alarms | No |
+| `applying` | Open · Add one · Closed | No |
+| `activities` | Yours · Add one · Find things | No |
+| `registrar` | Fill them in · Paste the page | No |
+| `deck` | From a unit · From a brief | No |
+| `exam` | From your cards · Written for you | No |
+| `announce` | A connected feed · Paste a calendar | No — M2's two sources |
+| `maps` | Campus · Nashville | No — map scope |
 
-The survivor is not the same shape in the three, and that is the point rather
-than an inconsistency. Grades is genuinely one of three views of the same four
-courses — Courses' own comment said so — so it became a grain and the
-destination went. The report and the settings index are each a screen with a
-switcher of their own, and a switcher nested inside a switcher is not a view of
-its host: "what is on now" and "how did it go" are asked on different days.
+Everything else that renders a `<Segmented>` is an option picker inside a form
+(`settings/Look`, `settings/Nav`, `Essay` lengths and voices, `Exam` and `Deck`
+durations, `Sources` filter). Those are controls, not tabs, and are out of
+scope.
 
-## What this pass also checked and cleared
+### T1 — Today's "Report" tab · **CUT the tab, keep the screen**
 
-**Duplicated controls.** Every `set*` action in `state/slices/settings.ts`,
-against every file that dispatches it: 18 actions, and exactly one — `setLook`
-— is written from more than one file. Those four writes touch different keys
-(colour and type on Settings › Appearance, the shell and nav pickers through
-the shared `Appearance` component, the springboard's arrangement in
-`nav/Folder`). No control has a second copy.
+`brief` is a destination with `short: 'Report'`, three grains of its own, and
+its own `keywords`. Today renders the same component inline as a fifth tab.
+Pressing Today → Report and opening Reports land on the identical body, and
+the tab even shares `state.report`, so the grain you left on one is the grain
+you find on the other. One job, two homes.
 
-**Routes per destination**, recounted:
+The tab is the copy that goes, per #34: the screen is the thing the directory,
+the search box and the tab bar all point at, and a tab cannot be any of those.
+It also buys back the fifth-tab problem the code comments about — the comment
+at `Today.tsx:262` records that "This week" had to be shortened to "Week"
+because Report made the switcher a fifth tab and it wrapped to two lines.
 
-```
-$ grep -rn "type: 'go', screen: '…'" app/src --include=*.tsx --include=*.ts
-edit 5 · import 4 · mine 3 · everything else ≤ 2
-```
+### T2 — Courses' "Grades" tab · **CUT the tab, keep the screen**
 
-Unchanged from the first pass and left alone for its reasons: these are empty
-states and contextual next-actions, and the soft shell's action bar is one of
-several navigations of which exactly one is on screen at a time.
+Identical shape. `grades` is a destination (`root: 'courses'`, `taskTags:
+['stand']`); `Courses.tsx:70` intercepts its own `grades` tab and returns
+`<Grades bare />` inside a `<Page bottom={0}>`. Section 1 Cluster E already
+ruled that `grades` stays a screen; this is the second door to it.
 
-**50 → 49 destinations.** `grades` is the one that went; `brief` and `settings`
-each lost a duplicate rather than a home.
+### Kept, with the reason
+
+- **Study → "Tonight" is not the `tonight` screen.** The tab is "Tonight's 25
+  minutes": weakest unit per course, ordered by mastery, opening a card drill.
+  The screen is points of final grade per hour over outstanding deadlines. Two
+  questions — *what should I revise* and *how do I spend the evening* — that
+  happen to share a word. Kept, per the rule about two things that look alike.
+  **The shared name is a real cost and is recorded here as a naming collision,
+  not a duplication.**
+- **Progress → "Everything" is not the `everything` screen.** `Everything.tsx`
+  argues this out in its own file comment and section 1 Cluster D accepted it:
+  "where is the thing called X" versus "what would I use this for, and what
+  have I never opened". Same collision, same verdict.
+- **Today → "Week" is not `ahead`.** Five upcoming rows and the next campus
+  event, against seven days of hours arithmetic, clash detection and reading
+  extents. A preview is not the screen it previews.
+
+### Done
+
+| # | Change | Tabs | Destinations | Done |
+| --- | --- | --- | --- | --- |
+| T1 | Today's "Report" tab → the `brief` screen | −1 | 0 | ✅ `0ec5044` |
+| T2 | Courses' "Grades" tab → the `grades` screen | −1 | 0 | ✅ `0ec5044` |
+
+### After T1 and T2
+
+Two tabs go; no destination goes; nothing becomes unreachable, because in both
+cases the survivor is the destination and it keeps its own row, keywords and
+task tags. `homeTab` and `coursesTab` are `Ephemeral` — declared in the
+`Ephemeral` interface, defaulted in `blank()`, never read back out of a save —
+so there is no persisted value to migrate, which is why #34 narrowed `meTab`'s
+union and added no migration either. The `bare` prop and its second render path
+come out of both screens with the callers.
+
+---
+
+## 6. T2, revisited — which home the grade table gets
+
+Section 5 found the two duplicate tabs and cut both, keeping the destination
+each time. T1 is right and stands. **T2 is reopened here and resolved the
+other way**: the tab stays and the `grades` destination goes.
+
+Nothing in section 5's evidence changed. What changed is the question it asked.
+"Which copy is the copy" has one answer when the two are a screen and an inline
+render of that screen — the tab is the copy, which is why #34 cut it for
+Settings and why T1 cuts it for the report. It has a different answer when the
+embedded screen is genuinely *a view of its host*:
+
+- `Courses.tsx` has said so in its own file comment since it was written:
+  "Three views of the same four courses: the courses themselves, everything
+  they are asking of you as one list, and what any of it is worth." The third
+  view is the grade table. Two of the three shipped as tabs and one shipped
+  twice.
+- `grades` had `root: 'courses'` in the registry, so even the directory filed
+  it under the screen it is a view of.
+- Courses is in `DEFAULT_TABS`. The tab is one tap; the destination is two
+  taps down a directory. "What do I need on the final" is not a two-tap
+  question in week ten.
+
+The report is the opposite case, and that is why the two go different ways: it
+has a grain switcher of its own, so as a tab of Today it was a switcher inside
+a switcher, and "what is on now" and "how did it go" are asked on different
+days by a different person.
+
+### What T2' carries
+
+Deleting a destination is more than deleting a tab, so:
+
+- `courses` takes the grades `keywords`, the plural included — "where are my
+  grades" matched `registrar` and nothing else until it did.
+- `#/grades` retires into `#/courses` on the grades grain, through a new
+  `opens.courses` alongside `opens.report` and `opens.changes`. The course id
+  the link used to carry went with it: the table lists every course and never
+  read it.
+- The soft shell's header and the assistant's context both read the grain, so
+  the running-grade hero and the grade rows follow the tab rather than being
+  lost with the `case 'grades'` they lived in.
+- The projection insight can name the grain it means.
+- `UNLOCKS.grades` and the now-unread `hasGrades` fact go: Courses is where the
+  first score is typed, and gating it would hide the way in.
+- A stored tab bar or `recent` entry naming `grades` is dropped, with a test
+  for each.
+
+`lib/onehome.test.ts` from section 5 still holds and is what keeps this honest:
+the tab renders `<Grades />` with no prop to choose a frame, because there is
+only one caller and one frame.
+
+**50 → 49 destinations.**
+
+### The rest of the sweep, which found nothing
+
+Two censuses run alongside T2', recorded because a null result is worth as much
+as a finding:
+
+- **Controls.** Every `set*` action in `state/slices/settings.ts` against every
+  file that dispatches it: 18 actions, and exactly one — `setLook` — is written
+  from more than one file. Those four writes touch different keys (colour and
+  type on Settings › Appearance, the shell and nav pickers through the shared
+  `Appearance` component, the springboard's arrangement in `nav/Folder`). No
+  control has a second copy.
+- **Routes, recounted.** `edit` 5, `import` 4, `mine` 3, everything else two or
+  fewer — unchanged from section 2 and left alone for its reasons.
+- **Screens imported by screens**, the other way a screen could hide inside
+  one: `FirstRun` (a shared empty state), `Guide → FieldGuide` (`field` is a
+  `StudyMode`, not a `Screen`) and `Today → GapOffer` (`gap` has no directory
+  row). None is a destination; none is a duplicate.

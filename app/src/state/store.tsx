@@ -878,7 +878,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       terms: terms.length || 1,
       signedIn: Boolean(account),
     }),
-    [catalog, state.grades, state.notes, state.sittings, state.tasks, state.appointments, terms, account],
+    [catalog, state.notes, state.sittings, state.tasks, state.appointments, terms, account],
   );
 
   /**

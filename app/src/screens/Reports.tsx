@@ -66,14 +66,13 @@ export function Reports() {
   );
 
   /*
-   * One caller, one frame.
+   * One caller, one body.
    *
-   * There were two: this screen, and a "Report" tab on Today that rendered the
-   * same body bare inside Today's own `<Page>`. That put the whole report in
-   * two places — a grain switcher nested inside Today's tab switcher — and
-   * made Today's bar five wide, which is where "This week" started wrapping.
-   * The report is not a view of today: "what is on now" and "how did it go"
-   * are asked on different days. So the tab went and the screen stayed.
+   * There were two: Today rendered this as its "Report" tab, which meant a
+   * second render path that dropped the `<Page>` frame so it could sit inside
+   * somebody else's. That tab is gone and this is a screen again, so the frame
+   * is unconditional — see the note at the top of `components/Page.tsx` for
+   * why an embedded screen could not keep its own.
    */
   return <Page bottom={26}>{body}</Page>;
 }

@@ -254,11 +254,22 @@ function TabHome() {
 
   return (
     <Page bottom={26}>
+      {/*
+        Four tabs, not five. The fifth was Report, and it rendered the Reports
+        screen inline — the same body, sharing the same `state.report` grain,
+        so pressing it and opening Reports were two doors onto one room. The
+        screen kept its own, the way Settings did when Progress stopped
+        carrying a copy of it.
+
+        "This week" is back at full length because of it: the label was cut to
+        "Week" only because a fifth tab made the switcher wrap to two lines on
+        every Today view.
+      */}
       <Segmented
         options={[
           { id: 'today', label: 'Today' },
           { id: 'hours', label: 'Hours' },
-          { id: 'week', label: 'Week' },
+          { id: 'week', label: 'This week' },
           { id: 'done', label: 'Done' },
         ]}
         value={tab}
@@ -662,6 +673,7 @@ function Feed_registrar() {
       <SectionLabel style={{ margin: '14px 0 12px' }}>From the registrar</SectionLabel>
       {soon.slice(0, 3).map((d) => (
         <Blueprint
+          plain
           key={d.id}
           onClick={() => dispatch({ type: 'go', screen: 'registrar' })}
           style={{ padding: '12px 14px', marginBottom: 'var(--sp-4)' }}

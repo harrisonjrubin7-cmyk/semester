@@ -112,7 +112,6 @@ import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
 import { settingsTitle } from './lib/settings';
 import { chromeFor, homeShape } from './lib/chrome';
-import { addingOn } from './lib/adding';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
 import { ShellBody } from './components/shell/ShellBody';
@@ -446,7 +445,6 @@ function Header() {
   // every screen except the one it opens. Alerts stay at the top level, where
   // a header is not already competing with a Back button and a long title.
   const showActions = state.screen !== 'search';
-  const adding = addingOn(state.screen);
   const atRoot = rootOf(state.screen) === state.screen;
 
   /*
@@ -559,20 +557,20 @@ function Header() {
           {/* Before the icons, because it is the only thing here that is
               counting. Renders nothing at all unless a timer is running. */}
           <Running />
-          {/* The one +, and it adds what the screen is a list of: a course
-              on the courses list, a deadline everywhere else. See
-              `lib/adding.ts` — the courses list used to carry a second,
-              full-width "add a course" button under its last card because
-              this one could not make a course. */}
+          {/* One line, from anywhere. The alternative to this button is four
+              taps through two pickers, which is why nobody adds the thing
+              they were told about walking out of a lecture.
+
+              The same thing on every screen, deliberately. It briefly opened
+              the importer on the courses list — the + adding what the screen
+              lists — and that made the one control whose meaning you can rely
+              on into one you have to check. Adding a course has its own
+              routes: by name in search, `n`, and the soft layout's bar. */}
           <button
             type="button"
             className="btn btn-ghost btn-icon"
-            onClick={() =>
-              adding.kind === 'course'
-                ? dispatch({ type: 'go', screen: 'import' })
-                : dispatch({ type: 'quickAdd', open: true })
-            }
-            aria-label={adding.label}
+            onClick={() => dispatch({ type: 'quickAdd', open: true })}
+            aria-label="Add something in one line"
           >
             <Plus size={19} />
           </button>
