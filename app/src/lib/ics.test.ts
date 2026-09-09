@@ -227,3 +227,64 @@ describe('matchCourse', () => {
     expect(matchCourse([], 'ECON 1020')).toBeNull();
   });
 });
+
+/**
+ * A stamp shaped like a moment that is not one.
+ *
+ * The regexes above check the shape of a `DTSTART` and say nothing about
+ * whether its numbers are a day, and `new Date` does not refuse 31 February —
+ * it answers it, with 3 March. So a feed with one malformed stamp put an event
+ * on a day nobody had scheduled, drawn on the calendar beside the real classes,
+ * in the same colour, with nothing to say it was invented.
+ *
+ * Measured against this parser, one bad stamp at a time:
+ *
+ *     20260231   →  3 March            20260001  →  1 December 2025
+ *     20261345   →  14 February 2027    20260900  →  31 August
+ *     00000101   →  1 January 1900      T990000Z  →  the 14th, at 3:00a
+ *
+ * This is the one input in the app that comes from a server the student does
+ * not control and is refetched without them asking, so a bad row is not a
+ * one-off they can notice and correct.
+ */
+describe('a DTSTART that is shaped right and is not a moment', () => {
+  const one = (start: string) =>
+    parseIcs(COURSES, cal(event('UID:x', 'SUMMARY:Lecture', start))).events;
+
+  it('drops a day the calendar would have rolled over', () => {
+    expect(one('DTSTART;VALUE=DATE:20260231')).toEqual([]);
+    expect(one('DTSTART;VALUE=DATE:20270229')).toEqual([]);
+    expect(one('DTSTART;VALUE=DATE:20260900')).toEqual([]);
+  });
+
+  it('drops a month that is not one', () => {
+    expect(one('DTSTART;VALUE=DATE:20261345')).toEqual([]);
+    expect(one('DTSTART;VALUE=DATE:20260001')).toEqual([]);
+  });
+
+  it('drops a year the calendar will not give back', () => {
+    // `new Date` maps a year under 100 into the 1900s, so this is a real
+    // 1 January that lands in 1900 and is never seen again.
+    expect(one('DTSTART;VALUE=DATE:00000101')).toEqual([]);
+    expect(one('DTSTART;VALUE=DATE:00990601')).toEqual([]);
+  });
+
+  it('drops a clock that is not one', () => {
+    // Hour 99 moved the event four days and invented three in the morning.
+    expect(one('DTSTART:20260910T990000Z')).toEqual([]);
+    expect(one('DTSTART:20260910T129900Z')).toEqual([]);
+    expect(one('DTSTART:20260910T120099Z')).toEqual([]);
+  });
+
+  it('keeps every stamp that is a moment, in either shape', () => {
+    expect(one('DTSTART;VALUE=DATE:20260910')[0]).toMatchObject({ date: '2026-09-10' });
+    expect(one('DTSTART;VALUE=DATE:20280229')[0]).toMatchObject({ date: '2028-02-29' });
+    expect(one('DTSTART:20260910T140000')[0]).toMatchObject({ date: '2026-09-10', time: '2:00p' });
+    // A `Z` stamp is read back through the UTC getters, matching how it was
+    // built. Reading it back locally would refuse every correct feed either
+    // side of Greenwich — which is why both timezone runs matter here.
+    expect(one('DTSTART:20260910T140000Z')).toHaveLength(1);
+    expect(one('DTSTART:20260101T000000Z')).toHaveLength(1);
+    expect(one('DTSTART:20261231T235959Z')).toHaveLength(1);
+  });
+});

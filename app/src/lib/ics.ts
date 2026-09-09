@@ -37,7 +37,61 @@ interface RawEvent {
   [key: string]: { params: Record<string, string>; value: string };
 }
 
-/** "20260903T140000Z" or "20260903" → a local Date, plus whether it is all-day. */
+/**
+ * Whether a Date is the moment its parts named, or one the calendar rolled to.
+ *
+ * `new Date` does not refuse 31 February — it answers it, with 3 March. The
+ * regexes below check the *shape* of a stamp, which says nothing about whether
+ * the numbers in it are a day. This is the same check `lib/date.ts` names
+ * `realDate` and `lib/tools.ts` applies to a model's dates, done here by
+ * reading the built Date back, because that also catches the shape neither
+ * would: a year under 100, which `new Date` maps into the 1900s.
+ *
+ * Read back through the UTC getters for a `Z` stamp and the local ones
+ * otherwise, matching how each was built — the local getters on a UTC stamp
+ * differ by the device's offset and would refuse every correct feed east or
+ * west of Greenwich.
+ */
+function named(date: Date, parts: number[], utc: boolean): boolean {
+  if (Number.isNaN(date.getTime())) return false;
+  const got = utc
+    ? [
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        date.getUTCHours(),
+        date.getUTCMinutes(),
+        date.getUTCSeconds(),
+      ]
+    : [
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        date.getHours(),
+        date.getMinutes(),
+        date.getSeconds(),
+      ];
+  return parts.every((n, i) => got[i] === n);
+}
+
+/**
+ * "20260903T140000Z" or "20260903" → a local Date, plus whether it is all-day.
+ *
+ * Null for a stamp that is shaped right and is not a moment. Measured against
+ * this parser before the check existed, one malformed `DTSTART` at a time:
+ *
+ *     20260231   →  3 March          20260001  →  1 December 2025
+ *     20261345   →  14 February 2027  20260900  →  31 August
+ *     00000101   →  1 January 1900    T990000Z  →  the 14th, at 3:00a
+ *
+ * Every one drawn on the calendar beside the real classes, in the same colour,
+ * with nothing to say it was invented. A subscribed feed is the one input here
+ * that comes from a server the student does not control and is refetched
+ * without them asking, so a bad row is not a one-off they can correct.
+ *
+ * Dropping it is what this function already does with a `DTSTART` it cannot
+ * read at all, and `toEvents` drops an event with no start.
+ */
 function parseWhen(field: { params: Record<string, string>; value: string }): {
   date: Date;
   allDay: boolean;
@@ -46,7 +100,9 @@ function parseWhen(field: { params: Record<string, string>; value: string }): {
   const dateOnly = /^(\d{4})(\d{2})(\d{2})$/.exec(v);
   if (dateOnly) {
     const [, y, m, d] = dateOnly;
-    return { date: new Date(Number(y), Number(m) - 1, Number(d)), allDay: true };
+    const date = new Date(Number(y), Number(m) - 1, Number(d));
+    if (!named(date, [+y, +m - 1, +d, 0, 0, 0], false)) return null;
+    return { date, allDay: true };
   }
   const stamp = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z)?$/.exec(v);
   if (!stamp) return null;
@@ -56,6 +112,7 @@ function parseWhen(field: { params: Record<string, string>; value: string }): {
   const date = utc
     ? new Date(Date.UTC(+y, +mo - 1, +d, +h, +mi, +s))
     : new Date(+y, +mo - 1, +d, +h, +mi, +s);
+  if (!named(date, [+y, +mo - 1, +d, +h, +mi, +s], Boolean(utc))) return null;
   return { date, allDay: false };
 }
 
