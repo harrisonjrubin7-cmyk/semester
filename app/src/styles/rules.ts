@@ -247,7 +247,7 @@ export const BUDGET = {
 };
 
 /*
- * 680/219/521/519 → 680/219/520/515 when the assistant's panel became the
+ * 680/219/521/509 → 680/219/520/505 when the assistant's panel became the
  * chat. Two numbers down and none up, and neither by reformatting: the
  * panel's transcript, opening, header and footer are now the same components
  * and the same measure the Ask tab uses, so the hand-set gap and the four
