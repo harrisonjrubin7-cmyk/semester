@@ -252,3 +252,48 @@ function toEvents(courses: Course[], raw: RawEvent, sourceId: string): FeedEvent
     courseId,
   }));
 }
+
+/**
+ * Why a body is not a calendar, in a sentence — or null, when it is one.
+ *
+ * Asked before "how many events has it got", because those were one question
+ * with one answer and that made the app blame the student's link for
+ * something else entirely. Measured on the production build, pasting a
+ * correct Brightspace feed address:
+ *
+ *   dev          The feed answered 403. A subscribed link needs the dev
+ *                proxy running…                                      (true)
+ *   production   No events in that calendar. It may be the wrong link —
+ *                the feed has to be the .ics one.                    (not)
+ *
+ * `/feed` is a dev-server middleware (see `vite.config.ts`), so in a built app
+ * the request is not proxied anywhere: it reaches the static host, which
+ * answers a path it does not know with the app's own `index.html` — 200, and
+ * `res.ok`. That HTML went through `parseIcs`, which quite correctly found no
+ * events in it, and the student was told their link was wrong. Every
+ * subscription in the shipped build failed that way, and the advice was to go
+ * and find a different correct link.
+ *
+ * `BEGIN:VCALENDAR` is the first line of the format and the cheapest honest
+ * question — at the start of a line, because a page that merely mentions the
+ * word is not a calendar, and a leading BOM is what a Windows-written .ics
+ * arrives with. Three answers rather than one, because the three have different
+ * things to do about them: the app's own page means the request never left,
+ * any other page means the address answered with something that is not a
+ * feed — which is the mistake the old sentence was written for, pasting the
+ * calendar's web page — and a real calendar is the caller's to count.
+ */
+export function notCalendar(text: string): string | null {
+  if (/^[\uFEFF\s]*BEGIN:VCALENDAR/im.test(text)) return null;
+  if (/<title>\s*Semester\s*</i.test(text)) {
+    return (
+      'That address was never reached: a browser is not allowed to fetch another site\u2019s ' +
+      'calendar directly, and this build has nothing to do it for it. Download the .ics from ' +
+      'Brightspace and add the file \u2014 the button beside this one takes it.'
+    );
+  }
+  return (
+    'What came back is not a calendar \u2014 a web page, most likely, rather than the .ics feed ' +
+    'itself. Check that the link is the one Subscribe gave you, or download the file and add it.'
+  );
+}
