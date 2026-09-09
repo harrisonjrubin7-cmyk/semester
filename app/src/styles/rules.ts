@@ -241,18 +241,23 @@ export const BUDGET = {
   /** Line heights off the three — 1.55, 1.4, 1.35 and below. */
   leading: 219,
   /** Spacing numbers off the seven steps — 14, 7, 9, 18 and a tail. */
-  space: 522,
+  space: 520,
   /** `padding: '11px 0'` and the like: two axes in one string. */
-  shorthand: 540,
+  shorthand: 515,
 };
 
 /*
- * 680/221/523/544 → 680/219/522/540 when the assistant's panel became the
- * chat. Three numbers down and none up, and none of it by reformatting: the
+ * 680/219/521/519 → 680/219/520/515 when the assistant's panel became the
+ * chat. Two numbers down and none up, and neither by reformatting: the
  * panel's transcript, opening, header and footer are now the same components
- * and the same measure the Ask tab uses, so the two loose 1.4 line heights,
- * the hand-set gap and the four `'12px 16px'`-shaped paddings it drew for
- * itself went with the layout they belonged to. See `ai/Assistant.tsx`.
+ * and the same measure the Ask tab uses, so the hand-set gap and the four
+ * `'12px 16px'`-shaped paddings it drew for itself went with the layout they
+ * belonged to. See `ai/Assistant.tsx`.
+ *
+ * It also took out two loose 1.4 line heights, which do not show above: the
+ * row pass landed `leading` on 219 from the other side, and these counts are
+ * of what is left in the tree rather than of what each branch removed. Two
+ * changes can take the same number to the same place.
  *
  * 682/222/524/544 → 680/221/523/544 when Personal lost its Places tab. Three
  * down and none up: the tab was a second copy of what the map already is, and
