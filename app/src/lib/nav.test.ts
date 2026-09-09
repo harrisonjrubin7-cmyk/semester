@@ -327,9 +327,16 @@ describe('the promise', () => {
   });
 
   it('drops a screen the moment the registry does', () => {
-    const short = DESTINATIONS.filter((d) => d.screen !== 'grades');
+    // Whichever screen the registry happens to list first, rather than one
+    // named here: a literal makes this test a second place that has to be
+    // edited every time a screen is retired, and it then fails as a type
+    // error rather than as a statement about `byTask`. `grades` was that
+    // literal, and it broke exactly that way when the grade table became a
+    // tab of Courses — `tsc -b` rejects a comparison that can no longer match.
+    const [{ screen: gone }] = DESTINATIONS;
+    const short = DESTINATIONS.filter((d) => d.screen !== gone);
     const rows = byTask(short).flatMap((s) => s.rows);
-    expect(rows.some((d) => d.screen === 'grades')).toBe(false);
+    expect(rows.some((d) => d.screen === gone)).toBe(false);
   });
 
   it('picks up a screen the moment the registry has one', () => {
