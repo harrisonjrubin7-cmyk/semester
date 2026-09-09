@@ -63,14 +63,14 @@ export const projection: Source = {
             : `Everything is graded. ${s.incomplete ? 'The weights do not add to 100, so this is indicative.' : ''}`,
         evidence: graded.map((r, i) => ({
           says: `${course.code} · ${r.what} — ${facts.scores[key(course.id, s.rows.indexOf(r))] ?? '—'} at ${r.weight}%`,
-          screen: 'courses',
+          screen: 'grades',
           id: `${course.id}:${i}`,
         })),
         // Firm once most of the course is decided; tentative while most of it
         // is not, however many components have come back.
         confidence: ungraded <= 40 && !s.incomplete ? 'firm' : 'tentative',
         sampleSize: graded.length,
-        action: { label: 'Grades', screen: 'courses', tab: 'grades' },
+        action: { label: 'Grades', screen: 'grades' },
         rank: 3,
       });
     }
