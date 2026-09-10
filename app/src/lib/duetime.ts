@@ -18,7 +18,35 @@
  * starts at nine. A parser that reads the first time in isolation gets one of
  * those right by luck and the other wrong by twelve hours, which is the kind
  * of error that puts an exam before breakfast.
+ *
+ * ## The two clock times English writes as words
+ *
+ * "Due at noon" states a time as plainly as "due at 12:00", and this read it
+ * as no time at all — so it sorted to the end of its day, below the five
+ * o'clock one, and every screen that asks `hasTime` said it named none. The
+ * argument in this file for sorting untimed things late is that "you have all
+ * day to do something about" them; noon is not all day.
+ *
+ * `lib/capture.ts` already reads both words, off the line somebody types. The
+ * app could understand "noon" from you and not from your syllabus. It reads
+ * them the same way here, and a test holds the two to the same answer.
+ *
+ * Midnight is the end of its day, not the start: "due at midnight on the 8th"
+ * is the 8th running out, and 00:00 would put it before every lecture that
+ * day. 23:59 is what `capture.ts` chose for the same reason.
  */
+
+/** Twelve o'clock, as the two words English writes instead of digits. */
+const NOON = 12 * 60;
+
+/**
+ * The end of the day it names, not the start.
+ *
+ * "Due at midnight on the 8th" is the 8th running out. Reading it as 00:00
+ * would sort the deadline above every lecture on the 8th and mark it a day
+ * early on any screen that compares clocks.
+ */
+const MIDNIGHT = 23 * 60 + 59;
 
 /** Minutes past midnight, or null when the wording holds no clock time. */
 export function readDue(text: string): number | null {
@@ -29,6 +57,13 @@ export function readDue(text: string): number | null {
   if (typeof text !== 'string') return null;
   const s = text.trim();
   if (!s) return null;
+
+  // Before the digits: "12 noon" and "11:59pm (midnight)" hold both, and the
+  // word is the one that was meant. `\b` on each side so that *after*noon,
+  // which is a part of a day rather than a time, is left alone.
+  const said = s.toLowerCase();
+  if (/\bnoon\b/.test(said)) return NOON;
+  if (/\bmidnight\b/.test(said)) return MIDNIGHT;
 
   // Every clock-shaped thing, in order. A bare number is only a time when it
   // carries a meridiem — "Sep 8–17" is two dates and "1:15p" is a time.
