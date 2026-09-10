@@ -78,7 +78,8 @@ export function made(state: State, action: Action): State | null {
     case 'makeSheet': {
       const now = Date.now();
       const sheet: Sheet = { ...action.sheet, id: newId(), created: now, updated: now };
-      return { ...state, sheets: [sheet, ...state.sheets].slice(0, LIMIT) };
+      const next = { ...state, sheets: [sheet, ...state.sheets].slice(0, LIMIT) };
+      return action.open ? push({ ...next, sheetId: sheet.id }, 'sheet') : next;
     }
 
     case 'openSheet':

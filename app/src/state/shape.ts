@@ -1567,7 +1567,14 @@ export type Action =
   | { type: 'deleteDocument'; id: string }
   | { type: 'editBlock'; at: number | null }
   | { type: 'newSheet'; courseId: CourseId | null }
-  | { type: 'makeSheet'; sheet: Omit<Sheet, 'id' | 'created' | 'updated'> }
+  /*
+   * `open` is the one exception to the split above, and it is the button's,
+   * not the assistant's. A tool proposal leaves it unset and nothing moves. A
+   * press on "what do I need?" sets it, because a press that builds a sheet
+   * and then stays where it was reads as a press that did nothing — the only
+   * sign of it is a count going up two screens away.
+   */
+  | { type: 'makeSheet'; sheet: Omit<Sheet, 'id' | 'created' | 'updated'>; open?: boolean }
   | { type: 'openSheet'; id: string }
   | { type: 'closeSheet' }
   | { type: 'updateSheet'; id: string; patch: Partial<Omit<Sheet, 'id'>> }

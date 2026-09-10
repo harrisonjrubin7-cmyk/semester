@@ -79,21 +79,31 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
   );
 
   put(0, HEAD, 'Component');
-  put(1, HEAD, 'Weight');
+  put(1, HEAD, 'Weight (%)');
   put(2, HEAD, 'Your score');
-  put(3, HEAD, 'Counts for');
+  put(3, HEAD, 'Points earned');
   put(4, HEAD, 'The syllabus says');
+
+  /*
+   * One component's row, written the same way whether it is weighted or extra
+   * credit — they were two copies until the weights changed from fractions to
+   * whole points and only one copy changed with them.
+   *
+   * A weight nobody could read stays empty. The syllabus's wording is in
+   * column E either way, so the student can type the number in themselves and
+   * see what it was read from.
+   */
+  const component = (row: { what: string; pct: string; weight: number | null }, on: number) => {
+    put(0, on, row.what);
+    if (row.weight !== null) put(1, on, String(row.weight));
+    put(3, on, `=IF(C${on}="","",C${on}*B${on}/100)`);
+    put(4, on, row.pct);
+  };
 
   let at = HEAD + 1;
   const firstMain = at;
   for (const row of main) {
-    put(0, at, row.what);
-    // A weight nobody could read stays empty. The syllabus's wording is in
-    // column E either way, so the student can type the number in themselves
-    // and see what it was read from.
-    if (row.weight !== null) put(1, at, `${row.weight}%`);
-    put(3, at, `=IF(C${at}="","",C${at}*B${at})`);
-    put(4, at, row.pct);
+    component(row, at);
     at += 1;
   }
   const lastMain = at - 1;
@@ -107,10 +117,7 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
     at += 1;
     firstBonus = at;
     for (const row of bonus) {
-      put(0, at, row.what);
-      if (row.weight !== null) put(1, at, `${row.weight}%`);
-      put(3, at, `=IF(C${at}="","",C${at}*B${at})`);
-      put(4, at, row.pct);
+      component(row, at);
       at += 1;
     }
     lastBonus = at - 1;
@@ -128,8 +135,8 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
   put(
     4,
     at,
-    `=IF(ROUND(B${at},4)=1,"Adds to 100% — the sums below are exact.",` +
-      `"These do not add to 100%, so everything below is indicative.")`,
+    `=IF(ROUND(B${at},4)=100,"Adds to 100 — the sums below are exact.",` +
+      `"These do not add to 100, so everything below is indicative.")`,
   );
 
   at += 1;
@@ -138,17 +145,17 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
   // The weight of the components that actually have a score in them. ">=0"
   // rather than "<>" so a blank cell is not counted as a zero-scoring one.
   put(1, at, `=SUMIF(${S},">=0",${W})`);
-  put(4, at, 'How much of the course has a score against it.');
+  put(4, at, 'How many of the course’s 100 points have a score against them.');
 
   at += 1;
   const earnedRow = at;
   put(0, at, 'Earned so far');
   put(1, at, extraD ? `=SUM(${D})+SUM(${extraD})` : `=SUM(${D})`);
-  put(4, at, 'Your scores times their weights.');
+  put(4, at, 'Your scores times their weights, out of 100 for the course.');
 
   at += 1;
   put(0, at, 'Average so far');
-  put(1, at, `=IF(B${doneRow}=0,"",B${earnedRow}/B${doneRow})`);
+  put(1, at, `=IF(B${doneRow}=0,"",B${earnedRow}/B${doneRow}*100)`);
   put(4, at, 'What you are averaging across what has been graded.');
 
   at += 2;
@@ -179,7 +186,7 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
     1,
     at,
     `=IF(B${targetRow}="","",IF(B${leftRow}<=0,"Nothing left to be graded.",` +
-      `(B${targetRow}-B${earnedRow})/B${leftRow}))`,
+      `(B${targetRow}-B${earnedRow})/B${leftRow}*100))`,
   );
   put(
     4,

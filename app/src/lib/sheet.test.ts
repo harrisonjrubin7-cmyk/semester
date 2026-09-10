@@ -476,6 +476,39 @@ describe('stats', () => {
   });
 });
 
+/*
+ * The fault found by the grade calculator: an error in the middle of an
+ * expression used to end the parse there, and the unread tail then read as a
+ * formula nobody understood. It made the same arithmetic answer two different
+ * things depending on whether it sat inside a function call.
+ */
+describe('an error does not swallow the rest of the expression', () => {
+  it('says the same thing bare and inside a call', () => {
+    expect(v('=1/0*100')).toBe('#DIV/0!');
+    expect(v('=IF(1=2,"x",1/0*100)')).toBe('#DIV/0!');
+    expect(v('=SUM(1/0*100)')).toBe('#DIV/0!');
+  });
+
+  it('takes the safe branch even when the other branch is broken', () => {
+    // The calculator's own formula, in the state it spends most of its life:
+    // nothing graded yet, so the average is asked for and must come back blank.
+    const cells = { B10: '0', B11: '0', Z1: '=IF(B10=0,"",B11/B10*100)' };
+    expect(at(cells)).toBe('');
+  });
+
+  it('carries an error through every operator that follows it', () => {
+    expect(v('=1/0+2-3')).toBe('#DIV/0!');
+    expect(v('=1/0&"a"&"b"')).toBe('#DIV/0!');
+    expect(v('=(1/0)%%')).toBe('#DIV/0!');
+    expect(v('=IF(1=2,"x",1/0&"a"&"b")')).toBe('#DIV/0!');
+  });
+
+  it('still refuses a formula it genuinely did not understand', () => {
+    expect(v('=1 2')).toBe('#VALUE!');
+    expect(v('=SUM(1 2)')).toBe('#VALUE!');
+  });
+});
+
 describe('nothing that existed changed', () => {
   it('SUM still sums', () => expect(v('=SUM(B2:B5)', book)).toBe(353));
   it('weighted gradebook still works', () =>

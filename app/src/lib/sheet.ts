@@ -377,7 +377,27 @@ class Parser {
     return this.at >= this.tokens.length;
   }
 
-  /** Comparisons, which sit below arithmetic and produce a yes or a no. */
+  /*
+   * ## An error is carried, never returned from the middle
+   *
+   * Every loop below keeps going after something goes wrong, with the error as
+   * the running value, rather than returning it where it happened. That reads
+   * like a detail and is the difference between two answers.
+   *
+   * Returning from the middle leaves the rest of the expression unread, and an
+   * unread tail is what `run` calls a formula it only half understood — so
+   * `=1/0*100` came back `#DIV/0!` on its own, where the *same* expression
+   * inside a function came back `#VALUE!`: `arguments` found `*` where it
+   * wanted a comma. Measured on the grade calculator, which is where this was
+   * found: `=IF(B10=0,"",B11/B10*100)` answered `#VALUE!` in a cell whose
+   * condition was true and whose taken branch was a blank string. The engine
+   * evaluates every argument before it chooses one, so the arithmetic in the
+   * branch nobody takes still has to parse.
+   *
+   * Carrying it costs nothing — an error put through `number` comes back the
+   * same error — and it means the position of a fault no longer changes what
+   * the cell says.
+   */
   expression(): Value {
     let left = this.concat();
     for (;;) {
@@ -385,9 +405,8 @@ class Parser {
       if (!t || t.kind !== 'op' || !['=', '<>', '<', '<=', '>', '>='].includes(t.value)) return left;
       this.at += 1;
       const right = this.concat();
-      if (isError(left)) return left;
-      if (isError(right)) return right;
-      left = compare(t.value, left, right);
+      if (isError(left)) continue;
+      left = isError(right) ? right : compare(t.value, left, right);
     }
   }
 
@@ -395,9 +414,8 @@ class Parser {
     let left = this.additive();
     while (this.eat('&')) {
       const right = this.additive();
-      if (isError(left)) return left;
-      if (isError(right)) return right;
-      left = show(left) + show(right);
+      if (isError(left)) continue;
+      left = isError(right) ? right : show(left) + show(right);
     }
     return left;
   }
@@ -411,9 +429,9 @@ class Parser {
       const right = this.multiplicative();
       const a = number(left);
       const b = number(right);
-      if (isError(a)) return a;
-      if (isError(b)) return b;
-      left = t.value === '+' ? a + b : a - b;
+      if (isError(a)) left = a;
+      else if (isError(b)) left = b;
+      else left = t.value === '+' ? a + b : a - b;
     }
   }
 
@@ -426,10 +444,10 @@ class Parser {
       const right = this.power();
       const a = number(left);
       const b = number(right);
-      if (isError(a)) return a;
-      if (isError(b)) return b;
-      if (t.value === '/' && b === 0) return '#DIV/0!';
-      left = t.value === '*' ? a * b : a / b;
+      if (isError(a)) left = a;
+      else if (isError(b)) left = b;
+      else if (t.value === '/' && b === 0) left = '#DIV/0!';
+      else left = t.value === '*' ? a * b : a / b;
     }
   }
 
@@ -459,8 +477,7 @@ class Parser {
     let v = this.primary();
     while (this.eat('%')) {
       const n = number(v);
-      if (isError(n)) return n;
-      v = n / 100;
+      v = isError(n) ? n : n / 100;
     }
     return v;
   }

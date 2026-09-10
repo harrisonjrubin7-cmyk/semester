@@ -35,9 +35,11 @@ describe('the grade calculator', () => {
     const { sheet, counted } = gradeSheet(plain);
     expect(counted).toBe(3);
     expect(sheet.cells.A5).toBe('Problem sets');
-    expect(sheet.cells.B5).toBe('20%');
-    expect(sheet.cells.B6).toBe('50%');
-    expect(sheet.cells.B7).toBe('30%');
+    // Whole percentage points, not fractions: a student reading "Weights add
+    // to 1" does not recognise it as a whole course.
+    expect(sheet.cells.B5).toBe('20');
+    expect(sheet.cells.B6).toBe('50');
+    expect(sheet.cells.B7).toBe('30');
     // The syllabus's own wording travels with each row.
     expect(sheet.cells.E5).toBe('20%');
   });
@@ -55,7 +57,7 @@ describe('the grade calculator', () => {
 
   it('adds the weights up and confirms they make a whole course', () => {
     const { sheet } = gradeSheet(plain);
-    expect(at(sheet.cells, 'Weights add to')).toBeCloseTo(1, 10);
+    expect(at(sheet.cells, 'Weights add to')).toBe(100);
     expect(display(sheet.cells, `E${rowOf(sheet.cells, 'Weights add to')}`)).toContain('exact');
   });
 
@@ -84,10 +86,10 @@ describe('the grade calculator', () => {
     cells[`C${rowOf(cells, 'Midterms')}`] = '78';
     cells[`B${rowOf(cells, 'If you want')}`] = '85';
 
-    expect(at(cells, 'Graded so far')).toBeCloseTo(0.7, 10);
+    expect(at(cells, 'Graded so far')).toBe(70);
     expect(at(cells, 'Earned so far')).toBeCloseTo(85 * 0.2 + 78 * 0.5, 10);
-    expect(at(cells, 'Average so far')).toBeCloseTo(56 / 0.7, 10);
-    expect(at(cells, 'Still to be graded')).toBeCloseTo(0.3, 10);
+    expect(at(cells, 'Average so far')).toBeCloseTo(80, 10);
+    expect(at(cells, 'Still to be graded')).toBe(30);
     // (85 − 56) / 0.3 = 96.67 on the final.
     expect(Number(at(cells, 'You need to average'))).toBeCloseTo(96.6667, 3);
   });
@@ -121,7 +123,7 @@ describe('the grade calculator', () => {
       ]),
     );
     const cells = { ...sheet.cells };
-    expect(at(cells, 'Weights add to')).toBeCloseTo(1, 10);
+    expect(at(cells, 'Weights add to')).toBe(100);
 
     cells[`C${rowOf(cells, 'Problem sets')}`] = '90';
     cells[`C${rowOf(cells, 'Exams')}`] = '80';

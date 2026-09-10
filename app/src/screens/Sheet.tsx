@@ -139,31 +139,39 @@ function Shelf() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
             {calculable.map((course) => (
-              <Blueprint key={course.id} plain style={{ padding: 'var(--sp-5)' }}>
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--sp-4)',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 'var(--type-md)' }}>{course.code}</div>
-                    <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>
-                      {course.grading.length}{' '}
-                      {course.grading.length === 1 ? 'component' : 'components'} from the syllabus
-                    </div>
-                  </div>
-                  <ActionButton
-                    onClick={() => {
-                      const { sheet } = gradeSheet(course, state.grades[course.id] ?? '');
-                      dispatch({ type: 'makeSheet', sheet });
+              <Blueprint
+                key={course.id}
+                as="button"
+                plain
+                onClick={() =>
+                  dispatch({
+                    type: 'makeSheet',
+                    sheet: gradeSheet(course, state.grades[course.id] ?? '').sheet,
+                    open: true,
+                  })
+                }
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-5)',
+                  padding: 'var(--sp-6)',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 'var(--type-md)' }}>{course.code}</div>
+                  <div
+                    style={{
+                      ...secondLine(),
+                      fontSize: 'var(--type-sm)',
+                      marginTop: 'var(--sp-1)',
                     }}
                   >
-                    Build it
-                  </ActionButton>
+                    {course.grading.length}{' '}
+                    {course.grading.length === 1 ? 'component' : 'components'} from the syllabus
+                  </div>
                 </div>
+                <ChevronRight size={16} />
               </Blueprint>
             ))}
           </div>
