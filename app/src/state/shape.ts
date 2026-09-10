@@ -64,7 +64,7 @@ import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
 import { navOf, readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
-import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
+import { SCHEMA, migrate, versionOf, type Migrated } from '../lib/migrate';
 import { readOverrides, type GradeSystem } from '../lib/cutoffs';
 import { readPretested } from '../lib/pretest';
 import type { PostMortem } from '../lib/postmortem';
@@ -1295,9 +1295,28 @@ export function pickPersisted(state: State): Persisted {
     started: state.started,
     schoolId: state.schoolId,
     showAll: state.showAll,
-    // Stamped on the way out, so the next build to read this knows what shape
-    // it is in without having to guess from which fields are present.
-    schemaVersion: SCHEMA,
+    /*
+     * Stamped on the way out, so the next build to read this knows what shape
+     * it is in without having to guess from which fields are present.
+     *
+     * Never *below* the version it was read at. `migrate` takes trouble over a
+     * payload from a newer build — it passes it through untouched rather than
+     * walking it backwards through steps written for an older shape — and
+     * writing the constant here threw that away on the next save. A copy
+     * written by a phone on next month's build, opened once on a laptop a
+     * release behind, went back to disk marked as this build's shape; the
+     * phone would then read it as older than it is and run the steps that had
+     * already run. `migrate`'s own docblock says nothing is applied twice, and
+     * this is the line that decided whether that stayed true.
+     *
+     * Nothing is wrong today: both steps in `STEPS` happen to be idempotent,
+     * so re-running them changes nothing. It is the next step that is not
+     * which this is for, and a step is a bad place to find out.
+     *
+     * `versionOf` rather than reading the field directly, so the way out and
+     * the way in agree about what counts as a version at all.
+     */
+    schemaVersion: Math.max(SCHEMA, versionOf(state)),
     accent: state.accent,
     textSize: state.textSize,
     ground: state.ground,
