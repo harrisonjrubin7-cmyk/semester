@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { headline, pressure, showHours, studyAsked, week, type WeekInput } from './ahead';
 import type { Catalog } from '../data/catalog';
+import { blocksFor } from '../data/catalog';
+import { lengthOf } from './select';
 import type { Commitment } from './activities';
 import type { Appointment, Item } from './types';
 
@@ -76,6 +78,73 @@ const appointment = (date: string): Appointment => ({
   where: '',
   note: '',
   created: 0,
+});
+
+/**
+ * A catalog whose course really meets, with the length its syllabus states.
+ *
+ * The `catalog` helper above gives `blocksFor` no modules, so every existing
+ * test in this file has zero hours of class in it — which is why none of them
+ * could see a class being counted at the wrong length.
+ */
+const meeting = (meets: string, days = [2, 4]): Catalog => {
+  const course = { id: 'core', code: 'CORE 2500', meets };
+  return {
+    items: [],
+    courses: [course],
+    byId: { core: course },
+    modules: [
+      {
+        course,
+        schedule: [{ days, at: 795, time: '1:15p', title: 'CORE 2500', meta: 'Buttrick 101' }],
+        exceptions: [],
+      },
+    ],
+    short: { core: 'CORE' },
+    shortCodes: ['CORE'],
+    empty: false,
+    lessons: {},
+    figures: {},
+    extraFigures: {},
+    blocks: {},
+  } as unknown as Catalog;
+};
+
+describe('how long a class is', () => {
+  // Ninety minutes, so the figures survive rounding to a tenth and the test is
+  // about the length rather than about the rounding. Thu 3 Sep starts the
+  // window, so a Tue/Thu course meets twice in it.
+  const NINETY = 'T/R · 1:00–2:30p';
+
+  it('counts it at the length the syllabus states, not at a flat fifty', () => {
+    const w = week(input({ catalog: meeting(NINETY) }));
+    expect(w.days[0].classes).toBe(1.5);
+    expect(w.promised).toBe(3);
+  });
+
+  it('still says fifty where the syllabus states no times', () => {
+    // The honest fallback, and the only case the old flat number was right for.
+    const w = week(input({ catalog: meeting('T/R · Alumni Hall 201') }));
+    expect(w.days[0].classes).toBe(0.8);
+  });
+
+  it('agrees with the length the hour grid draws', () => {
+    // `lengthOf` is what the grid and the Activities screen already use. This
+    // screen having an answer of its own is what made the two disagree.
+    const cat = meeting(NINETY);
+    const drawn = blocksFor(cat, new Date(2026, 8, 3)).reduce((n, b) => n + lengthOf(cat, b), 0);
+    expect(week(input({ catalog: cat })).days[0].classes).toBeCloseTo(drawn / 60, 5);
+  });
+
+  it('counts nothing for a class that is not happening', () => {
+    const cat = meeting(NINETY);
+    (cat.modules[0] as { exceptions: unknown[] }).exceptions = [
+      { month: 8, day: 3, canceled: true },
+    ];
+    const w = week(input({ catalog: cat }));
+    expect(w.days[0].classes).toBe(0);
+    expect(w.promised).toBe(1.5);
+  });
 });
 
 describe('week', () => {

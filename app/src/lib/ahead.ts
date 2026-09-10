@@ -30,6 +30,7 @@ import { blocksFor } from '../data/catalog';
 import type { Commitment } from './activities';
 import { blocksOn } from './activities';
 import { dateToIso, decorateItem } from './date';
+import { lengthOf } from './select';
 import type { DoneMap } from './standing';
 import { weekShape, type WeekShape, type Window } from './windows';
 
@@ -73,10 +74,25 @@ export interface Week {
 
 const SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+/**
+ * Minutes of things that state their own length — commitments, which do.
+ *
+ * Classes do not go through here. A class block states a time and no length,
+ * so this used to give every one of them fifty minutes; but the app knows the
+ * real length, off `course.meets`, and `lengthOf` has read it for the hour
+ * grid all along. Counting a seventy-five minute seminar as fifty is a fifth
+ * of the week gone, and it left this screen and the Activities screen — which
+ * has always used the stated length — disagreeing about the same week.
+ */
 function minutesOfBlocks(blocks: { time: string; minutes?: number }[]): number {
-  // A class block states a time and not a length; fifty minutes is the
-  // ordinary teaching hour and the honest approximation for one.
   return blocks.reduce((n, b) => n + (b.minutes ?? 50), 0);
+}
+
+/** Minutes of class on a day, each at the length its syllabus states. */
+function minutesOfClasses(catalog: Catalog, date: Date): number {
+  return blocksFor(catalog, date)
+    .filter((b) => !b.canceled)
+    .reduce((n, b) => n + lengthOf(catalog, b), 0);
 }
 
 function round(n: number): number {
@@ -113,7 +129,7 @@ export function week(input: WeekInput): Week {
   const days: Day[] = [];
   for (let n = 0; n < 7; n++) {
     const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + n);
-    const classes = minutesOfBlocks(blocksFor(catalog, date).filter((b) => !b.canceled)) / 60;
+    const classes = minutesOfClasses(catalog, date) / 60;
     const commitments = minutesOfBlocks(blocksOn(input.commitments, date)) / 60;
 
     const key = dateToIso(date);
