@@ -49,6 +49,27 @@ export interface Slide {
   note?: string;
   /** A title slide is set bigger and centred. */
   opening?: boolean;
+  /**
+   * A real table on the slide, first row treated as headings.
+   *
+   * Drawn as a PowerPoint table rather than as a picture or a run of
+   * tab-separated bullets, which are the two things every other "export to
+   * slides" produces. A table you can edit in PowerPoint is the difference
+   * between a deck somebody can fix in the ten minutes before a seminar and
+   * one they have to rebuild.
+   */
+  table?: string[][];
+  /**
+   * An equation, as one line of ordinary text.
+   *
+   * Deliberately not OMML. PowerPoint can carry a real equation object, but
+   * only inside an `mc:AlternateContent` block that Keynote and Google Slides
+   * read differently — and a formula that renders in one application and
+   * disappears in another is worse on a wall in front of a room than a plain
+   * line that always renders. `lib/maths.ts` writes the line; see `plain()`
+   * there for what it does and does not keep.
+   */
+  equation?: string;
 }
 
 export interface Deck {
@@ -131,6 +152,72 @@ export function bodySize(bullets: string[]): number {
   return 15;
 }
 
+/**
+ * A PowerPoint table.
+ *
+ * A `graphicFrame` rather than a shape, because that is what the format calls
+ * a table, and the `uri` on the `graphicData` is what tells PowerPoint which
+ * kind of graphic is inside — get it wrong and the slide opens with an empty
+ * box rather than an error.
+ *
+ * Every cell carries its own fill and borders instead of naming a table style.
+ * A style id refers to a definition in a part this package does not ship, and
+ * the three applications disagree about what to do when it is missing:
+ * PowerPoint substitutes its own blue banded style, which is not this app's
+ * palette, and Google Slides draws nothing at all.
+ *
+ * The row height is a minimum rather than a size — PowerPoint grows a row to
+ * fit its text and shrinks nothing — so a long cell wraps instead of being
+ * clipped.
+ */
+function table(
+  id: number,
+  rows: string[][],
+  at: { x: number; y: number; w: number },
+): string {
+  const columns = rows.reduce((n, row) => Math.max(n, row.length), 0);
+  if (columns === 0) return '';
+  const each = Math.round((at.w * EMU) / columns);
+  // Smaller as the table grows: eight rows at 14pt is a readable slide and
+  // sixteen at 14pt is a wall of text nobody at the back can read either way.
+  const size = rows.length > 10 ? 1000 : rows.length > 6 ? 1200 : 1400;
+
+  const cell = (text: string, heading: boolean) =>
+    '<a:tc><a:txBody><a:bodyPr/><a:lstStyle/>' +
+    `<a:p><a:pPr><a:buNone/></a:pPr><a:r><a:rPr lang="en-US" sz="${size}" b="${heading ? 1 : 0}">` +
+    `<a:solidFill><a:srgbClr val="${heading ? PAPER : DIM}"/></a:solidFill>` +
+    `<a:latin typeface="Arial"/></a:rPr><a:t>${xml(text)}</a:t></a:r></a:p></a:txBody>` +
+    '<a:tcPr marL="68580" marR="68580" marT="45720" marB="45720">' +
+    ['L', 'R', 'T', 'B']
+      .map(
+        (side) =>
+          `<a:ln${side} w="6350"><a:solidFill><a:srgbClr val="${DIM}"><a:alpha val="45000"/>` +
+          `</a:srgbClr></a:solidFill></a:ln${side}>`,
+      )
+      .join('') +
+    `<a:solidFill><a:srgbClr val="${INK}"/></a:solidFill></a:tcPr></a:tc>`;
+
+  const body = rows
+    .map(
+      (row, r) =>
+        `<a:tr h="${Math.round(0.42 * EMU)}">` +
+        Array.from({ length: columns }, (_, c) => cell(row[c] ?? '', r === 0)).join('') +
+        '</a:tr>',
+    )
+    .join('');
+
+  return (
+    `<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${id}" name="Table ${id}"/>` +
+    '<p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/>' +
+    `</p:nvGraphicFramePr><p:xfrm><a:off x="${Math.round(at.x * EMU)}" y="${Math.round(at.y * EMU)}"/>` +
+    `<a:ext cx="${Math.round(at.w * EMU)}" cy="${Math.round(rows.length * 0.42 * EMU)}"/></p:xfrm>` +
+    '<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl>' +
+    '<a:tblPr firstRow="1"/><a:tblGrid>' +
+    Array.from({ length: columns }, () => `<a:gridCol w="${each}"/>`).join('') +
+    `</a:tblGrid>${body}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`
+  );
+}
+
 function slideXml(slide: Slide): string {
   const shapes: string[] = [
     // The ground. Set per slide rather than on the master, because a master
@@ -185,6 +272,29 @@ function slideXml(slide: Slide): string {
         w: 11.5,
         h: 0.5,
         lines: [{ text: slide.note, size: 13, color: DIM }],
+      }),
+    );
+  }
+
+  if (slide.equation) {
+    shapes.push(
+      box(next++, {
+        x: 0.9,
+        y: slide.table ? 2.1 : 2.9,
+        w: 11.5,
+        h: 1,
+        anchor: 'ctr',
+        lines: [{ text: slide.equation, size: 26, color: PAPER }],
+      }),
+    );
+  }
+
+  if (slide.table && slide.table.length) {
+    shapes.push(
+      table(next++, slide.table, {
+        x: 0.9,
+        y: slide.equation ? 3.3 : slide.note ? 2.6 : 2.2,
+        w: 11.5,
       }),
     );
   }

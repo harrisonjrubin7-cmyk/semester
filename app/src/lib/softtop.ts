@@ -157,7 +157,22 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
   const settledToday = dated.filter((i) => i.isToday);
   const doneToday = settledToday.filter((i) => state.done[i.id]);
   const overdue = overdueCount(dated, state.done);
-  const soon = upcomingItems(catalog, now).filter((i) => !i.isToday && i.daysAway <= 7);
+  /*
+   * The week ahead, less what is already done.
+   *
+   * `due` on the line above has always dropped what you ticked, and so has
+   * `overdue`. This did not, so the three numbers in the same row answered
+   * different questions: finish every deadline in the week and "Due today"
+   * fell to nothing while "This week" sat where it was. That row is carried
+   * at the top of twenty-three screens.
+   *
+   * It also reaches the "Work on it" hero, whose "Nothing due this week"
+   * could never appear for somebody who had done the week's work — which is
+   * the one person it was written for.
+   */
+  const soon = upcomingItems(catalog, now).filter(
+    (i) => !i.isToday && i.daysAway <= 7 && !state.done[i.id],
+  );
   const courses = catalog.courses.length;
 
   /** The three numbers most screens qualify their hero with. */
@@ -302,11 +317,26 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
 
     case 'tonight': {
-      const hours = state.dayBudget;
+      /*
+       * The count, not the hours.
+       *
+       * This used to headline `state.dayBudget` as "4 hours to spend on 8
+       * things". That is the standing figure for an ordinary day, and the
+       * screen underneath asks how long you have *tonight* and plans against
+       * its own answer — so the two contradicted each other in the same
+       * viewport from the moment the screen opened, and tapping a different
+       * number moved one of them and not the other.
+       *
+       * The number of things outstanding is a fact this tile can actually
+       * know, and it is the one the screen below agrees with.
+       */
+      const left = soon.length + due.length;
       return {
-        hero: hours
-          ? { label: 'Tonight', figure: showHours(hours), foot: 'to spend on ' + count(soon.length + due.length, 'thing') }
-          : { label: 'Tonight', said: 'Say how long you have, and this ranks the hours.', foot: count(due.length, 'thing') + ' due today' },
+        hero: {
+          label: 'Tonight',
+          figure: num(left),
+          foot: left === 1 ? 'thing outstanding' : 'things outstanding',
+        },
         stats: term,
       };
     }
@@ -482,6 +512,18 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     case 'deck':
       return nothing;
 
+    // Three counts, each of a list this screen is the home of. The making
+    // screens hold work nobody else has a copy of, so how much of it there is
+    // is worth saying in the header rather than only inside.
+    case 'write':
+      return holds('Documents', state.documents.length, 'document');
+
+    case 'sheet':
+      return holds('Sheets', state.sheets.length, 'sheet');
+
+    case 'equations':
+      return holds('Equations', state.equations.length, 'equation');
+
     case 'mail':
       return nothing;
 
@@ -569,7 +611,9 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
 
     case 'activities':
-      return holds('Commitments', state.commitments.length, 'commitment');
+      // Active ones, because that is what the screen this opens counts, and a
+      // tile that disagrees with the screen behind it is worse than no tile.
+      return holds('Commitments', state.commitments.filter((c) => c.active).length, 'commitment');
 
     case 'groupwork':
       return {
@@ -690,4 +734,38 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     default:
       return nothing;
   }
+}
+
+/**
+ * The one live number for a tile that stands for a set of screens.
+ *
+ * A tile on the launcher stands for a shelf and a tile on the task index
+ * stands for an intention, and both want the same thing under their glyphs:
+ * one figure that is true right now rather than a decoration. The honest
+ * source for that is the hero the screen itself opens with — Semester's next
+ * class, Courses' term progress, Study's cards due — so the tile borrows one
+ * and the two can never disagree.
+ *
+ * Which one: the first that has something to say, and the first of any kind
+ * if none does. A zero is a true answer to a question nobody asked here —
+ * the tile carries no label for its figure, so "0" under *Keep track of what
+ * is due* reads as an app with nothing in it rather than as "nothing due
+ * today", and seven tiles saying it reads as an app that is broken. A grid
+ * where every figure is zero still shows zeros, because that is then the
+ * truth about the term rather than an accident of which screen came first.
+ *
+ * `undefined` when nothing in the set has a figure at all, which is the
+ * ordinary answer for a set of tools: the caller says what to print instead,
+ * because only the caller knows what its tiles are counting.
+ */
+export function firstFigure(screens: Screen[], input: TopInput): string | undefined {
+  let any: string | undefined;
+  for (const screen of screens) {
+    const figure = softTop(screen, input).hero?.figure;
+    if (!figure) continue;
+    if (any === undefined) any = figure;
+    // "0", "0%", "$0" and "0.0" — a figure whose every digit is a nought.
+    if (!/^\D*0([.,]0+)?\D*$/.test(figure)) return figure;
+  }
+  return any;
 }

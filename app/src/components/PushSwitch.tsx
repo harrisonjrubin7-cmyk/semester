@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { canPush, enrol, enrolled, leave, markRefilled, PUSH_NOTE, queueFor } from '../lib/push';
 import { atRiskToday } from '../lib/atrisk';
+import { classesToNudge } from '../lib/notify';
 import { dropDevice, saveDevice, saveQueue, wipeQueue } from '../lib/cloud';
 import { railFor, datedItems } from '../lib/select';
 
@@ -52,9 +54,7 @@ export function PushSwitch() {
     // server does none of this arithmetic — see `lib/push.ts`.
     const queue = queueFor(now, state.notifs, (d) => ({
       items: datedItems(catalog, d).filter((i) => !state.done[i.id]),
-      classes: railFor(catalog, d, state.appointments, state.commitments)
-        .filter((b) => !b.optional && !b.canceled)
-        .map((b) => ({ label: b.title, at: b.at, where: b.meta })),
+      classes: classesToNudge(railFor(catalog, d, state.appointments, state.commitments)),
       registrar: state.registrar,
       // Before the class, not after the absence. See `lib/atrisk.ts`.
       atRisk: atRiskToday(
@@ -103,7 +103,7 @@ export function PushSwitch() {
         </div>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>{PUSH_NOTE}</div>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>{PUSH_NOTE}</div>
     </div>
   );
 }

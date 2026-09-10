@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { ClashList, DayBudget } from '../components/Clashes';
@@ -176,8 +177,9 @@ export function Ahead() {
         ))}
       </div>
       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
-        Classes and commitments at the length they meet for; an appointment counted as an hour,
-        because it has a start and no end. A dot marks a day with something due on it.
+        Classes and commitments at the length they meet for; a commitment given as hours a week
+        spread evenly across the seven, because it has no day of its own; an appointment counted
+        as an hour, because it has a start and no end. A dot marks a day with something due on it.
       </div>
 
       {/*
@@ -196,7 +198,7 @@ export function Ahead() {
             <button
               key={p.item.id}
               type="button"
-              className="bare tappable"
+              className="bare tappable on-paper"
               onClick={() => dispatch({ type: 'openItem', id: p.item.id })}
               style={{
                 display: 'flex',
@@ -254,7 +256,7 @@ export function Ahead() {
             <button
               key={i.id}
               type="button"
-              className="bare tappable"
+              className="bare tappable on-paper"
               onClick={() => dispatch({ type: 'openItem', id: i.id })}
               style={{
                 display: 'flex',
@@ -314,7 +316,7 @@ export function Ahead() {
             {mine}
           </div>
         ) : null}
-        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {basisLine(w.shape)} The coursework estimate is built only from work you have timed
           yourself — the app still invents nothing, and anything it has never seen the like of is
           counted as unknown rather than guessed at.

@@ -136,6 +136,38 @@ export function toHash(route: Route): string {
  * screen named actually exists is the caller's question — this file has no
  * business knowing which screens a given university has.
  */
+/**
+ * The id out of a path segment, without trusting the escaping.
+ *
+ * `decodeURIComponent` throws `URIError: URI malformed` on a percent that is
+ * not a whole escape — `%`, `%%%`, a `%E0%A4%A` cut short — and a URL is the
+ * one input here that arrives from outside and gets handled on the way: a chat
+ * client truncating a shared link at a `%`, a copy that lost its last two
+ * characters, somebody typing one by hand.
+ *
+ * Measured before this existed. Landing on `#/guide/%` from a shared link:
+ * `#root` had no children at all — the throw happened while the store was
+ * being built, so there was no screen and no boundary, just a white page.
+ * Changing the hash inside a running app was better and still wrong: two
+ * uncaught `URIError`s and a navigation that silently did not happen.
+ *
+ * The raw segment is the honest fallback: a malformed escape then behaves
+ * exactly like any other id that names nothing, which is the most this
+ * function can promise. What the *screens* do with an id naming nothing is
+ * their own established behaviour and is not changed here — measured,
+ * `#/guide/nosuchcourse` and `#/guide/%` now draw the same thing, which is
+ * the first course rather than a not-found state. Whether that is the right
+ * answer for a shared link to a course somebody does not have is a separate
+ * question, and it is in the pull request rather than quietly settled here.
+ */
+function readId(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}
+
 export function fromHash(hash: string): Route | null {
   const raw = hash.startsWith('#') ? hash.slice(1) : hash;
   if (!raw || raw === '/') return null;
@@ -151,7 +183,7 @@ export function fromHash(hash: string): Route | null {
   const moved = RETIRED[named];
   const screen = (moved?.screen ?? named) as Screen;
 
-  const id = parts[1] ? decodeURIComponent(parts[1]) : '';
+  const id = parts[1] ? readId(parts[1]) : '';
   const mode = new URLSearchParams(query ?? '').get('mode');
   return {
     screen,

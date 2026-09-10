@@ -199,6 +199,7 @@ export function Links() {
             <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-6)' }}>
               <div className="kicker">Your own link</div>
               <input
+                aria-label="What the link is"
                 className="input"
                 placeholder="What it is — Commodore Card, the gym"
                 value={newName}
@@ -206,6 +207,7 @@ export function Links() {
                 style={{ fontSize: 'var(--type-base)', marginTop: 9 }}
               />
               <input
+                aria-label="Its address"
                 className="input"
                 placeholder="https://…"
                 value={newUrl}

@@ -11,7 +11,7 @@ import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
-import { MAX_SHOTS, toShots } from '../lib/shots';
+import { MAX_SHOTS, tooMany, toShots } from '../lib/shots';
 import { APPROACHES, READ_SYSTEM, SYSTEM, approach as byId, brief } from '../lib/solve';
 import { NeedsKey } from '../components/NeedsKey';
 
@@ -57,9 +57,13 @@ export function Solve() {
     setBusy('Reading it…');
     try {
       const { shots, errors } = await toShots(files.slice(0, MAX_SHOTS));
-      // Some of the photos would not open. Said alongside whatever happens to
-      // the ones that did, because a transcription of three pages out of four
-      // looks complete and is not.
+      // Some of the photos would not open, and some were never opened: past
+      // twelve they are cut off. Both said alongside whatever happens to the
+      // ones that did, because a transcription of three pages out of four
+      // looks complete and is not — and the ones cut off are the easier case
+      // to miss, since nothing went wrong to say so.
+      const over = tooMany(files.length, MAX_SHOTS);
+      if (over) errors.push(over);
       if (errors.length) trouble.wrong(errors.join(' '));
       if (shots.length === 0) return;
       abort.current = new AbortController();
@@ -157,6 +161,7 @@ export function Solve() {
 
       <SectionLabel>The problem</SectionLabel>
       <textarea
+        aria-label="The problem"
         className="input"
         value={problem}
         onChange={(e) => setProblem(e.target.value)}
@@ -188,6 +193,7 @@ export function Solve() {
         <>
           <SectionLabel>What you did</SectionLabel>
           <textarea
+            aria-label="What you did"
             className="input"
             value={work}
             onChange={(e) => setWork(e.target.value)}
@@ -202,6 +208,7 @@ export function Solve() {
         <>
           <SectionLabel>The answer you expected</SectionLabel>
           <input
+            aria-label="The answer you expected"
             className="input"
             value={expected}
             onChange={(e) => setExpected(e.target.value)}

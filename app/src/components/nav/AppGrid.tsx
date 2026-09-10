@@ -30,26 +30,47 @@ import type { Destination } from '../../lib/nav';
 
 export function AppGrid({
   apps,
+  says,
   onOpen,
 }: {
   apps: Destination[];
+  /**
+   * What this school calls the screen, when it calls it something of its own.
+   *
+   * Optional, and the registry's own words are the default — the Tools tab
+   * has no school-specific names on it. The launcher does: `saysFor` is why a
+   * Vanderbilt student's registrar tile says YES and nobody else's does, and
+   * a grid that printed the registry label there would be the one place in
+   * the app using somebody else's word for their own university.
+   */
+  says?: (d: Destination) => { label: string; blurb: string };
   /** What the label says and where it goes — the caller owns both. */
   onOpen: (d: Destination) => void;
 }) {
   return (
     <div className="appgrid">
-      {apps.map((d) => (
-        <button
-          key={d.screen}
-          type="button"
-          className="bare appicon"
-          onClick={() => onOpen(d)}
-          title={d.blurb}
-        >
-          <span className="appicon-tile">{createElement(glyphFor(d.screen), { size: 27 })}</span>
-          <span className="appicon-name">{d.short ?? d.label}</span>
-        </button>
-      ))}
+      {apps.map((d) => {
+        const said = says?.(d);
+        return (
+          <button
+            key={d.screen}
+            type="button"
+            className="bare appicon"
+            onClick={() => onOpen(d)}
+            title={said?.blurb ?? d.blurb}
+          >
+            <span className="appicon-tile">{createElement(glyphFor(d.screen), { size: 27 })}</span>
+            {/* The caller's name first, then the short one: this is a 74px
+                column, so the registry's `short` is the right default — but
+                it abbreviates the registry's own label, and a caller passing
+                `says` is telling us this school calls the screen something
+                else. `d.short` first is how the launcher shipped saying
+                "Register" at the one university that calls it YES. See
+                `shortFor` in `lib/nav.ts`. */}
+            <span className="appicon-name">{said?.label ?? d.short ?? d.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

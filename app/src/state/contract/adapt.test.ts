@@ -4,6 +4,7 @@ import type { Envelope, Note } from '@semester/contract';
 import { DEFAULT_PERSISTED, type Persisted } from '../shape';
 import { toContract, fromContract, readScore } from './adapt';
 import { key as gradeKey } from '../../lib/grades';
+import { LEGACY_TERM } from '../../lib/term';
 import type { CourseModule } from '../../lib/types';
 
 /**
@@ -74,6 +75,41 @@ function state(over: Partial<Persisted> = {}): Persisted {
   return { ...DEFAULT_PERSISTED, courses: [course()], ...over };
 }
 
+describe('a course saved before terms existed', () => {
+  // `course.term` is optional and every course imported before terms existed
+  // has none. This file used to fall back to '', which is not what any other
+  // reader in the app falls back to — and then skipped emitting that term, so
+  // the course crossed the wire pointing at an id nothing carried.
+  const legacy = () => {
+    const c = course({ id: 'legacy', code: 'OLD 100' });
+    delete (c.course as { term?: string }).term;
+    return c;
+  };
+
+  it('puts it in the term the rest of the app puts it in', () => {
+    const out = toContract(state({ courses: [legacy()] }));
+    expect(out.courses[0].termId).toBe(`term:${LEGACY_TERM}`);
+  });
+
+  it('emits the term it points at', () => {
+    const out = toContract(state({ courses: [legacy()] }));
+    expect(out.terms.map((t) => t.id)).toEqual([`term:${LEGACY_TERM}`]);
+  });
+
+  it('leaves no course pointing at a term the envelope does not carry', () => {
+    const out = toContract(state({ courses: [legacy(), course()] }));
+    const known = new Set(out.terms.map((t) => t.id));
+    expect(out.courses.filter((c) => !known.has(c.termId))).toEqual([]);
+  });
+
+  it('does not invent a second term for one it already names', () => {
+    // The fixture's own course is already in the legacy term, so a legacy
+    // course beside it must not add a duplicate.
+    const out = toContract(state({ courses: [legacy(), course()] }));
+    expect(out.terms).toHaveLength(1);
+  });
+});
+
 describe('the crossing', () => {
   it('carries a course, and fixes the shapes the mapping table named', () => {
     const c = toContract(state()).courses[0];
@@ -83,6 +119,22 @@ describe('the crossing', () => {
     expect(c.credits).toBe(3);
     expect(typeof c.credits).toBe('number');
     expect(c.termId).toBe('term:2026FA');
+  });
+
+  it('reads the credit count out of the line the syllabus wrote', () => {
+    /*
+     * What crosses this wire is what a degree audit divides by. `parseFloat`
+     * took the leading number and stopped: it read the "Three (3)" the
+     * mapping comment offers as an example as none at all, and a line that
+     * opens with the term as two thousand and twenty-six.
+     */
+    const said = (credits: string) =>
+      toContract(state({ courses: [course({ credits })] })).courses[0].credits;
+    expect(said('Three (3)')).toBe(3);
+    expect(said('2026 Spring · 3 credits')).toBe(3);
+    expect(said('9:30 TR, 3 credits')).toBe(3);
+    // A line with no credit count in it still crosses as zero, not as NaN.
+    expect(said('TR 9:30-10:45')).toBe(0);
   });
 
   it('turns one recurring block into one meeting per day', () => {

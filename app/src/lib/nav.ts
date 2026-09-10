@@ -16,6 +16,7 @@
  */
 
 import type { Screen } from './types';
+import { settingsTitle } from './settings';
 import { allowed, cardName, lmsName, showsCash, showsSwipes, swipeUnit, type Capabilities } from './school';
 import { showing, type Facts } from './reveal';
 
@@ -331,11 +332,52 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
+    screen: 'write',
+    label: 'Write a document',
+    short: 'Write',
+    blurb: 'A memo, a report or a handout — headings, tables and equations, out as a real Word file.',
+    keywords: 'document doc docx word write writing memo report handout paper page pages heading headings paragraph list bullets quotation table tables equation equations formula print pdf markdown letterhead outline compose editor',
+    group: 'Make',
+    taskTags: ['make'],
+    root: 'study',
+  },
+  {
+    screen: 'sheet',
+    label: 'Sheet or table',
+    short: 'Sheet',
+    blurb: 'A grid you can type into and add up — out as a real Excel file, a CSV, or a table for your document.',
+    keywords: 'sheet sheets spreadsheet excel xlsx csv table tables grid cell cells column columns row rows formula formulas sum average total gradebook grades budget marks numbers calculate calculator google sheets numbers app pivot data',
+    group: 'Make',
+    taskTags: ['make', 'data'],
+    root: 'study',
+  },
+  {
+    screen: 'equations',
+    label: 'Equations',
+    short: 'Maths',
+    blurb: 'Write a formula properly — on screen, into a document, or as a line you can paste anywhere.',
+    keywords: 'equation equations formula formulas maths math latex mathml notation fraction exponent superscript subscript square root sum sigma greek symbol elasticity standard deviation margin of error present value regression z score expected value statistics',
+    group: 'Make',
+    taskTags: ['make', 'study'],
+    root: 'study',
+  },
+  {
     screen: 'sources',
     label: 'Sources',
     blurb: 'Every reading you have kept, with what each is for — and out as BibTeX.',
     keywords: 'source sources citation citations bibliography reference references reading list bibtex zotero overleaf works cited quote author year paper article book cite',
-    group: 'Make',
+    /*
+     * Courses rather than Make, since the making screens arrived.
+     *
+     * Make was at ten with a shelf limit of eight, and of the ten this is the
+     * one that is least a thing you make: a source list is the readings your
+     * courses set, kept so a bibliography can be trusted. It sits with the
+     * other course upkeep — adding one, editing one, folding in what changed —
+     * and it is still tagged `make`, so it goes on turning up under that
+     * intention wherever tasks rather than shelves are what somebody is
+     * reading.
+     */
+    group: 'Courses',
     taskTags: ['make', 'study'],
     root: 'study',
   },
@@ -482,7 +524,17 @@ export const DESTINATIONS: Destination[] = [
     label: 'Email',
     blurb: 'Draft the email you have been putting off — extension, question, meeting.',
     keywords: 'email mail write draft professor reply extension office hours absence recommendation letter follow up gmail outlook compose message send',
-    group: 'Make',
+    /*
+     * Life rather than Make, since the making screens arrived.
+     *
+     * The second of the two Make had to give up, and the better home was
+     * already obvious: People and letters is on Life and is the screen about
+     * the humans in your term — who you have written to, whose letter you are
+     * waiting on — and an email to a professor is the same errand. It keeps
+     * its `make` tag, so it is still a drafting tool wherever the app groups
+     * by intention.
+     */
+    group: 'Life',
     taskTags: ['campus', 'make'],
     root: 'courses',
   },
@@ -746,6 +798,56 @@ export function destination(screen: Screen): Destination | undefined {
 }
 
 /**
+ * What to call a screen the registry does not list.
+ *
+ * Twenty of the sixty-nine screens are not destinations, on purpose: eight
+ * settings pages, which are pages *under* Settings, and twelve you reach from
+ * something rather than go to — a course, a deadline, a study guide, the
+ * slides. Their names live in the header switch and in `lib/settings.ts`,
+ * neither of which is importable from a component that only has a `Screen`.
+ *
+ * So callers that needed a name did `DESTINATIONS.find(…)?.label ?? screen`,
+ * and the identifier is what a person then heard: the assistant button
+ * announced itself as "Ask about setNav" on every settings page, "Ask about
+ * drill" inside a drill, and the sheet it opens said "Looking at: setLook".
+ * A screen id is a thing in the source, not a thing on the screen.
+ *
+ * These read as the object of "Ask about ___" and of "Looking at: ___",
+ * which is what both callers write, and the settings pages take the same
+ * short name the header bar shows rather than a second copy of it.
+ */
+const NESTED_NAMES: Partial<Record<Screen, string>> = {
+  onboarding: 'setting up',
+  course: 'this course',
+  item: 'this deadline',
+  event: 'this event',
+  guide: 'this study guide',
+  quiz: 'this quiz',
+  drill: 'this drill',
+  guess: 'these predictions',
+  gap: 'this gap between classes',
+  lesson: 'this lesson',
+  note: 'this note',
+  slides: 'these slides',
+};
+
+/**
+ * The name of a screen, wherever that name is kept.
+ *
+ * The registry first, then the settings registry, then the nested screens
+ * above. The last resort is the id, which `nav.test.ts` holds to be
+ * unreachable — every member of the `Screen` union is named by one of the
+ * three, and a screen added without a name fails there rather than turning up
+ * in an aria-label.
+ */
+export function screenName(screen: Screen): string {
+  const own = BY_SCREEN.get(screen)?.label;
+  if (own) return own;
+  if (/^set[A-Z]/.test(screen)) return settingsTitle(screen);
+  return NESTED_NAMES[screen] ?? screen;
+}
+
+/**
  * The shelf a screen sits on.
  *
  * Its own, when the registry lists it; otherwise the shelf of the root it
@@ -847,6 +949,27 @@ function mealsBlurb(c: Capabilities): string {
 export function saysFor(d: Destination, c: Capabilities): { label: string; blurb: string } {
   const said = SAYS[d.screen]?.(c);
   return { label: said?.label ?? d.label, blurb: said?.blurb ?? d.blurb };
+}
+
+/**
+ * The same name, for a place with room for about nine characters.
+ *
+ * Two rules that look like one and are not, which is how the launcher shipped
+ * calling Vanderbilt's registrar "Register". `short` abbreviates the
+ * *registry's* label — "Register" for "Registration" — and a school that has
+ * renamed the screen has replaced the thing being abbreviated, so the
+ * abbreviation is of a word nobody at that school uses. `saysFor` wins
+ * wherever it has an opinion; `short` fills in where it does not.
+ *
+ * A school-specific name is not shortened here, deliberately. "YES" needs no
+ * help, and a registrar called "Student Center" is that school's own word for
+ * it — cutting it down would be this file inventing an abbreviation for a
+ * university it has never heard of. `.appicon-name` clamps to two lines, so a
+ * long one wraps rather than breaking the grid.
+ */
+export function shortFor(d: Destination, c: Capabilities): string {
+  const said = saysFor(d, c).label;
+  return said === d.label ? d.short ?? d.label : said;
 }
 
 /**

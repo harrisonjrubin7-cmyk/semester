@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Blueprint } from './Blueprint';
 import { Plus } from './Icons';
 import { FilePick } from './ui';
-import { MAX_SHOTS, toShots, weigh, type ShotFile } from '../lib/shots';
+import { MAX_SHOTS, tooMany, toShots, weigh, type ShotFile } from '../lib/shots';
 
 /**
  * Photograph the board, or pick from the camera roll.
@@ -45,9 +45,8 @@ export function Capture({
     const room = MAX_SHOTS - shots.length;
     const chosen = list.slice(0, Math.max(0, room));
     const { shots: made, errors: failed } = await toShots(chosen);
-    if (list.length > room) {
-      failed.push(`Only ${MAX_SHOTS} photos go in one batch — the rest were left out.`);
-    }
+    const over = tooMany(list.length, room);
+    if (over) failed.push(over);
     setErrors(failed);
     onChange([...shots, ...made]);
     setBusy(false);

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { Page } from '../components/Page';
 import { build, toMarkdown, type Section } from '../lib/guidebook';
 import { download } from '../lib/deliver';
@@ -97,7 +98,10 @@ function Chapter({
         <span style={{ flex: 1, fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>
           {section.title}
         </span>
-        <span style={{ flex: 'none', opacity: 0.4, fontSize: 'var(--type-sm)' }}>
+        {/* The one glyph that says the section opens, so it is dimmed with
+            the token rather than to 3.4:1 — the affordance should not be the
+            faintest mark on its own control. */}
+        <span style={{ flex: 'none', ...secondLine(), fontSize: 'var(--type-sm)' }}>
           {open ? '−' : '+'}
         </span>
       </button>

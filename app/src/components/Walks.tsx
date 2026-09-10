@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
+import { secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
-import { railFor } from '../lib/select';
+import { lengthOf, railFor } from '../lib/select';
 import { daySummary, hopLine, hops, tight } from '../lib/rooms';
 import { Folding } from './Fold';
 
@@ -25,7 +26,18 @@ export function Walks({ date }: { date?: Date }) {
   const day = date ?? now;
 
   const list = useMemo(
-    () => hops(railFor(catalog, day, state.appointments, state.commitments), state.places),
+    () =>
+      hops(
+        // How long each one runs, so the gap after a seventy-five minute
+        // seminar is not measured as though it were fifty. A commitment
+        // states its own length; a class's is on its course; an appointment
+        // states none and falls back the same way the hour grid does.
+        railFor(catalog, day, state.appointments, state.commitments).map((b) => ({
+          ...b,
+          minutes: b.minutes ?? lengthOf(catalog, b),
+        })),
+        state.places,
+      ),
     [catalog, day, state.appointments, state.commitments, state.places],
   );
 
@@ -77,7 +89,7 @@ export function Walks({ date }: { date?: Date }) {
         </button>
       )}
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         {pressed.length > 0
           ? 'Measured between places you saved, at an unhurried eighty metres a minute — slow on purpose, since an estimate that says you will make it and is wrong costs more than one that says you will not.'
           : 'Measured between places you saved, and a building you have not placed gets no distance rather than a guessed one. The map can look up every building this semester names in one tap.'}

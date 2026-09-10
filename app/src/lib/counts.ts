@@ -41,6 +41,61 @@ import type { CourseModule, Guide } from './types';
  * adding it here and marking where it goes — nowhere else.
  */
 
+/**
+ * The files that state counts, and which counts each one states.
+ *
+ * There are two READMEs and only one of them was ever held to the registries.
+ * `app/README.md` has carried markers since this file was written; the
+ * repository's front page — the one a reader meets first — carried the same
+ * kind of claim written by hand, and drifted exactly the way this mechanism
+ * exists to stop: a heading saying six ways over eleven modes, a sentence
+ * under it naming ten of them, and a table listing seven.
+ *
+ * So the generator is a list of files rather than one path. A file states the
+ * counts it states — the front page says how many ways there are to read a
+ * guide and nothing about tab bars — and the strictness is per file: every key
+ * named here must have a marker in that file, and a key not named here is not
+ * that file's business.
+ *
+ * Paths are from the repository root, because that is the only directory both
+ * READMEs are under.
+ */
+export interface Stated {
+  /** The file, from the repository root. */
+  path: string;
+  /** The `Count` keys this file is expected to carry a marker for. */
+  keys: string[];
+  /**
+   * The noun each number sits beside, so a count cannot be filled into the
+   * wrong sentence. Read back out of the prose by `readme.test.ts`.
+   */
+  nouns: Record<string, string>;
+}
+
+export const STATED: Stated[] = [
+  {
+    path: 'app/README.md',
+    keys: ['screens', 'tabs', 'modes', 'recordings', 'lessons'],
+    nouns: {
+      screens: 'screens',
+      tabs: 'tabs',
+      modes: 'modes',
+      recordings: 'recordings',
+      lessons: 'narrated lessons',
+    },
+  },
+  {
+    path: 'README.md',
+    keys: ['modes'],
+    nouns: { modes: 'ways through the same material' },
+  },
+];
+
+/** The counts one of those files states, in the order `counts` returned them. */
+export function statedIn(all: Count[], file: Stated): Count[] {
+  return all.filter((c) => file.keys.includes(c.key));
+}
+
 /** A number the README states, and where in it that number sits. */
 export interface Count {
   /** Names the marker in the README: `<!--screens-->forty-nine<!--/-->`. */

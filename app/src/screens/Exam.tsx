@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Dictate } from '../components/Dictate';
@@ -28,6 +29,8 @@ import {
   seedCode,
   shapeFor,
   total,
+  usableFormat,
+  buildable,
   verdict,
   type Answer,
   type Question,
@@ -67,7 +70,10 @@ export function Exam() {
   // The guide's Quiz mode can hand a shape over. Read once, on the way in.
   const preset = state.examPreset;
   const [source, setSource] = useState<'cards' | 'written'>('cards');
-  const [formatId, setFormatId] = useState(preset?.formatId ?? FORMATS[0].id);
+  const [picked, setFormatId] = useState(preset?.formatId ?? FORMATS[0].id);
+  // See `usableFormat`: a shape that cannot be built from cards is never the
+  // shape in force, so the paper described below is always the paper you get.
+  const formatId = usableFormat(picked, source);
   const [minutes, setMinutes] = useState(preset?.minutes ?? 30);
   const [material, setMaterial] = useState('');
   const [about, setAbout] = useState('');
@@ -222,7 +228,7 @@ export function Exam() {
             const on = f.id === formatId;
             // A flashcard is not an argument, so a paper drawn from cards
             // cannot carry an essay question. Said rather than silently ignored.
-            const unavailable = source === 'cards' && f.mix.long > 0;
+            const unavailable = !buildable(f.id, source);
             return (
               <button
                 key={f.id}
@@ -237,11 +243,14 @@ export function Exam() {
                   borderRadius: 'var(--r-md)',
                   border: `1px solid ${on && !unavailable ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                   background: on && !unavailable ? 'var(--app-accent-wash)' : 'transparent',
-                  opacity: unavailable ? 0.4 : 1,
+                  opacity: unavailable ? DIMMED_ROW : 1,
                 }}
               >
                 <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{f.label}</span>
-                <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                {/* The reason it cannot be picked is the one line on this
+                    button somebody actually needs, so it is not dimmed a
+                    second time inside a button that is already dimmed. */}
+                <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(unavailable), marginTop: 'var(--sp-1)' }}>
                   {unavailable ? 'Needs written questions — a flashcard is not an argument.' : f.blurb}
                 </span>
               </button>
@@ -269,6 +278,7 @@ export function Exam() {
           <>
             <SectionLabel>The material it may use</SectionLabel>
             <textarea
+              aria-label="The material it may use"
               className="input"
               value={material}
               onChange={(e) => setMaterial(e.target.value)}
@@ -284,6 +294,7 @@ export function Exam() {
 
             <SectionLabel>Topics to cover</SectionLabel>
             <input
+              aria-label="Topics to cover"
               className="input"
               value={topics}
               onChange={(e) => setTopics(e.target.value)}
@@ -293,6 +304,7 @@ export function Exam() {
 
             <SectionLabel>What the real exam is like</SectionLabel>
             <textarea
+              aria-label="What the real exam is like"
               className="input"
               value={about}
               onChange={(e) => setAbout(e.target.value)}
@@ -309,6 +321,7 @@ export function Exam() {
           <>
             <SectionLabel>Sit one you have sat before</SectionLabel>
             <input
+              aria-label="Paper code"
               className="input"
               value={reuse}
               onChange={(e) => setReuse(e.target.value)}
@@ -400,7 +413,7 @@ export function Exam() {
                 {i + 1} · {q.points} {q.points === 1 ? 'mark' : 'marks'}
               </span>
               {q.from ? (
-                <span style={{ fontSize: 'var(--type-xs)', opacity: 0.45, flex: 1, minWidth: 0 }}>{q.from}</span>
+                <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: 1, minWidth: 0 }}>{q.from}</span>
               ) : null}
               {marking ? (
                 <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', flex: 'none', opacity: 0.7 }}>
@@ -461,6 +474,7 @@ export function Exam() {
               </div>
             ) : (
               <textarea
+                aria-label="Your answer"
                 className="input"
                 value={chosen}
                 readOnly={marking}

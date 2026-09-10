@@ -110,6 +110,62 @@ describe('what gets thrown away', () => {
     expect(dropped).toContain(`s${MOST + 5}`);
   });
 
+  it('does not let a busy day eat the week', () => {
+    /*
+     * The extra copies are taken "before anything that rewrites a lot at
+     * once", so the day that produces twenty of them is the day somebody is
+     * rewriting a lot. The cap used to apply newest-first across everything
+     * that survived, so today's twenty-five displaced every older copy and
+     * the week this file promises to keep was gone.
+     */
+    const today = Array.from({ length: 25 }, (_, i) =>
+      snap({ id: `today${i}`, at: ago(i * 0.5), reason: 'import' }),
+    );
+    const week = Array.from({ length: 6 }, (_, i) =>
+      snap({ id: `day${i + 1}`, at: ago((i + 1) * 24 + 6) }),
+    );
+    const dropped = new Set(stale([...today, ...week], now));
+    for (let i = 1; i <= 6; i++) expect(dropped.has(`day${i}`)).toBe(false);
+  });
+
+  it('still caps the total when it does', () => {
+    const today = Array.from({ length: 25 }, (_, i) =>
+      snap({ id: `today${i}`, at: ago(i * 0.5), reason: 'import' }),
+    );
+    const week = Array.from({ length: 6 }, (_, i) =>
+      snap({ id: `day${i + 1}`, at: ago((i + 1) * 24 + 6) }),
+    );
+    const all = [...today, ...week];
+    expect(all.length - stale(all, now).length).toBe(MOST);
+  });
+
+  it('takes the cap out of today, newest of today first', () => {
+    const today = Array.from({ length: 25 }, (_, i) =>
+      snap({ id: `today${i}`, at: ago(i * 0.5), reason: 'import' }),
+    );
+    const week = Array.from({ length: 6 }, (_, i) =>
+      snap({ id: `day${i + 1}`, at: ago((i + 1) * 24 + 6) }),
+    );
+    const dropped = new Set(stale([...today, ...week], now));
+    // Fourteen of today survive beside the six dailies; the newest stay.
+    expect(dropped.has('today0')).toBe(false);
+    expect(dropped.has('today13')).toBe(false);
+    expect(dropped.has('today14')).toBe(true);
+    expect(dropped.has('today24')).toBe(true);
+  });
+
+  it('leaves the cap room for today after a full week of dailies', () => {
+    /*
+     * The guarantee the floor in `stale` is standing in for, asserted where it
+     * can actually fail. A week can contribute at most `KEEP_DAYS + 1` daily
+     * copies, so the cap has to be larger than that or a day of work could end
+     * with no copy of itself at all. The floor cannot be reached while this
+     * holds, which is why there is no test of the floor: there is no input
+     * that reaches it.
+     */
+    expect(MOST).toBeGreaterThan(KEEP_DAYS + 1);
+  });
+
   it('has nothing to say about an empty list', () => {
     expect(stale([], now)).toEqual([]);
   });

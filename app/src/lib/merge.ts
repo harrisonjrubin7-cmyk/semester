@@ -55,6 +55,11 @@ export const STRATEGY: Record<string, Strategy> = {
   places: 'union',
   sittings: 'union',
   sources: 'union',
+  // Made in the app and held nowhere else. A document written on the laptop
+  // and a sheet made on the phone are two things, not a conflict.
+  documents: 'union',
+  sheets: 'union',
+  equations: 'union',
   registrar: 'union',
   spent: 'union',
   windows: 'union',
@@ -464,6 +469,9 @@ const LABELS: Record<string, string> = {
   done: 'What you have ticked off',
   reviews: 'Study card history',
   sittings: 'Practice papers',
+  documents: 'Documents',
+  sheets: 'Sheets',
+  equations: 'Equations',
   attendance: 'Attendance',
   spent: 'Timings',
   ground: 'Theme',

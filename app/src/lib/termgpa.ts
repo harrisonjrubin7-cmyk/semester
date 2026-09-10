@@ -31,13 +31,14 @@
  * ## What it will not count, and says so
  *
  * A course with nothing graded, a course whose credit hours cannot be read
- * from the syllabus line, and a scale that states cutoffs but no grade points
- * are three different holes with three different fixes. Each is named, per
- * course, rather than silently dropped — a GPA quietly computed over three of
- * your four courses is worse than no GPA, which is the same argument
- * `gpaLine` already makes about pass/fail.
+ * from the syllabus line, and a scale that leaves a letter this course could
+ * land on unpriced are three different holes with three different fixes. Each
+ * is named, per course, rather than silently dropped — a GPA quietly computed
+ * over three of your four courses is worse than no GPA, which is the same
+ * argument `gpaLine` already makes about pass/fail.
  */
 
+import { creditHours } from './credits';
 import { systemFor, letterFor, type GradeSystem } from './cutoffs';
 import { NO_POLICY, pointsOff, rate, tally, type AttendPolicy, type Attended } from './attend';
 import { needFor, reachFor, standing, type Reach, type Standing } from './grades';
@@ -86,30 +87,6 @@ export interface TermStanding {
   cumulative: { before: number; hours: number; after: Band } | null;
 }
 
-/**
- * The number out of "3 credits", "3", "3.0 hrs".
- *
- * A syllabus writes this line freely and the app stores it as it was written,
- * so this reads rather than parses: the first number in the string, refused if
- * it is not a plausible credit count.
- *
- * Two shapes are struck out before the reading rather than filtered after it,
- * because both survive the plausibility test and mean something else. A year —
- * "Fall 2026" — is four digits and fails the range. A **time** does not: "TR
- * 9:30" reads as nine credit hours, which is a number in range, in the right
- * position, and wrong. Better to leave a course out and say the hours could
- * not be read than to weight a term by a lecture slot.
- */
-export function creditHours(credits: string | undefined): number | null {
-  const said = (credits ?? '')
-    .replace(/\b\d{1,2}:\d{2}\s*[ap]?\.?m?\.?/gi, ' ')
-    .replace(/\b(?:19|20)\d{2}\b/g, ' ');
-  const m = /(\d+(?:\.\d+)?)/.exec(said);
-  if (!m) return null;
-  const n = Number(m[1]);
-  return Number.isFinite(n) && n > 0 && n <= 12 ? n : null;
-}
-
 /** The grade points a percentage earns on this scale, letter and all. */
 export function landingAt(pct: number, system: GradeSystem): Landing {
   const letter = letterFor(pct, system);
@@ -146,7 +123,9 @@ function courseTerm(s: Sitting): CourseTerm {
   let missing: Missing = '';
   if (!band) missing = 'ungraded';
   else if (hours === null) missing = 'hours';
-  else if (band.mid.points === null) missing = 'points';
+  else if (unpriced(band.mid) || unpriced(band.low) || unpriced(band.high)) {
+    missing = 'points';
+  }
 
   return {
     courseId: s.courseId,
@@ -157,6 +136,28 @@ function courseTerm(s: Sitting): CourseTerm {
     band,
     missing,
   };
+}
+
+/**
+ * A letter the scale names and never prices.
+ *
+ * `landingAt` returns null points for two different silences, and only one of
+ * them is this. A percentage below every band the scale states earns no letter
+ * at all, and the term arithmetic has always read that as nothing — which on
+ * every American scale is what a mark below the lowest stated cutoff is worth.
+ *
+ * This is the other one: the scale named the letter and did not say what it is
+ * worth. `readGradeSystem` takes `min` and `gpa` band by band, so a published
+ * table that lists A+ as a cutoff and prices nothing above 4.0 arrives exactly
+ * like this — and folding it in as zero produced a term whose high end came
+ * out *below* its low end, printed on the degree screen as "somewhere between
+ * 3.30 and 0.00". An unpriced letter lives at the top of a scale, which is
+ * precisely the end the middle cannot see, so all three ends ask this and the
+ * middle is not a special case: reading a fail as "the scale states no grade
+ * points" dropped a whole course out of a term for a table that prices four.
+ */
+function unpriced(l: Landing): boolean {
+  return l.points === null && l.letter !== '';
 }
 
 const round = (n: number) => Math.round(n * 1000) / 1000;
@@ -214,8 +215,21 @@ export function missingLine(c: CourseTerm): string {
       return `${c.code} — nothing graded yet, so there is nothing to project from.`;
     case 'hours':
       return `${c.code} — the syllabus line does not say how many credit hours it is. Edit the course to add them.`;
-    case 'points':
-      return `${c.code} — its grade scale has cutoffs but no grade points, so a letter cannot become a number.`;
+    case 'points': {
+      const ends = c.band ? [c.band.low, c.band.mid, c.band.high] : [];
+      const blank = [...new Set(ends.filter(unpriced).map((l) => l.letter))];
+      // A scale that prices nothing is one fix; a scale that prices all but one
+      // letter is another, and it is the letter that has to be named. "No grade
+      // points" would be false of a table that states eleven of them.
+      if (blank.length === 0 || !ends.some((l) => l.points !== null)) {
+        return `${c.code} — its grade scale has cutoffs but no grade points, so a letter cannot become a number.`;
+      }
+      const one = blank.length === 1;
+      const list = one ? blank[0] : `${blank.slice(0, -1).join(', ')} or ${blank[blank.length - 1]}`;
+      return `${c.code} — this could land on ${list}, and the scale states no grade points for ${
+        one ? 'it' : 'those'
+      }. Add ${one ? 'that' : 'them'} to the scale and the course counts.`;
+    }
     default:
       return '';
   }

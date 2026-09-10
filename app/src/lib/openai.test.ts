@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { explain, readChunk, toMessages } from './openai';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { askOpenAI, explain, readChunk, toMessages } from './openai';
 
 describe('toMessages', () => {
   it('turns a top-level system prompt into a system message', () => {
@@ -100,5 +100,66 @@ describe('explain', () => {
 
   it('passes an unrecognised error through rather than guessing', () => {
     expect(explain(418, 'teapot')).toBe('teapot');
+  });
+});
+
+// ── The wire ──────────────────────────────────────────────────────────────
+
+/** An SSE body in the shape this API streams, line by line. */
+function stream(lines: string[]): Response {
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const enc = new TextEncoder();
+      for (const l of lines) controller.enqueue(enc.encode(`${l}\n\n`));
+      controller.close();
+    },
+  });
+  return new Response(body, { status: 200 });
+}
+
+const delta = (text: string) => `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}`;
+
+const call = (lines: string[]) => {
+  vi.stubGlobal('fetch', () => Promise.resolve(stream(lines)));
+  return askOpenAI({ apiKey: 'sk-test', model: 'gpt-5', system: 's', messages: [{ role: 'user', content: 'q' }] });
+};
+
+describe('a stream that stopped rather than ended', () => {
+  beforeEach(() => vi.unstubAllGlobals());
+  afterEach(() => vi.unstubAllGlobals());
+
+  /*
+   * `[DONE]` is the sentence this API closes with, and `readChunk` was
+   * already reading it — to skip it, which is not the same as noticing it.
+   * Without that, a connection dropped mid-answer read exactly like a
+   * finished one. The same repair, and what it cost, is in `lib/claude.ts`.
+   */
+  it('takes the terminator as the answer having ended', async () => {
+    let why = '';
+    vi.stubGlobal('fetch', () => Promise.resolve(stream([delta('All of it'), 'data: [DONE]'])));
+    const text = await askOpenAI({
+      apiKey: 'sk-test', model: 'gpt-5', system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      onStop: (r) => { why = r; },
+    });
+    expect(text).toBe('All of it');
+    expect(why).toBe('');
+  });
+
+  it('calls a stream that stopped without it cut, and keeps the words', async () => {
+    let why = '';
+    vi.stubGlobal('fetch', () => Promise.resolve(stream([delta('Half a sen')])));
+    const text = await askOpenAI({
+      apiKey: 'sk-test', model: 'gpt-5', system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      onStop: (r) => { why = r; },
+    });
+    expect(text).toBe('Half a sen');
+    expect(why).toBe('cut');
+  });
+
+  it('throws rather than returning an empty answer when nothing arrived', async () => {
+    await expect(call([])).rejects.toThrow(/connection closed/i);
+    await expect(call(['data: {oh no'])).rejects.toThrow(/connection closed/i);
   });
 });

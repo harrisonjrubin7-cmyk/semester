@@ -12,6 +12,9 @@ import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, Meter, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { Check, ChevronRight } from '../components/Icons';
 import { homeShape } from '../lib/chrome';
+import type { Catalog } from '../data/catalog';
+import type { State } from '../state/shape';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import {
   appointmentsOn,
   railFor,
@@ -22,6 +25,7 @@ import {
   itemsDueToday,
   lengthOf,
   nextClass,
+  nothingYet,
   punchline,
   upcomingItems,
   type FeedFilter,
@@ -174,7 +178,7 @@ function YourTasks() {
             >
               <TickBox on={t.done} />
             </button>
-            <div style={{ flex: 1, minWidth: 0, opacity: t.done ? 0.42 : 1 }}>
+            <div style={{ flex: 1, minWidth: 0, opacity: t.done ? DIMMED_ROW : 1 }}>
               <div
                 style={{
                   fontSize: 'var(--type-md)',
@@ -185,7 +189,7 @@ function YourTasks() {
                 {t.title}
               </div>
               {(t.time || t.courseId) && (
-                <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                <div style={{ fontSize: 'var(--type-xs)', ...secondLine(t.done), marginTop: 'var(--sp-1)' }}>
                   {/* The code in its course's colour rather than in the dim
                       grey the time is set in: a task you filed against ECON
                       belongs to ECON, and this is the only mark on the row
@@ -473,7 +477,7 @@ function ThisWeek() {
                       display: 'block',
                       fontSize: 'var(--type-base)',
                       lineHeight: 'var(--leading-normal)',
-                      opacity: t.done ? 0.45 : 1,
+                      opacity: t.done ? DIMMED_ROW : 1,
                       textDecoration: t.done ? 'line-through' : 'none',
                     }}
                   >
@@ -483,7 +487,7 @@ function ThisWeek() {
                     style={{
                       display: 'block',
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.55,
+                      ...secondLine(t.done),
                       marginTop: 'var(--sp-1)',
                     }}
                   >
@@ -641,9 +645,15 @@ function Feed_due() {
                 sentence, and "tue sep 15" reads as a typo rather than as
                 prose — a date is a name, and the app writes it one way
                 everywhere else. */}
+            {/* Three cases, not two. This screen is reached with no courses
+                at all now — somebody who has added a task or an appointment
+                before their first syllabus — and "the semester is clear" is
+                not true of a semester the app has never been told about. */}
             {ahead[0]
               ? `Next up is ${ahead[0].title}, ${ahead[0].dueShort}.`
-              : 'The semester is clear.'}
+              : catalog.empty
+                ? 'No syllabus yet. Add one and its deadlines land here.'
+                : 'The semester is clear.'}
           </div>
         </Blueprint>
       )}
@@ -678,14 +688,14 @@ function Feed_due() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'openItem', id: it.id })}
-                style={{ flex: 1, minWidth: 0, opacity: done ? 0.4 : 1 }}
+                style={{ flex: 1, minWidth: 0, opacity: done ? DIMMED_ROW : 1 }}
               >
                 <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 3 }}>
                   <CourseTag id={it.c} />
                   <span
                     style={{
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.55,
+                      ...secondLine(done),
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
@@ -703,7 +713,7 @@ function Feed_due() {
                 >
                   {it.title}
                 </div>
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3 }}>
+                <div style={{ fontSize: 'var(--type-sm)', ...secondLine(done), marginTop: 3 }}>
                   {it.dueTime} · {it.where}
                 </div>
               </button>
@@ -892,7 +902,7 @@ function Feed_rail() {
                     // Everything behind you at once — the hour, the dot and
                     // the words together — rather than the title alone, which
                     // left a column of bright times above a dimmed day.
-                    opacity: gone ? 0.45 : 1,
+                    opacity: gone ? DIMMED_ROW : 1,
                   }}
                 >
                   {/*
@@ -912,7 +922,7 @@ function Feed_rail() {
                       fontFamily: 'var(--font-heading)',
                       fontSize: 'var(--type-md)',
                       paddingTop: 'var(--sp-6)',
-                      opacity: 0.6,
+                      ...secondLine(gone),
                     }}
                   >
                     {b.from?.kind === 'item' ? said(b.at) : b.time}
@@ -949,13 +959,13 @@ function Feed_rail() {
                         fontFamily: 'var(--font-heading)',
                         fontSize: 'calc(19px * var(--text-scale, 1))',
                         lineHeight: 1.15,
-                        opacity: b.canceled ? 0.45 : 1,
+                        opacity: b.canceled ? DIMMED_ROW : 1,
                         textDecoration: b.canceled ? 'line-through' : 'none',
                       }}
                     >
                       {b.title}
                     </div>
-                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
+                    <div style={{ fontSize: 'var(--type-sm)', ...secondLine(gone || b.canceled) }}>
                       {b.mine && (
                         <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
                           Yours
@@ -1596,13 +1606,43 @@ function FeedHome() {
   );
 }
 
+/**
+ * Whether Today has nothing to draw — which depends on which Today it is.
+ *
+ * `TabHome` shows the student's own tasks and appointments in sections of
+ * their own, so it has something to draw the moment either exists. `FeedHome`
+ * is one list built from `feed(catalog, …)`, which reads classes and deadlines
+ * and nothing else — so on a catalogue with only personal entries in it, it
+ * drew a header, three chips and nothing at all.
+ *
+ * Measured under all four navigations with one task and one appointment and no
+ * courses: tabs, springboard and shelves each showed both, and feed showed
+ * "WED · SEP 9 Today ALL DUE CLASSES" and stopped. That is worse than the
+ * first-run screen it replaced, which at least said what to do next.
+ *
+ * So the feed keeps the old question. It leaves the feed navigation still
+ * telling somebody with a task that there is nothing on today, which is the
+ * defect this change is about — but fixing it there means putting personal
+ * entries into `feed()` itself, and that changes the feed for everybody who
+ * uses it rather than only for the empty case. That is a change with its own
+ * design in it, and it is not this one.
+ */
+export function nothingOnToday(
+  shape: ReturnType<typeof homeShape>,
+  catalog: Catalog,
+  state: Pick<State, 'tasks' | 'appointments' | 'feedEvents'>,
+): boolean {
+  return shape === 'feed' ? catalog.empty : nothingYet(catalog, state);
+}
+
 export function Today() {
   const { state, catalog } = useStore();
-  if (catalog.empty) return <FirstRun where="on today" />;
   // `homeShape` rather than a second `nav === 'feed'` written here. This test
   // and the one in `App.tsx` used to be separate, so a navigation added to
   // one and not the other got the feed's home screen inside the bar's chrome.
-  return homeShape(state.nav) === 'feed' ? <FeedHome /> : <TabHome />;
+  const shape = homeShape(state.nav);
+  if (nothingOnToday(shape, catalog, state)) return <FirstRun where="on today" />;
+  return shape === 'feed' ? <FeedHome /> : <TabHome />;
 }
 
 /** Re-exported for the Me screen's load bars. */

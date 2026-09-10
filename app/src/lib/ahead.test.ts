@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { headline, pressure, showHours, studyAsked, week, type WeekInput } from './ahead';
 import type { Catalog } from '../data/catalog';
+import { blocksFor } from '../data/catalog';
+import { lengthOf } from './select';
 import type { Commitment } from './activities';
+import { weeklyHours } from './activities';
 import type { Appointment, Item } from './types';
 
 const NOW = new Date(2026, 8, 3); // Thu 3 Sep 2026
@@ -67,6 +70,12 @@ const commitment = (over: Partial<Commitment> = {}): Commitment => ({
   ...over,
 });
 
+/** A commitment with no fixed time — a shift job, stated as hours a week. */
+const job = (over: Partial<Commitment> = {}): Commitment =>
+  commitment({ id: 'job', name: 'Dining hall', kind: 'job', days: [], at: null, minutes: 0, hours: 10, ...over });
+
+const round = (n: number): number => Math.round(n * 10) / 10;
+
 const appointment = (date: string): Appointment => ({
   id: date,
   title: 'Dentist',
@@ -76,6 +85,73 @@ const appointment = (date: string): Appointment => ({
   where: '',
   note: '',
   created: 0,
+});
+
+/**
+ * A catalog whose course really meets, with the length its syllabus states.
+ *
+ * The `catalog` helper above gives `blocksFor` no modules, so every existing
+ * test in this file has zero hours of class in it — which is why none of them
+ * could see a class being counted at the wrong length.
+ */
+const meeting = (meets: string, days = [2, 4]): Catalog => {
+  const course = { id: 'core', code: 'CORE 2500', meets };
+  return {
+    items: [],
+    courses: [course],
+    byId: { core: course },
+    modules: [
+      {
+        course,
+        schedule: [{ days, at: 795, time: '1:15p', title: 'CORE 2500', meta: 'Buttrick 101' }],
+        exceptions: [],
+      },
+    ],
+    short: { core: 'CORE' },
+    shortCodes: ['CORE'],
+    empty: false,
+    lessons: {},
+    figures: {},
+    extraFigures: {},
+    blocks: {},
+  } as unknown as Catalog;
+};
+
+describe('how long a class is', () => {
+  // Ninety minutes, so the figures survive rounding to a tenth and the test is
+  // about the length rather than about the rounding. Thu 3 Sep starts the
+  // window, so a Tue/Thu course meets twice in it.
+  const NINETY = 'T/R · 1:00–2:30p';
+
+  it('counts it at the length the syllabus states, not at a flat fifty', () => {
+    const w = week(input({ catalog: meeting(NINETY) }));
+    expect(w.days[0].classes).toBe(1.5);
+    expect(w.promised).toBe(3);
+  });
+
+  it('still says fifty where the syllabus states no times', () => {
+    // The honest fallback, and the only case the old flat number was right for.
+    const w = week(input({ catalog: meeting('T/R · Alumni Hall 201') }));
+    expect(w.days[0].classes).toBe(0.8);
+  });
+
+  it('agrees with the length the hour grid draws', () => {
+    // `lengthOf` is what the grid and the Activities screen already use. This
+    // screen having an answer of its own is what made the two disagree.
+    const cat = meeting(NINETY);
+    const drawn = blocksFor(cat, new Date(2026, 8, 3)).reduce((n, b) => n + lengthOf(cat, b), 0);
+    expect(week(input({ catalog: cat })).days[0].classes).toBeCloseTo(drawn / 60, 5);
+  });
+
+  it('counts nothing for a class that is not happening', () => {
+    const cat = meeting(NINETY);
+    (cat.modules[0] as { exceptions: unknown[] }).exceptions = [
+      { month: 8, day: 3, canceled: true },
+    ];
+    const w = week(input({ catalog: cat }));
+    expect(w.days[0].classes).toBe(0);
+    expect(w.promised).toBe(1.5);
+  });
 });
 
 describe('week', () => {
@@ -132,6 +208,58 @@ describe('week', () => {
   it('leaves waking hours over rather than pretending a week is 168 usable', () => {
     const w = week(input({ commitments: [commitment()] }));
     expect(w.spare).toBeCloseTo(16 * 7 - 1.5, 5);
+  });
+
+  it('counts a job stated as hours a week, which meets on no day at all', () => {
+    // The whole point of the hours field is a commitment with no fixed time.
+    // Reading only what meets left ten hours of somebody's week out of the one
+    // figure this screen exists to give.
+    const w = week(input({ commitments: [job()] }));
+    expect(w.promised).toBeCloseTo(10, 5);
+  });
+
+  it('puts a share of it on every day, because it belongs to no one of them', () => {
+    const w = week(input({ commitments: [job()] }));
+    expect(w.days.map((d) => d.commitments)).toEqual([1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4]);
+  });
+
+  it('adds a weekly job to what meets, rather than choosing between them', () => {
+    // 90 minutes on the Thursday plus ten hours across the seven.
+    const w = week(input({ commitments: [commitment(), job()] }));
+    expect(w.promised).toBeCloseTo(11.5, 5);
+    expect(w.days[0].commitments).toBe(round(1.5 + 10 / 7));
+  });
+
+  it('states the week as the seven days really add up to, not as seven roundings', () => {
+    // A tenth lost seven times is 9.8 hours where the Activities screen says
+    // ten, about a number the student typed in themselves.
+    const w = week(input({ commitments: [job()] }));
+    const summed = w.days.reduce((n, d) => n + d.promised, 0);
+    expect(summed).toBeCloseTo(9.8, 5);
+    expect(w.promised).toBeCloseTo(10, 5);
+  });
+
+  it('leaves less waking time over once a job is counted', () => {
+    const w = week(input({ commitments: [job()] }));
+    expect(w.spare).toBeCloseTo(16 * 7 - 10, 5);
+  });
+
+  it('promises the week the Activities screen promises, for every shape', () => {
+    const shapes: Commitment[] = [
+      commitment({ id: 'meets', days: [4], at: 17 * 60, minutes: 90, hours: 0 }),
+      job({ id: 'weekly' }),
+      commitment({ id: 'hour-no-days', days: [], at: 17 * 60, minutes: 90, hours: 5 }),
+      commitment({ id: 'days-no-hour', days: [1, 3], at: null, minutes: 90, hours: 4 }),
+    ];
+    for (const c of shapes) {
+      expect(week(input({ commitments: [c] })).promised).toBeCloseTo(weeklyHours([c]), 5);
+    }
+    expect(week(input({ commitments: shapes })).promised).toBeCloseTo(weeklyHours(shapes), 5);
+  });
+
+  it('takes no hours at all from a job you have paused', () => {
+    const w = week(input({ commitments: [job({ active: false })] }));
+    expect(w.promised).toBe(0);
   });
 });
 

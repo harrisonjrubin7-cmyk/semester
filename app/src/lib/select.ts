@@ -325,6 +325,61 @@ export function feedEventsOn(events: FeedEvent[], date: Date): FeedEvent[] {
     .sort((a, b) => (a.at ?? -1) - (b.at ?? -1));
 }
 
+/**
+ * Whether a screen that shows dated things has nothing at all to show.
+ *
+ * `catalog.empty` was the whole test, on seven screens. It is the right test
+ * for five of them — Courses, Study, Behind, Tonight and Meet are about
+ * graded coursework, and there is no such thing without a syllabus. It is the
+ * wrong test for the two that also show what the student put in themselves.
+ *
+ * Measured: with no courses, one task and one appointment dated today, the
+ * calendar said "Nothing on the calendar yet" and Today said "Nothing on
+ * today yet" — both entries made through this app's own screens, both dated,
+ * both denied. Only Personal showed them. That is the same failure the month
+ * panel had one level down, on the whole screen: the app telling somebody
+ * there is nothing there about a thing they put there.
+ *
+ * The campus calendar is deliberately not counted. It is not the student's
+ * doing — it is there for anybody with a school set, which is everybody by
+ * default — so counting it would make the first run unreachable on these two
+ * screens rather than fixing anything. A fresh install with no syllabi and
+ * nothing added still gets told where to start.
+ */
+export function nothingYet(
+  cat: Catalog,
+  own: { tasks: PersonalTask[]; appointments: Appointment[]; feedEvents: FeedEvent[] },
+): boolean {
+  return (
+    cat.empty &&
+    own.tasks.length === 0 &&
+    own.appointments.length === 0 &&
+    own.feedEvents.length === 0
+  );
+}
+
+/**
+ * How much is still to do — the syllabus's and the student's, together.
+ *
+ * The springboard's one line of summary counted `catalog.items` alone, so a
+ * launcher with a task on it said "Nothing outstanding." That is the home
+ * screen under that navigation, which makes it the first sentence the app
+ * says to somebody who opens it.
+ *
+ * Appointments are deliberately not counted. An appointment is not
+ * outstanding work — it is a time you have to be somewhere — and a line
+ * calling it a thing to do would be the opposite error.
+ */
+export function outstanding(
+  cat: Catalog,
+  state: { done: Record<string, boolean>; tasks: PersonalTask[] },
+): number {
+  return (
+    cat.items.filter((i) => !state.done[i.id]).length +
+    state.tasks.filter((t) => !t.done).length
+  );
+}
+
 /** Appointments on a given day, in time order. */
 export function appointmentsOn(appointments: Appointment[], date: Date): Appointment[] {
   const iso = dateToIso(date);
@@ -358,13 +413,22 @@ export function railFor(
    * separately and the fourth being forgotten again.
    */
   tasks: PersonalTask[] = [],
-): (Block & { mine?: boolean; kind?: string; minutes?: number; from?: { kind: 'appointment' | 'item' | 'task'; id: string } })[] {
+): (Block & {
+  mine?: boolean;
+  kind?: string;
+  minutes?: number;
+  where?: string;
+  from?: { kind: 'appointment' | 'item' | 'task'; id: string };
+})[] {
   const classes = blocksFor(cat, date);
   const mine = appointmentsOn(appointments, date).map((a) => ({
     time: a.time,
     at: a.at,
     title: a.title,
     meta: a.where || 'Added by you',
+    // The place, said rather than left in the line above: with nowhere
+    // stated that line reads "Added by you", which is not somewhere to walk.
+    where: a.where,
     c: null,
     mine: true,
     kind: a.kind ?? 'other',
@@ -385,6 +449,9 @@ export function railFor(
       at: i.dueAt,
       title: i.title,
       meta: [codeOf(cat, i.c), i.kind].filter(Boolean).join(' · '),
+      // A deadline is an hour, not a room. Its line names the course, which
+      // read as prose sent a walking route to "CORE 2500".
+      where: '',
       c: i.c,
       // Dimmer than a class, like office hours: it is a moment rather than a
       // room you have to be in.
@@ -417,6 +484,8 @@ export function railFor(
       // with no course says only "Task", which is still more than the blank
       // second line it would otherwise draw.
       meta: [t.courseId ? codeOf(cat, t.courseId) : '', 'Task'].filter(Boolean).join(' · '),
+      // As with a deadline: a task is an hour, not a room.
+      where: '',
       c: t.courseId,
       mine: true,
       kind: 'task',
@@ -566,9 +635,29 @@ export function lengthOf(cat: Catalog, block: Block): number {
   return mins ?? 50;
 }
 
-/** Minutes between the two times in "1:15–2:30p", or null. */
+/**
+ * Minutes between the two times in "1:15–2:30p", or null.
+ *
+ * Written wide, because this line is prose off a syllabus and there is no
+ * house style for it. The narrow version read `a` and `p` and a dash, which
+ * covers how this app's own placeholder writes it and not much else: "MWF
+ * 9:30 AM - 10:45 AM", "TR 1:15 p.m. – 2:30 p.m.", "MW 2:00pm-3:15pm" and
+ * "TR 1:15 PM to 2:30 PM" all failed to match, and every failure here is a
+ * seventy-five minute class that `lengthOf` then calls fifty.
+ *
+ * So the opening meridiem may spell itself out with or without stops, and the
+ * separator may be any of the dashes a word processor produces — including the
+ * minus sign, which is what a spreadsheet paste leaves behind — or the word
+ * "to", as a word rather than as letters inside one.
+ *
+ * The closing meridiem stays a bare letter. Nothing follows it in the pattern,
+ * so "p.m." matches on its `p` and the stops fall outside the match: spelling
+ * that half out too would be a clause no input could ever exercise.
+ */
 export function spanOf(meets: string): number | null {
-  const m = meets.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])?\s*[–—-]\s*(\d{1,2})(?::(\d{2}))?\s*([ap])?/i);
+  const m = meets.match(
+    /(\d{1,2})(?::(\d{2}))?\s*(?:([ap])\.?m?\.?)?(?:\s*[–—−-]\s*|\s+to\s+)(\d{1,2})(?::(\d{2}))?\s*([ap])?/i,
+  );
   if (!m) return null;
 
   const [, h1, m1, ap1, h2, m2, ap2] = m;

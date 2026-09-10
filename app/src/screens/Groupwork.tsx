@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -524,7 +525,7 @@ export function Groupwork() {
             </div>
           )}
 
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.45, marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 14, lineHeight: 'var(--leading-normal)' }}>
             Any member can claim a part, tick one or fix a title — group work does not survive a
             permission model where only the person who wrote a line may correct it. Nobody can
             remove anybody from a group but themselves.

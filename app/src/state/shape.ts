@@ -50,6 +50,9 @@ import { readDrop } from '../lib/drop';
 import { DEFAULT_BUDGET } from '../lib/clash';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
+import type { Doc } from '../lib/document';
+import type { Sheet } from '../lib/sheet';
+import type { SavedEquation } from '../lib/maths';
 import { type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
@@ -61,14 +64,14 @@ import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
 import { navOf, readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
-import { SCHEMA, migrate, type Migrated } from '../lib/migrate';
+import { SCHEMA, migrate, versionOf, type Migrated } from '../lib/migrate';
 import { readOverrides, type GradeSystem } from '../lib/cutoffs';
 import { readPretested } from '../lib/pretest';
 import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
-import { readList, readModule, readWindow } from '../lib/stored';
+import { list, readList, readModule, readWindow, record } from '../lib/stored';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -331,6 +334,21 @@ export interface Persisted {
    * asking happens once rather than every session.
    */
   sources: Source[];
+  /**
+   * Documents, sheets and equations somebody made in the app.
+   *
+   * Three lists rather than one bag of "files", because they are three
+   * different objects with three different editors and three different
+   * exports — and because a single list would have to carry a kind field that
+   * every reader switched on, which is the same three lists with an extra
+   * step. See `lib/document.ts`, `lib/sheet.ts` and `lib/maths.ts`.
+   *
+   * They hold work nobody else has a copy of, so they merge as unions and are
+   * never shed by `lib/keep.ts` — the same standing as a note.
+   */
+  documents: Doc[];
+  sheets: Sheet[];
+  equations: SavedEquation[];
   /**
    * The university's own dates — add/drop, withdrawal, registration.
    *
@@ -666,9 +684,23 @@ export interface Ephemeral {
    * had one open yesterday is an app that has misread what a search is for.
    */
   finder: boolean;
+  /**
+   * Whether the app launcher is up.
+   *
+   * Ephemeral for the same reason `finder` is, and one more: it is a way of
+   * getting somewhere, and every way of leaving it — choosing a screen,
+   * Close, Escape, a swipe down — means it is finished. An app that reopened
+   * onto a grid of its own icons has forgotten what you came back for.
+   */
+  apps: boolean;
   studyTab: 'guides' | 'revise' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
+  /** Document, sheet and equation currently open. Null is the list. */
+  documentId: string | null;
+  sheetId: string | null;
+  /** Which block of the open document is being edited, by index. */
+  blockAt: number | null;
   /** Unit whose lesson is playing. */
   lessonUnit: number;
   /** Unit the Add-material screen is filing against; null for a new one. */
@@ -846,6 +878,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   recent: [],
   sittings: [],
   sources: [],
+  documents: [],
+  sheets: [],
+  equations: [],
   registrar: [],
   spent: [],
   windows: [],
@@ -936,8 +971,12 @@ export function initialEphemeral(now: Date): Ephemeral {
     dueTab: 'ahead',
     mailSeed: null,
     finder: false,
+    apps: false,
     studyTab: 'guides',
     noteId: null,
+    documentId: null,
+    sheetId: null,
+    blockAt: null,
     lessonUnit: 0,
     updateUnit: null,
     query: '',
@@ -983,31 +1022,19 @@ export function primePersisted(state: Persisted | null): void {
   primed = state;
 }
 
-/**
- * An array from storage, or an empty one.
+/*
+ * The two readers every list and record on this screen's state goes through
+ * are `list` and `record` in `lib/stored.ts`, imported above.
  *
- * `list(saved.tasks)` looks like it guards this and does not: `??` only
- * catches null and undefined, so a `tasks` that came back as a string, a
- * number or an object went straight through into the app, and the first
- * `.map` on it killed the whole page. Measured: storage holding
- * `{"tasks":"none"}` rendered zero characters and threw
- * `e.tasks.map is not a function` — before any boundary could catch it,
- * because it happens while the store is being built rather than while a
- * screen is being drawn.
+ * They used to live here, and the file they live in now is the one written
+ * about this exact bug one layer down — so keeping a second copy here meant
+ * the rule was stated twice and applied at one door out of three. A backup
+ * somebody opens and a sync from another device never touch `loadPersisted`
+ * at all; they arrive through `readIncoming`, which is where the rule had to
+ * be if it was going to be the rule.
  *
- * Storage is not a trusted input. It holds whatever an older build wrote, a
- * half-finished sync left behind, a quota error truncated, or somebody typed
- * into devtools. `readTabs` and `navOf` already read their fields back
- * defensively; there were twenty-three arrays that did not, and this is the
- * same idea applied to all of them at once.
- *
- * Empty rather than throwing, for the reason the whole file is written this
- * way: an app that opens with one list missing is recoverable, and an app
- * that will not open is not.
+ * What they do, and why, is written over each of them there.
  */
-function list<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : [];
-}
 
 export function loadPersisted(): Persisted {
   if (primed) return primed;
@@ -1029,17 +1056,17 @@ export function loadPersisted(): Persisted {
     return {
       ...DEFAULT_PERSISTED,
       ...saved,
-      notifs: { ...DEFAULT_PERSISTED.notifs, ...(saved.notifs ?? {}) },
-      done: saved.done ?? {},
-      saved: saved.saved ?? DEFAULT_PERSISTED.saved,
-      picked: { ...DEFAULT_PERSISTED.picked, ...(saved.picked ?? {}) },
+      notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
+      done: record(saved.done),
+      saved: record(saved.saved ?? DEFAULT_PERSISTED.saved),
+      picked: { ...DEFAULT_PERSISTED.picked, ...record(saved.picked) },
       tasks: list(saved.tasks),
       appointments: list(saved.appointments),
       notes: list(saved.notes),
       updates: list(saved.updates),
       feeds: list(saved.feeds),
       feedEvents: list(saved.feedEvents),
-      linkUrls: saved.linkUrls ?? {},
+      linkUrls: record(saved.linkUrls),
       extraLinks: list(saved.extraLinks),
       // Not `list()`: that checks the list is a list and casts what is in it.
       // The catalogue is built from these before any screen is drawn, so there
@@ -1050,11 +1077,20 @@ export function loadPersisted(): Persisted {
       // ones; it keeps them, or the app would look wiped on the next load. A
       // genuinely new account starts empty.
       sample: saved.sample ?? saved.courses === undefined,
-      term: saved.term ?? LEGACY_TERM,
-    waysOpen: saved.waysOpen ?? true,
+      /*
+       * A term id names a term; anything else is not one.
+       *
+       * `?? LEGACY_TERM` catches null and undefined only, so a term that came
+       * back as an array or an object went into the app as the id of the term
+       * being shown, and the first lookup on it threw
+       * `(id ?? "").trim is not a function` — before a screen, so blank, and
+       * on every reload, because the id that kills it is the id being read.
+       */
+      term: typeof saved.term === 'string' ? saved.term : LEGACY_TERM,
+      waysOpen: saved.waysOpen ?? true,
       keyOpen: saved.keyOpen ?? false,
-      reviews: saved.reviews ?? {},
-      grades: saved.grades ?? {},
+      reviews: record(saved.reviews),
+      grades: record(saved.grades),
       gradeSystems: readOverrides(saved.gradeSystems),
       mySchools: Array.isArray(saved.mySchools)
         ? saved.mySchools.map(readSchool).filter((s) => s.id && s.name)
@@ -1146,6 +1182,9 @@ export function loadPersisted(): Persisted {
       lastOpened: saved.lastOpened ?? {},
       sittings: list(saved.sittings),
       sources: list(saved.sources),
+      documents: list(saved.documents),
+      sheets: list(saved.sheets),
+      equations: list(saved.equations),
       registrar: list(saved.registrar),
       spent: list(saved.spent),
       windows: readList(saved.windows, readWindow),
@@ -1242,6 +1281,9 @@ export function pickPersisted(state: State): Persisted {
     lastOpened: state.lastOpened,
     sittings: state.sittings,
     sources: state.sources,
+    documents: state.documents,
+    sheets: state.sheets,
+    equations: state.equations,
     registrar: state.registrar,
     spent: state.spent,
     windows: state.windows,
@@ -1253,9 +1295,28 @@ export function pickPersisted(state: State): Persisted {
     started: state.started,
     schoolId: state.schoolId,
     showAll: state.showAll,
-    // Stamped on the way out, so the next build to read this knows what shape
-    // it is in without having to guess from which fields are present.
-    schemaVersion: SCHEMA,
+    /*
+     * Stamped on the way out, so the next build to read this knows what shape
+     * it is in without having to guess from which fields are present.
+     *
+     * Never *below* the version it was read at. `migrate` takes trouble over a
+     * payload from a newer build — it passes it through untouched rather than
+     * walking it backwards through steps written for an older shape — and
+     * writing the constant here threw that away on the next save. A copy
+     * written by a phone on next month's build, opened once on a laptop a
+     * release behind, went back to disk marked as this build's shape; the
+     * phone would then read it as older than it is and run the steps that had
+     * already run. `migrate`'s own docblock says nothing is applied twice, and
+     * this is the line that decided whether that stayed true.
+     *
+     * Nothing is wrong today: both steps in `STEPS` happen to be idempotent,
+     * so re-running them changes nothing. It is the next step that is not
+     * which this is for, and a step is a bad place to find out.
+     *
+     * `versionOf` rather than reading the field directly, so the way out and
+     * the way in agree about what counts as a version at all.
+     */
+    schemaVersion: Math.max(SCHEMA, versionOf(state)),
     accent: state.accent,
     textSize: state.textSize,
     ground: state.ground,
@@ -1385,6 +1446,7 @@ export type Action =
   | { type: 'forgetUndo' }
   | { type: 'quickAdd'; open: boolean }
   | { type: 'finder'; open: boolean }
+  | { type: 'apps'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }
@@ -1487,6 +1549,31 @@ export type Action =
   | { type: 'addSource'; source: NewSource }
   | { type: 'patchSource'; id: string; patch: Partial<Source> }
   | { type: 'dropSource'; id: string }
+  /*
+   * Making things: a document, a sheet, an equation.
+   *
+   * `newDocument` and `newSheet` open the editor on what they make;
+   * `makeDocument` and `makeSheet` do not, because they are what a tool
+   * proposal dispatches and being thrown out of a conversation into an editor
+   * is the same loss `keepNote` avoids. Same split, same reason. See
+   * `state/slices/made.ts`.
+   */
+  | { type: 'newDocument'; courseId: CourseId | null }
+  | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'> }
+  | { type: 'openDocument'; id: string }
+  /** Back to the shelf. Its own action rather than an open with no id. */
+  | { type: 'closeDocument' }
+  | { type: 'updateDocument'; id: string; patch: Partial<Omit<Doc, 'id'>> }
+  | { type: 'deleteDocument'; id: string }
+  | { type: 'editBlock'; at: number | null }
+  | { type: 'newSheet'; courseId: CourseId | null }
+  | { type: 'makeSheet'; sheet: Omit<Sheet, 'id' | 'created' | 'updated'> }
+  | { type: 'openSheet'; id: string }
+  | { type: 'closeSheet' }
+  | { type: 'updateSheet'; id: string; patch: Partial<Omit<Sheet, 'id'>> }
+  | { type: 'deleteSheet'; id: string }
+  | { type: 'saveEquation'; equation: Omit<SavedEquation, 'id' | 'created'> }
+  | { type: 'deleteEquation'; id: string }
   | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
   | { type: 'clearPaperPreset' }
   | { type: 'writeRoomDraft'; text: string }

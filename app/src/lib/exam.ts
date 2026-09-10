@@ -94,6 +94,38 @@ export function format(id: string): Format {
   return FORMATS.find((f) => f.id === id) ?? FORMATS[0];
 }
 
+/**
+ * Whether a shape can be built from the material to hand.
+ *
+ * `fromGuide` draws multiple choice and short answers off flashcards and
+ * stops there: a long answer wants an argument, and a card is a question and
+ * a fact. So a shape with a long answer in it needs questions somebody wrote.
+ */
+export function buildable(formatId: string, source: 'cards' | 'written'): boolean {
+  return source === 'written' || format(formatId).mix.long === 0;
+}
+
+/**
+ * The shape actually used, which is the one picked unless it cannot be built.
+ *
+ * The screen has always disabled the two shapes that need written questions
+ * while the source is cards. What it did not do is stop one of them being the
+ * *selected* shape — `FORMATS[0]` is "A real paper", and that is where the
+ * screen opened. So the paper it described was one it could not produce:
+ * "12 multiple choice, 2 short answer, 1 long answer · 51 marks", against
+ * fourteen questions and 36 marks that `fromGuide` can actually draw. The
+ * long answer, which is the part that is least like a flashcard and most like
+ * an exam, went missing without a word.
+ *
+ * Derived rather than corrected in an effect, so there is no moment where the
+ * two disagree — including the one where a preset handed over by the guide's
+ * Quiz mode names a shape this source cannot build.
+ */
+export function usableFormat(formatId: string, source: 'cards' | 'written'): string {
+  if (buildable(formatId, source)) return formatId;
+  return (FORMATS.find((f) => f.mix.long === 0) ?? FORMATS[0]).id;
+}
+
 /** What each kind is worth, and roughly how long it takes to answer. */
 const WORTH: Record<Kind, { points: number; minutes: number }> = {
   choice: { points: 2, minutes: 1.2 },

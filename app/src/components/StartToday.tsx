@@ -14,6 +14,7 @@
  */
 
 import { useStore } from '../state/store';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { beginNow, plan, planLine } from '../lib/start';
@@ -48,7 +49,7 @@ export function StartToday() {
           <button
             key={s.id}
             type="button"
-            className="bare tappable"
+            className="bare tappable on-paper"
             onClick={() => dispatch({ type: 'openItem', id: s.id })}
             style={{
               display: 'block',
@@ -74,7 +75,7 @@ export function StartToday() {
               style={{
                 display: 'block',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                opacity: 0.62,
+                ...secondLine(),
                 marginTop: 3,
                 textWrap: 'pretty',
               }}
@@ -185,7 +186,7 @@ export function StartList() {
           <button
             key={s.id}
             type="button"
-            className="bare tappable"
+            className="bare tappable on-paper"
             onClick={() => dispatch({ type: 'openItem', id: s.id })}
             style={{
               display: 'flex',
@@ -197,7 +198,7 @@ export function StartList() {
               borderRadius: 'var(--r-md)',
               border: `1px solid ${s.late ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
               background: s.late ? 'var(--app-warn-wash)' : 'transparent',
-              opacity: s.startOn ? 1 : 0.6,
+              opacity: s.startOn ? 1 : DIMMED_ROW,
             }}
           >
             <span style={{ flex: 1, minWidth: 0 }}>
@@ -215,7 +216,7 @@ export function StartList() {
                 style={{
                   display: 'block',
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.62,
+                  ...secondLine(!s.startOn),
                   marginTop: 3,
                   textWrap: 'pretty',
                 }}
@@ -232,7 +233,7 @@ export function StartList() {
               <span
                 style={{
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.55,
+                  ...secondLine(!s.startOn),
                   whiteSpace: 'nowrap',
                   fontVariantNumeric: 'tabular-nums',
                 }}

@@ -253,13 +253,30 @@ export function singular(word: string): string {
   return word;
 }
 
-/** Whether `phrase` appears in `text` as whole words rather than inside one. */
+/**
+ * Whether `phrase` appears in `text` as whole words rather than inside one.
+ *
+ * Every occurrence, not the first one. Looking only at `indexOf` meant that a
+ * passage saying "microeconomics is economics at a small scale" did not use
+ * the word *economics*: the first hit sat inside the longer word, the boundary
+ * test failed on it, and the real one four words later was never reached. The
+ * same went for *security* after cybersecurity, *state* after statement, *war*
+ * after warrant — a term is most likely to be buried inside a longer word in
+ * exactly the courses that are about it, which are the courses this file
+ * exists to connect.
+ *
+ * An empty phrase is refused rather than scanned. `indexOf` clamps its start
+ * to the length of the string, so an empty needle never advances and the walk
+ * below would not end.
+ */
 export function saysIt(text: string, phrase: string): boolean {
-  const at = text.indexOf(phrase);
-  if (at < 0) return false;
-  const before = at === 0 ? ' ' : text[at - 1];
-  const after = at + phrase.length >= text.length ? ' ' : text[at + phrase.length];
-  return !/[a-z0-9]/i.test(before) && !/[a-z0-9]/i.test(after);
+  if (!phrase) return false;
+  for (let at = text.indexOf(phrase); at >= 0; at = text.indexOf(phrase, at + 1)) {
+    const before = at === 0 ? ' ' : text[at - 1];
+    const after = at + phrase.length >= text.length ? ' ' : text[at + phrase.length];
+    if (!/[a-z0-9]/i.test(before) && !/[a-z0-9]/i.test(after)) return true;
+  }
+  return false;
 }
 
 interface Entry {

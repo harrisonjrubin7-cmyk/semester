@@ -230,9 +230,31 @@ describe('the per-file ledger', () => {
     expect(countsByFile(tree(`export const x = <i style={{ gap: 'var(--sp-4)' }} />;`))).toEqual({});
   });
 
+  it('counts text dimmed by hand, which the palette audit cannot see', () => {
+    // `contrast.test.ts` checks `--app-dim` and `--app-faint` against every
+    // panel of every ground. An opacity written into a component answers to
+    // none of that — and two of them nest and multiply. See `lib/dim.ts`.
+    expect(countsByFile(tree(`export const x = <i style={{ opacity: 0.55 }} />;`))).toEqual({
+      'Probe.tsx': { dim: 1 },
+    });
+  });
+
+  it('does not count the token, which is the way out of the ledger', () => {
+    expect(
+      countsByFile(tree(`export const x = <i style={{ color: 'var(--app-dim)' }} />;`)),
+    ).toEqual({});
+    expect(
+      countsByFile(tree(`export const x = <i style={{ opacity: 'var(--app-row-dim)' }} />;`)),
+    ).toEqual({});
+  });
+
+  it('does not count a fully opaque element as dimmed', () => {
+    expect(countsByFile(tree(`export const x = <i style={{ opacity: 1 }} />;`))).toEqual({});
+  });
+
   it('totals the same numbers it files per screen', () => {
     const dir = tree(DRIFT);
-    expect(counts(dir)).toEqual({ type: 0, leading: 1, space: 1, shorthand: 0 });
+    expect(counts(dir)).toEqual({ type: 0, leading: 1, space: 1, shorthand: 0, dim: 0 });
   });
 
   it('renders a ledger that parses back to the counts it was made from', () => {

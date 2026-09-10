@@ -24,6 +24,7 @@
  */
 
 import { useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
@@ -36,7 +37,20 @@ const HOURS = [1, 2, 3, 4, 6, 8];
 
 export function Tonight() {
   const { state, dispatch, now, catalog } = useStore();
-  const [hours, setHours] = useState(3);
+  /*
+   * Tonight starts from the hours a day you already told the app you have,
+   * rather than from a three nobody chose. `state.dayBudget` is that standing
+   * figure — the one behind "a day is heavy past four hours" on the week
+   * ahead, and the one the assistant quotes back as "hours a day is what you
+   * have told the app you have".
+   *
+   * It seeds the picker and is deliberately not written back by it. The
+   * question here is "how long have you got *tonight*", and an evening lost
+   * to something else is not a statement about your ordinary day: tapping 1h
+   * because of a party should not leave the app planning every week around
+   * one hour a day.
+   */
+  const [hours, setHours] = useState(state.dayBudget);
   if (catalog.empty) return <FirstRun where="to plan an evening" />;
 
   const outstanding = datedItems(catalog, now)
@@ -87,7 +101,12 @@ export function Tonight() {
       </Blueprint>
 
       <SectionLabel style={{ margin: '18px 0 8px' }}>How long have you got?</SectionLabel>
-      <PickChips options={HOURS} value={hours} onChange={setHours} labels={(h) => `${h}h`} />
+      <PickChips
+        options={HOURS.includes(hours) ? HOURS : [...HOURS, hours].sort((a, b) => a - b)}
+        value={hours}
+        onChange={setHours}
+        labels={(h) => `${h}h`}
+      />
 
       {taken.length > 0 ? (
         <>
@@ -178,7 +197,7 @@ function Row({
           style={{
             fontFamily: 'var(--font-heading)',
             fontSize: 'var(--type-lg)',
-            opacity: 0.45,
+            ...secondLine(),
             minWidth: 14,
           }}
         >
