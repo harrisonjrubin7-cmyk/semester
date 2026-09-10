@@ -41,6 +41,27 @@ import {
   type Counts,
 } from '../lib/usage';
 
+/**
+ * A stored value, or null, even where the browser refuses to be asked.
+ *
+ * Safari with site data blocked throws a `SecurityError` on the *access*
+ * rather than answering null, and this app is meant to run there —
+ * `lib/keep.ts` has the sentence for it: *"This browser will not let the app
+ * store anything, so nothing you do here will survive a reload."*
+ *
+ * Both reads below sat outside the handler's own `try`, which covers writing
+ * the file. So in exactly that browser the button did nothing at all: no file,
+ * no message, no explanation. It is the button somebody presses *because*
+ * something has gone wrong, which makes it the worst one to fail quietly.
+ */
+function stored(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 export function Privacy() {
   const { account, state, dispatch } = useStore();
   // Read once on mount: the counts live outside React state on purpose, and a
@@ -190,7 +211,7 @@ export function Privacy() {
         type="button"
         className="btn btn-block"
         onClick={() => {
-          const log = read(localStorage.getItem(LOG_KEY));
+          const log = read(stored(LOG_KEY));
           const m = migrationReport();
           const text = dump(
             {
@@ -200,7 +221,7 @@ export function Privacy() {
               agent: navigator.userAgent,
               cloud: cloudConfigured,
               signedIn: Boolean(account),
-              storageUsed: (localStorage.getItem('semester.v1') ?? '').length,
+              storageUsed: (stored('semester.v1') ?? '').length,
               schema: m ? migrationLine(m) : String(SCHEMA),
             },
             log,

@@ -64,6 +64,7 @@ export function Command({ onClose }: { onClose: () => void }) {
         school.capabilities,
         state.updates,
         state.reviews,
+        state.appointments,
       ),
     // `state.updates` is searched and was not listed here, so the results
     // could not see material added after the palette opened. `catalog` does

@@ -136,6 +136,13 @@ export function matchCourse(text: string, courses: Named[]): { id: string; word:
  * "friday" almost always means the coming one and an item due in four minutes
  * is not what they meant. "today" says today, which is unambiguous.
  */
+/** Every way a word can be cut short and still be itself: "september" down to "sep". */
+function prefixes(word: string): string {
+  const out: string[] = [];
+  for (let n = word.length; n >= 3; n -= 1) out.push(word.slice(0, n));
+  return out.join('|');
+}
+
 export function matchDate(text: string, now: Date): { date: string; word: string } | null {
   const s = text.toLowerCase();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -152,8 +159,18 @@ export function matchDate(text: string, now: Date): { date: string; word: string
     return { date: plus(1), word: /tomorrow/.test(s) ? 'tomorrow' : 'tmrw' };
   }
 
-  const inDays = /\bin\s+(\d{1,2})\s+days?\b/.exec(s);
-  if (inDays) return { date: plus(Number(inDays[1])), word: inDays[0] };
+  /*
+   * "in 3 days", and "in 2 weeks" beside it.
+   *
+   * The days form was here alone, and a week is how the other half of these
+   * get said — "problem set 3 due in 2 weeks" read as no date at all, and the
+   * whole phrase stayed in the title, so the row was called "problem set 3
+   * due in 2 weeks" and turned up nowhere. Same rule, times seven.
+   */
+  const counted = /\bin\s+(\d{1,2})\s+(day|week)s?\b/.exec(s);
+  if (counted) {
+    return { date: plus(Number(counted[1]) * (counted[2] === 'week' ? 7 : 1)), word: counted[0] };
+  }
 
   const weekday = /\b(next\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday|sun|mon|tue|tues|wed|thu|thur|thurs|fri|sat)\b/.exec(s);
   if (weekday) {
@@ -170,8 +187,30 @@ export function matchDate(text: string, now: Date): { date: string; word: string
     }
   }
 
+  /*
+   * The month, written however far somebody bothered to write it.
+   *
+   * This took the whole name or exactly the first three letters, and "sept" is
+   * neither: the alternation matched "sep", then wanted a dot or a space and
+   * found a "t". So "ps4 due sept 18" read as no date at all — the commonest
+   * abbreviation of the month this app's own term starts in, in the one box
+   * the whole feature exists to make quick.
+   *
+   * Every prefix from three letters up. That admits "septe" and "septemb"
+   * too, which nobody writes and which cost nothing, and still refuses "sepx"
+   * — a prefix of the name is the rule, not three letters and anything after.
+   *
+   * Three is the floor because two is ambiguous: "ju" is June and July both,
+   * and the alternation would silently answer whichever it listed first.
+   *
+   * They are written longest first only for reading. Which one matches is not
+   * decided by the order — the day that has to follow forces the engine back
+   * through the alternatives until one leaves a dot or a space where it needs
+   * one, so "september 18" is read whole either way. Measured, by listing them
+   * the other way round and watching nothing change.
+   */
   const named = new RegExp(
-    `\\b(${MONTHS.map((m) => `${m}|${m.slice(0, 3)}`).join('|')})\\.?\\s+(\\d{1,2})\\b`,
+    `\\b(${MONTHS.map(prefixes).join('|')})\\.?\\s+(\\d{1,2})\\b`,
     'i',
   ).exec(s);
   if (named) {
@@ -221,10 +260,25 @@ export function matchTime(text: string): { time: string; at: number; word: strin
   if (/\bnoon\b/.test(s)) return { time: '12:00 PM', at: 12 * 60, word: 'noon' };
   if (/\bmidnight\b/.test(s)) return { time: '11:59 PM', at: 23 * 60 + 59, word: 'midnight' };
 
-  const m = /\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|a|p)\b/.exec(s);
+  /*
+   * "5pm", "5 pm", "5p" — but a lone "a" or "p" has to be against its hour.
+   *
+   * A space was allowed before it, so "read ch 4 p 12" read four in the
+   * afternoon out of a page reference, and "problem 3 a" read three in the
+   * morning out of a sub-question. Both are ordinary things to type in this
+   * box. Written as a time the letter is never held off from the figure —
+   * nobody writes "5 p" for five in the afternoon, and anybody who does still
+   * has "5 pm", which is untouched.
+   *
+   * "3a" attached is left alone and is genuinely ambiguous: it is three in the
+   * morning and it is the first part of question three, and nothing in the
+   * line says which. The readback is what settles that one, which is what it
+   * is for.
+   */
+  const m = /\b(\d{1,2})(?::(\d{2}))?(\s*[ap]m|[ap])\b/.exec(s);
   if (m) {
     let hour = Number(m[1]) % 12;
-    if (m[3].startsWith('p')) hour += 12;
+    if (m[3].trim().startsWith('p')) hour += 12;
     const mins = m[2] ? Number(m[2]) : 0;
     if (mins > 59) return null;
     return { time: clock(hour, mins), at: hour * 60 + mins, word: m[0].trim() };
@@ -270,9 +324,30 @@ export function capture(text: string, courses: Named[], now: Date): Caught {
   const date = matchDate(raw, now);
   const time = matchTime(raw);
 
+  /*
+   * The word that introduced the date goes with the date.
+   *
+   * Each match was cut out of the line on its own, and the little word in
+   * front of it was left standing: "essay draft due friday 5pm" became a task
+   * called *essay draft due*, and "advisor meeting oct 2 at 10:30am" one
+   * called *advisor meeting at*. Both measured through the sheet, and both
+   * then read that way on every screen that lists them, which is a small
+   * thing that makes an app feel like it is not paying attention.
+   *
+   * Only immediately in front, and only these words, which do nothing in a
+   * line but point at a date or a clock. That keeps "essay on federalism
+   * oct 6" — where `on` belongs to the essay and is nowhere near the date —
+   * exactly as it was.
+   */
+  const LEAD_IN = /\b(due|at|on|by|before|from|until|till)\s+$/i;
   let left = raw;
   for (const word of [course?.word, date?.word, time?.word]) {
-    if (word) left = left.replace(new RegExp(escape(word), 'i'), ' ');
+    if (!word) continue;
+    const found = new RegExp(escape(word), 'i').exec(left);
+    if (!found) continue;
+    const before = left.slice(0, found.index);
+    const lead = LEAD_IN.exec(before);
+    left = `${lead ? before.slice(0, lead.index) : before} ${left.slice(found.index + found[0].length)}`;
   }
   // The kind's own words stay in the title — "PS4" is the name of the thing,
   // not just its category, and stripping it leaves a row called nothing.

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildCatalog, EMPTY_CATALOG } from '../data/catalog';
+import { hops } from './rooms';
+import type { Commitment } from './activities';
 import {
   appointmentsOn,
   campusCalendar,
@@ -17,6 +19,8 @@ import {
   loadByCourse,
   nextClass,
   nextExam,
+  nothingYet,
+  outstanding,
   railFor,
   spanOf,
   tasksOn,
@@ -369,6 +373,103 @@ describe('itemsOn and dotsForMonth', () => {
   });
 });
 
+describe('outstanding', () => {
+  const task = (id: string, done = false): PersonalTask => ({
+    id,
+    title: id,
+    date: '2026-09-09',
+    time: '',
+    note: '',
+    done,
+    created: 0,
+    courseId: null,
+  });
+
+  /*
+   * The springboard's one line of summary counted the syllabus alone, so a
+   * launcher with a task on it said "Nothing outstanding." Measured under that
+   * navigation with one task and no courses — and it is the home screen there,
+   * so it is the first sentence the app says.
+   */
+  it('counts what the student wrote down, not only what a syllabus said', () => {
+    expect(outstanding(EMPTY_CATALOG, { done: {}, tasks: [task('t')] })).toBe(1);
+  });
+
+  it('leaves out what has been ticked off, on either side', () => {
+    expect(outstanding(EMPTY_CATALOG, { done: {}, tasks: [task('t', true)] })).toBe(0);
+    const one = CAT.items[0];
+    expect(outstanding(CAT, { done: {}, tasks: [] })).toBe(CAT.items.length);
+    expect(outstanding(CAT, { done: { [one.id]: true }, tasks: [] })).toBe(CAT.items.length - 1);
+  });
+
+  it('adds the two rather than choosing between them', () => {
+    expect(outstanding(CAT, { done: {}, tasks: [task('a'), task('b')] })).toBe(
+      CAT.items.length + 2,
+    );
+  });
+
+  it('is nothing when there is nothing', () => {
+    expect(outstanding(EMPTY_CATALOG, { done: {}, tasks: [] })).toBe(0);
+  });
+});
+
+describe('nothingYet', () => {
+  const task = (id: string): PersonalTask => ({
+    id,
+    title: id,
+    date: '2026-09-09',
+    time: '',
+    note: '',
+    done: false,
+    created: 0,
+    courseId: null,
+  });
+  const appt = (id: string): Appointment => ({
+    id,
+    title: id,
+    date: '2026-09-09',
+    at: 600,
+    time: '',
+    where: '',
+    note: '',
+    created: 0,
+  });
+  const feedEvent = (id: string): FeedEvent => ({
+    id,
+    sourceId: 's',
+    title: id,
+    date: '2026-09-09',
+    at: 600,
+    time: '',
+    where: '',
+    note: '',
+    courseId: null,
+  });
+  const none = { tasks: [], appointments: [], feedEvents: [] };
+
+  /*
+   * `catalog.empty` was the whole test on the calendar and on Today, and both
+   * of those screens show things that do not come from a syllabus. Measured
+   * before the fix, with no courses and one task and one appointment dated
+   * today: "Nothing on the calendar yet" and "Nothing on today yet", on
+   * entries made through this app's own screens.
+   */
+  it('is true only when there is genuinely nothing', () => {
+    expect(nothingYet(EMPTY_CATALOG, none)).toBe(true);
+  });
+
+  it('is false once the student has put something in', () => {
+    expect(nothingYet(EMPTY_CATALOG, { ...none, tasks: [task('t')] })).toBe(false);
+    expect(nothingYet(EMPTY_CATALOG, { ...none, appointments: [appt('a')] })).toBe(false);
+    expect(nothingYet(EMPTY_CATALOG, { ...none, feedEvents: [feedEvent('f')] })).toBe(false);
+  });
+
+  it('is false once there is a syllabus, whatever else there is', () => {
+    expect(nothingYet(CAT, none)).toBe(false);
+    expect(nothingYet(CAT, { ...none, tasks: [task('t')] })).toBe(false);
+  });
+});
+
 describe('tasksOn, appointmentsOn and feedEventsOn', () => {
   const task = (id: string, date: string | null): PersonalTask => ({
     id,
@@ -464,6 +565,52 @@ describe('railFor', () => {
   it('falls back to a label rather than an empty line when there is no place', () => {
     const rail = railFor(CAT, NOW, [{ ...appt, where: '' }]);
     expect(rail.find((b) => b.title === 'Dentist')?.meta).toBe('Added by you');
+  });
+
+  it('states where each thing is, separately from the line that describes it', () => {
+    // Only a class block's line is shaped "room first"; the walking route reads
+    // buildings out of it. Everything else here puts something that is not a
+    // place there — a kind, a course code, or the words "Added by you" — so
+    // each says its place outright, and `''` means it has none.
+    const due = datedItems(CAT, NOW).filter((i) => i.id === 'p-r1');
+    const task: PersonalTask = {
+      id: 't1', title: 'Renew pass', done: false, date: '2026-09-09',
+      time: '3:00p', courseId: null, created: 0,
+    } as PersonalTask;
+    const commitment: Commitment = {
+      id: 'c1', name: 'Rowing squad', kind: 'clubsport', role: '', where: 'Boathouse',
+      url: '', note: '', days: [3], at: 17 * 60, minutes: 90, hours: 0, active: true, created: 0,
+    };
+    const rail = railFor(CAT, NOW, [appt, { ...appt, id: 'a2', title: 'Coffee', where: '' }],
+      [commitment], due, [task]);
+    const at = (title: string) => rail.find((b) => b.title === title);
+
+    expect(at('Rowing squad')?.where).toBe('Boathouse');
+    expect(at('Dentist')?.where).toBe('Broadway');
+    expect(at('Coffee')?.where).toBe('');
+    expect(at('Response 1')?.where).toBe('');
+    expect(at('Renew pass')?.where).toBe('');
+    // A class says nothing, because its line already is the room.
+    expect(at('ECON lecture')?.where).toBeUndefined();
+  });
+
+  it('sends the walking route to places, and to nothing that is not one', () => {
+    // What the Today screen actually does. Before this, the same day gave five
+    // "moves between buildings", three of them between things that are not
+    // buildings — and never once to the Boathouse.
+    const commitment: Commitment = {
+      id: 'c1', name: 'Rowing squad', kind: 'clubsport', role: '', where: 'Boathouse',
+      url: '', note: '', days: [3], at: 17 * 60, minutes: 90, hours: 0, active: true, created: 0,
+    };
+    const rail = railFor(CAT, NOW, [{ ...appt, title: 'Coffee', where: '' }], [commitment]);
+    const route = hops(rail, []);
+    for (const h of route) {
+      expect(h.toPlace).not.toBe('Added by you');
+      expect(h.toPlace).not.toBe('Club sport');
+      expect(h.fromPlace).not.toBe('Added by you');
+      expect(h.fromPlace).not.toBe('Club sport');
+    }
+    expect(route.map((h) => h.toPlace)).toContain('Boathouse');
   });
 
   it('draws a deadline that names an hour where it actually falls', () => {
@@ -618,6 +765,34 @@ describe('spanOf', () => {
     expect(spanOf('9–10a')).toBe(60);
   });
 
+  it('reads a meridiem spelled out, with or without its stops', () => {
+    /*
+     * The failure this was widened for. `a` and `p` alone is how this app's
+     * own placeholder writes it and almost nothing else: a syllabus writes
+     * "AM", or "p.m.", and the old pattern matched none of them — the letter
+     * would match and then the "M" sat where the dash had to be. Every miss
+     * here is a seventy-five minute class that `lengthOf` calls fifty.
+     */
+    expect(spanOf('MWF 9:30 AM - 10:45 AM')).toBe(75);
+    expect(spanOf('MWF 9:30 am – 10:45 am')).toBe(75);
+    expect(spanOf('TR 1:15 p.m. – 2:30 p.m.')).toBe(75);
+    expect(spanOf('MW 2:00pm-3:15pm')).toBe(75);
+    expect(spanOf('MWF 9 a.m. to 10 a.m.')).toBe(60);
+  });
+
+  it('accepts "to" where a syllabus writes it out', () => {
+    expect(spanOf('TR 1:15 PM to 2:30 PM')).toBe(75);
+    expect(spanOf('TR 2:00pm to 3:15pm')).toBe(75);
+    // A word of its own, and not two letters between two numbers: without the
+    // spaces required, "9to10" reads as an hour-long class.
+    expect(spanOf('9to10')).toBeNull();
+  });
+
+  it('accepts the minus sign a spreadsheet paste leaves behind', () => {
+    // U+2212, which is not any of the three dashes the pattern already took.
+    expect(spanOf('TR 8:00−9:15a')).toBe(75);
+  });
+
   it('says nothing when the line states no range', () => {
     expect(spanOf('MW')).toBeNull();
     expect(spanOf('')).toBeNull();
@@ -635,6 +810,15 @@ describe('lengthOf', () => {
   it('reads the length off the course the block belongs to', () => {
     expect(lengthOf(CAT, { time: '', at: 545, title: '', meta: '', c: 'econ' })).toBe(50);
     expect(lengthOf(CAT, { time: '', at: 795, title: '', meta: '', c: 'psci' })).toBe(75);
+  });
+
+  it('reads a length off a line that spells its meridiem out', () => {
+    // Through the caller, because the fallback is what made a miss invisible:
+    // fifty is a plausible number, so a class read as fifty looks answered.
+    const spelled = buildCatalog([
+      mod(course({ id: 's', code: 'S 100', meets: 'TR 1:15 p.m. – 2:30 p.m.' })),
+    ]);
+    expect(lengthOf(spelled, { time: '', at: 795, title: '', meta: '', c: 's' })).toBe(75);
   });
 
   it('falls back to fifty minutes when the line does not say', () => {

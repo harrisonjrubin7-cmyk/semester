@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { countHits, findEverything, spelled } from './find';
-import type { CourseUpdate, PersonalTask } from './types';
+import type { Appointment, CourseUpdate, PersonalTask } from './types';
 import ECON from '../data/courses/econ';
 import { buildCatalog } from '../data/catalog';
 
@@ -208,5 +208,86 @@ describe('a task in the results', () => {
 
   it('still says Someday for a task with no date', () => {
     expect(sub(new Date('2026-09-01T12:00:00'), { date: null, time: '' })).toBe('Someday');
+  });
+});
+
+describe('your own appointments', () => {
+  const cat = buildCatalog([]);
+  const appt = (over: Partial<Appointment> & { id: string }): Appointment => ({
+    title: over.id,
+    date: '2026-09-16',
+    at: 600,
+    time: '10:00a',
+    where: '',
+    note: '',
+    created: 0,
+    ...over,
+  });
+  const task = (title: string): PersonalTask => ({
+    id: title,
+    title,
+    date: '2026-09-16',
+    time: '',
+    note: '',
+    done: false,
+    created: 0,
+    courseId: null,
+  });
+  const NOW = new Date(2026, 8, 9);
+  const search = (q: string, appointments: Appointment[], tasks: PersonalTask[] = []) =>
+    findEverything(cat, NOW, q, [], tasks, undefined, [], {}, appointments);
+  const titles = (q: string, appointments: Appointment[], tasks: PersonalTask[] = []) =>
+    search(q, appointments, tasks).flatMap((g) => g.hits.map((h) => h.title));
+
+  /*
+   * They were not searched at all, and the control is what makes it plain: a
+   * task, a note and an appointment sharing a word, one tab apart on Personal,
+   * and the box answered "2 results".
+   */
+  it('finds one by its title', () => {
+    expect(titles('zanzibar', [appt({ id: 'a1', title: 'Zanzibar advising meeting' })])).toEqual([
+      'Zanzibar advising meeting',
+    ]);
+  });
+
+  it('is not the reason a task is found', () => {
+    // The control. Both carry the word; before this, only the task came back.
+    const both = titles(
+      'zanzibar',
+      [appt({ id: 'a1', title: 'Zanzibar advising meeting' })],
+      [task('Zanzibar reading')],
+    );
+    expect(both).toContain('Zanzibar reading');
+    expect(both).toContain('Zanzibar advising meeting');
+  });
+
+  it('finds one by where it is and by what was written on it', () => {
+    // Half of why anybody looks an appointment up is to be told where to go.
+    const list = [appt({ id: 'a1', title: 'Advising', where: 'Kirkland Hall', note: 'bring the form' })];
+    expect(titles('kirkland', list)).toEqual(['Advising']);
+    expect(titles('bring the form', list)).toEqual(['Advising']);
+  });
+
+  it('says the date the way the rest of the app says it', () => {
+    // Not "2026-09-16". The row for the same appointment on Personal reads
+    // "Sep 16", and a search result is often the second time somebody sees a
+    // thing they wrote.
+    const [hit] = search('advising', [appt({ id: 'a1', title: 'Advising', where: 'Kirkland' })])
+      .flatMap((g) => g.hits);
+    expect(hit.sub).not.toMatch(/2026-09-16/);
+    expect(hit.sub).toContain('Kirkland');
+  });
+
+  it('groups them under their own heading', () => {
+    // "advising" also reaches a screen, which is the search working — the
+    // claim here is only that appointments are their own group and not
+    // quietly filed under the tasks one.
+    const groups = search('advising', [appt({ id: 'a1', title: 'Advising' })]);
+    const mine = groups.find((g) => g.hits.some((h) => h.kind === 'appointment'));
+    expect(mine?.label).toBe('Your appointments');
+  });
+
+  it('finds nothing when there is nothing, rather than everything', () => {
+    expect(titles('zanzibar', [appt({ id: 'a1', title: 'Advising meeting' })])).toEqual([]);
   });
 });

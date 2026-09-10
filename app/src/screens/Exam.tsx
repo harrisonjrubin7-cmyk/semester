@@ -29,6 +29,8 @@ import {
   seedCode,
   shapeFor,
   total,
+  usableFormat,
+  buildable,
   verdict,
   type Answer,
   type Question,
@@ -68,7 +70,10 @@ export function Exam() {
   // The guide's Quiz mode can hand a shape over. Read once, on the way in.
   const preset = state.examPreset;
   const [source, setSource] = useState<'cards' | 'written'>('cards');
-  const [formatId, setFormatId] = useState(preset?.formatId ?? FORMATS[0].id);
+  const [picked, setFormatId] = useState(preset?.formatId ?? FORMATS[0].id);
+  // See `usableFormat`: a shape that cannot be built from cards is never the
+  // shape in force, so the paper described below is always the paper you get.
+  const formatId = usableFormat(picked, source);
   const [minutes, setMinutes] = useState(preset?.minutes ?? 30);
   const [material, setMaterial] = useState('');
   const [about, setAbout] = useState('');
@@ -223,7 +228,7 @@ export function Exam() {
             const on = f.id === formatId;
             // A flashcard is not an argument, so a paper drawn from cards
             // cannot carry an essay question. Said rather than silently ignored.
-            const unavailable = source === 'cards' && f.mix.long > 0;
+            const unavailable = !buildable(f.id, source);
             return (
               <button
                 key={f.id}

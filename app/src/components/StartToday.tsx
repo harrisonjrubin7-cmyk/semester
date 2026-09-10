@@ -49,7 +49,7 @@ export function StartToday() {
           <button
             key={s.id}
             type="button"
-            className="bare tappable"
+            className="bare tappable on-paper"
             onClick={() => dispatch({ type: 'openItem', id: s.id })}
             style={{
               display: 'block',
@@ -186,7 +186,7 @@ export function StartList() {
           <button
             key={s.id}
             type="button"
-            className="bare tappable"
+            className="bare tappable on-paper"
             onClick={() => dispatch({ type: 'openItem', id: s.id })}
             style={{
               display: 'flex',

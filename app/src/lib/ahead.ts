@@ -28,7 +28,7 @@ import type { Appointment, DatedItem } from './types';
 import type { Catalog } from '../data/catalog';
 import { blocksFor } from '../data/catalog';
 import type { Commitment } from './activities';
-import { blocksOn } from './activities';
+import { blocksOn, sharePerDay } from './activities';
 import { dateToIso, decorateItem } from './date';
 import { lengthOf } from './select';
 import type { DoneMap } from './standing';
@@ -40,7 +40,10 @@ export interface Day {
   name: string;
   /** Hours of class. */
   classes: number;
-  /** Hours of commitments that meet on this day. */
+  /**
+   * Hours of commitments on this day: what meets today, plus this day's share
+   * of anything given as hours a week. See `activities.sharePerDay`.
+   */
   commitments: number;
   /** Hours of your own appointments. */
   appointments: number;
@@ -126,11 +129,28 @@ export function week(input: WeekInput): Week {
     .filter((i) => !done[i.id] && i.date >= start && i.date < end)
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 
+  // A commitment stated as hours a week has no day to fall on, so it falls on
+  // all of them. Counting only what meets left a shift job out of the week
+  // entirely — the hours were on the Activities screen and nowhere in the
+  // figure this screen exists to give.
+  const loose = sharePerDay(input.commitments);
+
   const days: Day[] = [];
+  // A day's free hours come from its own windows, not from a week's worth
+  // divided by seven — the whole point is that Tuesday and Sunday differ.
+  const byDay: number[] = [];
+  // Both totals are summed from unrounded days, because a week is the sum of
+  // seven days and not the sum of seven numbers each already rounded to a
+  // tenth. Ten hours a week spread over seven is 1.4 a day to read and ten
+  // hours to add up; rounding first made it 9.8, which is this screen
+  // disagreeing with the Activities screen about a figure you typed in.
+  let hours = 0;
   for (let n = 0; n < 7; n++) {
     const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + n);
+    // `minutesOfClasses` already drops the cancelled ones, and unlike the
+    // flat count it asks the syllabus how long each class actually runs.
     const classes = minutesOfClasses(catalog, date) / 60;
-    const commitments = minutesOfBlocks(blocksOn(input.commitments, date)) / 60;
+    const commitments = minutesOfBlocks(blocksOn(input.commitments, date)) / 60 + loose;
 
     const key = dateToIso(date);
     // An appointment has a start and no end, same as a class. An hour is the
@@ -144,6 +164,10 @@ export function week(input: WeekInput): Week {
         i.date.getDate() === date.getDate(),
     );
 
+    const today = classes + commitments + appointments;
+    hours += today;
+    byDay[date.getDay()] = (byDay[date.getDay()] ?? 0) + today;
+
     days.push({
       date,
       name: SHORT[date.getDay()],
@@ -151,11 +175,11 @@ export function week(input: WeekInput): Week {
       commitments: round(commitments),
       appointments,
       due,
-      promised: round(classes + commitments + appointments),
+      promised: round(today),
     });
   }
 
-  const promised = round(days.reduce((n, d) => n + d.promised, 0));
+  const promised = round(hours);
 
   const heaviest = days.reduce<Day | null>(
     (best, d) => (best === null || d.promised > best.promised ? d : best),
@@ -169,10 +193,6 @@ export function week(input: WeekInput): Week {
     null,
   );
 
-  // A day's free hours come from its own windows, not from a week's worth
-  // divided by seven — the whole point is that Tuesday and Sunday differ.
-  const byDay: number[] = [];
-  for (const d of days) byDay[d.date.getDay()] = (byDay[d.date.getDay()] ?? 0) + d.promised;
   for (let i = 0; i < 7; i++) byDay[i] = byDay[i] ?? 0;
   const shape = weekShape(input.windows ?? [], byDay);
 

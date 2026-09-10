@@ -28,6 +28,7 @@
  */
 
 import { ask } from './claude';
+import { realDate } from './date';
 
 export interface Deliverable {
   what: string;
@@ -117,11 +118,27 @@ const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
  * acts on it.
  */
 export function clean(raw: Partial<Breakdown>, unitNames: string[]): Breakdown {
+  /*
+   * `new Date('2026-02-31T12:00:00')` was the check here, on the reasonable
+   * assumption that the spec's own parser refuses a day February does not
+   * have. It does not: V8 answers 3 March, and only a *month* out of range
+   * comes back Invalid. So 31 February and 31 April both got through — and
+   * they are the shapes a model actually produces, far more often than
+   * `2026-13-45`, which is the one the test pinned.
+   *
+   * What that cost: the step is saved as a task dated `2026-02-31`, the plan
+   * on screen reads "Due 2026-02-31", and everything that draws the task puts
+   * it on 3 March. One assignment, two days, neither of them the one anybody
+   * wrote down — against this function's own comment, that "a fabricated
+   * detail is worse than a missing one, because the student acts on it".
+   *
+   * `realDate` is the question it was asking, and answers it by building the
+   * day and reading it back.
+   */
   const date = (v: unknown): string => {
-    const s = str(v);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return '';
-    const d = new Date(`${s}T12:00:00`);
-    return Number.isNaN(d.getTime()) ? '' : s;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str(v));
+    if (!m) return '';
+    return realDate(Number(m[1]), Number(m[2]), Number(m[3])) ? str(v) : '';
   };
 
   return {

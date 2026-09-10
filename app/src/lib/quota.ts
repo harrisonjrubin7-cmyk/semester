@@ -65,3 +65,21 @@ export function roomLine(r: Room | null): string {
 
 /** How often it is worth asking. Rarely: the number moves slowly. */
 export const CHECK_EVERY_MS = 2 * 60 * 1000;
+
+/**
+ * What to say when a write has actually failed.
+ *
+ * Not a share of a quota — news about a write the database refused. The
+ * estimate above is a guess made every couple of minutes, and it is no help
+ * at all when the disk is full but the origin's quota is not, or in a browser
+ * whose `estimate()` is coarse or absent.
+ *
+ * It says the two things a person can act on: that what they are doing is not
+ * being kept, and where the door out is. `App.tsx` draws it without a timer,
+ * for the reason written there — *"a message that fades after four seconds is
+ * worse than none because it makes them think they imagined it"*.
+ */
+export const WRITE_FAILED =
+  'Your changes are not being saved \u2014 the browser refused to write to its own database. ' +
+  'This is usually a full disk, or a private window. Anything since will be lost on reload: ' +
+  'take a backup under Take it with you, and free some room.';

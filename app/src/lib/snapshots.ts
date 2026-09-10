@@ -133,7 +133,9 @@ export function dueForDaily(snaps: Snapshot[], now: Date): boolean {
  *   1. Everything from the last day stays. That is the day the mistake was
  *      made, and it is the day the extra copies are worth having.
  *   2. Older than that, the newest one per calendar day, back `KEEP_DAYS`.
- *   3. Nothing older than `KEEP_DAYS`, and never more than `MOST`.
+ *   3. Nothing older than `KEEP_DAYS`, and never more than `MOST` in total —
+ *      with the cap taken out of rule 1's pile rather than off the end of the
+ *      week, because an older day's copy is the only one of that day.
  *
  * Returns ids rather than doing the deleting, so the decision can be tested
  * without a database.
@@ -141,27 +143,41 @@ export function dueForDaily(snaps: Snapshot[], now: Date): boolean {
 export function stale(snaps: Snapshot[], now: Date): string[] {
   const ms = now.getTime();
   const newest = [...snaps].sort((a, b) => b.at - a.at);
-  const keep = new Set<string>();
+  const recent: Snapshot[] = [];
+  const daily: Snapshot[] = [];
   const seenDays = new Set<string>();
 
   for (const s of newest) {
     const age = ms - s.at;
     if (age > KEEP_DAYS * 86_400_000) continue;
     if (age <= KEEP_ALL_HOURS * 3_600_000) {
-      keep.add(s.id);
+      recent.push(s);
       continue;
     }
     const day = new Date(s.at).toDateString();
-    if (!seenDays.has(day)) {
-      seenDays.add(day);
-      keep.add(s.id);
-    }
+    if (seenDays.has(day)) continue;
+    seenDays.add(day);
+    daily.push(s);
   }
 
-  // The cap applies to what survived, newest first.
-  const capped = newest.filter((s) => keep.has(s.id)).slice(0, MOST);
-  const final = new Set(capped.map((s) => s.id));
-  return newest.filter((s) => !final.has(s.id)).map((s) => s.id);
+  /*
+   * The cap comes out of today's pile, not out of the week.
+   *
+   * It used to apply to everything that survived, newest first — and since
+   * the extra copies are taken "before anything that rewrites a lot at once",
+   * the day that produces twenty of them is exactly the day somebody is
+   * rewriting a lot. Twenty-five today and one a day for the previous six
+   * kept twenty, all of them from today, and dropped every older one. The
+   * week this file promises to keep was destroyed by the activity it exists
+   * to protect against.
+   *
+   * Within a day the copies are minutes apart and losing one costs little.
+   * An older day's is the only copy of that day, so it is never the one that
+   * goes. At least one recent copy is always kept, whatever the arithmetic.
+   */
+  const room = Math.max(1, MOST - daily.length);
+  const keep = new Set([...recent.slice(0, room), ...daily].map((s) => s.id));
+  return newest.filter((s) => !keep.has(s.id)).map((s) => s.id);
 }
 
 /**

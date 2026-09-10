@@ -17,6 +17,7 @@
  */
 
 import type { Catalog } from '../data/catalog';
+import { realDate } from './date';
 import type { Appointment, DatedItem, Note, PersonalTask } from './types';
 import { standingOf, type DoneMap } from './standing';
 import { NO_TIME } from './duetime';
@@ -235,18 +236,66 @@ export function toIcs(events: IcsEvent[], name = 'Semester'): string {
   ];
 
   for (const e of events) {
+    /*
+     * A day that is not a day is left out, rather than written down.
+     *
+     * `dateStamp` reads three fields off the Date and pads them, so an
+     * Invalid Date — which is what `new Date(year, NaN, day)` is, and every
+     * caller here builds its Date out of fields that came from a syllabus or
+     * out of storage — wrote `DTSTART;VALUE=DATE:NaNNaNNaN`. Measured. That is
+     * not a wrong date, it is a line no parser accepts, and a strict client
+     * refuses the *file*: one unreadable appointment takes a whole semester of
+     * deadlines down with it. Skipping is the smaller loss and the honest one
+     * — the event was already unshowable, and what is saved is every other
+     * event in the export.
+     */
+    if (Number.isNaN(e.date.getTime())) continue;
+
     lines.push('BEGIN:VEVENT');
     lines.push(`UID:${e.uid}@semester.app`);
     lines.push(`DTSTAMP:${stamp}`);
-    if (e.at === undefined) {
+    /*
+     * And an hour outside the clock is no hour, which is a thing this file can
+     * already say. `at` is minutes past midnight; anything below 0 or at 1440
+     * and above came out of a reader rather than off a clock — `-1` is how a
+     * stored appointment records that no hour was read, and a hand-edited
+     * backup can hold any figure at all. Passed through, -1 wrote
+     * `DTSTART:19000101T-1-100` and 5000 wrote hour 83. All-day is what this
+     * function already does for a deadline whose hour nobody stated, and it is
+     * the same claim: the day is known and the time is not.
+     */
+    const at = Number.isInteger(e.at) && e.at! >= 0 && e.at! < 1440 ? e.at : undefined;
+    if (at === undefined) {
       const next = new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + 1);
       lines.push(`DTSTART;VALUE=DATE:${dateStamp(e.date)}`);
       lines.push(`DTEND;VALUE=DATE:${dateStamp(next)}`);
     } else {
-      const start = `${dateStamp(e.date)}T${pad(Math.floor(e.at / 60))}${pad(e.at % 60)}00`;
-      const end = e.at + (e.minutes ?? 60);
-      lines.push(`DTSTART:${start}`);
-      lines.push(`DTEND:${dateStamp(e.date)}T${pad(Math.floor(end / 60))}${pad(end % 60)}00`);
+      /*
+       * The end rolls into the next day, which it did not.
+       *
+       * The end was minutes-past-midnight formatted as an hour and a minute,
+       * so anything finishing after midnight wrote an hour of 24 or more: a
+       * deadline at 11:59 PM — the commonest time in any syllabus, and this
+       * app's own default — came out as `DTEND:20260904T242900`. RFC 5545
+       * gives the hour two digits and the range 00–23, so that is not a late
+       * time, it is a malformed one, and a client is free to drop the event,
+       * drop its end, or refuse the file.
+       *
+       * Counted in whole days and leftover minutes rather than by adding
+       * milliseconds to a Date: an iCalendar time with no `Z` is a wall clock,
+       * and wall clocks are what these are. Adding half an hour to 11:59 PM on
+       * the night the clocks go forward should still be half an hour later on
+       * the clock.
+       */
+      const total = at + Math.max(0, e.minutes ?? 60);
+      const endDate = new Date(
+        e.date.getFullYear(),
+        e.date.getMonth(),
+        e.date.getDate() + Math.floor(total / 1440),
+      );
+      const endAt = total % 1440;
+      lines.push(`DTSTART:${dateStamp(e.date)}T${pad(Math.floor(at / 60))}${pad(at % 60)}00`);
+      lines.push(`DTEND:${dateStamp(endDate)}T${pad(Math.floor(endAt / 60))}${pad(endAt % 60)}00`);
     }
     lines.push(`SUMMARY:${icsText(e.summary)}`);
     if (e.description) lines.push(`DESCRIPTION:${icsText(e.description)}`);
@@ -294,18 +343,43 @@ export function deadlineEvents(
   }));
 }
 
+/**
+ * Appointments as calendar entries — the ones that name a day.
+ *
+ * The date was split into three numbers and handed to `new Date` unchecked,
+ * and both halves of that are wrong for a record that has been through
+ * storage. `Number('')` is 0, not NaN, so an appointment saved without a date
+ * did not fall to the `|| 1` guards written beside it: it became 1 January
+ * 1900 and went into the downloaded file as a real-looking entry on a day
+ * nobody named. And a date of the shape `2026-02-31`, which a syllabus reader
+ * or a hand-edited backup can hold, became 3 March the same silent way.
+ *
+ * `realDate` is the check this app already wrote for exactly that, and it
+ * answers with the Date so there is nothing left to build. An appointment with
+ * no usable date is dropped rather than placed: it is still in the app, on
+ * every screen that lists it, and the alternative is a confident wrong entry
+ * in somebody's actual calendar — the failure this whole file is careful
+ * about, as the stable `uid` above says.
+ */
 export function appointmentEvents(appts: Appointment[]): IcsEvent[] {
-  return appts.map((a) => {
-    const [y, m, d] = a.date.split('-').map(Number);
-    return {
+  const out: IcsEvent[] = [];
+  for (const a of appts) {
+    const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(a.date);
+    const day = parts && realDate(Number(parts[1]), Number(parts[2]), Number(parts[3]));
+    if (!day) continue;
+    out.push({
       uid: `appt-${a.id}`,
       summary: a.title,
       description: a.kind ?? '',
-      date: new Date(y, (m || 1) - 1, d || 1),
+      date: day,
+      // -1 is how a stored appointment records that no hour was read. `toIcs`
+      // turns any hour off the clock into an all-day entry anyway; this keeps
+      // the sentinel from having to be understood twice.
       at: typeof a.at === 'number' ? a.at : undefined,
       minutes: 60,
-    };
-  });
+    });
+  }
+  return out;
 }
 
 // ── Naming ───────────────────────────────────────────────────────────────
@@ -367,6 +441,20 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean }[] =
   { key: 'appointments', label: 'appointments', array: true },
   { key: 'places', label: 'saved places', array: true },
   { key: 'extraLinks', label: 'your links', array: true },
+  /*
+   * The calendars you subscribed to.
+   *
+   * `backupOf` has always written these and this list has never named them,
+   * so `readBackup` walked straight past: the subscriptions were in the file,
+   * the confirmation did not mention them, and restoring dropped every one.
+   * Measured — a backup holding one feed restored to `feeds: undefined`.
+   *
+   * Which is the failure the comment above this list describes and was meant
+   * to prevent: "One list, so a section added to a backup is automatically a
+   * section a restore warns you about." A section added to `backupOf` and not
+   * to this list is the case it does not cover, and this was it.
+   */
+  { key: 'feeds', label: 'connected calendars', array: true },
   { key: 'grades', label: 'grades', array: false },
   { key: 'reviews', label: 'what you have drilled', array: false },
   { key: 'done', label: 'what you have ticked off', array: false },
@@ -443,9 +531,32 @@ export function backupOf(state: State) {
     reviews: state.reviews,
     done: state.done,
     saved: state.saved,
-    // The addresses only. A feed's token is a credential and a backup that
-    // carries credentials is a liability, not a safety net.
-    feeds: state.feeds.map((f) => ({ id: f.id, name: f.name, url: f.url })),
+    /*
+     * The subscription, and not the last thing it did.
+     *
+     * This wrote `{ id, name, url }` under a note about not carrying a feed's
+     * token — but `FeedSource` has no token and never has; the URL is the
+     * whole credential, and it was already going. What the three fields did
+     * do was leave out `kind`, which decides the label and the icon, so a
+     * feed restored from one of these files would have arrived nameless even
+     * once the restore read them at all.
+     *
+     * `synced`, `status` and `count` are written as never-pulled rather than
+     * carried, because they are facts about a device rather than about a
+     * subscription: a restored phone has genuinely never pulled this feed,
+     * and "last synced in March" on a machine that has never seen it is a
+     * worse answer than "not yet".
+     */
+    feeds: state.feeds.map((f) => ({
+      id: f.id,
+      kind: f.kind,
+      name: f.name,
+      url: f.url,
+      added: f.added,
+      synced: 0,
+      status: '',
+      count: 0,
+    })),
     linkUrls: state.linkUrls,
     extraLinks: state.extraLinks,
     sample: state.sample,

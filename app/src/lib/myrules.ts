@@ -123,7 +123,13 @@ export interface Fired {
  * again at three days minus one hour, and again at two days, and turn a lead
  * time into a countdown nobody asked for.
  */
-export function myReminders(now: Date, rules: MyRule[], items: DatedItem[]): Fired[] {
+export function myReminders(
+  now: Date,
+  rules: MyRule[],
+  items: DatedItem[],
+  /** What has already been ticked off. A rule never fires about finished work. */
+  done: Record<string, boolean> = {},
+): Fired[] {
   const today = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
   const hour = now.getHours();
   const out: Fired[] = [];
@@ -132,6 +138,7 @@ export function myReminders(now: Date, rules: MyRule[], items: DatedItem[]): Fir
     if (!r.on || hour < r.hour) continue;
     for (const item of items) {
       if (item.daysAway !== r.days) continue;
+      if (done[item.id]) continue;
       if (!watched(item, r)) continue;
       out.push({
         // The day is in the id so it fires once, the same rule the built-in
