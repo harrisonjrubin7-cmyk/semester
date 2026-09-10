@@ -12,6 +12,8 @@
  * actually uploads a PDF.
  */
 
+import { tooPacked, tooPackedSaid } from "./zips";
+
 /** What the parser needs from pdf.js, without pulling its types in. */
 interface PdfLib {
   GlobalWorkerOptions: { workerSrc: string };
@@ -19,7 +21,9 @@ interface PdfLib {
     promise: Promise<{
       numPages: number;
       getPage: (n: number) => Promise<{
-        getTextContent: () => Promise<{ items: { str?: string; transform?: number[] }[] }>;
+        getTextContent: () => Promise<{
+          items: { str?: string; transform?: number[] }[];
+        }>;
       }>;
     }>;
   };
@@ -29,9 +33,10 @@ let pdfjs: PdfLib | null = null;
 
 async function loadPdfjs(): Promise<PdfLib> {
   if (pdfjs) return pdfjs;
-  const lib = (await import('pdfjs-dist')) as unknown as PdfLib;
+  const lib = (await import("pdfjs-dist")) as unknown as PdfLib;
   // The worker ships beside the library; Vite gives us a URL for it.
-  const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default as string;
+  const workerUrl = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url"))
+    .default as string;
   lib.GlobalWorkerOptions.workerSrc = workerUrl;
   pdfjs = lib;
   return lib;
@@ -47,7 +52,7 @@ async function loadPdfjs(): Promise<PdfLib> {
  */
 async function fromPdf(file: File): Promise<string> {
   const lib = await loadPdfjs();
-  let doc: Awaited<ReturnType<PdfLib['getDocument']>['promise']>;
+  let doc: Awaited<ReturnType<PdfLib["getDocument"]>["promise"]>;
   try {
     doc = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
   } catch {
@@ -65,18 +70,18 @@ async function fromPdf(file: File): Promise<string> {
 
   for (let n = 1; n <= doc.numPages; n += 1) {
     const content = await (await doc.getPage(n)).getTextContent();
-    let text = '';
+    let text = "";
     let lastY: number | null = null;
     for (const item of content.items) {
-      const str = item.str ?? '';
+      const str = item.str ?? "";
       const y = item.transform?.[5] ?? null;
-      if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) text += '\n';
+      if (lastY !== null && y !== null && Math.abs(y - lastY) > 2) text += "\n";
       text += str;
       if (y !== null) lastY = y;
     }
     pages.push(text);
   }
-  return pages.join('\n\n');
+  return pages.join("\n\n");
 }
 
 /**
@@ -94,13 +99,13 @@ async function fromPdf(file: File): Promise<string> {
  */
 function entities(text: string): string {
   return text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&');
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&");
 }
 
 /**
@@ -112,7 +117,16 @@ function entities(text: string): string {
  * nothing more: tables come out as text, and formatting is discarded.
  */
 async function fromDocx(file: File): Promise<string> {
-  const { unzipSync, strFromU8 } = await import('fflate');
+  // fflate decompresses the whole archive at once, so the only place a
+  // limit can be applied is here; see `lib/zips.ts`.
+  if (tooPacked(file))
+    throw new Error(
+      tooPackedSaid(
+        file.name,
+        "Save just the pages you need as a smaller file, or paste the text in by hand.",
+      ),
+    );
+  const { unzipSync, strFromU8 } = await import("fflate");
   let zip: Record<string, Uint8Array>;
   try {
     zip = unzipSync(new Uint8Array(await file.arrayBuffer()));
@@ -124,14 +138,16 @@ async function fromDocx(file: File): Promise<string> {
       `${file.name} could not be opened as a Word file. If it is an older .doc, open it in Word and save it again as .docx — or paste the text in by hand.`,
     );
   }
-  const entry = zip['word/document.xml'];
-  if (!entry) throw new Error('That .docx has no document inside it.');
+  const entry = zip["word/document.xml"];
+  if (!entry) throw new Error("That .docx has no document inside it.");
   const xml = strFromU8(entry);
   const stripped = xml
-    .replace(/<w:p[ >]/g, '\n<w:p ')
-    .replace(/<w:tab\/>/g, '\t')
-    .replace(/<[^>]+>/g, '');
-  return entities(stripped).replace(/\n{3,}/g, '\n\n').trim();
+    .replace(/<w:p[ >]/g, "\n<w:p ")
+    .replace(/<w:tab\/>/g, "\t")
+    .replace(/<[^>]+>/g, "");
+  return entities(stripped)
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 /**
@@ -146,8 +162,19 @@ async function fromDocx(file: File): Promise<string> {
  * page reference a deck has, and everything downstream that says where a card
  * came from — "From Session 7 slides, slide 12" — needs them.
  */
-export async function fromPptx(file: File): Promise<{ slide: number; text: string }[]> {
-  const { unzipSync, strFromU8 } = await import('fflate');
+export async function fromPptx(
+  file: File,
+): Promise<{ slide: number; text: string }[]> {
+  // fflate decompresses the whole archive at once, so the only place a
+  // limit can be applied is here; see `lib/zips.ts`.
+  if (tooPacked(file))
+    throw new Error(
+      tooPackedSaid(
+        file.name,
+        "Export the deck as a PDF, or save a smaller copy.",
+      ),
+    );
+  const { unzipSync, strFromU8 } = await import("fflate");
   let zip: Record<string, Uint8Array>;
   try {
     zip = unzipSync(new Uint8Array(await file.arrayBuffer()));
@@ -163,7 +190,8 @@ export async function fromPptx(file: File): Promise<{ slide: number; text: strin
   const names = Object.keys(zip)
     .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
     .sort((a, b) => Number(/(\d+)/.exec(a)![1]) - Number(/(\d+)/.exec(b)![1]));
-  if (names.length === 0) throw new Error('That .pptx has no slides inside it.');
+  if (names.length === 0)
+    throw new Error("That .pptx has no slides inside it.");
 
   const out: { slide: number; text: string }[] = [];
   for (const n of names) {
@@ -176,14 +204,14 @@ export async function fromPptx(file: File): Promise<{ slide: number; text: strin
      * wall.
      */
     const text = xml
-      .replace(/<a:p[ >]/g, '\n<a:p ')
-      .replace(/<a:br\/>/g, '\n')
-      .replace(/<\/a:t>\s*<a:t[^>]*>/g, '')
-      .replace(/<[^>]+>/g, '')
-      .split('\n')
+      .replace(/<a:p[ >]/g, "\n<a:p ")
+      .replace(/<a:br\/>/g, "\n")
+      .replace(/<\/a:t>\s*<a:t[^>]*>/g, "")
+      .replace(/<[^>]+>/g, "")
+      .split("\n")
       .map((l) => entities(l).trim())
       .filter(Boolean)
-      .join('\n');
+      .join("\n");
     out.push({ slide: Number(/(\d+)/.exec(n)![1]), text });
   }
   return out;
@@ -231,7 +259,7 @@ const SENDABLE_PDF = 12 * 1024 * 1024;
 /** A file as base64, with no data: prefix and no newlines. */
 async function asBase64(file: File): Promise<string> {
   const buf = new Uint8Array(await file.arrayBuffer());
-  let binary = '';
+  let binary = "";
   // In chunks: `String.fromCharCode(...bigArray)` overflows the call stack on
   // anything of this size.
   const STEP = 0x8000;
@@ -248,7 +276,7 @@ export async function extractText(file: File): Promise<Extracted> {
   let original: string | undefined;
   let pages: { page: number; text: string }[] | undefined;
 
-  if (/\.pdf$/i.test(name) || file.type === 'application/pdf') {
+  if (/\.pdf$/i.test(name) || file.type === "application/pdf") {
     text = await fromPdf(file);
     if (file.size <= SENDABLE_PDF) {
       try {
@@ -265,24 +293,32 @@ export async function extractText(file: File): Promise<Extracted> {
     pages = slides.map((s) => ({ page: s.slide, text: s.text }));
     // Numbered in the flat text as well. A model reading this is being asked
     // where something came from, and the number has to be in front of it.
-    text = slides.map((s) => `Slide ${s.slide}\n${s.text}`).join('\n\n');
-  } else if (/^text\//.test(file.type) || /\.(txt|md|markdown|csv|rtf|html?)$/i.test(name)) {
+    text = slides.map((s) => `Slide ${s.slide}\n${s.text}`).join("\n\n");
+  } else if (
+    /^text\//.test(file.type) ||
+    /\.(txt|md|markdown|csv|rtf|html?)$/i.test(name)
+  ) {
     text = await file.text();
     if (/\.html?$/i.test(name)) {
       // Keep the structure a syllabus page carries: headings and rows.
       text = entities(
         text
-          .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
-          .replace(/<\/(p|div|tr|h[1-6]|li)>/gi, '\n')
-          .replace(/<(br|td|th)[^>]*>/gi, ' ')
-          .replace(/<[^>]+>/g, ''),
-      ).replace(/\n{3,}/g, '\n\n');
+          .replace(/<(script|style)[\s\S]*?<\/\1>/gi, "")
+          .replace(/<\/(p|div|tr|h[1-6]|li)>/gi, "\n")
+          .replace(/<(br|td|th)[^>]*>/gi, " ")
+          .replace(/<[^>]+>/g, ""),
+      ).replace(/\n{3,}/g, "\n\n");
     }
   } else {
-    throw new Error(`${name} is not a kind of file this can read — PDF, Word, slides, or text.`);
+    throw new Error(
+      `${name} is not a kind of file this can read — PDF, Word, slides, or text.`,
+    );
   }
 
-  text = text.replace(/\r\n/g, '\n').replace(/[ \t]+\n/g, '\n').trim();
+  text = text
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
   if (!text) {
     throw new Error(
       `Nothing readable came out of ${name}. A scanned PDF is a picture of text — it needs to be run through OCR first, or pasted in by hand.`,

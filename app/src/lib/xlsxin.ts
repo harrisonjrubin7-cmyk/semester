@@ -34,11 +34,19 @@
  * copy, never a move.
  */
 
-import { blankSheet, colIndex, MAX_COLS, MAX_ROWS, parseRef, type Sheet } from './sheet';
-import type { CourseId } from './types';
+import {
+  blankSheet,
+  colIndex,
+  MAX_COLS,
+  MAX_ROWS,
+  parseRef,
+  type Sheet,
+} from "./sheet";
+import { tooPacked } from "./zips";
+import type { CourseId } from "./types";
 
 export interface Read {
-  sheets: Omit<Sheet, 'id'>[];
+  sheets: Omit<Sheet, "id">[];
   /** What the reader had to leave behind, in words meant for the student. */
   notes: string[];
 }
@@ -55,8 +63,8 @@ export interface Read {
  */
 function entities(text: string): string {
   return text
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
@@ -68,9 +76,11 @@ function entities(text: string): string {
     })
     .replace(/&#x([0-9a-f]+);/gi, (whole, code) => {
       const n = Number.parseInt(code, 16);
-      return Number.isFinite(n) && n <= 0x10ffff ? String.fromCodePoint(n) : whole;
+      return Number.isFinite(n) && n <= 0x10ffff
+        ? String.fromCodePoint(n)
+        : whole;
     })
-    .replace(/&amp;/g, '&');
+    .replace(/&amp;/g, "&");
 }
 
 /*
@@ -98,11 +108,16 @@ function entities(text: string): string {
  * together with the value it describes.
  */
 function siText(block: string): string {
-  const spoken = block.replace(/<(?:[A-Za-z_][\w.-]*:)?rPh\b[^>]*(?:\/>|>[\s\S]*?<\/(?:[A-Za-z_][\w.-]*:)?rPh>)/g, '');
-  const parts = [...spoken.matchAll(/<(?:[A-Za-z_][\w.-]*:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?t>/g)].map(
-    (m) => entities(m[1]),
+  const spoken = block.replace(
+    /<(?:[A-Za-z_][\w.-]*:)?rPh\b[^>]*(?:\/>|>[\s\S]*?<\/(?:[A-Za-z_][\w.-]*:)?rPh>)/g,
+    "",
   );
-  return parts.join('');
+  const parts = [
+    ...spoken.matchAll(
+      /<(?:[A-Za-z_][\w.-]*:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?t>/g,
+    ),
+  ].map((m) => entities(m[1]));
+  return parts.join("");
 }
 
 /**
@@ -150,13 +165,17 @@ function dateFormats(stylesXml: string): {
    * had every custom date format ignored, so its due dates imported as
    * five-digit serials.
    */
-  for (const m of stylesXml.matchAll(/<(?:[A-Za-z_][\w.-]*:)?numFmt\b[^>]*>/g)) {
+  for (const m of stylesXml.matchAll(
+    /<(?:[A-Za-z_][\w.-]*:)?numFmt\b[^>]*>/g,
+  )) {
     const id = /numFmtId=['"](\d+)['"]/.exec(m[0]);
     const format = /formatCode=['"]([^'"]*)['"]/.exec(m[0]);
     if (!id || !format) continue;
     // Bracketed parts are conditions and locales, quoted parts are literal
     // text; neither says anything about what the number means.
-    const code = entities(format[1]).replace(/\[[^\]]*\]/g, '').replace(/"[^"]*"/g, '');
+    const code = entities(format[1])
+      .replace(/\[[^\]]*\]/g, "")
+      .replace(/"[^"]*"/g, "");
     const hasTime = /[hs]/i.test(code);
     /*
      * `m` is the ambiguous one: a month in a date and a minute in a time. The
@@ -167,7 +186,10 @@ function dateFormats(stylesXml: string): {
      * So: a `y` or a `d` settles it, and `m` on its own counts as a month only
      * when there is no hour or second anywhere in the code to make it a minute.
      */
-    const hasDate = /[yd]/i.test(code) || /m{3,}/i.test(code) || (/m/i.test(code) && !hasTime);
+    const hasDate =
+      /[yd]/i.test(code) ||
+      /m{3,}/i.test(code) ||
+      (/m/i.test(code) && !hasTime);
     if (hasDate) {
       dateFmtIds.add(Number(id[1]));
       if (hasTime) timeFmtIds.add(Number(id[1]));
@@ -183,7 +205,10 @@ function dateFormats(stylesXml: string): {
   const dates = new Set<number>();
   const times = new Set<number>();
   const seconds = new Set<number>();
-  const xfs = /<(?:[A-Za-z_][\w.-]*:)?cellXfs[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?cellXfs>/.exec(stylesXml);
+  const xfs =
+    /<(?:[A-Za-z_][\w.-]*:)?cellXfs[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?cellXfs>/.exec(
+      stylesXml,
+    );
   if (!xfs) return { dates, times, seconds };
   let at = 0;
   for (const m of xfs[1].matchAll(/<(?:[A-Za-z_][\w.-]*:)?xf\b[^>]*>/g)) {
@@ -227,15 +252,18 @@ const EPOCH_1904 = Date.UTC(1904, 0, 1);
  * The 1904 system has no such fiction and is a plain count.
  */
 function dayOf(days: number, epoch: number): string {
-  if (epoch !== EPOCH_1900) return new Date(epoch + days * 86_400_000).toISOString().slice(0, 10);
+  if (epoch !== EPOCH_1900)
+    return new Date(epoch + days * 86_400_000).toISOString().slice(0, 10);
   // The day Excel believes in and the calendar does not.
-  if (days === 60) return '1900-02-29';
+  if (days === 60) return "1900-02-29";
   const shifted = days < 60 ? days + 1 : days;
   return new Date(epoch + shifted * 86_400_000).toISOString().slice(0, 10);
 }
 
 function epochOf(workbookXml: string): number {
-  return /<(?:[A-Za-z_][\w.-]*:)?workbookPr[^>]*date1904=['"](1|true)['"]/i.test(workbookXml)
+  return /<(?:[A-Za-z_][\w.-]*:)?workbookPr[^>]*date1904=['"](1|true)['"]/i.test(
+    workbookXml,
+  )
     ? EPOCH_1904
     : EPOCH_1900;
 }
@@ -270,7 +298,7 @@ export function knownFormula(body: string): boolean {
   if (!localRefs(code)) return false;
 
   const names = code.toUpperCase().match(/\b[A-Z][A-Z0-9_.]*\s*\(/g) ?? [];
-  return names.every((n) => KNOWN.has(n.replace(/\s*\($/, '')));
+  return names.every((n) => KNOWN.has(n.replace(/\s*\($/, "")));
 }
 
 /**
@@ -288,10 +316,11 @@ export function knownFormula(body: string): boolean {
  * is the same trade: a broken formula against the last number it produced.
  */
 function localRefs(code: string): boolean {
-  if (code.includes('!')) return false;
+  if (code.includes("!")) return false;
   // `A:A`, `$A:$A`, `AA:AB` — letters on both sides of the colon, where a
   // cell range such as `A1:A2` has a digit before it.
-  if (/(^|[^A-Z0-9$])\$?[A-Z]{1,3}:\$?[A-Z]{1,3}([^A-Z0-9$]|$)/i.test(code)) return false;
+  if (/(^|[^A-Z0-9$])\$?[A-Z]{1,3}:\$?[A-Z]{1,3}([^A-Z0-9$]|$)/i.test(code))
+    return false;
   // `1:1` — the same thing along the other axis.
   if (/(^|[^A-Z0-9$])\$?\d+:\$?\d+([^A-Z0-9$]|$)/i.test(code)) return false;
   /*
@@ -309,7 +338,7 @@ function localRefs(code: string): boolean {
    */
   const named = code.replace(/\$?[A-Za-z]{1,2}\$?\d{1,4}\b/g, (at) => {
     const cell = parseRef(at);
-    return cell && cell.row < MAX_ROWS && cell.col < MAX_COLS ? ' ' : at;
+    return cell && cell.row < MAX_ROWS && cell.col < MAX_COLS ? " " : at;
   });
   /*
    * And what is left must be a function call or a value.
@@ -324,7 +353,7 @@ function localRefs(code: string): boolean {
 }
 
 /** The bare words that are values rather than names. */
-const LITERALS = new Set(['TRUE', 'FALSE']);
+const LITERALS = new Set(["TRUE", "FALSE"]);
 
 /** The formula with every quoted literal taken out, so only code is left. */
 function withoutStrings(body: string): string {
@@ -351,7 +380,7 @@ export function plainNames(body: string): string {
    * is handed back exactly as it came.
    */
   return body.replace(/"(?:[^"]|"")*"|_xlfn\.(?:_xlws\.)?/gi, (part) =>
-    part.startsWith('"') ? part : '',
+    part.startsWith('"') ? part : "",
   );
 }
 
@@ -364,13 +393,69 @@ export function plainNames(body: string): string {
  * this list to be wrong.
  */
 const KNOWN = new Set([
-  'IF','IFS','IFERROR','SUMPRODUCT','AND','OR','NOT','COUNTA','CONCAT','LEN','UPPER','LOWER','TRIM',
-  'VLOOKUP','HLOOKUP','XLOOKUP','INDEX','MATCH','LEFT','RIGHT','MID','SPLIT','TEXT',
-  'TODAY','NOW','DATE','DATEDIF','WEEKDAY','EOMONTH',
-  'COUNTIF','SUMIF','AVERAGEIF','COUNTIFS','SUMIFS',
-  'SUM','PRODUCT','COUNT','AVERAGE','AVG','MEDIAN','MIN','MAX','STDEV','STDEVP','VAR','VARP',
-  'ABS','INT','SQRT','EXP','LN','LOG10','POWER','MOD','ROUND','MODE','CORREL',
-  'NPV','IRR','PMT','FV','PV','RATE',
+  "IF",
+  "IFS",
+  "IFERROR",
+  "SUMPRODUCT",
+  "AND",
+  "OR",
+  "NOT",
+  "COUNTA",
+  "CONCAT",
+  "LEN",
+  "UPPER",
+  "LOWER",
+  "TRIM",
+  "VLOOKUP",
+  "HLOOKUP",
+  "XLOOKUP",
+  "INDEX",
+  "MATCH",
+  "LEFT",
+  "RIGHT",
+  "MID",
+  "SPLIT",
+  "TEXT",
+  "TODAY",
+  "NOW",
+  "DATE",
+  "DATEDIF",
+  "WEEKDAY",
+  "EOMONTH",
+  "COUNTIF",
+  "SUMIF",
+  "AVERAGEIF",
+  "COUNTIFS",
+  "SUMIFS",
+  "SUM",
+  "PRODUCT",
+  "COUNT",
+  "AVERAGE",
+  "AVG",
+  "MEDIAN",
+  "MIN",
+  "MAX",
+  "STDEV",
+  "STDEVP",
+  "VAR",
+  "VARP",
+  "ABS",
+  "INT",
+  "SQRT",
+  "EXP",
+  "LN",
+  "LOG10",
+  "POWER",
+  "MOD",
+  "ROUND",
+  "MODE",
+  "CORREL",
+  "NPV",
+  "IRR",
+  "PMT",
+  "FV",
+  "PV",
+  "RATE",
 ]);
 
 /**
@@ -380,7 +465,12 @@ const KNOWN = new Set([
  * apart: rounding the two together is how an afternoon becomes the next
  * morning.
  */
-function isoDate(serial: number, epoch: number, withTime: boolean, withSeconds: boolean): string {
+function isoDate(
+  serial: number,
+  epoch: number,
+  withTime: boolean,
+  withSeconds: boolean,
+): string {
   let days = Math.floor(serial);
   /*
    * The rounding can carry.
@@ -397,15 +487,15 @@ function isoDate(serial: number, epoch: number, withTime: boolean, withSeconds: 
   }
   const date = dayOf(days, epoch);
   if (!withTime) return date;
-  const hh = String(Math.floor(seconds / 3600) % 24).padStart(2, '0');
-  const mm = String(Math.floor(seconds / 60) % 60).padStart(2, '0');
+  const hh = String(Math.floor(seconds / 3600) % 24).padStart(2, "0");
+  const mm = String(Math.floor(seconds / 60) % 60).padStart(2, "0");
   /*
    * Seconds only where the format has them. A code spelling `hh:mm:ss` was
    * losing its seconds outright; every other timestamp would gain a `:00` it
    * never had, which is inventing precision rather than reading it.
    */
   if (!withSeconds) return `${date} ${hh}:${mm}`;
-  const ss = String(seconds % 60).padStart(2, '0');
+  const ss = String(seconds % 60).padStart(2, "0");
   return `${date} ${hh}:${mm}:${ss}`;
 }
 
@@ -423,19 +513,24 @@ function isoDate(serial: number, epoch: number, withTime: boolean, withSeconds: 
  * descends. A leading slash is from the package root and starts over.
  */
 function resolve(target: string): string {
-  const from = target.startsWith('/') ? [] : ['xl'];
-  for (const part of target.replace(/^\//, '').split('/')) {
-    if (part === '' || part === '.') continue;
-    if (part === '..') from.pop();
+  const from = target.startsWith("/") ? [] : ["xl"];
+  for (const part of target.replace(/^\//, "").split("/")) {
+    if (part === "" || part === ".") continue;
+    if (part === "..") from.pop();
     else from.push(part);
   }
-  return from.join('/');
+  return from.join("/");
 }
 
 /** Which worksheet part each tab in the workbook refers to. */
-function worksheetOrder(workbook: string, rels: string): { name: string; part: string }[] {
+function worksheetOrder(
+  workbook: string,
+  rels: string,
+): { name: string; part: string }[] {
   const targets = new Map<string, string>();
-  for (const m of rels.matchAll(/<(?:[A-Za-z_][\w.-]*:)?Relationship\b[^>]*>/g)) {
+  for (const m of rels.matchAll(
+    /<(?:[A-Za-z_][\w.-]*:)?Relationship\b[^>]*>/g,
+  )) {
     const id = /Id=['"]([^'"]+)['"]/.exec(m[0]);
     const target = /Target=['"]([^'"]+)['"]/.exec(m[0]);
     if (id && target) targets.set(id[1], resolve(entities(target[1])));
@@ -443,7 +538,9 @@ function worksheetOrder(workbook: string, rels: string): { name: string; part: s
 
   const out: { name: string; part: string }[] = [];
   let nth = 0;
-  for (const m of workbook.matchAll(/<(?:[A-Za-z_][\w.-]*:)?sheet\b[^>]*\/?>/g)) {
+  for (const m of workbook.matchAll(
+    /<(?:[A-Za-z_][\w.-]*:)?sheet\b[^>]*\/?>/g,
+  )) {
     nth += 1;
     const name = /name=['"]([^'"]*)['"]/.exec(m[0]);
     /*
@@ -495,9 +592,11 @@ function readCells(
   let frozen = 0;
   let unsupported = 0;
 
-  for (const m of xml.matchAll(/<(?:[A-Za-z_][\w.-]*:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?c>)/g)) {
+  for (const m of xml.matchAll(
+    /<(?:[A-Za-z_][\w.-]*:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?c>)/g,
+  )) {
     const attrs = m[1];
-    const body = m[2] ?? '';
+    const body = m[2] ?? "";
     // Either quote style: `<c r='A1'>` is valid XML and was being skipped
     // outright, so a worksheet written that way imported as empty.
     const rref = /r=['"]([A-Z]+\d+)['"]/.exec(attrs);
@@ -509,12 +608,21 @@ function readCells(
       continue;
     }
 
-    const type = /t=['"]([^'"]+)['"]/.exec(attrs)?.[1] ?? 'n';
-    const formula = /<(?:[A-Za-z_][\w.-]*:)?f(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?f>/.exec(body);
-    const raw = /<(?:[A-Za-z_][\w.-]*:)?v(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?v>/.exec(body);
+    const type = /t=['"]([^'"]+)['"]/.exec(attrs)?.[1] ?? "n";
+    const formula =
+      /<(?:[A-Za-z_][\w.-]*:)?f(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?f>/.exec(
+        body,
+      );
+    const raw =
+      /<(?:[A-Za-z_][\w.-]*:)?v(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?v>/.exec(
+        body,
+      );
 
-    let text = '';
-    const written = formula && formula[1].trim() ? plainNames(entities(formula[1]).trim()) : '';
+    let text = "";
+    const written =
+      formula && formula[1].trim()
+        ? plainNames(entities(formula[1]).trim())
+        : "";
     /*
      * A formula this engine cannot evaluate keeps its answer instead.
      *
@@ -528,12 +636,12 @@ function readCells(
     } else if (written) {
       unsupported += 1;
       text = entities(raw![1]);
-    } else if (type === 'inlineStr') {
+    } else if (type === "inlineStr") {
       text = siText(body);
-    } else if (type === 's') {
-      text = shared[Number(raw?.[1] ?? -1)] ?? '';
-    } else if (type === 'b') {
-      text = raw?.[1] === '1' ? 'TRUE' : 'FALSE';
+    } else if (type === "s") {
+      text = shared[Number(raw?.[1] ?? -1)] ?? "";
+    } else if (type === "b") {
+      text = raw?.[1] === "1" ? "TRUE" : "FALSE";
     } else if (raw) {
       /*
        * A shared formula's followers.
@@ -551,12 +659,17 @@ function readCells(
       const style = Number(/s=['"](\d+)['"]/.exec(attrs)?.[1] ?? -1);
       const n = Number(entities(raw[1]));
       text =
-        type === 'n' && styles.dates.has(style) && Number.isFinite(n)
-          ? isoDate(n, epoch, styles.times.has(style), styles.seconds.has(style))
+        type === "n" && styles.dates.has(style) && Number.isFinite(n)
+          ? isoDate(
+              n,
+              epoch,
+              styles.times.has(style),
+              styles.seconds.has(style),
+            )
           : entities(raw[1]);
     }
 
-    if (text === '') continue;
+    if (text === "") continue;
     cells[rref[1]] = text;
     rows = Math.max(rows, where.row + 1);
     cols = Math.max(cols, where.col + 1);
@@ -581,17 +694,19 @@ function readCells(
  * so these are far past anything genuine and far short of anything a phone
  * cannot survive.
  */
-const MOST_PACKED = 64 * 1024 * 1024;
 const MOST_UNPACKED = 128 * 1024 * 1024;
 
-export async function fromXlsx(file: File, courseId: CourseId | null = null): Promise<Read> {
-  if (file.size > MOST_PACKED) {
+export async function fromXlsx(
+  file: File,
+  courseId: CourseId | null = null,
+): Promise<Read> {
+  if (tooPacked(file)) {
     throw new Error(
       `${file.name} is too large for this app to open. Its grid stops at ${MAX_ROWS} rows and ` +
         `${MAX_COLS} columns — export the part you need as a CSV.`,
     );
   }
-  const { unzipSync, strFromU8 } = await import('fflate');
+  const { unzipSync, strFromU8 } = await import("fflate");
   let zip: Record<string, Uint8Array>;
   try {
     zip = unzipSync(new Uint8Array(await file.arrayBuffer()));
@@ -616,20 +731,21 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
     );
   }
 
-  const part = (name: string): string => (zip[name] ? strFromU8(zip[name]) : '');
-  const workbook = part('xl/workbook.xml');
-  if (!workbook) throw new Error('That .xlsx has no workbook inside it.');
+  const part = (name: string): string =>
+    zip[name] ? strFromU8(zip[name]) : "";
+  const workbook = part("xl/workbook.xml");
+  if (!workbook) throw new Error("That .xlsx has no workbook inside it.");
 
   const shared = [
-    ...part('xl/sharedStrings.xml').matchAll(
+    ...part("xl/sharedStrings.xml").matchAll(
       /<(?:[A-Za-z_][\w.-]*:)?si(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?si>/g,
     ),
   ].map((m) => siText(m[1]));
-  const styles = dateFormats(part('xl/styles.xml'));
+  const styles = dateFormats(part("xl/styles.xml"));
   const epoch = epochOf(workbook);
 
-  const tabs = worksheetOrder(workbook, part('xl/_rels/workbook.xml.rels'));
-  const sheets: Omit<Sheet, 'id'>[] = [];
+  const tabs = worksheetOrder(workbook, part("xl/_rels/workbook.xml.rels"));
+  const sheets: Omit<Sheet, "id">[] = [];
   const notes: string[] = [];
   let truncated = false;
   let stale = 0;
@@ -638,7 +754,12 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
   for (const tab of tabs) {
     const xml = part(tab.part);
     if (!xml) continue;
-    const { cells, rows, cols, over, frozen, unsupported } = readCells(xml, shared, styles, epoch);
+    const { cells, rows, cols, over, frozen, unsupported } = readCells(
+      xml,
+      shared,
+      styles,
+      epoch,
+    );
     truncated = truncated || over;
     stale += frozen;
     unknown += unsupported;
@@ -650,7 +771,8 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
     });
   }
 
-  if (sheets.length === 0) throw new Error('That .xlsx has no worksheets in it.');
+  if (sheets.length === 0)
+    throw new Error("That .xlsx has no worksheets in it.");
   if (sheets.length > 1) {
     notes.push(
       `${sheets.length} worksheets came in as ${sheets.length} separate sheets. A formula that referred across tabs will not find the other side.`,
@@ -658,26 +780,28 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
   }
   if (truncated) {
     notes.push(
-      `Anything past ${MAX_ROWS} rows or ${colIndex('Z') + 1} columns was left out — this app's grid stops there.`,
+      `Anything past ${MAX_ROWS} rows or ${colIndex("Z") + 1} columns was left out — this app's grid stops there.`,
     );
   }
   if (stale > 0) {
     notes.push(
-      `${stale} ${stale === 1 ? 'cell was' : 'cells were'} filled down from another cell's formula. ` +
-        'Those came in as the number Excel last worked out, not as a formula, so they will not ' +
-        'move if you change what they were adding up. Retype the formula in the first one and ' +
-        'fill it down again to make them live.',
+      `${stale} ${stale === 1 ? "cell was" : "cells were"} filled down from another cell's formula. ` +
+        "Those came in as the number Excel last worked out, not as a formula, so they will not " +
+        "move if you change what they were adding up. Retype the formula in the first one and " +
+        "fill it down again to make them live.",
     );
   }
   if (unknown > 0) {
     notes.push(
-      `${unknown} ${unknown === 1 ? 'formula' : 'formulas'} could not be read by this app — a ` +
-        'function it does not have, or a reference to another tab or to a whole column — so ' +
-        `${unknown === 1 ? 'it came' : 'they came'} in as the number Excel last worked out ` +
-        'rather than as a formula.',
+      `${unknown} ${unknown === 1 ? "formula" : "formulas"} could not be read by this app — a ` +
+        "function it does not have, or a reference to another tab or to a whole column — so " +
+        `${unknown === 1 ? "it came" : "they came"} in as the number Excel last worked out ` +
+        "rather than as a formula.",
     );
   }
-  notes.push('Charts, pivot tables, colours and cell formats do not come across. The file itself is untouched.');
+  notes.push(
+    "Charts, pivot tables, colours and cell formats do not come across. The file itself is untouched.",
+  );
 
   return { sheets, notes };
 }
@@ -700,14 +824,14 @@ export async function fromDelimited(
    * every character of it before anything is cut to the grid, so a very large
    * CSV is a frozen tab regardless of the 200×26 limit that follows.
    */
-  if (file.size > MOST_PACKED) {
+  if (tooPacked(file)) {
     throw new Error(
       `${file.name} is too large for this app to open. Its grid stops at ${MAX_ROWS} rows and ` +
         `${MAX_COLS} columns — split the file, or export just the part you need.`,
     );
   }
 
-  const { readTable, fromRows } = await import('./sheet');
+  const { readTable, fromRows } = await import("./sheet");
   const rows = readTable(await file.text());
   if (rows.length === 0) throw new Error(`${file.name} had no rows in it.`);
 
@@ -719,10 +843,11 @@ export async function fromDelimited(
    * drawn, not editable, and dropped by every export, which reads the grid
    * rather than the cell map. Silently — the sheet looked complete.
    */
-  const over = rows.length > MAX_ROWS || rows.some((row) => row.length > MAX_COLS);
+  const over =
+    rows.length > MAX_ROWS || rows.some((row) => row.length > MAX_COLS);
   const cut = rows.slice(0, MAX_ROWS).map((row) => row.slice(0, MAX_COLS));
 
-  const title = file.name.replace(/\.(csv|tsv|txt)$/i, '');
+  const title = file.name.replace(/\.(csv|tsv|txt)$/i, "");
   return {
     sheets: [{ ...fromRows(title, cut), courseId }],
     notes: over
@@ -734,8 +859,8 @@ export async function fromDelimited(
 }
 
 /** Which reader a picked file wants, or nothing when it is neither. */
-export function readerFor(file: File): 'xlsx' | 'delimited' | null {
-  if (/\.xlsx$/i.test(file.name)) return 'xlsx';
-  if (/\.(csv|tsv|txt)$/i.test(file.name)) return 'delimited';
+export function readerFor(file: File): "xlsx" | "delimited" | null {
+  if (/\.xlsx$/i.test(file.name)) return "xlsx";
+  if (/\.(csv|tsv|txt)$/i.test(file.name)) return "delimited";
   return null;
 }
