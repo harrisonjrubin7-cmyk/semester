@@ -119,6 +119,29 @@ export function weeklyHours(list: Commitment[]): number {
   return round(list.filter((c) => c.active).reduce((n, c) => n + hoursOf(c), 0));
 }
 
+/**
+ * A single day's share of everything stated by the week rather than the clock.
+ *
+ * A job with variable shifts, or reading for a lab, has no day of its own — so
+ * it belongs on every day at a seventh of its weekly figure. The alternative is
+ * to count it on no day at all, which is what both the day's report and the
+ * week ahead were doing: a ten-hour-a-week job showed up as ten hours on the
+ * Activities screen and as nothing at all in the hours either of them said you
+ * had promised.
+ *
+ * It lives here, beside `hoursOf`, because two screens now need the same rule
+ * and they disagreed about it while each had its own copy.
+ */
+export function sharePerDay(list: Commitment[]): number {
+  // Deliberately the complement of the branch `hoursOf` measures rather than
+  // estimates, so every shape of commitment lands in exactly one of the two
+  // and the seven days add back up to `weeklyHours`. Asking `at === null`
+  // instead — which is the obvious way to write it — leaves a commitment with
+  // an hour but no days out of both.
+  const stated = list.filter((c) => c.active && !(c.days.length > 0 && c.at !== null));
+  return stated.reduce((n, c) => n + hoursOf(c), 0) / 7;
+}
+
 function round(n: number): number {
   return Math.round(n * 10) / 10;
 }
