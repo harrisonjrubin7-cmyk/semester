@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   asNumber,
+  clock,
   asPercent,
   blankSheet,
   colIndex,
@@ -111,7 +112,10 @@ describe('what a cell comes to', () => {
   });
 
   it('names an unknown function rather than guessing at it', () => {
-    expect(evaluate(sheet({ A1: '=VLOOKUP(A2,B2,2)' }), 'A1')).toBe('#NAME?');
+    // VLOOKUP used to stand here, as the example of a function the engine did
+    // not have. It has one now, so the example has to be a name no sheet will
+    // ever grow — the assertion is about unknown names, not about that one.
+    expect(evaluate(sheet({ A1: '=FROBNICATE(A2,B2,2)' }), 'A1')).toBe('#NAME?');
     // A whole-column range is not supported, and says so rather than reading
     // as a subtraction of two things that are not numbers.
     expect(evaluate(sheet({ A1: '=SUM(B:C)' }), 'A1')).toBe('#VALUE!');
@@ -352,4 +356,132 @@ describe('an address round-trips', () => {
       expect(parseRef(ref(r, c))).toEqual({ row: r, col: c });
     }
   });
+});
+
+// ── The wider function table ─────────────────────────────────────────────
+//
+// Every expected value below is one Excel produces for the same formula. That
+// is the point of them: a formula engine is only worth having if a student can
+// check their answer against a classmate's spreadsheet and get the same number.
+
+const at = (cells: Record<string, string>, a = 'Z1') => evaluate(cells, a);
+const v = (formula: string, rest: Record<string, string> = {}) => at({ ...rest, Z1: formula });
+
+
+// A gradebook: item, score, weight
+const book = {
+  A1: 'Item', B1: 'Score', C1: 'Weight',
+  A2: 'PS1', B2: '92', C2: '0.15',
+  A3: 'Midterm', B3: '78', C3: '0.25',
+  A4: 'Final', B4: '88', C4: '0.35',
+  A5: 'Paper', B5: '95', C5: '0.25',
+};
+
+describe('lookups', () => {
+  it('VLOOKUP exact', () => expect(v('=VLOOKUP("Final",A2:C5,2)', book)).toBe(88));
+  it('VLOOKUP weight column', () => expect(v('=VLOOKUP("PS1",A2:C5,3)', book)).toBe(0.15));
+  it('VLOOKUP missing is #N/A', () => expect(v('=VLOOKUP("Quiz",A2:C5,2)', book)).toBe('#N/A'));
+  it('VLOOKUP bad index', () => expect(v('=VLOOKUP("PS1",A2:C5,9)', book)).toBe('#REF!'));
+  it('XLOOKUP', () => expect(v('=XLOOKUP("Midterm",A2:A5,B2:B5)', book)).toBe(78));
+  it('XLOOKUP fallback', () => expect(v('=XLOOKUP("Nope",A2:A5,B2:B5,"none")', book)).toBe('none'));
+  it('MATCH', () => expect(v('=MATCH("Final",A2:A5)', book)).toBe(3));
+  it('MATCH missing', () => expect(v('=MATCH("x",A2:A5)', book)).toBe('#N/A'));
+  it('INDEX 2d', () => expect(v('=INDEX(A2:C5,2,2)', book)).toBe(78));
+  it('INDEX 1d', () => expect(v('=INDEX(B2:B5,4)', book)).toBe(95));
+  it('INDEX+MATCH', () => expect(v('=INDEX(B2:B5,MATCH("Paper",A2:A5))', book)).toBe(95));
+  it('HLOOKUP', () => expect(v('=HLOOKUP("Score",B1:C5,3)', book)).toBe(78));
+});
+
+describe('conditional counting', () => {
+  it('COUNTIF >=', () => expect(v('=COUNTIF(B2:B5,">=88")', book)).toBe(3));
+  it('COUNTIF text', () => expect(v('=COUNTIF(A2:A5,"Final")', book)).toBe(1));
+  it('COUNTIF wildcard', () => expect(v('=COUNTIF(A2:A5,"P*")', book)).toBe(2));
+  it('SUMIF over another column', () => expect(v('=SUMIF(B2:B5,">=90",C2:C5)', book)).toBeCloseTo(0.40));
+  it('AVERAGEIF', () => expect(v('=AVERAGEIF(B2:B5,">=88")', book)).toBeCloseTo((92+88+95)/3));
+  it('COUNTIFS two conditions', () => expect(v('=COUNTIFS(B2:B5,">=80",C2:C5,">=0.25")', book)).toBe(2));
+  it('SUMIFS', () => expect(v('=SUMIFS(B2:B5,C2:C5,">=0.25")', book)).toBe(78+88+95));
+
+  /*
+   * The rule a half-finished gradebook depends on. `SUM` reads a blank as
+   * zero; a criterion must not, or every row nobody has been graded on counts
+   * as a row scoring nothing.
+   */
+  it('does not let a blank cell match a criterion', () => {
+    const half = { ...book, B4: '', B5: '' };
+    expect(v('=COUNTIF(B2:B5,">=0")', half)).toBe(2);
+    expect(v('=SUMIF(B2:B5,">=0",C2:C5)', half)).toBeCloseTo(0.4, 10);
+    expect(v('=COUNTIF(B2:B5,"<1000")', half)).toBe(2);
+    expect(v('=COUNTIF(A2:A5,"<>x")', half)).toBe(4);
+  });
+
+  it('counts blanks when blank is what was asked for', () => {
+    expect(v('=COUNTIF(B2:B5,"")', { ...book, B4: '', B5: '' })).toBe(2);
+  });
+});
+
+describe('logic', () => {
+  it('IFS first hit', () => expect(v('=IFS(B2>=90,"A",B2>=80,"B",TRUE,"C")', book)).toBe('A'));
+  it('IFS falls through', () => expect(v('=IFS(B3>=90,"A",B3>=80,"B",TRUE,"C")', book)).toBe('C'));
+  it('IFS no match', () => expect(v('=IFS(1=2,"x")')).toBe('#N/A'));
+  it('IFERROR catches', () => expect(v('=IFERROR(1/0,"safe")')).toBe('safe'));
+  it('IFERROR passes through', () => expect(v('=IFERROR(2+2,"safe")')).toBe(4));
+});
+
+describe('text', () => {
+  it('LEFT', () => expect(v('=LEFT("ECON 1020",4)')).toBe('ECON'));
+  it('RIGHT', () => expect(v('=RIGHT("ECON 1020",4)')).toBe('1020'));
+  it('MID', () => expect(v('=MID("ECON 1020",6,4)')).toBe('1020'));
+  it('SPLIT piece', () => expect(v('=SPLIT("ECON 1020"," ",2)')).toBe('1020'));
+  it('TEXT percent', () => expect(v('=TEXT(0.8734,"0.0%")')).toBe('87.3%'));
+  it('TEXT money', () => expect(v('=TEXT(1234.5,"$#,##0.00")')).toBe('$1,234.50'));
+});
+
+describe('dates', () => {
+  const ctx = clock(Date.UTC(2026, 8, 10, 12, 0, 0));
+  const d = (f: string) => evaluate({ Z1: f }, 'Z1', new Set(), ctx);
+  it('DATE is an Excel serial', () => expect(d('=DATE(2026,9,10)')).toBe(46275));
+  it('DATEDIF days to the final', () => expect(d('=DATEDIF(DATE(2026,9,10),DATE(2026,12,15),"D")')).toBe(96));
+  it('DATEDIF months', () => expect(d('=DATEDIF(DATE(2026,1,15),DATE(2026,9,10),"M")')).toBe(7));
+  it('DATEDIF backwards refuses', () => expect(d('=DATEDIF(DATE(2026,12,1),DATE(2026,1,1),"D")')).toBe('#VALUE!'));
+  it('WEEKDAY', () => expect(d('=WEEKDAY(DATE(2026,9,10))')).toBe(5)); // Thursday
+  it('EOMONTH', () => expect(d('=TEXT(EOMONTH(DATE(2026,9,10),0),"yyyy-mm-dd")')).toBe('2026-09-30'));
+  it('EOMONTH forward', () => expect(d('=TEXT(EOMONTH(DATE(2026,9,10),3),"yyyy-mm-dd")')).toBe('2026-12-31'));
+  it('TEXT month name', () => expect(d('=TEXT(DATE(2026,9,10),"ddd d mmm yyyy")')).toBe('Thu 10 Sep 2026'));
+});
+
+describe('finance', () => {
+  it('PMT on a loan', () => expect(Number(v('=PMT(0.05/12,60,20000)'))).toBeCloseTo(-377.42, 2));
+  it('PMT zero rate', () => expect(v('=PMT(0,10,1000)')).toBe(-100));
+  it('FV of savings', () => expect(Number(v('=FV(0.04,10,-1000,0)'))).toBeCloseTo(12006.11, 2));
+  it('PV', () => expect(Number(v('=PV(0.06,5,0,-1000)'))).toBeCloseTo(747.26, 2));
+  it('NPV matches Excel convention', () =>
+    expect(Number(v('=NPV(0.1,100,200,300)'))).toBeCloseTo(481.59, 2));
+  it('IRR', () => {
+    const cells = { A1: '-1000', A2: '400', A3: '400', A4: '400', Z1: '=IRR(A1:A4)' };
+    expect(Number(at(cells))).toBeCloseTo(0.09701, 4);
+  });
+  it('RATE', () => expect(Number(v('=RATE(60,-377.42,20000)'))).toBeCloseTo(0.05/12, 5));
+});
+
+describe('stats', () => {
+  it('MODE', () => {
+    expect(at({ A1: '3', A2: '5', A3: '5', A4: '9', Z1: '=MODE(A1:A4)' })).toBe(5);
+  });
+  it('MODE with no repeat is #N/A', () => {
+    expect(at({ A1: '1', A2: '2', A3: '3', Z1: '=MODE(A1:A3)' })).toBe('#N/A');
+  });
+  it('CORREL', () => {
+    const cells = { A1:'1',A2:'2',A3:'3',A4:'4', B1:'2',B2:'4',B3:'6',B4:'8', Z1:'=CORREL(A1:A4,B1:B4)' };
+    expect(Number(at(cells))).toBeCloseTo(1, 10);
+  });
+});
+
+describe('nothing that existed changed', () => {
+  it('SUM still sums', () => expect(v('=SUM(B2:B5)', book)).toBe(353));
+  it('weighted gradebook still works', () =>
+    expect(Number(v('=SUMPRODUCT(B2:B5,C2:C5)/SUM(C2:C5)', book))).toBeCloseTo(87.85, 6));
+  it('cycles still caught', () => expect(evaluate({ A1: '=A1+1' }, 'A1')).toBe('#CYCLE!'));
+  it('unknown name still #NAME?', () => expect(v('=FROBNICATE(1)')).toBe('#NAME?'));
+  it('display leaves typed text alone', () => expect(display({ A1: '80%' }, 'A1')).toBe('80%'));
+  it('but evaluates it as a number', () => expect(evaluate({ A1: '80%' }, 'A1')).toBe(0.8));
 });

@@ -28,6 +28,7 @@ import {
   type Sheet as SheetModel,
 } from '../lib/sheet';
 import { fromSheet, sheetFileName, widthsFor, xlsx } from '../lib/xlsx';
+import { canBuild, gradeSheet } from '../lib/gradesheet';
 
 /**
  * A sheet, or a table.
@@ -63,9 +64,16 @@ export function Sheet() {
 }
 
 function Shelf() {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode, catalog } = useStore();
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
+  /*
+   * The courses whose syllabus states weights this app can read. A course
+   * whose grading is prose — "at the instructor's discretion" — is left out
+   * rather than offered a calculator with blank weights in it, which would be
+   * a sheet that looks like it knows something and does not.
+   */
+  const calculable = catalog.courses.filter(canBuild);
 
   return (
     <Page blurb="A grid you can type into and add up. Out as a real Excel file, a CSV, or a table for a document.">
@@ -119,6 +127,48 @@ function Shelf() {
         <ActionButton onClick={() => setPasting(true)} style={{ marginBottom: 'var(--sp-7)' }}>
           Paste a table in
         </ActionButton>
+      )}
+
+      {calculable.length > 0 && (
+        <div style={{ marginBottom: 'var(--sp-7)' }}>
+        <Folding name="What do I need?">
+          <SectionLabel>From your syllabus</SectionLabel>
+          <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-4)' }}>
+            A sheet per course, weighted the way its syllabus weights it, with the scores left for
+            you to fill in. Nothing in it is a grade your university has given you.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+            {calculable.map((course) => (
+              <Blueprint key={course.id} plain style={{ padding: 'var(--sp-5)' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--sp-4)',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 'var(--type-md)' }}>{course.code}</div>
+                    <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>
+                      {course.grading.length}{' '}
+                      {course.grading.length === 1 ? 'component' : 'components'} from the syllabus
+                    </div>
+                  </div>
+                  <ActionButton
+                    onClick={() => {
+                      const { sheet } = gradeSheet(course, state.grades[course.id] ?? '');
+                      dispatch({ type: 'makeSheet', sheet });
+                    }}
+                  >
+                    Build it
+                  </ActionButton>
+                </div>
+              </Blueprint>
+            ))}
+          </div>
+        </Folding>
+        </div>
       )}
 
       {state.sheets.length === 0 ? (
