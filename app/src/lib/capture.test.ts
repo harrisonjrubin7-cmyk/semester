@@ -172,3 +172,94 @@ describe('showing its working', () => {
     expect(said.some((l) => l.includes('No date read'))).toBe(true);
   });
 });
+
+
+describe('a month written however far somebody bothered', () => {
+  /*
+   * The month was read as the whole name or exactly the first three letters,
+   * and "sept" is neither — the alternation matched "sep", then wanted a dot
+   * or a space and found a "t". The commonest abbreviation of the month this
+   * app's own term starts in, in the one box the whole feature exists to make
+   * quick.
+   */
+  it('reads sept', () => {
+    expect(matchDate('sept 18', NOW)?.date).toBe('2026-09-18');
+    expect(matchDate('Sept. 18', NOW)?.date).toBe('2026-09-18');
+    expect(matchDate('ps4 due sept 18 11:59pm', NOW)?.date).toBe('2026-09-18');
+  });
+
+  it('still reads the forms it always did', () => {
+    expect(matchDate('september 18', NOW)?.date).toBe('2026-09-18');
+    expect(matchDate('sep 18', NOW)?.date).toBe('2026-09-18');
+    expect(matchDate('sep. 18', NOW)?.date).toBe('2026-09-18');
+    expect(matchDate('oct 2', NOW)?.date).toBe('2026-10-02');
+    expect(matchDate('jan 20', NOW)?.date).toBe('2027-01-20');
+    expect(matchDate('may 4', NOW)?.date).toBe('2027-05-04');
+  });
+
+  it('reads the whole word back, however long it was written', () => {
+    // Not because of the order of the alternatives — the day that has to
+    // follow forces the engine back through them either way. Listing them
+    // shortest first changes nothing, which is why there is no test for it.
+    expect(matchDate('september 18', NOW)?.word).toBe('september 18');
+    expect(matchDate('sept 18', NOW)?.word).toBe('sept 18');
+    expect(matchDate('sep 18', NOW)?.word).toBe('sep 18');
+  });
+
+  it('will not cut a month to two letters', () => {
+    /*
+     * Two is ambiguous where three is not: "ju" is June and July both, and an
+     * alternation asked to choose would answer whichever it happened to list
+     * first. "ma" is March and May, "no" is November and an ordinary word.
+     */
+    expect(matchDate('ju 4', NOW)).toBeNull();
+    expect(matchDate('ma 4', NOW)).toBeNull();
+    expect(matchDate('no 5', NOW)).toBeNull();
+    expect(matchDate('de 2', NOW)).toBeNull();
+    expect(matchDate('ap 7', NOW)).toBeNull();
+  });
+
+  it('refuses a word that merely starts like a month', () => {
+    // A prefix of the name is the rule, not three letters and anything after.
+    expect(matchDate('sepx 18', NOW)).toBeNull();
+    expect(matchDate('janx 18', NOW)).toBeNull();
+    expect(matchDate('feb 31', NOW)).toBeNull();
+  });
+});
+
+describe('a lone meridiem letter has to be against its hour', () => {
+  /*
+   * A space was allowed before it, so a page reference and a sub-question both
+   * read as times. Both are ordinary things to type in this box.
+   */
+  it('does not read a page reference as an afternoon', () => {
+    expect(matchTime('read ch 4 p 12')).toBeNull();
+    expect(matchTime('ch 4, pp. 100-120')).toBeNull();
+  });
+
+  it('does not read a sub-question as a morning', () => {
+    expect(matchTime('problem 3 a')).toBeNull();
+    expect(matchTime('part 2 a and b')).toBeNull();
+  });
+
+  it('still reads every way a time is actually written', () => {
+    expect(matchTime('5pm')?.time).toBe('5:00 PM');
+    expect(matchTime('5 pm')?.time).toBe('5:00 PM');
+    expect(matchTime('5p')?.time).toBe('5:00 PM');
+    expect(matchTime('9am')?.time).toBe('9:00 AM');
+    expect(matchTime('9 am')?.time).toBe('9:00 AM');
+    expect(matchTime('9a')?.time).toBe('9:00 AM');
+    expect(matchTime('11:59pm')?.time).toBe('11:59 PM');
+    expect(matchTime('12:30 am')?.time).toBe('12:30 AM');
+    expect(matchTime('17:00')?.time).toBe('5:00 PM');
+    expect(matchTime('noon')?.time).toBe('12:00 PM');
+    expect(matchTime('midnight')?.time).toBe('11:59 PM');
+  });
+
+  it('reads a whole line the way somebody types it', () => {
+    const c = capture('econ ps4 sept 18 5pm', COURSES, NOW);
+    expect(c.courseId).toBe('econ');
+    expect(c.date).toBe('2026-09-18');
+    expect(c.time).toBe('5:00 PM');
+  });
+});
