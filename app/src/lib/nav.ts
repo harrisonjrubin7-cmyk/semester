@@ -901,6 +901,27 @@ export function saysFor(d: Destination, c: Capabilities): { label: string; blurb
 }
 
 /**
+ * The same name, for a place with room for about nine characters.
+ *
+ * Two rules that look like one and are not, which is how the launcher shipped
+ * calling Vanderbilt's registrar "Register". `short` abbreviates the
+ * *registry's* label — "Register" for "Registration" — and a school that has
+ * renamed the screen has replaced the thing being abbreviated, so the
+ * abbreviation is of a word nobody at that school uses. `saysFor` wins
+ * wherever it has an opinion; `short` fills in where it does not.
+ *
+ * A school-specific name is not shortened here, deliberately. "YES" needs no
+ * help, and a registrar called "Student Center" is that school's own word for
+ * it — cutting it down would be this file inventing an abbreviation for a
+ * university it has never heard of. `.appicon-name` clamps to two lines, so a
+ * long one wraps rather than breaking the grid.
+ */
+export function shortFor(d: Destination, c: Capabilities): string {
+  const said = saysFor(d, c).label;
+  return said === d.label ? d.short ?? d.label : said;
+}
+
+/**
  * The handful of places somebody actually keeps going back to.
  *
  * Recency above taxonomy. Five shelves fixed "which heading was that under",

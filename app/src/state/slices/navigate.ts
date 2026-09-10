@@ -60,6 +60,9 @@ export function navigate(state: State, action: Action): State | null {
     case 'finder':
       return { ...state, finder: action.open };
 
+    case 'apps':
+      return { ...state, apps: action.open };
+
     case 'go':
       return push(
         action.courseId ? { ...state, guideId: action.courseId } : state,
