@@ -20,6 +20,8 @@
  * readings without knowing it.
  */
 
+import { tooPacked, tooPackedSaid } from "./zips";
+
 /** What the app can actually do something with. */
 const READABLE =
   /\.(pdf|docx?|pptx?|txt|md|markdown|csv|tsv|rtf|png|jpe?g|webp|gif|heic|heif)$/i;
@@ -52,7 +54,7 @@ export const MAX_FILE_BYTES = 40 * 1024 * 1024;
 export const MAX_TOTAL_BYTES = 150 * 1024 * 1024;
 
 export function isZip(file: File): boolean {
-  return /\.zip$/i.test(file.name) || file.type === 'application/zip';
+  return /\.zip$/i.test(file.name) || file.type === "application/zip";
 }
 
 export function readable(name: string): boolean {
@@ -61,32 +63,32 @@ export function readable(name: string): boolean {
 
 /** "chapter-3.pdf" from "readings/week 4/chapter-3.pdf". */
 export function baseName(path: string): string {
-  const parts = path.split('/').filter(Boolean);
+  const parts = path.split("/").filter(Boolean);
   return parts[parts.length - 1] ?? path;
 }
 
 /** A rough MIME type from an extension, since a zip entry carries none. */
 export function typeOf(name: string): string {
-  const ext = /\.([a-z0-9]+)$/i.exec(name)?.[1]?.toLowerCase() ?? '';
+  const ext = /\.([a-z0-9]+)$/i.exec(name)?.[1]?.toLowerCase() ?? "";
   const known: Record<string, string> = {
-    pdf: 'application/pdf',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    doc: 'application/msword',
-    txt: 'text/plain',
-    md: 'text/markdown',
-    markdown: 'text/markdown',
-    csv: 'text/csv',
-    tsv: 'text/tab-separated-values',
-    rtf: 'application/rtf',
-    png: 'image/png',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    webp: 'image/webp',
-    gif: 'image/gif',
-    heic: 'image/heic',
-    heif: 'image/heif',
+    pdf: "application/pdf",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    doc: "application/msword",
+    txt: "text/plain",
+    md: "text/markdown",
+    markdown: "text/markdown",
+    csv: "text/csv",
+    tsv: "text/tab-separated-values",
+    rtf: "application/rtf",
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    webp: "image/webp",
+    gif: "image/gif",
+    heic: "image/heic",
+    heif: "image/heif",
   };
-  return known[ext] ?? 'application/octet-stream';
+  return known[ext] ?? "application/octet-stream";
 }
 
 /**
@@ -97,20 +99,21 @@ export function typeOf(name: string): string {
  * different outcome.
  */
 export function whySkipped(name: string, bytes: number): string | null {
-  if (JUNK.test(name)) return 'not a real file — a zip’s own bookkeeping';
+  if (JUNK.test(name)) return "not a real file — a zip’s own bookkeeping";
   if (!READABLE.test(name)) {
     if (/\.(mp4|mov|avi|mkv|webm|m4v)$/i.test(name)) {
-      return 'video — the model reads neither audio nor video, so there is nothing to do with it';
+      return "video — the model reads neither audio nor video, so there is nothing to do with it";
     }
     if (/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(name)) {
-      return 'audio — record a lecture in the app instead, where it is transcribed live';
+      return "audio — record a lecture in the app instead, where it is transcribed live";
     }
     if (/\.(keynote|key)$/i.test(name)) {
-      return 'a Keynote file — export it as a PDF or a .pptx and it reads';
+      return "a Keynote file — export it as a PDF or a .pptx and it reads";
     }
-    return 'not a kind of file the app can read';
+    return "not a kind of file the app can read";
   }
-  if (bytes > MAX_FILE_BYTES) return `too big — ${Math.round(bytes / 1024 / 1024)}MB`;
+  if (bytes > MAX_FILE_BYTES)
+    return `too big — ${Math.round(bytes / 1024 / 1024)}MB`;
   return null;
 }
 
@@ -118,11 +121,24 @@ export function whySkipped(name: string, bytes: number): string | null {
  * Everything usable inside a zip.
  *
  * fflate unzips in memory, which is why the caps above exist and are checked
- * against the *declared* sizes as entries come out rather than after building
- * every File.
+ * as entries come out rather than after building every File. They bound what
+ * is built, not what unpacking costs — by the time the loop runs, the archive
+ * is already decompressed. The size of the zip itself is checked first, which
+ * is the only point at which that can be bounded; see `lib/zips.ts`.
  */
 export async function unzip(file: File): Promise<Unpacked> {
-  const { unzipSync } = await import('fflate');
+  // Before the unpacking, not after it. The caps below run over entries that
+  // `unzipSync` has already decompressed in full, so they bound what gets
+  // built into `File` objects and not what gets held in memory to do it.
+  if (tooPacked(file)) {
+    throw new Error(
+      tooPackedSaid(
+        file.name,
+        "Unzip it yourself and pick the files you need.",
+      ),
+    );
+  }
+  const { unzipSync } = await import("fflate");
   let entries: Record<string, Uint8Array>;
   try {
     entries = unzipSync(new Uint8Array(await file.arrayBuffer()));
@@ -133,12 +149,12 @@ export async function unzip(file: File): Promise<Unpacked> {
   }
 
   const files: Piece[] = [];
-  const skipped: Unpacked['skipped'] = [];
+  const skipped: Unpacked["skipped"] = [];
   let total = 0;
 
   for (const [path, bytes] of Object.entries(entries)) {
     // A directory entry is a zero-length name ending in a slash.
-    if (path.endsWith('/')) continue;
+    if (path.endsWith("/")) continue;
 
     const why = whySkipped(path, bytes.length);
     if (why) {
@@ -146,19 +162,27 @@ export async function unzip(file: File): Promise<Unpacked> {
       continue;
     }
     if (files.length >= MAX_FILES) {
-      skipped.push({ name: baseName(path), why: `past the first ${MAX_FILES} files` });
+      skipped.push({
+        name: baseName(path),
+        why: `past the first ${MAX_FILES} files`,
+      });
       continue;
     }
     total += bytes.length;
     if (total > MAX_TOTAL_BYTES) {
-      skipped.push({ name: baseName(path), why: 'the zip is larger than a browser tab can unpack' });
+      skipped.push({
+        name: baseName(path),
+        why: "the zip is larger than a browser tab can unpack",
+      });
       continue;
     }
 
     const name = baseName(path);
     files.push({
       name,
-      file: new File([bytes as unknown as BlobPart], name, { type: typeOf(name) }),
+      file: new File([bytes as unknown as BlobPart], name, {
+        type: typeOf(name),
+      }),
     });
   }
 
@@ -174,7 +198,7 @@ export async function unzip(file: File): Promise<Unpacked> {
  */
 export async function gather(picked: File[]): Promise<Unpacked> {
   const files: Piece[] = [];
-  const skipped: Unpacked['skipped'] = [];
+  const skipped: Unpacked["skipped"] = [];
 
   for (const file of picked) {
     if (isZip(file)) {
@@ -183,7 +207,10 @@ export async function gather(picked: File[]): Promise<Unpacked> {
         files.push(...inside.files);
         skipped.push(...inside.skipped);
       } catch (e) {
-        skipped.push({ name: file.name, why: e instanceof Error ? e.message : 'would not open' });
+        skipped.push({
+          name: file.name,
+          why: e instanceof Error ? e.message : "would not open",
+        });
       }
       continue;
     }
@@ -201,6 +228,8 @@ export async function gather(picked: File[]): Promise<Unpacked> {
 /** "4 files · 2 skipped" — the line under the picker. */
 export function tally(got: Unpacked): string {
   const n = got.files.length;
-  const head = n === 0 ? 'Nothing usable' : `${n} file${n === 1 ? '' : 's'}`;
-  return got.skipped.length === 0 ? head : `${head} · ${got.skipped.length} left out`;
+  const head = n === 0 ? "Nothing usable" : `${n} file${n === 1 ? "" : "s"}`;
+  return got.skipped.length === 0
+    ? head
+    : `${head} · ${got.skipped.length} left out`;
 }
