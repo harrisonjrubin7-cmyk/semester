@@ -17,6 +17,8 @@ import {
   loadByCourse,
   nextClass,
   nextExam,
+  nothingYet,
+  outstanding,
   railFor,
   spanOf,
   tasksOn,
@@ -366,6 +368,103 @@ describe('itemsOn and dotsForMonth', () => {
   it('does not confuse the same day of another month or year', () => {
     expect(itemsOn(CAT, NOW, 2026, 9, 9)).toEqual([]);
     expect(itemsOn(CAT, NOW, 2025, 8, 9)).toEqual([]);
+  });
+});
+
+describe('outstanding', () => {
+  const task = (id: string, done = false): PersonalTask => ({
+    id,
+    title: id,
+    date: '2026-09-09',
+    time: '',
+    note: '',
+    done,
+    created: 0,
+    courseId: null,
+  });
+
+  /*
+   * The springboard's one line of summary counted the syllabus alone, so a
+   * launcher with a task on it said "Nothing outstanding." Measured under that
+   * navigation with one task and no courses — and it is the home screen there,
+   * so it is the first sentence the app says.
+   */
+  it('counts what the student wrote down, not only what a syllabus said', () => {
+    expect(outstanding(EMPTY_CATALOG, { done: {}, tasks: [task('t')] })).toBe(1);
+  });
+
+  it('leaves out what has been ticked off, on either side', () => {
+    expect(outstanding(EMPTY_CATALOG, { done: {}, tasks: [task('t', true)] })).toBe(0);
+    const one = CAT.items[0];
+    expect(outstanding(CAT, { done: {}, tasks: [] })).toBe(CAT.items.length);
+    expect(outstanding(CAT, { done: { [one.id]: true }, tasks: [] })).toBe(CAT.items.length - 1);
+  });
+
+  it('adds the two rather than choosing between them', () => {
+    expect(outstanding(CAT, { done: {}, tasks: [task('a'), task('b')] })).toBe(
+      CAT.items.length + 2,
+    );
+  });
+
+  it('is nothing when there is nothing', () => {
+    expect(outstanding(EMPTY_CATALOG, { done: {}, tasks: [] })).toBe(0);
+  });
+});
+
+describe('nothingYet', () => {
+  const task = (id: string): PersonalTask => ({
+    id,
+    title: id,
+    date: '2026-09-09',
+    time: '',
+    note: '',
+    done: false,
+    created: 0,
+    courseId: null,
+  });
+  const appt = (id: string): Appointment => ({
+    id,
+    title: id,
+    date: '2026-09-09',
+    at: 600,
+    time: '',
+    where: '',
+    note: '',
+    created: 0,
+  });
+  const feedEvent = (id: string): FeedEvent => ({
+    id,
+    sourceId: 's',
+    title: id,
+    date: '2026-09-09',
+    at: 600,
+    time: '',
+    where: '',
+    note: '',
+    courseId: null,
+  });
+  const none = { tasks: [], appointments: [], feedEvents: [] };
+
+  /*
+   * `catalog.empty` was the whole test on the calendar and on Today, and both
+   * of those screens show things that do not come from a syllabus. Measured
+   * before the fix, with no courses and one task and one appointment dated
+   * today: "Nothing on the calendar yet" and "Nothing on today yet", on
+   * entries made through this app's own screens.
+   */
+  it('is true only when there is genuinely nothing', () => {
+    expect(nothingYet(EMPTY_CATALOG, none)).toBe(true);
+  });
+
+  it('is false once the student has put something in', () => {
+    expect(nothingYet(EMPTY_CATALOG, { ...none, tasks: [task('t')] })).toBe(false);
+    expect(nothingYet(EMPTY_CATALOG, { ...none, appointments: [appt('a')] })).toBe(false);
+    expect(nothingYet(EMPTY_CATALOG, { ...none, feedEvents: [feedEvent('f')] })).toBe(false);
+  });
+
+  it('is false once there is a syllabus, whatever else there is', () => {
+    expect(nothingYet(CAT, none)).toBe(false);
+    expect(nothingYet(CAT, { ...none, tasks: [task('t')] })).toBe(false);
   });
 });
 

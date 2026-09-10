@@ -35,6 +35,7 @@
 
 import { useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
+import { outstanding } from '../lib/select';
 import { TabGlyph } from '../components/TabIcon';
 import {
   DOCK_KEY,
@@ -263,7 +264,7 @@ export function Springboard() {
   const found = searchable(school.capabilities).filter((s) => matches(s, query));
   const here = pages[at];
 
-  const due = catalog.items.filter((i) => !state.done[i.id]).length;
+  const due = outstanding(catalog, state);
   // Against the dock rather than the tab bar: this layout's own navigation is
   // the dock, and a shortcut to something already one tap away is noise. Same
   // rule as the Me screen, from the same place. See `lib/nav.ts`.
