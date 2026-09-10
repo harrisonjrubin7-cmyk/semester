@@ -550,6 +550,43 @@ describe('an error does not swallow the rest of the expression', () => {
   });
 });
 
+describe('a field with a newline in it', () => {
+  /*
+   * Found by a review of the file reader, and it was here rather than there:
+   * `readTable` split the whole text into lines before looking at quotes, so a
+   * quoted newline cut the field in half and the next column was swallowed
+   * into it. A CSV this app writes hits it the moment a cell holds a note with
+   * a line break — the round trip through its own export was lossy.
+   */
+  it('is one cell, not two rows', () => {
+    expect(readTable('a,b\n"one\ntwo",2\n')).toEqual([
+      ['a', 'b'],
+      ['one\ntwo', '2'],
+    ]);
+  });
+
+  it('does not swallow the column after it', () => {
+    const rows = readTable('a,b,c\n1,"two\nlines",3\n');
+    expect(rows[1]).toEqual(['1', 'two\nlines', '3']);
+  });
+
+  it('leaves every other shape reading as it did', () => {
+    expect(readTable('a,b\n1,2\n')).toEqual([['a', 'b'], ['1', '2']]);
+    expect(readTable('a\tb\n1\t2\n')).toEqual([['a', 'b'], ['1', '2']]);
+    expect(readTable('| a | b |\n|---|---|\n| 1 | 2 |')).toEqual([['a', 'b'], ['1', '2']]);
+    expect(readTable('a,b\n"say ""hi""",2\n')).toEqual([['a', 'b'], ['say "hi"', '2']]);
+    expect(readTable('a,b\n\n\n1,2\n')).toEqual([['a', 'b'], ['1', '2']]);
+  });
+
+  it('round-trips what this app itself writes', () => {
+    const rows = [
+      ['Item', 'Note'],
+      ['PS1', 'first line\nsecond line'],
+    ];
+    expect(readTable(toCsv(rows))).toEqual(rows);
+  });
+});
+
 describe('nothing that existed changed', () => {
   it('SUM still sums', () => expect(v('=SUM(B2:B5)', book)).toBe(353));
   it('weighted gradebook still works', () =>

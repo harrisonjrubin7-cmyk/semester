@@ -43,7 +43,16 @@ export interface Read {
   notes: string[];
 }
 
-/** The five entities an OOXML part can carry. Shared with `extract.ts`'s reader. */
+/**
+ * The named entities an OOXML part can carry, and the numeric ones.
+ *
+ * The numeric references are the half this missed. A line break inside a cell
+ * is written `&#10;` by several writers, and leaving it undecoded imported the
+ * six literal characters instead of a newline. Decimal and hex both, and both
+ * before the `&amp;` pass — after it, a literal `&amp;#10;` in somebody's text
+ * would have become a real newline, which is the same bug pointing the other
+ * way.
+ */
 function entities(text: string): string {
   return text
     .replace(/&lt;/g, '<')
@@ -51,6 +60,16 @@ function entities(text: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
+    .replace(/&#(\d+);/g, (whole, code) => {
+      const n = Number(code);
+      // A reference outside Unicode is not one; leave it as written rather
+      // than throwing in the middle of somebody's spreadsheet.
+      return n >= 0 && n <= 0x10ffff ? String.fromCodePoint(n) : whole;
+    })
+    .replace(/&#x([0-9a-f]+);/gi, (whole, code) => {
+      const n = Number.parseInt(code, 16);
+      return Number.isFinite(n) && n <= 0x10ffff ? String.fromCodePoint(n) : whole;
+    })
     .replace(/&amp;/g, '&');
 }
 
@@ -61,20 +80,40 @@ function siText(block: string): string {
 }
 
 /**
- * The number formats that mean "this is a date".
+ * The number formats that mean "this is a date" — and only those.
  *
  * Excel stores a date as a count of days and a style saying to show it as one,
  * so a reader that ignores styles turns every due date into a five-digit
- * number. The built-in ids below are fixed by the file format; a custom format
- * is a date if its code has a `y`, `d`, or a month `m` in it and no fraction.
+ * number.
+ *
+ * The trap is that the built-in ids do not divide where you would guess. 14 to
+ * 17 are dates and 22 is a date and a time, but **18 to 21 and 45 to 47 are
+ * times** — `h:mm`, `mm:ss`, `[h]:mm:ss` — and a time is a fraction of a day
+ * with no date in it at all. Treating those as dates was measured turning a
+ * cell holding half past midday into `1899-12-30`: the time thrown away and a
+ * date invented in its place, which is the worst of both.
+ *
+ * So a time-formatted cell keeps its number. That reads as `0.5`, which is
+ * unhelpful and honest; the alternative was a date nobody entered.
  */
-const DATE_BUILT_IN = new Set([14, 15, 16, 17, 18, 19, 20, 21, 22, 45, 46, 47]);
+const DATE_BUILT_IN = new Set([14, 15, 16, 17, 22]);
 
-function dateFormats(stylesXml: string): Set<number> {
+/** The built-in date formats that carry a time as well. */
+const DATE_TIME_BUILT_IN = new Set([22]);
+
+function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number> } {
   const dateFmtIds = new Set(DATE_BUILT_IN);
+  const timeFmtIds = new Set(DATE_TIME_BUILT_IN);
   for (const m of stylesXml.matchAll(/<numFmt[^>]*numFmtId="(\d+)"[^>]*formatCode="([^"]*)"/g)) {
+    // Bracketed parts are conditions and locales, quoted parts are literal
+    // text; neither says anything about what the number means.
     const code = entities(m[2]).replace(/\[[^\]]*\]/g, '').replace(/"[^"]*"/g, '');
-    if (/[yd]/i.test(code) || /m{3,}/i.test(code)) dateFmtIds.add(Number(m[1]));
+    const hasDate = /[yd]/i.test(code) || /m{3,}/i.test(code);
+    const hasTime = /[hs]/i.test(code);
+    if (hasDate) {
+      dateFmtIds.add(Number(m[1]));
+      if (hasTime) timeFmtIds.add(Number(m[1]));
+    }
   }
 
   /*
@@ -82,22 +121,52 @@ function dateFormats(stylesXml: string): Set<number> {
    * indirections have to be followed or the set above matches nothing: the
    * cell's `s=` is an index into `cellXfs`, not a format id.
    */
-  const out = new Set<number>();
+  const dates = new Set<number>();
+  const times = new Set<number>();
   const xfs = /<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/.exec(stylesXml);
-  if (!xfs) return out;
+  if (!xfs) return { dates, times };
   let at = 0;
   for (const m of xfs[1].matchAll(/<xf\b[^>]*>/g)) {
     const id = /numFmtId="(\d+)"/.exec(m[0]);
-    if (id && dateFmtIds.has(Number(id[1]))) out.add(at);
+    if (id && dateFmtIds.has(Number(id[1]))) {
+      dates.add(at);
+      if (timeFmtIds.has(Number(id[1]))) times.add(at);
+    }
     at += 1;
   }
-  return out;
+  return { dates, times };
 }
 
-/** A serial back to the day it stands for, as `YYYY-MM-DD`. */
-function isoDate(serial: number): string {
-  const ms = Date.UTC(1899, 11, 30) + Math.round(serial * 86_400_000);
-  return new Date(ms).toISOString().slice(0, 10);
+/**
+ * The two epochs a workbook can count from.
+ *
+ * Excel for Mac counted days from 1904 and the setting survives in files to
+ * this day, as `<workbookPr date1904="1"/>`. A reader that assumes 1900 puts
+ * every date in such a file 1,462 days early — measured, a 2026 due date
+ * imported as 2022 — and nothing about it looks wrong on screen.
+ */
+const EPOCH_1900 = Date.UTC(1899, 11, 30);
+const EPOCH_1904 = Date.UTC(1904, 0, 1);
+
+function epochOf(workbookXml: string): number {
+  return /<workbookPr[^>]*date1904="(1|true)"/i.test(workbookXml) ? EPOCH_1904 : EPOCH_1900;
+}
+
+/**
+ * A serial as the day it stands for, and the time too where the format has one.
+ *
+ * The day comes from the whole part and the time from the fraction, kept
+ * apart: rounding the two together is how an afternoon becomes the next
+ * morning.
+ */
+function isoDate(serial: number, epoch: number, withTime: boolean): string {
+  const days = Math.floor(serial);
+  const date = new Date(epoch + days * 86_400_000).toISOString().slice(0, 10);
+  if (!withTime) return date;
+  const seconds = Math.round((serial - days) * 86_400);
+  const hh = String(Math.floor(seconds / 3600) % 24).padStart(2, '0');
+  const mm = String(Math.floor(seconds / 60) % 60).padStart(2, '0');
+  return `${date} ${hh}:${mm}`;
 }
 
 /** Which worksheet part each tab in the workbook refers to. */
@@ -138,12 +207,21 @@ function worksheetOrder(workbook: string, rels: string): { name: string; part: s
 function readCells(
   xml: string,
   shared: string[],
-  dateStyles: Set<number>,
-): { cells: Record<string, string>; rows: number; cols: number; over: boolean } {
+  styles: { dates: Set<number>; times: Set<number> },
+  epoch: number,
+): {
+  cells: Record<string, string>;
+  rows: number;
+  cols: number;
+  over: boolean;
+  /** Cells that inherited a shared formula and came in as their last value. */
+  frozen: number;
+} {
   const cells: Record<string, string> = {};
   let rows = 0;
   let cols = 0;
   let over = false;
+  let frozen = 0;
 
   for (const m of xml.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
     const attrs = m[1];
@@ -163,9 +241,6 @@ function readCells(
 
     let text = '';
     if (formula && formula[1].trim()) {
-      // A shared formula (`<f t="shared" si="0"/>`) carries no body on the
-      // rows that inherit it; those fall through to the cached value below,
-      // which is why this checks the text rather than the tag.
       text = `=${entities(formula[1]).trim()}`;
     } else if (type === 'inlineStr') {
       text = siText(body);
@@ -174,11 +249,24 @@ function readCells(
     } else if (type === 'b') {
       text = raw?.[1] === '1' ? 'TRUE' : 'FALSE';
     } else if (raw) {
+      /*
+       * A shared formula's followers.
+       *
+       * `<f t="shared" si="0"/>` carries no formula text — only the first cell
+       * of the group has it, and every other row is meant to be derived from
+       * it by shifting the references. Deriving them is real work and easy to
+       * get subtly wrong, so they come in as the value Excel last computed:
+       * correct today, and stale the moment somebody edits a cell it depended
+       * on. That is a trade, so it is counted and said in `notes` rather than
+       * left for somebody to discover in a total that stopped moving.
+       */
+      if (/<f\b/.test(body)) frozen += 1;
+
       const style = Number(/s="(\d+)"/.exec(attrs)?.[1] ?? -1);
       const n = Number(entities(raw[1]));
       text =
-        type === 'n' && dateStyles.has(style) && Number.isFinite(n)
-          ? isoDate(n)
+        type === 'n' && styles.dates.has(style) && Number.isFinite(n)
+          ? isoDate(n, epoch, styles.times.has(style))
           : entities(raw[1]);
     }
 
@@ -188,7 +276,7 @@ function readCells(
     cols = Math.max(cols, where.col + 1);
   }
 
-  return { cells, rows, cols, over };
+  return { cells, rows, cols, over, frozen };
 }
 
 /**
@@ -216,18 +304,21 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
   const shared = [...part('xl/sharedStrings.xml').matchAll(/<si(?:\s[^>]*)?>([\s\S]*?)<\/si>/g)].map(
     (m) => siText(m[1]),
   );
-  const dateStyles = dateFormats(part('xl/styles.xml'));
+  const styles = dateFormats(part('xl/styles.xml'));
+  const epoch = epochOf(workbook);
 
   const tabs = worksheetOrder(workbook, part('xl/_rels/workbook.xml.rels'));
   const sheets: Omit<Sheet, 'id'>[] = [];
   const notes: string[] = [];
   let truncated = false;
+  let stale = 0;
 
   for (const tab of tabs) {
     const xml = part(tab.part);
     if (!xml) continue;
-    const { cells, rows, cols, over } = readCells(xml, shared, dateStyles);
+    const { cells, rows, cols, over, frozen } = readCells(xml, shared, styles, epoch);
     truncated = truncated || over;
+    stale += frozen;
     sheets.push({
       ...blankSheet(tab.name, courseId),
       cells,
@@ -245,6 +336,14 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
   if (truncated) {
     notes.push(
       `Anything past ${MAX_ROWS} rows or ${colIndex('Z') + 1} columns was left out — this app's grid stops there.`,
+    );
+  }
+  if (stale > 0) {
+    notes.push(
+      `${stale} ${stale === 1 ? 'cell was' : 'cells were'} filled down from another cell's formula. ` +
+        'Those came in as the number Excel last worked out, not as a formula, so they will not ' +
+        'move if you change what they were adding up. Retype the formula in the first one and ' +
+        'fill it down again to make them live.',
     );
   }
   notes.push('Charts, pivot tables, colours and cell formats do not come across. The file itself is untouched.');
@@ -266,8 +365,27 @@ export async function fromDelimited(
   const { readTable, fromRows } = await import('./sheet');
   const rows = readTable(await file.text());
   if (rows.length === 0) throw new Error(`${file.name} had no rows in it.`);
+
+  /*
+   * Cut to the grid before building the sheet, not after.
+   *
+   * `fromRows` caps `rows` and `cols` but writes every cell it was given, so a
+   * 205-row file came in with `A201` onwards sitting outside the grid: not
+   * drawn, not editable, and dropped by every export, which reads the grid
+   * rather than the cell map. Silently — the sheet looked complete.
+   */
+  const over = rows.length > MAX_ROWS || rows.some((row) => row.length > MAX_COLS);
+  const cut = rows.slice(0, MAX_ROWS).map((row) => row.slice(0, MAX_COLS));
+
   const title = file.name.replace(/\.(csv|tsv|txt)$/i, '');
-  return { sheets: [{ ...fromRows(title, rows), courseId }], notes: [] };
+  return {
+    sheets: [{ ...fromRows(title, cut), courseId }],
+    notes: over
+      ? [
+          `Anything past ${MAX_ROWS} rows or ${MAX_COLS} columns was left out — this app's grid stops there.`,
+        ]
+      : [],
+  };
 }
 
 /** Which reader a picked file wants, or nothing when it is neither. */

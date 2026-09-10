@@ -13,10 +13,12 @@ function workbook(opts: {
   sheets: { name: string; rows: string[] }[];
   shared?: string[];
   styles?: string;
+  /** Raw XML inside <workbook>, for things like <workbookPr date1904="1"/>. */
+  props?: string;
 }): Uint8Array {
   const files: Record<string, Uint8Array> = {
     'xl/workbook.xml': strToU8(
-      `<?xml version="1.0"?><workbook><sheets>${opts.sheets
+      `<?xml version="1.0"?><workbook>${opts.props ?? ''}<sheets>${opts.sheets
         .map((s, i) => `<sheet name="${s.name}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`)
         .join('')}</sheets></workbook>`,
     ),
@@ -231,5 +233,160 @@ describe('picking the reader', () => {
     expect(readerFor(asFile('a.tsv', ''))).toBe('delimited');
     expect(readerFor(asFile('a.pdf', ''))).toBeNull();
     expect(readerFor(asFile('a.numbers', ''))).toBeNull();
+  });
+});
+
+/*
+ * Seven findings from a review of this file. Six were right; the seventh —
+ * that `Math.round` in `isoDate` pushed an afternoon into the next day — was
+ * not, and the test at the end of this block is the evidence.
+ */
+describe('dates, times, and which is which', () => {
+  const styles =
+    '<styleSheet><numFmts>' +
+    '<numFmt numFmtId="165" formatCode="yyyy-mm-dd"/>' +
+    '<numFmt numFmtId="166" formatCode="[$-409]h:mm AM/PM"/>' +
+    '<numFmt numFmtId="167" formatCode="yyyy-mm-dd hh:mm"/>' +
+    '</numFmts><cellXfs>' +
+    '<xf numFmtId="0"/><xf numFmtId="14"/><xf numFmtId="20"/><xf numFmtId="47"/>' +
+    '<xf numFmtId="165"/><xf numFmtId="166"/><xf numFmtId="167"/><xf numFmtId="22"/>' +
+    '</cellXfs></styleSheet>';
+
+  const cells = async (row: string, props?: string) =>
+    (await fromXlsx(asFile('x.xlsx', workbook({ styles, props, sheets: [{ name: 'S', rows: [row] }] }))))
+      .sheets[0].cells;
+
+  it('keeps a time-formatted cell as a number rather than inventing a date', async () => {
+    // 20 is `h:mm` and 47 is `mmss.0`. Both are times — a fraction of a day
+    // with no date in it — and both used to import as 1899-12-30: the time
+    // thrown away and a date nobody entered put in its place.
+    const c = await cells('<row r="1"><c r="A1" s="2"><v>0.5</v></c><c r="B1" s="3"><v>0.5</v></c></row>');
+    expect(c.A1).toBe('0.5');
+    expect(c.B1).toBe('0.5');
+  });
+
+  it('still reads a real date format as a date', async () => {
+    const c = await cells('<row r="1"><c r="A1" s="1"><v>46275</v></c><c r="B1" s="4"><v>46275</v></c></row>');
+    expect(c.A1).toBe('2026-09-10');
+    expect(c.B1).toBe('2026-09-10');
+  });
+
+  it('treats a custom time-only code as a time', async () => {
+    expect((await cells('<row r="1"><c r="A1" s="5"><v>0.75</v></c></row>')).A1).toBe('0.75');
+  });
+
+  it('keeps the time when the format carries both', async () => {
+    // 22 is `m/d/yy h:mm`, and 167 is a custom date-time. Dropping the time
+    // silently would lose the half of the cell that says when.
+    const c = await cells('<row r="1"><c r="A1" s="7"><v>46275.75</v></c><c r="B1" s="6"><v>46275.75</v></c></row>');
+    expect(c.A1).toBe('2026-09-10 18:00');
+    expect(c.B1).toBe('2026-09-10 18:00');
+  });
+
+  it('counts days from 1904 when the workbook says to', async () => {
+    // Excel for Mac's epoch, still in files today. Assuming 1900 puts every
+    // date 1,462 days early — a 2026 due date importing as 2022.
+    const c = await cells(
+      '<row r="1"><c r="A1" s="1"><v>44813</v></c></row>',
+      '<workbookPr date1904="1"/>',
+    );
+    expect(c.A1).toBe('2026-09-10');
+  });
+
+  it('does NOT push an afternoon into the next day', async () => {
+    // The one finding that was wrong. `Math.round` rounded milliseconds, not
+    // days, so this was always right — and it is still right now that the day
+    // and the time are taken apart.
+    const c = await cells('<row r="1"><c r="A1" s="1"><v>46275.75</v></c></row>');
+    expect(c.A1).toBe('2026-09-10');
+    expect((await cells('<row r="1"><c r="A1" s="1"><v>46275.999</v></c></row>')).A1).toBe('2026-09-10');
+  });
+});
+
+describe('character references', () => {
+  it('decodes the numeric ones, so a line break arrives as a line break', async () => {
+    const bytes = workbook({
+      shared: ['First&#10;Second', '&#x41;lpha'],
+      sheets: [{ name: 'S', rows: ['<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row>'] }],
+    });
+    const { sheets } = await fromXlsx(asFile('e.xlsx', bytes));
+    expect(sheets[0].cells.A1).toBe('First\nSecond');
+    expect(sheets[0].cells.B1).toBe('Alpha');
+  });
+
+  it('leaves an escaped reference alone', async () => {
+    // `&amp;#10;` is somebody's literal text, not a newline. Decoding numeric
+    // references after the &amp; pass would turn it into one.
+    const bytes = workbook({
+      shared: ['a &amp;#10; b'],
+      sheets: [{ name: 'S', rows: ['<row r="1"><c r="A1" t="s"><v>0</v></c></row>'] }],
+    });
+    expect((await fromXlsx(asFile('e.xlsx', bytes))).sheets[0].cells.A1).toBe('a &#10; b');
+  });
+});
+
+describe('a formula filled down', () => {
+  const bytes = workbook({
+    sheets: [
+      {
+        name: 'S',
+        rows: [
+          '<row r="1"><c r="A1"><f t="shared" ref="A1:A2" si="0">B1*2</f><v>2</v></c>' +
+            '<c r="B1"><v>1</v></c></row>',
+          '<row r="2"><c r="A2"><f t="shared" si="0"/><v>4</v></c></row>',
+        ],
+      },
+    ],
+  });
+
+  it('keeps the first cell live and the follower as its last value', async () => {
+    const { sheets } = await fromXlsx(asFile('s.xlsx', bytes));
+    expect(sheets[0].cells.A1).toBe('=B1*2');
+    expect(sheets[0].cells.A2).toBe('4');
+  });
+
+  it('says so, rather than leaving it to be found in a total that stopped moving', async () => {
+    const { notes } = await fromXlsx(asFile('s.xlsx', bytes));
+    expect(notes.join(' ')).toContain('filled down');
+    expect(notes.join(' ')).toContain('will not move');
+  });
+
+  it('says nothing when no cell inherited one', async () => {
+    const plain = workbook({ sheets: [{ name: 'S', rows: ['<row r="1"><c r="A1"><v>1</v></c></row>'] }] });
+    expect((await fromXlsx(asFile('p.xlsx', plain))).notes.join(' ')).not.toContain('filled down');
+  });
+});
+
+describe('a CSV bigger than the grid', () => {
+  const big = Array.from({ length: 205 }, (_, r) =>
+    Array.from({ length: 30 }, (_, c) => `${r}-${c}`).join(','),
+  ).join('\n');
+
+  it('is cut to the grid rather than hiding cells outside it', async () => {
+    // `fromRows` caps rows and cols but writes every cell it is given, so the
+    // overflow used to sit outside the grid: not drawn, not editable, and
+    // dropped by every export — silently, on a sheet that looked complete.
+    const { sheets } = await fromDelimited(asFile('big.csv', big));
+    expect(sheets[0].cells.A201).toBeUndefined();
+    expect(sheets[0].cells.AB1).toBeUndefined();
+    expect(Object.keys(sheets[0].cells)).toHaveLength(200 * 26);
+  });
+
+  it('says what it left out', async () => {
+    expect((await fromDelimited(asFile('big.csv', big))).notes.join(' ')).toContain('left out');
+  });
+
+  it('says nothing about a file that fits', async () => {
+    expect((await fromDelimited(asFile('s.csv', 'a,b\n1,2\n'))).notes).toEqual([]);
+  });
+});
+
+describe('a CSV field with a newline in it', () => {
+  it('survives, instead of being cut in half', async () => {
+    // The round trip through this app's own `toCsv` hit this the moment a cell
+    // held a note with a line break: the field halved and the next column was
+    // swallowed into it.
+    const { sheets } = await fromDelimited(asFile('n.csv', 'a,b\n"one\ntwo",2\n'));
+    expect(sheets[0].cells).toEqual({ A1: 'a', B1: 'b', A2: 'one\ntwo', B2: '2' });
   });
 });

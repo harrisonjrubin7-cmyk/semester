@@ -471,6 +471,9 @@ This is the real gap list — the honest version of §2 of the build prompt.
   lookup. What is still genuinely absent is any *effect* of pinning: there is
   no fill handle, so nothing moves a reference and nothing needs holding still.
 - No named ranges.
+- No fill handle — so a formula filled down in Excel arrives as the values it
+  last had, not as a live formula. The import says so rather than leaving it to
+  be found in a total that stopped moving.
 - No fill handle, no paste-special, no undo/redo inside the grid.
 - No cell formatting at all: number/currency/percent/date formats, bold, fill,
   borders, alignment, wrap, merge.

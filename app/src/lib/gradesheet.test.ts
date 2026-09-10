@@ -166,3 +166,57 @@ describe('the grade calculator', () => {
     expect(canBuild(course([{ what: 'Bonus', pct: '+5% EC' }]))).toBe(false);
   });
 });
+
+describe('a syllabus written in points', () => {
+  const pts = course([
+    { what: 'Problem sets', pct: '50 pts' },
+    { what: 'Final', pct: '150 pts' },
+  ]);
+
+  it('is offered a calculator, which it was not', () => {
+    // "50 pts" states a weight as plainly as "20%" does — against a
+    // denominator the syllabus expects you to add up yourself.
+    expect(canBuild(pts)).toBe(true);
+  });
+
+  it('converts the points to their share of the course', () => {
+    const { sheet, counted } = gradeSheet(pts);
+    expect(sheet.cells.B5).toBe('25');
+    expect(sheet.cells.B6).toBe('75');
+    expect(counted).toBe(2);
+    expect(at(sheet.cells, 'Weights add to')).toBe(100);
+  });
+
+  it('keeps the syllabus’s own wording beside each row', () => {
+    const { sheet } = gradeSheet(pts);
+    expect(sheet.cells.E5).toBe('50 pts');
+  });
+
+  it('answers the question, in points as in percentages', () => {
+    const { sheet } = gradeSheet(pts);
+    const cells = { ...sheet.cells };
+    cells[`C${rowOf(cells, 'Problem sets')}`] = '90';
+    cells[`B${rowOf(cells, 'If you want')}`] = '85';
+    // 90 on a quarter of the course is 22.5 earned; 62.5 needed over the
+    // remaining 75 points is 83.33 on the final.
+    expect(at(cells, 'Earned so far')).toBeCloseTo(22.5, 10);
+    expect(Number(at(cells, 'You need to average'))).toBeCloseTo(83.333, 3);
+  });
+
+  it('leaves a mixed syllabus’s percentages alone', () => {
+    // Percentages and points in one syllabus are two denominators, and
+    // guessing at how they relate would produce a confident wrong number.
+    const mixed = course([
+      { what: 'Essays', pct: '40%' },
+      { what: 'Lab', pct: '30 pts' },
+    ]);
+    const { sheet, unreadable } = gradeSheet(mixed);
+    expect(sheet.cells.B5).toBe('40');
+    expect(sheet.cells[`B${rowOf(sheet.cells, 'Lab')}`]).toBeUndefined();
+    expect(unreadable).toEqual(['Lab']);
+  });
+
+  it('is still not offered to a syllabus that states nothing', () => {
+    expect(canBuild(course([{ what: 'Everything', pct: 'at the instructor’s discretion' }]))).toBe(false);
+  });
+});

@@ -37,7 +37,7 @@
  */
 
 import { blankSheet, colName, type Sheet } from './sheet';
-import { readWeight } from './grades';
+import { asWeights, readWeight } from './grades';
 import type { Course } from './types';
 
 /** Where the fixed parts of the sheet sit, one-based as the grid shows them. */
@@ -65,7 +65,24 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
     cells[`${colName(col)}${row}`] = value;
   };
 
-  const rows = course.grading.map((row) => ({ ...row, ...readWeight(row.pct) }));
+  /*
+   * Points, where that is what the syllabus used.
+   *
+   * "Problem sets — 50 pts" states a weight as plainly as "20%" does; it just
+   * states it against a denominator the syllabus expects you to add up
+   * yourself. `asWeights` does that adding, and only when *no* row states a
+   * percentage — a syllabus mixing the two is talking about two different
+   * denominators, and guessing at how they relate would produce a confident
+   * wrong number. Without this the calculator was simply never offered to a
+   * points-based course, which is a common enough way to write a syllabus.
+   */
+  const read = course.grading.map((row) => readWeight(row.pct));
+  const weights = asWeights(read);
+  const rows = course.grading.map((row, i) => ({
+    ...row,
+    ...read[i],
+    weight: weights[i] === null ? null : Math.round(weights[i]! * 100) / 100,
+  }));
   const main = rows.filter((r) => !r.extra);
   const bonus = rows.filter((r) => r.extra);
   const unreadable = rows.filter((r) => r.weight === null).map((r) => r.what);
@@ -216,7 +233,15 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
   };
 }
 
-/** Whether a course states enough for the calculator to be worth offering. */
+/**
+ * Whether a course states enough for the calculator to be worth offering.
+ *
+ * Through the same `asWeights` the sheet itself uses, so a course whose
+ * syllabus is written in points is offered one — it was not, and the two
+ * answers disagreeing would have been worse than either.
+ */
 export function canBuild(course: Course): boolean {
-  return course.grading.some((row) => !readWeight(row.pct).extra && readWeight(row.pct).weight !== null);
+  const read = course.grading.map((row) => readWeight(row.pct));
+  const weights = asWeights(read);
+  return read.some((row, i) => !row.extra && weights[i] !== null);
 }

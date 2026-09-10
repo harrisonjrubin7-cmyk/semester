@@ -1494,6 +1494,48 @@ export function fromRows(
 // ── Reading a table somebody pasted ──────────────────────────────────────
 
 /** One CSV line, honouring quotes. Shared by the CSV and the auto-detect paths. */
+/**
+ * A delimited text split into records, not lines.
+ *
+ * A newline inside quotes is part of a field — `"line one\nline two",2` is one
+ * record of two cells — and splitting on every newline first cuts it in half.
+ * Measured before this existed, that text came back as
+ * `[["a","b"],["line one"],["line two,2"]]`: the field halved *and* the second
+ * column swallowed into the first, so a column of numbers silently became text.
+ *
+ * It is not a rare shape. A CSV this app writes hits it the moment a cell
+ * holds a note with a line break in it, which means the round trip through its
+ * own export was lossy.
+ */
+function records(text: string): string[] {
+  const out: string[] = [];
+  let record = '';
+  let quoted = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (ch === '"') {
+      // A doubled quote inside a quoted field is an escaped quote, not the end
+      // of one — consume both so the state does not flip.
+      if (quoted && text[i + 1] === '"') {
+        record += '""';
+        i += 1;
+        continue;
+      }
+      quoted = !quoted;
+      record += ch;
+      continue;
+    }
+    if (ch === '\n' && !quoted) {
+      out.push(record);
+      record = '';
+      continue;
+    }
+    record += ch;
+  }
+  out.push(record);
+  return out;
+}
+
 function csvLine(line: string, sep: string): string[] {
   const out: string[] = [];
   let cell = '';
@@ -1530,7 +1572,7 @@ function csvLine(line: string, sep: string): string[] {
  * one that is wrong throughout.
  */
 export function readTable(text: string): string[][] {
-  const lines = text.replace(/\r\n?/g, '\n').split('\n').filter((l) => l.trim() !== '');
+  const lines = records(text.replace(/\r\n?/g, '\n')).filter((l) => l.trim() !== '');
   if (lines.length === 0) return [];
 
   const markdown = lines.filter((l) => /^\s*\|/.test(l)).length >= lines.length - 1;
@@ -1550,6 +1592,8 @@ export function readTable(text: string): string[][] {
 
   const tabs = lines.filter((l) => l.includes('\t')).length;
   const sep = tabs >= lines.length / 2 ? '\t' : ',';
+  // Trimmed per cell, but a newline held inside a quoted field is content and
+  // survives — only the whitespace around the whole cell goes.
   return lines.map((l) => csvLine(l, sep).map((c) => c.trim()));
 }
 
