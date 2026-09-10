@@ -825,6 +825,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           classes: classesToNudge(railFor(catalog, at, state.appointments)),
           registrar: state.registrar,
           bill: nextPayment(state, state.term, at),
+          quiet: state.quiet,
           atRisk: atRiskToday(
             railFor(catalog, at, state.appointments),
             state.attendance,

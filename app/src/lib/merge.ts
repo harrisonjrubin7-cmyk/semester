@@ -279,6 +279,7 @@ export const STRATEGY: Record<string, Strategy> = {
   // the laptop because that is where you first opened the calendar.
   keyOpen: 'theirs',
   accessLeadDays: 'theirs',
+  quiet: 'theirs',
   // Where you have been lately, newest first. Interleaving two devices'
   // histories would make it a list of nowhere in particular.
   recent: 'theirs',

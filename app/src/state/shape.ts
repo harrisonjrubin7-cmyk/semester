@@ -63,6 +63,7 @@ import type { Spent } from '../lib/pace';
 import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
 import type { Aid, Charge, Payment, Plan } from '../lib/bill';
+import type { Quiet } from '../lib/notify';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
@@ -452,6 +453,15 @@ export interface Persisted {
    */
   accessLeadDays: number;
   /**
+   * The hours nothing is allowed to interrupt you in, or nothing.
+   *
+   * Minutes from midnight, and the window wraps midnight because the one
+   * everybody sets does. Null rather than a pair of zeroes for "not set", so
+   * "off" and "quiet from midnight to midnight" cannot be confused — see
+   * `inQuiet` in `lib/notify.ts`.
+   */
+  quiet: Quiet | null;
+  /**
    * When each deadline was ticked, epoch ms.
    *
    * Deliberately a second map rather than a change to `done`, which a dozen
@@ -831,6 +841,24 @@ export const STORAGE_KEY = 'semester.v1';
 /** When this device last agreed with the account copy, as epoch ms. */
 export const SYNCED_KEY = 'semester.synced';
 
+/**
+ * A stored quiet window, made safe to read from.
+ *
+ * Storage does not typecheck, and this pair of numbers decides whether the app
+ * ever speaks again. A window carrying a stray string, a fraction, or a minute
+ * outside the day is not a window, and half-reading one would be worse than
+ * reading none: `inQuiet` would compare against a NaN, which is false for
+ * every minute of the day, and the setting would appear to have quietly turned
+ * itself off.
+ */
+function readQuiet(value: unknown): Quiet | null {
+  if (!value || typeof value !== 'object') return null;
+  const { from, to } = value as { from?: unknown; to?: unknown };
+  const ok = (n: unknown): n is number =>
+    typeof n === 'number' && Number.isInteger(n) && n >= 0 && n < 1440;
+  return ok(from) && ok(to) ? { from, to } : null;
+}
+
 export const DEFAULT_PERSISTED: Persisted = {
   nav: 'tabs',
   done: {},
@@ -941,6 +969,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   balances: [],
   residences: [],
   accessLeadDays: 0,
+  quiet: null,
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -1253,6 +1282,7 @@ export function loadPersisted(): Persisted {
       balances: list(saved.balances),
       residences: list(saved.residences),
       accessLeadDays: saved.accessLeadDays ?? 0,
+      quiet: readQuiet(saved.quiet),
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
       schoolId: typeof saved.schoolId === 'string' ? saved.schoolId : DEFAULT_PERSISTED.schoolId,
@@ -1358,6 +1388,7 @@ export function pickPersisted(state: State): Persisted {
     balances: state.balances,
     residences: state.residences,
     accessLeadDays: state.accessLeadDays,
+    quiet: state.quiet,
     tickedAt: state.tickedAt,
     started: state.started,
     schoolId: state.schoolId,
@@ -1765,6 +1796,7 @@ export type Action =
   | { type: 'dropPayment'; id: string }
   | { type: 'setPlan'; term: string; plan: Plan }
   | { type: 'setAccessLead'; days: number }
+  | { type: 'setQuiet'; quiet: Quiet | null }
   /** Where you live this term, from the housing portal. */
   | { type: 'setResidence'; residence: Omit<Residence, 'id' | 'created'> }
   | { type: 'dropResidence'; id: string }

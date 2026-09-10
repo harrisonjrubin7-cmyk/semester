@@ -101,6 +101,16 @@ interface Source {
    * is decided here is when to say it.
    */
   bill?: { due: string; cents: number } | null;
+  /**
+   * The hours the student asked not to be interrupted in, or nothing.
+   *
+   * Applies to every rule, with no exceptions and none hidden. A class
+   * fifteen minutes away inside the window is suppressed like everything
+   * else — somebody whose quiet hours cover a class has said they are asleep
+   * through it, and an app that decides which of its own rules are important
+   * enough to override the setting is one people stop trusting the setting on.
+   */
+  quiet?: Quiet | null;
 }
 
 /**
@@ -141,6 +151,38 @@ export interface AtRisk {
 /** How long before the class the warning is worth having. */
 export const ATTEND_LEAD = 45;
 
+/**
+ * The hours nothing is allowed to fire in.
+ *
+ * Held as minutes from midnight, and `from === to` means off rather than
+ * "quiet for twenty-four hours". A window of zero length and a window of a
+ * whole day are the same two numbers, and the reading that silences the app
+ * forever is not the one anybody means by setting a start equal to an end.
+ */
+export interface Quiet {
+  from: number;
+  to: number;
+}
+
+/**
+ * Whether a moment falls inside the quiet window.
+ *
+ * The window wraps midnight, which is the whole difficulty and the reason this
+ * is a function with a test rather than `m >= from && m < to` at the call
+ * site: quiet hours are 10pm to 8am for almost everybody who sets them, and
+ * that comparison is false for every minute of it.
+ *
+ * Half-open — the start minute is quiet and the end minute is not — so a
+ * reminder held back by the window fires on the tick that ends it rather than
+ * a minute later.
+ */
+export function inQuiet(minutes: number, quiet: Quiet | null): boolean {
+  if (!quiet) return false;
+  const { from, to } = quiet;
+  if (from === to) return false;
+  return from < to ? minutes >= from && minutes < to : minutes >= from || minutes < to;
+}
+
 const day = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
 /**
@@ -167,6 +209,15 @@ export function dueReminders(
   const out: Reminder[] = [];
   const today = day(now);
   const minutes = now.getHours() * 60 + now.getMinutes();
+
+  /*
+   * Nothing fires inside the quiet window — and nothing is *dropped* by it
+   * either, because `fire` keeps the seen list and an id it has never seen is
+   * still unseen when the window lifts. A reminder whose rule is still true
+   * at eight in the morning arrives at eight. One whose rule was only true at
+   * three does not, which is the setting doing what it was asked to.
+   */
+  if (inQuiet(minutes, src.quiet ?? null)) return out;
   const done = src.done ?? {};
   const left = (i: DatedItem): boolean => !done[i.id];
   // Two different questions, and only one of them is about work still to do.

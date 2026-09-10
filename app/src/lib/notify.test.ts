@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classesToNudge, dueReminders } from './notify';
+import { classesToNudge, dueReminders, inQuiet } from './notify';
 import type { DatedItem } from './types';
 import type { NotifKey } from '../data/misc';
 
@@ -156,6 +156,67 @@ describe('registrar deadlines', () => {
       items: [], classes: [], registrar: sheet,
     });
     expect(out.filter((r) => r.rule === 'term')).toEqual([]);
+  });
+});
+
+describe('quiet hours', () => {
+  const at = (h: number, m = 0) => new Date(2026, 8, 3, h, m);
+  const night = { from: 22 * 60, to: 8 * 60 };
+  const src = { items: [item({ isToday: true })], classes: [], quiet: night };
+
+  // The whole difficulty, and the reason `inQuiet` is a function rather than
+  // `m >= from && m < to` at the call site: that comparison is false for every
+  // minute of the window everybody actually sets.
+  it('wraps midnight', () => {
+    expect(inQuiet(23 * 60, night)).toBe(true);
+    expect(inQuiet(2 * 60, night)).toBe(true);
+    expect(inQuiet(12 * 60, night)).toBe(false);
+  });
+
+  it('is half-open, so a held reminder fires on the tick that ends it', () => {
+    expect(inQuiet(22 * 60, night)).toBe(true);
+    expect(inQuiet(8 * 60, night)).toBe(false);
+    expect(inQuiet(8 * 60 - 1, night)).toBe(true);
+  });
+
+  it('handles a window inside one day as well', () => {
+    const nap = { from: 13 * 60, to: 15 * 60 };
+    expect(inQuiet(14 * 60, nap)).toBe(true);
+    expect(inQuiet(12 * 60, nap)).toBe(false);
+    expect(inQuiet(23 * 60, nap)).toBe(false);
+  });
+
+  // Two readings of the same two numbers, and the one that silences the app
+  // forever is not what anybody means by setting a start equal to an end.
+  it('reads a window that starts when it ends as off, not as all day', () => {
+    const none = { from: 9 * 60, to: 9 * 60 };
+    for (const m of [0, 9 * 60, 9 * 60 + 1, 23 * 60 + 59]) expect(inQuiet(m, none)).toBe(false);
+  });
+
+  it('is off where none is set', () => {
+    expect(inQuiet(3 * 60, null)).toBe(false);
+  });
+
+  it('silences every rule inside the window, with no exception', () => {
+    expect(dueReminders(at(23), ALL, src)).toEqual([]);
+    expect(
+      dueReminders(at(3), ALL, {
+        ...src,
+        classes: [{ label: 'ECON 1020', at: 3 * 60 + 10, where: 'Hall 201' }],
+        registrar: [
+          { id: 'drop-clean', label: 'Drop', iso: '2026-09-10', until: '', cost: '', kind: 'deadline' as const },
+        ],
+        bill: { due: '2026-09-10', cents: 1000 },
+      }),
+    ).toEqual([]);
+  });
+
+  it('says everything again the moment the window lifts', () => {
+    expect(dueReminders(at(8), ALL, src).length).toBeGreaterThan(0);
+  });
+
+  it('changes nothing for somebody who has not set one', () => {
+    expect(dueReminders(at(23), ALL, { items: src.items, classes: [] }).length).toBeGreaterThan(0);
   });
 });
 
