@@ -441,6 +441,20 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean }[] =
   { key: 'appointments', label: 'appointments', array: true },
   { key: 'places', label: 'saved places', array: true },
   { key: 'extraLinks', label: 'your links', array: true },
+  /*
+   * The calendars you subscribed to.
+   *
+   * `backupOf` has always written these and this list has never named them,
+   * so `readBackup` walked straight past: the subscriptions were in the file,
+   * the confirmation did not mention them, and restoring dropped every one.
+   * Measured — a backup holding one feed restored to `feeds: undefined`.
+   *
+   * Which is the failure the comment above this list describes and was meant
+   * to prevent: "One list, so a section added to a backup is automatically a
+   * section a restore warns you about." A section added to `backupOf` and not
+   * to this list is the case it does not cover, and this was it.
+   */
+  { key: 'feeds', label: 'connected calendars', array: true },
   { key: 'grades', label: 'grades', array: false },
   { key: 'reviews', label: 'what you have drilled', array: false },
   { key: 'done', label: 'what you have ticked off', array: false },
@@ -517,9 +531,32 @@ export function backupOf(state: State) {
     reviews: state.reviews,
     done: state.done,
     saved: state.saved,
-    // The addresses only. A feed's token is a credential and a backup that
-    // carries credentials is a liability, not a safety net.
-    feeds: state.feeds.map((f) => ({ id: f.id, name: f.name, url: f.url })),
+    /*
+     * The subscription, and not the last thing it did.
+     *
+     * This wrote `{ id, name, url }` under a note about not carrying a feed's
+     * token — but `FeedSource` has no token and never has; the URL is the
+     * whole credential, and it was already going. What the three fields did
+     * do was leave out `kind`, which decides the label and the icon, so a
+     * feed restored from one of these files would have arrived nameless even
+     * once the restore read them at all.
+     *
+     * `synced`, `status` and `count` are written as never-pulled rather than
+     * carried, because they are facts about a device rather than about a
+     * subscription: a restored phone has genuinely never pulled this feed,
+     * and "last synced in March" on a machine that has never seen it is a
+     * worse answer than "not yet".
+     */
+    feeds: state.feeds.map((f) => ({
+      id: f.id,
+      kind: f.kind,
+      name: f.name,
+      url: f.url,
+      added: f.added,
+      synced: 0,
+      status: '',
+      count: 0,
+    })),
     linkUrls: state.linkUrls,
     extraLinks: state.extraLinks,
     sample: state.sample,
