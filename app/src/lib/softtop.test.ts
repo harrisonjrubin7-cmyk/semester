@@ -260,3 +260,50 @@ describe('an account with something in it', () => {
     expect(softTop('registrar', input()).hero?.figure).toBe('0');
   });
 });
+
+describe("tonight's hero", () => {
+  // It used to headline `state.dayBudget` — the standing figure behind "a day
+  // is heavy past four hours" — as "4 hours to spend on 8 things", while the
+  // screen underneath asked how long you had tonight and planned against its
+  // own answer. Two numbers about the same evening, in one viewport.
+  const course = {
+    course: {
+      id: 'econ', code: 'ECON 1020', name: '', prof: '', email: '', meets: '',
+      room: '', credits: '3', source: '', grading: [], term: '2026FA',
+    },
+    items: [
+      { id: 'a', c: 'econ', title: 'One', kind: 'Problem set', month: 8, day: 7, year: 2026,
+        dueTime: '11:59p', weight: '', where: '', detail: '', quote: '', source: '' },
+      { id: 'b', c: 'econ', title: 'Two', kind: 'Problem set', month: 8, day: 9, year: 2026,
+        dueTime: '11:59p', weight: '', where: '', detail: '', quote: '', source: '' },
+    ],
+    schedule: [],
+    guide: null,
+    planMinutes: '',
+    frameLabel: '',
+  } as unknown as State['courses'][number];
+
+  const hero = (over: Partial<State> = {}) =>
+    softTop('tonight', input(over, [course])).hero;
+
+  it('states no figure in hours, which it cannot know', () => {
+    // The picker on the screen is local to it, so anything in hours up here is
+    // a number the screen below is free to contradict, and did.
+    expect(hero()?.figure).not.toMatch(/hour/);
+    expect(hero()?.foot).not.toMatch(/hour/);
+  });
+
+  it('does not move when the standing day budget does', () => {
+    expect(hero({ dayBudget: 8 })).toEqual(hero({ dayBudget: 1 }));
+  });
+
+  it('counts what is outstanding, which the screen below agrees with', () => {
+    expect(hero()?.figure).toBe('2');
+    expect(hero()?.foot).toBe('things outstanding');
+  });
+
+  it('says thing rather than things when there is one', () => {
+    const one = { ...course, items: [course.items[0]] } as typeof course;
+    expect(softTop('tonight', input({}, [one])).hero?.foot).toBe('thing outstanding');
+  });
+});
