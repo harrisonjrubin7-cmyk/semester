@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dueReminders } from './notify';
+import { classesToNudge, dueReminders } from './notify';
 import type { DatedItem } from './types';
 import type { NotifKey } from '../data/misc';
 
@@ -254,5 +254,41 @@ describe('what has already been ticked off', () => {
     const with_ = dueReminders(THU, ALL, { items: four, classes: [], done: {} });
     const without = dueReminders(THU, ALL, { items: four, classes: [] });
     expect(without.map((r) => r.id)).toEqual(with_.map((r) => r.id));
+  });
+});
+describe('classesToNudge', () => {
+  const block = (over: Record<string, unknown> = {}) =>
+    ({ title: 'PSCI 1104', meta: 'Buttrick 101', at: 885, ...over }) as {
+      title: string; meta: string; at: number; canceled?: boolean; optional?: boolean;
+    };
+
+  it('leaves out a class that is not happening', () => {
+    // Straight out of the shipped PSCI syllabus: two blocks on 3 September are
+    // marked cancelled, and the in-page timer sent a phone
+    // "PSCI 1104 — canceled in 10 min" for one of them.
+    expect(classesToNudge([block({ title: 'PSCI 1104 — canceled', canceled: true })])).toEqual([]);
+  });
+
+  it('leaves out an optional one, which you are never late for', () => {
+    expect(classesToNudge([block({ title: 'Office hours', optional: true })])).toEqual([]);
+  });
+
+  it('keeps the ones that are happening, as label, hour and place', () => {
+    expect(classesToNudge([block(), block({ title: 'Gone', canceled: true })])).toEqual([
+      { label: 'PSCI 1104', at: 885, where: 'Buttrick 101' },
+    ]);
+  });
+
+  it('is what both notification paths use, so they cannot drift apart again', () => {
+    // The push queue filtered these and the in-page timer did not. Two copies
+    // of one rule is how that happened; there is one copy now.
+    const rail = [block(), block({ title: 'Gone', canceled: true }), block({ optional: true })];
+    expect(classesToNudge(rail)).toHaveLength(1);
+  });
+
+  it('warns about nothing when a cancelled class would have started', () => {
+    const rail = [block({ title: 'PSCI 1104 — canceled', at: 9 * 60 + 10, canceled: true })];
+    const out = dueReminders(THU, ALL, { items: [], classes: classesToNudge(rail) });
+    expect(out.some((r) => r.rule === 'class')).toBe(false);
   });
 });
