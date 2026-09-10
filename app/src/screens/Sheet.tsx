@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
-import { ActionButton, EmptyState, SectionLabel } from '../components/ui';
+import { ActionButton, EmptyState, FilePick, SectionLabel } from '../components/ui';
 import { ChevronRight, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
@@ -29,6 +29,7 @@ import {
 } from '../lib/sheet';
 import { fromSheet, sheetFileName, widthsFor, xlsx } from '../lib/xlsx';
 import { canBuild, gradeSheet } from '../lib/gradesheet';
+import { fromDelimited, fromXlsx, readerFor } from '../lib/xlsxin';
 
 /**
  * A sheet, or a table.
@@ -74,6 +75,41 @@ function Shelf() {
    * a sheet that looks like it knows something and does not.
    */
   const calculable = catalog.courses.filter(canBuild);
+  /** What the last import had to leave behind, and anything that went wrong. */
+  const [notes, setNotes] = useState<string[]>([]);
+  const [trouble, setTrouble] = useState('');
+  const [reading, setReading] = useState(false);
+
+  /*
+   * Reading picked files, one after another rather than all at once: a
+   * workbook is parsed on this thread, and three at a time on a phone is a
+   * frozen screen. A file that fails says why and does not stop the rest.
+   */
+  const readFiles = async (picked: File[]) => {
+    setReading(true);
+    setTrouble('');
+    const said: string[] = [];
+    const problems: string[] = [];
+    for (const file of picked) {
+      const kind = readerFor(file);
+      if (!kind) {
+        problems.push(`${file.name} is not a spreadsheet this app can open.`);
+        continue;
+      }
+      try {
+        const read = kind === 'xlsx' ? await fromXlsx(file) : await fromDelimited(file);
+        // Newest last, so a multi-sheet workbook lands in the order its tabs
+        // were in rather than reversed.
+        for (const sheet of read.sheets) dispatch({ type: 'makeSheet', sheet });
+        said.push(...read.notes);
+      } catch (e) {
+        problems.push(e instanceof Error ? e.message : `${file.name} could not be read.`);
+      }
+    }
+    setNotes([...new Set(said)]);
+    setTrouble(problems.join(' '));
+    setReading(false);
+  };
 
   return (
     <Page blurb="A grid you can type into and add up. Out as a real Excel file, a CSV, or a table for a document.">
@@ -124,9 +160,44 @@ function Shelf() {
           </div>
         </Blueprint>
       ) : (
-        <ActionButton onClick={() => setPasting(true)} style={{ marginBottom: 'var(--sp-7)' }}>
+        <ActionButton onClick={() => setPasting(true)} style={{ marginBottom: 'var(--sp-4)' }}>
           Paste a table in
         </ActionButton>
+      )}
+
+      <FilePick
+        accept=".xlsx,.csv,.tsv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        disabled={reading}
+        onPick={(picked) => void readFiles(picked)}
+        style={{ marginBottom: 'var(--sp-5)' }}
+      >
+        {reading ? 'Reading…' : 'Open an Excel file or CSV'}
+      </FilePick>
+
+      {trouble !== '' && (
+        <Blueprint style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-sm)' }}>{trouble}</div>
+        </Blueprint>
+      )}
+
+      {notes.length > 0 && (
+        <Blueprint style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-7)' }}>
+          <SectionLabel>What did not come across</SectionLabel>
+          <ul
+            style={{
+              ...secondLine(),
+              fontSize: 'var(--type-sm)',
+              margin: 0,
+              paddingLeft: 'var(--sp-6)',
+            }}
+          >
+            {notes.map((note) => (
+              <li key={note} style={{ marginTop: 'var(--sp-2)' }}>
+                {note}
+              </li>
+            ))}
+          </ul>
+        </Blueprint>
       )}
 
       {calculable.length > 0 && (
