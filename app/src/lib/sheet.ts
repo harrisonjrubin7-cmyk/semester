@@ -71,7 +71,7 @@ export const MAX_COLS = 26;
  * would hand in, and `VLOOKUP` finding nothing is exactly the moment this file
  * must refuse to be helpful.
  */
-export const ERRORS = ['#DIV/0!', '#REF!', '#NAME?', '#VALUE!', '#CYCLE!', '#N/A'] as const;
+export const ERRORS = ['#DIV/0!', '#REF!', '#NAME?', '#VALUE!', '#CYCLE!', '#N/A', '#DEEP!'] as const;
 export type Err = (typeof ERRORS)[number];
 
 export type Value = number | string | boolean | Err;
@@ -230,6 +230,23 @@ export function isFormula(text: string): boolean {
 }
 
 /**
+ * How long a chain of cells one cell may stand on.
+ *
+ * The cycle check above was written so that runaway recursion becomes an error
+ * in one cell rather than a stack overflow that takes the tab with it. It does
+ * that for a *cycle*. A chain with no cycle in it reaches the same overflow:
+ * measured, 600 links evaluate and 800 throw `RangeError: Maximum call stack
+ * size exceeded` — out of `display`, so the whole screen goes, not one cell.
+ *
+ * And it is well within reach. The grid holds 200×26 cells, so a chain filled
+ * down a column and across is 5,200 long; a running total down one column is
+ * 200, which is why the limit sits at twice that and nowhere near the 600 that
+ * still worked. A cell that says it went too far is a poor answer. A blank
+ * screen is not an answer at all.
+ */
+const DEEPEST = 400;
+
+/**
  * What one cell comes to.
  *
  * `seen` is the path taken to get here, and it is the whole of the cycle
@@ -268,6 +285,9 @@ export function evaluate(
 ): Value {
   const key_ = key(address);
   if (seen.has(key_)) return '#CYCLE!';
+  // Not a cycle, just a chain longer than this can safely stand on. Said in
+  // the cell, because the alternative is the screen.
+  if (seen.size >= DEEPEST) return '#DEEP!';
   const raw = cells[key_];
   if (raw === undefined || raw === '') return '';
   if (!isFormula(raw)) {

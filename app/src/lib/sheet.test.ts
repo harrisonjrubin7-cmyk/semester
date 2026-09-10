@@ -10,6 +10,7 @@ import {
   evaluate,
   expand,
   filled,
+  isError,
   fromRows,
   numericColumns,
   parseRef,
@@ -704,5 +705,47 @@ describe('a range far larger than the grid', () => {
     expect(expand('B2', 'B2')).toEqual(['B2']);
     expect(expand('$A$1', '$A$3')).toEqual(['A1', 'A2', 'A3']);
     expect(display({ A1: '5', A2: '6', Q1: '=SUM(A1:A2)' }, 'Q1')).toBe('11');
+  });
+});
+
+describe('a chain of cells longer than the stack', () => {
+  /*
+   * The cycle check was written so that runaway recursion becomes an error in
+   * one cell rather than a stack overflow that takes the tab with it. It does
+   * that for a cycle. A chain with no cycle in it reached the same overflow:
+   * measured, 600 links evaluated and 800 threw `RangeError`, out of `display`
+   * — so the whole Sheet screen went, not one cell.
+   *
+   * The grid holds 200×26, so a chain filled down a column and across is 5,200
+   * long. This is not a contrived shape.
+   */
+  const chain = (n: number): Cells => {
+    const cells: Cells = { A1: '1' };
+    const addr = (i: number) => ref(i % 200, Math.floor(i / 200));
+    for (let i = 1; i < n; i += 1) cells[addr(i)] = `=${addr(i - 1)}+1`;
+    return cells;
+  };
+  const last = (n: number) => ref((n - 1) % 200, Math.floor((n - 1) / 200));
+
+  it('says so in the cell instead of throwing', () => {
+    const cells = chain(5200);
+    expect(() => display(cells, last(5200))).not.toThrow();
+    expect(display(cells, last(5200))).toBe('#DEEP!');
+  });
+
+  it('is an error like any other, so the screen marks it', () => {
+    // `isError` is what `Sheet.tsx` asks, so being in `ERRORS` is what makes
+    // this render as a fault rather than as somebody's text.
+    expect(isError(evaluate(chain(5200), last(5200)))).toBe(true);
+  });
+
+  it('leaves a chain the length of one column alone', () => {
+    // A running total down a full column is 200 links, and has to keep working.
+    expect(display(chain(200), last(200))).toBe('200');
+  });
+
+  it('still says #CYCLE! for an actual cycle, which is a different fault', () => {
+    expect(display({ A1: '=B1', B1: '=A1' }, 'A1')).toBe('#CYCLE!');
+    expect(display({ A1: '=A1' }, 'A1')).toBe('#CYCLE!');
   });
 });
