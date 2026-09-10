@@ -72,6 +72,32 @@ const loaded = (over: Partial<State> = {}): State =>
         created: 0,
       },
     ],
+    commitments: [
+      {
+        id: 'cm1',
+        name: 'Rowing squad',
+        kind: 'sport',
+        role: 'Member',
+        // A commitment's place travels nowhere in this app — not from the
+        // Activities provider, which sends the name, kind, role and hours a
+        // week, and not from a lookup. It is a secret here so that a change
+        // which starts sending it is caught by the sweep rather than by a
+        // reviewer.
+        where: 'COMMITMENT-PLACE',
+        url: '',
+        note: 'COMMITMENT-NOTE',
+        // Monday, not Sunday. The appointment above sits on Sunday the 20th
+        // and the "a day with nothing on it" tests use Sunday the 27th, so a
+        // weekly commitment on day 0 lands on both and makes one of them a
+        // liar. The 21st is still inside the seven days the timetable clamps
+        // to, which is what the sweep needs of it.
+        days: [1],
+        at: 360,
+        minutes: 180,
+        hours: 9,
+        active: true,
+      },
+    ] as unknown as State['commitments'],
     feeds: [
       { id: 'f1', kind: 'ics', name: 'Their calendar', url: '', added: 0, synced: 0, status: '', count: 1 },
     ] as unknown as State['feeds'],
@@ -144,6 +170,8 @@ describe('what a lookup can never reach', () => {
     'FEED-EVENT-TITLE',
     'FEED-EVENT-PLACE',
     'FEED-EVENT-NOTE',
+    'COMMITMENT-PLACE',
+    'COMMITMENT-NOTE',
     'PERSON-NAME-HERE',
     'SAID-ABOUT-THEM',
     'LETTER-BODY-HERE',
@@ -550,5 +578,61 @@ describe('the assistant\'s day and the app\'s day', () => {
      * it wholesale would have quietly lost these.
      */
     expect(read()).toContain('TASK-WITH-NO-HOUR');
+  });
+});
+
+
+describe('a connected calendar with a lot on it', () => {
+  /*
+   * A line each said the same eleven words over and over to carry one hour,
+   * and `within` drops whole days rather than trimming them. Measured on the
+   * per-line form: forty entries came to 2,743 characters and read fine;
+   * sixty-four passed `ROOM` and the day's whole answer became "(1 more, not
+   * shown — ask again more narrowly.)" with no hours in it at all — worse than
+   * the sentence this branch was written to stop.
+   */
+  const busy = (n: number): Partial<State> =>
+    ({
+      tasks: [],
+      appointments: [],
+      commitments: [],
+      feeds: [{ id: 'fb', kind: 'ics', name: 'Dept', url: '', added: 0, synced: 0, status: '', count: n }],
+      feedEvents: [...Array(n)].map((_, i) => ({
+        id: `b${i}`,
+        sourceId: 'fb',
+        title: `Event ${i}`,
+        date: '2026-09-20',
+        at: 480 + i,
+        time: `${8 + Math.floor(i / 60)}:${String(i % 60).padStart(2, '0')}a`,
+        where: '',
+        note: '',
+        courseId: null,
+      })),
+    }) as unknown as Partial<State>;
+
+  const read = (n: number) =>
+    (ran('read_timetable', { date: '2026-09-20', days: 1 }, busy(n)).result as { text: string }).text;
+
+  it('still answers on a day with sixty-four things on it', () => {
+    const out = read(64);
+    expect(out).not.toContain('not shown');
+    expect(out).toContain('64 things on a calendar they connected');
+    expect(out).toContain('8:00a');
+  });
+
+  it('stays inside its budget however many there are', () => {
+    // The count carries what the list stops carrying, so the length settles
+    // rather than growing with the day.
+    expect(read(200).length).toBeLessThan(400);
+    expect(read(200)).toContain('200 things');
+  });
+
+  it('says one thing as one thing', () => {
+    expect(read(1)).toContain('1 thing on a calendar they connected, at 8:00a');
+  });
+
+  it('counts the ones it stopped listing', () => {
+    const out = read(20);
+    expect(out).toContain('and 8 more');
   });
 });

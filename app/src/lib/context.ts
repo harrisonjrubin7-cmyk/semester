@@ -123,7 +123,7 @@ export const PICK = {
      * many events each feed pulled. Titles, places and notes stay where they
      * are, and moving them is a decision for whoever owns the app.
      */
-    'That a connected calendar has something at an hour on a day, and how many. Never its title, place or note.',
+    'How many things a connected calendar has on a day, and at which hours. Never a title, a place or a note.',
     /*
      * Their clubs, shifts and practices, on the days they run.
      *
