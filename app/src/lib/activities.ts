@@ -202,7 +202,7 @@ export function loadLine(l: Load): string {
 export function blocksOn(
   list: Commitment[],
   date: Date,
-): (Block & { mine?: boolean; kind?: string; minutes?: number })[] {
+): (Block & { mine?: boolean; kind?: string; minutes?: number; where?: string })[] {
   const day = date.getDay();
   return list
     .filter((c) => c.active && c.at !== null && c.days.includes(day))
@@ -211,6 +211,9 @@ export function blocksOn(
       at: c.at as number,
       title: c.name,
       meta: [activityKind(c.kind).label, c.where].filter(Boolean).join(' · '),
+      // Stated rather than left to be read back out of the line above, where
+      // the kind comes first and would be taken for the building.
+      where: c.where,
       c: null,
       mine: true,
       kind: activityKind(c.kind).tint,

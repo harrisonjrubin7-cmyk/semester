@@ -413,13 +413,22 @@ export function railFor(
    * separately and the fourth being forgotten again.
    */
   tasks: PersonalTask[] = [],
-): (Block & { mine?: boolean; kind?: string; minutes?: number; from?: { kind: 'appointment' | 'item' | 'task'; id: string } })[] {
+): (Block & {
+  mine?: boolean;
+  kind?: string;
+  minutes?: number;
+  where?: string;
+  from?: { kind: 'appointment' | 'item' | 'task'; id: string };
+})[] {
   const classes = blocksFor(cat, date);
   const mine = appointmentsOn(appointments, date).map((a) => ({
     time: a.time,
     at: a.at,
     title: a.title,
     meta: a.where || 'Added by you',
+    // The place, said rather than left in the line above: with nowhere
+    // stated that line reads "Added by you", which is not somewhere to walk.
+    where: a.where,
     c: null,
     mine: true,
     kind: a.kind ?? 'other',
@@ -440,6 +449,9 @@ export function railFor(
       at: i.dueAt,
       title: i.title,
       meta: [codeOf(cat, i.c), i.kind].filter(Boolean).join(' · '),
+      // A deadline is an hour, not a room. Its line names the course, which
+      // read as prose sent a walking route to "CORE 2500".
+      where: '',
       c: i.c,
       // Dimmer than a class, like office hours: it is a moment rather than a
       // room you have to be in.
@@ -472,6 +484,8 @@ export function railFor(
       // with no course says only "Task", which is still more than the blank
       // second line it would otherwise draw.
       meta: [t.courseId ? codeOf(cat, t.courseId) : '', 'Task'].filter(Boolean).join(' · '),
+      // As with a deadline: a task is an hour, not a room.
+      where: '',
       c: t.courseId,
       mine: true,
       kind: 'task',
