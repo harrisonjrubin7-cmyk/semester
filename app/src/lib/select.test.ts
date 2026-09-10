@@ -765,6 +765,34 @@ describe('spanOf', () => {
     expect(spanOf('9–10a')).toBe(60);
   });
 
+  it('reads a meridiem spelled out, with or without its stops', () => {
+    /*
+     * The failure this was widened for. `a` and `p` alone is how this app's
+     * own placeholder writes it and almost nothing else: a syllabus writes
+     * "AM", or "p.m.", and the old pattern matched none of them — the letter
+     * would match and then the "M" sat where the dash had to be. Every miss
+     * here is a seventy-five minute class that `lengthOf` calls fifty.
+     */
+    expect(spanOf('MWF 9:30 AM - 10:45 AM')).toBe(75);
+    expect(spanOf('MWF 9:30 am – 10:45 am')).toBe(75);
+    expect(spanOf('TR 1:15 p.m. – 2:30 p.m.')).toBe(75);
+    expect(spanOf('MW 2:00pm-3:15pm')).toBe(75);
+    expect(spanOf('MWF 9 a.m. to 10 a.m.')).toBe(60);
+  });
+
+  it('accepts "to" where a syllabus writes it out', () => {
+    expect(spanOf('TR 1:15 PM to 2:30 PM')).toBe(75);
+    expect(spanOf('TR 2:00pm to 3:15pm')).toBe(75);
+    // A word of its own, and not two letters between two numbers: without the
+    // spaces required, "9to10" reads as an hour-long class.
+    expect(spanOf('9to10')).toBeNull();
+  });
+
+  it('accepts the minus sign a spreadsheet paste leaves behind', () => {
+    // U+2212, which is not any of the three dashes the pattern already took.
+    expect(spanOf('TR 8:00−9:15a')).toBe(75);
+  });
+
   it('says nothing when the line states no range', () => {
     expect(spanOf('MW')).toBeNull();
     expect(spanOf('')).toBeNull();
@@ -782,6 +810,15 @@ describe('lengthOf', () => {
   it('reads the length off the course the block belongs to', () => {
     expect(lengthOf(CAT, { time: '', at: 545, title: '', meta: '', c: 'econ' })).toBe(50);
     expect(lengthOf(CAT, { time: '', at: 795, title: '', meta: '', c: 'psci' })).toBe(75);
+  });
+
+  it('reads a length off a line that spells its meridiem out', () => {
+    // Through the caller, because the fallback is what made a miss invisible:
+    // fifty is a plausible number, so a class read as fifty looks answered.
+    const spelled = buildCatalog([
+      mod(course({ id: 's', code: 'S 100', meets: 'TR 1:15 p.m. – 2:30 p.m.' })),
+    ]);
+    expect(lengthOf(spelled, { time: '', at: 795, title: '', meta: '', c: 's' })).toBe(75);
   });
 
   it('falls back to fifty minutes when the line does not say', () => {

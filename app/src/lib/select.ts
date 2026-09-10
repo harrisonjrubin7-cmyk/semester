@@ -635,9 +635,29 @@ export function lengthOf(cat: Catalog, block: Block): number {
   return mins ?? 50;
 }
 
-/** Minutes between the two times in "1:15–2:30p", or null. */
+/**
+ * Minutes between the two times in "1:15–2:30p", or null.
+ *
+ * Written wide, because this line is prose off a syllabus and there is no
+ * house style for it. The narrow version read `a` and `p` and a dash, which
+ * covers how this app's own placeholder writes it and not much else: "MWF
+ * 9:30 AM - 10:45 AM", "TR 1:15 p.m. – 2:30 p.m.", "MW 2:00pm-3:15pm" and
+ * "TR 1:15 PM to 2:30 PM" all failed to match, and every failure here is a
+ * seventy-five minute class that `lengthOf` then calls fifty.
+ *
+ * So the opening meridiem may spell itself out with or without stops, and the
+ * separator may be any of the dashes a word processor produces — including the
+ * minus sign, which is what a spreadsheet paste leaves behind — or the word
+ * "to", as a word rather than as letters inside one.
+ *
+ * The closing meridiem stays a bare letter. Nothing follows it in the pattern,
+ * so "p.m." matches on its `p` and the stops fall outside the match: spelling
+ * that half out too would be a clause no input could ever exercise.
+ */
 export function spanOf(meets: string): number | null {
-  const m = meets.match(/(\d{1,2})(?::(\d{2}))?\s*([ap])?\s*[–—-]\s*(\d{1,2})(?::(\d{2}))?\s*([ap])?/i);
+  const m = meets.match(
+    /(\d{1,2})(?::(\d{2}))?\s*(?:([ap])\.?m?\.?)?(?:\s*[–—−-]\s*|\s+to\s+)(\d{1,2})(?::(\d{2}))?\s*([ap])?/i,
+  );
   if (!m) return null;
 
   const [, h1, m1, ap1, h2, m2, ap2] = m;
