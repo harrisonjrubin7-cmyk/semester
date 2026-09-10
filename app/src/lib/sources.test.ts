@@ -148,9 +148,43 @@ describe('toBibtex', () => {
     expect(out).toContain('note = {Trounstine, J. (2018). Segregation by Design.');
   });
 
-  it('strips the characters that would break the entry and every one after it', () => {
+  it('escapes the characters that would break the entry, and keeps them', () => {
+    // This used to assert stripping — "Braces and backslashes", with the
+    // author's own characters quietly gone. Escaping renders the same on the
+    // page and does not edit somebody's title to make the export work.
     const out = toBibtex([source({ title: 'Braces {and} back\\slashes' })]);
-    expect(out).toContain('title = {Braces and backslashes}');
+    expect(out).toContain('title = {Braces \\{and\\} back\\textbackslash{}slashes}');
+  });
+
+  it('escapes the five that break LaTeX rather than BibTeX', () => {
+    // `%` is the one that costs most: it opens a comment, so the rest of the
+    // line goes, closing brace included, and usually the entries after it.
+    const out = toBibtex([source({ title: 'The 50% Rule in R&D: $5, #3, cost_benefit' })]);
+    expect(out).toContain('title = {The 50\\% Rule in R\\&D: \\$5, \\#3, cost\\_benefit}');
+  });
+
+  it('escapes a url, where percent-encoding puts one there unasked', () => {
+    const out = toBibtex([source({ url: 'https://x.org/a%20b_c#frag' })]);
+    expect(out).toContain('url = {https://x.org/a\\%20b\\_c\\#frag}');
+  });
+
+  it('escapes the two that render as something else without complaining', () => {
+    const out = toBibtex([source({ title: 'a ~ b and x^2' })]);
+    expect(out).toContain('\\textasciitilde{}');
+    expect(out).toContain('\\textasciicircum{}');
+  });
+
+  it('does not escape the backslashes it just inserted', () => {
+    // One pass, not several: escaping `&` and then escaping backslashes would
+    // turn `\&` into `\textbackslash{}&`.
+    const out = toBibtex([source({ title: 'R&D' })]);
+    expect(out).toContain('title = {R\\&D}');
+    expect(out).not.toContain('textbackslash');
+  });
+
+  it('leaves ordinary words exactly as they were', () => {
+    const out = toBibtex([source({ title: 'Segregation by Design' })]);
+    expect(out).toContain('title = {Segregation by Design}');
   });
 
   it('gives two sources distinct keys', () => {

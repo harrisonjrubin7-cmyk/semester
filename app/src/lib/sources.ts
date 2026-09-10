@@ -150,10 +150,41 @@ export function citeKey(s: Source, taken: Set<string> = new Set()): string {
   return key;
 }
 
+/**
+ * What LaTeX reads as instructions rather than as text.
+ *
+ * This used to strip braces and backslashes and stop, on the grounds that
+ * they are BibTeX's own syntax. True, and not the whole list: a .bib file is
+ * read by LaTeX, and five more characters are instructions to it.
+ *
+ * `%` is the one that costs the most, because it fails quietly. It opens a
+ * comment, so "The 50% Rule" ends the line after "The 50" — taking the
+ * closing brace with it, and the entry, and usually the entries after it. A
+ * URL is worse: percent-encoding puts one in `https://x.org/a%20b` without
+ * anybody typing it.
+ *
+ * `&`, `$`, `#` and `_` each stop the build with an error, which is at least
+ * loud. `~` and `^` render as something else without complaining.
+ *
+ * Escaped rather than stripped, which is the other change here: a title that
+ * really does contain braces keeps them now instead of quietly losing them.
+ */
+const LATEX: Record<string, string> = {
+  '\\': '\\textbackslash{}',
+  '{': '\\{',
+  '}': '\\}',
+  '&': '\\&',
+  '%': '\\%',
+  $: '\\$',
+  '#': '\\#',
+  _: '\\_',
+  '~': '\\textasciitilde{}',
+  '^': '\\textasciicircum{}',
+};
+
 function escapeBib(text: string): string {
-  // Braces and backslashes are BibTeX's own syntax; a stray one in a title
-  // breaks the entry and every entry after it.
-  return text.replace(/[\\{}]/g, '');
+  // One pass, so the backslashes this inserts are not escaped again.
+  return text.replace(/[\\{}&%$#_~^]/g, (ch) => LATEX[ch] ?? ch);
 }
 
 /**
