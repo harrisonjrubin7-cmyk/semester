@@ -322,3 +322,70 @@ for. **`pageerror` was 0 across every check below.**
 **P1–P4** (service worker, PWA install, multi-tab sync) were not driven this
 phase. Nothing in it touches `sw.js`, the manifest or `lib/tabs.ts`, but that is
 an argument, not a test, and it is recorded here as untested rather than passed.
+
+## Run 2 — after Drive, Docs and Slides (2026-09-10)
+
+Commits `3520504` … `63cbaa0`. Executed, not estimated.
+
+### Automated gates
+
+| | Result |
+| --- | --- |
+| **A1** `cd app && npm test` | **PASS** — 267 files, **5,396 passed**, 10 skipped, 0 failed. Baseline 5,212; +184 tests, none dropped. |
+| **A2** `cd app && npm run test:zones` | **PASS** — 5,396 under UTC, `America/Chicago` and `Pacific/Kiritimati`, identical. |
+| **A3** `cd app && npm run lint` | **PASS** — exit 0; nothing reported in any file these phases added or touched. |
+| **A4** `cd app && npm run build` | **PASS** — exit 0, no TypeScript errors, and clean under `VITE_BASE=/semester/`. |
+
+### Bundle
+
+| | Baseline | Now | Result |
+| --- | --- | --- | --- |
+| **B1** entry `index-*.js` | 562,445 B | 562,765 B under `VITE_BASE=/semester/` | **PASS** — +320 B (+0.06%), which is the longer base-path strings. |
+| **B2** editors code-split | — | `Deck-*.js` 38,621 B, `Mine-*.js` 26,777 B, `Sheet-*.js` 21,959 B | **PASS** — every editor in its own lazily-loaded chunk. |
+| **B3** no heavy deps in entry | — | **no dependency added in any phase** | **PASS** — `.xlsx` and `.docx` reading reuse `fflate`; no rich-text, chart or PDF library was added. |
+| **B4** totals | 234 chunks, 6,469,990 B | 236 chunks, 6,527,896 B | **PASS** — +57,906 B (+0.9%), none of it in the entry chunk. |
+
+### Driven in a browser
+
+Headless Chromium at **390×844**, the narrowest phone width the app targets.
+**`pageerror` was 0 in every run below.**
+
+- **C1, C4, C5, C7** — 24 routes swept, including all seven `RETIRED` rows
+  (`#/grades`, `#/weekly`, `#/worked`, `#/check`, `#/chat`, `#/setStorage`,
+  `#/everything`). Every one rendered; **0 problems**. **PASS**
+- **P3** — **0 horizontal overflow** across all 24 at 390 px. **PASS**
+- **D1** — all four `NavMode`s render after a reload: `tabs`, `feed`,
+  `springboard`, `shelves`. **PASS**
+- **E1** — **exercised, not asserted.** An account payload shaped the way one
+  was *before* this branch (no `folders`, no `decks`, original document and
+  sheet shapes) was seeded into `semester.v1` and loaded: the document opened
+  with both blocks, the sheet with its cells *and its formula*, the task, the
+  name and the recorded grade all intact, and the new collections defaulted
+  rather than throwing. **PASS**
+- **F, G, H, I** — each area was driven directly as it was built: the grade
+  calculator answered 83.25 on ECON's real weights; a real `.xlsx` imported at
+  80.8 and moved to 88.8 when a score changed; the Drive auto-created four
+  course folders, found a word that exists only *inside* a file, and
+  round-tripped a file through the bin; a document restored its oldest of three
+  drafts; a deck duplicated, hid a slide, and presented with notes, counter and
+  next-slide preview. **PASS**
+
+### Guards that fired, and were obeyed rather than worked around
+
+Four of the repo's own tests caught real mistakes in this work:
+
+| Guard | What it caught |
+| --- | --- |
+| `components/marks.test.ts` | a repeated `<Blueprint>` missing `plain` |
+| `lib/merge.test.ts` | a new persisted field that had not declared how it syncs |
+| `a11y/motion.test.ts` | a smooth scroll going round the reduced-motion helper |
+| `styles/inset.test.ts` | two `.bare` tap targets over-constrained, so both would have covered the whole slide |
+
+`styles/budget.ts` was regenerated twice; every count went **down**, and none
+of the four new screens or eleven new library files owes anything at all.
+
+### Still not exercised
+
+**P1, P2, P4** — service worker, PWA install and multi-tab sync. Nothing in
+these phases touches `sw.js`, the manifest or `lib/tabs.ts`, but that is an
+argument rather than a test, and it stays recorded as untested.
