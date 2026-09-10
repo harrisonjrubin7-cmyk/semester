@@ -65,6 +65,7 @@ export function Command({ onClose }: { onClose: () => void }) {
         state.updates,
         state.reviews,
         state.appointments,
+        { documents: state.documents, sheets: state.sheets, decks: state.decks },
       ),
     // `state.updates` is searched and was not listed here, so the results
     // could not see material added after the palette opened. `catalog` does
@@ -73,7 +74,20 @@ export function Command({ onClose }: { onClose: () => void }) {
     // making this recompute. Reachable while the palette is open through a
     // sync landing new material, which is rare and is not the same as
     // impossible.
-    [catalog, now, text, state.notes, state.tasks, school.capabilities, state.updates, state.reviews],
+    [
+      catalog,
+      now,
+      text,
+      state.notes,
+      state.tasks,
+      school.capabilities,
+      state.updates,
+      state.reviews,
+      state.appointments,
+      state.documents,
+      state.sheets,
+      state.decks,
+    ],
   );
 
   /*

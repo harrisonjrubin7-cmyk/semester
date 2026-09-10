@@ -163,6 +163,17 @@ describe('openHit', () => {
     ]);
   });
 
+  // Unlike a task, each of these has a screen of its own, so the result opens
+  // the thing rather than the list that holds it.
+  it('opens a made thing on its own screen', () => {
+    expect(sentBy(hit({ kind: 'document', id: 'd1' }))).toEqual([
+      { type: 'openDocument', id: 'd1' },
+    ]);
+    expect(sentBy(hit({ kind: 'sheet', id: 's1' }))).toEqual([{ type: 'openSheet', id: 's1' }]);
+    // `editDeck`, not `openDeck` — that name belongs to the study slideshow.
+    expect(sentBy(hit({ kind: 'deck', id: 'k1' }))).toEqual([{ type: 'editDeck', id: 'k1' }]);
+  });
+
   it('opens a study unit in the mode it was found in', () => {
     expect(
       sentBy(hit({ kind: 'unit', courseId: 'econ', unit: 3, mode: 'cards' })),

@@ -9,8 +9,16 @@
  * remembering where it was put.
  *
  * So this searches deadlines, courses, study units, your notes, your tasks,
- * your appointments — and the app's own screens, so "sync" reaches Account
- * without knowing that Account is where syncing lives.
+ * your appointments, the documents, sheets and decks you have made — and the
+ * app's own screens, so "sync" reaches Account without knowing that Account is
+ * where syncing lives.
+ *
+ * The made things were the last gap and the worst kind: a student writes a
+ * document, comes back a fortnight later, types its name, and gets nothing.
+ * The thing exists, the app made it, and the app cannot find it — which reads
+ * as having lost it. They are searched by title and by their own contents now:
+ * a document by its text, a sheet by what has been typed into its cells, a
+ * deck by its slides.
  *
  * Ranking is deliberately dull and predictable: a match at the start of a name
  * beats a match in the middle, which beats a match in the body text. People
@@ -49,6 +57,23 @@ import type {
   StudyMode,
 } from './types';
 import { liveGuide } from './live';
+import type { Block, Doc } from './document';
+import type { Sheet } from './sheet';
+import type { StoredDeck } from './decks';
+
+/**
+ * What the student has made in the app, as one argument.
+ *
+ * One parameter rather than three, because this signature has grown by one
+ * positional argument five times and the note beside `appointments` below says
+ * what that costs. A caller with none of them passes nothing and is telling
+ * the truth by saying nothing.
+ */
+export interface Made {
+  documents?: Doc[];
+  sheets?: Sheet[];
+  decks?: StoredDeck[];
+}
 
 export type Hit =
   | { kind: 'item'; id: string; title: string; sub: string; tag: string; score: number }
@@ -64,6 +89,9 @@ export type Hit =
       score: number;
     }
   | { kind: 'note'; id: string; title: string; sub: string; tag: string; score: number }
+  | { kind: 'document'; id: string; title: string; sub: string; tag: string; score: number }
+  | { kind: 'sheet'; id: string; title: string; sub: string; tag: string; score: number }
+  | { kind: 'deck'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'task'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'appointment'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'screen'; screen: Screen; title: string; sub: string; tag: string; score: number };
@@ -181,6 +209,50 @@ function score(q: string, name: string, body = '', spelling = name): number {
   return 0;
 }
 
+/**
+ * A block's words, whatever kind of block it is.
+ *
+ * The switch is exhaustive on purpose: adding a block kind to
+ * `lib/document.ts` should fail the typecheck here rather than quietly make
+ * that kind of content unsearchable.
+ */
+function textOfBlock(b: Block): string {
+  switch (b.kind) {
+    case 'heading':
+    case 'text':
+      return b.text;
+    case 'bullets':
+      return b.items.join(' ');
+    case 'quote':
+      return `${b.text} ${b.source}`;
+    case 'table':
+      return `${b.caption} ${b.rows.flat().join(' ')}`;
+    case 'equation':
+      return `${b.caption} ${b.latex}`;
+    case 'break':
+      return '';
+  }
+}
+
+/**
+ * A searchable body, capped.
+ *
+ * `score` runs a substring test over this on every keystroke, and a sheet can
+ * hold ten thousand cells. Twenty thousand characters is a long document and
+ * far more than anybody searches past.
+ */
+const BODY_CAP = 20_000;
+
+function bodyOf(parts: string[]): string {
+  let out = '';
+  for (const part of parts) {
+    if (!part) continue;
+    out += `${part} `;
+    if (out.length >= BODY_CAP) return out.slice(0, BODY_CAP);
+  }
+  return out;
+}
+
 const first = (text: string, n = 80): string =>
   text.length > n ? `${text.slice(0, n).trimEnd()}…` : text;
 
@@ -232,6 +304,10 @@ export function findEverything(
    * that matters in them.
    */
   appointments: Appointment[] = [],
+  /**
+   * Documents, sheets and decks. See `Made` above for why this is one object.
+   */
+  made: Made = {},
 ): HitGroup[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -380,6 +456,73 @@ export function findEverything(
       }
     }
 
+    /*
+     * The things the student made, searched by their contents as well as by
+     * their names.
+     *
+     * A document is found by its text, a sheet by what has been typed into
+     * its cells, and a deck by its slides — because a document called
+     * "Untitled" with three pages of a Rawls essay in it is exactly the one
+     * somebody searches for by typing "Rawls", and it is exactly the one a
+     * title-only search cannot find.
+     *
+     * The body is capped rather than joined whole. `score` is a substring test
+     * over the haystack and a sheet can hold ten thousand cells; a search box
+     * that stutters on the fourth keystroke is worse than one that misses the
+     * ten-thousandth cell of a spreadsheet nobody is looking for by its
+     * contents.
+     */
+    const docHits: Hit[] = [];
+    for (const d of made.documents ?? []) {
+      const body = bodyOf(d.blocks.map(textOfBlock));
+      const s = score(q, d.title || 'Untitled', `${d.subtitle} ${body}`, spell ? d.title : '');
+      if (s) {
+        docHits.push({
+          kind: 'document',
+          id: d.id,
+          title: d.title || 'Untitled document',
+          sub: d.subtitle || first(body.replace(/\s+/g, ' ')) || 'Empty',
+          tag: d.courseId ? (cat.byId[d.courseId]?.code ?? 'Document') : 'Document',
+          score: s,
+        });
+      }
+    }
+
+    const sheetHits: Hit[] = [];
+    for (const sh of made.sheets ?? []) {
+      const typed = Object.values(sh.cells).filter(Boolean);
+      const s = score(q, sh.title || 'Untitled', bodyOf(typed), spell ? sh.title : '');
+      if (s) {
+        sheetHits.push({
+          kind: 'sheet',
+          id: sh.id,
+          title: sh.title || 'Untitled sheet',
+          // What is in it, not how big the grid was dragged: a sheet with four
+          // numbers in a 40×20 grid is four cells of work, and "40 × 20" would
+          // describe the dragging rather than the sheet.
+          sub: typed.length === 0 ? 'Empty' : `${typed.length} ${typed.length === 1 ? 'cell' : 'cells'}`,
+          tag: sh.courseId ? (cat.byId[sh.courseId]?.code ?? 'Sheet') : 'Sheet',
+          score: s,
+        });
+      }
+    }
+
+    const deckHits: Hit[] = [];
+    for (const d of made.decks ?? []) {
+      const body = bodyOf(d.slides.flatMap((sl) => [sl.title, ...sl.bullets]));
+      const s = score(q, d.title || 'Untitled', `${d.subtitle} ${body}`, spell ? d.title : '');
+      if (s) {
+        deckHits.push({
+          kind: 'deck',
+          id: d.id,
+          title: d.title || 'Untitled deck',
+          sub: `${d.slides.length} ${d.slides.length === 1 ? 'slide' : 'slides'}`,
+          tag: d.courseId ? (cat.byId[d.courseId]?.code ?? 'Deck') : 'Deck',
+          score: s,
+        });
+      }
+    }
+
     const screens: Hit[] = [];
     for (const d of DESTINATIONS) {
       if (!allowed(d.screen, caps)) continue;
@@ -400,6 +543,9 @@ export function findEverything(
       { label: 'Your notes', hits: noteHits },
       { label: 'Your tasks', hits: taskHits },
       { label: 'Your appointments', hits: apptHits },
+      { label: 'Documents', hits: docHits },
+      { label: 'Sheets', hits: sheetHits },
+      { label: 'Decks', hits: deckHits },
       { label: 'Places in the app', hits: screens },
     ];
 
