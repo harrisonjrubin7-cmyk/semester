@@ -320,20 +320,42 @@ export function useConversation(): Conversation {
         let sending: Turn[] = next;
         let reply = '';
         /*
-         * Whether the answer stopped because it ran out of room.
+         * Whether the answer stopped rather than ended.
          *
-         * The one stop reason a reader cannot see for themselves. An answer
-         * cut off at the ceiling arrives looking finished — it ends on a full
+         * The stop reasons a reader cannot see for themselves. An answer cut
+         * off at the ceiling arrives looking finished — it ends on a full
          * sentence about as often as not — and the transcript already has a
          * way to say otherwise, the same one Stop uses. Without this the
          * model is later sent a truncated answer as though it were complete
          * and reasons on from a conclusion it never reached.
+         *
+         * `cut` is the same failure arriving a different way: the stream died
+         * mid-answer, which on a phone is the ordinary one. `lib/claude.ts`
+         * could not tell that from an answer that ended until it was taught
+         * to read the closing event, and until then a dropped connection was
+         * drawn here as a finished turn.
          */
         let ranOut = false;
 
         for (let round = 0; ; round += 1) {
           /** Read-only calls this round asked for. See `lib/lookup.ts`. */
           const wants: ToolCall[] = [];
+          /*
+           * Each round answers for itself.
+           *
+           * `ranOut` is set from `onStop`, and `lib/claude.ts` calls that only
+           * when the stream had something to report — a stream that closes
+           * cleanly with nothing to say says nothing, which its own test pins.
+           * So a round cut mid-answer set this true, and a later round that
+           * closed with `message_stop` and no `stop_reason` left it true: the
+           * finished answer was saved `incomplete`, drawn under "Stopped
+           * here.", and sent back to the model as a conclusion it never
+           * reached — when in fact it had.
+           *
+           * A normal `end_turn` round did clear it, which is why this needed a
+           * stream shape rather than an ordinary one to show up.
+           */
+          ranOut = false;
 
           const said = await ask({
             system: systemFor(read.mode, drawn.text),
@@ -396,7 +418,7 @@ export function useConversation(): Conversation {
             },
             signal: flight.abort.signal,
             onStop: (why) => {
-              ranOut = why === 'max_tokens';
+              ranOut = why === 'max_tokens' || why === 'cut';
             },
             onText: (chunk) => {
               // The first word of the round is the end of the pause the

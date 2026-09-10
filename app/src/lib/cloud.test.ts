@@ -53,6 +53,10 @@ function makeDb() {
       auth: {
         getUser: async () => ({ data: { user: { id: 'user-1' } } }),
         signOut: vi.fn(async () => ({ error: null })),
+        resetPasswordForEmail: vi.fn(async (email: string, opts: unknown) => {
+          log.push({ table: 'auth', op: 'resetPasswordForEmail', args: [email, opts] });
+          return { error: errors.auth ? { message: errors.auth } : null };
+        }),
       },
     },
     /** Which tables a delete was sent to, in order. */
@@ -179,6 +183,53 @@ describe('providerOf and accountOf', () => {
     const { PROVIDER_LABEL } = await load();
     expect(Object.keys(PROVIDER_LABEL).sort()).toEqual(['apple', 'azure', 'google']);
     for (const label of Object.values(PROVIDER_LABEL)) expect(label).toBeTruthy();
+  });
+});
+
+describe('sendReset', () => {
+  /*
+   * It returned nothing, and the form only puts a sentence up when it is
+   * given one — so a reset link that went looked exactly like a button that
+   * did nothing, which is the one situation where somebody presses twice.
+   */
+  it('gives the form something to say', async () => {
+    const mod = await load();
+    const said = await mod.sendReset('you@vanderbilt.edu');
+    expect(said).toContain('you@vanderbilt.edu');
+    expect(said).toMatch(/reset link/i);
+  });
+
+  it('does not say whether that address has an account', async () => {
+    // Supabase answers the same way for an address it has never seen, so that
+    // nobody can use this form to find out who has an account here. Saying
+    // more than the call knows would give that back.
+    const mod = await load();
+    expect(await mod.sendReset('nobody@example.edu')).toMatch(/^If /);
+  });
+
+  it('still throws what the service said', async () => {
+    const mod = await load();
+    harness.errors.auth = 'For security purposes, you can only request this after 60 seconds.';
+    await expect(mod.sendReset('you@vanderbilt.edu')).rejects.toThrow(/60 seconds/);
+  });
+});
+
+describe('PROVIDERS_SAID', () => {
+  /*
+   * The paragraph under the buttons named Google and Microsoft by hand, and
+   * Apple was added to the record without it — so the app drew three buttons
+   * under a line describing two. It is generated from the record now, and this
+   * is what stops the two drifting apart again.
+   */
+  it('names every provider the app draws a button for', async () => {
+    const mod = await load();
+    for (const label of Object.values(mod.PROVIDER_LABEL)) {
+      expect(mod.PROVIDERS_SAID).toContain(label);
+    }
+  });
+
+  it('reads as a sentence rather than as a list', async () => {
+    expect((await load()).PROVIDERS_SAID).toBe('Google, Microsoft or Apple');
   });
 });
 

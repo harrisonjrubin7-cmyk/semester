@@ -3,6 +3,7 @@ import {
   FORMATS,
   SYSTEM,
   brief,
+  buildable,
   clock,
   codeIn,
   examFileName,
@@ -18,6 +19,7 @@ import {
   seedCode,
   shapeFor,
   total,
+  usableFormat,
   verdict,
   type Answer,
   type Question,
@@ -348,5 +350,58 @@ describe('the small pieces', () => {
     expect(clock(90)).toBe('1:30');
     expect(clock(5)).toBe('0:05');
     expect(clock(-10)).toBe('0:00');
+  });
+});
+
+describe('the shape actually in force', () => {
+  // `fromGuide` draws multiple choice and short answers off cards and stops
+  // there. The screen has always said so — and then opened with "A real
+  // paper" selected, which is one of the two shapes it says needs written
+  // questions.
+  it('never leaves a shape selected that cannot be built from cards', () => {
+    for (const f of FORMATS) {
+      expect(buildable(usableFormat(f.id, 'cards'), 'cards')).toBe(true);
+    }
+  });
+
+  it('leaves every shape alone once there are written questions', () => {
+    for (const f of FORMATS) {
+      expect(usableFormat(f.id, 'written')).toBe(f.id);
+    }
+  });
+
+  it('keeps a shape that was already buildable', () => {
+    expect(usableFormat('choice', 'cards')).toBe('choice');
+    expect(usableFormat('short', 'cards')).toBe('short');
+  });
+
+  it('moves off the two that are not', () => {
+    expect(usableFormat('mixed', 'cards')).not.toBe('mixed');
+    expect(usableFormat('essay', 'cards')).not.toBe('essay');
+  });
+
+  it('describes the paper it can actually draw', () => {
+    // Measured before this: "A real paper" at thirty minutes promised
+    // 12 choice, 2 short, 1 long — 51 marks — and drew fourteen questions
+    // worth 36, dropping the long answer without a word. "Essay questions"
+    // promised 21 marks and drew 6.
+    const guide: Guide = {
+      code: 'X', name: '', blurb: '', source: '', mastery: 0, audio: false, terms: [],
+      units: [
+        {
+          name: 'Unit 1',
+          mastery: 0,
+          cards: Array.from({ length: 40 }, (_, i) => ({ q: `q${i}`, a: `a${i}` })),
+        },
+      ],
+    };
+    for (const f of FORMATS) {
+      const shape = shapeFor(30, usableFormat(f.id, 'cards'));
+      const drawn = fromGuide(guide, shape, 7);
+      expect(drawn.filter((q) => q.kind === 'choice')).toHaveLength(shape.counts.choice);
+      expect(drawn.filter((q) => q.kind === 'short')).toHaveLength(shape.counts.short);
+      expect(shape.counts.long).toBe(0);
+      expect(total(drawn)).toBe(shape.points);
+    }
   });
 });

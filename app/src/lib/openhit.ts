@@ -27,6 +27,11 @@ export function openHit(hit: Hit, dispatch: (a: Action) => void): void {
       // nowhere.
       dispatch({ type: 'setMineTab', tab: 'tasks' });
       return dispatch({ type: 'go', screen: 'mine' });
+    case 'appointment':
+      // Same as a task, and for the same reason: there is no screen for one
+      // appointment, and the tab that holds them is as close as the app gets.
+      dispatch({ type: 'setMineTab', tab: 'appointments' });
+      return dispatch({ type: 'go', screen: 'mine' });
     case 'screen':
       return dispatch({ type: 'go', screen: hit.screen });
   }

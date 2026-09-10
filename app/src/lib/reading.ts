@@ -48,41 +48,74 @@ export interface Extent {
 const NONE: Extent = { chapters: 0, pages: 0 };
 
 /**
+ * Every chapter a piece of text names, counted once each.
+ *
+ * One pass rather than three tries at the same sentence, because the three
+ * tries disagreed with one another about what a chapter is called. A range
+ * would read "ch 4–6" and a list would read "chs 2, 3", both without a full
+ * stop — but a single chapter insisted on the whole word or the stop, so
+ * "Ch 7" and "chs 7" read as no chapters at all, while "Ch 7–9" read as
+ * three. None of the three could see past the first mention, so "Chapter 7
+ * and Chapter 9" was one chapter, and none of them took `&` for a separator,
+ * so "Ch. 2 & 4" — which is in this app's own shipped syllabus, twice — was
+ * one chapter as well.
+ *
+ * Collected as numbers rather than tallied, so "ch 4–6 and ch 5" is three.
+ */
+function chaptersIn(text: string): number {
+  const named = new Set<number>();
+  // The trailing guard is about a range this could not read. The repeated
+  // group is optional, so "ch 4–1234" would otherwise fall back to matching
+  // "4" alone and report one chapter — a number invented out of a form the
+  // parser did not understand, which is the one thing this file is not
+  // allowed to do. It costs "Ch 4 – 2026 edition", which really is one
+  // chapter and is indistinguishable from "ch 4–1234" in the text; under-
+  // reading falls back to the plain median, and over-reading scales an
+  // estimate somebody plans against.
+  const runs = text.matchAll(
+    /\bch(?:apters?|s)?\.?\s*(\d{1,3}(?:\s*(?:[-–—]|to|through|,|and|&)\s*\d{1,3})*)(?!\s*(?:[-–—]|to|through)\s*\d{4})(?!\d)/gi,
+  );
+  for (const run of runs) {
+    for (const part of run[1].split(/\s*(?:,|and|&)\s*/)) {
+      const span = /^(\d{1,3})\s*(?:[-–—]|to|through)\s*(\d{1,3})$/.exec(part);
+      if (!span) {
+        if (/^\d{1,3}$/.test(part)) named.add(Number(part));
+        continue;
+      }
+      const from = Number(span[1]);
+      const to = Number(span[2]);
+      // Backwards, or longer than any book's worth of one week's reading, is a
+      // form this has not understood. A fabricated size is worse than none.
+      if (to < from || to - from >= 40) continue;
+      for (let n = from; n <= to; n += 1) named.add(n);
+    }
+  }
+  return named.size;
+}
+
+/**
  * How much there is, where the syllabus says.
  *
  * Ranges and lists, in the forms syllabi actually use. Anything else returns
  * nothing rather than a guess — "the Konner piece" states no extent, and
- * inventing one for it would put a fabricated number into an hour total.
+ * inventing one for it would put a fabricated number into an hour total. A
+ * lone page number is one of those: "Smith p. 45" is as likely to be where a
+ * reading starts as the whole of it, so it is left unstated.
  */
 export function extent(item: { title: string; detail?: string }): Extent {
   const text = `${item.title} ${item.detail ?? ''}`;
   const out = { ...NONE };
 
-  // "pp. 112–140", "pages 112-140".
+  // "pp. 112–140", "pages 112-140". A range that starts and ends on the same
+  // page is one page, not nothing.
   const pages = /\bp{1,2}(?:ages?|\.)?\s*(\d{1,4})\s*[-–—]\s*(\d{1,4})\b/i.exec(text);
   if (pages) {
     const from = Number(pages[1]);
     const to = Number(pages[2]);
-    if (to > from && to - from < 2000) out.pages = to - from + 1;
+    if (to >= from && to - from < 2000) out.pages = to - from + 1;
   }
 
-  // "ch. 4–6", "chapters 4 to 6".
-  const range = /\bch(?:apters?|\.|s\.?)?\s*(\d{1,3})\s*(?:[-–—]|to|through)\s*(\d{1,3})\b/i.exec(text);
-  if (range) {
-    const from = Number(range[1]);
-    const to = Number(range[2]);
-    if (to >= from && to - from < 40) out.chapters = to - from + 1;
-  } else {
-    // "chapters 2 and 3", "ch. 2, 3, 5".
-    const list = /\bch(?:apters?|\.|s\.?)?\s*((?:\d{1,3})(?:\s*(?:,|and)\s*\d{1,3})+)/i.exec(text);
-    if (list) {
-      out.chapters = list[1].split(/\s*(?:,|and)\s*/).filter(Boolean).length;
-    } else {
-      const one = /\bch(?:apter|\.)\s*(\d{1,3})\b/i.exec(text);
-      if (one) out.chapters = 1;
-    }
-  }
-
+  out.chapters = chaptersIn(text);
   return out;
 }
 

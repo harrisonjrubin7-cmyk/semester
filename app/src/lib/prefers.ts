@@ -71,7 +71,10 @@ export function usePrefersContrast(): boolean {
  * symptom.
  */
 export function prefersLessMotion(): boolean {
-  return motion()?.matches ?? false;
+  // `?? true`, which is what the paragraph above argues for and what this
+  // answered the other way round. A browser that cannot be asked got a page
+  // sweeping its whole length, for the people the setting exists to protect.
+  return motion()?.matches ?? true;
 }
 
 /**

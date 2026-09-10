@@ -156,6 +156,35 @@ describe('searching it', () => {
     expect(findSetting('colour and type')[0].matched).toBe('Colour and type');
   });
 
+  it('names the occurrence that earned the rank, not the first in the string', () => {
+    /*
+     * Both of these are real keyword lists in this file. The Connected
+     * accounts row lists "onedrive drive"; the Workload row lists "workload
+     * ... load". `startsAWord` walks every occurrence and matched on the
+     * standalone word — then `keyword` took `indexOf` and sliced around the
+     * buried one, so a search for "drive" answered "onedrive". The word this
+     * reports is the word the page lights, and it is shown to the person who
+     * typed the other one.
+     */
+    const drive = findSetting('drive')[0];
+    expect(drive.row.label).toBe('Connected accounts');
+    expect(drive.matched).toBe('drive');
+
+    const load = findSetting('load')[0];
+    expect(load.row.label).toBe('Workload');
+    expect(load.matched).toBe('load');
+  });
+
+  it('still names the longer word when that is the only match there is', () => {
+    // Rank 4: "soft" is in Connected accounts only inside "microsoft", and
+    // there the longer word is the honest answer for why the row is listed.
+    const rows = findSetting('soft');
+    const connected = rows.find((r) => r.row.label === 'Connected accounts');
+    expect(connected?.matched).toBe('microsoft');
+    // And the row that genuinely holds the Soft layout still comes first.
+    expect(rows[0].row.label).toBe('Layout and navigation');
+  });
+
   it('says which section a hit lives in', () => {
     expect(findSetting('gpa')[0].section).toBe('Academic');
   });
