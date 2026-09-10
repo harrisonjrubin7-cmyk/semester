@@ -32,6 +32,7 @@
  * an empty bar at zero.
  */
 
+import { creditHoursOr0 } from './credits';
 import { split, type DoneMap } from './standing';
 import type { DatedItem, Screen } from './types';
 
@@ -110,7 +111,7 @@ export function whereYouStand(input: {
   const ahead = parts.ahead.filter((i) => !done[i.id]).length;
   return {
     courses: courses.length,
-    credits: courses.reduce((sum, c) => sum + (parseFloat(c.credits ?? '') || 0), 0),
+    credits: courses.reduce((sum, c) => sum + creditHoursOr0(c.credits), 0),
     ahead,
     done: parts.done.length,
     late: parts.overdue.length,

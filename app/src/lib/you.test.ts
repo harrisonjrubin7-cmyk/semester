@@ -31,6 +31,29 @@ const item = (patch: { id: string; daysAway: number }): DatedItem => {
   } as DatedItem;
 };
 
+describe('the credits in the headline', () => {
+  it('reads the credit count out of the line, not the first number in it', () => {
+    // "4 courses · 2026 credits" was the header this produced.
+    const where = whereYouStand({
+      courses: [{ credits: '2026 Spring · 3 credits' }, { credits: '9:30 TR, 4 credits' }],
+      items: [],
+      done: {},
+      now: NOW,
+    });
+    expect(where.credits).toBe(7);
+  });
+
+  it('counts a line that states no credits as none', () => {
+    const where = whereYouStand({
+      courses: [{ credits: 'TR 9:30-10:45' }, { credits: '3' }],
+      items: [],
+      done: {},
+      now: NOW,
+    });
+    expect(where.credits).toBe(3);
+  });
+});
+
 describe('term progress', () => {
   it('is null until the deadlines describe a span', () => {
     expect(termProgress([], NOW)).toBeNull();

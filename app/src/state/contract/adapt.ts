@@ -16,6 +16,7 @@ import {
 } from '@semester/contract';
 import type { Persisted } from '../shape';
 import type { CourseModule, Item as AppItem, Note as AppNote } from '../../lib/types';
+import { creditHoursOr0 } from '../../lib/credits';
 import { key as gradeKey } from '../../lib/grades';
 import { LEGACY_TERM } from '../../lib/term';
 
@@ -136,10 +137,16 @@ function course(mod: CourseModule, now: string): Course {
      *
      * The app keeps `credits` as the string it read — "3", "3.0", "Three (3)"
      * — which is right for showing and useless for adding up, and adding up is
-     * what a degree audit does. `parseFloat` takes the leading number and 0 is
-     * the honest answer for a line with none, rather than NaN travelling.
+     * what a degree audit does. 0 is the honest answer for a line with none,
+     * rather than NaN travelling.
+     *
+     * The reading is `lib/credits.ts` rather than `parseFloat`, which takes
+     * the leading number and stops: it read the "Three (3)" this comment
+     * offers as an example as none at all, and "2026 Spring · 3 credits" as
+     * two thousand and twenty-six. What crosses this wire is what a degree
+     * audit divides by.
      */
-    credits: Number.parseFloat(c.credits) || 0,
+    credits: creditHoursOr0(c.credits),
     meetings: meetings(mod),
     grading: grading(mod),
     /*

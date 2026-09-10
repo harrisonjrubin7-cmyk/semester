@@ -25,6 +25,26 @@ const row = (over: Partial<Closing> = {}): Closing => ({
   ...over,
 });
 
+describe('the credit hours a close writes onto the transcript', () => {
+  it('reads past a year in the credits line rather than banking it', () => {
+    /*
+     * This number is persisted and `lib/degree.ts` divides a cumulative GPA
+     * by it. `parseFloat` took the leading number and stopped, so a line
+     * beginning with the term wrote two thousand and twenty-six credit hours
+     * into the transcript — and a cumulative GPA divided by that is gone.
+     */
+    const rows = closing([mod('econ', 'ECON 1020', '2026FA', '2026 Spring · 3 credits')], '2026FA', {});
+    expect(rows[0].hours).toBe(3);
+  });
+
+  it('reads past a time in it, and says nothing rather than reading the clock', () => {
+    const timed = closing([mod('econ', 'ECON 1020', '2026FA', '9:30 TR, 3 credits')], '2026FA', {});
+    expect(timed[0].hours).toBe(3);
+    const only = closing([mod('psci', 'PSCI 1100', '2026FA', 'TR 9:30-10:45')], '2026FA', {});
+    expect(only[0].hours).toBe(0);
+  });
+});
+
 describe('what comes next', () => {
   it('rolls autumn into the following spring', () => {
     expect(nextTerm('2026FA').id).toBe('2027SP');

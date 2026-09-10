@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { COMMON_LETTER, type GradeSystem } from './cutoffs';
 import { standing } from './grades';
-import { creditHours, landingAt, moveLine, moves, termGpa, termLine, missingLine, type Sitting } from './termgpa';
+import { landingAt, moveLine, moves, termGpa, termLine, missingLine, type Sitting } from './termgpa';
 import type { Course, CourseId } from './types';
 
 /** A course with one 50% category graded and one still to come. */
@@ -73,24 +73,6 @@ const GAP: GradeSystem = {
     { label: 'F', min: 0, gpa: 0 },
   ],
 };
-
-describe('creditHours', () => {
-  it('reads the number out of however the syllabus wrote it', () => {
-    expect(creditHours('3 credits')).toBe(3);
-    expect(creditHours('3')).toBe(3);
-    expect(creditHours('1.5 hrs')).toBe(1.5);
-  });
-
-  it('refuses a number that cannot be a credit count', () => {
-    // The failure this guard exists for: a line that starts with a year.
-    expect(creditHours('Fall 2026, TR 9:30')).toBeNull();
-    // A time is the one wrong reading that passes every plausibility test.
-    expect(creditHours('TR 9:30–10:45')).toBeNull();
-    expect(creditHours('')).toBeNull();
-    expect(creditHours(undefined)).toBeNull();
-    expect(creditHours('nought')).toBeNull();
-  });
-});
 
 describe('landingAt', () => {
   it('treats a letter as a cliff and never rounds up to it', () => {

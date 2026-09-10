@@ -40,6 +40,7 @@
  * exactly what every existing store already means.
  */
 
+import { creditHoursOr0 } from './credits';
 import { LEGACY_TERM, readTerm, sortTerms, termId, type Term } from './term';
 import type { CourseModule } from './types';
 import type { Taken } from './degree';
@@ -79,8 +80,10 @@ export interface Closing {
 }
 
 function hoursOf(m: CourseModule): number {
-  const n = parseFloat(m.course.credits ?? '');
-  return Number.isFinite(n) && n > 0 ? n : 0;
+  // `lib/credits.ts`, not `parseFloat`: this number is persisted onto the
+  // transcript and `lib/degree.ts` divides a cumulative GPA by it, so a
+  // lecture slot read as nine hours does not wash out.
+  return creditHoursOr0(m.course.credits);
 }
 
 /** Every course in the term being closed, in the order they read. */

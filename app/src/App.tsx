@@ -10,6 +10,7 @@ import {
   Plus,
   Search as SearchIcon,
 } from './components/Icons';
+import { creditHoursOr0 } from './lib/credits';
 import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
@@ -233,7 +234,7 @@ function useHeader(): { kicker: string; title: string } {
   // user but one, and the kind that quietly says the app is not really yours.
   const n = catalog.courses.length;
   const courseCount = `${n} ${n === 1 ? 'course' : 'courses'}`;
-  const credits = catalog.courses.reduce((sum, c) => sum + (parseFloat(c.credits) || 0), 0);
+  const credits = catalog.courses.reduce((sum, c) => sum + creditHoursOr0(c.credits), 0);
   const load = credits > 0 ? `${courseCount} · ${credits} credits` : courseCount;
 
   switch (state.screen) {
