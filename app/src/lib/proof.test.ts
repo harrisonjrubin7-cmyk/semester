@@ -98,6 +98,21 @@ describe('punctuation and spacing', () => {
     expect(says('Really!!')).toContain('the exclamation mark repeated');
   });
 
+  it('reports two spaces after an address, which is outside it', () => {
+    /*
+     * The double-space rule matches the character *before* the spaces, and
+     * after a URL that character is the last one of the URL. Masking on it
+     * suppressed every real double space that followed an address.
+     */
+    expect(says('See https://example.test  then read on.')).toContain('more than one space');
+    expect(says('Write to a.b@vanderbilt.edu  and wait.')).toContain('more than one space');
+  });
+
+  it('still says nothing about two spaces inside code', () => {
+    // Which is what the mask is for here, and `f.at` is inside it.
+    expect(kinds('Run `a  b` first.')).not.toContain('spacing');
+  });
+
   it('leaves a decimal, a URL, an email and an abbreviation alone', () => {
     expect(proofread('It rose 4.5% — see https://fred.stlouisfed.org/series/x,y')).toEqual([]);
     expect(proofread('Write to a.b@vanderbilt.edu')).toEqual([]);
@@ -204,6 +219,21 @@ describe('long sentences', () => {
     // And what it shows the writer is what they wrote, not the masked copy.
     expect(f.found).toContain('U.S.');
     expect(f.found).not.toContain('_');
+  });
+
+  it('does not swallow the full stop that ends the sentence a URL sits in', () => {
+    /*
+     * `\S+` is greedy and a full stop is not whitespace, so the URL pattern
+     * matched "https://example.test." — the stop included. Masking that hid a
+     * real sentence boundary, and this ran the two sentences together and
+     * called the pair too long: the false alarm the mask exists to prevent.
+     */
+    const half = 'word '.repeat(Math.ceil(LONG_SENTENCE * 0.6)).trim();
+    const two = `${half} at https://example.test. ${half} and that is all.`;
+    expect(longSentences(two)).toEqual([]);
+
+    const byEmail = `${half} to a.b@vanderbilt.edu. ${half} and that is all.`;
+    expect(longSentences(byEmail)).toEqual([]);
   });
 
   it('still ends a sentence at a full stop that is one', () => {

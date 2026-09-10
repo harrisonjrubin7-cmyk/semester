@@ -181,19 +181,47 @@ export const PHRASES: [RegExp, string, string][] = [
  */
 function maskedRanges(text: string): [number, number][] {
   const out: [number, number][] = [];
-  const patterns = [
-    /https?:\/\/\S+/g,
-    /\bwww\.\S+/g,
-    /[\w.+-]+@[\w-]+\.[\w.]+/g,
-    /`[^`]*`/g,
-    /\b\d+(?:[.,]\d+)+\b/g,
+  /*
+   * `greedy` says whether the pattern can swallow the punctuation that ends
+   * the sentence it sits in. The address patterns run to the next space, and a
+   * full stop is not one — see `trimmed`. The others cannot: an abbreviation's
+   * final stop is the abbreviation's own and must stay masked, a decimal's is
+   * between its digits, and backticks close themselves.
+   */
+  const patterns: [RegExp, boolean][] = [
+    [/https?:\/\/\S+/g, true],
+    [/\bwww\.\S+/g, true],
+    [/[\w.+-]+@[\w-]+\.[\w.]+/g, true],
+    [/`[^`]*`/g, false],
+    [/\b\d+(?:[.,]\d+)+\b/g, false],
     // "e.g." and friends: a full stop that does not end a sentence.
-    /\b(?:e\.g|i\.e|etc|vs|Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Ph\.D|U\.S|a\.m|p\.m)\./gi,
+    [/\b(?:e\.g|i\.e|etc|vs|Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Ph\.D|U\.S|a\.m|p\.m)\./gi, false],
   ];
-  for (const re of patterns) {
-    for (const m of text.matchAll(re)) out.push([m.index, m.index + m[0].length]);
+  for (const [re, greedy] of patterns) {
+    for (const m of text.matchAll(re)) {
+      const len = greedy ? trimmed(m[0]).length : m[0].length;
+      if (len > 0) out.push([m.index, m.index + len]);
+    }
   }
   return out;
+}
+
+/**
+ * The match without the sentence punctuation it happened to swallow.
+ *
+ * `\S+` is greedy and a full stop is not whitespace, so "See
+ * https://example.test. Next one." matched the URL *and the stop that ends the
+ * sentence*, and "a.b@vanderbilt.edu." did the same. Masking that stop hides a
+ * real sentence boundary: `longSentences` then runs two sentences together and
+ * can call the pair too long, which is the false alarm this mask exists to
+ * prevent rather than cause.
+ *
+ * Only from the end, and only punctuation that ends a sentence or a clause. A
+ * stop inside an address — the one in `.edu` or in `fred.stlouisfed.org` — has
+ * something after it and is left alone.
+ */
+function trimmed(match: string): string {
+  return match.replace(/[.,;:!?]+$/, '');
 }
 
 function inside(ranges: [number, number][], at: number): boolean {
@@ -307,18 +335,21 @@ export function proofread(text: string): Finding[] {
 
   // Two spaces between words. Harmless in a typewriter's world and visible in
   // a proportional one, which is every place this app puts text.
+  // Deliberately without a trigger position, where the capital rule has one:
+  // this match *spans* a boundary, and the character before the spaces can be
+  // the last one of a URL. Passing it suppressed a real double space after
+  // every address. What the finding is about is the whitespace, and `f.at`
+  // already points at it — so two spaces inside `code like  this` are still
+  // masked, and two spaces after an address are still reported.
   for (const m of text.matchAll(/\S(  +)\S/g)) {
-    add(
-      {
-        at: m.index + 1,
-        len: m[1].length,
-        kind: 'spacing',
-        found: m[1],
-        says: 'more than one space',
-        fix: ' ',
-      },
-      m.index,
-    );
+    add({
+      at: m.index + 1,
+      len: m[1].length,
+      kind: 'spacing',
+      found: m[1],
+      says: 'more than one space',
+      fix: ' ',
+    });
   }
 
   for (const m of text.matchAll(/([!?,;:])\1+/g)) {
