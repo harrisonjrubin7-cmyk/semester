@@ -519,12 +519,19 @@ export function parts(deck: Deck): Record<string, string> {
   out['ppt/presentation.xml'] =
     `${HEAD}<p:presentation ${NS} saveSubsetFonts="1">` +
     '<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>' +
-    '<p:sldIdLst>' +
-    slides.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 2}"/>`).join('') +
-    '</p:sldIdLst>' +
+    /*
+     * Order is part of the schema here, not a matter of taste.
+     * `CT_Presentation` is a sequence — masters, then notes master, then
+     * handout master, then the slides — and a `notesMasterIdLst` written after
+     * `sldIdLst` makes the part invalid. Office repairs an invalid
+     * presentation, and what it drops in the repair is the notes.
+     */
     (anyNotes
       ? `<p:notesMasterIdLst><p:notesMasterId r:id="rId${slides.length + 3}"/></p:notesMasterIdLst>`
       : '') +
+    '<p:sldIdLst>' +
+    slides.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 2}"/>`).join('') +
+    '</p:sldIdLst>' +
     `<p:sldSz cx="${W}" cy="${H}"/><p:notesSz cx="${H}" cy="${W}"/></p:presentation>`;
 
   out['ppt/slideMasters/slideMaster1.xml'] = MASTER;

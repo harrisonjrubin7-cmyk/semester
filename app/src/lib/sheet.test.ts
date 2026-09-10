@@ -622,6 +622,42 @@ describe('a quote that is an inch mark', () => {
   });
 });
 
+describe('a cell holding TRUE or FALSE', () => {
+  /*
+   * `IF(A1,1,2)` against a cell reading FALSE took the *yes* branch: the
+   * string went to `number`, came back `#VALUE!`, and `#VALUE! !== 0` is true.
+   * A wrong branch rather than an error — and it arrived from every imported
+   * spreadsheet, where a boolean column is ordinary.
+   */
+  it('reads as the boolean it is', () => {
+    expect(evaluate({ A1: 'TRUE' }, 'A1')).toBe(true);
+    expect(evaluate({ A1: 'FALSE' }, 'A1')).toBe(false);
+    expect(evaluate({ A1: 'false' }, 'A1')).toBe(false);
+    expect(evaluate({ A1: '  TRUE  ' }, 'A1')).toBe(true);
+  });
+
+  it('takes the branch it should', () => {
+    expect(v('=IF(A1,1,2)', { A1: 'FALSE' })).toBe(2);
+    expect(v('=IF(A1,1,2)', { A1: 'TRUE' })).toBe(1);
+    expect(v('=AND(A1,B1)', { A1: 'TRUE', B1: 'FALSE' })).toBe(false);
+    expect(v('=NOT(A1)', { A1: 'FALSE' })).toBe(true);
+  });
+
+  it('counts as one and zero in arithmetic, as a boolean does', () => {
+    expect(v('=A1+A2', { A1: 'TRUE', A2: 'TRUE' })).toBe(2);
+    expect(v('=SUM(A1:A2)', { A1: 'TRUE', A2: 'FALSE' })).toBe(1);
+  });
+
+  it('still shows the word that was typed', () => {
+    expect(display({ A1: 'TRUE' }, 'A1')).toBe('TRUE');
+  });
+
+  it('leaves an ordinary word alone', () => {
+    expect(evaluate({ A1: 'Truelove' }, 'A1')).toBe('Truelove');
+    expect(evaluate({ A1: 'Midterm' }, 'A1')).toBe('Midterm');
+  });
+});
+
 describe('nothing that existed changed', () => {
   it('SUM still sums', () => expect(v('=SUM(B2:B5)', book)).toBe(353));
   it('weighted gradebook still works', () =>

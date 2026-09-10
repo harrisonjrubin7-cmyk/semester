@@ -299,3 +299,19 @@ describe('the notes master', () => {
     expect(files['[Content_Types].xml']).not.toContain('notesMaster');
   });
 });
+
+describe('the order of presentation.xml', () => {
+  it('puts the notes master before the slide list, as the schema requires', () => {
+    // CT_Presentation is a sequence. A notesMasterIdLst after sldIdLst makes
+    // the part invalid, Office repairs it, and what the repair drops is the
+    // notes — the very thing it is there for.
+    const xml = parts({
+      title: 'T',
+      subtitle: '',
+      slides: [{ title: 'A', bullets: [], notes: 'Say this.' }],
+    })['ppt/presentation.xml'];
+    expect(xml.indexOf('<p:notesMasterIdLst>')).toBeGreaterThan(xml.indexOf('<p:sldMasterIdLst>'));
+    expect(xml.indexOf('<p:notesMasterIdLst>')).toBeLessThan(xml.indexOf('<p:sldIdLst>'));
+    expect(xml.indexOf('<p:sldIdLst>')).toBeLessThan(xml.indexOf('<p:sldSz'));
+  });
+});

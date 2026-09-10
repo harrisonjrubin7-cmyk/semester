@@ -91,6 +91,10 @@ function Shelf() {
     setTrouble('');
     const said: string[] = [];
     const problems: string[] = [];
+    // `state` does not change while this loop runs, so the room left has to be
+    // counted here — otherwise three files of eighty sheets each all see the
+    // same room and the third one evicts what the first two added.
+    let taken = 0;
     for (const file of picked) {
       const kind = readerFor(file);
       if (!kind) {
@@ -111,7 +115,7 @@ function Shelf() {
          * no good way to choose which of somebody's existing sheets to lose,
          * and the answer to "you have too many" is theirs to make.
          */
-        const room = LIMIT - state.sheets.length;
+        const room = LIMIT - state.sheets.length - taken;
         if (read.sheets.length > room) {
           problems.push(
             `${file.name} holds ${read.sheets.length} ${read.sheets.length === 1 ? 'sheet' : 'sheets'} ` +
@@ -123,6 +127,7 @@ function Shelf() {
         // Newest last, so a multi-sheet workbook lands in the order its tabs
         // were in rather than reversed.
         for (const sheet of read.sheets) dispatch({ type: 'makeSheet', sheet });
+        taken += read.sheets.length;
         said.push(...read.notes);
       } catch (e) {
         problems.push(e instanceof Error ? e.message : `${file.name} could not be read.`);

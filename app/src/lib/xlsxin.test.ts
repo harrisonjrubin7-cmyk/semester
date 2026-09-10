@@ -532,3 +532,69 @@ describe('a delimited file far larger than the grid', () => {
     await expect(fromDelimited(huge)).rejects.toThrow(/too large/);
   });
 });
+
+describe('dates at the edges of the 1900 system', () => {
+  const styles = '<styleSheet><cellXfs><xf numFmtId="14"/></cellXfs></styleSheet>';
+  const at = async (serial: string) =>
+    (
+      await fromXlsx(
+        asFile(
+          'e.xlsx',
+          workbook({
+            styles,
+            sheets: [{ name: 'S', rows: [`<row r="1"><c r="A1" s="0"><v>${serial}</v></c></row>`] }],
+          }),
+        ),
+      )
+    ).sheets[0].cells.A1;
+
+  /*
+   * Excel's 1900 system contains a fiction: serial 60 is 29 February 1900, a
+   * date that never happened, kept since 1985 for Lotus compatibility.
+   * Everything from 61 on is a day ahead of a naive count because of it.
+   */
+  it('matches Excel on either side of the day that never happened', async () => {
+    expect(await at('1')).toBe('1900-01-01');
+    expect(await at('59')).toBe('1900-02-28');
+    expect(await at('60')).toBe('1900-02-29');
+    expect(await at('61')).toBe('1900-03-01');
+  });
+
+  it('still matches Excel on a date anybody actually has', async () => {
+    expect(await at('46275')).toBe('2026-09-10');
+  });
+});
+
+describe('a format that says only "month"', () => {
+  const styles =
+    '<styleSheet><numFmts><numFmt numFmtId="165" formatCode="mm"/>' +
+    '<numFmt numFmtId="166" formatCode="hh:mm"/></numFmts>' +
+    '<cellXfs><xf numFmtId="165"/><xf numFmtId="166"/></cellXfs></styleSheet>';
+  const cells = async () =>
+    (
+      await fromXlsx(
+        asFile(
+          'm.xlsx',
+          workbook({
+            styles,
+            sheets: [
+              {
+                name: 'S',
+                rows: ['<row r="1"><c r="A1" s="0"><v>46275</v></c><c r="B1" s="1"><v>0.5</v></c></row>'],
+              },
+            ],
+          }),
+        ),
+      )
+    ).sheets[0].cells;
+
+  it('is a date, not a number', async () => {
+    // The rule wanted three `m`s — a month name — so a bare `mm` was read as a
+    // plain number and a column of months imported as five-digit serials.
+    expect((await cells()).A1).toBe('2026-09-10');
+  });
+
+  it('is still a time when there is an hour beside it', async () => {
+    expect((await cells()).B1).toBe('0.5');
+  });
+});

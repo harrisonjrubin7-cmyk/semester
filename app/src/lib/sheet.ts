@@ -254,7 +254,24 @@ export function evaluate(
   if (raw === undefined || raw === '') return '';
   if (!isFormula(raw)) {
     const n = asNumber(raw);
-    return n === null ? raw : n;
+    if (n !== null) return n;
+    /*
+     * A cell holding TRUE or FALSE is a boolean, not a word.
+     *
+     * `IF(A1,1,2)` against a cell reading FALSE took the *yes* branch: the
+     * string went to `number`, came back `#VALUE!`, and `#VALUE! !== 0` is
+     * true. A wrong branch rather than an error, which is the shape of fault
+     * this file exists to refuse — and it arrived from every imported
+     * spreadsheet, where a boolean column is ordinary.
+     *
+     * The cell still *shows* what was typed; `display` returns the raw text
+     * for anything that is not a formula, so a student who typed TRUE sees
+     * TRUE.
+     */
+    const word = raw.trim().toUpperCase();
+    if (word === 'TRUE') return true;
+    if (word === 'FALSE') return false;
+    return raw;
   }
   const next = new Set(seen);
   next.add(key_);

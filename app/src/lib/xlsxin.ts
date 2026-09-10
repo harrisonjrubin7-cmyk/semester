@@ -119,8 +119,17 @@ function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number
     // Bracketed parts are conditions and locales, quoted parts are literal
     // text; neither says anything about what the number means.
     const code = entities(format[1]).replace(/\[[^\]]*\]/g, '').replace(/"[^"]*"/g, '');
-    const hasDate = /[yd]/i.test(code) || /m{3,}/i.test(code);
     const hasTime = /[hs]/i.test(code);
+    /*
+     * `m` is the ambiguous one: a month in a date and a minute in a time. The
+     * first rule here wanted three of them — `mmm`, a month name — which meant
+     * a plain `mm/yy` was fine but a bare `mm` was read as a number, and a
+     * column of month numbers imported as five-digit serials.
+     *
+     * So: a `y` or a `d` settles it, and `m` on its own counts as a month only
+     * when there is no hour or second anywhere in the code to make it a minute.
+     */
+    const hasDate = /[yd]/i.test(code) || /m{3,}/i.test(code) || (/m/i.test(code) && !hasTime);
     if (hasDate) {
       dateFmtIds.add(Number(id[1]));
       if (hasTime) timeFmtIds.add(Number(id[1]));
@@ -158,6 +167,31 @@ function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number
  */
 const EPOCH_1900 = Date.UTC(1899, 11, 30);
 const EPOCH_1904 = Date.UTC(1904, 0, 1);
+
+/**
+ * The day a serial names, including the one that does not exist.
+ *
+ * Excel's 1900 system contains a fiction: serial 60 is 29 February 1900, a
+ * date that never happened — 1900 was not a leap year — kept since 1985 for
+ * compatibility with Lotus 1-2-3. Everything from 61 onwards is therefore one
+ * day *ahead* of a naive count, which is exactly why the epoch here is 30
+ * December 1899 rather than the 31st: it cancels the fiction out for the dates
+ * anybody actually has.
+ *
+ * The price is the first two months of 1900, which come out a day late, and
+ * serial 60 itself, which is not a real day at all. Nobody's coursework is
+ * dated January 1900 — but "nobody" is not "no one", and a wrong date is
+ * silent, so the two are handled rather than left.
+ *
+ * The 1904 system has no such fiction and is a plain count.
+ */
+function dayOf(days: number, epoch: number): string {
+  if (epoch !== EPOCH_1900) return new Date(epoch + days * 86_400_000).toISOString().slice(0, 10);
+  // The day Excel believes in and the calendar does not.
+  if (days === 60) return '1900-02-29';
+  const shifted = days < 60 ? days + 1 : days;
+  return new Date(epoch + shifted * 86_400_000).toISOString().slice(0, 10);
+}
 
 function epochOf(workbookXml: string): number {
   return /<workbookPr[^>]*date1904="(1|true)"/i.test(workbookXml) ? EPOCH_1904 : EPOCH_1900;
@@ -203,7 +237,7 @@ const KNOWN = new Set([
  */
 function isoDate(serial: number, epoch: number, withTime: boolean): string {
   const days = Math.floor(serial);
-  const date = new Date(epoch + days * 86_400_000).toISOString().slice(0, 10);
+  const date = dayOf(days, epoch);
   if (!withTime) return date;
   const seconds = Math.round((serial - days) * 86_400);
   const hh = String(Math.floor(seconds / 3600) % 24).padStart(2, '0');

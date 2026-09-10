@@ -77,7 +77,7 @@ export function settled(meta: FileMeta): Settled {
 export const TRASH_DAYS = 30;
 
 /** This file's own database and store. The wrapper is `lib/idb.ts`. */
-const { tx } = store(DB_NAME, STORE, DB_VERSION);
+const { tx, work } = store(DB_NAME, STORE, DB_VERSION);
 
 /**
  * `folderId` and `text` are optional and last, so every caller written before
@@ -162,25 +162,20 @@ export async function getFile(id: string): Promise<StoredFile | undefined> {
  * one: the read and the `put` are both issued against `store` here, and the
  * transaction does not commit until both have run.
  */
-function patch(id: string, change: Partial<StoredFile>): Promise<void> {
-  return new Promise((resolve, reject) => {
-    void tx('readwrite', (store) => {
-      const read = store.get(id) as IDBRequest<StoredFile | undefined>;
-      read.onsuccess = () => {
-        const record = read.result;
-        // Gone between the press and here. Nothing to change, and putting the
-        // change back would resurrect a deleted file.
-        if (!record) {
-          resolve();
-          return;
-        }
-        const write = store.put({ ...record, ...change });
-        write.onsuccess = () => resolve();
-        write.onerror = () => reject(write.error);
-      };
-      read.onerror = () => reject(read.error);
-      return read;
-    }).catch(reject);
+async function patch(id: string, change: Partial<StoredFile>): Promise<void> {
+  await work<void>('readwrite', (s, done) => {
+    const read = s.get(id) as IDBRequest<StoredFile | undefined>;
+    read.onsuccess = () => {
+      const record = read.result;
+      // Gone between the press and here. Nothing to change, and putting the
+      // change back would resurrect a deleted file.
+      if (!record) {
+        done(undefined);
+        return;
+      }
+      s.put({ ...record, ...change });
+      done(undefined);
+    };
   });
 }
 
@@ -242,23 +237,18 @@ export async function emptyTrash(days = 0, now = Date.now()): Promise<number> {
 
 /** Delete one file only if it is in the bin now, deciding and doing it at once. */
 function deleteIfStillBinned(id: string, cutoff: number): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    void tx('readwrite', (store) => {
-      const read = store.get(id) as IDBRequest<StoredFile | undefined>;
-      read.onsuccess = () => {
-        const record = read.result;
-        const binned = record?.trashedAt ?? null;
-        if (!record || binned === null || binned > cutoff) {
-          resolve(false);
-          return;
-        }
-        const kill = store.delete(id);
-        kill.onsuccess = () => resolve(true);
-        kill.onerror = () => reject(kill.error);
-      };
-      read.onerror = () => reject(read.error);
-      return read;
-    }).catch(reject);
+  return work<boolean>('readwrite', (s, done) => {
+    const read = s.get(id) as IDBRequest<StoredFile | undefined>;
+    read.onsuccess = () => {
+      const record = read.result;
+      const binned = record?.trashedAt ?? null;
+      if (!record || binned === null || binned > cutoff) {
+        done(false);
+        return;
+      }
+      s.delete(id);
+      done(true);
+    };
   });
 }
 

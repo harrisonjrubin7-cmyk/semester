@@ -29,6 +29,26 @@
 export interface Store {
   /** Run one request inside one transaction, and resolve what it returns. */
   tx<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => IDBRequest<T>): Promise<T>;
+  /**
+   * Several requests inside one transaction, resolved when it commits.
+   *
+   * `tx` is for one request and takes it over: it sets `onsuccess` on whatever
+   * request is returned, so a caller that read a record and meant to write it
+   * back had its own handler replaced and the write never happened. Silently —
+   * the promise resolved with the value read, and the change was simply lost.
+   * That shipped once, in `files.ts`, and turned starring, moving and binning
+   * a file into buttons that did nothing.
+   *
+   * So a read-modify-write is this instead. The callback issues requests and
+   * calls `done` with the answer; nothing here touches the handlers of the
+   * requests the caller makes, and the promise settles on the transaction
+   * rather than on any one of them — which is also what makes it atomic, and
+   * the reason to want one transaction in the first place.
+   */
+  work<T>(
+    mode: IDBTransactionMode,
+    run: (store: IDBObjectStore, done: (value: T) => void) => void,
+  ): Promise<T>;
 }
 
 /**
@@ -62,6 +82,38 @@ export function store(dbName: string, storeName: string, version = 1): Store {
             req.onsuccess = () => resolve(req.result);
             req.onerror = () => reject(req.error);
             t.oncomplete = () => db.close();
+          }),
+      );
+    },
+
+    work<T>(
+      mode: IDBTransactionMode,
+      run: (s: IDBObjectStore, done: (value: T) => void) => void,
+    ): Promise<T> {
+      return open().then(
+        (db) =>
+          new Promise<T>((resolve, reject) => {
+            const t = db.transaction(storeName, mode);
+            let answer: T | undefined;
+            let settled = false;
+            run(t.objectStore(storeName), (value) => {
+              answer = value;
+              settled = true;
+            });
+            // On commit, not on any one request: a read-modify-write is only
+            // done when the write has actually landed.
+            t.oncomplete = () => {
+              db.close();
+              resolve(settled ? (answer as T) : (undefined as T));
+            };
+            t.onerror = () => {
+              db.close();
+              reject(t.error);
+            };
+            t.onabort = () => {
+              db.close();
+              reject(t.error ?? new Error('The transaction was aborted.'));
+            };
           }),
       );
     },
