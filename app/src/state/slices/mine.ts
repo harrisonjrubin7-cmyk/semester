@@ -376,6 +376,46 @@ export function mine(state: State, action: Action): State | null {
     case 'dropCost':
       return { ...state, costs: state.costs.filter((c) => c.id !== action.id) };
 
+    // The university's statement and the aid against it. Entered, never
+    // fetched, for the reasons written out in `lib/bill.ts`.
+    case 'addCharge':
+      return {
+        ...state,
+        charges: [...state.charges, { ...action.charge, id: newId(), at: Date.now() }],
+      };
+
+    case 'dropCharge':
+      return { ...state, charges: state.charges.filter((c) => c.id !== action.id) };
+
+    case 'addAid':
+      return { ...state, aid: [...state.aid, { ...action.aid, id: newId(), at: Date.now() }] };
+
+    // Confirming an award is a patch rather than a retype: the amount is
+    // already right and only the condition on it has changed.
+    case 'patchAid':
+      return {
+        ...state,
+        aid: state.aid.map((a) => (a.id === action.id ? { ...a, ...action.patch } : a)),
+      };
+
+    case 'dropAid':
+      return { ...state, aid: state.aid.filter((a) => a.id !== action.id) };
+
+    case 'addPayment':
+      return {
+        ...state,
+        payments: [...state.payments, { ...action.payment, id: newId(), at: Date.now() }],
+      };
+
+    case 'dropPayment':
+      return { ...state, payments: state.payments.filter((p) => p.id !== action.id) };
+
+    // Keyed by term: the plan is a decision made again every semester, and
+    // last term's instalment dates against this term's balance are worse than
+    // no plan at all.
+    case 'setPlan':
+      return { ...state, plans: { ...state.plans, [action.term]: action.plan } };
+
     // Meal-plan readings. Logged rather than overwritten — see `lib/meals.ts`.
     case 'logBalance':
       return { ...state, balances: [...state.balances, { ...action.balance, id: newId() }] };

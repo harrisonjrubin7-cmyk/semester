@@ -66,6 +66,8 @@ import { meetings, pairings } from './meet';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
 import { dateToIso, shiftIso } from './date';
+import { billFor, money } from './bill';
+import { forTerm as costsFor, total } from './cost';
 
 export interface TopHero {
   label: string;
@@ -638,8 +640,45 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     case 'people':
       return holds('People', state.people.length + state.letters.length, 'record');
 
-    case 'costs':
+    case 'costs': {
+      /*
+       * The bill first, and a count of receipts only where there is no bill.
+       *
+       * The screen's two halves are not the same size: a tuition balance is
+       * five figures and the books are two, so a header that counted entries
+       * reported "0 · No costs yet" above a headline reading "$15,921.50
+       * owed". A summary that disagrees with the screen under it is worse
+       * than no summary, which is the rule already written on `activities`
+       * above.
+       */
+      const bill = billFor(state, state.term, now);
+      if (bill.any) {
+        const out = total(costsFor(state.costs, state.term));
+        return {
+          hero: {
+            label: 'Owed',
+            meta: bill.owed.pendingCents > 0 ? 'on confirmed aid' : undefined,
+            figure: money(bill.owed.owedCents),
+            foot: bill.next
+              ? `${money(bill.next.shortCents)} due ${bill.next.overdue ? 'already' : 'next'}`
+              : `${money(bill.owed.chargesCents)} charged this term`,
+          },
+          /*
+           * The term's three deadline counts replaced by three money figures,
+           * for the reason `mine` and `settings` do the same below: the one
+           * screen that is not about coursework should not report coursework.
+           * Three, never four — `StatRow` takes two or three and a test holds
+           * every screen to it.
+           */
+          stats: [
+            { label: 'Charged', value: money(bill.owed.chargesCents) },
+            { label: 'Covered', value: money(bill.owed.creditedCents) },
+            { label: 'Out of pocket', value: money(out.net) },
+          ],
+        };
+      }
       return holds('Costs', state.costs.length, 'cost');
+    }
 
     case 'links':
       return holds('Links', state.extraLinks.length, 'link');

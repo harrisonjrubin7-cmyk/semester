@@ -151,6 +151,9 @@ export function navigate(state: State, action: Action): State | null {
     case 'setCoursesTab':
       return { ...state, coursesTab: action.tab };
 
+    case 'setCostsTab':
+      return { ...state, costsTab: action.tab };
+
     case 'setMeTab':
       return { ...state, meTab: action.tab };
 

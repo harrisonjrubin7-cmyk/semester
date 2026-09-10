@@ -34,6 +34,7 @@ import {
 } from '../lib/cloud';
 import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
+import { nextPayment } from '../lib/bill';
 import { classesToNudge, dueReminders, fire } from '../lib/notify';
 import { atRiskToday } from '../lib/atrisk';
 import { myReminders } from '../lib/myrules';
@@ -823,6 +824,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           done: state.done,
           classes: classesToNudge(railFor(catalog, at, state.appointments)),
           registrar: state.registrar,
+          bill: nextPayment(state, state.term, at),
           atRisk: atRiskToday(
             railFor(catalog, at, state.appointments),
             state.attendance,

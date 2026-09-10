@@ -15,6 +15,7 @@ import type {
   Appointment,
   CampusLink,
   ChangeSource,
+  CostsTab,
   CoursesTab,
   CourseId,
   CourseModule,
@@ -61,6 +62,7 @@ import type { Found, TermDate } from '../lib/registrar';
 import type { Spent } from '../lib/pace';
 import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
+import type { Aid, Charge, Payment, Plan } from '../lib/bill';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
@@ -403,6 +405,26 @@ export interface Persisted {
    */
   costs: Cost[];
   /**
+   * The university's own statement, and the aid set against it.
+   *
+   * Four fields rather than one object because they are four lists that grow
+   * at different times: charges arrive in August, an award letter in July, a
+   * payment every month, and the plan is chosen once. See `lib/bill.ts` for
+   * why none of it is fetched, and for the four mistakes the arithmetic is
+   * there to stop.
+   */
+  charges: Charge[];
+  aid: Aid[];
+  payments: Payment[];
+  /**
+   * The payment plan, per term.
+   *
+   * Keyed by term rather than a single plan, because the plan is a decision
+   * made again every semester and last term's instalment dates are actively
+   * misleading against this term's balance.
+   */
+  plans: Record<string, Plan>;
+  /**
    * Meal-plan balances, as read off CBORD GET.
    *
    * Logged rather than overwritten: one balance is a fact about today and
@@ -659,6 +681,8 @@ export interface Ephemeral {
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done';
   coursesTab: CoursesTab;
+  /** Which half of the money screen is showing. See `lib/types.ts`. */
+  costsTab: CostsTab;
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all' | 'task';
   /** Which shelf of the directory is showing under Everything. */
@@ -910,6 +934,10 @@ export const DEFAULT_PERSISTED: Persisted = {
   spent: [],
   windows: [],
   costs: [],
+  charges: [],
+  aid: [],
+  payments: [],
+  plans: {},
   balances: [],
   residences: [],
   accessLeadDays: 0,
@@ -989,6 +1017,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     mineTab: 'tasks',
     homeTab: 'today',
     coursesTab: 'courses',
+    costsTab: 'bill',
     meTab: 'you',
     meGroup: 'Study',
     examPreset: null,
@@ -1217,6 +1246,10 @@ export function loadPersisted(): Persisted {
       spent: list(saved.spent),
       windows: readList(saved.windows, readWindow),
       costs: list(saved.costs),
+      charges: list(saved.charges),
+      aid: list(saved.aid),
+      payments: list(saved.payments),
+      plans: record(saved.plans),
       balances: list(saved.balances),
       residences: list(saved.residences),
       accessLeadDays: saved.accessLeadDays ?? 0,
@@ -1318,6 +1351,10 @@ export function pickPersisted(state: State): Persisted {
     spent: state.spent,
     windows: state.windows,
     costs: state.costs,
+    charges: state.charges,
+    aid: state.aid,
+    payments: state.payments,
+    plans: state.plans,
     balances: state.balances,
     residences: state.residences,
     accessLeadDays: state.accessLeadDays,
@@ -1562,6 +1599,7 @@ export type Action =
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
+  | { type: 'setCostsTab'; tab: CostsTab }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'task' }
@@ -1710,6 +1748,22 @@ export type Action =
   | { type: 'addCost'; cost: Omit<Cost, 'id' | 'at'> }
   | { type: 'patchCost'; id: string; patch: Partial<Cost> }
   | { type: 'dropCost'; id: string }
+  /*
+   * The university's statement. Entered, never fetched — `lib/bill.ts`.
+   *
+   * `patchAid` exists so confirming an award is one tap rather than a delete
+   * and a retype: the number is already right, it is the condition on it that
+   * has changed, and retyping a five-figure amount to flip a flag is how a
+   * figure gets a digit dropped.
+   */
+  | { type: 'addCharge'; charge: Omit<Charge, 'id' | 'at'> }
+  | { type: 'dropCharge'; id: string }
+  | { type: 'addAid'; aid: Omit<Aid, 'id' | 'at'> }
+  | { type: 'patchAid'; id: string; patch: Partial<Pick<Aid, 'pending' | 'cents' | 'what'>> }
+  | { type: 'dropAid'; id: string }
+  | { type: 'addPayment'; payment: Omit<Payment, 'id' | 'at'> }
+  | { type: 'dropPayment'; id: string }
+  | { type: 'setPlan'; term: string; plan: Plan }
   | { type: 'setAccessLead'; days: number }
   /** Where you live this term, from the housing portal. */
   | { type: 'setResidence'; residence: Omit<Residence, 'id' | 'created'> }

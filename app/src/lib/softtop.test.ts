@@ -140,6 +140,15 @@ describe('an account with something in it', () => {
       ] as State['registrar'],
       grades: { a: '88' },
       visited: { home: true, study: true },
+      // A statement entered, so the money screen's other branch is walked by
+      // every rule below rather than only its empty one.
+      charges: [
+        { id: 'c1', term: DEFAULT_PERSISTED.term, what: 'Tuition', kind: 'tuition', cents: 3_200_000, at: 0 },
+      ] as State['charges'],
+      aid: [
+        { id: 'a1', term: DEFAULT_PERSISTED.term, what: 'Grant', kind: 'grant', cents: 2_000_000, pending: false, at: 0 },
+      ] as State['aid'],
+      plans: { [DEFAULT_PERSISTED.term]: { parts: 5, first: '2026-09-20', everyMonths: 1 } },
     });
 
   it('still obeys every rule', () => {
@@ -150,6 +159,21 @@ describe('an account with something in it', () => {
       }
       expect(top.stats.length === 0 || top.stats.length === 2 || top.stats.length === 3).toBe(true);
     }
+  });
+
+  it('reports money on the money screen, not the term’s deadline counts', () => {
+    // It reported "Costs · 0 · No costs yet" above a headline reading
+    // "$12,000.00 owed", because the header counted receipts and the screen
+    // had grown a bill. A summary that disagrees with the screen under it is
+    // worse than no summary.
+    const top = softTop('costs', full());
+    expect(top.hero?.label).toBe('Owed');
+    expect(top.hero?.figure).toBe('$12,000.00');
+    expect(top.stats.map((s) => s.label)).toEqual(['Charged', 'Covered', 'Out of pocket']);
+  });
+
+  it('still counts receipts on the money screen where no bill was entered', () => {
+    expect(softTop('costs', input()).hero?.label).toBe('Costs');
   });
 
   it('takes its numbers from the app’s own derivations, not a second copy', () => {

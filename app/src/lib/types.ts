@@ -560,6 +560,16 @@ export type Screen =
 export type ReportGrain = 'day' | 'week' | 'term';
 export type ChangeSource = 'told' | 'feed';
 export type CoursesTab = 'courses' | 'due' | 'grades';
+/**
+ * The two halves of what a term costs.
+ *
+ * `bill` is the university's statement and the aid against it — large, dated,
+ * and somebody else's arithmetic to check. `out` is what you chose to spend:
+ * books, access codes, a lab fee. They are one screen because they are one
+ * question, and two tabs because confusing a $32,000 charge with a $64.99
+ * textbook in one list helps nobody.
+ */
+export type CostsTab = 'bill' | 'out';
 
 export type StudyMode =
   | 'cards'

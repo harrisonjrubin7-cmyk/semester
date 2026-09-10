@@ -5,9 +5,11 @@ import type { NotifKey } from '../data/misc';
 
 const ALL: Record<NotifKey, boolean> = {
   class: true, today: true, two: true, free: true, sun: true, exam: true, term: true, attend: true,
+  bill: true,
 };
 const NONE: Record<NotifKey, boolean> = {
   class: false, today: false, two: false, free: false, sun: false, exam: false, term: false, attend: false,
+  bill: false,
 };
 
 const item = (over: Partial<DatedItem>): DatedItem =>
@@ -154,6 +156,57 @@ describe('registrar deadlines', () => {
       items: [], classes: [], registrar: sheet,
     });
     expect(out.filter((r) => r.rule === 'term')).toEqual([]);
+  });
+});
+
+describe('the tuition instalment', () => {
+  const bill = { due: '2026-09-10', cents: 368_644 };
+
+  it('warns a week out, with the amount and the consequence', () => {
+    const out = dueReminders(THU, ALL, { items: [], classes: [], bill });
+    const said = out.find((r) => r.rule === 'bill');
+    expect(said?.title).toBe('One week: tuition payment');
+    expect(said?.body).toBe(
+      "$3,686.44 due. An unpaid balance is what puts a hold on next term's registration.",
+    );
+  });
+
+  it('warns again the day before, and not on the days between', () => {
+    const days = [8, 9, 10].map(
+      (d) =>
+        dueReminders(new Date(2026, 8, d, 9, 0), ALL, { items: [], classes: [], bill }).filter(
+          (r) => r.rule === 'bill',
+        ).length,
+    );
+    expect(days).toEqual([0, 1, 0]);
+  });
+
+  it('holds off until the morning, like the registrar rule', () => {
+    const out = dueReminders(new Date(2026, 8, 3, 6, 30), ALL, { items: [], classes: [], bill });
+    expect(out.filter((r) => r.rule === 'bill')).toEqual([]);
+  });
+
+  it('says nothing where no payment date has been entered', () => {
+    expect(
+      dueReminders(THU, ALL, { items: [], classes: [] }).filter((r) => r.rule === 'bill'),
+    ).toEqual([]);
+    expect(
+      dueReminders(THU, ALL, { items: [], classes: [], bill: null }).filter(
+        (r) => r.rule === 'bill',
+      ),
+    ).toEqual([]);
+  });
+
+  // The point of keeping this separate from the registrar rule: academic
+  // deadlines without money notifications has to be a reachable setting.
+  it('is silent when the rule is off, with the registrar rule still on', () => {
+    const out = dueReminders(THU, { ...ALL, bill: false }, { items: [], classes: [], bill });
+    expect(out.filter((r) => r.rule === 'bill')).toEqual([]);
+  });
+
+  it('fires independently of the registrar rule being off', () => {
+    const out = dueReminders(THU, { ...ALL, term: false }, { items: [], classes: [], bill });
+    expect(out.filter((r) => r.rule === 'bill')).toHaveLength(1);
   });
 });
 

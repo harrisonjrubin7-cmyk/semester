@@ -41,6 +41,7 @@ import { overdueCount } from '../lib/standing';
 import { ordered, sectionLabel, visible } from '../lib/feed';
 import { MOVE_HINT, useMovable } from '../lib/arrange';
 import { line, pressing, standing } from '../lib/registrar';
+import { billFor, money } from '../lib/bill';
 import { HowLong } from '../components/HowLong';
 import { DropBy } from '../components/DropBy';
 import { Walks } from '../components/Walks';
@@ -1059,6 +1060,59 @@ function Feed_registrar() {
 }
 
 /**
+ * The next tuition instalment, once it is close enough to act on.
+ *
+ * A fortnight, which is longer than the registrar section's week, because a
+ * payment is not a thing you do in an afternoon: it needs money moved, or a
+ * parent told, or a plan changed. Silent outside that window, silent for
+ * anybody who has not entered a bill, and silent once the balance is settled —
+ * so for most students this section never draws at all, which is the point.
+ */
+function Feed_bill() {
+  const { state, dispatch, now } = useStore();
+  const { next } = billFor(state, state.term, now);
+  if (!next) return null;
+  if (next.daysAway > 14) return null;
+
+  const late = next.overdue;
+  return (
+    <Folding name="Feed_bill">
+      <SectionLabel style={{ margin: '14px 0 12px' }}>Money</SectionLabel>
+      <Blueprint
+        plain
+        onClick={() => {
+          dispatch({ type: 'setCostsTab', tab: 'bill' });
+          dispatch({ type: 'go', screen: 'costs' });
+        }}
+        style={{ padding: '12px 14px', marginBottom: 'var(--sp-4)' }}
+      >
+        <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>
+            {money(next.shortCents)} due
+          </span>
+          <span
+            style={{ flex: 'none', fontSize: 'var(--type-sm)', color: late ? 'var(--app-warn)' : undefined }}
+          >
+            {late
+              ? next.daysAway === -1
+                ? 'yesterday'
+                : `${-next.daysAway} days ago`
+              : next.daysAway === 0
+                ? 'today'
+                : `in ${next.daysAway} ${next.daysAway === 1 ? 'day' : 'days'}`}
+          </span>
+        </div>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+          {late
+            ? "An unpaid balance is what puts a hold on next term's registration."
+            : `Instalment ${next.instalment.n} of your payment plan.`}
+        </div>
+      </Blueprint>
+    </Folding>
+  );
+}
+
+/**
  * Today, in the order you asked for.
  *
  * Every section is its own component so the list can be reordered and switched
@@ -1071,6 +1125,7 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
   due: Feed_due,
   dropby: Feed_dropby,
   registrar: Feed_registrar,
+  bill: Feed_bill,
   tasks: Feed_tasks,
   rail: Feed_rail,
   walks: Feed_walks,

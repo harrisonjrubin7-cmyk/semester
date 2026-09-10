@@ -17,6 +17,7 @@
  * uploaded and nothing is sent anywhere.
  */
 
+import { money } from './bill';
 import type { NotifKey } from '../data/misc';
 import { daysTo, type TermDate } from './registrar';
 import { isExam } from './runway';
@@ -91,6 +92,15 @@ interface Source {
    * second one.
    */
   atRisk?: AtRisk[];
+  /**
+   * The next unpaid instalment on the term's bill, worked out by the caller
+   * with `lib/bill.ts`.
+   *
+   * Same division as `atRisk` above: the money arithmetic has one
+   * implementation and this file is not going to become a second one. All that
+   * is decided here is when to say it.
+   */
+  bill?: { due: string; cents: number } | null;
 }
 
 /**
@@ -246,6 +256,29 @@ export function dueReminders(
         rule: 'term',
         title: away === 1 ? `Tomorrow: ${d.label}` : `One week: ${d.label}`,
         body: d.cost || 'From your registrar.',
+      });
+    }
+  }
+
+  /*
+   * A tuition instalment at a week and again at a day, on the same two-strike
+   * rhythm as the registrar dates above — and for the same reason: the job is
+   * to make sure the date is not a surprise, not to become the thing swiped
+   * away every morning for a fortnight.
+   *
+   * Separate from `term` rather than folded into it, because the registrar
+   * rule reads `src.registrar` and a payment date is not a registrar date: it
+   * lives on the plan, where the student entered it, and a student who wants
+   * academic deadlines without money notifications can now have exactly that.
+   */
+  if (on.bill && minutes >= 8 * 60 && src.bill) {
+    const away = daysTo(src.bill.due, now);
+    if (away === 7 || away === 1) {
+      out.push({
+        id: `bill:${today}:${src.bill.due}`,
+        rule: 'bill',
+        title: away === 1 ? 'Tomorrow: tuition payment' : 'One week: tuition payment',
+        body: `${money(src.bill.cents)} due. An unpaid balance is what puts a hold on next term's registration.`,
       });
     }
   }
