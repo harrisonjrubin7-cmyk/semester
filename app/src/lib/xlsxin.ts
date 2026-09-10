@@ -77,7 +77,8 @@ function entities(text: string): string {
  * ## A word about the patterns below
  *
  * Every tag pattern in this file allows an optional `x:`-style prefix on the
- * name. OOXML puts these parts in a namespace, and whether a writer binds that
+ * name — an XML NCName, so `x`, `x-1` and `ns.a` all count, not just letters
+ * and digits. OOXML puts these parts in a namespace, and whether a writer binds that
  * namespace as the default or to a prefix is its own business — `<sheetData>`
  * and `<x:sheetData>` are the same document to an XML parser, and this file is
  * not one. Without the prefix allowed, a workbook written the second way
@@ -97,8 +98,8 @@ function entities(text: string): string {
  * together with the value it describes.
  */
 function siText(block: string): string {
-  const spoken = block.replace(/<(?:\w+:)?rPh\b[^>]*(?:\/>|>[\s\S]*?<\/(?:\w+:)?rPh>)/g, '');
-  const parts = [...spoken.matchAll(/<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/g)].map(
+  const spoken = block.replace(/<(?:[A-Za-z_][\w.-]*:)?rPh\b[^>]*(?:\/>|>[\s\S]*?<\/(?:[A-Za-z_][\w.-]*:)?rPh>)/g, '');
+  const parts = [...spoken.matchAll(/<(?:[A-Za-z_][\w.-]*:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?t>/g)].map(
     (m) => entities(m[1]),
   );
   return parts.join('');
@@ -149,7 +150,7 @@ function dateFormats(stylesXml: string): {
    * had every custom date format ignored, so its due dates imported as
    * five-digit serials.
    */
-  for (const m of stylesXml.matchAll(/<(?:\w+:)?numFmt\b[^>]*>/g)) {
+  for (const m of stylesXml.matchAll(/<(?:[A-Za-z_][\w.-]*:)?numFmt\b[^>]*>/g)) {
     const id = /numFmtId=['"](\d+)['"]/.exec(m[0]);
     const format = /formatCode=['"]([^'"]*)['"]/.exec(m[0]);
     if (!id || !format) continue;
@@ -182,10 +183,10 @@ function dateFormats(stylesXml: string): {
   const dates = new Set<number>();
   const times = new Set<number>();
   const seconds = new Set<number>();
-  const xfs = /<(?:\w+:)?cellXfs[^>]*>([\s\S]*?)<\/(?:\w+:)?cellXfs>/.exec(stylesXml);
+  const xfs = /<(?:[A-Za-z_][\w.-]*:)?cellXfs[^>]*>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?cellXfs>/.exec(stylesXml);
   if (!xfs) return { dates, times, seconds };
   let at = 0;
-  for (const m of xfs[1].matchAll(/<(?:\w+:)?xf\b[^>]*>/g)) {
+  for (const m of xfs[1].matchAll(/<(?:[A-Za-z_][\w.-]*:)?xf\b[^>]*>/g)) {
     const id = /numFmtId=['"](\d+)['"]/.exec(m[0]);
     if (id && dateFmtIds.has(Number(id[1]))) {
       dates.add(at);
@@ -234,7 +235,7 @@ function dayOf(days: number, epoch: number): string {
 }
 
 function epochOf(workbookXml: string): number {
-  return /<(?:\w+:)?workbookPr[^>]*date1904=['"](1|true)['"]/i.test(workbookXml)
+  return /<(?:[A-Za-z_][\w.-]*:)?workbookPr[^>]*date1904=['"](1|true)['"]/i.test(workbookXml)
     ? EPOCH_1904
     : EPOCH_1900;
 }
@@ -293,8 +294,37 @@ function localRefs(code: string): boolean {
   if (/(^|[^A-Z0-9$])\$?[A-Z]{1,3}:\$?[A-Z]{1,3}([^A-Z0-9$]|$)/i.test(code)) return false;
   // `1:1` — the same thing along the other axis.
   if (/(^|[^A-Z0-9$])\$?\d+:\$?\d+([^A-Z0-9$]|$)/i.test(code)) return false;
-  return true;
+  /*
+   * Then every address, checked against the grid rather than only parsed.
+   *
+   * `SUM(A1:ZZ9999)` parses — `parseRef` takes two letters and four digits —
+   * and named seven million addresses that cannot exist here; `sheet.ts` spent
+   * 9.8 seconds building them before answering. It no longer enumerates them,
+   * so this is now about the answer rather than the freeze: Excel worked the
+   * real total out over cells this grid does not have, and its cached value is
+   * a better thing to keep than a `#REF!`. A lone `AA5` is the quieter version
+   * — off the grid, so it reads as empty and computes as nought.
+   *
+   * On-grid addresses are blanked out, so whatever text is left is a name.
+   */
+  const named = code.replace(/\$?[A-Za-z]{1,2}\$?\d{1,4}\b/g, (at) => {
+    const cell = parseRef(at);
+    return cell && cell.row < MAX_ROWS && cell.col < MAX_COLS ? ' ' : at;
+  });
+  /*
+   * And what is left must be a function call or a value.
+   *
+   * A defined name is not a reference this app has at all: `=TaxRate*B2` is
+   * ordinary in a workbook and `#NAME?` here, because the importer does not
+   * read `definedNames`. The name check never caught it — it only ever looked
+   * at what came before a bracket.
+   */
+  const bare = named.match(/\b[A-Za-z_][A-Za-z0-9_.]*\b(?!\s*\()/g) ?? [];
+  return bare.every((name) => LITERALS.has(name.toUpperCase()));
 }
+
+/** The bare words that are values rather than names. */
+const LITERALS = new Set(['TRUE', 'FALSE']);
 
 /** The formula with every quoted literal taken out, so only code is left. */
 function withoutStrings(body: string): string {
@@ -405,7 +435,7 @@ function resolve(target: string): string {
 /** Which worksheet part each tab in the workbook refers to. */
 function worksheetOrder(workbook: string, rels: string): { name: string; part: string }[] {
   const targets = new Map<string, string>();
-  for (const m of rels.matchAll(/<(?:\w+:)?Relationship\b[^>]*>/g)) {
+  for (const m of rels.matchAll(/<(?:[A-Za-z_][\w.-]*:)?Relationship\b[^>]*>/g)) {
     const id = /Id=['"]([^'"]+)['"]/.exec(m[0]);
     const target = /Target=['"]([^'"]+)['"]/.exec(m[0]);
     if (id && target) targets.set(id[1], resolve(entities(target[1])));
@@ -413,7 +443,7 @@ function worksheetOrder(workbook: string, rels: string): { name: string; part: s
 
   const out: { name: string; part: string }[] = [];
   let nth = 0;
-  for (const m of workbook.matchAll(/<(?:\w+:)?sheet\b[^>]*\/?>/g)) {
+  for (const m of workbook.matchAll(/<(?:[A-Za-z_][\w.-]*:)?sheet\b[^>]*\/?>/g)) {
     nth += 1;
     const name = /name=['"]([^'"]*)['"]/.exec(m[0]);
     /*
@@ -424,7 +454,7 @@ function worksheetOrder(workbook: string, rels: string): { name: string; part: s
      * not named `sheet1.xml` then had its worksheet skipped and the whole file
      * reported as having none.
      */
-    const rid = /(?:\w+:)id=['"]([^'"]+)['"]/.exec(m[0]);
+    const rid = /(?:[A-Za-z_][\w.-]*:)id=['"]([^'"]+)['"]/.exec(m[0]);
     out.push({
       name: name ? entities(name[1]) : `Sheet${nth}`,
       // The relationship is the correct answer; the positional guess is what
@@ -465,7 +495,7 @@ function readCells(
   let frozen = 0;
   let unsupported = 0;
 
-  for (const m of xml.matchAll(/<(?:\w+:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?c>)/g)) {
+  for (const m of xml.matchAll(/<(?:[A-Za-z_][\w.-]*:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?c>)/g)) {
     const attrs = m[1];
     const body = m[2] ?? '';
     // Either quote style: `<c r='A1'>` is valid XML and was being skipped
@@ -480,8 +510,8 @@ function readCells(
     }
 
     const type = /t=['"]([^'"]+)['"]/.exec(attrs)?.[1] ?? 'n';
-    const formula = /<(?:\w+:)?f(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?f>/.exec(body);
-    const raw = /<(?:\w+:)?v(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?v>/.exec(body);
+    const formula = /<(?:[A-Za-z_][\w.-]*:)?f(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?f>/.exec(body);
+    const raw = /<(?:[A-Za-z_][\w.-]*:)?v(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?v>/.exec(body);
 
     let text = '';
     const written = formula && formula[1].trim() ? plainNames(entities(formula[1]).trim()) : '';
@@ -516,7 +546,7 @@ function readCells(
        * on. That is a trade, so it is counted and said in `notes` rather than
        * left for somebody to discover in a total that stopped moving.
        */
-      if (/<(?:\w+:)?f\b/.test(body)) frozen += 1;
+      if (/<(?:[A-Za-z_][\w.-]*:)?f\b/.test(body)) frozen += 1;
 
       const style = Number(/s=['"](\d+)['"]/.exec(attrs)?.[1] ?? -1);
       const n = Number(entities(raw[1]));
@@ -592,7 +622,7 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
 
   const shared = [
     ...part('xl/sharedStrings.xml').matchAll(
-      /<(?:\w+:)?si(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?si>/g,
+      /<(?:[A-Za-z_][\w.-]*:)?si(?:\s[^>]*)?>([\s\S]*?)<\/(?:[A-Za-z_][\w.-]*:)?si>/g,
     ),
   ].map((m) => siText(m[1]));
   const styles = dateFormats(part('xl/styles.xml'));

@@ -667,3 +667,42 @@ describe('nothing that existed changed', () => {
   it('display leaves typed text alone', () => expect(display({ A1: '80%' }, 'A1')).toBe('80%'));
   it('but evaluates it as a number', () => expect(evaluate({ A1: '80%' }, 'A1')).toBe(0.8));
 });
+
+describe('a range far larger than the grid', () => {
+  /*
+   * `parseRef` takes two letters and four digits, so `A1:ZZ9999` parses and
+   * `expand` built **seven million addresses** from it — measured at 9.8
+   * seconds of blocked main thread before answering `#CYCLE!`. Typed into a
+   * cell, that is the tab frozen, and nothing about the formula looks wrong.
+   *
+   * A reference past the grid cannot name a real cell, so there is nothing to
+   * compute. `A1:Z100000` was already `#REF!` — six digits is more than
+   * `parseRef` takes — so this only makes the answer the same on both sides of
+   * a limit that was never meant to be a cliff.
+   */
+  it('is not enumerated', () => {
+    const started = Date.now();
+    expect(expand('A1', 'ZZ9999')).toEqual([]);
+    expect(Date.now() - started).toBeLessThan(200);
+  });
+
+  it('answers #REF! rather than freezing', () => {
+    const started = Date.now();
+    expect(display({ A1: '5', Q1: '=SUM(A1:ZZ9999)' }, 'Q1')).toBe('#REF!');
+    expect(Date.now() - started).toBeLessThan(200);
+  });
+
+  it('says the same thing one step past each edge', () => {
+    // 200 rows and 26 columns: Z200 is the last cell, AA1 and A201 are not.
+    expect(expand('A1', 'Z200')).toHaveLength(200 * 26);
+    expect(expand('A1', 'A201')).toEqual([]);
+    expect(expand('A1', 'AA1')).toEqual([]);
+  });
+
+  it('leaves every range inside the grid exactly as it was', () => {
+    expect(expand('A1', 'C4')).toHaveLength(12);
+    expect(expand('B2', 'B2')).toEqual(['B2']);
+    expect(expand('$A$1', '$A$3')).toEqual(['A1', 'A2', 'A3']);
+    expect(display({ A1: '5', A2: '6', Q1: '=SUM(A1:A2)' }, 'Q1')).toBe('11');
+  });
+});

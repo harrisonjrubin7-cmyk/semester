@@ -817,7 +817,8 @@ describe('a reference this grid cannot resolve', () => {
   it('leaves an ordinary cell range alone, which is the shape it must not catch', () => {
     expect(knownFormula('SUM(A1:A9)')).toBe(true);
     expect(knownFormula('SUM($A$1:$A$9)')).toBe(true);
-    expect(knownFormula('SUM(AA1:AB9)')).toBe(true);
+    // The whole grid, pinned, is still an ordinary range.
+    expect(knownFormula('SUM($A$1:$Z$200)')).toBe(true);
     expect(knownFormula('ROUND(AVERAGE(A1:A9),2)')).toBe(true);
   });
 
@@ -923,5 +924,98 @@ describe('seconds in a timestamp', () => {
   it('do not turn a date-only format into a time', async () => {
     const dateOnly = '<styleSheet><cellXfs><xf numFmtId="14"/></cellXfs></styleSheet>';
     expect(await read(dateOnly, noon34)).toBe('2026-09-10');
+  });
+});
+
+describe('a reference that parses but cannot exist here', () => {
+  /*
+   * `parseRef` takes two letters and four digits, so `A1:ZZ9999` parses — and
+   * `expand` then built **seven million addresses**, measured at 9.8 seconds
+   * of blocked main thread before answering. Typed into a cell that is the tab
+   * frozen; arriving from an imported workbook it happened without anybody
+   * typing anything.
+   */
+  it('is refused rather than enumerated', () => {
+    expect(knownFormula('SUM(A1:ZZ9999)')).toBe(false);
+    // One past the last row, and one past the last column.
+    expect(knownFormula('SUM(A1:Z201)')).toBe(false);
+    expect(knownFormula('SUM(A1:AA5)')).toBe(false);
+  });
+
+  it('catches a lone address off the grid, which reads as empty rather than wrong', () => {
+    // `AA5` is column 26 of a 26-column grid: `sheet.ts` finds nothing there
+    // and computes nought, where Excel's cached value is the real answer.
+    expect(knownFormula('AA5*2')).toBe(false);
+  });
+
+  it('keeps the cached value for one, and says so', async () => {
+    const bytes = workbook({
+      sheets: [
+        {
+          name: 'S',
+          rows: ['<row r="1"><c r="A1"><f>SUM(A1:ZZ9999)</f><v>1234</v></c></row>'],
+        },
+      ],
+    });
+    const { sheets } = await fromXlsx(asFile('big.xlsx', bytes));
+    expect(sheets[0].cells.A1).toBe('1234');
+  });
+});
+
+describe('a name this app has never heard of', () => {
+  it('is refused, because a defined name is not a reference it holds', () => {
+    // `=TaxRate*B2` is ordinary in a workbook and `#NAME?` here — the importer
+    // does not read `definedNames`. The check only ever looked at what came
+    // before a bracket, so a bare name went straight through.
+    expect(knownFormula('TaxRate*B2')).toBe(false);
+    expect(knownFormula('TaxRate')).toBe(false);
+    expect(knownFormula('IF(Threshold>1,A1,B1)')).toBe(false);
+  });
+
+  it('still reads TRUE and FALSE as the values they are', () => {
+    expect(knownFormula('IF(A1,TRUE,FALSE)')).toBe(true);
+  });
+
+  it('leaves every ordinary formula alone', () => {
+    for (const f of [
+      'TODAY()',
+      'NOW()-A1',
+      'A1*2',
+      'A1&"x"',
+      'CONCAT(A1," ",B1)',
+      'VLOOKUP(A1,B1:D9,2,0)',
+      'PMT(A1/12,B1*12,-C1)',
+      'ROUND(AVERAGE(A1:A9),2)',
+    ]) {
+      expect(knownFormula(f), f).toBe(true);
+    }
+  });
+});
+
+describe('a namespace prefix that is not just letters', () => {
+  it('is read, because an NCName may carry a dash or a dot', async () => {
+    // `x-1` is a legal prefix and `\w+` excluded it, so a workbook written
+    // that way reported no worksheets at all.
+    const bytes = zipSync({
+      'xl/workbook.xml': strToU8(
+        '<?xml version="1.0"?><x-1:workbook xmlns:x-1="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+          '<x-1:sheets><x-1:sheet name="Marks" sheetId="1" r:id="rId1"/></x-1:sheets></x-1:workbook>',
+      ),
+      'xl/_rels/workbook.xml.rels': strToU8(
+        '<?xml version="1.0"?><Relationships>' +
+          '<Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>',
+      ),
+      'xl/sharedStrings.xml': strToU8(
+        '<?xml version="1.0"?><x-1:sst><x-1:si><x-1:t>Essay</x-1:t></x-1:si></x-1:sst>',
+      ),
+      'xl/worksheets/sheet1.xml': strToU8(
+        '<?xml version="1.0"?><x-1:worksheet><x-1:sheetData><x-1:row r="1">' +
+          '<x-1:c r="A1" t="s"><x-1:v>0</x-1:v></x-1:c>' +
+          '<x-1:c r="B1"><x-1:v>88</x-1:v></x-1:c>' +
+          '</x-1:row></x-1:sheetData></x-1:worksheet>',
+      ),
+    });
+    const { sheets } = await fromXlsx(asFile('nc.xlsx', bytes));
+    expect(sheets[0].cells).toEqual({ A1: 'Essay', B1: '88' });
   });
 });

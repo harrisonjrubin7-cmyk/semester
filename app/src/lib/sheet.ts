@@ -137,18 +137,36 @@ export function parseRef(text: string): { row: number; col: number } | null {
 export function span(from: string, to: string): { rows: number; cols: number } {
   const a = parseRef(from);
   const b = parseRef(to);
-  if (!a || !b) return { rows: 0, cols: 0 };
+  if (!a || !b || !onGrid(a, b)) return { rows: 0, cols: 0 };
   return {
     rows: Math.abs(a.row - b.row) + 1,
     cols: Math.abs(a.col - b.col) + 1,
   };
 }
 
+/**
+ * Whether both ends of a range name a cell this grid can hold.
+ *
+ * `parseRef` takes two letters and four digits, so `A1:ZZ9999` parses — and
+ * `expand` then built **seven million addresses**, measured at 9.8 seconds of
+ * blocked main thread before answering `#CYCLE!`. Typed into a cell, that is
+ * the tab frozen; the same range arriving from an imported workbook did it
+ * without anybody typing anything.
+ *
+ * A reference past `MAX_ROWS`×`MAX_COLS` cannot name a real cell, so there is
+ * nothing to compute and no reason to enumerate it. `A1:Z100000` was already
+ * `#REF!` — the row is too long for `parseRef` — so this only makes the answer
+ * the same on both sides of a limit that was never meant to be a cliff.
+ */
+function onGrid(a: { row: number; col: number }, b: { row: number; col: number }): boolean {
+  return Math.max(a.row, b.row) < MAX_ROWS && Math.max(a.col, b.col) < MAX_COLS;
+}
+
 /** Every address in `A1:B3`, reading across then down. Empty if either end is nonsense. */
 export function expand(from: string, to: string): string[] {
   const a = parseRef(from);
   const b = parseRef(to);
-  if (!a || !b) return [];
+  if (!a || !b || !onGrid(a, b)) return [];
   const out: string[] = [];
   for (let r = Math.min(a.row, b.row); r <= Math.max(a.row, b.row); r += 1) {
     for (let c = Math.min(a.col, b.col); c <= Math.max(a.col, b.col); c += 1) {
