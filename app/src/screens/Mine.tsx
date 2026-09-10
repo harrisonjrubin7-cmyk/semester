@@ -4,6 +4,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
+import { CoursePicker } from '../components/CoursePicker';
 import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
@@ -25,50 +26,6 @@ import { Folding } from '../components/Fold';
  * of thing, so they live in a different place — and surface on Today and the
  * calendar clearly marked as yours.
  */
-
-/** Course picker used by every add form. */
-function CoursePicker({
-  value,
-  onChange,
-}: {
-  value: CourseId | null;
-  onChange: (id: CourseId | null) => void;
-}) {
-  const { catalog } = useStore();
-  return (
-    <div className="chiprow" style={{ marginTop: 'var(--sp-5)' }}>
-      <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
-        {[{ id: null, label: 'Personal' }, ...catalog.courses.map((c) => ({ id: c.id, label: c.code }))].map(
-          (o) => {
-            const on = value === o.id;
-            return (
-              <button
-                key={o.label}
-                type="button"
-                className="btn"
-                onClick={() => onChange(o.id as CourseId | null)}
-                aria-pressed={on}
-                style={{
-                  flex: 'none',
-                  padding: '5px 11px',
-                  fontSize: 'var(--type-xs)',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  background: on ? 'var(--chrome)' : 'transparent',
-                  color: on ? 'var(--chrome-ink)' : 'var(--app-fg)',
-                  borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
-                  fontWeight: on ? 600 : 400,
-                }}
-              >
-                {o.label}
-              </button>
-            );
-          },
-        )}
-      </div>
-    </div>
-  );
-}
 
 const inputStyle = { height: 40, fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)' } as const;
 

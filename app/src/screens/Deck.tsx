@@ -15,6 +15,7 @@ import {
   KINDS,
   SYSTEM,
   brief,
+  fromTable,
   fromUnit,
   holes,
   kind as kindById,
@@ -24,6 +25,7 @@ import {
   toDeck,
   type Planned,
 } from '../lib/deck';
+import { filled } from '../lib/sheet';
 import { UseSources, appendTo } from '../components/UseSources';
 import { NeedsKey } from '../components/NeedsKey';
 
@@ -43,10 +45,11 @@ import { NeedsKey } from '../components/NeedsKey';
  * whole room at once, so a missing number comes back as a blank.
  */
 export function Deck() {
-  const { state, catalog, dispatch } = useStore();
+  const { state, catalog, dispatch, courseCode } = useStore();
   const { guide, figuresOn, onUnit } = useLive(state.guideId);
 
-  const [source, setSource] = useState<'unit' | 'brief'>('unit');
+  const [source, setSource] = useState<'unit' | 'brief' | 'sheet'>('unit');
+  const [sheetId, setSheetId] = useState<string | null>(null);
   const [unit, setUnit] = useState(state.lessonUnit ?? 0);
 
   const [kindId, setKindId] = useState(KINDS[0].id);
@@ -81,7 +84,30 @@ export function Deck() {
     [guide, unit, figuresOn, onUnit],
   );
   const planned = plan ? toDeck(plan) : null;
-  const file: DeckFile | null = source === 'unit' ? unitDeck : planned;
+
+  /*
+   * A sheet, as a deck.
+   *
+   * No model and no guide — the same free door `From a unit` is, for the same
+   * reason: a table somebody built is already the content of a slide, and the
+   * only thing standing between the two was a file format. Long tables are
+   * split across slides by `fromTable` rather than shrunk to fit.
+   */
+  const chosen = state.sheets.find((sheet) => sheet.id === sheetId) ?? state.sheets[0] ?? null;
+  const sheetDeck = useMemo(
+    () =>
+      chosen
+        ? fromTable(
+            chosen.title || 'Table',
+            filled(chosen),
+            chosen.courseId ? courseCode(chosen.courseId) : '',
+          )
+        : null,
+    [chosen, courseCode],
+  );
+
+  const file: DeckFile | null =
+    source === 'unit' ? unitDeck : source === 'sheet' ? sheetDeck : planned;
   const left = plan ? holes(plan) : [];
 
   const make = async () => {
@@ -145,6 +171,7 @@ export function Deck() {
       <Segmented
         options={[
           { id: 'unit', label: 'From a unit' },
+          { id: 'sheet', label: 'From a sheet' },
           { id: 'brief', label: 'From a brief' },
         ]}
         value={source}
@@ -152,7 +179,36 @@ export function Deck() {
         style={{ marginTop: 14 }}
       />
 
-      {source === 'unit' ? (
+      {source === 'sheet' ? (
+        <>
+          <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+            No model in the loop either. A table you built goes on the slides as a real PowerPoint
+            table you can still edit — split over several slides if it is long, rather than shrunk
+            until nobody at the back can read it.
+          </div>
+
+          <SectionLabel>Which sheet</SectionLabel>
+          {state.sheets.length === 0 ? (
+            <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
+              You have not made a sheet yet. Sheet or table is where they live.
+            </div>
+          ) : (
+            <select
+              className="input"
+              aria-label="Which sheet"
+              value={chosen?.id ?? ''}
+              onChange={(e) => setSheetId(e.target.value)}
+              style={{ width: '100%' }}
+            >
+              {state.sheets.map((sheet) => (
+                <option key={sheet.id} value={sheet.id}>
+                  {sheet.title || 'Untitled sheet'}
+                </option>
+              ))}
+            </select>
+          )}
+        </>
+      ) : source === 'unit' ? (
         <>
           <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
             No model in the loop and nothing invented — your own guide, rearranged. Question on one
@@ -317,6 +373,30 @@ export function Deck() {
                     style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 5, lineHeight: 'var(--leading-normal)' }}
                   >
                     · {b}
+                  </div>
+                ))}
+                {/*
+                  A table slide has no bullets, so without this it previewed as
+                  a title and nothing else — which reads as an empty slide
+                  rather than as a slide whose content is a table. The rows are
+                  shown as they will be laid out, tab-width apart.
+                */}
+                {slide.table?.map((row, n) => (
+                  <div
+                    key={`row-${n}`}
+                    style={{
+                      ...secondLine(),
+                      // On the scale, unlike the bullets above it: the rule for
+                      // anything new here is that a file with no entry in the
+                      // ledger owes nothing, and half a pixel is not worth one.
+                      fontSize: 'var(--type-sm)',
+                      marginTop: 'var(--sp-3)',
+                      lineHeight: 'var(--leading-normal)',
+                      fontWeight: n === 0 ? 600 : 400,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    {row.join('  ·  ')}
                   </div>
                 ))}
               </Blueprint>

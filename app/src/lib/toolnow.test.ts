@@ -140,6 +140,22 @@ describe('suggest', () => {
     expect(top.why).toContain('the brief broken into a rubric');
   });
 
+  it('offers the document editor for a memo, which is not the same as a paper', () => {
+    const said = suggest([item({ kind: 'Paper', title: 'Policy memo on tariffs', daysAway: 5 })]);
+    expect(said.map((s) => s.screen)).toContain('write');
+  });
+
+  it('offers a sheet for something with a budget in it', () => {
+    const said = suggest([item({ kind: 'Group work', title: 'Project budget', daysAway: 6 })]);
+    expect(said.map((s) => s.screen)).toContain('sheet');
+  });
+
+  it('does not offer either for an ordinary reading', () => {
+    const said = suggest([item({ kind: 'Reading', title: 'Chapter 4', daysAway: 3 })]);
+    expect(said.map((s) => s.screen)).not.toContain('write');
+    expect(said.map((s) => s.screen)).not.toContain('sheet');
+  });
+
   it('ranks what is due tomorrow above what is due in a fortnight', () => {
     const late = suggest([item({ kind: 'Paper', daysAway: 13 })])[0];
     const soon = suggest([item({ kind: 'Paper', daysAway: 1 })])[0];

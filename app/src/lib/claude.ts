@@ -5,13 +5,17 @@
  * study format at once, explaining the card you keep failing, and answering a
  * question about a course with that course's own guide in front of it.
  *
- * **Three routes to the same API, in this order of preference:**
+ * **Four routes to the same API, in this order of preference:**
  *
  *  1. **A proxy** you point the app at, holding the key server-side.
- *  2. **The shared key**, when signed in — an Edge Function checks the account
+ *  2. **Your own key**, stored on this device.
+ *  3. **A proxy this build was given** — `VITE_CLAUDE_PROXY`. Running your own
+ *     copy, that is the dev server: put `ANTHROPIC_API_KEY` in
+ *     `app/.env.local` and it holds the key while the page holds only the
+ *     address, so the assistant answers on first load with nothing to type.
+ *  4. **The shared key**, when signed in — an Edge Function checks the account
  *     and meters it, so a new user can generate a course without first going
  *     and getting a key of their own.
- *  3. **Your own key**, stored on this device.
  *
  * Talking to the API from a page means the key is in the page: anything running
  * in that browser can read it, and a key baked into a deployed site is a key
@@ -103,12 +107,41 @@ function sharedEndpoint(): string {
   return base ? `${base.replace(/\/$/, '')}/functions/v1/claude` : '';
 }
 
-export function configured(s = settings()): boolean {
-  if (s.provider === 'openai') return Boolean(s.openaiKey.trim());
-  return Boolean(s.proxy.trim() || s.apiKey.trim() || (sessionToken && sharedEndpoint()));
+/**
+ * A proxy this build was pointed at, rather than one typed on this device.
+ *
+ * `VITE_CLAUDE_PROXY` in `app/.env.local`. It is the piece that makes a fresh
+ * clone answer: set `ANTHROPIC_API_KEY` there too and the dev server serves
+ * this proxy at `/anthropic`, holding the key while the page holds only the
+ * address. See `app/vite.config.ts`.
+ *
+ * An address and not a key, on purpose. Anything named `VITE_…` is compiled
+ * into the page, so a key put there is a key handed to everyone who loads the
+ * site — which is the same reason the shared key lives in a function. The
+ * address of a proxy is safe to publish; what it holds stays on the server.
+ */
+export function envProxy(): string {
+  return (env.VITE_CLAUDE_PROXY ?? '').trim();
 }
 
-/** Which of the three routes a call will take — the UI says so plainly. */
+/**
+ * The proxy in force: this device's if one was typed, otherwise this build's.
+ *
+ * Device before build is the same rule as everywhere else here — something a
+ * person typed on this screen outranks something a deployment decided for
+ * them, and a key typed on this device outranks both, because an env var set
+ * once in a file should not quietly take over from a key set on purpose.
+ */
+export function proxyUrl(s = settings()): string {
+  return s.proxy.trim() || envProxy();
+}
+
+export function configured(s = settings()): boolean {
+  if (s.provider === 'openai') return Boolean(s.openaiKey.trim());
+  return Boolean(proxyUrl(s) || s.apiKey.trim() || (sessionToken && sharedEndpoint()));
+}
+
+/** Which route a call will take — the UI says so plainly. */
 export function route(s = settings()): 'proxy' | 'shared' | 'own' | 'openai' | 'none' {
   // The OpenAI route has only one shape: your own key, in this browser. There
   // is no proxy and no shared key behind it, because the Edge Function holds
@@ -116,6 +149,7 @@ export function route(s = settings()): 'proxy' | 'shared' | 'own' | 'openai' | '
   if (s.provider === 'openai') return s.openaiKey.trim() ? 'openai' : 'none';
   if (s.proxy.trim()) return 'proxy';
   if (s.apiKey.trim()) return 'own';
+  if (envProxy()) return 'proxy';
   if (sessionToken && sharedEndpoint()) return 'shared';
   return 'none';
 }
@@ -133,7 +167,7 @@ export function routeLabel(s = settings()): string {
     case 'shared':
       return 'the shared key';
     case 'proxy':
-      return 'your proxy';
+      return s.proxy.trim() ? 'your proxy' : 'the proxy this build points at';
     case 'openai':
       return 'your OpenAI key';
     case 'own':
@@ -671,7 +705,7 @@ export async function ask(options: AskOptions): Promise<string> {
 
   if (taking === 'proxy') {
     // A proxy holds its own credentials; nothing goes in the headers.
-    url = `${s.proxy.trim().replace(/\/$/, '')}/v1/messages`;
+    url = `${proxyUrl(s).replace(/\/$/, '')}/v1/messages`;
   } else if (taking === 'shared') {
     // The function verifies the account and meters the call.
     url = sharedEndpoint();

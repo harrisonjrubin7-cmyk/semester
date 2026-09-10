@@ -71,6 +71,31 @@ export const SHORTCUTS: Shortcut[] = [
 ];
 
 /**
+ * Whether a dialog has claimed the page.
+ *
+ * `aria-modal="true"` says that everything outside this element is not there.
+ * A screen reader believes it; the keyboard did not — `Keys` listens on the
+ * window, so with the app launcher open on a laptop, `/` opened the search
+ * palette *behind* the launcher, and `t` walked to Today under it. Whichever
+ * you then closed, you were somewhere you had not asked to be.
+ *
+ * Read off the document rather than off the event's target, and both halves
+ * matter. A dialog whose focus is still settling leaves the target on
+ * `<body>`, which is outside the dialog by ancestry and would let the
+ * shortcut through; and this is the promise the attribute makes about the
+ * whole page, not about one element's subtree. The dialogs that hold a field
+ * were already safe by `typing()` below — this is for the ones that do not,
+ * which is every sheet made of buttons.
+ *
+ * `aria-modal="false"` is not caught, which is right: the shortcut sheet
+ * itself carries that, and `?` has to keep closing it.
+ */
+export function underModal(doc?: Document): boolean {
+  const d = doc ?? (typeof document === 'undefined' ? null : document);
+  return Boolean(d?.querySelector('[role="dialog"][aria-modal="true"]'));
+}
+
+/**
  * Whether the caret is somewhere a keystroke means a character.
  *
  * `contentEditable` is checked separately from the tag names: a note editor
@@ -88,16 +113,30 @@ export function typing(target: EventTarget | null): boolean {
  * The shortcut a keystroke means, or null.
  *
  * Null for every modifier combination, because those belong to the browser,
- * and null while typing, because those belong to the sentence.
+ * null while typing, because those belong to the sentence, and null under a
+ * modal dialog, because that dialog has said the rest of the page is not
+ * there.
  */
-export function shortcutFor(e: {
-  key: string;
-  metaKey?: boolean;
-  ctrlKey?: boolean;
-  altKey?: boolean;
-  target?: EventTarget | null;
-}): Shortcut | null {
+export function shortcutFor(
+  e: {
+    key: string;
+    metaKey?: boolean;
+    ctrlKey?: boolean;
+    altKey?: boolean;
+    target?: EventTarget | null;
+  },
+  /** The document to ask about open dialogs. Passed only by the test. */
+  doc?: Document,
+): Shortcut | null {
   if (e.metaKey || e.ctrlKey || e.altKey) return null;
+  /*
+   * Escape included, and that is the point rather than an oversight. A dialog
+   * with a way out handles its own — `a11y/modal.ts` stops the event before
+   * it reaches the window — and `Adopting`, the one with no way out, would
+   * otherwise have had Escape navigate the app behind the question it is
+   * waiting on.
+   */
+  if (underModal(doc)) return null;
 
   const key = e.key.toLowerCase();
   // Escape is the exception to the typing rule, and has to be: it is how you

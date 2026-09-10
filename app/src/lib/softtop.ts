@@ -482,6 +482,18 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     case 'deck':
       return nothing;
 
+    // Three counts, each of a list this screen is the home of. The making
+    // screens hold work nobody else has a copy of, so how much of it there is
+    // is worth saying in the header rather than only inside.
+    case 'write':
+      return holds('Documents', state.documents.length, 'document');
+
+    case 'sheet':
+      return holds('Sheets', state.sheets.length, 'sheet');
+
+    case 'equations':
+      return holds('Equations', state.equations.length, 'equation');
+
     case 'mail':
       return nothing;
 
