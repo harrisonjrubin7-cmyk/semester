@@ -138,15 +138,31 @@ export async function generateCourse(
   const caps = capsFor(input.controls);
   const says = shapeSays(input.controls);
 
+  // Each is added only when it says something the default prompt does not.
+  const rules = [
+    says,
+    caps.cards !== MOST.cards || caps.terms !== MOST.terms ? countsSay(caps) : '',
+  ].filter(Boolean);
+
   const reply = await ask({
     signal,
     // As in `readMaterial`: a reply cut off mid-JSON parses as nothing, so the
     // budget rises with a ceiling the student raised rather than leaving them
     // to see "could not read it" for a syllabus that read fine.
     maxTokens: Math.min(16_000, 8_000 + Math.max(0, caps.cards - MOST.cards) * 160),
-    // Empty on the defaults, so this is byte-for-byte the system prompt that
-    // built the four shipped courses for anybody who has not chosen anything.
-    system: says ? `${SYSTEM}\n\n8. ${says}\n9. ${countsSay(caps)}` : SYSTEM,
+    /*
+     * Empty on the defaults, so this is byte-for-byte the system prompt that
+     * built the four shipped courses for anybody who has not chosen anything.
+     *
+     * The counts are their own rule rather than a tail on the register one.
+     * They were written as `says ? … countsSay(caps) : SYSTEM`, and `says` is
+     * empty whenever depth and level are both untouched — so a student who
+     * asked for twelve cards and changed nothing else had the number computed,
+     * clamped, and then never sent. It read as the control doing nothing,
+     * which is the worst kind of broken setting: no error, no clue, and the
+     * app quietly behaving as though you had not asked.
+     */
+    system: rules.length > 0 ? `${SYSTEM}\n${rules.map((r, i) => `${8 + i}. ${r}`).join('\n')}` : SYSTEM,
     docs,
     cite: worthCiting(docs),
     onCitation: (c) => citations.push(c),

@@ -121,6 +121,25 @@ describe('how many cards', () => {
   it('spells the counts out for the prompt', () => {
     expect(countsSay(capsFor(c({ cards: 12 })))).toBe('At most 12 cards and 20 terms.');
   });
+
+  /*
+   * The shape of a bug this had, found by re-reading the diff rather than by a
+   * failing test. `generate.ts` gated the counts on `shapeSays`, which is
+   * empty whenever depth and level are both untouched — so a student who
+   * asked for twelve cards and changed nothing else had the number computed,
+   * clamped, and then never sent.
+   *
+   * The property that makes the gate safe is here rather than in the caller:
+   * an explicit count moves the caps even when nothing moves the register, so
+   * "did the register change" is never a sound proxy for "is there anything
+   * to say".
+   */
+  it('moves the caps even where it says nothing about the register', () => {
+    const only = c({ cards: 12 });
+    expect(shapeSays(only)).toBe('');
+    expect(capsFor(only).cards).toBe(12);
+    expect(capsFor(only).cards).not.toBe(MOST.cards);
+  });
 });
 
 describe('the line the screen shows', () => {
