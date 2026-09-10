@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { SHORTCUTS, keyLabel, shortcutFor, typing } from './keys';
+import { SHORTCUTS, keyLabel, shortcutFor, typing, underModal } from './keys';
 
 const field = (tag: string) => document.createElement(tag);
 
@@ -19,6 +19,45 @@ describe('where a keystroke is a character, not a command', () => {
     // jsdom does not compute isContentEditable from the attribute.
     Object.defineProperty(div, 'isContentEditable', { value: true });
     expect(typing(div)).toBe(true);
+  });
+});
+
+/*
+ * A dialog that says the rest of the page is not there.
+ *
+ * `Keys` listens on the window, so every one of these fired straight through
+ * an open overlay: with the app launcher up on a laptop, `/` opened the search
+ * palette behind it and `t` walked to Today underneath, and whichever you
+ * closed first you were somewhere you had not asked to be. The overlays that
+ * hold a field were safe by accident — `typing()` catches their focused input
+ * — and the ones made of buttons, which is most of them, were not.
+ */
+describe('under a modal dialog', () => {
+  const open = (modal: boolean) => {
+    document.body.innerHTML = modal
+      ? '<div role="dialog" aria-modal="true"><button>Close</button></div>'
+      : '<div role="dialog" aria-modal="false"><button>Close</button></div>';
+    return document;
+  };
+
+  it('sees one that is up, and ignores one that is not', () => {
+    expect(underModal(open(true))).toBe(true);
+    expect(underModal(open(false))).toBe(false);
+    document.body.innerHTML = '';
+    expect(underModal(document)).toBe(false);
+  });
+
+  it('stands every shortcut down while it is up', () => {
+    const doc = open(true);
+    for (const s of SHORTCUTS) {
+      expect(shortcutFor({ key: s.key }, doc), s.key).toBeNull();
+    }
+  });
+
+  it('hands them back the moment it closes', () => {
+    const doc = open(false);
+    expect(shortcutFor({ key: 't' }, doc)?.screen).toBe('home');
+    expect(shortcutFor({ key: '/' }, doc)?.action).toBe('search');
   });
 });
 

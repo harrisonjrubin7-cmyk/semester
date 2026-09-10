@@ -2553,6 +2553,42 @@ input[type='search'].input {
   }
 }
 
+/*
+ * On a desk, the window rather than the pane.
+ *
+ * `absolute` is right on a phone, where `.device` is the app, and on a browser
+ * window between 402 and 760px, where the app is a column with ground either
+ * side and a sheet spilling onto the ground would be the only thing that does.
+ * Above 760px `.device-pane` is a strip beside the rail, and a sheet that
+ * covers only the strip leaves the rail lit and clickable behind a dialog
+ * saying `aria-modal="true"` — so a tap on Courses navigated the screen
+ * underneath while the sheet stayed over it, and a screen reader was told the
+ * rail was not there while it plainly was.
+ *
+ * `Command` reached the same conclusion for the same reason and switches to
+ * `fixed` at the same width; `a11y/modal.ts` argues the Tab half of it. Safe
+ * because nothing above this transforms — a transformed ancestor would become
+ * the containing block and put the sheet back over the pane.
+ *
+ * The content is a column at that width rather than a grid stretched over a
+ * laptop, which is what makes a covered window read as a sheet and not as a
+ * screen that has been pulled out of shape.
+ */
+@media (min-width: 760px) {
+  .soft-folder {
+    position: fixed;
+    padding: 26px;
+  }
+
+  .soft-folder-top,
+  .soft-folder-grid,
+  .soft-folder-body {
+    width: 100%;
+    max-width: 620px;
+    margin-inline: auto;
+  }
+}
+
 .soft-folder-top {
   display: flex;
   align-items: flex-start;
@@ -2578,6 +2614,31 @@ input[type='search'].input {
   /* Two across on a phone, and as many as fit after that. */
   grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
   gap: var(--sp-5);
+}
+
+/* The other thing a sheet can hold: shelves that lay themselves out, each a
+   caps heading over a grid of icons. The gap is a step wider than the tile
+   grid's because what it separates is a section rather than a tile — at
+   `--sp-5` the heading of one shelf sat as close to the row above it as to
+   its own icons, which reads as one long grid with words in it. */
+.soft-folder-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-7);
+  /* A column, not the width of a laptop. The sheet is as wide as the pane,
+     and left to fill it the icons run nine and ten across — which is a strip
+     of icons rather than the block the eye takes in at once. Seven is the
+     ceiling this works out to, and a phone is nowhere near it. */
+  max-width: 620px;
+}
+
+/* `.appgrid` carries a top margin for the tab it was written for, where it
+   follows a paragraph. Under a caps heading that is a second gap on top of
+   the one the heading already has — and its own 460px ceiling is the Tools
+   tab's, inside a body that already has one. */
+.soft-folder-body .appgrid {
+  margin-top: var(--sp-4);
+  max-width: none;
 }
 
 /*

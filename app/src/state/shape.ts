@@ -684,6 +684,15 @@ export interface Ephemeral {
    * had one open yesterday is an app that has misread what a search is for.
    */
   finder: boolean;
+  /**
+   * Whether the app launcher is up.
+   *
+   * Ephemeral for the same reason `finder` is, and one more: it is a way of
+   * getting somewhere, and every way of leaving it — choosing a screen,
+   * Close, Escape, a swipe down — means it is finished. An app that reopened
+   * onto a grid of its own icons has forgotten what you came back for.
+   */
+  apps: boolean;
   studyTab: 'guides' | 'revise' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
@@ -962,6 +971,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     dueTab: 'ahead',
     mailSeed: null,
     finder: false,
+    apps: false,
     studyTab: 'guides',
     noteId: null,
     documentId: null,
@@ -1417,6 +1427,7 @@ export type Action =
   | { type: 'forgetUndo' }
   | { type: 'quickAdd'; open: boolean }
   | { type: 'finder'; open: boolean }
+  | { type: 'apps'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }
