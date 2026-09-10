@@ -239,8 +239,8 @@ export function Springboard() {
   const [query, setQuery] = useState('');
 
   const look = currentLook(state);
-  const pages = arrangedPages(school.capabilities, look.boardOrder);
-  const dock = arrangedDock(school.capabilities, look.boardOrder);
+  const pages = arrangedPages(school.capabilities, look.boardOrder, state.role);
+  const dock = arrangedDock(school.capabilities, look.boardOrder, state.role);
   const open = (screen: string) => dispatch({ type: 'go', screen: screen as Screen });
 
   /** One list of the arrangement, written back whole. See `afterMove`. */
@@ -261,7 +261,7 @@ export function Springboard() {
   });
 
   const searching = query.trim().length > 0;
-  const found = searchable(school.capabilities).filter((s) => matches(s, query));
+  const found = searchable(school.capabilities, state.role).filter((s) => matches(s, query));
   const here = pages[at];
 
   const due = outstanding(catalog, state);

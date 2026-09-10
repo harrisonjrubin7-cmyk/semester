@@ -66,6 +66,7 @@ export function Command({ onClose }: { onClose: () => void }) {
         state.reviews,
         state.appointments,
         { documents: state.documents, sheets: state.sheets, decks: state.decks },
+        state.role,
       ),
     // `state.updates` is searched and was not listed here, so the results
     // could not see material added after the palette opened. `catalog` does
@@ -87,6 +88,7 @@ export function Command({ onClose }: { onClose: () => void }) {
       state.documents,
       state.sheets,
       state.decks,
+      state.role,
     ],
   );
 

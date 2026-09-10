@@ -18,6 +18,7 @@
 import type { Screen } from './types';
 import { settingsTitle } from './settings';
 import { allowed, cardName, lmsName, showsCash, showsSwipes, swipeUnit, type Capabilities } from './school';
+import { DEFAULT_ROLE, forRole, type Role } from './role';
 import { showing, type Facts } from './reveal';
 
 /**
@@ -874,23 +875,29 @@ export function destinationsIn(group: Group): Destination[] {
  * is filtered here, once, so the directory, search and the tab chooser cannot
  * disagree about whether a screen exists.
  */
-export function destinationsFor(group: Group, c: Capabilities): Destination[] {
-  return destinationsIn(group).filter((d) => allowed(d.screen, c));
+export function destinationsFor(
+  group: Group,
+  c: Capabilities,
+  role: Role = DEFAULT_ROLE,
+): Destination[] {
+  return destinationsIn(group).filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
 }
 
-/** Every destination the app can offer this student, across all groups. */
-export function offered(c: Capabilities): Destination[] {
-  return DESTINATIONS.filter((d) => allowed(d.screen, c));
+/** Every destination the app can offer this person, across all groups. */
+export function offered(c: Capabilities, role: Role = DEFAULT_ROLE): Destination[] {
+  return DESTINATIONS.filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
 }
 
 /**
- * The two gates together, which are different things.
+ * The three gates together, which are three different questions.
  *
  * `allowed` is about the school — a meal plan screen at a university with no
  * meal plan is absent, not pending, and no amount of using the app produces
- * one. `showing` is about how far along somebody is — a real screen that is
- * not useful yet. A destination has to pass both, and the order does not
- * matter because neither can un-hide what the other hid.
+ * one. `forRole` is about who is holding the phone — a degree audit is not
+ * addressed to the person teaching the course. `showing` is about how far
+ * along somebody is — a real screen that is not useful yet. A destination has
+ * to pass all three, and the order does not matter because none of them can
+ * un-hide what another hid.
  */
 export function listed(
   group: Group,
@@ -898,8 +905,9 @@ export function listed(
   facts: Facts,
   visited: Record<string, boolean>,
   showAll: boolean,
+  role: Role = DEFAULT_ROLE,
 ): Destination[] {
-  return destinationsFor(group, c).filter((d) => showing(d.screen, facts, visited, showAll));
+  return destinationsFor(group, c, role).filter((d) => showing(d.screen, facts, visited, showAll));
 }
 
 /**

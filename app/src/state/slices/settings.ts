@@ -270,6 +270,10 @@ export function settings(state: State, action: Action): State | null {
     case 'setControls':
       return { ...state, controls: { ...state.controls, ...action.patch } };
 
+    // Who is holding the app. Not a permission — see `lib/role.ts`.
+    case 'setRole':
+      return { ...state, role: action.role };
+
     case 'toggleSaved':
       return { ...state, saved: { ...state.saved, [action.id]: !state.saved[action.id] } };
 

@@ -449,3 +449,28 @@ describe('the things you made in the app', () => {
     expect(found).toEqual([]);
   });
 });
+
+describe('search is a gate too', () => {
+  const cat = buildCatalog([]);
+  const NOW = new Date(2026, 8, 9);
+  const hits = (q: string, role?: 'student' | 'faculty') =>
+    findEverything(cat, NOW, q, [], [], undefined, [], {}, [], {}, role).flatMap((g) => g.hits);
+
+  /*
+   * The note on `caps` in `find.ts` says why this matters: search was the leak
+   * that would have let somebody reach a meal-plan screen their university
+   * does not have. A role is the same kind of hole.
+   */
+  it('does not offer a screen the directory has stopped showing this role', () => {
+    expect(hits('housing', 'student').some((h) => h.kind === 'screen')).toBe(true);
+    expect(hits('housing', 'faculty').some((h) => h.kind === 'screen')).toBe(false);
+  });
+
+  it('still finds what the role does have', () => {
+    expect(hits('calendar', 'faculty').some((h) => h.kind === 'screen')).toBe(true);
+  });
+
+  it('searches as a student when no role is given', () => {
+    expect(hits('housing').some((h) => h.kind === 'screen')).toBe(true);
+  });
+});

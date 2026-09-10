@@ -65,6 +65,7 @@ import type { Cost } from '../lib/cost';
 import type { Aid, Charge, Payment, Plan } from '../lib/bill';
 import type { Quiet } from '../lib/notify';
 import { DEFAULTS as DEFAULT_CONTROLS, MOST_CARDS, type Controls } from '../lib/controls';
+import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
@@ -470,6 +471,14 @@ export interface Persisted {
    * decks wants them from both. See `lib/controls.ts`.
    */
   controls: Controls;
+  /**
+   * What this person is here to do — see `lib/role.ts`.
+   *
+   * A statement about the person, not a permission. It decides which
+   * destinations are addressed to them, the same way the school's
+   * capabilities decide which ones exist at all.
+   */
+  role: Role;
   /**
    * When each deadline was ticked, epoch ms.
    *
@@ -1003,6 +1012,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   accessLeadDays: 0,
   quiet: null,
   controls: DEFAULT_CONTROLS,
+  role: DEFAULT_ROLE,
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -1316,7 +1326,11 @@ export function loadPersisted(): Persisted {
       residences: list(saved.residences),
       accessLeadDays: saved.accessLeadDays ?? 0,
       quiet: readQuiet(saved.quiet),
+      // Through the table rather than trusted: a role this build has never
+      // heard of would hide every screen it does not name, and an app that
+      // opens on an empty directory looks broken rather than out of date.
       controls: readControls(saved.controls),
+      role: roleOf(typeof saved.role === 'string' ? saved.role : DEFAULT_ROLE).id,
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
       schoolId: typeof saved.schoolId === 'string' ? saved.schoolId : DEFAULT_PERSISTED.schoolId,
@@ -1424,6 +1438,7 @@ export function pickPersisted(state: State): Persisted {
     accessLeadDays: state.accessLeadDays,
     quiet: state.quiet,
     controls: state.controls,
+    role: state.role,
     tickedAt: state.tickedAt,
     started: state.started,
     schoolId: state.schoolId,
@@ -1833,6 +1848,7 @@ export type Action =
   | { type: 'setAccessLead'; days: number }
   | { type: 'setQuiet'; quiet: Quiet | null }
   | { type: 'setControls'; patch: Partial<Controls> }
+  | { type: 'setRole'; role: Role }
   /** Where you live this term, from the housing portal. */
   | { type: 'setResidence'; residence: Omit<Residence, 'id' | 'created'> }
   | { type: 'dropResidence'; id: string }

@@ -3,7 +3,8 @@
 The product vision, section by section, against what `app/src` actually does.
 Counted and read, not guessed from screen names.
 
-**Measured on this machine, 2026-09-10, on `claude/awesome-rubin-63w34j`:**
+**Measured on this machine, 2026-09-10, on `claude/awesome-rubin-63w34j`.**
+Counts below are from the first pass; later sections note what has landed since.
 
 | Measure | Value |
 | --- | --- |
@@ -130,11 +131,21 @@ Eleven modes ship (`lib/modes.ts`), so the count matches. The mapping does not:
 | Formula and problem-solving | `cases`, plus `#/equations` and `#/solve` |
 | Audio / read-aloud | `listen` and `watch`, with real narrated audio per unit |
 
-Absent: the **controls**. `GenerationInput` takes documents, a hint, a year and
-the ids already taken. There is no picker for length, difficulty, exam date,
-reading level, number of questions, question types, time available, or areas of
-weakness, and no "regenerate this section only". Citation, no-invention,
-in-course saving, DOCX/PDF export and printing are all shipped.
+The **controls** are shipped as of this branch (`lib/controls.ts`): depth
+(brief/usual/thorough, which scales every ceiling), level
+(plainer/course/harder), an explicit card count that wins over the depth for
+cards and leaves every other kind on it, and "regenerate this section only"
+(`readOneUnit` in `lib/rework.ts`, bounded in code rather than asked for in the
+prompt). The defaults add nothing to the prompt, so a student who has never
+opened a control still gets the pipeline that built the four shipped courses.
+
+The refusal that makes "harder" safe is in the same file: harder means asking
+more of the material, never inventing material to ask about, and a test holds
+that sentence onto the `harder` register where the pressure is.
+
+Still absent: exam date, reading level, question types, time available, and
+areas of weakness. Citation, no-invention, in-course saving, DOCX/PDF export and
+printing were already shipped.
 
 ## 5. Universal calendar — **shipped**
 
@@ -313,16 +324,42 @@ lifts arrives then.
 Per-course notification settings: absent. Push to a closed browser: not
 possible, and Settings says so rather than implying otherwise.
 
-## 17. User roles — **absent**
+## 17. User roles — **foundation shipped; four of six honestly deferred**
 
-There is one role: the student. No faculty, advisor, administrator, authorised
-payer or campus-staff interface exists, and none of the permission plumbing for
-them does either. Everything in this app is a single student's data on a single
-student's device.
+The decision has been made: Semester is **both** a student tool and an
+institutional platform. `lib/role.ts` is the first half of that, and its
+docblock draws the line the rest of this section rests on.
 
-This is the sharpest divergence from the vision and the one that decides whether
-Semester is a student tool or an institutional platform. It should be a
-deliberate decision, not a backlog item.
+**A role that reads only its own data works today**, because that is the shape
+the whole app already has. Somebody teaching a course — turning their syllabus
+into modules and deadlines, keeping the term's dates, writing the handout, the
+slides and the practice paper — is using the same screens a student uses, for a
+different reason. `student` and `faculty` are both selectable now.
+
+**A role that reads somebody else's data cannot.** An advisor reviewing a
+student's plan, a professor grading a roster, an administrator reporting on
+enrolment, a parent seeing a bill: each needs a server, an authenticated
+identity on both sides, and an authorisation model, and the app has none of the
+three. `advisor`, `admin`, `payer` and `staff` are therefore **shown in the
+picker with what they are waiting on, and cannot be chosen** — a role offered
+and then holding only what you typed into it would be the confident wrong thing
+this codebase refuses everywhere else.
+
+The gate itself is a third one beside the two that already existed, and they
+are three different questions: the school decides whether a screen *exists*
+here (`allowed`), the role decides whether it is *addressed to* the person
+holding the phone (`forRole`), and progress decides whether it is *useful yet*
+(`showing`). None can un-hide what another hid. Twelve destinations are
+student-only — a degree audit, a dorm, an exam to sit, a tuition bill — leaving
+forty for somebody teaching, which is a real tool rather than a stub.
+
+**It is not a security boundary, and says so.** It is one device and one
+person; a role is a statement about what they are here to do. The institutional
+half will need real authorisation on a server, and this file will be what the
+client asks for, never what grants it.
+
+Still absent, and the honest size of it: everything that needs the server —
+rosters, submission, grading, advising records, enrolment, reporting.
 
 ## 18. Accessibility — **shipped, and enforced**
 
@@ -417,13 +454,16 @@ services are not started. Phase 5 is not applicable without an institution.
 
 ## What is worth doing next, in order
 
-1. **Decide on §17.** Whether Semester is a student tool or an institutional
-   platform is the question every other gap hangs off. Registration (§9),
-   advising appointments (§10), LMS submission (§2) and faculty gradebooks all
-   wait behind it.
-2. **Study-guide controls (§4).** The generator exists and is good; length,
-   difficulty, question count and "regenerate this section" are additive, need
-   no institution, and are the most-used feature's biggest gap.
+1. **A server, or nothing past here.** §17 is decided — Semester is both — and
+   the client-side foundation is in. Every remaining institutional gap
+   (rosters, submission, grading, advising records, enrolment, reporting) needs
+   the same three things and none of them exist: a server, an authenticated
+   identity on both sides, and an authorisation model. That is one piece of
+   work, not five, and it should be scoped as one.
+2. **A faculty surface of its own.** Today "teaching" is the app minus twelve
+   student-only screens, which is honest and useful and still subtractive. The
+   additive version — the week addressed to the person teaching it rather than
+   taking it — needs no server and is the natural next increment.
 3. **Stored files in search (§13).** Documents, sheets and decks are found now;
    files in IndexedDB are not, and they are the ones with a name and no
    preview, which is exactly when search matters most.

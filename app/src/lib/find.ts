@@ -32,6 +32,7 @@ import { DESTINATIONS, saysFor } from './nav';
 import { anyAnswered, cardKey, type Reviews } from './review';
 import { nearAny } from './near';
 import { allowed, type Capabilities } from './school';
+import { DEFAULT_ROLE, forRole, type Role } from './role';
 
 /**
  * The default for a caller that has not been given a school.
@@ -308,6 +309,21 @@ export function findEverything(
    * Documents, sheets and decks. See `Made` above for why this is one object.
    */
   made: Made = {},
+  /*
+   * Who is holding the app.
+   *
+   * Last again, and for the last time: this signature is eleven parameters
+   * now and wants an options object. That refactor touches every call in this
+   * file's tests and would bury the change that matters in it, so it is a
+   * separate job — but it is a job, not a preference.
+   *
+   * It is here at all because search is a gate like any other. The note on
+   * `caps` above says why: search was the leak that would have let somebody
+   * reach a meal-plan screen their university does not have, and a role is
+   * the same kind of hole — a professor typing "housing" should not be
+   * offered a dorm screen the directory has already stopped showing them.
+   */
+  role: Role = DEFAULT_ROLE,
 ): HitGroup[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -525,7 +541,7 @@ export function findEverything(
 
     const screens: Hit[] = [];
     for (const d of DESTINATIONS) {
-      if (!allowed(d.screen, caps)) continue;
+      if (!allowed(d.screen, caps) || !forRole(d.screen, role)) continue;
       // Searched and shown in the school's own words, so typing "commodore
       // cash" finds the meal screen and a student elsewhere is not offered a
       // sentence about somebody else's campus card. The static keywords stay in

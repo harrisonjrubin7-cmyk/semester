@@ -341,7 +341,7 @@ export function Me() {
             // this university has no equivalent of — absent, not pending.
             // `reveal.ts` hides what is real and not useful yet, and gives it
             // back the moment there is something for it to work on.
-            const rows = listed(group, school.capabilities, facts, state.visited, state.showAll).filter(
+            const rows = listed(group, school.capabilities, facts, state.visited, state.showAll, state.role).filter(
               (d) => !HIDE_IN_ME.includes(d.screen),
             );
             if (rows.length === 0) return null;

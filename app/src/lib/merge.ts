@@ -284,6 +284,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // quiet window above — somebody who wants shorter decks wants them on both
   // devices, which is what separates this from the `mine` category.
   controls: 'theirs',
+  // Who this person is. About them rather than about the device, so a role
+  // chosen on the laptop is the role on the phone.
+  role: 'theirs',
   // Where you have been lately, newest first. Interleaving two devices'
   // histories would make it a list of nowhere in particular.
   recent: 'theirs',

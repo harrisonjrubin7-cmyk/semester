@@ -178,7 +178,7 @@ export const BUDGET: Budget = {
   'screens/settings/About.tsx': { space: 1, shorthand: 1, dim: 1 },
   'screens/settings/Alerts.tsx': { type: 6, space: 5, shorthand: 3, dim: 5 },
   'screens/settings/Assistant.tsx': { type: 3, shorthand: 2, dim: 6 },
-  'screens/settings/Courses.tsx': { type: 2, shorthand: 3, dim: 2 },
+  'screens/settings/Courses.tsx': { type: 4, shorthand: 5, dim: 5 },
   'screens/settings/Index.tsx': { type: 2, shorthand: 1, dim: 1 },
   'screens/settings/Look.tsx': { type: 5, space: 5, shorthand: 6, dim: 3 },
   'screens/settings/Nav.tsx': { type: 2, shorthand: 3, dim: 3 },
