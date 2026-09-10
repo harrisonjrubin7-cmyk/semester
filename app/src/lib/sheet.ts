@@ -219,22 +219,45 @@ export function isFormula(text: string): boolean {
  * without this the recursion is a stack overflow that takes the tab with it
  * rather than a `#CYCLE!` in one cell.
  */
+/**
+ * One address, written the one way the cell map is keyed.
+ *
+ * `$A$1`, `$A1`, `A$1` and `a1` are four spellings of one cell, and until this
+ * existed only the last of them found it: `evaluate` upper-cased the string and
+ * looked it up, so `cells['$A$1']` was `undefined` and a formula reading a
+ * pinned reference came back blank — `=$A$1*2` was 0 where the cell held 5.
+ *
+ * Silently, which is what makes it the worst kind of fault this file can have.
+ * The note at the top promises an error is *said* in the cell rather than
+ * resolved to a zero that looks like an answer, and this was the app breaking
+ * that promise: not a `#REF!` anybody would chase, a number.
+ *
+ * It only ever showed up on a sheet written somewhere else, because nothing in
+ * this app produces a dollar sign — `parseRef` has always accepted them for
+ * exactly that reason, and `expand` rebuilt range ends through `ref` so
+ * `SUM($A$1:$B$2)` was right all along. A lone reference had no such rebuild.
+ */
+function key(address: string): string {
+  const where = parseRef(address);
+  return where ? ref(where.row, where.col) : address.toUpperCase();
+}
+
 export function evaluate(
   cells: Cells,
   address: string,
   seen: Set<string> = new Set(),
   ctx: Ctx = clock(),
 ): Value {
-  const key = address.toUpperCase();
-  if (seen.has(key)) return '#CYCLE!';
-  const raw = cells[key];
+  const key_ = key(address);
+  if (seen.has(key_)) return '#CYCLE!';
+  const raw = cells[key_];
   if (raw === undefined || raw === '') return '';
   if (!isFormula(raw)) {
     const n = asNumber(raw);
     return n === null ? raw : n;
   }
   const next = new Set(seen);
-  next.add(key);
+  next.add(key_);
   return run(raw.trimStart().slice(1), cells, next, ctx);
 }
 
@@ -251,7 +274,7 @@ export function evaluate(
  * student number.
  */
 export function display(cells: Cells, address: string, ctx: Ctx = clock()): string {
-  const raw = cells[address.toUpperCase()];
+  const raw = cells[key(address)];
   if (raw !== undefined && raw !== '' && !isFormula(raw)) return raw;
   return show(evaluate(cells, address, new Set(), ctx));
 }

@@ -4,26 +4,32 @@ Every existing behaviour that must still work identically after the Workspace
 work. Run this at the end of **each** phase and report pass/fail before moving
 on, per §1 of the build prompt.
 
+**Every command in this file runs from `app/`, not from the repository root.**
+The only client `package.json` is `app/package.json` — the other is
+`packages/contract/` — so `npm test` at the root finds no script and the gate
+silently does not execute. Either `cd app` first, or prefix each one, as the
+rows below do.
+
 **Baseline captured 2026-09-10 on `claude/new-session-xh7by4`, before any
 feature code:**
 
 ```
-npm test    → 260 files, 5,212 passed, 10 skipped, exit 0
-npm run build → exit 0, 234 JS chunks, 6,469,990 B total
-              entry index-*.js = 562,445 B (174.79 kB gzip)
+cd app && npm test      → 260 files, 5,212 passed, 10 skipped, exit 0
+cd app && npm run build → exit 0, 234 JS chunks, 6,469,990 B total
+                          entry index-*.js = 562,445 B (174.79 kB gzip)
 ```
 
 ---
 
 ## A. Automated gates — all four must pass, every phase
 
-- [ ] **A1** `npm test` — 260 files pass, **≥ 5,212 tests pass**, 0 failures.
+- [ ] **A1** `cd app && npm test` — 260 files pass, **≥ 5,212 tests pass**, 0 failures.
       A dropped test counts as a regression, not as a cleanup.
-- [ ] **A2** `npm run test:zones` — the suite passes under both
+- [ ] **A2** `cd app && npm run test:zones` — the suite passes under both
       `America/Chicago` and `Pacific/Kiritimati`.
-- [ ] **A3** `npm run lint` — oxlint clean, `scripts/styles.mjs` clean (no raw
+- [ ] **A3** `cd app && npm run lint` — oxlint clean, `scripts/styles.mjs` clean (no raw
       hex, no off-scale spacing), `scripts/labels.mjs` clean.
-- [ ] **A4** `npm run build` — exit 0, no TypeScript errors.
+- [ ] **A4** `cd app && npm run build` — exit 0, no TypeScript errors.
 
 ## B. Bundle and load — the prompt's own performance rule
 
@@ -254,10 +260,10 @@ estimated.
 
 | | Result |
 | --- | --- |
-| **A1** `npm test` | **PASS** — 262 files, **5,300 passed**, 10 skipped, 0 failed. Baseline was 5,212; no test was dropped or weakened. |
-| **A2** `npm run test:zones` | **PASS** — 5,300 pass under `America/Chicago` and under `Pacific/Kiritimati`, matching UTC exactly. |
-| **A3** `npm run lint` | **PASS** — exit 0. oxlint reports nothing in any file this phase touched; `styles.mjs` "ok"; `labels.mjs` "ok". |
-| **A4** `npm run build` | **PASS** — exit 0, no TypeScript errors. |
+| **A1** `cd app && npm test` | **PASS** — 262 files, **5,300 passed**, 10 skipped, 0 failed. Baseline was 5,212; no test was dropped or weakened. |
+| **A2** `cd app && npm run test:zones` | **PASS** — 5,300 pass under `America/Chicago` and under `Pacific/Kiritimati`, matching UTC exactly. |
+| **A3** `cd app && npm run lint` | **PASS** — exit 0. oxlint reports nothing in any file this phase touched; `styles.mjs` "ok"; `labels.mjs` "ok". |
+| **A4** `cd app && npm run build` | **PASS** — exit 0, no TypeScript errors. |
 
 ### Bundle
 

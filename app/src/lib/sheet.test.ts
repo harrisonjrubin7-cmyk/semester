@@ -482,6 +482,47 @@ describe('stats', () => {
  * formula nobody understood. It made the same arithmetic answer two different
  * things depending on whether it sat inside a function call.
  */
+/*
+ * Found by a review comment saying the inventory was wrong to call absolute
+ * references missing. It was — they parse — and chasing that turned up the
+ * reason they looked missing: a lone one silently read as blank.
+ */
+describe('a pinned reference is the same cell as an unpinned one', () => {
+  it('reads $A$1 as A1 rather than as nothing', () => {
+    // =$A$1*2 was 0 where A1 held 5. Not #REF!, which somebody would chase —
+    // a number, which nobody re-checks.
+    expect(v('=$A$1*2', { A1: '5' })).toBe(10);
+    expect(v('=$A1*2', { A1: '5' })).toBe(10);
+    expect(v('=A$1*2', { A1: '5' })).toBe(10);
+    expect(v('=$A$1', { A1: 'Midterm' })).toBe('Midterm');
+  });
+
+  it('was always right inside a range, which is why it went unnoticed', () => {
+    // `expand` rebuilds both ends through `ref`, so a range never had the bug.
+    expect(v('=SUM($A$1:$A$3)', { A1: '1', A2: '2', A3: '3' })).toBe(6);
+  });
+
+  it('lower case finds the cell too', () => {
+    expect(v('=a1+1', { A1: '4' })).toBe(5);
+  });
+
+  it('catches a cycle written with dollars', () => {
+    // Before the fix this was not a cycle, it was a blank: the key never
+    // matched what was on the path.
+    expect(evaluate({ A1: '=$A$1+1' }, 'A1')).toBe('#CYCLE!');
+    expect(evaluate({ A1: '=$B$1', B1: '=$A$1' }, 'A1')).toBe('#CYCLE!');
+  });
+
+  it('displays a cell asked for by any spelling', () => {
+    expect(display({ A1: '80%' }, '$A$1')).toBe('80%');
+    expect(display({ A1: '80%' }, 'a1')).toBe('80%');
+  });
+
+  it('still says #NAME? for something that is not a reference at all', () => {
+    expect(v('=NOTACELL')).toBe('#NAME?');
+  });
+});
+
 describe('an error does not swallow the rest of the expression', () => {
   it('says the same thing bare and inside a call', () => {
     expect(v('=1/0*100')).toBe('#DIV/0!');

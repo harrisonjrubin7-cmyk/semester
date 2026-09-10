@@ -462,14 +462,27 @@ This is the real gap list — the honest version of §2 of the build prompt.
 - Missing functions the prompt names: `IFS IFERROR VLOOKUP HLOOKUP XLOOKUP INDEX
   MATCH LEFT RIGHT MID TEXT SPLIT TODAY NOW DATE DATEDIF WEEKDAY EOMONTH MODE
   CORREL COUNTIF SUMIF COUNTIFS SUMIFS AVERAGEIF NPV IRR PMT FV PV RATE`.
-- No absolute references (`$A$1`) and no named ranges.
+- ~~No absolute references (`$A$1`)~~ — **wrong as written, and correcting it
+  found a bug.** `parseRef` has always accepted `$A$1`, `$A1` and `A$1`, and a
+  range end was rebuilt through `ref()` so `SUM($A$1:$B$2)` was right. But a
+  *lone* reference was looked up as the raw string, so `cells['$A$1']` missed
+  and `=$A$1*2` came back **0** where the cell held 5 — silently, as a number
+  rather than a `#REF!`. Fixed on this branch; addresses are normalised before
+  lookup. What is still genuinely absent is any *effect* of pinning: there is
+  no fill handle, so nothing moves a reference and nothing needs holding still.
+- No named ranges.
 - No fill handle, no paste-special, no undo/redo inside the grid.
 - No cell formatting at all: number/currency/percent/date formats, bold, fill,
   borders, alignment, wrap, merge.
 - No sort, no filter, no freeze panes.
 - No conditional formatting, no data validation or dropdowns.
 - **No charts and no pivot tables.**
-- **No XLSX or CSV import** (export only).
+- ~~**No XLSX or CSV import** (export only)~~ — **wrong as written.** CSV and
+  TSV could always be *pasted* in: "Paste a table in" runs `readTable()` and
+  dispatches `makeSheet`. What was missing was importing a **file** — and
+  `.xlsx` in any form. Both are on this branch now (`lib/xlsxin.ts`): a picked
+  `.xlsx` or `.csv` comes in with its formulas live, its dates read as dates,
+  and every worksheet as its own sheet.
 - No auto-generated grade calculator per course, no GPA planner template.
 
 **Slides**
@@ -486,6 +499,11 @@ This is the real gap list — the honest version of §2 of the build prompt.
 - No paste-a-range-into-Docs-as-a-table.
 - Universal search does not return documents, sheets or files.
 - No assignment-attachment flow for any of these.
+
+> **Two entries above were wrong when this was written**, and are struck
+> through rather than deleted so the correction is visible. Both were found by
+> a review comment on the pull request. The second was only a documentation
+> error; the first was a documentation error hiding a real one.
 
 **Also true and worth stating plainly:** several prompt requirements are large
 new dependencies (a rich-text engine, a chart library, XLSX/PPTX/DOCX *readers*,
