@@ -8,9 +8,9 @@
  * the app teaches people not to search, and then everything has to be found by
  * remembering where it was put.
  *
- * So this searches deadlines, courses, study units, your notes, your tasks —
- * and the app's own screens, so "sync" reaches Account without knowing that
- * Account is where syncing lives.
+ * So this searches deadlines, courses, study units, your notes, your tasks,
+ * your appointments — and the app's own screens, so "sync" reaches Account
+ * without knowing that Account is where syncing lives.
  *
  * Ranking is deliberately dull and predictable: a match at the start of a name
  * beats a match in the middle, which beats a match in the body text. People
@@ -39,7 +39,15 @@ const ANY: Capabilities = {
   registrarUrl: 'https://example.invalid',
   orgPortalUrl: 'https://example.invalid',
 };
-import type { CourseId, CourseUpdate, Note, PersonalTask, Screen, StudyMode } from './types';
+import type {
+  Appointment,
+  CourseId,
+  CourseUpdate,
+  Note,
+  PersonalTask,
+  Screen,
+  StudyMode,
+} from './types';
 import { liveGuide } from './live';
 
 export type Hit =
@@ -57,6 +65,7 @@ export type Hit =
     }
   | { kind: 'note'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'task'; id: string; title: string; sub: string; tag: string; score: number }
+  | { kind: 'appointment'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'screen'; screen: Screen; title: string; sub: string; tag: string; score: number };
 
 export interface HitGroup {
@@ -207,6 +216,22 @@ export function findEverything(
    * and a caller that has none is telling the truth by saying nothing.
    */
   reviews: Reviews = {},
+  /*
+   * Your own appointments.
+   *
+   * They were not searched at all. Seed a task, a note and an appointment that
+   * share a word and search it: "2 results", the note and the task, on a
+   * screen where all three are one tab apart. An appointment is the same shape
+   * as a task — a title you typed, a date, a note — and it is the one of the
+   * three most likely to have a person's name in it, which is exactly what
+   * somebody types into a search box.
+   *
+   * Last in the list because that is where this signature has grown every
+   * time, not because it matters least: adding it beside `tasks`, where it
+   * belongs, would rewrite fifteen call sites in the test and bury the change
+   * that matters in them.
+   */
+  appointments: Appointment[] = [],
 ): HitGroup[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -338,6 +363,23 @@ export function findEverything(
       }
     }
 
+    const apptHits: Hit[] = [];
+    for (const a of appointments) {
+      const s = score(q, a.title, `${a.note} ${a.where} ${a.time}`, spell ? a.title : '');
+      if (s) {
+        apptHits.push({
+          kind: 'appointment',
+          id: a.id,
+          // The date as the app says dates, and the place, which is half of
+          // why somebody looks an appointment up in the first place.
+          sub: [dueLabel(isoToDate(a.date), now, a.time), a.time, a.where].filter(Boolean).join(' · '),
+          title: a.title,
+          tag: 'Appointment',
+          score: s,
+        });
+      }
+    }
+
     const screens: Hit[] = [];
     for (const d of DESTINATIONS) {
       if (!allowed(d.screen, caps)) continue;
@@ -357,6 +399,7 @@ export function findEverything(
       { label: 'Courses', hits: courses },
       { label: 'Your notes', hits: noteHits },
       { label: 'Your tasks', hits: taskHits },
+      { label: 'Your appointments', hits: apptHits },
       { label: 'Places in the app', hits: screens },
     ];
 

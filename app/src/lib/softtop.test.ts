@@ -260,3 +260,136 @@ describe('an account with something in it', () => {
     expect(softTop('registrar', input()).hero?.figure).toBe('0');
   });
 });
+
+describe("tonight's hero", () => {
+  // It used to headline `state.dayBudget` — the standing figure behind "a day
+  // is heavy past four hours" — as "4 hours to spend on 8 things", while the
+  // screen underneath asked how long you had tonight and planned against its
+  // own answer. Two numbers about the same evening, in one viewport.
+  const course = {
+    course: {
+      id: 'econ', code: 'ECON 1020', name: '', prof: '', email: '', meets: '',
+      room: '', credits: '3', source: '', grading: [], term: '2026FA',
+    },
+    items: [
+      { id: 'a', c: 'econ', title: 'One', kind: 'Problem set', month: 8, day: 7, year: 2026,
+        dueTime: '11:59p', weight: '', where: '', detail: '', quote: '', source: '' },
+      { id: 'b', c: 'econ', title: 'Two', kind: 'Problem set', month: 8, day: 9, year: 2026,
+        dueTime: '11:59p', weight: '', where: '', detail: '', quote: '', source: '' },
+    ],
+    schedule: [],
+    guide: null,
+    planMinutes: '',
+    frameLabel: '',
+  } as unknown as State['courses'][number];
+
+  const hero = (over: Partial<State> = {}) =>
+    softTop('tonight', input(over, [course])).hero;
+
+  it('states no figure in hours, which it cannot know', () => {
+    // The picker on the screen is local to it, so anything in hours up here is
+    // a number the screen below is free to contradict, and did.
+    expect(hero()?.figure).not.toMatch(/hour/);
+    expect(hero()?.foot).not.toMatch(/hour/);
+  });
+
+  it('does not move when the standing day budget does', () => {
+    expect(hero({ dayBudget: 8 })).toEqual(hero({ dayBudget: 1 }));
+  });
+
+  it('counts what is outstanding, which the screen below agrees with', () => {
+    expect(hero()?.figure).toBe('2');
+    expect(hero()?.foot).toBe('things outstanding');
+  });
+
+  it('says thing rather than things when there is one', () => {
+    const one = { ...course, items: [course.items[0]] } as typeof course;
+    expect(softTop('tonight', input({}, [one])).hero?.foot).toBe('thing outstanding');
+  });
+});
+
+describe('the Activities tile counts what the Activities screen counts', () => {
+  /*
+   * A commitment carries a Pause switch, and the screen's own header counts
+   * `mine.filter((c) => c.active)`. The tile counted the lot, so pausing one
+   * left the tile saying "3 commitments" above a screen saying "2" — and a
+   * tile that disagrees with the screen behind it is worse than no tile.
+   */
+  const commitment = (id: string, active: boolean) =>
+    ({
+      id,
+      name: `Thing ${id}`,
+      kind: 'club',
+      role: '',
+      where: '',
+      url: '',
+      note: '',
+      days: [1],
+      at: 600,
+      minutes: 60,
+      hours: 2,
+      active,
+    }) as unknown as State['commitments'][number];
+
+  const figure = (over: Partial<State>) => softTop('activities', input(over)).hero?.figure;
+
+  it('leaves out the paused ones', () => {
+    expect(figure({ commitments: [commitment('a', true), commitment('b', false)] })).toBe('1');
+  });
+
+  it('counts the running ones', () => {
+    expect(figure({ commitments: [commitment('a', true), commitment('b', true)] })).toBe('2');
+  });
+
+  it('says none where every one of them is paused', () => {
+    expect(figure({ commitments: [commitment('a', false)] })).toBe('0');
+  });
+});
+describe('the three numbers at the top of every screen', () => {
+  // "Due today" and "Overdue" have always dropped what you ticked. "This week"
+  // did not, so the row answered two different questions at once.
+  const item = (id: string, day: number) => ({
+    id, c: 'econ', title: id, kind: 'Problem set', month: 8, day, year: 2026,
+    dueTime: '11:59p', weight: '', where: '', detail: '', quote: '', source: '',
+  });
+  const course = {
+    course: {
+      id: 'econ', code: 'ECON 1020', name: '', prof: '', email: '', meets: '',
+      room: '', credits: '3', source: '', grading: [], term: '2026FA',
+    },
+    // NOW is Mon 7 Sep 2026: two today, two later in the week.
+    items: [item('today1', 7), item('today2', 7), item('wed', 9), item('fri', 11)],
+    schedule: [],
+    guide: null,
+    planMinutes: '',
+    frameLabel: '',
+  } as unknown as State['courses'][number];
+
+  const row = (done: Record<string, boolean> = {}) => {
+    const stats = softTop('behind', input({ done }, [course])).stats ?? [];
+    return Object.fromEntries(stats.map((x) => [x.label, x.value]));
+  };
+
+  it('counts a week that has been finished as finished', () => {
+    expect(row()['This week']).toBe('2');
+    expect(row({ wed: true, fri: true })['This week']).toBe('0');
+  });
+
+  it('drops just the ones ticked, not the day they fall on', () => {
+    expect(row({ wed: true })['This week']).toBe('1');
+  });
+
+  it('answers the same question as the two numbers beside it', () => {
+    const all = { today1: true, today2: true, wed: true, fri: true };
+    expect(row(all)).toMatchObject({ 'Due today': '0', 'This week': '0', Overdue: '0' });
+  });
+
+  it('says nothing is due this week once nothing is', () => {
+    // The hero this reaches is the one written for somebody who has done the
+    // week's work, and they were the one person who could never see it.
+    const hero = (done: Record<string, boolean>) =>
+      softTop('work', input({ done }, [course])).hero;
+    expect(hero({})?.foot).toBe('due in the next seven days');
+    expect(hero({ wed: true, fri: true })?.foot).toBe('Nothing due this week');
+  });
+});

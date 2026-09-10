@@ -2,6 +2,7 @@ import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from 'react';
 import { useStore } from './state/store';
 import { currentLook } from './state/shape';
 import {
+  AppsIcon,
   Bell,
   Check,
   ChevronLeft,
@@ -9,6 +10,7 @@ import {
   Plus,
   Search as SearchIcon,
 } from './components/Icons';
+import { creditHoursOr0 } from './lib/credits';
 import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
@@ -59,6 +61,9 @@ const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Cos
 const CourseDetail = lazy(() => import('./screens/Courses').then((m) => ({ default: m.CourseDetail })));
 const Courses = lazy(() => import('./screens/Courses').then((m) => ({ default: m.Courses })));
 const Deck = lazy(() => import('./screens/Deck').then((m) => ({ default: m.Deck })));
+const Write = lazy(() => import('./screens/Write').then((m) => ({ default: m.Write })));
+const SheetScreen = lazy(() => import('./screens/Sheet').then((m) => ({ default: m.Sheet })));
+const Equations = lazy(() => import('./screens/Equations').then((m) => ({ default: m.Equations })));
 const Draw = lazy(() => import('./screens/Draw').then((m) => ({ default: m.Draw })));
 const Drill = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Drill })));
 const Guess = lazy(() => import('./screens/Guess').then((m) => ({ default: m.Guess })));
@@ -125,6 +130,7 @@ import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
 import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
+import { AllApps } from './components/nav/AllApps';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
 import { Tapped } from './components/Tapped';
@@ -228,7 +234,7 @@ function useHeader(): { kicker: string; title: string } {
   // user but one, and the kind that quietly says the app is not really yours.
   const n = catalog.courses.length;
   const courseCount = `${n} ${n === 1 ? 'course' : 'courses'}`;
-  const credits = catalog.courses.reduce((sum, c) => sum + (parseFloat(c.credits) || 0), 0);
+  const credits = catalog.courses.reduce((sum, c) => sum + creditHoursOr0(c.credits), 0);
   const load = credits > 0 ? `${courseCount} · ${credits} credits` : courseCount;
 
   switch (state.screen) {
@@ -375,6 +381,12 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Everything but coursework', title: 'Draft it' };
     case 'deck':
       return { kicker: 'A real PowerPoint file', title: 'Make a deck' };
+    case 'write':
+      return { kicker: 'A real Word file', title: 'Write a document' };
+    case 'sheet':
+      return { kicker: 'Added up here, not guessed', title: 'Sheet or table' };
+    case 'equations':
+      return { kicker: 'Written, never computed', title: 'Equations' };
     case 'exam':
       return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
     case 'ahead':
@@ -641,6 +653,44 @@ function Header() {
           >
             <SearchIcon size={19} />
           </button>
+          {/*
+            All apps: the nine squares, and the other half of the button
+            beside it.
+
+            Search finds a screen if you can name it. Half the app's fifty-odd
+            screens are things somebody has seen once — the practice paper,
+            the deck builder, the diagram drawer — and "the thing that makes
+            flashcards" is not a word you can type. This is the answer to
+            that: every screen there is, drawn as its own icon under its own
+            shelf, in the order the tiles were arranged.
+
+            The two sit together deliberately, and this one is second: naming
+            a thing is faster when you can, so the control that takes a name
+            comes first.
+
+            On every screen, with no `atRoot` gate — the whole point is the
+            screen you are three levels into, where the directory on Progress
+            is four taps and a lost place away. See `components/nav/AllApps.tsx`.
+
+            What it costs, measured rather than guessed: a fourth icon takes
+            44px off the title at 390px, and two of the app's fifty titles
+            that used to fit now end in an ellipsis — "A change to a date" by
+            17px and "Timers and alarms" by 9. The header has always
+            truncated, so this is two more titles over a line rather than a
+            new kind of failure, and the row's tap targets still measure 44
+            and still do not overlap. `lib/header.test.ts` holds the second
+            half of that.
+          */}
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon tap"
+            onClick={() => dispatch({ type: 'apps', open: true })}
+            aria-label="All apps"
+            aria-haspopup="dialog"
+            aria-expanded={state.apps}
+          >
+            <AppsIcon size={19} />
+          </button>
           {atRoot && (
           <button
             type="button"
@@ -906,6 +956,12 @@ function CurrentScreen() {
       return <Essay />;
     case 'deck':
       return <Deck />;
+    case 'write':
+      return <Write />;
+    case 'sheet':
+      return <SheetScreen />;
+    case 'equations':
+      return <Equations />;
     case 'exam':
       return <Exam />;
     case 'ahead':
@@ -1267,6 +1323,10 @@ export default function App() {
             `components/Command.tsx`.
           */}
           {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
+          {/* And the launcher, which is inside the pane because `TileSheet`
+              portals it into `.device` regardless — mounted here so the two
+              overlays are read in one place rather than found separately. */}
+          {state.apps && <AllApps onClose={() => dispatch({ type: 'apps', open: false })} />}
           {/* And the capture box, for the same reason and with the same
               answer: its one field was a white browser textbox out here, and
               with nothing capping it its explanation ran the full width of a
@@ -1353,7 +1413,9 @@ export default function App() {
       <Assistant />
       {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
       {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
-        {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
+      {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
+      {/* The launcher, on this layout too. See the wide layout's copy. */}
+      {state.apps && <AllApps onClose={() => dispatch({ type: 'apps', open: false })} />}
       <Header />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />

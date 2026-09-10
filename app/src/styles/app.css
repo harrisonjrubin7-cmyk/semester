@@ -219,6 +219,24 @@ body {
   font-family: var(--font-body);
   font-size: 15px;
   -webkit-font-smoothing: antialiased;
+
+  /*
+   * A word longer than the column breaks, rather than the column giving way.
+   *
+   * Everything in this app is text somebody else wrote — a course title off a
+   * syllabus, a submission link pasted out of Brightspace, a professor's
+   * emailed room code. A URL has no spaces in it, so by default it is one
+   * word 100 characters wide, and the layout is 390: the card grew past the
+   * right edge of the screen and the whole scroller started moving sideways.
+   *
+   * `break-word` rather than `anywhere`, because the two differ in exactly
+   * the way that matters here: `anywhere` counts the break when working out
+   * how narrow a box may be, so every flex column in the app would become
+   * free to collapse to one letter, while `break-word` breaks the word only
+   * once the line it is on cannot hold it. Text that already fits is
+   * unaffected — which is why this can sit on `body`.
+   */
+  overflow-wrap: break-word;
 }
 
 a {
@@ -1084,9 +1102,27 @@ a:hover {
     color: #111318 !important;
   }
 
-  /* Anything you press is noise on paper. The exception is a link, which is
-     printed with its address after it further down. */
-  button,
+  /*
+   * Anything you press is noise on paper — except a row, which is content.
+   *
+   * This app draws a deadline, a task, an appointment and a campus listing as
+   * a row you press, so the row is a `<button>`, so the row was not on the
+   * paper. Measured on The week ahead, whose own button says "Print the week":
+   * "Reflection #2", "Quiz #2", "Midterm" and "CORE 2500" were all on the
+   * screen and none of them on the page. The printed week had its headings,
+   * its empty days, and not one deadline.
+   *
+   * `.on-paper` names the rows that are content, and the default stays what it
+   * was: a button does not print unless it says so. That is the safe direction
+   * and the first attempt went the other way — `button:not(.tappable)`, on the
+   * strength of `.tappable` being documented as "rows and cards the prototype
+   * made clickable". It is not: 123 buttons wear it, and a good third are
+   * controls — the drill's own "✗ Guessed" and "✓ Sure", "Set no school",
+   * "Just start", "Forget the counts". A review bot caught the drill; the
+   * others were found by scanning the source for the rest, and the count is
+   * why this is an allowlist rather than a rule with exceptions.
+   */
+  button:not(.on-paper),
   input[type='file'],
   select,
   .chiprow,
@@ -2553,6 +2589,42 @@ input[type='search'].input {
   }
 }
 
+/*
+ * On a desk, the window rather than the pane.
+ *
+ * `absolute` is right on a phone, where `.device` is the app, and on a browser
+ * window between 402 and 760px, where the app is a column with ground either
+ * side and a sheet spilling onto the ground would be the only thing that does.
+ * Above 760px `.device-pane` is a strip beside the rail, and a sheet that
+ * covers only the strip leaves the rail lit and clickable behind a dialog
+ * saying `aria-modal="true"` — so a tap on Courses navigated the screen
+ * underneath while the sheet stayed over it, and a screen reader was told the
+ * rail was not there while it plainly was.
+ *
+ * `Command` reached the same conclusion for the same reason and switches to
+ * `fixed` at the same width; `a11y/modal.ts` argues the Tab half of it. Safe
+ * because nothing above this transforms — a transformed ancestor would become
+ * the containing block and put the sheet back over the pane.
+ *
+ * The content is a column at that width rather than a grid stretched over a
+ * laptop, which is what makes a covered window read as a sheet and not as a
+ * screen that has been pulled out of shape.
+ */
+@media (min-width: 760px) {
+  .soft-folder {
+    position: fixed;
+    padding: 26px;
+  }
+
+  .soft-folder-top,
+  .soft-folder-grid,
+  .soft-folder-body {
+    width: 100%;
+    max-width: 620px;
+    margin-inline: auto;
+  }
+}
+
 .soft-folder-top {
   display: flex;
   align-items: flex-start;
@@ -2578,6 +2650,31 @@ input[type='search'].input {
   /* Two across on a phone, and as many as fit after that. */
   grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
   gap: var(--sp-5);
+}
+
+/* The other thing a sheet can hold: shelves that lay themselves out, each a
+   caps heading over a grid of icons. The gap is a step wider than the tile
+   grid's because what it separates is a section rather than a tile — at
+   `--sp-5` the heading of one shelf sat as close to the row above it as to
+   its own icons, which reads as one long grid with words in it. */
+.soft-folder-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-7);
+  /* A column, not the width of a laptop. The sheet is as wide as the pane,
+     and left to fill it the icons run nine and ten across — which is a strip
+     of icons rather than the block the eye takes in at once. Seven is the
+     ceiling this works out to, and a phone is nowhere near it. */
+  max-width: 620px;
+}
+
+/* `.appgrid` carries a top margin for the tab it was written for, where it
+   follows a paragraph. Under a caps heading that is a second gap on top of
+   the one the heading already has — and its own 460px ceiling is the Tools
+   tab's, inside a body that already has one. */
+.soft-folder-body .appgrid {
+  margin-top: var(--sp-4);
+  max-width: none;
 }
 
 /*

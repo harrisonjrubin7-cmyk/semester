@@ -3,6 +3,7 @@ import {
   ALARMS,
   appointmentEvents,
   backupOf,
+  BACKUP_SECTIONS,
   readBackup,
   cell,
   deadlineCsv,
@@ -209,6 +210,42 @@ describe('toIcs', () => {
   });
 });
 
+describe('the lines toIcs refuses to write', () => {
+  const good = { uid: 'ok', summary: 'Fine', date: new Date(2026, 8, 10), minutes: 60 };
+
+  it('drops an event whose date is not a date, instead of writing NaNNaNNaN', () => {
+    // `dateStamp` pads three fields off the Date, so an Invalid Date came out
+    // as `DTSTART;VALUE=DATE:NaNNaNNaN` — a line no parser accepts, in a file
+    // a strict client then refuses whole.
+    const ics = toIcs([{ uid: 'broken', summary: 'Broken', date: new Date(NaN) }, good]);
+    expect(ics).not.toContain('NaN');
+    expect(ics).toContain('UID:ok@semester.app');
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(1);
+  });
+
+  it('treats an hour off the clock as no hour', () => {
+    // RFC 5545 gives the hour two digits, 00-23. 5000 minutes wrote hour 83.
+    for (const at of [-1, -600, 1440, 5000, 1.5]) {
+      const ics = toIcs([{ ...good, at }]);
+      expect(ics, String(at)).toContain('DTSTART;VALUE=DATE:20260910');
+    }
+  });
+
+  it('keeps the hours that are on it', () => {
+    expect(toIcs([{ ...good, at: 0 }])).toContain('DTSTART:20260910T000000');
+    expect(toIcs([{ ...good, at: 1439 }])).toContain('DTSTART:20260910T235900');
+  });
+
+  it('rolls an end past midnight into the next day rather than writing hour 24', () => {
+    // 11:59 PM is the commonest time in any syllabus and this app's own
+    // default. Half an hour later used to be `DTEND:20260910T242900`.
+    const ics = toIcs([{ ...good, at: 23 * 60 + 59, minutes: 30 }]);
+    expect(ics).toContain('DTSTART:20260910T235900');
+    expect(ics).toContain('DTEND:20260911T002900');
+    expect(ics).not.toMatch(/DTEND:\d{8}T(2[4-9]|[3-9]\d)/);
+  });
+});
+
 describe('appointmentEvents', () => {
   const appt = {
     id: 'a1',
@@ -232,6 +269,41 @@ describe('appointmentEvents', () => {
     const [event] = appointmentEvents([appt]);
     expect(event.date.getDate()).toBe(2);
     expect(event.date.getMonth()).toBe(9);
+  });
+
+  /*
+   * The dates that are not dates.
+   *
+   * A stored appointment saved without one arrives as `date: ''`, and
+   * `Number('')` is 0 rather than NaN — so the split-and-construct this used
+   * to do sailed past its own `|| 1` guards and produced 1 January 1900: a
+   * confident entry, in the downloaded file, on a day nobody named.
+   */
+  it('leaves out an appointment with no date rather than inventing 1900', () => {
+    const none = { ...appt, id: 'a2', date: '' } as Appointment;
+    expect(appointmentEvents([none])).toEqual([]);
+    expect(toIcs(appointmentEvents([none]))).not.toContain('19000101');
+  });
+
+  it('leaves out a date the calendar does not have', () => {
+    // 31 February reads back as 3 March, which is a day nobody wrote down.
+    for (const date of ['2026-02-31', '2026-13-01', '2026-10-2', '0026-01-01', 'soon']) {
+      expect(appointmentEvents([{ ...appt, date } as Appointment]), date).toEqual([]);
+    }
+  });
+
+  it('still exports the good ones beside a bad one', () => {
+    const ics = toIcs(appointmentEvents([{ ...appt, id: 'bad', date: '' } as Appointment, appt]));
+    expect(ics).toContain('UID:appt-a1@semester.app');
+    expect(ics).not.toContain('appt-bad');
+  });
+
+  it('writes an appointment with no recorded hour as all-day, not as hour -1', () => {
+    // -1 is what a stored appointment holds when neither the number nor the
+    // words could be read. It used to reach the formatter and write `T-1-100`.
+    const ics = toIcs(appointmentEvents([{ ...appt, at: -1 } as Appointment]));
+    expect(ics).toContain('DTSTART;VALUE=DATE:20261002');
+    expect(ics).not.toMatch(/DTSTART:.*T-/);
   });
 });
 
@@ -373,5 +445,68 @@ describe('a backup carries the semester, not the look', () => {
     });
     const { data } = readBackup(meddled);
     for (const k of LOOK) expect(data[k], k).toBeUndefined();
+  });
+});
+
+describe('a backup that can be restored from', () => {
+  const feed = {
+    id: 'f1',
+    kind: 'ics' as const,
+    name: 'Rowing',
+    url: 'https://example.invalid/rowing.ics',
+    added: 111,
+    synced: 999,
+    status: 'Pulled 12 events',
+    count: 12,
+  };
+  const withFeed = () =>
+    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date()), feeds: [feed] }) as State;
+
+  /*
+   * The failure this catches, and why it is written as a set difference.
+   *
+   * `backupOf` wrote `feeds` and `BACKUP_SECTIONS` never named them, so
+   * `readBackup` walked past: a backup holding a subscription restored to
+   * `feeds: undefined`, and the confirmation — which is built from the same
+   * list — never mentioned them, so nobody could tell. The comment above the
+   * list says it exists so that "a section added to a backup is automatically
+   * a section a restore warns you about"; nothing was checking that, and this
+   * is that check rather than one more remembered case.
+   */
+  it('reads back every section it writes', () => {
+    const written = Object.keys(backupOf(withFeed())).filter(
+      (k) => k !== 'format' && k !== 'exported' && k !== 'sample',
+    );
+    const read = new Set(BACKUP_SECTIONS.map((s) => s.key));
+    expect(written.filter((k) => !read.has(k))).toEqual([]);
+  });
+
+  it('brings the calendars you subscribed to back with it', () => {
+    const { parts, data } = readBackup(JSON.stringify(backupOf(withFeed())));
+    expect(data.feeds).toHaveLength(1);
+    expect(parts.join(' · ')).toContain('connected calendars');
+  });
+
+  it('carries what the subscription is, including the kind that names it', () => {
+    // `{ id, name, url }` was what went. `kind` decides the label and the
+    // icon, so a feed restored without it arrives nameless on the screen.
+    const [back] = readBackup(JSON.stringify(backupOf(withFeed()))).data.feeds as typeof feed[];
+    // The id first: `FeedEvent.sourceId` points at it, so a feed restored
+    // without one is a subscription nothing pulled can be attributed to.
+    expect(back.id).toBe('f1');
+    expect(back.kind).toBe('ics');
+    expect(back.url).toBe(feed.url);
+    expect(back.name).toBe('Rowing');
+    expect(back.added).toBe(111);
+  });
+
+  it('does not carry a pull that happened on the other device', () => {
+    // These are facts about a machine, not about a subscription. "Last synced
+    // in March" on a phone that has never seen this feed is a worse answer
+    // than "not yet", and the next pull fills them in truthfully.
+    const [back] = readBackup(JSON.stringify(backupOf(withFeed()))).data.feeds as typeof feed[];
+    expect(back.synced).toBe(0);
+    expect(back.status).toBe('');
+    expect(back.count).toBe(0);
   });
 });

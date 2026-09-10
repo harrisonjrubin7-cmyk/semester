@@ -49,6 +49,79 @@ const loaded = (over: Partial<State> = {}): State =>
         courseId: null,
       },
     ],
+    appointments: [
+      {
+        id: 'a1',
+        title: 'Advising meeting with Dr Trounstine',
+        /*
+         * Inside the window the privacy loop below can see.
+         *
+         * `read_timetable` clamps its span to seven days from the date it is
+         * given, and every probe there asks about 2026-09-15 — so a fixture
+         * item dated outside 15–21 September is invisible to the one test
+         * that checks every lookup for every secret. It was on the 13th, and
+         * a mutation that appended the appointment's note to the timetable
+         * line passed the whole suite. A Sunday, so there are no classes to
+         * make "not empty" true for the wrong reason.
+         */
+        date: '2026-09-20',
+        at: 600,
+        time: '10:00a',
+        where: 'Kirkland Hall 210',
+        note: 'THE-PRIVATE-APPT-NOTE',
+        created: 0,
+      },
+    ],
+    commitments: [
+      {
+        id: 'cm1',
+        name: 'Rowing squad',
+        kind: 'sport',
+        role: 'Member',
+        // A commitment's place travels nowhere in this app — not from the
+        // Activities provider, which sends the name, kind, role and hours a
+        // week, and not from a lookup. It is a secret here so that a change
+        // which starts sending it is caught by the sweep rather than by a
+        // reviewer.
+        where: 'COMMITMENT-PLACE',
+        url: '',
+        note: 'COMMITMENT-NOTE',
+        // Monday, not Sunday. The appointment above sits on Sunday the 20th
+        // and the "a day with nothing on it" tests use Sunday the 27th, so a
+        // weekly commitment on day 0 lands on both and makes one of them a
+        // liar. The 21st is still inside the seven days the timetable clamps
+        // to, which is what the sweep needs of it.
+        days: [1],
+        at: 360,
+        minutes: 180,
+        hours: 9,
+        active: true,
+      },
+    ] as unknown as State['commitments'],
+    feeds: [
+      { id: 'f1', kind: 'ics', name: 'Their calendar', url: '', added: 0, synced: 0, status: '', count: 1 },
+    ] as unknown as State['feeds'],
+    feedEvents: [
+      {
+        id: 'fe1',
+        sourceId: 'f1',
+        /*
+         * A connected calendar is somebody else's writing — an employer's
+         * rota, a clinic's confirmation — so every text field on it is a
+         * secret here, not only the note. The same Sunday as the appointment
+         * above, for the same reason: inside the seven days the timetable
+         * clamps to, and with no classes to make the day non-empty for the
+         * wrong reason.
+         */
+        title: 'FEED-EVENT-TITLE',
+        date: '2026-09-20',
+        at: 840,
+        time: '2:00p',
+        where: 'FEED-EVENT-PLACE',
+        note: 'FEED-EVENT-NOTE',
+        courseId: null,
+      },
+    ] as unknown as State['feedEvents'],
     notes: [
       {
         id: 'n1',
@@ -93,12 +166,24 @@ describe('what a lookup can never reach', () => {
   const SECRETS = [
     'THE-PRIVATE-NOTE-BODY',
     'THE-PRIVATE-TASK-NOTE',
+    'THE-PRIVATE-APPT-NOTE',
+    'FEED-EVENT-TITLE',
+    'FEED-EVENT-PLACE',
+    'FEED-EVENT-NOTE',
+    'COMMITMENT-PLACE',
+    'COMMITMENT-NOTE',
     'PERSON-NAME-HERE',
     'SAID-ABOUT-THEM',
     'LETTER-BODY-HERE',
   ];
 
   it('returns nothing private, whatever it is asked for', () => {
+    /*
+     * `days: 400` does not mean four hundred days everywhere: the timetable
+     * clamps its span to seven. So a secret this loop is meant to catch has
+     * to be dated within a week of the date below, or the lookup never reads
+     * the row it is on and the probe proves nothing.
+     */
     const asked = [
       { course: 'ECON 1020', days: 400, query: 'therapy', date: '2026-09-15', hours: 4 },
       { course: '', days: 400, query: 'PERSON-NAME-HERE', date: '2026-09-15' },
@@ -264,6 +349,33 @@ describe('the timetable', () => {
     expect(result.failed).toBeUndefined();
     expect(result.text).toContain('September');
   });
+
+  /*
+   * The day above is a Sunday with no classes and no tasks, and the fixture
+   * puts one appointment on it — so the two assertions here are the before
+   * and after of the same call. This read classes and tasks only, and
+   * answered "nothing scheduled" about a day holding something the student
+   * had put there themselves. Measured against a day with genuinely nothing
+   * on it, the two answers were the same sentence.
+   */
+  it('does not call a day empty when an appointment is on it', () => {
+    const { result } = ran('read_timetable', { date: '2026-09-20', days: 1 });
+    expect(result.text).not.toContain('nothing scheduled');
+    expect(result.text).toContain('Advising meeting with Dr Trounstine');
+  });
+
+  it('says when it is and where, which is what the question is usually for', () => {
+    const { result } = ran('read_timetable', { date: '2026-09-20', days: 1 });
+    expect(result.text).toContain('10:00a');
+    expect(result.text).toContain('Kirkland Hall 210');
+  });
+
+  it('still says nothing scheduled about a day with nothing on it', () => {
+    // The control. Without it the first assertion above passes for a lookup
+    // that has simply stopped saying the sentence at all.
+    const { result } = ran('read_timetable', { date: '2026-09-27', days: 1 });
+    expect(result.text).toContain('nothing scheduled');
+  });
 });
 
 describe('answering every call, whatever happens', () => {
@@ -308,5 +420,219 @@ describe('the tool definitions themselves', () => {
       expect(t.input_schema.required, t.name).toEqual(props);
       expect(t.strict, t.name).toBe(true);
     }
+  });
+});
+
+describe('a day the connected calendar has something on', () => {
+  /*
+   * The day read back "nothing scheduled" — word for word the sentence for a
+   * day with genuinely nothing on it. Measured before the fix: a Saturday
+   * holding a seminar at two and a shift at five, and read_timetable,
+   * read_tasks and find_deadlines all called it empty. Asked whether they are
+   * free at two — the example this tool's own description gives — the model
+   * would have said yes.
+   */
+  const withFeed = (): Partial<State> =>
+    ({
+      /*
+       * Nothing else on the day, deliberately. The shared fixture above puts
+       * an appointment on this Sunday, and left in place it makes the day
+       * non-empty on its own — so a probe asking whether the feed event
+       * rescues the day would pass without the feed event doing anything.
+       * Measured: with the appointment left in, removing the feed from the
+       * empty test broke no test at all.
+       */
+      tasks: [],
+      appointments: [],
+      feeds: [{ id: 'f2', kind: 'ics', name: 'Vanderbilt', url: '', added: 0, synced: 0, status: '', count: 2 }],
+      feedEvents: [
+        { id: 'x1', sourceId: 'f2', title: 'SEMINAR-TITLE', date: '2026-09-20', at: 840, time: '2:00p', where: 'SEMINAR-PLACE', note: 'SEMINAR-NOTE', courseId: null },
+      ],
+    }) as unknown as Partial<State>;
+
+  it('does not call the day empty', () => {
+    const out = ran('read_timetable', { date: '2026-09-20', days: 1 }, withFeed());
+    expect(JSON.stringify(out.result)).not.toContain('nothing scheduled');
+  });
+
+  it('says when it is, so "are you free at two" can be answered', () => {
+    const out = ran('read_timetable', { date: '2026-09-20', days: 1 }, withFeed());
+    expect(JSON.stringify(out.result)).toContain('2:00p');
+  });
+
+  it('says it is a connected calendar, not one of their own entries', () => {
+    // The wording has to be unmistakable, because the model will repeat it and
+    // the student needs to know where to look.
+    const out = ran('read_timetable', { date: '2026-09-20', days: 1 }, withFeed());
+    expect(JSON.stringify(out.result)).toContain('calendar they connected');
+  });
+
+  it('reads no title, no place and no note from it', () => {
+    /*
+     * The line this change stops at. An appointment is what the student typed
+     * into this app and `PICK.always` already sends it; a connected calendar
+     * is somebody else's writing, and none of it reaches the model from any
+     * provider or lookup today. Widening that is the owner's decision, not
+     * something to do while fixing a false sentence.
+     */
+    const out = JSON.stringify(ran('read_timetable', { date: '2026-09-20', days: 1 }, withFeed()).result);
+    for (const secret of ['SEMINAR-TITLE', 'SEMINAR-PLACE', 'SEMINAR-NOTE']) {
+      expect(out, secret).not.toContain(secret);
+    }
+  });
+
+  it('still calls a day with nothing on it nothing', () => {
+    // 2026-09-27 is a Sunday with no classes, and the fixture puts no feed
+    // event on it.
+    const out = ran('read_timetable', { date: '2026-09-27', days: 1 }, withFeed());
+    expect(JSON.stringify(out.result)).toContain('nothing scheduled');
+  });
+});
+
+describe('the assistant\'s day and the app\'s day', () => {
+  /*
+   * Three lists went missing from `read_timetable` one at a time — the
+   * student's own appointments, the calendars they connected, and their
+   * standing commitments — and each was found only when somebody thought to
+   * look. `railFor` in `lib/select.ts` is what the day rail, the day grid, the
+   * week grid and the hours tab are all built from, and its own comment says
+   * it exists so that a fifth view is not "taught separately and the fourth
+   * forgotten again". This tool is that fifth view and was never taught.
+   *
+   * So rather than a fourth test remembering a fourth list, this seeds one of
+   * every kind of thing a day can hold and asserts the tool names all of them.
+   * Add a source to the day and forget this tool, and this fails.
+   *
+   * Deadlines are the one deliberate absence: `find_deadlines` is the tool for
+   * those, and listing them here would hand the model the same rows twice.
+   */
+  const ON = '2026-09-19'; // Saturday, so no classes get in the way.
+
+  const everything = (): Partial<State> =>
+    ({
+      tasks: [
+        { id: 'k1', title: 'TASK-WITH-AN-HOUR', date: ON, time: '4:00p', done: false, courseId: null, note: '' },
+        { id: 'k2', title: 'TASK-WITH-NO-HOUR', date: ON, time: '', done: false, courseId: null, note: '' },
+      ],
+      appointments: [
+        { id: 'a9', title: 'APPOINTMENT-TITLE', kind: 'meeting', date: ON, at: 600, time: '10:00a', where: 'Kirkland', note: 'APPT-NOTE-SECRET', created: 0 },
+      ],
+      commitments: [
+        { id: 'c9', name: 'COMMITMENT-NAME', kind: 'sport', role: 'Member', where: 'Percy Priest', url: '', note: 'COMMITMENT-NOTE-SECRET', days: [6], at: 6 * 60, minutes: 180, hours: 9, active: true },
+      ],
+      feeds: [{ id: 'f9', kind: 'ics', name: 'Theirs', url: '', added: 0, synced: 0, status: '', count: 1 }],
+      feedEvents: [
+        { id: 'x9', sourceId: 'f9', title: 'FEED-TITLE-SECRET', date: ON, at: 840, time: '2:00p', where: 'FEED-PLACE-SECRET', note: 'FEED-NOTE-SECRET', courseId: null },
+      ],
+    }) as unknown as Partial<State>;
+
+  const read = () => JSON.stringify(ran('read_timetable', { date: ON, days: 1 }, everything()).result);
+
+  it('names everything the day actually holds', () => {
+    const out = read();
+    for (const named of [
+      'TASK-WITH-AN-HOUR',
+      'TASK-WITH-NO-HOUR',
+      'APPOINTMENT-TITLE',
+      'COMMITMENT-NAME',
+    ]) {
+      expect(out, named).toContain(named);
+    }
+    // The connected calendar is there by its hour, deliberately without a name.
+    expect(out).toContain('2:00p');
+    expect(out).toContain('calendar they connected');
+  });
+
+  it('does not call a day empty when a standing commitment is all it holds', () => {
+    /*
+     * The real shape of it: a Saturday the student rows every week from six,
+     * and nothing else on the day. Their own entry, in their own app, used by
+     * the clash detector to say a day is already promised — and read back as
+     * "nothing scheduled" to the one tool asked what a day looks like.
+     */
+    const only = {
+      tasks: [],
+      appointments: [],
+      feedEvents: [],
+      commitments: [
+        { id: 'c8', name: 'Rowing squad', kind: 'sport', role: 'Member', where: 'Percy Priest', url: '', note: '', days: [6], at: 6 * 60, minutes: 180, hours: 9, active: true },
+      ],
+    } as unknown as Partial<State>;
+    const out = JSON.stringify(ran('read_timetable', { date: ON, days: 1 }, only).result);
+    expect(out).not.toContain('nothing scheduled');
+    expect(out).toContain('Rowing squad');
+  });
+
+  it('gives away nothing it should not, from any of them', () => {
+    const out = read();
+    for (const secret of ['APPT-NOTE-SECRET', 'COMMITMENT-NOTE-SECRET', 'FEED-TITLE-SECRET', 'FEED-PLACE-SECRET', 'FEED-NOTE-SECRET']) {
+      expect(out, secret).not.toContain(secret);
+    }
+  });
+
+  it('keeps a task with no hour, which an hour grid would drop', () => {
+    /*
+     * The reason this tool does not simply call `railFor` and be done. That
+     * builds an hour grid, so it takes only the tasks that name a clock time —
+     * right for a grid, wrong for a question about the whole day. Swapping to
+     * it wholesale would have quietly lost these.
+     */
+    expect(read()).toContain('TASK-WITH-NO-HOUR');
+  });
+});
+
+
+describe('a connected calendar with a lot on it', () => {
+  /*
+   * A line each said the same eleven words over and over to carry one hour,
+   * and `within` drops whole days rather than trimming them. Measured on the
+   * per-line form: forty entries came to 2,743 characters and read fine;
+   * sixty-four passed `ROOM` and the day's whole answer became "(1 more, not
+   * shown — ask again more narrowly.)" with no hours in it at all — worse than
+   * the sentence this branch was written to stop.
+   */
+  const busy = (n: number): Partial<State> =>
+    ({
+      tasks: [],
+      appointments: [],
+      commitments: [],
+      feeds: [{ id: 'fb', kind: 'ics', name: 'Dept', url: '', added: 0, synced: 0, status: '', count: n }],
+      feedEvents: [...Array(n)].map((_, i) => ({
+        id: `b${i}`,
+        sourceId: 'fb',
+        title: `Event ${i}`,
+        date: '2026-09-20',
+        at: 480 + i,
+        time: `${8 + Math.floor(i / 60)}:${String(i % 60).padStart(2, '0')}a`,
+        where: '',
+        note: '',
+        courseId: null,
+      })),
+    }) as unknown as Partial<State>;
+
+  const read = (n: number) =>
+    (ran('read_timetable', { date: '2026-09-20', days: 1 }, busy(n)).result as { text: string }).text;
+
+  it('still answers on a day with sixty-four things on it', () => {
+    const out = read(64);
+    expect(out).not.toContain('not shown');
+    expect(out).toContain('64 things on a calendar they connected');
+    expect(out).toContain('8:00a');
+  });
+
+  it('stays inside its budget however many there are', () => {
+    // The count carries what the list stops carrying, so the length settles
+    // rather than growing with the day.
+    expect(read(200).length).toBeLessThan(400);
+    expect(read(200)).toContain('200 things');
+  });
+
+  it('says one thing as one thing', () => {
+    expect(read(1)).toContain('1 thing on a calendar they connected, at 8:00a');
+  });
+
+  it('counts the ones it stopped listing', () => {
+    const out = read(20);
+    expect(out).toContain('and 8 more');
   });
 });

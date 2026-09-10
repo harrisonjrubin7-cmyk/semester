@@ -88,6 +88,35 @@ describe('saysIt', () => {
     expect(saysIt('inelasticity is not this', 'elasticity')).toBe(false);
   });
 
+  it('keeps looking after a hit that sits inside a longer word', () => {
+    /*
+     * The failure this was written for. `indexOf` finds the buried one first,
+     * the boundary test rejects it, and the real word later in the sentence
+     * was never reached — so a passage that plainly says *economics* did not
+     * use the word. A term is most likely to be buried inside a longer word
+     * in exactly the courses that are about it.
+     */
+    expect(saysIt('microeconomics is economics at a small scale', 'economics')).toBe(true);
+    expect(saysIt('macroeconomics and economics', 'economics')).toBe(true);
+    expect(saysIt('cybersecurity and security policy', 'security')).toBe(true);
+    expect(saysIt('statements about the state', 'state')).toBe(true);
+    expect(saysIt('the warrant for war', 'war')).toBe(true);
+    expect(saysIt('inelasticity and elasticity', 'elasticity')).toBe(true);
+  });
+
+  it('still says no when every occurrence is inside a longer word', () => {
+    expect(saysIt('microeconomics and macroeconomics', 'economics')).toBe(false);
+    expect(saysIt('cybersecurity alone', 'security')).toBe(false);
+    expect(saysIt('statements and restatements', 'state')).toBe(false);
+  });
+
+  it('refuses an empty phrase rather than walking forever', () => {
+    // `indexOf` clamps its start to the length of the string, so an empty
+    // needle never advances: without the guard the search does not end.
+    expect(saysIt('anything at all', '')).toBe(false);
+    expect(saysIt('', '')).toBe(false);
+  });
+
   it('matches at either end of the text', () => {
     expect(saysIt('elasticity of demand', 'elasticity')).toBe(true);
     expect(saysIt('demand and elasticity', 'elasticity')).toBe(true);

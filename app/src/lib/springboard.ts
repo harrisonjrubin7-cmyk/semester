@@ -67,7 +67,7 @@ export const PAGES: Page[] = [
       'proof',
       'analyse',
       'ahead',
-      { label: 'Make', screens: ['draw', 'sources', 'essay', 'deck'] },
+      { label: 'Make', screens: ['write', 'sheet', 'draw', 'equations', 'sources', 'essay', 'deck'] },
       {
         label: 'Campus',
         screens: ['meals', 'housing', 'maps', 'classmates', 'groupwork', 'costs', 'yes', 'mail', 'activities'],

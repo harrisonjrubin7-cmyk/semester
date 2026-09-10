@@ -56,9 +56,35 @@ describe('when the device asks for less motion', () => {
 
   it('does not fall over on a missing element or a browser with no matchMedia', () => {
     vi.stubGlobal('matchMedia', undefined);
-    expect(prefersLessMotion()).toBe(false);
     expect(() => scrollKindly(null, { top: 0 })).not.toThrow();
     expect(() => revealKindly(undefined)).not.toThrow();
+  });
+
+  it('reduces when it cannot ask, which is the direction the cost is uneven in', () => {
+    /*
+     * This assertion used to read `toBe(false)`, tucked inside the test above
+     * as an incidental of not throwing — and it pinned the answer the opposite
+     * way round from the one `lib/prefers.ts` argues for two paragraphs above
+     * the function: "answering 'yes, reduce' wherever `matchMedia` cannot be
+     * asked … The wrong answer in that direction is a jump instead of a glide;
+     * in the other it is a symptom."
+     *
+     * The cost is not symmetric, which is the whole reason the file states a
+     * direction rather than picking whichever is tidier. Asserted on its own
+     * now, so it is a decision rather than a side effect of a robustness test.
+     */
+    vi.stubGlobal('matchMedia', undefined);
+    expect(prefersLessMotion()).toBe(true);
+
+    // And the same for a browser that has `matchMedia` and throws on the query.
+    vi.stubGlobal('matchMedia', () => {
+      throw new Error('unsupported query');
+    });
+    expect(prefersLessMotion()).toBe(true);
+
+    const el = { scrollTo: vi.fn(), scrollIntoView: vi.fn() };
+    scrollKindly(el as unknown as Element, { top: 0 });
+    expect(el.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'auto' });
   });
 });
 

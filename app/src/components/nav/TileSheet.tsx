@@ -42,6 +42,7 @@ const SWIPE = 70;
 export function TileSheet({
   name,
   sub,
+  plain = false,
   onClose,
   children,
 }: {
@@ -49,6 +50,16 @@ export function TileSheet({
   name: string;
   /** The quiet line under it — how many screens are in here. */
   sub: string;
+  /**
+   * Whether the children lay themselves out.
+   *
+   * The two original callers both hand over a flat set of tiles, so the grid
+   * they sit in is chrome and belongs here. The app launcher hands over
+   * shelves — a caps heading and a grid of icons, several times over — and a
+   * tile grid wrapped round *that* would put each shelf in a 148px column.
+   * So it says so, and gets a plain column with the sheet's own rhythm.
+   */
+  plain?: boolean;
   onClose: () => void;
   children: ReactNode;
 }) {
@@ -91,7 +102,7 @@ export function TileSheet({
         </button>
       </div>
 
-      <div className="soft-folder-grid">{children}</div>
+      <div className={plain ? 'soft-folder-body' : 'soft-folder-grid'}>{children}</div>
     </div>
   );
 

@@ -175,6 +175,26 @@ describe('openHit', () => {
       { type: 'go', screen: 'mine' },
     ]);
   });
+
+  it('lands an appointment on its own tab, not on the task one', () => {
+    expect(sentBy(hit({ kind: 'appointment', id: 'a1' }))).toEqual([
+      { type: 'setMineTab', tab: 'appointments' },
+      { type: 'go', screen: 'mine' },
+    ]);
+  });
+
+  /*
+   * The failure this file's header names: findable in one place and dead in
+   * the other. A kind added to `Hit` and not to the table falls through the
+   * switch and the press does nothing at all — no navigation, no error.
+   */
+  it('has somewhere to send every kind of hit there is', () => {
+    const kinds: Hit['kind'][] = ['item', 'course', 'unit', 'note', 'task', 'appointment', 'screen'];
+    for (const kind of kinds) {
+      expect(sentBy(hit({ kind, courseId: 'econ', unit: 0, mode: 'cards', screen: 'calendar' })), kind)
+        .not.toHaveLength(0);
+    }
+  });
 });
 
 describe('flatten and hitKey', () => {

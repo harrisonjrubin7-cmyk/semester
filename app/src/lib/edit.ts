@@ -16,7 +16,7 @@ import { realMonthDay } from './date';
  * mutate what they were handed, because the store compares by identity.
  */
 
-import { percentOf } from './grades';
+import { readWeight } from './grades';
 import { isPlace } from './maps';
 import type { CourseModule, GradeRow, Item, RecurringBlock } from './types';
 
@@ -118,12 +118,26 @@ export function weightTotal(grading: GradeRow[]): number | null {
   let total = 0;
   let any = false;
   for (const row of grading) {
-    // `percentOf` returns 0 for a row with no percentage in it, and a row
-    // graded on points or letters must not count towards the total — so the
-    // test is on the wording, not on the number it produced.
-    if (!/\d\s*%/.test(row.pct)) continue;
+    /*
+     * The same reading `standing` does, so the two screens agree about the
+     * same syllabus.
+     *
+     * They did not. This summed a plain percentage off the wording, which
+     * counted a "+3% EC" bonus row towards the hundred and took "25–30%" at
+     * its top. `standing` excludes a bonus from the hundred and takes a range
+     * at its midpoint. On a syllabus with a range, this said "Adds up to
+     * 100%" while the grade screen said "yours add to 98%. Fix the weights
+     * above" — sending somebody to a screen that told them there was nothing
+     * to fix.
+     *
+     * A row graded on points or on letters still counts towards nothing:
+     * `readWeight` returns no weight for those, which is the same silence the
+     * wording test gave and the reason this can return null at all.
+     */
+    const { weight, extra } = readWeight(row.pct);
+    if (weight === null || extra) continue;
     any = true;
-    total += percentOf(row.pct);
+    total += weight;
   }
   return any ? Math.round(total * 10) / 10 : null;
 }

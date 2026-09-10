@@ -123,6 +123,52 @@ export function fromUnit(guide: Guide, index: number, also: UnitExtras = {}): De
 }
 
 /** What a unit holds besides its cards. Optional, so the old call still works. */
+/**
+ * How many rows of a table go on one slide.
+ *
+ * Eight, plus the heading. Not a layout constraint — PowerPoint would happily
+ * take thirty — but a reading one: a table nobody at the back can read is not
+ * on the slide, it is on the presenter's laptop. A longer table is split, and
+ * the heading row is repeated at the top of each part so the second slide is
+ * still readable on its own.
+ */
+export const ROWS_ON_A_SLIDE = 8;
+
+/**
+ * A deck from a sheet.
+ *
+ * The third door, and the one with no model and no guide behind it: a table
+ * you built is already the content of a slide, and until now getting it onto
+ * one meant a screenshot. Long tables are split rather than shrunk, because
+ * the alternative to two readable slides is one nobody reads.
+ */
+export function fromTable(title: string, rows: string[][], subtitle = ''): Deck {
+  const body = rows.filter((row) => row.some((cell) => cell.trim() !== ''));
+  if (body.length === 0) return { title, subtitle, slides: [] };
+
+  const [head, ...rest] = body;
+  const slides: Slide[] = [
+    { title, bullets: [], note: subtitle || `${rest.length} rows`, opening: true },
+  ];
+
+  if (rest.length === 0) {
+    slides.push({ title, bullets: [], table: [head] });
+    return { title, subtitle, slides };
+  }
+
+  const parts = Math.ceil(rest.length / ROWS_ON_A_SLIDE);
+  for (let i = 0; i < parts; i += 1) {
+    const chunk = rest.slice(i * ROWS_ON_A_SLIDE, (i + 1) * ROWS_ON_A_SLIDE);
+    slides.push({
+      title,
+      bullets: [],
+      note: parts > 1 ? `${i + 1} of ${parts}` : undefined,
+      table: [head, ...chunk],
+    });
+  }
+  return { title, subtitle, slides };
+}
+
 export interface UnitExtras {
   figures?: Figure[];
   notes?: { title: string; text: string; from: string }[];

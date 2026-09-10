@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NO_TIME, dueMinutes, hasTime, readDue } from './duetime';
+import { matchTime } from './capture';
 
 describe('the wordings the sample syllabi actually use', () => {
   // Every one of these is a real `dueTime` from the four courses in the app.
@@ -45,6 +46,42 @@ describe('ranges, where a naive parser goes wrong', () => {
 
   it('is not fooled by a date range', () => {
     expect(readDue('Sep 29 – Oct 8')).toBeNull();
+  });
+});
+
+describe('the two clock times English writes as words', () => {
+  it('reads noon, however the wording sits around it', () => {
+    expect(readDue('noon')).toBe(12 * 60);
+    expect(readDue('Due at noon')).toBe(12 * 60);
+    expect(readDue('12 noon')).toBe(12 * 60);
+  });
+
+  it('reads midnight as the end of its day, not the start', () => {
+    // 00:00 would sort the deadline above every lecture on the day it names,
+    // and mark it a day early on any screen that compares clocks.
+    expect(readDue('midnight')).toBe(23 * 60 + 59);
+    expect(readDue('by midnight')).toBe(23 * 60 + 59);
+  });
+
+  it('says these name a time, so they no longer sort to the end of the day', () => {
+    // The failure this was written for: "Due at noon" was untimed, so it sat
+    // below the five o'clock deadline on the same day.
+    expect(hasTime('Due at noon')).toBe(true);
+    expect(dueMinutes('Due at noon')).toBeLessThan(dueMinutes('5:00p'));
+    expect(dueMinutes('Due at noon')).toBeLessThan(NO_TIME);
+  });
+
+  it('leaves afternoon alone, which is a part of a day rather than a time', () => {
+    expect(readDue('afternoon')).toBe(null);
+    expect(readDue('Sunday afternoon')).toBe(null);
+  });
+
+  it('agrees with the reader on the other side of the same word', () => {
+    // `capture.ts` reads these off a line somebody types. The app should not
+    // understand "noon" from you and not from your syllabus.
+    for (const w of ['noon', 'at noon', '12 noon', 'midnight', 'by midnight']) {
+      expect(readDue(w), w).toBe(matchTime(w)?.at ?? null);
+    }
   });
 });
 
@@ -101,5 +138,173 @@ describe('sorting a day', () => {
   it('says plainly whether a wording named a time', () => {
     expect(hasTime('11:59 PM')).toBe(true);
     expect(hasTime('In class')).toBe(false);
+  });
+});
+
+describe('twelve, which does not sort where it is written', () => {
+  /*
+   * Whether a range crosses noon was decided by comparing the two hours as
+   * numerals, and on a clock face twelve comes before one rather than after
+   * eleven. Every range with a twelve at either end was read twelve hours out,
+   * in whichever direction the numeral misled.
+   */
+  const at = (h: number, m = 0) => h * 60 + m;
+
+  it('starts at noon where the range starts at twelve', () => {
+    expect(readDue('12:00–2:00 PM')).toBe(at(12));
+    expect(readDue('12:30–1:30 PM')).toBe(at(12, 30));
+    expect(readDue('12:45–2:15 PM')).toBe(at(12, 45));
+    expect(readDue('12:00–12:30 PM')).toBe(at(12));
+  });
+
+  it('stays in the morning where the range ends at twelve', () => {
+    // An ordinary morning exam window. Read as ten at night, because ten is
+    // less than twelve as a numeral.
+    expect(readDue('10:00–12:00 PM')).toBe(at(10));
+    expect(readDue('11:30–12:30 PM')).toBe(at(11, 30));
+    expect(readDue('11:59–12:30 PM')).toBe(at(11, 59));
+  });
+
+  it('leaves the ranges that were already right exactly as they were', () => {
+    expect(readDue('3:00–5:00 PM')).toBe(at(15));
+    expect(readDue('9:00–11:00 AM')).toBe(at(9));
+    expect(readDue('11:00–1:00 PM')).toBe(at(11));
+    expect(readDue('1:00–2:00 PM')).toBe(at(13));
+    expect(readDue('12:00–3:00 AM')).toBe(at(0));
+  });
+
+  it('reads twelve on its own the way it always did', () => {
+    expect(readDue('12:00 PM')).toBe(at(12));
+    expect(readDue('12:00 AM')).toBe(at(0));
+    expect(readDue('12p')).toBe(at(12));
+    expect(readDue('12a')).toBe(at(0));
+  });
+});
+
+describe('a range is a range however it is joined', () => {
+  /*
+   * The range reading required a colon on the first half and a dash between,
+   * so anything else was no range at all and the scan took the first time
+   * carrying a meridiem — which in a range is the end. Eight wordings, every
+   * one of them a window read from the wrong end.
+   */
+  it('reads one joined by a word', () => {
+    expect(readDue('10:30 to 2:00 PM')).toBe(10 * 60 + 30);
+    expect(readDue('10:30 until 2:00 PM')).toBe(10 * 60 + 30);
+    expect(readDue('10:30 through 2:00 PM')).toBe(10 * 60 + 30);
+    expect(readDue('8am to 10am')).toBe(8 * 60);
+    expect(readDue('3:00 PM to 5:00 PM')).toBe(15 * 60);
+  });
+
+  it('reads one whose first half states no minutes', () => {
+    expect(readDue('9 to 11 AM')).toBe(9 * 60);
+    expect(readDue('9–11 AM')).toBe(9 * 60);
+    expect(readDue('1–3 PM')).toBe(13 * 60);
+  });
+
+  it('keeps a date range out of it, which is what the meridiem is for', () => {
+    /*
+     * Not the colon, which is what it looked like. A date range carries no am
+     * or pm — but the meridiem needs a word boundary after it, or the "a" of
+     * "at" is read as an antemeridian and "Sep 8–17 at 5pm" becomes eight in
+     * the morning. That is the trap in relaxing this, and it is the reason the
+     * colon appeared to be doing the work.
+     */
+    expect(readDue('Sep 8–17 at 5pm')).toBe(17 * 60);
+    expect(readDue('Window is Sep 8–17')).toBeNull();
+    expect(readDue('Window is Sep 29 – Oct 8')).toBeNull();
+    expect(readDue('Weeks 1–3')).toBeNull();
+    expect(readDue('pp. 112–140')).toBeNull();
+    expect(readDue('Chapters 4 to 6')).toBeNull();
+    expect(readDue('Part 1 to 3')).toBeNull();
+    expect(readDue('Problem 4–6')).toBeNull();
+  });
+
+  it('leaves every wording the four shipped syllabi use exactly as it was', () => {
+    const shipped: [string, number | null][] = [
+      ['Before class, 1:15p', 13 * 60 + 15],
+      ['11:59 PM', 23 * 60 + 59],
+      ['In class', null],
+      ['11:59p', 23 * 60 + 59],
+      ['', null],
+      ['Before class, 2:45p', 14 * 60 + 45],
+      ['Window is Sep 8–17', null],
+      ['Window is Sep 29 – Oct 8', null],
+      ['Take-home posted 9a Sep 14', 9 * 60],
+      ['In class, 2:45p', 14 * 60 + 45],
+      ['Before class', null],
+      ['9:00–11:00 AM', 9 * 60],
+      ['9:00 AM', 9 * 60],
+      ['5pm', 17 * 60],
+      ['5:00p', 17 * 60],
+      ['3:00–5:00 PM', 15 * 60],
+      ['11:59pm', 23 * 60 + 59],
+    ];
+    for (const [wording, want] of shipped) expect(readDue(wording), wording).toBe(want);
+  });
+});
+
+describe('noon and midnight, said in words', () => {
+  it('reads noon', () => {
+    // A syllabus says it as readily as it says a figure, and the app read it
+    // as no time at all: "due by noon" sorted below a deadline at five, and
+    // the screen said no hour was stated when one plainly was.
+    expect(readDue('due by noon')).toBe(12 * 60);
+    expect(readDue('Noon')).toBe(12 * 60);
+    expect(readDue('12 noon')).toBe(12 * 60);
+    expect(hasTime('due by noon')).toBe(true);
+  });
+
+  it('reads a range that ends at noon from its start', () => {
+    expect(readDue('10:30 to noon')).toBe(10 * 60 + 30);
+    expect(readDue('9:00 AM to noon')).toBe(9 * 60);
+    expect(readDue('12:00 noon')).toBe(12 * 60);
+  });
+
+  it('reads a range that starts at noon from noon', () => {
+    /*
+     * The reason noon is made a figure before anything else reads figures.
+     * Caught as a special case at the end, it was found only where a wording
+     * held no figure at all — so these fell through to the ordinary scan,
+     * which takes the first time carrying a meridiem, and in a range that is
+     * the *end*. A window from noon was read as two o'clock.
+     */
+    expect(readDue('Noon–2:00 PM')).toBe(12 * 60);
+    expect(readDue('Noon to 2:00 PM')).toBe(12 * 60);
+    expect(readDue('noon - 1:30 PM')).toBe(12 * 60);
+  });
+
+  it('takes the first time a wording states, where it states two', () => {
+    /*
+     * "noon, or 2:15p" reads as noon. An earlier draft of this file asserted
+     * 2:15 here, which was the old fallback showing through rather than a rule
+     * anybody wanted: noon was read only when no figure was present, so the
+     * figure always won. First-stated-wins is what the rest of the function
+     * does, and it is what a range depends on.
+     */
+    expect(readDue('noon, or 2:15p')).toBe(12 * 60);
+    expect(readDue('9:00 AM, or 2:15p')).toBe(9 * 60);
+  });
+
+  it('reads midnight as the end of the day it names, not the start', () => {
+    /*
+     * This file used to leave midnight unread on the argument that either
+     * figure is a guess. But `capture.ts` was already guessing — 23:59, off
+     * the line somebody types — so the app understood the word from you and
+     * not from your syllabus. The test above holds the two readers to one
+     * answer; this one says which answer, and why it is not 00:00: "due
+     * Friday at midnight" is Friday running out, and midnight-as-the-start
+     * sorts it above every lecture on the day and marks it a day early.
+     */
+    expect(readDue('midnight')).toBe(23 * 60 + 59);
+    expect(readDue('Due at midnight')).toBe(23 * 60 + 59);
+    expect(dueMinutes('Due at midnight')).toBeLessThan(NO_TIME);
+    expect(dueMinutes('Due at midnight')).toBeGreaterThan(dueMinutes('5:00p'));
+  });
+
+  it('does not find noon inside a word that merely contains it', () => {
+    expect(readDue('afternoon')).toBeNull();
+    expect(readDue('Noonan Hall')).toBeNull();
+    expect(readDue('Room 12')).toBeNull();
   });
 });

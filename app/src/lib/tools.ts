@@ -51,6 +51,9 @@ import type { ToolCall, ToolSpec } from './claude';
 import type { Action, Persisted } from '../state/shape';
 import type { Attended } from './attend';
 import type { CourseId, PersonalTask, Screen } from './types';
+import { fromMarkdown, summary, type Block } from './document';
+import { fromRows, readTable } from './sheet';
+import { parse, plain } from './maths';
 
 /** The screens a proposal may send you to. Everything else is out of bounds. */
 const REACHABLE: Screen[] = [
@@ -73,6 +76,9 @@ const REACHABLE: Screen[] = [
   'clocks',
   'applying',
   'sources',
+  'write',
+  'sheet',
+  'equations',
   'data',
   'help',
 ];
@@ -278,6 +284,86 @@ export const TOOLS: ToolSpec[] = [
       required: ['org', 'next', 'by'],
     },
   },
+  /*
+   * The three making tools.
+   *
+   * These take more than an id, which the note at the top of this file says
+   * tools do not. The rule there is about a *patch* — an argument shaped like
+   * "the change to make", whose confirmation line cannot be written honestly
+   * because nobody can say in advance what it will do. These are the other
+   * thing: they make a new object and touch nothing that exists, so the
+   * confirmation line can say exactly what will appear — "a 4-section
+   * document, 380 words, with 2 tables" — and the object is right there to
+   * read afterwards. Undo removes what appeared, as with every other addition
+   * here.
+   *
+   * They also never open the editor. `makeDocument` and `makeSheet` are the
+   * non-navigating half of the pair in `state/slices/made.ts`, for the reason
+   * `keepNote` is: being thrown out of a half-read answer into an editor is a
+   * loss the assistant should not be able to cause.
+   */
+  {
+    name: 'make_document',
+    description:
+      'Write a document into the student’s documents — a memo, a summary, a set of notes, a handout. Only from material in front of you: their own text, a reading they gave you, or something you have already shown them. Never coursework you have written for them to hand in.',
+    strict: true,
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'What the document is called.' },
+        courseId: { type: 'string', description: 'A course id from the context, or empty.' },
+        body: {
+          type: 'string',
+          description:
+            'The document in Markdown. `## heading`, prose, `- lists`, `> quotations`, ' +
+            'pipe tables, and `$$ … $$` for an equation in LaTeX. Nothing else is read.',
+        },
+      },
+      required: ['title', 'courseId', 'body'],
+    },
+  },
+  {
+    name: 'make_sheet',
+    description:
+      'Build a sheet the student can open, add up and export to Excel. For a gradebook, a table of figures they gave you, a comparison, a budget. Every number must come from them or from the context — never a figure you recalled.',
+    strict: true,
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'What the sheet is called.' },
+        courseId: { type: 'string', description: 'A course id from the context, or empty.' },
+        rows: {
+          type: 'string',
+          description:
+            'The rows, one per line, cells separated by tabs or written as a Markdown table. ' +
+            'The first row is the headings. A cell may be a formula starting with `=` — ' +
+            'SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT and SUMPRODUCT.',
+        },
+      },
+      required: ['title', 'courseId', 'rows'],
+    },
+  },
+  {
+    name: 'save_equation',
+    description:
+      'Keep a formula in the student’s equations, written properly. Use it when they ask what a formula is or ask for one they will need again. LaTeX, in the subset the app reads.',
+    strict: true,
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'What the formula is called.' },
+        latex: {
+          type: 'string',
+          description:
+            'The formula: \\frac{a}{b}, x^2, x_i, \\sqrt{x}, \\sum_{i=1}^{n}, \\bar{x}, ' +
+            '\\text{words}, and the greek and relation commands.',
+        },
+        says: { type: 'string', description: 'One sentence on what it says, or empty.' },
+        courseId: { type: 'string', description: 'A course id from the context, or empty.' },
+      },
+      required: ['name', 'latex', 'says', 'courseId'],
+    },
+  },
   {
     name: 'open_screen',
     description:
@@ -326,7 +412,15 @@ export type Undo =
   | { how: 'appeared'; field: Appears; remove: (id: string) => Action };
 
 /** The lists a tool can add a row to. */
-type Appears = 'tasks' | 'notes' | 'sources' | 'applications' | 'timers';
+type Appears =
+  | 'tasks'
+  | 'notes'
+  | 'sources'
+  | 'applications'
+  | 'timers'
+  | 'documents'
+  | 'sheets'
+  | 'equations';
 
 /** A proposal, checked and ready to show. */
 export interface Proposal {
@@ -655,6 +749,105 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     };
   }
 
+  if (call.name === 'make_document') {
+    const title = str(call.input, 'title');
+    const body = str(call.input, 'body');
+    if (!title || !body) return null;
+    const blocks: Block[] = fromMarkdown(body);
+    // A document with nothing in it is not a document. `fromMarkdown` always
+    // returns at least one empty paragraph, so "it parsed" is not the test.
+    const something = blocks.some(
+      (b) =>
+        (b.kind === 'text' || b.kind === 'heading' || b.kind === 'quote') ? b.text.trim() !== ''
+        : b.kind === 'bullets' ? b.items.some((i) => i.trim() !== '')
+        : b.kind === 'table' ? b.rows.some((r) => r.some((c) => c.trim() !== ''))
+        : b.kind === 'equation' ? b.latex.trim() !== ''
+        : false,
+    );
+    if (!something) return null;
+    const courseId = str(call.input, 'courseId') as CourseId;
+    const course = known.courses.find((c) => c.id === courseId);
+    return {
+      id,
+      said: `Write “${title}”${course ? ` for ${course.code}` : ''} — ${summary(blocks)}`,
+      did: `“${title}” is in your documents`,
+      verb: 'Write it',
+      sort: 'write',
+      action: {
+        type: 'makeDocument',
+        doc: { title, subtitle: '', courseId: course ? courseId : null, blocks },
+      },
+      undo: {
+        how: 'appeared',
+        field: 'documents',
+        remove: (row) => ({ type: 'deleteDocument', id: row }),
+      },
+    };
+  }
+
+  if (call.name === 'make_sheet') {
+    const title = str(call.input, 'title');
+    const rows = readTable(str(call.input, 'rows'));
+    // One row is a heading with nothing under it, which is not a sheet.
+    if (!title || rows.length < 2) return null;
+    const courseId = str(call.input, 'courseId') as CourseId;
+    const course = known.courses.find((c) => c.id === courseId);
+    const wide = rows.reduce((n, row) => Math.max(n, row.length), 0);
+    const formulas = rows.flat().filter((cell) => cell.trimStart().startsWith('=')).length;
+    return {
+      id,
+      said:
+        `Build the sheet “${title}”${course ? ` for ${course.code}` : ''} — ` +
+        `${rows.length} rows by ${wide}${formulas ? `, ${formulas} of them formulas` : ''}`,
+      did: `“${title}” is in your sheets`,
+      verb: 'Build it',
+      sort: 'write',
+      action: {
+        type: 'makeSheet',
+        sheet: fromRows(title, rows, course ? courseId : null),
+      },
+      undo: {
+        how: 'appeared',
+        field: 'sheets',
+        remove: (row) => ({ type: 'deleteSheet', id: row }),
+      },
+    };
+  }
+
+  if (call.name === 'save_equation') {
+    const name = str(call.input, 'name');
+    const latex = str(call.input, 'latex');
+    if (!name || !latex) return null;
+    // The confirmation shows the equation as one line of readable text rather
+    // than as the LaTeX, because the LaTeX is not what the student is being
+    // asked to agree to — what it comes out as is.
+    const reads = plain(parse(latex));
+    if (!reads.trim()) return null;
+    const courseId = str(call.input, 'courseId') as CourseId;
+    const course = known.courses.find((c) => c.id === courseId);
+    return {
+      id,
+      said: `Keep “${name}” — ${reads}${course ? ` — under ${course.code}` : ''}`,
+      did: `“${name}” is in your equations`,
+      verb: 'Keep it',
+      sort: 'write',
+      action: {
+        type: 'saveEquation',
+        equation: {
+          name,
+          latex,
+          note: str(call.input, 'says'),
+          courseId: course ? courseId : null,
+        },
+      },
+      undo: {
+        how: 'appeared',
+        field: 'equations',
+        remove: (row) => ({ type: 'deleteEquation', id: row }),
+      },
+    };
+  }
+
   if (call.name === 'open_screen') {
     const screen = str(call.input, 'screen') as Screen;
     if (!REACHABLE.includes(screen)) return null;
@@ -720,6 +913,9 @@ function label(screen: Screen): string {
     clocks: 'timers and alarms',
     applying: 'applications',
     sources: 'your sources',
+    write: 'your documents',
+    sheet: 'your sheets',
+    equations: 'your equations',
     data: 'your data',
     help: 'the guide to this app',
   };
