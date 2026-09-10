@@ -102,6 +102,78 @@ describe('parts', () => {
   });
 });
 
+describe('a table on a slide', () => {
+  const withTable = () =>
+    parts(
+      deck({
+        slides: [
+          {
+            title: 'Marks',
+            bullets: [],
+            table: [
+              ['Piece', 'Weight'],
+              ['Midterm', '30%'],
+              ['Final', '40%'],
+            ],
+          },
+        ],
+      }),
+    )['ppt/slides/slide1.xml'];
+
+  it('is a real table rather than a picture or a run of bullets', () => {
+    const doc = parse(withTable());
+    expect(doc.getElementsByTagName('a:tbl')).toHaveLength(1);
+    expect(doc.getElementsByTagName('a:tr')).toHaveLength(3);
+    // Three columns' worth of grid for a two-column table would silently
+    // squash every cell; the grid has to match the widest row.
+    expect(doc.getElementsByTagName('a:gridCol')).toHaveLength(2);
+  });
+
+  it('names the graphic PowerPoint has to look up, or the slide opens empty', () => {
+    expect(withTable()).toContain(
+      'uri="http://schemas.openxmlformats.org/drawingml/2006/table"',
+    );
+  });
+
+  it('draws its own borders rather than naming a style it does not ship', () => {
+    // A missing style id is where the three applications disagree: PowerPoint
+    // substitutes a blue banded style and Google Slides draws nothing.
+    expect(withTable()).not.toContain('tableStyleId');
+    expect(withTable()).toContain('<a:lnL');
+  });
+
+  it('pads a short row so the columns do not shift', () => {
+    const doc = parse(
+      parts(
+        deck({
+          slides: [{ title: 'x', bullets: [], table: [['a', 'b'], ['1']] }],
+        }),
+      )['ppt/slides/slide1.xml'],
+    );
+    expect(doc.getElementsByTagName('a:tc')).toHaveLength(4);
+  });
+
+  it('escapes a cell, because an ampersand in a heading breaks the file', () => {
+    const out = parts(
+      deck({ slides: [{ title: 'x', bullets: [], table: [['Marks & Spencer']] }] }),
+    )['ppt/slides/slide1.xml'];
+    expect(out).toContain('Marks &amp; Spencer');
+    expect(() => parse(out)).not.toThrow();
+  });
+});
+
+describe('an equation on a slide', () => {
+  it('is one line of text, which every reader lays out the same way', () => {
+    const out = parts(
+      deck({ slides: [{ title: 'Elasticity', bullets: [], equation: 'E = (ΔQ)/(ΔP)' }] }),
+    )['ppt/slides/slide1.xml'];
+    expect(out).toContain('E = (ΔQ)/(ΔP)');
+    // Deliberately not an equation object: OMML in a slide needs an
+    // `mc:AlternateContent` block Keynote and Google Slides read differently.
+    expect(out).not.toContain('m:oMath');
+  });
+});
+
 describe('bodySize', () => {
   it('sets a short slide large and a full one smaller', () => {
     expect(bodySize(['One', 'Two'])).toBeGreaterThan(bodySize(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']));

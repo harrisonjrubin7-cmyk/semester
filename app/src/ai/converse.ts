@@ -175,6 +175,9 @@ export function useConversation(): Conversation {
       sources: state.sources,
       applications: state.applications,
       timers: state.timers,
+      documents: state.documents,
+      sheets: state.sheets,
+      equations: state.equations,
     }),
     [state],
   );

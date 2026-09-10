@@ -29,7 +29,7 @@ own application.
 
 ## What is in it
 
-<!--tabs-->Five<!--/--> tabs, <!--screens-->forty-nine<!--/--> screens. The tabs
+<!--tabs-->Five<!--/--> tabs, <!--screens-->fifty-two<!--/--> screens. The tabs
 are below; the screens are the registry in `src/lib/nav.ts`, which is also what
 the directory, the search box and the home-screen icons are drawn from — there
 is one list, and it is that one.
