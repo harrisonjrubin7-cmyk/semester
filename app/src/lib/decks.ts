@@ -62,6 +62,9 @@ export const LAYOUTS: { id: Layout; label: string }[] = [
 
 export function blankSlide(layout: Layout): Slide {
   if (layout === 'title') return { title: '', bullets: [], opening: true };
+  // `note` is the line printed under a section's title. It starts undefined
+  // rather than empty: an empty string is a field the editor has to draw and
+  // the exporter has to skip, and the editor draws it when it is present.
   if (layout === 'section') return { title: '', bullets: [], opening: true, note: '' };
   if (layout === 'table') {
     return { title: '', bullets: [], table: [['', ''], ['', '']] };
@@ -91,7 +94,20 @@ export function running(deck: StoredDeck): { slide: Slide; at: number }[] {
  * matters most — the file is what gets handed in.
  */
 export function forExport(deck: StoredDeck): Deck {
-  return { title: deck.title, subtitle: deck.subtitle, slides: running(deck).map((r) => r.slide) };
+  const slides = running(deck).map((r) => r.slide);
+  /*
+   * A deck with every slide hidden exports as one blank slide, not as the
+   * title slide `pptx.parts` invents for an empty deck.
+   *
+   * That fallback is right for a deck nobody has written yet and wrong here:
+   * hiding every slide is a deliberate act, and answering it by putting the
+   * deck's title back on a slide hands somebody a file with content they had
+   * just taken out.
+   */
+  if (slides.length === 0) {
+    return { title: deck.title, subtitle: deck.subtitle, slides: [{ title: '', bullets: [] }] };
+  }
+  return { title: deck.title, subtitle: deck.subtitle, slides };
 }
 
 /**

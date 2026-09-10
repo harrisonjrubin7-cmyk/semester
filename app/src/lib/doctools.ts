@@ -104,11 +104,21 @@ function strings(block: Block): string[] {
 function pattern(find: string, opts: Options): RegExp | null {
   if (!find) return null;
   const escaped = find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // `\b` on a term starting or ending in punctuation matches nothing, so the
-  // boundary is only added on the side where it can mean something.
-  const left = opts.wholeWord && /^\w/.test(find) ? '\\b' : '';
-  const right = opts.wholeWord && /\w$/.test(find) ? '\\b' : '';
-  return new RegExp(`${left}${escaped}${right}`, opts.matchCase ? 'g' : 'gi');
+  /*
+   * Not `\b`, for two reasons it fails at once.
+   *
+   * `\b` is defined against ASCII `\w`, so "café" ends at the "f" as far as it
+   * is concerned and searching for "é" as a whole word matched inside the
+   * word. And a term with punctuation at its edge — "C++" — has no word
+   * boundary to anchor to, so the guard was dropped on that side and "C++"
+   * matched the front of "C++primer".
+   *
+   * A lookaround for "not a letter, digit or underscore" says what a whole
+   * word means directly, and the `u` flag makes the classes Unicode-aware.
+   */
+  const left = opts.wholeWord ? '(?<![\\p{L}\\p{N}_])' : '';
+  const right = opts.wholeWord ? '(?![\\p{L}\\p{N}_])' : '';
+  return new RegExp(`${left}${escaped}${right}`, opts.matchCase ? 'gu' : 'giu');
 }
 
 /** Every match, in the order they are read. */
@@ -221,7 +231,28 @@ export function emphasise(
   const tail = /\s*$/.exec(chosen)![0];
   const core = chosen.slice(lead.length, chosen.length - tail.length);
   if (!core) return text;
-  return `${before}${lead}${stars}${core}${stars}${tail}${after}`;
+
+  const wrapped = `${before}${lead}${stars}${core}${stars}${tail}${after}`;
+  if (!wrapped.includes(stars + stars)) return wrapped;
+
+  /*
+   * The selection sits against a marker, inside a run already marked.
+   *
+   * "**really**" with only "real" chosen is neither of the two cases above —
+   * one side is against a marker and the other is not — and wrapping it
+   * produced `****real**ly**`, which is not markdown at all and which `runs`
+   * renders as literal stars.
+   *
+   * Doubling the markers is the tell, and what the person meant by pressing a
+   * mark button inside a marked run is to take the mark off. So the enclosing
+   * pair comes off: predictable, reversible, and never a line nobody can read.
+   */
+  const openAt = text.lastIndexOf(stars, Math.max(0, start - stars.length));
+  const closeAt = text.indexOf(stars, end);
+  if (openAt === -1 || closeAt === -1 || closeAt < openAt) return text;
+  return (
+    text.slice(0, openAt) + text.slice(openAt + stars.length, closeAt) + text.slice(closeAt + stars.length)
+  );
 }
 
 /** Whether a whole line is already marked, for showing a button as pressed. */

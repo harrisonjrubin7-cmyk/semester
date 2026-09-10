@@ -151,3 +151,37 @@ describe('how long it will take', () => {
     expect(minutes(deck(1, [0]))).toBe(1);
   });
 });
+
+describe('exporting a deck with everything hidden', () => {
+  it('does not put the title back on a slide', () => {
+    // `pptx.parts` invents a title slide for an empty deck, which is right for
+    // a deck nobody has written and wrong here: hiding every slide is
+    // deliberate, and answering it with the deck's title hands somebody a file
+    // holding content they had just taken out.
+    const all = deck(2, [0, 1]);
+    const out = forExport(all);
+    expect(out.slides).toHaveLength(1);
+    expect(out.slides[0].title).toBe('');
+    expect(out.slides[0].bullets).toEqual([]);
+  });
+
+  it('still exports the visible ones normally', () => {
+    expect(forExport(deck(3, [1])).slides.map((s) => s.title)).toEqual(['S0', 'S2']);
+  });
+});
+
+describe('the table layout', () => {
+  it('starts as a grid the editor can fill in', () => {
+    const slide = blankSlide('table');
+    expect(slide.table).toEqual([['', ''], ['', '']]);
+  });
+
+  it('carries what was typed into it through to the export', () => {
+    const d = setSlide(deck(1), 0, {
+      title: 'Results',
+      bullets: [],
+      table: [['Year', 'Rate'], ['2026', '3.1']],
+    });
+    expect(forExport(d).slides[0].table).toEqual([['Year', 'Rate'], ['2026', '3.1']]);
+  });
+});

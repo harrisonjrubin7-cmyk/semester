@@ -3,7 +3,9 @@ import {
   canMove,
   childrenOf,
   courseFolderId,
+  exists,
   freeName,
+  homeOf,
   isCourseFolder,
   subtree,
   trail,
@@ -137,5 +139,57 @@ describe('naming', () => {
 
   it('falls back rather than returning an empty name', () => {
     expect(freeName(all, null, '   ')).toBe('New folder');
+  });
+});
+
+/*
+ * A file's folder can vanish underneath it four ways, and every one of them
+ * used to take the file out of sight: the course was removed, the course is in
+ * another term, a parent folder was deleted, or the folder list hit its cap.
+ * One rule at the point of display covers all four — and still covers a fifth.
+ */
+describe('a file whose folder has gone', () => {
+  const all = withCourses([folder('a', 'Essays'), folder('b', 'Drafts', 'a')], courses);
+
+  it('knows which ids name a folder that is there', () => {
+    expect(exists(all, 'a')).toBe(true);
+    expect(exists(all, 'course:econ')).toBe(true);
+    expect(exists(all, null)).toBe(true);
+    expect(exists(all, 'course:gone')).toBe(false);
+    expect(exists(all, 'deleted')).toBe(false);
+  });
+
+  it('comes home to the top of the drive rather than disappearing', () => {
+    expect(homeOf(all, 'a')).toBe('a');
+    expect(homeOf(all, null)).toBeNull();
+    // The course was dropped from the catalogue.
+    expect(homeOf(all, 'course:gone')).toBeNull();
+    // Its parent folder was deleted with the subtree.
+    expect(homeOf(all, 'deleted')).toBeNull();
+  });
+
+  it('is what makes a removed course safe', () => {
+    const after = withCourses([], []);
+    expect(homeOf(after, courseFolderId('econ'))).toBeNull();
+  });
+});
+
+describe('reading folders that came from storage', () => {
+  it('does not fall over sorting a name that is not a string', () => {
+    // `childrenOf` sorts by name, and storage is only as well-formed as what
+    // was written to it.
+    const bent = withCourses(
+      [{ id: 'x', name: 42 as unknown as string, parentId: null, created: 0 }],
+      [],
+    );
+    expect(() => childrenOf(bent, null)).not.toThrow();
+    expect(childrenOf(bent, null)).toHaveLength(1);
+  });
+
+  it('draws a course folder once even if the course is listed twice', () => {
+    // Two terms of the same course are one folder, since the id comes from the
+    // course id.
+    const twice = withCourses([], [courses[0], courses[0]]);
+    expect(twice).toHaveLength(1);
   });
 });

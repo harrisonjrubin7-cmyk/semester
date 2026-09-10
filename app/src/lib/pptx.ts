@@ -393,6 +393,27 @@ function rels(entries: { id: string; type: string; target: string }[]): string {
 }
 
 /**
+ * The notes master, which a notes slide is not valid without.
+ *
+ * A `notesSlide` part has to point at one, the presentation has to list it,
+ * and `[Content_Types]` has to declare it. Ship the notes without it and
+ * PowerPoint opens the file with "we found a problem with some content" and
+ * repairs it — which usually keeps the slides and drops the notes, so the
+ * feature appears to work right up until the moment it is needed.
+ *
+ * Deliberately empty of styling. Everything it would carry is a default, and
+ * a master that specifies nothing is a master every reader agrees about.
+ */
+const NOTES_MASTER =
+  `${HEAD}<p:notesMaster ${NS}><p:cSld><p:spTree>` +
+  '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+  '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/>' +
+  '<a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>' +
+  '</p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" ' +
+  'accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" ' +
+  'hlink="hlink" folHlink="folHlink"/></p:notesMaster>';
+
+/**
  * One slide's speaker notes, as the part PowerPoint looks for.
  *
  * The shape is fixed by the format: a notes slide holds a placeholder pointing
@@ -438,6 +459,8 @@ function notesXml(text: string): string {
 export function parts(deck: Deck): Record<string, string> {
   const slides = deck.slides.length ? deck.slides : [{ title: deck.title, bullets: [], opening: true }];
   const out: Record<string, string> = {};
+  /** Whether anything in this deck needs the notes half of the package at all. */
+  const anyNotes = slides.some((slide) => slide.notes?.trim());
 
   out['[Content_Types].xml'] =
     `${HEAD}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
@@ -462,6 +485,9 @@ export function parts(deck: Deck): Record<string, string> {
           : '',
       )
       .join('') +
+    (anyNotes
+      ? '<Override PartName="/ppt/notesMasters/notesMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.notesMaster+xml"/>'
+      : '') +
     '</Types>';
 
   out['_rels/.rels'] = rels([
@@ -478,6 +504,15 @@ export function parts(deck: Deck): Record<string, string> {
       target: `slides/slide${i + 1}.xml`,
     })),
     { id: `rId${slides.length + 2}`, type: 'theme', target: 'theme/theme1.xml' },
+    ...(anyNotes
+      ? [
+          {
+            id: `rId${slides.length + 3}`,
+            type: 'notesMaster',
+            target: 'notesMasters/notesMaster1.xml',
+          },
+        ]
+      : []),
   ];
   out['ppt/_rels/presentation.xml.rels'] = rels(presRels);
 
@@ -487,6 +522,9 @@ export function parts(deck: Deck): Record<string, string> {
     '<p:sldIdLst>' +
     slides.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 2}"/>`).join('') +
     '</p:sldIdLst>' +
+    (anyNotes
+      ? `<p:notesMasterIdLst><p:notesMasterId r:id="rId${slides.length + 3}"/></p:notesMasterIdLst>`
+      : '') +
     `<p:sldSz cx="${W}" cy="${H}"/><p:notesSz cx="${H}" cy="${W}"/></p:presentation>`;
 
   out['ppt/slideMasters/slideMaster1.xml'] = MASTER;
@@ -501,6 +539,15 @@ export function parts(deck: Deck): Record<string, string> {
   ]);
 
   out['ppt/theme/theme1.xml'] = themeXml();
+
+  if (anyNotes) {
+    out['ppt/notesMasters/notesMaster1.xml'] = NOTES_MASTER;
+    // The master needs a theme of its own by the format's rules; the deck's
+    // own is the right one, and reusing it keeps one set of colours.
+    out['ppt/notesMasters/_rels/notesMaster1.xml.rels'] = rels([
+      { id: 'rId1', type: 'theme', target: '../theme/theme1.xml' },
+    ]);
+  }
 
   slides.forEach((slide, i) => {
     out[`ppt/slides/slide${i + 1}.xml`] = slideXml(slide);
@@ -517,7 +564,8 @@ export function parts(deck: Deck): Record<string, string> {
       // The notes slide points back at its slide. Without this the graph does
       // not close and PowerPoint offers to repair the file.
       out[`ppt/notesSlides/_rels/notesSlide${i + 1}.xml.rels`] = rels([
-        { id: 'rId1', type: 'slide', target: `../slides/slide${i + 1}.xml` },
+        { id: 'rId1', type: 'notesMaster', target: '../notesMasters/notesMaster1.xml' },
+        { id: 'rId2', type: 'slide', target: `../slides/slide${i + 1}.xml` },
       ]);
     }
     out[`ppt/slides/_rels/slide${i + 1}.xml.rels`] = rels(links);

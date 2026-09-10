@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { strToU8, zipSync } from 'fflate';
-import { fromDelimited, fromXlsx, readerFor } from './xlsxin';
+import { fromDelimited, fromXlsx, knownFormula, readerFor } from './xlsxin';
 import { display, evaluate } from './sheet';
 import { fromSheet, parts, type Book } from './xlsx';
 
@@ -388,5 +388,53 @@ describe('a CSV field with a newline in it', () => {
     // swallowed into it.
     const { sheets } = await fromDelimited(asFile('n.csv', 'a,b\n"one\ntwo",2\n'));
     expect(sheets[0].cells).toEqual({ A1: 'a', B1: 'b', A2: 'one\ntwo', B2: '2' });
+  });
+});
+
+describe('a formula this app cannot evaluate', () => {
+  const bytes = workbook({
+    sheets: [
+      {
+        name: 'S',
+        rows: [
+          '<row r="1"><c r="A1"><f>SUBTOTAL(9,B1:B9)</f><v>412</v></c>' +
+            '<c r="A2"><f>SUM(B1:B9)</f><v>412</v></c></row>',
+        ],
+      },
+    ],
+  });
+
+  it('keeps the number Excel worked out rather than turning it into #NAME?', () => {
+    // Replacing a real total with an error throws away the only copy of it:
+    // the app cannot compute SUBTOTAL, but Excel already did.
+    expect(knownFormula('SUBTOTAL(9,B1:B9)')).toBe(false);
+    expect(knownFormula('SUM(B1:B9)')).toBe(true);
+    expect(knownFormula('ROUND(AVERAGE(A1:A9),2)')).toBe(true);
+  });
+
+  it('imports the one it knows as a formula and the other as its value', async () => {
+    const { sheets } = await fromXlsx(asFile('s.xlsx', bytes));
+    expect(sheets[0].cells.A1).toBe('412');
+    expect(sheets[0].cells.A2).toBe('=SUM(B1:B9)');
+  });
+
+  it('says how many came in that way', async () => {
+    expect((await fromXlsx(asFile('s.xlsx', bytes))).notes.join(' ')).toContain('does not have');
+  });
+
+  it('keeps an unknown formula with no cached value as a formula', async () => {
+    // Nothing better to fall back to, and a #NAME? in the cell is at least
+    // visible — which is what a typed one would do too.
+    const none = workbook({
+      sheets: [{ name: 'S', rows: ['<row r="1"><c r="A1"><f>SUBTOTAL(9,B1:B9)</f></c></row>'] }],
+    });
+    expect((await fromXlsx(asFile('n.xlsx', none))).sheets[0].cells.A1).toBe('=SUBTOTAL(9,B1:B9)');
+  });
+});
+
+describe('a file claiming to be far larger than a spreadsheet', () => {
+  it('is refused before it is unpacked', async () => {
+    const huge = { name: 'huge.xlsx', size: 200 * 1024 * 1024 } as File;
+    await expect(fromXlsx(huge)).rejects.toThrow(/too large/);
   });
 });

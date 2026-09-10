@@ -153,6 +153,37 @@ function epochOf(workbookXml: string): number {
 }
 
 /**
+ * Whether every function named in a formula is one `sheet.ts` can evaluate.
+ *
+ * A name check, not a parse: the engine refuses an unknown name and evaluates
+ * everything else, so the question is only whether any name in the text is one
+ * it does not have. Anything else it cannot handle still says so in the cell,
+ * which is what a typed formula gets too.
+ */
+export function knownFormula(body: string): boolean {
+  const names = body.toUpperCase().match(/\b[A-Z][A-Z0-9_.]*\s*\(/g) ?? [];
+  return names.every((n) => KNOWN.has(n.replace(/\s*\($/, '')));
+}
+
+/**
+ * Every function name the engine answers to.
+ *
+ * Kept beside the reader rather than exported from `sheet.ts`, because that
+ * file's list is a `switch` and a switch cannot be iterated. A name missing
+ * here costs a cached value, never a wrong number, which is the right way for
+ * this list to be wrong.
+ */
+const KNOWN = new Set([
+  'IF','IFS','IFERROR','SUMPRODUCT','AND','OR','NOT','COUNTA','CONCAT','LEN','UPPER','LOWER','TRIM',
+  'VLOOKUP','HLOOKUP','XLOOKUP','INDEX','MATCH','LEFT','RIGHT','MID','SPLIT','TEXT',
+  'TODAY','NOW','DATE','DATEDIF','WEEKDAY','EOMONTH',
+  'COUNTIF','SUMIF','AVERAGEIF','COUNTIFS','SUMIFS',
+  'SUM','PRODUCT','COUNT','AVERAGE','AVG','MEDIAN','MIN','MAX','STDEV','STDEVP','VAR','VARP',
+  'ABS','INT','SQRT','EXP','LN','LOG10','POWER','MOD','ROUND','MODE','CORREL',
+  'NPV','IRR','PMT','FV','PV','RATE',
+]);
+
+/**
  * A serial as the day it stands for, and the time too where the format has one.
  *
  * The day comes from the whole part and the time from the fraction, kept
@@ -216,12 +247,15 @@ function readCells(
   over: boolean;
   /** Cells that inherited a shared formula and came in as their last value. */
   frozen: number;
+  /** Cells whose formula this app cannot evaluate, kept as their last value. */
+  unsupported: number;
 } {
   const cells: Record<string, string> = {};
   let rows = 0;
   let cols = 0;
   let over = false;
   let frozen = 0;
+  let unsupported = 0;
 
   for (const m of xml.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
     const attrs = m[1];
@@ -240,8 +274,20 @@ function readCells(
     const raw = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body);
 
     let text = '';
-    if (formula && formula[1].trim()) {
-      text = `=${entities(formula[1]).trim()}`;
+    const written = formula && formula[1].trim() ? entities(formula[1]).trim() : '';
+    /*
+     * A formula this engine cannot evaluate keeps its answer instead.
+     *
+     * `sheet.ts` says `#NAME?` for a function it does not have, which is the
+     * right answer to something somebody typed and the wrong one to something
+     * imported: Excel already worked `SUBTOTAL` out, the number is in the
+     * file, and replacing it with an error throws away the only copy of it.
+     */
+    if (written && (!raw || knownFormula(written))) {
+      text = `=${written}`;
+    } else if (written) {
+      unsupported += 1;
+      text = entities(raw![1]);
     } else if (type === 'inlineStr') {
       text = siText(body);
     } else if (type === 's') {
@@ -276,7 +322,7 @@ function readCells(
     cols = Math.max(cols, where.col + 1);
   }
 
-  return { cells, rows, cols, over, frozen };
+  return { cells, rows, cols, over, frozen, unsupported };
 }
 
 /**
@@ -286,7 +332,25 @@ function readCells(
  * the commonest failure by far is an older .xls renamed rather than re-saved,
  * which is not a zip at all.
  */
+/**
+ * How much this will unpack before deciding the file is not a spreadsheet.
+ *
+ * `unzipSync` decompresses the whole archive into memory in one go, so a small
+ * file claiming to hold a great deal is a frozen tab. A real .xlsx is a few
+ * hundred kilobytes of XML per worksheet and this app's grid stops at 200×26,
+ * so these are far past anything genuine and far short of anything a phone
+ * cannot survive.
+ */
+const MOST_PACKED = 64 * 1024 * 1024;
+const MOST_UNPACKED = 128 * 1024 * 1024;
+
 export async function fromXlsx(file: File, courseId: CourseId | null = null): Promise<Read> {
+  if (file.size > MOST_PACKED) {
+    throw new Error(
+      `${file.name} is too large for this app to open. Its grid stops at ${MAX_ROWS} rows and ` +
+        `${MAX_COLS} columns — export the part you need as a CSV.`,
+    );
+  }
   const { unzipSync, strFromU8 } = await import('fflate');
   let zip: Record<string, Uint8Array>;
   try {
@@ -294,6 +358,21 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
   } catch {
     throw new Error(
       `${file.name} could not be opened as a spreadsheet. If it is an older .xls, open it and save it again as .xlsx — or export it as a CSV.`,
+    );
+  }
+
+  /*
+   * The unpacked total, checked before any of it becomes a string.
+   *
+   * The archive is already in memory by here — `unzipSync` offers no way to
+   * stop part-way — but the strings are what multiply it, and refusing at this
+   * point is the difference between a lot of memory briefly and a tab that
+   * does not come back.
+   */
+  const unpacked = Object.values(zip).reduce((n, bytes) => n + bytes.length, 0);
+  if (unpacked > MOST_UNPACKED) {
+    throw new Error(
+      `${file.name} unpacks to more than this app can hold. Export the sheet you need as a CSV.`,
     );
   }
 
@@ -312,13 +391,15 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
   const notes: string[] = [];
   let truncated = false;
   let stale = 0;
+  let unknown = 0;
 
   for (const tab of tabs) {
     const xml = part(tab.part);
     if (!xml) continue;
-    const { cells, rows, cols, over, frozen } = readCells(xml, shared, styles, epoch);
+    const { cells, rows, cols, over, frozen, unsupported } = readCells(xml, shared, styles, epoch);
     truncated = truncated || over;
     stale += frozen;
+    unknown += unsupported;
     sheets.push({
       ...blankSheet(tab.name, courseId),
       cells,
@@ -344,6 +425,13 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
         'Those came in as the number Excel last worked out, not as a formula, so they will not ' +
         'move if you change what they were adding up. Retype the formula in the first one and ' +
         'fill it down again to make them live.',
+    );
+  }
+  if (unknown > 0) {
+    notes.push(
+      `${unknown} ${unknown === 1 ? 'formula uses a function' : 'formulas use functions'} this app ` +
+        `does not have, so ${unknown === 1 ? 'it came' : 'they came'} in as the number Excel last ` +
+        'worked out rather than as a formula.',
     );
   }
   notes.push('Charts, pivot tables, colours and cell formats do not come across. The file itself is untouched.');

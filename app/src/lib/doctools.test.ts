@@ -174,3 +174,64 @@ describe('emphasis', () => {
     expect(marked('*all of it*', 'italic')).toBe(true);
   });
 });
+
+describe('whole words, when the word is not plain ASCII', () => {
+  it('does not match inside an accented word', () => {
+    // `\b` is defined against ASCII, so "café" ended at the "f" as far as it
+    // was concerned and "é" matched inside the word.
+    const d = doc([{ kind: 'text', text: 'café and é alone' }]);
+    expect(findAll(d, 'é', { wholeWord: true })).toHaveLength(1);
+    expect(findAll(d, 'é')).toHaveLength(2);
+  });
+
+  it('does not match the front of a longer term with punctuation', () => {
+    // "C++" has no word boundary to anchor to, so the guard used to be dropped
+    // on that side and it matched the front of "C++primer".
+    const d = doc([{ kind: 'text', text: 'C++primer and C++ alone' }]);
+    expect(findAll(d, 'C++', { wholeWord: true })).toHaveLength(1);
+  });
+
+  it('still finds an ordinary word', () => {
+    const d = doc([{ kind: 'text', text: 'art started as art' }]);
+    expect(findAll(d, 'art', { wholeWord: true })).toHaveLength(2);
+  });
+
+  it('replaces only the whole words', () => {
+    const d = doc([{ kind: 'text', text: 'café and é' }]);
+    expect(replaceAll(d, 'é', 'e', { wholeWord: true }).changed).toBe(1);
+  });
+});
+
+describe('emphasis inside an emphasised run', () => {
+  it('does not produce markdown that is not markdown', () => {
+    // Selecting "real" inside "**really**" used to produce `****real**ly**`,
+    // which `runs` then renders as literal stars.
+    const out = emphasise('**really**', 2, 6, 'bold');
+    expect(out).not.toContain('****');
+    expect(out).toBe('really');
+  });
+
+  it('un-marks only the run the selection is in, leaving the others', () => {
+    // Selecting part of the first run of "**abc** and **b**" takes the mark
+    // off that run and leaves the second one bold.
+    expect(emphasise('**abc** and **b**', 2, 4, 'bold')).toBe('abc and **b**');
+  });
+
+  it('never leaves a doubled marker behind', () => {
+    for (const [text, from, to] of [
+      ['**really**', 2, 6],
+      ['**really**', 4, 8],
+      ['**abc** and **b**', 2, 4],
+      ['*italic*', 1, 4],
+    ] as const) {
+      const out = emphasise(text, from, to, text.startsWith('**') ? 'bold' : 'italic');
+      expect(out).not.toContain('****');
+      expect(out).not.toContain('***');
+    }
+  });
+
+  it('still wraps and unwraps the ordinary cases', () => {
+    expect(emphasise('the real cost', 4, 8, 'bold')).toBe('the **real** cost');
+    expect(emphasise('the **real** cost', 6, 10, 'bold')).toBe('the real cost');
+  });
+});

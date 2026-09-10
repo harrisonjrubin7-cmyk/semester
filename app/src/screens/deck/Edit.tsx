@@ -328,6 +328,68 @@ function SlideEditor({
         style={{ width: '100%', marginBottom: 'var(--sp-4)', fontSize: 'var(--type-base)' }}
       />
 
+      {slide.note !== undefined && (
+        <input
+          className="input"
+          value={slide.note}
+          onChange={(e) => onChange({ ...slide, note: e.target.value })}
+          placeholder="A line under the title — a source, a unit, a date"
+          aria-label={`Line under the title of slide ${at + 1}`}
+          style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
+        />
+      )}
+
+      {/*
+        The table, cell by cell. Without this a Table slide stayed the empty
+        two-by-two it was created as, and exported that way — a layout you
+        could choose and could not fill in.
+      */}
+      {slide.table && (
+        <div style={{ marginBottom: 'var(--sp-4)', overflowX: 'auto' }}>
+          <SectionLabel>The table</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+            {slide.table.map((row, r) => (
+              <div key={r} style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                {row.map((cell, c) => (
+                  <input
+                    key={c}
+                    className="input"
+                    value={cell}
+                    onChange={(e) => {
+                      const table = (slide.table ?? []).map((line, i) =>
+                        i === r ? line.map((was, j) => (j === c ? e.target.value : was)) : line,
+                      );
+                      onChange({ ...slide, table });
+                    }}
+                    aria-label={`Slide ${at + 1}, ${r === 0 ? 'heading' : `row ${r}`}, column ${c + 1}`}
+                    style={{ flex: 1, minWidth: 90 }}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
+            <ActionButton
+              onClick={() => {
+                const width = slide.table?.[0]?.length ?? 2;
+                onChange({ ...slide, table: [...(slide.table ?? []), Array(width).fill('')] });
+              }}
+              style={{ width: 'auto', padding: 'var(--sp-2) var(--sp-5)' }}
+            >
+              Add a row
+            </ActionButton>
+            <ActionButton
+              onClick={() =>
+                onChange({ ...slide, table: (slide.table ?? []).map((row) => [...row, '']) })
+              }
+              style={{ width: 'auto', padding: 'var(--sp-2) var(--sp-5)' }}
+            >
+              Add a column
+            </ActionButton>
+          </div>
+        </div>
+      )}
+
       {slide.equation !== undefined && (
         <input
           className="input"
@@ -408,6 +470,10 @@ function Presenter({
 
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
+      // Space on a focused button is that button's press. Taking it here
+      // first made Done unreachable by keyboard — the one control somebody
+      // needs when the deck is over the whole screen.
+      if (e.key === ' ' && e.target instanceof HTMLButtonElement) return;
       if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
         e.preventDefault();
         setI((was) => Math.min(order.length - 1, was + 1));
@@ -496,6 +562,41 @@ function Presenter({
         <h2 style={{ fontSize: 'var(--type-xl)', lineHeight: 'var(--leading-tight)', margin: 0 }}>
           {here.slide.title}
         </h2>
+        {/*
+          Everything the exported slide carries has to be on the wall too. A
+          presenter view showing less than the file is a presenter view that
+          lies about what the room can see — a deck built "from a sheet" is all
+          table, and showed as a bare title.
+        */}
+        {here.slide.note && (
+          <div style={{ ...secondLine(), marginTop: 'var(--sp-3)', fontSize: 'var(--type-md)' }}>
+            {here.slide.note}
+          </div>
+        )}
+        {here.slide.table && here.slide.table.length > 0 && (
+          <div style={{ marginTop: 'var(--sp-6)', overflowX: 'auto' }}>
+            <table style={{ borderCollapse: 'collapse', fontSize: 'var(--type-md)' }}>
+              <tbody>
+                {here.slide.table.map((row, r) => (
+                  <tr key={r}>
+                    {row.map((cell, c) => (
+                      <td
+                        key={c}
+                        style={{
+                          border: '1px solid var(--app-line)',
+                          padding: 'var(--sp-3) var(--sp-5)',
+                          fontWeight: r === 0 ? 500 : 400,
+                        }}
+                      >
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
         {here.slide.bullets.length > 0 && (
           <ul style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-relaxed)' }}>
             {here.slide.bullets.map((line, n) => (

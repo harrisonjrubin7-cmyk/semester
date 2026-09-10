@@ -16,6 +16,7 @@ import { newId } from '../../lib/idb';
 import {
   TRASH_DAYS,
   addFile,
+  sweepTrash,
   deleteFile,
   emptyTrash,
   formatBytes,
@@ -34,6 +35,8 @@ import {
   canMove,
   childrenOf,
   freeName,
+  homeOf,
+  subtree,
   isCourseFolder,
   trail,
   withCourses,
@@ -89,7 +92,7 @@ const SORT_LABELS: Record<Sort, string> = {
 const INDEX_CHARS = 20_000;
 
 export function Drive() {
-  const { state, dispatch, catalog, courseCode } = useStore();
+  const { state, dispatch, courseCode } = useStore();
   const [files, setFiles] = useState<Settled[]>([]);
   const [binned, setBinned] = useState<Settled[]>([]);
   const [at, setAt] = useState<string | null>(null);
@@ -98,6 +101,7 @@ export function Drive() {
   const [grid, setGrid] = useState(false);
   const [query, setQuery] = useState('');
   const [busy, setBusy] = useState('');
+  const [trouble, setTrouble] = useState('');
   const [moving, setMoving] = useState<Settled | null>(null);
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState('');
@@ -106,11 +110,22 @@ export function Drive() {
     void listFiles().then(setFiles);
     void listTrash().then(setBinned);
   };
-  useEffect(refresh, []);
+  useEffect(() => {
+    // Take out what has been in the bin past its month, then read. `TRASH_DAYS`
+    // was a promise nothing kept until this call existed.
+    void sweepTrash().then(refresh);
+  }, []);
 
+  /*
+   * Every course the account holds, not only this term's.
+   *
+   * `catalog` is one term by design, and deriving the folders from it meant a
+   * file filed under last term's ECON had no folder to sit in the moment the
+   * term switched — still stored, reachable from nowhere.
+   */
   const folders = useMemo(
-    () => withCourses(state.folders, catalog.courses),
-    [state.folders, catalog.courses],
+    () => withCourses(state.folders, state.courses.map((m) => m.course)),
+    [state.folders, state.courses],
   );
 
   /*
@@ -132,19 +147,51 @@ export function Drive() {
 
   const onPick = async (list: File[]) => {
     if (list.length === 0) return;
-    for (const [n, f] of list.entries()) {
-      setBusy(list.length > 1 ? `Adding ${n + 1} of ${list.length}…` : 'Adding…');
-      // A file dropped into a course's folder is filed against that course, so
-      // it turns up on the course page without anybody tagging it twice.
-      const course = isCourseFolder(at) ? (at as string).slice('course:'.length) : null;
-      await addFile(f, course, at, await indexed(f));
+    const failed: string[] = [];
+    try {
+      for (const [n, f] of list.entries()) {
+        setBusy(list.length > 1 ? `Adding ${n + 1} of ${list.length}…` : 'Adding…');
+        // A file added inside a course's folder is filed against that course,
+        // so it turns up on the course page without anybody tagging it twice.
+        const course = isCourseFolder(at) ? (at as string).slice('course:'.length) : null;
+        try {
+          await addFile(f, course, at, await indexed(f));
+        } catch {
+          // One file that will not store — the disk is full, the browser
+          // refused — must not take the rest of the selection with it, and
+          // must not leave the button saying "Adding…" for ever.
+          failed.push(f.name);
+        }
+      }
+    } finally {
+      setBusy('');
+      setTrouble(
+        failed.length === 0
+          ? ''
+          : `${failed.join(', ')} could not be stored. There may be no room left on this device.`,
+      );
+      refresh();
     }
-    setBusy('');
-    refresh();
   };
 
   const act = async (run: Promise<unknown>) => {
     await run;
+    refresh();
+  };
+
+  /**
+   * Putting a file in a folder, however it got there.
+   *
+   * Dragging and the Move picker were two paths doing different things: the
+   * picker tagged a file against the course when it landed in a course folder
+   * and the drag did not, so the same drop filed it under the course or not
+   * depending on how you did it. One function, used by both.
+   */
+  const dropInto = async (id: string, folderId: string | null) => {
+    await moveFile(id, folderId);
+    if (isCourseFolder(folderId)) {
+      await tagFile(id, (folderId as string).slice('course:'.length));
+    }
     refresh();
   };
 
@@ -164,8 +211,11 @@ export function Drive() {
     // Searching reaches the whole drive rather than the folder you happen to
     // be standing in — a search that only looked here would answer "no" about
     // a file you can see two folders away.
-    return query.trim() ? files : files.filter((f) => f.folderId === at);
-  }, [view, binned, files, at, query]);
+    // `homeOf` rather than the raw id: a file whose folder has gone — a course
+    // removed, a parent folder deleted, a term switched — comes home to the
+    // top of the drive rather than disappearing from every view.
+    return query.trim() ? files : files.filter((f) => homeOf(folders, f.folderId) === at);
+  }, [view, binned, files, at, query, folders]);
 
   const shown = useMemo(() => {
     const hits = search(pool, query);
@@ -212,6 +262,12 @@ export function Drive() {
         placeholder="Search names and what is inside"
         style={{ width: '100%', marginBottom: 'var(--sp-5)' }}
       />
+
+      {trouble !== '' && (
+        <Blueprint style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-sm)' }}>{trouble}</div>
+        </Blueprint>
+      )}
 
       {inDrive && (
         <Crumbs crumbs={crumbs} onGo={setAt} />
@@ -307,23 +363,26 @@ export function Drive() {
             <FolderRow
               key={folder.id}
               folder={folder}
-              count={files.filter((f) => f.folderId === folder.id).length}
+              count={files.filter((f) => homeOf(folders, f.folderId) === folder.id).length}
               onOpen={() => setAt(folder.id)}
-              onDropFile={(id) => void act(moveFile(id, folder.id))}
+              onDropFile={(id) => void dropInto(id, folder.id)}
               onRename={(next) =>
                 dispatch({ type: 'renameFolder', id: folder.id, name: freeName(folders, folder.parentId, next) })
               }
               onDelete={async () => {
                 /*
-                 * The files come out first, then the folder goes.
+                 * The files come out first, then the folder goes — and it is
+                 * every folder in the subtree, not just this one.
                  *
-                 * The reducer cannot reach IndexedDB, so if the folder went
-                 * first and this failed, every file in it would point at
-                 * somewhere that does not exist — present in the store,
-                 * invisible in every view. Same order, same reason, as the
-                 * note on `deleteFolder` in `state/slices/made.ts`.
+                 * `deleteFolder` removes the descendants too, so relocating
+                 * only the files directly in this folder left the ones a level
+                 * down pointing at an id that no longer existed. `homeOf` now
+                 * catches that as a last resort, but a file quietly relocated
+                 * to the drive's root by a repair is worse than one moved
+                 * deliberately to where its folder used to be.
                  */
-                for (const f of files.filter((x) => x.folderId === folder.id)) {
+                const gone = subtree(folders, folder.id);
+                for (const f of files.filter((x) => x.folderId && gone.has(x.folderId))) {
                   await moveFile(f.id, folder.parentId);
                 }
                 dispatch({ type: 'deleteFolder', id: folder.id });
@@ -405,14 +464,8 @@ export function Drive() {
           folders={folders}
           onClose={() => setMoving(null)}
           onPick={async (folderId) => {
-            await moveFile(moving.id, folderId);
-            // Dropping a file into a course folder files it against that
-            // course too, which is what makes it appear on the course page.
-            if (isCourseFolder(folderId)) {
-              await tagFile(moving.id, (folderId as string).slice('course:'.length));
-            }
+            await dropInto(moving.id, folderId);
             setMoving(null);
-            refresh();
           }}
         />
       )}

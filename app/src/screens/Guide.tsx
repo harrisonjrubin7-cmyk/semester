@@ -810,11 +810,15 @@ function Documents() {
       */}
       <ActionButton
         onClick={() => {
+          // `open` so the press does what the label says. Without it the
+          // document was made and the student was left where they stood,
+          // reading a line telling them it had happened somewhere else.
           dispatch({
             type: 'makeDocument',
             doc: fromGuide(guide, state.guideId),
+            open: true,
           });
-          say('Opened as a document you can edit. It is in Write a document.');
+          say('Opened as a document you can edit. The guide itself is unchanged.');
         }}
         style={{ marginTop: 'var(--sp-6)' }}
       >

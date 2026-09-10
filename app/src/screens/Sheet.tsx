@@ -30,6 +30,7 @@ import {
 import { fromSheet, sheetFileName, widthsFor, xlsx } from '../lib/xlsx';
 import { canBuild, gradeSheet } from '../lib/gradesheet';
 import { fromDelimited, fromXlsx, readerFor } from '../lib/xlsxin';
+import { LIMIT } from '../state/slices/made';
 
 /**
  * A sheet, or a table.
@@ -98,6 +99,27 @@ function Shelf() {
       }
       try {
         const read = kind === 'xlsx' ? await fromXlsx(file) : await fromDelimited(file);
+        /*
+         * Room first.
+         *
+         * `makeSheet` prepends and then cuts the list to `LIMIT`, so importing
+         * a twelve-tab workbook with 195 sheets already kept would push seven
+         * of them off the end — and the next write to storage makes that
+         * permanent. Nothing said so; the import looked like it worked.
+         *
+         * So the workbook is refused whole rather than half-imported: there is
+         * no good way to choose which of somebody's existing sheets to lose,
+         * and the answer to "you have too many" is theirs to make.
+         */
+        const room = LIMIT - state.sheets.length;
+        if (read.sheets.length > room) {
+          problems.push(
+            `${file.name} holds ${read.sheets.length} ${read.sheets.length === 1 ? 'sheet' : 'sheets'} ` +
+              `and there is room for ${Math.max(0, room)}. Delete some sheets and try again — ` +
+              'nothing was imported and nothing was lost.',
+          );
+          continue;
+        }
         // Newest last, so a multi-sheet workbook lands in the order its tabs
         // were in rather than reversed.
         for (const sheet of read.sheets) dispatch({ type: 'makeSheet', sheet });

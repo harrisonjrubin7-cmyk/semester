@@ -268,7 +268,14 @@ export function templateById(id: string): Template | undefined {
  * generated material says what it was generated from.
  */
 export function fromGuide(
-  guide: { code: string; name: string; source: string; units: Unit[]; terms: Term[] },
+  guide: {
+    code: string;
+    name: string;
+    source: string;
+    units: Unit[];
+    terms: Term[];
+    selfTest?: { q: string; a: string }[];
+  },
   courseId: CourseId | null = null,
 ): Omit<Doc, 'id'> {
   const blocks: Block[] = [head(1, `${guide.code} — ${guide.name}`)];
@@ -282,6 +289,18 @@ export function fromGuide(
     blocks.push({
       kind: 'table',
       rows: [['Question', 'Answer'], ...unit.cards.map((card) => [card.q, card.a])],
+      header: true,
+      caption: '',
+    });
+  }
+
+  // The guide's own self-test. Part of what the Guide screen shows as the
+  // study guide, so a copy without it is a copy that is missing something.
+  if (guide.selfTest && guide.selfTest.length > 0) {
+    blocks.push(head(2, 'Self-test'));
+    blocks.push({
+      kind: 'table',
+      rows: [['Question', 'Answer'], ...guide.selfTest.map((card) => [card.q, card.a])],
       header: true,
       caption: '',
     });

@@ -150,16 +150,38 @@ export async function getFile(id: string): Promise<StoredFile | undefined> {
 }
 
 /**
- * Change some of a record without reading its blob into a variable first.
+ * Change some of a record, reading and writing inside one transaction.
  *
- * The blob rides along inside the record either way — this is IndexedDB, not a
- * network — but doing it in one read-modify-write transaction is what stops
- * two quick presses from writing back the version each of them started from.
+ * The first version of this read through `getFile` and then opened a *second*
+ * transaction to write — which is two transactions, and between them another
+ * one can land. Starring a file and moving it at the same moment then wrote
+ * back two records each built from the state before the other, and whichever
+ * finished second silently undid the first.
+ *
+ * IndexedDB's own guarantee is per transaction, so the fix is to stay inside
+ * one: the read and the `put` are both issued against `store` here, and the
+ * transaction does not commit until both have run.
  */
-async function patch(id: string, change: Partial<StoredFile>): Promise<void> {
-  const record = await getFile(id);
-  if (!record) return;
-  await tx('readwrite', (s) => s.put({ ...record, ...change }));
+function patch(id: string, change: Partial<StoredFile>): Promise<void> {
+  return new Promise((resolve, reject) => {
+    void tx('readwrite', (store) => {
+      const read = store.get(id) as IDBRequest<StoredFile | undefined>;
+      read.onsuccess = () => {
+        const record = read.result;
+        // Gone between the press and here. Nothing to change, and putting the
+        // change back would resurrect a deleted file.
+        if (!record) {
+          resolve();
+          return;
+        }
+        const write = store.put({ ...record, ...change });
+        write.onsuccess = () => resolve();
+        write.onerror = () => reject(write.error);
+      };
+      read.onerror = () => reject(read.error);
+      return read;
+    }).catch(reject);
+  });
 }
 
 /** Move a file into a folder, or to the top of the drive with null. */
@@ -197,12 +219,63 @@ export async function deleteFile(id: string): Promise<void> {
   await tx('readwrite', (s) => s.delete(id));
 }
 
-/** Empty the bin, or only the part of it older than `days`. */
+/**
+ * Empty the bin, or only the part of it older than `days`.
+ *
+ * Each delete re-reads the record and checks it is *still* in the bin, inside
+ * the same transaction as the delete. The list this walks was read earlier,
+ * and "earlier" is long enough: press Empty the bin, put a file back while it
+ * runs, and a delete keyed on the stale list erases a file the student had
+ * just rescued. There is no undo behind this one — the blob is the only copy —
+ * so it is worth a read per file.
+ */
 export async function emptyTrash(days = 0, now = Date.now()): Promise<number> {
   const cutoff = now - days * 86_400_000;
   const old = (await listTrash()).filter((f) => (f.trashedAt ?? 0) <= cutoff);
-  for (const f of old) await deleteFile(f.id);
-  return old.length;
+  let gone = 0;
+  for (const f of old) {
+    const took = await deleteIfStillBinned(f.id, cutoff);
+    if (took) gone += 1;
+  }
+  return gone;
+}
+
+/** Delete one file only if it is in the bin now, deciding and doing it at once. */
+function deleteIfStillBinned(id: string, cutoff: number): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    void tx('readwrite', (store) => {
+      const read = store.get(id) as IDBRequest<StoredFile | undefined>;
+      read.onsuccess = () => {
+        const record = read.result;
+        const binned = record?.trashedAt ?? null;
+        if (!record || binned === null || binned > cutoff) {
+          resolve(false);
+          return;
+        }
+        const kill = store.delete(id);
+        kill.onsuccess = () => resolve(true);
+        kill.onerror = () => reject(kill.error);
+      };
+      read.onerror = () => reject(read.error);
+      return read;
+    }).catch(reject);
+  });
+}
+
+/**
+ * The bin's own housekeeping: take out what has been in there past its month.
+ *
+ * `TRASH_DAYS` was a promise the code did not keep — nothing ever called
+ * `emptyTrash` with it, so a binned file's bytes stayed on the device for
+ * ever. Called when the drive opens, which is the only moment anybody is
+ * looking at the bin anyway.
+ */
+export async function sweepTrash(now = Date.now()): Promise<number> {
+  try {
+    return await emptyTrash(TRASH_DAYS, now);
+  } catch {
+    return 0;
+  }
 }
 
 /** Note the moment a file was opened, so the recents list has something to sort by. */

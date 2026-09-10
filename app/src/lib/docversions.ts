@@ -42,6 +42,12 @@ export interface Version {
   docId: string;
   at: number;
   title: string;
+  /**
+   * Optional only because versions written before this field existed have
+   * none; a restore from one of those leaves the subtitle as it is rather
+   * than blanking it, which is the safer of the two wrong answers.
+   */
+  subtitle?: string;
   blocks: Block[];
   /** Words at the time, so the list can say how the draft grew or shrank. */
   words: number;
@@ -69,7 +75,11 @@ export async function versionsOf(docId: string): Promise<Version[]> {
  */
 function same(a: Version | undefined, doc: Doc): boolean {
   if (!a) return false;
-  return a.title === doc.title && JSON.stringify(a.blocks) === JSON.stringify(doc.blocks);
+  return (
+    a.title === doc.title &&
+    (a.subtitle ?? '') === doc.subtitle &&
+    JSON.stringify(a.blocks) === JSON.stringify(doc.blocks)
+  );
 }
 
 /**
@@ -88,6 +98,7 @@ export async function keep(doc: Doc, wordCount: number, at = Date.now()): Promis
       docId: doc.id,
       at,
       title: doc.title,
+      subtitle: doc.subtitle,
       blocks: doc.blocks,
       words: wordCount,
     };
@@ -134,7 +145,12 @@ export async function allVersions(): Promise<Version[]> {
  * it stamps every other edit.
  */
 export function restored(doc: Doc, version: Version): Doc {
-  return { ...doc, title: version.title, blocks: version.blocks };
+  return {
+    ...doc,
+    title: version.title,
+    subtitle: version.subtitle ?? doc.subtitle,
+    blocks: version.blocks,
+  };
 }
 
 /**

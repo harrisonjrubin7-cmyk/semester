@@ -63,7 +63,13 @@ export function isCourseFolder(id: string | null): boolean {
 
 /** Every folder the drive shows: the course ones, then the student's own. */
 export function withCourses(folders: Folder[], courses: Course[]): Shown[] {
-  const made: Shown[] = courses.map((course) => ({
+  // Courses can repeat across terms in the list this is given; the folder id
+  // is derived from the course id, so two of them would be one folder drawn
+  // twice.
+  const seen = new Set<string>();
+  const made: Shown[] = courses
+    .filter((course) => !seen.has(course.id) && seen.add(course.id))
+    .map((course) => ({
     id: courseFolderId(course.id),
     name: course.code,
     parentId: null,
@@ -75,13 +81,42 @@ export function withCourses(folders: Folder[], courses: Course[]): Shown[] {
   return [...made, ...mine];
 }
 
+/**
+ * Whether a folder id names a folder that is actually there.
+ *
+ * The question matters because a file's folder can disappear underneath it in
+ * four different ways, and every one of them used to take the file out of
+ * sight: the course it belonged to was removed, or is in another term, or the
+ * folder was a descendant of one that was deleted, or the folder list hit its
+ * cap. The file is still stored, still in the backup, and reachable from
+ * nowhere — which is worse than deleting it, because nothing said so.
+ */
+export function exists(all: Shown[], id: string | null): boolean {
+  return id === null || all.some((f) => f.id === id);
+}
+
+/**
+ * Where a file should be shown, given the folders that exist.
+ *
+ * A file whose folder is gone comes home to the top of the drive rather than
+ * vanishing. One rule, at the point of display, instead of four separate
+ * repairs at four points of deletion — and it is the rule that still holds if
+ * a fifth way turns up.
+ */
+export function homeOf(all: Shown[], folderId: string | null): string | null {
+  return exists(all, folderId) ? folderId : null;
+}
+
 /** The folders directly inside `parentId`, course folders first and then by name. */
 export function childrenOf(all: Shown[], parentId: string | null): Shown[] {
   return all
     .filter((f) => f.parentId === parentId)
     .sort((a, b) => {
       if (a.fromCourse !== b.fromCourse) return a.fromCourse ? -1 : 1;
-      return a.name.localeCompare(b.name);
+      // `String()` because a folder read back from storage is only as
+      // well-formed as what was written, and a name that is not a string
+      // would otherwise take the whole drive down inside a sort.
+      return String(a.name).localeCompare(String(b.name));
     });
 }
 

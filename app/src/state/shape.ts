@@ -73,7 +73,7 @@ import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
-import { list, readList, readModule, readWindow, record } from '../lib/stored';
+import { list, readDeck, readFolder, readList, readModule, readWindow, record } from '../lib/stored';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -1211,8 +1211,8 @@ export function loadPersisted(): Persisted {
       documents: list(saved.documents),
       sheets: list(saved.sheets),
       equations: list(saved.equations),
-      decks: list(saved.decks),
-      folders: list(saved.folders),
+      decks: readList(saved.decks, readDeck),
+      folders: readList(saved.folders, readFolder),
       registrar: list(saved.registrar),
       spent: list(saved.spent),
       windows: readList(saved.windows, readWindow),
@@ -1589,7 +1589,7 @@ export type Action =
    * `state/slices/made.ts`.
    */
   | { type: 'newDocument'; courseId: CourseId | null }
-  | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'> }
+  | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'>; open?: boolean }
   | { type: 'openDocument'; id: string }
   /** Back to the shelf. Its own action rather than an open with no id. */
   | { type: 'closeDocument' }

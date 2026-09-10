@@ -29,7 +29,7 @@ import type { Action, State } from '../shape';
 import { push } from './navigate';
 
 /** How many of each is kept. Generous, and there so nothing grows without a bound. */
-const LIMIT = 200;
+export const LIMIT = 200;
 
 export function made(state: State, action: Action): State | null {
   switch (action.type) {
@@ -44,7 +44,8 @@ export function made(state: State, action: Action): State | null {
     case 'makeDocument': {
       const now = Date.now();
       const doc: Doc = { ...action.doc, id: newId(), created: now, updated: now };
-      return { ...state, documents: [doc, ...state.documents].slice(0, LIMIT) };
+      const next = { ...state, documents: [doc, ...state.documents].slice(0, LIMIT) };
+      return action.open ? push({ ...next, documentId: doc.id }, 'write') : next;
     }
 
     case 'openDocument':
@@ -120,7 +121,16 @@ export function made(state: State, action: Action): State | null {
         parentId: action.parentId,
         created: Date.now(),
       };
-      return { ...state, folders: [...state.folders, folder].slice(-LIMIT) };
+      /*
+       * No cap here, unlike documents and sheets.
+       *
+       * A folder is a few dozen bytes and evicting the oldest one does not
+       * free anything worth having — but it does take every file and folder
+       * inside it out of the drive's reach, because they point at an id that
+       * has stopped existing. A limit that trades a rounding error of storage
+       * for somebody's filing is not a limit worth having.
+       */
+      return { ...state, folders: [...state.folders, folder] };
     }
 
     case 'renameFolder':

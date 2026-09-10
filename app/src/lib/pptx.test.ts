@@ -260,3 +260,42 @@ describe('speaker notes', () => {
     expect(Object.keys(files).some((n) => n.includes('notesSlide'))).toBe(false);
   });
 });
+
+describe('the notes master', () => {
+  const withNotes = {
+    title: 'T',
+    subtitle: '',
+    slides: [{ title: 'A', bullets: [], notes: 'Say this.' }],
+  };
+
+  /*
+   * A notesSlide is not valid on its own. Without a master, PowerPoint opens
+   * the file with "we found a problem with some content" and repairs it —
+   * usually keeping the slides and dropping the notes, so the feature appears
+   * to work right up until the moment it is needed.
+   */
+  it('is written, declared and related when a deck has notes', () => {
+    const files = parts(withNotes);
+    expect(files['ppt/notesMasters/notesMaster1.xml']).toBeDefined();
+    expect(files['[Content_Types].xml']).toContain('/ppt/notesMasters/notesMaster1.xml');
+    expect(files['ppt/_rels/presentation.xml.rels']).toContain('notesMasters/notesMaster1.xml');
+    expect(files['ppt/presentation.xml']).toContain('<p:notesMasterIdLst>');
+  });
+
+  it('is what each notes slide points at, as well as its own slide', () => {
+    const rels = parts(withNotes)['ppt/notesSlides/_rels/notesSlide1.xml.rels'];
+    expect(rels).toContain('../notesMasters/notesMaster1.xml');
+    expect(rels).toContain('../slides/slide1.xml');
+  });
+
+  it('has a theme of its own, as the format requires', () => {
+    expect(parts(withNotes)['ppt/notesMasters/_rels/notesMaster1.xml.rels']).toContain('theme1.xml');
+  });
+
+  it('is absent entirely from a deck with no notes', () => {
+    const files = parts({ title: 'T', subtitle: '', slides: [{ title: 'A', bullets: [] }] });
+    expect(Object.keys(files).some((n) => n.includes('notesMaster'))).toBe(false);
+    expect(files['ppt/presentation.xml']).not.toContain('notesMasterIdLst');
+    expect(files['[Content_Types].xml']).not.toContain('notesMaster');
+  });
+});
