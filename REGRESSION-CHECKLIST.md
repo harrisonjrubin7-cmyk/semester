@@ -439,3 +439,60 @@ nothing, and **every unit test passed**.
 since Run 2: nothing on this branch touches `sw.js`, the manifest or
 `lib/tabs.ts`, but that is an argument rather than a test, and it stays
 recorded as untested.
+
+## Run 4 — two main-thread faults, found by looking (2026-09-10)
+
+Commits `e33c11f` … `317dcbf`. Both were reachable with data the grid can hold,
+neither was reported by a test, and both took out more than the cell they were
+in. The second was found by going looking for siblings of the first rather than
+waiting on CI.
+
+### What changed, measured
+
+| | Before | After |
+| --- | --- | --- |
+| `=SUM(A1:ZZ9999)` typed into a cell | **9,823 ms** of blocked main thread, then `#CYCLE!` | `#REF!` in **0 ms** |
+| A 5,200-cell formula chain | `RangeError: Maximum call stack size exceeded`, thrown out of `display` — the **whole Sheet screen** | `#DEEP!` in **8 ms** |
+
+`parseRef` takes two letters and four digits, so `A1:ZZ9999` parses and `expand`
+built all seven million addresses. `evaluate`'s cycle check was written so that
+runaway recursion becomes an error in one cell rather than a stack overflow;
+it does that for a cycle, and a chain with no cycle in it reached the same
+overflow at somewhere between 600 and 800 links. The grid holds 200×26, so a
+chain filled down a column and across is 5,200 long.
+
+`#DEEP!` joins `ERRORS`, so `isError` marks it on screen exactly as the other
+six are marked. No change to how a cell is drawn.
+
+### Checked in the same sweep and left alone
+
+Two more places where unbounded work could have hidden, both already sound:
+
+- **Folder parent chains** — `trail` carries a `seen` guard and `subtree` grows
+  a set, so a cycle terminates.
+- **Find and replace** — the search term is fully regex-escaped, so no
+  user-supplied metacharacter reaches the engine and there is no catastrophic
+  backtracking; a zero-length match advances `lastIndex`.
+
+### Automated gates
+
+| | Result |
+| --- | --- |
+| **A1** `cd app && npm test` | **PASS** — 267 files, **5,534 passed**, 10 skipped, 0 failed. |
+| **A2** `cd app && npm run test:zones` | **PASS** — 5,534 under `America/Chicago` and `Pacific/Kiritimati`, identical. |
+| **A3** `cd app && npm run lint` | **PASS** — exit 0. |
+| **A4** `cd app && npm run build` | **PASS** — exit 0, clean under `VITE_BASE=/semester/`. |
+| **B1** entry `index-*.js` | **PASS** — 562,782 B, unchanged from Run 3. |
+
+### Driven in a browser — re-run, because `sheet.ts` changed
+
+- **C1, C4, C5, C7, P3** — 27 routes at 390×844 against the rebuilt bundle:
+  **0 `pageerror`, 0 horizontal overflow, 0 blank screens**. **PASS**
+- **I** — the Drive write path again, end to end: add a file, star it, reload,
+  read the star back. `aria-pressed="true"` survived, and search found the file
+  by a word only inside it. **PASS**
+
+### Still not exercised
+
+**P1, P2, P4** — service worker, PWA install and multi-tab sync, unchanged
+since Run 2 and still recorded as untested rather than passed.
