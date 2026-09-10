@@ -126,9 +126,21 @@ const DATE_BUILT_IN = new Set([14, 15, 16, 17, 22]);
 /** The built-in date formats that carry a time as well. */
 const DATE_TIME_BUILT_IN = new Set([22]);
 
-function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number> } {
+function dateFormats(stylesXml: string): {
+  dates: Set<number>;
+  times: Set<number>;
+  seconds: Set<number>;
+} {
   const dateFmtIds = new Set(DATE_BUILT_IN);
   const timeFmtIds = new Set(DATE_TIME_BUILT_IN);
+  /*
+   * Seconds are their own question, and no built-in date format asks it: 22 is
+   * `m/d/yy h:mm`, which Excel itself shows without them. Writing `:00` onto
+   * every timestamp would be inventing precision the file never had, so only a
+   * custom code that spells `s` gets seconds — and one that does was losing
+   * them, which is the other half of the same bug.
+   */
+  const secondFmtIds = new Set<number>();
   /*
    * The two attributes read independently, because XML does not order them.
    *
@@ -158,6 +170,7 @@ function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number
     if (hasDate) {
       dateFmtIds.add(Number(id[1]));
       if (hasTime) timeFmtIds.add(Number(id[1]));
+      if (/s/i.test(code)) secondFmtIds.add(Number(id[1]));
     }
   }
 
@@ -168,18 +181,20 @@ function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number
    */
   const dates = new Set<number>();
   const times = new Set<number>();
+  const seconds = new Set<number>();
   const xfs = /<(?:\w+:)?cellXfs[^>]*>([\s\S]*?)<\/(?:\w+:)?cellXfs>/.exec(stylesXml);
-  if (!xfs) return { dates, times };
+  if (!xfs) return { dates, times, seconds };
   let at = 0;
   for (const m of xfs[1].matchAll(/<(?:\w+:)?xf\b[^>]*>/g)) {
     const id = /numFmtId=['"](\d+)['"]/.exec(m[0]);
     if (id && dateFmtIds.has(Number(id[1]))) {
       dates.add(at);
       if (timeFmtIds.has(Number(id[1]))) times.add(at);
+      if (secondFmtIds.has(Number(id[1]))) seconds.add(at);
     }
     at += 1;
   }
-  return { dates, times };
+  return { dates, times, seconds };
 }
 
 /**
@@ -295,7 +310,19 @@ function withoutStrings(body: string): string {
  * with an error for a function it supports perfectly well.
  */
 export function plainNames(body: string): string {
-  return body.replace(/_xlfn\.(_xlws\.)?/gi, '');
+  /*
+   * Only outside a string literal. The first version rewrote the whole formula
+   * text, so `="_xlfn.XLOOKUP"` came in as `="XLOOKUP"` and
+   * `CONCAT("a_xlfn.b")` as `CONCAT("ab")` — a cell whose computed *text*
+   * quietly changed on the way in. A prefix is spelling only where it is a
+   * name; inside quotes it is somebody's data.
+   *
+   * The literal is matched first so the alternation consumes it whole, and it
+   * is handed back exactly as it came.
+   */
+  return body.replace(/"(?:[^"]|"")*"|_xlfn\.(?:_xlws\.)?/gi, (part) =>
+    part.startsWith('"') ? part : '',
+  );
 }
 
 /**
@@ -323,7 +350,7 @@ const KNOWN = new Set([
  * apart: rounding the two together is how an afternoon becomes the next
  * morning.
  */
-function isoDate(serial: number, epoch: number, withTime: boolean): string {
+function isoDate(serial: number, epoch: number, withTime: boolean, withSeconds: boolean): string {
   let days = Math.floor(serial);
   /*
    * The rounding can carry.
@@ -342,7 +369,14 @@ function isoDate(serial: number, epoch: number, withTime: boolean): string {
   if (!withTime) return date;
   const hh = String(Math.floor(seconds / 3600) % 24).padStart(2, '0');
   const mm = String(Math.floor(seconds / 60) % 60).padStart(2, '0');
-  return `${date} ${hh}:${mm}`;
+  /*
+   * Seconds only where the format has them. A code spelling `hh:mm:ss` was
+   * losing its seconds outright; every other timestamp would gain a `:00` it
+   * never had, which is inventing precision rather than reading it.
+   */
+  if (!withSeconds) return `${date} ${hh}:${mm}`;
+  const ss = String(seconds % 60).padStart(2, '0');
+  return `${date} ${hh}:${mm}:${ss}`;
 }
 
 /**
@@ -412,7 +446,7 @@ function worksheetOrder(workbook: string, rels: string): { name: string; part: s
 function readCells(
   xml: string,
   shared: string[],
-  styles: { dates: Set<number>; times: Set<number> },
+  styles: { dates: Set<number>; times: Set<number>; seconds: Set<number> },
   epoch: number,
 ): {
   cells: Record<string, string>;
@@ -488,7 +522,7 @@ function readCells(
       const n = Number(entities(raw[1]));
       text =
         type === 'n' && styles.dates.has(style) && Number.isFinite(n)
-          ? isoDate(n, epoch, styles.times.has(style))
+          ? isoDate(n, epoch, styles.times.has(style), styles.seconds.has(style))
           : entities(raw[1]);
     }
 

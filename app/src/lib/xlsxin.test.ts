@@ -871,3 +871,57 @@ describe('a relationship id bound to a prefix other than r', () => {
     expect(sheets[0].cells.A1).toBe('91');
   });
 });
+
+describe('a `_xlfn.` inside a string literal', () => {
+  it('is somebody’s data, not a name, and comes through untouched', () => {
+    // The first version rewrote the whole formula text, so a cell whose
+    // computed *text* was `_xlfn.XLOOKUP` quietly became `XLOOKUP`.
+    expect(plainNames('"_xlfn.XLOOKUP"')).toBe('"_xlfn.XLOOKUP"');
+    expect(plainNames('CONCAT("a_xlfn.b")')).toBe('CONCAT("a_xlfn.b")');
+    expect(plainNames('IF(A1="_xlfn.X","_xlfn.Y",_xlfn.XLOOKUP(A1,B1:B2,C1:C2))')).toBe(
+      'IF(A1="_xlfn.X","_xlfn.Y",XLOOKUP(A1,B1:B2,C1:C2))',
+    );
+  });
+
+  it('still strips the prefix off a real name', () => {
+    expect(plainNames('_xlfn.XLOOKUP(A1,B1:B9,C1:C9)')).toBe('XLOOKUP(A1,B1:B9,C1:C9)');
+    expect(plainNames('_xlfn._xlws.FILTER(A1:A9,B1:B9)')).toBe('FILTER(A1:A9,B1:B9)');
+  });
+});
+
+describe('seconds in a timestamp', () => {
+  const read = async (styles: string, serial: string) =>
+    (
+      await fromXlsx(
+        asFile(
+          'sec.xlsx',
+          workbook({
+            styles,
+            sheets: [{ name: 'S', rows: [`<row r="1"><c r="A1" s="0"><v>${serial}</v></c></row>`] }],
+          }),
+        ),
+      )
+    ).sheets[0].cells.A1;
+
+  // 46275 is 2026-09-10; .5242592592592593 is 12:34:56 into the day.
+  const noon34 = '46275.5242592592592593';
+
+  it('are kept when the format asks for them', async () => {
+    const withSeconds =
+      '<styleSheet><numFmts><numFmt numFmtId="165" formatCode="yyyy-mm-dd hh:mm:ss"/></numFmts>' +
+      '<cellXfs><xf numFmtId="165"/></cellXfs></styleSheet>';
+    expect(await read(withSeconds, noon34)).toBe('2026-09-10 12:34:56');
+  });
+
+  it('are not invented when it does not', async () => {
+    // Built-in 22 is `m/d/yy h:mm`, which Excel itself shows without seconds.
+    // Writing `:00` onto every timestamp would be precision the file never had.
+    const builtIn = '<styleSheet><cellXfs><xf numFmtId="22"/></cellXfs></styleSheet>';
+    expect(await read(builtIn, noon34)).toBe('2026-09-10 12:34');
+  });
+
+  it('do not turn a date-only format into a time', async () => {
+    const dateOnly = '<styleSheet><cellXfs><xf numFmtId="14"/></cellXfs></styleSheet>';
+    expect(await read(dateOnly, noon34)).toBe('2026-09-10');
+  });
+});
