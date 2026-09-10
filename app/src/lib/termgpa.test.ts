@@ -41,6 +41,24 @@ function sitting(
   };
 }
 
+/**
+ * A published table that states a cutoff for A+ and prices nothing above 4.0 —
+ * the band-by-band shape `readGradeSystem` accepts.
+ */
+const NO_TOP_POINTS: GradeSystem = {
+  kind: 'letter',
+  gpaMax: 4,
+  scale: [
+    { label: 'A+', min: 97 },
+    { label: 'A', min: 93, gpa: 4 },
+    { label: 'A−', min: 90, gpa: 3.7 },
+    { label: 'B+', min: 87, gpa: 3.3 },
+    { label: 'B', min: 83, gpa: 3 },
+    { label: 'C', min: 73, gpa: 2 },
+    { label: 'F', min: 0, gpa: 0 },
+  ],
+};
+
 describe('creditHours', () => {
   it('reads the number out of however the syllabus wrote it', () => {
     expect(creditHours('3 credits')).toBe(3);
@@ -114,6 +132,54 @@ describe('termGpa', () => {
     expect(t.courses[0].missing).toBe('points');
     expect(t.gpa).toBeNull();
     expect(termLine(t)).toContain('needs at least one of each');
+  });
+
+  it('will not price a letter the scale names and never values', () => {
+    /*
+     * `readGradeSystem` takes `min` and `gpa` band by band, so a published
+     * table that states a cutoff for A+ and prices nothing above 4.0 arrives
+     * exactly like this. Folding the unpriced letter in as zero put the top of
+     * the band underneath the bottom of it: measured, low 3.3, mid 4, high 0,
+     * printed on the degree screen as "somewhere between 3.30 and 0.00".
+     */
+    const t = termGpa([sitting('a', 'A 100', '3 credits', { 'a:0': '95' }, NO_TOP_POINTS)]);
+    expect(t.courses[0].band!.high.letter).toBe('A+');
+    expect(t.courses[0].band!.high.points).toBeNull();
+    expect(t.courses[0].missing).toBe('points');
+    expect(t.gpa).toBeNull();
+  });
+
+  it('names the letter that has no points, not the whole scale', () => {
+    const t = termGpa([sitting('a', 'A 100', '3 credits', { 'a:0': '95' }, NO_TOP_POINTS)]);
+    const said = missingLine(t.courses[0]);
+    expect(said).toContain('A+');
+    // The scale prices eleven letters. Saying it has "no grade points" would
+    // send somebody looking for a table that is already there.
+    expect(said).not.toContain('no grade points, so');
+  });
+
+  it('still counts a course whose low end falls off the bottom of the scale', () => {
+    /*
+     * The other silence `landingAt` returns null for, and it is not this one.
+     * A syllabus table that lists A down to D and omits F is ordinary, and a
+     * projection that dips under the lowest stated cutoff earns no letter —
+     * which is worth nothing, which is what a mark below D is worth. Dropping
+     * the course over that would lose a GPA the app can honestly compute.
+     */
+    const noF: GradeSystem = {
+      kind: 'letter',
+      gpaMax: 4,
+      scale: [
+        { label: 'A', min: 90, gpa: 4 },
+        { label: 'B', min: 80, gpa: 3 },
+        { label: 'C', min: 70, gpa: 2 },
+        { label: 'D', min: 60, gpa: 1 },
+      ],
+    };
+    const t = termGpa([sitting('a', 'A 100', '3 credits', { 'a:0': '62' }, noF)]);
+    expect(t.courses[0].band!.low.letter).toBe('');
+    expect(t.courses[0].missing).toBe('');
+    expect(t.gpa).not.toBeNull();
   });
 
   it('says nothing at all about an empty term', () => {
