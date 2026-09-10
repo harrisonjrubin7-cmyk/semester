@@ -82,6 +82,28 @@ interface Source {
   atRisk?: AtRisk[];
 }
 
+/**
+ * The rail as a reminder should read it.
+ *
+ * Here rather than at the two call sites because there are two call sites and
+ * they disagreed. The push queue filtered a cancelled or optional block out
+ * and the in-page timer did not, so the same rule sent a phone
+ * "PSCI 1104 — canceled in 10 min" through one path and nothing through the
+ * other. That sentence is in the app's own shipped syllabus data: PSCI has
+ * two blocks marked cancelled on 3 September, one of them an office hour that
+ * was optional as well.
+ *
+ * A block that is not happening is not a class to leave for, and an optional
+ * one is not a class you are late for. Neither earns a buzz.
+ */
+export function classesToNudge(
+  rail: { title: string; meta: string; at: number; canceled?: boolean; optional?: boolean }[],
+): { label: string; at: number; where: string }[] {
+  return rail
+    .filter((b) => !b.optional && !b.canceled)
+    .map((b) => ({ label: b.title, at: b.at, where: b.meta }));
+}
+
 /** A class meeting worth a warning, and why it is worth one. */
 export interface AtRisk {
   code: string;

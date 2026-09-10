@@ -34,7 +34,7 @@ import {
 } from '../lib/cloud';
 import type { Session } from '@supabase/supabase-js';
 import { loadSeed } from '../data/seed';
-import { dueReminders, fire } from '../lib/notify';
+import { classesToNudge, dueReminders, fire } from '../lib/notify';
 import { atRiskToday } from '../lib/atrisk';
 import { myReminders } from '../lib/myrules';
 import { datedItems, railFor } from '../lib/select';
@@ -795,11 +795,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       fire(
         dueReminders(at, state.notifs, {
           items,
-          classes: railFor(catalog, at, state.appointments).map((b) => ({
-            label: b.title,
-            at: b.at,
-            where: b.meta,
-          })),
+          classes: classesToNudge(railFor(catalog, at, state.appointments)),
           registrar: state.registrar,
           atRisk: atRiskToday(
             railFor(catalog, at, state.appointments),
