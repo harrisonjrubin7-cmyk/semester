@@ -77,11 +77,8 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
    * points-based course, which is a common enough way to write a syllabus.
    */
   const read = course.grading.map((row) => readWeight(row.pct));
-  const rows = course.grading.map((row, i) => ({
-    ...row,
-    ...read[i],
-    weight: shareOut(asWeights(read))[i],
-  }));
+  const weights = shareOut(weightsOf(read));
+  const rows = course.grading.map((row, i) => ({ ...row, ...read[i], weight: weights[i] }));
   const main = rows.filter((r) => !r.extra);
   const bonus = rows.filter((r) => r.extra);
   const unreadable = rows.filter((r) => r.weight === null).map((r) => r.what);
@@ -112,7 +109,20 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
   const component = (row: { what: string; pct: string; weight: number | null }, on: number) => {
     put(0, on, row.what);
     if (row.weight !== null) put(1, on, String(row.weight));
-    put(3, on, `=IF(C${on}="","",C${on}*B${on}/100)`);
+    /*
+     * A score typed as "85%" is eighty-five, not nought point eight five.
+     *
+     * `sheet.ts` reads a trailing per-cent sign as a fraction — right for a
+     * weight, and a hundredfold error for a score: 85% credited 0.17 points of
+     * a twenty-point component instead of 17. Silently, on the one screen
+     * whose whole output is a number a student plans around.
+     *
+     * So anything under 1 is read as a fraction of the component and scaled.
+     * The trade, stated plainly: a literal score of 0.4 out of 100 is misread
+     * as 40%. That is a mark nobody has ever been given, against "85%", which
+     * is how half of people would type it.
+     */
+    put(3, on, `=IF(C${on}="","",IF(C${on}<1,C${on}*100,C${on})*B${on}/100)`);
     put(4, on, row.pct);
   };
 
@@ -233,6 +243,26 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
 }
 
 /**
+ * The weights, or an honest refusal to normalise them.
+ *
+ * `asWeights` turns points into percentages by dividing each by their total —
+ * correct when the points are the whole course, and a lie when they are not.
+ * A syllabus reading "Exams — 80 pts" and "Participation — at the instructor's
+ * discretion" has one component this app cannot read, and dividing 80 by 80
+ * made the exams *the entire course*: weights adding to exactly 100, and the
+ * sheet saying so in as many words.
+ *
+ * So the normalisation only happens when every component that counts is
+ * readable. Otherwise the points rows come through unweighted, the total falls
+ * short of 100, and the sheet says the sums are indicative — which is the
+ * truth about a syllabus it could only read part of.
+ */
+function weightsOf(read: { weight: number | null; extra: boolean; points: number | null }[]): (number | null)[] {
+  const missing = read.some((r) => !r.extra && r.weight === null && r.points === null);
+  return missing ? read.map((r) => r.weight) : asWeights(read);
+}
+
+/**
  * Weights rounded to two places whose total is still exactly what it was.
  *
  * Points divide badly. Three components of one point each are 33.333… per
@@ -278,6 +308,6 @@ function shareOut(weights: (number | null)[]): (number | null)[] {
  */
 export function canBuild(course: Course): boolean {
   const read = course.grading.map((row) => readWeight(row.pct));
-  const weights = asWeights(read);
+  const weights = weightsOf(read);
   return read.some((row, i) => !row.extra && weights[i] !== null);
 }

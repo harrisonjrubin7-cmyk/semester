@@ -269,3 +269,73 @@ describe('weights that do not divide evenly', () => {
     expect([clean.cells.B5, clean.cells.B6]).toEqual(['25', '75']);
   });
 });
+
+/*
+ * Caught by a third review pass. Both of these produced a *number*, silently,
+ * on the one screen whose entire output is a number a student plans around.
+ */
+describe('a score typed the way people type scores', () => {
+  it('reads "85%" as eighty-five, not as nought point eight five', () => {
+    // `sheet.ts` reads a trailing per-cent sign as a fraction — right for a
+    // weight, and a hundredfold error for a score: 85% credited 0.17 points of
+    // a twenty-point component instead of 17.
+    const cells = { ...gradeSheet(plain).sheet.cells };
+    cells[`C${rowOf(cells, 'Problem sets')}`] = '85%';
+    expect(at(cells, 'Earned so far')).toBeCloseTo(17, 10);
+  });
+
+  it('reads a bare "85" the same way, as it always did', () => {
+    const cells = { ...gradeSheet(plain).sheet.cells };
+    cells[`C${rowOf(cells, 'Problem sets')}`] = '85';
+    expect(at(cells, 'Earned so far')).toBeCloseTo(17, 10);
+  });
+
+  it('still credits a perfect score as the whole component', () => {
+    const cells = { ...gradeSheet(plain).sheet.cells };
+    cells[`C${rowOf(cells, 'Problem sets')}`] = '100';
+    expect(at(cells, 'Earned so far')).toBeCloseTo(20, 10);
+  });
+});
+
+describe('a points syllabus this app could only read half of', () => {
+  /*
+   * `asWeights` turns points into percentages by dividing each by their total,
+   * which is correct when the points are the whole course and a lie when they
+   * are not. One readable component and one unreadable one made the readable
+   * one *the entire course*: weights adding to exactly 100, and the sheet
+   * saying so in as many words.
+   */
+  const partial = course([
+    { what: 'Exams', pct: '80 pts' },
+    { what: 'Participation', pct: 'at the instructor’s discretion' },
+  ]);
+
+  it('does not make the one component it can read the whole course', () => {
+    // Both rows come through unweighted, which is what `unreadable` means:
+    // the app could not turn the syllabus's wording into a weight, so the row
+    // is left empty with "80 pts" beside it for the student to work from.
+    const { sheet, unreadable } = gradeSheet(partial);
+    expect(unreadable).toEqual(['Exams', 'Participation']);
+    expect(sheet.cells[`B${rowOf(sheet.cells, 'Exams')}`]).toBeUndefined();
+    expect(sheet.cells[`E${rowOf(sheet.cells, 'Exams')}`]).toBe('80 pts');
+  });
+
+  it('says the sums are indicative rather than exact', () => {
+    const { sheet } = gradeSheet(partial);
+    expect(display(sheet.cells, `E${rowOf(sheet.cells, 'Weights add to')}`)).toContain('indicative');
+  });
+
+  it('is not offered at all, because there is nothing to weigh', () => {
+    expect(canBuild(partial)).toBe(false);
+  });
+
+  it('still normalises when every counted component is readable', () => {
+    // The narrowing is only about components it could not read. Extra credit
+    // is read and counted separately, so it does not block the division.
+    const whole = gradeSheet(
+      course([{ what: 'Exams', pct: '80 pts' }, { what: 'Homework', pct: '20 pts' }]),
+    ).sheet;
+    expect([whole.cells.B5, whole.cells.B6]).toEqual(['80', '20']);
+    expect(at(whole.cells, 'Weights add to')).toBe(100);
+  });
+});

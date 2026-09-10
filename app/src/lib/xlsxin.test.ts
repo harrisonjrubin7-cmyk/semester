@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { strToU8, zipSync } from 'fflate';
-import { fromDelimited, fromXlsx, knownFormula, readerFor } from './xlsxin';
+import { fromDelimited, fromXlsx, knownFormula, plainNames, readerFor } from './xlsxin';
 import { display, evaluate } from './sheet';
 import { fromSheet, parts, type Book } from './xlsx';
 
@@ -596,5 +596,198 @@ describe('a format that says only "month"', () => {
 
   it('is still a time when there is an hour beside it', async () => {
     expect((await cells()).B1).toBe('0.5');
+  });
+});
+
+describe('a workbook whose tags carry a namespace prefix', () => {
+  /*
+   * `<sheetData>` and `<x:sheetData>` are the same document to an XML parser,
+   * and this file is not one. Without the prefix allowed every cell missed,
+   * so `fromXlsx` decided the file had no worksheets and threw — on a workbook
+   * Excel opens without comment.
+   */
+  const prefixed = zipSync({
+    'xl/workbook.xml': strToU8(
+      '<?xml version="1.0"?><x:workbook xmlns:x="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+        '<x:workbookPr date1904="1"/><x:sheets><x:sheet name="Marks" sheetId="1" r:id="rId1"/></x:sheets></x:workbook>',
+    ),
+    'xl/_rels/workbook.xml.rels': strToU8(
+      '<?xml version="1.0"?><r:Relationships xmlns:r="x">' +
+        '<r:Relationship Id="rId1" Target="worksheets/sheet1.xml"/></r:Relationships>',
+    ),
+    'xl/styles.xml': strToU8(
+      '<?xml version="1.0"?><x:styleSheet><x:numFmts><x:numFmt numFmtId="165" formatCode="yyyy-mm-dd"/></x:numFmts>' +
+        '<x:cellXfs><x:xf numFmtId="0"/><x:xf numFmtId="165"/></x:cellXfs></x:styleSheet>',
+    ),
+    'xl/sharedStrings.xml': strToU8(
+      '<?xml version="1.0"?><x:sst><x:si><x:t>Essay</x:t></x:si></x:sst>',
+    ),
+    'xl/worksheets/sheet1.xml': strToU8(
+      '<?xml version="1.0"?><x:worksheet><x:sheetData><x:row r="1">' +
+        '<x:c r="A1" t="s"><x:v>0</x:v></x:c>' +
+        '<x:c r="B1"><x:v>88</x:v></x:c>' +
+        '<x:c r="C1"><x:f>SUM(B1:B1)</x:f><x:v>88</x:v></x:c>' +
+        '<x:c r="D1" s="1"><x:v>44643</x:v></x:c>' +
+        '</x:row></x:sheetData></x:worksheet>',
+    ),
+  });
+
+  it('is imported rather than reported as having no worksheets', async () => {
+    const { sheets } = await fromXlsx(asFile('p.xlsx', prefixed));
+    expect(sheets).toHaveLength(1);
+    expect(sheets[0].title).toBe('Marks');
+  });
+
+  it('reads its shared strings, numbers and formulas', async () => {
+    const { sheets } = await fromXlsx(asFile('p.xlsx', prefixed));
+    expect(sheets[0].cells.A1).toBe('Essay');
+    expect(sheets[0].cells.B1).toBe('88');
+    expect(sheets[0].cells.C1).toBe('=SUM(B1:B1)');
+  });
+
+  it('reads its styles and its epoch, both of which live in prefixed tags too', async () => {
+    // 44643 is 2022-03-23 counting from 1900 and 2026-03-24 counting from
+    // 1904, so this pins the epoch as well as the custom date format.
+    const { sheets } = await fromXlsx(asFile('p.xlsx', prefixed));
+    expect(sheets[0].cells.D1).toBe('2026-03-24');
+  });
+
+  it('still reads a workbook with no prefixes at all', async () => {
+    const plain = workbook({
+      shared: ['Essay'],
+      sheets: [{ name: 'S', rows: ['<row r="1"><c r="A1" t="s"><v>0</v></c></row>'] }],
+    });
+    const { sheets } = await fromXlsx(asFile('n.xlsx', plain));
+    expect(sheets[0].cells.A1).toBe('Essay');
+  });
+});
+
+describe('a cell with a phonetic reading beside its text', () => {
+  const withRuby = (si: string) =>
+    zipSync({
+      'xl/workbook.xml': strToU8(
+        '<?xml version="1.0"?><workbook><sheets><sheet name="S" sheetId="1" r:id="rId1"/></sheets></workbook>',
+      ),
+      'xl/_rels/workbook.xml.rels': strToU8(
+        '<?xml version="1.0"?><Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>',
+      ),
+      'xl/sharedStrings.xml': strToU8(`<?xml version="1.0"?><sst>${si}</sst>`),
+      'xl/worksheets/sheet1.xml': strToU8(
+        '<?xml version="1.0"?><worksheet><sheetData><row r="1">' +
+          '<c r="A1" t="s"><v>0</v></c></row></sheetData></worksheet>',
+      ),
+    });
+  const read = async (si: string) =>
+    (await fromXlsx(asFile('r.xlsx', withRuby(si)))).sheets[0].cells.A1;
+
+  it('leaves the furigana out of the value', async () => {
+    // Joining every `<t>` in the `<si>` glued the reading onto the end of the
+    // word: 東京 came in as 東京トウキョウ.
+    expect(
+      await read('<si><t>東京</t><rPh sb="0" eb="2"><t>トウキョウ</t></rPh><phoneticPr fontId="1"/></si>'),
+    ).toBe('東京');
+  });
+
+  it('does not swallow the text after a self-closing one', async () => {
+    // A lazy match for a closing tag that never comes runs on to the next
+    // one, taking everything in between with it.
+    expect(await read('<si><r><t>a</t></r><rPh sb="0" eb="1"/><r><t>b</t></r></si>')).toBe('ab');
+  });
+
+  it('still joins the runs of an ordinary rich-text cell', async () => {
+    expect(await read('<si><r><t>Prof. </t></r><r><t>Stromme</t></r></si>')).toBe('Prof. Stromme');
+  });
+});
+
+describe('a timestamp in the last half-second of a day', () => {
+  const styles = '<styleSheet><cellXfs><xf numFmtId="22"/></cellXfs></styleSheet>';
+  const at = async (serial: string) =>
+    (
+      await fromXlsx(
+        asFile(
+          's.xlsx',
+          workbook({
+            styles,
+            sheets: [{ name: 'S', rows: [`<row r="1"><c r="A1" s="0"><v>${serial}</v></c></row>`] }],
+          }),
+        ),
+      )
+    ).sheets[0].cells.A1;
+
+  it('carries into the next day instead of falling back a day', async () => {
+    // Rounding the fraction reached 86,400 seconds — a whole day — and the
+    // date was computed before that was applied, so midnight landed on the
+    // day before the one it belongs to.
+    expect(await at('46275.9999999')).toBe('2026-09-11 00:00');
+  });
+
+  it('leaves every other time where it was', async () => {
+    expect(await at('46275.5')).toBe('2026-09-10 12:00');
+    expect(await at('46275')).toBe('2026-09-10 00:00');
+    expect(await at('46275.99')).toBe('2026-09-10 23:45');
+  });
+});
+
+describe('a formula with a quote inside a string', () => {
+  it('is kept as its cached value rather than read as a broken formula', async () => {
+    // Excel doubles a quote to escape it. `sheet.ts`'s lexer ends the string
+    // at the first one, so the formula cannot be read at all and would
+    // evaluate to #VALUE! where a cached answer was sitting right there.
+    expect(knownFormula('IF(A1="say ""hi""",1,0)')).toBe(false);
+    const bytes = workbook({
+      sheets: [
+        {
+          name: 'S',
+          rows: [
+            '<row r="1"><c r="A1"><f>IF(B1=&quot;a&quot;&quot;b&quot;,1,0)</f><v>7</v></c></row>',
+          ],
+        },
+      ],
+    });
+    const { sheets, notes } = await fromXlsx(asFile('q.xlsx', bytes));
+    expect(sheets[0].cells.A1).toBe('7');
+    expect(notes.join(' ')).toContain('does not have');
+  });
+});
+
+describe('a function name inside a string literal', () => {
+  it('is text, not a call, so the formula comes across as a formula', async () => {
+    // `SUBTOTAL` is not a function this app has, but nothing here calls it.
+    expect(knownFormula('IF(B1="SUBTOTAL(",1,0)')).toBe(true);
+    const bytes = workbook({
+      sheets: [
+        {
+          name: 'S',
+          rows: ['<row r="1"><c r="A1"><f>IF(B1=&quot;SUBTOTAL(&quot;,1,0)</f><v>0</v></c></row>'],
+        },
+      ],
+    });
+    const { sheets } = await fromXlsx(asFile('l.xlsx', bytes));
+    expect(sheets[0].cells.A1).toBe('=IF(B1="SUBTOTAL(",1,0)');
+  });
+
+  it('still refuses a real call to something it does not have', () => {
+    expect(knownFormula('SUBTOTAL(9,B1:B9)')).toBe(false);
+  });
+});
+
+describe('a function name written the OOXML way', () => {
+  it('loses the _xlfn. that is spelling rather than meaning', () => {
+    expect(plainNames('_xlfn.XLOOKUP(A1,B:B,C:C)')).toBe('XLOOKUP(A1,B:B,C:C)');
+    expect(plainNames('_xlfn._xlws.FILTER(A:A,B:B)')).toBe('FILTER(A:A,B:B)');
+    expect(plainNames('SUM(A1:A9)')).toBe('SUM(A1:A9)');
+  });
+
+  it('imports as a formula rather than as #NAME?', async () => {
+    const bytes = workbook({
+      sheets: [
+        {
+          name: 'S',
+          rows: ['<row r="1"><c r="A1"><f>_xlfn.XLOOKUP(B1,C1:C3,D1:D3)</f><v>5</v></c></row>'],
+        },
+      ],
+    });
+    const { sheets } = await fromXlsx(asFile('x.xlsx', bytes));
+    expect(sheets[0].cells.A1).toBe('=XLOOKUP(B1,C1:C3,D1:D3)');
   });
 });

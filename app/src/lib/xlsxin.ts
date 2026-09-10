@@ -73,9 +73,34 @@ function entities(text: string): string {
     .replace(/&amp;/g, '&');
 }
 
-/** Every `<t>` inside one shared string, joined — a rich-text run is still one string. */
+/*
+ * ## A word about the patterns below
+ *
+ * Every tag pattern in this file allows an optional `x:`-style prefix on the
+ * name. OOXML puts these parts in a namespace, and whether a writer binds that
+ * namespace as the default or to a prefix is its own business — `<sheetData>`
+ * and `<x:sheetData>` are the same document to an XML parser, and this file is
+ * not one. Without the prefix allowed, a workbook written the second way
+ * matched nothing at all: every cell missed, so `fromXlsx` decided the file had
+ * no worksheets and threw, on a workbook Excel opens without comment.
+ */
+
+/**
+ * Every `<t>` inside one shared string, joined — a rich-text run is still one
+ * string.
+ *
+ * Except the phonetic ones. A Japanese cell carries its reading alongside its
+ * text in `<rPh>` blocks, each holding a `<t>` of its own, so joining every
+ * `<t>` in the `<si>` glued the furigana onto the end of the word: 東京 came in
+ * as 東京トウキョウ. The reading is an annotation on the text rather than part
+ * of it, and this app has nowhere to show it, so it is dropped rather than run
+ * together with the value it describes.
+ */
 function siText(block: string): string {
-  const parts = [...block.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map((m) => entities(m[1]));
+  const spoken = block.replace(/<(?:\w+:)?rPh\b[^>]*(?:\/>|>[\s\S]*?<\/(?:\w+:)?rPh>)/g, '');
+  const parts = [...spoken.matchAll(/<(?:\w+:)?t(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?t>/g)].map(
+    (m) => entities(m[1]),
+  );
   return parts.join('');
 }
 
@@ -112,7 +137,7 @@ function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number
    * had every custom date format ignored, so its due dates imported as
    * five-digit serials.
    */
-  for (const m of stylesXml.matchAll(/<numFmt\b[^>]*>/g)) {
+  for (const m of stylesXml.matchAll(/<(?:\w+:)?numFmt\b[^>]*>/g)) {
     const id = /numFmtId=['"](\d+)['"]/.exec(m[0]);
     const format = /formatCode=['"]([^'"]*)['"]/.exec(m[0]);
     if (!id || !format) continue;
@@ -143,10 +168,10 @@ function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number
    */
   const dates = new Set<number>();
   const times = new Set<number>();
-  const xfs = /<cellXfs[^>]*>([\s\S]*?)<\/cellXfs>/.exec(stylesXml);
+  const xfs = /<(?:\w+:)?cellXfs[^>]*>([\s\S]*?)<\/(?:\w+:)?cellXfs>/.exec(stylesXml);
   if (!xfs) return { dates, times };
   let at = 0;
-  for (const m of xfs[1].matchAll(/<xf\b[^>]*>/g)) {
+  for (const m of xfs[1].matchAll(/<(?:\w+:)?xf\b[^>]*>/g)) {
     const id = /numFmtId=['"](\d+)['"]/.exec(m[0]);
     if (id && dateFmtIds.has(Number(id[1]))) {
       dates.add(at);
@@ -194,7 +219,9 @@ function dayOf(days: number, epoch: number): string {
 }
 
 function epochOf(workbookXml: string): number {
-  return /<workbookPr[^>]*date1904="(1|true)"/i.test(workbookXml) ? EPOCH_1904 : EPOCH_1900;
+  return /<(?:\w+:)?workbookPr[^>]*date1904=['"](1|true)['"]/i.test(workbookXml)
+    ? EPOCH_1904
+    : EPOCH_1900;
 }
 
 /**
@@ -206,8 +233,36 @@ function epochOf(workbookXml: string): number {
  * which is what a typed formula gets too.
  */
 export function knownFormula(body: string): boolean {
-  const names = body.toUpperCase().match(/\b[A-Z][A-Z0-9_.]*\s*\(/g) ?? [];
+  /*
+   * Excel escapes a quote inside a string by doubling it. `sheet.ts`'s lexer
+   * takes the first `"` it meets as the end of the string, so a formula
+   * carrying `""` cannot be read at all — and would evaluate to `#VALUE!`
+   * where a cached answer was sitting right there. Not known, so the value is
+   * kept.
+   */
+  if (/""/.test(body)) return false;
+
+  // Function names inside a string literal are text, not calls:
+  // `IF(A1="SUBTOTAL(",1,0)` is a formula this app can evaluate perfectly well.
+  const names = withoutStrings(body).toUpperCase().match(/\b[A-Z][A-Z0-9_.]*\s*\(/g) ?? [];
   return names.every((n) => KNOWN.has(n.replace(/\s*\($/, '')));
+}
+
+/** The formula with every quoted literal taken out, so only code is left. */
+function withoutStrings(body: string): string {
+  return body.replace(/"(?:[^"])*"/g, '""');
+}
+
+/**
+ * `_xlfn.` off the front of a function name.
+ *
+ * OOXML writes functions added after the format was fixed with that prefix —
+ * `_xlfn.XLOOKUP` — and it is spelling, not meaning. Left on, the evaluator
+ * saw a name it did not have and answered `#NAME?`, replacing a cached result
+ * with an error for a function it supports perfectly well.
+ */
+export function plainNames(body: string): string {
+  return body.replace(/_xlfn\.(_xlws\.)?/gi, '');
 }
 
 /**
@@ -236,10 +291,22 @@ const KNOWN = new Set([
  * morning.
  */
 function isoDate(serial: number, epoch: number, withTime: boolean): string {
-  const days = Math.floor(serial);
+  let days = Math.floor(serial);
+  /*
+   * The rounding can carry.
+   *
+   * A serial in the last half-second of a day rounds to 86,400 seconds — a
+   * whole day — and computing the date before applying that put the time at
+   * `00:00` on the day *before* the one it belongs to. Off by a day and by
+   * nothing else, which is the hardest kind to notice.
+   */
+  let seconds = Math.round((serial - days) * 86_400);
+  if (seconds >= 86_400) {
+    days += 1;
+    seconds -= 86_400;
+  }
   const date = dayOf(days, epoch);
   if (!withTime) return date;
-  const seconds = Math.round((serial - days) * 86_400);
   const hh = String(Math.floor(seconds / 3600) % 24).padStart(2, '0');
   const mm = String(Math.floor(seconds / 60) % 60).padStart(2, '0');
   return `${date} ${hh}:${mm}`;
@@ -271,7 +338,7 @@ function resolve(target: string): string {
 /** Which worksheet part each tab in the workbook refers to. */
 function worksheetOrder(workbook: string, rels: string): { name: string; part: string }[] {
   const targets = new Map<string, string>();
-  for (const m of rels.matchAll(/<Relationship\b[^>]*>/g)) {
+  for (const m of rels.matchAll(/<(?:\w+:)?Relationship\b[^>]*>/g)) {
     const id = /Id=['"]([^'"]+)['"]/.exec(m[0]);
     const target = /Target=['"]([^'"]+)['"]/.exec(m[0]);
     if (id && target) targets.set(id[1], resolve(entities(target[1])));
@@ -279,7 +346,7 @@ function worksheetOrder(workbook: string, rels: string): { name: string; part: s
 
   const out: { name: string; part: string }[] = [];
   let nth = 0;
-  for (const m of workbook.matchAll(/<sheet\b[^>]*\/?>/g)) {
+  for (const m of workbook.matchAll(/<(?:\w+:)?sheet\b[^>]*\/?>/g)) {
     nth += 1;
     const name = /name=['"]([^'"]*)['"]/.exec(m[0]);
     const rid = /r:id=['"]([^'"]+)['"]/.exec(m[0]);
@@ -323,7 +390,7 @@ function readCells(
   let frozen = 0;
   let unsupported = 0;
 
-  for (const m of xml.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+  for (const m of xml.matchAll(/<(?:\w+:)?c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/(?:\w+:)?c>)/g)) {
     const attrs = m[1];
     const body = m[2] ?? '';
     // Either quote style: `<c r='A1'>` is valid XML and was being skipped
@@ -338,11 +405,11 @@ function readCells(
     }
 
     const type = /t=['"]([^'"]+)['"]/.exec(attrs)?.[1] ?? 'n';
-    const formula = /<f(?:\s[^>]*)?>([\s\S]*?)<\/f>/.exec(body);
-    const raw = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body);
+    const formula = /<(?:\w+:)?f(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?f>/.exec(body);
+    const raw = /<(?:\w+:)?v(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?v>/.exec(body);
 
     let text = '';
-    const written = formula && formula[1].trim() ? entities(formula[1]).trim() : '';
+    const written = formula && formula[1].trim() ? plainNames(entities(formula[1]).trim()) : '';
     /*
      * A formula this engine cannot evaluate keeps its answer instead.
      *
@@ -374,7 +441,7 @@ function readCells(
        * on. That is a trade, so it is counted and said in `notes` rather than
        * left for somebody to discover in a total that stopped moving.
        */
-      if (/<f\b/.test(body)) frozen += 1;
+      if (/<(?:\w+:)?f\b/.test(body)) frozen += 1;
 
       const style = Number(/s=['"](\d+)['"]/.exec(attrs)?.[1] ?? -1);
       const n = Number(entities(raw[1]));
@@ -448,9 +515,11 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
   const workbook = part('xl/workbook.xml');
   if (!workbook) throw new Error('That .xlsx has no workbook inside it.');
 
-  const shared = [...part('xl/sharedStrings.xml').matchAll(/<si(?:\s[^>]*)?>([\s\S]*?)<\/si>/g)].map(
-    (m) => siText(m[1]),
-  );
+  const shared = [
+    ...part('xl/sharedStrings.xml').matchAll(
+      /<(?:\w+:)?si(?:\s[^>]*)?>([\s\S]*?)<\/(?:\w+:)?si>/g,
+    ),
+  ].map((m) => siText(m[1]));
   const styles = dateFormats(part('xl/styles.xml'));
   const epoch = epochOf(workbook);
 
