@@ -3,6 +3,8 @@ import { stopWriting } from '../state/persist';
 import { wipe } from '../state/persist/db';
 import { clearSnapshots } from './snapshots';
 import { clearFiles } from './files';
+import { clearVersions } from './docversions';
+import { clearShared } from './shared';
 
 /**
  * Erase from this device.
@@ -42,8 +44,27 @@ import { clearFiles } from './files';
 /** Everything this app writes to a browser store begins with it. */
 export const PREFIX = 'semester.';
 
-/** The databases it opens, all three named the same way. */
-export const DATABASES = ['semester-store', 'semester-files', 'semester-snapshots'];
+/**
+ * The databases it opens, all named the same way.
+ *
+ * This list drifted exactly as the paragraph above warns a list will. It said
+ * three while the app had opened a fourth — `semester-drafts`, holding up to
+ * twenty full copies of every document — and nothing read the list, so nothing
+ * noticed. A history of everything somebody wrote survived Erase from this
+ * device, on the shared laptop that button exists for.
+ *
+ * So it is no longer decoration: `erase.test.ts` reads every `store(...)` call
+ * in `src` and fails if a database is opened that is not named here, the same
+ * way it already reads every `setItem` against the prefix. Adding a name here
+ * is not enough on its own — `eraseDevice` has to clear it, and the test
+ * checks that too.
+ */
+export const DATABASES = [
+  'semester-store',
+  'semester-files',
+  'semester-snapshots',
+  'semester-drafts',
+];
 
 /** What was actually removed, so the screen can say so rather than assume. */
 export interface Erased {
@@ -108,6 +129,12 @@ export async function eraseDevice(): Promise<Erased> {
   await wipe(COLLECTIONS).catch(() => undefined);
   await clearFiles().catch(() => undefined);
   await clearSnapshots().catch(() => undefined);
+  await clearVersions().catch(() => undefined);
+
+  // Not a database: the service worker leaves a shared file in a Cache
+  // Storage entry, and one that arrived and was never collected is still a
+  // file somebody handed this device.
+  await clearShared().catch(() => undefined);
 
   return { keys };
 }

@@ -40,6 +40,24 @@ export function arrivedByShare(): boolean {
 }
 
 /**
+ * Drop the share cache.
+ *
+ * `takeShared` deletes as it reads, so this is only ever the one file that
+ * arrived and was never collected — a share opened and then closed before the
+ * importer ran. That is still a file somebody else handed this device, and
+ * "Erase from this device" was leaving it behind.
+ */
+export async function clearShared(): Promise<void> {
+  if (typeof caches === 'undefined') return;
+  try {
+    await caches.delete(SHARE_CACHE);
+  } catch {
+    // A browser with no Cache API, or a private window. Nothing was stored,
+    // so nothing is left.
+  }
+}
+
+/**
  * Take the shared file, if there is one.
  *
  * Deletes as it reads: a share is a one-time hand-off, and a file left in the
