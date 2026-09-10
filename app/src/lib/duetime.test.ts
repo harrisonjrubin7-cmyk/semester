@@ -103,3 +103,81 @@ describe('sorting a day', () => {
     expect(hasTime('In class')).toBe(false);
   });
 });
+
+describe('twelve, which does not sort where it is written', () => {
+  /*
+   * Whether a range crosses noon was decided by comparing the two hours as
+   * numerals, and on a clock face twelve comes before one rather than after
+   * eleven. Every range with a twelve at either end was read twelve hours out,
+   * in whichever direction the numeral misled.
+   */
+  const at = (h: number, m = 0) => h * 60 + m;
+
+  it('starts at noon where the range starts at twelve', () => {
+    expect(readDue('12:00–2:00 PM')).toBe(at(12));
+    expect(readDue('12:30–1:30 PM')).toBe(at(12, 30));
+    expect(readDue('12:45–2:15 PM')).toBe(at(12, 45));
+    expect(readDue('12:00–12:30 PM')).toBe(at(12));
+  });
+
+  it('stays in the morning where the range ends at twelve', () => {
+    // An ordinary morning exam window. Read as ten at night, because ten is
+    // less than twelve as a numeral.
+    expect(readDue('10:00–12:00 PM')).toBe(at(10));
+    expect(readDue('11:30–12:30 PM')).toBe(at(11, 30));
+    expect(readDue('11:59–12:30 PM')).toBe(at(11, 59));
+  });
+
+  it('leaves the ranges that were already right exactly as they were', () => {
+    expect(readDue('3:00–5:00 PM')).toBe(at(15));
+    expect(readDue('9:00–11:00 AM')).toBe(at(9));
+    expect(readDue('11:00–1:00 PM')).toBe(at(11));
+    expect(readDue('1:00–2:00 PM')).toBe(at(13));
+    expect(readDue('12:00–3:00 AM')).toBe(at(0));
+  });
+
+  it('reads twelve on its own the way it always did', () => {
+    expect(readDue('12:00 PM')).toBe(at(12));
+    expect(readDue('12:00 AM')).toBe(at(0));
+    expect(readDue('12p')).toBe(at(12));
+    expect(readDue('12a')).toBe(at(0));
+  });
+});
+
+describe('noon and midnight, said in words', () => {
+  it('reads noon', () => {
+    // A syllabus says it as readily as it says a figure, and the app read it
+    // as no time at all: "due by noon" sorted below a deadline at five, and
+    // the screen said no hour was stated when one plainly was.
+    expect(readDue('due by noon')).toBe(12 * 60);
+    expect(readDue('Noon')).toBe(12 * 60);
+    expect(readDue('12 noon')).toBe(12 * 60);
+    expect(hasTime('due by noon')).toBe(true);
+  });
+
+  it('takes the figure over the word, where a wording has both', () => {
+    // Read any earlier than last and this one gets worse than it was.
+    expect(readDue('10:30 to noon')).toBe(10 * 60 + 30);
+    expect(readDue('9:00 AM to noon')).toBe(9 * 60);
+    expect(readDue('noon, or 2:15p')).toBe(14 * 60 + 15);
+    expect(readDue('12:00 noon')).toBe(12 * 60);
+  });
+
+  it('leaves midnight unread, which is the answer and not a gap', () => {
+    /*
+     * "Due Friday at midnight" is written to mean the end of Friday and reads
+     * literally as its start. Either figure would be a guess and one of them
+     * is a whole day early, so it falls to NO_TIME and sorts to the end of its
+     * day — which is what the wording means.
+     */
+    expect(readDue('midnight')).toBeNull();
+    expect(readDue('Due at midnight')).toBeNull();
+    expect(dueMinutes('Due at midnight')).toBe(NO_TIME);
+  });
+
+  it('does not find noon inside a word that merely contains it', () => {
+    expect(readDue('afternoon')).toBeNull();
+    expect(readDue('Noonan Hall')).toBeNull();
+    expect(readDue('Room 12')).toBeNull();
+  });
+});

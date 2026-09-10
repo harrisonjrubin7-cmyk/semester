@@ -18,6 +18,16 @@
  * starts at nine. A parser that reads the first time in isolation gets one of
  * those right by luck and the other wrong by twelve hours, which is the kind
  * of error that puts an exam before breakfast.
+ *
+ * ## And noon, which is where the range case in turn went wrong
+ *
+ * Whether a range crosses noon was decided by comparing the two hours as
+ * written, and twelve does not sort where it is written: on a clock face it
+ * comes before one, not after eleven. So every range with a twelve at either
+ * end was read twelve hours out. "12:00–2:00 PM" became midnight, and
+ * "10:00–12:00 PM" — an ordinary morning exam window — became ten at night.
+ * Comparing the positions on the face rather than the numerals is the whole
+ * fix, and `% 12` is what puts twelve where it belongs.
  */
 
 /** Minutes past midnight, or null when the wording holds no clock time. */
@@ -47,21 +57,43 @@ export function readDue(text: string): number | null {
     const mins = Number(range[2]);
     const pm = range[5].toLowerCase() === 'p';
     // The meridiem governs both halves, unless the range crosses noon —
-    // "11:00–1:00 PM" starts in the morning, because it has to.
+    // "11:00–1:00 PM" starts in the morning, because it has to. Read around
+    // the face, where twelve sits at nought and one follows it, or a range
+    // with a twelve at either end is read twelve hours out.
     const end = Number(range[3]);
-    const startsPm = pm && hour <= end;
+    const face = (h: number) => h % 12;
+    const startsPm = pm && face(hour) <= face(end);
     return clock(hour, mins, startsPm);
   }
 
-  // Otherwise a lone `H:MM` with no meridiem at all, which a 24-hour syllabus
-  // or a form field can produce.
   if (found.length === 0) {
+    // A lone `H:MM` with no meridiem at all, which a 24-hour syllabus or a
+    // form field can produce.
     const bare = /\b(\d{1,2}):(\d{2})\b/.exec(s);
-    if (!bare) return null;
-    const hour = Number(bare[1]);
-    const mins = Number(bare[2]);
-    if (hour > 23 || mins > 59) return null;
-    return hour * 60 + mins;
+    if (bare) {
+      const hour = Number(bare[1]);
+      const mins = Number(bare[2]);
+      if (hour <= 23 && mins <= 59) return hour * 60 + mins;
+    }
+
+    /*
+     * And noon said in words, which a syllabus does as readily as in figures.
+     *
+     * It was read as no time at all, so "due by noon" sorted below a deadline
+     * at five, and the screen said no hour had been stated when one plainly
+     * had. Read last of all, so that a wording carrying a figure as well —
+     * "10:30 to noon" — is still read at the figure. Putting it any earlier
+     * makes that one worse than it was.
+     *
+     * Midnight is deliberately not read, and that is not an omission of the
+     * same kind. "Due Friday at midnight" is written to mean the end of Friday
+     * and reads literally as its start, so any figure returned for it would be
+     * a guess and one of the two guesses is a whole day early. Left unread it
+     * falls to `NO_TIME` and sorts to the end of its day, which is what the
+     * wording means.
+     */
+    if (/\bnoon\b/i.test(s)) return 12 * 60;
+    return null;
   }
 
   const first = found[0];
