@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TARGETS, key, needCaveat, needFor, percentOf, reachFor, reaches, readScore, readWeight, standing } from './grades';
+import { TARGETS, asWeights, key, needCaveat, needFor, percentOf, reachFor, reaches, readScore, readWeight, pointsTotal, standing } from './grades';
 import type { Standing } from './grades';
 import type { Course } from './types';
 
@@ -435,5 +435,30 @@ describe('one reading of a weight', () => {
     // The difference between this and `weightTotal`: an hour spent on extra
     // credit is worth three points, and it is not three of the hundred.
     expect(percentOf('+3% EC')).toBe(3);
+  });
+});
+
+describe('asWeights and pointsTotal answer as one', () => {
+  /*
+   * They were two copies of one rule and both carried the same two mistakes.
+   * A reviewer found them against the newer copy; the older one was behind
+   * the grading screen, shipping. These hold them to the same answers so the
+   * pair cannot drift apart again.
+   */
+  const read = (rows: string[]) => rows.map((r) => readWeight(r));
+
+  it('counts a points course with a percentage bonus as a points course', () => {
+    expect(asWeights(read(['100 pts', '300 pts', '+5% EC']))).toEqual([25, 75, 5]);
+    expect(pointsTotal([{ pct: '100 pts' }, { pct: '300 pts' }, { pct: '+5% EC' }])).toBe(400);
+  });
+
+  it('refuses a table holding a row it cannot read', () => {
+    expect(asWeights(read(['100 pts', 'Graded by the tutor']))).toEqual([null, null]);
+    expect(pointsTotal([{ pct: '100 pts' }, { pct: 'Graded by the tutor' }])).toBeNull();
+  });
+
+  it('still refuses a genuinely mixed table', () => {
+    expect(asWeights(read(['40%', '20 pts']))).toEqual([40, null]);
+    expect(pointsTotal([{ pct: '40%' }, { pct: '20 pts' }])).toBeNull();
   });
 });

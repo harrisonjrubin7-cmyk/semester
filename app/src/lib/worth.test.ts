@@ -292,6 +292,48 @@ describe('what an hour buys', () => {
     expect(list.every((b) => b.why !== 'No stated weight')).toBe(true);
   });
 
+  it('is not thrown off by an extra-credit row stated as a percentage', () => {
+    /*
+     * Found by review. `readWeight('+5% EC')` reads a weight of 5, so a test
+     * of "does any row state a percentage" counted it — and a course graded
+     * entirely in points, with one bonus, came back wholly unweighted. The
+     * bonus nobody has been given yet decided the course was unreadable.
+     */
+    const grading = {
+      econ: [
+        { what: 'Problem sets', pct: '100 pts' },
+        { what: 'Final', pct: '300 pts' },
+        { what: 'Seminar bonus', pct: '+5% EC' },
+      ],
+    };
+    const list = bestBuys(
+      [item({ id: 'pset', weight: '100 pts' }), item({ id: 'final', weight: '300 pts' })],
+      spent,
+      null,
+      grading,
+    );
+    expect(list.find((b) => b.id === 'pset')?.worth).toBe(25);
+    expect(list.find((b) => b.id === 'final')?.worth).toBe(75);
+  });
+
+  it('refuses a table with a row it cannot read, rather than shrinking the divisor', () => {
+    /*
+     * Also found by review. "100 pts" beside an unreadable "Participation"
+     * totalled 100, so the problem sets read as the whole course. The
+     * participation might be worth fifty points — the honest answer is that
+     * this table cannot be converted, which is what a mixed table gets.
+     */
+    const grading = {
+      econ: [
+        { what: 'Problem sets', pct: '100 pts' },
+        { what: 'Participation', pct: 'Graded by the tutor' },
+      ],
+    };
+    const list = bestBuys([item({ id: 'pset', weight: '100 pts' })], spent, null, grading);
+    expect(list[0].worth).toBe(0);
+    expect(list[0].why).toBe('No stated weight');
+  });
+
   it('leaves extra credit out of the total it divides by', () => {
     /*
      * Found by mutation: dropping the `!r.extra` filter changed nothing any
