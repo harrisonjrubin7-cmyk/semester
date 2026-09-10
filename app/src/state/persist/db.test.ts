@@ -10,11 +10,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * *"a device that will not open a database gets null, and the app falls
  * straight back to the localStorage path"*.
  *
- * That held for a throw, for `onerror` and for `onblocked`. It did not hold
- * for a request that fires none of them. Measured in the browser with
- * `indexedDB.open` returning a request that never answers: `#root` empty, 0
- * characters, nothing in the console, on every load. The other three ways all
- * boot and save.
+ * That held for a throw and for `onerror`. It did not hold for a request that
+ * fires neither. Measured in the browser with `indexedDB.open` returning a
+ * request that never answers: `#root` empty, 0 characters, nothing in the
+ * console, on every load. The other two ways both boot and save.
+ *
+ * And below that, the schema: a store this build needs that the database on
+ * the device does not have. That is what a collection added to `shape.ts`
+ * after somebody's database was built looks like, and until `open` went
+ * looking for it, the answer was for ever — the version asked for was a
+ * hardcoded 1, so `onupgradeneeded` never ran a second time.
  */
 
 /** An open request that behaves however the test tells it to. */
@@ -114,5 +119,152 @@ describe('open', () => {
     // Nothing left pending: the timer was cleared rather than left to fire.
     expect(await waiting).not.toBeNull();
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+
+/**
+ * A database that remembers its version and its stores, the way a device does.
+ *
+ * Enough of IndexedDB to answer the only question these tests ask: after
+ * `open`, does the store exist? The stub above cannot — it says every store
+ * is present, which is the case that never had a bug.
+ */
+function fakeIndexedDB(start: { version: number; stores: string[] }) {
+  const state = { version: start.version, stores: new Set(start.stores) };
+  const rows = new Map<string, Map<string, unknown>>();
+  const opens: (number | undefined)[] = [];
+  let held = 0;
+
+  const database = {
+    get version() {
+      return state.version;
+    },
+    objectStoreNames: { contains: (name: string) => state.stores.has(name) },
+    createObjectStore: (name: string) => {
+      state.stores.add(name);
+      return {};
+    },
+    close: () => {
+      held -= 1;
+    },
+    onversionchange: null as unknown,
+    transaction: (names: string | string[], _mode?: string) => {
+      const wanted = typeof names === 'string' ? [names] : names;
+      for (const name of wanted) {
+        if (!state.stores.has(name)) throw new DOMException('no such store', 'NotFoundError');
+      }
+      const t: Record<string, unknown> = {
+        objectStore: (name: string) => {
+          const store = rows.get(name) ?? new Map<string, unknown>();
+          rows.set(name, store);
+          return {
+            put: (value: unknown, key: string) => store.set(key, value),
+            delete: (key: string) => store.delete(key),
+          };
+        },
+      };
+      setTimeout(() => (t.oncomplete as (() => void) | undefined)?.(), 0);
+      return t;
+    },
+  };
+
+  vi.stubGlobal('indexedDB', {
+    open: (_name: string, version?: number) => {
+      opens.push(version);
+      held += 1;
+      const req: Record<string, unknown> = { result: database };
+      setTimeout(() => {
+        // No version asked for means "whatever is on disk", and on a device
+        // that has never had one that is a new database at version 1.
+        const asked = version ?? (state.version === 0 ? 1 : state.version);
+        if (asked > state.version) {
+          state.version = asked;
+          (req.onupgradeneeded as (() => void) | undefined)?.();
+        }
+        (req.onsuccess as (() => void) | undefined)?.();
+      }, 0);
+      return req;
+    },
+  });
+
+  return { state, rows, opens, held: () => held };
+}
+
+describe('a store this build needs that the database has never had', () => {
+  it('makes it, by opening once more a version higher', async () => {
+    // The account of somebody who has used the app since before Sheets: the
+    // database is at version 1 with the stores that existed then.
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses', 'notes'] });
+    const { open } = await fresh();
+
+    const waiting = open(['courses', 'notes', 'sheets', 'equations']);
+    await vi.advanceTimersByTimeAsync(10);
+    expect(await waiting).not.toBeNull();
+
+    expect(fake.state.stores.has('sheets'), 'the store a sheet is saved in').toBe(true);
+    expect(fake.state.stores.has('equations')).toBe(true);
+    expect(fake.state.version, 'a version higher than what was on disk').toBe(2);
+    expect(fake.opens, 'once to look, once to upgrade').toEqual([undefined, 2]);
+  });
+
+  it('saves into it once it is there — the write that used to be refused', async () => {
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] });
+    const { open, write } = await fresh();
+
+    const waiting = open(['courses', 'sheets']);
+    await vi.advanceTimersByTimeAsync(10);
+    await waiting;
+
+    const saving = write([{ store: 'sheets', key: 's1', value: { id: 's1' } }]);
+    await vi.advanceTimersByTimeAsync(10);
+    // Before this, `write` filtered the missing store out, found nothing left
+    // to do and answered false — which is the "not being saved" banner, on a
+    // device with an empty disk.
+    expect(await saving).toBe(true);
+    expect(fake.rows.get('sheets')?.get('s1')).toEqual({ id: 's1' });
+  });
+
+  it('opens once when the database already has everything', async () => {
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] });
+    const { open } = await fresh();
+
+    const waiting = open(['courses']);
+    await vi.advanceTimersByTimeAsync(10);
+    expect(await waiting).not.toBeNull();
+    expect(fake.opens).toEqual([undefined]);
+    expect(fake.state.version, 'nothing to upgrade, so no upgrade').toBe(1);
+  });
+
+  it('creates every store on a device that has never had the database', async () => {
+    const fake = fakeIndexedDB({ version: 0, stores: [] });
+    const { open } = await fresh();
+
+    const waiting = open(['courses', 'sheets']);
+    await vi.advanceTimersByTimeAsync(10);
+    expect(await waiting).not.toBeNull();
+    expect([...fake.state.stores].sort()).toEqual(['courses', 'maps', 'settings', 'sheets']);
+    expect(fake.opens, 'one open: the first one makes them all').toEqual([undefined]);
+  });
+});
+
+describe('a write with nowhere to land says so', () => {
+  it('answers false rather than reporting a row it dropped as saved', async () => {
+    // The upgrade could not run — another tab holding the old version, or a
+    // browser refusing it. The rest of the batch is still written; the answer
+    // is about the part that was not.
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] });
+    const { open, write } = await fresh();
+    const waiting = open(['courses']);
+    await vi.advanceTimersByTimeAsync(10);
+    await waiting;
+
+    const saving = write([
+      { store: 'courses', key: 'c1', value: { id: 'c1' } },
+      { store: 'sheets', key: 's1', value: { id: 's1' } },
+    ]);
+    await vi.advanceTimersByTimeAsync(10);
+    expect(await saving, 'a sheet with no store is a sheet not saved').toBe(false);
+    expect(fake.rows.get('courses')?.get('c1'), 'and the rest still landed').toEqual({ id: 'c1' });
   });
 });
