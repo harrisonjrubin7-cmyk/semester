@@ -155,6 +155,42 @@ export function asWeights(
 }
 
 /**
+ * The points a course's grading table adds up to, where that is how it states
+ * weights at all.
+ *
+ * `asWeights` converts a whole table at once, which is what a grading screen
+ * has. Anything holding one deadline at a time has only that row's wording and
+ * needs the denominator separately — `lib/worth.ts` was reading "100 pts" with
+ * `percentOf`, getting nought, and ranking a whole points-based syllabus as
+ * unweighted.
+ *
+ * Null where the syllabus states percentages, or mixes the two, or states
+ * neither: exactly the cases `asWeights` refuses, and for its reason. A total
+ * invented here would put a confident wrong number on a screen whose whole
+ * job is deciding what to do next.
+ */
+export function pointsTotal(grading: { pct: string }[]): number | null {
+  const read = grading.map((row) => readWeight(row.pct));
+  if (read.some((r) => r.weight !== null)) return null;
+  const total = read.filter((r) => !r.extra).reduce((n, r) => n + (r.points ?? 0), 0);
+  return total > 0 ? total : null;
+}
+
+/**
+ * One stated weight as a percentage of the course, points included.
+ *
+ * `percentOf` is this without the denominator, and returns nought for a row
+ * stating points. Where the course's total is known, a points row is worth its
+ * share of it — the same arithmetic `asWeights` does over a whole table.
+ */
+export function percentIn(stated: string, total: number | null): number {
+  const read = readWeight(stated);
+  if (read.weight !== null) return read.weight;
+  if (total !== null && read.points !== null) return (read.points / total) * 100;
+  return 0;
+}
+
+/**
  * A score as a person types it: "88", "88%", "17/20", "17 out of 20", "0.88".
  *
  * Not letters. Those need to know the course's cutoffs, which this does not
