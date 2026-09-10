@@ -529,16 +529,37 @@ class Parser {
     }
   }
 
-  /** Right-associative, so `2^3^2` is 512 rather than 64 — as every sheet has it. */
+  /**
+   * Left-associative, so `2^3^2` is 64 — which is what a spreadsheet says.
+   *
+   * This read right-associative and its comment claimed that was "as every
+   * sheet has it". It is the other way round: Excel, Google Sheets and
+   * LibreOffice all fold `^` left to right, and 64 is what all three answer.
+   * Right-associativity is the convention of mathematics and of Python,
+   * Fortran and Mathematica — not of the thing this screen is imitating.
+   *
+   * The line below has always known that. `-3^2` is 9 here, which is Excel's
+   * quirk of taking the unary minus first where mathematics would answer −9.
+   * So the file was already matching Excel on the harder half of this
+   * operator and diverging on the easier one, and a student checking their
+   * working against the sheet their professor sent would find the two
+   * disagreeing with no way to tell which was wrong.
+   *
+   * Written as a loop rather than a recursive call, which is also what makes
+   * it left-associative — the same shape as `additive` and `multiplicative`
+   * above, which were left-associative loops all along.
+   */
   private power(): Value {
-    const left = this.unary();
-    if (!this.eat('^')) return left;
-    const right = this.power();
-    const a = number(left);
-    const b = number(right);
-    if (isError(a)) return a;
-    if (isError(b)) return b;
-    return a ** b;
+    let left = this.unary();
+    for (;;) {
+      if (!this.eat('^')) return left;
+      const right = this.unary();
+      const a = number(left);
+      const b = number(right);
+      if (isError(a)) left = a;
+      else if (isError(b)) left = b;
+      else left = a ** b;
+    }
   }
 
   private unary(): Value {
