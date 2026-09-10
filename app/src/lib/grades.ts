@@ -62,11 +62,17 @@ export interface Standing {
  * Zero rather than null for the unreadable case, because every caller sorts
  * or sums with it and a null in an arithmetic is a `NaN` somebody has to
  * defend against. Where the difference between "nought per cent" and "no
- * percentage stated" matters, `readWeight` above is the one to ask.
+ * percentage stated" matters, `readWeight` below is the one to ask.
+ *
+ * It asks `readWeight` rather than carrying a fifth copy of the regular
+ * expression. Its own was simpler, and simpler here meant different: it read
+ * "25–30%" as thirty where every other reading in the app takes a range at
+ * its midpoint. The note above this one already warned that one of these
+ * would be corrected without the others; this is that correction, made by
+ * removing the second reading rather than by matching it.
  */
 export function percentOf(weight: string): number {
-  const m = /(\d+(?:\.\d+)?)\s*%/.exec(weight);
-  return m ? Number(m[1]) : 0;
+  return readWeight(weight).weight ?? 0;
 }
 
 /**
