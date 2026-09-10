@@ -23,6 +23,7 @@ import { newId } from '../../lib/idb';
 import { blankDoc, type Doc } from '../../lib/document';
 import { blankSheet, type Sheet } from '../../lib/sheet';
 import type { SavedEquation } from '../../lib/maths';
+import { subtree, withCourses, type Folder } from '../../lib/folders';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
 
@@ -102,6 +103,56 @@ export function made(state: State, action: Action): State | null {
         sheets: state.sheets.filter((s) => s.id !== action.id),
         sheetId: state.sheetId === action.id ? null : state.sheetId,
       };
+
+    /*
+     * The drive's folders.
+     *
+     * The id is the caller's, not this slice's, which is the one place these
+     * differ from documents and sheets. A folder is made in order to be
+     * navigated into immediately, and an id minted in here is an id the caller
+     * would have to go looking for in the list afterwards.
+     */
+    case 'newFolder': {
+      const folder: Folder = {
+        id: action.id,
+        name: action.name.trim() || 'New folder',
+        parentId: action.parentId,
+        created: Date.now(),
+      };
+      return { ...state, folders: [...state.folders, folder].slice(-LIMIT) };
+    }
+
+    case 'renameFolder':
+      return {
+        ...state,
+        folders: state.folders.map((f) =>
+          f.id === action.id ? { ...f, name: action.name.trim() || f.name } : f,
+        ),
+      };
+
+    case 'moveFolder':
+      return {
+        ...state,
+        folders: state.folders.map((f) =>
+          f.id === action.id ? { ...f, parentId: action.parentId } : f,
+        ),
+      };
+
+    /*
+     * A folder and everything under it.
+     *
+     * The files inside are not touched here — this slice cannot reach
+     * IndexedDB, and a reducer that returned a promise would be a reducer.
+     * `screens/Mine.tsx` moves them to the top of the drive first and then
+     * dispatches this, so a folder never leaves files pointing at somewhere
+     * that no longer exists. Deleting the folder first and failing on the
+     * files would be exactly that, which is why the order is the screen's to
+     * keep and is written down there too.
+     */
+    case 'deleteFolder': {
+      const gone = subtree(withCourses(state.folders, []), action.id);
+      return { ...state, folders: state.folders.filter((f) => !gone.has(f.id)) };
+    }
 
     case 'saveEquation': {
       const equation: SavedEquation = {

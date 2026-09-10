@@ -58,6 +58,13 @@ export const SHAPES = {
     { d: 'M12 6.5v15' },
   ],
   notes: [{ d: 'M5.5 3.5h13v17h-13z' }, { d: 'M9 8h6M9 12h6M9 16h3' }],
+  /** The drive's folder — a tab on the left, as every folder glyph has had. */
+  folder: [{ d: 'M3 6.5a1 1 0 0 1 1-1h5l2 2.5h8a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z' }],
+  /**
+   * Favourite. Drawn as one closed path so `fill` says whether it is starred —
+   * a second outline-versus-solid glyph would be two shapes to keep in step.
+   */
+  star: [{ d: 'M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 9.9l5.4-.8z' }],
   play: [{ d: 'M8 5.5v13l11-6.5z' }],
   pause: [{ d: 'M9 5v14M15 5v14' }],
   /** A folded map, not a pin — the tab is a map, and a pin is a saved place. */

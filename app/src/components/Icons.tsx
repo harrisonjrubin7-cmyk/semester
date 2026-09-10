@@ -57,6 +57,34 @@ export const TodayIcon = svg('today');
 export const CoursesIcon = svg('courses');
 export const StudyIcon = svg('study');
 export const NotesIcon = svg('notes');
+export const FolderIcon = svg('folder');
+
+/**
+ * The one icon that carries a state.
+ *
+ * Filled when it is a favourite and outlined when it is not, from the same
+ * path — an outline glyph and a solid glyph would be two shapes to keep in
+ * step, and the moment they drift the filled one is a different star.
+ */
+export function StarIcon({ on = false, size = 19, className, style }: IconProps & { on?: boolean }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={STROKE.viewBox}
+      fill={on ? 'currentColor' : 'none'}
+      stroke="currentColor"
+      strokeWidth={STROKE.width}
+      strokeLinecap={STROKE.cap}
+      strokeLinejoin={STROKE.join}
+      className={className}
+      style={{ display: 'block', ...style }}
+      aria-hidden="true"
+    >
+      {SHAPES.star.map(draw)}
+    </svg>
+  );
+}
 export const MapIcon = svg('map');
 export const CalendarIcon = svg('calendar');
 export const MakeIcon = svg('make');

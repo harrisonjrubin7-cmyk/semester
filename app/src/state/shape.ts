@@ -53,6 +53,7 @@ import type { NewSource, Source } from '../lib/sources';
 import type { Doc } from '../lib/document';
 import type { Sheet } from '../lib/sheet';
 import type { SavedEquation } from '../lib/maths';
+import type { Folder } from '../lib/folders';
 import { type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
@@ -349,6 +350,16 @@ export interface Persisted {
   documents: Doc[];
   sheets: Sheet[];
   equations: SavedEquation[];
+  /**
+   * The drive's folders — a name and a parent each, nothing more.
+   *
+   * Here rather than in IndexedDB beside the files they hold, because they are
+   * small and the small things are already backed up, merged, migrated and
+   * synced by this file. See `lib/folders.ts`, which also explains why the
+   * folder per course is not in this list: it is derived from the catalogue on
+   * every read, so it cannot fall out of step with the courses.
+   */
+  folders: Folder[];
   /**
    * The university's own dates — add/drop, withdrawal, registration.
    *
@@ -881,6 +892,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   documents: [],
   sheets: [],
   equations: [],
+  folders: [],
   registrar: [],
   spent: [],
   windows: [],
@@ -1185,6 +1197,7 @@ export function loadPersisted(): Persisted {
       documents: list(saved.documents),
       sheets: list(saved.sheets),
       equations: list(saved.equations),
+      folders: list(saved.folders),
       registrar: list(saved.registrar),
       spent: list(saved.spent),
       windows: readList(saved.windows, readWindow),
@@ -1284,6 +1297,7 @@ export function pickPersisted(state: State): Persisted {
     documents: state.documents,
     sheets: state.sheets,
     equations: state.equations,
+    folders: state.folders,
     registrar: state.registrar,
     spent: state.spent,
     windows: state.windows,
@@ -1580,6 +1594,16 @@ export type Action =
   | { type: 'updateSheet'; id: string; patch: Partial<Omit<Sheet, 'id'>> }
   | { type: 'deleteSheet'; id: string }
   | { type: 'saveEquation'; equation: Omit<SavedEquation, 'id' | 'created'> }
+  /*
+   * The drive's folders. `newFolder` answers with nothing — the caller needs
+   * the id it minted, so it is derived from the moment rather than random;
+   * see `state/slices/made.ts`.
+   */
+  | { type: 'newFolder'; id: string; name: string; parentId: string | null }
+  | { type: 'renameFolder'; id: string; name: string }
+  | { type: 'moveFolder'; id: string; parentId: string | null }
+  /** Takes everything under it with it. The files inside go to the drive's top. */
+  | { type: 'deleteFolder'; id: string }
   | { type: 'deleteEquation'; id: string }
   | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
   | { type: 'clearPaperPreset' }

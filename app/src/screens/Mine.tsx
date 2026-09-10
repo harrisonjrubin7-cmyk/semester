@@ -7,7 +7,8 @@ import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
 import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
-import { addFile, deleteFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
+import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
+import { Drive } from './mine/Drive';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
@@ -628,94 +629,18 @@ function Notes({ rows }: { rows?: Note[] }) {
   );
 }
 
+/**
+ * The files tab, which is now a drive.
+ *
+ * The list, the folders, the bin and the search live in
+ * `screens/mine/Drive.tsx` — this stayed a wrapper so the fold and the heading
+ * above it read the same as the three tabs beside it.
+ */
 function Files() {
-  const { state } = useStore();
-  const [files, setFiles] = useState<FileMeta[]>([]);
-  const [busy, setBusy] = useState(false);
-
-  const refresh = () => void listFiles().then(setFiles);
-  useEffect(refresh, []);
-
-  const onPick = async (list: File[]) => {
-    if (list.length === 0) return;
-    setBusy(true);
-    for (const f of list) await addFile(f, null);
-    setBusy(false);
-    refresh();
-  };
-
-  const total = files.reduce((n, f) => n + f.size, 0);
-
   return (
     <div>
       <Folding name="Files">
-      <FilePick onPick={(picked) => void onPick(picked)} disabled={busy} tone="primary">
-        {busy ? 'Adding…' : '+ Add files'}
-      </FilePick>
-
-      {files.length === 0 ? (
-        <EmptyState
-          title="No files."
-          body="Slides, readings, a photo of the whiteboard. They stay on this device — nothing is uploaded."
-        />
-      ) : (
-        <>
-          <SectionLabel>
-            {files.length} {files.length === 1 ? 'file' : 'files'} · {formatBytes(total)}
-          </SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-            {files.map((f) => {
-              const usedBy = state.notes.filter((n) => n.fileIds.includes(f.id)).length;
-              return (
-                <Blueprint plain key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '12px 14px' }}>
-                  <button
-                    type="button"
-                    className="bare"
-                    onClick={() => void openFile(f.id)}
-                    style={{ flex: 1, minWidth: 0 }}
-                  >
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: 'var(--type-md)',
-                        lineHeight: 1.25,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {f.name}
-                    </span>
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: 'var(--type-xs)',
-                        opacity: 0.55,
-                        marginTop: 'var(--sp-1)',
-                        fontFamily: 'var(--font-heading)',
-                        letterSpacing: '0.08em',
-                      }}
-                    >
-                      {formatBytes(f.size)}
-                      {usedBy > 0 ? ` · attached to ${usedBy} note` : ''}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={() => void deleteFile(f.id).then(refresh)}
-                    aria-label={`Delete ${f.name}`}
-                    style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
-                  >
-                    Del
-                  </button>
-                </Blueprint>
-              );
-            })}
-          </div>
-        </>
-      )}
-      <div style={{ height: 22 }} />
+        <Drive />
       </Folding>
     </div>
   );
