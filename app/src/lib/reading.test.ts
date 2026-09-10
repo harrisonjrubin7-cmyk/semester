@@ -106,6 +106,16 @@ describe('reading how much there is', () => {
     expect(extent({ title: 'ch 1234' }).chapters).toBe(0);
   });
 
+  it('refuses a range whose far end is too long to be a chapter', () => {
+    // The repeated group is optional, so without a guard this falls back to
+    // reading "4" alone and reports one chapter out of a form it could not
+    // read. A list separator is not a range, so a year after a comma still
+    // leaves the chapter before it readable.
+    expect(extent({ title: 'ch 4-1234' }).chapters).toBe(0);
+    expect(extent({ title: 'ch 4-12345' }).chapters).toBe(0);
+    expect(extent({ title: 'Ch. 3, 2026 reprint' }).chapters).toBe(1);
+  });
+
   it('reads a page range, and prefers it', () => {
     const e = extent({ title: 'Read ch. 4, pp. 112–140' });
     expect(e.pages).toBe(29);

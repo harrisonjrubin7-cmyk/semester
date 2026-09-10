@@ -64,8 +64,16 @@ const NONE: Extent = { chapters: 0, pages: 0 };
  */
 function chaptersIn(text: string): number {
   const named = new Set<number>();
+  // The trailing guard is about a range this could not read. The repeated
+  // group is optional, so "ch 4–1234" would otherwise fall back to matching
+  // "4" alone and report one chapter — a number invented out of a form the
+  // parser did not understand, which is the one thing this file is not
+  // allowed to do. It costs "Ch 4 – 2026 edition", which really is one
+  // chapter and is indistinguishable from "ch 4–1234" in the text; under-
+  // reading falls back to the plain median, and over-reading scales an
+  // estimate somebody plans against.
   const runs = text.matchAll(
-    /\bch(?:apters?|s)?\.?\s*(\d{1,3}(?:\s*(?:[-–—]|to|through|,|and|&)\s*\d{1,3})*)(?!\d)/gi,
+    /\bch(?:apters?|s)?\.?\s*(\d{1,3}(?:\s*(?:[-–—]|to|through|,|and|&)\s*\d{1,3})*)(?!\s*(?:[-–—]|to|through)\s*\d{4})(?!\d)/gi,
   );
   for (const run of runs) {
     for (const part of run[1].split(/\s*(?:,|and|&)\s*/)) {
