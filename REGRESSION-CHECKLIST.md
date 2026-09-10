@@ -240,3 +240,79 @@ npm run build → exit 0, 234 JS chunks, 6,469,990 B total
 - [ ] **Q4** Still a static build; no new required backend.
 - [ ] **Q5** Nothing invents a deadline, grade, policy or financial figure;
       generated content is still labelled as generated and still cites its source.
+
+---
+
+# Run log
+
+## Run 1 — after the Sheets phase (2026-09-10)
+
+Commits `ea49424`, `c3cc0dc`, `1cb1fe6`. Everything below was executed, not
+estimated.
+
+### Automated gates
+
+| | Result |
+| --- | --- |
+| **A1** `npm test` | **PASS** — 262 files, **5,300 passed**, 10 skipped, 0 failed. Baseline was 5,212; no test was dropped or weakened. |
+| **A2** `npm run test:zones` | **PASS** — 5,300 pass under `America/Chicago` and under `Pacific/Kiritimati`, matching UTC exactly. |
+| **A3** `npm run lint` | **PASS** — exit 0. oxlint reports nothing in any file this phase touched; `styles.mjs` "ok"; `labels.mjs` "ok". |
+| **A4** `npm run build` | **PASS** — exit 0, no TypeScript errors. |
+
+### Bundle
+
+| | Baseline | Now | Result |
+| --- | --- | --- | --- |
+| **B1** entry `index-*.js` | 562,445 B | 562,424 B (562,717 B under `VITE_BASE=/semester/`) | **PASS** — not grown. |
+| **B2** editors code-split | — | `Sheet-*.js` 16,783 → 21,959 B, its own chunk | **PASS** — all new code is in the lazily-loaded Sheet chunk. |
+| **B3** no heavy deps in entry | — | no dependency added at all | **PASS** — `.xlsx` reading reuses `fflate`, already present. |
+| **B4** totals reported | 234 chunks, 6,469,990 B | 235 chunks, 6,487,947 B | **PASS** — +17,957 B (+0.28%), none of it in the entry chunk. |
+
+### Everything else
+
+Driven in headless Chromium at 420×900, the phone width the app is laid out
+for. **`pageerror` was 0 across every check below.**
+
+- **C1 / C7** — every screen swept renders: home, courses, study, calendar, me,
+  write, sheet, deck, mine, settings, brief, ask, data, export. **PASS**
+- **C4 / C5** — retired routes still redirect and still draw: `#/grades`,
+  `#/weekly`, `#/chat`, `#/everything`. No row removed from `RETIRED`. **PASS**
+- **C2, C3, C6, C8, C9** — `route.test.ts` unchanged and passing; no route path
+  renamed or repurposed; nothing new was added to the `Screen` union this phase.
+  **PASS**
+- **D1–D10** — nav untouched this phase; `nav.test.ts`, `tabbar.test.ts`,
+  `launcher.test.ts`, `apps.test.ts` all passing. **PASS**
+- **E2, E7, E8** — no storage key, no IndexedDB name, no model field renamed or
+  removed. `documents`/`sheets`/`equations` still three lists, still merged as
+  unions. `state/persist` and `lib/keep.ts` untouched. **PASS**
+- **E1, E3–E6, E9, E10** — `storage.test.ts`, `shape.test.ts`, `db.test.ts`,
+  `migrate.test.ts`, `keep.test.ts` all passing; no schema change was made, so
+  `schemaVersion` did not move. **PASS**
+- **F1–F10** — Write untouched; `document.test.ts` and `docx.test.ts` passing;
+  `#/write` renders. **PASS**
+- **G1–G12** — every one of the original 32 functions still returns the same
+  value (`sheet.test.ts`), `.xlsx` export unchanged (`xlsx.test.ts`), and the
+  round trip is now pinned by a test: written by this app, read back, edited,
+  still live. Confirmed in the browser — a real `.xlsx` came in at 80.8 and
+  moved to 88.8 when a score changed. **PASS**
+- **H1–H7** — Deck untouched; `deck.test.ts` and `pptx.test.ts` passing. **PASS**
+- **I1–I8** — Personal untouched; `files` and `#/mine` unchanged. **PASS**
+- **J1–J6, K1–K10, L1–L6, M1–M5** — untouched this phase; their suites pass and
+  the screens render. **PASS**
+- **N1–N5** — the one changed screen reuses `Blueprint`, `ActionButton`,
+  `FilePick`, `SectionLabel`, `Folding` and `ChevronRight` and adds no new
+  token. `marks.test.ts` caught a repeated `<Blueprint>` missing `plain` and it
+  was fixed rather than excepted. **PASS**
+- **O1–O5** — every `src/a11y/` test passes; `labels.mjs` passes, so the new
+  file input carries a name a screen reader can read. **PASS**
+- **P5** — builds under `VITE_BASE=/semester/` with assets correctly at
+  `/semester/assets/…`. **PASS**
+- **Q1–Q5** — nothing deleted, nothing renamed, no route repurposed, still a
+  static build, and the calculator writes down no grade the university gave.
+  **PASS**
+
+### Not yet exercised
+
+**P1–P4** (service worker, PWA install, multi-tab sync) were not driven this
+phase. Nothing in it touches `sw.js`, the manifest or `lib/tabs.ts`, but that is
+an argument, not a test, and it is recorded here as untested rather than passed.
