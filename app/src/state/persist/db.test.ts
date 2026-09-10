@@ -26,7 +26,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 function stubOpen(behave: (req: Record<string, unknown>) => void): void {
   vi.stubGlobal('indexedDB', {
     open: () => {
-      const req: Record<string, unknown> = { result: { objectStoreNames: { contains: () => true } } };
+      // A database with everything in it, so `open` has nothing to upgrade —
+      // `close` included, because the real one always has one and a double
+      // that does not gives a passing test a way to be wrong.
+      const req: Record<string, unknown> = {
+        result: { version: 1, objectStoreNames: { contains: () => true }, close: () => {} },
+      };
       behave(req);
       return req;
     },
@@ -130,7 +135,15 @@ describe('open', () => {
  * `open`, does the store exist? The stub above cannot — it says every store
  * is present, which is the case that never had a bug.
  */
-function fakeIndexedDB(start: { version: number; stores: string[] }) {
+function fakeIndexedDB(
+  start: { version: number; stores: string[] },
+  /**
+   * Another tab, on an older build, taking the version this one was about to
+   * ask for — and taking it with a shorter list of stores. Set to a count of
+   * versioned opens to steal.
+   */
+  stolen = 0,
+) {
   const state = { version: start.version, stores: new Set(start.stores) };
   const rows = new Map<string, Map<string, unknown>>();
   const opens: (number | undefined)[] = [];
@@ -175,6 +188,12 @@ function fakeIndexedDB(start: { version: number; stores: string[] }) {
       held += 1;
       const req: Record<string, unknown> = { result: database };
       setTimeout(() => {
+        if (version !== undefined && stolen > 0) {
+          // The other tab got there first, so this open finds the version it
+          // asked for already on disk — and no `onupgradeneeded` with it.
+          stolen -= 1;
+          state.version = version;
+        }
         // No version asked for means "whatever is on disk", and on a device
         // that has never had one that is a new database at version 1.
         const asked = version ?? (state.version === 0 ? 1 : state.version);
@@ -266,5 +285,67 @@ describe('a write with nowhere to land says so', () => {
     await vi.advanceTimersByTimeAsync(10);
     expect(await saving, 'a sheet with no store is a sheet not saved').toBe(false);
     expect(fake.rows.get('courses')?.get('c1'), 'and the rest still landed').toEqual({ id: 'c1' });
+  });
+});
+
+describe('the two ways a careful open still gets it wrong', () => {
+  it('closes a success that arrives after it stopped waiting', async () => {
+    // Ten seconds late, the answer already given, and the app on the
+    // localStorage path — but the connection is real, and an open connection
+    // is what blocks the next upgrade. Which is now how a store gets made.
+    let late: (() => void) | undefined;
+    let closed = 0;
+    vi.stubGlobal('indexedDB', {
+      open: () => {
+        const req: Record<string, unknown> = {
+          result: {
+            version: 1,
+            objectStoreNames: { contains: () => true },
+            close: () => {
+              closed += 1;
+            },
+          },
+        };
+        late = () => (req.onsuccess as (() => void) | undefined)?.();
+        return req;
+      },
+    });
+    const { open } = await fresh();
+
+    const waiting = open([]);
+    await vi.advanceTimersByTimeAsync(11_000);
+    expect(await waiting).toBeNull();
+
+    late?.();
+    expect(closed, 'the handle nobody is going to use').toBe(1);
+    expect(await waiting, 'and the answer still stands').toBeNull();
+  });
+
+  it('looks again when another tab takes the version first', async () => {
+    // Between looking and upgrading, a tab on an older build claims version 2
+    // — with its own shorter list of stores. The open at 2 then succeeds with
+    // no upgrade at all, and trusting the version number would leave this tab
+    // writing sheets into a store that is not there.
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] }, 1);
+    const { open } = await fresh();
+
+    const waiting = open(['courses', 'sheets']);
+    await vi.advanceTimersByTimeAsync(30);
+    expect(await waiting).not.toBeNull();
+
+    expect(fake.state.stores.has('sheets')).toBe(true);
+    expect(fake.opens, 'looked, was beaten to 2, asked for 3').toEqual([undefined, 2, 3]);
+  });
+
+  it('gives up asking after three rounds rather than looping', async () => {
+    // A database that takes every version and makes nothing. The app runs on
+    // the stores that do exist; `write` is what says the rest is not saved.
+    const fake = fakeIndexedDB({ version: 1, stores: ['maps', 'settings', 'courses'] }, 99);
+    const { open } = await fresh();
+
+    const waiting = open(['courses', 'sheets']);
+    await vi.advanceTimersByTimeAsync(60);
+    expect(await waiting, 'still a database, still usable').not.toBeNull();
+    expect(fake.opens.length, 'one look and three tries, then it stops').toBe(4);
   });
 });

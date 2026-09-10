@@ -63,10 +63,27 @@ const OPEN_LIMIT_MS = 10_000;
  */
 function request(version: number | undefined, needed: string[]): Promise<IDBDatabase | null> {
   return new Promise<IDBDatabase | null>((resolve) => {
-    // Whichever comes first. `resolve` after the first call is a no-op, so a
-    // request that answers late cannot take back an answer already given.
-    const gaveUp = setTimeout(() => resolve(null), OPEN_LIMIT_MS);
+    /*
+     * Whichever comes first, and the loser is closed rather than dropped.
+     *
+     * `resolve` after the first call is a no-op, so a request that answers
+     * late cannot take back an answer already given. But a late answer that
+     * *succeeded* is a live connection to the database, and letting go of the
+     * variable does not close it — it sits there for the life of the tab,
+     * blocking the next upgrade that comes along, which is now the thing that
+     * makes a new store. A handle nobody is going to use is a handle to close.
+     */
+    let answered = false;
+    const gaveUp = setTimeout(() => {
+      answered = true;
+      resolve(null);
+    }, OPEN_LIMIT_MS);
     const answer = (value: IDBDatabase | null) => {
+      if (answered) {
+        value?.close();
+        return;
+      }
+      answered = true;
       clearTimeout(gaveUp);
       resolve(value);
     };
@@ -151,27 +168,52 @@ export function open(collections: string[]): Promise<IDBDatabase | null> {
   return opening;
 }
 
+/**
+ * How many times to ask for a higher version before settling for what is
+ * there.
+ *
+ * One is enough for the case this exists for — a database a version behind
+ * this build's fields. More than one is for the race: between looking and
+ * upgrading, another tab on an older build can take the version this one was
+ * about to ask for, and take it with a shorter list of stores. That open then
+ * succeeds with no `onupgradeneeded` and the store is still missing, so the
+ * answer is to look again rather than to trust the version number. Bounded,
+ * because a loop against a database that will not take an upgrade is worse
+ * than the missing store.
+ */
+const UPGRADE_TRIES = 3;
+
 async function adopt(needed: string[]): Promise<IDBDatabase | null> {
-  const found = await request(undefined, needed);
-  if (!found) return null;
-  if (missingFrom(found, needed).length === 0) return keep(found);
+  let database = await request(undefined, needed);
+  if (!database) return null;
 
-  // Closed before asking for the upgrade: this tab's own handle is otherwise
-  // the thing blocking it.
-  const next = found.version + 1;
-  found.close();
-  const upgraded = await request(next, needed);
-  if (upgraded) return keep(upgraded);
+  for (let tries = 0; tries < UPGRADE_TRIES; tries += 1) {
+    if (missingFrom(database, needed).length === 0) return keep(database);
 
-  /*
-   * The upgrade did not happen — a browser refusing it, or another tab that
-   * never let go. Going back to the database as it is beats going back with
-   * nothing: everything that has a store still loads and still saves, and the
-   * next load tries the upgrade again. Only what is stored in a missing store
-   * is affected, and `write` says so rather than pretending.
-   */
-  const again = await request(undefined, needed);
-  return again ? keep(again) : null;
+    // Closed before asking for the upgrade: this tab's own handle is
+    // otherwise the thing blocking it.
+    const next = database.version + 1;
+    database.close();
+    const upgraded = await request(next, needed);
+    if (upgraded) {
+      database = upgraded;
+      continue;
+    }
+
+    /*
+     * The upgrade did not happen — a browser refusing it, or another tab that
+     * never let go. Going back to the database as it is beats going back with
+     * nothing: everything that has a store still loads and still saves, and
+     * the next load tries the upgrade again. Only what is stored in a missing
+     * store is affected, and `write` says so rather than pretending.
+     */
+    const again = await request(undefined, needed);
+    return again ? keep(again) : null;
+  }
+
+  // Three rounds and something is still missing. The app runs on what does
+  // exist, and the write that has nowhere to land answers false.
+  return keep(database);
 }
 
 /** Read a whole store as [key, value] pairs. Empty on any trouble. */
