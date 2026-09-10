@@ -50,6 +50,9 @@ import { readDrop } from '../lib/drop';
 import { DEFAULT_BUDGET } from '../lib/clash';
 import type { Sitting } from '../lib/sitting';
 import type { NewSource, Source } from '../lib/sources';
+import type { Doc } from '../lib/document';
+import type { Sheet } from '../lib/sheet';
+import type { SavedEquation } from '../lib/maths';
 import { type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
@@ -331,6 +334,21 @@ export interface Persisted {
    * asking happens once rather than every session.
    */
   sources: Source[];
+  /**
+   * Documents, sheets and equations somebody made in the app.
+   *
+   * Three lists rather than one bag of "files", because they are three
+   * different objects with three different editors and three different
+   * exports — and because a single list would have to carry a kind field that
+   * every reader switched on, which is the same three lists with an extra
+   * step. See `lib/document.ts`, `lib/sheet.ts` and `lib/maths.ts`.
+   *
+   * They hold work nobody else has a copy of, so they merge as unions and are
+   * never shed by `lib/keep.ts` — the same standing as a note.
+   */
+  documents: Doc[];
+  sheets: Sheet[];
+  equations: SavedEquation[];
   /**
    * The university's own dates — add/drop, withdrawal, registration.
    *
@@ -678,6 +696,11 @@ export interface Ephemeral {
   studyTab: 'guides' | 'revise' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
+  /** Document, sheet and equation currently open. Null is the list. */
+  documentId: string | null;
+  sheetId: string | null;
+  /** Which block of the open document is being edited, by index. */
+  blockAt: number | null;
   /** Unit whose lesson is playing. */
   lessonUnit: number;
   /** Unit the Add-material screen is filing against; null for a new one. */
@@ -855,6 +878,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   recent: [],
   sittings: [],
   sources: [],
+  documents: [],
+  sheets: [],
+  equations: [],
   registrar: [],
   spent: [],
   windows: [],
@@ -948,6 +974,9 @@ export function initialEphemeral(now: Date): Ephemeral {
     apps: false,
     studyTab: 'guides',
     noteId: null,
+    documentId: null,
+    sheetId: null,
+    blockAt: null,
     lessonUnit: 0,
     updateUnit: null,
     query: '',
@@ -1153,6 +1182,9 @@ export function loadPersisted(): Persisted {
       lastOpened: saved.lastOpened ?? {},
       sittings: list(saved.sittings),
       sources: list(saved.sources),
+      documents: list(saved.documents),
+      sheets: list(saved.sheets),
+      equations: list(saved.equations),
       registrar: list(saved.registrar),
       spent: list(saved.spent),
       windows: readList(saved.windows, readWindow),
@@ -1249,6 +1281,9 @@ export function pickPersisted(state: State): Persisted {
     lastOpened: state.lastOpened,
     sittings: state.sittings,
     sources: state.sources,
+    documents: state.documents,
+    sheets: state.sheets,
+    equations: state.equations,
     registrar: state.registrar,
     spent: state.spent,
     windows: state.windows,
@@ -1495,6 +1530,31 @@ export type Action =
   | { type: 'addSource'; source: NewSource }
   | { type: 'patchSource'; id: string; patch: Partial<Source> }
   | { type: 'dropSource'; id: string }
+  /*
+   * Making things: a document, a sheet, an equation.
+   *
+   * `newDocument` and `newSheet` open the editor on what they make;
+   * `makeDocument` and `makeSheet` do not, because they are what a tool
+   * proposal dispatches and being thrown out of a conversation into an editor
+   * is the same loss `keepNote` avoids. Same split, same reason. See
+   * `state/slices/made.ts`.
+   */
+  | { type: 'newDocument'; courseId: CourseId | null }
+  | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'> }
+  | { type: 'openDocument'; id: string }
+  /** Back to the shelf. Its own action rather than an open with no id. */
+  | { type: 'closeDocument' }
+  | { type: 'updateDocument'; id: string; patch: Partial<Omit<Doc, 'id'>> }
+  | { type: 'deleteDocument'; id: string }
+  | { type: 'editBlock'; at: number | null }
+  | { type: 'newSheet'; courseId: CourseId | null }
+  | { type: 'makeSheet'; sheet: Omit<Sheet, 'id' | 'created' | 'updated'> }
+  | { type: 'openSheet'; id: string }
+  | { type: 'closeSheet' }
+  | { type: 'updateSheet'; id: string; patch: Partial<Omit<Sheet, 'id'>> }
+  | { type: 'deleteSheet'; id: string }
+  | { type: 'saveEquation'; equation: Omit<SavedEquation, 'id' | 'created'> }
+  | { type: 'deleteEquation'; id: string }
   | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
   | { type: 'clearPaperPreset' }
   | { type: 'writeRoomDraft'; text: string }

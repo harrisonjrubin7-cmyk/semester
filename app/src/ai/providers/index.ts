@@ -65,6 +65,9 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   // Make — the screens that produce something.
   draw: make.draw,
   deck: make.deck,
+  write: make.write,
+  sheet: make.sheet,
+  equations: make.equations,
   sources: make.sources,
   essay: make.essay,
   proof: make.proof,

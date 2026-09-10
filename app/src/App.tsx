@@ -60,6 +60,9 @@ const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Cos
 const CourseDetail = lazy(() => import('./screens/Courses').then((m) => ({ default: m.CourseDetail })));
 const Courses = lazy(() => import('./screens/Courses').then((m) => ({ default: m.Courses })));
 const Deck = lazy(() => import('./screens/Deck').then((m) => ({ default: m.Deck })));
+const Write = lazy(() => import('./screens/Write').then((m) => ({ default: m.Write })));
+const SheetScreen = lazy(() => import('./screens/Sheet').then((m) => ({ default: m.Sheet })));
+const Equations = lazy(() => import('./screens/Equations').then((m) => ({ default: m.Equations })));
 const Draw = lazy(() => import('./screens/Draw').then((m) => ({ default: m.Draw })));
 const Drill = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Drill })));
 const Guess = lazy(() => import('./screens/Guess').then((m) => ({ default: m.Guess })));
@@ -377,6 +380,12 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Everything but coursework', title: 'Draft it' };
     case 'deck':
       return { kicker: 'A real PowerPoint file', title: 'Make a deck' };
+    case 'write':
+      return { kicker: 'A real Word file', title: 'Write a document' };
+    case 'sheet':
+      return { kicker: 'Added up here, not guessed', title: 'Sheet or table' };
+    case 'equations':
+      return { kicker: 'Written, never computed', title: 'Equations' };
     case 'exam':
       return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
     case 'ahead':
@@ -946,6 +955,12 @@ function CurrentScreen() {
       return <Essay />;
     case 'deck':
       return <Deck />;
+    case 'write':
+      return <Write />;
+    case 'sheet':
+      return <SheetScreen />;
+    case 'equations':
+      return <Equations />;
     case 'exam':
       return <Exam />;
     case 'ahead':

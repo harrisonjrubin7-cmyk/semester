@@ -34,6 +34,7 @@ import {
   DegreeIcon,
   DrawIcon,
   EditIcon,
+  EquationsIcon,
   EssayIcon,
   ExamIcon,
   ExportIcon,
@@ -55,6 +56,7 @@ import {
   RegistrarIcon,
   RunwayIcon,
   SettingsIcon,
+  SheetIcon,
   SolveIcon,
   SourcesIcon,
   StudyIcon,
@@ -63,6 +65,7 @@ import {
   UpdateIcon,
   UpkeepIcon,
   WorkIcon,
+  WriteIcon,
   YesIcon,
 } from './Icons';
 import { destination, type Group } from '../lib/nav';
@@ -98,6 +101,9 @@ const OWN: Partial<Record<Screen, Glyph>> = {
   solve: SolveIcon,
   exam: ExamIcon,
   deck: DeckIcon,
+  write: WriteIcon,
+  sheet: SheetIcon,
+  equations: EquationsIcon,
   sources: SourcesIcon,
   essay: EssayIcon,
   runway: RunwayIcon,

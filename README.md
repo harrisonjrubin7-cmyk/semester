@@ -345,6 +345,55 @@ is editable and your edit is what persists — myVU ships with none at all,
 because where it opens differs between people and a confident wrong link is
 worse than a field that asks. You can add links of your own beside them.
 
+## Making things: documents, sheets, tables and equations
+
+The app could turn a semester into a deck and into CSV and could do nothing
+between those two. So a memo with a table in it, a gradebook weighted by the
+syllabus's own percentages, and every formula an econ or statistics course
+prints happened in Word, Excel and a screenshot — and everything the app knows
+stayed behind. Three screens now, on the **Make** shelf, and none of them has a
+model in it or needs a key:
+
+- **Write a document.** A block editor — headings, paragraphs, lists,
+  quotations, tables, equations, page breaks — out as a real `.docx`, as
+  Markdown, or printed to PDF from the browser. It is not **Draft it**, which
+  writes prose and is fenced off from coursework, and it is not **Work on it**,
+  which plans an assignment and refuses to write it. This one arranges what you
+  type. Paste notes or Markdown in and it reads headings, lists, tables and
+  `$$…$$` equations into blocks you can edit.
+- **Sheet or table.** A grid you type into, with formulas computed on the
+  device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
+  `ROUND`, `SQRT`, `SUMPRODUCT` and the arithmetic around them. Out as a real
+  `.xlsx` **with the formulas still in it** — a CSV of a gradebook is the
+  answers with the working thrown away — or as a CSV, a Markdown table, or a
+  table dropped into a document. A pasted table is read whether it is a copy
+  out of Excel, a CSV or Markdown.
+- **Equations.** A small piece of LaTeX — `\frac{a}{b}`, `x^2`, `x_i`,
+  `\sqrt{x}`, `\sum_{i=1}^{n}`, `\bar{x}`, the greek and the relations —
+  written once and rendered three ways: MathML on screen, a real Word equation
+  object in the `.docx`, and one line of ordinary text for anywhere else. It
+  opens on a library of the fifteen formulas these courses actually use, each
+  with **every symbol named**, because that is the half a picture of an equation
+  loses and the half a marker looks for.
+
+**Make a deck** gained a third door beside *From a unit* and *From a brief*:
+**From a sheet** puts a table you built onto slides as a real PowerPoint table
+you can still edit, split across several slides when it is long rather than
+shrunk until nobody at the back can read it.
+
+Nothing here computes what it renders and nothing here renders what it computes:
+the sheet does arithmetic and says so, the equation screen writes a formula and
+will not evaluate one. An error in a cell is said — `#DIV/0!`, `#CYCLE!`,
+`#NAME?` — rather than resolved to a zero that looks like an answer, because a
+spreadsheet is the format where an invented figure travels furthest.
+
+Three writers, no libraries: `app/src/lib/docx.ts`, `app/src/lib/xlsx.ts` and
+the `app/src/lib/pptx.ts` that was already here each write OOXML directly, the
+way the app already *reads* a `.docx` syllabus. And the assistant can propose
+any of them — `make_document`, `make_sheet` and `save_equation` in
+`app/src/lib/tools.ts` — as a confirmation you accept, with an undo decided
+before the write happens like every other tool in that file.
+
 ## Claude, in the app
 
 **Study → Ask Claude.** The course guide, its deadlines and what you are

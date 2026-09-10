@@ -139,6 +139,34 @@ export const SHAPES = {
   /** Make a deck — a screen on a stand. */
   deck: [{ d: 'M3.5 4.5h17v11h-17z' }, { d: 'M12 15.5v3' }, { d: 'm8.5 20.5 3.5-2 3.5 2' }],
 
+  /**
+   * Write a document — a page with a heading rule and prose under it.
+   *
+   * Deliberately not the turned corner `essay` uses. Two writing tools that
+   * both draw a page are two tools nobody can tell apart in a grid, and the
+   * difference between them is that this one is a document with a structure
+   * in it rather than a draft of prose.
+   */
+  write: [
+    { d: 'M5.5 3.5h13v17h-13z' },
+    { d: 'M9 7.5h6' },
+    { d: 'M9 11.5h6M9 14.5h6M9 17.5h3' },
+  ],
+
+  /** Sheet or table — a grid, with the header row ruled off. */
+  sheet: [
+    { d: 'M3.5 4.5h17v15h-17z' },
+    { d: 'M3.5 9h17' },
+    { d: 'M9.5 9v10.5M15 9v10.5' },
+  ],
+
+  /** Equations — the division sign, which is the one glyph that reads as maths. */
+  equations: [
+    { d: 'M4.5 12h15' },
+    { c: [12, 7, 1.4] },
+    { c: [12, 17, 1.4] },
+  ],
+
   /** Sources — a book with the ribbon in it, not a shelf of two rectangles. */
   sources: [{ d: 'M5.5 3.5h13v17h-13z' }, { d: 'M9.5 3.5v7l2.5-2 2.5 2v-7' }],
 
