@@ -16,7 +16,7 @@ import {
   spread,
   type BuyInput,
 } from './worth';
-import type { Standing } from './grades';
+import { needFor, type Standing } from './grades';
 import type { Spent } from './pace';
 
 const at = (patch: Partial<Standing>): Standing =>
@@ -50,6 +50,36 @@ describe('where the term lands', () => {
     const s = at({ earned: 33.6, counted: 40, remaining: 60, current: 84 });
     const p = projectGrade(s, [84, 84, 84, 84]);
     expect(p?.middle).toBeCloseTo(84, 1);
+  });
+
+  it('takes the absence penalty off once, not once for every week left', () => {
+    // 50% counted at 80 = 40 banked, 50% left, ten final-grade points lost to
+    // absences. Banked plus the rest at your own rate, less the penalty:
+    // 40 + 40 − 10 = 70. Reading `current` as the rate gave 65.
+    const s = at({ earned: 40, counted: 50, remaining: 50, current: 70, pointsOff: 10 });
+    expect(projectGrade(s, [80, 80, 80])?.middle).toBeCloseTo(70, 1);
+  });
+
+  it('is wrong by more the more of the term is left, so check both ends', () => {
+    // The old error was `remaining × pointsOff / 100`, so it vanished at the
+    // end of term and was worst at the start. One case could not show that.
+    const early = at({ earned: 8, counted: 10, remaining: 90, current: 70, pointsOff: 10 });
+    expect(projectGrade(early, [80, 80, 80])?.middle).toBeCloseTo(8 + 72 - 10, 1);
+    const late = at({ earned: 72, counted: 90, remaining: 10, current: 70, pointsOff: 10 });
+    expect(projectGrade(late, [80, 80, 80])?.middle).toBeCloseTo(72 + 8 - 10, 1);
+  });
+
+  it('projects the same as always when nothing was lost to absences', () => {
+    const s = at({ earned: 40, counted: 50, remaining: 50, current: 80, pointsOff: 0 });
+    expect(projectGrade(s, [80, 80, 80])?.middle).toBeCloseTo(80, 1);
+  });
+
+  it('agrees with what needFor says it would take to hold that grade', () => {
+    // Two implementations of one rule. They disagreed about the penalty.
+    const s = at({ earned: 40, counted: 50, remaining: 50, current: 70, pointsOff: 10 });
+    const middle = projectGrade(s, [80, 80, 80])!.middle;
+    // To land exactly on the projection, the rest has to go at your own rate.
+    expect(needFor(s, middle)).toBeCloseTo((s.earned / s.counted) * 100, 1);
   });
 
   it('is a band, never a point, and never a probability', () => {
