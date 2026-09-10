@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { realDate, realMonthDay } from './date';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { dateToIso, realDate, realMonthDay } from './date';
 import { parseIcs } from './ics';
 import { matchDate } from './capture';
 import { fromInputDate } from './edit';
@@ -74,6 +74,59 @@ describe('realDate', () => {
   it('refuses anything that is not a whole number', () => {
     expect(realDate(2026, 9, 14.5)).toBeNull();
     expect(realDate(2026, NaN, 14)).toBeNull();
+  });
+
+  describe('on a day whose local midnight never happens', () => {
+    /*
+     * Havana springs forward at midnight: on 8 March 2026 the clock goes from
+     * 23:59 to 01:00, and `new Date(2026, 2, 8)` normalises to 01:00. Checking
+     * the calendar on that value asked whether local midnight existed, and
+     * refused a real date for the one day a year its own timezone skips it.
+     *
+     * A zone of its own rather than a third entry in `test:zones`, because
+     * this is the only rule that cares and the suite is run twice already.
+     * Chicago moves at two in the morning and Kiritimati does not move, so
+     * neither of the zones the suite does run in can reach this.
+     */
+    const held = process.env.TZ;
+    beforeAll(() => {
+      process.env.TZ = 'America/Havana';
+    });
+    afterAll(() => {
+      process.env.TZ = held;
+    });
+
+    it('is the timezone this test needs, or the test is not testing anything', () => {
+      // The guard against a test that passes for the wrong reason: if setting
+      // TZ here stopped working, every assertion below would pass on a clock
+      // that has no such day.
+      expect(new Date(2026, 2, 8, 0, 0, 0).getHours()).toBe(1);
+    });
+
+    it('still answers with the date', () => {
+      const d = realDate(2026, 3, 8);
+      expect(d).toBeInstanceOf(Date);
+      expect(dateToIso(d!)).toBe('2026-03-08');
+    });
+
+    it('does not send a date typed by hand into the following year', () => {
+      // What this cost on the way through `capture.ts`: "March 8" asked in
+      // January read as 2027, because this year's had been declared not to
+      // exist.
+      expect(matchDate('registration on March 8', new Date(2026, 0, 15))?.date).toBe('2026-03-08');
+    });
+
+    it('still refuses a day that is not one', () => {
+      expect(realDate(2026, 2, 30)).toBeNull();
+      expect(realDate(2026, 4, 31)).toBeNull();
+    });
+
+    it('still refuses a stated time the clock never reached', () => {
+      // Different from refusing the day: 00:30 that night did not happen, and
+      // a caller that asked about it is owed the truth.
+      expect(realDate(2026, 3, 8, { hours: 0, minutes: 30, seconds: 0 })).toBeNull();
+      expect(realDate(2026, 3, 8, { hours: 9, minutes: 30, seconds: 0 })).toBeInstanceOf(Date);
+    });
   });
 });
 

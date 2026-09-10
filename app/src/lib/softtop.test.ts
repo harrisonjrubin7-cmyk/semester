@@ -260,3 +260,41 @@ describe('an account with something in it', () => {
     expect(softTop('registrar', input()).hero?.figure).toBe('0');
   });
 });
+
+describe('the Activities tile counts what the Activities screen counts', () => {
+  /*
+   * A commitment carries a Pause switch, and the screen's own header counts
+   * `mine.filter((c) => c.active)`. The tile counted the lot, so pausing one
+   * left the tile saying "3 commitments" above a screen saying "2" — and a
+   * tile that disagrees with the screen behind it is worse than no tile.
+   */
+  const commitment = (id: string, active: boolean) =>
+    ({
+      id,
+      name: `Thing ${id}`,
+      kind: 'club',
+      role: '',
+      where: '',
+      url: '',
+      note: '',
+      days: [1],
+      at: 600,
+      minutes: 60,
+      hours: 2,
+      active,
+    }) as unknown as State['commitments'][number];
+
+  const figure = (over: Partial<State>) => softTop('activities', input(over)).hero?.figure;
+
+  it('leaves out the paused ones', () => {
+    expect(figure({ commitments: [commitment('a', true), commitment('b', false)] })).toBe('1');
+  });
+
+  it('counts the running ones', () => {
+    expect(figure({ commitments: [commitment('a', true), commitment('b', true)] })).toBe('2');
+  });
+
+  it('says none where every one of them is paused', () => {
+    expect(figure({ commitments: [commitment('a', false)] })).toBe('0');
+  });
+});

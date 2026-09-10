@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { headline, pressure, showHours, studyAsked, week, type WeekInput } from './ahead';
 import type { Catalog } from '../data/catalog';
 import type { Commitment } from './activities';
+import { weeklyHours } from './activities';
 import type { Appointment, Item } from './types';
 
 const NOW = new Date(2026, 8, 3); // Thu 3 Sep 2026
@@ -66,6 +67,12 @@ const commitment = (over: Partial<Commitment> = {}): Commitment => ({
   created: 0,
   ...over,
 });
+
+/** A commitment with no fixed time — a shift job, stated as hours a week. */
+const job = (over: Partial<Commitment> = {}): Commitment =>
+  commitment({ id: 'job', name: 'Dining hall', kind: 'job', days: [], at: null, minutes: 0, hours: 10, ...over });
+
+const round = (n: number): number => Math.round(n * 10) / 10;
 
 const appointment = (date: string): Appointment => ({
   id: date,
@@ -132,6 +139,58 @@ describe('week', () => {
   it('leaves waking hours over rather than pretending a week is 168 usable', () => {
     const w = week(input({ commitments: [commitment()] }));
     expect(w.spare).toBeCloseTo(16 * 7 - 1.5, 5);
+  });
+
+  it('counts a job stated as hours a week, which meets on no day at all', () => {
+    // The whole point of the hours field is a commitment with no fixed time.
+    // Reading only what meets left ten hours of somebody's week out of the one
+    // figure this screen exists to give.
+    const w = week(input({ commitments: [job()] }));
+    expect(w.promised).toBeCloseTo(10, 5);
+  });
+
+  it('puts a share of it on every day, because it belongs to no one of them', () => {
+    const w = week(input({ commitments: [job()] }));
+    expect(w.days.map((d) => d.commitments)).toEqual([1.4, 1.4, 1.4, 1.4, 1.4, 1.4, 1.4]);
+  });
+
+  it('adds a weekly job to what meets, rather than choosing between them', () => {
+    // 90 minutes on the Thursday plus ten hours across the seven.
+    const w = week(input({ commitments: [commitment(), job()] }));
+    expect(w.promised).toBeCloseTo(11.5, 5);
+    expect(w.days[0].commitments).toBe(round(1.5 + 10 / 7));
+  });
+
+  it('states the week as the seven days really add up to, not as seven roundings', () => {
+    // A tenth lost seven times is 9.8 hours where the Activities screen says
+    // ten, about a number the student typed in themselves.
+    const w = week(input({ commitments: [job()] }));
+    const summed = w.days.reduce((n, d) => n + d.promised, 0);
+    expect(summed).toBeCloseTo(9.8, 5);
+    expect(w.promised).toBeCloseTo(10, 5);
+  });
+
+  it('leaves less waking time over once a job is counted', () => {
+    const w = week(input({ commitments: [job()] }));
+    expect(w.spare).toBeCloseTo(16 * 7 - 10, 5);
+  });
+
+  it('promises the week the Activities screen promises, for every shape', () => {
+    const shapes: Commitment[] = [
+      commitment({ id: 'meets', days: [4], at: 17 * 60, minutes: 90, hours: 0 }),
+      job({ id: 'weekly' }),
+      commitment({ id: 'hour-no-days', days: [], at: 17 * 60, minutes: 90, hours: 5 }),
+      commitment({ id: 'days-no-hour', days: [1, 3], at: null, minutes: 90, hours: 4 }),
+    ];
+    for (const c of shapes) {
+      expect(week(input({ commitments: [c] })).promised).toBeCloseTo(weeklyHours([c]), 5);
+    }
+    expect(week(input({ commitments: shapes })).promised).toBeCloseTo(weeklyHours(shapes), 5);
+  });
+
+  it('takes no hours at all from a job you have paused', () => {
+    const w = week(input({ commitments: [job({ active: false })] }));
+    expect(w.promised).toBe(0);
   });
 });
 

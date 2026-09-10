@@ -192,16 +192,56 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
   let name = '';
   let current: RawEvent | null = null;
 
+  /*
+   * How deep inside a component we are that is not the event itself.
+   *
+   * A VEVENT can contain a whole other component, and in practice almost
+   * always does: Google Calendar writes a VALARM into every event that has a
+   * reminder on it, which for a student's own calendar is most of them. This
+   * reader knew only BEGIN:VEVENT, so every other BEGIN line fell through to
+   * the property branch below and the nested component's own properties were
+   * written onto the event, last one winning.
+   *
+   * An alarm carries a DESCRIPTION, and Google's says "This is an event
+   * reminder". It appears after the event's own DESCRIPTION, so that sentence
+   * replaced whatever the professor actually wrote — the room change, the
+   * reading, the link. An ACTION:EMAIL alarm carries a SUMMARY as well, which
+   * RFC 5545 requires of it, and that replaced the event's *title*. Measured
+   * against exports shaped the way Google and Outlook shape them.
+   *
+   * Nothing about that is specific to alarms, so nothing here is either: an
+   * event's properties are the ones written directly inside it, and anything
+   * between a nested BEGIN and its END belongs to that component instead.
+   * Counted rather than flagged, because components nest more than one deep.
+   */
+  let inside = 0;
+
   for (const line of lines) {
-    if (line.startsWith('BEGIN:VEVENT')) {
-      current = {};
+    // Component names are case-insensitive in RFC 5545, and property names are
+    // already read that way a few lines down. A feed that writes `begin:valarm`
+    // in lower case is rare, but it must not be the one that gets through.
+    const mark = /^(BEGIN|END):(.*)$/i.exec(line);
+    const opens = mark?.[1].toUpperCase() === 'BEGIN';
+    const of = mark?.[2].trim().toUpperCase();
+
+    if (mark && of === 'VEVENT') {
+      if (opens) {
+        current = {};
+      } else {
+        if (current) events.push(...toEvents(courses, current, sourceId));
+        current = null;
+      }
+      inside = 0;
       continue;
     }
-    if (line.startsWith('END:VEVENT')) {
-      if (current) events.push(...toEvents(courses, current, sourceId));
-      current = null;
+    // Outside an event, a component boundary is nothing to track: the calendar
+    // header is read by key, and a VTIMEZONE's properties are already ignored
+    // for want of an event to attach them to.
+    if (mark && current) {
+      inside = opens ? inside + 1 : Math.max(0, inside - 1);
       continue;
     }
+    if (inside > 0) continue;
 
     const split = line.indexOf(':');
     if (split === -1) continue;

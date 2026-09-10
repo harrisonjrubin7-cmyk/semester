@@ -247,6 +247,10 @@ describe('a tool the model wants to use', () => {
     delta: { type: 'input_json_delta', partial_json },
   });
   const blockStop = { type: 'content_block_stop' };
+  // A real stream closes, whatever was in it. Written out here because `ask`
+  // now tells a stream that ended from one that stopped, and these cases are
+  // about what was *in* the stream, not about it being cut short.
+  const messageStop = { type: 'message_stop' };
 
   it('reassembles arguments that arrive in pieces', async () => {
     // The JSON streams as fragments; parsing before the block closes gets a
@@ -283,7 +287,7 @@ describe('a tool the model wants to use', () => {
   it('drops a call whose arguments did not survive the stream', async () => {
     // Acting on a half-read instruction is the one outcome worse than not
     // acting at all.
-    catchRequest([toolStart('toolu_2', 'tick_deadline'), args('{"id":"eco'), blockStop]);
+    catchRequest([toolStart('toolu_2', 'tick_deadline'), args('{"id":"eco'), blockStop, messageStop]);
     const calls: unknown[] = [];
     await ask({
       system: 's',
@@ -631,8 +635,17 @@ describe('why the model stopped', () => {
     expect(why).toBe('max_tokens');
   });
 
-  it('says nothing where the stream reported nothing', async () => {
-    catchRequest([said('done')]);
+  /*
+   * This test used to feed `[said('done')]` — a text delta and no closing
+   * event at all — and pin that `onStop` stayed silent. Its premise turned
+   * out to be the bug: a stream with no closing event is one that *stopped*
+   * rather than ended, and the app drew it as a finished answer. What it was
+   * protecting is still here and still right — a stream that closes cleanly
+   * with nothing to report reports nothing — so the case it names now closes
+   * cleanly, and the open-ended one is below.
+   */
+  it('says nothing where a finished stream reported nothing', async () => {
+    catchRequest([said('done'), { type: 'message_stop' }]);
     let called = false;
     await ask({
       system: 's',
@@ -642,6 +655,115 @@ describe('why the model stopped', () => {
       },
     });
     expect(called).toBe(false);
+  });
+
+  it('calls a stream that stopped without ending cut, and keeps the words', async () => {
+    // The ordinary failure of a streamed API on a phone. `ai/converse.ts`
+    // marks the turn on this, which is what draws "Stopped here." under it
+    // and what stops the model being sent a conclusion it never reached.
+    catchRequest([said('The three things due')]);
+    let why = '';
+    const text = await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      onStop: (r) => {
+        why = r;
+      },
+    });
+    expect(why).toBe('cut');
+    expect(text).toBe('The three things due');
+  });
+
+  it('keeps a whole tool call that arrived before the stream died', async () => {
+    // A proposal is something the reader can act on, so it is not nothing —
+    // the call is delivered, and the turn is marked rather than refused.
+    catchRequest([
+      { type: 'content_block_start', content_block: { type: 'tool_use', id: 'toolu_9', name: 'add_task' } },
+      { type: 'content_block_delta', delta: { partial_json: '{"title":"Draft"}' } },
+      { type: 'content_block_stop' },
+    ]);
+    const calls: unknown[] = [];
+    let why = '';
+    await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      onToolUse: (c) => calls.push(c),
+      onStop: (r) => {
+        why = r;
+      },
+    });
+    expect(calls).toHaveLength(1);
+    expect(why).toBe('cut');
+  });
+
+  /*
+   * A streamed answer can fail after the 200.
+   *
+   * The connection is open and the headers are long sent, so the trouble
+   * arrives as an event of its own. Nothing read those, and the result was one
+   * of two lies depending on when it came: before any text the stream looked
+   * empty and threw "the answer never arrived", which says the model had
+   * nothing to say; after some text it looked cut and reported `cut`, which
+   * says the connection dropped. Both send somebody to look at their own
+   * signal for a fault at the other end.
+   */
+  it('says what the stream said, when the stream said what went wrong', async () => {
+    catchRequest([{ type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } }]);
+    await expect(
+      ask({ system: 's', messages: [{ role: 'user', content: 'q' }] }),
+    ).rejects.toThrow(/Overloaded/);
+  });
+
+  it('does not call that a stream which merely stopped', async () => {
+    // The words that arrived first are not kept: an overloaded server is a
+    // "try that again", and half an answer under a button offering to try
+    // again is half an answer somebody may act on.
+    catchRequest([
+      said('Your three deadlines are'),
+      { type: 'error', error: { message: 'Overloaded' } },
+    ]);
+    let why = '';
+    await expect(
+      ask({
+        system: 's',
+        messages: [{ role: 'user', content: 'q' }],
+        onStop: (r) => {
+          why = r;
+        },
+      }),
+    ).rejects.toThrow(/Overloaded/);
+    expect(why).toBe('');
+  });
+
+  it('throws rather than returning an empty answer when nothing arrived', async () => {
+    // Measured in the browser before this: a 200 with an empty body, with
+    // unparseable events, or cut mid-event all drew a finished turn with
+    // COPY and GOOD under an answer that did not exist.
+    for (const events of [[], [{ type: 'message_start', message: {} }]]) {
+      catchRequest(events);
+      await expect(ask({ system: 's', messages: [{ role: 'user', content: 'q' }] })).rejects.toThrow(
+        /connection closed/i,
+      );
+    }
+  });
+
+  it('is silent about a stream that ended, however it ended', async () => {
+    for (const closing of [
+      { type: 'message_stop' },
+      { type: 'message_delta', delta: { stop_reason: 'end_turn' } },
+    ]) {
+      catchRequest([said('All of it'), closing]);
+      let why = '';
+      const text = await ask({
+        system: 's',
+        messages: [{ role: 'user', content: 'q' }],
+        onStop: (r) => {
+          why = r;
+        },
+      });
+      expect(text).toBe('All of it');
+      expect(why).not.toBe('cut');
+    }
   });
 });
 

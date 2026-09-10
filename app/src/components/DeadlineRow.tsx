@@ -168,7 +168,7 @@ export function DeadlineRow({
       </button>
       <button
         type="button"
-        className="bare tappable"
+        className="bare tappable on-paper"
         onClick={() => dispatch({ type: 'openItem', id: item.id })}
         style={{
           flex: 1,

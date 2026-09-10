@@ -581,7 +581,9 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
 
     case 'activities':
-      return holds('Commitments', state.commitments.length, 'commitment');
+      // Active ones, because that is what the screen this opens counts, and a
+      // tile that disagrees with the screen behind it is worse than no tile.
+      return holds('Commitments', state.commitments.filter((c) => c.active).length, 'commitment');
 
     case 'groupwork':
       return {

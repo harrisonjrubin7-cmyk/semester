@@ -15,6 +15,7 @@ import {
 } from './brief';
 import type { Catalog } from '../data/catalog';
 import type { Commitment } from './activities';
+import { weeklyHours } from './activities';
 import type { Item, PersonalTask } from './types';
 
 const NOW = new Date(2026, 8, 3, 9, 0); // Thu 3 Sep 2026
@@ -226,6 +227,53 @@ describe('committedToday', () => {
 
   it('is zero when there is nothing', () => {
     expect(committedToday([], NOW)).toBe(0);
+  });
+
+  it('still counts the weekly figure on a day something also meets', () => {
+    // The day you are busiest was the day the job disappeared: a Thursday
+    // practice made this return the practice alone, so Thursday read as the
+    // cheapest day of somebody's week rather than the dearest.
+    const job: Commitment = { ...fixed, id: 'j', days: [], at: null, minutes: 0, hours: 7 };
+    expect(committedToday([fixed, job], NOW)).toBeCloseTo(2.5, 5);
+  });
+
+  it('adds up over seven days to the week the Activities screen shows', () => {
+    const job: Commitment = { ...fixed, id: 'j', days: [], at: null, minutes: 0, hours: 7 };
+    const both = [fixed, job];
+    let week = 0;
+    for (let n = 0; n < 7; n++) {
+      week += committedToday(both, new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + n));
+    }
+    expect(week).toBeCloseTo(weeklyHours(both), 5);
+  });
+
+  it('adds up to the week the Activities screen shows, for every shape', () => {
+    // Four shapes, because `hoursOf` measures one of them and estimates the
+    // other three, and the split between "what meets today" and "a share of
+    // the week" has to fall in the same place or the seven days stop adding
+    // up. An hour with no days is the shape that fell through both.
+    const shapes: Commitment[] = [
+      { ...fixed, id: 'meets', days: [4], at: 17 * 60, minutes: 90, hours: 0 },
+      { ...fixed, id: 'weekly', days: [], at: null, minutes: 0, hours: 7 },
+      { ...fixed, id: 'hour-no-days', days: [], at: 17 * 60, minutes: 90, hours: 5 },
+      { ...fixed, id: 'days-no-hour', days: [1, 3], at: null, minutes: 90, hours: 4 },
+    ];
+    const over = (list: Commitment[]): number => {
+      let week = 0;
+      for (let n = 0; n < 7; n++) {
+        week += committedToday(list, new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + n));
+      }
+      return week;
+    };
+    for (const c of shapes) expect(over([c])).toBeCloseTo(weeklyHours([c]), 5);
+    expect(over(shapes)).toBeCloseTo(weeklyHours(shapes), 5);
+  });
+
+  it('counts nothing at all for a commitment you have paused', () => {
+    const job: Commitment = {
+      ...fixed, id: 'j', days: [], at: null, minutes: 0, hours: 7, active: false,
+    };
+    expect(committedToday([job], NOW)).toBe(0);
   });
 });
 

@@ -66,6 +66,15 @@ describe('when one fires', () => {
     expect(myReminders(at(12), [rule({ on: false })], [item()])).toHaveLength(0);
   });
 
+  it('is silent about work already ticked off', () => {
+    // A rule you set to remind you about a paper should not remind you about
+    // a paper you handed in last night.
+    const r = [rule({ days: 3 })];
+    expect(myReminders(at(12), r, [item()], { ps4: true })).toHaveLength(0);
+    expect(myReminders(at(12), r, [item()], { other: true })).toHaveLength(1);
+    expect(myReminders(at(12), r, [item()])).toHaveLength(1);
+  });
+
   it('watches one course when it names one', () => {
     const r = [rule({ courseId: 'psci' })];
     expect(myReminders(at(12), r, [item({ c: 'econ' })])).toHaveLength(0);

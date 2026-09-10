@@ -183,30 +183,89 @@ let inFlight: Promise<void> = Promise.resolve();
  */
 let told: (() => void) | null = null;
 
+/**
+ * Told whether writes are landing.
+ *
+ * A standing registration rather than an argument to `persist`, because it is
+ * about the writer and not about one write, and because `stopWriting` is
+ * already that shape. `state/store.tsx` turns the banner on and off with it.
+ */
+let watching: ((failing: boolean) => void) | null = null;
+
+/** Register the one listener, or clear it with null. */
+export function whileWriting(fn: ((failing: boolean) => void) | null): void {
+  watching = fn;
+}
+
 async function flush(): Promise<void> {
   const next = pending;
   const tell = told;
   pending = null;
   told = null;
   if (!next || !last) return;
+  const before = last;
   const writes = writesFor(last, next);
   last = next;
   // Nothing to write is not something to announce. A tab told to re-read a
   // disk that did not change is the first step of a loop, not an update.
   if (writes.length === 0) return;
+  /*
+   * `write` reports a failure by answering false, not by throwing.
+   *
+   * This was a `try`/`catch` around it, whose catch could therefore never run
+   * — `db.ts` resolves false on an error, on an abort and on a synchronous
+   * throw. So every write counted as a success: `last` moved on to a state
+   * the database had refused, and `tell` went out.
+   *
+   * That last one matters most, because `tell` is the nudge that sends the
+   * other tab to re-read the disk. Sent after a write that did not land, it
+   * sends that tab to read a disk without the change on it — which is the
+   * hazard the ordering here exists to prevent, re-armed in the one case
+   * where it does most damage.
+   *
+   * Measured on the production build, with `put` refusing the way a full disk
+   * refuses it: a task added through the quick-add sheet drew on screen,
+   * stayed in memory, and was gone after a reload — no warning while typing,
+   * none afterwards, and nothing in the console.
+   */
+  let ok = false;
   try {
-    await write(writes);
+    ok = await write(writes);
   } catch {
-    // A failed write must never break the app. The state is still in memory,
-    // the old localStorage copy is still on disk, and the next change tries
-    // again — this is the one place where carrying on is better than saying
-    // so, because there is nothing the person could do about it mid-keystroke.
-    //
-    // It tells nobody either: a tab sent to re-read a disk that did not take
-    // the change would spread the failure rather than leave it where it is.
+    ok = false;
+  }
+
+  if (!ok) {
+    /*
+     * Nothing is thrown and no screen is taken down: the state is still in
+     * memory, and there is nothing a person could do about one failed write
+     * mid-keystroke. That much was right, and it is kept.
+     *
+     * Two things are new. `last` goes back, so the next write carries this
+     * change as well — it had already moved on to what the database *would*
+     * have held, so the failed change was never retried, not even when the
+     * failure was one transaction losing one race. And nobody is told, for
+     * the reason the old comment gave.
+     *
+     * Then it is said out loud. `App.tsx` draws a banner for exactly this and
+     * argues for it above: *"Until it is fixed, everything the person does is
+     * being lost on the next reload, and a message that fades after four
+     * seconds is worse than none because it makes them think they imagined
+     * it."* The only thing that could turn it on was
+     * `navigator.storage.estimate()` — a guess about a quota rather than news
+     * about a write, and no help at all when the disk is full but the
+     * origin's quota is not.
+     */
+    last = before;
+    watching?.(true);
     return;
   }
+
   tell?.();
+  // And the writer is working, which clears a warning left by a failure that
+  // has since passed — a browser that made room, or a transaction that lost a
+  // race and won the next one.
+  watching?.(false);
 }
 
 /** What the app last read or wrote, so the first diff has something to be against. */

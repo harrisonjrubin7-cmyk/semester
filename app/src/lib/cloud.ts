@@ -224,6 +224,19 @@ export const PROVIDER_LABEL: Record<Provider, string> = {
   apple: 'Apple',
 };
 
+/**
+ * The providers, named in a sentence — "Google, Microsoft or Apple".
+ *
+ * The paragraph under the buttons named two of them by hand, and the third was
+ * added to the record without it, so the app drew an Apple button under a line
+ * saying "Any Google or Microsoft account works". Generated from the record
+ * that draws the buttons, so the words and the buttons cannot disagree again.
+ */
+export const PROVIDERS_SAID = ((names: string[]) =>
+  names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`)(
+  Object.values(PROVIDER_LABEL),
+);
+
 export async function signInWith(provider: Provider): Promise<void> {
   const { error } = await (await cloud()).auth.signInWithOAuth({
     provider,
@@ -237,11 +250,24 @@ export async function signInWith(provider: Provider): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-export async function sendReset(email: string): Promise<void> {
+/**
+ * Send the reset link, and say that it went.
+ *
+ * It returned nothing, and the form only shows a sentence when there is one to
+ * show — so pressing "Send a reset link" and having it work looked exactly
+ * like pressing it and having nothing happen. The one case where a person
+ * presses a button twice is the case where the first press said nothing.
+ *
+ * The sentence does not say whether the address is on an account, because the
+ * call does not either: Supabase answers the same way for an address it has
+ * never seen, so that nobody can use this form to find out who has an account.
+ */
+export async function sendReset(email: string): Promise<string> {
   const { error } = await (await cloud()).auth.resetPasswordForEmail(email, {
     redirectTo: appUrl(),
   });
   if (error) throw new Error(error.message);
+  return `If ${email} has an account, a reset link is on its way to it.`;
 }
 
 export async function signOut(): Promise<void> {

@@ -335,7 +335,7 @@ export function Runway() {
             <button
               key={i.id}
               type="button"
-              className="bare tappable"
+              className="bare tappable on-paper"
               onClick={() => dispatch({ type: 'openItem', id: i.id })}
               style={{
                 display: 'flex',
