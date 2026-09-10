@@ -53,6 +53,8 @@ import type { NewSource, Source } from '../lib/sources';
 import type { Doc } from '../lib/document';
 import type { Sheet } from '../lib/sheet';
 import type { SavedEquation } from '../lib/maths';
+import type { Folder } from '../lib/folders';
+import type { StoredDeck } from '../lib/decks';
 import { type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
@@ -71,7 +73,7 @@ import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
-import { list, readList, readModule, readWindow, record } from '../lib/stored';
+import { list, readDeck, readFolder, readList, readModule, readWindow, record } from '../lib/stored';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -349,6 +351,26 @@ export interface Persisted {
   documents: Doc[];
   sheets: Sheet[];
   equations: SavedEquation[];
+  /**
+   * Decks, which until now were built and forgotten.
+   *
+   * A presentation is made on Sunday, fixed on Tuesday and given on
+   * Wednesday; `screens/Deck.tsx` held one in component state and lost it on
+   * the way to another screen, so the app could only do the first of those.
+   * Kept here rather than in IndexedDB because a deck is text — no images live
+   * in one — which is the line `lib/files.ts` draws.
+   */
+  decks: StoredDeck[];
+  /**
+   * The drive's folders — a name and a parent each, nothing more.
+   *
+   * Here rather than in IndexedDB beside the files they hold, because they are
+   * small and the small things are already backed up, merged, migrated and
+   * synced by this file. See `lib/folders.ts`, which also explains why the
+   * folder per course is not in this list: it is derived from the catalogue on
+   * every read, so it cannot fall out of step with the courses.
+   */
+  folders: Folder[];
   /**
    * The university's own dates — add/drop, withdrawal, registration.
    *
@@ -696,9 +718,10 @@ export interface Ephemeral {
   studyTab: 'guides' | 'revise' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
-  /** Document, sheet and equation currently open. Null is the list. */
+  /** Document, sheet, deck and equation currently open. Null is the list. */
   documentId: string | null;
   sheetId: string | null;
+  deckId: string | null;
   /** Which block of the open document is being edited, by index. */
   blockAt: number | null;
   /** Unit whose lesson is playing. */
@@ -881,6 +904,8 @@ export const DEFAULT_PERSISTED: Persisted = {
   documents: [],
   sheets: [],
   equations: [],
+  decks: [],
+  folders: [],
   registrar: [],
   spent: [],
   windows: [],
@@ -976,6 +1001,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     noteId: null,
     documentId: null,
     sheetId: null,
+    deckId: null,
     blockAt: null,
     lessonUnit: 0,
     updateUnit: null,
@@ -1185,6 +1211,8 @@ export function loadPersisted(): Persisted {
       documents: list(saved.documents),
       sheets: list(saved.sheets),
       equations: list(saved.equations),
+      decks: readList(saved.decks, readDeck),
+      folders: readList(saved.folders, readFolder),
       registrar: list(saved.registrar),
       spent: list(saved.spent),
       windows: readList(saved.windows, readWindow),
@@ -1284,6 +1312,8 @@ export function pickPersisted(state: State): Persisted {
     documents: state.documents,
     sheets: state.sheets,
     equations: state.equations,
+    decks: state.decks,
+    folders: state.folders,
     registrar: state.registrar,
     spent: state.spent,
     windows: state.windows,
@@ -1559,7 +1589,7 @@ export type Action =
    * `state/slices/made.ts`.
    */
   | { type: 'newDocument'; courseId: CourseId | null }
-  | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'> }
+  | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'>; open?: boolean }
   | { type: 'openDocument'; id: string }
   /** Back to the shelf. Its own action rather than an open with no id. */
   | { type: 'closeDocument' }
@@ -1567,12 +1597,43 @@ export type Action =
   | { type: 'deleteDocument'; id: string }
   | { type: 'editBlock'; at: number | null }
   | { type: 'newSheet'; courseId: CourseId | null }
-  | { type: 'makeSheet'; sheet: Omit<Sheet, 'id' | 'created' | 'updated'> }
+  /*
+   * `open` is the one exception to the split above, and it is the button's,
+   * not the assistant's. A tool proposal leaves it unset and nothing moves. A
+   * press on "what do I need?" sets it, because a press that builds a sheet
+   * and then stays where it was reads as a press that did nothing — the only
+   * sign of it is a count going up two screens away.
+   */
+  | { type: 'makeSheet'; sheet: Omit<Sheet, 'id' | 'created' | 'updated'>; open?: boolean }
   | { type: 'openSheet'; id: string }
   | { type: 'closeSheet' }
   | { type: 'updateSheet'; id: string; patch: Partial<Omit<Sheet, 'id'>> }
   | { type: 'deleteSheet'; id: string }
   | { type: 'saveEquation'; equation: Omit<SavedEquation, 'id' | 'created'> }
+  /*
+   * The drive's folders. `newFolder` answers with nothing — the caller needs
+   * the id it minted, so it is derived from the moment rather than random;
+   * see `state/slices/made.ts`.
+   */
+  /*
+   * Decks. `newDeck` opens the editor on what it makes and `makeDeck` does
+   * not, the same split documents and sheets draw and for the same reason —
+   * `makeDeck` is what a generated deck dispatches, and being thrown into an
+   * editor is a loss the generator should not be able to cause.
+   */
+  | { type: 'newDeck'; courseId: CourseId | null }
+  | { type: 'makeDeck'; deck: Omit<StoredDeck, 'id' | 'created' | 'updated'>; open?: boolean }
+  /* `editDeck`, not `openDeck`: that name is taken by the study slideshow,
+     which opens a guide unit at `#/slides` and is a different thing. */
+  | { type: 'editDeck'; id: string }
+  | { type: 'closeDeck' }
+  | { type: 'updateDeck'; id: string; patch: Partial<Omit<StoredDeck, 'id'>> }
+  | { type: 'deleteDeck'; id: string }
+  | { type: 'newFolder'; id: string; name: string; parentId: string | null }
+  | { type: 'renameFolder'; id: string; name: string }
+  | { type: 'moveFolder'; id: string; parentId: string | null }
+  /** Takes everything under it with it. The files inside go to the drive's top. */
+  | { type: 'deleteFolder'; id: string }
   | { type: 'deleteEquation'; id: string }
   | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
   | { type: 'clearPaperPreset' }

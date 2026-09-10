@@ -23,11 +23,13 @@ import { newId } from '../../lib/idb';
 import { blankDoc, type Doc } from '../../lib/document';
 import { blankSheet, type Sheet } from '../../lib/sheet';
 import type { SavedEquation } from '../../lib/maths';
+import { subtree, withCourses, type Folder } from '../../lib/folders';
+import { blankDeck, type StoredDeck } from '../../lib/decks';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
 
 /** How many of each is kept. Generous, and there so nothing grows without a bound. */
-const LIMIT = 200;
+export const LIMIT = 200;
 
 export function made(state: State, action: Action): State | null {
   switch (action.type) {
@@ -42,7 +44,8 @@ export function made(state: State, action: Action): State | null {
     case 'makeDocument': {
       const now = Date.now();
       const doc: Doc = { ...action.doc, id: newId(), created: now, updated: now };
-      return { ...state, documents: [doc, ...state.documents].slice(0, LIMIT) };
+      const next = { ...state, documents: [doc, ...state.documents].slice(0, LIMIT) };
+      return action.open ? push({ ...next, documentId: doc.id }, 'write') : next;
     }
 
     case 'openDocument':
@@ -78,7 +81,8 @@ export function made(state: State, action: Action): State | null {
     case 'makeSheet': {
       const now = Date.now();
       const sheet: Sheet = { ...action.sheet, id: newId(), created: now, updated: now };
-      return { ...state, sheets: [sheet, ...state.sheets].slice(0, LIMIT) };
+      const next = { ...state, sheets: [sheet, ...state.sheets].slice(0, LIMIT) };
+      return action.open ? push({ ...next, sheetId: sheet.id }, 'sheet') : next;
     }
 
     case 'openSheet':
@@ -100,6 +104,98 @@ export function made(state: State, action: Action): State | null {
         ...state,
         sheets: state.sheets.filter((s) => s.id !== action.id),
         sheetId: state.sheetId === action.id ? null : state.sheetId,
+      };
+
+    /*
+     * The drive's folders.
+     *
+     * The id is the caller's, not this slice's, which is the one place these
+     * differ from documents and sheets. A folder is made in order to be
+     * navigated into immediately, and an id minted in here is an id the caller
+     * would have to go looking for in the list afterwards.
+     */
+    case 'newFolder': {
+      const folder: Folder = {
+        id: action.id,
+        name: action.name.trim() || 'New folder',
+        parentId: action.parentId,
+        created: Date.now(),
+      };
+      /*
+       * No cap here, unlike documents and sheets.
+       *
+       * A folder is a few dozen bytes and evicting the oldest one does not
+       * free anything worth having — but it does take every file and folder
+       * inside it out of the drive's reach, because they point at an id that
+       * has stopped existing. A limit that trades a rounding error of storage
+       * for somebody's filing is not a limit worth having.
+       */
+      return { ...state, folders: [...state.folders, folder] };
+    }
+
+    case 'renameFolder':
+      return {
+        ...state,
+        folders: state.folders.map((f) =>
+          f.id === action.id ? { ...f, name: action.name.trim() || f.name } : f,
+        ),
+      };
+
+    case 'moveFolder':
+      return {
+        ...state,
+        folders: state.folders.map((f) =>
+          f.id === action.id ? { ...f, parentId: action.parentId } : f,
+        ),
+      };
+
+    /*
+     * A folder and everything under it.
+     *
+     * The files inside are not touched here — this slice cannot reach
+     * IndexedDB, and a reducer that returned a promise would be a reducer.
+     * `screens/Mine.tsx` moves them to the top of the drive first and then
+     * dispatches this, so a folder never leaves files pointing at somewhere
+     * that no longer exists. Deleting the folder first and failing on the
+     * files would be exactly that, which is why the order is the screen's to
+     * keep and is written down there too.
+     */
+    case 'deleteFolder': {
+      const gone = subtree(withCourses(state.folders, []), action.id);
+      return { ...state, folders: state.folders.filter((f) => !gone.has(f.id)) };
+    }
+
+    case 'newDeck': {
+      const deck: StoredDeck = { ...blankDeck('', action.courseId), id: newId() };
+      return push({ ...state, decks: [deck, ...state.decks], deckId: deck.id }, 'deck');
+    }
+
+    case 'makeDeck': {
+      const now = Date.now();
+      const deck: StoredDeck = { ...action.deck, id: newId(), created: now, updated: now };
+      const next = { ...state, decks: [deck, ...state.decks].slice(0, LIMIT) };
+      return action.open ? push({ ...next, deckId: deck.id }, 'deck') : next;
+    }
+
+    case 'editDeck':
+      return push({ ...state, deckId: action.id }, 'deck');
+
+    case 'closeDeck':
+      return { ...state, deckId: null };
+
+    case 'updateDeck':
+      return {
+        ...state,
+        decks: state.decks.map((d) =>
+          d.id === action.id ? { ...d, ...action.patch, updated: Date.now() } : d,
+        ),
+      };
+
+    case 'deleteDeck':
+      return {
+        ...state,
+        decks: state.decks.filter((d) => d.id !== action.id),
+        deckId: state.deckId === action.id ? null : state.deckId,
       };
 
     case 'saveEquation': {

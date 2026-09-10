@@ -70,6 +70,16 @@ export interface Slide {
    * there for what it does and does not keep.
    */
   equation?: string;
+  /**
+   * What you say while this slide is up — the speaker's, not the room's.
+   *
+   * Written as a real `notesSlide` part rather than as small text on the slide
+   * itself, which is the difference between a note that appears in
+   * PowerPoint's presenter view and one the whole room reads off the wall.
+   * `note` above is the other thing and stays the other thing: it is printed
+   * on the slide, under the title, and is for a source or a unit name.
+   */
+  notes?: string;
 }
 
 export interface Deck {
@@ -383,6 +393,63 @@ function rels(entries: { id: string; type: string; target: string }[]): string {
 }
 
 /**
+ * The notes master, which a notes slide is not valid without.
+ *
+ * A `notesSlide` part has to point at one, the presentation has to list it,
+ * and `[Content_Types]` has to declare it. Ship the notes without it and
+ * PowerPoint opens the file with "we found a problem with some content" and
+ * repairs it — which usually keeps the slides and drops the notes, so the
+ * feature appears to work right up until the moment it is needed.
+ *
+ * Deliberately empty of styling. Everything it would carry is a default, and
+ * a master that specifies nothing is a master every reader agrees about.
+ */
+const NOTES_MASTER =
+  `${HEAD}<p:notesMaster ${NS}><p:cSld><p:spTree>` +
+  '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+  '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/>' +
+  '<a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>' +
+  '</p:spTree></p:cSld><p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" ' +
+  'accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" ' +
+  'hlink="hlink" folHlink="folHlink"/></p:notesMaster>';
+
+/**
+ * One slide's speaker notes, as the part PowerPoint looks for.
+ *
+ * The shape is fixed by the format: a notes slide holds a placeholder pointing
+ * back at the slide it belongs to (`type="sldImg"`) and a body placeholder
+ * with the text. Leaving out the slide-image placeholder is the mistake that
+ * makes PowerPoint repair the file on open, so it is here even though nothing
+ * draws it.
+ */
+function notesXml(text: string): string {
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const body = (lines.length ? lines : ['']).map(
+    (line) => `<a:p><a:r><a:rPr lang="en-US" dirty="0"/><a:t>${xml(line)}</a:t></a:r></a:p>`,
+  );
+  return (
+    `${HEAD}<p:notes ${NS}><p:cSld><p:spTree>` +
+    '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+    '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/>' +
+    '<a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>' +
+    '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/>' +
+    '<p:cNvSpPr><a:spLocks noGrp="1" noRot="1" noChangeAspect="1"/></p:cNvSpPr>' +
+    '<p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr>' +
+    '<p:spPr/></p:sp>' +
+    '<p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/>' +
+    '<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>' +
+    '<p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr>' +
+    '<p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/>' +
+    body.join('') +
+    '</p:txBody></p:sp>' +
+    '</p:spTree></p:cSld></p:notes>'
+  );
+}
+
+/**
  * The parts of the package, as a name-to-text map.
  *
  * Separated from the zipping so the whole format can be tested without a
@@ -392,6 +459,8 @@ function rels(entries: { id: string; type: string; target: string }[]): string {
 export function parts(deck: Deck): Record<string, string> {
   const slides = deck.slides.length ? deck.slides : [{ title: deck.title, bullets: [], opening: true }];
   const out: Record<string, string> = {};
+  /** Whether anything in this deck needs the notes half of the package at all. */
+  const anyNotes = slides.some((slide) => slide.notes?.trim());
 
   out['[Content_Types].xml'] =
     `${HEAD}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
@@ -407,6 +476,18 @@ export function parts(deck: Deck): Record<string, string> {
           `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`,
       )
       .join('') +
+    // Only the slides that actually have notes get a part. An empty notes
+    // slide on every slide is a file half again as large saying nothing.
+    slides
+      .map((slide, i) =>
+        slide.notes?.trim()
+          ? `<Override PartName="/ppt/notesSlides/notesSlide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml"/>`
+          : '',
+      )
+      .join('') +
+    (anyNotes
+      ? '<Override PartName="/ppt/notesMasters/notesMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.notesMaster+xml"/>'
+      : '') +
     '</Types>';
 
   out['_rels/.rels'] = rels([
@@ -423,12 +504,31 @@ export function parts(deck: Deck): Record<string, string> {
       target: `slides/slide${i + 1}.xml`,
     })),
     { id: `rId${slides.length + 2}`, type: 'theme', target: 'theme/theme1.xml' },
+    ...(anyNotes
+      ? [
+          {
+            id: `rId${slides.length + 3}`,
+            type: 'notesMaster',
+            target: 'notesMasters/notesMaster1.xml',
+          },
+        ]
+      : []),
   ];
   out['ppt/_rels/presentation.xml.rels'] = rels(presRels);
 
   out['ppt/presentation.xml'] =
     `${HEAD}<p:presentation ${NS} saveSubsetFonts="1">` +
     '<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>' +
+    /*
+     * Order is part of the schema here, not a matter of taste.
+     * `CT_Presentation` is a sequence — masters, then notes master, then
+     * handout master, then the slides — and a `notesMasterIdLst` written after
+     * `sldIdLst` makes the part invalid. Office repairs an invalid
+     * presentation, and what it drops in the repair is the notes.
+     */
+    (anyNotes
+      ? `<p:notesMasterIdLst><p:notesMasterId r:id="rId${slides.length + 3}"/></p:notesMasterIdLst>`
+      : '') +
     '<p:sldIdLst>' +
     slides.map((_, i) => `<p:sldId id="${256 + i}" r:id="rId${i + 2}"/>`).join('') +
     '</p:sldIdLst>' +
@@ -447,11 +547,35 @@ export function parts(deck: Deck): Record<string, string> {
 
   out['ppt/theme/theme1.xml'] = themeXml();
 
+  if (anyNotes) {
+    out['ppt/notesMasters/notesMaster1.xml'] = NOTES_MASTER;
+    // The master needs a theme of its own by the format's rules; the deck's
+    // own is the right one, and reusing it keeps one set of colours.
+    out['ppt/notesMasters/_rels/notesMaster1.xml.rels'] = rels([
+      { id: 'rId1', type: 'theme', target: '../theme/theme1.xml' },
+    ]);
+  }
+
   slides.forEach((slide, i) => {
     out[`ppt/slides/slide${i + 1}.xml`] = slideXml(slide);
-    out[`ppt/slides/_rels/slide${i + 1}.xml.rels`] = rels([
+    const links = [
       { id: 'rId1', type: 'slideLayout', target: '../slideLayouts/slideLayout1.xml' },
-    ]);
+    ];
+    if (slide.notes?.trim()) {
+      links.push({
+        id: 'rId2',
+        type: 'notesSlide',
+        target: `../notesSlides/notesSlide${i + 1}.xml`,
+      });
+      out[`ppt/notesSlides/notesSlide${i + 1}.xml`] = notesXml(slide.notes);
+      // The notes slide points back at its slide. Without this the graph does
+      // not close and PowerPoint offers to repair the file.
+      out[`ppt/notesSlides/_rels/notesSlide${i + 1}.xml.rels`] = rels([
+        { id: 'rId1', type: 'notesMaster', target: '../notesMasters/notesMaster1.xml' },
+        { id: 'rId2', type: 'slide', target: `../slides/slide${i + 1}.xml` },
+      ]);
+    }
+    out[`ppt/slides/_rels/slide${i + 1}.xml.rels`] = rels(links);
   });
 
   return out;

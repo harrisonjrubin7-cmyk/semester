@@ -194,3 +194,124 @@ describe('deckFileName', () => {
     expect(deckFileName('???')).toBe('deck.pptx');
   });
 });
+
+describe('speaker notes', () => {
+  const withNotes = {
+    title: 'Sanctions',
+    subtitle: '',
+    slides: [
+      { title: 'Opening', bullets: [], opening: true, notes: 'Say hello.\n\nThen the question.' },
+      { title: 'Plain', bullets: ['a'] },
+    ],
+  };
+
+  it('writes a notes part only for the slides that have any', () => {
+    const files = parts(withNotes);
+    expect(files['ppt/notesSlides/notesSlide1.xml']).toBeDefined();
+    // An empty notes slide on every slide is a file half again as large
+    // saying nothing.
+    expect(files['ppt/notesSlides/notesSlide2.xml']).toBeUndefined();
+  });
+
+  it('carries the text, one paragraph per line', () => {
+    const doc = new DOMParser().parseFromString(
+      parts(withNotes)['ppt/notesSlides/notesSlide1.xml'],
+      'application/xml',
+    );
+    const said = [...doc.getElementsByTagName('a:t')].map((n) => n.textContent);
+    expect(said).toEqual(['Say hello.', 'Then the question.']);
+  });
+
+  it('keeps the slide-image placeholder, without which PowerPoint repairs the file', () => {
+    expect(parts(withNotes)['ppt/notesSlides/notesSlide1.xml']).toContain('type="sldImg"');
+  });
+
+  it('closes the relationship graph in both directions', () => {
+    const files = parts(withNotes);
+    // Slide → its notes.
+    expect(files['ppt/slides/_rels/slide1.xml.rels']).toContain(
+      'Target="../notesSlides/notesSlide1.xml"',
+    );
+    // Notes → back to its slide.
+    expect(files['ppt/notesSlides/_rels/notesSlide1.xml.rels']).toContain(
+      'Target="../slides/slide1.xml"',
+    );
+    // And the slide with no notes gains no second relationship.
+    expect(files['ppt/slides/_rels/slide2.xml.rels']).not.toContain('notesSlide');
+  });
+
+  it('declares the notes part in [Content_Types]', () => {
+    const types = parts(withNotes)['[Content_Types].xml'];
+    expect(types).toContain('/ppt/notesSlides/notesSlide1.xml');
+    expect(types).not.toContain('/ppt/notesSlides/notesSlide2.xml');
+  });
+
+  it('escapes what a person actually types into a note', () => {
+    const files = parts({
+      title: 't',
+      subtitle: '',
+      slides: [{ title: 's', bullets: [], notes: 'Ask & wait <5s>' }],
+    });
+    expect(files['ppt/notesSlides/notesSlide1.xml']).toContain('Ask &amp; wait &lt;5s&gt;');
+  });
+
+  it('adds nothing at all to a deck with no notes', () => {
+    const files = parts({ title: 't', subtitle: '', slides: [{ title: 's', bullets: [] }] });
+    expect(Object.keys(files).some((n) => n.includes('notesSlide'))).toBe(false);
+  });
+});
+
+describe('the notes master', () => {
+  const withNotes = {
+    title: 'T',
+    subtitle: '',
+    slides: [{ title: 'A', bullets: [], notes: 'Say this.' }],
+  };
+
+  /*
+   * A notesSlide is not valid on its own. Without a master, PowerPoint opens
+   * the file with "we found a problem with some content" and repairs it —
+   * usually keeping the slides and dropping the notes, so the feature appears
+   * to work right up until the moment it is needed.
+   */
+  it('is written, declared and related when a deck has notes', () => {
+    const files = parts(withNotes);
+    expect(files['ppt/notesMasters/notesMaster1.xml']).toBeDefined();
+    expect(files['[Content_Types].xml']).toContain('/ppt/notesMasters/notesMaster1.xml');
+    expect(files['ppt/_rels/presentation.xml.rels']).toContain('notesMasters/notesMaster1.xml');
+    expect(files['ppt/presentation.xml']).toContain('<p:notesMasterIdLst>');
+  });
+
+  it('is what each notes slide points at, as well as its own slide', () => {
+    const rels = parts(withNotes)['ppt/notesSlides/_rels/notesSlide1.xml.rels'];
+    expect(rels).toContain('../notesMasters/notesMaster1.xml');
+    expect(rels).toContain('../slides/slide1.xml');
+  });
+
+  it('has a theme of its own, as the format requires', () => {
+    expect(parts(withNotes)['ppt/notesMasters/_rels/notesMaster1.xml.rels']).toContain('theme1.xml');
+  });
+
+  it('is absent entirely from a deck with no notes', () => {
+    const files = parts({ title: 'T', subtitle: '', slides: [{ title: 'A', bullets: [] }] });
+    expect(Object.keys(files).some((n) => n.includes('notesMaster'))).toBe(false);
+    expect(files['ppt/presentation.xml']).not.toContain('notesMasterIdLst');
+    expect(files['[Content_Types].xml']).not.toContain('notesMaster');
+  });
+});
+
+describe('the order of presentation.xml', () => {
+  it('puts the notes master before the slide list, as the schema requires', () => {
+    // CT_Presentation is a sequence. A notesMasterIdLst after sldIdLst makes
+    // the part invalid, Office repairs it, and what the repair drops is the
+    // notes — the very thing it is there for.
+    const xml = parts({
+      title: 'T',
+      subtitle: '',
+      slides: [{ title: 'A', bullets: [], notes: 'Say this.' }],
+    })['ppt/presentation.xml'];
+    expect(xml.indexOf('<p:notesMasterIdLst>')).toBeGreaterThan(xml.indexOf('<p:sldMasterIdLst>'));
+    expect(xml.indexOf('<p:notesMasterIdLst>')).toBeLessThan(xml.indexOf('<p:sldIdLst>'));
+    expect(xml.indexOf('<p:sldIdLst>')).toBeLessThan(xml.indexOf('<p:sldSz'));
+  });
+});

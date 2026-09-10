@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
 import { Equation } from '../components/Equation';
-import { ActionButton, EmptyState, SectionLabel } from '../components/ui';
+import { ActionButton, EmptyState, SectionLabel, Toggle } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
 import { ChevronRight, Plus, WriteIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
@@ -25,6 +25,10 @@ import {
   type Doc,
 } from '../lib/document';
 import { filled } from '../lib/sheet';
+import { TEMPLATES, fromTemplate } from '../lib/doctemplates';
+import { characters, findAll, outline, readingMinutes, replaceAll } from '../lib/doctools';
+import { revealKindly } from '../lib/prefers';
+import { change, forget, keep, restored, versionsOf, type Version } from '../lib/docversions';
 
 /**
  * Write a document.
@@ -64,16 +68,57 @@ export function Write() {
 
 function Shelf() {
   const { state, dispatch, courseCode } = useStore();
+  const [picking, setPicking] = useState(false);
 
   return (
     <Page blurb="Headings, tables and equations, arranged into a real Word file — or printed straight from here as a PDF.">
       <ActionButton
         tone="primary"
         onClick={() => dispatch({ type: 'newDocument', courseId: null })}
-        style={{ marginBottom: 'var(--sp-7)' }}
+        style={{ marginBottom: 'var(--sp-4)' }}
       >
         New document
       </ActionButton>
+
+      <ActionButton onClick={() => setPicking(!picking)} style={{ marginBottom: 'var(--sp-5)' }}>
+        {picking ? 'Never mind' : 'Start from a shape'}
+      </ActionButton>
+
+      {picking && (
+        <Blueprint style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-7)' }}>
+          <SectionLabel>A shape, not a draft</SectionLabel>
+          <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-5)' }}>
+            Headings and blanks. None of them contains a sentence you could hand in — the app does
+            not write coursework.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+            {TEMPLATES.map((template) => (
+              <Blueprint
+                key={template.id}
+                as="button"
+                plain
+                onClick={() => {
+                  dispatch({ type: 'makeDocument', doc: fromTemplate(template, template.label) });
+                  setPicking(false);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-5)',
+                  padding: 'var(--sp-5)',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 'var(--type-md)' }}>{template.label}</div>
+                  <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>{template.blurb}</div>
+                </div>
+                <ChevronRight size={15} />
+              </Blueprint>
+            ))}
+          </div>
+        </Blueprint>
+      )}
 
       {state.documents.length === 0 ? (
         <EmptyState
@@ -155,6 +200,7 @@ function Editor({ doc }: { doc: Doc }) {
 
   const count = words(doc);
   const empty = !hasContent(doc);
+  const headings = outline(doc);
 
   const saveWord = async () => {
     setBusy(true);
@@ -182,7 +228,7 @@ function Editor({ doc }: { doc: Doc }) {
 
   return (
     <Page
-      blurb={`${count} ${count === 1 ? 'word' : 'words'} · ${summary(doc.blocks)}`}
+      blurb={`${count} ${count === 1 ? 'word' : 'words'} · ${characters(doc)} characters · about ${readingMinutes(doc)} min to read · ${summary(doc.blocks)}`}
       actions={
         <ActionButton onClick={() => dispatch({ type: 'closeDocument' })}>
           All documents
@@ -206,6 +252,11 @@ function Editor({ doc }: { doc: Doc }) {
         style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
       />
       <CoursePicker value={doc.courseId} onChange={(id) => patch({ courseId: id })} />
+
+      <Saved doc={doc} words={count} />
+      {headings.length > 1 && <Outline headings={headings} />}
+      <FindReplace doc={doc} onReplace={(next) => patch({ blocks: next.blocks })} />
+      <History doc={doc} onRestore={(version) => patch(restored(doc, version))} />
 
       <SectionLabel>The document</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
@@ -303,6 +354,10 @@ function Editor({ doc }: { doc: Doc }) {
       <SectionLabel>This document</SectionLabel>
       <ActionButton
         onClick={() => {
+          // The drafts go with the document. Leaving them would keep every
+          // paragraph of something somebody deliberately deleted, in a store
+          // with nothing left pointing at it.
+          void forget(doc.id);
           dispatch({ type: 'deleteDocument', id: doc.id });
           say('Document deleted.');
         }}
@@ -322,6 +377,205 @@ function Editor({ doc }: { doc: Doc }) {
  * support two arrows. So this is by position, which is what the two arrows
  * mean anyway.
  */
+/**
+ * "Saved", said honestly.
+ *
+ * The document is written to the store on every keystroke and always has been
+ * — this is not the save. It is the version history's save: a copy is kept
+ * when the writing pauses, and the line says when the last copy was kept and
+ * whether it was actually written, rather than flashing "saved" on a timer
+ * regardless of whether anything happened.
+ *
+ * Two seconds after the last change. Long enough that a sentence being typed
+ * is one version rather than forty; short enough that the copy exists before
+ * somebody puts the phone down.
+ */
+function Saved({ doc, words: count }: { doc: Doc; words: number }) {
+  const [at, setAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void keep(doc, count).then((wrote) => {
+        if (wrote) setAt(Date.now());
+      });
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [doc, count]);
+
+  return (
+    <div
+      role="status"
+      style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-4)' }}
+    >
+      {at === null
+        ? 'Every change is kept as you type.'
+        : `A copy of this draft was kept at ${new Date(at).toLocaleTimeString(undefined, {
+            hour: 'numeric',
+            minute: '2-digit',
+          })}.`}
+    </div>
+  );
+}
+
+/** The headings, as a way of finding your place in something long. */
+function Outline({ headings }: { headings: ReturnType<typeof outline> }) {
+  return (
+    <Folding name="Outline">
+      <SectionLabel>{headings.length} headings</SectionLabel>
+      <nav aria-label="The headings in this document">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          {headings.map((h) => (
+            <button
+              key={`${h.at}-${h.text}`}
+              type="button"
+              className="bare"
+              onClick={() => revealKindly(document.getElementById(`block-${h.at}`), { block: 'center' })}
+              style={{
+                textAlign: 'left',
+                padding: 'var(--sp-2)',
+                paddingLeft: `calc(var(--sp-2) + ${h.level - 1} * var(--sp-6))`,
+                fontSize: 'var(--type-sm)',
+              }}
+            >
+              {h.text}
+            </button>
+          ))}
+        </div>
+      </nav>
+    </Folding>
+  );
+}
+
+/**
+ * Find, and replace them all at once.
+ *
+ * The count is shown before anything is replaced, because "replace all" is the
+ * one editing action with no natural undo — a document is not a text field and
+ * Ctrl+Z does not reach across it. Seeing "14 matches" first is what turns it
+ * from a leap into a decision.
+ */
+function FindReplace({ doc, onReplace }: { doc: Doc; onReplace: (next: Doc) => void }) {
+  const [find, setFind] = useState('');
+  const [put, setPut] = useState('');
+  const [matchCase, setMatchCase] = useState(false);
+  const [wholeWord, setWholeWord] = useState(false);
+
+  const hits = useMemo(
+    () => findAll(doc, find, { matchCase, wholeWord }),
+    [doc, find, matchCase, wholeWord],
+  );
+
+  return (
+    <Folding name="Find and replace">
+      <input
+        className="input"
+        value={find}
+        onChange={(e) => setFind(e.target.value)}
+        aria-label="Find"
+        placeholder="Find"
+        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
+      />
+      <input
+        className="input"
+        value={put}
+        onChange={(e) => setPut(e.target.value)}
+        aria-label="Replace with"
+        placeholder="Replace with"
+        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
+      />
+      <div style={{ display: 'flex', gap: 'var(--sp-5)', marginBottom: 'var(--sp-4)' }}>
+        <Toggle on={matchCase} onChange={() => setMatchCase(!matchCase)} label="Match case" />
+        <Toggle on={wholeWord} onChange={() => setWholeWord(!wholeWord)} label="Whole words" />
+      </div>
+      <div
+        role="status"
+        style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-4)' }}
+      >
+        {find.trim() === ''
+          ? 'Tables and equations are left alone, and so is a quotation’s source.'
+          : `${hits.length} ${hits.length === 1 ? 'match' : 'matches'}`}
+      </div>
+      <ActionButton
+        disabled={hits.length === 0}
+        onClick={() => onReplace(replaceAll(doc, find, put, { matchCase, wholeWord }).doc)}
+      >
+        {hits.length === 0
+          ? 'Replace all'
+          : `Replace all ${hits.length} ${hits.length === 1 ? 'match' : 'matches'}`}
+      </ActionButton>
+    </Folding>
+  );
+}
+
+/** Earlier drafts, and the way back to one. */
+function History({ doc, onRestore }: { doc: Doc; onRestore: (version: Version) => void }) {
+  const [rows, setRows] = useState<Version[]>([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (open) void versionsOf(doc.id).then(setRows);
+  }, [open, doc.id, doc.updated]);
+
+  return (
+    <Folding name="Earlier drafts">
+      <div onFocus={() => setOpen(true)} onMouseEnter={() => setOpen(true)}>
+        {!open && (
+          <ActionButton onClick={() => setOpen(true)}>Show what was kept</ActionButton>
+        )}
+        {open && rows.length === 0 && (
+          <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>
+            Nothing kept yet. A copy is made a couple of seconds after you stop typing.
+          </div>
+        )}
+        {open && rows.length > 0 && (
+          <>
+            <SectionLabel>
+              {rows.length} kept · the oldest is dropped once there are more than 20
+            </SectionLabel>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+              {rows.map((version, i) => (
+                <Blueprint
+                  key={version.id}
+                  plain
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--sp-4)',
+                    padding: 'var(--sp-5)',
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 'var(--type-md)' }}>
+                      {new Date(version.at).toLocaleString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                    <div style={{ ...secondLine(), fontSize: 'var(--type-xs)' }}>
+                      {change(version, rows[i + 1])}
+                    </div>
+                  </div>
+                  <ActionButton
+                    onClick={() => onRestore(version)}
+                    aria-label={`Put this document back to the draft kept at ${new Date(
+                      version.at,
+                    ).toLocaleString()}`}
+                    style={{ width: 'auto', padding: 'var(--sp-2) var(--sp-5)' }}
+                  >
+                    Put back
+                  </ActionButton>
+                </Blueprint>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </Folding>
+  );
+}
+
 function moved<T>(list: readonly T[], from: number, to: number): T[] {
   if (to < 0 || to >= list.length) return [...list];
   const out = [...list];
@@ -347,7 +601,8 @@ function BlockCard({
   onMove: (to: number) => void;
 }) {
   return (
-    <Blueprint plain style={{ padding: 'var(--sp-6)' }}>
+    // The id is what the outline scrolls to. Nothing else reads it.
+    <Blueprint plain id={`block-${at}`} style={{ padding: 'var(--sp-6)' }}>
       <div
         style={{
           display: 'flex',

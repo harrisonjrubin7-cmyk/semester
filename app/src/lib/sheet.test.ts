@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   asNumber,
+  clock,
   asPercent,
   blankSheet,
   colIndex,
@@ -9,6 +10,7 @@ import {
   evaluate,
   expand,
   filled,
+  isError,
   fromRows,
   numericColumns,
   parseRef,
@@ -111,7 +113,10 @@ describe('what a cell comes to', () => {
   });
 
   it('names an unknown function rather than guessing at it', () => {
-    expect(evaluate(sheet({ A1: '=VLOOKUP(A2,B2,2)' }), 'A1')).toBe('#NAME?');
+    // VLOOKUP used to stand here, as the example of a function the engine did
+    // not have. It has one now, so the example has to be a name no sheet will
+    // ever grow — the assertion is about unknown names, not about that one.
+    expect(evaluate(sheet({ A1: '=FROBNICATE(A2,B2,2)' }), 'A1')).toBe('#NAME?');
     // A whole-column range is not supported, and says so rather than reading
     // as a subtraction of two things that are not numbers.
     expect(evaluate(sheet({ A1: '=SUM(B:C)' }), 'A1')).toBe('#VALUE!');
@@ -351,5 +356,396 @@ describe('an address round-trips', () => {
     for (const [r, c] of [[0, 0], [4, 2], [99, 25]] as const) {
       expect(parseRef(ref(r, c))).toEqual({ row: r, col: c });
     }
+  });
+});
+
+// ── The wider function table ─────────────────────────────────────────────
+//
+// Every expected value below is one Excel produces for the same formula. That
+// is the point of them: a formula engine is only worth having if a student can
+// check their answer against a classmate's spreadsheet and get the same number.
+
+const at = (cells: Record<string, string>, a = 'Z1') => evaluate(cells, a);
+const v = (formula: string, rest: Record<string, string> = {}) => at({ ...rest, Z1: formula });
+
+
+// A gradebook: item, score, weight
+const book = {
+  A1: 'Item', B1: 'Score', C1: 'Weight',
+  A2: 'PS1', B2: '92', C2: '0.15',
+  A3: 'Midterm', B3: '78', C3: '0.25',
+  A4: 'Final', B4: '88', C4: '0.35',
+  A5: 'Paper', B5: '95', C5: '0.25',
+};
+
+describe('lookups', () => {
+  it('VLOOKUP exact', () => expect(v('=VLOOKUP("Final",A2:C5,2)', book)).toBe(88));
+  it('VLOOKUP weight column', () => expect(v('=VLOOKUP("PS1",A2:C5,3)', book)).toBe(0.15));
+  it('VLOOKUP missing is #N/A', () => expect(v('=VLOOKUP("Quiz",A2:C5,2)', book)).toBe('#N/A'));
+  it('VLOOKUP bad index', () => expect(v('=VLOOKUP("PS1",A2:C5,9)', book)).toBe('#REF!'));
+  it('XLOOKUP', () => expect(v('=XLOOKUP("Midterm",A2:A5,B2:B5)', book)).toBe(78));
+  it('XLOOKUP fallback', () => expect(v('=XLOOKUP("Nope",A2:A5,B2:B5,"none")', book)).toBe('none'));
+  it('MATCH', () => expect(v('=MATCH("Final",A2:A5)', book)).toBe(3));
+  it('MATCH missing', () => expect(v('=MATCH("x",A2:A5)', book)).toBe('#N/A'));
+  it('INDEX 2d', () => expect(v('=INDEX(A2:C5,2,2)', book)).toBe(78));
+  it('INDEX 1d', () => expect(v('=INDEX(B2:B5,4)', book)).toBe(95));
+  it('INDEX+MATCH', () => expect(v('=INDEX(B2:B5,MATCH("Paper",A2:A5))', book)).toBe(95));
+  it('HLOOKUP', () => expect(v('=HLOOKUP("Score",B1:C5,3)', book)).toBe(78));
+});
+
+describe('conditional counting', () => {
+  it('COUNTIF >=', () => expect(v('=COUNTIF(B2:B5,">=88")', book)).toBe(3));
+  it('COUNTIF text', () => expect(v('=COUNTIF(A2:A5,"Final")', book)).toBe(1));
+  it('COUNTIF wildcard', () => expect(v('=COUNTIF(A2:A5,"P*")', book)).toBe(2));
+  it('SUMIF over another column', () => expect(v('=SUMIF(B2:B5,">=90",C2:C5)', book)).toBeCloseTo(0.40));
+  it('AVERAGEIF', () => expect(v('=AVERAGEIF(B2:B5,">=88")', book)).toBeCloseTo((92+88+95)/3));
+  it('COUNTIFS two conditions', () => expect(v('=COUNTIFS(B2:B5,">=80",C2:C5,">=0.25")', book)).toBe(2));
+  it('SUMIFS', () => expect(v('=SUMIFS(B2:B5,C2:C5,">=0.25")', book)).toBe(78+88+95));
+
+  /*
+   * The rule a half-finished gradebook depends on. `SUM` reads a blank as
+   * zero; a criterion must not, or every row nobody has been graded on counts
+   * as a row scoring nothing.
+   */
+  it('does not let a blank cell match a criterion', () => {
+    const half = { ...book, B4: '', B5: '' };
+    expect(v('=COUNTIF(B2:B5,">=0")', half)).toBe(2);
+    expect(v('=SUMIF(B2:B5,">=0",C2:C5)', half)).toBeCloseTo(0.4, 10);
+    expect(v('=COUNTIF(B2:B5,"<1000")', half)).toBe(2);
+    expect(v('=COUNTIF(A2:A5,"<>x")', half)).toBe(4);
+  });
+
+  it('counts blanks when blank is what was asked for', () => {
+    expect(v('=COUNTIF(B2:B5,"")', { ...book, B4: '', B5: '' })).toBe(2);
+  });
+});
+
+describe('logic', () => {
+  it('IFS first hit', () => expect(v('=IFS(B2>=90,"A",B2>=80,"B",TRUE,"C")', book)).toBe('A'));
+  it('IFS falls through', () => expect(v('=IFS(B3>=90,"A",B3>=80,"B",TRUE,"C")', book)).toBe('C'));
+  it('IFS no match', () => expect(v('=IFS(1=2,"x")')).toBe('#N/A'));
+  it('IFERROR catches', () => expect(v('=IFERROR(1/0,"safe")')).toBe('safe'));
+  it('IFERROR passes through', () => expect(v('=IFERROR(2+2,"safe")')).toBe(4));
+});
+
+describe('text', () => {
+  it('LEFT', () => expect(v('=LEFT("ECON 1020",4)')).toBe('ECON'));
+  it('RIGHT', () => expect(v('=RIGHT("ECON 1020",4)')).toBe('1020'));
+  it('MID', () => expect(v('=MID("ECON 1020",6,4)')).toBe('1020'));
+  it('SPLIT piece', () => expect(v('=SPLIT("ECON 1020"," ",2)')).toBe('1020'));
+  it('TEXT percent', () => expect(v('=TEXT(0.8734,"0.0%")')).toBe('87.3%'));
+  it('TEXT money', () => expect(v('=TEXT(1234.5,"$#,##0.00")')).toBe('$1,234.50'));
+});
+
+describe('dates', () => {
+  const ctx = clock(Date.UTC(2026, 8, 10, 12, 0, 0));
+  const d = (f: string) => evaluate({ Z1: f }, 'Z1', new Set(), ctx);
+  it('DATE is an Excel serial', () => expect(d('=DATE(2026,9,10)')).toBe(46275));
+  it('DATEDIF days to the final', () => expect(d('=DATEDIF(DATE(2026,9,10),DATE(2026,12,15),"D")')).toBe(96));
+  it('DATEDIF months', () => expect(d('=DATEDIF(DATE(2026,1,15),DATE(2026,9,10),"M")')).toBe(7));
+  it('DATEDIF backwards refuses', () => expect(d('=DATEDIF(DATE(2026,12,1),DATE(2026,1,1),"D")')).toBe('#VALUE!'));
+  it('WEEKDAY', () => expect(d('=WEEKDAY(DATE(2026,9,10))')).toBe(5)); // Thursday
+  it('EOMONTH', () => expect(d('=TEXT(EOMONTH(DATE(2026,9,10),0),"yyyy-mm-dd")')).toBe('2026-09-30'));
+  it('EOMONTH forward', () => expect(d('=TEXT(EOMONTH(DATE(2026,9,10),3),"yyyy-mm-dd")')).toBe('2026-12-31'));
+  it('TEXT month name', () => expect(d('=TEXT(DATE(2026,9,10),"ddd d mmm yyyy")')).toBe('Thu 10 Sep 2026'));
+});
+
+describe('finance', () => {
+  it('PMT on a loan', () => expect(Number(v('=PMT(0.05/12,60,20000)'))).toBeCloseTo(-377.42, 2));
+  it('PMT zero rate', () => expect(v('=PMT(0,10,1000)')).toBe(-100));
+  it('FV of savings', () => expect(Number(v('=FV(0.04,10,-1000,0)'))).toBeCloseTo(12006.11, 2));
+  it('PV', () => expect(Number(v('=PV(0.06,5,0,-1000)'))).toBeCloseTo(747.26, 2));
+  it('NPV matches Excel convention', () =>
+    expect(Number(v('=NPV(0.1,100,200,300)'))).toBeCloseTo(481.59, 2));
+  it('IRR', () => {
+    const cells = { A1: '-1000', A2: '400', A3: '400', A4: '400', Z1: '=IRR(A1:A4)' };
+    expect(Number(at(cells))).toBeCloseTo(0.09701, 4);
+  });
+  it('RATE', () => expect(Number(v('=RATE(60,-377.42,20000)'))).toBeCloseTo(0.05/12, 5));
+});
+
+describe('stats', () => {
+  it('MODE', () => {
+    expect(at({ A1: '3', A2: '5', A3: '5', A4: '9', Z1: '=MODE(A1:A4)' })).toBe(5);
+  });
+  it('MODE with no repeat is #N/A', () => {
+    expect(at({ A1: '1', A2: '2', A3: '3', Z1: '=MODE(A1:A3)' })).toBe('#N/A');
+  });
+  it('CORREL', () => {
+    const cells = { A1:'1',A2:'2',A3:'3',A4:'4', B1:'2',B2:'4',B3:'6',B4:'8', Z1:'=CORREL(A1:A4,B1:B4)' };
+    expect(Number(at(cells))).toBeCloseTo(1, 10);
+  });
+});
+
+/*
+ * The fault found by the grade calculator: an error in the middle of an
+ * expression used to end the parse there, and the unread tail then read as a
+ * formula nobody understood. It made the same arithmetic answer two different
+ * things depending on whether it sat inside a function call.
+ */
+/*
+ * Found by a review comment saying the inventory was wrong to call absolute
+ * references missing. It was — they parse — and chasing that turned up the
+ * reason they looked missing: a lone one silently read as blank.
+ */
+describe('a pinned reference is the same cell as an unpinned one', () => {
+  it('reads $A$1 as A1 rather than as nothing', () => {
+    // =$A$1*2 was 0 where A1 held 5. Not #REF!, which somebody would chase —
+    // a number, which nobody re-checks.
+    expect(v('=$A$1*2', { A1: '5' })).toBe(10);
+    expect(v('=$A1*2', { A1: '5' })).toBe(10);
+    expect(v('=A$1*2', { A1: '5' })).toBe(10);
+    expect(v('=$A$1', { A1: 'Midterm' })).toBe('Midterm');
+  });
+
+  it('was always right inside a range, which is why it went unnoticed', () => {
+    // `expand` rebuilds both ends through `ref`, so a range never had the bug.
+    expect(v('=SUM($A$1:$A$3)', { A1: '1', A2: '2', A3: '3' })).toBe(6);
+  });
+
+  it('lower case finds the cell too', () => {
+    expect(v('=a1+1', { A1: '4' })).toBe(5);
+  });
+
+  it('catches a cycle written with dollars', () => {
+    // Before the fix this was not a cycle, it was a blank: the key never
+    // matched what was on the path.
+    expect(evaluate({ A1: '=$A$1+1' }, 'A1')).toBe('#CYCLE!');
+    expect(evaluate({ A1: '=$B$1', B1: '=$A$1' }, 'A1')).toBe('#CYCLE!');
+  });
+
+  it('displays a cell asked for by any spelling', () => {
+    expect(display({ A1: '80%' }, '$A$1')).toBe('80%');
+    expect(display({ A1: '80%' }, 'a1')).toBe('80%');
+  });
+
+  it('still says #NAME? for something that is not a reference at all', () => {
+    expect(v('=NOTACELL')).toBe('#NAME?');
+  });
+});
+
+describe('an error does not swallow the rest of the expression', () => {
+  it('says the same thing bare and inside a call', () => {
+    expect(v('=1/0*100')).toBe('#DIV/0!');
+    expect(v('=IF(1=2,"x",1/0*100)')).toBe('#DIV/0!');
+    expect(v('=SUM(1/0*100)')).toBe('#DIV/0!');
+  });
+
+  it('takes the safe branch even when the other branch is broken', () => {
+    // The calculator's own formula, in the state it spends most of its life:
+    // nothing graded yet, so the average is asked for and must come back blank.
+    const cells = { B10: '0', B11: '0', Z1: '=IF(B10=0,"",B11/B10*100)' };
+    expect(at(cells)).toBe('');
+  });
+
+  it('carries an error through every operator that follows it', () => {
+    expect(v('=1/0+2-3')).toBe('#DIV/0!');
+    expect(v('=1/0&"a"&"b"')).toBe('#DIV/0!');
+    expect(v('=(1/0)%%')).toBe('#DIV/0!');
+    expect(v('=IF(1=2,"x",1/0&"a"&"b")')).toBe('#DIV/0!');
+  });
+
+  it('still refuses a formula it genuinely did not understand', () => {
+    expect(v('=1 2')).toBe('#VALUE!');
+    expect(v('=SUM(1 2)')).toBe('#VALUE!');
+  });
+});
+
+describe('a field with a newline in it', () => {
+  /*
+   * Found by a review of the file reader, and it was here rather than there:
+   * `readTable` split the whole text into lines before looking at quotes, so a
+   * quoted newline cut the field in half and the next column was swallowed
+   * into it. A CSV this app writes hits it the moment a cell holds a note with
+   * a line break — the round trip through its own export was lossy.
+   */
+  it('is one cell, not two rows', () => {
+    expect(readTable('a,b\n"one\ntwo",2\n')).toEqual([
+      ['a', 'b'],
+      ['one\ntwo', '2'],
+    ]);
+  });
+
+  it('does not swallow the column after it', () => {
+    const rows = readTable('a,b,c\n1,"two\nlines",3\n');
+    expect(rows[1]).toEqual(['1', 'two\nlines', '3']);
+  });
+
+  it('leaves every other shape reading as it did', () => {
+    expect(readTable('a,b\n1,2\n')).toEqual([['a', 'b'], ['1', '2']]);
+    expect(readTable('a\tb\n1\t2\n')).toEqual([['a', 'b'], ['1', '2']]);
+    expect(readTable('| a | b |\n|---|---|\n| 1 | 2 |')).toEqual([['a', 'b'], ['1', '2']]);
+    expect(readTable('a,b\n"say ""hi""",2\n')).toEqual([['a', 'b'], ['say "hi"', '2']]);
+    expect(readTable('a,b\n\n\n1,2\n')).toEqual([['a', 'b'], ['1', '2']]);
+  });
+
+  it('round-trips what this app itself writes', () => {
+    const rows = [
+      ['Item', 'Note'],
+      ['PS1', 'first line\nsecond line'],
+    ];
+    expect(readTable(toCsv(rows))).toEqual(rows);
+  });
+});
+
+/*
+ * A regression from the fix above, caught by a second review pass. `records`
+ * flipped on every `"` in the text — right for CSV, wrong for everything else,
+ * and the separator is not known until after it runs.
+ */
+describe('a quote that is an inch mark', () => {
+  const tsv = 'Item\tSize\n15" monitor\t2\nDesk\t1\nChair\t4\n';
+
+  it('does not swallow the rest of the file', () => {
+    // Measured before the fix: four rows arrived as two, with everything after
+    // the quote inside one cell.
+    expect(readTable(tsv)).toHaveLength(4);
+  });
+
+  it('stays in its own cell, quote and all', () => {
+    expect(readTable(tsv)[1]).toEqual(['15" monitor', '2']);
+  });
+
+  it('does the same in a comma-separated file', () => {
+    expect(readTable('Item,Size\n15" monitor,2\nDesk,1\n')[1]).toEqual(['15" monitor', '2']);
+  });
+
+  it('still opens a quoted field at the edge of one', () => {
+    expect(readTable('a,b\n"one\ntwo",2\n')[1]).toEqual(['one\ntwo', '2']);
+    expect(readTable('a,b\n"say ""hi""",2\n')[1]).toEqual(['say "hi"', '2']);
+  });
+
+  it('reads a quoted field that itself holds an inch mark', () => {
+    expect(readTable('Name,Note\n"He said ""15"" monitor""",2\n')[1]).toEqual([
+      'He said "15" monitor"',
+      '2',
+    ]);
+  });
+});
+
+describe('a cell holding TRUE or FALSE', () => {
+  /*
+   * `IF(A1,1,2)` against a cell reading FALSE took the *yes* branch: the
+   * string went to `number`, came back `#VALUE!`, and `#VALUE! !== 0` is true.
+   * A wrong branch rather than an error — and it arrived from every imported
+   * spreadsheet, where a boolean column is ordinary.
+   */
+  it('reads as the boolean it is', () => {
+    expect(evaluate({ A1: 'TRUE' }, 'A1')).toBe(true);
+    expect(evaluate({ A1: 'FALSE' }, 'A1')).toBe(false);
+    expect(evaluate({ A1: 'false' }, 'A1')).toBe(false);
+    expect(evaluate({ A1: '  TRUE  ' }, 'A1')).toBe(true);
+  });
+
+  it('takes the branch it should', () => {
+    expect(v('=IF(A1,1,2)', { A1: 'FALSE' })).toBe(2);
+    expect(v('=IF(A1,1,2)', { A1: 'TRUE' })).toBe(1);
+    expect(v('=AND(A1,B1)', { A1: 'TRUE', B1: 'FALSE' })).toBe(false);
+    expect(v('=NOT(A1)', { A1: 'FALSE' })).toBe(true);
+  });
+
+  it('counts as one and zero in arithmetic, as a boolean does', () => {
+    expect(v('=A1+A2', { A1: 'TRUE', A2: 'TRUE' })).toBe(2);
+    expect(v('=SUM(A1:A2)', { A1: 'TRUE', A2: 'FALSE' })).toBe(1);
+  });
+
+  it('still shows the word that was typed', () => {
+    expect(display({ A1: 'TRUE' }, 'A1')).toBe('TRUE');
+  });
+
+  it('leaves an ordinary word alone', () => {
+    expect(evaluate({ A1: 'Truelove' }, 'A1')).toBe('Truelove');
+    expect(evaluate({ A1: 'Midterm' }, 'A1')).toBe('Midterm');
+  });
+});
+
+describe('nothing that existed changed', () => {
+  it('SUM still sums', () => expect(v('=SUM(B2:B5)', book)).toBe(353));
+  it('weighted gradebook still works', () =>
+    expect(Number(v('=SUMPRODUCT(B2:B5,C2:C5)/SUM(C2:C5)', book))).toBeCloseTo(87.85, 6));
+  it('cycles still caught', () => expect(evaluate({ A1: '=A1+1' }, 'A1')).toBe('#CYCLE!'));
+  it('unknown name still #NAME?', () => expect(v('=FROBNICATE(1)')).toBe('#NAME?'));
+  it('display leaves typed text alone', () => expect(display({ A1: '80%' }, 'A1')).toBe('80%'));
+  it('but evaluates it as a number', () => expect(evaluate({ A1: '80%' }, 'A1')).toBe(0.8));
+});
+
+describe('a range far larger than the grid', () => {
+  /*
+   * `parseRef` takes two letters and four digits, so `A1:ZZ9999` parses and
+   * `expand` built **seven million addresses** from it — measured at 9.8
+   * seconds of blocked main thread before answering `#CYCLE!`. Typed into a
+   * cell, that is the tab frozen, and nothing about the formula looks wrong.
+   *
+   * A reference past the grid cannot name a real cell, so there is nothing to
+   * compute. `A1:Z100000` was already `#REF!` — six digits is more than
+   * `parseRef` takes — so this only makes the answer the same on both sides of
+   * a limit that was never meant to be a cliff.
+   */
+  it('is not enumerated', () => {
+    const started = Date.now();
+    expect(expand('A1', 'ZZ9999')).toEqual([]);
+    expect(Date.now() - started).toBeLessThan(200);
+  });
+
+  it('answers #REF! rather than freezing', () => {
+    const started = Date.now();
+    expect(display({ A1: '5', Q1: '=SUM(A1:ZZ9999)' }, 'Q1')).toBe('#REF!');
+    expect(Date.now() - started).toBeLessThan(200);
+  });
+
+  it('says the same thing one step past each edge', () => {
+    // 200 rows and 26 columns: Z200 is the last cell, AA1 and A201 are not.
+    expect(expand('A1', 'Z200')).toHaveLength(200 * 26);
+    expect(expand('A1', 'A201')).toEqual([]);
+    expect(expand('A1', 'AA1')).toEqual([]);
+  });
+
+  it('leaves every range inside the grid exactly as it was', () => {
+    expect(expand('A1', 'C4')).toHaveLength(12);
+    expect(expand('B2', 'B2')).toEqual(['B2']);
+    expect(expand('$A$1', '$A$3')).toEqual(['A1', 'A2', 'A3']);
+    expect(display({ A1: '5', A2: '6', Q1: '=SUM(A1:A2)' }, 'Q1')).toBe('11');
+  });
+});
+
+describe('a chain of cells longer than the stack', () => {
+  /*
+   * The cycle check was written so that runaway recursion becomes an error in
+   * one cell rather than a stack overflow that takes the tab with it. It does
+   * that for a cycle. A chain with no cycle in it reached the same overflow:
+   * measured, 600 links evaluated and 800 threw `RangeError`, out of `display`
+   * — so the whole Sheet screen went, not one cell.
+   *
+   * The grid holds 200×26, so a chain filled down a column and across is 5,200
+   * long. This is not a contrived shape.
+   */
+  const chain = (n: number): Cells => {
+    const cells: Cells = { A1: '1' };
+    const addr = (i: number) => ref(i % 200, Math.floor(i / 200));
+    for (let i = 1; i < n; i += 1) cells[addr(i)] = `=${addr(i - 1)}+1`;
+    return cells;
+  };
+  const last = (n: number) => ref((n - 1) % 200, Math.floor((n - 1) / 200));
+
+  it('says so in the cell instead of throwing', () => {
+    const cells = chain(5200);
+    expect(() => display(cells, last(5200))).not.toThrow();
+    expect(display(cells, last(5200))).toBe('#DEEP!');
+  });
+
+  it('is an error like any other, so the screen marks it', () => {
+    // `isError` is what `Sheet.tsx` asks, so being in `ERRORS` is what makes
+    // this render as a fault rather than as somebody's text.
+    expect(isError(evaluate(chain(5200), last(5200)))).toBe(true);
+  });
+
+  it('leaves a chain the length of one column alone', () => {
+    // A running total down a full column is 200 links, and has to keep working.
+    expect(display(chain(200), last(200))).toBe('200');
+  });
+
+  it('still says #CYCLE! for an actual cycle, which is a different fault', () => {
+    expect(display({ A1: '=B1', B1: '=A1' }, 'A1')).toBe('#CYCLE!');
+    expect(display({ A1: '=A1' }, 'A1')).toBe('#CYCLE!');
   });
 });

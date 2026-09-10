@@ -47,6 +47,8 @@
 
 import type { CourseModule, Course } from './types';
 import type { Window } from './windows';
+import type { Folder } from './folders';
+import type { StoredDeck } from './decks';
 
 const str = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
 
@@ -210,6 +212,63 @@ export function readList<T>(value: unknown, read: (row: unknown) => T | null): T
   return arr<unknown>(value)
     .map(read)
     .filter((row): row is T => row !== null);
+}
+
+/**
+ * A drive folder, read back from storage.
+ *
+ * `list` only drops nullish rows and casts the rest, so a folder whose `name`
+ * was not a string reached `childrenOf` and took the whole drive down inside a
+ * `localeCompare`. What comes out of storage is only as well-formed as what
+ * went in — another build, an edited backup, a half-finished write — so the
+ * shape is checked rather than asserted.
+ */
+export function readFolder(value: unknown): Folder | null {
+  const row = obj(value);
+  const id = str(row.id);
+  if (!id) return null;
+  const parent = str(row.parentId);
+  return {
+    ...row,
+    id,
+    name: str(row.name) || 'Folder',
+    parentId: parent === '' ? null : parent,
+    created: num(row.created, 0),
+  } as Folder;
+}
+
+/**
+ * A deck, read back the same way.
+ *
+ * The field that matters is `slides`: `running` maps over it on every render,
+ * so a deck stored with `slides: null` was a screen that threw rather than a
+ * deck that looked empty.
+ */
+export function readDeck(value: unknown): StoredDeck | null {
+  const row = obj(value);
+  const id = str(row.id);
+  if (!id) return null;
+  const course = str(row.courseId);
+  return {
+    ...row,
+    id,
+    title: str(row.title),
+    subtitle: str(row.subtitle),
+    courseId: course === '' ? null : course,
+    slides: arr<unknown>(row.slides)
+      .map((slide) => {
+        const s = obj(slide);
+        return {
+          ...s,
+          title: str(s.title),
+          bullets: arr<unknown>(s.bullets).filter((b): b is string => typeof b === 'string'),
+        };
+      })
+      .filter(Boolean),
+    hidden: arr<unknown>(row.hidden).filter((h): h is number => typeof h === 'number'),
+    created: num(row.created, 0),
+    updated: num(row.updated, 0),
+  } as StoredDeck;
 }
 
 /**

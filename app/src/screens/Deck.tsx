@@ -11,6 +11,8 @@ import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
 import { download } from '../lib/deliver';
 import { deckFileName, pptx, type Deck as DeckFile } from '../lib/pptx';
+import { DeckEdit, DeckShelf } from './deck/Edit';
+import { keepable } from '../lib/decks';
 import {
   KINDS,
   SYSTEM,
@@ -45,6 +47,14 @@ import { NeedsKey } from '../components/NeedsKey';
  * whole room at once, so a missing number comes back as a blank.
  */
 export function Deck() {
+  const { state } = useStore();
+  const open = state.decks.find((d) => d.id === state.deckId) ?? null;
+  // A deck being edited takes the whole screen; the builders below are how one
+  // comes into being in the first place.
+  return open ? <DeckEdit deck={open} /> : <Build />;
+}
+
+function Build() {
   const { state, catalog, dispatch, courseCode } = useStore();
   const { guide, figuresOn, onUnit } = useLive(state.guideId);
 
@@ -167,6 +177,15 @@ export function Deck() {
         A real PowerPoint file, built here. It opens in PowerPoint, Keynote and Google Slides, and
         it comes out in the app's own palette rather than a template's.
       </div>
+
+      <DeckShelf />
+
+      <ActionButton
+        onClick={() => dispatch({ type: 'newDeck', courseId: null })}
+        style={{ marginTop: 'var(--sp-5)', marginBottom: 'var(--sp-5)' }}
+      >
+        Start an empty deck
+      </ActionButton>
 
       <Segmented
         options={[
@@ -418,6 +437,27 @@ export function Deck() {
           >
             {saving ? 'Writing the file…' : 'Save as PowerPoint'}
           </ActionButton>
+
+          {/*
+            The other way out, and the one that was missing. A deck built here
+            went straight to a file and was gone — so cutting a slide, fixing a
+            title or adding speaker notes meant doing it in PowerPoint, and
+            everything this app knows stayed behind.
+          */}
+          {file && (
+            <ActionButton
+              onClick={() =>
+                dispatch({
+                  type: 'makeDeck',
+                  deck: keepable(file, state.guideId),
+                  open: true,
+                })
+              }
+              style={{ marginTop: 'var(--sp-4)' }}
+            >
+              Keep it, and edit the slides
+            </ActionButton>
+          )}
 
           {plan && (
             <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>

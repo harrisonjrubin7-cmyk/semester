@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { newId } from './idb';
+import { newId, store } from './idb';
 
 /**
  * The one id generator the app has, and the promise it makes.
@@ -73,5 +73,137 @@ describe('what the id is made of', () => {
     vi.spyOn(Date, 'now').mockReturnValue(1_800_000_060_000);
     const late = newId();
     expect([late, early].sort()).toEqual([early, late]);
+  });
+});
+
+/**
+ * `work`, against an IndexedDB small enough to reason about.
+ *
+ * jsdom has none, which is precisely how the bug this guards against reached a
+ * pull request: `patch` in `files.ts` returned its read request to `tx`, `tx`
+ * replaced the `onsuccess` that would have issued the write, and starring or
+ * binning a file became a button that did nothing. Every unit test passed,
+ * because none of them could reach a database.
+ *
+ * The double below is not a real IndexedDB — it is the four behaviours the
+ * helper depends on: a request resolves asynchronously with a result, handlers
+ * set by the caller are honoured, further requests can be issued from inside
+ * those handlers, and the transaction completes only once the queue is empty.
+ */
+function fakeIndexedDB(rows: Record<string, unknown> = {}) {
+  const queue: (() => void)[] = [];
+  let done: (() => void) | null = null;
+
+  const request = <T,>(get: () => T) => {
+    const req: Record<string, unknown> = { result: undefined, error: null };
+    queue.push(() => {
+      req.result = get();
+      (req.onsuccess as (() => void) | undefined)?.();
+    });
+    return req as unknown as IDBRequest<T>;
+  };
+
+  const objectStore = {
+    get: (id: string) => request(() => rows[id]),
+    put: (row: { id: string }) => request(() => {
+      rows[row.id] = row;
+      return undefined;
+    }),
+    delete: (id: string) => request(() => {
+      delete rows[id];
+      return undefined;
+    }),
+    getAll: () => request(() => Object.values(rows)),
+    clear: () => request(() => {
+      for (const k of Object.keys(rows)) delete rows[k];
+      return undefined;
+    }),
+  };
+
+  /** Drain the queue, letting handlers add to it, then complete. */
+  const run = () => {
+    setTimeout(() => {
+      while (queue.length) queue.shift()!();
+      done?.();
+    }, 0);
+  };
+
+  const transaction = {
+    objectStore: () => objectStore as unknown as IDBObjectStore,
+    set oncomplete(fn: () => void) {
+      done = fn;
+      run();
+    },
+    onerror: null,
+    onabort: null,
+    error: null,
+  };
+
+  const db = { transaction: () => transaction, close: () => undefined };
+  const open = () => {
+    const req: Record<string, unknown> = { result: db };
+    setTimeout(() => (req.onsuccess as (() => void) | undefined)?.(), 0);
+    return req;
+  };
+  vi.stubGlobal('indexedDB', { open });
+  return rows;
+}
+
+describe('a read and a write in one transaction', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('runs the caller’s own success handler', async () => {
+    // The whole bug: `tx` overwrote this, so the write inside it never ran.
+    fakeIndexedDB({ a: { id: 'a', starred: false } });
+    const { work } = store('db', 's');
+    let ran = false;
+    await work<void>('readwrite', (s, finish) => {
+      const read = s.get('a') as IDBRequest<unknown>;
+      read.onsuccess = () => {
+        ran = true;
+        finish(undefined);
+      };
+    });
+    expect(ran).toBe(true);
+  });
+
+  it('lets a handler issue a further request, and that request lands', async () => {
+    const rows = fakeIndexedDB({ a: { id: 'a', starred: false } });
+    const { work } = store('db', 's');
+    await work<void>('readwrite', (s, finish) => {
+      const read = s.get('a') as IDBRequest<{ id: string; starred: boolean } | undefined>;
+      read.onsuccess = () => {
+        s.put({ ...read.result!, starred: true });
+        finish(undefined);
+      };
+    });
+    expect(rows.a).toEqual({ id: 'a', starred: true });
+  });
+
+  it('answers with what the callback decided', async () => {
+    fakeIndexedDB({ a: { id: 'a' } });
+    const { work } = store('db', 's');
+    const found = await work<boolean>('readonly', (s, finish) => {
+      const read = s.get('a') as IDBRequest<unknown>;
+      read.onsuccess = () => finish(read.result !== undefined);
+    });
+    expect(found).toBe(true);
+  });
+
+  it('does not write when the record has gone', async () => {
+    const rows = fakeIndexedDB({});
+    const { work } = store('db', 's');
+    await work<void>('readwrite', (s, finish) => {
+      const read = s.get('missing') as IDBRequest<unknown>;
+      read.onsuccess = () => {
+        if (read.result === undefined) {
+          finish(undefined);
+          return;
+        }
+        s.put({ id: 'missing' });
+        finish(undefined);
+      };
+    });
+    expect(rows).toEqual({});
   });
 });

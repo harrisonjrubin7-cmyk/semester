@@ -62,8 +62,16 @@ export const NEW_COLS = 6;
 export const MAX_ROWS = 200;
 export const MAX_COLS = 26;
 
-/** The five ways a cell can be wrong, said rather than swallowed. */
-export const ERRORS = ['#DIV/0!', '#REF!', '#NAME?', '#VALUE!', '#CYCLE!'] as const;
+/**
+ * The six ways a cell can be wrong, said rather than swallowed.
+ *
+ * `#N/A` is the newest and the one that earns its place loudest: it is what a
+ * lookup answers when the thing looked up is not there. Every other candidate
+ * for that answer — a blank, a zero, the nearest row — is a number a student
+ * would hand in, and `VLOOKUP` finding nothing is exactly the moment this file
+ * must refuse to be helpful.
+ */
+export const ERRORS = ['#DIV/0!', '#REF!', '#NAME?', '#VALUE!', '#CYCLE!', '#N/A', '#DEEP!'] as const;
 export type Err = (typeof ERRORS)[number];
 
 export type Value = number | string | boolean | Err;
@@ -115,11 +123,50 @@ export function parseRef(text: string): { row: number; col: number } | null {
   return { row, col };
 }
 
+/**
+ * How many rows and columns a range covers.
+ *
+ * `expand` flattens `A1:C4` to twelve addresses reading across then down, and
+ * for `SUM` that is the whole story. A lookup is the other case: `VLOOKUP`
+ * needs to know that those twelve are three wide before it can take the second
+ * column of them, and it cannot recover that from a flat list. So the shape is
+ * carried alongside the values rather than guessed at from their number —
+ * twelve values could be 3×4, 4×3, 2×6 or 12×1, and guessing wrong returns a
+ * confident answer from the wrong column.
+ */
+export function span(from: string, to: string): { rows: number; cols: number } {
+  const a = parseRef(from);
+  const b = parseRef(to);
+  if (!a || !b || !onGrid(a, b)) return { rows: 0, cols: 0 };
+  return {
+    rows: Math.abs(a.row - b.row) + 1,
+    cols: Math.abs(a.col - b.col) + 1,
+  };
+}
+
+/**
+ * Whether both ends of a range name a cell this grid can hold.
+ *
+ * `parseRef` takes two letters and four digits, so `A1:ZZ9999` parses — and
+ * `expand` then built **seven million addresses**, measured at 9.8 seconds of
+ * blocked main thread before answering `#CYCLE!`. Typed into a cell, that is
+ * the tab frozen; the same range arriving from an imported workbook did it
+ * without anybody typing anything.
+ *
+ * A reference past `MAX_ROWS`×`MAX_COLS` cannot name a real cell, so there is
+ * nothing to compute and no reason to enumerate it. `A1:Z100000` was already
+ * `#REF!` — the row is too long for `parseRef` — so this only makes the answer
+ * the same on both sides of a limit that was never meant to be a cliff.
+ */
+function onGrid(a: { row: number; col: number }, b: { row: number; col: number }): boolean {
+  return Math.max(a.row, b.row) < MAX_ROWS && Math.max(a.col, b.col) < MAX_COLS;
+}
+
 /** Every address in `A1:B3`, reading across then down. Empty if either end is nonsense. */
 export function expand(from: string, to: string): string[] {
   const a = parseRef(from);
   const b = parseRef(to);
-  if (!a || !b) return [];
+  if (!a || !b || !onGrid(a, b)) return [];
   const out: string[] = [];
   for (let r = Math.min(a.row, b.row); r <= Math.max(a.row, b.row); r += 1) {
     for (let c = Math.min(a.col, b.col); c <= Math.max(a.col, b.col); c += 1) {
@@ -132,6 +179,32 @@ export function expand(from: string, to: string): string[] {
 // ── Reading a cell ───────────────────────────────────────────────────────
 
 export type Cells = Record<string, string>;
+
+/**
+ * What a formula needs from outside itself.
+ *
+ * Only the clock, and only because `TODAY()` and `NOW()` exist. Everything
+ * else here is a sheet in and a value out, and the note at the top of this
+ * file promises exactly that: *"no DOM and no clock. That split is what lets
+ * the formula engine be tested properly."*
+ *
+ * Two dates a student needs — how long until the exam, what the last day of
+ * the month is — cannot be computed without knowing today, so the choice was
+ * to break the promise or to pass the clock in. Passing it in keeps the engine
+ * pure: a test hands it a fixed instant and `=TODAY()` is the same value on
+ * every machine on every day, which is the only way a date function is worth
+ * having. The default reads the real clock once, at the top of a render, so a
+ * sheet whose formulas span midnight still agrees with itself.
+ */
+export interface Ctx {
+  /** Milliseconds since the Unix epoch — the instant this sheet is read at. */
+  now: number;
+}
+
+/** A context around one instant. Called once per render, not once per cell. */
+export function clock(now: number = Date.now()): Ctx {
+  return { now };
+}
 
 /**
  * A number if the text is one, otherwise nothing.
@@ -157,6 +230,23 @@ export function isFormula(text: string): boolean {
 }
 
 /**
+ * How long a chain of cells one cell may stand on.
+ *
+ * The cycle check above was written so that runaway recursion becomes an error
+ * in one cell rather than a stack overflow that takes the tab with it. It does
+ * that for a *cycle*. A chain with no cycle in it reaches the same overflow:
+ * measured, 600 links evaluate and 800 throw `RangeError: Maximum call stack
+ * size exceeded` — out of `display`, so the whole screen goes, not one cell.
+ *
+ * And it is well within reach. The grid holds 200×26 cells, so a chain filled
+ * down a column and across is 5,200 long; a running total down one column is
+ * 200, which is why the limit sits at twice that and nowhere near the 600 that
+ * still worked. A cell that says it went too far is a poor answer. A blank
+ * screen is not an answer at all.
+ */
+const DEEPEST = 400;
+
+/**
  * What one cell comes to.
  *
  * `seen` is the path taken to get here, and it is the whole of the cycle
@@ -164,18 +254,66 @@ export function isFormula(text: string): boolean {
  * without this the recursion is a stack overflow that takes the tab with it
  * rather than a `#CYCLE!` in one cell.
  */
-export function evaluate(cells: Cells, address: string, seen: Set<string> = new Set()): Value {
-  const key = address.toUpperCase();
-  if (seen.has(key)) return '#CYCLE!';
-  const raw = cells[key];
+/**
+ * One address, written the one way the cell map is keyed.
+ *
+ * `$A$1`, `$A1`, `A$1` and `a1` are four spellings of one cell, and until this
+ * existed only the last of them found it: `evaluate` upper-cased the string and
+ * looked it up, so `cells['$A$1']` was `undefined` and a formula reading a
+ * pinned reference came back blank — `=$A$1*2` was 0 where the cell held 5.
+ *
+ * Silently, which is what makes it the worst kind of fault this file can have.
+ * The note at the top promises an error is *said* in the cell rather than
+ * resolved to a zero that looks like an answer, and this was the app breaking
+ * that promise: not a `#REF!` anybody would chase, a number.
+ *
+ * It only ever showed up on a sheet written somewhere else, because nothing in
+ * this app produces a dollar sign — `parseRef` has always accepted them for
+ * exactly that reason, and `expand` rebuilt range ends through `ref` so
+ * `SUM($A$1:$B$2)` was right all along. A lone reference had no such rebuild.
+ */
+function key(address: string): string {
+  const where = parseRef(address);
+  return where ? ref(where.row, where.col) : address.toUpperCase();
+}
+
+export function evaluate(
+  cells: Cells,
+  address: string,
+  seen: Set<string> = new Set(),
+  ctx: Ctx = clock(),
+): Value {
+  const key_ = key(address);
+  if (seen.has(key_)) return '#CYCLE!';
+  // Not a cycle, just a chain longer than this can safely stand on. Said in
+  // the cell, because the alternative is the screen.
+  if (seen.size >= DEEPEST) return '#DEEP!';
+  const raw = cells[key_];
   if (raw === undefined || raw === '') return '';
   if (!isFormula(raw)) {
     const n = asNumber(raw);
-    return n === null ? raw : n;
+    if (n !== null) return n;
+    /*
+     * A cell holding TRUE or FALSE is a boolean, not a word.
+     *
+     * `IF(A1,1,2)` against a cell reading FALSE took the *yes* branch: the
+     * string went to `number`, came back `#VALUE!`, and `#VALUE! !== 0` is
+     * true. A wrong branch rather than an error, which is the shape of fault
+     * this file exists to refuse — and it arrived from every imported
+     * spreadsheet, where a boolean column is ordinary.
+     *
+     * The cell still *shows* what was typed; `display` returns the raw text
+     * for anything that is not a formula, so a student who typed TRUE sees
+     * TRUE.
+     */
+    const word = raw.trim().toUpperCase();
+    if (word === 'TRUE') return true;
+    if (word === 'FALSE') return false;
+    return raw;
   }
   const next = new Set(seen);
-  next.add(key);
-  return run(raw.trimStart().slice(1), cells, next);
+  next.add(key_);
+  return run(raw.trimStart().slice(1), cells, next, ctx);
 }
 
 /**
@@ -190,10 +328,10 @@ export function evaluate(cells: Cells, address: string, seen: Set<string> = new 
  * silently rewrites what you typed is a sheet you cannot trust to hold a
  * student number.
  */
-export function display(cells: Cells, address: string): string {
-  const raw = cells[address.toUpperCase()];
+export function display(cells: Cells, address: string, ctx: Ctx = clock()): string {
+  const raw = cells[key(address)];
   if (raw !== undefined && raw !== '' && !isFormula(raw)) return raw;
-  return show(evaluate(cells, address));
+  return show(evaluate(cells, address, new Set(), ctx));
 }
 
 /**
@@ -214,6 +352,22 @@ export function show(value: Value): string {
 }
 
 // ── The formula engine ───────────────────────────────────────────────────
+
+/**
+ * One argument to a function, with its shape kept.
+ *
+ * `SUM(A1:A9, B1)` arrives as two of these — nine values shaped 9×1, and one
+ * shaped 1×1 — rather than as ten loose values. Almost every function flattens
+ * them immediately and does not care. Three kinds do: `SUMPRODUCT` multiplies
+ * the first range by the second and cannot be written against a flat list at
+ * all; the lookups need the width to know which column they were asked for;
+ * and the `*IF` pair walks a range beside another of the same length.
+ */
+export interface Group {
+  values: Value[];
+  rows: number;
+  cols: number;
+}
 
 type Token =
   | { kind: 'num'; value: number }
@@ -274,11 +428,13 @@ class Parser {
   private readonly tokens: Token[];
   private readonly cells: Cells;
   private readonly seen: Set<string>;
+  private readonly ctx: Ctx;
 
-  constructor(tokens: Token[], cells: Cells, seen: Set<string>) {
+  constructor(tokens: Token[], cells: Cells, seen: Set<string>, ctx: Ctx) {
     this.tokens = tokens;
     this.cells = cells;
     this.seen = seen;
+    this.ctx = ctx;
   }
 
   private peek(): Token | undefined {
@@ -299,7 +455,27 @@ class Parser {
     return this.at >= this.tokens.length;
   }
 
-  /** Comparisons, which sit below arithmetic and produce a yes or a no. */
+  /*
+   * ## An error is carried, never returned from the middle
+   *
+   * Every loop below keeps going after something goes wrong, with the error as
+   * the running value, rather than returning it where it happened. That reads
+   * like a detail and is the difference between two answers.
+   *
+   * Returning from the middle leaves the rest of the expression unread, and an
+   * unread tail is what `run` calls a formula it only half understood — so
+   * `=1/0*100` came back `#DIV/0!` on its own, where the *same* expression
+   * inside a function came back `#VALUE!`: `arguments` found `*` where it
+   * wanted a comma. Measured on the grade calculator, which is where this was
+   * found: `=IF(B10=0,"",B11/B10*100)` answered `#VALUE!` in a cell whose
+   * condition was true and whose taken branch was a blank string. The engine
+   * evaluates every argument before it chooses one, so the arithmetic in the
+   * branch nobody takes still has to parse.
+   *
+   * Carrying it costs nothing — an error put through `number` comes back the
+   * same error — and it means the position of a fault no longer changes what
+   * the cell says.
+   */
   expression(): Value {
     let left = this.concat();
     for (;;) {
@@ -307,9 +483,8 @@ class Parser {
       if (!t || t.kind !== 'op' || !['=', '<>', '<', '<=', '>', '>='].includes(t.value)) return left;
       this.at += 1;
       const right = this.concat();
-      if (isError(left)) return left;
-      if (isError(right)) return right;
-      left = compare(t.value, left, right);
+      if (isError(left)) continue;
+      left = isError(right) ? right : compare(t.value, left, right);
     }
   }
 
@@ -317,9 +492,8 @@ class Parser {
     let left = this.additive();
     while (this.eat('&')) {
       const right = this.additive();
-      if (isError(left)) return left;
-      if (isError(right)) return right;
-      left = show(left) + show(right);
+      if (isError(left)) continue;
+      left = isError(right) ? right : show(left) + show(right);
     }
     return left;
   }
@@ -333,9 +507,9 @@ class Parser {
       const right = this.multiplicative();
       const a = number(left);
       const b = number(right);
-      if (isError(a)) return a;
-      if (isError(b)) return b;
-      left = t.value === '+' ? a + b : a - b;
+      if (isError(a)) left = a;
+      else if (isError(b)) left = b;
+      else left = t.value === '+' ? a + b : a - b;
     }
   }
 
@@ -348,10 +522,10 @@ class Parser {
       const right = this.power();
       const a = number(left);
       const b = number(right);
-      if (isError(a)) return a;
-      if (isError(b)) return b;
-      if (t.value === '/' && b === 0) return '#DIV/0!';
-      left = t.value === '*' ? a * b : a / b;
+      if (isError(a)) left = a;
+      else if (isError(b)) left = b;
+      else if (t.value === '/' && b === 0) left = '#DIV/0!';
+      else left = t.value === '*' ? a * b : a / b;
     }
   }
 
@@ -381,8 +555,7 @@ class Parser {
     let v = this.primary();
     while (this.eat('%')) {
       const n = number(v);
-      if (isError(n)) return n;
-      v = n / 100;
+      v = isError(n) ? n : n / 100;
     }
     return v;
   }
@@ -408,7 +581,7 @@ class Parser {
         this.at += 1;
         return '#VALUE!';
       }
-      return evaluate(this.cells, t.value, this.seen);
+      return evaluate(this.cells, t.value, this.seen, this.ctx);
     }
     if (t.kind === 'name') {
       this.at += 1;
@@ -417,7 +590,7 @@ class Parser {
       if (!this.eat('(')) return '#NAME?';
       const groups = this.arguments();
       if (isError(groups)) return groups;
-      return apply(t.value, groups);
+      return apply(t.value, groups, this.ctx);
     }
     if (t.kind === 'op' && t.value === '(') {
       this.at += 1;
@@ -437,8 +610,8 @@ class Parser {
    * in the common case and is the difference between a weighted gradebook
    * working and not.
    */
-  private arguments(): Value[][] | Err {
-    const out: Value[][] = [];
+  private arguments(): Group[] | Err {
+    const out: Group[] = [];
     if (this.eat(')')) return out;
     for (;;) {
       const t = this.peek();
@@ -449,9 +622,14 @@ class Parser {
         this.at += 3;
         const range = expand(t.value, end.value);
         if (range.length === 0) return '#REF!';
-        out.push(range.map((address) => evaluate(this.cells, address, this.seen)));
+        const shape = span(t.value, end.value);
+        out.push({
+          values: range.map((address) => evaluate(this.cells, address, this.seen, this.ctx)),
+          rows: shape.rows,
+          cols: shape.cols,
+        });
       } else {
-        out.push([this.expression()]);
+        out.push({ values: [this.expression()], rows: 1, cols: 1 });
       }
       if (this.eat(',')) continue;
       return this.eat(')') ? out : '#VALUE!';
@@ -459,10 +637,10 @@ class Parser {
   }
 }
 
-function run(body: string, cells: Cells, seen: Set<string>): Value {
+function run(body: string, cells: Cells, seen: Set<string>, ctx: Ctx): Value {
   const tokens = lex(body);
   if (!tokens || tokens.length === 0) return '#VALUE!';
-  const parser = new Parser(tokens, cells, seen);
+  const parser = new Parser(tokens, cells, seen, ctx);
   const value = parser.expression();
   // A tail nobody consumed means the formula was not understood, and a partial
   // answer to a formula is the most dangerous thing this file could return.
@@ -524,6 +702,289 @@ function squares(xs: number[]): number {
   return sum(xs.map((x) => (x - m) ** 2));
 }
 
+// ── Criteria, dates and money ────────────────────────────────────────────
+
+/**
+ * A criterion, as the test it stands for.
+ *
+ * `COUNTIF(B2:B9, ">=90")` passes a string that is not a value but a question
+ * about one, and the whole family — `COUNTIF`, `SUMIF`, `AVERAGEIF` and the
+ * plural forms — turns on reading it the way every other sheet does:
+ *
+ * · a bare number or word is an equality test, case-insensitively;
+ * · a leading `>=`, `<=`, `<>`, `>`, `<` or `=` is that comparison;
+ * · `*` and `?` in a text test are wildcards, any-run and any-one.
+ *
+ * A comparison against something that is not a number falls back to comparing
+ * the text, which is what makes `">=B"` work on a column of letter grades.
+ */
+export function matcher(criterion: Value): (v: Value) => boolean {
+  const raw = typeof criterion === 'string' ? criterion.trim() : show(criterion);
+  const m = /^(<=|>=|<>|=|<|>)(.*)$/.exec(raw);
+  const op = m ? m[1] : '=';
+  const rest = m ? m[2].trim() : raw;
+  const wanted = asNumber(rest);
+
+  /*
+   * A blank cell matches nothing, unless nothing is what was asked for.
+   *
+   * This is the rule that makes a half-finished gradebook add up. `number`
+   * reads a blank as zero — right for `SUM`, where a blank column is a zero
+   * total — and reading it as zero here would make `SUMIF(C:C,">=0",B:B)`
+   * count every ungraded row as scoring nothing. Measured, that turned "70% of
+   * the course has been graded" into 100%, and "what do I need on the final"
+   * into a division by a weight of zero.
+   *
+   * Excel draws the line in the same place and for the same reason: a blank is
+   * the absence of an answer, not the answer zero.
+   */
+  const empty = (v: Value) => typeof v === 'string' && v.trim() === '';
+  if (raw === '') return empty;
+
+  if (op === '=' || op === '<>') {
+    const yes = wildcard(rest);
+    return (v) => {
+      if (empty(v)) return false;
+      const hit = wanted !== null && typeof v !== 'string' ? number(v) === wanted : yes(show(v));
+      return op === '=' ? hit : !hit;
+    };
+  }
+
+  return (v) => {
+    if (empty(v)) return false;
+    const n = wanted === null ? null : number(v);
+    if (wanted !== null && !isError(n) && n !== null) {
+      return compare(op, n, wanted) === true;
+    }
+    return compare(op, show(v), rest) === true;
+  };
+}
+
+/** `*` for any run and `?` for any one character, anchored and case-blind. */
+function wildcard(pattern: string): (text: string) => boolean {
+  if (!/[*?]/.test(pattern)) {
+    const want = pattern.toLowerCase();
+    return (text) => text.trim().toLowerCase() === want;
+  }
+  const source = pattern
+    .split(/([*?])/)
+    .map((part) => (part === '*' ? '.*' : part === '?' ? '.' : escapeRe(part)))
+    .join('');
+  const re = new RegExp(`^${source}$`, 'i');
+  return (text) => re.test(text.trim());
+}
+
+function escapeRe(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Every `*IFS` function is the same walk, so it is written once.
+ *
+ * Pairs of (range, criterion) after the first argument, all of which must hold
+ * for a row to count. Ranges of different lengths are refused rather than
+ * padded — the same rule `SUMPRODUCT` follows, and for the same reason: a
+ * criteria range one row short is a mistake worth stopping, not a total
+ * quietly computed over part of the data.
+ */
+function hits(pairs: Group[], length: number): number[] | Err {
+  const chosen: number[] = [];
+  for (let i = 0; i < pairs.length; i += 2) {
+    if (!pairs[i + 1]) return '#VALUE!';
+    if (pairs[i].values.length !== length) return '#VALUE!';
+  }
+  for (let row = 0; row < length; row += 1) {
+    let all = true;
+    for (let i = 0; i < pairs.length && all; i += 2) {
+      const value = pairs[i].values[row];
+      if (isError(value)) return value;
+      all = matcher(pairs[i + 1].values[0] ?? '')(value);
+    }
+    if (all) chosen.push(row);
+  }
+  return chosen;
+}
+
+/**
+ * Dates as serial numbers, counted from 1899-12-30 — the epoch every
+ * spreadsheet uses, chosen so that a file written here opens in Excel with the
+ * same dates in it rather than with dates two days out.
+ *
+ * The arithmetic is in UTC throughout. A date is a calendar day, not an
+ * instant, and doing the sums in local time means a sheet built the evening
+ * the clocks change is a day wrong — which is the one bug a date function
+ * cannot be allowed to have. `TODAY` reads the local calendar day, once, and
+ * converts it; everything after that is UTC.
+ */
+const EPOCH = Date.UTC(1899, 11, 30);
+const DAY_MS = 86_400_000;
+
+export function toSerial(utcMs: number): number {
+  return (utcMs - EPOCH) / DAY_MS;
+}
+
+export function fromSerial(serial: number): Date {
+  return new Date(EPOCH + Math.round(serial * DAY_MS));
+}
+
+/** Today where the person is, as a serial. The whole of the local-time story. */
+function today(ctx: Ctx): number {
+  const local = new Date(ctx.now);
+  return toSerial(Date.UTC(local.getFullYear(), local.getMonth(), local.getDate()));
+}
+
+/**
+ * The present instant as a serial, fraction and all.
+ *
+ * The offset is the device's, so `NOW()` reads as the wall clock rather than
+ * as UTC — which is what somebody timing a revision session means by it.
+ */
+function rightNow(ctx: Ctx): number {
+  const local = new Date(ctx.now);
+  return toSerial(ctx.now - local.getTimezoneOffset() * 60_000);
+}
+
+/**
+ * A payment, by the annuity formula every finance course teaches.
+ *
+ * `type` is 0 for payments at the end of a period and 1 for the beginning.
+ * A zero rate is not a division by zero here, it is a straight split — and
+ * writing it as the limit rather than letting it divide is the difference
+ * between an interest-free loan showing its instalment and showing `#DIV/0!`.
+ */
+function pmt(rate: number, nper: number, pv: number, fv: number, type: number): number | Err {
+  if (nper === 0) return '#DIV/0!';
+  if (rate === 0) return -(pv + fv) / nper;
+  const growth = (1 + rate) ** nper;
+  return (-(pv * growth + fv) * rate) / ((growth - 1) * (1 + rate * type));
+}
+
+function fvOf(rate: number, nper: number, pay: number, pv: number, type: number): number {
+  if (rate === 0) return -(pv + pay * nper);
+  const growth = (1 + rate) ** nper;
+  return -(pv * growth + pay * (1 + rate * type) * ((growth - 1) / rate));
+}
+
+function pvOf(rate: number, nper: number, pay: number, fv: number, type: number): number | Err {
+  if (rate === 0) return -(fv + pay * nper);
+  const growth = (1 + rate) ** nper;
+  return -(fv + pay * (1 + rate * type) * ((growth - 1) / rate)) / growth;
+}
+
+/**
+ * A rate found by looking for it, because there is no closed form.
+ *
+ * Bisection rather than Newton: Newton is faster and, on the shapes a cash
+ * flow actually takes, wanders off a root it started next to. This brackets
+ * the answer and halves the bracket, which cannot diverge — and when no
+ * bracket exists the honest answer is `#N/A` rather than the last guess.
+ */
+function solveRate(f: (r: number) => number, low = -0.999_999, high = 10): number | Err {
+  let a = low;
+  let b = high;
+  let fa = f(a);
+  let fb = f(b);
+  if (!Number.isFinite(fa) || !Number.isFinite(fb)) return '#N/A';
+  if (fa === 0) return a;
+  if (fb === 0) return b;
+  if (fa > 0 === fb > 0) return '#N/A';
+  for (let i = 0; i < 200; i += 1) {
+    const mid = (a + b) / 2;
+    const fm = f(mid);
+    if (!Number.isFinite(fm)) return '#N/A';
+    if (Math.abs(fm) < 1e-10 || (b - a) / 2 < 1e-12) return mid;
+    if (fm > 0 === fa > 0) {
+      a = mid;
+      fa = fm;
+    } else {
+      b = mid;
+    }
+  }
+  return (a + b) / 2;
+}
+
+/** A value read as a yes or a no, the way `IF` reads its first argument. */
+function truthy(v: Value | undefined): boolean {
+  if (v === undefined || isError(v)) return false;
+  if (typeof v === 'boolean') return v;
+  const n = number(v);
+  return !isError(n) && n !== 0;
+}
+
+/**
+ * `TEXT(value, format)` — a number or a date under a picture of itself.
+ *
+ * A deliberately small set, and it refuses rather than approximates. The
+ * formats read are the ones a student's sheet has in it:
+ *
+ * · dates — `yyyy`, `yy`, `mmmm`, `mmm`, `mm`, `m`, `dddd`, `ddd`, `dd`, `d`,
+ *   and `hh`/`ss` with `mm` after an hour taken as minutes, as Excel does;
+ * · numbers — `0` and `#` places, `,` for thousands, `%`, and a leading `$`,
+ *   `£` or `€`.
+ *
+ * Anything else comes back as the value written plainly. That is the honest
+ * failure: a format string this does not understand produces the number,
+ * which is visibly unformatted, rather than a number silently shown under the
+ * wrong picture — the failure somebody hands in.
+ *
+ * Until a cell can carry a format of its own, this is also how a date is read
+ * at all: `TODAY()` is a count of days, and `=TEXT(TODAY(),"yyyy-mm-dd")` is
+ * how it becomes a date on the screen.
+ */
+export function formatted(value: Value, format: string): Value {
+  if (isError(value)) return value;
+  if (!format.trim()) return show(value);
+  const n = number(value);
+  if (isError(n)) return show(value);
+
+  if (/[ymdhs]/i.test(format) && !/[0#]/.test(format)) {
+    const d = fromSerial(n);
+    const pad = (x: number, width = 2) => String(x).padStart(width, '0');
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const frac = n - Math.floor(n);
+    const secondsOfDay = Math.round(frac * 86_400);
+    let afterHour = false;
+    return format.replace(/yyyy|yy|mmmm|mmm|mm|m|dddd|ddd|dd|d|hh|h|ss|s/gi, (token) => {
+      const t = token.toLowerCase();
+      if (t === 'yyyy') return String(d.getUTCFullYear());
+      if (t === 'yy') return pad(d.getUTCFullYear() % 100);
+      if (t === 'hh' || t === 'h') {
+        afterHour = true;
+        const h = Math.floor(secondsOfDay / 3600);
+        return t === 'hh' ? pad(h) : String(h);
+      }
+      if (t === 'ss' || t === 's') return pad(secondsOfDay % 60);
+      if (t === 'mmmm') return MONTHS[d.getUTCMonth()];
+      if (t === 'mmm') return MONTHS[d.getUTCMonth()].slice(0, 3);
+      if (t === 'mm' || t === 'm') {
+        // `mm` means minutes directly after an hour and months everywhere
+        // else. It is Excel's rule, and without it "hh:mm" prints the month.
+        if (afterHour) {
+          afterHour = false;
+          return pad(Math.floor(secondsOfDay / 60) % 60);
+        }
+        return t === 'mm' ? pad(d.getUTCMonth() + 1) : String(d.getUTCMonth() + 1);
+      }
+      if (t === 'dddd') return DAYS[d.getUTCDay()];
+      if (t === 'ddd') return DAYS[d.getUTCDay()].slice(0, 3);
+      return t === 'dd' ? pad(d.getUTCDate()) : String(d.getUTCDate());
+    });
+  }
+
+  if (!/[0#]/.test(format)) return show(value);
+  const percent = format.includes('%');
+  const scaled = percent ? n * 100 : n;
+  const money = /^[$£€]/.exec(format);
+  const decimals = /\.([0#]+)/.exec(format);
+  const places = decimals ? decimals[1].length : 0;
+  const fixed = Math.abs(scaled).toFixed(places);
+  const [whole, rest] = fixed.split('.');
+  const grouped = format.includes(',') ? whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : whole;
+  const sign = scaled < 0 ? '-' : '';
+  return `${sign}${money ? money[0] : ''}${grouped}${rest ? `.${rest}` : ''}${percent ? '%' : ''}`;
+}
+
 /**
  * The functions a student's sheet actually needs.
  *
@@ -533,9 +994,10 @@ function squares(xs: number[]): number {
  * `MEDIAN`; a budget wants `IF` and `ROUND`. Anything not here is `#NAME?`
  * rather than an approximation of it.
  */
-function apply(name: string, groups: Value[][]): Value {
-  const args = groups.flat();
+function apply(name: string, groups: Group[], ctx: Ctx): Value {
+  const args = groups.flatMap((g) => g.values);
   const first = args[0];
+  const text = (i: number): string => show(args[i] ?? '');
   const one = (f: (x: number) => number): Value => {
     const n = number(first ?? '');
     return isError(n) ? n : f(n);
@@ -543,11 +1005,11 @@ function apply(name: string, groups: Value[][]): Value {
 
   switch (name) {
     case 'IF': {
-      const test = groups[0]?.[0];
+      const test = groups[0]?.values[0];
       if (test === undefined) return '#VALUE!';
       if (isError(test)) return test;
       const yes = typeof test === 'boolean' ? test : number(test) !== 0;
-      const branch = yes ? groups[1]?.[0] : groups[2]?.[0];
+      const branch = yes ? groups[1]?.values[0] : groups[2]?.values[0];
       return branch === undefined ? yes : branch;
     }
     /*
@@ -558,13 +1020,13 @@ function apply(name: string, groups: Value[][]): Value {
      */
     case 'SUMPRODUCT': {
       if (groups.length === 0) return 0;
-      const lengths = new Set(groups.map((g) => g.length));
+      const lengths = new Set(groups.map((g) => g.values.length));
       if (lengths.size > 1) return '#VALUE!';
       let total = 0;
-      for (let i = 0; i < groups[0].length; i += 1) {
+      for (let i = 0; i < groups[0].values.length; i += 1) {
         let product = 1;
         for (const group of groups) {
-          const n = number(group[i]);
+          const n = number(group.values[i]);
           if (isError(n)) return n;
           product *= n;
         }
@@ -603,6 +1065,260 @@ function apply(name: string, groups: Value[][]): Value {
       return show(first ?? '').toLowerCase();
     case 'TRIM':
       return show(first ?? '').trim();
+    /**
+     * The chain of tests, which is what a grade boundary actually is.
+     *
+     * `IFS(A1>=90,"A",A1>=80,"B",TRUE,"C")` reads down the pairs and stops at
+     * the first that holds. Nothing matching is `#N/A` rather than a blank:
+     * a letter grade that silently came out empty is a row somebody scrolls
+     * past.
+     */
+    case 'IFS': {
+      for (let i = 0; i + 1 < groups.length; i += 2) {
+        const test = groups[i].values[0];
+        if (test === undefined) return '#VALUE!';
+        if (isError(test)) return test;
+        const yes = typeof test === 'boolean' ? test : number(test) !== 0;
+        if (yes) return groups[i + 1].values[0] ?? '';
+      }
+      return '#N/A';
+    }
+    /**
+     * The one place an error is allowed to be swallowed, because the person
+     * asked for it by name. Everywhere else this file says what went wrong.
+     */
+    case 'IFERROR': {
+      const value = groups[0]?.values[0];
+      if (value === undefined) return '#VALUE!';
+      return isError(value) ? (groups[1]?.values[0] ?? '') : value;
+    }
+    /*
+     * The lookups.
+     *
+     * All four answer `#N/A` when the thing is not there, and none of them
+     * approximates. Excel's fourth argument to `VLOOKUP` defaults to TRUE —
+     * "close enough, assuming the column is sorted" — and that default is how
+     * a lookup returns the wrong row to somebody who never knew there was a
+     * fourth argument. Here it defaults to exact, and an approximate match
+     * happens only when the sheet asks for one in writing.
+     */
+    case 'VLOOKUP':
+    case 'HLOOKUP': {
+      const table = groups[1];
+      if (!table) return '#VALUE!';
+      const wanted = groups[0]?.values[0];
+      if (wanted === undefined) return '#VALUE!';
+      if (isError(wanted)) return wanted;
+      const index = number(groups[2]?.values[0] ?? '');
+      if (isError(index)) return index;
+      const down = name === 'VLOOKUP';
+      const across = table.cols;
+      const lines = down ? table.rows : table.cols;
+      const depth = down ? table.cols : table.rows;
+      if (index < 1 || index > depth) return '#REF!';
+      const at = (line: number, step: number): Value =>
+        down ? table.values[line * across + step] : table.values[step * across + line];
+      const loose = groups[3] ? truthy(groups[3].values[0]) : false;
+      const same = matcher(wanted);
+      let best = -1;
+      for (let line = 0; line < lines; line += 1) {
+        const key = at(line, 0);
+        if (isError(key)) return key;
+        if (!loose && same(key)) {
+          best = line;
+          break;
+        }
+        if (loose && compare('<=', key, wanted) === true) best = line;
+      }
+      if (best < 0) return '#N/A';
+      return at(best, index - 1) ?? '';
+    }
+    /**
+     * `XLOOKUP(what, where, return, [if-missing])`.
+     *
+     * The modern one, and the one worth teaching: the lookup column and the
+     * answer column are named separately, so inserting a column in between
+     * cannot silently change what the formula returns — which is the standing
+     * flaw in `VLOOKUP`'s index number.
+     */
+    case 'XLOOKUP': {
+      const wanted = groups[0]?.values[0];
+      const where = groups[1];
+      const answers = groups[2];
+      if (wanted === undefined || !where || !answers) return '#VALUE!';
+      if (isError(wanted)) return wanted;
+      if (where.values.length !== answers.values.length) return '#VALUE!';
+      const same = matcher(wanted);
+      for (let i = 0; i < where.values.length; i += 1) {
+        const key = where.values[i];
+        if (isError(key)) return key;
+        if (same(key)) return answers.values[i] ?? '';
+      }
+      return groups[3] ? (groups[3].values[0] ?? '') : '#N/A';
+    }
+    /** `INDEX(range, row, [col])`, one-based, and out of range is `#REF!`. */
+    case 'INDEX': {
+      const table = groups[0];
+      if (!table) return '#VALUE!';
+      const row = number(groups[1]?.values[0] ?? 1);
+      if (isError(row)) return row;
+      const col = groups[2] ? number(groups[2].values[0]) : 1;
+      if (isError(col)) return col;
+      // A single row or column is indexed by one number, as every sheet has
+      // it: INDEX(A1:A9, 3) is the third cell, not the third row of a column.
+      if (table.rows === 1 || table.cols === 1) {
+        if (!groups[2]) {
+          const flat = table.values[row - 1];
+          return row < 1 || flat === undefined ? '#REF!' : flat;
+        }
+      }
+      if (row < 1 || row > table.rows || col < 1 || col > table.cols) return '#REF!';
+      return table.values[(row - 1) * table.cols + (col - 1)] ?? '';
+    }
+    /** Where in a range something sits, one-based. `#N/A` when it is not there. */
+    case 'MATCH': {
+      const wanted = groups[0]?.values[0];
+      const where = groups[1];
+      if (wanted === undefined || !where) return '#VALUE!';
+      if (isError(wanted)) return wanted;
+      const same = matcher(wanted);
+      for (let i = 0; i < where.values.length; i += 1) {
+        if (same(where.values[i])) return i + 1;
+      }
+      return '#N/A';
+    }
+    // ── Text ──────────────────────────────────────────────────────────────
+    case 'LEFT': {
+      const n = groups[1] ? number(groups[1].values[0]) : 1;
+      if (isError(n)) return n;
+      return n < 0 ? '#VALUE!' : text(0).slice(0, n);
+    }
+    case 'RIGHT': {
+      const n = groups[1] ? number(groups[1].values[0]) : 1;
+      if (isError(n)) return n;
+      if (n < 0) return '#VALUE!';
+      return n === 0 ? '' : text(0).slice(-n);
+    }
+    case 'MID': {
+      const start = number(groups[1]?.values[0] ?? '');
+      const count = number(groups[2]?.values[0] ?? '');
+      if (isError(start)) return start;
+      if (isError(count)) return count;
+      if (start < 1 || count < 0) return '#VALUE!';
+      return text(0).slice(start - 1, start - 1 + count);
+    }
+    /**
+     * `SPLIT(text, delimiter)` — the nth piece, or all of them joined by a
+     * space when no piece is named.
+     *
+     * A grid has no way to spill one value across several cells, so the
+     * alternative to a third argument would be quietly returning only the
+     * first piece. Naming the piece is honest about what a single cell can
+     * hold.
+     */
+    case 'SPLIT': {
+      const parts = text(0).split(show(groups[1]?.values[0] ?? ' '));
+      if (!groups[2]) return parts.join(' ');
+      const n = number(groups[2].values[0]);
+      if (isError(n)) return n;
+      return parts[n - 1] ?? '#N/A';
+    }
+    /** A value under a format. See `formatted` for which formats are read. */
+    case 'TEXT':
+      return formatted(args[0] ?? '', show(groups[1]?.values[0] ?? ''));
+    // ── Dates ─────────────────────────────────────────────────────────────
+    case 'TODAY':
+      return today(ctx);
+    case 'NOW':
+      return rightNow(ctx);
+    case 'DATE': {
+      const y = number(groups[0]?.values[0] ?? '');
+      const m = number(groups[1]?.values[0] ?? '');
+      const d = number(groups[2]?.values[0] ?? '');
+      if (isError(y)) return y;
+      if (isError(m)) return m;
+      if (isError(d)) return d;
+      return toSerial(Date.UTC(y, m - 1, d));
+    }
+    /**
+     * `DATEDIF(from, to, unit)` — "Y", "M" or "D", and the one every planner
+     * is built on: how long until the exam.
+     *
+     * Whole units, counting down. A start after the end is `#NUM!` in Excel;
+     * there is no `#NUM!` here, and `#VALUE!` says the same thing — the
+     * arguments are the wrong way round — without inventing a seventh error.
+     */
+    case 'DATEDIF': {
+      const from = number(groups[0]?.values[0] ?? '');
+      const to = number(groups[1]?.values[0] ?? '');
+      if (isError(from)) return from;
+      if (isError(to)) return to;
+      if (to < from) return '#VALUE!';
+      const unit = show(groups[2]?.values[0] ?? 'D').trim().toUpperCase();
+      if (unit === 'D') return Math.floor(to) - Math.floor(from);
+      const a = fromSerial(from);
+      const b = fromSerial(to);
+      let months =
+        (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth());
+      if (b.getUTCDate() < a.getUTCDate()) months -= 1;
+      if (unit === 'M') return months;
+      if (unit === 'Y') return Math.floor(months / 12);
+      return '#VALUE!';
+    }
+    /** 1 for Sunday through 7 for Saturday, which is the default every sheet has. */
+    case 'WEEKDAY': {
+      const serial = number(groups[0]?.values[0] ?? '');
+      if (isError(serial)) return serial;
+      return fromSerial(serial).getUTCDay() + 1;
+    }
+    /** The last day of the month `n` months along — quarter ends, rent, term dates. */
+    case 'EOMONTH': {
+      const serial = number(groups[0]?.values[0] ?? '');
+      const months = groups[1] ? number(groups[1].values[0]) : 0;
+      if (isError(serial)) return serial;
+      if (isError(months)) return months;
+      const d = fromSerial(serial);
+      return toSerial(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + months + 1, 0));
+    }
+    // ── Counting and summing under a condition ────────────────────────────
+    case 'COUNTIF':
+    case 'SUMIF':
+    case 'AVERAGEIF': {
+      const where = groups[0];
+      if (!where || !groups[1]) return '#VALUE!';
+      const same = matcher(groups[1].values[0] ?? '');
+      // SUMIF's third argument is the column actually added up, which is what
+      // lets a gradebook count one column and total another.
+      const totals = groups[2] ?? where;
+      if (totals.values.length !== where.values.length) return '#VALUE!';
+      const picked: Value[] = [];
+      for (let i = 0; i < where.values.length; i += 1) {
+        const v = where.values[i];
+        if (isError(v)) return v;
+        if (same(v)) picked.push(totals.values[i]);
+      }
+      if (name === 'COUNTIF') return picked.length;
+      const ns = numbers(picked);
+      if (isError(ns)) return ns;
+      if (name === 'SUMIF') return sum(ns);
+      return ns.length ? mean(ns) : '#DIV/0!';
+    }
+    case 'COUNTIFS':
+    case 'SUMIFS': {
+      // COUNTIFS is (range, criterion) pairs from the start; SUMIFS puts the
+      // range being added up first and the pairs after it.
+      const counting = name === 'COUNTIFS';
+      const pairs = counting ? groups : groups.slice(1);
+      if (pairs.length < 2) return '#VALUE!';
+      const length = pairs[0].values.length;
+      const rows = hits(pairs, length);
+      if (isError(rows)) return rows;
+      if (counting) return rows.length;
+      const totals = groups[0];
+      if (!totals || totals.values.length !== length) return '#VALUE!';
+      const ns = numbers(rows.map((r) => totals.values[r]));
+      return isError(ns) ? ns : sum(ns);
+    }
     default:
       break;
   }
@@ -669,6 +1385,78 @@ function apply(name: string, groups: Value[][]): Value {
       const places = xs[1] ?? 0;
       const factor = 10 ** places;
       return Math.round((xs[0] ?? 0) * factor) / factor;
+    }
+    case 'MODE': {
+      if (!xs.length) return '#N/A';
+      const tally = new Map<number, number>();
+      for (const x of xs) tally.set(x, (tally.get(x) ?? 0) + 1);
+      let best = 0;
+      let at = 0;
+      for (const [value, count] of tally) {
+        if (count > best) {
+          best = count;
+          at = value;
+        }
+      }
+      // Nothing repeating has no mode. Excel says #N/A and it is right: the
+      // first value of a column of distinct numbers is not the common one.
+      return best > 1 ? at : '#N/A';
+    }
+    /** Pearson's r, over two ranges of the same length. */
+    case 'CORREL': {
+      const a = numbers(groups[0]?.values ?? []);
+      const b = numbers(groups[1]?.values ?? []);
+      if (isError(a)) return a;
+      if (isError(b)) return b;
+      if (a.length !== b.length || a.length < 2) return '#DIV/0!';
+      const ma = mean(a);
+      const mb = mean(b);
+      let top = 0;
+      for (let i = 0; i < a.length; i += 1) top += (a[i] - ma) * (b[i] - mb);
+      const spread = Math.sqrt(squares(a) * squares(b));
+      return spread === 0 ? '#DIV/0!' : top / spread;
+    }
+    // ── Money ─────────────────────────────────────────────────────────────
+    /**
+     * `NPV(rate, ...flows)` — discounted from period one, as Excel has it.
+     *
+     * The catch worth knowing, and the reason this comment exists: Excel's
+     * `NPV` discounts the *first* flow by one period, so an investment made
+     * today goes outside the function — `=A1+NPV(r,B1:E1)` — rather than
+     * inside it. Matching Excel here matters more than being right in the
+     * abstract, because the answer is checked against a classmate's sheet.
+     */
+    case 'NPV': {
+      const rate = number(groups[0]?.values[0] ?? '');
+      if (isError(rate)) return rate;
+      if (rate === -1) return '#DIV/0!';
+      const flows = numbers(groups.slice(1).flatMap((g) => g.values));
+      if (isError(flows)) return flows;
+      let total = 0;
+      for (let i = 0; i < flows.length; i += 1) total += flows[i] / (1 + rate) ** (i + 1);
+      return total;
+    }
+    /** The rate at which the flows come to nothing. `#N/A` when none does. */
+    case 'IRR': {
+      const flows = numbers(groups[0]?.values ?? []);
+      if (isError(flows)) return flows;
+      if (flows.length < 2) return '#VALUE!';
+      return solveRate((r) =>
+        flows.reduce((total, flow, i) => total + flow / (1 + r) ** i, 0),
+      );
+    }
+    case 'PMT': {
+      const [rate, nper, pv] = [xs[0] ?? 0, xs[1] ?? 0, xs[2] ?? 0];
+      return pmt(rate, nper, pv, xs[3] ?? 0, xs[4] ?? 0);
+    }
+    case 'FV':
+      return fvOf(xs[0] ?? 0, xs[1] ?? 0, xs[2] ?? 0, xs[3] ?? 0, xs[4] ?? 0);
+    case 'PV':
+      return pvOf(xs[0] ?? 0, xs[1] ?? 0, xs[2] ?? 0, xs[3] ?? 0, xs[4] ?? 0);
+    case 'RATE': {
+      const [nper, pay, pv, fv, type] = [xs[0] ?? 0, xs[1] ?? 0, xs[2] ?? 0, xs[3] ?? 0, xs[4] ?? 0];
+      if (nper === 0) return '#DIV/0!';
+      return solveRate((r) => fvOf(r, nper, pay, pv, type) - fv);
     }
     default:
       return '#NAME?';
@@ -761,23 +1549,112 @@ export function fromRows(
 // ── Reading a table somebody pasted ──────────────────────────────────────
 
 /** One CSV line, honouring quotes. Shared by the CSV and the auto-detect paths. */
+/**
+ * A delimited text split into records, not lines.
+ *
+ * A newline inside quotes is part of a field — `"line one\nline two",2` is one
+ * record of two cells — and splitting on every newline first cuts it in half.
+ * Measured before this existed, that text came back as
+ * `[["a","b"],["line one"],["line two,2"]]`: the field halved *and* the second
+ * column swallowed into the first, so a column of numbers silently became text.
+ *
+ * It is not a rare shape. A CSV this app writes hits it the moment a cell
+ * holds a note with a line break in it, which means the round trip through its
+ * own export was lossy.
+ */
+function records(text: string): string[] {
+  const out: string[] = [];
+  let record = '';
+  let quoted = false;
+
+  /*
+   * A quote only means "quoted field" at the edge of a field.
+   *
+   * The first version of this flipped on every `"` in the text, which is right
+   * for CSV and wrong for everything else — and the separator is not known
+   * until `readTable` has counted the tabs, which happens after this runs. A
+   * tab-separated paste holding `15" monitor` therefore opened a quoted field
+   * at the inch mark and swallowed every newline after it: four rows arrived
+   * as two, with the rest of the file inside one cell. That is worse than the
+   * bug this function was written to fix.
+   *
+   * A field boundary is the start of the text, a newline, a comma or a tab —
+   * true whichever separator turns out to be in use, so no ordering problem.
+   * `15" monitor` has a digit before the quote and stays literal; `"one\ntwo",2`
+   * opens at the start of a field and keeps its newline.
+   */
+  const boundary = (at: number): boolean =>
+    at === 0 || text[at - 1] === '\n' || text[at - 1] === ',' || text[at - 1] === '\t';
+
+  /** A quoted field ends where the quote is followed by a separator or the end. */
+  const closes = (at: number): boolean => {
+    const next = text[at + 1];
+    return next === undefined || next === '\n' || next === ',' || next === '\t';
+  };
+
+  for (let i = 0; i < text.length; i += 1) {
+    const ch = text[i];
+    if (ch === '"') {
+      // A doubled quote inside a quoted field is an escaped quote, not the end
+      // of one — consume both so the state does not flip.
+      if (quoted && text[i + 1] === '"') {
+        record += '""';
+        i += 1;
+        continue;
+      }
+      if (!quoted && boundary(i)) quoted = true;
+      else if (quoted && closes(i)) quoted = false;
+      record += ch;
+      continue;
+    }
+    if (ch === '\n' && !quoted) {
+      out.push(record);
+      record = '';
+      continue;
+    }
+    record += ch;
+  }
+  out.push(record);
+  return out;
+}
+
+/**
+ * One record split into cells.
+ *
+ * Quotes are read the same way `records` reads them, and for the same reason:
+ * a `"` is only a field delimiter at the edge of a field. `15" monitor` in a
+ * tab-separated paste is an inch mark, and treating it as an opening quote
+ * swallowed the tab after it — so the row arrived as one cell instead of two,
+ * with the quote silently removed.
+ *
+ * `started` is the test: a quote can open a field only while nothing has been
+ * put in it yet, and can close one only where a separator or the end follows.
+ */
 function csvLine(line: string, sep: string): string[] {
   const out: string[] = [];
   let cell = '';
   let quoted = false;
+  let started = false;
   for (let i = 0; i < line.length; i += 1) {
     const ch = line[i];
     if (quoted) {
       if (ch === '"' && line[i + 1] === '"') {
         cell += '"';
         i += 1;
-      } else if (ch === '"') quoted = false;
-      else cell += ch;
-    } else if (ch === '"') quoted = true;
-    else if (ch === sep) {
+      } else if (ch === '"' && (line[i + 1] === undefined || line[i + 1] === sep)) {
+        quoted = false;
+      } else cell += ch;
+    } else if (ch === '"' && !started) {
+      quoted = true;
+      started = true;
+    } else if (ch === sep) {
       out.push(cell);
       cell = '';
-    } else cell += ch;
+      started = false;
+    } else {
+      cell += ch;
+      started = true;
+    }
   }
   out.push(cell);
   return out;
@@ -797,7 +1674,7 @@ function csvLine(line: string, sep: string): string[] {
  * one that is wrong throughout.
  */
 export function readTable(text: string): string[][] {
-  const lines = text.replace(/\r\n?/g, '\n').split('\n').filter((l) => l.trim() !== '');
+  const lines = records(text.replace(/\r\n?/g, '\n')).filter((l) => l.trim() !== '');
   if (lines.length === 0) return [];
 
   const markdown = lines.filter((l) => /^\s*\|/.test(l)).length >= lines.length - 1;
@@ -817,6 +1694,8 @@ export function readTable(text: string): string[][] {
 
   const tabs = lines.filter((l) => l.includes('\t')).length;
   const sep = tabs >= lines.length / 2 ? '\t' : ',';
+  // Trimmed per cell, but a newline held inside a quoted field is content and
+  // survives — only the whitespace around the whole cell goes.
   return lines.map((l) => csvLine(l, sep).map((c) => c.trim()));
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readIncoming, readList, readModule, readWindow } from './stored';
+import { readDeck, readFolder, readIncoming, readList, readModule, readWindow } from './stored';
 import { buildCatalog } from '../data/catalog';
 import { hoursOn } from './windows';
 import type { CourseModule } from './types';
@@ -178,5 +178,73 @@ describe('every door, through one reader', () => {
     const out = readIncoming({ timers, reviews } as Record<string, unknown>);
     expect(out.timers).toBe(timers);
     expect(out.reviews).toBe(reviews);
+  });
+});
+
+/*
+ * Two more rows of the same kind, on the two collections this branch added.
+ * `list()` only drops nullish rows and casts the rest, so a folder whose name
+ * was not a string took the drive down inside a `localeCompare`, and a deck
+ * stored with `slides: null` took its screen down inside a `.map`.
+ */
+describe('a drive folder read back from storage', () => {
+  it('keeps a well-formed one', () => {
+    const row = { id: 'a', name: 'Essays', parentId: null, created: 5 };
+    expect(readFolder(row)).toEqual(row);
+  });
+
+  it('gives a name that is not a string one that is', () => {
+    expect(readFolder({ id: 'a', name: 42 })?.name).toBe('Folder');
+    expect(readFolder({ id: 'a' })?.name).toBe('Folder');
+  });
+
+  it('reads a missing or empty parent as the top of the drive', () => {
+    expect(readFolder({ id: 'a', name: 'x' })?.parentId).toBeNull();
+    expect(readFolder({ id: 'a', name: 'x', parentId: '' })?.parentId).toBeNull();
+    expect(readFolder({ id: 'a', name: 'x', parentId: 'b' })?.parentId).toBe('b');
+  });
+
+  it('drops a row with no id, which names nothing', () => {
+    expect(readFolder({ name: 'x' })).toBeNull();
+    expect(readFolder(null)).toBeNull();
+    expect(readList([{ id: 'a', name: 'x' }, null, { name: 'no id' }], readFolder)).toHaveLength(1);
+  });
+});
+
+describe('a deck read back from storage', () => {
+  it('keeps a well-formed one', () => {
+    const deck = readDeck({
+      id: 'd',
+      title: 'A talk',
+      subtitle: '',
+      courseId: 'econ',
+      slides: [{ title: 'One', bullets: ['a'] }],
+      hidden: [1],
+      created: 1,
+      updated: 2,
+    });
+    expect(deck?.slides).toHaveLength(1);
+    expect(deck?.hidden).toEqual([1]);
+    expect(deck?.courseId).toBe('econ');
+  });
+
+  it('gives slides that are not a list an empty one', () => {
+    // `running(deck)` maps over this on every render.
+    expect(readDeck({ id: 'd', slides: null })?.slides).toEqual([]);
+    expect(readDeck({ id: 'd' })?.slides).toEqual([]);
+  });
+
+  it('keeps only the bullets that are strings', () => {
+    const deck = readDeck({ id: 'd', slides: [{ title: 'x', bullets: ['a', 3, null, 'b'] }] });
+    expect(deck?.slides[0].bullets).toEqual(['a', 'b']);
+  });
+
+  it('keeps only the hidden marks that are numbers', () => {
+    expect(readDeck({ id: 'd', hidden: [0, 'x', 2] })?.hidden).toEqual([0, 2]);
+  });
+
+  it('drops a row with no id', () => {
+    expect(readDeck({ title: 'x' })).toBeNull();
+    expect(readDeck(undefined)).toBeNull();
   });
 });

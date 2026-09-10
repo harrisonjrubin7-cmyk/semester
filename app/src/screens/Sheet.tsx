@@ -3,7 +3,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
-import { ActionButton, EmptyState, SectionLabel } from '../components/ui';
+import { ActionButton, EmptyState, FilePick, SectionLabel } from '../components/ui';
 import { ChevronRight, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
@@ -28,6 +28,9 @@ import {
   type Sheet as SheetModel,
 } from '../lib/sheet';
 import { fromSheet, sheetFileName, widthsFor, xlsx } from '../lib/xlsx';
+import { canBuild, gradeSheet } from '../lib/gradesheet';
+import { fromDelimited, fromXlsx, readerFor } from '../lib/xlsxin';
+import { LIMIT } from '../state/slices/made';
 
 /**
  * A sheet, or a table.
@@ -63,9 +66,77 @@ export function Sheet() {
 }
 
 function Shelf() {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode, catalog } = useStore();
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
+  /*
+   * The courses whose syllabus states weights this app can read. A course
+   * whose grading is prose — "at the instructor's discretion" — is left out
+   * rather than offered a calculator with blank weights in it, which would be
+   * a sheet that looks like it knows something and does not.
+   */
+  const calculable = catalog.courses.filter(canBuild);
+  /** What the last import had to leave behind, and anything that went wrong. */
+  const [notes, setNotes] = useState<string[]>([]);
+  const [trouble, setTrouble] = useState('');
+  const [reading, setReading] = useState(false);
+
+  /*
+   * Reading picked files, one after another rather than all at once: a
+   * workbook is parsed on this thread, and three at a time on a phone is a
+   * frozen screen. A file that fails says why and does not stop the rest.
+   */
+  const readFiles = async (picked: File[]) => {
+    setReading(true);
+    setTrouble('');
+    const said: string[] = [];
+    const problems: string[] = [];
+    // `state` does not change while this loop runs, so the room left has to be
+    // counted here — otherwise three files of eighty sheets each all see the
+    // same room and the third one evicts what the first two added.
+    let taken = 0;
+    for (const file of picked) {
+      const kind = readerFor(file);
+      if (!kind) {
+        problems.push(`${file.name} is not a spreadsheet this app can open.`);
+        continue;
+      }
+      try {
+        const read = kind === 'xlsx' ? await fromXlsx(file) : await fromDelimited(file);
+        /*
+         * Room first.
+         *
+         * `makeSheet` prepends and then cuts the list to `LIMIT`, so importing
+         * a twelve-tab workbook with 195 sheets already kept would push seven
+         * of them off the end — and the next write to storage makes that
+         * permanent. Nothing said so; the import looked like it worked.
+         *
+         * So the workbook is refused whole rather than half-imported: there is
+         * no good way to choose which of somebody's existing sheets to lose,
+         * and the answer to "you have too many" is theirs to make.
+         */
+        const room = LIMIT - state.sheets.length - taken;
+        if (read.sheets.length > room) {
+          problems.push(
+            `${file.name} holds ${read.sheets.length} ${read.sheets.length === 1 ? 'sheet' : 'sheets'} ` +
+              `and there is room for ${Math.max(0, room)}. Delete some sheets and try again — ` +
+              'nothing was imported and nothing was lost.',
+          );
+          continue;
+        }
+        // Newest last, so a multi-sheet workbook lands in the order its tabs
+        // were in rather than reversed.
+        for (const sheet of read.sheets) dispatch({ type: 'makeSheet', sheet });
+        taken += read.sheets.length;
+        said.push(...read.notes);
+      } catch (e) {
+        problems.push(e instanceof Error ? e.message : `${file.name} could not be read.`);
+      }
+    }
+    setNotes([...new Set(said)]);
+    setTrouble(problems.join(' '));
+    setReading(false);
+  };
 
   return (
     <Page blurb="A grid you can type into and add up. Out as a real Excel file, a CSV, or a table for a document.">
@@ -116,9 +187,94 @@ function Shelf() {
           </div>
         </Blueprint>
       ) : (
-        <ActionButton onClick={() => setPasting(true)} style={{ marginBottom: 'var(--sp-7)' }}>
+        <ActionButton onClick={() => setPasting(true)} style={{ marginBottom: 'var(--sp-4)' }}>
           Paste a table in
         </ActionButton>
+      )}
+
+      <FilePick
+        accept=".xlsx,.csv,.tsv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        disabled={reading}
+        onPick={(picked) => void readFiles(picked)}
+        style={{ marginBottom: 'var(--sp-5)' }}
+      >
+        {reading ? 'Reading…' : 'Open an Excel file or CSV'}
+      </FilePick>
+
+      {trouble !== '' && (
+        <Blueprint style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-sm)' }}>{trouble}</div>
+        </Blueprint>
+      )}
+
+      {notes.length > 0 && (
+        <Blueprint style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-7)' }}>
+          <SectionLabel>What did not come across</SectionLabel>
+          <ul
+            style={{
+              ...secondLine(),
+              fontSize: 'var(--type-sm)',
+              margin: 0,
+              paddingLeft: 'var(--sp-6)',
+            }}
+          >
+            {notes.map((note) => (
+              <li key={note} style={{ marginTop: 'var(--sp-2)' }}>
+                {note}
+              </li>
+            ))}
+          </ul>
+        </Blueprint>
+      )}
+
+      {calculable.length > 0 && (
+        <div style={{ marginBottom: 'var(--sp-7)' }}>
+        <Folding name="What do I need?">
+          <SectionLabel>From your syllabus</SectionLabel>
+          <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-4)' }}>
+            A sheet per course, weighted the way its syllabus weights it, with the scores left for
+            you to fill in. Nothing in it is a grade your university has given you.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+            {calculable.map((course) => (
+              <Blueprint
+                key={course.id}
+                as="button"
+                plain
+                onClick={() =>
+                  dispatch({
+                    type: 'makeSheet',
+                    sheet: gradeSheet(course, state.grades[course.id] ?? '').sheet,
+                    open: true,
+                  })
+                }
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-5)',
+                  padding: 'var(--sp-6)',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 'var(--type-md)' }}>{course.code}</div>
+                  <div
+                    style={{
+                      ...secondLine(),
+                      fontSize: 'var(--type-sm)',
+                      marginTop: 'var(--sp-1)',
+                    }}
+                  >
+                    {course.grading.length}{' '}
+                    {course.grading.length === 1 ? 'component' : 'components'} from the syllabus
+                  </div>
+                </div>
+                <ChevronRight size={16} />
+              </Blueprint>
+            ))}
+          </div>
+        </Folding>
+        </div>
       )}
 
       {state.sheets.length === 0 ? (
