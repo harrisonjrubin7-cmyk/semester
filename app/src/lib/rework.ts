@@ -301,7 +301,30 @@ Reply with JSON only, no prose around it:
  * what unit 7 already covers" — and sending their cards would both cost tokens
  * and invite the model to move them.
  */
-export function oneUnit(guide: Guide, updates: CourseUpdate[], unit: number): string {
+export function oneUnit(
+  guide: Guide,
+  updates: CourseUpdate[],
+  unit: number,
+  /**
+   * Which unit of the *stored* guide this displayed one is, or null.
+   *
+   * The two are not the same number, and assuming they were sent the wrong
+   * reading to the model. `CourseUpdate.unit` is an index into the guide as
+   * imported; the guide on screen is the live merge, and `mergeGuide` splices
+   * an unfiled update in as a unit of its own at the session it names — so
+   * every unit at or after it is displayed one higher than it is stored. Pick
+   * unit 5 on screen and the material filed against stored unit 5 is a
+   * different week's reading.
+   *
+   * Null means this displayed unit *is* one of those insertions and has no
+   * stored counterpart, so only unfiled material belongs to it — which is the
+   * material it was made out of.
+   *
+   * Worked out by the caller with `storedUnit`, which has the merge's own
+   * `addedUnits` to hand.
+   */
+  stored: number | null = unit,
+): string {
   const target = guide.units[unit];
   if (!target) throw new Error('That unit is not in this guide.');
 
@@ -313,8 +336,9 @@ export function oneUnit(guide: Guide, updates: CourseUpdate[], unit: number): st
 
   // Material filed against this unit, plus anything filed against none — an
   // unfiled reading is exactly as likely to belong here as anywhere, and the
-  // student asked for this unit.
-  const mine = updates.filter((u) => u.unit === unit || u.unit === null);
+  // student asked for this unit. Filed material is matched on the *stored*
+  // index, which is what `CourseUpdate.unit` holds.
+  const mine = updates.filter((u) => u.unit === null || (stored !== null && u.unit === stored));
   const added = mine
     .map((u) => {
       const where = u.unit === null ? 'filed against no unit' : 'filed against this unit';
@@ -419,4 +443,21 @@ export function readOneUnit(reply: string, base: Guide, unit: number): Plan {
     },
     notes,
   };
+}
+
+/**
+ * A unit's index in the stored guide, given its index on screen.
+ *
+ * `mergeGuide` splices an unfiled update in as a unit of its own, so the guide
+ * a person is looking at can have more units than the one on disk, and every
+ * unit at or after an insertion is displayed one higher than it is stored.
+ * `addedUnits` is the merge's own record of which displayed indices are
+ * insertions, which is exactly what this needs.
+ *
+ * Null for an inserted unit: it has no stored counterpart, and the material
+ * that belongs to it is the unfiled update it was made out of.
+ */
+export function storedUnit(displayed: number, addedUnits: number[] = []): number | null {
+  if (addedUnits.includes(displayed)) return null;
+  return displayed - addedUnits.filter((a) => a < displayed).length;
 }

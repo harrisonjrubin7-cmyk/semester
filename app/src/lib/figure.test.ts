@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MOST_FIGURES, describeFigure, readFigure, readFigures } from './figure';
+import { MOST_FIGURES, describeFigure, figureShapes, readFigure, readFigures } from './figure';
+import { capsFor } from './controls';
 import { DIAGRAM_KINDS } from './types';
 
 const bars = (over: Record<string, unknown> = {}) => ({
@@ -193,5 +194,43 @@ describe('how a figure reads before it is saved', () => {
     expect(
       describeFigure({ type: 'diagram', title: 'The market', caption: '', kind: 'supply-demand' }),
     ).toBe('The market — the supply demand diagram');
+  });
+});
+
+describe('the ceiling a student chose', () => {
+  const many = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      type: 'steps',
+      title: `Figure ${i}`,
+      caption: 'What it shows.',
+      steps: [
+        { n: '1', t: 'First', d: 'It begins.' },
+        { n: '2', t: 'Then', d: 'It continues.' },
+      ],
+    }));
+
+  /*
+   * Figures were the one kind left on a fixed ceiling while everything around
+   * them scaled: `brief` kept three and `full` could never keep more than
+   * three, however much the material had.
+   */
+  it('keeps the raised ceiling that thorough asked for', () => {
+    const caps = capsFor({ depth: 'full', level: 'course', cards: 0 });
+    expect(caps.figures).toBeGreaterThan(MOST_FIGURES);
+    expect(readFigures(many(9), caps)).toHaveLength(caps.figures);
+    expect(readFigures(many(9))).toHaveLength(MOST_FIGURES);
+  });
+
+  it('enforces the lowered ceiling that brief asked for', () => {
+    const caps = capsFor({ depth: 'brief', level: 'course', cards: 0 });
+    expect(readFigures(many(9), caps)).toHaveLength(caps.figures);
+  });
+
+  // The description and the validator that enforces it have to agree — they
+  // drifted once already in this codebase.
+  it('asks for the same number it will keep', () => {
+    const caps = capsFor({ depth: 'full', level: 'course', cards: 0 });
+    expect(figureShapes(caps)).toContain(`0 to ${caps.figures} figures`);
+    expect(figureShapes()).toContain(`0 to ${MOST_FIGURES} figures`);
   });
 });

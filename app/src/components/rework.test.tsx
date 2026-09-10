@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { CourseUpdate, Guide } from '../lib/types';
+import type { LiveGuide } from '../lib/live';
 
 /**
  * Choosing what a rebuild covers.
@@ -82,6 +83,23 @@ const guide = (): Guide => ({
   terms: [{ t: 'Scarcity', d: 'Wants exceed means.' }],
 });
 
+/**
+ * The guide as the screen gets it — the live merge, not the stored one.
+ *
+ * `addedUnits` is empty here, so displayed and stored indices agree; the case
+ * where they do not is covered in `rework.test.ts` against `storedUnit`
+ * directly, which is where the arithmetic lives.
+ */
+const live = (over: Partial<LiveGuide> = {}): LiveGuide => ({
+  ...guide(),
+  added: {},
+  baseCards: guide().units.map((u) => u.cards.length),
+  addedUnits: [],
+  addedLong: { frames: 0, selfTest: 0, cases: 0, examples: 0 },
+  examples: [],
+  ...over,
+});
+
 const updates: CourseUpdate[] = [
   {
     id: 'u1',
@@ -111,7 +129,7 @@ beforeEach(() => {
     root = createRoot(host);
   });
   act(() => {
-    root.render(<Rework courseId="econ" guide={guide()} updates={updates} />);
+    root.render(<Rework courseId="econ" guide={live()} updates={updates} />);
   });
 });
 

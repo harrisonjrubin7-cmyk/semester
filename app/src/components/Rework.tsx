@@ -10,12 +10,14 @@ import {
   oneUnit,
   readOneUnit,
   readPlan,
+  storedUnit,
   survey,
   verdict,
   type Plan,
   type Survey,
 } from '../lib/rework';
-import type { CourseId, CourseUpdate, Guide } from '../lib/types';
+import type { CourseId, CourseUpdate } from '../lib/types';
+import type { LiveGuide } from '../lib/live';
 import { Folding } from './Fold';
 
 /**
@@ -55,7 +57,7 @@ export function Rework({
   updates,
 }: {
   courseId: CourseId;
-  guide: Guide;
+  guide: LiveGuide;
   updates: CourseUpdate[];
 }) {
   const { state, dispatch } = useStore();
@@ -88,7 +90,15 @@ export function Rework({
         think: true,
         system: whole ? SYSTEM : SYSTEM_ONE,
         messages: [
-          { role: 'user', content: whole ? brief(guide, updates) : oneUnit(guide, updates, scope) },
+          {
+            role: 'user',
+            content: whole
+              ? brief(guide, updates)
+              : // The guide on screen is the live merge, whose unit indices are
+                // not the stored ones an update was filed against. See
+                // `storedUnit`.
+                oneUnit(guide, updates, scope, storedUnit(scope, guide.addedUnits)),
+          },
         ],
       });
       const next = whole ? readPlan(reply, guide) : readOneUnit(reply, guide, scope);

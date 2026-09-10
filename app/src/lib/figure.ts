@@ -35,9 +35,10 @@
  */
 
 import { DIAGRAM_KINDS, type BarRow, type DiagramKind, type Figure, type Step } from './types';
+import { MOST as DEFAULT_CAPS, type Caps } from './controls';
 
 /** At most this many figures out of one piece of material. */
-export const MOST_FIGURES = 3;
+export const MOST_FIGURES = DEFAULT_CAPS.figures;
 
 /** A table with one row is not a table; with twenty it is not a figure. */
 const BAR_ROWS = { least: 2, most: 12 };
@@ -56,7 +57,9 @@ const CAPTION = 200;
  * validator that enforces it are the same file. They drifted once already in
  * this codebase — a prompt that asked for a field nothing read.
  */
-export const FIGURE_SHAPES = `figures: 0 to ${MOST_FIGURES} figures the material actually contains. \
+/** The shapes, at a given ceiling. `FIGURE_SHAPES` below is this at the default. */
+export function figureShapes(caps: Caps = DEFAULT_CAPS): string {
+  return `figures: 0 to ${caps.figures} figures the material actually contains. \
 This is not decoration and not a summary — include one only where the text gives you the whole \
 thing. Each is one of exactly three shapes:
 
@@ -74,6 +77,10 @@ other diagram available — if the material's picture is not in that list, do no
 for it. Return no figure rather than the nearest one.
 
 Return "figures":[] when the material has none. Most material has none.`;
+}
+
+/** The shapes at the default ceiling — what every caller used before. */
+export const FIGURE_SHAPES = figureShapes();
 
 function text(v: unknown, cap: number): string {
   return typeof v === 'string' ? v.trim().slice(0, cap) : '';
@@ -183,13 +190,13 @@ export function readFigure(raw: unknown): Figure | null {
 }
 
 /** Every figure in a reply that survives {@link readFigure}, capped. */
-export function readFigures(raw: unknown): Figure[] {
+export function readFigures(raw: unknown, caps: Caps = DEFAULT_CAPS): Figure[] {
   if (!Array.isArray(raw)) return [];
   const out: Figure[] = [];
   for (const one of raw) {
     const f = readFigure(one);
     if (f) out.push(f);
-    if (out.length === MOST_FIGURES) break;
+    if (out.length === caps.figures) break;
   }
   return out;
 }

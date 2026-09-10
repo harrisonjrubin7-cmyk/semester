@@ -62,17 +62,19 @@ export interface Caps {
   tests: number;
   cases: number;
   examples: number;
+  figures: number;
 }
 
 /**
  * The ceilings as they have always been — `standard`, and the default.
  *
- * `cards` and `terms` were literals inside the prompt in `lib/claude.ts` and
- * the other four were `MOST` in `lib/study.ts`. Two homes for one idea, and
- * changing "how much" meant knowing about both. One table now; `lib/study.ts`
- * reads this rather than keeping its own.
+ * `cards` and `terms` were literals inside the prompt in `lib/claude.ts`, four
+ * were `MOST` in `lib/study.ts`, and figures were `MOST_FIGURES` in
+ * `lib/figure.ts`. Three homes for one idea, and changing "how much" meant
+ * knowing about all of them. One table now; the others read this rather than
+ * keeping their own.
  */
-export const MOST: Caps = { cards: 25, terms: 20, frames: 6, tests: 8, cases: 3, examples: 4 };
+export const MOST: Caps = { cards: 25, terms: 20, frames: 6, tests: 8, cases: 3, examples: 4, figures: 3 };
 
 /** The most a student may ask for by hand, whatever the depth. */
 export const MOST_CARDS = 50;
@@ -113,6 +115,7 @@ export function capsFor(c: Controls = DEFAULTS): Caps {
     tests: scaled(MOST.tests, c.depth),
     cases: scaled(MOST.cases, c.depth),
     examples: scaled(MOST.examples, c.depth),
+    figures: scaled(MOST.figures, c.depth),
   };
 }
 

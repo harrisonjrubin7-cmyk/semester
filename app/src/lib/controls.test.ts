@@ -40,7 +40,7 @@ describe('depth', () => {
   it('shortens everything at brief and lengthens everything at full', () => {
     const brief = capsFor(c({ depth: 'brief' }));
     const full = capsFor(c({ depth: 'full' }));
-    for (const k of ['cards', 'terms', 'frames', 'tests', 'cases', 'examples'] as const) {
+    for (const k of ['cards', 'terms', 'frames', 'tests', 'cases', 'examples', 'figures'] as const) {
       expect(brief[k], k).toBeLessThan(MOST[k]);
       expect(full[k], k).toBeGreaterThan(MOST[k]);
     }
@@ -50,6 +50,13 @@ describe('depth', () => {
   it('never takes a ceiling to zero, even for the smallest kind', () => {
     expect(MOST.cases).toBe(3);
     expect(capsFor(c({ depth: 'brief' })).cases).toBeGreaterThanOrEqual(1);
+  });
+
+  // Figures were the one kind left on a fixed ceiling while everything around
+  // them scaled, so `brief` kept three and `full` could never keep more.
+  it('scales figures with everything else', () => {
+    expect(capsFor(c({ depth: 'full' })).figures).toBeGreaterThan(MOST.figures);
+    expect(capsFor(c({ depth: 'brief' })).figures).toBeLessThan(MOST.figures);
   });
 
   it('keeps every ceiling a whole number', () => {

@@ -633,3 +633,70 @@ describe('extraFigures', () => {
     expect(extraFigures(existing, [update({ fileIds: [] })])).toBe(existing);
   });
 });
+
+describe('material a rebuild has already folded in', () => {
+  /*
+   * A rebuild folds added material into the guide and saves it, and the
+   * updates stay listed — deliberately, so they can still be removed and their
+   * files are still attached. Nothing consumed them, so the next render merged
+   * the same cards on top of the guide that now contains them: every card from
+   * every reading twice, and three times after a second rebuild.
+   *
+   * This predates scoped rebuilds and applies to the whole-guide one just as
+   * much. The scoped path only made it easier to reach, because a rebuild you
+   * would actually accept is one you can do without rearranging eleven other
+   * units.
+   */
+  it('is not merged in a second time', () => {
+    const baked = guide({
+      units: [
+        { name: 'Supply', mastery: 80, cards: [card('s1'), card('s2'), card('new')] },
+        { name: 'Demand', mastery: 40, cards: [card('d1')] },
+      ],
+    });
+    const out = mergeGuide(baked, [update()]);
+    expect(out.units[0].cards.map((c) => c.q)).toEqual(['s1', 's2', 'new']);
+  });
+
+  it('still merges what the guide does not have', () => {
+    const out = mergeGuide(guide(), [update()]);
+    expect(out.units[0].cards.map((c) => c.q)).toEqual(['s1', 's2', 'new']);
+  });
+
+  /*
+   * A card the rebuild reworded is genuinely a different card — that is what
+   * `cardKey` means everywhere else, and it is the same answer the cost
+   * preview gives. So it merges, rather than being guessed at as "the same
+   * question, differently worded".
+   */
+  it('treats a reworded question as the different card it is', () => {
+    const reworded = guide({
+      units: [
+        { name: 'Supply', mastery: 80, cards: [card('s1'), card('s2'), card('new, reworded')] },
+        { name: 'Demand', mastery: 40, cards: [card('d1')] },
+      ],
+    });
+    expect(mergeGuide(reworded, [update()]).units[0].cards.map((c) => c.q)).toContain('new');
+  });
+
+  // The same duplication one level up: an unfiled update becomes a unit of its
+  // own, and after a rebuild that unit's cards are in a real unit.
+  it('does not splice in a unit for material the guide already holds', () => {
+    const baked = guide({
+      units: [
+        { name: 'Supply', mastery: 80, cards: [card('s1'), card('s2')] },
+        { name: 'Demand', mastery: 40, cards: [card('d1')] },
+        { name: 'Week 6 reading', mastery: 0, cards: [card('unfiled')] },
+      ],
+    });
+    const out = mergeGuide(baked, [update({ unit: null, cards: [card('unfiled')] })]);
+    expect(out.units).toHaveLength(3);
+    expect(out.addedUnits).toEqual([]);
+  });
+
+  it('still splices one in for material that is genuinely new', () => {
+    const out = mergeGuide(guide(), [update({ unit: null, cards: [card('unfiled')] })]);
+    expect(out.units).toHaveLength(3);
+    expect(out.addedUnits).toHaveLength(1);
+  });
+});

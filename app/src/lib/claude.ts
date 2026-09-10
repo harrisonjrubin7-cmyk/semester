@@ -25,7 +25,7 @@
 
 import type { Usage } from './spend';
 import type { CaseFile, Example, Figure, Frame, StudyCard } from './types';
-import { FIGURE_SHAPES, readFigures } from './figure';
+import { figureShapes, readFigures } from './figure';
 import { readStudyParts, studyShapes } from './study';
 import {
   DEFAULTS as NO_CONTROLS,
@@ -1185,7 +1185,7 @@ export async function readMaterial(
       'names, dates and steps the text actually gives. Not topic labels: "Know the GGL study" ' +
       `is not a card. Between 0 and ${caps.cards}, however many the material genuinely supports.\n` +
       `- terms: vocabulary this material defines, with the definition it gives. Between 0 and ${caps.terms}.\n` +
-      '- ' + FIGURE_SHAPES + '\n' +
+      '- ' + figureShapes(caps) + '\n' +
       '- ' + studyShapes(caps) + '\n' +
       '- Everything must come from the text in front of you. Do not complete a half-stated idea ' +
       'from general knowledge, and leave out anything the material only alludes to.' +
@@ -1238,7 +1238,7 @@ export async function readMaterial(
         .map((t) => ({ t: (t.t as string).trim(), d: (t.d as string).trim() })),
       // Every check lives in `lib/figure.ts`, including the one that matters:
       // a figure that does not survive validation is dropped, never repaired.
-      figures: readFigures(parsed.figures),
+      figures: readFigures(parsed.figures, caps),
       // The field guide and the cram sheet, which cards and terms never
       // reached. Checked in `lib/study.ts`, on the same rule: dropped whole
       // rather than rendered with a gap.

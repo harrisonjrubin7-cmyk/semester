@@ -93,11 +93,36 @@ function attached(u: CourseUpdate, unitCount: number): boolean {
 }
 
 /** Cards a set of updates adds, keyed by the unit they extend. */
-function cardsByUnit(updates: CourseUpdate[], unitCount: number): Record<number, StudyCard[]> {
+function cardsByUnit(
+  updates: CourseUpdate[],
+  unitCount: number,
+  /**
+   * Questions the guide already has, so nothing is merged in twice.
+   *
+   * A rebuild folds added material into the guide and saves it, and the
+   * updates stay listed — deliberately, so they can still be removed and
+   * their files are still attached. Nothing consumed them, so the next render
+   * merged the same cards on top of the guide that now contains them, and
+   * every card from every reading appeared twice. Once a guide has been
+   * rebuilt, twice more after two rebuilds.
+   *
+   * Keyed on the question text, which is what `cardKey` hashes and therefore
+   * what "the same card" already means everywhere else in the app: a card the
+   * rebuild reworded is genuinely a different card and is merged, which is the
+   * same answer the cost preview gives.
+   *
+   * This predates scoped rebuilds and applies to the whole-guide one just as
+   * much — the scoped path only made it easier to reach, because a rebuild you
+   * would actually accept is one you can do without rearranging eleven other
+   * units.
+   */
+  have: Set<string>,
+): Record<number, StudyCard[]> {
   const out: Record<number, StudyCard[]> = {};
   for (const u of updates) {
     if (!attached(u, unitCount)) continue;
-    (out[u.unit as number] ??= []).push(...u.cards);
+    const fresh = u.cards.filter((c) => !have.has(c.q));
+    if (fresh.length > 0) (out[u.unit as number] ??= []).push(...fresh);
   }
   return out;
 }
@@ -126,7 +151,9 @@ export function mergeGuide(
     };
   }
 
-  const added = cardsByUnit(updates, guide.units.length);
+  // Every question the guide already holds, for the duplicate check above.
+  const have = new Set(guide.units.flatMap((u) => u.cards.map((c) => c.q)));
+  const added = cardsByUnit(updates, guide.units.length, have);
 
   const units: Unit[] = guide.units.map((u, i) => {
     const extra = added[i];
@@ -156,6 +183,10 @@ export function mergeGuide(
   for (const u of updates) {
     if (attached(u, guide.units.length)) continue;
     if (u.cards.length === 0) continue;
+    // Already folded in by a rebuild — see the note on `have` above. A unit
+    // spliced in for material the guide now contains is the same duplication
+    // as a card, one level up.
+    if (u.cards.every((c) => have.has(c.q))) continue;
     const n = sessionIn(u.title) ?? sessionIn(u.source);
     const at = slotFor(units, n);
     units.splice(at, 0, {
