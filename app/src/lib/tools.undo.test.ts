@@ -78,6 +78,9 @@ const lists = (s: State): Lists => ({
   sources: s.sources,
   applications: s.applications,
   timers: s.timers,
+  documents: s.documents,
+  sheets: s.sheets,
+  equations: s.equations,
 });
 
 /** What the app holds after a write, and after taking it back. */
@@ -100,6 +103,9 @@ const TOUCHED = [
   'tasks',
   'notes',
   'sources',
+  'documents',
+  'sheets',
+  'equations',
   'applications',
   'timers',
   'attendance',
@@ -147,6 +153,22 @@ describe('every write, done and taken back', () => {
     ['set_look', { field: 'accent', value: 'jade' }],
     ['set_look', { field: 'textSize', value: 'large' }],
     ['set_day_budget', { hours: 6 }],
+    [
+      'make_document',
+      {
+        title: 'Elasticity memo',
+        courseId: 'econ',
+        body: '## Finding\n\nDemand is elastic here.\n\n| Price | Quantity |\n| --- | --- |\n| 4 | 90 |',
+      },
+    ],
+    [
+      'make_sheet',
+      { title: 'Marks', courseId: 'econ', rows: 'Piece\tScore\nMidterm\t88\nFinal\t91' },
+    ],
+    [
+      'save_equation',
+      { name: 'Price elasticity', latex: 'E_d = \\frac{\\Delta Q}{\\Delta P}', says: '', courseId: 'econ' },
+    ],
   ];
 
   for (const [name, input] of CASES) {

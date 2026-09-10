@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { SettingsPage } from './Page';
 import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
+import { secondLine } from '../../lib/dim';
 import {
   MODELS,
   checkKey,
   configured,
+  envProxy,
   modelLabel,
   route,
   routeLabel,
@@ -156,6 +158,31 @@ export function SettingsAssistant() {
               </CustomRow>
             ) : (
               <CustomRow>
+                {/*
+                  * The case where there is nothing to do here.
+                  *
+                  * A copy run with ANTHROPIC_API_KEY in app/.env.local is
+                  * already answering, through a proxy the page knows only the
+                  * address of. Without this line the screen shows two empty
+                  * boxes and no hint that they are empty on purpose, which is
+                  * exactly the moment somebody pastes a key into a browser
+                  * that did not need one.
+                  */}
+                {envProxy() && !config.proxy.trim() && !config.apiKey.trim() && (
+                  <div
+                    style={{
+                      fontSize: 'var(--type-sm)',
+                      ...secondLine(),
+                      lineHeight: 'var(--leading-relaxed)',
+                      marginBottom: 'var(--sp-5)',
+                      textWrap: 'pretty',
+                    }}
+                  >
+                    This copy already has somewhere to ask: <code>{envProxy()}</code>, holding a key
+                    this browser never sees. Leave both boxes empty to keep using it — a key typed
+                    here would be used instead, and would live in this browser.
+                  </div>
+                )}
                 <input
                   className="input"
                   type="password"
