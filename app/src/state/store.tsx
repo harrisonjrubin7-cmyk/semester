@@ -795,6 +795,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       fire(
         dueReminders(at, state.notifs, {
           items,
+          done: state.done,
           classes: railFor(catalog, at, state.appointments).map((b) => ({
             label: b.title,
             at: b.at,
@@ -813,7 +814,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // the seen list, so a custom reminder is subject to the same "once" as
       // every built-in one. They add and never subtract: see `lib/myrules.ts`.
       fire(
-        myReminders(at, state.myRules, items).map((f) => ({
+        myReminders(at, state.myRules, items, state.done).map((f) => ({
           id: f.id,
           rule: 'today' as const,
           title: f.title,
@@ -824,7 +825,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     check();
     const id = setInterval(check, 60_000);
     return () => clearInterval(id);
-  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, courseCode]);
+    // `state.done` is in here for a reason: the interval closes over it, so
+    // without it a tick made after the effect was set up would not be seen
+    // until something else in this list changed, and the reminders would keep
+    // naming work already handed in. Re-creating the interval is free — the
+    // list of what has already fired lives in storage, not in this closure.
+  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, courseCode]);
 
   // The number on the installed icon: things due today and not ticked. In the
   // provider rather than on Today, because the count has to be right whatever
