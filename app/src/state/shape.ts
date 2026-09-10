@@ -64,6 +64,7 @@ import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
 import type { Aid, Charge, Payment, Plan } from '../lib/bill';
 import type { Quiet } from '../lib/notify';
+import { DEFAULTS as DEFAULT_CONTROLS, MOST_CARDS, type Controls } from '../lib/controls';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
@@ -462,6 +463,14 @@ export interface Persisted {
    */
   quiet: Quiet | null;
   /**
+   * How much study material to make, at what level, and how many cards.
+   *
+   * One setting for both generation paths — the syllabus pipeline and adding a
+   * reading — because they make the same thing and a student who wants shorter
+   * decks wants them from both. See `lib/controls.ts`.
+   */
+  controls: Controls;
+  /**
    * When each deadline was ticked, epoch ms.
    *
    * Deliberately a second map rather than a change to `done`, which a dozen
@@ -859,6 +868,29 @@ function readQuiet(value: unknown): Quiet | null {
   return ok(from) && ok(to) ? { from, to } : null;
 }
 
+/**
+ * Stored generation controls, made safe to read from.
+ *
+ * Field by field against the unions rather than trusted whole: an unknown
+ * depth would reach `SCALE[depth]` and come back undefined, and every ceiling
+ * would then be NaN — which asks a model for "0 to NaN cards" and gets
+ * whatever it feels like. Falling back per field means a control added in a
+ * later version arrives at its default rather than taking the other two down
+ * with it.
+ */
+function readControls(value: unknown): Controls {
+  if (!value || typeof value !== 'object') return { ...DEFAULT_CONTROLS };
+  const { depth, level, cards } = value as Partial<Controls>;
+  return {
+    depth: depth === 'brief' || depth === 'full' ? depth : DEFAULT_CONTROLS.depth,
+    level: level === 'plainer' || level === 'harder' ? level : DEFAULT_CONTROLS.level,
+    cards:
+      typeof cards === 'number' && Number.isInteger(cards) && cards >= 0 && cards <= MOST_CARDS
+        ? cards
+        : DEFAULT_CONTROLS.cards,
+  };
+}
+
 export const DEFAULT_PERSISTED: Persisted = {
   nav: 'tabs',
   done: {},
@@ -970,6 +1002,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   residences: [],
   accessLeadDays: 0,
   quiet: null,
+  controls: DEFAULT_CONTROLS,
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -1283,6 +1316,7 @@ export function loadPersisted(): Persisted {
       residences: list(saved.residences),
       accessLeadDays: saved.accessLeadDays ?? 0,
       quiet: readQuiet(saved.quiet),
+      controls: readControls(saved.controls),
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
       schoolId: typeof saved.schoolId === 'string' ? saved.schoolId : DEFAULT_PERSISTED.schoolId,
@@ -1389,6 +1423,7 @@ export function pickPersisted(state: State): Persisted {
     residences: state.residences,
     accessLeadDays: state.accessLeadDays,
     quiet: state.quiet,
+    controls: state.controls,
     tickedAt: state.tickedAt,
     started: state.started,
     schoolId: state.schoolId,
@@ -1797,6 +1832,7 @@ export type Action =
   | { type: 'setPlan'; term: string; plan: Plan }
   | { type: 'setAccessLead'; days: number }
   | { type: 'setQuiet'; quiet: Quiet | null }
+  | { type: 'setControls'; patch: Partial<Controls> }
   /** Where you live this term, from the housing portal. */
   | { type: 'setResidence'; residence: Omit<Residence, 'id' | 'created'> }
   | { type: 'dropResidence'; id: string }

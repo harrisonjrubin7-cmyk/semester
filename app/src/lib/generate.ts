@@ -25,6 +25,7 @@ import { ask, type Citation, type Doc } from './claude';
 import { courseId } from './edit';
 import type { Course, CourseModule, GradeRow, Item, RecurringBlock } from './types';
 import { check, flatten, tally, worthCiting, type Checked } from './cite';
+import { MOST, capsFor, countsSay, shapeSays, type Controls } from './controls';
 
 export interface GenerationInput {
   /**
@@ -48,6 +49,14 @@ export interface GenerationInput {
    * one course to every screen in the app. See `courseId` in `lib/edit.ts`.
    */
   taken?: string[];
+  /**
+   * How much, at what level, and how many cards — see `lib/controls.ts`.
+   *
+   * Optional and defaulted for the same reason as `readMaterial`: a caller
+   * that passes nothing gets exactly the prompt this pipeline had before
+   * controls existed, and the four shipped courses were built by that prompt.
+   */
+  controls?: Controls;
 }
 
 export interface GenerationResult {
@@ -126,10 +135,18 @@ export async function generateCourse(
 
   const citations: Citation[] = [];
 
+  const caps = capsFor(input.controls);
+  const says = shapeSays(input.controls);
+
   const reply = await ask({
     signal,
-    maxTokens: 8000,
-    system: SYSTEM,
+    // As in `readMaterial`: a reply cut off mid-JSON parses as nothing, so the
+    // budget rises with a ceiling the student raised rather than leaving them
+    // to see "could not read it" for a syllabus that read fine.
+    maxTokens: Math.min(16_000, 8_000 + Math.max(0, caps.cards - MOST.cards) * 160),
+    // Empty on the defaults, so this is byte-for-byte the system prompt that
+    // built the four shipped courses for anybody who has not chosen anything.
+    system: says ? `${SYSTEM}\n\n8. ${says}\n9. ${countsSay(caps)}` : SYSTEM,
     docs,
     cite: worthCiting(docs),
     onCitation: (c) => citations.push(c),

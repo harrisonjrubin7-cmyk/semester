@@ -32,6 +32,7 @@
  */
 
 import type { CaseFile, Example, Frame, StudyCard } from './types';
+import { MOST as DEFAULT_CAPS, type Caps } from './controls';
 
 /**
  * How many of each, at most.
@@ -40,27 +41,40 @@ import type { CaseFile, Example, Frame, StudyCard } from './types';
  * the point of the cram sheet is that it is short enough to read before an
  * exam, and a model asked for "frames" without a ceiling will produce one per
  * paragraph.
+ *
+ * The numbers moved to `lib/controls.ts`, which is where a student's choice of
+ * depth now scales them. This is still the default and still what the app does
+ * for anybody who has not touched a control — `capsFor()` with no argument is
+ * these four numbers exactly.
  */
-export const MOST = { frames: 6, tests: 8, cases: 3, examples: 4 };
+export const MOST = DEFAULT_CAPS;
 
 const SHORT = 120;
 const LONG = 400;
 
-export const STUDY_SHAPES = `frames: 0 to ${MOST.frames} exam frames — what a question about this material \
+/**
+ * The shapes, at a given set of ceilings.
+ *
+ * A function rather than a constant because the ceilings are a student's
+ * choice now. `STUDY_SHAPES` below is this at the defaults, kept so the
+ * callers that have no controls to pass read exactly as they did.
+ */
+export function studyShapes(caps: Caps = DEFAULT_CAPS): string {
+  return `frames: 0 to ${caps.frames} exam frames — what a question about this material \
 actually looks like, and what it is testing underneath. {"t":"The framing","d":"What it is really \
 asking, and what a good answer has to do."} These go on the cram sheet, so write the ones worth \
 reading an hour before an exam and no others.
 
-selfTest: 0 to ${MOST.tests} questions to answer out loud, with the answer. {"q":"…","a":"…"} \
+selfTest: 0 to ${caps.tests} questions to answer out loud, with the answer. {"q":"…","a":"…"} \
 Broader than a flashcard — a question that makes you say the whole idea, not name one fact.
 
-cases: 0 to ${MOST.cases} claim-and-test pairings, and only where the material genuinely contains \
+cases: 0 to ${caps.cases} claim-and-test pairings, and only where the material genuinely contains \
 one: a stated claim, a study or episode that tested it, and what came of it. \
 {"title":"…","when":"1968","claim":"What people believed","test":"Who tested it and how", \
 "verdict":"What they found","lesson":"What it means for the course"} All six fields are required. \
 If the material does not name who tested the claim, there is no case — return none.
 
-examples: 0 to ${MOST.examples} worked examples — the concept pointed at something concrete the \
+examples: 0 to ${caps.examples} worked examples — the concept pointed at something concrete the \
 material actually discusses. {"tag":"Elasticity","t":"Short title of the case","d":"What it is and \
 why the concept explains it."} Not an illustration you thought of: if the material does not work \
 the example, there is no example.
@@ -68,6 +82,10 @@ the example, there is no example.
 Return an empty list for any of these the material does not support, which is the common case. \
 Never infer a frame from what an exam usually asks, a verdict from what is generally believed, or \
 a date the material does not give.`;
+}
+
+/** The shapes at the default ceilings — what every caller used before. */
+export const STUDY_SHAPES = studyShapes();
 
 function text(v: unknown, cap: number): string {
   return typeof v === 'string' ? v.trim().slice(0, cap) : '';

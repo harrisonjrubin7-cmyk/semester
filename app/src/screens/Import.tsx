@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
+import { HowMuch } from '../components/HowMuch';
 import { useRowStyle } from '../components/shell/useShell';
 import { backupOf } from '../lib/export';
 import { takeSnapshot } from '../lib/snapshots';
@@ -267,7 +268,7 @@ export function Import() {
     abort.current = new AbortController();
     try {
       const built = await generateCourse(
-        { documents: files, hint, year: term.year, taken },
+        { documents: files, hint, year: term.year, taken, controls: state.controls },
         abort.current.signal,
       );
       setDropped(new Set());
@@ -555,6 +556,11 @@ export function Import() {
             onChange={(e) => setHint(e.target.value)}
             style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
           />
+
+          {/* Beside the build button rather than in Settings: the moment
+              somebody wants a shorter deck is the moment they are looking at
+              the syllabus about to make one. */}
+          <HowMuch />
 
           <ActionButton
             disabled={busy !== ''}

@@ -249,3 +249,174 @@ export function verdict(s: Survey): string {
     `${s.reworded} look reworded and ${s.dropped} are gone. ${s.fresh} are new.`
   );
 }
+
+// ── One unit at a time ──────────────────────────────────────────────────────
+
+/**
+ * Rebuilding a single unit rather than the whole guide.
+ *
+ * The rework above is the right tool once a term's worth of material has piled
+ * up, and the wrong one for "unit 4 is thin". It rewrites everything, so its
+ * cost preview covers everything, and a student who wants one section improved
+ * has to accept a rearrangement of eleven others to get it. Most of the time
+ * they say no, and unit 4 stays thin.
+ *
+ * This is the bounded version. One unit in, one unit out, and the blast radius
+ * is enforced here rather than asked for in the prompt: `readOneUnit` returns
+ * the guide it was given with exactly one unit replaced, so a model that
+ * decides to reorganise the whole course cannot.
+ *
+ * The rule about answer history is unchanged and matters just as much — see
+ * the note at the top of this file. `survey` measures it the same way; it just
+ * has far less to measure.
+ */
+export const SYSTEM_ONE = `You revise ONE unit of a university study guide.
+
+You are given the whole guide's unit list for context, the unit to revise in full, and any material
+the student has added that belongs to it. Produce that one unit, better: its cards written from
+prose that never became questions, thin coverage filled in from the added material, a clearer name
+if the current one no longer describes it.
+
+Stay inside the unit. Do not move content into it from another unit, do not propose splitting it,
+and do not return any other unit — the other units are shown to you only so you do not duplicate
+what they already cover.
+
+THE RULE THAT MATTERS MOST — reproduce every existing card question EXACTLY as written, character
+for character, unless it is factually wrong. The app keys the student's answer history to the text
+of the question, so rewording one silently discards every answer they have given it: the streak,
+the interval, the due date. A clumsily worded question they have drilled eleven times is worth more
+than a better one they have drilled none. If a question is genuinely wrong, fix it and say so.
+
+Never invent a fact, a figure, a date or a citation. Everything must come from the unit you were
+given or from the added material shown with it.
+
+Reply with JSON only, no prose around it:
+{"name":"…","cards":[{"q":"…","a":"…"}],"terms":[{"t":"…","d":"…"}],
+ "notes":["what you changed, one line each"]}`;
+
+/**
+ * Everything the model is shown for one unit.
+ *
+ * The other units appear as names only. They are context — "do not duplicate
+ * what unit 7 already covers" — and sending their cards would both cost tokens
+ * and invite the model to move them.
+ */
+export function oneUnit(guide: Guide, updates: CourseUpdate[], unit: number): string {
+  const target = guide.units[unit];
+  if (!target) throw new Error('That unit is not in this guide.');
+
+  const others = guide.units
+    .map((u, i) => (i === unit ? `Unit ${i + 1}: ${u.name}  ← THE ONE TO REVISE` : `Unit ${i + 1}: ${u.name}`))
+    .join('\n');
+
+  const cards = target.cards.map((c) => `  Q: ${c.q}\n  A: ${c.a}`).join('\n');
+
+  // Material filed against this unit, plus anything filed against none — an
+  // unfiled reading is exactly as likely to belong here as anywhere, and the
+  // student asked for this unit.
+  const mine = updates.filter((u) => u.unit === unit || u.unit === null);
+  const added = mine
+    .map((u) => {
+      const where = u.unit === null ? 'filed against no unit' : 'filed against this unit';
+      const made = u.cards.length
+        ? `\nCards already made from it:\n${u.cards.map((c) => `  Q: ${c.q}\n  A: ${c.a}`).join('\n')}`
+        : '';
+      const terms = u.terms.length
+        ? `\nTerms: ${u.terms.map((t) => `${t.t} — ${t.d}`).join('; ')}`
+        : '';
+      return `--- ${u.title || 'Added material'} (${u.source || 'no source given'}, ${where})\n${
+        u.body.trim() || '(no prose)'
+      }${made}${terms}`;
+    })
+    .join('\n\n');
+
+  return [
+    `Course: ${guide.code} — ${guide.name}`,
+    '',
+    'EVERY UNIT, FOR CONTEXT ONLY',
+    others,
+    '',
+    `THE UNIT TO REVISE — ${target.name}`,
+    cards || '(no cards yet)',
+    '',
+    'GLOSSARY, SO YOU DO NOT REDEFINE A TERM',
+    guide.terms.map((t) => `${t.t} — ${t.d}`).join('\n') || '(empty)',
+    '',
+    'ADDED MATERIAL THAT BELONGS TO IT',
+    added || '(nothing)',
+  ].join('\n');
+}
+
+/**
+ * The revised unit, put back into the guide it came from.
+ *
+ * Everything outside the one unit is copied from `base` rather than taken from
+ * the reply — which is what makes this bounded. A model that returns eleven
+ * units, renames the course, or empties the glossary changes nothing here but
+ * the unit that was asked for.
+ *
+ * New terms are folded in and existing definitions win. A unit-scoped
+ * regeneration is not the place to quietly redefine a term the rest of the
+ * guide already uses, and dropping one would take it out of every other unit's
+ * glossary to fix one unit's.
+ */
+export function readOneUnit(reply: string, base: Guide, unit: number): Plan {
+  if (!base.units[unit]) throw new Error('That unit is not in this guide.');
+
+  const start = reply.indexOf('{');
+  const end = reply.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('Nothing usable came back.');
+
+  let raw: { name?: unknown; cards?: unknown; terms?: unknown; notes?: unknown };
+  try {
+    raw = JSON.parse(reply.slice(start, end + 1)) as typeof raw;
+  } catch {
+    throw new Error('What came back was not valid JSON. Try again.');
+  }
+
+  const cards: StudyCard[] = [];
+  for (const c of Array.isArray(raw.cards) ? raw.cards : []) {
+    const card = c as { q?: unknown; a?: unknown };
+    if (typeof card.q !== 'string' || typeof card.a !== 'string') continue;
+    const q = card.q.trim();
+    const a = card.a.trim();
+    if (q && a) cards.push({ q, a });
+  }
+
+  // The one outcome worse than not regenerating: a unit you had cards in,
+  // replaced by nothing.
+  if (cards.length === 0) {
+    throw new Error('That came back with no cards. The unit was left as it was.');
+  }
+
+  const name = typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : base.units[unit].name;
+
+  const terms: Term[] = [...base.terms];
+  const seen = new Set(base.terms.map((t) => t.t.trim().toLowerCase()));
+  for (const t of Array.isArray(raw.terms) ? raw.terms : []) {
+    const term = t as { t?: unknown; d?: unknown };
+    if (typeof term.t !== 'string' || typeof term.d !== 'string') continue;
+    const key = term.t.trim().toLowerCase();
+    if (!term.t.trim() || !term.d.trim() || seen.has(key)) continue;
+    seen.add(key);
+    terms.push({ t: term.t.trim(), d: term.d.trim() });
+  }
+
+  const notes = (Array.isArray(raw.notes) ? raw.notes : [])
+    .filter((n): n is string => typeof n === 'string' && n.trim() !== '')
+    .map((n) => n.trim());
+
+  return {
+    guide: {
+      ...base,
+      units: base.units.map((u, i) =>
+        // Mastery is measured from answers and never declared — same as the
+        // whole-guide path. `applyReviews` fills it back in from what has
+        // actually been drilled.
+        i === unit ? { name, mastery: 0, cards } : u,
+      ),
+      terms,
+    },
+    notes,
+  };
+}

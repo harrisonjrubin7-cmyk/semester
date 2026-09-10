@@ -56,6 +56,7 @@ export const BUDGET: Budget = {
   'components/HomeWalk.tsx': { type: 1, leading: 1, space: 2, shorthand: 1 },
   'components/HourGrid.tsx': { type: 3, leading: 1, space: 1, shorthand: 1, dim: 3 },
   'components/HowLong.tsx': { type: 1, leading: 1, shorthand: 2, dim: 1 },
+  'components/HowMuch.tsx': { type: 2, space: 2, shorthand: 1, dim: 2 },
   'components/InsightCards.tsx': { shorthand: 2, dim: 2 },
   'components/Insights.tsx': { type: 1, leading: 1, space: 1, shorthand: 2, dim: 3 },
   'components/Keys.tsx': { type: 1, shorthand: 3, dim: 2 },
