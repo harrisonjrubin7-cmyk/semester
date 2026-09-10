@@ -245,3 +245,53 @@ describe('the day in one line', () => {
     expect(daySummary(list)).toMatch(/no saved places to measure them/);
   });
 });
+
+describe('how much of the gap is actually free', () => {
+  // `tight` and `hopLine` each subtracted a `classMinutes` that defaulted to
+  // fifty, and the only caller took the default. A seventy-five minute
+  // seminar was therefore treated as fifty, and the walk after it looked
+  // twenty-five minutes roomier than it was.
+  const block = (title: string, at: number, minutes?: number) =>
+    minutes === undefined
+      ? { title, meta: `${title} 101`, at }
+      : { title, meta: `${title} 101`, at, minutes };
+
+  const between = (from: ReturnType<typeof block>, to: ReturnType<typeof block>) =>
+    hops([from, to], [BUTTRICK, GARLAND])[0];
+
+  it('takes the length off the gap, not a flat fifty', () => {
+    // Two starts ninety minutes apart, the first running seventy-five.
+    const h = between(block('Buttrick', 600, 75), block('Garland Hall', 690));
+    expect(h.apart).toBe(90);
+    expect(h.spare).toBe(15);
+  });
+
+  it('does not call a walk you cannot make comfortable', () => {
+    // ~400 m at eighty metres a minute is about five minutes; make the gap
+    // leave less than that once the seminar has had its seventy-five.
+    const h = between(block('Buttrick', 600, 75), block('Garland Hall', 678));
+    expect(h.spare).toBe(3);
+    expect(tight(h)).toBe(true);
+    expect(hopLine(h)).toContain('there are 3 between them');
+  });
+
+  it('says the same as before for a class that really is fifty', () => {
+    const stated = between(block('Buttrick', 600, 50), block('Garland Hall', 690));
+    const unstated = between(block('Buttrick', 600), block('Garland Hall', 690));
+    expect(stated.spare).toBe(unstated.spare);
+    expect(unstated.spare).toBe(40);
+  });
+
+  it('never says a gap is negative', () => {
+    const h = between(block('Buttrick', 600, 200), block('Garland Hall', 660));
+    expect(h.spare).toBe(0);
+    expect(tight(h)).toBe(true);
+  });
+
+  it('measures against the one you are leaving, not the one you are going to', () => {
+    const leavingLong = between(block('Buttrick', 600, 75), block('Garland Hall', 690));
+    const arrivingLong = between(block('Buttrick', 600, 50), block('Garland Hall', 690, 75));
+    expect(leavingLong.spare).toBe(15);
+    expect(arrivingLong.spare).toBe(40);
+  });
+});

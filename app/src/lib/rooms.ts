@@ -94,12 +94,26 @@ export function walkMinutes(metres: number): number {
   return Math.max(1, Math.ceil(metres / PACE));
 }
 
+/** How long a thing runs when nothing says. An ordinary teaching hour. */
+export const USUAL_CLASS = 50;
+
 export interface Hop {
   /** The block you are leaving and the one you are going to. */
   from: { title: string; meta: string; at: number };
   to: { title: string; meta: string; at: number };
   /** Minutes between the two starting times. */
   apart: number;
+  /**
+   * Minutes actually free to walk in: the gap, less however long the first
+   * one runs.
+   *
+   * Worked out once, here, rather than by each caller subtracting a fifty it
+   * was given as a default. Every caller took that default, so a seventy-five
+   * minute seminar was treated as fifty and the walk after it looked
+   * twenty-five minutes roomier than it was — in the direction that makes
+   * somebody late.
+   */
+  spare: number;
   /** Metres between the two buildings, where both are saved places. */
   metres: number;
   /** Minutes of walking. Zero when the app cannot say. */
@@ -121,7 +135,15 @@ export interface Hop {
  * than pretending there were none.
  */
 export function hops(
-  blocks: { title: string; meta: string; at: number; canceled?: boolean; where?: string }[],
+  blocks: {
+    title: string;
+    meta: string;
+    at: number;
+    canceled?: boolean;
+    where?: string;
+    /** How long this one runs. `USUAL_CLASS` where nothing states it. */
+    minutes?: number;
+  }[],
   places: SavedPlace[],
 ): Hop[] {
   const real = blocks.filter((b) => !b.canceled && buildingOf(placeText(b)));
@@ -138,10 +160,13 @@ export function hops(
     const pb = matchPlace(placeText(to), places);
     const metres = pa && pb ? Math.round(metresBetween(pa, pb)) : 0;
 
+    const apart = to.at - from.at;
     out.push({
       from: { title: from.title, meta: from.meta, at: from.at },
       to: { title: to.title, meta: to.meta, at: to.at },
-      apart: to.at - from.at,
+      apart,
+      // The class you are leaving occupies the front of the gap.
+      spare: Math.max(0, apart - (from.minutes ?? USUAL_CLASS)),
       metres,
       walk: pa && pb ? walkMinutes(metres) : 0,
       known: Boolean(pa && pb),
@@ -154,35 +179,34 @@ export function hops(
 }
 
 /**
- * Whether a hop is tight.
+ * Whether a hop is tight: the walk uses more than the gap leaves.
  *
- * A class runs to within ten minutes of the next one starting, so the walking
- * time available is the gap less the fifty minutes a class occupies — which
- * is the same fifty-minute teaching hour the rest of the app assumes. Tight
- * means the walk uses more than what is left.
+ * The gap less the class is `hop.spare`, worked out where the class's own
+ * length is known. This used to take a `classMinutes` parameter defaulting to
+ * fifty, and every caller took the default.
  */
-export function tight(hop: Hop, classMinutes = 50): boolean {
+export function tight(hop: Hop): boolean {
   if (!hop.known) return false;
-  return hop.walk > Math.max(0, hop.apart - classMinutes);
+  return hop.walk > hop.spare;
 }
 
 /** The sentence a hop earns. Distances and minutes, never advice. */
-export function hopLine(hop: Hop, classMinutes = 50): string {
+export function hopLine(hop: Hop): string {
   if (!hop.known) {
     return `${hop.fromPlace} to ${hop.toPlace} — no saved place for one of them, so there is no distance to give.`;
   }
-  const spare = Math.max(0, hop.apart - classMinutes);
+  const spare = hop.spare;
   const walk = `${far(hop.metres)}, about ${hop.walk} ${hop.walk === 1 ? 'minute' : 'minutes'}`;
-  if (tight(hop, classMinutes)) {
+  if (tight(hop)) {
     return `${hop.fromPlace} to ${hop.toPlace} is ${walk}, and there are ${spare} between them.`;
   }
   return `${hop.fromPlace} to ${hop.toPlace} is ${walk}, inside the ${spare} you have.`;
 }
 
 /** How many hops a day has, and how many are tight. For one line on a screen. */
-export function daySummary(list: Hop[], classMinutes = 50): string {
+export function daySummary(list: Hop[]): string {
   const known = list.filter((h) => h.known);
-  const pressed = known.filter((h) => tight(h, classMinutes));
+  const pressed = known.filter((h) => tight(h));
   if (list.length === 0) return '';
   if (known.length === 0) {
     return `${list.length} ${list.length === 1 ? 'move' : 'moves'} between buildings today, and no saved places to measure them.`;
