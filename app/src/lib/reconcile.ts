@@ -152,10 +152,23 @@ function daysBetween(a: string, b: string): number {
  * matters more when somebody is deciding whether to trust it.
  */
 export function compare(items: DatedItem[], events: FeedEvent[]): Report {
+  /*
+   * Only the events that name a day can be compared against one.
+   *
+   * `daysBetween` splits both sides on `-` and subtracts, so an event whose
+   * date is not a date — a stored feed row from an older build, a reader that
+   * left the field blank — made `NaN`, and the report told the student their
+   * deadline had moved "NaN days earlier". A pairing that cannot say how far
+   * something moved has nothing to report, so the event goes to `onlyThere`
+   * with the rest of what the app does not hold, which is where a row it
+   * cannot make sense of honestly belongs.
+   */
+  const dated = events.filter((e) => /^\d{4}-\d{2}-\d{2}$/.test(e.date));
+
   const pairs: { i: number; e: number; score: number }[] = [];
 
   items.forEach((item, i) => {
-    events.forEach((event, e) => {
+    dated.forEach((event, e) => {
       // A course on both sides that disagrees is disqualifying. A course on
       // only one side is not — the feed's matcher misses plenty.
       if (item.c && event.courseId && item.c !== event.courseId) return;
@@ -177,7 +190,7 @@ export function compare(items: DatedItem[], events: FeedEvent[]): Report {
     usedEvents.add(pair.e);
 
     const item = items[pair.i];
-    const event = events[pair.e];
+    const event = dated[pair.e];
     const was = dateToIso(item.date);
     if (was === event.date) {
       agreed++;
@@ -197,11 +210,16 @@ export function compare(items: DatedItem[], events: FeedEvent[]): Report {
   // one that moved in November, and a list sorted by score reads as arbitrary.
   moved.sort((a, b) => a.was.localeCompare(b.was));
 
+  /** The events that found a partner, by identity rather than by index. */
+  const paired = new Set([...usedEvents].map((e) => dated[e]));
+
   return {
     moved,
     onlyHere: items.filter((_, i) => !usedItems.has(i)),
+    // Against `events` rather than `dated`, so an undated row is still listed
+    // as something the feed has and the app does not, rather than vanishing.
     onlyThere: events
-      .filter((_, e) => !usedEvents.has(e))
+      .filter((e) => !paired.has(e))
       .sort((a, b) => a.date.localeCompare(b.date)),
     agreed,
   };
