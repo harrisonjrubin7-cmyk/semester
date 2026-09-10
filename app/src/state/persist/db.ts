@@ -26,22 +26,58 @@ let db: IDBDatabase | null = null;
 let opening: Promise<IDBDatabase | null> | null = null;
 
 /**
+ * How long to wait for the database to open before going without it.
+ *
+ * Opening does not read anything — it checks a version and hands back a
+ * handle — so on a working browser it is milliseconds. Ten seconds is not a
+ * budget, it is the point past which the honest conclusion is that no answer
+ * is coming.
+ *
+ * The trade it makes, stated plainly: a device whose open is merely *slow*
+ * rather than stuck spends the rest of the session on the localStorage path,
+ * which after the migration is a copy from the day of the migration. That
+ * would be an old account on screen. Against a wait with no end, which is
+ * what this replaces, it is the better of the two — and at ten seconds it
+ * takes a browser that has stopped answering rather than one that is busy.
+ */
+const OPEN_LIMIT_MS = 10_000;
+
+/**
  * Open it, creating every store the app needs.
  *
  * The store list is passed in rather than imported, so this file holds no
  * opinion about what the app persists and `shape.ts` stays the single place
  * that decides.
+ *
+ * Every way this can fail answers null, including the one that answers
+ * nothing at all. `main.tsx` waits on this before anything mounts — it has
+ * to, because the account lives in here and rendering against a half-loaded
+ * store would send somebody who has used the app for a month back through
+ * onboarding — and the comment there promises that *"a device that will not
+ * open a database gets null, and the app falls straight back to the
+ * localStorage path"*. That was true of a throw, of `onerror` and of
+ * `onblocked`, and not of a request that simply never fires any of them:
+ * measured with `indexedDB.open` returning a request that never answers, the
+ * app drew nothing at all — `#root` empty, 0 characters, no error in the
+ * console, on every load, for ever. The other three ways all boot and save.
  */
 export function open(collections: string[]): Promise<IDBDatabase | null> {
   if (db) return Promise.resolve(db);
   if (opening) return opening;
 
   opening = new Promise<IDBDatabase | null>((resolve) => {
+    // Whichever comes first. `resolve` after the first call is a no-op, so a
+    // request that answers late cannot take back an answer already given.
+    const gaveUp = setTimeout(() => resolve(null), OPEN_LIMIT_MS);
+    const answer = (value: IDBDatabase | null) => {
+      clearTimeout(gaveUp);
+      resolve(value);
+    };
     let req: IDBOpenDBRequest;
     try {
       req = indexedDB.open(DB_NAME, DB_VERSION);
     } catch {
-      resolve(null);
+      answer(null);
       return;
     }
     req.onupgradeneeded = () => {
@@ -58,10 +94,10 @@ export function open(collections: string[]): Promise<IDBDatabase | null> {
         db?.close();
         db = null;
       };
-      resolve(db);
+      answer(db);
     };
-    req.onerror = () => resolve(null);
-    req.onblocked = () => resolve(null);
+    req.onerror = () => answer(null);
+    req.onblocked = () => answer(null);
   });
   return opening;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { TARGETS, key, needCaveat, needFor, reachFor, reaches, readScore, readWeight, standing } from './grades';
+import { TARGETS, key, needCaveat, needFor, percentOf, reachFor, reaches, readScore, readWeight, standing } from './grades';
 import type { Standing } from './grades';
 import type { Course } from './types';
 
@@ -403,5 +403,37 @@ describe('a plus in a weight', () => {
     const bonus = readWeight('+3% EC');
     const counted = [joined, bonus].filter((r) => !r.extra).reduce((n, r) => n + (r.weight ?? 0), 0);
     expect(counted, 'the 40% counts and the 3% bonus does not').toBe(40);
+  });
+});
+
+describe('one reading of a weight', () => {
+  // `percentOf` used to carry its own, simpler regex. Simpler meant different:
+  // it took a range at its top where every other reading in this app takes the
+  // midpoint. The docblock above it had already warned that one of these
+  // copies would be corrected without the others.
+  const FORMS = ['20%', '25–30%', '25-30%', '+3% EC', '10 pts', '10 points', 'Pass/fail', '', '0%', '7.5%'];
+
+  it('agrees with readWeight on every form a syllabus uses', () => {
+    for (const said of FORMS) {
+      expect(percentOf(said)).toBe(readWeight(said).weight ?? 0);
+    }
+  });
+
+  it('takes a range at its midpoint, not at its top', () => {
+    expect(percentOf('25–30%')).toBe(27.5);
+    expect(percentOf('25-30%')).toBe(27.5);
+  });
+
+  it('still answers zero where nothing reads as a percentage', () => {
+    // Every caller sorts or sums with this, so a null here is a NaN later.
+    expect(percentOf('10 pts')).toBe(0);
+    expect(percentOf('Pass/fail')).toBe(0);
+    expect(percentOf('')).toBe(0);
+  });
+
+  it('still counts a bonus, which does buy points even if not out of a hundred', () => {
+    // The difference between this and `weightTotal`: an hour spent on extra
+    // credit is worth three points, and it is not three of the hundred.
+    expect(percentOf('+3% EC')).toBe(3);
   });
 });

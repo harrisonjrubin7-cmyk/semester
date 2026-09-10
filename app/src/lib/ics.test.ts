@@ -227,3 +227,191 @@ describe('matchCourse', () => {
     expect(matchCourse([], 'ECON 1020')).toBeNull();
   });
 });
+
+describe('a component nested inside an event', () => {
+  /*
+   * Shaped the way Google Calendar shapes an export: the event's own
+   * DESCRIPTION, then a VALARM at the end of the VEVENT carrying the sentence
+   * Google puts in every default reminder.
+   */
+  const alarmed = cal(
+    event(
+      'UID:abc',
+      'SUMMARY:ECON 1020 midterm review',
+      'DTSTART:20260918T140000',
+      'DESCRIPTION:Bring the problem set. Room changed to Buttrick 101.',
+      'LOCATION:Buttrick 101',
+      'BEGIN:VALARM',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:This is an event reminder',
+      'TRIGGER:-P0DT0H30M0S',
+      'END:VALARM',
+    ),
+  );
+
+  it('leaves the note the professor wrote', () => {
+    const { events } = parseIcs(COURSES, alarmed);
+    expect(events).toHaveLength(1);
+    expect(events[0].note).toBe('Bring the problem set. Room changed to Buttrick 101.');
+  });
+
+  it('leaves the title, against an alarm that carries one', () => {
+    // RFC 5545 requires SUMMARY of an ACTION:EMAIL alarm, so this is not an
+    // exotic file — it is what a mail reminder looks like.
+    const { events } = parseIcs(
+      COURSES,
+      cal(
+        event(
+          'UID:def',
+          'SUMMARY:Advising appointment',
+          'DTSTART:20260919T140000',
+          'BEGIN:VALARM',
+          'ACTION:EMAIL',
+          'SUMMARY:Reminder: Advising appointment',
+          'DESCRIPTION:Your event starts in 1 hour',
+          'TRIGGER:-PT1H',
+          'END:VALARM',
+        ),
+      ),
+    );
+    expect(events[0].title).toBe('Advising appointment');
+    expect(events[0].note).toBe('');
+  });
+
+  it('is not fooled by lower case', () => {
+    const { events } = parseIcs(
+      COURSES,
+      cal(
+        event(
+          'UID:ghi',
+          'SUMMARY:PSCI 1104 seminar',
+          'DTSTART:20260920T140000',
+          'DESCRIPTION:Read chapter four.',
+          'begin:valarm',
+          'description:This is an event reminder',
+          'end:valarm',
+        ),
+      ),
+    );
+    expect(events[0].note).toBe('Read chapter four.');
+  });
+
+  it('counts its way back out of a component nested two deep', () => {
+    const { events } = parseIcs(
+      COURSES,
+      cal(
+        event(
+          'UID:jkl',
+          'SUMMARY:BUS 1600 case',
+          'DTSTART:20260921T140000',
+          'DESCRIPTION:The real note.',
+          'BEGIN:VALARM',
+          'BEGIN:X-SOMETHING',
+          'SUMMARY:Nonsense',
+          'END:X-SOMETHING',
+          'DESCRIPTION:Still the alarm',
+          'END:VALARM',
+          'LOCATION:Buttrick 101',
+        ),
+      ),
+    );
+    expect(events[0].note).toBe('The real note.');
+    expect(events[0].title).toBe('BUS 1600 case');
+    // Back at the event's own level, the properties after the alarm are read
+    // again — a counter that never came back down would have swallowed this.
+    expect(events[0].where).toBe('Buttrick 101');
+  });
+
+  it('reads the event after an alarmed one', () => {
+    const { events } = parseIcs(
+      COURSES,
+      cal(
+        [
+          event(
+            'UID:one',
+            'SUMMARY:ECON 1020 lecture',
+            'DTSTART:20260922T140000',
+            'BEGIN:VALARM',
+            'DESCRIPTION:This is an event reminder',
+            'END:VALARM',
+          ),
+          event('UID:two', 'SUMMARY:PSCI 1104 lecture', 'DTSTART:20260923T140000', 'DESCRIPTION:Second note.'),
+        ].join('\r\n'),
+      ),
+    );
+    expect(events.map((e) => e.title)).toEqual(['ECON 1020 lecture', 'PSCI 1104 lecture']);
+    expect(events[1].note).toBe('Second note.');
+  });
+
+  it('still reads an event with no nested component at all', () => {
+    const { events } = parseIcs(
+      COURSES,
+      cal(event('UID:mno', 'SUMMARY:ECON 1020 quiz', 'DTSTART:20260924T140000', 'DESCRIPTION:Plain.')),
+    );
+    expect(events[0]).toMatchObject({ title: 'ECON 1020 quiz', note: 'Plain.' });
+  });
+
+  it('keeps the course an alarm would have hidden', () => {
+    /*
+     * The description is not only read: `toEvents` matches the course on the
+     * title, the place and the note together. A generic room booking that says
+     * which class it is in its description — which is how a department books
+     * one — lost that sentence to the alarm, and with it the only thing tying
+     * the entry to a course. It stayed on the calendar, unattributed, out of
+     * the course's own list.
+     */
+    const { events } = parseIcs(
+      COURSES,
+      cal(
+        event(
+          'UID:room',
+          'SUMMARY:Room booking',
+          'DTSTART:20260928T140000',
+          'DESCRIPTION:Review session for ECON 1020.',
+          'BEGIN:VALARM',
+          'ACTION:DISPLAY',
+          'DESCRIPTION:This is an event reminder',
+          'END:VALARM',
+        ),
+      ),
+    );
+    expect(events[0].courseId).toBe('econ');
+  });
+
+  it('does not let one truncated event swallow the rest of the file', () => {
+    /*
+     * A BEGIN with no END — a feed cut off mid-write, or a server that builds
+     * its calendar by string concatenation and got it wrong. Counting depth
+     * without clearing it at the event boundary would carry that count into
+     * every event after this one, and each would lose its DTSTART and be
+     * dropped: one malformed entry silently deleting the whole rest of the
+     * term. The count belongs to the event, so it ends with the event.
+     */
+    const { events } = parseIcs(
+      COURSES,
+      cal(
+        [
+          event('UID:torn', 'SUMMARY:ECON 1020 lecture', 'DTSTART:20260926T140000', 'BEGIN:VALARM', 'ACTION:DISPLAY'),
+          event('UID:after', 'SUMMARY:PSCI 1104 seminar', 'DTSTART:20260927T140000', 'DESCRIPTION:Still here.'),
+        ].join('\r\n'),
+      ),
+    );
+    expect(events.map((e) => e.title)).toEqual(['ECON 1020 lecture', 'PSCI 1104 seminar']);
+    expect(events[1].note).toBe('Still here.');
+  });
+
+  it('takes nothing from a VTIMEZONE standing outside the events', () => {
+    const { events, name } = parseIcs(
+      COURSES,
+      cal(
+        [
+          ['BEGIN:VTIMEZONE', 'TZID:America/Chicago', 'BEGIN:DAYLIGHT', 'DTSTART:19700308T020000', 'END:DAYLIGHT', 'END:VTIMEZONE'].join('\r\n'),
+          event('UID:pqr', 'SUMMARY:ECON 1020 lab', 'DTSTART:20260925T140000'),
+        ].join('\r\n'),
+      ),
+    );
+    expect(name).toBe('Brightspace');
+    expect(events).toHaveLength(1);
+    expect(events[0].date).toBe('2026-09-25');
+  });
+});

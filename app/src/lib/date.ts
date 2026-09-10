@@ -88,7 +88,29 @@ export function realDate(
     ? [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()]
     : [d.getFullYear(), d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds()];
   const asked = [year, month, day, hours, minutes, seconds];
-  return got.every((n, i) => n === asked[i]) ? d : null;
+  /*
+   * A date with no time on it is not asking about any hour, and must not be
+   * refused because the hour it happened to be built at was skipped.
+   *
+   * Havana springs forward at midnight: on 8 March 2026 the clock goes from
+   * 23:59 to 01:00, so `new Date(2026, 2, 8)` is one in the morning and its
+   * `getHours()` is 1. Comparing all six fields refused that date — a real
+   * day, on the one day a year its own timezone skips the hour this builds
+   * at. Santiago does the same on 6 September. `lib/capture.ts` then read
+   * "March 8" as the *next* year, because this year's had been declared not
+   * to exist.
+   *
+   * The calendar fields are still exact, so the date is still checked: only
+   * the clock is left out of a question that never mentioned one. A stated
+   * time keeps all six, because a caller asking about 00:30 on a night the
+   * clock skipped it is owed the answer that the hour did not happen.
+   *
+   * Neither zone the suite runs in has a midnight transition — Chicago moves
+   * at two and Kiritimati does not move — so `realdate.test.ts` names a third
+   * for this, and asserts the zone took before asserting anything about it.
+   */
+  const fields = time ? 6 : 3;
+  return got.slice(0, fields).every((n, i) => n === asked[i]) ? d : null;
 }
 
 /**

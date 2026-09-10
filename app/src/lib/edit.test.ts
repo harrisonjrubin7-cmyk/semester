@@ -15,7 +15,8 @@ import {
   withCourse,
   withGrading,
 } from './edit';
-import type { CourseModule, Item } from './types';
+import type { CourseModule, GradeRow, Item } from './types';
+import { readWeight, standing } from './grades';
 
 const item = (id: string, month: number, day: number): Item =>
   ({
@@ -242,5 +243,61 @@ describe('blankCourse', () => {
 
   it('still makes a course when the code is all punctuation', () => {
     expect(blankCourse('???').course.id).toMatch(/^course/);
+  });
+});
+
+describe('the weights note against the grade arithmetic', () => {
+  // One syllabus, two screens. They read the same wording differently, so the
+  // note under the grading table and the caveat under the projected grade
+  // disagreed about whether anything needed fixing.
+  const rows = (...pcts: string[]): GradeRow[] => pcts.map((pct, i) => ({ what: `Cat ${i}`, pct }));
+  const course = (grading: GradeRow[]) =>
+    ({
+      id: 'c', code: 'C 100', name: '', prof: '', email: '', meets: '', room: '',
+      credits: '3', source: '', grading,
+    }) as unknown as Parameters<typeof standing>[0];
+
+  /** What `standing` treats as the hundred: every row that is not a bonus. */
+  const hundred = (grading: GradeRow[]) =>
+    grading
+      .map((r) => readWeight(r.pct))
+      .filter((r) => !r.extra)
+      .reduce((n, r) => n + (r.weight ?? 0), 0);
+
+  const SYLLABI: [string, GradeRow[]][] = [
+    ['plain', rows('20%', '30%', '50%')],
+    ['a bonus row', rows('20%', '30%', '50%', '+3% EC')],
+    ['a range', rows('25–30%', '20%', '52.5%')],
+    ['a range and a bonus', rows('25–30%', '20%', '52.5%', '+5% bonus')],
+  ];
+
+  it('reads the same total the grade arithmetic reads', () => {
+    for (const [, grading] of SYLLABI) {
+      expect(weightTotal(grading)).toBeCloseTo(hundred(grading), 5);
+    }
+  });
+
+  it('never says fix them while the grade screen says they are fine', () => {
+    for (const [, grading] of SYLLABI) {
+      const complains = weightNote(grading).includes('%,');
+      expect(complains).toBe(standing(course(grading), {}, {}).incomplete);
+    }
+  });
+
+  it('leaves a bonus out of the hundred', () => {
+    // "+3% EC" is three points on top, not three of the hundred.
+    expect(weightTotal(rows('20%', '30%', '50%', '+3% EC'))).toBe(100);
+    expect(weightNote(rows('20%', '30%', '50%', '+3% EC'))).toBe('Adds up to 100%.');
+  });
+
+  it('takes a range at its midpoint, as every other reading does', () => {
+    expect(weightTotal(rows('25–30%', '20%', '52.5%'))).toBe(100);
+  });
+
+  it('still says nothing about a syllabus that states no percentages', () => {
+    expect(weightTotal(rows('80 pts', '120 pts'))).toBeNull();
+    expect(weightTotal(rows('Pass/fail'))).toBeNull();
+    // A bonus and nothing else states no weights either.
+    expect(weightTotal(rows('+3% EC'))).toBeNull();
   });
 });

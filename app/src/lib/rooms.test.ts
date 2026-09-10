@@ -22,6 +22,70 @@ const block = (title: string, meta: string, at: number, canceled = false) => ({
   canceled,
 });
 
+describe('a block that states its own place', () => {
+  // Only a class block's `meta` is shaped "room first". Everything else on the
+  // rail puts something that is not a place there, and reading it as prose sent
+  // a student walking to things that are not buildings.
+  const at = (title: string, meta: string, where: string | undefined, when: number) =>
+    where === undefined ? { title, meta, at: when } : { title, meta, at: when, where };
+
+  it('walks to the place, not to the kind of thing it is', () => {
+    // A commitment's line reads "Club sport · Boathouse" — its kind first.
+    const day = [
+      at('CORE 2500', 'Garland 162 · Prof. Torres Colón', undefined, 795),
+      at('Rowing squad', 'Club sport · Boathouse', 'Boathouse', 1020),
+    ];
+    const [hop] = hops(day, []);
+    expect(hop.toPlace).toBe('Boathouse');
+  });
+
+  it('leaves out a commitment with nowhere stated', () => {
+    // Its line reads just "Club or organisation", which is not somewhere to be.
+    const day = [
+      at('CORE 2500', 'Garland 162 · Prof. Torres Colón', undefined, 795),
+      at('Debate society', 'Club or organisation', '', 1140),
+    ];
+    expect(hops(day, [])).toEqual([]);
+  });
+
+  it('leaves out an appointment with nowhere stated', () => {
+    // Its line reads "Added by you".
+    const day = [
+      at('CORE 2500', 'Garland 162 · Prof. Torres Colón', undefined, 795),
+      at('Coffee with Sam', 'Added by you', '', 960),
+    ];
+    expect(hops(day, [])).toEqual([]);
+  });
+
+  it('leaves out a deadline, which is an hour rather than a room', () => {
+    // Its line names the course, which read as prose became a building.
+    const day = [
+      at('Garland 162', 'Garland 162 · Prof. Torres Colón', undefined, 795),
+      at('Reflection #2', 'CORE 2500 · Reflection', '', 795),
+    ];
+    expect(hops(day, [])).toEqual([]);
+  });
+
+  it('still reads the room off a class, which states no place of its own', () => {
+    const day = [
+      at('Buttrick 101', 'Buttrick 101 · Dr. Hogue', undefined, 600),
+      at('Garland 162', 'Garland 162 · Prof. Torres Colón', undefined, 795),
+    ];
+    const [hop] = hops(day, []);
+    expect([hop.fromPlace, hop.toPlace]).toEqual(['Buttrick', 'Garland']);
+  });
+
+  it('measures a stated place against the ones you saved', () => {
+    const day = [
+      at('CORE 2500', 'Garland Hall 162 · Prof. Torres Colón', undefined, 795),
+      at('Study group', 'Study · Buttrick 101', 'Buttrick 101', 900),
+    ];
+    const [hop] = hops(day, [BUTTRICK, GARLAND]);
+    expect(hop.known).toBe(true);
+    expect(hop.metres).toBeGreaterThan(300);
+  });
+});
+
 describe('reading a building out of a room', () => {
   it('drops the room number', () => {
     expect(buildingOf('Buttrick 101')).toBe('Buttrick');
@@ -179,5 +243,55 @@ describe('the day in one line', () => {
       [],
     );
     expect(daySummary(list)).toMatch(/no saved places to measure them/);
+  });
+});
+
+describe('how much of the gap is actually free', () => {
+  // `tight` and `hopLine` each subtracted a `classMinutes` that defaulted to
+  // fifty, and the only caller took the default. A seventy-five minute
+  // seminar was therefore treated as fifty, and the walk after it looked
+  // twenty-five minutes roomier than it was.
+  const block = (title: string, at: number, minutes?: number) =>
+    minutes === undefined
+      ? { title, meta: `${title} 101`, at }
+      : { title, meta: `${title} 101`, at, minutes };
+
+  const between = (from: ReturnType<typeof block>, to: ReturnType<typeof block>) =>
+    hops([from, to], [BUTTRICK, GARLAND])[0];
+
+  it('takes the length off the gap, not a flat fifty', () => {
+    // Two starts ninety minutes apart, the first running seventy-five.
+    const h = between(block('Buttrick', 600, 75), block('Garland Hall', 690));
+    expect(h.apart).toBe(90);
+    expect(h.spare).toBe(15);
+  });
+
+  it('does not call a walk you cannot make comfortable', () => {
+    // ~400 m at eighty metres a minute is about five minutes; make the gap
+    // leave less than that once the seminar has had its seventy-five.
+    const h = between(block('Buttrick', 600, 75), block('Garland Hall', 678));
+    expect(h.spare).toBe(3);
+    expect(tight(h)).toBe(true);
+    expect(hopLine(h)).toContain('there are 3 between them');
+  });
+
+  it('says the same as before for a class that really is fifty', () => {
+    const stated = between(block('Buttrick', 600, 50), block('Garland Hall', 690));
+    const unstated = between(block('Buttrick', 600), block('Garland Hall', 690));
+    expect(stated.spare).toBe(unstated.spare);
+    expect(unstated.spare).toBe(40);
+  });
+
+  it('never says a gap is negative', () => {
+    const h = between(block('Buttrick', 600, 200), block('Garland Hall', 660));
+    expect(h.spare).toBe(0);
+    expect(tight(h)).toBe(true);
+  });
+
+  it('measures against the one you are leaving, not the one you are going to', () => {
+    const leavingLong = between(block('Buttrick', 600, 75), block('Garland Hall', 690));
+    const arrivingLong = between(block('Buttrick', 600, 50), block('Garland Hall', 690, 75));
+    expect(leavingLong.spare).toBe(15);
+    expect(arrivingLong.spare).toBe(40);
   });
 });
