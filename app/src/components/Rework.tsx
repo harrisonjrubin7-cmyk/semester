@@ -10,7 +10,6 @@ import {
   oneUnit,
   readOneUnit,
   readPlan,
-  storedUnit,
   survey,
   verdict,
   type Plan,
@@ -94,10 +93,10 @@ export function Rework({
             role: 'user',
             content: whole
               ? brief(guide, updates)
-              : // The guide on screen is the live merge, whose unit indices are
-                // not the stored ones an update was filed against. See
-                // `storedUnit`.
-                oneUnit(guide, updates, scope, storedUnit(scope, guide.addedUnits)),
+              : // The guide on screen is the live merge: its unit indices are
+                // not the stored ones an update was filed against, and two of
+                // its units may have been spliced in. See `updatesFor`.
+                oneUnit(guide, updates, scope, guide.addedUnits),
           },
         ],
       });

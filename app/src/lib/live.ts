@@ -183,16 +183,25 @@ export function mergeGuide(
   for (const u of updates) {
     if (attached(u, guide.units.length)) continue;
     if (u.cards.length === 0) continue;
-    // Already folded in by a rebuild — see the note on `have` above. A unit
-    // spliced in for material the guide now contains is the same duplication
-    // as a card, one level up.
-    if (u.cards.every((c) => have.has(c.q))) continue;
+    /*
+     * Already folded in by a rebuild — see the note on `have` above. A unit
+     * spliced in for material the guide now contains is the same duplication
+     * as a card, one level up.
+     *
+     * Card by card, not all-or-nothing. A reading whose cards were partly
+     * folded in — one reworded by the rebuild and so still outstanding, the
+     * rest kept verbatim — passes an `every` check and then splices a unit
+     * holding the verbatim ones a second time. The attached path above
+     * filters; this one has to filter for the same reason.
+     */
+    const fresh = u.cards.filter((c) => !have.has(c.q));
+    if (fresh.length === 0) continue;
     const n = sessionIn(u.title) ?? sessionIn(u.source);
     const at = slotFor(units, n);
     units.splice(at, 0, {
       name: nameFor(u.title || 'Added material', n, numbered),
       mastery: 0,
-      cards: u.cards,
+      cards: fresh,
     });
     base.splice(at, 0, 0);
     // Everything at or after the insert shifted up by one, including units an
@@ -208,7 +217,7 @@ export function mergeGuide(
         delete added[key];
       }
     }
-    added[at] = u.cards;
+    added[at] = fresh;
   }
   addedUnits.sort((a, b) => a - b);
 

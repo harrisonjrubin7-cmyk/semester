@@ -694,6 +694,39 @@ describe('material a rebuild has already folded in', () => {
     expect(out.addedUnits).toEqual([]);
   });
 
+  /*
+   * The all-or-nothing check was not enough. A reading whose cards were partly
+   * folded in — one reworded by the rebuild and so still outstanding, the rest
+   * kept verbatim — fails `every`, and the old code then spliced a unit
+   * holding the verbatim ones a second time.
+   */
+  it('splices in only the cards the guide does not already hold', () => {
+    const baked = guide({
+      units: [
+        { name: 'Supply', mastery: 80, cards: [card('s1'), card('s2'), card('kept')] },
+        { name: 'Demand', mastery: 40, cards: [card('d1')] },
+      ],
+    });
+    const out = mergeGuide(baked, [
+      update({ unit: null, cards: [card('kept'), card('outstanding')] }),
+    ]);
+    const spliced = out.units[out.addedUnits[0]];
+    expect(spliced.cards.map((c) => c.q)).toEqual(['outstanding']);
+  });
+
+  it('reports the spliced unit’s added cards as the ones it actually holds', () => {
+    const baked = guide({
+      units: [
+        { name: 'Supply', mastery: 80, cards: [card('s1'), card('s2'), card('kept')] },
+        { name: 'Demand', mastery: 40, cards: [card('d1')] },
+      ],
+    });
+    const out = mergeGuide(baked, [
+      update({ unit: null, cards: [card('kept'), card('outstanding')] }),
+    ]);
+    expect(out.added[out.addedUnits[0]].map((c) => c.q)).toEqual(['outstanding']);
+  });
+
   it('still splices one in for material that is genuinely new', () => {
     const out = mergeGuide(guide(), [update({ unit: null, cards: [card('unfiled')] })]);
     expect(out.units).toHaveLength(3);

@@ -306,24 +306,13 @@ export function oneUnit(
   updates: CourseUpdate[],
   unit: number,
   /**
-   * Which unit of the *stored* guide this displayed one is, or null.
+   * Which displayed units the merge spliced in, from `LiveGuide.addedUnits`.
    *
-   * The two are not the same number, and assuming they were sent the wrong
-   * reading to the model. `CourseUpdate.unit` is an index into the guide as
-   * imported; the guide on screen is the live merge, and `mergeGuide` splices
-   * an unfiled update in as a unit of its own at the session it names — so
-   * every unit at or after it is displayed one higher than it is stored. Pick
-   * unit 5 on screen and the material filed against stored unit 5 is a
-   * different week's reading.
-   *
-   * Null means this displayed unit *is* one of those insertions and has no
-   * stored counterpart, so only unfiled material belongs to it — which is the
-   * material it was made out of.
-   *
-   * Worked out by the caller with `storedUnit`, which has the merge's own
-   * `addedUnits` to hand.
+   * Everything about which material belongs to which unit follows from this —
+   * see `updatesFor`. Empty means the guide on screen is the guide on disk,
+   * which is what every caller that has no merge to consult should pass.
    */
-  stored: number | null = unit,
+  addedUnits: number[] = [],
 ): string {
   const target = guide.units[unit];
   if (!target) throw new Error('That unit is not in this guide.');
@@ -334,11 +323,7 @@ export function oneUnit(
 
   const cards = target.cards.map((c) => `  Q: ${c.q}\n  A: ${c.a}`).join('\n');
 
-  // Material filed against this unit, plus anything filed against none — an
-  // unfiled reading is exactly as likely to belong here as anywhere, and the
-  // student asked for this unit. Filed material is matched on the *stored*
-  // index, which is what `CourseUpdate.unit` holds.
-  const mine = updates.filter((u) => u.unit === null || (stored !== null && u.unit === stored));
+  const mine = updatesFor(guide.units, addedUnits, updates, unit);
   const added = mine
     .map((u) => {
       const where = u.unit === null ? 'filed against no unit' : 'filed against this unit';
@@ -455,9 +440,67 @@ export function readOneUnit(reply: string, base: Guide, unit: number): Plan {
  * insertions, which is exactly what this needs.
  *
  * Null for an inserted unit: it has no stored counterpart, and the material
- * that belongs to it is the unfiled update it was made out of.
+ * that belongs to it is the one update it was made out of — which is
+ * `updatesFor`'s problem rather than this one's.
  */
 export function storedUnit(displayed: number, addedUnits: number[] = []): number | null {
   if (addedUnits.includes(displayed)) return null;
   return displayed - addedUnits.filter((a) => a < displayed).length;
+}
+
+/**
+ * Whether an unfiled update is the one a given unit was spliced in for.
+ *
+ * A superset test rather than an equality one, because the unit holds the
+ * update's *fresh* cards: a rebuild that folded half a reading in leaves the
+ * other half to be spliced, so the unit is a subset of the update by then.
+ * Every question in the unit appearing in the update is true before and after
+ * that, and is false for a different reading.
+ */
+function madeIt(u: CourseUpdate, unit: Unit): boolean {
+  if (u.unit !== null || unit.cards.length === 0) return false;
+  const asked = new Set(u.cards.map((c) => c.q));
+  return unit.cards.every((c) => asked.has(c.q));
+}
+
+/**
+ * The material that belongs to one displayed unit.
+ *
+ * Three cases, and getting any of them wrong sends the model the wrong week's
+ * reading — which comes back looking like a perfectly good unit, so nothing
+ * downstream can catch it.
+ *
+ * - **A unit the merge spliced in** owns exactly the update it was made out
+ *   of. Filtering on "unfiled" alone is not enough once there are two of
+ *   them: both are unfiled, so picking either one offered the model both
+ *   readings and let it fold one into the other, and the save then replaced
+ *   one unit with a rewrite drawing on the other's material.
+ * - **A stored unit** owns what was filed against its *stored* index, which
+ *   is what `CourseUpdate.unit` holds and is not the index on screen.
+ * - **Unfiled material with no unit of its own** — a reading with no cards, or
+ *   one a rebuild has entirely folded in — could belong anywhere, so it goes
+ *   to whichever stored unit is being rebuilt. Unfiled material that *did*
+ *   become a unit does not: it has a home, and that home is not this one.
+ */
+export function updatesFor(
+  units: Unit[],
+  addedUnits: number[],
+  updates: CourseUpdate[],
+  displayed: number,
+): CourseUpdate[] {
+  const target = units[displayed];
+  if (!target) return [];
+
+  if (addedUnits.includes(displayed)) {
+    return updates.filter((u) => madeIt(u, target));
+  }
+
+  const stored = storedUnit(displayed, addedUnits);
+  const housed = updates.filter((u) =>
+    addedUnits.some((i) => units[i] && madeIt(u, units[i] as Unit)),
+  );
+  return updates.filter(
+    (u) =>
+      (stored !== null && u.unit === stored) || (u.unit === null && !housed.includes(u)),
+  );
 }

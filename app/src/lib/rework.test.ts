@@ -8,6 +8,7 @@ import {
   readPlan,
   storedUnit,
   survey,
+  updatesFor,
   verdict,
 } from './rework';
 import type { CourseUpdate, Guide } from './types';
@@ -372,28 +373,82 @@ describe('the unit on screen is not the unit on disk', () => {
     // Displayed unit 1 is stored unit 0 once something is spliced in at 0.
     const filed = update({ id: 'u0', unit: 0, body: 'BELONGS-TO-STORED-ZERO' });
     const other = update({ id: 'u1', unit: 1, body: 'BELONGS-TO-STORED-ONE' });
-    const said = oneUnit(g, [filed, other], 1, storedUnit(1, [0]));
+    const said = oneUnit(g, [filed, other], 1, [0]);
     expect(said).toContain('BELONGS-TO-STORED-ZERO');
     expect(said).not.toContain('BELONGS-TO-STORED-ONE');
-  });
-
-  it('sends only unfiled material for a unit that was spliced in', () => {
-    const g = guide();
-    const said = oneUnit(
-      g,
-      [update({ id: 'u1', unit: 1, body: 'FILED-SOMEWHERE' }), update({ id: 'u2', unit: null, body: 'UNFILED' })],
-      1,
-      storedUnit(1, [1]),
-    );
-    expect(said).toContain('UNFILED');
-    expect(said).not.toContain('FILED-SOMEWHERE');
   });
 
   it('behaves as it did when nothing was spliced in', () => {
     const g = guide();
     const ups = [update({ id: 'u1', unit: 1, body: 'FILED-AT-ONE' })];
-    expect(oneUnit(g, ups, 1, storedUnit(1, []))).toContain('FILED-AT-ONE');
+    expect(oneUnit(g, ups, 1, [])).toContain('FILED-AT-ONE');
     // The default keeps every caller that has no merge to consult working.
     expect(oneUnit(g, ups, 1)).toContain('FILED-AT-ONE');
+  });
+});
+
+describe('which reading belongs to which unit', () => {
+  const card = (q: string) => ({ q, a: `answer to ${q}` });
+
+  /**
+   * A guide with two units spliced in: displayed 1 and 3, from two different
+   * unfiled readings.
+   */
+  const merged = () => ({
+    ...guide(),
+    units: [
+      guide().units[0],
+      { name: 'Session 4 · Reading A', mastery: 0, cards: [card('a1'), card('a2')] },
+      guide().units[1],
+      { name: 'Session 9 · Reading B', mastery: 0, cards: [card('b1')] },
+    ],
+  });
+  const readingA = update({ id: 'ua', unit: null, body: 'MATERIAL-A', cards: [card('a1'), card('a2')] });
+  const readingB = update({ id: 'ub', unit: null, body: 'MATERIAL-B', cards: [card('b1')] });
+
+  /*
+   * Both are unfiled, so "unfiled" alone cannot tell them apart. Picking
+   * either one offered the model both readings and let it fold one into the
+   * other — and the save then replaced one unit with a rewrite drawing on the
+   * other's material.
+   */
+  it('gives a spliced-in unit its own reading and not the other one', () => {
+    const mine = updatesFor(merged().units, [1, 3], [readingA, readingB], 1);
+    expect(mine.map((u) => u.id)).toEqual(['ua']);
+    expect(updatesFor(merged().units, [1, 3], [readingA, readingB], 3).map((u) => u.id)).toEqual([
+      'ub',
+    ]);
+  });
+
+  it('does not offer a stored unit a reading that already has a unit of its own', () => {
+    const mine = updatesFor(merged().units, [1, 3], [readingA, readingB], 0);
+    expect(mine).toEqual([]);
+  });
+
+  it('does offer a stored unit unfiled material that has no unit of its own', () => {
+    // No cards, so `mergeGuide` never splices it in and it could belong here.
+    const homeless = update({ id: 'uh', unit: null, body: 'HOMELESS', cards: [] });
+    const mine = updatesFor(merged().units, [1, 3], [readingA, homeless], 0);
+    expect(mine.map((u) => u.id)).toEqual(['uh']);
+  });
+
+  it('matches a reading a rebuild has only half folded in', () => {
+    // The unit holds the fresh cards; the update still holds both.
+    const half = {
+      ...merged(),
+      units: merged().units.map((u, i) => (i === 1 ? { ...u, cards: [card('a2')] } : u)),
+    };
+    expect(updatesFor(half.units, [1, 3], [readingA, readingB], 1).map((u) => u.id)).toEqual(['ua']);
+  });
+
+  it('matches filed material on the stored index', () => {
+    const filed = update({ id: 'uf', unit: 1 });
+    // Displayed 2 is stored 1 with an insertion at 1 before it.
+    expect(updatesFor(merged().units, [1, 3], [filed], 2).map((u) => u.id)).toEqual(['uf']);
+    expect(updatesFor(merged().units, [1, 3], [filed], 0)).toEqual([]);
+  });
+
+  it('is nothing for a unit that is not there', () => {
+    expect(updatesFor(merged().units, [1, 3], [readingA], 9)).toEqual([]);
   });
 });
