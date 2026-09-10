@@ -127,7 +127,22 @@ export function clashes(
 
     // A day already promised to something else. The student entered the
     // commitment, so this is the app joining up two things it was told.
-    const busy = commitments.filter((c) => c.days.includes(new Date(`${date}T12:00:00`).getDay()));
+    /*
+     * Active ones only. A commitment carries a switch — the Activities screen
+     * calls it Pause and Resume, and dims the row when it is off — and this
+     * read past it, so a club somebody had left still made the app say the day
+     * was promised to it. Measured: paused, and the warning still read "2
+     * things due on a day you have Rowing squad."
+     *
+     * Every other reader of this list already honours the switch: `blocksOn`
+     * checks it, so the day rail, the day grid, the week grid, the hours tab
+     * and the week-ahead figures all do; `ai/providers/campus.ts` filters on
+     * it; the Activities screen counts with it. This was the one place that
+     * did not, and the sentence it produces names the thing by name.
+     */
+    const busy = commitments.filter(
+      (c) => c.active && c.days.includes(new Date(`${date}T12:00:00`).getDay()),
+    );
     if (busy.length > 0 && onDay.length >= 2) {
       out.push({
         date,

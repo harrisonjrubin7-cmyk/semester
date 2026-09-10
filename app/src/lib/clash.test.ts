@@ -181,6 +181,38 @@ describe('everything due at one time', () => {
   });
 });
 
+describe('a commitment the student paused', () => {
+  /*
+   * Every commitment carries a switch — the Activities screen calls it Pause
+   * and Resume and dims the row when it is off — and this read past it. A club
+   * somebody had left still made the app say their day was promised to it, by
+   * name. Measured before: paused, and the warning still read "2 things due on
+   * a day you have the away game."
+   *
+   * Every other reader already honoured it: `blocksOn` checks `active`, so the
+   * day rail, day grid, week grid, hours tab and week-ahead figures do; the
+   * campus provider filters on it; the Activities screen counts with it.
+   */
+  const paused = (days: number[]): Commitment => ({ ...club(days), active: false }) as Commitment;
+
+  it('is not a day you have anything on', () => {
+    // 4 Sept 2026 is a Friday; +7 is the next Friday.
+    const out = clashes([item({ daysAway: 7 }), item({ daysAway: 7, kind: 'Essay' })], [], [paused([5])], code);
+    expect(out.find((c) => c.kind === 'committed')).toBeUndefined();
+  });
+
+  it('still warns about the ones that are running', () => {
+    const out = clashes(
+      [item({ daysAway: 7 }), item({ daysAway: 7, kind: 'Essay' })],
+      [],
+      [paused([5]), club([5], 'rowing')],
+      code,
+    );
+    expect(out.find((c) => c.kind === 'committed')?.says).toContain('rowing');
+    expect(out.find((c) => c.kind === 'committed')?.says).not.toContain('the away game');
+  });
+});
+
 describe('work landing on a day you are already committed', () => {
   it('joins up two things the student entered', () => {
     // 4 Sept 2026 is a Friday; +7 is the next Friday.
