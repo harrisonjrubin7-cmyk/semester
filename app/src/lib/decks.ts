@@ -62,9 +62,13 @@ export const LAYOUTS: { id: Layout; label: string }[] = [
 
 export function blankSlide(layout: Layout): Slide {
   if (layout === 'title') return { title: '', bullets: [], opening: true };
-  // `note` is the line printed under a section's title. It starts undefined
-  // rather than empty: an empty string is a field the editor has to draw and
-  // the exporter has to skip, and the editor draws it when it is present.
+  /*
+   * `note` is the line printed under a section's title, and it starts as an
+   * empty string rather than undefined because that is what makes the editor
+   * draw the field: `SlideEditor` shows the box when `note !== undefined`, so
+   * leaving it off gave a section slide a line of text in the export that
+   * nobody could type into or change.
+   */
   if (layout === 'section') return { title: '', bullets: [], opening: true, note: '' };
   if (layout === 'table') {
     return { title: '', bullets: [], table: [['', ''], ['', '']] };
