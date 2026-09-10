@@ -38,6 +38,7 @@
  * `gpaLine` already makes about pass/fail.
  */
 
+import { creditHours } from './credits';
 import { systemFor, letterFor, type GradeSystem } from './cutoffs';
 import { NO_POLICY, pointsOff, rate, tally, type AttendPolicy, type Attended } from './attend';
 import { needFor, reachFor, standing, type Reach, type Standing } from './grades';
@@ -84,30 +85,6 @@ export interface TermStanding {
   gpa: Band | null;
   /** The finished record, and what this term does to it. */
   cumulative: { before: number; hours: number; after: Band } | null;
-}
-
-/**
- * The number out of "3 credits", "3", "3.0 hrs".
- *
- * A syllabus writes this line freely and the app stores it as it was written,
- * so this reads rather than parses: the first number in the string, refused if
- * it is not a plausible credit count.
- *
- * Two shapes are struck out before the reading rather than filtered after it,
- * because both survive the plausibility test and mean something else. A year —
- * "Fall 2026" — is four digits and fails the range. A **time** does not: "TR
- * 9:30" reads as nine credit hours, which is a number in range, in the right
- * position, and wrong. Better to leave a course out and say the hours could
- * not be read than to weight a term by a lecture slot.
- */
-export function creditHours(credits: string | undefined): number | null {
-  const said = (credits ?? '')
-    .replace(/\b\d{1,2}:\d{2}\s*[ap]?\.?m?\.?/gi, ' ')
-    .replace(/\b(?:19|20)\d{2}\b/g, ' ');
-  const m = /(\d+(?:\.\d+)?)/.exec(said);
-  if (!m) return null;
-  const n = Number(m[1]);
-  return Number.isFinite(n) && n > 0 && n <= 12 ? n : null;
 }
 
 /** The grade points a percentage earns on this scale, letter and all. */

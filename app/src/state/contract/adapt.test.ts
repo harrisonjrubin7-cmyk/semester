@@ -85,6 +85,22 @@ describe('the crossing', () => {
     expect(c.termId).toBe('term:2026FA');
   });
 
+  it('reads the credit count out of the line the syllabus wrote', () => {
+    /*
+     * What crosses this wire is what a degree audit divides by. `parseFloat`
+     * took the leading number and stopped: it read the "Three (3)" the
+     * mapping comment offers as an example as none at all, and a line that
+     * opens with the term as two thousand and twenty-six.
+     */
+    const said = (credits: string) =>
+      toContract(state({ courses: [course({ credits })] })).courses[0].credits;
+    expect(said('Three (3)')).toBe(3);
+    expect(said('2026 Spring · 3 credits')).toBe(3);
+    expect(said('9:30 TR, 3 credits')).toBe(3);
+    // A line with no credit count in it still crosses as zero, not as NaN.
+    expect(said('TR 9:30-10:45')).toBe(0);
+  });
+
   it('turns one recurring block into one meeting per day', () => {
     // The app holds `days: [1,3,5]` and one start time; a calendar cannot
     // render that, so it becomes three meetings.
