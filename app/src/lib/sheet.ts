@@ -1511,6 +1511,32 @@ function records(text: string): string[] {
   const out: string[] = [];
   let record = '';
   let quoted = false;
+
+  /*
+   * A quote only means "quoted field" at the edge of a field.
+   *
+   * The first version of this flipped on every `"` in the text, which is right
+   * for CSV and wrong for everything else — and the separator is not known
+   * until `readTable` has counted the tabs, which happens after this runs. A
+   * tab-separated paste holding `15" monitor` therefore opened a quoted field
+   * at the inch mark and swallowed every newline after it: four rows arrived
+   * as two, with the rest of the file inside one cell. That is worse than the
+   * bug this function was written to fix.
+   *
+   * A field boundary is the start of the text, a newline, a comma or a tab —
+   * true whichever separator turns out to be in use, so no ordering problem.
+   * `15" monitor` has a digit before the quote and stays literal; `"one\ntwo",2`
+   * opens at the start of a field and keeps its newline.
+   */
+  const boundary = (at: number): boolean =>
+    at === 0 || text[at - 1] === '\n' || text[at - 1] === ',' || text[at - 1] === '\t';
+
+  /** A quoted field ends where the quote is followed by a separator or the end. */
+  const closes = (at: number): boolean => {
+    const next = text[at + 1];
+    return next === undefined || next === '\n' || next === ',' || next === '\t';
+  };
+
   for (let i = 0; i < text.length; i += 1) {
     const ch = text[i];
     if (ch === '"') {
@@ -1521,7 +1547,8 @@ function records(text: string): string[] {
         i += 1;
         continue;
       }
-      quoted = !quoted;
+      if (!quoted && boundary(i)) quoted = true;
+      else if (quoted && closes(i)) quoted = false;
       record += ch;
       continue;
     }
@@ -1536,23 +1563,43 @@ function records(text: string): string[] {
   return out;
 }
 
+/**
+ * One record split into cells.
+ *
+ * Quotes are read the same way `records` reads them, and for the same reason:
+ * a `"` is only a field delimiter at the edge of a field. `15" monitor` in a
+ * tab-separated paste is an inch mark, and treating it as an opening quote
+ * swallowed the tab after it — so the row arrived as one cell instead of two,
+ * with the quote silently removed.
+ *
+ * `started` is the test: a quote can open a field only while nothing has been
+ * put in it yet, and can close one only where a separator or the end follows.
+ */
 function csvLine(line: string, sep: string): string[] {
   const out: string[] = [];
   let cell = '';
   let quoted = false;
+  let started = false;
   for (let i = 0; i < line.length; i += 1) {
     const ch = line[i];
     if (quoted) {
       if (ch === '"' && line[i + 1] === '"') {
         cell += '"';
         i += 1;
-      } else if (ch === '"') quoted = false;
-      else cell += ch;
-    } else if (ch === '"') quoted = true;
-    else if (ch === sep) {
+      } else if (ch === '"' && (line[i + 1] === undefined || line[i + 1] === sep)) {
+        quoted = false;
+      } else cell += ch;
+    } else if (ch === '"' && !started) {
+      quoted = true;
+      started = true;
+    } else if (ch === sep) {
       out.push(cell);
       cell = '';
-    } else cell += ch;
+      started = false;
+    } else {
+      cell += ch;
+      started = true;
+    }
   }
   out.push(cell);
   return out;

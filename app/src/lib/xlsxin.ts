@@ -200,23 +200,44 @@ function isoDate(serial: number, epoch: number, withTime: boolean): string {
   return `${date} ${hh}:${mm}`;
 }
 
+/**
+ * A relationship target as a key into the zip.
+ *
+ * Targets are written relative to the part that declares them —
+ * `xl/workbook.xml` — so `worksheets/sheet1.xml`, `/xl/worksheets/sheet1.xml`
+ * and `../worksheets/sheet1.xml` are all things a writer may produce and all
+ * name a real part. Prefixing `xl/` blindly turned the third into the literal
+ * key `xl/../worksheets/sheet1.xml`, which matches nothing, so the worksheet
+ * was skipped and the whole workbook reported as having none.
+ *
+ * The segments are walked instead: `..` goes up, `.` stays, everything else
+ * descends. A leading slash is from the package root and starts over.
+ */
+function resolve(target: string): string {
+  const from = target.startsWith('/') ? [] : ['xl'];
+  for (const part of target.replace(/^\//, '').split('/')) {
+    if (part === '' || part === '.') continue;
+    if (part === '..') from.pop();
+    else from.push(part);
+  }
+  return from.join('/');
+}
+
 /** Which worksheet part each tab in the workbook refers to. */
 function worksheetOrder(workbook: string, rels: string): { name: string; part: string }[] {
   const targets = new Map<string, string>();
   for (const m of rels.matchAll(/<Relationship\b[^>]*>/g)) {
-    const id = /Id="([^"]+)"/.exec(m[0]);
-    const target = /Target="([^"]+)"/.exec(m[0]);
-    if (id && target) {
-      targets.set(id[1], `xl/${entities(target[1]).replace(/^\/?xl\//, '').replace(/^\.\//, '')}`);
-    }
+    const id = /Id=['"]([^'"]+)['"]/.exec(m[0]);
+    const target = /Target=['"]([^'"]+)['"]/.exec(m[0]);
+    if (id && target) targets.set(id[1], resolve(entities(target[1])));
   }
 
   const out: { name: string; part: string }[] = [];
   let nth = 0;
   for (const m of workbook.matchAll(/<sheet\b[^>]*\/?>/g)) {
     nth += 1;
-    const name = /name="([^"]*)"/.exec(m[0]);
-    const rid = /r:id="([^"]+)"/.exec(m[0]);
+    const name = /name=['"]([^'"]*)['"]/.exec(m[0]);
+    const rid = /r:id=['"]([^'"]+)['"]/.exec(m[0]);
     out.push({
       name: name ? entities(name[1]) : `Sheet${nth}`,
       // The relationship is the correct answer; the positional guess is what
@@ -260,7 +281,9 @@ function readCells(
   for (const m of xml.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
     const attrs = m[1];
     const body = m[2] ?? '';
-    const rref = /r="([A-Z]+\d+)"/.exec(attrs);
+    // Either quote style: `<c r='A1'>` is valid XML and was being skipped
+    // outright, so a worksheet written that way imported as empty.
+    const rref = /r=['"]([A-Z]+\d+)['"]/.exec(attrs);
     if (!rref) continue;
     const where = parseRef(rref[1]);
     if (!where) continue;
@@ -269,7 +292,7 @@ function readCells(
       continue;
     }
 
-    const type = /t="([^"]+)"/.exec(attrs)?.[1] ?? 'n';
+    const type = /t=['"]([^'"]+)['"]/.exec(attrs)?.[1] ?? 'n';
     const formula = /<f(?:\s[^>]*)?>([\s\S]*?)<\/f>/.exec(body);
     const raw = /<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/.exec(body);
 
@@ -308,7 +331,7 @@ function readCells(
        */
       if (/<f\b/.test(body)) frozen += 1;
 
-      const style = Number(/s="(\d+)"/.exec(attrs)?.[1] ?? -1);
+      const style = Number(/s=['"](\d+)['"]/.exec(attrs)?.[1] ?? -1);
       const n = Number(entities(raw[1]));
       text =
         type === 'n' && styles.dates.has(style) && Number.isFinite(n)

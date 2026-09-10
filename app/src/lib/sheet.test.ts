@@ -587,6 +587,41 @@ describe('a field with a newline in it', () => {
   });
 });
 
+/*
+ * A regression from the fix above, caught by a second review pass. `records`
+ * flipped on every `"` in the text — right for CSV, wrong for everything else,
+ * and the separator is not known until after it runs.
+ */
+describe('a quote that is an inch mark', () => {
+  const tsv = 'Item\tSize\n15" monitor\t2\nDesk\t1\nChair\t4\n';
+
+  it('does not swallow the rest of the file', () => {
+    // Measured before the fix: four rows arrived as two, with everything after
+    // the quote inside one cell.
+    expect(readTable(tsv)).toHaveLength(4);
+  });
+
+  it('stays in its own cell, quote and all', () => {
+    expect(readTable(tsv)[1]).toEqual(['15" monitor', '2']);
+  });
+
+  it('does the same in a comma-separated file', () => {
+    expect(readTable('Item,Size\n15" monitor,2\nDesk,1\n')[1]).toEqual(['15" monitor', '2']);
+  });
+
+  it('still opens a quoted field at the edge of one', () => {
+    expect(readTable('a,b\n"one\ntwo",2\n')[1]).toEqual(['one\ntwo', '2']);
+    expect(readTable('a,b\n"say ""hi""",2\n')[1]).toEqual(['say "hi"', '2']);
+  });
+
+  it('reads a quoted field that itself holds an inch mark', () => {
+    expect(readTable('Name,Note\n"He said ""15"" monitor""",2\n')[1]).toEqual([
+      'He said "15" monitor"',
+      '2',
+    ]);
+  });
+});
+
 describe('nothing that existed changed', () => {
   it('SUM still sums', () => expect(v('=SUM(B2:B5)', book)).toBe(353));
   it('weighted gradebook still works', () =>

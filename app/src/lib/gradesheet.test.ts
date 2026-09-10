@@ -220,3 +220,52 @@ describe('a syllabus written in points', () => {
     expect(canBuild(course([{ what: 'Everything', pct: 'at the instructor’s discretion' }]))).toBe(false);
   });
 });
+
+/*
+ * Caught by a second review pass, on the points support added just above.
+ * Rounding each weight on its own put the total either side of 100 by a
+ * hundredth, which the sheet then reported as weights that do not add up.
+ */
+describe('weights that do not divide evenly', () => {
+  const of = (n: number) =>
+    gradeSheet(course(Array.from({ length: n }, (_, i) => ({ what: `C${i}`, pct: '1 pt' })))).sheet;
+
+  it('adds to exactly 100 when three components split it', () => {
+    const sheet = of(3);
+    expect(at(sheet.cells, 'Weights add to')).toBe(100);
+    expect([sheet.cells.B5, sheet.cells.B6, sheet.cells.B7]).toEqual(['33.34', '33.33', '33.33']);
+  });
+
+  it('adds to exactly 100 when seven do, which rounded the other way', () => {
+    // Seven at 14.2857 reached 100.03, and asking for 100 then needed more
+    // than full marks and read as out of reach.
+    expect(at(of(7).cells, 'Weights add to')).toBe(100);
+  });
+
+  it('adds to exactly 100 across a range of awkward splits', () => {
+    // Through `display`, which is what the student reads: summing exact
+    // two-place values still accumulates a float tail, and the sheet rounds it
+    // away at twelve significant figures exactly as it does everywhere else.
+    for (const n of [3, 6, 7, 9, 11, 13]) {
+      const cells = of(n).cells;
+      expect(display(cells, `B${rowOf(cells, 'Weights add to')}`)).toBe('100');
+      expect(display(cells, `E${rowOf(cells, 'Weights add to')}`)).toContain('exact');
+    }
+  });
+
+  it('asks for exactly 100 on the last component, not more', () => {
+    const cells = { ...of(3).cells };
+    cells[`C${rowOf(cells, 'C0')}`] = '100';
+    cells[`C${rowOf(cells, 'C1')}`] = '100';
+    cells[`B${rowOf(cells, 'If you want')}`] = '100';
+    expect(Number(at(cells, 'You need to average'))).toBeCloseTo(100, 6);
+    expect(display(cells, `E${rowOf(cells, 'You need to average')}`)).not.toContain('out of reach');
+  });
+
+  it('leaves weights that already divide cleanly alone', () => {
+    const clean = gradeSheet(
+      course([{ what: 'A', pct: '50 pts' }, { what: 'B', pct: '150 pts' }]),
+    ).sheet;
+    expect([clean.cells.B5, clean.cells.B6]).toEqual(['25', '75']);
+  });
+});

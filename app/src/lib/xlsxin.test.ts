@@ -438,3 +438,70 @@ describe('a file claiming to be far larger than a spreadsheet', () => {
     await expect(fromXlsx(huge)).rejects.toThrow(/too large/);
   });
 });
+
+describe('parts named the long way round', () => {
+  /** A workbook whose relationship target is written however `target` says. */
+  const withTarget = (target: string, part: string) =>
+    zipSync({
+      'xl/workbook.xml': strToU8(
+        '<?xml version="1.0"?><workbook><sheets><sheet name="S" sheetId="1" r:id="rId1"/></sheets></workbook>',
+      ),
+      'xl/_rels/workbook.xml.rels': strToU8(
+        `<?xml version="1.0"?><Relationships><Relationship Id="rId1" Target="${target}"/></Relationships>`,
+      ),
+      [part]: strToU8(
+        '<?xml version="1.0"?><worksheet><sheetData><row r="1"><c r="A1"><v>42</v></c></row></sheetData></worksheet>',
+      ),
+    });
+
+  it('follows a target that climbs out of xl/ and back in', async () => {
+    // `xl/` + `../worksheets/sheet1.xml` is the literal key
+    // `xl/../worksheets/sheet1.xml`, which matches nothing — so the worksheet
+    // was skipped and the workbook reported as having none at all.
+    const { sheets } = await fromXlsx(
+      asFile('a.xlsx', withTarget('../worksheets/sheet1.xml', 'worksheets/sheet1.xml')),
+    );
+    expect(sheets[0].cells.A1).toBe('42');
+  });
+
+  it('follows a plain relative target', async () => {
+    const { sheets } = await fromXlsx(
+      asFile('b.xlsx', withTarget('worksheets/sheet1.xml', 'xl/worksheets/sheet1.xml')),
+    );
+    expect(sheets[0].cells.A1).toBe('42');
+  });
+
+  it('follows one written from the package root', async () => {
+    const { sheets } = await fromXlsx(
+      asFile('c.xlsx', withTarget('/xl/worksheets/sheet1.xml', 'xl/worksheets/sheet1.xml')),
+    );
+    expect(sheets[0].cells.A1).toBe('42');
+  });
+
+  it('follows one with a ./ in front', async () => {
+    const { sheets } = await fromXlsx(
+      asFile('d.xlsx', withTarget('./worksheets/sheet1.xml', 'xl/worksheets/sheet1.xml')),
+    );
+    expect(sheets[0].cells.A1).toBe('42');
+  });
+});
+
+describe('attributes in single quotes', () => {
+  it('reads a worksheet written that way, which is valid XML', async () => {
+    const bytes = zipSync({
+      'xl/workbook.xml': strToU8(
+        "<?xml version='1.0'?><workbook><sheets><sheet name='S' sheetId='1' r:id='rId1'/></sheets></workbook>",
+      ),
+      'xl/_rels/workbook.xml.rels': strToU8(
+        "<?xml version='1.0'?><Relationships><Relationship Id='rId1' Target='worksheets/sheet1.xml'/></Relationships>",
+      ),
+      'xl/worksheets/sheet1.xml': strToU8(
+        "<?xml version='1.0'?><worksheet><sheetData><row r='1'>" +
+          "<c r='A1'><v>42</v></c><c r='B1' t='str'><v>hi</v></c></row></sheetData></worksheet>",
+      ),
+    });
+    const { sheets } = await fromXlsx(asFile('sq.xlsx', bytes));
+    expect(sheets[0].title).toBe('S');
+    expect(sheets[0].cells).toEqual({ A1: '42', B1: 'hi' });
+  });
+});

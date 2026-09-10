@@ -77,11 +77,10 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
    * points-based course, which is a common enough way to write a syllabus.
    */
   const read = course.grading.map((row) => readWeight(row.pct));
-  const weights = asWeights(read);
   const rows = course.grading.map((row, i) => ({
     ...row,
     ...read[i],
-    weight: weights[i] === null ? null : Math.round(weights[i]! * 100) / 100,
+    weight: shareOut(asWeights(read))[i],
   }));
   const main = rows.filter((r) => !r.extra);
   const bonus = rows.filter((r) => r.extra);
@@ -231,6 +230,43 @@ export function gradeSheet(course: Course, carry: string = ''): Built {
     counted: main.filter((r) => r.weight !== null).length,
     unreadable,
   };
+}
+
+/**
+ * Weights rounded to two places whose total is still exactly what it was.
+ *
+ * Points divide badly. Three components of one point each are 33.333… per
+ * cent, and rounding each on its own gives 33.33 three times — a course that
+ * adds up to 99.99, so the sheet calls its own weights "indicative" when they
+ * are exact. Seven of them round the other way and reach 100.03, and asking
+ * for 100 then needs more than full marks and is reported as out of reach.
+ * Both from an error in the third decimal place.
+ *
+ * So the rounding is shared out rather than done row by row: every weight goes
+ * *down* to two places, and the pennies left over go to the rows that lost
+ * most in the rounding. Three thirds come out 33.34, 33.33, 33.33 — which add
+ * to 100, which is what the syllabus said.
+ */
+function shareOut(weights: (number | null)[]): (number | null)[] {
+  const real = weights.filter((w): w is number => w !== null);
+  if (real.length === 0) return weights;
+
+  const target = Math.round(real.reduce((n, w) => n + w, 0) * 100) / 100;
+  const down = weights.map((w) => (w === null ? null : Math.floor(w * 100) / 100));
+  const short = Math.round(target * 100 - down.reduce((n: number, w) => n + (w ?? 0) * 100, 0));
+  if (short <= 0) return down;
+
+  // The rows that lost most to the floor get the pennies back, biggest first.
+  const order = weights
+    .map((w, i) => ({ i, lost: w === null ? -1 : w * 100 - Math.floor(w * 100) }))
+    .filter((row) => row.lost >= 0)
+    .sort((a, b) => b.lost - a.lost);
+  const out = [...down];
+  for (let n = 0; n < short && n < order.length; n += 1) {
+    const at = order[n].i;
+    out[at] = Math.round(out[at]! * 100 + 1) / 100;
+  }
+  return out;
 }
 
 /**
