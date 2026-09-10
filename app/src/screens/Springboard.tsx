@@ -268,7 +268,7 @@ export function Springboard() {
   // Against the dock rather than the tab bar: this layout's own navigation is
   // the dock, and a shortcut to something already one tap away is noise. Same
   // rule as the Me screen, from the same place. See `lib/nav.ts`.
-  const recent = lately(state.recent, dock, school.capabilities);
+  const recent = lately(state.recent, dock, school.capabilities, [], 4, state.role);
 
   /*
    * No `<Page>` here, deliberately.

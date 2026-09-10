@@ -141,6 +141,18 @@ export function Rework({
         value={scope}
         aria-label="What to rebuild"
         onChange={(e) => {
+          /*
+           * The in-flight request goes too, not just the preview on screen.
+           *
+           * Clearing `plan` and `cost` alone left the running `run()` to
+           * finish and call `setPlan` with the *old* scope's result — which
+           * then rendered as a preview under a chooser naming a different
+           * unit, and `Use this guide` would have replaced unit A while the
+           * screen said unit B. The result is bounded to the scope it was
+           * built for by `readOneUnit`, so the wrong one is a real
+           * replacement of the wrong unit rather than a mislabelled right one.
+           */
+          abort.current?.abort();
           setScope(Number(e.target.value));
           // A preview belongs to the scope it was made for. Leaving one on
           // screen while the chooser says something else is how somebody

@@ -1087,12 +1087,22 @@ export function lately(
   c: Capabilities,
   hide: string[] = [],
   limit = 4,
+  /**
+   * Who is holding the phone.
+   *
+   * The recents list is a record of where somebody has been, and a role
+   * switch does not unvisit anything — so a student who opened Housing and
+   * then switched to Teaching had a Housing tile in Lately, one tap from a
+   * screen the directory had just stopped offering. Last and defaulted, so a
+   * caller with no role behaves exactly as before.
+   */
+  role: Role = DEFAULT_ROLE,
 ): Destination[] {
   const out: Destination[] = [];
   const seen = new Set<string>();
   for (const screen of recent) {
     if (seen.has(screen) || onBar.includes(screen) || hide.includes(screen)) continue;
-    if (!allowed(screen, c)) continue;
+    if (!allowed(screen, c) || !forRole(screen, role)) continue;
     const d = DESTINATIONS.find((x) => x.screen === screen);
     if (!d) continue;
     seen.add(screen);

@@ -121,7 +121,7 @@ import { ShellBody } from './components/shell/ShellBody';
 import { isCanvas } from './components/shell/exempt';
 import { ShelfNav } from './components/nav/ShelfNav';
 import { SoftTop } from './components/soft/SoftTop';
-import { litRailTab, litTab, tabLabel } from './lib/tabbar';
+import { barFor, litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
@@ -759,13 +759,14 @@ function useTabBarHeight(ref: React.RefObject<HTMLElement | null>) {
 }
 
 function TabBar() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, school } = useStore();
   const bar = useRef<HTMLElement>(null);
   useTabBarHeight(bar);
   // The seven that shipped are still the default; this is whichever seven the
-  // student arranged. `litTab` rather than `rootOf` because a chosen bar can
-  // hold a screen and the tab it files under at the same time.
-  const tabs = state.tabs;
+  // student arranged, minus anything the school or the role has since taken
+  // off the table — see `barFor`. `litTab` rather than `rootOf` because a
+  // chosen bar can hold a screen and the tab it files under at the same time.
+  const tabs = barFor(state.tabs, school.capabilities, state.role);
   const here = litTab(state.screen, tabs);
   const labelled = state.labels !== 'off';
 
@@ -1002,8 +1003,11 @@ function CurrentScreen() {
  * phone is set to, and it carries the things the phone keeps under Me.
  */
 function Rail() {
-  const { state, dispatch } = useStore();
-  const tabs = state.tabs;
+  const { state, dispatch, school } = useStore();
+  // Through the same gate as the bar: the rail is the same list on a wider
+  // screen, and a screen hidden from this role must not survive by being on
+  // a laptop.
+  const tabs = barFor(state.tabs, school.capabilities, state.role);
   // The rail keeps its labels whatever the tab bar does: it is a wide-screen
   // sidebar with room for words, and the setting exists to buy height back on
   // a phone, which the rail is not on.

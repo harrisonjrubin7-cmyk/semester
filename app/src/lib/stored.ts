@@ -49,6 +49,9 @@ import type { CourseModule, Course } from './types';
 import type { Window } from './windows';
 import type { Folder } from './folders';
 import type { StoredDeck } from './decks';
+import { DEFAULTS as DEFAULT_CONTROLS, MOST_CARDS, type Controls } from './controls';
+import { roleOf } from './role';
+import type { Quiet } from './notify';
 
 const str = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
 
@@ -300,6 +303,28 @@ export function readIncoming<T extends Record<string, unknown>>(blob: T): T {
     (out as Record<string, unknown>).windows = readList(out.windows, readWindow);
   }
   /*
+   * The three small settings whose bad values are worse than their absence.
+   *
+   * Each of these is read by something that has no way to say "that is not a
+   * value": a role this build has never heard of is not `student`, so
+   * `forRole` hides every student-only screen and the app opens on a directory
+   * with twelve things missing; a `depth` of `"bad"` indexes a table of
+   * multipliers and comes back undefined, so every ceiling is `NaN` and the
+   * prompt asks for "0 to NaN cards"; a quiet window carrying a string is
+   * compared with `>=` and is false for every minute of the day, so quiet
+   * hours look switched off by themselves.
+   *
+   * The boot read normalises all three. These two doors did not, and this is
+   * the one the docblock above calls the worst of them: nobody has to open
+   * anything for a sync to arrive.
+   *
+   * By name, unlike the structural pass below, because "what counts as a
+   * value" is exactly the thing a structural rule cannot know.
+   */
+  if ('role' in out) (out as Record<string, unknown>).role = roleOf(String(out.role)).id;
+  if ('controls' in out) (out as Record<string, unknown>).controls = readControls(out.controls);
+  if ('quiet' in out) (out as Record<string, unknown>).quiet = readQuiet(out.quiet);
+  /*
    * And the holes, in whatever else came, which is the half these doors were
    * missing.
    *
@@ -333,4 +358,46 @@ export function readIncoming<T extends Record<string, unknown>>(blob: T): T {
     }
   }
   return out;
+}
+
+
+// ── The settings that cannot survive a bad value ────────────────────────────
+
+/**
+ * Stored generation controls, made safe to read from.
+ *
+ * Field by field against the unions rather than trusted whole: an unknown
+ * depth reaches `SCALE[depth]` and comes back undefined, and every ceiling is
+ * then `NaN`, which asks a model for "0 to NaN cards" and gets whatever it
+ * feels like. Per field, so a control added in a later version arrives at its
+ * default rather than taking the other two down with it.
+ */
+export function readControls(value: unknown): Controls {
+  if (!plain(value)) return { ...DEFAULT_CONTROLS };
+  const { depth, level, cards } = value as Partial<Controls>;
+  return {
+    depth: depth === 'brief' || depth === 'full' ? depth : DEFAULT_CONTROLS.depth,
+    level: level === 'plainer' || level === 'harder' ? level : DEFAULT_CONTROLS.level,
+    cards:
+      typeof cards === 'number' && Number.isInteger(cards) && cards >= 0 && cards <= MOST_CARDS
+        ? cards
+        : DEFAULT_CONTROLS.cards,
+  };
+}
+
+/**
+ * A stored quiet window, made safe to read from.
+ *
+ * This pair of numbers decides whether the app ever speaks again. A window
+ * carrying a stray string, a fraction, or a minute outside the day is not a
+ * window, and half-reading one is worse than reading none: `inQuiet` would
+ * compare against a `NaN`, which is false for every minute of the day, and the
+ * setting would appear to have quietly turned itself off.
+ */
+export function readQuiet(value: unknown): Quiet | null {
+  if (!plain(value)) return null;
+  const { from, to } = value as { from?: unknown; to?: unknown };
+  const ok = (n: unknown): n is number =>
+    typeof n === 'number' && Number.isInteger(n) && n >= 0 && n < 1440;
+  return ok(from) && ok(to) ? { from, to } : null;
 }

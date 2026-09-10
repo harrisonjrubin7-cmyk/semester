@@ -64,7 +64,7 @@ import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
 import type { Aid, Charge, Payment, Plan } from '../lib/bill';
 import type { Quiet } from '../lib/notify';
-import { DEFAULTS as DEFAULT_CONTROLS, MOST_CARDS, type Controls } from '../lib/controls';
+import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
@@ -78,7 +78,17 @@ import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
-import { list, readDeck, readFolder, readList, readModule, readWindow, record } from '../lib/stored';
+import {
+  list,
+  readControls,
+  readDeck,
+  readFolder,
+  readList,
+  readModule,
+  readQuiet,
+  readWindow,
+  record,
+} from '../lib/stored';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -858,47 +868,6 @@ export type State = Persisted & Ephemeral;
 export const STORAGE_KEY = 'semester.v1';
 /** When this device last agreed with the account copy, as epoch ms. */
 export const SYNCED_KEY = 'semester.synced';
-
-/**
- * A stored quiet window, made safe to read from.
- *
- * Storage does not typecheck, and this pair of numbers decides whether the app
- * ever speaks again. A window carrying a stray string, a fraction, or a minute
- * outside the day is not a window, and half-reading one would be worse than
- * reading none: `inQuiet` would compare against a NaN, which is false for
- * every minute of the day, and the setting would appear to have quietly turned
- * itself off.
- */
-function readQuiet(value: unknown): Quiet | null {
-  if (!value || typeof value !== 'object') return null;
-  const { from, to } = value as { from?: unknown; to?: unknown };
-  const ok = (n: unknown): n is number =>
-    typeof n === 'number' && Number.isInteger(n) && n >= 0 && n < 1440;
-  return ok(from) && ok(to) ? { from, to } : null;
-}
-
-/**
- * Stored generation controls, made safe to read from.
- *
- * Field by field against the unions rather than trusted whole: an unknown
- * depth would reach `SCALE[depth]` and come back undefined, and every ceiling
- * would then be NaN — which asks a model for "0 to NaN cards" and gets
- * whatever it feels like. Falling back per field means a control added in a
- * later version arrives at its default rather than taking the other two down
- * with it.
- */
-function readControls(value: unknown): Controls {
-  if (!value || typeof value !== 'object') return { ...DEFAULT_CONTROLS };
-  const { depth, level, cards } = value as Partial<Controls>;
-  return {
-    depth: depth === 'brief' || depth === 'full' ? depth : DEFAULT_CONTROLS.depth,
-    level: level === 'plainer' || level === 'harder' ? level : DEFAULT_CONTROLS.level,
-    cards:
-      typeof cards === 'number' && Number.isInteger(cards) && cards >= 0 && cards <= MOST_CARDS
-        ? cards
-        : DEFAULT_CONTROLS.cards,
-  };
-}
 
 export const DEFAULT_PERSISTED: Persisted = {
   nav: 'tabs',

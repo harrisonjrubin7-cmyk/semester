@@ -357,18 +357,38 @@ function validate(
     }));
   if (schedule.length === 0) notes.push('No meeting pattern was stated, so the day rail will be empty.');
 
+  /*
+   * The ceilings, enforced rather than only requested.
+   *
+   * The prompt asks for at most N cards and a model is free to ignore it, so
+   * "at most 12" was twelve in the instruction and eighteen in the guide — a
+   * control that does not control anything. Cut across the whole guide rather
+   * than per unit, because that is what the number means to the person who
+   * typed it: twelve cards for this course, not twelve for each of eleven
+   * units.
+   *
+   * Taken in order, so what survives is the front of each unit in the order
+   * the model wrote them — what it judged most worth knowing, and the units
+   * in the course's own sequence rather than a sample.
+   */
+  const caps = capsFor(input.controls);
+  let left = caps.cards;
+  const units = raw.guide.units
+    .map((u) => {
+      const kept = (u.cards ?? []).filter((c) => c?.q && c?.a).slice(0, Math.max(0, left));
+      left -= kept.length;
+      return { name: u.name ?? 'Unit', mastery: 0, cards: kept };
+    })
+    .filter((u) => u.cards.length > 0);
+
   const guide = {
     ...raw.guide,
     code: course.code,
     source,
     mastery: 0,
     audio: false,
-    units: raw.guide.units.map((u) => ({
-      name: u.name ?? 'Unit',
-      mastery: 0,
-      cards: (u.cards ?? []).filter((c) => c?.q && c?.a),
-    })).filter((u) => u.cards.length > 0),
-    terms: raw.guide.terms ?? [],
+    units,
+    terms: (raw.guide.terms ?? []).slice(0, caps.terms),
   };
 
   const cards = guide.units.reduce((n, u) => n + u.cards.length, 0);

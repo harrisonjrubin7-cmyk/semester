@@ -1216,11 +1216,25 @@ export async function readMaterial(
     };
     return {
       note: typeof parsed.note === 'string' ? parsed.note.trim() : '',
+      /*
+       * Cut to the ceiling, not merely asked for it.
+       *
+       * The number in the prompt is a request and a model is free to ignore
+       * it — so "at most 12 cards" was twelve in the instruction and eighteen
+       * on the screen, which is a control that does not control anything. The
+       * four readers below have always cut at their ceiling; cards and terms
+       * were the two that only ever asked.
+       *
+       * Taken from the front rather than sampled, so what survives is what the
+       * model put first, which is what it judged most worth knowing.
+       */
       cards: (parsed.cards ?? [])
         .filter((c) => typeof c?.q === 'string' && typeof c?.a === 'string' && c.q && c.a)
+        .slice(0, caps.cards)
         .map((c) => ({ q: c.q.trim(), a: c.a.trim() })),
       terms: (parsed.terms ?? [])
         .filter((t) => typeof t?.t === 'string' && typeof t?.d === 'string' && t.t && t.d)
+        .slice(0, caps.terms)
         .map((t) => ({ t: (t.t as string).trim(), d: (t.d as string).trim() })),
       // Every check lives in `lib/figure.ts`, including the one that matters:
       // a figure that does not survive validation is dropped, never repaired.
@@ -1228,7 +1242,7 @@ export async function readMaterial(
       // The field guide and the cram sheet, which cards and terms never
       // reached. Checked in `lib/study.ts`, on the same rule: dropped whole
       // rather than rendered with a gap.
-      ...readStudyParts(parsed),
+      ...readStudyParts(parsed, caps),
     };
   } catch {
     return { ...NOTHING_READ };

@@ -24,16 +24,38 @@ import type { CourseUpdate, Guide } from '../lib/types';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-const asked = vi.fn<() => Promise<string>>(async () =>
-  JSON.stringify({
-    name: '2 · Supply, revised',
-    cards: [{ q: 'What shifts supply?', a: 'Costs, technology.' }],
-    notes: ['Tightened the wording.'],
-  }),
-);
+const REPLY = JSON.stringify({
+  name: '2 · Supply, revised',
+  cards: [{ q: 'What shifts supply?', a: 'Costs, technology.' }],
+  notes: ['Tightened the wording.'],
+});
+
+const asked = vi.fn<() => Promise<string>>(async () => REPLY);
+
+/**
+ * A request that is still in flight, and the signal that ends it.
+ *
+ * `ask` is replaced with one that never settles on its own, so a test can hold
+ * a request open, change the scope under it, and then let it finish — which is
+ * the sequence the abort exists for and the only way to see it.
+ */
+let hold: { resolve: (s: string) => void; aborted: () => boolean } | null = null;
+
+const holdOne = () => {
+  asked.mockImplementationOnce(
+    (opts?: { signal?: AbortSignal }) =>
+      new Promise<string>((resolve, reject) => {
+        const signal = opts?.signal;
+        hold = { resolve, aborted: () => Boolean(signal?.aborted) };
+        signal?.addEventListener('abort', () =>
+          reject(new DOMException('Aborted', 'AbortError')),
+        );
+      }) as Promise<string>,
+  );
+};
 
 vi.mock('../lib/claude', () => ({
-  ask: () => asked(),
+  ask: (opts: unknown) => (asked as unknown as (o: unknown) => Promise<string>)(opts),
   configured: () => true,
 }));
 
@@ -152,5 +174,32 @@ describe('the scope chooser', () => {
     pick(scope(), '0');
     pick(scope(), '1');
     expect(asked).not.toHaveBeenCalled();
+  });
+
+  /*
+   * The sharp one. Clearing the preview alone left the running request to
+   * finish and call `setPlan` with the *old* scope's result, which then
+   * rendered under a chooser naming a different unit — and `Use this guide`
+   * would have replaced unit A while the screen said unit B. The result is
+   * bounded to the scope it was built for, so the wrong one is a real
+   * replacement of the wrong unit rather than a mislabelled right one.
+   */
+  it('abandons a request whose scope changed under it', async () => {
+    holdOne();
+    pick(scope(), '1');
+    act(() => {
+      preview()?.click();
+    });
+    expect(hold).toBeTruthy();
+
+    pick(scope(), '0');
+    expect(hold?.aborted()).toBe(true);
+
+    // Even if the old request settles anyway, nothing is shown for it.
+    await act(async () => {
+      hold?.resolve(REPLY);
+    });
+    expect(cost()).toBeUndefined();
+    expect(dispatched).toEqual([]);
   });
 });

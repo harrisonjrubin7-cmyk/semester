@@ -92,7 +92,7 @@ function text(v: unknown, cap: number): string {
 }
 
 /** Exam frames — a title and what it is really testing. */
-export function readFrames(raw: unknown): Frame[] {
+export function readFrames(raw: unknown, caps: Caps = DEFAULT_CAPS): Frame[] {
   if (!Array.isArray(raw)) return [];
   const out: Frame[] = [];
   for (const one of raw) {
@@ -101,13 +101,13 @@ export function readFrames(raw: unknown): Frame[] {
     const t = text(f.t, SHORT);
     const d = text(f.d, LONG);
     if (t && d) out.push({ t, d });
-    if (out.length === MOST.frames) break;
+    if (out.length === caps.frames) break;
   }
   return out;
 }
 
 /** Questions written to be answered out loud. */
-export function readSelfTest(raw: unknown): StudyCard[] {
+export function readSelfTest(raw: unknown, caps: Caps = DEFAULT_CAPS): StudyCard[] {
   if (!Array.isArray(raw)) return [];
   const out: StudyCard[] = [];
   for (const one of raw) {
@@ -116,7 +116,7 @@ export function readSelfTest(raw: unknown): StudyCard[] {
     const q = text(c.q, LONG);
     const a = text(c.a, LONG);
     if (q && a) out.push({ q, a });
-    if (out.length === MOST.tests) break;
+    if (out.length === caps.tests) break;
   }
   return out;
 }
@@ -129,7 +129,7 @@ export function readSelfTest(raw: unknown): StudyCard[] {
  * believed X, and in fact Y", which is a claim the app would be making on its
  * own account.
  */
-export function readCases(raw: unknown): CaseFile[] {
+export function readCases(raw: unknown, caps: Caps = DEFAULT_CAPS): CaseFile[] {
   if (!Array.isArray(raw)) return [];
   const out: CaseFile[] = [];
   for (const one of raw) {
@@ -144,13 +144,13 @@ export function readCases(raw: unknown): CaseFile[] {
       lesson: text(c.lesson, LONG),
     };
     if (Object.values(made).every(Boolean)) out.push(made);
-    if (out.length === MOST.cases) break;
+    if (out.length === caps.cases) break;
   }
   return out;
 }
 
 /** Worked examples — a tag, a title and what it shows. */
-export function readExamples(raw: unknown): Example[] {
+export function readExamples(raw: unknown, caps: Caps = DEFAULT_CAPS): Example[] {
   if (!Array.isArray(raw)) return [];
   const out: Example[] = [];
   for (const one of raw) {
@@ -160,7 +160,7 @@ export function readExamples(raw: unknown): Example[] {
     const t = text(e.t, SHORT);
     const d = text(e.d, LONG);
     if (tag && t && d) out.push({ tag, t, d });
-    if (out.length === MOST.examples) break;
+    if (out.length === caps.examples) break;
   }
   return out;
 }
@@ -173,17 +173,31 @@ export interface StudyParts {
 }
 
 /** All three out of one reply. */
-export function readStudyParts(raw: {
-  frames?: unknown;
-  selfTest?: unknown;
-  cases?: unknown;
-  examples?: unknown;
-}): StudyParts {
+export function readStudyParts(
+  raw: {
+    frames?: unknown;
+    selfTest?: unknown;
+    cases?: unknown;
+    examples?: unknown;
+  },
+  /**
+   * The ceilings actually asked for.
+   *
+   * These readers each stop at a ceiling, and until now it was always the
+   * default one — so a student who chose `full` was asked for nine frames in
+   * the prompt and kept six, and a student who chose `brief` was asked for two
+   * and kept whatever came. The number in the prompt was a request and the
+   * number here is the rule, and they have to be the same number or the
+   * control only half works. Defaulted, so every caller with no controls to
+   * pass behaves exactly as it did.
+   */
+  caps: Caps = DEFAULT_CAPS,
+): StudyParts {
   return {
-    frames: readFrames(raw.frames),
-    selfTest: readSelfTest(raw.selfTest),
-    cases: readCases(raw.cases),
-    examples: readExamples(raw.examples),
+    frames: readFrames(raw.frames, caps),
+    selfTest: readSelfTest(raw.selfTest, caps),
+    cases: readCases(raw.cases, caps),
+    examples: readExamples(raw.examples, caps),
   };
 }
 

@@ -8,6 +8,7 @@ import {
   readSelfTest,
   readStudyParts,
 } from './study';
+import { capsFor } from './controls';
 
 describe('exam frames', () => {
   it('come through as a framing and what it is testing', () => {
@@ -112,5 +113,41 @@ describe('the line that says part of a section arrived later', () => {
   it('agrees with itself about number', () => {
     expect(addedLine(1, 'framings')).toContain('1 of these is from material you added');
     expect(addedLine(3, 'framings')).toContain('3 of these are from material you added');
+  });
+});
+
+describe('the ceilings a student chose', () => {
+  const frames = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ t: `Frame ${i}`, d: `What it is really asking, ${i}.` }));
+  const tests = (n: number) => Array.from({ length: n }, (_, i) => ({ q: `Q${i}?`, a: `A${i}.` }));
+
+  /*
+   * The number in the prompt is a request; the number here is the rule. Until
+   * these took caps they were always the default ones, so `full` asked for
+   * nine frames and kept six — the control half worked, silently.
+   */
+  it('keeps the raised ceiling that thorough asked for', () => {
+    const caps = capsFor({ depth: 'full', level: 'course', cards: 0 });
+    expect(caps.frames).toBeGreaterThan(MOST.frames);
+    expect(readFrames(frames(12), caps)).toHaveLength(caps.frames);
+    // Without the caps it stops at the default, which is the bug.
+    expect(readFrames(frames(12))).toHaveLength(MOST.frames);
+  });
+
+  it('enforces the lowered ceiling that brief asked for', () => {
+    const caps = capsFor({ depth: 'brief', level: 'course', cards: 0 });
+    expect(readFrames(frames(12), caps)).toHaveLength(caps.frames);
+    expect(readSelfTest(tests(12), caps)).toHaveLength(caps.tests);
+  });
+
+  it('carries the caps through the one reader the callers use', () => {
+    const caps = capsFor({ depth: 'brief', level: 'course', cards: 0 });
+    const out = readStudyParts({ frames: frames(12), selfTest: tests(12) }, caps);
+    expect(out.frames).toHaveLength(caps.frames);
+    expect(out.selfTest).toHaveLength(caps.tests);
+  });
+
+  it('is the default ceilings when no caps are passed, as every old caller does', () => {
+    expect(readStudyParts({ frames: frames(12) }).frames).toHaveLength(MOST.frames);
   });
 });

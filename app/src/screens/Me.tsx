@@ -227,7 +227,7 @@ export function Me() {
   // one against its own dock. It also gates on the school, which this did not:
   // a screen visited before somebody changed university could come back here
   // after the directory had already dropped it.
-  const recent = lately(state.recent, state.tabs, school.capabilities, HIDE_IN_ME);
+  const recent = lately(state.recent, state.tabs, school.capabilities, HIDE_IN_ME, 4, state.role);
 
   return (
     <Page>

@@ -23,6 +23,8 @@
 
 import { nudged } from './arrange';
 import { DESTINATIONS, destination, rootOf } from './nav';
+import { allowed, type Capabilities } from './school';
+import { DEFAULT_ROLE, forRole, type Role } from './role';
 import type { Screen } from './types';
 
 /**
@@ -97,6 +99,31 @@ export function readTabs(saved: unknown): Screen[] {
 
   if (out.length < FEWEST_CHOSEN) return DEFAULT_TABS;
   return [...out, PINNED];
+}
+
+/**
+ * The bar as it can actually be drawn, given who is holding the phone.
+ *
+ * `readTabs` makes a stored list safe — no unknown screens, no duplicates,
+ * never empty. It cannot make it *appropriate*, because a saved bar is a
+ * saved bar and the gates move underneath it: switch to Teaching with Money
+ * in the bar and the directory stops offering Money while the bar keeps
+ * carrying it, one tap from a screen the role is meant to hide. Switching
+ * schools does the same, and has always done it — this is the older hole,
+ * reachable only by people who move university and therefore never reported.
+ *
+ * Filtered rather than rewritten, so nothing is lost: the stored order still
+ * holds Money, and switching back brings it straight back. A bar is the one
+ * component that cannot render nothing, so a filter that empties it falls
+ * back the same way `readTabs` does.
+ */
+export function barFor(saved: Screen[], c: Capabilities, role: Role = DEFAULT_ROLE): Screen[] {
+  const kept = saved.filter((s) => allowed(s, c) && forRole(s, role));
+  // PINNED passes both gates by construction — `me` is on no gate's list — so
+  // this only fires if a caller hands in a bar that never had it.
+  const chosen = kept.filter((s) => s !== PINNED);
+  if (chosen.length < FEWEST_CHOSEN) return DEFAULT_TABS;
+  return kept.includes(PINNED) ? kept : [...kept, PINNED];
 }
 
 /** Whether the list as it stands has room for another. */
