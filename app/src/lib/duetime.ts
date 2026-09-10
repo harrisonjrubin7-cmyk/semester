@@ -37,7 +37,21 @@ export function readDue(text: string): number | null {
   // with it missing, and this is called from the Header, so a `.trim()` on
   // undefined took the whole app down rather than one deadline's clock.
   if (typeof text !== 'string') return null;
-  const s = text.trim();
+  /*
+   * Noon, written out, is a time like any other and is turned into one here
+   * rather than caught at the end.
+   *
+   * Read as a special case after the figures, it was found only where a
+   * wording held no figure at all — so "Noon–2:00 PM" fell through to the
+   * ordinary scan, which takes the first time carrying a meridiem, and that is
+   * the *end* of a range. A window from noon was read as two o'clock. Made a
+   * figure up front, it takes part in the range reading below like anything
+   * else.
+   *
+   * The word boundaries are load-bearing: "afternoon" and "Noonan Hall" are
+   * not noon.
+   */
+  const s = text.trim().replace(/\bnoon\b/gi, '12:00pm');
   if (!s) return null;
 
   // Every clock-shaped thing, in order. A bare number is only a time when it
@@ -49,12 +63,32 @@ export function readDue(text: string): number | null {
     stated: true,
   }));
 
-  // A range whose first half states no meridiem: "3:00–5:00 PM". The colon is
-  // required here, so "Sep 29 – Oct 8" is not mistaken for one.
-  const range = /(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?/i.exec(s);
+  /*
+   * A range whose first half states no meridiem: "3:00–5:00 PM", "9–11 AM",
+   * "10:30 to 2:00 PM". Three things about the shape of it, each of which was
+   * a wrong answer before:
+   *
+   * The halves may be joined by a word as readily as a dash. Joined by "to",
+   * "through" or "until" this was no range at all, so the scan below took the
+   * first time carrying a meridiem — the *end* — and a window from half past
+   * ten was read as two o'clock.
+   *
+   * The first half need not state minutes. "9–11 AM" is an hour range and was
+   * read as eleven.
+   *
+   * What keeps "Sep 29 – Oct 8" out of this is the meridiem, not the colon:
+   * a date range carries no am or pm. But the meridiem needs a word boundary
+   * after it, or the "a" of "Sep 8–17 at 5pm" is read as an antemeridian and
+   * the date range becomes eight in the morning. That one is why the colon
+   * looked necessary.
+   */
+  const range =
+    /(\d{1,2})(?::(\d{2}))?(?:\s*[-–—]\s*|\s+(?:to|through|until)\s+)(\d{1,2})(?::(\d{2}))?\s*([ap])\.?m?\.?\b/i.exec(
+      s,
+    );
   if (range) {
     const hour = Number(range[1]);
-    const mins = Number(range[2]);
+    const mins = Number(range[2] ?? 0);
     const pm = range[5].toLowerCase() === 'p';
     // The meridiem governs both halves, unless the range crosses noon —
     // "11:00–1:00 PM" starts in the morning, because it has to. Read around
@@ -77,22 +111,13 @@ export function readDue(text: string): number | null {
     }
 
     /*
-     * And noon said in words, which a syllabus does as readily as in figures.
-     *
-     * It was read as no time at all, so "due by noon" sorted below a deadline
-     * at five, and the screen said no hour had been stated when one plainly
-     * had. Read last of all, so that a wording carrying a figure as well —
-     * "10:30 to noon" — is still read at the figure. Putting it any earlier
-     * makes that one worse than it was.
-     *
-     * Midnight is deliberately not read, and that is not an omission of the
-     * same kind. "Due Friday at midnight" is written to mean the end of Friday
-     * and reads literally as its start, so any figure returned for it would be
-     * a guess and one of the two guesses is a whole day early. Left unread it
-     * falls to `NO_TIME` and sorts to the end of its day, which is what the
-     * wording means.
+     * Midnight is deliberately not read, unlike noon above, and that is not an
+     * omission of the same kind. "Due Friday at midnight" is written to mean
+     * the end of Friday and reads literally as its start, so any figure
+     * returned for it would be a guess and one of the two guesses is a whole
+     * day early. Left unread it falls to `NO_TIME` and sorts to the end of its
+     * day, which is what the wording means.
      */
-    if (/\bnoon\b/i.test(s)) return 12 * 60;
     return null;
   }
 
