@@ -505,3 +505,30 @@ describe('attributes in single quotes', () => {
     expect(sheets[0].cells).toEqual({ A1: '42', B1: 'hi' });
   });
 });
+
+describe('attributes in whichever order the writer chose', () => {
+  it('reads a custom date format declared formatCode-first', () => {
+    // XML does not order attributes. Wanting numFmtId first meant a writer
+    // emitting them the other way round had every custom date format ignored,
+    // and its due dates imported as five-digit serials.
+    const styles =
+      '<styleSheet><numFmts><numFmt formatCode="yyyy-mm-dd" numFmtId="165"/></numFmts>' +
+      '<cellXfs><xf numFmtId="0"/><xf numFmtId="165"/></cellXfs></styleSheet>';
+    const bytes = workbook({
+      styles,
+      sheets: [{ name: 'S', rows: ['<row r="1"><c r="A1" s="1"><v>46275</v></c></row>'] }],
+    });
+    return expect(
+      fromXlsx(asFile('o.xlsx', bytes)).then((r) => r.sheets[0].cells.A1),
+    ).resolves.toBe('2026-09-10');
+  });
+});
+
+describe('a delimited file far larger than the grid', () => {
+  it('is refused before it is read into memory', async () => {
+    // `file.text()` materialises the whole thing and `readTable` walks every
+    // character before the 200×26 cut happens.
+    const huge = { name: 'huge.csv', size: 200 * 1024 * 1024 } as File;
+    await expect(fromDelimited(huge)).rejects.toThrow(/too large/);
+  });
+});

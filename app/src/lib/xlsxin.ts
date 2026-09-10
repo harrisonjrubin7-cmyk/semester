@@ -104,15 +104,26 @@ const DATE_TIME_BUILT_IN = new Set([22]);
 function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number> } {
   const dateFmtIds = new Set(DATE_BUILT_IN);
   const timeFmtIds = new Set(DATE_TIME_BUILT_IN);
-  for (const m of stylesXml.matchAll(/<numFmt[^>]*numFmtId="(\d+)"[^>]*formatCode="([^"]*)"/g)) {
+  /*
+   * The two attributes read independently, because XML does not order them.
+   *
+   * The first version wanted `numFmtId` before `formatCode` in one pattern,
+   * and a writer emitting them the other way round — which is just as valid —
+   * had every custom date format ignored, so its due dates imported as
+   * five-digit serials.
+   */
+  for (const m of stylesXml.matchAll(/<numFmt\b[^>]*>/g)) {
+    const id = /numFmtId=['"](\d+)['"]/.exec(m[0]);
+    const format = /formatCode=['"]([^'"]*)['"]/.exec(m[0]);
+    if (!id || !format) continue;
     // Bracketed parts are conditions and locales, quoted parts are literal
     // text; neither says anything about what the number means.
-    const code = entities(m[2]).replace(/\[[^\]]*\]/g, '').replace(/"[^"]*"/g, '');
+    const code = entities(format[1]).replace(/\[[^\]]*\]/g, '').replace(/"[^"]*"/g, '');
     const hasDate = /[yd]/i.test(code) || /m{3,}/i.test(code);
     const hasTime = /[hs]/i.test(code);
     if (hasDate) {
-      dateFmtIds.add(Number(m[1]));
-      if (hasTime) timeFmtIds.add(Number(m[1]));
+      dateFmtIds.add(Number(id[1]));
+      if (hasTime) timeFmtIds.add(Number(id[1]));
     }
   }
 
@@ -127,7 +138,7 @@ function dateFormats(stylesXml: string): { dates: Set<number>; times: Set<number
   if (!xfs) return { dates, times };
   let at = 0;
   for (const m of xfs[1].matchAll(/<xf\b[^>]*>/g)) {
-    const id = /numFmtId="(\d+)"/.exec(m[0]);
+    const id = /numFmtId=['"](\d+)['"]/.exec(m[0]);
     if (id && dateFmtIds.has(Number(id[1]))) {
       dates.add(at);
       if (timeFmtIds.has(Number(id[1]))) times.add(at);
@@ -473,6 +484,20 @@ export async function fromDelimited(
   file: File,
   courseId: CourseId | null = null,
 ): Promise<Read> {
+  /*
+   * The same size guard the workbook path has.
+   *
+   * `file.text()` brings the whole thing into memory and `readTable` walks
+   * every character of it before anything is cut to the grid, so a very large
+   * CSV is a frozen tab regardless of the 200×26 limit that follows.
+   */
+  if (file.size > MOST_PACKED) {
+    throw new Error(
+      `${file.name} is too large for this app to open. Its grid stops at ${MAX_ROWS} rows and ` +
+        `${MAX_COLS} columns — split the file, or export just the part you need.`,
+    );
+  }
+
   const { readTable, fromRows } = await import('./sheet');
   const rows = readTable(await file.text());
   if (rows.length === 0) throw new Error(`${file.name} had no rows in it.`);
