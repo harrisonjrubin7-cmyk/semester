@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { loadPersisted } from './shape';
+import { DEFAULT_PERSISTED, initialEphemeral, loadPersisted, pickPersisted, type Persisted, type State } from './shape';
+import { SCHEMA, migrate } from '../lib/migrate';
 
 /**
  * Storage is not a trusted input, and the app opens whatever it finds.
@@ -160,5 +161,46 @@ describe('opening the app on damaged storage', () => {
     // Strings, not objects: `courseOrder` and `recent` are why the filter is
     // for holes rather than for things that are objects.
     expect(state.recent).toEqual(['home', 'courses']);
+  });
+});
+
+describe('the version written back', () => {
+  /*
+   * `migrate` takes trouble over a payload from a newer build: it passes it
+   * through untouched rather than walking it backwards through steps written
+   * for an older shape. `pickPersisted` decides whether that survives the next
+   * save, and it used to write the constant.
+   *
+   * Nothing is wrong today — both steps in `STEPS` are idempotent, so
+   * re-running them changes nothing. This holds the invariant that `migrate`'s
+   * docblock states, before a step arrives that is not.
+   */
+  const state = (over: Partial<Persisted> = {}) =>
+    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date(2026, 8, 10)), ...over }) as State;
+
+  it('stamps this build for a copy this build understands', () => {
+    expect(pickPersisted(state({ schemaVersion: SCHEMA })).schemaVersion).toBe(SCHEMA);
+    expect(pickPersisted(state({ schemaVersion: 1 })).schemaVersion).toBe(SCHEMA);
+  });
+
+  it('never writes a copy back older than it was read', () => {
+    // A phone on next month's build wrote it; a laptop a release behind opens
+    // it once. It must not go back to disk claiming to be this build's shape.
+    expect(pickPersisted(state({ schemaVersion: SCHEMA + 2 })).schemaVersion).toBe(SCHEMA + 2);
+  });
+
+  it('agrees with the way in about what counts as a version', () => {
+    // `versionOf` is what the read path asks, so a nonsense marker lands the
+    // same on both sides rather than being preserved out and rejected in.
+    const odd = pickPersisted(state({ schemaVersion: Number.NaN }));
+    expect(Number.isFinite(odd.schemaVersion)).toBe(true);
+    expect(odd.schemaVersion).toBe(SCHEMA);
+  });
+
+  it('survives a round trip through migrate at its own version', () => {
+    const written = pickPersisted(state({ schemaVersion: SCHEMA + 2 }));
+    const read = migrate(JSON.parse(JSON.stringify(written)));
+    expect(read.fromFuture).toBe(true);
+    expect(read.ran).toEqual([]);
   });
 });
