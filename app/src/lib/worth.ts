@@ -33,7 +33,7 @@
  * disagreed with.
  */
 
-import { percentOf, type Standing } from './grades';
+import { percentIn, pointsTotal, type Standing } from './grades';
 import { estimate, type Spent } from './pace';
 
 /** How much a run of scores has actually varied, in percentage points. */
@@ -285,9 +285,25 @@ export function bestBuys(
   items: BuyInput[],
   spent: Spent[],
   c: Calibration | null,
+  /*
+   * Each course's grading table, so a syllabus that states points can be read
+   * at all. Optional because a caller without the catalogue is no worse off
+   * than this was before — every points row scores nought, which is what it
+   * did for every caller until now.
+   */
+  grading: Record<string, { pct: string }[]> = {},
 ): Buy[] {
+  // One denominator per course rather than one per item: `pointsTotal` reads
+  // the whole table, and a list of tonight's work is mostly the same few
+  // courses over and over.
+  const totals = new Map<string, number | null>();
+  const totalFor = (courseId: string): number | null => {
+    if (!totals.has(courseId)) totals.set(courseId, pointsTotal(grading[courseId] ?? []));
+    return totals.get(courseId) ?? null;
+  };
+
   const out: Buy[] = items.map((i) => {
-    const worth = percentOf(i.weight);
+    const worth = percentIn(i.weight, totalFor(i.courseId));
     const e = estimate(spent, i.courseId, i.kind);
     const minutes = e.minutes > 0 ? corrected(e.minutes, c) : null;
     const perHour = worth > 0 && minutes ? Math.round(((worth / minutes) * 60) * 100) / 100 : null;

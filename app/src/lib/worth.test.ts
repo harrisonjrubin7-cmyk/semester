@@ -257,6 +257,129 @@ describe('what an hour buys', () => {
     expect(list[1].why).toBe('No stated weight');
   });
 
+  it('reads a syllabus that states points rather than percentages', () => {
+    /*
+     * The failure this was written for. `percentOf` returns nought for "100
+     * pts", so every row of a points-based syllabus came back worth nothing,
+     * `perHour` was null for all of them, and the sort fell through to the
+     * deadline — an evening ordered by what is due soonest, captioned "No
+     * stated weight", on a course whose grading is fully specified.
+     *
+     * `readWeight` has read the points all along and `asWeights` has converted
+     * them since `standing` needed it. This is the same rule, reaching the one
+     * screen that had been left out of it.
+     */
+    const grading = {
+      econ: [
+        { what: 'Problem sets', pct: '100 pts' },
+        { what: 'Midterm', pct: '150 pts' },
+        { what: 'Final', pct: '250 pts' },
+      ],
+    };
+    const list = bestBuys(
+      [
+        item({ id: 'pset', weight: '100 pts' }),
+        item({ id: 'final', weight: '250 pts' }),
+      ],
+      spent,
+      null,
+      grading,
+    );
+    // 500 points in the course, so the final is half of it and the problem set
+    // a fifth.
+    expect(list.find((b) => b.id === 'final')?.worth).toBe(50);
+    expect(list.find((b) => b.id === 'pset')?.worth).toBe(20);
+    expect(list.every((b) => b.why !== 'No stated weight')).toBe(true);
+  });
+
+  it('is not thrown off by an extra-credit row stated as a percentage', () => {
+    /*
+     * Found by review. `readWeight('+5% EC')` reads a weight of 5, so a test
+     * of "does any row state a percentage" counted it — and a course graded
+     * entirely in points, with one bonus, came back wholly unweighted. The
+     * bonus nobody has been given yet decided the course was unreadable.
+     */
+    const grading = {
+      econ: [
+        { what: 'Problem sets', pct: '100 pts' },
+        { what: 'Final', pct: '300 pts' },
+        { what: 'Seminar bonus', pct: '+5% EC' },
+      ],
+    };
+    const list = bestBuys(
+      [item({ id: 'pset', weight: '100 pts' }), item({ id: 'final', weight: '300 pts' })],
+      spent,
+      null,
+      grading,
+    );
+    expect(list.find((b) => b.id === 'pset')?.worth).toBe(25);
+    expect(list.find((b) => b.id === 'final')?.worth).toBe(75);
+  });
+
+  it('refuses a table with a row it cannot read, rather than shrinking the divisor', () => {
+    /*
+     * Also found by review. "100 pts" beside an unreadable "Participation"
+     * totalled 100, so the problem sets read as the whole course. The
+     * participation might be worth fifty points — the honest answer is that
+     * this table cannot be converted, which is what a mixed table gets.
+     */
+    const grading = {
+      econ: [
+        { what: 'Problem sets', pct: '100 pts' },
+        { what: 'Participation', pct: 'Graded by the tutor' },
+      ],
+    };
+    const list = bestBuys([item({ id: 'pset', weight: '100 pts' })], spent, null, grading);
+    expect(list[0].worth).toBe(0);
+    expect(list[0].why).toBe('No stated weight');
+  });
+
+  it('leaves extra credit out of the total it divides by', () => {
+    /*
+     * Found by mutation: dropping the `!r.extra` filter changed nothing any
+     * test could see. Extra credit is counted on top of the hundred rather
+     * than inside it — the same rule `asWeights` applies — so a course with
+     * 400 points of graded work and a 20-point bonus divides by 400. Divide
+     * by 420 and every piece of work on the course is quietly worth less than
+     * the syllabus says.
+     */
+    const grading = {
+      econ: [
+        { what: 'Problem sets', pct: '100 pts' },
+        { what: 'Final', pct: '300 pts' },
+        { what: 'Seminar bonus', pct: '+20 pts EC' },
+      ],
+    };
+    const list = bestBuys([item({ id: 'final', weight: '300 pts' })], spent, null, grading);
+    expect(list[0].worth).toBe(75);
+  });
+
+  it('leaves a mixed table alone, which is the one asWeights refuses', () => {
+    // "40%" and "20 pts" are two different denominators, and relating them
+    // would be a guess. The percentage row is read; the points row is not.
+    const grading = {
+      econ: [
+        { what: 'Essays', pct: '40%' },
+        { what: 'Participation', pct: '20 pts' },
+      ],
+    };
+    const list = bestBuys(
+      [item({ id: 'essay', weight: '40%' }), item({ id: 'part', weight: '20 pts' })],
+      spent,
+      null,
+      grading,
+    );
+    expect(list.find((b) => b.id === 'essay')?.worth).toBe(40);
+    expect(list.find((b) => b.id === 'part')?.worth).toBe(0);
+  });
+
+  it('is no worse than before for a caller with no grading tables', () => {
+    // The parameter is optional, so a caller that does not pass one gets what
+    // every caller got until now rather than an error.
+    const list = bestBuys([item({ id: 'pset', weight: '100 pts' })], spent, null);
+    expect(list[0].worth).toBe(0);
+  });
+
   it('marks something weighted that has never been timed', () => {
     const list = bestBuys([item({ id: 'x', kind: 'Presentation', weight: '15%' })], spent, null);
     expect(list[0].why).toBe('15% of the grade, never timed');
