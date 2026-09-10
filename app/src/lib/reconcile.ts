@@ -24,7 +24,7 @@
  * wrong pairing sends somebody to change a date that was already right.
  */
 
-import { dateToIso, movedLine as movedDays } from './date';
+import { dateToIso, movedLine as movedDays, realMonthDay } from './date';
 import type { DatedItem, FeedEvent, Item } from './types';
 
 /** Words that appear in half of all assignment titles and carry no signal. */
@@ -235,9 +235,26 @@ export function summary(r: Report): string {
  * this drops it, and a feed entry from the wrong year would move a deadline to
  * the same day of this one. That is a real limitation and it is why the screen
  * shows both dates in full before anything is applied.
+ *
+ * ## The shape is not the date
+ *
+ * Four digits, two, two says nothing about whether those numbers name a day.
+ * "2026-04-31" matches, and the month and day it yields are stored and then
+ * read back through `new Date(year, month, day)`, which rolls: 31 April is
+ * drawn as 1 May, "2026-13-01" as 1 January of the *next* year, "2026-00-10"
+ * as December of the last one. Not a crash — a deadline quietly somewhere
+ * else, after a screen showed both dates in full and asked to be trusted.
+ *
+ * `lib/edit.ts` already learned this on the same value from the other end:
+ * "Not `day <= 31`: the year was in the field and thrown away, so 31 April was
+ * accepted and drawn as 1 May." It reaches for `realMonthDay`; so does this,
+ * and the caller's "not a date this app can store" becomes true.
  */
 export function asItemDate(isoDate: string): Pick<Item, 'month' | 'day'> | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
   if (!m) return null;
-  return { month: Number(m[2]) - 1, day: Number(m[3]) };
+  const month = Number(m[2]) - 1;
+  const day = Number(m[3]);
+  if (!realMonthDay(month, day)) return null;
+  return { month, day };
 }
