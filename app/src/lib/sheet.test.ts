@@ -136,8 +136,16 @@ describe('what a cell comes to', () => {
     expect(evaluate(sheet({ A1: '=2+3*4' }), 'A1')).toBe(14);
     expect(evaluate(sheet({ A1: '=(2+3)*4' }), 'A1')).toBe(20);
     // Right-associative, as every spreadsheet has it.
-    expect(evaluate(sheet({ A1: '=2^3^2' }), 'A1')).toBe(512);
+    // 64, not 512: `^` folds left to right in Excel, Google Sheets and
+    // LibreOffice. Right-associativity is the mathematical convention, and
+    // this file pinned it for a while against the three sheets it imitates.
+    expect(evaluate(sheet({ A1: '=2^3^2' }), 'A1')).toBe(64);
+    expect(evaluate(sheet({ A1: '=4^3^2' }), 'A1')).toBe(4096);
+    // Excel's other exponent quirk, which this has always had right: the
+    // unary minus binds first, so this is 9 and not −9.
     expect(evaluate(sheet({ A1: '=-3^2' }), 'A1')).toBe(9);
+    // A single `^` is unchanged, and the loop still ends.
+    expect(evaluate(sheet({ A1: '=2^10' }), 'A1')).toBe(1024);
   });
 
   it('takes a percentage sign as a hundredth', () => {
