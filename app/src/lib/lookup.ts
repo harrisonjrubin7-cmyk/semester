@@ -52,6 +52,7 @@
 import { budget, hasPolicy, tally } from './attend';
 import { blocksFor, type Catalog } from '../data/catalog';
 import type { ToolCall, ToolResult, ToolSpec } from './claude';
+import { blocksOn } from './activities';
 import { dateToIso } from './date';
 import { standing } from './grades';
 import { liveGuide } from './live';
@@ -523,13 +524,33 @@ function readTimetable(src: Source, input: Record<string, unknown>): { text: str
      * how many events each feed pulled. This says when they are, so the tool
      * can answer the question it advertises, and stops there.
      */
+    /*
+     * And the standing commitments — a club, a shift, a practice.
+     *
+     * The third list this tool did not have, after the appointments below it
+     * and the connected calendars above. A Saturday the student rows every
+     * week from six read back "nothing scheduled": their own entry, in their
+     * own app, used by the clash detector to say a day is already promised,
+     * and invisible to the one tool asked what a day looks like.
+     *
+     * `blocksOn` is what the day rail and the week grid already draw them
+     * with, so this is the same list on the same terms, and the note never
+     * travels because `blocksOn` never reads it.
+     */
+    const standing = blocksOn(src.state.commitments, on);
     const feed = feedEventsOn(src.state.feedEvents, on);
     const label = on.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
     });
-    if (blocks.length === 0 && tasks.length === 0 && appts.length === 0 && feed.length === 0) {
+    if (
+      blocks.length === 0 &&
+      tasks.length === 0 &&
+      appts.length === 0 &&
+      standing.length === 0 &&
+      feed.length === 0
+    ) {
       out.push(`${label}: nothing scheduled.`);
       continue;
     }
@@ -545,6 +566,9 @@ function readTimetable(src: Source, input: Record<string, unknown>): { text: str
             (a) =>
               `  - ${a.time || 'no time'} · ${a.title}${a.where ? ` · ${a.where}` : ''}` +
               ' (their own appointment)',
+          ),
+          ...standing.map(
+            (b) => `  - ${b.time} · ${b.title}${b.meta ? ` · ${b.meta}` : ''} (a standing commitment)`,
           ),
           ...tasks.map((t) => `  - ${t.time || 'no time'} · ${t.title} (their own task)`),
           // The hour and nothing else, said in words that cannot be mistaken

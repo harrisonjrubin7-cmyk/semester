@@ -124,6 +124,17 @@ export const PICK = {
      * are, and moving them is a decision for whoever owns the app.
      */
     'That a connected calendar has something at an hour on a day, and how many. Never its title, place or note.',
+    /*
+     * Their clubs, shifts and practices, on the days they run.
+     *
+     * `ai/providers/campus.ts` already sends the name, kind, role and hours a
+     * week of every active one from the Activities screen; what it does not
+     * send is which days, so the tool asked what a day looks like could not
+     * see a Saturday the student rows every week and called it empty. The note
+     * on a commitment does not travel and `blocksOn`, which builds these, has
+     * never read it.
+     */
+    'Names, days and times of the student’s own standing commitments. Never a commitment’s note.',
     'Which classes meet on a given day, and when.',
     'A course’s study cards, terms and cases, searched for a topic and capped.',
     /*

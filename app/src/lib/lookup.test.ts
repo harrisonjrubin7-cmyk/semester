@@ -460,3 +460,95 @@ describe('a day the connected calendar has something on', () => {
     expect(JSON.stringify(out.result)).toContain('nothing scheduled');
   });
 });
+
+describe('the assistant\'s day and the app\'s day', () => {
+  /*
+   * Three lists went missing from `read_timetable` one at a time — the
+   * student's own appointments, the calendars they connected, and their
+   * standing commitments — and each was found only when somebody thought to
+   * look. `railFor` in `lib/select.ts` is what the day rail, the day grid, the
+   * week grid and the hours tab are all built from, and its own comment says
+   * it exists so that a fifth view is not "taught separately and the fourth
+   * forgotten again". This tool is that fifth view and was never taught.
+   *
+   * So rather than a fourth test remembering a fourth list, this seeds one of
+   * every kind of thing a day can hold and asserts the tool names all of them.
+   * Add a source to the day and forget this tool, and this fails.
+   *
+   * Deadlines are the one deliberate absence: `find_deadlines` is the tool for
+   * those, and listing them here would hand the model the same rows twice.
+   */
+  const ON = '2026-09-19'; // Saturday, so no classes get in the way.
+
+  const everything = (): Partial<State> =>
+    ({
+      tasks: [
+        { id: 'k1', title: 'TASK-WITH-AN-HOUR', date: ON, time: '4:00p', done: false, courseId: null, note: '' },
+        { id: 'k2', title: 'TASK-WITH-NO-HOUR', date: ON, time: '', done: false, courseId: null, note: '' },
+      ],
+      appointments: [
+        { id: 'a9', title: 'APPOINTMENT-TITLE', kind: 'meeting', date: ON, at: 600, time: '10:00a', where: 'Kirkland', note: 'APPT-NOTE-SECRET', created: 0 },
+      ],
+      commitments: [
+        { id: 'c9', name: 'COMMITMENT-NAME', kind: 'sport', role: 'Member', where: 'Percy Priest', url: '', note: 'COMMITMENT-NOTE-SECRET', days: [6], at: 6 * 60, minutes: 180, hours: 9, active: true },
+      ],
+      feeds: [{ id: 'f9', kind: 'ics', name: 'Theirs', url: '', added: 0, synced: 0, status: '', count: 1 }],
+      feedEvents: [
+        { id: 'x9', sourceId: 'f9', title: 'FEED-TITLE-SECRET', date: ON, at: 840, time: '2:00p', where: 'FEED-PLACE-SECRET', note: 'FEED-NOTE-SECRET', courseId: null },
+      ],
+    }) as unknown as Partial<State>;
+
+  const read = () => JSON.stringify(ran('read_timetable', { date: ON, days: 1 }, everything()).result);
+
+  it('names everything the day actually holds', () => {
+    const out = read();
+    for (const named of [
+      'TASK-WITH-AN-HOUR',
+      'TASK-WITH-NO-HOUR',
+      'APPOINTMENT-TITLE',
+      'COMMITMENT-NAME',
+    ]) {
+      expect(out, named).toContain(named);
+    }
+    // The connected calendar is there by its hour, deliberately without a name.
+    expect(out).toContain('2:00p');
+    expect(out).toContain('calendar they connected');
+  });
+
+  it('does not call a day empty when a standing commitment is all it holds', () => {
+    /*
+     * The real shape of it: a Saturday the student rows every week from six,
+     * and nothing else on the day. Their own entry, in their own app, used by
+     * the clash detector to say a day is already promised — and read back as
+     * "nothing scheduled" to the one tool asked what a day looks like.
+     */
+    const only = {
+      tasks: [],
+      appointments: [],
+      feedEvents: [],
+      commitments: [
+        { id: 'c8', name: 'Rowing squad', kind: 'sport', role: 'Member', where: 'Percy Priest', url: '', note: '', days: [6], at: 6 * 60, minutes: 180, hours: 9, active: true },
+      ],
+    } as unknown as Partial<State>;
+    const out = JSON.stringify(ran('read_timetable', { date: ON, days: 1 }, only).result);
+    expect(out).not.toContain('nothing scheduled');
+    expect(out).toContain('Rowing squad');
+  });
+
+  it('gives away nothing it should not, from any of them', () => {
+    const out = read();
+    for (const secret of ['APPT-NOTE-SECRET', 'COMMITMENT-NOTE-SECRET', 'FEED-TITLE-SECRET', 'FEED-PLACE-SECRET', 'FEED-NOTE-SECRET']) {
+      expect(out, secret).not.toContain(secret);
+    }
+  });
+
+  it('keeps a task with no hour, which an hour grid would drop', () => {
+    /*
+     * The reason this tool does not simply call `railFor` and be done. That
+     * builds an hour grid, so it takes only the tasks that name a clock time —
+     * right for a grid, wrong for a question about the whole day. Swapping to
+     * it wholesale would have quietly lost these.
+     */
+    expect(read()).toContain('TASK-WITH-NO-HOUR');
+  });
+});
