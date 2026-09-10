@@ -791,3 +791,83 @@ describe('a function name written the OOXML way', () => {
     expect(sheets[0].cells.A1).toBe('=XLOOKUP(B1,C1:C3,D1:D3)');
   });
 });
+
+describe('a reference this grid cannot resolve', () => {
+  /*
+   * Both of these evaluate to `#VALUE!` in `sheet.ts`, measured — the app's
+   * worksheets are separate grids with no cross-tab lookup, and `parseRef`
+   * wants a cell, so a whole column is not an address it has. Keeping them as
+   * live formulas replaced a number Excel had already worked out with an
+   * error.
+   */
+  it('refuses a formula that reaches into another tab', () => {
+    expect(knownFormula('Sheet2!A1')).toBe(false);
+    expect(knownFormula('SUM(Sheet2!A1:A3)')).toBe(false);
+    expect(knownFormula("'My Sheet'!A1")).toBe(false);
+  });
+
+  it('refuses a whole column or a whole row', () => {
+    expect(knownFormula('SUM(A:A)')).toBe(false);
+    expect(knownFormula('SUM($A:$A)')).toBe(false);
+    expect(knownFormula('SUM(AA:AB)')).toBe(false);
+    expect(knownFormula('SUM(1:1)')).toBe(false);
+    expect(knownFormula('VLOOKUP(A1,B:D,2,0)')).toBe(false);
+  });
+
+  it('leaves an ordinary cell range alone, which is the shape it must not catch', () => {
+    expect(knownFormula('SUM(A1:A9)')).toBe(true);
+    expect(knownFormula('SUM($A$1:$A$9)')).toBe(true);
+    expect(knownFormula('SUM(AA1:AB9)')).toBe(true);
+    expect(knownFormula('ROUND(AVERAGE(A1:A9),2)')).toBe(true);
+  });
+
+  it('reads text as text: an exclamation mark in a string is not another tab', () => {
+    expect(knownFormula('A1&"!"')).toBe(true);
+    expect(knownFormula('IF(A1>0,"yes!","no")')).toBe(true);
+  });
+
+  it('keeps the cached value on import, and counts it', async () => {
+    const bytes = workbook({
+      sheets: [
+        {
+          name: 'S',
+          rows: [
+            '<row r="1"><c r="A1"><f>SUM(Sheet2!A1:A9)</f><v>412</v></c>' +
+              '<c r="B1"><f>SUM(B:B)</f><v>77</v></c></row>',
+          ],
+        },
+      ],
+    });
+    const { sheets, notes } = await fromXlsx(asFile('r.xlsx', bytes));
+    expect(sheets[0].cells.A1).toBe('412');
+    expect(sheets[0].cells.B1).toBe('77');
+    expect(notes.join(' ')).toContain('another tab');
+  });
+});
+
+describe('a relationship id bound to a prefix other than r', () => {
+  it('still finds the worksheet it points at', async () => {
+    // `r:` is a convention, not a rule — the attribute lives in the
+    // relationships namespace and a writer may bind that anywhere. Requiring
+    // the literal `r:id` fell through to guessing `sheet1.xml`, so a workbook
+    // whose parts are named otherwise reported no worksheets at all.
+    const bytes = zipSync({
+      'xl/workbook.xml': strToU8(
+        '<?xml version="1.0"?><workbook xmlns:rel="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+          '<sheets><sheet name="Marks" sheetId="1" rel:id="rId7"/></sheets></workbook>',
+      ),
+      'xl/_rels/workbook.xml.rels': strToU8(
+        '<?xml version="1.0"?><Relationships>' +
+          '<Relationship Id="rId7" Target="worksheets/data1.xml"/></Relationships>',
+      ),
+      'xl/worksheets/data1.xml': strToU8(
+        '<?xml version="1.0"?><worksheet><sheetData><row r="1">' +
+          '<c r="A1"><v>91</v></c></row></sheetData></worksheet>',
+      ),
+    });
+    const { sheets } = await fromXlsx(asFile('rel.xlsx', bytes));
+    expect(sheets).toHaveLength(1);
+    expect(sheets[0].title).toBe('Marks');
+    expect(sheets[0].cells.A1).toBe('91');
+  });
+});

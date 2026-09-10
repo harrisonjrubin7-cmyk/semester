@@ -225,12 +225,16 @@ function epochOf(workbookXml: string): number {
 }
 
 /**
- * Whether every function named in a formula is one `sheet.ts` can evaluate.
+ * Whether `sheet.ts` can evaluate this formula at all.
  *
- * A name check, not a parse: the engine refuses an unknown name and evaluates
- * everything else, so the question is only whether any name in the text is one
- * it does not have. Anything else it cannot handle still says so in the cell,
- * which is what a typed formula gets too.
+ * Not a parse — a short list of the things this engine is known to refuse,
+ * each of which turns a total Excel already worked out into an error. It
+ * started as a check on function names alone, and every widening since has
+ * been a cached value rescued from a `#NAME?` or a `#VALUE!`.
+ *
+ * Anything else it cannot handle still says so in the cell, which is what a
+ * typed formula gets too. A name missing from `KNOWN` costs a live formula,
+ * never a wrong number, which is the right way for this to be wrong.
  */
 export function knownFormula(body: string): boolean {
   /*
@@ -242,10 +246,39 @@ export function knownFormula(body: string): boolean {
    */
   if (/""/.test(body)) return false;
 
-  // Function names inside a string literal are text, not calls:
-  // `IF(A1="SUBTOTAL(",1,0)` is a formula this app can evaluate perfectly well.
-  const names = withoutStrings(body).toUpperCase().match(/\b[A-Z][A-Z0-9_.]*\s*\(/g) ?? [];
+  // Everything below reads code rather than text: a function name inside a
+  // string literal is not a call, and `=A1&"!"` is not a reference to another
+  // tab. `IF(A1="SUBTOTAL(",1,0)` is a formula this app evaluates perfectly
+  // well, and both checks got it wrong until the literals came out first.
+  const code = withoutStrings(body);
+  if (!localRefs(code)) return false;
+
+  const names = code.toUpperCase().match(/\b[A-Z][A-Z0-9_.]*\s*\(/g) ?? [];
   return names.every((n) => KNOWN.has(n.replace(/\s*\($/, '')));
+}
+
+/**
+ * Whether every reference in a formula is one this grid can resolve.
+ *
+ * Two shapes are perfectly ordinary in a workbook and are `#VALUE!` here,
+ * measured: `Sheet2!A1` and `SUM(A:A)`. The app's sheets are separate grids
+ * with no cross-tab lookup — `fromXlsx` already says so in `notes` — and
+ * `parseRef` wants a cell, so a whole column or row is not an address it has.
+ *
+ * Both were being kept as live formulas, which replaced the number Excel had
+ * already worked out with an error. Neither is a formula this app can offer
+ * anything better for, so the cached value is kept and counted instead. A
+ * `#REF!` written into the formula text falls in here too, on the `!`, which
+ * is the same trade: a broken formula against the last number it produced.
+ */
+function localRefs(code: string): boolean {
+  if (code.includes('!')) return false;
+  // `A:A`, `$A:$A`, `AA:AB` — letters on both sides of the colon, where a
+  // cell range such as `A1:A2` has a digit before it.
+  if (/(^|[^A-Z0-9$])\$?[A-Z]{1,3}:\$?[A-Z]{1,3}([^A-Z0-9$]|$)/i.test(code)) return false;
+  // `1:1` — the same thing along the other axis.
+  if (/(^|[^A-Z0-9$])\$?\d+:\$?\d+([^A-Z0-9$]|$)/i.test(code)) return false;
+  return true;
 }
 
 /** The formula with every quoted literal taken out, so only code is left. */
@@ -349,7 +382,15 @@ function worksheetOrder(workbook: string, rels: string): { name: string; part: s
   for (const m of workbook.matchAll(/<(?:\w+:)?sheet\b[^>]*\/?>/g)) {
     nth += 1;
     const name = /name=['"]([^'"]*)['"]/.exec(m[0]);
-    const rid = /r:id=['"]([^'"]+)['"]/.exec(m[0]);
+    /*
+     * `r:` is a convention, not a rule. The relationship id lives in the
+     * relationships namespace and a writer may bind that to any prefix it
+     * likes — `rel:id` is the same attribute. Requiring the literal `r:id`
+     * dropped to the positional guess below, and a workbook whose parts are
+     * not named `sheet1.xml` then had its worksheet skipped and the whole file
+     * reported as having none.
+     */
+    const rid = /(?:\w+:)id=['"]([^'"]+)['"]/.exec(m[0]);
     out.push({
       name: name ? entities(name[1]) : `Sheet${nth}`,
       // The relationship is the correct answer; the positional guess is what
@@ -566,9 +607,10 @@ export async function fromXlsx(file: File, courseId: CourseId | null = null): Pr
   }
   if (unknown > 0) {
     notes.push(
-      `${unknown} ${unknown === 1 ? 'formula uses a function' : 'formulas use functions'} this app ` +
-        `does not have, so ${unknown === 1 ? 'it came' : 'they came'} in as the number Excel last ` +
-        'worked out rather than as a formula.',
+      `${unknown} ${unknown === 1 ? 'formula' : 'formulas'} could not be read by this app — a ` +
+        'function it does not have, or a reference to another tab or to a whole column — so ' +
+        `${unknown === 1 ? 'it came' : 'they came'} in as the number Excel last worked out ` +
+        'rather than as a formula.',
     );
   }
   notes.push('Charts, pivot tables, colours and cell formats do not come across. The file itself is untouched.');
