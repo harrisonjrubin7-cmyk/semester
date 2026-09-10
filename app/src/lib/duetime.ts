@@ -28,7 +28,29 @@
  * "10:00–12:00 PM" — an ordinary morning exam window — became ten at night.
  * Comparing the positions on the face rather than the numerals is the whole
  * fix, and `% 12` is what puts twelve where it belongs.
+ *
+ * ## Midnight, the other clock time English writes as a word
+ *
+ * Noon is handled above by becoming a figure. Midnight cannot be, because the
+ * figure it reads as literally is the wrong end of the day: "due at midnight
+ * on the 8th" is the 8th running out, and 00:00 would put it before every
+ * lecture that day. So it is read as 23:59 — which is what `lib/capture.ts`
+ * chose, for the same reason, off the line somebody types. The app should not
+ * understand "midnight" from you and not from your syllabus, and a test holds
+ * the two readers to the same answer.
+ *
+ * Unread it fell to `NO_TIME` and sorted below the five o'clock deadline on
+ * the day it names, and every screen that asks `hasTime` said it named none.
  */
+
+/**
+ * The end of the day it names, not the start.
+ *
+ * "Due at midnight on the 8th" is the 8th running out. Reading it as 00:00
+ * would sort the deadline above every lecture on the 8th and mark it a day
+ * early on any screen that compares clocks.
+ */
+const MIDNIGHT = 23 * 60 + 59;
 
 /** Minutes past midnight, or null when the wording holds no clock time. */
 export function readDue(text: string): number | null {
@@ -53,6 +75,10 @@ export function readDue(text: string): number | null {
    */
   const s = text.trim().replace(/\bnoon\b/gi, '12:00pm');
   if (!s) return null;
+
+  // Before the digits, because "11:59pm (midnight)" holds both and the word is
+  // the one that was meant.
+  if (/\bmidnight\b/i.test(s)) return MIDNIGHT;
 
   // Every clock-shaped thing, in order. A bare number is only a time when it
   // carries a meridiem — "Sep 8–17" is two dates and "1:15p" is a time.
@@ -110,14 +136,8 @@ export function readDue(text: string): number | null {
       if (hour <= 23 && mins <= 59) return hour * 60 + mins;
     }
 
-    /*
-     * Midnight is deliberately not read, unlike noon above, and that is not an
-     * omission of the same kind. "Due Friday at midnight" is written to mean
-     * the end of Friday and reads literally as its start, so any figure
-     * returned for it would be a guess and one of the two guesses is a whole
-     * day early. Left unread it falls to `NO_TIME` and sorts to the end of its
-     * day, which is what the wording means.
-     */
+    // Nothing clock-shaped and neither word: the wording holds no time, which
+    // `NO_TIME` sorts to the end of its day.
     return null;
   }
 

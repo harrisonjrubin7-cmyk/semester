@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { NO_TIME, dueMinutes, hasTime, readDue } from './duetime';
+import { matchTime } from './capture';
 
 describe('the wordings the sample syllabi actually use', () => {
   // Every one of these is a real `dueTime` from the four courses in the app.
@@ -45,6 +46,42 @@ describe('ranges, where a naive parser goes wrong', () => {
 
   it('is not fooled by a date range', () => {
     expect(readDue('Sep 29 – Oct 8')).toBeNull();
+  });
+});
+
+describe('the two clock times English writes as words', () => {
+  it('reads noon, however the wording sits around it', () => {
+    expect(readDue('noon')).toBe(12 * 60);
+    expect(readDue('Due at noon')).toBe(12 * 60);
+    expect(readDue('12 noon')).toBe(12 * 60);
+  });
+
+  it('reads midnight as the end of its day, not the start', () => {
+    // 00:00 would sort the deadline above every lecture on the day it names,
+    // and mark it a day early on any screen that compares clocks.
+    expect(readDue('midnight')).toBe(23 * 60 + 59);
+    expect(readDue('by midnight')).toBe(23 * 60 + 59);
+  });
+
+  it('says these name a time, so they no longer sort to the end of the day', () => {
+    // The failure this was written for: "Due at noon" was untimed, so it sat
+    // below the five o'clock deadline on the same day.
+    expect(hasTime('Due at noon')).toBe(true);
+    expect(dueMinutes('Due at noon')).toBeLessThan(dueMinutes('5:00p'));
+    expect(dueMinutes('Due at noon')).toBeLessThan(NO_TIME);
+  });
+
+  it('leaves afternoon alone, which is a part of a day rather than a time', () => {
+    expect(readDue('afternoon')).toBe(null);
+    expect(readDue('Sunday afternoon')).toBe(null);
+  });
+
+  it('agrees with the reader on the other side of the same word', () => {
+    // `capture.ts` reads these off a line somebody types. The app should not
+    // understand "noon" from you and not from your syllabus.
+    for (const w of ['noon', 'at noon', '12 noon', 'midnight', 'by midnight']) {
+      expect(readDue(w), w).toBe(matchTime(w)?.at ?? null);
+    }
   });
 });
 
@@ -249,16 +286,20 @@ describe('noon and midnight, said in words', () => {
     expect(readDue('9:00 AM, or 2:15p')).toBe(9 * 60);
   });
 
-  it('leaves midnight unread, which is the answer and not a gap', () => {
+  it('reads midnight as the end of the day it names, not the start', () => {
     /*
-     * "Due Friday at midnight" is written to mean the end of Friday and reads
-     * literally as its start. Either figure would be a guess and one of them
-     * is a whole day early, so it falls to NO_TIME and sorts to the end of its
-     * day — which is what the wording means.
+     * This file used to leave midnight unread on the argument that either
+     * figure is a guess. But `capture.ts` was already guessing — 23:59, off
+     * the line somebody types — so the app understood the word from you and
+     * not from your syllabus. The test above holds the two readers to one
+     * answer; this one says which answer, and why it is not 00:00: "due
+     * Friday at midnight" is Friday running out, and midnight-as-the-start
+     * sorts it above every lecture on the day and marks it a day early.
      */
-    expect(readDue('midnight')).toBeNull();
-    expect(readDue('Due at midnight')).toBeNull();
-    expect(dueMinutes('Due at midnight')).toBe(NO_TIME);
+    expect(readDue('midnight')).toBe(23 * 60 + 59);
+    expect(readDue('Due at midnight')).toBe(23 * 60 + 59);
+    expect(dueMinutes('Due at midnight')).toBeLessThan(NO_TIME);
+    expect(dueMinutes('Due at midnight')).toBeGreaterThan(dueMinutes('5:00p'));
   });
 
   it('does not find noon inside a word that merely contains it', () => {
