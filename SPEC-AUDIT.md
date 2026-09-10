@@ -60,11 +60,21 @@ rail, walks between buildings, timers, applications, readings part-finished,
 regrade windows still open, a payment due, and the "worth seeing coming" clash
 warning.
 
-"What should I do next?" is `screens/Tonight.tsx` and `lib/start.ts`, working
-backwards from deadlines through `lib/windows.ts` (the hours you actually
-work). It weighs deadline, estimated time, and availability. It does **not**
-weigh assignment weight or current course grade, though both are in state —
-that is the one gap against the vision's list.
+"What should I do next?" is two screens. `screens/Tonight.tsx` orders
+outstanding work by **points of final grade per hour** (`lib/worth.ts`,
+`bestBuys`) — weight divided by how long that kind of work has actually taken
+this student, calibrated against how wrong their own past estimates were, with
+anything due today jumping the queue because a thing due tonight is not a
+trade. `screens/Ahead.tsx` and `lib/start.ts` do the other half: when a thing
+has to *begin*, walked backwards a day at a time through the hours the student
+actually works, and refusing to date work it has never timed rather than
+guessing.
+
+So of the vision's seven inputs, five are in: deadline, weight, estimated time,
+availability, and previously scheduled work. **Current course grade is not** —
+`lib/grades.ts` knows where you stand in every course and `bestBuys` does not
+read it. Nor are missing prerequisites, which is §9's problem rather than this
+one's.
 
 Not present: weather.
 
@@ -252,10 +262,16 @@ and keywords, and live records: deadlines, courses, guide units, notes, tasks
 and appointments. Scored, with a near-miss tier that tells you when it is
 guessing at a spelling rather than matching what you typed (`spelled`).
 
-It does **not** reach documents, sheets, decks or stored files, and does not
-search inside file contents. The natural-language examples in the vision mostly
-work because the destination keywords are thorough — "financial aid",
-"payment plan" and "scholarship" now reach the money screen.
+Documents, sheets and decks are searched on this branch, by their contents as
+well as their names — a document by its text, a sheet by what has been typed
+into its cells, a deck by its slides — with the haystack capped at twenty
+thousand characters so the fourth keystroke stays fast. Before this they were
+unfindable, which reads as having lost them.
+
+It still does **not** reach stored files or search inside file contents. The
+natural-language examples in the vision mostly work because the destination
+keywords are thorough — "financial aid", "payment plan" and "scholarship" now
+reach the money screen.
 
 ## 14. Semester AI assistant — **shipped**
 
@@ -289,7 +305,12 @@ by id. The categories the vision names map to: assignments (`two`, `today`),
 exams (`exam`), registrar (`term`), money (`bill`), attendance (`attend`),
 weekly summary (`sun`), classes (`class`), and the all-clear (`free`).
 
-Quiet hours and per-course settings: absent. Push to a closed browser: not
+Quiet hours are on this branch: one window, wrapping midnight, covering every
+rule with no exception and none hidden. Nothing is dropped by it — `fire`
+keeps the seen list, so a reminder whose rule is still true when the window
+lifts arrives then.
+
+Per-course notification settings: absent. Push to a closed browser: not
 possible, and Settings says so rather than implying otherwise.
 
 ## 17. User roles — **absent**
@@ -388,6 +409,11 @@ services are not started. Phase 5 is not applicable without an institution.
 - **The add-a-line chooser** was a hand-rolled row of pills whose "Aid" button
   had the same accessible name as the "Aid" section above it. It is the shared
   `Segmented` now. Found by driving the screen in a browser.
+- **Search reaches the things the app made** — §13. Documents, sheets and decks
+  were real and unfindable; they are searched by their contents now, and each
+  opens its own screen rather than the list that holds it.
+- **Quiet hours** — §16, and the wrap around midnight is why `inQuiet` is a
+  function with a test rather than a comparison at a call site.
 
 ## What is worth doing next, in order
 
@@ -398,9 +424,15 @@ services are not started. Phase 5 is not applicable without an institution.
 2. **Study-guide controls (§4).** The generator exists and is good; length,
    difficulty, question count and "regenerate this section" are additive, need
    no institution, and are the most-used feature's biggest gap.
-3. **Search over made things (§13).** Documents, sheets, decks and files are
-   real and unfindable. This is a new `Hit` kind and a renderer.
-4. **The prioritiser should weigh grade and weight (§1).** Both are already in
-   state; `lib/start.ts` reads neither.
-5. **Quiet hours (§16).** One setting, and the only notification control the
-   vision names that is missing.
+3. **Stored files in search (§13).** Documents, sheets and decks are found now;
+   files in IndexedDB are not, and they are the ones with a name and no
+   preview, which is exactly when search matters most.
+4. **Should the prioritiser read your standing (§1)?** It weighs points of
+   final grade per hour and does not read `lib/grades.ts`. Whether it should is
+   a real question rather than an oversight: an hour spent where you are on a
+   grade boundary is worth more than the same hour in a course already settled,
+   and it is also the change most likely to make a considered ordering feel
+   arbitrary. It is left alone deliberately, and should be decided rather than
+   drifted into.
+5. **Per-course notification settings (§16).** The remaining half of the
+   notification controls the vision names.
