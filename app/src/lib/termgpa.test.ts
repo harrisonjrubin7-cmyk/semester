@@ -59,6 +59,21 @@ const NO_TOP_POINTS: GradeSystem = {
   ],
 };
 
+/**
+ * A table with a gap in it: one row whose grade point was left off or read
+ * wrong, with priced rows above and below it.
+ */
+const GAP: GradeSystem = {
+  kind: 'letter',
+  gpaMax: 4,
+  scale: [
+    { label: 'A', min: 90, gpa: 4 },
+    { label: 'B', min: 80 },
+    { label: 'C', min: 70, gpa: 2 },
+    { label: 'F', min: 0, gpa: 0 },
+  ],
+};
+
 describe('creditHours', () => {
   it('reads the number out of however the syllabus wrote it', () => {
     expect(creditHours('3 credits')).toBe(3);
@@ -156,6 +171,68 @@ describe('termGpa', () => {
     // The scale prices eleven letters. Saying it has "no grade points" would
     // send somebody looking for a table that is already there.
     expect(said).not.toContain('no grade points, so');
+  });
+
+  it('will not price a letter the scale skipped in the middle of the table', () => {
+    /*
+     * The end no other test reaches. A gap in the middle of a scale — one row
+     * whose grade point was left off or read wrong — puts an unpriced letter
+     * where the low and high landings both straddle it and both are priced.
+     * Checking only the edges of the band walks straight past it and prices
+     * the middle, the one figure the screen leads with, at zero.
+     */
+    const t = termGpa([sitting('a', 'A 100', '3 credits', { 'a:0': '84' }, GAP)]);
+    const band = t.courses[0].band!;
+    expect(band.mid.letter).toBe('B');
+    expect(band.mid.points).toBeNull();
+    // The ends straddle it, and both of those the scale does price.
+    expect(band.low.points).not.toBeNull();
+    expect(band.high.points).not.toBeNull();
+    expect(t.courses[0].missing).toBe('points');
+    expect(missingLine(t.courses[0])).toContain('B');
+  });
+
+  it('will not price a letter the scale skipped below where the middle lands', () => {
+    /*
+     * The same gap, met at the low end. The band straddles the unpriced row
+     * from above rather than sitting on it, so a check of the middle and the
+     * top alone reads the course as fully priced and quietly values the
+     * bottom of its band at zero — which is the number the screen leads with
+     * when it says how far this could fall.
+     */
+    const t = termGpa([sitting('a', 'A 100', '3 credits', { 'a:0': '95' }, GAP)]);
+    const band = t.courses[0].band!;
+    expect(band.low.letter).toBe('B');
+    expect(band.low.points).toBeNull();
+    expect(band.mid.points).not.toBeNull();
+    expect(band.high.points).not.toBeNull();
+    expect(t.courses[0].missing).toBe('points');
+  });
+
+  it('still counts a course heading for a fail on a scale with no F row', () => {
+    /*
+     * The same silence as the test below, at the end that decides whether the
+     * course counts at all. A syllabus table listing A down to D and omitting
+     * F is ordinary, and a student projecting 37.5 to 52.5 on it is heading
+     * for a 0.0 — which the arithmetic can say. Reading that as "the scale
+     * states no grade points" dropped the whole course out of the term, and
+     * told a student with a four-letter table in front of them that it had
+     * none.
+     */
+    const noF: GradeSystem = {
+      kind: 'letter',
+      gpaMax: 4,
+      scale: [
+        { label: 'A', min: 90, gpa: 4 },
+        { label: 'B', min: 80, gpa: 3 },
+        { label: 'C', min: 70, gpa: 2 },
+        { label: 'D', min: 60, gpa: 1 },
+      ],
+    };
+    const t = termGpa([sitting('a', 'A 100', '3 credits', { 'a:0': '45' }, noF)]);
+    expect(t.courses[0].band!.mid.letter).toBe('');
+    expect(t.courses[0].missing).toBe('');
+    expect(t.gpa).toEqual({ low: 0, mid: 0, high: 0 });
   });
 
   it('still counts a course whose low end falls off the bottom of the scale', () => {

@@ -146,7 +146,7 @@ function courseTerm(s: Sitting): CourseTerm {
   let missing: Missing = '';
   if (!band) missing = 'ungraded';
   else if (hours === null) missing = 'hours';
-  else if (band.mid.points === null || unpriced(band.low) || unpriced(band.high)) {
+  else if (unpriced(band.mid) || unpriced(band.low) || unpriced(band.high)) {
     missing = 'points';
   }
 
@@ -174,9 +174,10 @@ function courseTerm(s: Sitting): CourseTerm {
  * table that lists A+ as a cutoff and prices nothing above 4.0 arrives exactly
  * like this — and folding it in as zero produced a term whose high end came
  * out *below* its low end, printed on the degree screen as "somewhere between
- * 3.30 and 0.00". Checked at every end of the band rather than at the middle:
- * an unpriced letter lives at the top of a scale, which is precisely the end
- * the middle cannot see.
+ * 3.30 and 0.00". An unpriced letter lives at the top of a scale, which is
+ * precisely the end the middle cannot see, so all three ends ask this and the
+ * middle is not a special case: reading a fail as "the scale states no grade
+ * points" dropped a whole course out of a term for a table that prices four.
  */
 function unpriced(l: Landing): boolean {
   return l.points === null && l.letter !== '';
