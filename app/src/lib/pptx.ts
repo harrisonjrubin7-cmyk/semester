@@ -70,6 +70,16 @@ export interface Slide {
    * there for what it does and does not keep.
    */
   equation?: string;
+  /**
+   * What you say while this slide is up — the speaker's, not the room's.
+   *
+   * Written as a real `notesSlide` part rather than as small text on the slide
+   * itself, which is the difference between a note that appears in
+   * PowerPoint's presenter view and one the whole room reads off the wall.
+   * `note` above is the other thing and stays the other thing: it is printed
+   * on the slide, under the title, and is for a source or a unit name.
+   */
+  notes?: string;
 }
 
 export interface Deck {
@@ -383,6 +393,42 @@ function rels(entries: { id: string; type: string; target: string }[]): string {
 }
 
 /**
+ * One slide's speaker notes, as the part PowerPoint looks for.
+ *
+ * The shape is fixed by the format: a notes slide holds a placeholder pointing
+ * back at the slide it belongs to (`type="sldImg"`) and a body placeholder
+ * with the text. Leaving out the slide-image placeholder is the mistake that
+ * makes PowerPoint repair the file on open, so it is here even though nothing
+ * draws it.
+ */
+function notesXml(text: string): string {
+  const lines = text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const body = (lines.length ? lines : ['']).map(
+    (line) => `<a:p><a:r><a:rPr lang="en-US" dirty="0"/><a:t>${xml(line)}</a:t></a:r></a:p>`,
+  );
+  return (
+    `${HEAD}<p:notes ${NS}><p:cSld><p:spTree>` +
+    '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+    '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/>' +
+    '<a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>' +
+    '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Slide Image Placeholder 1"/>' +
+    '<p:cNvSpPr><a:spLocks noGrp="1" noRot="1" noChangeAspect="1"/></p:cNvSpPr>' +
+    '<p:nvPr><p:ph type="sldImg"/></p:nvPr></p:nvSpPr>' +
+    '<p:spPr/></p:sp>' +
+    '<p:sp><p:nvSpPr><p:cNvPr id="3" name="Notes Placeholder 2"/>' +
+    '<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>' +
+    '<p:nvPr><p:ph type="body" idx="1"/></p:nvPr></p:nvSpPr>' +
+    '<p:spPr/><p:txBody><a:bodyPr/><a:lstStyle/>' +
+    body.join('') +
+    '</p:txBody></p:sp>' +
+    '</p:spTree></p:cSld></p:notes>'
+  );
+}
+
+/**
  * The parts of the package, as a name-to-text map.
  *
  * Separated from the zipping so the whole format can be tested without a
@@ -405,6 +451,15 @@ export function parts(deck: Deck): Record<string, string> {
       .map(
         (_, i) =>
           `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`,
+      )
+      .join('') +
+    // Only the slides that actually have notes get a part. An empty notes
+    // slide on every slide is a file half again as large saying nothing.
+    slides
+      .map((slide, i) =>
+        slide.notes?.trim()
+          ? `<Override PartName="/ppt/notesSlides/notesSlide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml"/>`
+          : '',
       )
       .join('') +
     '</Types>';
@@ -449,9 +504,23 @@ export function parts(deck: Deck): Record<string, string> {
 
   slides.forEach((slide, i) => {
     out[`ppt/slides/slide${i + 1}.xml`] = slideXml(slide);
-    out[`ppt/slides/_rels/slide${i + 1}.xml.rels`] = rels([
+    const links = [
       { id: 'rId1', type: 'slideLayout', target: '../slideLayouts/slideLayout1.xml' },
-    ]);
+    ];
+    if (slide.notes?.trim()) {
+      links.push({
+        id: 'rId2',
+        type: 'notesSlide',
+        target: `../notesSlides/notesSlide${i + 1}.xml`,
+      });
+      out[`ppt/notesSlides/notesSlide${i + 1}.xml`] = notesXml(slide.notes);
+      // The notes slide points back at its slide. Without this the graph does
+      // not close and PowerPoint offers to repair the file.
+      out[`ppt/notesSlides/_rels/notesSlide${i + 1}.xml.rels`] = rels([
+        { id: 'rId1', type: 'slide', target: `../slides/slide${i + 1}.xml` },
+      ]);
+    }
+    out[`ppt/slides/_rels/slide${i + 1}.xml.rels`] = rels(links);
   });
 
   return out;

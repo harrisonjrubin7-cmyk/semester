@@ -60,6 +60,7 @@ export const STRATEGY: Record<string, Strategy> = {
   documents: 'union',
   sheets: 'union',
   equations: 'union',
+  decks: 'union',
   // A folder made on the phone and one made on the laptop are two folders.
   // The files inside them are in IndexedDB and do not sync at all, so the
   // worst a union can produce here is an empty folder on the other device —
@@ -477,6 +478,7 @@ const LABELS: Record<string, string> = {
   documents: 'Documents',
   sheets: 'Sheets',
   equations: 'Equations',
+  decks: 'Decks',
   folders: 'Drive folders',
   attendance: 'Attendance',
   spent: 'Timings',

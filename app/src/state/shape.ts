@@ -54,6 +54,7 @@ import type { Doc } from '../lib/document';
 import type { Sheet } from '../lib/sheet';
 import type { SavedEquation } from '../lib/maths';
 import type { Folder } from '../lib/folders';
+import type { StoredDeck } from '../lib/decks';
 import { type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
@@ -350,6 +351,16 @@ export interface Persisted {
   documents: Doc[];
   sheets: Sheet[];
   equations: SavedEquation[];
+  /**
+   * Decks, which until now were built and forgotten.
+   *
+   * A presentation is made on Sunday, fixed on Tuesday and given on
+   * Wednesday; `screens/Deck.tsx` held one in component state and lost it on
+   * the way to another screen, so the app could only do the first of those.
+   * Kept here rather than in IndexedDB because a deck is text — no images live
+   * in one — which is the line `lib/files.ts` draws.
+   */
+  decks: StoredDeck[];
   /**
    * The drive's folders — a name and a parent each, nothing more.
    *
@@ -707,9 +718,10 @@ export interface Ephemeral {
   studyTab: 'guides' | 'revise' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
-  /** Document, sheet and equation currently open. Null is the list. */
+  /** Document, sheet, deck and equation currently open. Null is the list. */
   documentId: string | null;
   sheetId: string | null;
+  deckId: string | null;
   /** Which block of the open document is being edited, by index. */
   blockAt: number | null;
   /** Unit whose lesson is playing. */
@@ -892,6 +904,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   documents: [],
   sheets: [],
   equations: [],
+  decks: [],
   folders: [],
   registrar: [],
   spent: [],
@@ -988,6 +1001,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     noteId: null,
     documentId: null,
     sheetId: null,
+    deckId: null,
     blockAt: null,
     lessonUnit: 0,
     updateUnit: null,
@@ -1197,6 +1211,7 @@ export function loadPersisted(): Persisted {
       documents: list(saved.documents),
       sheets: list(saved.sheets),
       equations: list(saved.equations),
+      decks: list(saved.decks),
       folders: list(saved.folders),
       registrar: list(saved.registrar),
       spent: list(saved.spent),
@@ -1297,6 +1312,7 @@ export function pickPersisted(state: State): Persisted {
     documents: state.documents,
     sheets: state.sheets,
     equations: state.equations,
+    decks: state.decks,
     folders: state.folders,
     registrar: state.registrar,
     spent: state.spent,
@@ -1599,6 +1615,20 @@ export type Action =
    * the id it minted, so it is derived from the moment rather than random;
    * see `state/slices/made.ts`.
    */
+  /*
+   * Decks. `newDeck` opens the editor on what it makes and `makeDeck` does
+   * not, the same split documents and sheets draw and for the same reason —
+   * `makeDeck` is what a generated deck dispatches, and being thrown into an
+   * editor is a loss the generator should not be able to cause.
+   */
+  | { type: 'newDeck'; courseId: CourseId | null }
+  | { type: 'makeDeck'; deck: Omit<StoredDeck, 'id' | 'created' | 'updated'>; open?: boolean }
+  /* `editDeck`, not `openDeck`: that name is taken by the study slideshow,
+     which opens a guide unit at `#/slides` and is a different thing. */
+  | { type: 'editDeck'; id: string }
+  | { type: 'closeDeck' }
+  | { type: 'updateDeck'; id: string; patch: Partial<Omit<StoredDeck, 'id'>> }
+  | { type: 'deleteDeck'; id: string }
   | { type: 'newFolder'; id: string; name: string; parentId: string | null }
   | { type: 'renameFolder'; id: string; name: string }
   | { type: 'moveFolder'; id: string; parentId: string | null }

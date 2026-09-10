@@ -24,6 +24,7 @@ import { blankDoc, type Doc } from '../../lib/document';
 import { blankSheet, type Sheet } from '../../lib/sheet';
 import type { SavedEquation } from '../../lib/maths';
 import { subtree, withCourses, type Folder } from '../../lib/folders';
+import { blankDeck, type StoredDeck } from '../../lib/decks';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
 
@@ -153,6 +154,39 @@ export function made(state: State, action: Action): State | null {
       const gone = subtree(withCourses(state.folders, []), action.id);
       return { ...state, folders: state.folders.filter((f) => !gone.has(f.id)) };
     }
+
+    case 'newDeck': {
+      const deck: StoredDeck = { ...blankDeck('', action.courseId), id: newId() };
+      return push({ ...state, decks: [deck, ...state.decks], deckId: deck.id }, 'deck');
+    }
+
+    case 'makeDeck': {
+      const now = Date.now();
+      const deck: StoredDeck = { ...action.deck, id: newId(), created: now, updated: now };
+      const next = { ...state, decks: [deck, ...state.decks].slice(0, LIMIT) };
+      return action.open ? push({ ...next, deckId: deck.id }, 'deck') : next;
+    }
+
+    case 'editDeck':
+      return push({ ...state, deckId: action.id }, 'deck');
+
+    case 'closeDeck':
+      return { ...state, deckId: null };
+
+    case 'updateDeck':
+      return {
+        ...state,
+        decks: state.decks.map((d) =>
+          d.id === action.id ? { ...d, ...action.patch, updated: Date.now() } : d,
+        ),
+      };
+
+    case 'deleteDeck':
+      return {
+        ...state,
+        decks: state.decks.filter((d) => d.id !== action.id),
+        deckId: state.deckId === action.id ? null : state.deckId,
+      };
 
     case 'saveEquation': {
       const equation: SavedEquation = {
