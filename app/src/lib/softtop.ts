@@ -157,7 +157,22 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
   const settledToday = dated.filter((i) => i.isToday);
   const doneToday = settledToday.filter((i) => state.done[i.id]);
   const overdue = overdueCount(dated, state.done);
-  const soon = upcomingItems(catalog, now).filter((i) => !i.isToday && i.daysAway <= 7);
+  /*
+   * The week ahead, less what is already done.
+   *
+   * `due` on the line above has always dropped what you ticked, and so has
+   * `overdue`. This did not, so the three numbers in the same row answered
+   * different questions: finish every deadline in the week and "Due today"
+   * fell to nothing while "This week" sat where it was. That row is carried
+   * at the top of twenty-three screens.
+   *
+   * It also reaches the "Work on it" hero, whose "Nothing due this week"
+   * could never appear for somebody who had done the week's work — which is
+   * the one person it was written for.
+   */
+  const soon = upcomingItems(catalog, now).filter(
+    (i) => !i.isToday && i.daysAway <= 7 && !state.done[i.id],
+  );
   const courses = catalog.courses.length;
 
   /** The three numbers most screens qualify their hero with. */

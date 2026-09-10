@@ -345,3 +345,51 @@ describe('the Activities tile counts what the Activities screen counts', () => {
     expect(figure({ commitments: [commitment('a', false)] })).toBe('0');
   });
 });
+describe('the three numbers at the top of every screen', () => {
+  // "Due today" and "Overdue" have always dropped what you ticked. "This week"
+  // did not, so the row answered two different questions at once.
+  const item = (id: string, day: number) => ({
+    id, c: 'econ', title: id, kind: 'Problem set', month: 8, day, year: 2026,
+    dueTime: '11:59p', weight: '', where: '', detail: '', quote: '', source: '',
+  });
+  const course = {
+    course: {
+      id: 'econ', code: 'ECON 1020', name: '', prof: '', email: '', meets: '',
+      room: '', credits: '3', source: '', grading: [], term: '2026FA',
+    },
+    // NOW is Mon 7 Sep 2026: two today, two later in the week.
+    items: [item('today1', 7), item('today2', 7), item('wed', 9), item('fri', 11)],
+    schedule: [],
+    guide: null,
+    planMinutes: '',
+    frameLabel: '',
+  } as unknown as State['courses'][number];
+
+  const row = (done: Record<string, boolean> = {}) => {
+    const stats = softTop('behind', input({ done }, [course])).stats ?? [];
+    return Object.fromEntries(stats.map((x) => [x.label, x.value]));
+  };
+
+  it('counts a week that has been finished as finished', () => {
+    expect(row()['This week']).toBe('2');
+    expect(row({ wed: true, fri: true })['This week']).toBe('0');
+  });
+
+  it('drops just the ones ticked, not the day they fall on', () => {
+    expect(row({ wed: true })['This week']).toBe('1');
+  });
+
+  it('answers the same question as the two numbers beside it', () => {
+    const all = { today1: true, today2: true, wed: true, fri: true };
+    expect(row(all)).toMatchObject({ 'Due today': '0', 'This week': '0', Overdue: '0' });
+  });
+
+  it('says nothing is due this week once nothing is', () => {
+    // The hero this reaches is the one written for somebody who has done the
+    // week's work, and they were the one person who could never see it.
+    const hero = (done: Record<string, boolean>) =>
+      softTop('work', input({ done }, [course])).hero;
+    expect(hero({})?.foot).toBe('due in the next seven days');
+    expect(hero({ wed: true, fri: true })?.foot).toBe('Nothing due this week');
+  });
+});
