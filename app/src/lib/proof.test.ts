@@ -118,6 +118,39 @@ describe('capitals', () => {
   it('catches a lone lower-case i', () => {
     expect(proofread('Then i wrote it.').find((f) => f.found === 'i')?.fix).toBe('I');
   });
+
+  it('does not read an abbreviation as the end of a sentence', () => {
+    /*
+     * The mask exists for these and was asked about the wrong character: this
+     * rule matches the full stop and points at the letter after it, so masking
+     * on where it points asked whether *the letter* sat inside "U.S." — which
+     * it never does. Every one of these was reported as a sentence starting in
+     * lower case, offering to capitalise the following word, in the prose this
+     * app is most often given.
+     */
+    expect(kinds('The U.S. position on export controls hardened.')).not.toContain('capital');
+    expect(kinds('Allied governments, e.g. the Netherlands, coordinated.')).not.toContain('capital');
+    expect(kinds('The point, i.e. that it binds, is contested.')).not.toContain('capital');
+    expect(kinds('Compare Dr. smith later on.')).not.toContain('capital');
+  });
+
+  it('does not read the start of a URL or an address as a lower-case sentence', () => {
+    // The other end of the same mask: here the full stop is a real one and the
+    // letter it points at is inside something that should not be checked at
+    // all. A bibliography is mostly this shape.
+    expect(kinds('See the figures. www.imf.org/data has them.')).not.toContain('capital');
+    expect(kinds('Ask the office. a.b@vanderbilt.edu replies fastest.')).not.toContain('capital');
+    expect(kinds('The source is there. https://fred.stlouisfed.org holds it.')).not.toContain(
+      'capital',
+    );
+  });
+
+  it('still catches a real one in the same sentence as an abbreviation', () => {
+    // The mask must narrow this rule, not switch it off.
+    expect(says('The U.S. position hardened. it hardened further.')).toContain(
+      'a sentence starting in lower case',
+    );
+  });
 });
 
 describe('brackets and quotes', () => {
@@ -153,6 +186,29 @@ describe('long sentences', () => {
 
   it('leaves an ordinary sentence alone', () => {
     expect(longSentences('This is a short sentence about elasticity.')).toEqual([]);
+  });
+
+  it('does not let an abbreviation break one long sentence into short ones', () => {
+    /*
+     * `proofread` masks "U.S." and "e.g."; this counted words between full
+     * stops without asking. The same sentence went unreported when it said
+     * "U.S." and reported when it said "American" — which of those a writer
+     * gets should not depend on whether they abbreviated.
+     */
+    const tail = ` ${'word '.repeat(LONG_SENTENCE).trim()}.`;
+    const abbreviated = `The U.S. position, e.g. on export controls,${tail}`;
+    const [f] = longSentences(abbreviated);
+    expect(f?.kind).toBe('length');
+    // Seven words of prefix: The / U.S. / position, / e.g. / on / export / controls,
+    expect(f.says).toContain(`${LONG_SENTENCE + 7} words`);
+    // And what it shows the writer is what they wrote, not the masked copy.
+    expect(f.found).toContain('U.S.');
+    expect(f.found).not.toContain('_');
+  });
+
+  it('still ends a sentence at a full stop that is one', () => {
+    const long = `${'word '.repeat(LONG_SENTENCE + 5).trim()}.`;
+    expect(longSentences(`${long} Short one after it.`)).toHaveLength(1);
   });
 });
 
