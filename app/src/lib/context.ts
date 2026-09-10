@@ -107,6 +107,23 @@ export const PICK = {
      * worse than none, and this one was already short of the truth.
      */
     'Titles, dates, times and places from the student’s own appointments. Never an appointment’s note.',
+    /*
+     * The hour, and how many — never what.
+     *
+     * A calendar the student connected is somebody else's writing: an
+     * employer's rota, a clinic's confirmation, whatever a personal account
+     * holds. None of its content reaches the model, from any provider or any
+     * lookup, and this line does not change that. What it allows is that
+     * `read_timetable` may say a day is not free and at what hour, because
+     * saying "nothing scheduled" about such a day is a false statement the
+     * model repeats — and answering "are you free at two" is the example that
+     * tool's own description gives.
+     *
+     * The count was already travelling: `ai/providers/upkeep.ts` sends how
+     * many events each feed pulled. Titles, places and notes stay where they
+     * are, and moving them is a decision for whoever owns the app.
+     */
+    'That a connected calendar has something at an hour on a day, and how many. Never its title, place or note.',
     'Which classes meet on a given day, and when.',
     'A course’s study cards, terms and cases, searched for a topic and capped.',
     /*

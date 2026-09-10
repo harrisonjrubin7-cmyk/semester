@@ -72,6 +72,30 @@ const loaded = (over: Partial<State> = {}): State =>
         created: 0,
       },
     ],
+    feeds: [
+      { id: 'f1', kind: 'ics', name: 'Their calendar', url: '', added: 0, synced: 0, status: '', count: 1 },
+    ] as unknown as State['feeds'],
+    feedEvents: [
+      {
+        id: 'fe1',
+        sourceId: 'f1',
+        /*
+         * A connected calendar is somebody else's writing — an employer's
+         * rota, a clinic's confirmation — so every text field on it is a
+         * secret here, not only the note. The same Sunday as the appointment
+         * above, for the same reason: inside the seven days the timetable
+         * clamps to, and with no classes to make the day non-empty for the
+         * wrong reason.
+         */
+        title: 'FEED-EVENT-TITLE',
+        date: '2026-09-20',
+        at: 840,
+        time: '2:00p',
+        where: 'FEED-EVENT-PLACE',
+        note: 'FEED-EVENT-NOTE',
+        courseId: null,
+      },
+    ] as unknown as State['feedEvents'],
     notes: [
       {
         id: 'n1',
@@ -117,6 +141,9 @@ describe('what a lookup can never reach', () => {
     'THE-PRIVATE-NOTE-BODY',
     'THE-PRIVATE-TASK-NOTE',
     'THE-PRIVATE-APPT-NOTE',
+    'FEED-EVENT-TITLE',
+    'FEED-EVENT-PLACE',
+    'FEED-EVENT-NOTE',
     'PERSON-NAME-HERE',
     'SAID-ABOUT-THEM',
     'LETTER-BODY-HERE',
@@ -365,5 +392,71 @@ describe('the tool definitions themselves', () => {
       expect(t.input_schema.required, t.name).toEqual(props);
       expect(t.strict, t.name).toBe(true);
     }
+  });
+});
+
+describe('a day the connected calendar has something on', () => {
+  /*
+   * The day read back "nothing scheduled" — word for word the sentence for a
+   * day with genuinely nothing on it. Measured before the fix: a Saturday
+   * holding a seminar at two and a shift at five, and read_timetable,
+   * read_tasks and find_deadlines all called it empty. Asked whether they are
+   * free at two — the example this tool's own description gives — the model
+   * would have said yes.
+   */
+  const withFeed = (): Partial<State> =>
+    ({
+      /*
+       * Nothing else on the day, deliberately. The shared fixture above puts
+       * an appointment on this Sunday, and left in place it makes the day
+       * non-empty on its own — so a probe asking whether the feed event
+       * rescues the day would pass without the feed event doing anything.
+       * Measured: with the appointment left in, removing the feed from the
+       * empty test broke no test at all.
+       */
+      tasks: [],
+      appointments: [],
+      feeds: [{ id: 'f2', kind: 'ics', name: 'Vanderbilt', url: '', added: 0, synced: 0, status: '', count: 2 }],
+      feedEvents: [
+        { id: 'x1', sourceId: 'f2', title: 'SEMINAR-TITLE', date: '2026-09-20', at: 840, time: '2:00p', where: 'SEMINAR-PLACE', note: 'SEMINAR-NOTE', courseId: null },
+      ],
+    }) as unknown as Partial<State>;
+
+  it('does not call the day empty', () => {
+    const out = ran('read_timetable', { date: '2026-09-20', days: 1 }, withFeed());
+    expect(JSON.stringify(out.result)).not.toContain('nothing scheduled');
+  });
+
+  it('says when it is, so "are you free at two" can be answered', () => {
+    const out = ran('read_timetable', { date: '2026-09-20', days: 1 }, withFeed());
+    expect(JSON.stringify(out.result)).toContain('2:00p');
+  });
+
+  it('says it is a connected calendar, not one of their own entries', () => {
+    // The wording has to be unmistakable, because the model will repeat it and
+    // the student needs to know where to look.
+    const out = ran('read_timetable', { date: '2026-09-20', days: 1 }, withFeed());
+    expect(JSON.stringify(out.result)).toContain('calendar they connected');
+  });
+
+  it('reads no title, no place and no note from it', () => {
+    /*
+     * The line this change stops at. An appointment is what the student typed
+     * into this app and `PICK.always` already sends it; a connected calendar
+     * is somebody else's writing, and none of it reaches the model from any
+     * provider or lookup today. Widening that is the owner's decision, not
+     * something to do while fixing a false sentence.
+     */
+    const out = JSON.stringify(ran('read_timetable', { date: '2026-09-20', days: 1 }, withFeed()).result);
+    for (const secret of ['SEMINAR-TITLE', 'SEMINAR-PLACE', 'SEMINAR-NOTE']) {
+      expect(out, secret).not.toContain(secret);
+    }
+  });
+
+  it('still calls a day with nothing on it nothing', () => {
+    // 2026-09-27 is a Sunday with no classes, and the fixture puts no feed
+    // event on it.
+    const out = ran('read_timetable', { date: '2026-09-27', days: 1 }, withFeed());
+    expect(JSON.stringify(out.result)).toContain('nothing scheduled');
   });
 });

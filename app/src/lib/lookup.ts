@@ -55,7 +55,7 @@ import type { ToolCall, ToolResult, ToolSpec } from './claude';
 import { dateToIso } from './date';
 import { standing } from './grades';
 import { liveGuide } from './live';
-import { appointmentsOn, datedItems, searchItems, tasksOn } from './select';
+import { appointmentsOn, datedItems, feedEventsOn, searchItems, tasksOn } from './select';
 import type { State } from '../state/shape';
 import type { CourseId } from './types';
 
@@ -498,12 +498,38 @@ function readTimetable(src: Source, input: Record<string, unknown>): { text: str
      * day. The `note` is not sent, for the same reason a task's is not.
      */
     const appts = appointmentsOn(src.state.appointments, on);
+    /*
+     * And the connected calendars — as a count and an hour, and nothing else.
+     *
+     * A day whose only entries came from a calendar the student connected read
+     * back "nothing scheduled", word for word the sentence for a day with
+     * genuinely nothing on it. Measured: a Saturday holding a department
+     * seminar at two and a shift at five, and every lookup there is called it
+     * empty. Asked whether they are free at two — which is the example this
+     * tool's own description gives — the model would say yes, about a calendar
+     * the student linked so the app would know.
+     *
+     * What travels is the hour and the number of things, never the title, the
+     * place or the note. That is deliberate and it is where this stops.
+     * Appointments above are the student's own words typed into this app, and
+     * `PICK.always` already sends them from the Personal screen. A connected
+     * calendar is somebody else's: an employer's rota, a clinic's
+     * confirmation, whatever a personal account happens to hold. None of it
+     * reaches the model today, from any provider or any lookup, and widening
+     * that is a decision for whoever owns the app rather than a thing to do
+     * while fixing a false sentence.
+     *
+     * The count is not new either way — `ai/providers/upkeep.ts` already sends
+     * how many events each feed pulled. This says when they are, so the tool
+     * can answer the question it advertises, and stops there.
+     */
+    const feed = feedEventsOn(src.state.feedEvents, on);
     const label = on.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
     });
-    if (blocks.length === 0 && tasks.length === 0 && appts.length === 0) {
+    if (blocks.length === 0 && tasks.length === 0 && appts.length === 0 && feed.length === 0) {
       out.push(`${label}: nothing scheduled.`);
       continue;
     }
@@ -521,6 +547,15 @@ function readTimetable(src: Source, input: Record<string, unknown>): { text: str
               ' (their own appointment)',
           ),
           ...tasks.map((t) => `  - ${t.time || 'no time'} · ${t.title} (their own task)`),
+          // The hour and nothing else, said in words that cannot be mistaken
+          // for a title. An answer built on this can say the day is not free
+          // and where to look; it cannot say what the entry is, because this
+          // does not know.
+          ...feed.map(
+            (e) =>
+              `  - ${e.time || 'no time'} · something on a calendar they connected` +
+              ' (title not read)',
+          ),
         ].join('\n'),
     );
   }
