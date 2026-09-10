@@ -389,3 +389,53 @@ of the four new screens or eleven new library files owes anything at all.
 **P1, P2, P4** — service worker, PWA install and multi-tab sync. Nothing in
 these phases touches `sw.js`, the manifest or `lib/tabs.ts`, but that is an
 argument rather than a test, and it stays recorded as untested.
+
+## Run 3 — after ten review passes (2026-09-10)
+
+Commits `63cbaa0` … `3fb6959`. **59 review findings**, each verified against
+running code before anything was changed, each fixed and pinned by a test. Six
+were regressions from my own earlier fixes on this branch; one finding was
+wrong and was rejected with evidence rather than actioned.
+
+### Automated gates
+
+| | Result |
+| --- | --- |
+| **A1** `cd app && npm test` | **PASS** — 267 files, **5,519 passed**, 10 skipped, 0 failed. Baseline 5,212; +307 tests, none dropped or weakened. |
+| **A2** `cd app && npm run test:zones` | **PASS** — 5,519 under `America/Chicago` and `Pacific/Kiritimati`, identical. Also run by hand under `Pacific/Niue` (UTC−11): identical again. |
+| **A3** `cd app && npm run lint` | **PASS** — exit 0. `styles/budget.ts` regenerated; every count went down and none of the new files owes anything. |
+| **A4** `cd app && npm run build` | **PASS** — exit 0, no TypeScript errors, clean under `VITE_BASE=/semester/`. |
+
+### Bundle
+
+| | Baseline | Now | Result |
+| --- | --- | --- | --- |
+| **B1** entry `index-*.js` | 562,445 B | 562,782 B under `VITE_BASE=/semester/` | **PASS** — +337 B (+0.06%). Run 2 was 562,765 B, so ten passes of fixes cost 17 B. |
+| **B2** editors code-split | — | `Deck-*.js` 41,620 B, `Mine-*.js` 27,234 B, `Sheet-*.js` 26,630 B | **PASS** — every editor still in its own lazily-loaded chunk. |
+| **B3** no heavy deps in entry | — | **still no dependency added anywhere on this branch** | **PASS** |
+| **B4** totals | 234 chunks, 6,469,990 B | 236 chunks, 6,538,229 B | **PASS** — +68,239 B (+1.1%), none of it in the entry chunk. |
+
+### Driven in a browser — re-run, not carried over from Run 2
+
+Headless Chromium at **390×844**, against the built bundle.
+
+- **C1, C4, C5, C7, P3** — **27 routes** swept, including all seven `RETIRED`
+  rows. **0 `pageerror`, 0 horizontal overflow, 0 blank screens.** **PASS**
+- **I (the Drive write path)** — the one thing a unit test in this repo cannot
+  reach, because jsdom has no IndexedDB, and the place a silent failure hid
+  once already. A file was added through the real picker, starred, and the page
+  **reloaded**: `Unstar syllabus-notes.txt` came back `aria-pressed="true"`, so
+  the write reached IndexedDB rather than only React state. Search then found
+  that file by a word that exists only *inside* it. **PASS**
+
+That second check is the regression test for the worst bug on this branch:
+`patch()` never ran at all, because returning the read request to `tx()` let it
+overwrite `onsuccess`. Starring, moving and binning a file all silently did
+nothing, and **every unit test passed**.
+
+### Still not exercised
+
+**P1, P2, P4** — service worker, PWA install and multi-tab sync. Unchanged
+since Run 2: nothing on this branch touches `sw.js`, the manifest or
+`lib/tabs.ts`, but that is an argument rather than a test, and it stays
+recorded as untested.
