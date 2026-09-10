@@ -446,7 +446,7 @@ function DayView() {
             <button
               key={e.id}
               type="button"
-              className="bare tappable"
+              className="bare tappable on-paper"
               onClick={() => dispatch({ type: 'openEvent', id: e.id })}
               style={{
                 display: 'flex',
@@ -872,7 +872,7 @@ function WeekView() {
                 <button
                   key={e.id}
                   type="button"
-                  className="bare tappable"
+                  className="bare tappable on-paper"
                   onClick={() => dispatch({ type: 'openEvent', id: e.id })}
                   style={{ display: 'flex', gap: 'var(--sp-5)', width: '100%', textAlign: 'left', ...weekEventRow }}
                 >
@@ -1477,7 +1477,7 @@ function MonthView() {
         <button
           key={t.id}
           type="button"
-          className="bare tappable"
+          className="bare tappable on-paper"
           {...drag.handlers({ kind: 'task', id: t.id, title: t.title })}
           onClick={() => {
             if (drag.tookDrop()) return;
@@ -1572,7 +1572,7 @@ function MonthView() {
             <button
               key={e.id}
               type="button"
-              className="bare tappable"
+              className="bare tappable on-paper"
               onClick={() => dispatch({ type: 'openEvent', id: e.id })}
               style={{
                 display: 'flex',

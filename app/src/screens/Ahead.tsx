@@ -197,7 +197,7 @@ export function Ahead() {
             <button
               key={p.item.id}
               type="button"
-              className="bare tappable"
+              className="bare tappable on-paper"
               onClick={() => dispatch({ type: 'openItem', id: p.item.id })}
               style={{
                 display: 'flex',
@@ -255,7 +255,7 @@ export function Ahead() {
             <button
               key={i.id}
               type="button"
-              className="bare tappable"
+              className="bare tappable on-paper"
               onClick={() => dispatch({ type: 'openItem', id: i.id })}
               style={{
                 display: 'flex',
