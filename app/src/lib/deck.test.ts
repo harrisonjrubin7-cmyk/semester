@@ -5,6 +5,7 @@ import {
   SYSTEM,
   brief,
   figureSlide,
+  fromTable,
   fromUnit,
   holes,
   kind,
@@ -267,6 +268,46 @@ describe('speakerNotes', () => {
 
   it('carries what to say, which is the part not on the slide', () => {
     expect(speakerNotes(plan())).toContain('**Say:** Neither delegates.');
+  });
+});
+
+describe('a deck from a table', () => {
+  const rows = () => [
+    ['Piece', 'Weight'],
+    ...Array.from({ length: 20 }, (_, i) => [`Row ${i + 1}`, `${i}%`]),
+  ];
+
+  it('opens on a title slide, then puts the table on slides of its own', () => {
+    const built = fromTable('Marks', rows(), 'ECON 1020');
+    expect(built.slides[0].opening).toBe(true);
+    expect(built.slides[1].table).toBeTruthy();
+  });
+
+  it('splits a long table rather than shrinking it out of legibility', () => {
+    const built = fromTable('Marks', rows());
+    // Twenty rows at eight to a slide is three, plus the title slide.
+    expect(built.slides).toHaveLength(4);
+  });
+
+  it('repeats the heading row on every part, so the second slide reads alone', () => {
+    const built = fromTable('Marks', rows());
+    for (const slide of built.slides.slice(1)) {
+      expect(slide.table?.[0]).toEqual(['Piece', 'Weight']);
+    }
+  });
+
+  it('keeps a short table on one slide with no part numbers', () => {
+    const built = fromTable('Marks', [
+      ['Piece', 'Weight'],
+      ['Midterm', '30%'],
+    ]);
+    expect(built.slides).toHaveLength(2);
+    expect(built.slides[1].note).toBeUndefined();
+  });
+
+  it('is an empty deck rather than a deck of empty slides', () => {
+    expect(fromTable('Nothing', []).slides).toEqual([]);
+    expect(fromTable('Nothing', [['', ''], ['', '']]).slides).toEqual([]);
   });
 });
 

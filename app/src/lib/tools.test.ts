@@ -54,10 +54,13 @@ describe('what it is allowed to offer', () => {
       'add_note',
       'add_source',
       'add_task',
+      'make_document',
+      'make_sheet',
       'mark_attendance',
       'move_application',
       'move_task',
       'open_screen',
+      'save_equation',
       'set_day_budget',
       'set_look',
       'set_next_step',
@@ -405,6 +408,86 @@ describe('applications', () => {
       how: 'inverse',
       action: { type: 'patchApplication', id: 'a1', patch: { next: 'Follow up', nextBy: '' } },
     });
+  });
+});
+
+describe('making a document', () => {
+  it('says what will appear, in the language of the editor', () => {
+    const p = read('make_document', {
+      title: 'Elasticity memo',
+      courseId: 'econ',
+      body: '## Finding\n\nDemand is elastic here.\n\n| Price | Q |\n| --- | --- |\n| 4 | 90 |',
+    })!;
+    expect(p.said).toContain('Elasticity memo');
+    expect(p.said).toContain('ECON 1020');
+    expect(p.said).toContain('1 heading');
+    expect(p.said).toContain('1 table');
+    expect(p.sort).toBe('write');
+  });
+
+  it('reads a fenced equation as an equation rather than as prose', () => {
+    const p = read('make_document', {
+      title: 'Formulas',
+      courseId: '',
+      body: '$$\n\\frac{a}{b}\n$$',
+    })!;
+    expect(p.said).toContain('1 equation');
+  });
+
+  it('refuses a document with nothing in it', () => {
+    // `fromMarkdown` always returns at least one empty paragraph, so "it
+    // parsed" is not the test — this is the case that would otherwise offer a
+    // button that creates a blank file.
+    expect(read('make_document', { title: 'Empty', courseId: '', body: '   ' })).toBeNull();
+    expect(read('make_document', { title: '', courseId: '', body: 'Some prose.' })).toBeNull();
+  });
+
+  it('drops a course id the app does not hold, rather than filing it wrongly', () => {
+    const p = read('make_document', { title: 'Memo', courseId: 'nope', body: 'Prose.' })!;
+    expect(p.action).toMatchObject({ type: 'makeDocument', doc: { courseId: null } });
+  });
+});
+
+describe('making a sheet', () => {
+  it('counts the rows and the formulas in the confirmation', () => {
+    const p = read('make_sheet', {
+      title: 'Marks',
+      courseId: 'econ',
+      rows: 'Piece\tScore\nMidterm\t88\nFinal\t91\nTotal\t=SUM(B2:B3)',
+    })!;
+    expect(p.said).toContain('4 rows by 2');
+    expect(p.said).toContain('1 of them formulas');
+    expect(p.verb).toBe('Build it');
+  });
+
+  it('refuses a heading with nothing under it', () => {
+    expect(read('make_sheet', { title: 'Marks', courseId: '', rows: 'Piece\tScore' })).toBeNull();
+    expect(read('make_sheet', { title: '', courseId: '', rows: 'a\tb\nc\td' })).toBeNull();
+  });
+});
+
+describe('keeping an equation', () => {
+  it('shows what it comes out as, not the notation it went in as', () => {
+    /*
+     * The student is agreeing to the formula, not to the LaTeX. A
+     * confirmation line reading `\frac{\Delta Q}{\Delta P}` asks somebody to
+     * approve a string they cannot read.
+     */
+    const p = read('save_equation', {
+      name: 'Price elasticity',
+      latex: 'E_d = \\frac{\\Delta Q}{\\Delta P}',
+      says: 'How much quantity moves for a move in price.',
+      courseId: 'econ',
+    })!;
+    expect(p.said).toContain('Price elasticity');
+    expect(p.said).toContain('(ΔQ)/(ΔP)');
+    expect(p.said).not.toContain('\\frac');
+    expect(p.said).toContain('ECON 1020');
+  });
+
+  it('refuses a formula with nothing in it', () => {
+    expect(read('save_equation', { name: 'x', latex: '   ', says: '', courseId: '' })).toBeNull();
+    expect(read('save_equation', { name: '', latex: 'x^2', says: '', courseId: '' })).toBeNull();
   });
 });
 

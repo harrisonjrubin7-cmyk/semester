@@ -29,7 +29,7 @@ own application.
 
 ## What is in it
 
-<!--tabs-->Five<!--/--> tabs, <!--screens-->forty-nine<!--/--> screens. The tabs
+<!--tabs-->Five<!--/--> tabs, <!--screens-->fifty-two<!--/--> screens. The tabs
 are below; the screens are the registry in `src/lib/nav.ts`, which is also what
 the directory, the search box and the home-screen icons are drawn from — there
 is one list, and it is that one.
@@ -265,6 +265,14 @@ server-side so the .p8 never reaches the browser.
 `src/lib/claude.ts` is the Messages API client behind **Ask Claude** — streamed,
 with the course guide as system context, and a card-maker that refuses anything
 it cannot parse cleanly rather than inventing a card.
+
+It reaches the API by four routes, preferred in this order: a proxy typed on
+this device, a key typed on this device, a proxy this build was pointed at
+(`VITE_CLAUDE_PROXY`), and the shared key that comes with signing in. The third
+is what makes a fresh clone answer — put `ANTHROPIC_API_KEY` in
+`app/.env.local` and `vite.config.ts` serves that proxy at `/anthropic`, adding
+the key to each call and streaming the reply back, so the key stays in the dev
+server and the page holds only an address. See [SETUP.md](../SETUP.md#the-assistant-on-your-own-machine).
 
 ### Two kinds of tool, and the rule that tells them apart
 
