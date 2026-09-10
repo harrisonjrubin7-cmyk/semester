@@ -44,11 +44,12 @@ const signUp = vi.fn<(email: string, password: string) => Promise<Made>>(async (
   signedIn: true,
 }));
 const signIn = vi.fn<(email: string, password: string) => Promise<void>>(async () => {});
-const sendReset = vi.fn<(email: string) => Promise<void>>(async () => {});
+const sendReset = vi.fn<(email: string) => Promise<string>>(async () => 'A reset link is on its way.');
 const signInWith = vi.fn<(provider: string) => Promise<void>>(async () => {});
 
 vi.mock('../lib/cloud', () => ({
   PROVIDER_LABEL: { google: 'Google', azure: 'Microsoft', apple: 'Apple' },
+  PROVIDERS_SAID: 'Google, Microsoft or Apple',
   signUp: (email: string, password: string) => signUp(email, password),
   signIn: (email: string, password: string) => signIn(email, password),
   sendReset: (email: string) => sendReset(email),
@@ -108,6 +109,7 @@ beforeEach(() => {
   dispatched.length = 0;
   signUp.mockClear();
   signIn.mockClear();
+  sendReset.mockClear();
   signUp.mockImplementation(async () => ({ said: 'Account made.', signedIn: true }));
   host = document.createElement('div');
   document.body.append(host);
@@ -192,12 +194,80 @@ describe('what it refuses to send', () => {
   });
 
   it('says the eight-character floor here rather than after a round trip', async () => {
+    // Making one. Signing in with one is the case below.
     show(<Credentials />);
     type(email(), 'you@vanderbilt.edu');
     type(password(), 'short');
     expect(submit().disabled).toBe(true);
     await send();
     expect(signUp).not.toHaveBeenCalled();
+  });
+
+  /*
+   * The floor is a rule about choosing a password, and it was applied to
+   * typing one you already have.
+   *
+   * Nothing in this project sets the minimum an account was made under — the
+   * reset link this very form sends leads to Supabase's own page, which sets a
+   * password under the project's floor and not under this one. So the app can
+   * hand somebody a password and then refuse it, and refuse it in the worst
+   * way available: the sign-in placeholder is the word "Password", so there is
+   * a dead button and nothing on screen that says why.
+   */
+  it('does not hold an existing password to the length a new one needs', async () => {
+    registered = true;
+    show(<Credentials />);
+    type(email(), 'you@vanderbilt.edu');
+    type(password(), 'sixchr');
+    expect(submit().disabled).toBe(false);
+    await send();
+    expect(signIn).toHaveBeenCalledWith('you@vanderbilt.edu', 'sixchr');
+  });
+
+  it('still asks for something to send', () => {
+    registered = true;
+    show(<Credentials />);
+    type(email(), 'you@vanderbilt.edu');
+    expect(submit().disabled).toBe(true);
+  });
+});
+
+describe('changing your mind', () => {
+  /*
+   * The two mode switches are not the same event.
+   *
+   * A registration that needs a confirmation switches to sign-in by itself and
+   * keeps the sentence about the inbox up, because that is the instruction.
+   * Pressing the link is somebody asking a different question, and the answer
+   * to the last one has no business under it: "User already registered" sat
+   * under a form now offering to sign in, where it reads as the answer to a
+   * press that has not happened.
+   */
+  it('clears what the other mode said', async () => {
+    signUp.mockImplementation(async () => {
+      throw new Error('User already registered');
+    });
+    show(<Credentials />);
+    await enter();
+    expect(host.querySelector('[role=alert]')).toBeTruthy();
+    act(() => link('I already have one')?.click());
+    expect(submit().textContent).toBe('Sign in');
+    expect(host.querySelector('[role=alert]')).toBeNull();
+  });
+});
+
+describe('the reset link', () => {
+  /*
+   * It returned nothing, and the form only shows a sentence when there is one,
+   * so a reset that worked looked exactly like a button that did not.
+   */
+  it('says that it went', async () => {
+    registered = true;
+    show(<Credentials />);
+    type(email(), 'you@vanderbilt.edu');
+    await act(async () => link('Send a reset link')?.click());
+    expect(sendReset).toHaveBeenCalledWith('you@vanderbilt.edu');
+    expect(host.querySelector('[role=status]')?.textContent).toContain('on its way');
   });
 });
 

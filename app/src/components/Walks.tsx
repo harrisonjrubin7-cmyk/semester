@@ -3,7 +3,7 @@ import { secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
-import { railFor } from '../lib/select';
+import { lengthOf, railFor } from '../lib/select';
 import { daySummary, hopLine, hops, tight } from '../lib/rooms';
 import { Folding } from './Fold';
 
@@ -26,7 +26,18 @@ export function Walks({ date }: { date?: Date }) {
   const day = date ?? now;
 
   const list = useMemo(
-    () => hops(railFor(catalog, day, state.appointments, state.commitments), state.places),
+    () =>
+      hops(
+        // How long each one runs, so the gap after a seventy-five minute
+        // seminar is not measured as though it were fifty. A commitment
+        // states its own length; a class's is on its course; an appointment
+        // states none and falls back the same way the hour grid does.
+        railFor(catalog, day, state.appointments, state.commitments).map((b) => ({
+          ...b,
+          minutes: b.minutes ?? lengthOf(catalog, b),
+        })),
+        state.places,
+      ),
     [catalog, day, state.appointments, state.commitments, state.places],
   );
 

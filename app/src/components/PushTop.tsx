@@ -21,6 +21,7 @@ import { useEffect, useRef } from 'react';
 import { useStore } from '../state/store';
 import { enrolled, lastRefill, markRefilled, needsRefill, queueFor } from '../lib/push';
 import { atRiskToday } from '../lib/atrisk';
+import { classesToNudge } from '../lib/notify';
 import { saveQueue } from '../lib/cloud';
 import { datedItems, railFor } from '../lib/select';
 
@@ -40,9 +41,7 @@ export function PushTop() {
         if (!(await enrolled())) return;
         const queue = queueFor(now, state.notifs, (d) => ({
           items: datedItems(catalog, d).filter((i) => !state.done[i.id]),
-          classes: railFor(catalog, d, state.appointments, state.commitments)
-            .filter((b) => !b.optional && !b.canceled)
-            .map((b) => ({ label: b.title, at: b.at, where: b.meta })),
+          classes: classesToNudge(railFor(catalog, d, state.appointments, state.commitments)),
           registrar: state.registrar,
           atRisk: atRiskToday(
             railFor(catalog, d, state.appointments, state.commitments),

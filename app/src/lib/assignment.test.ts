@@ -37,6 +37,24 @@ describe('clean', () => {
     expect(clean({ due: '14/10/2026' }, UNITS).due).toBe('');
   });
 
+  it('drops a day the month does not have, which is the shape a model gets wrong', () => {
+    // Not `2026-13-45`: a plausible near miss. `new Date('2026-02-31T12:00')`
+    // answers 3 March rather than refusing, so this used to be saved as a task
+    // dated the 31st and drawn on the 3rd.
+    expect(clean({ due: '2026-02-31' }, UNITS).due).toBe('');
+    expect(clean({ due: '2026-04-31' }, UNITS).due).toBe('');
+    expect(clean({ due: '2026-02-29' }, UNITS).due).toBe('');
+    expect(clean({ due: '0026-01-01' }, UNITS).due).toBe('');
+    // And the ones that are real stay.
+    expect(clean({ due: '2026-03-31' }, UNITS).due).toBe('2026-03-31');
+    expect(clean({ due: '2028-02-29' }, UNITS).due).toBe('2028-02-29');
+  });
+
+  it('drops an unreal date on a step as well as on the plan', () => {
+    const out = clean({ steps: [{ do: 'Draft', why: 'x', by: '2026-06-31', minutes: 30 }] }, UNITS);
+    expect(out.steps[0].by).toBe('');
+  });
+
   it('drops a unit the course does not have', () => {
     // The model naming a plausible-sounding unit that does not exist would
     // send someone revising material they have not got.

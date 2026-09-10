@@ -24,7 +24,7 @@ import { dateToIso } from './date';
 import type { Catalog } from '../data/catalog';
 import type { Appointment, DatedItem, PersonalTask } from './types';
 import type { Commitment } from './activities';
-import { blocksOn, hoursOf } from './activities';
+import { blocksOn, sharePerDay } from './activities';
 import { blocksFor } from '../data/catalog';
 import { decorateItem } from './date';
 import { overdueCount, type DoneMap } from './standing';
@@ -146,18 +146,25 @@ function datedFor(input: DayInput): DatedItem[] {
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
-/** How many hours of commitments fall on this weekday. */
+/**
+ * How many hours of commitments fall on this weekday.
+ *
+ * Two kinds, added rather than chosen between. What meets today is arithmetic
+ * off the clock; anything stated as hours a week has no day of its own and
+ * counts as a share of every day — see `sharePerDay`.
+ *
+ * Choosing was the bug. This used to return the share only on a day nothing
+ * met, so a student with a Thursday practice and a ten-hour-a-week job was
+ * told Thursday cost an hour and a half, and every other day of the week cost
+ * more. The busiest day read as the emptiest, and the seven days added up to
+ * less than the week the Activities screen showed.
+ */
 export function committedToday(list: Commitment[], date: Date): number {
-  const fixed = blocksOn(list, date).length;
-  if (fixed > 0) {
-    return (
-      list
-        .filter((c) => c.active && c.at !== null && c.days.includes(date.getDay()))
-        .reduce((n, c) => n + c.minutes, 0) / 60
-    );
-  }
-  // Nothing scheduled today, so a share of anything stated by the week.
-  return list.filter((c) => c.active && c.at === null).reduce((n, c) => n + hoursOf(c), 0) / 7;
+  const meeting =
+    list
+      .filter((c) => c.active && c.at !== null && c.days.includes(date.getDay()))
+      .reduce((n, c) => n + c.minutes, 0) / 60;
+  return meeting + sharePerDay(list);
 }
 
 // ── What Claude is told ──────────────────────────────────────────────────

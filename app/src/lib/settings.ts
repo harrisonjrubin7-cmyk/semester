@@ -224,14 +224,21 @@ export interface Found {
  *
  * A prefix rather than a whole word, because somebody typing "notif" has not
  * finished the word and should still be finding notifications.
+ *
+ * `wordStart` is the index rather than the answer, because two callers want
+ * this and only one of them wants a yes or no: `keyword()` has to slice the
+ * synonym out around it, and slicing around a different occurrence than the
+ * one that decided the match is how a search for "drive" reported "onedrive".
  */
-function startsAWord(text: string, q: string): boolean {
-  let at = text.indexOf(q);
-  while (at !== -1) {
-    if (at === 0 || /[^a-z0-9]/.test(text[at - 1])) return true;
-    at = text.indexOf(q, at + 1);
+function wordStart(text: string, q: string): number {
+  for (let at = text.indexOf(q); at !== -1; at = text.indexOf(q, at + 1)) {
+    if (at === 0 || /[^a-z0-9]/.test(text[at - 1])) return at;
   }
-  return false;
+  return -1;
+}
+
+function startsAWord(text: string, q: string): boolean {
+  return wordStart(text, q) !== -1;
 }
 
 /**
@@ -270,9 +277,24 @@ export function findSetting(query: string): Found[] {
       const holds = row.holds.toLowerCase();
       const keywords = row.keywords.toLowerCase();
 
-      /** The synonym that matched, whole, so the page can say what it was. */
+      /**
+       * The synonym that matched, whole, so the page can say what it was.
+       *
+       * The occurrence that earned the rank, not the first one in the string.
+       * `startsAWord` walks every occurrence to decide; this used to take
+       * `indexOf` and slice around whatever came back, so a query that matched
+       * on a standalone word was reported as the longer word it happened to
+       * sit inside earlier in the list. Searching for "drive" found Connected
+       * accounts on its "drive" keyword and said it had matched "onedrive";
+       * "load" found Workload on "load" and said "workload".
+       *
+       * Falling back to the first occurrence, because rank 4 calls this too
+       * and a mid-word match has no word start to find — there the longer word
+       * is the honest answer.
+       */
       const keyword = (): string => {
-        const at = keywords.indexOf(q);
+        const start = wordStart(keywords, q);
+        const at = start === -1 ? keywords.indexOf(q) : start;
         if (at === -1) return q;
         const from = keywords.lastIndexOf(' ', at) + 1;
         const to = keywords.indexOf(' ', at + q.length);

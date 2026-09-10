@@ -4,6 +4,7 @@ import type { Envelope, Note } from '@semester/contract';
 import { DEFAULT_PERSISTED, type Persisted } from '../shape';
 import { toContract, fromContract, readScore } from './adapt';
 import { key as gradeKey } from '../../lib/grades';
+import { LEGACY_TERM } from '../../lib/term';
 import type { CourseModule } from '../../lib/types';
 
 /**
@@ -73,6 +74,41 @@ const course = (over: Partial<CourseModule['course']> = {}): CourseModule => ({
 function state(over: Partial<Persisted> = {}): Persisted {
   return { ...DEFAULT_PERSISTED, courses: [course()], ...over };
 }
+
+describe('a course saved before terms existed', () => {
+  // `course.term` is optional and every course imported before terms existed
+  // has none. This file used to fall back to '', which is not what any other
+  // reader in the app falls back to — and then skipped emitting that term, so
+  // the course crossed the wire pointing at an id nothing carried.
+  const legacy = () => {
+    const c = course({ id: 'legacy', code: 'OLD 100' });
+    delete (c.course as { term?: string }).term;
+    return c;
+  };
+
+  it('puts it in the term the rest of the app puts it in', () => {
+    const out = toContract(state({ courses: [legacy()] }));
+    expect(out.courses[0].termId).toBe(`term:${LEGACY_TERM}`);
+  });
+
+  it('emits the term it points at', () => {
+    const out = toContract(state({ courses: [legacy()] }));
+    expect(out.terms.map((t) => t.id)).toEqual([`term:${LEGACY_TERM}`]);
+  });
+
+  it('leaves no course pointing at a term the envelope does not carry', () => {
+    const out = toContract(state({ courses: [legacy(), course()] }));
+    const known = new Set(out.terms.map((t) => t.id));
+    expect(out.courses.filter((c) => !known.has(c.termId))).toEqual([]);
+  });
+
+  it('does not invent a second term for one it already names', () => {
+    // The fixture's own course is already in the legacy term, so a legacy
+    // course beside it must not add a duplicate.
+    const out = toContract(state({ courses: [legacy(), course()] }));
+    expect(out.terms).toHaveLength(1);
+  });
+});
 
 describe('the crossing', () => {
   it('carries a course, and fixes the shapes the mapping table named', () => {

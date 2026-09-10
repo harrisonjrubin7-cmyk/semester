@@ -83,7 +83,24 @@ export interface Projection {
 export function projectGrade(s: Standing, scores: number[]): Projection | null {
   if (s.current === null || s.counted <= 0) return null;
 
-  const middleRaw = s.earned + (s.remaining * s.current) / 100 - s.pointsOff;
+  /*
+   * The rate the remaining weight is projected at is what you have averaged
+   * on graded work — not `current`, which already has the absence penalty
+   * subtracted out of it.
+   *
+   * Using `current` as the rate and then subtracting `pointsOff` again took
+   * the penalty off twice: once in full at the end, and once more scaled by
+   * however much of the term is left. Half a term still to play for and ten
+   * points lost to absences projected five points below the truth, and the
+   * error grew with the penalty — so the figure was furthest out for exactly
+   * the student most worried about it.
+   *
+   * `needFor`, in `lib/grades.ts`, has always done this correctly: it adds
+   * `pointsOff` once to a penalty-free `earned`, and its own comment explains
+   * why. This is the same rule, and now the same answer.
+   */
+  const rate = s.earned / s.counted;
+  const middleRaw = s.earned + s.remaining * rate - s.pointsOff;
   const sd = spread(scores);
   const width = Math.max(FLOOR, sd ?? UNSURE);
   // The band is on what is left to play for. What is graded is graded.

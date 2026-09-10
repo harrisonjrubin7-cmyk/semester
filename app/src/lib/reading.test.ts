@@ -71,6 +71,51 @@ describe('reading how much there is', () => {
     expect(extent({ title: 'Chapter 7' }).chapters).toBe(1);
   });
 
+  it('spells a chapter the way a range and a list already spelled it', () => {
+    // A range read "Ch 7–9" without the stop and a list read "chs 2, 3", so a
+    // syllabus writing "Ch 7" was the only one of the three the app refused.
+    for (const said of ['Ch 7', 'ch. 7', 'Chapter 7', 'Chapters 7', 'chs 7', 'chs. 7', 'Ch7']) {
+      expect(extent({ title: `Read ${said}` }).chapters).toBe(1);
+    }
+  });
+
+  it('takes an ampersand for the separator it is', () => {
+    // Both of these are in this app's own shipped syllabus, and both read as
+    // one chapter.
+    expect(extent({ title: 'Fox, Ch. 2 & 4' }).chapters).toBe(2);
+    expect(extent({ title: 'Canada, Ch. 2 & 3' }).chapters).toBe(2);
+  });
+
+  it('sees past the first mention when the noun is repeated', () => {
+    expect(extent({ title: 'Chapter 7 and Chapter 9' }).chapters).toBe(2);
+    expect(extent({ title: 'Ch. 1–2, and ch. 6' }).chapters).toBe(3);
+  });
+
+  it('counts a chapter named twice as one chapter', () => {
+    expect(extent({ title: 'ch 4–6 and ch 5' }).chapters).toBe(3);
+  });
+
+  it('is not fooled by a word that merely begins with those two letters', () => {
+    for (const said of ['Chicago 3', 'Chem 101 lab', 'Chart 3 explained', 'Multiple choice, 4 of them']) {
+      expect(extent({ title: said }).chapters).toBe(0);
+    }
+    expect(extent({ title: 'A video as well as the chapter.' }).chapters).toBe(0);
+  });
+
+  it('refuses a chapter number longer than a chapter number', () => {
+    expect(extent({ title: 'ch 1234' }).chapters).toBe(0);
+  });
+
+  it('refuses a range whose far end is too long to be a chapter', () => {
+    // The repeated group is optional, so without a guard this falls back to
+    // reading "4" alone and reports one chapter out of a form it could not
+    // read. A list separator is not a range, so a year after a comma still
+    // leaves the chapter before it readable.
+    expect(extent({ title: 'ch 4-1234' }).chapters).toBe(0);
+    expect(extent({ title: 'ch 4-12345' }).chapters).toBe(0);
+    expect(extent({ title: 'Ch. 3, 2026 reprint' }).chapters).toBe(1);
+  });
+
   it('reads a page range, and prefers it', () => {
     const e = extent({ title: 'Read ch. 4, pp. 112–140' });
     expect(e.pages).toBe(29);
@@ -91,6 +136,16 @@ describe('reading how much there is', () => {
   it('refuses a range that is not one', () => {
     expect(extent({ title: 'pp. 400–3' }).pages).toBe(0);
     expect(extent({ title: 'ch. 1–99' }).chapters).toBe(0);
+    expect(extent({ title: 'ch. 6–4' }).chapters).toBe(0);
+  });
+
+  it('counts a range that begins and ends on one page as one page', () => {
+    expect(extent({ title: 'pp. 100–100' }).pages).toBe(1);
+    expect(extent({ title: 'ch. 4–4' }).chapters).toBe(1);
+  });
+
+  it('leaves a lone page number unstated, because it is as likely a start', () => {
+    expect(extent({ title: 'Smith p. 45' }).pages).toBe(0);
   });
 });
 

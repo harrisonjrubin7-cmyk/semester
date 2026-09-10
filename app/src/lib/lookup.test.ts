@@ -49,6 +49,29 @@ const loaded = (over: Partial<State> = {}): State =>
         courseId: null,
       },
     ],
+    appointments: [
+      {
+        id: 'a1',
+        title: 'Advising meeting with Dr Trounstine',
+        /*
+         * Inside the window the privacy loop below can see.
+         *
+         * `read_timetable` clamps its span to seven days from the date it is
+         * given, and every probe there asks about 2026-09-15 — so a fixture
+         * item dated outside 15–21 September is invisible to the one test
+         * that checks every lookup for every secret. It was on the 13th, and
+         * a mutation that appended the appointment's note to the timetable
+         * line passed the whole suite. A Sunday, so there are no classes to
+         * make "not empty" true for the wrong reason.
+         */
+        date: '2026-09-20',
+        at: 600,
+        time: '10:00a',
+        where: 'Kirkland Hall 210',
+        note: 'THE-PRIVATE-APPT-NOTE',
+        created: 0,
+      },
+    ],
     notes: [
       {
         id: 'n1',
@@ -93,12 +116,19 @@ describe('what a lookup can never reach', () => {
   const SECRETS = [
     'THE-PRIVATE-NOTE-BODY',
     'THE-PRIVATE-TASK-NOTE',
+    'THE-PRIVATE-APPT-NOTE',
     'PERSON-NAME-HERE',
     'SAID-ABOUT-THEM',
     'LETTER-BODY-HERE',
   ];
 
   it('returns nothing private, whatever it is asked for', () => {
+    /*
+     * `days: 400` does not mean four hundred days everywhere: the timetable
+     * clamps its span to seven. So a secret this loop is meant to catch has
+     * to be dated within a week of the date below, or the lookup never reads
+     * the row it is on and the probe proves nothing.
+     */
     const asked = [
       { course: 'ECON 1020', days: 400, query: 'therapy', date: '2026-09-15', hours: 4 },
       { course: '', days: 400, query: 'PERSON-NAME-HERE', date: '2026-09-15' },
@@ -263,6 +293,33 @@ describe('the timetable', () => {
     const { result } = ran('read_timetable', { date: 'next tuesday', days: 1 });
     expect(result.failed).toBeUndefined();
     expect(result.text).toContain('September');
+  });
+
+  /*
+   * The day above is a Sunday with no classes and no tasks, and the fixture
+   * puts one appointment on it — so the two assertions here are the before
+   * and after of the same call. This read classes and tasks only, and
+   * answered "nothing scheduled" about a day holding something the student
+   * had put there themselves. Measured against a day with genuinely nothing
+   * on it, the two answers were the same sentence.
+   */
+  it('does not call a day empty when an appointment is on it', () => {
+    const { result } = ran('read_timetable', { date: '2026-09-20', days: 1 });
+    expect(result.text).not.toContain('nothing scheduled');
+    expect(result.text).toContain('Advising meeting with Dr Trounstine');
+  });
+
+  it('says when it is and where, which is what the question is usually for', () => {
+    const { result } = ran('read_timetable', { date: '2026-09-20', days: 1 });
+    expect(result.text).toContain('10:00a');
+    expect(result.text).toContain('Kirkland Hall 210');
+  });
+
+  it('still says nothing scheduled about a day with nothing on it', () => {
+    // The control. Without it the first assertion above passes for a lookup
+    // that has simply stopped saying the sentence at all.
+    const { result } = ran('read_timetable', { date: '2026-09-27', days: 1 });
+    expect(result.text).toContain('nothing scheduled');
   });
 });
 

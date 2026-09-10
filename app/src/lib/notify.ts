@@ -69,6 +69,17 @@ export interface Reminder {
 
 interface Source {
   items: DatedItem[];
+  /**
+   * What has already been ticked off.
+   *
+   * Optional only because a caller that has nothing ticked can leave it out;
+   * the app always passes it. Without it every rule here counted finished
+   * work, so a student who handed in all three of Thursday's deadlines on
+   * Wednesday night was still told on Thursday morning that three were due.
+   * A reminder about work you have done is the reason people turn reminders
+   * off, and it costs the ones that matter their credibility.
+   */
+  done?: Record<string, boolean>;
   /** Blocks on today's rail: label and minutes-from-midnight. */
   classes: { label: string; at: number; where: string }[];
   /** The university's own dates, if the student has filled any in. */
@@ -80,6 +91,28 @@ interface Source {
    * second one.
    */
   atRisk?: AtRisk[];
+}
+
+/**
+ * The rail as a reminder should read it.
+ *
+ * Here rather than at the two call sites because there are two call sites and
+ * they disagreed. The push queue filtered a cancelled or optional block out
+ * and the in-page timer did not, so the same rule sent a phone
+ * "PSCI 1104 — canceled in 10 min" through one path and nothing through the
+ * other. That sentence is in the app's own shipped syllabus data: PSCI has
+ * two blocks marked cancelled on 3 September, one of them an office hour that
+ * was optional as well.
+ *
+ * A block that is not happening is not a class to leave for, and an optional
+ * one is not a class you are late for. Neither earns a buzz.
+ */
+export function classesToNudge(
+  rail: { title: string; meta: string; at: number; canceled?: boolean; optional?: boolean }[],
+): { label: string; at: number; where: string }[] {
+  return rail
+    .filter((b) => !b.optional && !b.canceled)
+    .map((b) => ({ label: b.title, at: b.at, where: b.meta }));
 }
 
 /** A class meeting worth a warning, and why it is worth one. */
@@ -124,7 +157,12 @@ export function dueReminders(
   const out: Reminder[] = [];
   const today = day(now);
   const minutes = now.getHours() * 60 + now.getMinutes();
-  const todays = src.items.filter((i) => i.isToday);
+  const done = src.done ?? {};
+  const left = (i: DatedItem): boolean => !done[i.id];
+  // Two different questions, and only one of them is about work still to do.
+  // `onToday` is what the day holds; `todays` is what is left of it.
+  const onToday = src.items.filter((i) => i.isToday);
+  const todays = onToday.filter(left);
 
   // Before the class rather than after the absence. Everything that decides
   // *whether* to warn happened in `lib/attend.ts` and arrived in `atRisk`;
@@ -170,7 +208,12 @@ export function dueReminders(
     });
   }
 
-  if (on.free && minutes >= 8 * 60 && todays.length === 0) {
+  // Deliberately about the day rather than about the list: the all-clear is
+  // for a day that had nothing on it, not for a list you have just cleared.
+  // Firing it on the second would contradict the "3 due today" that went out
+  // the same morning, and two notifications a day apart on the same facts is
+  // worse than one.
+  if (on.free && minutes >= 8 * 60 && onToday.length === 0) {
     out.push({
       id: `free:${today}`,
       rule: 'free',
@@ -180,7 +223,7 @@ export function dueReminders(
   }
 
   if (on.two) {
-    for (const i of src.items.filter((x) => x.daysAway === 2)) {
+    for (const i of src.items.filter((x) => x.daysAway === 2 && left(x))) {
       out.push({
         id: `two:${today}:${i.id}`,
         rule: 'two',
@@ -212,7 +255,7 @@ export function dueReminders(
   if (on.exam) {
     for (const i of src.items) {
       if (i.daysAway !== 7 && i.daysAway !== 28) continue;
-      if (!isExam(i)) continue;
+      if (!isExam(i) || !left(i)) continue;
       out.push({
         id: `exam:${today}:${i.id}`,
         rule: 'exam',
@@ -234,7 +277,7 @@ export function dueReminders(
   // what has had no attention — and staying silent on it meant the report
   // never arrived in the weeks it would have helped most.
   if (on.sun && now.getDay() === 0 && minutes >= 18 * 60) {
-    const week = src.items.filter((i) => i.daysAway > 0 && i.daysAway <= 7);
+    const week = src.items.filter((i) => i.daysAway > 0 && i.daysAway <= 7 && left(i));
     out.push({
       id: `sun:${today}`,
       rule: 'sun',

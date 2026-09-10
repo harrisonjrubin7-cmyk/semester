@@ -18,6 +18,7 @@ import type { Persisted } from '../shape';
 import type { CourseModule, Item as AppItem, Note as AppNote } from '../../lib/types';
 import { creditHoursOr0 } from '../../lib/credits';
 import { key as gradeKey } from '../../lib/grades';
+import { LEGACY_TERM } from '../../lib/term';
 
 /**
  * The app's state, in and out of the shared contract.
@@ -61,6 +62,23 @@ function termId(code: string): string {
   return `term:${code}`;
 }
 
+/**
+ * A course's term code, with the fallback the rest of the app uses.
+ *
+ * `course.term` is optional: every course imported before terms existed has
+ * none. Everywhere else that reads it says those are the legacy term —
+ * `readTerm(undefined)` returns it, and `store.tsx` filters on
+ * `?? LEGACY_TERM`. This file used `?? ''`, which put a legacy course in a
+ * term nothing else agreed it was in, and then declined to emit that term at
+ * all: the course crossed the wire pointing at `term:`, an id no `Term`
+ * record in the same envelope carried.
+ *
+ * A contract exists to stop exactly that.
+ */
+function termOf(course: { term?: string }): string {
+  return course.term ?? LEGACY_TERM;
+}
+
 /* ── Out of the app, into the contract ─────────────────────────────────── */
 
 /**
@@ -78,7 +96,7 @@ export function toContract(state: Persisted, at: number = Date.now()): Contract 
   const seenTerms = new Set<string>();
 
   for (const mod of state.courses) {
-    const code = mod.course.term ?? '';
+    const code = termOf(mod.course);
     if (code && !seenTerms.has(code)) {
       seenTerms.add(code);
       out.terms.push(term(code, state, now));
@@ -110,7 +128,7 @@ function course(mod: CourseModule, now: string): Course {
     id: c.id,
     updatedAt: now,
     origin: ORIGIN,
-    termId: termId(c.term ?? ''),
+    termId: termId(termOf(c)),
     code: c.code,
     title: c.name,
     professor: c.prof,

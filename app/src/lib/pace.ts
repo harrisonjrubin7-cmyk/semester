@@ -85,21 +85,44 @@ export interface Spent {
  */
 export function normalKind(kind: string): string {
   const k = kind.toLowerCase().replace(/[^a-z ]+/g, ' ').replace(/\s+/g, ' ').trim();
-  const groups: [RegExp, string][] = [
+  /*
+   * The nouns first, and the words that are only ever qualifiers last.
+   *
+   * "final" and "midterm" say *when* a piece of work falls, not what it is.
+   * Tested among the nouns they beat the noun standing next to them, so "final
+   * paper" was an exam, and so was "final project", "final presentation" and —
+   * with the answer written in the wording — "final essay". A term's largest
+   * piece of writing was then estimated from however long the student's exams
+   * take, and every exam median took a paper into it.
+   *
+   * "exam" and "test" stay among the nouns, because they are nouns: "midterm
+   * exam" and "final exam" are exams by the second word, and reach the same
+   * answer as before.
+   */
+  const nouns: [RegExp, string][] = [
     // `ps` on its own is here because "PS4" loses its digit to the strip
     // above and arrives as a bare "ps" — which is how half of every economics
     // syllabus writes a problem set.
     [/problem set|pset|\bps\b|homework|\bhw\b/, 'problem set'],
     [/read(ing)?|chapter/, 'reading'],
     [/quiz/, 'quiz'],
-    [/midterm|final|exam|test/, 'exam'],
+    [/exam|test/, 'exam'],
     [/essay|paper|memo|write|writing|draft/, 'essay'],
     [/lab\b/, 'lab'],
     [/present|deck|slides|talk/, 'presentation'],
     [/reflect|response|journal|discussion|post/, 'response'],
     [/project|case/, 'project'],
   ];
-  for (const [re, name] of groups) if (re.test(k)) return name;
+  for (const [re, name] of nouns) if (re.test(k)) return name;
+  /*
+   * Nothing said what it is, so when it falls is the best there is: a row
+   * called only "Final", "Finals" or "Midterm" is the exam it has always been.
+   *
+   * Whole words, and the plural counted — "finals" is how most people write
+   * it, and "semifinal" is not a word about exams at all, which for a course
+   * on sport is not the idle example it looks.
+   */
+  if (/\bmidterms?\b|\bfinals?\b/.test(k)) return 'exam';
   return k || 'other';
 }
 
