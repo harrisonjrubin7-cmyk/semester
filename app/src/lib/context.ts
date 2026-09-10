@@ -95,6 +95,18 @@ export const PICK = {
      * note's body is not.
      */
     'Titles, dates and times from the student’s own task list. Never a task’s note.',
+    /*
+     * Written down rather than newly allowed.
+     *
+     * These already travel: the Personal screen's provider sends its
+     * appointment rows — title, date, time, place — under the `always` line
+     * about visible rows, and has done since it was written. What did not
+     * have them was `read_timetable`, the one tool asked directly about a
+     * day, which answered "nothing scheduled" about a day holding one. The
+     * line is here because a list that does not describe what happens is
+     * worse than none, and this one was already short of the truth.
+     */
+    'Titles, dates, times and places from the student’s own appointments. Never an appointment’s note.',
     'Which classes meet on a given day, and when.',
     'A course’s study cards, terms and cases, searched for a topic and capped.',
     /*

@@ -41,7 +41,7 @@
  *
  * These reach exactly the categories `PICK.onDemand` already names —
  * deadlines, grades, attendance, units, cards, the student's own tasks and
- * their timetable. What changes is *who asks*: the same fields, for a course
+ * appointments, and their timetable. What changes is *who asks*: the same fields, for a course
  * the model named rather than a course the question happened to spell. What
  * does not change is `PICK.never`. There is no lookup that reads a note body,
  * a draft, a letter, or anything about another person, and `lookup.test.ts`
@@ -55,7 +55,7 @@ import type { ToolCall, ToolResult, ToolSpec } from './claude';
 import { dateToIso } from './date';
 import { standing } from './grades';
 import { liveGuide } from './live';
-import { datedItems, searchItems, tasksOn } from './select';
+import { appointmentsOn, datedItems, searchItems, tasksOn } from './select';
 import type { State } from '../state/shape';
 import type { CourseId } from './types';
 
@@ -480,12 +480,30 @@ function readTimetable(src: Source, input: Record<string, unknown>): { text: str
     on.setDate(on.getDate() + i);
     const blocks = blocksFor(src.catalog, on).sort((a, b) => a.at - b.at);
     const tasks = tasksOn(src.state.tasks, on).filter((t) => !t.done);
+    /*
+     * And the appointments they made themselves.
+     *
+     * This read classes and tasks, so a day whose only entry was an
+     * appointment came back "nothing scheduled" — the same sentence as a day
+     * with genuinely nothing on it, measured side by side. That is worse than
+     * a list being short: the model is handed a false statement about the
+     * student's own day and will repeat it, in answer to the question this
+     * tool exists for.
+     *
+     * Not a widening of what travels. `PICK.always` already sends the
+     * appointment rows the Personal screen is showing — title, date, time and
+     * place, from `ai/providers/personal.ts`, whose own suggested question is
+     * "What have I got on this week?" — so these have always reached the
+     * model. What was inconsistent was the one tool asked directly about a
+     * day. The `note` is not sent, for the same reason a task's is not.
+     */
+    const appts = appointmentsOn(src.state.appointments, on);
     const label = on.toLocaleDateString('en-US', {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
     });
-    if (blocks.length === 0 && tasks.length === 0) {
+    if (blocks.length === 0 && tasks.length === 0 && appts.length === 0) {
       out.push(`${label}: nothing scheduled.`);
       continue;
     }
@@ -496,6 +514,11 @@ function readTimetable(src: Source, input: Record<string, unknown>): { text: str
             (b) =>
               `  - ${b.time} · ${b.title}${b.meta ? ` · ${b.meta}` : ''}` +
               `${b.canceled ? ' · CANCELLED' : ''}${b.optional ? ' · optional' : ''}`,
+          ),
+          ...appts.map(
+            (a) =>
+              `  - ${a.time || 'no time'} · ${a.title}${a.where ? ` · ${a.where}` : ''}` +
+              ' (their own appointment)',
           ),
           ...tasks.map((t) => `  - ${t.time || 'no time'} · ${t.title} (their own task)`),
         ].join('\n'),
