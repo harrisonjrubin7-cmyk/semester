@@ -33,6 +33,7 @@
  */
 
 import { dateToIso } from './date';
+import { NO_TIME } from './duetime';
 import { estimate, type Spent } from './pace';
 import { isExam } from './runway';
 import type { Commitment } from './activities';
@@ -139,9 +140,31 @@ export function clashes(
       });
     }
 
-    // Everything landing in one hour. Common, because 11:59 PM is a default.
+    /*
+     * Everything landing in one hour. Common, because 11:59 PM is a default.
+     *
+     * Grouped on `dueAt`, and `NO_TIME` is not one — it is what `duetime.ts`
+     * returns for a wording that names no hour, so that a deadline with no
+     * clock sorts to the end of its day rather than the top. Every such item
+     * carries the same number, so they were gathered up as though they shared
+     * an hour and the day was reported as a pile-up at a time none of them
+     * stated. Worse, the sentence took its wording from whichever happened to
+     * be first: "In class", "Before class" and "End of the week" came out as
+     * "3 things due at In class", two thirds of which is not true, and where
+     * the first wording was blank it read "3 things due at the same time",
+     * which is not true of any of them.
+     *
+     * That sentence is not incidental. `worstAhead` shows one warning and
+     * nearest wins, so a made-up pile-up on a near day is the single thing the
+     * app says about the fortnight. A day with several untimed things due is a
+     * real thing to know, and `heavy` above is what knows it — by how long the
+     * work takes rather than by an hour nobody named.
+     */
     const atSameTime = new Map<number, DatedItem[]>();
-    for (const i of onDay) atSameTime.set(i.dueAt, [...(atSameTime.get(i.dueAt) ?? []), i]);
+    for (const i of onDay) {
+      if (i.dueAt >= NO_TIME) continue;
+      atSameTime.set(i.dueAt, [...(atSameTime.get(i.dueAt) ?? []), i]);
+    }
     for (const [, group] of atSameTime) {
       if (group.length >= STACKED) {
         out.push({
@@ -151,7 +174,10 @@ export function clashes(
           items: group,
           hours,
           unknown,
-          says: `${group.length} things due at ${group[0].dueTime || 'the same time'}.`,
+          // Every one of these states an hour now, so the wording is the
+          // syllabus's own rather than a stand-in. Trimmed because a `dueTime`
+          // is stored exactly as it was read, padding included.
+          says: `${group.length} things due at ${group[0].dueTime.trim() || 'the same time'}.`,
         });
       }
     }

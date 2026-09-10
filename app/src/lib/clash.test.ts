@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_BUDGET, HORIZON, adviceFor, clashes, whenLine, worstAhead } from './clash';
+import { NO_TIME } from './duetime';
 import type { Spent } from './pace';
 import type { Commitment } from './activities';
 import type { DatedItem } from './types';
@@ -128,6 +129,46 @@ describe('everything due at one time', () => {
   it('is not raised for two', () => {
     const two = [1, 2].map(() => item({ daysAway: 4, dueAt: 1439 }));
     expect(clashes(two, [], [], code).find((c) => c.kind === 'stacked')).toBeUndefined();
+  });
+
+  it('does not call a day of untimed deadlines a pile-up at one hour', () => {
+    /*
+     * `NO_TIME` is what `duetime.ts` returns for a wording that names no hour,
+     * so a deadline with no clock sorts to the end of its day. Every one of
+     * them carries that same number, and gathering them by it reported an hour
+     * none of them stated — with the sentence taking its wording from
+     * whichever came first: "3 things due at In class", two thirds untrue.
+     */
+    const untimed = [
+      item({ daysAway: 4, dueAt: NO_TIME, dueTime: 'In class' }),
+      item({ daysAway: 4, dueAt: NO_TIME, dueTime: 'Before class' }),
+      item({ daysAway: 4, dueAt: NO_TIME, dueTime: 'End of the week' }),
+    ];
+    expect(clashes(untimed, [], [], code).find((c) => c.kind === 'stacked')).toBeUndefined();
+  });
+
+  it('does not say "the same time" of things that state none', () => {
+    const blank = [1, 2, 3].map(() => item({ daysAway: 4, dueAt: NO_TIME, dueTime: '' }));
+    expect(clashes(blank, [], [], code).find((c) => c.kind === 'stacked')).toBeUndefined();
+  });
+
+  it('still raises it for the timed ones on a day that also has untimed', () => {
+    // The untimed ones drop out of the grouping; they do not take the real
+    // pile-up with them.
+    const mixed = [
+      item({ daysAway: 4, dueAt: NO_TIME, dueTime: 'In class' }),
+      ...[1, 2, 3].map(() => item({ daysAway: 4, dueAt: 1439, dueTime: '11:59 PM' })),
+    ];
+    expect(clashes(mixed, [], [], code).find((c) => c.kind === 'stacked')?.says).toBe(
+      '3 things due at 11:59 PM.',
+    );
+  });
+
+  it('names the hour without the padding a syllabus left on it', () => {
+    const padded = [1, 2, 3].map(() => item({ daysAway: 4, dueAt: 1439, dueTime: '  11:59 PM  ' }));
+    expect(clashes(padded, [], [], code).find((c) => c.kind === 'stacked')?.says).toBe(
+      '3 things due at 11:59 PM.',
+    );
   });
 
   it('does not group things due at different hours', () => {
