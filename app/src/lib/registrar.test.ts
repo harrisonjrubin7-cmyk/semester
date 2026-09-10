@@ -198,6 +198,47 @@ describe('reading a registrar page', () => {
   it('refuses a day that is not a day', () => {
     expect(parse('October 47 Something or other', 2026)).toEqual([]);
   });
+
+  it('refuses a span whose end is not a day either', () => {
+    /*
+     * The end used to go unguarded where the start did not, two lines apart.
+     * `new Date` rolls, so these stored an end of 1 December and of 3 March —
+     * a break four days longer than the registrar said, and one ending before
+     * it began. Nothing threw, and `apply` writes the result into the sheet.
+     */
+    expect(parse('November 30 - November 31 Reading days', 2026)).toEqual([]);
+    expect(parse('December 30 - February 31 Winter recess', 2026)).toEqual([]);
+    expect(parse('October 15 - October 32 Fall break', 2026)).toEqual([]);
+    // And a real span is still read, so the guard is not simply refusing spans.
+    const [f] = parse('November 30 - December 4 Reading days', 2026);
+    expect([f.iso, f.until]).toEqual(['2026-11-30', '2026-12-04']);
+  });
+
+  it('reads 29 February against the year it was handed', () => {
+    /*
+     * The reason this uses `realDate` and not `realMonthDay`. The month/day
+     * table allows the 29th in every year — correctly, for the six files that
+     * store `{ month, day }` and let the term settle the year later. This
+     * function is *given* the year, and asking the year-blind question meant a
+     * 2026 page saying "February 29" was filed as 1 March: a day out, silently,
+     * which is the filing this module exists to prevent.
+     */
+    expect(parse('February 29 Reading day here', 2026)).toEqual([]);
+    expect(parse('February 27 - February 29 Reading days', 2026)).toEqual([]);
+
+    // 2028 is a leap year, and the same lines are real dates in it.
+    const [one] = parse('February 29 Reading day here', 2028);
+    expect(one.iso).toBe('2028-02-29');
+    const [span] = parse('February 27 - February 29 Reading days', 2028);
+    expect([span.iso, span.until]).toEqual(['2028-02-27', '2028-02-29']);
+  });
+
+  it('leaves a span with an unreadable end month exactly as it was', () => {
+    // Not the case this guard is for: the end month is what could not be read,
+    // and the row has always been offered as a single date rather than dropped.
+    const [f] = parse('October 15 - 16 Fall break', 2026);
+    expect([f.iso, f.until]).toEqual(['2026-10-15', '2026-10-16']);
+  });
 });
 
 describe('folding confirmed rows in', () => {

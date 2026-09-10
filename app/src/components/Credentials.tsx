@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import { PROVIDER_LABEL, sendReset, signIn, signInWith, signUp, type Provider } from '../lib/cloud';
+import {
+  PROVIDER_LABEL,
+  PROVIDERS_SAID,
+  sendReset,
+  signIn,
+  signInWith,
+  signUp,
+  type Provider,
+} from '../lib/cloud';
 
 /**
  * An email address, a password, and the two things they can mean.
@@ -42,8 +50,25 @@ export function Credentials({
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
 
-  /** The floor Supabase itself enforces, said here rather than after a round trip. */
-  const ready = Boolean(email.trim()) && password.length >= 8;
+  /*
+   * What may be sent, and the one rule that is not the same in both modes.
+   *
+   * Eight characters is a rule about *choosing* a password, and it was applied
+   * to typing one you already have. Nothing here sets the project's minimum —
+   * SETUP.md does not mention one — so the floor an existing account was made
+   * under is whatever the project was configured with, and this form is in no
+   * position to assume it was eight. The reset link the form sends leads to
+   * Supabase's own page, which sets a password under that floor rather than
+   * this one, so the app can hand somebody a password it will then refuse.
+   *
+   * And refuse silently: the sign-in placeholder is the word "Password", so a
+   * shorter one leaves a dead button and nothing on screen saying why. The
+   * floor stays where it belongs — on creating one, where the placeholder does
+   * say it — and signing in asks only that there is something to send.
+   */
+  const MADE_FLOOR = 8;
+  const ready =
+    Boolean(email.trim()) && (mode === 'up' ? password.length >= MADE_FLOOR : password.length > 0);
 
   const run = async (fn: () => Promise<string | void>) => {
     setBusy(true);
@@ -130,7 +155,7 @@ export function Credentials({
           name="password"
           type="password"
           autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
-          placeholder={mode === 'in' ? 'Password' : 'Password — at least 8 characters'}
+          placeholder={mode === 'in' ? 'Password' : `Password — at least ${MADE_FLOOR} characters`}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)' }}
@@ -181,7 +206,7 @@ export function Credentials({
           textWrap: 'pretty',
         }}
       >
-        Any Google or Microsoft account works — there is no check on which university the address
+        Any {PROVIDERS_SAID} account works — there is no check on which university the address
         belongs to. Email and a password is kept as a third way in because some universities block
         third-party sign-in outright, and being locked out of the only option is not a good enough
         reason to be locked out of the app. Each provider works once it is switched on for the
@@ -194,10 +219,26 @@ export function Credentials({
           space, and the one later in the DOM would quietly win the overlap.
           Measured 102×19: the size of the words, not of a thumb. */}
       <div style={{ display: 'flex', gap: 14, marginTop: 18 }}>
+        {/*
+          Changing your mind clears what the other mode said.
+
+          `submit` switches to sign-in by itself after a registration that
+          needs a confirmation, and deliberately leaves the sentence about the
+          inbox on screen — that is the instruction, and the switch is what it
+          is an instruction about. A person pressing this link is doing the
+          opposite: they have read the answer and are asking a different
+          question. It used to leave "User already registered" sitting under a
+          form now offering to sign in, where it reads as the answer to a press
+          that has not happened yet.
+        */}
         <button
           type="button"
           className="bare tap-y"
-          onClick={() => setMode(mode === 'in' ? 'up' : 'in')}
+          onClick={() => {
+            setMode(mode === 'in' ? 'up' : 'in');
+            setError('');
+            setNote('');
+          }}
           style={{ fontSize: 'var(--type-sm)', opacity: 0.7, width: 'auto' }}
         >
           {mode === 'in' ? 'Make an account' : 'I already have one'}

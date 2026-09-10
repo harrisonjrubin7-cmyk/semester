@@ -25,7 +25,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
  * one that failed.
  */
 
-const write = vi.fn<(w: unknown[]) => Promise<void>>();
+/*
+ * `Promise<boolean>`, because that is what the real one answers.
+ *
+ * This double was typed `Promise<void>` and defaulted to `undefined`, and
+ * `db.ts` resolves `false` on an error, on an abort and on a synchronous
+ * throw — it never rejects. The difference is what hid the bug these tests
+ * now cover: `flush` guarded the call with a `try`/`catch` that could
+ * therefore never run, so every write counted as a success, and the failure
+ * path existed only in this file.
+ */
+const write = vi.fn<(w: unknown[]) => Promise<boolean>>();
 
 vi.mock('./db', async () => {
   const real = await vi.importActual<typeof import('./db')>('./db');
@@ -33,12 +43,12 @@ vi.mock('./db', async () => {
 });
 
 // Imported after the mock is registered, so the module binds the fake `write`.
-const { persist, prime, flushNow, stopWriting } = await import('./index');
+const { persist, prime, flushNow, stopWriting, whileWriting } = await import('./index');
 const { load } = await import('./index');
 
 beforeEach(async () => {
   write.mockReset();
-  write.mockResolvedValue(undefined);
+  write.mockResolvedValue(true);
   // `persist` is inert until the database has opened. `load` is what sets
   // that, and the mocked `open` makes it succeed without a real IndexedDB.
   await load().catch(() => {});
@@ -53,6 +63,7 @@ describe('when the other tabs are told', () => {
     const order: string[] = [];
     write.mockImplementation(async () => {
       order.push('wrote');
+      return true;
     });
     prime({ notes: [] });
     persist({ notes: [{ id: 'n1', title: 'A note' }] } as never, () => order.push('told'));
@@ -74,7 +85,8 @@ describe('when the other tabs are told', () => {
 
   it('says nothing when the write failed', async () => {
     const told = vi.fn();
-    write.mockRejectedValue(new Error('quota'));
+    // False rather than a throw: that is how the real one reports a refusal.
+    write.mockResolvedValue(false);
     prime({ notes: [] });
     persist({ notes: [{ id: 'n1', title: 'A note' }] } as never, told);
     await flushNow();
@@ -93,6 +105,72 @@ describe('when the other tabs are told', () => {
     await flushNow();
     expect(write).toHaveBeenCalledOnce();
     expect(told).toHaveBeenCalledOnce();
+  });
+
+  it('says out loud that a write failed, and that a later one landed', async () => {
+    /*
+     * `App.tsx` draws a banner for exactly this and argues for it above:
+     * *"Until it is fixed, everything the person does is being lost on the
+     * next reload."* Nothing but `navigator.storage.estimate()` could turn it
+     * on — a guess about a quota rather than news about a write. Measured on
+     * the production build with the database refusing writes: a task drew,
+     * stayed in memory, and was gone after a reload, with nothing said either
+     * time.
+     */
+    const heard: boolean[] = [];
+    whileWriting((failing) => heard.push(failing));
+
+    write.mockResolvedValue(false);
+    prime({ notes: [] });
+    persist({ notes: [{ id: 'n1', title: 'A note' }] } as never);
+    await flushNow();
+    expect(heard).toEqual([true]);
+
+    write.mockResolvedValue(true);
+    persist({ notes: [{ id: 'n1', title: 'A note' }, { id: 'n2', title: 'Another' }] } as never);
+    await flushNow();
+    expect(heard).toEqual([true, false]);
+
+    whileWriting(null);
+  });
+
+  it('carries a refused change into the next write rather than dropping it', async () => {
+    /*
+     * `last` had already moved on to what the database *would* have held, so
+     * the next flush diffed against a state that was never written and the
+     * refused change was never retried — not even when the refusal was one
+     * transaction losing one race.
+     */
+    // The same array by reference in both calls, so `writesFor` sees the notes
+    // as unchanged the second time and only a retry can put the row back in.
+    const notes = [{ id: 'n1', title: 'A note' }];
+    write.mockResolvedValue(false);
+    prime({ notes: [] });
+    persist({ notes } as never);
+    await flushNow();
+
+    write.mockResolvedValue(true);
+    write.mockClear();
+    persist({ notes, myName: 'Harrison' } as never);
+    await flushNow();
+
+    const keys = (write.mock.calls[0]?.[0] ?? []).map((w) => (w as { key: string }).key);
+    // Both: the row the database refused — collections are written a row at a
+    // time, so it is the note's own id — and the setting changed after it.
+    expect(keys).toContain('n1');
+    expect(keys).toContain('myName');
+  });
+
+  it('does not tell anyone after a write that was refused', async () => {
+    // A tab sent to re-read a disk that did not take the change would spread
+    // the failure rather than leave it where it is.
+    const told = vi.fn();
+    write.mockResolvedValue(false);
+    prime({ notes: [] });
+    persist({ notes: [{ id: 'n1', title: 'A note' }] } as never, told);
+    await flushNow();
+    expect(write).toHaveBeenCalled();
+    expect(told).not.toHaveBeenCalled();
   });
 
   it('carries on writing for a caller that does not want telling', async () => {

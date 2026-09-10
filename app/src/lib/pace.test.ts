@@ -266,3 +266,73 @@ describe('a measured session, not a tapped bucket', () => {
     expect(record('x', 'econ', 'Reading', 'nonesuch', 1)).toBeNull();
   });
 });
+
+describe('a word that says when, not what', () => {
+  /*
+   * "final" and "midterm" say when a piece of work falls, not what it is.
+   * Tested among the nouns they beat the noun standing next to them, so a
+   * final paper was an exam — and so was a final essay, with the answer
+   * written in the wording. The term's largest piece of writing was then
+   * estimated from however long this student's exams take, and every exam
+   * median took a paper into it.
+   */
+  it('lets the noun decide', () => {
+    expect(normalKind('Final paper')).toBe('essay');
+    expect(normalKind('Final essay')).toBe('essay');
+    expect(normalKind('Final draft')).toBe('essay');
+    expect(normalKind('Final project')).toBe('project');
+    expect(normalKind('Final presentation')).toBe('presentation');
+    expect(normalKind('Final reflection')).toBe('response');
+    expect(normalKind('Midterm paper')).toBe('essay');
+    expect(normalKind('Midterm project')).toBe('project');
+  });
+
+  it('keeps exam a noun, however it is qualified', () => {
+    expect(normalKind('Final Exam')).toBe('exam');
+    expect(normalKind('Midterm exam')).toBe('exam');
+    expect(normalKind('Take-home exam')).toBe('exam');
+    expect(normalKind('Practice test')).toBe('exam');
+  });
+
+  it('still reads a row that says only when', () => {
+    // Nothing said what it is, so when it falls is the best there is.
+    expect(normalKind('Final')).toBe('exam');
+    expect(normalKind('Finals')).toBe('exam');
+    expect(normalKind('Midterm')).toBe('exam');
+    expect(normalKind('Midterms')).toBe('exam');
+    expect(normalKind('Midterm 1')).toBe('exam');
+  });
+
+  it('reads whole words, and a semifinal is not a final', () => {
+    // For a course on sport, which this app ships one of, that is not the idle
+    // example it looks.
+    expect(normalKind('Semifinal')).toBe('semifinal');
+    expect(normalKind('Quarterfinal')).toBe('quarterfinal');
+  });
+
+  it('leaves every kind the four shipped syllabi use exactly as it was', () => {
+    const shipped: [string, string][] = [
+      ['Reflection', 'response'],
+      ['Quiz', 'quiz'],
+      ['Exam', 'exam'],
+      ['Group work', 'group work'],
+      ['Research', 'research'],
+      ['Reading', 'reading'],
+      ['Paper', 'essay'],
+      ['Problem set', 'problem set'],
+    ];
+    for (const [kind, want] of shipped) expect(normalKind(kind), kind).toBe(want);
+  });
+
+  it('keeps a final paper out of the exam timings', () => {
+    // The consequence, rather than the classification: a student who has timed
+    // three exams at half an hour and three papers at four hours is told the
+    // final paper is four hours, not half an hour.
+    const spent = [
+      ...[1, 2, 3].map((n) => ({ id: `e${n}`, courseId: 'econ', kind: 'exam', minutes: 30, at: n })),
+      ...[1, 2, 3].map((n) => ({ id: `p${n}`, courseId: 'econ', kind: 'essay', minutes: 240, at: n })),
+    ];
+    expect(estimate(spent, 'econ', 'Final paper').minutes).toBe(240);
+    expect(estimate(spent, 'econ', 'Final exam').minutes).toBe(30);
+  });
+});

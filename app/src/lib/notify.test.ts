@@ -192,6 +192,70 @@ describe('the exam warning', () => {
   });
 });
 
+describe('what has already been ticked off', () => {
+  // The installed icon's badge has always filtered these out — see the badge
+  // effect in `state/store.tsx`. The notifications never did, so the number on
+  // the icon and the number in the notification disagreed by whatever you had
+  // handed in.
+  const four = [
+    item({ id: 'a', title: 'Problem Set 1', isToday: true, daysAway: 0 }),
+    item({ id: 'b', title: 'Reading response', isToday: true, daysAway: 0 }),
+    item({ id: 'c', title: 'Memo', daysAway: 2 }),
+    item({ id: 'd', title: 'Midterm 1', kind: 'Exam', daysAway: 7 }),
+  ];
+  const all = { a: true, b: true, c: true, d: true };
+
+  it('says nothing about a day whose deadlines are all handed in', () => {
+    const out = dueReminders(THU, ALL, { items: four, classes: [], done: all });
+    expect(out.some((r) => r.rule === 'today')).toBe(false);
+  });
+
+  it('counts only what is left when some of them are', () => {
+    const out = dueReminders(THU, ALL, { items: four, classes: [], done: { a: true } });
+    const today = out.find((r) => r.rule === 'today');
+    expect(today?.title).toBe('1 due today');
+    expect(today?.body).toBe('Reading response');
+  });
+
+  it('does not warn two days out about work already done', () => {
+    expect(dueReminders(THU, ALL, { items: four, classes: [], done: all })
+      .some((r) => r.rule === 'two')).toBe(false);
+    expect(dueReminders(THU, ALL, { items: four, classes: [], done: {} })
+      .some((r) => r.rule === 'two')).toBe(true);
+  });
+
+  it('does not count down to an exam that has been sat', () => {
+    expect(dueReminders(THU, ALL, { items: four, classes: [], done: all })
+      .some((r) => r.rule === 'exam')).toBe(false);
+    expect(dueReminders(THU, ALL, { items: four, classes: [], done: {} })
+      .some((r) => r.rule === 'exam')).toBe(true);
+  });
+
+  it('leaves finished work out of the weekly report', () => {
+    const week = four.map((i) => ({ ...i, isToday: false, daysAway: 3 }));
+    const sun = (done: Record<string, boolean>) =>
+      dueReminders(SUN_EVENING, ALL, { items: week, classes: [], done }).find((r) => r.rule === 'sun');
+    expect(sun({})?.body).toContain('4 due this week');
+    expect(sun({ a: true, b: true })?.body).toContain('2 due this week');
+    expect(sun(all)?.body).toBe('Nothing due next week — a good one to look back on.');
+  });
+
+  it('keeps the all-clear about the day, not about the list', () => {
+    // Clearing three deadlines does not turn the morning that had three on it
+    // into a morning that had none: the "3 due today" already went out, and a
+    // contradicting all-clear an hour later is worse than no all-clear.
+    const out = dueReminders(THU, ALL, { items: four, classes: [], done: all });
+    expect(out.some((r) => r.rule === 'free')).toBe(false);
+    expect(dueReminders(THU, ALL, { items: [], classes: [], done: {} })
+      .some((r) => r.rule === 'free')).toBe(true);
+  });
+
+  it('is unchanged for a caller that states nothing about what is done', () => {
+    const with_ = dueReminders(THU, ALL, { items: four, classes: [], done: {} });
+    const without = dueReminders(THU, ALL, { items: four, classes: [] });
+    expect(without.map((r) => r.id)).toEqual(with_.map((r) => r.id));
+  });
+});
 describe('classesToNudge', () => {
   const block = (over: Record<string, unknown> = {}) =>
     ({ title: 'PSCI 1104', meta: 'Buttrick 101', at: 885, ...over }) as {

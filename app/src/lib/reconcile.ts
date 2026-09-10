@@ -24,7 +24,7 @@
  * wrong pairing sends somebody to change a date that was already right.
  */
 
-import { dateToIso, movedLine as movedDays } from './date';
+import { dateToIso, movedLine as movedDays, realMonthDay } from './date';
 import type { DatedItem, FeedEvent, Item } from './types';
 
 /** Words that appear in half of all assignment titles and carry no signal. */
@@ -152,10 +152,23 @@ function daysBetween(a: string, b: string): number {
  * matters more when somebody is deciding whether to trust it.
  */
 export function compare(items: DatedItem[], events: FeedEvent[]): Report {
+  /*
+   * Only the events that name a day can be compared against one.
+   *
+   * `daysBetween` splits both sides on `-` and subtracts, so an event whose
+   * date is not a date — a stored feed row from an older build, a reader that
+   * left the field blank — made `NaN`, and the report told the student their
+   * deadline had moved "NaN days earlier". A pairing that cannot say how far
+   * something moved has nothing to report, so the event goes to `onlyThere`
+   * with the rest of what the app does not hold, which is where a row it
+   * cannot make sense of honestly belongs.
+   */
+  const dated = events.filter((e) => /^\d{4}-\d{2}-\d{2}$/.test(e.date));
+
   const pairs: { i: number; e: number; score: number }[] = [];
 
   items.forEach((item, i) => {
-    events.forEach((event, e) => {
+    dated.forEach((event, e) => {
       // A course on both sides that disagrees is disqualifying. A course on
       // only one side is not — the feed's matcher misses plenty.
       if (item.c && event.courseId && item.c !== event.courseId) return;
@@ -177,7 +190,7 @@ export function compare(items: DatedItem[], events: FeedEvent[]): Report {
     usedEvents.add(pair.e);
 
     const item = items[pair.i];
-    const event = events[pair.e];
+    const event = dated[pair.e];
     const was = dateToIso(item.date);
     if (was === event.date) {
       agreed++;
@@ -197,11 +210,16 @@ export function compare(items: DatedItem[], events: FeedEvent[]): Report {
   // one that moved in November, and a list sorted by score reads as arbitrary.
   moved.sort((a, b) => a.was.localeCompare(b.was));
 
+  /** The events that found a partner, by identity rather than by index. */
+  const paired = new Set([...usedEvents].map((e) => dated[e]));
+
   return {
     moved,
     onlyHere: items.filter((_, i) => !usedItems.has(i)),
+    // Against `events` rather than `dated`, so an undated row is still listed
+    // as something the feed has and the app does not, rather than vanishing.
     onlyThere: events
-      .filter((_, e) => !usedEvents.has(e))
+      .filter((e) => !paired.has(e))
       .sort((a, b) => a.date.localeCompare(b.date)),
     agreed,
   };
@@ -235,9 +253,26 @@ export function summary(r: Report): string {
  * this drops it, and a feed entry from the wrong year would move a deadline to
  * the same day of this one. That is a real limitation and it is why the screen
  * shows both dates in full before anything is applied.
+ *
+ * ## The shape is not the date
+ *
+ * Four digits, two, two says nothing about whether those numbers name a day.
+ * "2026-04-31" matches, and the month and day it yields are stored and then
+ * read back through `new Date(year, month, day)`, which rolls: 31 April is
+ * drawn as 1 May, "2026-13-01" as 1 January of the *next* year, "2026-00-10"
+ * as December of the last one. Not a crash — a deadline quietly somewhere
+ * else, after a screen showed both dates in full and asked to be trusted.
+ *
+ * `lib/edit.ts` already learned this on the same value from the other end:
+ * "Not `day <= 31`: the year was in the field and thrown away, so 31 April was
+ * accepted and drawn as 1 May." It reaches for `realMonthDay`; so does this,
+ * and the caller's "not a date this app can store" becomes true.
  */
 export function asItemDate(isoDate: string): Pick<Item, 'month' | 'day'> | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
   if (!m) return null;
-  return { month: Number(m[2]) - 1, day: Number(m[3]) };
+  const month = Number(m[2]) - 1;
+  const day = Number(m[3]);
+  if (!realMonthDay(month, day)) return null;
+  return { month, day };
 }

@@ -181,19 +181,47 @@ export const PHRASES: [RegExp, string, string][] = [
  */
 function maskedRanges(text: string): [number, number][] {
   const out: [number, number][] = [];
-  const patterns = [
-    /https?:\/\/\S+/g,
-    /\bwww\.\S+/g,
-    /[\w.+-]+@[\w-]+\.[\w.]+/g,
-    /`[^`]*`/g,
-    /\b\d+(?:[.,]\d+)+\b/g,
+  /*
+   * `greedy` says whether the pattern can swallow the punctuation that ends
+   * the sentence it sits in. The address patterns run to the next space, and a
+   * full stop is not one — see `trimmed`. The others cannot: an abbreviation's
+   * final stop is the abbreviation's own and must stay masked, a decimal's is
+   * between its digits, and backticks close themselves.
+   */
+  const patterns: [RegExp, boolean][] = [
+    [/https?:\/\/\S+/g, true],
+    [/\bwww\.\S+/g, true],
+    [/[\w.+-]+@[\w-]+\.[\w.]+/g, true],
+    [/`[^`]*`/g, false],
+    [/\b\d+(?:[.,]\d+)+\b/g, false],
     // "e.g." and friends: a full stop that does not end a sentence.
-    /\b(?:e\.g|i\.e|etc|vs|Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Ph\.D|U\.S|a\.m|p\.m)\./gi,
+    [/\b(?:e\.g|i\.e|etc|vs|Dr|Mr|Mrs|Ms|Prof|St|Jr|Sr|Ph\.D|U\.S|a\.m|p\.m)\./gi, false],
   ];
-  for (const re of patterns) {
-    for (const m of text.matchAll(re)) out.push([m.index, m.index + m[0].length]);
+  for (const [re, greedy] of patterns) {
+    for (const m of text.matchAll(re)) {
+      const len = greedy ? trimmed(m[0]).length : m[0].length;
+      if (len > 0) out.push([m.index, m.index + len]);
+    }
   }
   return out;
+}
+
+/**
+ * The match without the sentence punctuation it happened to swallow.
+ *
+ * `\S+` is greedy and a full stop is not whitespace, so "See
+ * https://example.test. Next one." matched the URL *and the stop that ends the
+ * sentence*, and "a.b@vanderbilt.edu." did the same. Masking that stop hides a
+ * real sentence boundary: `longSentences` then runs two sentences together and
+ * can call the pair too long, which is the false alarm this mask exists to
+ * prevent rather than cause.
+ *
+ * Only from the end, and only punctuation that ends a sentence or a clause. A
+ * stop inside an address — the one in `.edu` or in `fred.stlouisfed.org` — has
+ * something after it and is left alone.
+ */
+function trimmed(match: string): string {
+  return match.replace(/[.,;:!?]+$/, '');
 }
 
 function inside(ranges: [number, number][], at: number): boolean {
@@ -209,8 +237,21 @@ function inside(ranges: [number, number][], at: number): boolean {
 export function proofread(text: string): Finding[] {
   const out: Finding[] = [];
   const masked = maskedRanges(text);
-  const add = (f: Finding) => {
-    if (!inside(masked, f.at)) out.push(f);
+  /*
+   * `from` is where the rule fired; `f.at` is where the screen should point.
+   * They are the same for every rule that reports the thing it matched, and
+   * they are not for the two that deliberately point past it.
+   *
+   * The capital rule is why this matters. It matches the full stop and points
+   * at the letter after it, so masking on `f.at` alone asked whether *the
+   * letter* was inside "U.S." — which it never is. "The U.S. position on
+   * export controls" was reported as a sentence starting in lower case, with
+   * a fix offering to capitalise "position", and so was every "e.g. the", "vs
+   * the" and "i.e. a" in the same paragraph. The mask exists to stop exactly
+   * that, and was being asked about the wrong character.
+   */
+  const add = (f: Finding, from = f.at) => {
+    if (!inside(masked, from) && !inside(masked, f.at)) out.push(f);
   };
 
   // A word said twice. The commonest error in anything written at midnight,
@@ -294,6 +335,12 @@ export function proofread(text: string): Finding[] {
 
   // Two spaces between words. Harmless in a typewriter's world and visible in
   // a proportional one, which is every place this app puts text.
+  // Deliberately without a trigger position, where the capital rule has one:
+  // this match *spans* a boundary, and the character before the spaces can be
+  // the last one of a URL. Passing it suppressed a real double space after
+  // every address. What the finding is about is the whitespace, and `f.at`
+  // already points at it — so two spaces inside `code like  this` are still
+  // masked, and two spaces after an address are still reported.
   for (const m of text.matchAll(/\S(  +)\S/g)) {
     add({
       at: m.index + 1,
@@ -319,14 +366,18 @@ export function proofread(text: string): Finding[] {
   // A sentence starting in lower case. Not applied to the first character of
   // the whole text, which is often a fragment somebody is still writing.
   for (const m of text.matchAll(/[.!?]\s+([a-z])/g)) {
-    add({
-      at: m.index + m[0].length - 1,
-      len: 1,
-      kind: 'capital',
-      found: m[1],
-      says: 'a sentence starting in lower case',
-      fix: m[1].toUpperCase(),
-    });
+    add(
+      {
+        at: m.index + m[0].length - 1,
+        len: 1,
+        kind: 'capital',
+        found: m[1],
+        says: 'a sentence starting in lower case',
+        fix: m[1].toUpperCase(),
+      },
+      // The full stop, which is the character the mask knows about.
+      m.index,
+    );
   }
 
   // A lone "i". There is no sentence in which it is right.
@@ -421,20 +472,49 @@ export function unbalanced(text: string): Finding[] {
  */
 export function longSentences(text: string): Finding[] {
   const out: Finding[] = [];
+  const scan = withoutFalseStops(text);
   const re = /[^.!?]+[.!?]*/g;
-  for (const m of text.matchAll(re)) {
-    const words = m[0].trim().split(/\s+/).filter(Boolean).length;
+  for (const m of scan.matchAll(re)) {
+    // Measured and reported off `text`: `scan` exists only to say where the
+    // sentence ends, and the writer should see what they wrote.
+    const said = text.slice(m.index, m.index + m[0].length);
+    const words = said.trim().split(/\s+/).filter(Boolean).length;
     if (words <= LONG_SENTENCE) continue;
     out.push({
-      at: m.index + (m[0].length - m[0].trimStart().length),
-      len: m[0].trim().length,
+      at: m.index + (said.length - said.trimStart().length),
+      len: said.trim().length,
       kind: 'length',
-      found: m[0].trim().slice(0, 60),
+      found: said.trim().slice(0, 60),
       says: `${words} words in one sentence — worth a look, not necessarily a change`,
       fix: '',
     });
   }
   return out;
+}
+
+/**
+ * The same text with the full stops that do not end sentences blanked out.
+ *
+ * `proofread` masks "U.S.", "e.g." and the rest already; this counted words
+ * between full stops without asking, so one fifty-four word sentence about
+ * export controls was three short ones and went unreported, while the same
+ * sentence saying "American" instead of "U.S." was reported. Which of those a
+ * writer gets should not depend on whether they abbreviated.
+ *
+ * An underscore rather than a deletion, and split by code unit rather than by
+ * code point, so every index still lands on the same character of `text` —
+ * the caller reports what was written, not this.
+ */
+function withoutFalseStops(text: string): string {
+  const marks = maskedRanges(text);
+  if (marks.length === 0) return text;
+  const units = text.split('');
+  for (const [a, b] of marks) {
+    for (let i = a; i < b && i < units.length; i += 1) {
+      if (units[i] === '.' || units[i] === '!' || units[i] === '?') units[i] = '_';
+    }
+  }
+  return units.join('');
 }
 
 /** Words, the way a word count means it. */

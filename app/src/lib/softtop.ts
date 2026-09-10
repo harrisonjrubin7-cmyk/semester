@@ -157,7 +157,22 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
   const settledToday = dated.filter((i) => i.isToday);
   const doneToday = settledToday.filter((i) => state.done[i.id]);
   const overdue = overdueCount(dated, state.done);
-  const soon = upcomingItems(catalog, now).filter((i) => !i.isToday && i.daysAway <= 7);
+  /*
+   * The week ahead, less what is already done.
+   *
+   * `due` on the line above has always dropped what you ticked, and so has
+   * `overdue`. This did not, so the three numbers in the same row answered
+   * different questions: finish every deadline in the week and "Due today"
+   * fell to nothing while "This week" sat where it was. That row is carried
+   * at the top of twenty-three screens.
+   *
+   * It also reaches the "Work on it" hero, whose "Nothing due this week"
+   * could never appear for somebody who had done the week's work — which is
+   * the one person it was written for.
+   */
+  const soon = upcomingItems(catalog, now).filter(
+    (i) => !i.isToday && i.daysAway <= 7 && !state.done[i.id],
+  );
   const courses = catalog.courses.length;
 
   /** The three numbers most screens qualify their hero with. */
@@ -302,11 +317,26 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
 
     case 'tonight': {
-      const hours = state.dayBudget;
+      /*
+       * The count, not the hours.
+       *
+       * This used to headline `state.dayBudget` as "4 hours to spend on 8
+       * things". That is the standing figure for an ordinary day, and the
+       * screen underneath asks how long you have *tonight* and plans against
+       * its own answer — so the two contradicted each other in the same
+       * viewport from the moment the screen opened, and tapping a different
+       * number moved one of them and not the other.
+       *
+       * The number of things outstanding is a fact this tile can actually
+       * know, and it is the one the screen below agrees with.
+       */
+      const left = soon.length + due.length;
       return {
-        hero: hours
-          ? { label: 'Tonight', figure: showHours(hours), foot: 'to spend on ' + count(soon.length + due.length, 'thing') }
-          : { label: 'Tonight', said: 'Say how long you have, and this ranks the hours.', foot: count(due.length, 'thing') + ' due today' },
+        hero: {
+          label: 'Tonight',
+          figure: num(left),
+          foot: left === 1 ? 'thing outstanding' : 'things outstanding',
+        },
         stats: term,
       };
     }
@@ -581,7 +611,9 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
 
     case 'activities':
-      return holds('Commitments', state.commitments.length, 'commitment');
+      // Active ones, because that is what the screen this opens counts, and a
+      // tile that disagrees with the screen behind it is worse than no tile.
+      return holds('Commitments', state.commitments.filter((c) => c.active).length, 'commitment');
 
     case 'groupwork':
       return {

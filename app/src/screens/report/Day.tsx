@@ -155,7 +155,8 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
             framed={false}
             footer={
               committed > 0
-                ? `${showHours(committed)} of that is a commitment rather than a class.`
+                ? `${showHours(committed)} of today is a commitment rather than a class,` +
+                  ` counting a share of anything you gave hours a week for.`
                 : undefined
             }
           >

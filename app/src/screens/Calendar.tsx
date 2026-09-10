@@ -30,12 +30,14 @@ import {
   shiftIso,
 } from '../lib/date';
 import {
+  appointmentsOn,
   campusHours,
   datedEvents,
   datedItems,
   feedEventsOn,
   hoursFor,
   itemsOn,
+  nothingYet,
   railFor,
 } from '../lib/select';
 import { timeLabel, useDragToMove } from '../lib/drag';
@@ -53,7 +55,14 @@ import {
 import { useRowStyle } from '../components/shell/useShell';
 import { movableOf, useCalendarMove, type Movable } from './calendar/Move';
 import { AddHere } from './calendar/AddHere';
-import type { CourseId, DatedEvent, DatedItem, FeedEvent, PersonalTask } from '../lib/types';
+import type {
+  Appointment,
+  CourseId,
+  DatedEvent,
+  DatedItem,
+  FeedEvent,
+  PersonalTask,
+} from '../lib/types';
 import { Folding } from '../components/Fold';
 
 /**
@@ -437,7 +446,7 @@ function DayView() {
             <button
               key={e.id}
               type="button"
-              className="bare tappable"
+              className="bare tappable on-paper"
               onClick={() => dispatch({ type: 'openEvent', id: e.id })}
               style={{
                 display: 'flex',
@@ -863,7 +872,7 @@ function WeekView() {
                 <button
                   key={e.id}
                   type="button"
-                  className="bare tappable"
+                  className="bare tappable on-paper"
                   onClick={() => dispatch({ type: 'openEvent', id: e.id })}
                   style={{ display: 'flex', gap: 'var(--sp-5)', width: '100%', textAlign: 'left', ...weekEventRow }}
                 >
@@ -1094,6 +1103,18 @@ function MonthView() {
   const selDate = new Date(calYear, calMonth, selectedDay);
   const selEvents = campus.filter((e) => sameDay(e.date, selDate));
   const selFeed = feedAll.filter((e) => e.date === iso(selectedDay));
+  /*
+   * Your own appointments, which the grid above marks and the panel left out.
+   *
+   * A day holding one reads "Wednesday 16 September. 1 appointment." on the
+   * cell, and said "Nothing due this day" the moment you tapped it — the same
+   * disagreement the campus calendar had above, on the one kind of thing on
+   * this grid the student put there themselves.
+   *
+   * Gated on `on.classes` to match the marks exactly, so a chip that takes
+   * appointments off the grid takes them out of the panel too.
+   */
+  const selAppts = on.classes ? appointmentsOn(state.appointments, selDate) : [];
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
@@ -1456,7 +1477,7 @@ function MonthView() {
         <button
           key={t.id}
           type="button"
-          className="bare tappable"
+          className="bare tappable on-paper"
           {...drag.handlers({ kind: 'task', id: t.id, title: t.title })}
           onClick={() => {
             if (drag.tookDrop()) return;
@@ -1495,6 +1516,52 @@ function MonthView() {
         </div>
       )}
 
+      {/* Your own appointments that day, in the row the campus list uses: a
+          kind, a title, the hour and the place. Tapping one opens the list it
+          lives in, which is where it can be edited. */}
+      {selAppts.length > 0 && (
+        <>
+          <SectionLabel>Yours</SectionLabel>
+          {selAppts.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              className="bare tappable"
+              onClick={() => {
+                dispatch({ type: 'setMineTab', tab: 'appointments' });
+                dispatch({ type: 'go', screen: 'mine' });
+              }}
+              style={{
+                display: 'flex',
+                gap: 'var(--sp-5)',
+                alignItems: 'center',
+                width: '100%',
+                textAlign: 'left',
+                ...monthTaskRow,
+              }}
+            >
+              <span className="tag tag-outline">{kindOf(a.kind).label}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
+                  {a.title}
+                </span>
+                {[a.time, a.where].filter(Boolean).length > 0 && (
+                  // `secondLine` rather than an opacity: main's contrast pass
+                  // landed while this branch was open, and a line written at
+                  // 0.55 inside a row is invisible to the audit and to
+                  // "Increase contrast". The campus row below still has the
+                  // old shape and is that pass's to convert, not this one's.
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine() }}>
+                    {[a.time, a.where].filter(Boolean).join(' \u00b7 ')}
+                  </span>
+                )}
+              </span>
+              <ChevronRight size={14} style={{ opacity: 0.4, flex: 'none' }} />
+            </button>
+          ))}
+        </>
+      )}
+
       {/* What is on around campus that day, in the same row the day view
           draws: a kind, a title, the hour and the place. Tapping it opens the
           listing, which is where the ticket line and the detail are. */}
@@ -1505,7 +1572,7 @@ function MonthView() {
             <button
               key={e.id}
               type="button"
-              className="bare tappable"
+              className="bare tappable on-paper"
               onClick={() => dispatch({ type: 'openEvent', id: e.id })}
               style={{
                 display: 'flex',
@@ -1554,6 +1621,7 @@ function MonthView() {
 
       {selItems.length === 0 &&
         selTasks.length === 0 &&
+        selAppts.length === 0 &&
         selEvents.length === 0 &&
         selFeed.length === 0 && (
           <EmptyState inline title="Nothing due this day" body="Double-tap it to put something there." />
@@ -1653,6 +1721,20 @@ function SemesterView() {
    * "someday" has no week to sit in.
    */
   const tasks = on.deadlines ? state.tasks.filter((t) => t.date !== null) : [];
+  /*
+   * And your appointments, which this view had no branch for either.
+   *
+   * The third time this same omission has been found on this one view: the
+   * two notes above are the connected calendars and your own tasks, each of
+   * which plotted as an empty week until somebody looked. An appointment is
+   * dated, it is yours, and it is the only one of the three that was still
+   * missing — a fortnight of advising and interviews plotted as bars with
+   * nothing in them.
+   *
+   * Gated on `on.classes`, the flag the month grid marks them under, so the
+   * chips say the same thing about them on every view of this screen.
+   */
+  const appts = on.classes ? state.appointments : [];
 
   // Weeks from the first Sunday on or before the earliest thing, to the last.
   const dates = [
@@ -1660,6 +1742,7 @@ function SemesterView() {
     ...events.map((e) => e.date),
     ...feed.map((e) => isoToDate(e.date)),
     ...tasks.map((t) => isoToDate(t.date as string)),
+    ...appts.map((a) => isoToDate(a.date)),
   ];
   /*
    * The term's teaching, which this view had no branch for at all.
@@ -1698,9 +1781,36 @@ function SemesterView() {
     );
   }
   const first = new Date(Math.min(...dates.map((d) => d.getTime())));
-  const last = new Date(Math.max(...dates.map((d) => d.getTime())));
   const start = new Date(first);
   start.setDate(start.getDate() - start.getDay());
+  /*
+   * How far this view will run, and why it needs an edge at all.
+   *
+   * The loop below builds one row per week from the earliest dated thing to
+   * the latest, and until this there was nothing to stop it. One entry dated
+   * 9999-01-01 — which `<input type="date">` accepts, and a restored backup or
+   * a synced device can carry — made that 415,978 rows, each filtering every
+   * list and calling `railFor` seven times. Measured: the term renders in 97ms
+   * and the far-dated one never finished at all.
+   *
+   * That is not new and it is not appointments. It came in through the task
+   * list, which has been in `dates` since this view learned about tasks, and
+   * the same door stands open for a deadline or a connected-calendar entry
+   * with a bad year on it. Bounding only the appointments — the shape the
+   * review suggested — would have left the hang exactly as reachable through
+   * the other three and looked fixed.
+   *
+   * A year, because the screen is called Semester and no term is longer. What
+   * falls outside is counted rather than dropped silently: the line under the
+   * chips says how many, so a date typed wrong is visible rather than merely
+   * absent.
+   */
+  const MAX_WEEKS = 53;
+  const wanted = new Date(Math.max(...dates.map((d) => d.getTime())));
+  const edge = new Date(start);
+  edge.setDate(edge.getDate() + MAX_WEEKS * 7);
+  const last = wanted < edge ? wanted : edge;
+  const beyond = dates.filter((d) => d > last).length;
 
   const weeks: {
     start: Date;
@@ -1708,6 +1818,7 @@ function SemesterView() {
     events: DatedEvent[];
     feed: FeedEvent[];
     tasks: PersonalTask[];
+    appts: Appointment[];
     classes: number;
   }[] = [];
   for (let cursor = new Date(start); cursor <= last; cursor.setDate(cursor.getDate() + 7)) {
@@ -1736,11 +1847,26 @@ function SemesterView() {
       // string in the store, and turning seven of them into `Date`s per week
       // to compare them back is arithmetic with a timezone in it.
       tasks: tasks.filter((t) => t.date! >= from && t.date! < to),
+      /*
+       * ISO strings, for the reason above — and in the order they happen.
+       *
+       * They were in whatever order the store held, so an appointment added
+       * later showed above one earlier in the week. Every other list on this
+       * screen is in time order, and `appointmentsOn` — which the day panel
+       * uses — sorts by `at` for exactly this reason.
+       *
+       * By date first and then by `at`, which is minutes past midnight and a
+       * number: the review's suggested fix called `localeCompare` on it, which
+       * throws.
+       */
+      appts: appts
+        .filter((a) => a.date >= from && a.date < to)
+        .sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at),
       classes,
     });
   }
 
-  const busiest = Math.max(1, ...weeks.map((w) => w.items.length + w.tasks.length));
+  const busiest = Math.max(1, ...weeks.map((w) => w.items.length + w.tasks.length + w.appts.length));
   // The fullest teaching week, so the rule below can be read against it. A
   // fixed width per meeting made every week the same length, which is a mark
   // that says "there are classes" and nothing a person did not already know.
@@ -1767,9 +1893,19 @@ function SemesterView() {
           on.deadlines && `${items.length} ${items.length === 1 ? 'deadline' : 'deadlines'}`,
           // Counted apart from the deadlines, the way the whole app counts
           // them apart: what you decided to do is not what a syllabus asked.
-          on.deadlines && tasks.length > 0 && `${tasks.length} of your own`,
+          // Tasks and appointments together: both are things the student put
+          // there, and the sentence says "of your own" rather than naming a
+          // kind. Each keeps its own chip, which is why the two are counted
+          // under different flags.
+          (on.deadlines ? tasks.length : 0) + (on.classes ? appts.length : 0) > 0 &&
+            `${(on.deadlines ? tasks.length : 0) + (on.classes ? appts.length : 0)} of your own`,
           on.campus &&
             `${events.length + feed.length} ${events.length + feed.length === 1 ? 'event' : 'events'}`,
+          // Said rather than silently dropped: a date typed as 9999 is a thing
+          // somebody has to be able to find again, and "not on the bar" with
+          // no explanation is how it stays lost.
+          beyond > 0 &&
+            `${beyond} ${beyond === 1 ? 'thing is' : 'things are'} dated past this year and not plotted`,
           on.classes &&
             (teachingVaries
               ? `${weeks.reduce((n, w) => n + w.classes, 0)} class meetings`
@@ -1843,6 +1979,7 @@ function SemesterView() {
                   w.events.length === 0 &&
                   w.feed.length === 0 &&
                   w.tasks.length === 0 &&
+                  w.appts.length === 0 &&
                   w.classes === 0 ? (
                     <div
                       style={{ flex: 1, background: 'var(--app-track)', opacity: 0.4, height: 2, alignSelf: 'center' }}
@@ -1873,6 +2010,18 @@ function SemesterView() {
                             maxWidth: `${100 / busiest}%`,
                             background: 'transparent',
                             border: `1px solid ${tint(t.courseId).fill}`,
+                          }}
+                        />
+                      ))}
+                      {w.appts.map((a) => (
+                        <div
+                          key={a.id}
+                          title={a.title}
+                          style={{
+                            flex: 1,
+                            maxWidth: `${100 / busiest}%`,
+                            background: 'transparent',
+                            border: `1px solid ${kindOf(a.kind).tint}`,
                           }}
                         />
                       ))}
@@ -2022,6 +2171,37 @@ function SemesterView() {
                     ))}
                     {w.tasks.length > 3 && (
                       <div style={{ opacity: 0.5 }}>+{w.tasks.length - 3} more of your own</div>
+                    )}
+                  </div>
+                )}
+
+                {/* And the appointments in that week, in the same list and the
+                    same words. They are not draggable here: a task's day is a
+                    choice and an appointment's is somebody else's. */}
+                {w.appts.length > 0 && (
+                  <div style={WEEK_LIST}>
+                    {w.appts.slice(0, 3).map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        className="bare"
+                        onClick={() => {
+                          dispatch({ type: 'setMineTab', tab: 'appointments' });
+                          dispatch({ type: 'go', screen: 'mine' });
+                        }}
+                        style={{ width: 'auto', display: 'block', textAlign: 'left' }}
+                      >
+                        {/* `secondLine` rather than an opacity — main's
+                            contrast pass landed while this was open, and new
+                            dimmed text answers to the audit now. The task rows
+                            above keep the old shape; converting those is that
+                            pass's to finish. */}
+                        <span style={secondLine()}>Yours</span>{' '}
+                        {a.title.length > 42 ? `${a.title.slice(0, 40)}…` : a.title}
+                      </button>
+                    ))}
+                    {w.appts.length > 3 && (
+                      <div style={secondLine()}>+{w.appts.length - 3} more of your own</div>
                     )}
                   </div>
                 )}
@@ -2254,7 +2434,7 @@ function CampusList() {
 
 export function Calendar() {
   const { state, dispatch, catalog } = useStore();
-  if (catalog.empty) return <FirstRun where="on the calendar" />;
+  if (nothingYet(catalog, state)) return <FirstRun where="on the calendar" />;
 
   return (
     /*

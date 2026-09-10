@@ -133,3 +133,31 @@ export function weigh(shots: ShotFile[]): number {
  * the wait gets long, and a student is better served sending two batches.
  */
 export const MAX_SHOTS = 12;
+
+/**
+ * What to say when more were picked than fit — or null, when they all did.
+ *
+ * Two screens cap at `MAX_SHOTS` and only one of them said so. Photograph
+ * fifteen pages of a problem set on Work the problem and it read the first
+ * twelve and handed back a worked solution, with nothing on screen about the
+ * other three; the camera screen, capping in the same place with the same
+ * constant, has always said "the rest were left out".
+ *
+ * That is the argument the comment beside Solve's own error handling already
+ * makes about photos that would not open — "a transcription of three pages
+ * out of four looks complete and is not" — applied to the ones it chose not
+ * to read, which is the case it is easier to miss precisely because nothing
+ * went wrong.
+ *
+ * The sentence is here, next to the number it quotes, so the two screens
+ * cannot come to say different things about the same cap.
+ *
+ * @param picked How many were chosen.
+ * @param room How many this screen can still take — `MAX_SHOTS` where the
+ *   batch starts empty, less where photos are already in it.
+ */
+export function tooMany(picked: number, room: number): string | null {
+  return picked > room
+    ? `Only ${MAX_SHOTS} photos go in one batch — the rest were left out.`
+    : null;
+}
