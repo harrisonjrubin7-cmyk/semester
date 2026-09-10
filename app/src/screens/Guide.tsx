@@ -9,6 +9,7 @@ import { alsoLine, elsewhere, meetings, type Also } from '../lib/meet';
 import { Blueprint } from '../components/Blueprint';
 import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
 import { ActionButton, ChipRow, Meter, SectionLabel } from '../components/ui';
+import { fromGuide } from '../lib/doctemplates';
 import { addedLine } from '../lib/study';
 import { ModePicker } from '../components/ModePicker';
 import { modeInfo, modesFor } from '../lib/modes';
@@ -777,7 +778,7 @@ function Decks() {
  * writes a real .pptx in the browser, so every course can have one now.
  */
 function Documents() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, say } = useStore();
   const { guide } = useLive(state.guideId);
   const stem = `/handouts/${state.guideId}`;
   const prebuilt = hasPrebuiltDocs(state.guideId);
@@ -799,6 +800,26 @@ function Documents() {
         The same {guide.units.length} units as a document — every card, the terms and the
         self-test, in reading order.
       </div>
+
+      {/*
+        The PDF and the Word file above are fixed: they are this guide, exactly,
+        and they are for printing. This one is a copy you can change — add your
+        own worked example, cut the units the exam does not cover — and it
+        leaves the guide itself alone, so the cards still match the source they
+        cite.
+      */}
+      <ActionButton
+        onClick={() => {
+          dispatch({
+            type: 'makeDocument',
+            doc: fromGuide(guide, state.guideId),
+          });
+          say('Opened as a document you can edit. It is in Write a document.');
+        }}
+        style={{ marginTop: 'var(--sp-6)' }}
+      >
+        Open it in Write, to edit
+      </ActionButton>
 
       {files.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 11, marginTop: 14 }}>
