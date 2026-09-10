@@ -32,6 +32,16 @@ export function openHit(hit: Hit, dispatch: (a: Action) => void): void {
       // appointment, and the tab that holds them is as close as the app gets.
       dispatch({ type: 'setMineTab', tab: 'appointments' });
       return dispatch({ type: 'go', screen: 'mine' });
+    // The three things the student made in the app. Each has a real screen of
+    // its own, so unlike a task these open the thing rather than the list.
+    case 'document':
+      return dispatch({ type: 'openDocument', id: hit.id });
+    case 'sheet':
+      return dispatch({ type: 'openSheet', id: hit.id });
+    case 'deck':
+      // `editDeck`, not `openDeck`: that name belongs to the study slideshow,
+      // which opens a guide unit and is a different thing. See `state/shape.ts`.
+      return dispatch({ type: 'editDeck', id: hit.id });
     case 'screen':
       return dispatch({ type: 'go', screen: hit.screen });
   }

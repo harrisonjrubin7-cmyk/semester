@@ -18,6 +18,7 @@ const ALL_ON: Record<NotifKey, boolean> = {
   free: true,
   two: true,
   term: true, attend: true,
+  bill: true,
   exam: true,
   sun: true,
 };
@@ -28,6 +29,7 @@ const NONE: Record<NotifKey, boolean> = {
   free: false,
   two: false,
   term: false, attend: false,
+  bill: false,
   exam: false,
   sun: false,
 };

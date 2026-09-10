@@ -70,6 +70,11 @@ export const STRATEGY: Record<string, Strategy> = {
   spent: 'union',
   windows: 'union',
   costs: 'union',
+  // The statement, the award letter and what has been paid. Three lists with
+  // ids, entered on whichever device was to hand when the letter arrived.
+  charges: 'union',
+  aid: 'union',
+  payments: 'union',
   balances: 'union',
   residences: 'union',
   feeds: 'union',
@@ -94,6 +99,10 @@ export const STRATEGY: Record<string, Strategy> = {
   // this course's scale off its syllabus on the laptop must not wipe the one
   // typed for another course on the phone.
   gradeSystems: 'ticks',
+  // The payment plan, keyed by term. `ticks` rather than `theirs` for the same
+  // reason as the cutoffs above: choosing this term's plan on the laptop must
+  // not drop the plan already entered for next term on the phone.
+  plans: 'ticks',
   linkUrls: 'ticks',
   feedHidden: 'ticks',
   notifs: 'ticks',
@@ -270,6 +279,7 @@ export const STRATEGY: Record<string, Strategy> = {
   // the laptop because that is where you first opened the calendar.
   keyOpen: 'theirs',
   accessLeadDays: 'theirs',
+  quiet: 'theirs',
   // Where you have been lately, newest first. Interleaving two devices'
   // histories would make it a list of nowhere in particular.
   recent: 'theirs',

@@ -20,6 +20,7 @@ const off = (): Record<NotifKey, boolean> => ({
   free: false,
   two: false,
   term: false, attend: false,
+  bill: false,
   exam: false,
   sun: false,
 });
@@ -84,6 +85,13 @@ describe('a reminder about a day rather than a thing', () => {
     const [r] = dueReminders(sunday, { ...off(), sun: true } as Record<NotifKey, boolean>, { items: [], classes: [] });
     expect(r).toBeTruthy();
     expect(landingFor(r.id)).toEqual({ screen: 'brief', grain: 'week' });
+  });
+
+  it('puts a tuition instalment on the money screen, where the plan is', () => {
+    // 6 September, and the instalment falls on the 13th — a week out.
+    const [r] = real({ bill: true }, { items: [], classes: [], bill: { due: '2026-09-13', cents: 368_644 } });
+    expect(r).toBeTruthy();
+    expect(landingFor(r.id)).toEqual({ screen: 'costs' });
   });
 
   it('puts "3 due today" on home, which is where they are', () => {

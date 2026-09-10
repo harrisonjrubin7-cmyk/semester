@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { countHits, findEverything, spelled } from './find';
 import type { Appointment, CourseUpdate, PersonalTask } from './types';
+import type { Doc } from './document';
+import type { Sheet } from './sheet';
+import type { StoredDeck } from './decks';
 import ECON from '../data/courses/econ';
 import { buildCatalog } from '../data/catalog';
 
@@ -289,5 +292,160 @@ describe('your own appointments', () => {
 
   it('finds nothing when there is nothing, rather than everything', () => {
     expect(titles('zanzibar', [appt({ id: 'a1', title: 'Advising meeting' })])).toEqual([]);
+  });
+});
+
+describe('the things you made in the app', () => {
+  const cat = buildCatalog([]);
+  const NOW = new Date(2026, 8, 9);
+
+  const doc = (over: Partial<Doc> & { id: string }): Doc => ({
+    title: over.id,
+    subtitle: '',
+    courseId: null,
+    blocks: [],
+    created: 0,
+    updated: 0,
+    ...over,
+  });
+  const sheet = (over: Partial<Sheet> & { id: string }): Sheet => ({
+    title: over.id,
+    courseId: null,
+    cells: {},
+    rows: 20,
+    cols: 8,
+    created: 0,
+    updated: 0,
+    ...over,
+  });
+  const deck = (over: Partial<StoredDeck> & { id: string }): StoredDeck => ({
+    title: over.id,
+    subtitle: '',
+    slides: [],
+    courseId: null,
+    created: 0,
+    updated: 0,
+    ...over,
+  });
+
+  const search = (q: string, made: Parameters<typeof findEverything>[9]) =>
+    findEverything(cat, NOW, q, [], [], undefined, [], {}, [], made);
+  const hits = (q: string, made: Parameters<typeof findEverything>[9]) =>
+    search(q, made).flatMap((g) => g.hits);
+
+  it('finds a document by its name', () => {
+    const found = hits('rawls', { documents: [doc({ id: 'd1', title: 'Rawls essay' })] });
+    expect(found.map((h) => h.title)).toContain('Rawls essay');
+    expect(found[0].kind).toBe('document');
+  });
+
+  /*
+   * The reason the body is searched at all. A document called "Untitled" with
+   * three pages of an essay in it is exactly the one somebody looks for by
+   * typing a word out of it, and exactly the one a title-only search misses.
+   */
+  it('finds a document by what is written in it, not only its name', () => {
+    const found = hits('veil of ignorance', {
+      documents: [
+        doc({
+          id: 'd1',
+          title: 'Untitled',
+          blocks: [{ kind: 'text', text: 'The veil of ignorance is the device that makes it fair.' }],
+        }),
+      ],
+    });
+    expect(found).toHaveLength(1);
+    expect(found[0].title).toBe('Untitled');
+  });
+
+  it('reads every kind of block, so no kind of content is invisible', () => {
+    // Filtered to documents: "elasticity" reaches a screen too, which is the
+    // search working and is not what this is asking about.
+    const inside = (block: Doc['blocks'][number], q: string) =>
+      hits(q, { documents: [doc({ id: 'd1', title: 'Untitled', blocks: [block] })] }).filter(
+        (h) => h.kind === 'document',
+      ).length;
+    expect(inside({ kind: 'heading', level: 1, text: 'Monopoly' }, 'monopoly')).toBe(1);
+    expect(inside({ kind: 'bullets', items: ['Deadweight loss'], numbered: false }, 'deadweight')).toBe(1);
+    expect(inside({ kind: 'quote', text: 'a quoted line', source: 'Mankiw' }, 'mankiw')).toBe(1);
+    expect(inside({ kind: 'table', rows: [['Elasticity']], header: true, caption: '' }, 'elasticity')).toBe(1);
+    expect(inside({ kind: 'equation', latex: 'e = mc^2', caption: 'Energy' }, 'energy')).toBe(1);
+  });
+
+  it('finds a sheet by what has been typed into its cells', () => {
+    const found = hits('quiz average', {
+      sheets: [sheet({ id: 's1', title: 'Untitled', cells: { A1: 'Quiz average', B1: '=AVERAGE(C1:C9)' } })],
+    });
+    expect(found).toHaveLength(1);
+    expect(found[0].kind).toBe('sheet');
+  });
+
+  // The grid is dragged out to 20×8 by default and that says nothing about
+  // the sheet. What is in it does.
+  it('describes a sheet by what is in it rather than by how far it was dragged', () => {
+    const [found] = hits('budget', {
+      sheets: [sheet({ id: 's1', title: 'Budget', cells: { A1: 'Rent', A2: '1200', A3: '' } })],
+    });
+    expect(found.sub).toBe('2 cells');
+    expect(hits('budget', { sheets: [sheet({ id: 's1', title: 'Budget' })] })[0].sub).toBe('Empty');
+  });
+
+  it('finds a deck by its slides', () => {
+    const found = hits('anchoring', {
+      decks: [deck({ id: 'k1', title: 'Week 4', slides: [{ title: 'Bias', bullets: ['Anchoring'] }] })],
+    });
+    expect(found).toHaveLength(1);
+    expect(found[0].sub).toBe('1 slide');
+  });
+
+  it('gives each its own group rather than one pile of made things', () => {
+    const groups = search('draft', {
+      documents: [doc({ id: 'd1', title: 'Draft' })],
+      sheets: [sheet({ id: 's1', title: 'Draft' })],
+      decks: [deck({ id: 'k1', title: 'Draft' })],
+    });
+    const labels = groups.map((g) => g.label);
+    expect(labels).toContain('Documents');
+    expect(labels).toContain('Sheets');
+    expect(labels).toContain('Decks');
+  });
+
+  it('tags one filed under a course with that course', () => {
+    const withCourse = buildCatalog([ECON]);
+    const [found] = findEverything(
+      withCourse,
+      NOW,
+      'rawls',
+      [],
+      [],
+      undefined,
+      [],
+      {},
+      [],
+      { documents: [doc({ id: 'd1', title: 'Rawls essay', courseId: 'econ' })] },
+    ).flatMap((g) => g.hits.filter((h) => h.kind === 'document'));
+    expect(found.tag).toBe('ECON 1020');
+  });
+
+  it('names an untitled thing rather than showing an empty row', () => {
+    const [found] = hits('mankiw', {
+      documents: [doc({ id: 'd1', title: '', blocks: [{ kind: 'text', text: 'Mankiw ch. 4' }] })],
+    });
+    expect(found.title).toBe('Untitled document');
+  });
+
+  it('is silent for a caller that has made nothing', () => {
+    expect(hits('rawls', {})).toEqual([]);
+    expect(findEverything(cat, NOW, 'rawls', [], []).flatMap((g) => g.hits)).toEqual([]);
+  });
+
+  // `score` is a substring test run on every keystroke, and a sheet can hold
+  // ten thousand cells. The cap is what keeps the fourth keystroke fast.
+  it('caps how much of a body it searches, rather than scanning a whole sheet', () => {
+    const cells: Record<string, string> = {};
+    for (let i = 1; i <= 4000; i++) cells[`A${i}`] = 'filler text in this cell';
+    cells.A4001 = 'zanzibar';
+    const found = hits('zanzibar', { sheets: [sheet({ id: 's1', title: 'Big', cells })] });
+    expect(found).toEqual([]);
   });
 });

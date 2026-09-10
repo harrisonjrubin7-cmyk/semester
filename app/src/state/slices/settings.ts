@@ -254,6 +254,16 @@ export function settings(state: State, action: Action): State | null {
     case 'setAccessLead':
       return { ...state, accessLeadDays: Math.max(0, Math.min(30, Math.round(action.days))) };
 
+    /*
+     * The hours nothing may interrupt you in. Null clears it.
+     *
+     * Stored as given rather than normalised: a window whose start equals its
+     * end is read as off by `inQuiet`, and rewriting it to null here would
+     * make the two settings' screens disagree about what the student typed.
+     */
+    case 'setQuiet':
+      return { ...state, quiet: action.quiet };
+
     case 'toggleSaved':
       return { ...state, saved: { ...state.saved, [action.id]: !state.saved[action.id] } };
 

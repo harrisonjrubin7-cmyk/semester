@@ -79,11 +79,24 @@ export function readMoney(text: string): number | null {
   return Math.round(n * 100);
 }
 
-/** Cents as "$64.99". */
+/**
+ * Cents as "$64.99" — and as "$32,415.00", which is why the grouping is here.
+ *
+ * A textbook needs no thousands separator and this function was written for
+ * textbooks. A tuition line does: `$3241500` rendered as "$32415.00" is read
+ * wrong at a glance about as often as it is read right, and the statement it
+ * is being checked against groups its own figures. Grouped by hand rather than
+ * through `toLocaleString`, which would follow the device's locale and put a
+ * comma where this function has already written the decimal point.
+ *
+ * The minus sign is U+2212, not a hyphen: it is the one that lines up with
+ * digits in a tabular-nums column.
+ */
 export function money(cents: number): string {
   const sign = cents < 0 ? '−' : '';
   const abs = Math.abs(cents);
-  return `${sign}$${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, '0')}`;
+  const whole = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${sign}$${whole}.${String(abs % 100).padStart(2, '0')}`;
 }
 
 export interface Total {

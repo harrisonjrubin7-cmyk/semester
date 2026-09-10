@@ -394,7 +394,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'announce':
       return { kicker: 'What moved, and what said so', title: 'A change to a date' };
     case 'costs':
-      return { kicker: 'Books, fees and what came back', title: 'What this term cost' };
+      return { kicker: 'The bill, the aid, and what you paid', title: 'Money' };
     case 'gap':
       return { kicker: 'One thumb, and the walk taken off', title: 'Between classes' };
     case 'groupwork':
