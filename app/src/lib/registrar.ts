@@ -27,7 +27,7 @@
  * not shown anywhere except the screen that asks for it.
  */
 
-import { dateToIso, daysBetween, isoToDate, realMonthDay, startOfDay } from './date';
+import { dateToIso, daysBetween, isoToDate, realDate, startOfDay } from './date';
 
 export type RegistrarKind = 'deadline' | 'window' | 'break' | 'exams';
 
@@ -350,9 +350,23 @@ export function parse(text: string, year: number): Found[] {
     const month = monthIndex(m[1]);
     if (month < 0) continue;
     const day = Number(m[2]);
-    // A registrar landmark is the one date somebody arranges a fortnight
-    // around, so an invented one is worse here than almost anywhere.
-    if (!realMonthDay(month, day)) continue;
+    /*
+     * A registrar landmark is the one date somebody arranges a fortnight
+     * around, so an invented one is worse here than almost anywhere.
+     *
+     * `realDate` rather than `realMonthDay`, because this function is handed
+     * the year. `lib/date.ts` states the rule between them: the month/day
+     * check is "the check that a day *can* exist", for the six files that
+     * store `{ month, day }` and let the term settle the year later, and
+     * `realDate` "is the check that it does". This was the one caller holding
+     * a year and asking the year-blind question — so 29 February passed on
+     * every page, and a 2026 one was filed as 1 March. A day out rather than
+     * a year, but the same silent filing this module exists to prevent.
+     *
+     * `realDate` counts months from one; `realMonthDay` counts from zero.
+     */
+    const on = realDate(year, month + 1, day);
+    if (!on) continue;
 
     // What is left once the date is taken out is the label.
     const label = row
@@ -363,11 +377,28 @@ export function parse(text: string, year: number): Found[] {
       .trim();
     if (label.split(' ').filter(Boolean).length < 2) continue;
 
-    const iso = dateToIso(new Date(year, month, day));
+    const iso = dateToIso(on);
     // A span: "October 15–16", or "October 30 – November 2".
     const endMonth = m[3] ? monthIndex(m[3]) : month;
-    const until =
-      m[4] && endMonth >= 0 ? dateToIso(new Date(year, endMonth, Number(m[4]))) : '';
+    /*
+     * The end of a span gets the same check as its start, which it had none of
+     * at all. `new Date` rolls rather than refuses, so "November 30 – November
+     * 31" stored an end of 1 December and "December 30 – February 31" stored 3
+     * March — a break a day longer than the registrar said, and one ending
+     * before it began. Nothing throws, and `apply` writes it into the sheet.
+     *
+     * The row goes rather than half of it, because that is what this function
+     * already does with a start it cannot believe. Every row here is proposed
+     * rather than saved, so a refused one costs a line typed by hand and an
+     * invented one costs a fortnight arranged around it.
+     *
+     * An unreadable end *month* is left as it was: `until` stays empty and the
+     * row is still offered, which is the behaviour this has always had for
+     * "October 15 – 16".
+     */
+    const ends = m[4] && endMonth >= 0 ? realDate(year, endMonth + 1, Number(m[4])) : null;
+    if (m[4] && endMonth >= 0 && !ends) continue;
+    const until = ends ? dateToIso(ends) : '';
 
     const hit = HINTS.find((h) => h.words.test(label));
     const id = hit?.id ?? '';
