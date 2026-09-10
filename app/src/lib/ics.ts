@@ -8,8 +8,9 @@
  *
  * What is supported is what these feeds actually contain: VEVENT with SUMMARY,
  * DTSTART, DTEND, LOCATION, DESCRIPTION, and weekly or daily RRULEs so a class
- * that repeats does not appear once. Anything else is skipped rather than
- * guessed at.
+ * that repeats does not appear once — together with the two ways a repeating
+ * class is changed, EXDATE for a week cancelled and RECURRENCE-ID for a week
+ * moved. Anything else is skipped rather than guessed at.
  */
 
 import type { Course, FeedEvent } from './types';
@@ -188,7 +189,18 @@ export interface IcsResult {
 
 export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsResult {
   const lines = unfold(text);
-  const events: FeedEvent[] = [];
+  /*
+   * Read every entry before drawing any of them.
+   *
+   * An entry that moves one week of a repeating class is a second VEVENT
+   * carrying the same UID and a RECURRENCE-ID naming the week it replaces, and
+   * it may be written before or after the entry it replaces. So which
+   * occurrences the rule actually produces is not known until the whole file
+   * has been read — emitting each entry as its END line arrives cannot express
+   * that, and drew the class on the day it moved from as well as the day it
+   * moved to.
+   */
+  const raws: RawEvent[] = [];
   let name = '';
   let current: RawEvent | null = null;
 
@@ -228,7 +240,7 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
       if (opens) {
         current = {};
       } else {
-        if (current) events.push(...toEvents(courses, current, sourceId));
+        if (current) raws.push(current);
         current = null;
       }
       inside = 0;
@@ -259,36 +271,303 @@ export function parseIcs(courses: Course[], text: string, sourceId = ''): IcsRes
       if (key.toUpperCase() === 'X-WR-CALNAME') name = unescape(value);
       continue;
     }
-    current[key.toUpperCase()] = { params, value };
+    const k = key.toUpperCase();
+    /*
+     * A property may be written once — except the exclusions, which RFC 5545
+     * lets a calendar spread over as many EXDATE lines as it likes, and Google
+     * writes one line per cancelled week. Every other property here is
+     * single-valued and the last one written wins. EXDATE's value is already a
+     * comma-separated list, so joining the lines with a comma is not a special
+     * case downstream; it is the same list, written out in full.
+     */
+    const held = current[k];
+    current[k] = held && k === 'EXDATE' ? { params, value: `${held.value},${value}` } : { params, value };
+  }
+
+  /*
+   * The weeks a rule generates but the calendar has taken back: one map from
+   * an entry's UID to the days some other entry says it now happens on
+   * instead. Held by day rather than by the exact stamp, because a calendar is
+   * free to write the replaced week as a floating time, a UTC time or a bare
+   * date, and the app draws these by the day either way — the alternative is
+   * an exact match that a correct feed can miss, leaving the class on both
+   * days again.
+   */
+  const replaced = new Map<string, Set<string>>();
+  const onward = new Map<string, Onward[]>();
+  for (const raw of raws) {
+    const at = raw['RECURRENCE-ID'];
+    if (!at) continue;
+    const day = parseWhen(at);
+    if (!day) continue;
+    /*
+     * A week is only taken back by an entry that actually puts something in
+     * its place. An override with no DTSTART, or one this reader cannot read a
+     * date out of, draws nothing — and counting it here suppressed the week
+     * anyway, so a malformed entry deleted a lecture outright rather than
+     * failing to move it. Read on its own the week simply stays where the rule
+     * put it, which is what the reader did before it knew about overrides at
+     * all, and the smaller wrong answer of the two.
+     */
+    /*
+     * A week is only taken back by an entry that puts something in its place —
+     * or says outright that nothing happens. A cancellation is that second
+     * case and needs no replacement day, which is why it is tested for before
+     * the DTSTART is: an entry marked off with no date is not malformed, it is
+     * a class that is not meeting.
+     */
+    const off = calledOff(raw);
+    const moved = raw.DTSTART && parseWhen(raw.DTSTART);
+    if (!off && !moved) continue;
+    const uid = raw.UID?.value ?? '';
+
+    /*
+     * `RANGE=THISANDFUTURE` changes the rest of the series, not one week of it
+     * — the class that moves to Thursday for good, rather than the one Monday
+     * that clashed with a holiday. Taking back only the week it names left
+     * every later week sitting on the day the class no longer meets, which is
+     * the same wrong answer this whole section exists to stop, only quieter
+     * for lasting the rest of term.
+     *
+     * The change is carried as a whole number of days between the week it
+     * names and the day it moved to, and applied to each later occurrence by
+     * that count — not by adding milliseconds to a Date. A class is a wall
+     * clock: two o'clock stays two o'clock across the weekend the clocks go
+     * back, and an offset in milliseconds would make it one.
+     */
+    if ((at.params.RANGE ?? '').toUpperCase() === 'THISANDFUTURE') {
+      const list = onward.get(uid) ?? [];
+      list.push({
+        from: iso(day.date),
+        // A cancellation moves nothing; the figures below are never read for
+        // one, and are given the week it names so they are never nonsense.
+        shift: off || !moved ? 0 : Math.round((dayOf(moved.date).getTime() - dayOf(day.date).getTime()) / 86400000),
+        clockAt: moved ? moved.date : day.date,
+        allDay: moved ? moved.allDay : false,
+        look: lookOf(courses, raw),
+        cancels: off,
+        raw,
+      });
+      onward.set(uid, list);
+      continue;
+    }
+
+    const days = replaced.get(uid) ?? new Set<string>();
+    days.add(iso(day.date));
+    replaced.set(uid, days);
+  }
+
+  for (const list of onward.values()) list.sort((a, b) => a.from.localeCompare(b.from));
+
+  /*
+   * The entries that describe a class are read first, and the changes after.
+   *
+   * A change for good stands down and lets the entry it changes draw the moved
+   * weeks — but only where a week was actually moved. A rule this reader does
+   * not expand (a monthly one, say) makes a single occurrence on its start
+   * day, so a change dated later than that has nothing to take it up, and
+   * standing down for it lost a readable day at a readable time. Which weeks a
+   * rule really produced is not knowable until it has been expanded, so the
+   * entries are read in that order and each change is told whether it was
+   * taken up.
+   */
+  const events: FeedEvent[] = [];
+  const taken = new Set<RawEvent>();
+  const order = [...raws.filter((r) => !r['RECURRENCE-ID']), ...raws.filter((r) => r['RECURRENCE-ID'])];
+  for (const raw of order) {
+    events.push(...toEvents(courses, raw, sourceId, replaced, onward, taken));
   }
 
   return { events, name };
 }
 
-function toEvents(courses: Course[], raw: RawEvent, sourceId: string): FeedEvent[] {
+/** Midnight of a date, so a difference between two of them counts whole days. */
+function dayOf(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+interface Look {
+  title: string;
+  where: string;
+  note: string;
+  courseId: string | null;
+}
+
+/**
+ * Whether the calendar has called this off.
+ *
+ * `STATUS:CANCELLED` is the other way a calendar says a class is not
+ * happening, and the one this reader knew nothing about. EXDATE takes a week
+ * out of a rule; a cancelled entry is the week still written down and marked
+ * off, which is what Outlook and Exchange send rather than an EXDATE. It says
+ * it in five places and the app drew the class in all five: one week of a
+ * series, a whole series, a single event, this-and-all-following, and a
+ * cancellation with no replacement day at all.
+ */
+function calledOff(raw: RawEvent): boolean {
+  return (raw.STATUS?.value ?? '').trim().toUpperCase() === 'CANCELLED';
+}
+
+function lookOf(courses: Course[], raw: RawEvent): Look {
+  const title = unescape(raw.SUMMARY?.value ?? 'Untitled');
+  const where = unescape(raw.LOCATION?.value ?? '');
+  const note = unescape(raw.DESCRIPTION?.value ?? '').slice(0, 400);
+  return { title, where, note, courseId: matchCourse(courses, `${title} ${where} ${note}`) };
+}
+
+/** A change an entry makes to its series from one week onward. */
+interface Onward {
+  from: string;
+  shift: number;
+  clockAt: Date;
+  allDay: boolean;
+  look: Look;
+  /** True where the change is a cancellation: those weeks stop, not move. */
+  cancels: boolean;
+  /** The entry that stated it, so it can ask whether anything took it up. */
+  raw: RawEvent;
+}
+
+function toEvents(
+  courses: Course[],
+  raw: RawEvent,
+  sourceId: string,
+  replaced: Map<string, Set<string>>,
+  onward: Map<string, Onward[]>,
+  taken: Set<RawEvent>,
+): FeedEvent[] {
+  // Called off, so there is nothing to draw — a single event, a whole series,
+  // or the one week an entry was written to mark off. What it takes back it
+  // has already said where `replaced` and `onward` are built.
+  if (calledOff(raw)) return [];
+
   const startField = raw.DTSTART;
   if (!startField) return [];
   const when = parseWhen(startField);
   if (!when) return [];
 
-  const title = unescape(raw.SUMMARY?.value ?? 'Untitled');
-  const where = unescape(raw.LOCATION?.value ?? '');
-  const note = unescape(raw.DESCRIPTION?.value ?? '').slice(0, 400);
-  const uid = raw.UID?.value ?? `${title}-${when.date.getTime()}`;
-  const courseId = matchCourse(courses, `${title} ${where} ${note}`);
+  const look = lookOf(courses, raw);
+  const uid = raw.UID?.value ?? `${look.title}-${when.date.getTime()}`;
+
+  const draw = (date: Date, id: string, as: Look = look, allDay = when.allDay): FeedEvent => ({
+    id,
+    sourceId,
+    title: as.title,
+    date: iso(date),
+    at: allDay ? null : date.getHours() * 60 + date.getMinutes(),
+    time: allDay ? 'All day' : clock(date),
+    where: as.where,
+    note: as.note,
+    courseId: as.courseId,
+  });
+
+  /*
+   * This entry replaces one week of a repeating class rather than describing a
+   * class of its own, so it is drawn once, on its own date, and its rule — if
+   * it even carries one — is not expanded.
+   *
+   * Its id is the week it replaces — the RECURRENCE-ID, not the day it moved
+   * to. Two reasons, and the second is the one that is easy to get wrong.
+   *
+   * `${uid}-0` is what the first occurrence of the master entry is called, and
+   * an override of the first week is exactly the common case, so numbering
+   * this one would have given two entries the same id. `union` in
+   * `lib/merge.ts` keeps one row per id, so the first sync silently dropped
+   * one of the two, and re-reading the feed only recreated the collision.
+   *
+   * And the week it replaces is the only part of an override that does not
+   * change. Name it after the day it moved to and moving that same week a
+   * second time — the professor settling on Friday after trying Thursday —
+   * renames the row, so `union` cannot match what the other device already
+   * holds and keeps both: the class drawn on Thursday *and* Friday. The
+   * RECURRENCE-ID is what this entry is about, and it is the same on every
+   * reading.
+   *
+   * A RECURRENCE-ID this reader cannot read a date out of leaves nothing
+   * stable to use, so the moved day stands in. The entry is still drawn: it
+   * names a real day and dropping it would lose a class outright, which is the
+   * trade made where `replaced` is built, in the other direction.
+   */
+  const at = raw['RECURRENCE-ID'];
+  if (at) {
+    const original = parseWhen(at);
+    /*
+     * A change to the rest of the series steps aside for the entry it changes
+     * — exactly when that entry took it up, and not a case more.
+     *
+     * Everything else this tried to test for was a way of guessing at that:
+     * whether the week it names could be read, whether an entry with its UID
+     * existed, whether that entry could be drawn. Each guess was wrong for
+     * some file — a RECURRENCE-ID that is not a date, a master with no start,
+     * a rule this reader does not expand and so cannot produce the week the
+     * change is dated to — and each time the change stepped aside for nothing
+     * and a readable day at a readable time went off the calendar. Four of
+     * those in one evening is enough: the question is not what should have
+     * taken it up, it is what did.
+     *
+     * `taken` answers that outright, because the entries that describe a class
+     * are read before the ones that change them and each says what it used.
+     * The guesses are gone rather than kept alongside, since a condition that
+     * cannot fail still reads like one that can.
+     */
+    const range = (at.params.RANGE ?? '').toUpperCase() === 'THISANDFUTURE';
+    if (range && taken.has(raw)) return [];
+    return [draw(when.date, `${uid}-at-${iso((original ?? when).date)}`)];
+  }
+
+  /*
+   * Weeks the calendar has taken back — the class was cancelled, or it moved
+   * and some other entry now draws it. Both are read by day, for the reason
+   * given where `replaced` is built.
+   */
+  const gone = new Set(replaced.get(uid) ?? []);
+  for (const value of (raw.EXDATE?.value ?? '').split(',')) {
+    if (!value.trim()) continue;
+    const day = parseWhen({ params: raw.EXDATE?.params ?? {}, value });
+    if (day) gone.add(iso(day.date));
+  }
 
   const dates = raw.RRULE ? expand(raw.RRULE.value, when.date) : [when.date];
   const all = dates.length ? dates : [when.date];
 
-  return all.map((date, i) => ({
-    id: `${uid}-${i}`,
-    sourceId,
-    title,
-    date: iso(date),
-    at: when.allDay ? null : date.getHours() * 60 + date.getMinutes(),
-    time: when.allDay ? 'All day' : clock(date),
-    where,
-    note,
-    courseId,
-  }));
+  /*
+   * Numbered before the cancelled weeks are taken out, so that cancelling one
+   * week does not renumber the ones after it. An id is what ties a row to the
+   * one already synced to another device; renumbering would make every later
+   * week of the term look like a new entry, and leave the old ones behind.
+   */
+  /*
+   * A week changed for good keeps the id of the occurrence it came from: it is
+   * the same class on a new day, so the row a device already holds is updated
+   * rather than joined by a second one. The last change that has come into
+   * force by that week is the one that applies, so a class moved twice ends
+   * where it was moved to last.
+   */
+  const changes = onward.get(uid) ?? [];
+  const changeOn = (day: string): Onward | undefined => {
+    let found: Onward | undefined;
+    for (const c of changes) if (c.from <= day) found = c;
+    return found;
+  };
+
+  return all
+    .map((date, i) => ({ date, id: `${uid}-${i}` }))
+    .filter((o) => !gone.has(iso(o.date)))
+    .flatMap((o) => {
+      const change = changeOn(iso(o.date));
+      if (!change) return [draw(o.date, o.id)];
+      // Taken up either way: a cancellation for good has been acted on here
+      // just as a move has, and must not go looking for somewhere else to be
+      // drawn.
+      taken.add(change.raw);
+      if (change.cancels) return [];
+      const moved = new Date(
+        o.date.getFullYear(),
+        o.date.getMonth(),
+        o.date.getDate() + change.shift,
+        change.clockAt.getHours(),
+        change.clockAt.getMinutes(),
+      );
+      return [draw(moved, o.id, change.look, change.allDay)];
+    });
 }
