@@ -8,6 +8,7 @@ import {
   summary,
   words,
 } from './reconcile';
+import { fromInputDate } from './edit';
 import type { DatedItem, FeedEvent } from './types';
 
 const item = (id: string, title: string, month: number, day: number, c = 'core'): DatedItem =>
@@ -245,5 +246,36 @@ describe('asItemDate', () => {
   it('refuses anything that is not one rather than storing NaN', () => {
     expect(asItemDate('next Tuesday')).toBe(null);
     expect(asItemDate('')).toBe(null);
+  });
+
+  it('refuses a date whose shape is right and whose day does not exist', () => {
+    /*
+     * Four digits, two, two says nothing about whether those numbers name a
+     * day. Every one of these matched the pattern and was stored, then read
+     * back through `new Date(year, month, day)`, which rolls rather than
+     * refuses — so the deadline landed somewhere the calendar never said.
+     */
+    expect(asItemDate('2026-04-31')).toBe(null); // drawn as 1 May
+    expect(asItemDate('2026-02-30')).toBe(null); // drawn as 2 March
+    expect(asItemDate('2026-11-31')).toBe(null); // drawn as 1 December
+    expect(asItemDate('2026-13-01')).toBe(null); // drawn as 1 January, next year
+    expect(asItemDate('2026-00-10')).toBe(null); // drawn as December, last year
+    expect(asItemDate('2026-01-00')).toBe(null); // drawn as 31 December, last year
+  });
+
+  it('keeps 29 February, because the year is not stored to rule it out', () => {
+    // `SEMESTER_YEAR` is stamped on later, so this reader cannot know whether
+    // the year is a leap one. Refusing the 29th would drop a real deadline in
+    // three years out of four to catch a wrong one in the fourth.
+    expect(asItemDate('2026-02-29')).toEqual({ month: 1, day: 29 });
+  });
+
+  it('agrees with the reader on the other side of the same value', () => {
+    // `fromInputDate` reads the same ISO string off the edit form and already
+    // refused these. Two readers of one value, one answer.
+    for (const iso of ['2026-04-31', '2026-13-01', '2026-00-10', '2026-01-00']) {
+      expect(asItemDate(iso), iso).toEqual(fromInputDate(iso));
+    }
+    expect(asItemDate('2026-09-17')).toEqual(fromInputDate('2026-09-17'));
   });
 });
