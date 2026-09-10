@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildCatalog, EMPTY_CATALOG } from '../data/catalog';
+import { hops } from './rooms';
+import type { Commitment } from './activities';
 import {
   appointmentsOn,
   campusCalendar,
@@ -464,6 +466,52 @@ describe('railFor', () => {
   it('falls back to a label rather than an empty line when there is no place', () => {
     const rail = railFor(CAT, NOW, [{ ...appt, where: '' }]);
     expect(rail.find((b) => b.title === 'Dentist')?.meta).toBe('Added by you');
+  });
+
+  it('states where each thing is, separately from the line that describes it', () => {
+    // Only a class block's line is shaped "room first"; the walking route reads
+    // buildings out of it. Everything else here puts something that is not a
+    // place there — a kind, a course code, or the words "Added by you" — so
+    // each says its place outright, and `''` means it has none.
+    const due = datedItems(CAT, NOW).filter((i) => i.id === 'p-r1');
+    const task: PersonalTask = {
+      id: 't1', title: 'Renew pass', done: false, date: '2026-09-09',
+      time: '3:00p', courseId: null, created: 0,
+    } as PersonalTask;
+    const commitment: Commitment = {
+      id: 'c1', name: 'Rowing squad', kind: 'clubsport', role: '', where: 'Boathouse',
+      url: '', note: '', days: [3], at: 17 * 60, minutes: 90, hours: 0, active: true, created: 0,
+    };
+    const rail = railFor(CAT, NOW, [appt, { ...appt, id: 'a2', title: 'Coffee', where: '' }],
+      [commitment], due, [task]);
+    const at = (title: string) => rail.find((b) => b.title === title);
+
+    expect(at('Rowing squad')?.where).toBe('Boathouse');
+    expect(at('Dentist')?.where).toBe('Broadway');
+    expect(at('Coffee')?.where).toBe('');
+    expect(at('Response 1')?.where).toBe('');
+    expect(at('Renew pass')?.where).toBe('');
+    // A class says nothing, because its line already is the room.
+    expect(at('ECON lecture')?.where).toBeUndefined();
+  });
+
+  it('sends the walking route to places, and to nothing that is not one', () => {
+    // What the Today screen actually does. Before this, the same day gave five
+    // "moves between buildings", three of them between things that are not
+    // buildings — and never once to the Boathouse.
+    const commitment: Commitment = {
+      id: 'c1', name: 'Rowing squad', kind: 'clubsport', role: '', where: 'Boathouse',
+      url: '', note: '', days: [3], at: 17 * 60, minutes: 90, hours: 0, active: true, created: 0,
+    };
+    const rail = railFor(CAT, NOW, [{ ...appt, title: 'Coffee', where: '' }], [commitment]);
+    const route = hops(rail, []);
+    for (const h of route) {
+      expect(h.toPlace).not.toBe('Added by you');
+      expect(h.toPlace).not.toBe('Club sport');
+      expect(h.fromPlace).not.toBe('Added by you');
+      expect(h.fromPlace).not.toBe('Club sport');
+    }
+    expect(route.map((h) => h.toPlace)).toContain('Boathouse');
   });
 
   it('draws a deadline that names an hour where it actually falls', () => {

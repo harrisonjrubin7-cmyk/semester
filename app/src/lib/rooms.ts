@@ -34,6 +34,27 @@ import { far, metresBetween, type SavedPlace } from './place';
 export const PACE = 80;
 
 /**
+ * Where a block actually is, for reading a building out of.
+ *
+ * A class block's `meta` reads "Alumni Hall 201 · Dr. Hogue" — the room
+ * first, which is what `buildingOf` is written to read. Nothing else on the
+ * rail is shaped that way. A commitment's reads "Club sport · Boathouse", its
+ * kind first and the place second; an appointment with nowhere stated reads
+ * "Added by you"; a deadline reads "CORE 2500 · Reflection". Read as prose,
+ * those sent a student walking from Garland to "Club sport", from there to
+ * "Added by you", and never once to the Boathouse, which is the only real
+ * place among them.
+ *
+ * So a block that knows its own place says so, `''` included — a commitment
+ * with nowhere stated has nowhere to walk to, and belongs in no route at all.
+ * The prose is read only where nothing was said, which is the class block it
+ * was written for.
+ */
+function placeText(block: { meta: string; where?: string }): string {
+  return block.where ?? block.meta;
+}
+
+/**
  * The building out of a room string.
  *
  * "Buttrick 101" is Buttrick; "Commons 363A" is Commons; "Featheringill Hall
@@ -100,21 +121,21 @@ export interface Hop {
  * than pretending there were none.
  */
 export function hops(
-  blocks: { title: string; meta: string; at: number; canceled?: boolean }[],
+  blocks: { title: string; meta: string; at: number; canceled?: boolean; where?: string }[],
   places: SavedPlace[],
 ): Hop[] {
-  const real = blocks.filter((b) => !b.canceled && buildingOf(b.meta));
+  const real = blocks.filter((b) => !b.canceled && buildingOf(placeText(b)));
   const out: Hop[] = [];
 
   for (let i = 0; i < real.length - 1; i += 1) {
     const from = real[i];
     const to = real[i + 1];
-    const a = buildingOf(from.meta);
-    const b = buildingOf(to.meta);
+    const a = buildingOf(placeText(from));
+    const b = buildingOf(placeText(to));
     if (!a || !b || a.toLowerCase() === b.toLowerCase()) continue;
 
-    const pa = matchPlace(from.meta, places);
-    const pb = matchPlace(to.meta, places);
+    const pa = matchPlace(placeText(from), places);
+    const pb = matchPlace(placeText(to), places);
     const metres = pa && pb ? Math.round(metresBetween(pa, pb)) : 0;
 
     out.push({
