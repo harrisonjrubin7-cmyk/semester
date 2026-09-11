@@ -1583,6 +1583,25 @@ a:hover {
 .device .input::placeholder {
   color: var(--app-faint);
 }
+
+/*
+ * A field drawn on a slide, in `screens/deck/Canvas.tsx`.
+ *
+ * The canvas paints its own ground from the deck's theme, so the app's own
+ * `--app-faint` placeholder is the wrong colour on it — invisible on a light
+ * theme and too loud on a dark one. The field passes the theme's second rank
+ * in as `--slide-dim`, which is the one thing a placeholder cannot be given
+ * inline: `::placeholder` is a pseudo-element and has no style attribute.
+ *
+ * The inset hairline goes too. It is what makes an input look like an input,
+ * which is exactly what a field on a slide must not look like.
+ */
+.device .canvas-field {
+  box-shadow: none;
+}
+.device .canvas-field::placeholder {
+  color: var(--slide-dim, var(--app-faint));
+}
 .device .input:hover {
   border-color: rgba(236, 238, 242, 0.24);
 }

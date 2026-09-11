@@ -85,8 +85,25 @@ export function made(state: State, action: Action): State | null {
       return action.open ? push({ ...next, sheetId: sheet.id }, 'sheet') : next;
     }
 
+    /*
+     * Opening stamps `opened`, and deliberately not `updated`.
+     *
+     * The shelf sorts by "last opened", which is the order a person's own list
+     * of files is in everywhere else, and there was nothing to sort by: a
+     * sheet carried when it was made and when it was last written to, so the
+     * gradebook somebody checks every Friday without typing in it sank to the
+     * bottom. Stamping `updated` instead would have been the easy version of
+     * this and a lie — "edited just now" against a sheet nobody has changed.
+     */
     case 'openSheet':
-      return push({ ...state, sheetId: action.id }, 'sheet');
+      return push(
+        {
+          ...state,
+          sheets: state.sheets.map((s) => (s.id === action.id ? { ...s, opened: Date.now() } : s)),
+          sheetId: action.id,
+        },
+        'sheet',
+      );
 
     case 'closeSheet':
       return { ...state, sheetId: null };
