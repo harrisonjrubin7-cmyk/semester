@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_TABS,
   FEWEST,
+  barFor,
   FEWEST_CHOSEN,
   MOST,
   MOST_CHOSEN,
@@ -243,5 +244,64 @@ describe('what the bar says', () => {
     // for a label and quietly making the bar two rows tall.
     const tooLong = choosable().filter((s) => tabLabel(s).length > 9);
     expect(tooLong.map((s) => `${s}: ${tabLabel(s)}`)).toEqual([]);
+  });
+});
+
+describe('the bar, gated', () => {
+  const EVERY = {
+    mealPlan: 'both' as const,
+    housing: true,
+    campusMap: true,
+    registrarUrl: 'https://example.invalid',
+    orgPortalUrl: 'https://example.invalid',
+  };
+  const NO_CAMPUS = { mealPlan: 'none' as const, housing: false, campusMap: false };
+  const bar = (...list: string[]) => list as unknown as typeof DEFAULT_TABS;
+
+  /*
+   * A saved bar is a saved bar and the gates move underneath it. Switch to
+   * Teaching with Money in the bar and the directory stops offering Money
+   * while the bar keeps carrying it, one tap from a screen the role is meant
+   * to hide.
+   */
+  it('drops a tab this role is not meant to reach', () => {
+    const saved = bar('home', 'courses', 'costs', 'study', PINNED);
+    expect(barFor(saved, EVERY, 'student')).toContain('costs');
+    expect(barFor(saved, EVERY, 'faculty')).not.toContain('costs');
+  });
+
+  it('drops a tab this school has no equivalent of, which was the older hole', () => {
+    const saved = bar('home', 'courses', 'meals', 'study', PINNED);
+    expect(barFor(saved, NO_CAMPUS, 'student')).not.toContain('meals');
+  });
+
+  it('changes nothing it does not have to', () => {
+    const saved = bar('home', 'courses', 'study', 'calendar', PINNED);
+    expect(barFor(saved, EVERY, 'student')).toEqual(saved);
+    expect(barFor(saved, EVERY, 'faculty')).toEqual(saved);
+  });
+
+  it('keeps the pinned one, which is on no gate’s list', () => {
+    for (const role of ['student', 'faculty'] as const) {
+      expect(barFor(DEFAULT_TABS, EVERY, role)).toContain(PINNED);
+    }
+  });
+
+  // A navigation bar is the one component that cannot render nothing.
+  it('falls back rather than emptying itself', () => {
+    expect(barFor(bar('costs', 'meals', 'housing', PINNED), EVERY, 'faculty')).toEqual(DEFAULT_TABS);
+  });
+
+  it('defaults to the student, so an unpassed role changes nothing', () => {
+    const saved = bar('home', 'costs', 'study', PINNED);
+    expect(barFor(saved, EVERY)).toEqual(barFor(saved, EVERY, 'student'));
+  });
+
+  // Filtered, never rewritten: the stored order still holds it.
+  it('leaves the saved list alone, so switching back brings it back', () => {
+    const saved = bar('home', 'courses', 'costs', 'study', PINNED);
+    barFor(saved, EVERY, 'faculty');
+    expect(saved).toContain('costs');
+    expect(barFor(saved, EVERY, 'student')).toContain('costs');
   });
 });

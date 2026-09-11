@@ -25,8 +25,15 @@
 
 import type { Usage } from './spend';
 import type { CaseFile, Example, Figure, Frame, StudyCard } from './types';
-import { FIGURE_SHAPES, readFigures } from './figure';
-import { STUDY_SHAPES, readStudyParts } from './study';
+import { figureShapes, readFigures } from './figure';
+import { readStudyParts, studyShapes } from './study';
+import {
+  DEFAULTS as NO_CONTROLS,
+  MOST,
+  capsFor,
+  shapeSays,
+  type Controls,
+} from './controls';
 
 import {
   DEFAULT_MODEL as OPENAI_DEFAULT,
@@ -1135,6 +1142,14 @@ export async function readMaterial(
   text: string,
   context: string,
   signal?: AbortSignal,
+  /**
+   * How much, at what level, and how many cards.
+   *
+   * Optional and defaulted, so every caller that has no controls to pass gets
+   * byte-for-byte the prompt this function had before they existed — see the
+   * note on `shapeSays` in `lib/controls.ts` for why that matters.
+   */
+  controls: Controls = NO_CONTROLS,
 ): Promise<{
   cards: StudyCard[];
   terms: { t: string; d: string }[];
@@ -1145,12 +1160,20 @@ export async function readMaterial(
   examples: Example[];
   note: string;
 }> {
+  const caps = capsFor(controls);
+  const says = shapeSays(controls);
+
   const reply = await ask({
     signal,
     think: true,
     // Raised with figures: a table of twelve rows and a caption is a few
     // hundred tokens, and the ceiling used to be reached by cards alone.
-    maxTokens: 8000,
+    //
+    // Scaled with the ceiling rather than fixed: fifty cards asked for at
+    // `full` do not fit in the budget eight thousand was set for, and a reply
+    // cut off mid-JSON parses as nothing at all — the student would see "could
+    // not read it" for a reading the model read perfectly well.
+    maxTokens: Math.min(16_000, 8_000 + Math.max(0, caps.cards - MOST.cards) * 160),
     system:
       'You are reading course material a university student has added to a study guide — a ' +
       'reading, a handout, a set of lecture notes. Turn it into study material; do not invent.\n\n' +
@@ -1160,12 +1183,15 @@ export async function readMaterial(
       'material at all — and then return no cards.\n' +
       '- cards: questions an exam could ask, answered in full prose with the specific numbers, ' +
       'names, dates and steps the text actually gives. Not topic labels: "Know the GGL study" ' +
-      'is not a card. Between 0 and 25, however many the material genuinely supports.\n' +
-      '- terms: vocabulary this material defines, with the definition it gives. Between 0 and 20.\n' +
-      '- ' + FIGURE_SHAPES + '\n' +
-      '- ' + STUDY_SHAPES + '\n' +
+      `is not a card. Between 0 and ${caps.cards}, however many the material genuinely supports.\n` +
+      `- terms: vocabulary this material defines, with the definition it gives. Between 0 and ${caps.terms}.\n` +
+      '- ' + figureShapes(caps) + '\n' +
+      '- ' + studyShapes(caps) + '\n' +
       '- Everything must come from the text in front of you. Do not complete a half-stated idea ' +
-      'from general knowledge, and leave out anything the material only alludes to.',
+      'from general knowledge, and leave out anything the material only alludes to.' +
+      // Empty on the defaults, so the prompt is unchanged for anybody who has
+      // not touched a control.
+      (says ? `\n- ${says}` : ''),
     messages: [
       {
         role: 'user',
@@ -1190,19 +1216,33 @@ export async function readMaterial(
     };
     return {
       note: typeof parsed.note === 'string' ? parsed.note.trim() : '',
+      /*
+       * Cut to the ceiling, not merely asked for it.
+       *
+       * The number in the prompt is a request and a model is free to ignore
+       * it — so "at most 12 cards" was twelve in the instruction and eighteen
+       * on the screen, which is a control that does not control anything. The
+       * four readers below have always cut at their ceiling; cards and terms
+       * were the two that only ever asked.
+       *
+       * Taken from the front rather than sampled, so what survives is what the
+       * model put first, which is what it judged most worth knowing.
+       */
       cards: (parsed.cards ?? [])
         .filter((c) => typeof c?.q === 'string' && typeof c?.a === 'string' && c.q && c.a)
+        .slice(0, caps.cards)
         .map((c) => ({ q: c.q.trim(), a: c.a.trim() })),
       terms: (parsed.terms ?? [])
         .filter((t) => typeof t?.t === 'string' && typeof t?.d === 'string' && t.t && t.d)
+        .slice(0, caps.terms)
         .map((t) => ({ t: (t.t as string).trim(), d: (t.d as string).trim() })),
       // Every check lives in `lib/figure.ts`, including the one that matters:
       // a figure that does not survive validation is dropped, never repaired.
-      figures: readFigures(parsed.figures),
+      figures: readFigures(parsed.figures, caps),
       // The field guide and the cram sheet, which cards and terms never
       // reached. Checked in `lib/study.ts`, on the same rule: dropped whole
       // rather than rendered with a gap.
-      ...readStudyParts(parsed),
+      ...readStudyParts(parsed, caps),
     };
   } catch {
     return { ...NOTHING_READ };

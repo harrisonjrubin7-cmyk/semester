@@ -20,9 +20,13 @@ import type { Citation } from './claude';
 let reply = '';
 let citations: Citation[] = [];
 
+/** What the last call actually sent, so the prompt itself can be asserted on. */
+let sent: { system?: string; maxTokens?: number } = {};
+
 vi.mock('./claude', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./claude')>()),
-  ask: vi.fn(async (opts: { onCitation?: (c: Citation) => void }) => {
+  ask: vi.fn(async (opts: { onCitation?: (c: Citation) => void; system?: string; maxTokens?: number }) => {
+    sent = { system: opts.system, maxTokens: opts.maxTokens };
     for (const c of citations) opts.onCitation?.(c);
     return reply;
   }),
@@ -448,5 +452,71 @@ describe('what the preview is told', () => {
     citations = [{ text: 'Problem Set 1 is due Friday September 4th at 11:59 PM on Gradescope.', page: 2 }];
     const out = await run(course());
     expect(out.quotesLine).toBeTruthy();
+  });
+});
+
+describe('what the controls actually send', () => {
+  const build = (controls?: Parameters<typeof generateCourse>[0]['controls']) => {
+    reply = JSON.stringify(course());
+    return generateCourse({
+      documents: [{ name: 'Econ.pdf', text: SYLLABUS }],
+      hint: '',
+      year: 2026,
+      controls,
+    });
+  };
+
+  /*
+   * The prompt that built the four shipped courses, unchanged for anybody who
+   * has not chosen anything. This is the load-bearing one: a settings screen
+   * appearing must not quietly change everybody's generation.
+   */
+  it('sends the prompt exactly as it was when nothing is chosen', async () => {
+    await build();
+    const bare = sent.system;
+    await build({ depth: 'standard', level: 'course', cards: 0 });
+    expect(sent.system).toBe(bare);
+    expect(sent.system).not.toContain('At most');
+    expect(sent.maxTokens).toBe(8000);
+  });
+
+  /*
+   * The bug this test exists for, found by re-reading the diff rather than by
+   * a failure. The counts were gated on the register instruction, which is
+   * empty whenever depth and level are both untouched — so a student who
+   * asked for twelve cards and changed nothing else had the number computed,
+   * clamped, and then never sent. No error, no clue, and the app quietly
+   * behaving as though they had not asked.
+   */
+  it('sends a card count that was chosen on its own', async () => {
+    await build({ depth: 'standard', level: 'course', cards: 12 });
+    expect(sent.system).toContain('At most 12 cards');
+  });
+
+  it('sends the register when that is what moved', async () => {
+    await build({ depth: 'brief', level: 'course', cards: 0 });
+    expect(sent.system).toContain('Keep it short');
+    // Depth moves the ceilings too, so the counts come with it.
+    expect(sent.system).toContain('At most');
+  });
+
+  it('numbers each added rule after the seven the prompt already has', async () => {
+    await build({ depth: 'full', level: 'harder', cards: 40 });
+    expect(sent.system).toContain('\n8. ');
+    expect(sent.system).toContain('\n9. ');
+    expect(sent.system).not.toContain('\n10. ');
+  });
+
+  // A reply cut off mid-JSON parses as nothing, and would read as "could not
+  // read it" for a syllabus that read perfectly well.
+  it('raises the token budget with a ceiling the student raised', async () => {
+    await build({ depth: 'standard', level: 'course', cards: 50 });
+    expect(sent.maxTokens).toBeGreaterThan(8000);
+    expect(sent.maxTokens).toBeLessThanOrEqual(16000);
+  });
+
+  it('carries the no-invention refusal whenever harder is asked for', async () => {
+    await build({ depth: 'standard', level: 'harder', cards: 0 });
+    expect(sent.system).toContain('never inventing material to ask about');
   });
 });

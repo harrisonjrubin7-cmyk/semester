@@ -32,6 +32,7 @@
  */
 
 import type { CaseFile, Example, Frame, StudyCard } from './types';
+import { MOST as DEFAULT_CAPS, type Caps } from './controls';
 
 /**
  * How many of each, at most.
@@ -40,27 +41,40 @@ import type { CaseFile, Example, Frame, StudyCard } from './types';
  * the point of the cram sheet is that it is short enough to read before an
  * exam, and a model asked for "frames" without a ceiling will produce one per
  * paragraph.
+ *
+ * The numbers moved to `lib/controls.ts`, which is where a student's choice of
+ * depth now scales them. This is still the default and still what the app does
+ * for anybody who has not touched a control — `capsFor()` with no argument is
+ * these four numbers exactly.
  */
-export const MOST = { frames: 6, tests: 8, cases: 3, examples: 4 };
+export const MOST = DEFAULT_CAPS;
 
 const SHORT = 120;
 const LONG = 400;
 
-export const STUDY_SHAPES = `frames: 0 to ${MOST.frames} exam frames — what a question about this material \
+/**
+ * The shapes, at a given set of ceilings.
+ *
+ * A function rather than a constant because the ceilings are a student's
+ * choice now. `STUDY_SHAPES` below is this at the defaults, kept so the
+ * callers that have no controls to pass read exactly as they did.
+ */
+export function studyShapes(caps: Caps = DEFAULT_CAPS): string {
+  return `frames: 0 to ${caps.frames} exam frames — what a question about this material \
 actually looks like, and what it is testing underneath. {"t":"The framing","d":"What it is really \
 asking, and what a good answer has to do."} These go on the cram sheet, so write the ones worth \
 reading an hour before an exam and no others.
 
-selfTest: 0 to ${MOST.tests} questions to answer out loud, with the answer. {"q":"…","a":"…"} \
+selfTest: 0 to ${caps.tests} questions to answer out loud, with the answer. {"q":"…","a":"…"} \
 Broader than a flashcard — a question that makes you say the whole idea, not name one fact.
 
-cases: 0 to ${MOST.cases} claim-and-test pairings, and only where the material genuinely contains \
+cases: 0 to ${caps.cases} claim-and-test pairings, and only where the material genuinely contains \
 one: a stated claim, a study or episode that tested it, and what came of it. \
 {"title":"…","when":"1968","claim":"What people believed","test":"Who tested it and how", \
 "verdict":"What they found","lesson":"What it means for the course"} All six fields are required. \
 If the material does not name who tested the claim, there is no case — return none.
 
-examples: 0 to ${MOST.examples} worked examples — the concept pointed at something concrete the \
+examples: 0 to ${caps.examples} worked examples — the concept pointed at something concrete the \
 material actually discusses. {"tag":"Elasticity","t":"Short title of the case","d":"What it is and \
 why the concept explains it."} Not an illustration you thought of: if the material does not work \
 the example, there is no example.
@@ -68,13 +82,17 @@ the example, there is no example.
 Return an empty list for any of these the material does not support, which is the common case. \
 Never infer a frame from what an exam usually asks, a verdict from what is generally believed, or \
 a date the material does not give.`;
+}
+
+/** The shapes at the default ceilings — what every caller used before. */
+export const STUDY_SHAPES = studyShapes();
 
 function text(v: unknown, cap: number): string {
   return typeof v === 'string' ? v.trim().slice(0, cap) : '';
 }
 
 /** Exam frames — a title and what it is really testing. */
-export function readFrames(raw: unknown): Frame[] {
+export function readFrames(raw: unknown, caps: Caps = DEFAULT_CAPS): Frame[] {
   if (!Array.isArray(raw)) return [];
   const out: Frame[] = [];
   for (const one of raw) {
@@ -83,13 +101,13 @@ export function readFrames(raw: unknown): Frame[] {
     const t = text(f.t, SHORT);
     const d = text(f.d, LONG);
     if (t && d) out.push({ t, d });
-    if (out.length === MOST.frames) break;
+    if (out.length === caps.frames) break;
   }
   return out;
 }
 
 /** Questions written to be answered out loud. */
-export function readSelfTest(raw: unknown): StudyCard[] {
+export function readSelfTest(raw: unknown, caps: Caps = DEFAULT_CAPS): StudyCard[] {
   if (!Array.isArray(raw)) return [];
   const out: StudyCard[] = [];
   for (const one of raw) {
@@ -98,7 +116,7 @@ export function readSelfTest(raw: unknown): StudyCard[] {
     const q = text(c.q, LONG);
     const a = text(c.a, LONG);
     if (q && a) out.push({ q, a });
-    if (out.length === MOST.tests) break;
+    if (out.length === caps.tests) break;
   }
   return out;
 }
@@ -111,7 +129,7 @@ export function readSelfTest(raw: unknown): StudyCard[] {
  * believed X, and in fact Y", which is a claim the app would be making on its
  * own account.
  */
-export function readCases(raw: unknown): CaseFile[] {
+export function readCases(raw: unknown, caps: Caps = DEFAULT_CAPS): CaseFile[] {
   if (!Array.isArray(raw)) return [];
   const out: CaseFile[] = [];
   for (const one of raw) {
@@ -126,13 +144,13 @@ export function readCases(raw: unknown): CaseFile[] {
       lesson: text(c.lesson, LONG),
     };
     if (Object.values(made).every(Boolean)) out.push(made);
-    if (out.length === MOST.cases) break;
+    if (out.length === caps.cases) break;
   }
   return out;
 }
 
 /** Worked examples — a tag, a title and what it shows. */
-export function readExamples(raw: unknown): Example[] {
+export function readExamples(raw: unknown, caps: Caps = DEFAULT_CAPS): Example[] {
   if (!Array.isArray(raw)) return [];
   const out: Example[] = [];
   for (const one of raw) {
@@ -142,7 +160,7 @@ export function readExamples(raw: unknown): Example[] {
     const t = text(e.t, SHORT);
     const d = text(e.d, LONG);
     if (tag && t && d) out.push({ tag, t, d });
-    if (out.length === MOST.examples) break;
+    if (out.length === caps.examples) break;
   }
   return out;
 }
@@ -155,17 +173,31 @@ export interface StudyParts {
 }
 
 /** All three out of one reply. */
-export function readStudyParts(raw: {
-  frames?: unknown;
-  selfTest?: unknown;
-  cases?: unknown;
-  examples?: unknown;
-}): StudyParts {
+export function readStudyParts(
+  raw: {
+    frames?: unknown;
+    selfTest?: unknown;
+    cases?: unknown;
+    examples?: unknown;
+  },
+  /**
+   * The ceilings actually asked for.
+   *
+   * These readers each stop at a ceiling, and until now it was always the
+   * default one — so a student who chose `full` was asked for nine frames in
+   * the prompt and kept six, and a student who chose `brief` was asked for two
+   * and kept whatever came. The number in the prompt was a request and the
+   * number here is the rule, and they have to be the same number or the
+   * control only half works. Defaulted, so every caller with no controls to
+   * pass behaves exactly as it did.
+   */
+  caps: Caps = DEFAULT_CAPS,
+): StudyParts {
   return {
-    frames: readFrames(raw.frames),
-    selfTest: readSelfTest(raw.selfTest),
-    cases: readCases(raw.cases),
-    examples: readExamples(raw.examples),
+    frames: readFrames(raw.frames, caps),
+    selfTest: readSelfTest(raw.selfTest, caps),
+    cases: readCases(raw.cases, caps),
+    examples: readExamples(raw.examples, caps),
   };
 }
 

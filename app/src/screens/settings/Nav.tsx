@@ -186,7 +186,7 @@ export function SettingsNav() {
             footer="The same order the icons are dragged into. A folder’s own icons are a list of their own, and the dock is the four along the bottom."
             lit={lights('home screen springboard icons dock folder order rearrange move up down arrange', lit)}
           >
-            {boardLists(school.capabilities, currentLook(state).boardOrder).map((list) => (
+            {boardLists(school.capabilities, currentLook(state).boardOrder, state.role).map((list) => (
               <CustomRow key={list.key}>
                 <SectionLabel style={LABEL_STYLE}>{list.label}</SectionLabel>
                 {list.items.map((item, i, all) => (

@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { readDeck, readFolder, readIncoming, readList, readModule, readWindow } from './stored';
+import {
+  readControls,
+  readDeck,
+  readFolder,
+  readIncoming,
+  readList,
+  readModule,
+  readQuiet,
+  readWindow,
+} from './stored';
+import { DEFAULTS as DEFAULT_CONTROLS, capsFor } from './controls';
 import { buildCatalog } from '../data/catalog';
 import { hoursOn } from './windows';
 import type { CourseModule } from './types';
@@ -246,5 +256,57 @@ describe('a deck read back from storage', () => {
   it('drops a row with no id', () => {
     expect(readDeck({ title: 'x' })).toBeNull();
     expect(readDeck(undefined)).toBeNull();
+  });
+});
+
+describe('the settings whose bad values are worse than their absence', () => {
+  /*
+   * These arrive by the door nobody has to open. A role this build has never
+   * heard of is not `student`, so `forRole` hides every student-only screen
+   * and the app opens on a directory with twelve things missing; a depth of
+   * "bad" indexes a table of multipliers, comes back undefined, and every
+   * ceiling is NaN.
+   */
+  it('normalises a role it has never heard of, rather than hiding twelve screens', () => {
+    expect(readIncoming({ role: 'vice-chancellor' }).role).toBe('student');
+    expect(readIncoming({ role: 42 } as Record<string, unknown>).role).toBe('student');
+    expect(readIncoming({ role: 'faculty' }).role).toBe('faculty');
+  });
+
+  it('normalises controls field by field, so one bad value does not take the others', () => {
+    const out = readIncoming({ controls: { depth: 'bad', level: 'harder', cards: 12 } });
+    expect(out.controls).toEqual({ depth: 'standard', level: 'harder', cards: 12 });
+  });
+
+  it('never lets a stored depth produce a NaN ceiling', () => {
+    const out = readIncoming({ controls: { depth: 'bad', level: 'course', cards: 'lots' } });
+    for (const n of Object.values(capsFor(out.controls as never))) {
+      expect(Number.isInteger(n)).toBe(true);
+    }
+  });
+
+  it('refuses a quiet window that is not one, rather than half-reading it', () => {
+    expect(readIncoming({ quiet: { from: 'ten', to: 480 } }).quiet).toBeNull();
+    expect(readIncoming({ quiet: { from: 1320.5, to: 480 } }).quiet).toBeNull();
+    expect(readIncoming({ quiet: { from: 1320, to: 1440 } }).quiet).toBeNull();
+    expect(readIncoming({ quiet: { from: 1320, to: 480 } }).quiet).toEqual({ from: 1320, to: 480 });
+  });
+
+  // "Only the keys actually carried are returned, so a partial stays partial."
+  it('leaves a key that did not arrive alone', () => {
+    const out = readIncoming({ notes: [] });
+    expect('role' in out).toBe(false);
+    expect('controls' in out).toBe(false);
+    expect('quiet' in out).toBe(false);
+  });
+
+  it('reads the same way on its own as it does through the door', () => {
+    expect(readControls(undefined)).toEqual(DEFAULT_CONTROLS);
+    expect(readControls({ depth: 'brief', level: 'plainer', cards: 3 })).toEqual({
+      depth: 'brief',
+      level: 'plainer',
+      cards: 3,
+    });
+    expect(readQuiet(null)).toBeNull();
   });
 });

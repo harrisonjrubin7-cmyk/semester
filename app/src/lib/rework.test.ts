@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { SYSTEM, brief, readPlan, survey, verdict } from './rework';
+import {
+  SYSTEM,
+  SYSTEM_ONE,
+  brief,
+  oneUnit,
+  readOneUnit,
+  readPlan,
+  storedUnit,
+  survey,
+  updatesFor,
+  verdict,
+} from './rework';
 import type { CourseUpdate, Guide } from './types';
 
 const guide = (): Guide => ({
@@ -201,5 +212,243 @@ describe('verdict', () => {
     expect(said).toContain('loses the answers you have given it');
     expect(said).toContain('3 look reworded');
     expect(said).toContain('1 are gone');
+  });
+});
+
+describe('regenerating one unit', () => {
+  const reply = (over: Record<string, unknown> = {}) =>
+    JSON.stringify({
+      name: '2 · Supply and its shifters',
+      cards: [
+        { q: 'What shifts supply?', a: 'Costs, technology.' },
+        { q: 'What is a supply shock?', a: 'A sudden change in input costs.' },
+      ],
+      terms: [{ t: 'Supply shock', d: 'A sudden change in input costs.' }],
+      notes: ['Added a card on shocks from the week-seven reading.'],
+      ...over,
+    });
+
+  it('shows the other units as names only, so nothing is moved or duplicated', () => {
+    const said = oneUnit(guide(), [], 1);
+    expect(said).toContain('1 · What economics is');
+    // Unit 1's card must not be in the brief: sending it invites the model to
+    // move it, and costs tokens for context it does not need.
+    expect(said).not.toContain('What is scarcity?');
+    expect(said).toContain('What shifts supply?');
+    expect(said).toContain('← THE ONE TO REVISE');
+  });
+
+  it('leaves out material filed against another unit', () => {
+    expect(oneUnit(guide(), [update({ unit: 0, body: 'ONLY-IN-UNIT-ONE' })], 1)).not.toContain(
+      'ONLY-IN-UNIT-ONE',
+    );
+  });
+
+  it('refuses a unit that is not in the guide rather than guessing at one', () => {
+    expect(() => oneUnit(guide(), [], 9)).toThrow();
+    expect(() => readOneUnit(reply(), guide(), 9)).toThrow();
+  });
+
+  it('replaces the one unit and returns the rest untouched', () => {
+    const { guide: after } = readOneUnit(reply(), guide(), 1);
+    expect(after.units).toHaveLength(2);
+    expect(after.units[0]).toEqual(guide().units[0]);
+    expect(after.units[1].name).toBe('2 · Supply and its shifters');
+    expect(after.units[1].cards).toHaveLength(2);
+  });
+
+  /*
+   * The boundary the whole scoped path rests on, enforced in code rather than
+   * asked for in the prompt: a model that decides to reorganise the course
+   * changes nothing but the unit it was asked about.
+   */
+  it('ignores extra units the model returns, and anything else it renames', () => {
+    const wild = JSON.stringify({
+      name: 'Renamed',
+      cards: [{ q: 'What shifts supply?', a: 'Costs, technology.' }],
+      units: [{ name: 'A whole new structure', cards: [] }],
+      blurb: 'A blurb it was not asked for',
+      code: 'NOT 1010',
+    });
+    const { guide: after } = readOneUnit(wild, guide(), 1);
+    expect(after.units).toHaveLength(2);
+    expect(after.blurb).toBe(guide().blurb);
+    expect(after.code).toBe('ECON 1020');
+  });
+
+  it('folds new terms in and keeps the definition the guide already had', () => {
+    const { guide: after } = readOneUnit(
+      reply({
+        terms: [
+          { t: 'Scarcity', d: 'A DIFFERENT DEFINITION' },
+          { t: 'Supply shock', d: 'A sudden change.' },
+        ],
+      }),
+      guide(),
+      1,
+    );
+    expect(after.terms.find((t) => t.t === 'Scarcity')?.d).toBe('Wants exceed means.');
+    expect(after.terms.map((t) => t.t)).toContain('Supply shock');
+  });
+
+  it('never drops a term the rest of the guide uses', () => {
+    expect(readOneUnit(reply({ terms: [] }), guide(), 1).guide.terms).toEqual(guide().terms);
+  });
+
+  // The one outcome worse than not regenerating at all.
+  it('refuses to replace a unit with nothing', () => {
+    expect(() => readOneUnit(reply({ cards: [] }), guide(), 1)).toThrow(/no cards/);
+    expect(() => readOneUnit('not json at all', guide(), 1)).toThrow();
+    expect(() => readOneUnit('{"name":"x"}', guide(), 1)).toThrow(/no cards/);
+  });
+
+  it('keeps the old name when none comes back', () => {
+    expect(readOneUnit(reply({ name: '  ' }), guide(), 1).guide.units[1].name).toBe('2 · Supply');
+  });
+
+  it('resets the unit’s declared mastery, which is measured and never stated', () => {
+    const { guide: after } = readOneUnit(reply(), guide(), 1);
+    expect(after.units[1].mastery).toBe(0);
+    // The untouched unit keeps its own, because nothing about it changed.
+    expect(after.units[0].mastery).toBe(40);
+  });
+
+  it('reports what it changed', () => {
+    expect(readOneUnit(reply(), guide(), 1).notes).toEqual([
+      'Added a card on shocks from the week-seven reading.',
+    ]);
+  });
+
+  /*
+   * The point of scoping it: the same cost preview, over far less. A card
+   * whose wording changes loses its answer history, and here only one unit's
+   * wording is even at risk.
+   */
+  it('is measured by the same survey, and leaves the other unit’s history alone', () => {
+    const before = guide();
+    const s = survey(before, readOneUnit(reply(), before, 1).guide);
+    expect(s.kept).toBe(2);
+    expect(s.reworded).toBe(0);
+    expect(s.dropped).toBe(0);
+    expect(s.fresh).toBe(1);
+  });
+
+  it('tells the model to stay inside the unit, and why the others are shown', () => {
+    expect(SYSTEM_ONE).toContain('Stay inside the unit');
+    expect(SYSTEM_ONE).toContain('do not return any other unit');
+    // Carried over verbatim from the whole-guide path — a scoped rework must
+    // not be the one that loses a semester of drilling.
+    expect(SYSTEM_ONE).toContain('EXACTLY as written');
+    expect(SYSTEM_ONE).toContain('Never invent');
+  });
+});
+
+describe('the unit on screen is not the unit on disk', () => {
+  /*
+   * `mergeGuide` splices an unfiled update in as a unit of its own at the
+   * session it names, so the guide a person is looking at can have more units
+   * than the one stored, and every unit at or after an insertion is displayed
+   * one higher than it is stored. `CourseUpdate.unit` is a stored index.
+   * Assuming the two were the same number sent the wrong week's reading to
+   * the model — silently, because the result still looked like a unit.
+   */
+  it('shifts a displayed index back past every insertion before it', () => {
+    expect(storedUnit(0, [])).toBe(0);
+    expect(storedUnit(3, [])).toBe(3);
+    // One unit spliced in at 1: displayed 2 is stored 1, displayed 5 is 4.
+    expect(storedUnit(0, [1])).toBe(0);
+    expect(storedUnit(2, [1])).toBe(1);
+    expect(storedUnit(5, [1])).toBe(4);
+    // Two insertions, at 1 and 4.
+    expect(storedUnit(6, [1, 4])).toBe(4);
+  });
+
+  it('says an inserted unit has no stored counterpart', () => {
+    expect(storedUnit(1, [1])).toBeNull();
+    expect(storedUnit(4, [1, 4])).toBeNull();
+  });
+
+  it('sends the material filed against the stored unit, not the displayed one', () => {
+    const g = guide();
+    // Displayed unit 1 is stored unit 0 once something is spliced in at 0.
+    const filed = update({ id: 'u0', unit: 0, body: 'BELONGS-TO-STORED-ZERO' });
+    const other = update({ id: 'u1', unit: 1, body: 'BELONGS-TO-STORED-ONE' });
+    const said = oneUnit(g, [filed, other], 1, [0]);
+    expect(said).toContain('BELONGS-TO-STORED-ZERO');
+    expect(said).not.toContain('BELONGS-TO-STORED-ONE');
+  });
+
+  it('behaves as it did when nothing was spliced in', () => {
+    const g = guide();
+    const ups = [update({ id: 'u1', unit: 1, body: 'FILED-AT-ONE' })];
+    expect(oneUnit(g, ups, 1, [])).toContain('FILED-AT-ONE');
+    // The default keeps every caller that has no merge to consult working.
+    expect(oneUnit(g, ups, 1)).toContain('FILED-AT-ONE');
+  });
+});
+
+describe('which reading belongs to which unit', () => {
+  const card = (q: string) => ({ q, a: `answer to ${q}` });
+
+  /**
+   * A guide with two units spliced in: displayed 1 and 3, from two different
+   * unfiled readings.
+   */
+  const merged = () => ({
+    ...guide(),
+    units: [
+      guide().units[0],
+      { name: 'Session 4 · Reading A', mastery: 0, cards: [card('a1'), card('a2')] },
+      guide().units[1],
+      { name: 'Session 9 · Reading B', mastery: 0, cards: [card('b1')] },
+    ],
+  });
+  const readingA = update({ id: 'ua', unit: null, body: 'MATERIAL-A', cards: [card('a1'), card('a2')] });
+  const readingB = update({ id: 'ub', unit: null, body: 'MATERIAL-B', cards: [card('b1')] });
+
+  /*
+   * Both are unfiled, so "unfiled" alone cannot tell them apart. Picking
+   * either one offered the model both readings and let it fold one into the
+   * other — and the save then replaced one unit with a rewrite drawing on the
+   * other's material.
+   */
+  it('gives a spliced-in unit its own reading and not the other one', () => {
+    const mine = updatesFor(merged().units, [1, 3], [readingA, readingB], 1);
+    expect(mine.map((u) => u.id)).toEqual(['ua']);
+    expect(updatesFor(merged().units, [1, 3], [readingA, readingB], 3).map((u) => u.id)).toEqual([
+      'ub',
+    ]);
+  });
+
+  it('does not offer a stored unit a reading that already has a unit of its own', () => {
+    const mine = updatesFor(merged().units, [1, 3], [readingA, readingB], 0);
+    expect(mine).toEqual([]);
+  });
+
+  it('does offer a stored unit unfiled material that has no unit of its own', () => {
+    // No cards, so `mergeGuide` never splices it in and it could belong here.
+    const homeless = update({ id: 'uh', unit: null, body: 'HOMELESS', cards: [] });
+    const mine = updatesFor(merged().units, [1, 3], [readingA, homeless], 0);
+    expect(mine.map((u) => u.id)).toEqual(['uh']);
+  });
+
+  it('matches a reading a rebuild has only half folded in', () => {
+    // The unit holds the fresh cards; the update still holds both.
+    const half = {
+      ...merged(),
+      units: merged().units.map((u, i) => (i === 1 ? { ...u, cards: [card('a2')] } : u)),
+    };
+    expect(updatesFor(half.units, [1, 3], [readingA, readingB], 1).map((u) => u.id)).toEqual(['ua']);
+  });
+
+  it('matches filed material on the stored index', () => {
+    const filed = update({ id: 'uf', unit: 1 });
+    // Displayed 2 is stored 1 with an insertion at 1 before it.
+    expect(updatesFor(merged().units, [1, 3], [filed], 2).map((u) => u.id)).toEqual(['uf']);
+    expect(updatesFor(merged().units, [1, 3], [filed], 0)).toEqual([]);
+  });
+
+  it('is nothing for a unit that is not there', () => {
+    expect(updatesFor(merged().units, [1, 3], [readingA], 9)).toEqual([]);
   });
 });

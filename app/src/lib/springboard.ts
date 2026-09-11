@@ -28,6 +28,7 @@
 
 import { arranged, readLists, writeLists } from './arrange';
 import { DESTINATIONS, offered } from './nav';
+import { DEFAULT_ROLE, type Role } from './role';
 import { has } from './search';
 import type { Capabilities } from './school';
 
@@ -112,8 +113,8 @@ export function placed(): string[] {
  * an id here that names no real screen is dropped rather than drawn as an icon
  * that goes nowhere. Empty folders and empty pages go with it.
  */
-export function pagesFor(caps: Capabilities): Page[] {
-  const can = new Set(offered(caps).map((d) => d.screen as string));
+export function pagesFor(caps: Capabilities, role: Role = DEFAULT_ROLE): Page[] {
+  const can = new Set(offered(caps, role).map((d) => d.screen as string));
   const pages: Page[] = [];
   for (const page of PAGES) {
     const items: (string | Folder)[] = [];
@@ -137,7 +138,7 @@ export function pagesFor(caps: Capabilities): Page[] {
    * apart.
    */
   const seen = new Set(placed());
-  const rest = offered(caps)
+  const rest = offered(caps, role)
     .map((d) => d.screen as string)
     .filter((s) => !seen.has(s));
   if (rest.length > 0) pages.push({ widgets: false, items: rest });
@@ -185,9 +186,13 @@ export function keyOf(item: string | Folder): string {
 }
 
 /** The pages this student gets, in the order they have dragged them into. */
-export function arrangedPages(caps: Capabilities, saved: string | undefined): Page[] {
+export function arrangedPages(
+  caps: Capabilities,
+  saved: string | undefined,
+  role: Role = DEFAULT_ROLE,
+): Page[] {
   const lists = readLists(saved);
-  return pagesFor(caps).map((page, i) => {
+  return pagesFor(caps, role).map((page, i) => {
     const byKey = new Map(page.items.map((item) => [keyOf(item), item]));
     const items = arranged([...byKey.keys()], lists[pageKey(i)] ?? []).map((k) => {
       const item = byKey.get(k)!;
@@ -204,8 +209,12 @@ export function arrangedPages(caps: Capabilities, saved: string | undefined): Pa
 }
 
 /** The dock, arranged. Four icons, and which four is the point of them. */
-export function arrangedDock(caps: Capabilities, saved: string | undefined): string[] {
-  return arranged(dockFor(caps), readLists(saved)[DOCK_KEY] ?? []);
+export function arrangedDock(
+  caps: Capabilities,
+  saved: string | undefined,
+  role: Role = DEFAULT_ROLE,
+): string[] {
+  return arranged(dockFor(caps, role), readLists(saved)[DOCK_KEY] ?? []);
 }
 
 /**
@@ -221,8 +230,8 @@ export function afterMove(saved: string | undefined, list: string, items: string
 }
 
 /** The dock, minus anything this school does not have. */
-export function dockFor(caps: Capabilities): string[] {
-  const can = new Set(offered(caps).map((d) => d.screen as string));
+export function dockFor(caps: Capabilities, role: Role = DEFAULT_ROLE): string[] {
+  const can = new Set(offered(caps, role).map((d) => d.screen as string));
   return DOCK.filter((s) => can.has(s));
 }
 
@@ -255,9 +264,13 @@ export interface BoardList {
   items: { id: string; label: string }[];
 }
 
-export function boardLists(caps: Capabilities, saved: string | undefined): BoardList[] {
+export function boardLists(
+  caps: Capabilities,
+  saved: string | undefined,
+  role: Role = DEFAULT_ROLE,
+): BoardList[] {
   const out: BoardList[] = [];
-  arrangedPages(caps, saved).forEach((page, i) => {
+  arrangedPages(caps, saved, role).forEach((page, i) => {
     out.push({
       key: pageKey(i),
       label: `Page ${i + 1}`,
@@ -281,7 +294,7 @@ export function boardLists(caps: Capabilities, saved: string | undefined): Board
   out.push({
     key: DOCK_KEY,
     label: 'Dock',
-    items: arrangedDock(caps, saved).map((s) => ({ id: s, label: labelFor(s) })),
+    items: arrangedDock(caps, saved, role).map((s) => ({ id: s, label: labelFor(s) })),
   });
   // A list of one cannot be reordered, and a row of arrows that can never do
   // anything is worse than no row at all.
@@ -320,6 +333,6 @@ export function matches(screen: string, query: string): boolean {
 }
 
 /** Everything on offer, flattened, for the search results grid. */
-export function searchable(caps: Capabilities): string[] {
-  return offered(caps).map((d) => d.screen as string);
+export function searchable(caps: Capabilities, role: Role = DEFAULT_ROLE): string[] {
+  return offered(caps, role).map((d) => d.screen as string);
 }

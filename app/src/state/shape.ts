@@ -64,6 +64,8 @@ import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
 import type { Aid, Charge, Payment, Plan } from '../lib/bill';
 import type { Quiet } from '../lib/notify';
+import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
+import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
@@ -76,7 +78,17 @@ import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
-import { list, readDeck, readFolder, readList, readModule, readWindow, record } from '../lib/stored';
+import {
+  list,
+  readControls,
+  readDeck,
+  readFolder,
+  readList,
+  readModule,
+  readQuiet,
+  readWindow,
+  record,
+} from '../lib/stored';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -462,6 +474,22 @@ export interface Persisted {
    */
   quiet: Quiet | null;
   /**
+   * How much study material to make, at what level, and how many cards.
+   *
+   * One setting for both generation paths — the syllabus pipeline and adding a
+   * reading — because they make the same thing and a student who wants shorter
+   * decks wants them from both. See `lib/controls.ts`.
+   */
+  controls: Controls;
+  /**
+   * What this person is here to do — see `lib/role.ts`.
+   *
+   * A statement about the person, not a permission. It decides which
+   * destinations are addressed to them, the same way the school's
+   * capabilities decide which ones exist at all.
+   */
+  role: Role;
+  /**
    * When each deadline was ticked, epoch ms.
    *
    * Deliberately a second map rather than a change to `done`, which a dozen
@@ -841,24 +869,6 @@ export const STORAGE_KEY = 'semester.v1';
 /** When this device last agreed with the account copy, as epoch ms. */
 export const SYNCED_KEY = 'semester.synced';
 
-/**
- * A stored quiet window, made safe to read from.
- *
- * Storage does not typecheck, and this pair of numbers decides whether the app
- * ever speaks again. A window carrying a stray string, a fraction, or a minute
- * outside the day is not a window, and half-reading one would be worse than
- * reading none: `inQuiet` would compare against a NaN, which is false for
- * every minute of the day, and the setting would appear to have quietly turned
- * itself off.
- */
-function readQuiet(value: unknown): Quiet | null {
-  if (!value || typeof value !== 'object') return null;
-  const { from, to } = value as { from?: unknown; to?: unknown };
-  const ok = (n: unknown): n is number =>
-    typeof n === 'number' && Number.isInteger(n) && n >= 0 && n < 1440;
-  return ok(from) && ok(to) ? { from, to } : null;
-}
-
 export const DEFAULT_PERSISTED: Persisted = {
   nav: 'tabs',
   done: {},
@@ -970,6 +980,8 @@ export const DEFAULT_PERSISTED: Persisted = {
   residences: [],
   accessLeadDays: 0,
   quiet: null,
+  controls: DEFAULT_CONTROLS,
+  role: DEFAULT_ROLE,
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -1283,6 +1295,11 @@ export function loadPersisted(): Persisted {
       residences: list(saved.residences),
       accessLeadDays: saved.accessLeadDays ?? 0,
       quiet: readQuiet(saved.quiet),
+      // Through the table rather than trusted: a role this build has never
+      // heard of would hide every screen it does not name, and an app that
+      // opens on an empty directory looks broken rather than out of date.
+      controls: readControls(saved.controls),
+      role: roleOf(typeof saved.role === 'string' ? saved.role : DEFAULT_ROLE).id,
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
       schoolId: typeof saved.schoolId === 'string' ? saved.schoolId : DEFAULT_PERSISTED.schoolId,
@@ -1389,6 +1406,8 @@ export function pickPersisted(state: State): Persisted {
     residences: state.residences,
     accessLeadDays: state.accessLeadDays,
     quiet: state.quiet,
+    controls: state.controls,
+    role: state.role,
     tickedAt: state.tickedAt,
     started: state.started,
     schoolId: state.schoolId,
@@ -1797,6 +1816,8 @@ export type Action =
   | { type: 'setPlan'; term: string; plan: Plan }
   | { type: 'setAccessLead'; days: number }
   | { type: 'setQuiet'; quiet: Quiet | null }
+  | { type: 'setControls'; patch: Partial<Controls> }
+  | { type: 'setRole'; role: Role }
   /** Where you live this term, from the housing portal. */
   | { type: 'setResidence'; residence: Omit<Residence, 'id' | 'created'> }
   | { type: 'dropResidence'; id: string }

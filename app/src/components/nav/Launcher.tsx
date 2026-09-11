@@ -54,7 +54,7 @@ import { Folder } from './Folder';
  */
 function valueFor(group: Group, store: ReturnType<typeof useStore>): string {
   const { state, catalog, now, school } = store;
-  const on = destinationsFor(group, school.capabilities);
+  const on = destinationsFor(group, school.capabilities, state.role);
   return (
     firstFigure(on.map((d) => d.screen), { state, catalog, now, caps: school.capabilities }) ??
     String(on.length)

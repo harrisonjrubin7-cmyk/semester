@@ -3,8 +3,20 @@ import { useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { SectionLabel } from './ui';
 import { ask, configured } from '../lib/claude';
-import { SYSTEM, brief, readPlan, survey, verdict, type Plan, type Survey } from '../lib/rework';
-import type { CourseId, CourseUpdate, Guide } from '../lib/types';
+import {
+  SYSTEM,
+  SYSTEM_ONE,
+  brief,
+  oneUnit,
+  readOneUnit,
+  readPlan,
+  survey,
+  verdict,
+  type Plan,
+  type Survey,
+} from '../lib/rework';
+import type { CourseId, CourseUpdate } from '../lib/types';
+import type { LiveGuide } from '../lib/live';
 import { Folding } from './Fold';
 
 /**
@@ -21,6 +33,22 @@ import { Folding } from './Fold';
  * app has never seen — the streak, the interval and the due date go with the
  * wording. The preview counts exactly that and puts it above the guide, not
  * below, because it is the reason to say no.
+ *
+ * ## Two scopes, one panel
+ *
+ * The whole guide is the right tool once a term's material has piled up, and
+ * the wrong one for "unit 4 is thin": it rewrites everything, so its cost
+ * preview covers everything, and somebody who wants one section improved has
+ * to accept a rearrangement of eleven others to get it. Most people say no,
+ * and unit 4 stays thin.
+ *
+ * So the scope is a chooser here rather than a second component on a second
+ * screen. One home for the job, which is the rule in
+ * `.claude/commands/simplify.md`, and the scoped option is discoverable in
+ * exactly the place somebody already came to rebuild something. The bounding
+ * itself is not in this file and not in the prompt — `readOneUnit` returns the
+ * guide it was given with one unit replaced, so a model that reorganises the
+ * course cannot.
  */
 export function Rework({
   courseId,
@@ -28,10 +56,12 @@ export function Rework({
   updates,
 }: {
   courseId: CourseId;
-  guide: Guide;
+  guide: LiveGuide;
   updates: CourseUpdate[];
 }) {
   const { state, dispatch } = useStore();
+  // -1 is the whole guide; anything else is an index into `guide.units`.
+  const [scope, setScope] = useState(-1);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [cost, setCost] = useState<Survey | null>(null);
   const [busy, setBusy] = useState(false);
@@ -52,14 +82,25 @@ export function Rework({
     setCost(null);
     abort.current = new AbortController();
     try {
+      const whole = scope < 0 || !guide.units[scope];
       const reply = await ask({
         signal: abort.current.signal,
         maxTokens: 8000,
         think: true,
-        system: SYSTEM,
-        messages: [{ role: 'user', content: brief(guide, updates) }],
+        system: whole ? SYSTEM : SYSTEM_ONE,
+        messages: [
+          {
+            role: 'user',
+            content: whole
+              ? brief(guide, updates)
+              : // The guide on screen is the live merge: its unit indices are
+                // not the stored ones an update was filed against, and two of
+                // its units may have been spliced in. See `updatesFor`.
+                oneUnit(guide, updates, scope, guide.addedUnits),
+          },
+        ],
       });
-      const next = readPlan(reply, guide);
+      const next = whole ? readPlan(reply, guide) : readOneUnit(reply, guide, scope);
       setPlan(next);
       setCost(survey(guide, next.guide));
     } catch (e) {
@@ -77,8 +118,11 @@ export function Rework({
     setPlan(null);
     setCost(null);
     setDone(
-      'The guide is rebuilt. Cards, Read, Quiz, Cram and the slides are all using it. The ' +
-        'material you added is still listed below and can still be removed.',
+      (scope < 0
+        ? 'The guide is rebuilt. '
+        : `That unit is rebuilt and the rest of the guide is exactly as it was. `) +
+        'Cards, Read, Quiz, Cram and the slides are all using it. The material you added is ' +
+        'still listed below and can still be removed.',
     );
   };
 
@@ -99,6 +143,44 @@ export function Rework({
         </div>
       )}
 
+      {/* The scope, as a plain select rather than a row of pills: a guide has
+          fourteen units in it and no row of pills survives that. */}
+      <select
+        className="input"
+        value={scope}
+        aria-label="What to rebuild"
+        onChange={(e) => {
+          /*
+           * The in-flight request goes too, not just the preview on screen.
+           *
+           * Clearing `plan` and `cost` alone left the running `run()` to
+           * finish and call `setPlan` with the *old* scope's result — which
+           * then rendered as a preview under a chooser naming a different
+           * unit, and `Use this guide` would have replaced unit A while the
+           * screen said unit B. The result is bounded to the scope it was
+           * built for by `readOneUnit`, so the wrong one is a real
+           * replacement of the wrong unit rather than a mislabelled right one.
+           */
+          abort.current?.abort();
+          setScope(Number(e.target.value));
+          // A preview belongs to the scope it was made for. Leaving one on
+          // screen while the chooser says something else is how somebody
+          // accepts a rebuild of the wrong thing.
+          setPlan(null);
+          setCost(null);
+          setDone('');
+          setError('');
+        }}
+        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
+      >
+        <option value={-1}>The whole guide</option>
+        {guide.units.map((u, i) => (
+          <option key={i} value={i}>
+            Just {u.name}
+          </option>
+        ))}
+      </select>
+
       <button
         type="button"
         className="btn btn-secondary btn-block"
@@ -106,7 +188,11 @@ export function Rework({
         onClick={() => void run()}
         style={{ height: 44 }}
       >
-        {busy ? 'Reworking the guide…' : 'See what it would look like'}
+        {busy
+          ? scope < 0
+            ? 'Reworking the guide…'
+            : 'Reworking that unit…'
+          : 'See what it would look like'}
       </button>
 
       {error ? (

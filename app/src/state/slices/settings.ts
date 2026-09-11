@@ -264,6 +264,16 @@ export function settings(state: State, action: Action): State | null {
     case 'setQuiet':
       return { ...state, quiet: action.quiet };
 
+    // How much study material to make. Patched rather than replaced, so a
+    // screen that offers two of the three controls cannot silently reset the
+    // third to its default on every change.
+    case 'setControls':
+      return { ...state, controls: { ...state.controls, ...action.patch } };
+
+    // Who is holding the app. Not a permission — see `lib/role.ts`.
+    case 'setRole':
+      return { ...state, role: action.role };
+
     case 'toggleSaved':
       return { ...state, saved: { ...state.saved, [action.id]: !state.saved[action.id] } };
 

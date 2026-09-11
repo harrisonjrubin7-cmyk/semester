@@ -78,8 +78,8 @@ export function ByTask() {
   const box = useRef<HTMLInputElement>(null);
 
   const sections = useMemo(
-    () => byTask(offered(caps).filter((d) => !HIDE.includes(d.screen))),
-    [caps],
+    () => byTask(offered(caps, state.role).filter((d) => !HIDE.includes(d.screen))),
+    [caps, state.role],
   );
 
   const shown = useMemo(() => narrowTasks(sections, q, caps), [sections, q, caps]);
