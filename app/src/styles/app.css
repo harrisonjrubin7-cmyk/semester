@@ -3577,3 +3577,528 @@ input[type='search'].input {
   background: var(--app-hero);
   border-color: var(--app-line);
 }
+
+/* ── The spreadsheet ──────────────────────────────────────────────────────
+   The four bars a spreadsheet puts round a grid, drawn by
+   `components/Ribbon.tsx` from the value in `lib/ribbon.ts`: the ribbon, the
+   name box and formula bar, the tab strip and the status bar.
+
+   The whole of the responsive rule here is that everything scrolls sideways.
+   A ribbon that reflowed into four rows on a phone would move every button
+   somewhere new at the width where the screen is smallest, and the group
+   names — the whole point of a ribbon — would be the first thing dropped. */
+
+.rib {
+  display: flex;
+  flex-direction: column;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.rib-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-1);
+  padding: var(--sp-1) var(--sp-2) 0;
+  background: var(--app-hero);
+  border-bottom: 1px solid var(--app-line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.rib-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.rib-tab {
+  flex: none;
+  height: 28px;
+  padding: 0 var(--sp-5);
+  font-size: var(--type-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--app-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--r-sm) var(--r-sm) 0 0;
+  white-space: nowrap;
+}
+
+.rib-tab:hover {
+  color: var(--app-fg);
+}
+
+/* The open tab joins the body below it, which is the one thing that makes a
+   row of words read as tabs rather than as buttons. */
+.rib-tab[aria-selected='true'] {
+  color: var(--app-accent-bright);
+  background: var(--app-panel);
+  border-color: var(--app-line);
+  margin-bottom: -1px;
+  padding-bottom: 1px;
+}
+
+.rib-body {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-3) var(--sp-2);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.rib-group {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-4);
+}
+
+.rib-group + .rib-group {
+  border-left: 1px solid var(--app-line-soft);
+}
+
+.rib-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+}
+
+.rib-group-name {
+  font-size: var(--type-xs);
+  color: var(--app-faint);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rib-btn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--sp-3);
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+}
+
+.rib-btn-wide {
+  font-size: var(--type-xs);
+}
+
+.rib-btn:hover:not(:disabled) {
+  color: var(--app-fg);
+  background: var(--app-hero);
+}
+
+.rib-btn[aria-pressed='true'] {
+  color: var(--app-accent-bright);
+  background: var(--app-hero);
+  border-color: var(--app-line);
+}
+
+.rib-btn:disabled {
+  color: var(--app-faint);
+  cursor: default;
+}
+
+.rib-sel {
+  flex: none;
+  height: 28px;
+  max-width: 116px;
+  padding: 0 var(--sp-2);
+  font-size: var(--type-xs);
+  color: var(--app-fg);
+  background: var(--app-bg);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+.rib-range {
+  flex: none;
+  width: 96px;
+  accent-color: var(--app-accent);
+}
+
+/* ── The colour buttons ────────────────────────────────────────────────── */
+
+.rib-swatch {
+  position: relative;
+  flex: none;
+}
+
+/* The bar under the A, which is how every application since 1997 has said
+   "this is the colour it will be". */
+.rib-swatch-now {
+  display: block;
+  width: 12px;
+  height: 3px;
+  border-radius: 1px;
+  background: var(--ink, var(--app-faint));
+}
+
+.rib-chip {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: var(--sp-3);
+  border: 1px solid var(--app-line);
+  border-radius: 2px;
+  background: var(--ink, transparent);
+}
+
+[data-ink='red'] { --ink: #ff8c7a; }
+[data-ink='amber'] { --ink: #f0c274; }
+[data-ink='green'] { --ink: #86d6a2; }
+[data-ink='blue'] { --ink: #8ec2f5; }
+[data-ink='violet'] { --ink: #c3a9f0; }
+[data-ink='grey'] { --ink: #a6acb8; }
+[data-ink='none'] { --ink: transparent; }
+
+.rib-pop {
+  position: absolute;
+  top: calc(100% + var(--sp-2));
+  left: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  min-width: 128px;
+  padding: var(--sp-2);
+  background: var(--app-raise);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 45%);
+}
+
+.rib-pop-item {
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 var(--sp-3);
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--r-sm);
+}
+
+.rib-pop-item:hover {
+  background: var(--app-hero);
+}
+
+.rib-pop-item[aria-pressed='true'] {
+  color: var(--app-accent-bright);
+  background: var(--app-hero);
+}
+
+/* ── The name box and the formula bar ─────────────────────────────────── */
+
+.fx {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+}
+
+.fx-name {
+  flex: none;
+  width: 92px;
+  height: 30px;
+  padding: 0 var(--sp-3);
+  font-size: var(--type-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--app-fg);
+  background: var(--app-bg);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+/* The mark every spreadsheet puts between the name box and the long one. It
+   is what says the box to its right is for a formula and not for a note. */
+.fx-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  font-family: var(--font-heading);
+  font-size: var(--type-sm);
+  font-style: italic;
+  color: var(--app-faint);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+.fx-in {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 var(--sp-4);
+  font-size: var(--type-sm);
+  color: var(--app-fg);
+  background: var(--app-bg);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+.fx-in:focus,
+.fx-name:focus {
+  border-color: var(--app-accent-deep);
+}
+
+.fx-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ── The grid ─────────────────────────────────────────────────────────────
+   Headers that stay put while the body scrolls under them, which is the one
+   thing that makes a grid bigger than the screen usable: a column of numbers
+   whose heading has scrolled away is a column of numbers nobody can read. */
+
+.sgrid {
+  margin-top: var(--sp-4);
+  max-height: 62vh;
+  overflow: auto;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-bg);
+}
+
+.sgrid table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.sgrid th {
+  position: sticky;
+  z-index: 2;
+  padding: 0;
+  font-weight: 400;
+  background: var(--app-hero);
+}
+
+.sgrid thead th {
+  top: 0;
+}
+
+.sgrid tbody th {
+  left: 0;
+  z-index: 1;
+}
+
+/* The corner box, which selects the whole sheet. Above both headers, because
+   it sits where they cross. */
+.sgrid thead th:first-child {
+  left: 0;
+  z-index: 3;
+}
+
+.shead {
+  width: 100%;
+  height: 22px;
+  padding: 0 var(--sp-2);
+  font-size: var(--type-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--app-dim);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--app-line);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.shead:hover {
+  color: var(--app-fg);
+  background: var(--app-raise);
+}
+
+.shead[aria-pressed='true'] {
+  color: var(--app-accent-bright);
+  background: var(--app-accent-wash);
+}
+
+.srow {
+  text-align: right;
+  min-width: 34px;
+}
+
+.scell {
+  width: 92px;
+  height: 26px;
+  padding: 0 var(--sp-3);
+  font-size: var(--type-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--app-fg);
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--app-line-soft);
+  border-bottom: 1px solid var(--app-line-soft);
+  border-radius: 0;
+}
+
+.scell:focus {
+  outline: 2px solid var(--app-accent);
+  outline-offset: -2px;
+}
+
+/* Gridlines off. The cells keep their sizes and lose their rules, which is
+   what Excel's own toggle does and what a table meant for a document wants. */
+.sgrid-plain .scell {
+  border-color: transparent;
+}
+
+/* The frozen top row: held under the column letters rather than at the very
+   top, or it would sit over them. 22px is `.shead`'s height. */
+.sfreeze {
+  position: sticky;
+  top: 22px;
+  z-index: 1;
+  background: var(--app-bg);
+}
+
+/* Where the frozen row meets the frozen column, one cell is both and has to
+   be above each of them. */
+.sgrid tbody th.sfreeze {
+  z-index: 3;
+  background: var(--app-hero);
+}
+
+.scell-in {
+  background: var(--app-accent-wash);
+}
+
+.scell-bad {
+  color: var(--app-accent-bright);
+}
+
+/* ── The tab strip and the status bar ─────────────────────────────────── */
+
+.stabs {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-1);
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--app-line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.stabs::-webkit-scrollbar {
+  display: none;
+}
+
+.stab {
+  flex: none;
+  max-width: 148px;
+  height: 26px;
+  padding: 0 var(--sp-5);
+  font-size: var(--type-xs);
+  color: var(--app-dim);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stab:hover {
+  color: var(--app-fg);
+}
+
+.stab[aria-current='true'] {
+  color: var(--app-accent-bright);
+  background: var(--app-panel);
+  border-color: var(--app-line);
+  border-top-color: var(--app-accent);
+}
+
+.stab-new {
+  padding: 0 var(--sp-4);
+}
+
+.sbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--type-xs);
+  color: var(--app-dim);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+.sbar-mode {
+  flex: none;
+  color: var(--app-fg);
+}
+
+.sbar-stat {
+  flex: 1;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sbar-zoom {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.sbar-btn {
+  width: 20px;
+  height: 20px;
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+  background: transparent;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
+.sbar-btn:hover:not(:disabled) {
+  color: var(--app-fg);
+  background: var(--app-hero);
+}
+
+.sbar-btn:disabled {
+  color: var(--app-faint);
+  cursor: default;
+}
+
+.sbar-pc {
+  min-width: 38px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Narrow: the numbers under the selection take a line of their own.
+   Excel keeps the zoom in the bottom-right corner and on a phone that corner
+   is under the assistant's button — a control nothing can reach is worse than
+   one in the wrong place, so here it follows the mode word instead. */
+@media (max-width: 520px) {
+  .sbar {
+    flex-wrap: wrap;
+  }
+
+  .sbar-stat {
+    order: 3;
+    flex-basis: 100%;
+  }
+}

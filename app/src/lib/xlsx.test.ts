@@ -351,4 +351,51 @@ describe('what an exported sheet looks like', () => {
     expect(tab.rows[0].every((c) => c.look === undefined)).toBe(true);
     expect(styleTable([tab]).xml.match(/<xf /g)?.length).toBe(5);
   });
+
+  it('carries the underline and the type size', () => {
+    const tab = fromSheet(sheet({ A1: 'Total' }, { A1: { under: true, size: 14 } }), false);
+    const table = styleTable([tab]);
+    expect(table.xml).toContain('<u/>');
+    expect(table.xml).toContain('<sz val="14"/>');
+  });
+
+  it('translates the colours for paper rather than copying the screen’s', () => {
+    // The screen's red is chosen to read on a dark panel; the same hex on
+    // Excel's white page is a highlighter.
+    const tab = fromSheet(sheet({ A1: 'Late' }, { A1: { ink: 'red', wash: 'amber' } }), false);
+    const table = styleTable([tab]);
+    expect(table.xml).toContain('<color rgb="FFB03A28"/>');
+    expect(table.xml).toContain('<fgColor rgb="FFFCF0D8"/>');
+    // Fills 0 and 1 are reserved by the format, so a coloured cell points at 2
+    // — pointing at 1 opens the workbook with every such cell striped grey.
+    expect(table.xml).toMatch(/fillId="2"[^>]*applyFill="1"/);
+  });
+
+  it('rules only the sides the cell asked for, and keeps the five in order', () => {
+    const tab = fromSheet(sheet({ A1: '10' }, { A1: { edge: 'tb' } }), false);
+    const table = styleTable([tab]);
+    expect(table.xml).toContain(
+      '<border><left/><right/><top style="thin"><color indexed="64"/></top>' +
+        '<bottom style="thin"><color indexed="64"/></bottom><diagonal/></border>',
+    );
+    expect(table.xml).toMatch(/borderId="1"[^>]*applyBorder="1"/);
+  });
+
+  it('is still a well-formed styles part with all of it on at once', () => {
+    const files = parts({
+      tabs: [
+        fromSheet(
+          sheet(
+            { A1: '0.8', B1: 'Note' },
+            {
+              A1: { num: 'percent', ink: 'green', wash: 'green', edge: 'tblr', size: 18 },
+              B1: { under: true, italic: true, ink: 'violet' },
+            },
+          ),
+          false,
+        ),
+      ],
+    });
+    expect(() => parse(files['xl/styles.xml'])).not.toThrow();
+  });
 });

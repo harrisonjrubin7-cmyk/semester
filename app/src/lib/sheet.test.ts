@@ -112,6 +112,24 @@ describe('what a cell comes to', () => {
     expect(evaluate(sheet({ A1: '=1/0' }), 'A1')).toBe('#DIV/0!');
   });
 
+  /**
+   * An error written into the formula itself.
+   *
+   * Nothing used to write one, so `#` was not a character this understood and
+   * the honest answer came back as a vaguer one. Deleting a row a formula
+   * points at now writes `#REF!` into that formula — see `lib/sheetedit.ts` —
+   * so the cell has to say the reference is gone, which is the thing to go
+   * and fix, rather than that something about the formula is wrong.
+   */
+  it('reads an error the formula carries as that error', () => {
+    expect(evaluate(sheet({ A1: '=#REF!' }), 'A1')).toBe('#REF!');
+    expect(evaluate(sheet({ A1: '=#REF!+1' }), 'A1')).toBe('#REF!');
+    expect(evaluate(sheet({ A1: '=SUM(#REF!)' }), 'A1')).toBe('#REF!');
+    // And an error that is not one of the seven is still a name it does not
+    // know, rather than something it swallows.
+    expect(evaluate(sheet({ A1: '=#NOPE!' }), 'A1')).toBe('#VALUE!');
+  });
+
   it('names an unknown function rather than guessing at it', () => {
     // VLOOKUP used to stand here, as the example of a function the engine did
     // not have. It has one now, so the example has to be a name no sheet will
