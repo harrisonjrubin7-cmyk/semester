@@ -706,6 +706,37 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         stats: term,
       };
 
+    /*
+     * A sentence rather than a figure, and the numbers under it are about the
+     * person rather than the term.
+     *
+     * The term's three — due today, this week, overdue — are right above every
+     * screen that is about the semester and wrong above this one, for the same
+     * reason `mine` and `settings` above had to stop reporting them: a strip
+     * saying "Overdue 6" over a screen about who you are is three true numbers
+     * answering a question nobody asked here. What this screen is about is what
+     * the app holds of yours, so that is what it counts.
+     *
+     * There is no counting done here. Every figure is a length of something
+     * already in the state, which is the same thing `screens/Data.tsx` weighs
+     * and `lib/profile.ts` summarises — one number per fact, in three places.
+     */
+    case 'profile':
+      return {
+        hero: {
+          label: 'You',
+          said: state.myName
+            ? `The app calls you ${state.myName}.`
+            : 'The app has not been told your name yet.',
+          foot: state.myName ? undefined : 'Set it below — it never leaves the device.',
+        },
+        stats: [
+          { label: 'Courses', value: num(courses) },
+          { label: 'Notes', value: num(state.notes.length) },
+          { label: 'Your tasks', value: num(state.tasks.length) },
+        ],
+      };
+
     case 'connect':
       // Where a feed ends up, rather than a second accounts screen: what a
       // subscribed calendar is for is the dates showing on the day rail.

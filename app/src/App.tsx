@@ -6,10 +6,13 @@ import {
   Bell,
   Check,
   ChevronLeft,
-  Person,
   Plus,
   Search as SearchIcon,
 } from './components/Icons';
+import { Avatar } from './components/Avatar';
+import { showsAvatar } from './lib/header';
+import { useSitting } from './lib/sitting.hook';
+import { running } from './lib/session';
 import { creditHoursOr0 } from './lib/credits';
 import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
@@ -108,6 +111,7 @@ const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work 
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
+const Profile = lazy(() => import('./screens/Profile').then((m) => ({ default: m.Profile })));
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
 const Help = lazy(() => import('./screens/Help').then((m) => ({ default: m.Help })));
 
@@ -216,7 +220,7 @@ function Titled() {
 
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
-  const { state, now, catalog } = useStore();
+  const { state, now, catalog, school } = useStore();
   // Not `guide.code`. Opening a study screen by its own URL — which is the
   // point of having URLs — arrives with no course chosen, and the four study
   // kickers below then read a field off `undefined` and take the whole app
@@ -291,6 +295,17 @@ function useHeader(): { kicker: string; title: string } {
     }
     case 'me':
       return { kicker: load, title: 'Progress' };
+    /*
+     * The one screen whose kicker is not about the semester.
+     *
+     * `load` — "4 courses · 11 credits" — is right above every screen that is
+     * about the term and wrong above this one, which is about the person
+     * holding it. The school is the context that belongs here, and where
+     * nobody has said which school it falls back to the app's own name rather
+     * than to an empty kicker, which draws as a gap where a line should be.
+     */
+    case 'profile':
+      return { kicker: school.name || 'Semester', title: 'Profile' };
     case 'notifs':
       return { kicker: 'Today', title: 'Alerts' };
     case 'settings':
@@ -491,6 +506,15 @@ function Header() {
   // already competing with a Back button and a long title.
   const showActions = true;
   const atRoot = rootOf(state.screen) === state.screen;
+  /*
+   * The two things the action row's width depends on, for `showsAvatar`.
+   *
+   * `useSitting` rather than a prop: `components/Running.tsx` reads the same
+   * hook to decide whether to draw the pill at all, so the row and the rule
+   * about the row cannot disagree about whether a timer is counting.
+   */
+  const phone = useTier() === 'phone';
+  const counting = running(useSitting()[0]);
 
   /*
    * Move focus into the new screen's heading whenever the screen changes.
@@ -714,14 +738,34 @@ function Header() {
             )}
           </button>
           )}
-          {state.nav === 'feed' && atRoot && (
+          {/*
+            You, last in the row, on every navigation.
+
+            This was the feed layout's own button and it went to Progress — a
+            person glyph opening a report, because there was no screen it could
+            honestly open. There is one now, and the button is the thing every
+            phone puts at this exact corner: your picture, opening you.
+
+            When it is drawn is `lib/header.ts`, measured rather than
+            guessed: at a root, and on a phone only while the timer pill is not
+            also in the row. Six controls and an 83px pill do not fit across
+            320px — the row was overflowing and clipping this very button — and
+            the avatar is the one of the six with another route from a root
+            screen, through the Progress tab, the All apps grid and the search
+            beside it. That file has the measurement and the argument.
+
+            The label carries the name when there is one. A screen reader
+            saying "Profile, Harrison" is the same information the letters in
+            the box carry, and "HR" read out as letters is not.
+          */}
+          {showsAvatar({ atRoot, phone, counting }) && (
             <button
               type="button"
               className="btn btn-ghost btn-icon tap"
-              onClick={() => dispatch({ type: 'go', screen: 'me' })}
-              aria-label="Me"
+              onClick={() => dispatch({ type: 'go', screen: 'profile' })}
+              aria-label={state.myName.trim() ? `Profile — ${state.myName.trim()}` : 'Profile'}
             >
-              <Person size={19} />
+              <Avatar name={state.myName} size={22} />
             </button>
           )}
         </div>
@@ -867,6 +911,8 @@ function CurrentScreen() {
       return <EventDetail />;
     case 'me':
       return <Me />;
+    case 'profile':
+      return <Profile />;
     case 'notifs':
       return <Notifications />;
     case 'settings':

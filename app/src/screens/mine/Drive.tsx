@@ -13,6 +13,14 @@ import {
 import { ChevronRight, FolderIcon, StarIcon } from '../../components/Icons';
 import { secondLine } from '../../lib/dim';
 import { newId } from '../../lib/idb';
+import { useTier } from '../../lib/media';
+import { size as readableBytes, storageRoom, type Room } from '../../lib/device';
+import {
+  suggest,
+  suggestFolders,
+  type FolderHint,
+  type Suggestion,
+} from '../../lib/drivehome';
 import {
   TRASH_DAYS,
   addFile,
@@ -80,7 +88,27 @@ import { datedItems } from '../../lib/select';
  * makes the same argument about the app's orderings.
  */
 
-type View = 'drive' | 'starred' | 'recent' | 'bin';
+type View = 'home' | 'drive' | 'starred' | 'recent' | 'bin';
+
+/**
+ * The five places, in the order every drive puts them.
+ *
+ * Home first, because it is the answer to the question somebody has when they
+ * open a drive. Then the folders, then the two saved searches, then the bin.
+ *
+ * Two of the destinations a shared drive has are deliberately not here.
+ * "Shared with me" and "Spam" both need somebody else to have sent you
+ * something, and nothing in this app can: files are on this device and nothing
+ * is uploaded. An empty Shared with me would be a promise of a feature that
+ * does not exist, which is worse than its absence.
+ */
+const PLACES: { id: View; label: string; says: string }[] = [
+  { id: 'home', label: 'Home', says: 'What you were working on' },
+  { id: 'drive', label: 'My drive', says: 'Every folder and file' },
+  { id: 'recent', label: 'Recent', says: 'What you opened lately' },
+  { id: 'starred', label: 'Starred', says: 'What you marked' },
+  { id: 'bin', label: 'Bin', says: 'Deleted, and still here' },
+];
 type Sort = 'added' | 'name' | 'size' | 'course';
 
 const SORTS = ['added', 'name', 'size', 'course'] as const satisfies readonly Sort[];
@@ -97,11 +125,15 @@ const SORT_LABELS: Record<Sort, string> = {
 const INDEX_CHARS = 20_000;
 
 export function Drive() {
-  const { state, dispatch, courseCode, catalog, now } = useStore();
+  /* `now: clock` rather than `now` — see the same note in `screens/Sheet.tsx`.
+     The store's is a ticking `Date` that dates a deadline; the `now` below is
+     a stamp frozen at mount so a suggestion's reason stays still. */
+  const { state, dispatch, courseCode, catalog, now: clock } = useStore();
   const [files, setFiles] = useState<Settled[]>([]);
   const [binned, setBinned] = useState<Settled[]>([]);
   const [at, setAt] = useState<string | null>(null);
-  const [view, setView] = useState<View>('drive');
+  const [view, setView] = useState<View>('home');
+  const [room, setRoom] = useState<Room | null>(null);
   const [sort, setSort] = useState<Sort>('added');
   const [grid, setGrid] = useState(false);
   const [query, setQuery] = useState('');
@@ -124,6 +156,15 @@ export function Drive() {
     // Take out what has been in the bin past its month, then read. `TRASH_DAYS`
     // was a promise nothing kept until this call existed.
     void sweepTrash().then(refresh);
+    // How full the browser is. Asked once: the number moves slowly, and it is
+    // the browser's own estimate rather than a measurement — see `lib/quota.ts`.
+    let alive = true;
+    void storageRoom().then((r) => {
+      if (alive) setRoom(r);
+    });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   /*
@@ -140,7 +181,7 @@ export function Drive() {
 
   /* This term's deadlines, for the "for Friday's paper" line on a row. One
      list for the whole screen rather than one per row. */
-  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
+  const items = useMemo(() => datedItems(catalog, clock), [catalog, clock]);
 
   /*
    * Reading the text out of a file so search can look inside it.
@@ -215,6 +256,9 @@ export function Drive() {
   /** What the chosen view is looking at, before searching and sorting. */
   const pool = useMemo(() => {
     if (view === 'bin') return binned;
+    // The home draws its own two rows and does not go through the listing at
+    // all — except while somebody is searching, when every view is the search.
+    if (view === 'home') return files;
     if (view === 'starred') return files.filter((f) => f.starred);
     if (view === 'recent') {
       return [...files]
@@ -246,27 +290,44 @@ export function Drive() {
     });
   }, [pool, query, sort, view]);
 
-  const room = files.reduce((n, f) => n + f.size, 0);
+  const held = files.reduce((n, f) => n + f.size, 0);
   const searching = query.trim() !== '';
   const inDrive = view === 'drive' && !searching;
+  /** The home is the two suggested rows — unless somebody is searching. */
+  const onHome = view === 'home' && !searching;
+  /* Read once, for the same reason `screens/Sheet.tsx` does: the reasons
+     beside a suggestion say "Tuesday", and Tuesday does not move while
+     somebody is reading them. */
+  const [now] = useState(() => Date.now());
+  /*
+   * The places go down the side where there is room and across the top where
+   * there is not. It is the same five either way: a rail on a phone would take
+   * a third of the screen from the files it is for, and a row of five tabs on
+   * a desktop leaves half the window empty.
+   */
+  const beside = useTier() !== 'phone';
 
   return (
     <div>
-      <Segmented
-        options={[
-          { id: 'drive', label: 'Drive' },
-          { id: 'starred', label: 'Starred' },
-          { id: 'recent', label: 'Recent' },
-          { id: 'bin', label: 'Bin' },
-        ]}
-        value={view}
-        onChange={(next) => {
-          setView(next);
-          setQuery('');
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: beside ? 'row' : 'column',
+          gap: 'var(--sp-5)',
+          alignItems: 'flex-start',
         }}
-        style={{ marginBottom: 'var(--sp-5)' }}
-      />
-
+      >
+        <Places
+          view={view}
+          down={beside}
+          room={room}
+          held={held}
+          onGo={(next) => {
+            setView(next);
+            setQuery('');
+          }}
+        />
+        <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
       <input
         className="input"
         type="search"
@@ -343,7 +404,7 @@ export function Drive() {
         </div>
       )}
 
-      {view !== 'bin' && (
+      {view !== 'bin' && !onHome && (
         <div
           style={{
             display: 'flex',
@@ -369,6 +430,20 @@ export function Drive() {
             {grid ? 'List' : 'Grid'}
           </button>
         </div>
+      )}
+
+      {onHome && (
+        <Home
+          folders={suggestFolders(folders, files, now)}
+          files={suggest(files, now)}
+          courseCode={courseCode}
+          onFolder={(id) => {
+            setView('drive');
+            setAt(id);
+          }}
+          onOpen={(id) => void openFile(id).then(refresh)}
+          onEverything={() => setView('drive')}
+        />
       )}
 
       {inDrive && here.length > 0 && (
@@ -407,7 +482,7 @@ export function Drive() {
         </div>
       )}
 
-      {shown.length === 0 ? (
+      {onHome ? null : shown.length === 0 ? (
         <EmptyState
           title={
             view === 'bin'
@@ -433,7 +508,7 @@ export function Drive() {
         <>
           <SectionLabel>
             {shown.length} {shown.length === 1 ? 'file' : 'files'}
-            {view !== 'bin' && ` · ${formatBytes(room)} in all`}
+            {view !== 'bin' && ` · ${formatBytes(held)} in all`}
           </SectionLabel>
           <div
             style={
@@ -477,6 +552,9 @@ export function Drive() {
         </>
       )}
 
+        </div>
+      </div>
+
       {filing && (
         <FileAgainst
           file={filing}
@@ -504,6 +582,252 @@ export function Drive() {
         />
       )}
       <div style={{ height: 22 }} />
+    </div>
+  );
+}
+
+/**
+ * The five places, and how full the browser is.
+ *
+ * A rail beside the files on anything with room and a row of tabs above them
+ * on a phone — the same five destinations either way, in the same order, so
+ * the app is one app on both.
+ *
+ * The room line at the bottom is the browser's own estimate, said as an
+ * estimate. Every cloud drive puts one here and means something exact by it;
+ * this one cannot, and the word "about" is doing real work — a browser rounds
+ * the figure hard on purpose, so that somebody cannot be identified by how
+ * full their disk is.
+ */
+function Places({
+  view,
+  down,
+  room,
+  held,
+  onGo,
+}: {
+  view: View;
+  down: boolean;
+  room: Room | null;
+  /** What this app's own files come to, which is not what the browser is holding. */
+  held: number;
+  onGo: (next: View) => void;
+}) {
+  const share = room && room.used >= 0 && room.quota > 0 ? room.used / room.quota : -1;
+
+  const line =
+    share >= 0 ? (
+      <div style={{ marginTop: 'var(--sp-5)' }}>
+        <div
+          aria-hidden="true"
+          style={{
+            height: 4,
+            borderRadius: 'var(--r-sm)',
+            background: 'var(--app-track)',
+            overflow: 'hidden',
+            marginBottom: 'var(--sp-3)',
+          }}
+        >
+          <div
+            style={{
+              width: `${Math.min(100, share * 100)}%`,
+              height: '100%',
+              background: 'var(--app-accent-deep)',
+            }}
+          />
+        </div>
+        <div style={{ ...secondLine(), fontSize: 'var(--type-xs)' }}>
+          {readableBytes(room?.used ?? 0)} of about {readableBytes(room?.quota ?? 0)} used in this
+          browser · {formatBytes(held)} of it is files you added here
+        </div>
+      </div>
+    ) : (
+      <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-5)' }}>
+        {formatBytes(held)} of files, on this device. This browser will not say how much room is
+        left.
+      </div>
+    );
+
+  if (!down) {
+    return (
+      <div style={{ width: '100%' }}>
+        <Segmented
+          options={PLACES.map((p) => ({ id: p.id, label: p.label }))}
+          value={view}
+          onChange={onGo}
+          style={{ marginBottom: 'var(--sp-3)' }}
+        />
+        {line}
+      </div>
+    );
+  }
+
+  return (
+    <nav
+      aria-label="Places in your drive"
+      style={{ flex: 'none', width: 172, display: 'flex', flexDirection: 'column' }}
+    >
+      {PLACES.map((place) => (
+        <button
+          key={place.id}
+          type="button"
+          className="bare tappable"
+          onClick={() => onGo(place.id)}
+          aria-current={place.id === view ? 'page' : undefined}
+          style={{
+            textAlign: 'left',
+            padding: 'var(--sp-4) var(--sp-5)',
+            borderRadius: 'var(--r-sm)',
+            background: place.id === view ? 'var(--app-accent-wash)' : undefined,
+          }}
+        >
+          <div style={{ fontSize: 'var(--type-md)' }}>{place.label}</div>
+          <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-1)' }}>
+            {place.says}
+          </div>
+        </button>
+      ))}
+      {line}
+    </nav>
+  );
+}
+
+/**
+ * The home: the folders with something happening in them, and the files with
+ * a reason beside each.
+ *
+ * The reason is the whole of why this is better than a list sorted by date.
+ * Six rows in an order nobody can see is a list you check against the folders
+ * anyway; "You opened it · Tuesday" can be read, agreed with, or seen to be
+ * wrong. `lib/drivehome.ts` decides them.
+ */
+function Home({
+  folders,
+  files,
+  courseCode,
+  onFolder,
+  onOpen,
+  onEverything,
+}: {
+  folders: FolderHint[];
+  files: Suggestion[];
+  courseCode: (id: string) => string;
+  onFolder: (id: string) => void;
+  onOpen: (id: string) => void;
+  onEverything: () => void;
+}) {
+  if (folders.length === 0 && files.length === 0) {
+    return (
+      <EmptyState
+        title="Nothing here yet."
+        body="Add a reading, a slide deck, a photograph of the whiteboard. They stay on this device — nothing is uploaded."
+        icon={<FolderIcon />}
+      />
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: 'var(--sp-5)' }}>
+      {folders.length > 0 && (
+        <>
+          <SectionLabel>Folders you have been in</SectionLabel>
+          <div
+            style={{
+              display: 'flex',
+              gap: 'var(--sp-4)',
+              overflowX: 'auto',
+              paddingBottom: 'var(--sp-3)',
+              marginBottom: 'var(--sp-5)',
+            }}
+          >
+            {folders.map(({ folder, says }) => (
+              <Blueprint
+                key={folder.id}
+                as="button"
+                plain
+                onClick={() => onFolder(folder.id)}
+                style={{
+                  flex: 'none',
+                  width: 168,
+                  padding: 'var(--sp-5)',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-4)',
+                }}
+              >
+                <FolderIcon size={17} />
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 'var(--type-sm)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {folder.name}
+                  </div>
+                  <div style={{ ...secondLine(), fontSize: 'var(--type-xs)' }}>{says}</div>
+                </div>
+              </Blueprint>
+            ))}
+          </div>
+        </>
+      )}
+
+      {files.length > 0 && (
+        <>
+          <SectionLabel aside="Why it is here">Files to pick up again</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+            {files.map(({ file, says }) => (
+              <Blueprint
+                key={file.id}
+                as="button"
+                plain
+                onClick={() => onOpen(file.id)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-5)',
+                  padding: 'var(--sp-6)',
+                  textAlign: 'left',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 'var(--type-md)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {file.name}
+                  </div>
+                  <div
+                    style={{
+                      ...secondLine(),
+                      fontSize: 'var(--type-sm)',
+                      marginTop: 'var(--sp-1)',
+                    }}
+                  >
+                    {[says, file.courseId ? courseCode(file.courseId) : '']
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </div>
+                </div>
+                {file.starred && <StarIcon on size={15} />}
+                <ChevronRight size={16} />
+              </Blueprint>
+            ))}
+          </div>
+        </>
+      )}
+
+      <ActionButton onClick={onEverything} style={{ marginTop: 'var(--sp-5)' }}>
+        Everything in the drive
+      </ActionButton>
     </div>
   );
 }

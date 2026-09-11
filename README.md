@@ -308,6 +308,36 @@ you have not seen, so it climbs back into tonight's plan.
 Nothing added is invented. Prose that does not split cleanly into a question
 and an answer stays prose.
 
+## Your profile
+
+The round button at the top right of every root screen, which is where every
+phone puts it. It opens **Profile**: the name the app calls you, what the app
+is holding of yours, and a row into each of the screens that own the rest —
+Account, Your data, Privacy, Take it with you, Settings.
+
+The name is the one thing the screen owns rather than points at. It was a field
+on Settings → Courses, because until there was a profile there was nowhere else
+to put it; there is one box for it now and Settings keeps a row saying where it
+went. Everything else on the profile is a link, deliberately: signing in is
+explained by the account screen, byte counts belong to the data screen, and a
+profile that re-implemented either would be a second door onto a room that
+already has one.
+
+The avatar is your initials, and only ever from the name you typed. It is never
+guessed at from an email address — that is the promise
+[`app/src/state/shape.ts`](app/src/state/shape.ts) makes where the field is
+declared, and an avatar is exactly where it would get broken quietly, because
+`H` from `harrison@…` looks like a reasonable guess and is somebody's name
+invented and shown back to them as fact. With no name there are no initials:
+the button draws a figure, and the screen asks.
+
+There is no photograph, no bio and no "member since". A photograph needs bytes
+in the same quota that already sheds data when it fills, and uploading one
+needs a server this app does not have. A bio is for other people to read and
+there are no other people here. The line at the foot says how long your
+semester has been on this device, which is the date you would actually want
+before wiping a phone.
+
 ## Connecting accounts
 
 **Me → Connect accounts.** Two routes, and the screen says which is which:
@@ -363,11 +393,22 @@ model in it or needs a key:
   `$$…$$` equations into blocks you can edit.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
-  `ROUND`, `SQRT`, `SUMPRODUCT` and the arithmetic around them. Out as a real
-  `.xlsx` **with the formulas still in it** — a CSV of a gradebook is the
-  answers with the working thrown away — or as a CSV, a Markdown table, or a
-  table dropped into a document. A pasted table is read whether it is a copy
-  out of Excel, a CSV or Markdown.
+  `ROUND`, `SQRT`, `SUMPRODUCT` and the arithmetic around them. It is a
+  spreadsheet rather than a grid of text boxes: a **selection** you drag or
+  arrow across, whose sum, average, count and range are read off the status
+  line rather than written as a formula and deleted again; a **name box and
+  formula bar**, because the cell is 92 pixels wide and `=SUMPRODUCT(B2:B9,C2:C9)`
+  is not; a **toolbar** that puts a picture over a number — percentages,
+  money, decimal places, bold, alignment — without changing the number
+  underneath it; **undo and redo** inside the grid; and a **tab strip** along
+  the bottom, so the gradebook and the budget beside it are one tap apart.
+  It opens on **templates** — a to-do list, a monthly and a term budget, a
+  reading tracker, a lab's readings — each arriving with its totals already
+  written, beside the gradebook built from your own syllabus's weights. Out as
+  a real `.xlsx` **with the formulas and the formats still in it** — a CSV of a
+  gradebook is the answers with the working thrown away — or as a CSV, a
+  Markdown table, or a table dropped into a document. A pasted table is read
+  whether it is a copy out of Excel, a CSV or Markdown.
 - **Equations.** A small piece of LaTeX — `\frac{a}{b}`, `x^2`, `x_i`,
   `\sqrt{x}`, `\sum_{i=1}^{n}`, `\bar{x}`, the greek and the relations —
   written once and rendered three ways: MathML on screen, a real Word equation
@@ -380,6 +421,19 @@ model in it or needs a key:
 **From a sheet** puts a table you built onto slides as a real PowerPoint table
 you can still edit, split across several slides when it is long rather than
 shrunk until nobody at the back can read it.
+
+And editing a deck is **the slide**, not a form about it. The middle of the
+screen is the slide itself at sixteen by nine, in the deck's own colours, with
+the title and the points where the exported file puts them — because the two
+faults you cannot fix afterwards are a title that runs to three lines and
+eleven points on a slide that holds six, and a stack of labelled boxes hides
+both until the export. A rail of real thumbnails down the side, a layout you
+can change on a slide that already exists (and which says what the change would
+throw away before it does it), four **themes** — two for a projector, two for
+printing — that go into the `.pptx` so the file opens in the colours you chose,
+and speaker notes under the canvas where every slide editor puts them. The
+presenter view draws from the same code, so what is on the wall is what is in
+the file.
 
 Nothing here computes what it renders and nothing here renders what it computes:
 the sheet does arithmetic and says so, the equation screen writes a formula and

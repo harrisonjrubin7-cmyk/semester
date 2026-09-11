@@ -139,3 +139,5 @@ export const ExportIcon = svg('export');
 export const SettingsIcon = svg('settings');
 export const ActivitiesIcon = svg('activities');
 export const HelpIcon = svg('help');
+/** You, ringed. `Person` is anybody; this one is the reader. */
+export const ProfileIcon = svg('profile');

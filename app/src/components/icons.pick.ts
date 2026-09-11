@@ -52,6 +52,7 @@ import {
   PeopleIcon,
   Person,
   PrivacyIcon,
+  ProfileIcon,
   ProofIcon,
   RegistrarIcon,
   RunwayIcon,
@@ -91,6 +92,9 @@ const OWN: Partial<Record<Screen, Glyph>> = {
   maps: MapIcon,
   mine: NotesIcon,
   me: Person,
+  // The ringed figure, so the two never read as the same screen in the bar:
+  // `me` is the progress report and the directory, this is you.
+  profile: ProfileIcon,
   notifs: Bell,
 
   ask: AskIcon,

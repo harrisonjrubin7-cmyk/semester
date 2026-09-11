@@ -168,6 +168,35 @@ export const account: Provide = (look) => ({
   suggestions: ['What does signing in change?', 'What happens to what is already on this device?'],
 });
 
+/**
+ * Profile — the name, the account, and what the app holds of yours.
+ *
+ * Careful in the same direction the account provider above is, and for the
+ * same reason: it says *whether* a name has been set and never what it is, and
+ * the email address is not here under any condition. A profile screen is where
+ * every identifier the app holds about the student sits together, which makes
+ * it the one provider where a careless line would send all of them at once.
+ *
+ * The counts are lengths of lists, which say how much of a semester is here
+ * and nothing about whose.
+ */
+export const profile: Provide = (look) => ({
+  summary: `The profile screen — the name the app calls them by${look.state.myName ? ' (set)' : ' (not set yet)'}, the account, and rows into their data, privacy and settings. Everything works signed out; an account only decides whether the semester follows them to a second device.`,
+  visible: [
+    {
+      courses: look.state.courses.length,
+      notes: look.state.notes.length,
+      tasks: look.state.tasks.length,
+    },
+  ],
+  actions: ['open_screen'],
+  suggestions: [
+    'What does this app know about me?',
+    'What would signing in change?',
+    'How do I delete all of it?',
+  ],
+});
+
 /** Privacy and your rights — what leaves, what it is used for. */
 export const privacy: Provide = () => ({
   summary:

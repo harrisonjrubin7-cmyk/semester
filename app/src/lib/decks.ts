@@ -15,7 +15,7 @@
  */
 
 import { newId } from './idb';
-import type { Deck, Slide } from './pptx';
+import { DEFAULT_PALETTE, type Deck, type Palette, type Slide } from './pptx';
 import type { CourseId } from './types';
 
 /** A deck, plus what the app needs to file it and find it again. */
@@ -39,6 +39,72 @@ export interface StoredDeck extends Deck {
    * thing with no way back.
    */
   hidden?: number[];
+  /**
+   * Which of {@link THEMES} the deck is drawn in.
+   *
+   * Stored as the name rather than as the three colours, so a theme that is
+   * corrected — a dim that turned out to fail contrast on a projector —
+   * corrects every deck that chose it rather than the ones made after the fix.
+   * Absent is `ink`, which is what every deck made before this existed was.
+   */
+  theme?: ThemeId;
+}
+
+export type ThemeId = 'ink' | 'paper' | 'slate' | 'sand';
+
+export interface Theme {
+  id: ThemeId;
+  /** What the button says. */
+  label: string;
+  /** The line under it: where this one is the right answer. */
+  says: string;
+  palette: Palette;
+}
+
+/**
+ * The four a class presentation is actually given in.
+ *
+ * Not a gallery. A theme picker with thirty entries is thirty decisions
+ * somebody makes badly in the ten minutes before a seminar, and the
+ * difference between them that matters is one thing: is this going on a
+ * projector in a dark room, or is it going on paper and into a reading pack.
+ * So: two dark, two light, each with a reason written beside it.
+ *
+ * Every pairing here is checked against WCAG AA in `decktheme.test.ts` — a
+ * theme whose second rank is unreadable at the back of a lecture hall is
+ * worse than no choice at all, and "it looked fine on my laptop" is how that
+ * happens.
+ */
+export const THEMES: Theme[] = [
+  {
+    id: 'ink',
+    label: 'Ink',
+    says: 'Dark, for a projector',
+    palette: DEFAULT_PALETTE,
+  },
+  {
+    id: 'slate',
+    label: 'Slate',
+    says: 'Dark and cooler',
+    palette: { ink: '141A24', paper: 'E6EDF5', dim: '9FB0C4' },
+  },
+  {
+    id: 'paper',
+    label: 'Paper',
+    says: 'Light, for printing and handouts',
+    palette: { ink: 'F6F5F2', paper: '15171C', dim: '585D68' },
+  },
+  {
+    id: 'sand',
+    label: 'Sand',
+    says: 'Light and warmer',
+    palette: { ink: 'F2EDE3', paper: '22201B', dim: '5E5748' },
+  },
+];
+
+/** The theme a deck is in, whatever it says — an unknown name reads as the default. */
+export function themeOf(deck: Pick<StoredDeck, 'theme'>): Theme {
+  return THEMES.find((t) => t.id === deck.theme) ?? THEMES[0];
 }
 
 export function blankDeck(
@@ -56,6 +122,7 @@ export function blankDeck(
     created: now,
     updated: now,
     hidden: [],
+    theme: 'ink',
   };
 }
 
@@ -119,10 +186,77 @@ export function forExport(deck: StoredDeck): Deck {
    * deck's title back on a slide hands somebody a file with content they had
    * just taken out.
    */
+  const palette = themeOf(deck).palette;
   if (slides.length === 0) {
-    return { title: deck.title, subtitle: deck.subtitle, slides: [{ title: '', bullets: [] }] };
+    return {
+      title: deck.title,
+      subtitle: deck.subtitle,
+      slides: [{ title: '', bullets: [] }],
+      palette,
+    };
   }
-  return { title: deck.title, subtitle: deck.subtitle, slides };
+  return { title: deck.title, subtitle: deck.subtitle, slides, palette };
+}
+
+/**
+ * Which layout a slide is already in.
+ *
+ * Worked out from what the slide carries rather than stored beside it, and
+ * that is deliberate: a stored layout is a second copy of a fact the slide
+ * already states, and the two go out of step the first time somebody empties
+ * a table. The order matters — a slide can hold an equation *and* a table,
+ * and the equation is the one that names it.
+ */
+export function layoutOf(slide: Slide): Layout {
+  if (slide.equation !== undefined) return 'equation';
+  if (slide.table) return 'table';
+  if (slide.opening) return slide.note !== undefined ? 'section' : 'title';
+  return slide.bullets.length ? 'bullets' : 'blank';
+}
+
+/**
+ * The same slide in another layout.
+ *
+ * The title always survives, because the title is what the slide is about and
+ * losing it to a change of shape is the one thing nobody would accept. So do
+ * the speaker notes, which belong to the person rather than to the slide.
+ *
+ * Everything else is the layout's own: the fields the new layout does not have
+ * are dropped, and the ones it has are brought in empty. That is a real loss
+ * where somebody moves a filled table to a bullet slide, and the honest one —
+ * carrying an invisible table around inside a bullet slide until it reappears
+ * later is the version that surprises people. `Edit.tsx` says so before the
+ * change where there is anything to lose.
+ */
+export function relayout(slide: Slide, layout: Layout): Slide {
+  const blank = blankSlide(layout);
+  return {
+    ...blank,
+    title: slide.title,
+    ...(slide.notes !== undefined ? { notes: slide.notes } : {}),
+    // Points come across into any layout with a body, which is the one carry
+    // that never surprises anybody — they are what the slide says either way.
+    // `blank` and the two opening layouts have no body, and clear them.
+    bullets: KEEPS_POINTS.includes(layout) ? slide.bullets : [],
+  };
+}
+
+/** The layouts with a body to put points in. */
+const KEEPS_POINTS: Layout[] = ['bullets', 'table', 'equation'];
+
+/** Whether changing the layout would throw away something somebody typed. */
+export function losesSomething(slide: Slide, layout: Layout): string[] {
+  const to = blankSlide(layout);
+  const gone: string[] = [];
+  if (slide.table?.some((row) => row.some((cell) => cell.trim() !== '')) && !to.table) {
+    gone.push('the table');
+  }
+  if (slide.equation?.trim() && to.equation === undefined) gone.push('the equation');
+  if (slide.note?.trim() && to.note === undefined) gone.push('the line under the title');
+  if (slide.bullets.some((b) => b.trim() !== '') && !KEEPS_POINTS.includes(layout)) {
+    gone.push('the points');
+  }
+  return gone;
 }
 
 /**

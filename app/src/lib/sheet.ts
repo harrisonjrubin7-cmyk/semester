@@ -53,11 +53,152 @@ export interface Sheet {
   itemId?: string | null;
   /** What has actually been typed, by A1 reference. */
   cells: Record<string, string>;
+  /**
+   * The picture over each cell, by A1 reference. Absent until somebody
+   * presses a button on the toolbar — see {@link CellStyle}.
+   */
+  styles?: Record<string, CellStyle>;
   /** How far the grid has been dragged out. Never smaller than what is in it. */
   rows: number;
   cols: number;
   created: number;
   updated: number;
+  /**
+   * When it was last opened, which is not when it was last changed.
+   *
+   * What the shelf sorts by. Absent on every sheet made before this existed,
+   * and read as "not since" rather than as the epoch — see `screens/Sheet.tsx`,
+   * where a sheet nobody has opened falls back to when it was last written to.
+   */
+  opened?: number;
+}
+
+/**
+ * How a cell is *shown*, as against what it holds.
+ *
+ * A picture over the number, and the weight of the type. Kept apart from
+ * `cells` on purpose: the cell holds `0.8` and the style says `80%`, so
+ * changing the picture never rewrites what somebody typed and never changes
+ * what a formula reading that cell adds up. Every other arrangement — storing
+ * `"80%"` and parsing it back, or rounding the value when the decimals button
+ * is pressed — loses the number to its own display, which is the one thing a
+ * spreadsheet must not do.
+ *
+ * Absent is plain, and an absent `styles` is a sheet with no formatting in it:
+ * nothing is written until somebody presses a button, so the sheets made
+ * before this existed carry no extra bytes.
+ */
+export interface CellStyle {
+  /** The picture. `plain` and absent are the same thing: show what is there. */
+  num?: NumFormat;
+  /** Places after the point, for the three numeric pictures. 0–6. */
+  decimals?: number;
+  bold?: boolean;
+  italic?: boolean;
+  strike?: boolean;
+  /**
+   * Where the text sits in the cell.
+   *
+   * Absent is not `left`: it is the spreadsheet rule — numbers right, text
+   * left — which is what makes a column of figures line up at the decimal
+   * point without anybody being asked. Setting it overrides that.
+   */
+  align?: Align;
+}
+
+export type NumFormat = 'plain' | 'number' | 'percent' | 'money' | 'date';
+export type Align = 'left' | 'center' | 'right';
+
+/** As many places as the buttons will add. Past this the number is noise. */
+export const MAX_DECIMALS = 6;
+
+/** The default places each picture opens at, before anybody presses `.0` or `.00`. */
+const PLACES: Record<NumFormat, number> = {
+  plain: 0,
+  number: 2,
+  percent: 0,
+  money: 2,
+  date: 0,
+};
+
+/**
+ * A style as a format string `formatted` can read.
+ *
+ * One conversion, in one place, so the picture on the screen and the picture
+ * in the exported workbook are the same decision made once. `''` means plain,
+ * which is the whole of what "no formatting" has to mean anywhere.
+ */
+export function picture(style: CellStyle | undefined): string {
+  if (!style?.num || style.num === 'plain') return '';
+  if (style.num === 'date') return 'yyyy-mm-dd';
+  const places = Math.min(MAX_DECIMALS, Math.max(0, style.decimals ?? PLACES[style.num]));
+  const tail = places > 0 ? `.${'0'.repeat(places)}` : '';
+  if (style.num === 'percent') return `0${tail}%`;
+  if (style.num === 'money') return `$#,##0${tail}`;
+  return `#,##0${tail}`;
+}
+
+/** The places a picture is showing, so the two decimal buttons know where they are. */
+export function places(style: CellStyle | undefined): number {
+  if (!style?.num || style.num === 'plain' || style.num === 'date') return 0;
+  return Math.min(MAX_DECIMALS, Math.max(0, style.decimals ?? PLACES[style.num]));
+}
+
+/**
+ * What a cell shows, once its style has had a say.
+ *
+ * A plain cell falls straight through to {@link display}, which is what keeps
+ * `80%`, `$12.50` and `007` reading back exactly as typed. A cell with a
+ * picture on it shows the *value* under that picture — which is the point of
+ * having one — and anything the picture cannot be applied to (a word, an
+ * error, an empty cell) is shown the plain way rather than forced.
+ */
+export function styledDisplay(
+  cells: Cells,
+  address: string,
+  style: CellStyle | undefined,
+  ctx: Ctx = clock(),
+): string {
+  const format = picture(style);
+  if (!format) return display(cells, address, ctx);
+  const value = evaluate(cells, address, new Set(), ctx);
+  if (value === '' || isError(value) || typeof value === 'boolean') {
+    return display(cells, address, ctx);
+  }
+  const n = typeof value === 'number' ? value : asNumber(String(value));
+  if (n === null) return display(cells, address, ctx);
+  return show(formatted(n, format));
+}
+
+/** A cell's style, found through the same spelling rules a reference uses. */
+export function styleOf(sheet: Sheet, address: string): CellStyle | undefined {
+  return sheet.styles?.[key(address)];
+}
+
+/**
+ * The same change made to every cell in a selection, as a new style table.
+ *
+ * Pure, and returns the whole table rather than a patch, because that is what
+ * the store stores. A change that leaves a cell with nothing on it takes the
+ * entry out again — an empty `{}` per cell would be a sheet that grows a
+ * megabyte of nothing from a selection somebody pressed Bold on and off.
+ */
+export function restyle(
+  sheet: Sheet,
+  addresses: string[],
+  change: (was: CellStyle) => CellStyle,
+): Record<string, CellStyle> {
+  const out = { ...(sheet.styles ?? {}) };
+  for (const address of addresses) {
+    const at = key(address);
+    const next = change(out[at] ?? {});
+    const kept = Object.fromEntries(
+      Object.entries(next).filter(([, v]) => v !== undefined && v !== false && v !== 'plain'),
+    ) as CellStyle;
+    if (Object.keys(kept).length === 0) delete out[at];
+    else out[at] = kept;
+  }
+  return out;
 }
 
 /** The size a new sheet opens at: enough to look like a sheet, small enough to read. */

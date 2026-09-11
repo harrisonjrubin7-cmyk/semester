@@ -380,6 +380,26 @@ export const SHAPES = {
    */
   paperclip: [{ d: 'M20 11.5 11 20.5a4.6 4.6 0 0 1-6.5-6.5l8-8a3 3 0 0 1 4.3 4.3l-8 8a1.4 1.4 0 0 1-2-2l7.3-7.3' }],
 
+  /**
+   * Profile — the same person as `person`, inside a ring.
+   *
+   * Two glyphs this close together would normally be the near-collision the
+   * grid exists to make visible, and here the collision is the point: the ring
+   * is what every phone draws around the little picture of you, and the header
+   * button that opens this screen is that picture. `person` stays the plain
+   * figure used wherever a *person* is meant — a classmate, a professor — and
+   * this is the one that means *you*.
+   *
+   * The shoulders are cut narrower than `person`'s so the figure sits inside
+   * the ring rather than touching it at 19px, where a stroke meeting a stroke
+   * reads as a smudge.
+   */
+  profile: [
+    { c: [12, 12, 9] },
+    { c: [12, 10, 2.4] },
+    { d: 'M6.8 18.7a5.6 5.6 0 0 1 10.4 0' },
+  ],
+
   /** Guide — the question the screen exists to answer. */
   help: [
     { c: [12, 12, 8.5] },

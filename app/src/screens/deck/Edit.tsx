@@ -8,25 +8,34 @@ import { forLine } from '../../lib/forwork';
 import { datedItems } from '../../lib/select';
 import { Folding } from '../../components/Fold';
 import { ActionButton, EmptyState, SectionLabel } from '../../components/ui';
-import { ChevronLeft, ChevronRight, DeckIcon, Plus } from '../../components/Icons';
+import { ChevronLeft, ChevronRight, DeckIcon } from '../../components/Icons';
 import { secondLine } from '../../lib/dim';
 import { download } from '../../lib/deliver';
-import { deckFileName, pptx, type Slide } from '../../lib/pptx';
+import { deckFileName, pptx } from '../../lib/pptx';
 import { revealKindly } from '../../lib/prefers';
+import { useTier } from '../../lib/media';
+import { Canvas, Notes, Still, Thumb } from './Canvas';
 import {
   LAYOUTS,
+  THEMES,
   blankSlide,
   duplicate,
   forExport,
+  layoutOf,
+  losesSomething,
   minutes,
+  relayout,
   remove,
   reorder,
   running,
   setSlide,
   shown,
+  themeOf,
   toggleHidden,
   type Layout,
   type StoredDeck,
+  type Theme,
+  type ThemeId,
 } from '../../lib/decks';
 
 /**
@@ -38,11 +47,25 @@ import {
  * because the ten minutes before a seminar are spent cutting two slides and
  * rewriting a title, and the app could not do either.
  *
- * So: a rail of slides, one open at a time, and the four things anybody does to
- * a deck — reorder, duplicate, hide, delete. Plus the thing that is not
- * cosmetic at all, which is speaker notes, and the reason they matter is that
- * `lib/pptx.ts` now writes them as real notes parts. A note here shows up in
- * PowerPoint's presenter view rather than on the wall behind you.
+ * ## It is a slide now, not a form
+ *
+ * The first version of this was a stack of labelled boxes: one for the title,
+ * one for the points, one per table cell. Everything worked and nobody could
+ * see their deck until they exported it — which is when the two faults you
+ * cannot fix turn up, a title running to three lines and eleven points on a
+ * slide that holds six.
+ *
+ * So the middle of the screen is the slide, at sixteen by nine, in the deck's
+ * own colours, with the fields where the exported slide puts them. `Canvas.tsx`
+ * draws it, and draws the rail's thumbnails and the presenter's view from the
+ * same code, so what is on the screen is what comes out of the file.
+ *
+ * ## The four controls a deck actually needs
+ *
+ * Add a slide, change this slide's layout, change the deck's theme, and the
+ * three things you do to a slide once it exists — duplicate, hide, delete.
+ * Everything else a presentation program has is a way of decorating one slide,
+ * and this app has no business owning that.
  *
  * ## Hiding, rather than deleting
  *
@@ -56,6 +79,11 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
   const [busy, setBusy] = useState(false);
   const [presenting, setPresenting] = useState(false);
   const [allDeadlines, setAllDeadlines] = useState(false);
+  /** Which of the two pickers is open, if either. Never both. */
+  const [picking, setPicking] = useState<'add' | 'layout' | 'theme' | null>(null);
+  /** A layout change that would lose something, waiting to be confirmed. */
+  const [losing, setLosing] = useState<{ layout: Layout; gone: string[] } | null>(null);
+  const tier = useTier();
 
   const patch = (next: Partial<Omit<StoredDeck, 'id'>>) =>
     dispatch({ type: 'updateDeck', id: deck.id, patch: next });
@@ -65,6 +93,7 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
   const on = Math.min(at, deck.slides.length - 1);
   const slide = deck.slides[on];
   const order = running(deck);
+  const theme = themeOf(deck);
 
   const save = async () => {
     setBusy(true);
@@ -81,9 +110,41 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
     }
   };
 
+  /** Put a new slide of this shape after the one open, and go to it. */
+  const add = (layout: Layout) => {
+    const slides = [...deck.slides];
+    slides.splice(on + 1, 0, blankSlide(layout));
+    patch({ slides, hidden: (deck.hidden ?? []).map((h) => (h > on ? h + 1 : h)) });
+    setAt(on + 1);
+    setPicking(null);
+  };
+
+  /** Change this slide's shape, asking first where there is anything to lose. */
+  const reshape = (layout: Layout, anyway = false) => {
+    if (!slide) return;
+    const gone = losesSomething(slide, layout);
+    if (gone.length > 0 && !anyway) {
+      setLosing({ layout, gone });
+      setPicking(null);
+      return;
+    }
+    patch(setSlide(deck, on, relayout(slide, layout)));
+    setLosing(null);
+    setPicking(null);
+  };
+
   if (presenting) {
     return <Presenter deck={deck} from={on} onDone={() => setPresenting(false)} />;
   }
+
+  /*
+   * The rail runs down the side where there is room and along the top where
+   * there is not — which is the only thing about this screen that changes with
+   * the window. A rail 120 pixels wide beside a canvas on a phone leaves the
+   * canvas 200 wide, and a slide drawn 200 wide is not a slide anybody can
+   * judge.
+   */
+  const beside = tier !== 'phone';
 
   return (
     <Page
@@ -129,64 +190,111 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
         Present it
       </ActionButton>
 
-      <SectionLabel>The slides</SectionLabel>
-      <Rail
-        deck={deck}
-        on={on}
-        onGo={setAt}
-        onMove={(from, to) => {
-          patch(reorder(deck, from, to));
-          setAt(to);
+      <Bar
+        on={picking}
+        onPick={(which) => setPicking((was) => (was === which ? null : which))}
+        theme={theme}
+        layout={slide ? layoutOf(slide) : 'title'}
+        hidden={!shown(deck, on)}
+        onDuplicate={() => patch(duplicate(deck, on))}
+        onHide={() => patch(toggleHidden(deck, on))}
+        onRemove={() => {
+          patch(remove(deck, on));
+          setAt(Math.max(0, on - 1));
         }}
       />
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)' }}>
-        {LAYOUTS.map((layout) => (
-          <button
-            key={layout.id}
-            type="button"
-            className="bare tappable"
-            onClick={() => {
-              const slides = [...deck.slides];
-              slides.splice(on + 1, 0, blankSlide(layout.id as Layout));
-              patch({
-                slides,
-                hidden: (deck.hidden ?? []).map((h) => (h > on ? h + 1 : h)),
-              });
-              setAt(on + 1);
-            }}
-            style={{
-              width: 'auto',
-              padding: 'var(--sp-3) var(--sp-5)',
-              borderRadius: 'var(--r-sm)',
-              border: '1px solid var(--app-line)',
-              fontSize: 'var(--type-sm)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--sp-2)',
-            }}
-          >
-            <Plus size={13} />
-            {layout.label}
-          </button>
-        ))}
-      </div>
-
-      {slide && (
-        <SlideEditor
-          slide={slide}
-          at={on}
-          of={deck.slides.length}
-          hidden={!shown(deck, on)}
-          onChange={(next) => patch(setSlide(deck, on, next))}
-          onDuplicate={() => patch(duplicate(deck, on))}
-          onHide={() => patch(toggleHidden(deck, on))}
-          onRemove={() => {
-            patch(remove(deck, on));
-            setAt(Math.max(0, on - 1));
+      {picking === 'add' && (
+        <Choices
+          name="What shape is the new slide?"
+          options={LAYOUTS.map((l) => ({ id: l.id, label: l.label }))}
+          value={null}
+          onPick={(id) => add(id as Layout)}
+        />
+      )}
+      {picking === 'layout' && slide && (
+        <Choices
+          name="Change this slide to"
+          options={LAYOUTS.map((l) => ({ id: l.id, label: l.label }))}
+          value={layoutOf(slide)}
+          onPick={(id) => reshape(id as Layout)}
+        />
+      )}
+      {picking === 'theme' && (
+        <Choices
+          name="The deck’s colours"
+          options={THEMES.map((t) => ({ id: t.id, label: t.label, says: t.says }))}
+          value={theme.id}
+          onPick={(id) => {
+            patch({ theme: id as ThemeId });
+            setPicking(null);
           }}
         />
       )}
+
+      {losing && (
+        <Blueprint style={{ padding: 'var(--sp-6)', marginTop: 'var(--sp-4)' }}>
+          <div style={{ fontSize: 'var(--type-sm)' }}>
+            Changing to {LAYOUTS.find((l) => l.id === losing.layout)?.label.toLowerCase()} throws
+            away {losing.gone.join(' and ')} on this slide. The title and your speaker notes stay.
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+            <ActionButton onClick={() => setLosing(null)}>Leave it as it is</ActionButton>
+            <ActionButton tone="primary" onClick={() => reshape(losing.layout, true)}>
+              Change it anyway
+            </ActionButton>
+          </div>
+        </Blueprint>
+      )}
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: beside ? 'row' : 'column',
+          gap: 'var(--sp-5)',
+          marginTop: 'var(--sp-5)',
+          alignItems: 'flex-start',
+        }}
+      >
+        <Rail
+          deck={deck}
+          theme={theme}
+          on={on}
+          down={beside}
+          onGo={setAt}
+          onMove={(from, to) => {
+            patch(reorder(deck, from, to));
+            setAt(to);
+          }}
+        />
+        <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+          {slide && (
+            <Canvas
+              slide={slide}
+              theme={theme}
+              at={on}
+              onChange={(next) => patch(setSlide(deck, on, next))}
+            />
+          )}
+          <div
+            style={{
+              ...secondLine(),
+              fontSize: 'var(--type-xs)',
+              marginTop: 'var(--sp-3)',
+            }}
+          >
+            Slide {on + 1} of {deck.slides.length}
+            {shown(deck, on) ? '' : ' · hidden, and left out of the file'}
+          </div>
+          {slide && (
+            <Notes
+              value={slide.notes ?? ''}
+              at={on}
+              onChange={(notes) => patch(setSlide(deck, on, { ...slide, notes }))}
+            />
+          )}
+        </div>
+      </div>
 
       <Folding name="Take it away">
         <ActionButton tone="primary" disabled={busy} onClick={() => void save()}>
@@ -194,7 +302,8 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
         </ActionButton>
         <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
           Hidden slides are left out of the file. Speaker notes go in as real notes, so they show
-          in PowerPoint’s presenter view rather than on the wall.
+          in PowerPoint’s presenter view rather than on the wall. The theme goes in too — the file
+          opens in the colours you chose here.
         </div>
       </Folding>
 
@@ -212,67 +321,204 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
   );
 }
 
-/** The rail of slides, and the two arrows that move one without a drag. */
+/**
+ * The bar over the slide.
+ *
+ * Seven controls, which is all of them: add, the shape of this slide, the
+ * deck's colours, and the three things you do to a slide that exists. Each of
+ * the first three opens a row of choices underneath rather than a menu that
+ * floats — a floating menu on a phone covers the thing it is about, and this
+ * app has nowhere to put one that does not.
+ */
+function Bar({
+  on,
+  onPick,
+  theme,
+  layout,
+  hidden,
+  onDuplicate,
+  onHide,
+  onRemove,
+}: {
+  on: 'add' | 'layout' | 'theme' | null;
+  onPick: (which: 'add' | 'layout' | 'theme') => void;
+  theme: Theme;
+  layout: Layout;
+  hidden: boolean;
+  onDuplicate: () => void;
+  onHide: () => void;
+  onRemove: () => void;
+}) {
+  const button = (text: string, says: string, click: () => void, open = false) => (
+    <button
+      key={says}
+      type="button"
+      className="btn btn-ghost"
+      onClick={click}
+      aria-label={says}
+      aria-expanded={open ? true : undefined}
+      style={{
+        flex: 'none',
+        width: 'auto',
+        padding: 'var(--sp-2) var(--sp-5)',
+        fontSize: 'var(--type-xs)',
+        background: open ? 'var(--app-accent-wash)' : undefined,
+      }}
+    >
+      {text}
+    </button>
+  );
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 'var(--sp-2)',
+        alignItems: 'center',
+        marginTop: 'var(--sp-5)',
+        paddingBottom: 'var(--sp-3)',
+        borderBottom: '1px solid var(--app-line)',
+      }}
+    >
+      {button('+ Slide', 'Add a slide after this one', () => onPick('add'), on === 'add')}
+      {button(
+        `Layout · ${LAYOUTS.find((l) => l.id === layout)?.label ?? ''}`,
+        'Change this slide’s layout',
+        () => onPick('layout'),
+        on === 'layout',
+      )}
+      {button(`Theme · ${theme.label}`, 'Change the deck’s colours', () => onPick('theme'), on === 'theme')}
+      {button('Duplicate', 'Duplicate this slide', onDuplicate)}
+      {button(
+        hidden ? 'Show' : 'Hide',
+        hidden ? 'Show this slide again' : 'Hide this slide without deleting it',
+        onHide,
+      )}
+      {button('Delete', 'Delete this slide', onRemove)}
+    </div>
+  );
+}
+
+/** The row of choices one of the bar's three buttons opens. */
+function Choices({
+  name,
+  options,
+  value,
+  onPick,
+}: {
+  name: string;
+  options: { id: string; label: string; says?: string }[];
+  value: string | null;
+  onPick: (id: string) => void;
+}) {
+  return (
+    <div style={{ marginTop: 'var(--sp-4)' }}>
+      <SectionLabel>{name}</SectionLabel>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
+        {options.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            className="bare tappable"
+            onClick={() => onPick(option.id)}
+            aria-pressed={option.id === value}
+            style={{
+              width: 'auto',
+              padding: 'var(--sp-3) var(--sp-5)',
+              borderRadius: 'var(--r-sm)',
+              border: '1px solid var(--app-line)',
+              background: option.id === value ? 'var(--app-accent-wash)' : undefined,
+              fontSize: 'var(--type-sm)',
+              textAlign: 'left',
+            }}
+          >
+            <div>{option.label}</div>
+            {option.says && (
+              <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-1)' }}>
+                {option.says}
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The rail of slides, and the two arrows that move one without a drag.
+ *
+ * Down the side on a screen with room and along the top on a phone. Each
+ * thumbnail is the slide itself rather than its title — see `Thumb` in
+ * `Canvas.tsx` for why words rather than grey bars.
+ */
 function Rail({
   deck,
+  theme,
   on,
+  down,
   onGo,
   onMove,
 }: {
   deck: StoredDeck;
+  theme: Theme;
   on: number;
+  /** Vertical, beside the slide, rather than horizontal above it. */
+  down: boolean;
   onGo: (at: number) => void;
   onMove: (from: number, to: number) => void;
 }) {
   return (
     <div
-      style={{ display: 'flex', gap: 'var(--sp-3)', overflowX: 'auto', paddingBottom: 'var(--sp-3)' }}
+      style={{
+        display: 'flex',
+        flexDirection: down ? 'column' : 'row',
+        gap: 'var(--sp-3)',
+        overflowX: down ? 'visible' : 'auto',
+        overflowY: down ? 'auto' : 'visible',
+        maxHeight: down ? 460 : undefined,
+        paddingBottom: 'var(--sp-3)',
+        flex: 'none',
+        width: down ? 128 : '100%',
+      }}
     >
       {deck.slides.map((slide, i) => {
         const off = !shown(deck, i);
         return (
-          <div key={i} style={{ flex: 'none', width: 128 }}>
-            <Blueprint
-              plain
-              as="button"
+          <div key={i} style={{ flex: 'none', width: 116 }}>
+            <button
+              type="button"
+              className="bare tappable"
               onClick={() => onGo(i)}
               aria-current={i === on ? 'true' : undefined}
+              aria-label={`Slide ${i + 1}${off ? ', hidden' : ''}: ${slide.title || 'Untitled'}`}
               style={{
                 width: '100%',
-                padding: 'var(--sp-4)',
-                textAlign: 'left',
-                minHeight: 74,
+                padding: 0,
                 opacity: off ? 0.45 : 1,
-                outline: i === on ? '1px solid var(--app-accent)' : 'none',
+                outline: i === on ? '2px solid var(--app-accent)' : 'none',
               }}
             >
-              <div style={{ ...secondLine(), fontSize: 'var(--type-xs)' }}>
+              <Thumb slide={slide} theme={theme} />
+            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginTop: 'var(--sp-2)' }}>
+              <span style={{ ...secondLine(), fontSize: 'var(--type-xs)', flex: 1 }}>
                 {i + 1}
                 {off ? ' · hidden' : ''}
-              </div>
-              <div
-                style={{
-                  fontSize: 'var(--type-sm)',
-                  lineHeight: 'var(--leading-tight)',
-                  marginTop: 'var(--sp-2)',
-                }}
-              >
-                {slide.title || 'Untitled'}
-              </div>
-            </Blueprint>
-            {/*
-              A drag has to have a single-pointer equal — see
-              `a11y/dragging.test.ts`. These are it, and they are also the only
-              way to reorder on a phone where the rail itself scrolls.
-            */}
-            <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-2)' }}>
+              </span>
+              {/*
+                A drag has to have a single-pointer equal — see
+                `a11y/dragging.test.ts`. These are it, and they are also the
+                only way to reorder on a phone where the rail itself scrolls.
+              */}
               <button
                 type="button"
                 className="btn btn-ghost"
                 disabled={i === 0}
                 onClick={() => onMove(i, i - 1)}
                 aria-label={`Move slide ${i + 1} earlier`}
-                style={{ flex: 1, padding: 'var(--sp-2)' }}
+                style={{ flex: 'none', width: 'auto', padding: 'var(--sp-2)' }}
               >
                 <ChevronLeft size={13} />
               </button>
@@ -282,7 +528,7 @@ function Rail({
                 disabled={i === deck.slides.length - 1}
                 onClick={() => onMove(i, i + 1)}
                 aria-label={`Move slide ${i + 1} later`}
-                style={{ flex: 1, padding: 'var(--sp-2)' }}
+                style={{ flex: 'none', width: 'auto', padding: 'var(--sp-2)' }}
               >
                 <ChevronRight size={13} />
               </button>
@@ -291,156 +537,6 @@ function Rail({
         );
       })}
     </div>
-  );
-}
-
-function SlideEditor({
-  slide,
-  at,
-  of,
-  hidden,
-  onChange,
-  onDuplicate,
-  onHide,
-  onRemove,
-}: {
-  slide: Slide;
-  at: number;
-  of: number;
-  hidden: boolean;
-  onChange: (next: Slide) => void;
-  onDuplicate: () => void;
-  onHide: () => void;
-  onRemove: () => void;
-}) {
-  return (
-    <Blueprint style={{ padding: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
-      <SectionLabel>
-        Slide {at + 1} of {of}
-        {hidden ? ' · hidden' : ''}
-      </SectionLabel>
-
-      <input
-        className="input"
-        value={slide.title}
-        onChange={(e) => onChange({ ...slide, title: e.target.value })}
-        placeholder="Slide title"
-        aria-label={`Title of slide ${at + 1}`}
-        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
-      />
-
-      <textarea
-        className="input"
-        value={slide.bullets.join('\n')}
-        onChange={(e) =>
-          onChange({ ...slide, bullets: e.target.value.split('\n').filter((l, i, all) => l !== '' || i < all.length - 1) })
-        }
-        placeholder="One point per line"
-        aria-label={`Points on slide ${at + 1}`}
-        rows={5}
-        style={{ width: '100%', marginBottom: 'var(--sp-4)', fontSize: 'var(--type-base)' }}
-      />
-
-      {slide.note !== undefined && (
-        <input
-          className="input"
-          value={slide.note}
-          onChange={(e) => onChange({ ...slide, note: e.target.value })}
-          placeholder="A line under the title — a source, a unit, a date"
-          aria-label={`Line under the title of slide ${at + 1}`}
-          style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
-        />
-      )}
-
-      {/*
-        The table, cell by cell. Without this a Table slide stayed the empty
-        two-by-two it was created as, and exported that way — a layout you
-        could choose and could not fill in.
-      */}
-      {slide.table && (
-        <div style={{ marginBottom: 'var(--sp-4)', overflowX: 'auto' }}>
-          <SectionLabel>The table</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-            {slide.table.map((row, r) => (
-              <div key={r} style={{ display: 'flex', gap: 'var(--sp-2)' }}>
-                {row.map((cell, c) => (
-                  <input
-                    key={c}
-                    className="input"
-                    value={cell}
-                    onChange={(e) => {
-                      const table = (slide.table ?? []).map((line, i) =>
-                        i === r ? line.map((was, j) => (j === c ? e.target.value : was)) : line,
-                      );
-                      onChange({ ...slide, table });
-                    }}
-                    aria-label={`Slide ${at + 1}, ${r === 0 ? 'heading' : `row ${r}`}, column ${c + 1}`}
-                    style={{ flex: 1, minWidth: 90 }}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
-            <ActionButton
-              onClick={() => {
-                const width = slide.table?.[0]?.length ?? 2;
-                onChange({ ...slide, table: [...(slide.table ?? []), Array(width).fill('')] });
-              }}
-              style={{ width: 'auto', padding: 'var(--sp-2) var(--sp-5)' }}
-            >
-              Add a row
-            </ActionButton>
-            <ActionButton
-              onClick={() =>
-                onChange({ ...slide, table: (slide.table ?? []).map((row) => [...row, '']) })
-              }
-              style={{ width: 'auto', padding: 'var(--sp-2) var(--sp-5)' }}
-            >
-              Add a column
-            </ActionButton>
-          </div>
-        </div>
-      )}
-
-      {slide.equation !== undefined && (
-        <input
-          className="input"
-          value={slide.equation}
-          onChange={(e) => onChange({ ...slide, equation: e.target.value })}
-          placeholder="An equation, as one line"
-          aria-label={`Equation on slide ${at + 1}`}
-          style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
-        />
-      )}
-
-      <SectionLabel>What you say</SectionLabel>
-      <textarea
-        className="input"
-        value={slide.notes ?? ''}
-        onChange={(e) => onChange({ ...slide, notes: e.target.value })}
-        placeholder="Speaker notes — yours, not the room’s"
-        aria-label={`Speaker notes for slide ${at + 1}`}
-        rows={4}
-        style={{ width: '100%', fontSize: 'var(--type-base)' }}
-      />
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
-        <ActionButton onClick={onDuplicate} style={{ width: 'auto', padding: 'var(--sp-3) var(--sp-5)' }}>
-          Duplicate
-        </ActionButton>
-        <ActionButton
-          onClick={onHide}
-          aria-label={hidden ? `Show slide ${at + 1} again` : `Hide slide ${at + 1} without deleting it`}
-          style={{ width: 'auto', padding: 'var(--sp-3) var(--sp-5)' }}
-        >
-          {hidden ? 'Show it' : 'Hide it'}
-        </ActionButton>
-        <ActionButton onClick={onRemove} style={{ width: 'auto', padding: 'var(--sp-3) var(--sp-5)' }}>
-          Delete
-        </ActionButton>
-      </div>
-    </Blueprint>
   );
 }
 
@@ -560,70 +656,20 @@ function Presenter({
         </ActionButton>
       </div>
 
-      {/* The slide. Tapping its left and right halves moves, as it does in the
-          study slideshow — the same gesture in the same app. */}
-      <Blueprint
-        style={{
-          flex: 1,
-          padding: 'var(--sp-7)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          position: 'relative',
-        }}
-      >
-        <h2 style={{ fontSize: 'var(--type-xl)', lineHeight: 'var(--leading-tight)', margin: 0 }}>
-          {here.slide.title}
-        </h2>
-        {/*
-          Everything the exported slide carries has to be on the wall too. A
-          presenter view showing less than the file is a presenter view that
-          lies about what the room can see — a deck built "from a sheet" is all
-          table, and showed as a bare title.
-        */}
-        {here.slide.note && (
-          <div style={{ ...secondLine(), marginTop: 'var(--sp-3)', fontSize: 'var(--type-md)' }}>
-            {here.slide.note}
-          </div>
-        )}
-        {here.slide.table && here.slide.table.length > 0 && (
-          <div style={{ marginTop: 'var(--sp-6)', overflowX: 'auto' }}>
-            <table style={{ borderCollapse: 'collapse', fontSize: 'var(--type-md)' }}>
-              <tbody>
-                {here.slide.table.map((row, r) => (
-                  <tr key={r}>
-                    {row.map((cell, c) => (
-                      <td
-                        key={c}
-                        style={{
-                          border: '1px solid var(--app-line)',
-                          padding: 'var(--sp-3) var(--sp-5)',
-                          fontWeight: r === 0 ? 500 : 400,
-                        }}
-                      >
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {here.slide.bullets.length > 0 && (
-          <ul style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-relaxed)' }}>
-            {here.slide.bullets.map((line, n) => (
-              <li key={n} style={{ marginTop: 'var(--sp-3)' }}>
-                {line}
-              </li>
-            ))}
-          </ul>
-        )}
-        {here.slide.equation && (
-          <div style={{ marginTop: 'var(--sp-6)', fontSize: 'var(--type-lg)' }}>
-            {here.slide.equation}
-          </div>
-        )}
+      {/*
+        The slide, drawn by the same code the editor and the file use — see
+        `Canvas.tsx`. It used to be drawn again here, by hand, and the copy had
+        already drifted: it put the equation last where the file puts it first,
+        and sized a table differently. A presenter view that does not match the
+        wall is worse than none.
+
+        Tapping its left and right halves moves, as it does in the study
+        slideshow — the same gesture in the same app.
+      */}
+      <div style={{ flex: 1, position: 'relative', display: 'flex' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Still slide={here.slide} theme={themeOf(deck)} />
+        </div>
         <button
           type="button"
           className="bare"
@@ -643,7 +689,7 @@ function Presenter({
           aria-label="Next slide"
           style={{ position: 'absolute', inset: '0 0 0 50%', width: 'auto', opacity: 0 }}
         />
-      </Blueprint>
+      </div>
 
       <div style={{ display: 'flex', gap: 'var(--sp-5)', flexWrap: 'wrap' }}>
         <Blueprint plain style={{ flex: 2, minWidth: 200, padding: 'var(--sp-5)' }}>

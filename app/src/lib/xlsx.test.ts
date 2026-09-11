@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { fromSheet, parts, sheetFileName, tabName, widthsFor, xml, type Book } from './xlsx';
-import { blankSheet, fromRows, type Sheet } from './sheet';
+import { fromSheet, parts, sheetFileName, styleTable, tabName, widthsFor, xml, type Book } from './xlsx';
+import { blankSheet, fromRows, type CellStyle, type Sheet } from './sheet';
 
 /**
  * The parts of an Excel file, checked without opening Excel.
@@ -264,5 +264,91 @@ describe('the file name', () => {
 
   it('has a name even when the title has no letters in it', () => {
     expect(sheetFileName('***')).toBe('sheet.xlsx');
+  });
+});
+
+/**
+ * The formatting on the way out.
+ *
+ * A picture over a number is not decoration: a gradebook shown as percentages
+ * and dollars that arrives in Excel as `0.8` and `1234.5` has lost the half of
+ * itself that says what the numbers are. These are the checks that it does
+ * not.
+ */
+describe('what an exported sheet looks like', () => {
+  const sheet = (cells: Record<string, string>, styles: Record<string, CellStyle>): Sheet => ({
+    id: 's',
+    title: 'Marks',
+    courseId: null,
+    cells,
+    styles,
+    rows: 12,
+    cols: 6,
+    created: 0,
+    updated: 0,
+  });
+
+  it('leaves the first four style indices where they were', () => {
+    // `sheetXml` writes a header row as 1 and a typed percentage as 2 or 3
+    // directly. A table whose indices moved with the contents would make those
+    // three numbers mean something different in every file.
+    const table = styleTable([{ name: 'S', rows: [], header: false }]);
+    expect(table.index({})).toBe(0);
+    expect(table.index({ bold: true })).toBe(1);
+    expect(table.index({ fmt: '0%' })).toBe(2);
+    expect(table.index({ fmt: '0.00%' })).toBe(3);
+  });
+
+  it('writes one entry however many cells ask for the same look', () => {
+    const tab = fromSheet(
+      sheet(
+        { A1: 'Weight', A2: '0.4', A3: '0.6' },
+        { A2: { num: 'percent' }, A3: { num: 'percent' } },
+      ),
+      false,
+    );
+    const table = styleTable([tab]);
+    expect(table.index({ fmt: '0%' })).toBe(2);
+    expect(table.xml.match(/<xf /g)?.length).toBe(5);
+  });
+
+  it('defines a custom format for anything Excel has no built-in id for', () => {
+    const tab = fromSheet(sheet({ A1: '1234.5' }, { A1: { num: 'money' } }), false);
+    const table = styleTable([tab]);
+    expect(table.xml).toContain('formatCode="$#,##0.00"');
+    expect(table.xml).toContain('numFmtId="164"');
+  });
+
+  it('puts the format on the cell that carries it', () => {
+    const files = parts({ tabs: [fromSheet(sheet({ A1: '0.8' }, { A1: { num: 'percent' } }), false)] });
+    const at = files['xl/worksheets/sheet1.xml'];
+    // The value is the fraction, formatted — not the text off the screen.
+    expect(at).toContain('<v>0.8</v>');
+    expect(at).toMatch(/<c r="A1" s="2">/);
+  });
+
+  it('carries the weights and the alignment', () => {
+    const tab = fromSheet(
+      sheet({ A1: 'Total' }, { A1: { bold: true, italic: true, align: 'center' } }),
+      false,
+    );
+    const table = styleTable([tab]);
+    expect(table.xml).toContain('<b/><i/>');
+    expect(table.xml).toContain('<alignment horizontal="center"/>');
+  });
+
+  it('lets a picture somebody chose beat the one the typing implied', () => {
+    // The cell was typed `80%`, which would be written as a percentage on its
+    // own. Somebody then put money over it. What they chose wins.
+    const tab = fromSheet(sheet({ A1: '80%' }, { A1: { num: 'money' } }), false);
+    const table = styleTable([tab]);
+    expect(tab.rows[0][0].look?.fmt).toBe('$#,##0.00');
+    expect(table.index(tab.rows[0][0].look)).toBeGreaterThan(3);
+  });
+
+  it('writes no look at all for a sheet nobody has formatted', () => {
+    const tab = fromSheet(sheet({ A1: '1', B1: 'two' }, {}), false);
+    expect(tab.rows[0].every((c) => c.look === undefined)).toBe(true);
+    expect(styleTable([tab]).xml.match(/<xf /g)?.length).toBe(5);
   });
 });

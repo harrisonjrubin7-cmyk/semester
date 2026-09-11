@@ -1,6 +1,6 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, Group } from '../../components/shell/Rows';
+import { CustomRow, Group, NavRow } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { SectionLabel, Toggle } from '../../components/ui';
 import { YourCourses } from '../../components/YourCourses';
@@ -14,11 +14,12 @@ import { ROLES, hiddenFrom, pickable, roleOf, type Role } from '../../lib/role';
 /**
  * Who you are to the app, and what it is holding.
  *
- * Your name is here rather than on a page of its own because it is the one
- * fact this page's other settings are about: what this person is called, what
- * they are here to do, where they study, and which courses they are taking.
+ * Your name used to be a field here, on the argument that it was the one fact
+ * this page's other settings are about. It is on the profile screen now, where
+ * the account and the counts are, and this page keeps a row pointing at it —
+ * see the note beside that row.
  *
- * The role sits above the name because it is the widest of the four — it
+ * The role sits above that row because it is the widest of the four — it
  * decides which screens are addressed to this person at all, and the two
  * "Hidden:" lines on this page are the same sentence about two different
  * gates. See `lib/role.ts`, which is careful about which of them the app can
@@ -92,27 +93,28 @@ export function SettingsCourses() {
             </CustomRow>
           </Group>
 
+          {/*
+            The name moved to Profile, and this is the row that says where.
+
+            It was a field here, and the note at the top of this file argued
+            for it: the name was the fact the rest of this page's settings were
+            about. That was true while the app had no screen about the person.
+            It has one now — `screens/Profile.tsx` — and two boxes editing one
+            string is the duplicate this codebase keeps deleting. A row rather
+            than nothing at all, because somebody who learned where the name
+            was must not come back to find it simply gone.
+          */}
           <Group
             header="You"
             footer="Your name is only used to address you in the app. It is never sent anywhere and never guessed at from your email."
-            lit={lights('name your name called address me', lit)}
+            lit={lights('name your name called address me profile avatar account', lit)}
           >
-            <CustomRow>
-              <SectionLabel style={{ margin: '0 0 6px' }}>Your name</SectionLabel>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-4)', textWrap: 'pretty' }}>
-                Only used to address you in the app. Never sent anywhere, never guessed at from your
-                email, and leaving it blank costs nothing — the app just says "you".
-              </div>
-              <input
-                className="input"
-                value={state.myName}
-                maxLength={40}
-                placeholder="What should the app call you?"
-                aria-label="Your name"
-                onChange={(e) => dispatch({ type: 'setMyName', name: e.target.value })}
-                style={{ width: '100%', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
-              />
-            </CustomRow>
+            <NavRow
+              label="Your name"
+              value={state.myName.trim() || 'Not set'}
+              sub="On your profile, with your account and everything the app holds"
+              onClick={() => dispatch({ type: 'go', screen: 'profile' })}
+            />
           </Group>
 
           <Group
