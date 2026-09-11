@@ -3103,7 +3103,7 @@ input[type='search'].input {
 
 .bench-meta {
   font-size: var(--type-xs);
-  color: var(--app-faint);
+  color: var(--app-dim);
   line-height: var(--leading-normal);
 }
 
@@ -3192,6 +3192,10 @@ input[type='search'].input {
 }
 
 .bench-item:disabled {
+  /* Faint, and this is the one place it is right for words: `--app-faint` is
+     held to 3:1, which is the bar for a disabled control and is what makes it
+     read as unavailable. Everything here that is ordinary text is `--app-dim`,
+     per the note at `.soft-caps-quiet`. */
   color: var(--app-faint);
   cursor: default;
 }
@@ -3200,7 +3204,7 @@ input[type='search'].input {
   display: block;
   margin-top: var(--sp-1);
   font-size: var(--type-xs);
-  color: var(--app-faint);
+  color: var(--app-dim);
   line-height: var(--leading-normal);
 }
 
@@ -3375,7 +3379,7 @@ input[type='search'].input {
 
 .gal-under {
   font-size: var(--type-xs);
-  color: var(--app-faint);
+  color: var(--app-dim);
   line-height: var(--leading-normal);
 }
 
@@ -3435,7 +3439,7 @@ input[type='search'].input {
   flex: none;
   width: 116px;
   font-size: var(--type-sm);
-  color: var(--app-faint);
+  color: var(--app-dim);
 }
 
 @media (max-width: 559px) {
@@ -3510,7 +3514,7 @@ input[type='search'].input {
   font-family: var(--font-heading);
   font-style: italic;
   font-size: var(--type-sm);
-  color: var(--app-faint);
+  color: var(--app-dim);
   border-right: 1px solid var(--app-line);
 }
 

@@ -4,6 +4,8 @@ import { EmptyState } from './ui';
 import { Plus } from './Icons';
 import {
   SORTS,
+  anyPersonal,
+  coursesOn,
   grouped,
   named,
   only,
@@ -85,25 +87,26 @@ export function Gallery<T extends Filed>({
   /** Drawn in place of the whole shelf when there is nothing on it. */
   empty: { title: string; body: string; icon: ReactNode };
 }) {
-  const { catalog, courseCode } = useStore();
+  const { courseCode } = useStore();
   const [by, setBy] = useState<Sorting>('opened');
   const [view, setView] = useState<Shape>('grid');
   const [whose, setWhose] = useState<Whose>('all');
 
   /*
-   * Only the courses that have something on this shelf.
+   * Which courses to offer, and whether to offer "Not for a course" — both
+   * decided from the files, in `lib/shelf.ts`, where they are tested.
    *
-   * A filter that offers ECON 1020 and then shows an empty screen has taught
-   * somebody that their file is missing. The control can only ever narrow to
-   * something that is there.
+   * `courseCode` falls back to the id upper-cased, which is a name for a course
+   * the app no longer holds and is better than a row with no heading.
    */
   const courses = useMemo(
     () =>
-      catalog.courses
-        .filter((c) => items.some((i) => i.courseId === c.id))
-        .map((c) => ({ id: c.id as Whose, label: c.code })),
-    [catalog.courses, items],
+      coursesOn(items)
+        .map((id) => ({ id: id as Whose, label: courseCode(id) }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [items, courseCode],
   );
+  const personal = anyPersonal(items);
 
   const mine = only(items, whose);
   /*
@@ -165,7 +168,13 @@ export function Gallery<T extends Filed>({
             onChange={(e) => setWhose(e.target.value as Whose)}
           >
             <option value="all">Every course</option>
-            <option value="personal">Not for a course</option>
+            {/*
+             * Offered only where there is something to find behind it. A shelf
+             * whose every file belongs to a course still listed "Not for a
+             * course", and choosing it emptied the screen and explained that
+             * the filter had done it — a control that can only ever fail.
+             */}
+            {personal && <option value="personal">Not for a course</option>}
             {courses.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}

@@ -201,6 +201,19 @@ function Editor({ doc }: { doc: Doc }) {
   const patch = (next: Partial<Omit<Doc, 'id'>>) =>
     dispatch({ type: 'updateDocument', id: doc.id, patch: next });
 
+  /*
+   * The block the caret is in — clamped, and read everywhere instead of
+   * `state.blockAt`.
+   *
+   * `blockAt` is an index into a list that changes under it. Restore an
+   * earlier, shorter draft and it points past the end; move a block and it
+   * points at whatever took that place. The clamp is what makes "the block you
+   * are in" answerable at all, and reading the raw value anywhere is how the
+   * Insert commands came to splice at an index the document did not have.
+   */
+  const openAt =
+    state.blockAt !== null && state.blockAt < doc.blocks.length ? state.blockAt : null;
+
   const setBlock = (at: number, block: Block) =>
     patch({ blocks: doc.blocks.map((b, i) => (i === at ? block : b)) });
 
@@ -211,11 +224,11 @@ function Editor({ doc }: { doc: Doc }) {
    * the old behaviour — always append — meant writing the middle of a document
    * was: add a paragraph, then press the up arrow eleven times.
    */
-  const addBlock = (kind: BlockKind, at = (state.blockAt ?? doc.blocks.length - 1) + 1) => {
+  const addBlock = (kind: BlockKind, index = (openAt ?? doc.blocks.length - 1) + 1) => {
     const blocks = [...doc.blocks];
-    blocks.splice(at, 0, blankBlock(kind));
+    blocks.splice(index, 0, blankBlock(kind));
     patch({ blocks });
-    dispatch({ type: 'editBlock', at });
+    dispatch({ type: 'editBlock', at: index });
   };
 
   const removeBlock = (at: number) => {
@@ -228,9 +241,7 @@ function Editor({ doc }: { doc: Doc }) {
   const empty = !hasContent(doc);
   const headings = outline(doc);
 
-  /** The block the caret is in, which is what Format acts on. */
-  const at = state.blockAt !== null && state.blockAt < doc.blocks.length ? state.blockAt : null;
-  const open = at === null ? null : doc.blocks[at];
+  const open = openAt === null ? null : doc.blocks[openAt];
   const style: Style =
     open?.kind === 'heading' ? (`h${open.level}` as Style) : 'text';
 
@@ -244,10 +255,10 @@ function Editor({ doc }: { doc: Doc }) {
    * them.
    */
   const restyle = (next: Style) => {
-    if (at === null || !open || !plainText(open)) return;
+    if (openAt === null || !open || !plainText(open)) return;
     const text = open.kind === 'heading' || open.kind === 'text' ? open.text : '';
     setBlock(
-      at,
+      openAt,
       next === 'text'
         ? { kind: 'text', text }
         : { kind: 'heading', level: Number(next.slice(1)) as 1 | 2 | 3, text },
@@ -356,7 +367,7 @@ function Editor({ doc }: { doc: Doc }) {
           {
             id: 'edit.remove',
             label: 'Delete this block',
-            run: at === null ? undefined : () => removeBlock(at),
+            run: openAt === null ? undefined : () => removeBlock(openAt),
           },
         ],
       ],
@@ -417,8 +428,8 @@ function Editor({ doc }: { doc: Doc }) {
             label: 'Numbered list',
             on: open?.kind === 'bullets' && open.numbered,
             run:
-              at !== null && open?.kind === 'bullets'
-                ? () => setBlock(at, { ...open, numbered: !open.numbered })
+              openAt !== null && open?.kind === 'bullets'
+                ? () => setBlock(openAt, { ...open, numbered: !open.numbered })
                 : undefined,
           },
           {
@@ -426,8 +437,8 @@ function Editor({ doc }: { doc: Doc }) {
             label: 'Table has a header row',
             on: open?.kind === 'table' && open.header,
             run:
-              at !== null && open?.kind === 'table'
-                ? () => setBlock(at, { ...open, header: !open.header })
+              openAt !== null && open?.kind === 'table'
+                ? () => setBlock(openAt, { ...open, header: !open.header })
                 : undefined,
           },
         ],
@@ -596,7 +607,10 @@ function Editor({ doc }: { doc: Doc }) {
             onOpen={() => dispatch({ type: 'editBlock', at: index })}
             onChange={(next) => setBlock(index, next)}
             onRemove={() => removeBlock(index)}
-            onMove={(to) => patch({ blocks: moved(doc.blocks, index, to) })}
+            onMove={(to) => {
+              patch({ blocks: moved(doc.blocks, index, to) });
+              dispatch({ type: 'editBlock', at: to });
+            }}
           />
         ))}
       </div>

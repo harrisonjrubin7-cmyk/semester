@@ -83,6 +83,22 @@ function press(named: RegExp) {
   });
 }
 
+/**
+ * Press the control with this accessible name.
+ *
+ * `press` above finds a button by the words on it, which is how a person finds
+ * one. The toolbar's buttons are named for what they do and labelled with one
+ * word — "Heading" over `Insert a heading` — so the two halves of that need
+ * two ways in.
+ */
+function pressNamed(label: string) {
+  const el = host.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement | null;
+  if (!el) throw new Error(`no control named “${label}”`);
+  act(() => {
+    el.click();
+  });
+}
+
 /** The menu names drawn on the bar, as they read. */
 function bar(): string[] {
   return [...host.querySelectorAll('.bench-name')].map((b) => (b.textContent ?? '').trim());
@@ -329,5 +345,58 @@ describe('the shelf', () => {
     expect(host.querySelector('.gal-grid')).toBe(null);
     press(/^Grid$/);
     expect(host.querySelector('.gal-grid')).not.toBe(null);
+  });
+});
+
+/**
+ * The two things a review bot found by reading this branch's diff, held shut.
+ *
+ * Both are the same shape of mistake — an index or a label that was right when
+ * it was written and stopped being right when the thing under it moved — and
+ * neither shows up in a screenshot.
+ */
+describe('the shelf’s course filter', () => {
+  it('is not drawn at all until something is filed under a course', () => {
+    // Which courses it may offer, and whether "Not for a course" belongs, are
+    // decided in `lib/shelf.ts` and tested there. This is the one part that is
+    // a rendering decision: with nothing filed under a class there is nothing
+    // to narrow to, so there is no control.
+    show(<Write />);
+    press(/^Blank document$/);
+    press(/^All documents$/);
+    expect(host.querySelector('[aria-label="Which course to show"]')).toBe(null);
+  });
+});
+
+describe('the block the caret is in', () => {
+  /** What the style picker says it is about right now. */
+  const style = () =>
+    (host.querySelector('[aria-label="Paragraph style"]') as HTMLSelectElement | null)?.value ??
+    null;
+
+  const pickStyle = (value: string) => {
+    const el = host.querySelector('[aria-label="Paragraph style"]') as HTMLSelectElement;
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!.call(el, value);
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  };
+
+  it('follows a block that is moved, rather than staying on its old place', () => {
+    show(<Write />);
+    press(/^Blank document$/);
+
+    // Two blocks: a paragraph, then a heading inserted after it.
+    pressNamed('Insert a heading');
+    expect(style()).toBe('h2');
+
+    // Move the heading up. The caret should still be on the heading.
+    pressNamed('Move Heading up');
+    expect(style()).toBe('h2');
+
+    // And restyling now changes the heading, not the paragraph under it.
+    pickStyle('text');
+    expect(style()).toBe('text');
+    expect(host.querySelector('[aria-label="Heading text"]')).toBe(null);
   });
 });

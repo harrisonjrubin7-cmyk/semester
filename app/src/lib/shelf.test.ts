@@ -1,5 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { AGES, ageOf, grouped, named, only, sorted, stamp, type Filed } from './shelf';
+import {
+  AGES,
+  ageOf,
+  anyPersonal,
+  coursesOn,
+  grouped,
+  named,
+  only,
+  seenAt,
+  sorted,
+  stamp,
+  type Filed,
+} from './shelf';
 import type { CourseId } from './types';
 
 const DAY = 86_400_000;
@@ -164,5 +176,77 @@ describe('the date beside a row', () => {
 
   it('says the year for another one, because that is the fact that matters', () => {
     expect(stamp(new Date(2025, 2, 31, 9, 0).getTime(), NOW)).toContain('2025');
+  });
+});
+
+describe('when something was last in front of somebody', () => {
+  it('falls back to when it was edited, for everything made before this was kept', () => {
+    expect(seenAt(file({ id: 'a', updated: NOW - DAY }))).toBe(NOW - DAY);
+  });
+
+  it('takes the later of the two, because editing is being in front of it', () => {
+    expect(seenAt(file({ id: 'a', updated: NOW, opened: NOW - 40 * DAY }))).toBe(NOW);
+  });
+
+  it('moves a file you only read, which is the whole point of the field', () => {
+    expect(seenAt(file({ id: 'a', updated: NOW - 40 * DAY, opened: NOW }))).toBe(NOW);
+  });
+});
+
+describe('reading something without changing it', () => {
+  /*
+   * The bug this holds shut: the default order is called "Last opened" and
+   * sorted by `updated`, so a document read this morning and not typed into
+   * stayed where it was — under a heading saying it had not been touched in a
+   * month, in a list whose label said otherwise.
+   */
+  const read = file({ id: 'read', created: NOW - 50 * DAY, updated: NOW - 40 * DAY, opened: NOW });
+  const typed = file({ id: 'typed', created: NOW - DAY, updated: NOW - DAY });
+
+  it('comes first in the order that claims to track it', () => {
+    expect(sorted([typed, read], 'opened').map((i) => i.id)).toEqual(['read', 'typed']);
+  });
+
+  it('is filed under today rather than under Earlier', () => {
+    expect(grouped([typed, read], 'opened', NOW)).toEqual([
+      { label: 'Today', items: [read] },
+      { label: 'Previous 7 days', items: [typed] },
+    ]);
+  });
+
+  it('does not move in the order that is about something else', () => {
+    // Newest made first, and being opened this morning does not make a file
+    // from fifty days ago a new one.
+    expect(sorted([read, typed], 'made').map((i) => i.id)).toEqual(['typed', 'read']);
+    expect(grouped([read], 'made', NOW)[0].label).toBe('Earlier');
+  });
+});
+
+describe('what the course filter may offer', () => {
+  const econ = file({ id: 'a', courseId: 'econ' as CourseId });
+  const psci = file({ id: 'b', courseId: 'psci' as CourseId });
+  const mine = file({ id: 'c', courseId: null });
+
+  it('names each course once, in the order it is first met', () => {
+    expect(coursesOn([psci, econ, psci])).toEqual(['psci', 'econ']);
+  });
+
+  it('offers nothing for a shelf of files that belong to no course', () => {
+    expect(coursesOn([mine, mine])).toEqual([]);
+  });
+
+  /*
+   * The bug: the options were read off this term's catalogue, so a memo
+   * written for a course taken last spring — still on the shelf, still
+   * carrying that course's id — was the one file you could not narrow to.
+   */
+  it('offers a course the app no longer holds, because the file still names it', () => {
+    expect(coursesOn([file({ id: 'old', courseId: 'hist1010' as CourseId })])).toEqual(['hist1010']);
+  });
+
+  it('offers “not for a course” only where there is one', () => {
+    expect(anyPersonal([econ, mine])).toBe(true);
+    expect(anyPersonal([econ, psci])).toBe(false);
+    expect(anyPersonal([])).toBe(false);
   });
 });

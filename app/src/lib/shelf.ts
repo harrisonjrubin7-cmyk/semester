@@ -43,6 +43,28 @@ export interface Filed {
   courseId: CourseId | null;
   created: number;
   updated: number;
+  /**
+   * When it was last opened, where the store records that.
+   *
+   * Optional, and the fallback matters: absent it, `seenAt` answers with
+   * `updated`, which is what every file made before the store recorded this
+   * has. Sorting by "Last opened" without it was the bug — the order was last
+   * *edited* under a label that said otherwise, so a document read this
+   * morning and not typed into sat where it was, under a heading saying it had
+   * not been touched in a month.
+   */
+  opened?: number;
+}
+
+/**
+ * When this was last in front of somebody, however that happened.
+ *
+ * The later of the two, not `opened` alone: editing a file is being in front
+ * of it, and a store that stamps `updated` on every keystroke would otherwise
+ * be ignored by the one order that claims to track attention.
+ */
+export function seenAt(item: Filed): number {
+  return Math.max(item.opened ?? 0, item.updated);
 }
 
 /** The three orders, and what each is called where somebody chooses one. */
@@ -65,6 +87,41 @@ export type Shape = 'grid' | 'list';
  * question a term actually poses, and it is the one the shelf can answer.
  */
 export type Whose = 'all' | 'personal' | CourseId;
+
+/**
+ * The courses this shelf can actually be narrowed to.
+ *
+ * Read off the files themselves rather than off the term's catalogue, and the
+ * second reason is the one that caught this out. A filter that offers ECON
+ * 1020 and then shows an empty screen has taught somebody their file is
+ * missing — so it can only ever offer what is there. And a catalogue is *this*
+ * term: a memo written for a course taken last spring is still on this shelf,
+ * still carries that course's id, and asking the catalogue about it gets
+ * nothing — so the one file you most needed to narrow to was under the one
+ * course the control would not offer.
+ *
+ * Ids, in the order they are first met. The caller turns them into names,
+ * because only it knows how.
+ */
+export function coursesOn(items: Filed[]): CourseId[] {
+  const seen: CourseId[] = [];
+  for (const item of items) {
+    if (item.courseId !== null && !seen.includes(item.courseId)) seen.push(item.courseId);
+  }
+  return seen;
+}
+
+/**
+ * Whether anything here belongs to no course.
+ *
+ * What decides if "Not for a course" is worth offering. A shelf whose every
+ * file is filed under a class still listed it, and choosing it emptied the
+ * screen and explained that the filter had done it — a control that could only
+ * ever fail.
+ */
+export function anyPersonal(items: Filed[]): boolean {
+  return items.some((item) => item.courseId === null);
+}
 
 export function only<T extends Filed>(items: T[], whose: Whose): T[] {
   if (whose === 'all') return items;
@@ -100,7 +157,7 @@ export function sorted<T extends Filed>(items: T[], by: Sorting): T[] {
   } else if (by === 'made') {
     out.sort((a, b) => b.created - a.created);
   } else {
-    out.sort((a, b) => b.updated - a.updated);
+    out.sort((a, b) => seenAt(b) - seenAt(a));
   }
   return out;
 }
@@ -152,7 +209,7 @@ export function grouped<T extends Filed>(items: T[], by: Sorting, now: number): 
   const order = sorted(items, by);
   if (by === 'name') return order.length ? [{ label: '', items: order }] : [];
 
-  const when = by === 'made' ? (i: Filed) => i.created : (i: Filed) => i.updated;
+  const when = by === 'made' ? (i: Filed) => i.created : seenAt;
   return AGES.map((age) => ({
     label: age.label,
     items: order.filter((i) => ageOf(when(i), now) === age.id),
