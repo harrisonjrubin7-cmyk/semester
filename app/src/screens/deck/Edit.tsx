@@ -1,15 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../../state/store';
 import { Page } from '../../components/Page';
 import { Blueprint } from '../../components/Blueprint';
 import { CoursePicker } from '../../components/CoursePicker';
 import { Folding } from '../../components/Fold';
 import { ActionButton, EmptyState, SectionLabel } from '../../components/ui';
+import { Bench } from '../../components/Bench';
 import { ChevronLeft, ChevronRight, DeckIcon } from '../../components/Icons';
 import { secondLine } from '../../lib/dim';
 import { download } from '../../lib/deliver';
 import { deckFileName, pptx } from '../../lib/pptx';
 import { revealKindly } from '../../lib/prefers';
+import type { Menu } from '../../lib/menus';
 import { useTier } from '../../lib/media';
 import { Canvas, Notes, Still, Thumb } from './Canvas';
 import {
@@ -142,22 +144,210 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
    */
   const beside = tier !== 'phone';
 
+  /*
+   * The menu bar, which `Bar` below is not and does not replace.
+   *
+   * `Bar` is the toolbar: the six things done to the slide in front of you,
+   * one press each, always visible. The menus are everything else an editor
+   * can do — the file itself, the theme, the running order — and the reason
+   * both exist is the reason both exist in PowerPoint. See `lib/menus.ts`.
+   */
+  const menus: Menu[] = [
+    {
+      id: 'file',
+      label: 'File',
+      groups: [
+        [
+          {
+            id: 'file.new',
+            label: 'New presentation',
+            run: () => dispatch({ type: 'newDeck', courseId: deck.courseId }),
+          },
+          {
+            id: 'file.copy',
+            label: 'Make a copy',
+            run: () => {
+              const { id: _id, ...rest } = deck;
+              dispatch({
+                type: 'makeDeck',
+                deck: { ...rest, title: `${deck.title || 'Untitled presentation'} (copy)` },
+                open: true,
+              });
+              say('Copied. You are now in the copy.');
+            },
+          },
+        ],
+        [
+          {
+            id: 'file.pptx',
+            label: busy ? 'Building the file…' : 'Download as PowerPoint (.pptx)',
+            hint: 'Speaker notes go in as real notes; hidden slides are left out.',
+            run: busy ? undefined : () => void save(),
+          },
+          { id: 'file.print', label: 'Print, or save as PDF', run: () => window.print() },
+        ],
+        [
+          {
+            id: 'file.delete',
+            label: 'Move to the bin',
+            hint: 'Undo is offered for a few seconds afterwards.',
+            run: () => dispatch({ type: 'deleteDeck', id: deck.id }),
+          },
+        ],
+      ],
+    },
+    {
+      id: 'edit',
+      label: 'Edit',
+      groups: [
+        [
+          {
+            id: 'edit.duplicate',
+            label: 'Duplicate this slide',
+            run: slide ? () => patch(duplicate(deck, on)) : undefined,
+          },
+          {
+            id: 'edit.remove',
+            label: 'Delete this slide',
+            run: slide
+              ? () => {
+                  patch(remove(deck, on));
+                  setAt(Math.max(0, on - 1));
+                }
+              : undefined,
+          },
+        ],
+      ],
+    },
+    {
+      id: 'view',
+      label: 'View',
+      groups: [
+        [
+          {
+            id: 'view.present',
+            label: 'Present from this slide',
+            run: order.length === 0 ? undefined : () => setPresenting(true),
+          },
+        ],
+      ],
+    },
+    {
+      id: 'insert',
+      label: 'Insert',
+      groups: [
+        LAYOUTS.map((l) => ({
+          id: `insert.${l.id}`,
+          label: `New slide — ${l.label}`,
+          run: () => add(l.id as Layout),
+        })),
+      ],
+    },
+    {
+      id: 'format',
+      label: 'Format',
+      groups: [
+        THEMES.map((t) => ({
+          id: `format.${t.id}`,
+          label: t.label,
+          hint: t.says,
+          on: theme.id === t.id,
+          run: () => patch({ theme: t.id as ThemeId }),
+        })),
+        LAYOUTS.map((l) => ({
+          id: `format.layout.${l.id}`,
+          label: `Make this slide ${l.label.toLowerCase()}`,
+          on: slide ? layoutOf(slide) === l.id : false,
+          // `reshape` asks first where the change would throw something away.
+          run: slide ? () => reshape(l.id as Layout) : undefined,
+        })),
+      ],
+    },
+    {
+      id: 'slide',
+      label: 'Slide',
+      groups: [
+        [
+          {
+            id: 'slide.hide',
+            label: 'Skip this slide when presenting',
+            on: slide ? !shown(deck, on) : false,
+            run: slide ? () => patch(toggleHidden(deck, on)) : undefined,
+          },
+        ],
+        [
+          {
+            id: 'slide.earlier',
+            label: 'Move it earlier',
+            run:
+              on > 0
+                ? () => {
+                    patch(reorder(deck, on, on - 1));
+                    setAt(on - 1);
+                  }
+                : undefined,
+          },
+          {
+            id: 'slide.later',
+            label: 'Move it later',
+            run:
+              on < deck.slides.length - 1
+                ? () => {
+                    patch(reorder(deck, on, on + 1));
+                    setAt(on + 1);
+                  }
+                : undefined,
+          },
+        ],
+      ],
+    },
+    {
+      id: 'help',
+      label: 'Help',
+      groups: [
+        [
+          {
+            id: 'help.hidden',
+            label: 'What hiding a slide does',
+            run: () =>
+              say(
+                'A hidden slide keeps its place on the rail, is skipped when presenting, left out of the file, and comes back exactly where it was.',
+              ),
+          },
+          {
+            id: 'help.notes',
+            label: 'Where speaker notes end up',
+            run: () =>
+              say(
+                'Notes are written as real notes parts, so they appear in PowerPoint’s presenter view rather than on the wall behind you.',
+              ),
+          },
+        ],
+      ],
+    },
+  ];
+
   return (
     <Page
       blurb={`${order.length} ${order.length === 1 ? 'slide' : 'slides'}${
         deck.slides.length !== order.length ? ` · ${deck.slides.length - order.length} hidden` : ''
       } · about ${minutes(deck)} min`}
-      actions={
-        <ActionButton onClick={() => dispatch({ type: 'closeDeck' })}>All decks</ActionButton>
-      }
     >
-      <input
-        className="input"
-        value={deck.title}
-        onChange={(e) => patch({ title: e.target.value })}
-        placeholder="Title"
-        aria-label="Deck title"
-        style={{ width: '100%', height: 46, fontSize: 'var(--type-lg)' }}
+      <Bench
+        mark={<DeckIcon size={18} />}
+        title={deck.title}
+        onTitle={(title) => patch({ title })}
+        titleLabel="Deck title"
+        placeholder="Untitled presentation"
+        menus={menus}
+        actions={
+          <ActionButton
+            onClick={() => dispatch({ type: 'closeDeck' })}
+            style={{ width: 'auto', padding: '0 var(--sp-6)', flex: 'none' }}
+          >
+            All decks
+          </ActionButton>
+        }
       />
       <input
         className="input"
@@ -165,7 +355,7 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
         onChange={(e) => patch({ subtitle: e.target.value })}
         placeholder="Subtitle, your name, the course — optional"
         aria-label="Deck subtitle"
-        style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
+        style={{ width: '100%', height: 40 }}
       />
       <CoursePicker value={deck.courseId} onChange={(id) => patch({ courseId: id })} />
 
@@ -702,47 +892,3 @@ function Presenter({
   );
 }
 
-/** The list of decks somebody has kept, above the builders on `screens/Deck.tsx`. */
-export function DeckShelf() {
-  const { state, dispatch, courseCode } = useStore();
-  const rows = useMemo(() => [...state.decks].sort((a, b) => b.updated - a.updated), [state.decks]);
-
-  if (rows.length === 0) return null;
-
-  return (
-    <Folding name="Your decks">
-      <SectionLabel>
-        {rows.length} {rows.length === 1 ? 'deck' : 'decks'}
-      </SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-        {rows.map((deck) => (
-          <Blueprint
-            key={deck.id}
-            as="button"
-            plain
-            onClick={() => dispatch({ type: 'editDeck', id: deck.id })}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--sp-5)',
-              padding: 'var(--sp-6)',
-              textAlign: 'left',
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 'var(--type-md)' }}>{deck.title || 'Untitled deck'}</div>
-              <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-1)' }}>
-                {[
-                  deck.courseId ? courseCode(deck.courseId) : 'Personal',
-                  `${running(deck).length} slides`,
-                  `about ${minutes(deck)} min`,
-                ].join(' · ')}
-              </div>
-            </div>
-            <ChevronRight size={16} />
-          </Blueprint>
-        ))}
-      </div>
-    </Folding>
-  );
-}

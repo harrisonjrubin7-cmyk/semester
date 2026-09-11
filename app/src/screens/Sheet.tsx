@@ -4,6 +4,7 @@ import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
 import { ActionButton, ChipRow, EmptyState, FilePick, SectionLabel } from '../components/ui';
+import { Bench } from '../components/Bench';
 import { ChevronRight, Plus, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
@@ -64,6 +65,7 @@ import { fromSheet, sheetFileName, widthsFor, xlsx } from '../lib/xlsx';
 import { canBuild, gradeSheet } from '../lib/gradesheet';
 import { fromDelimited, fromXlsx, readerFor } from '../lib/xlsxin';
 import { LIMIT } from '../state/slices/made';
+import type { Menu } from '../lib/menus';
 
 /**
  * A sheet, or a table.
@@ -797,18 +799,269 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     }
   };
 
+  /** The run of cells above the cursor, as a range, for the four sums. */
+  const above = (over = 0) => columnAbove(focus, over);
+
+  /*
+   * The menu bar, which `Toolbar` below is not and does not replace.
+   *
+   * `Toolbar` is the pictures a spreadsheet keeps one press away — the number
+   * formats, bold, the alignments, undo. The menus are everything else the
+   * screen can do, including those, which is not a duplication anybody has
+   * ever objected to: Excel and Sheets both put the format buttons on the bar
+   * and the same formats on the Format menu, because a button is for the hand
+   * that knows where it is and a menu is for everybody else. See
+   * `lib/menus.ts`.
+   */
+  const menus: Menu[] = [
+    {
+      id: 'file',
+      label: 'File',
+      groups: [
+        [
+          {
+            id: 'file.new',
+            label: 'New spreadsheet',
+            run: () => dispatch({ type: 'newSheet', courseId: sheet.courseId }),
+          },
+          {
+            id: 'file.copy',
+            label: 'Make a copy',
+            run: () => {
+              const { id: _id, ...rest } = sheet;
+              dispatch({
+                type: 'makeSheet',
+                sheet: { ...rest, title: `${sheet.title || 'Untitled spreadsheet'} (copy)` },
+                open: true,
+              });
+              say('Copied. You are now in the copy.');
+            },
+          },
+        ],
+        [
+          {
+            id: 'file.xlsx',
+            label: busy ? 'Writing the Excel file…' : 'Download as Excel (.xlsx)',
+            hint: 'The formulas and the formatting go with it, not just the answers.',
+            run: nothing || busy ? undefined : () => void saveExcel(),
+          },
+          {
+            id: 'file.csv',
+            label: 'Download as CSV',
+            run: nothing
+              ? undefined
+              : () => {
+                  download({
+                    name: sheetFileName(sheet.title).replace(/\.xlsx$/, '.csv'),
+                    body: toCsv(rows),
+                    mime: 'text/csv',
+                  });
+                  say('CSV saved.');
+                },
+          },
+          { id: 'file.print', label: 'Print, or save as PDF', run: () => window.print() },
+        ],
+        [
+          {
+            id: 'file.delete',
+            label: 'Move to the bin',
+            hint: 'Undo is offered for a few seconds afterwards.',
+            run: () => dispatch({ type: 'deleteSheet', id: sheet.id }),
+          },
+        ],
+      ],
+    },
+    {
+      id: 'edit',
+      label: 'Edit',
+      groups: [
+        [
+          {
+            id: 'edit.undo',
+            label: 'Undo',
+            run: canUndo(history) ? () => rewind(undo(history)) : undefined,
+          },
+          {
+            id: 'edit.redo',
+            label: 'Redo',
+            run: canRedo(history) ? () => rewind(redo(history)) : undefined,
+          },
+        ],
+        [
+          {
+            id: 'edit.clear',
+            label: `Clear ${rangeLabel(sel)}`,
+            run: selected.some((cell) => sheet.cells[cell])
+              ? () => {
+                  const cells = { ...sheet.cells };
+                  for (const cell of selected) delete cells[cell];
+                  change({ cells }, 'clear');
+                }
+              : undefined,
+          },
+        ],
+        [
+          {
+            id: 'edit.markdown',
+            label: 'Copy as a Markdown table',
+            run: nothing
+              ? undefined
+              : () => {
+                  void navigator.clipboard?.writeText(toMarkdown(rows));
+                  say('Table copied as Markdown.');
+                },
+          },
+          {
+            id: 'edit.document',
+            label: 'Put this table in a new document',
+            run: nothing
+              ? undefined
+              : () => {
+                  dispatch({
+                    type: 'makeDocument',
+                    doc: {
+                      title: sheet.title || 'Table',
+                      subtitle: '',
+                      courseId: sheet.courseId,
+                      blocks: [{ kind: 'table', rows, header: rows.length > 1, caption: '' }],
+                    },
+                  });
+                  say('A document has been made with this table in it.');
+                },
+          },
+        ],
+      ],
+    },
+    {
+      id: 'insert',
+      label: 'Insert',
+      groups: [
+        [
+          {
+            id: 'insert.rows',
+            label: 'Five more rows',
+            run:
+              sheet.rows >= MAX_ROWS
+                ? undefined
+                : () => change({ rows: Math.min(MAX_ROWS, sheet.rows + 5) }, 'grow'),
+          },
+          {
+            id: 'insert.col',
+            label: 'Another column',
+            run:
+              sheet.cols >= MAX_COLS
+                ? undefined
+                : () => change({ cols: Math.min(MAX_COLS, sheet.cols + 1) }, 'grow'),
+          },
+        ],
+        [
+          ...(
+            [
+              ['total', 'Total', 'SUM'],
+              ['average', 'Average', 'AVERAGE'],
+              ['stdev', 'Std deviation', 'STDEV'],
+              ['count', 'Count', 'COUNT'],
+            ] as const
+          ).map(([id, label, fn]) => ({
+            id: `insert.${id}`,
+            label,
+            hint: above() ? `Over ${above()}, in ${focus}.` : 'Nothing above this cell to add up.',
+            run: above() ? () => write(focus, `=${fn}(${above()})`) : undefined,
+          })),
+          {
+            id: 'insert.weighted',
+            label: 'Weighted mark',
+            hint: 'Scores in the column above, weights in the one to its right.',
+            run:
+              above() && above(1)
+                ? () => write(focus, weighted(above() as string, above(1) as string))
+                : undefined,
+          },
+        ],
+      ],
+    },
+    {
+      id: 'format',
+      label: 'Format',
+      groups: [
+        FORMATS.map((f) => ({
+          id: `format.${f.id}`,
+          label: f.says,
+          on: (style.num ?? 'plain') === f.id,
+          run: () => restyleSelection((was) => ({ ...was, num: f.id }), `format:${rangeLabel(sel)}`),
+        })),
+        (['bold', 'italic'] as const).map((key) => ({
+          id: `format.${key}`,
+          label: key === 'bold' ? 'Bold' : 'Italic',
+          on: Boolean(style[key]),
+          run: () =>
+            restyleSelection((was) => ({ ...was, [key]: !was[key] }), `${key}:${rangeLabel(sel)}`),
+        })),
+        ALIGNS.map((a) => ({
+          id: `format.align.${a.id}`,
+          label: `Align ${a.label.toLowerCase()}`,
+          on: style.align === a.id,
+          run: () =>
+            restyleSelection(
+              (was) => ({ ...was, align: was.align === a.id ? undefined : a.id }),
+              `align:${rangeLabel(sel)}`,
+            ),
+        })),
+      ],
+    },
+    {
+      id: 'help',
+      label: 'Help',
+      groups: [
+        [
+          {
+            id: 'help.formulas',
+            label: 'What the formulas can do',
+            run: () =>
+              say(
+                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT and SUMPRODUCT are all here, computed on this device.',
+              ),
+          },
+          {
+            id: 'help.errors',
+            label: 'Why a cell says #NAME?',
+            run: () =>
+              say(
+                'An error is said in the cell rather than resolved to a zero that looks like an answer. #DIV/0!, #CYCLE!, #NAME? and #REF! each name what is wrong.',
+              ),
+          },
+          {
+            id: 'help.format',
+            label: 'What formatting does to a number',
+            run: () =>
+              say(
+                'Nothing. A format is a picture over the cell, kept apart from what is in it, so a formula always reads the value you typed.',
+              ),
+          },
+        ],
+      ],
+    },
+  ];
+
   return (
     <Page
       blurb={nothing ? 'Type into a cell. A cell starting with = is a formula.' : `${size.rows} × ${size.cols}`}
-      actions={<ActionButton onClick={() => dispatch({ type: 'closeSheet' })}>All sheets</ActionButton>}
     >
-      <input
-        className="input"
-        value={sheet.title}
-        onChange={(e) => patch({ title: e.target.value })}
-        placeholder="What this sheet is"
-        aria-label="Sheet title"
-        style={{ width: '100%', height: 44, fontSize: 'var(--type-lg)' }}
+      <Bench
+        mark={<SheetIcon size={18} />}
+        title={sheet.title}
+        onTitle={(title) => patch({ title })}
+        titleLabel="Sheet title"
+        placeholder="Untitled spreadsheet"
+        menus={menus}
+        actions={
+          <ActionButton
+            onClick={() => dispatch({ type: 'closeSheet' })}
+            style={{ width: 'auto', padding: '0 var(--sp-6)', flex: 'none' }}
+          >
+            All sheets
+          </ActionButton>
+        }
       />
       <CoursePicker value={sheet.courseId} onChange={(id) => patch({ courseId: id })} />
 

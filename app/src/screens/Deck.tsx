@@ -11,8 +11,11 @@ import { PrintButton } from '../components/PrintButton';
 import { ask, configured } from '../lib/claude';
 import { download } from '../lib/deliver';
 import { deckFileName, pptx, type Deck as DeckFile } from '../lib/pptx';
-import { DeckEdit, DeckShelf } from './deck/Edit';
-import { keepable } from '../lib/decks';
+import { Gallery } from '../components/Gallery';
+import { DeckIcon } from '../components/Icons';
+import { revealKindly } from '../lib/prefers';
+import { DeckEdit } from './deck/Edit';
+import { keepable, minutes as deckMinutes, running, type StoredDeck } from '../lib/decks';
 import {
   KINDS,
   SYSTEM,
@@ -173,19 +176,63 @@ function Build() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <Gallery
+        startLabel="Start a new presentation"
+        starters={[
+          {
+            id: 'blank',
+            label: 'Blank presentation',
+            onPick: () => dispatch({ type: 'newDeck', courseId: null }),
+          },
+          ...(
+            [
+              ['unit', 'From a unit', 'Your own guide, rearranged. Question on one slide, answer on the next.'],
+              ['sheet', 'From a sheet', 'A table you built, as real PowerPoint tables rather than a picture.'],
+              ['brief', 'From a brief', 'A talk planned by Claude from what you tell it, and nothing invented.'],
+            ] as const
+          ).map(([id, label, blurb]) => ({
+            id,
+            label,
+            blurb,
+            onPick: () => {
+              setSource(id);
+              // Chosen from the top of the screen, built half a screen down.
+              // Without this the press looks like it did nothing: the form it
+              // switched to is below the fold on a phone.
+              revealKindly(document.getElementById('deck-builder'), { block: 'start' });
+            },
+          })),
+        ]}
+        recentLabel="Recent presentations"
+        items={state.decks}
+        fallback="Untitled presentation"
+        onOpen={(deck) => dispatch({ type: 'editDeck', id: deck.id })}
+        preview={(deck) => <MiniSlide deck={deck} />}
+        under={(deck) =>
+          `${running(deck).length} ${running(deck).length === 1 ? 'slide' : 'slides'} · about ${deckMinutes(deck)} min`
+        }
+        shape="wide"
+        empty={{
+          title: 'No presentations yet',
+          body: 'A seminar talk, a group presentation, a unit as slides for the night before. It opens in PowerPoint, Keynote and Google Slides alike.',
+          icon: <DeckIcon />,
+        }}
+      />
+
+      <SectionLabel>Build one from what the app already has</SectionLabel>
+      <div
+        id="deck-builder"
+        style={{
+          ...secondLine(),
+          fontSize: 'var(--type-sm)',
+          lineHeight: 'var(--leading-relaxed)',
+          textWrap: 'pretty',
+          marginBottom: 'var(--sp-5)',
+        }}
+      >
         A real PowerPoint file, built here. It opens in PowerPoint, Keynote and Google Slides, in
         whichever of the four themes you choose — two for a projector, two for printing.
       </div>
-
-      <DeckShelf />
-
-      <ActionButton
-        onClick={() => dispatch({ type: 'newDeck', courseId: null })}
-        style={{ marginTop: 'var(--sp-5)', marginBottom: 'var(--sp-5)' }}
-      >
-        Start an empty deck
-      </ActionButton>
 
       <Segmented
         options={[
@@ -195,7 +242,6 @@ function Build() {
         ]}
         value={source}
         onChange={setSource}
-        style={{ marginTop: 14 }}
       />
 
       {source === 'sheet' ? (
@@ -501,5 +547,27 @@ function Build() {
         </>
       )}
     </Page>
+  );
+}
+
+/**
+ * A deck at thumbnail size: its first slide, as a slide.
+ *
+ * Sixteen by nine with the title where the title goes and the first couple of
+ * bullets under it — enough to tell one talk from another on a shelf, which a
+ * row of identical grey rectangles could not do.
+ */
+function MiniSlide({ deck }: { deck: StoredDeck }) {
+  const first = running(deck)[0]?.slide;
+  if (!first) return <DeckIcon size={20} />;
+  return (
+    <span className="paper" aria-hidden="true">
+      <span className="paper-line">{first.title || 'Untitled slide'}</span>
+      {first.bullets.slice(0, 3).map((line, at) => (
+        <span key={at} className="paper-line">
+          • {line}
+        </span>
+      ))}
+    </span>
   );
 }
