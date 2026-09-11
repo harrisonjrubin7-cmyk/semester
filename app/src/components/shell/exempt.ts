@@ -63,10 +63,16 @@ export function isExempt(screen: Screen): boolean {
  * setting are already about. A flashcard does not either — it is one card, and
  * a card the width of a monitor is a poster.
  *
+ * The mailbox is here for the same reason as the month grid rather than by
+ * analogy: it is three columns — folders, the list, the message — and the
+ * narrower the window the sooner the middle one stops fitting a subject and
+ * its first line on one row. Its own reading column is set inside it, on the
+ * message, where the prose actually is.
+ *
  * So the drawn screens take `--canvas` on a desktop and everything else takes
  * `--measure`. Below 1180px the two are both `100%` and this changes nothing.
  */
-export const CANVAS: Screen[] = ['calendar', 'maps', 'draw'];
+export const CANVAS: Screen[] = ['calendar', 'maps', 'draw', 'mail'];
 
 export function isCanvas(screen: Screen): boolean {
   return CANVAS.includes(screen);
@@ -86,8 +92,15 @@ export function isCanvas(screen: Screen): boolean {
  * way it does in every other chat anybody has used. So the shell must not
  * reserve space beneath it — see `.scrollarea.is-filled` in `styles/app.css`
  * for what that reservation was doing there and why it is wrong here.
+ *
+ * The mailbox is the second, and it is the same shape rather than a new
+ * argument for one: a rail that does not move, a list that scrolls, a message
+ * that scrolls separately beside it, and a toolbar across the top of all
+ * three. Every mail client anybody has used is built this way, and none of it
+ * works inside a page that scrolls as one — the folders would scroll off the
+ * top, and the reading pane and the list would be one long column.
  */
-export const FILLS: Screen[] = ['ask'];
+export const FILLS: Screen[] = ['ask', 'mail'];
 
 export function fills(screen: Screen): boolean {
   return FILLS.includes(screen);

@@ -60,6 +60,24 @@ export const NotesIcon = svg('notes');
 export const FolderIcon = svg('folder');
 export const Paperclip = svg('paperclip');
 
+/* The mailbox's own glyphs. See the note beside their shapes. */
+export const InboxIcon = svg('inbox');
+export const ArchiveIcon = svg('archive');
+export const TrashIcon = svg('trash');
+export const SendIcon = svg('send');
+export const ReplyIcon = svg('reply');
+export const ReplyAllIcon = svg('replyAll');
+export const ForwardIcon = svg('forward');
+export const ClockIcon = svg('clock');
+export const TagIcon = svg('tag');
+export const RefreshIcon = svg('refresh');
+export const MoreIcon = svg('more');
+export const MenuIcon = svg('menu');
+export const OpenedIcon = svg('opened');
+export const SpamIcon = svg('spam');
+export const PaneIcon = svg('pane');
+export const CloseIcon = svg('close');
+
 /**
  * The one icon that carries a state.
  *

@@ -3577,3 +3577,553 @@ input[type='search'].input {
   background: var(--app-hero);
   border-color: var(--app-line);
 }
+
+/* ── The mailbox ───────────────────────────────────────────────────────────
+ *
+ * Gmail's shape and Outlook's, which are the same shape: a rail of folders, a
+ * list you can scan a row a second, and the message beside it. Drawn here
+ * rather than inline in the screen for three reasons — a row has four hover
+ * states and an inline style has none; the whole thing has to restack at
+ * 760px and a component cannot hold a media query; and every size in it is a
+ * token, so the Text size and Spacing settings reach the mailbox like they
+ * reach everything else.
+ *
+ * `screens/Mail.tsx` is the markup and `lib/mailbox.ts` the model.
+ */
+
+.mb {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* The strip above everything: what is selected, what can be done to it, and
+   the search box. It spans the rail as well as the list, the way both clients
+   put their search across the top of the window. */
+.mb-top {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.mb-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.mb-main {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Reading pane under the list rather than beside it — Outlook's third option,
+   and the right one on a short wide window. */
+.mb-main.is-bottom {
+  flex-direction: column;
+}
+
+/* ── The rail ───────────────────────────────────────────────────────────── */
+
+.mb-rail {
+  flex: none;
+  width: 208px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4) var(--sp-3);
+  overflow-y: auto;
+  border-right: 1px solid var(--app-line);
+}
+
+.mb-folder {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--type-base);
+  color: var(--app-fg);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+}
+
+.mb-folder:hover {
+  background: var(--app-panel);
+}
+
+.mb-folder[aria-current='true'] {
+  color: var(--app-accent-bright);
+  background: var(--app-hero);
+  font-weight: 600;
+}
+
+.mb-folder-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mb-folder-n {
+  flex: none;
+  font-size: var(--type-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--app-dim);
+}
+
+.mb-folder[aria-current='true'] .mb-folder-n {
+  color: var(--app-accent-bright);
+}
+
+/* ── The list ───────────────────────────────────────────────────────────── */
+
+.mb-list {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* With a message open beside it the list is a column of its own width — 380px
+   is where a subject and its first line still fit on one row. With nothing
+   open it is the window, which is what both clients do: an empty reading pane
+   is half a screen spent saying nothing. */
+.mb-main.is-right.has-open .mb-list {
+  flex: none;
+  width: 380px;
+  border-right: 1px solid var(--app-line);
+}
+
+.mb-main.is-bottom.has-open .mb-list {
+  flex: 1;
+  border-bottom: 1px solid var(--app-line);
+}
+
+/* Gmail's tabs. A row of them, and the current one underlined rather than
+   filled, because a filled tab beside a filled folder is two "you are here"s. */
+.mb-tabs {
+  display: flex;
+  gap: var(--sp-1);
+  padding: 0 var(--sp-3);
+  border-bottom: 1px solid var(--app-line);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.mb-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.mb-tab {
+  flex: none;
+  padding: var(--sp-4) var(--sp-5);
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+}
+
+.mb-tab:hover {
+  color: var(--app-fg);
+}
+
+.mb-tab[aria-current='true'] {
+  color: var(--app-accent-bright);
+  border-bottom-color: var(--app-accent);
+}
+
+/* The date headings that cut the list into runs. Sticky, so the run you are
+   in is always named — Outlook does this and it is the reason a long scroll
+   stays legible. */
+.mb-when {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--sp-3) var(--sp-5);
+  font-size: var(--type-xs);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--app-dim);
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.mb-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.mb-row:hover {
+  background: var(--app-panel);
+}
+
+.mb-row.is-open {
+  background: var(--app-hero);
+  box-shadow: inset 2px 0 0 var(--app-accent);
+}
+
+.mb-row.is-picked {
+  background: var(--app-accent-wash);
+}
+
+/* Unread is heavier and brighter, read is the ordinary ink. The one piece of
+   a mail list nobody has to be taught. */
+.mb-row.is-unread .mb-subject,
+.mb-row.is-unread .mb-who {
+  font-weight: 700;
+  color: var(--app-fg);
+}
+
+/* The row's main target: everything but the checkbox, the star and the hover
+   actions. A `<button>` because pressing it opens the message, and every one
+   of these resets is undoing a control the browser draws as a grey slab. */
+.mb-lines {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+}
+
+.mb-line {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+}
+
+.mb-who {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--type-base);
+  color: var(--app-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mb-when-cell {
+  flex: none;
+  font-size: var(--type-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--app-dim);
+}
+
+.mb-subject {
+  font-size: var(--type-base);
+  color: var(--app-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mb-snippet {
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The count in a conversation row — Gmail's little (3). */
+.mb-count {
+  flex: none;
+  font-size: var(--type-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--app-dim);
+}
+
+/* A round monogram where a client would show a photo. There is no photo: the
+   app never fetches a remote image on behalf of a message. */
+.mb-face {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  font-size: var(--type-sm);
+  color: var(--app-accent-bright);
+  background: var(--app-hero);
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+}
+
+/* The icon buttons: the star, the row's hover actions, the toolbar. */
+.mb-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--app-dim);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-md);
+}
+
+.mb-ico:hover {
+  color: var(--app-fg);
+  background: var(--app-raise);
+}
+
+.mb-ico:disabled {
+  opacity: 0.35;
+}
+
+.mb-ico.is-on {
+  color: var(--app-accent-bright);
+}
+
+/* The actions that appear on a row under the pointer. Hidden from a touch
+   device rather than drawn small: there is nothing to hover with, and the
+   same four actions are in the toolbar and in the reader. */
+.mb-hover {
+  display: none;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mb-row:hover .mb-hover,
+  .mb-row:focus-within .mb-hover {
+    display: flex;
+  }
+
+  /* The date makes way for them, rather than the row growing on hover. */
+  .mb-row:hover .mb-when-cell,
+  .mb-row:focus-within .mb-when-cell {
+    display: none;
+  }
+}
+
+/* ── The message ────────────────────────────────────────────────────────── */
+
+.mb-read {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.mb-read-top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.mb-read-in {
+  padding: var(--sp-6) var(--sp-7);
+  max-width: var(--measure);
+}
+
+.mb-subject-big {
+  font-size: var(--type-lg);
+  line-height: var(--leading-tight);
+  color: var(--app-fg);
+}
+
+.mb-from {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-6);
+}
+
+/* The message itself. Plain text, wrapped as it was written — an email is
+   written in lines and reflowing one is how a signature ends up mid-sentence. */
+.mb-text {
+  margin-top: var(--sp-6);
+  font-size: var(--type-md);
+  line-height: var(--leading-relaxed);
+  color: var(--app-fg);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The quoted part of a reply, set back the way every client sets it back. */
+.mb-quote {
+  margin-top: var(--sp-5);
+  padding-left: var(--sp-5);
+  color: var(--app-dim);
+  border-left: 2px solid var(--app-line);
+}
+
+/* ── The composer ──────────────────────────────────────────────────────── */
+
+/*
+ * Gmail's docked window, bottom right, over whatever you were reading — which
+ * is the point of it: an email answered while the message is still on screen
+ * is an email that gets answered. On a phone it is the screen, because a
+ * 320px window inside a 390px one is nobody's idea of writing.
+ */
+.mb-compose {
+  position: fixed;
+  overflow: hidden;
+  inset: auto var(--sp-6) 0 auto;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  width: min(540px, calc(100vw - var(--sp-7)));
+  max-height: min(640px, 86vh);
+  background: var(--app-bg);
+  border: 1px solid var(--app-line);
+  border-bottom: 0;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: 0 -2px 28px rgb(0 0 0 / 45%);
+}
+
+.mb-compose.is-small {
+  max-height: none;
+}
+
+.mb-compose-top {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--app-hero);
+  border-bottom: 1px solid var(--app-line);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+
+.mb-compose-name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--type-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mb-compose-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-4) var(--sp-5) var(--sp-6);
+}
+
+/* A field with its label on the same line, which is how every compose window
+   since Outlook Express has drawn To and Subject. */
+.mb-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.mb-field-name {
+  flex: none;
+  width: 56px;
+  font-size: var(--type-sm);
+  color: var(--app-dim);
+}
+
+.mb-field input,
+.mb-field textarea {
+  flex: 1;
+  min-width: 0;
+  padding: var(--sp-4) 0;
+  font: inherit;
+  font-size: var(--type-md);
+  color: var(--app-fg);
+  background: transparent;
+  border: 0;
+  outline: 0;
+}
+
+.mb-write {
+  width: 100%;
+  min-height: 220px;
+  margin-top: var(--sp-4);
+  padding: 0;
+  font: inherit;
+  font-size: var(--type-md);
+  line-height: var(--leading-relaxed);
+  color: var(--app-fg);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  resize: vertical;
+}
+
+.mb-compose-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--app-line);
+}
+
+/* ── Narrow ────────────────────────────────────────────────────────────── */
+
+/*
+ * Below the rail's breakpoint the mailbox is the phone client: one pane at a
+ * time, the folders behind a button, the message full screen, and the
+ * composer as a sheet. The same components — only the frame changes.
+ */
+@media (max-width: 759px) {
+  .mb-rail {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    width: min(272px, 82vw);
+    background: var(--app-bg);
+    box-shadow: 0 0 40px rgb(0 0 0 / 55%);
+  }
+
+  .mb-main.is-right.has-open .mb-list,
+  .mb-main.is-bottom.has-open .mb-list {
+    flex: 1;
+    width: auto;
+    border: 0;
+  }
+
+  .mb-read-in {
+    padding: var(--sp-5) var(--sp-5) var(--sp-7);
+  }
+
+  .mb-compose {
+    inset: 0;
+    width: auto;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+  }
+}
+
+/* The ground behind an open drawer, which is also how it is closed. */
+.mb-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgb(0 0 0 / 45%);
+  border: 0;
+}

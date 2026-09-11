@@ -357,7 +357,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'maps':
       return { kicker: 'Campus, city, and how to get there', title: 'Getting there' };
     case 'mail':
-      return { kicker: 'Drafted here, sent by you', title: 'Email' };
+      return { kicker: 'Read here, sent by you', title: 'Email' };
     case 'export':
       return { kicker: 'Formats other software reads', title: 'Take it with you' };
     case 'yes':

@@ -50,6 +50,7 @@ import { readLog, readPolicy, type AttendPolicy, type Attended } from '../lib/at
 import { readDrop } from '../lib/drop';
 import { DEFAULT_BUDGET } from '../lib/clash';
 import type { Sitting } from '../lib/sitting';
+import type { FolderId, MailDraft, Mark, Marks } from '../lib/mailbox';
 import type { NewSource, Source } from '../lib/sources';
 import type { Doc } from '../lib/document';
 import type { Sheet } from '../lib/sheet';
@@ -660,6 +661,24 @@ export interface Persisted {
   linkUrls: Record<string, string>;
   /** Links you added yourself, alongside the campus ones. */
   extraLinks: CampusLink[];
+  /**
+   * Emails written here — the Drafts folder, and Sent once one is handed over.
+   *
+   * They persist because the commonest thing that happens to a student email
+   * is that it gets half written and left, and the second commonest is that
+   * the tab is closed on it. See `lib/mailbox.ts`.
+   */
+  mailDrafts: MailDraft[];
+  /**
+   * What you have done to a message the app can only read.
+   *
+   * Read, starred, archived, snoozed, deleted — kept here, over the provider's
+   * copy, because the account is connected read-only and always will be. The
+   * mailbox reads every message through these; Gmail never hears about them.
+   */
+  mailMarks: Marks;
+  /** Where the message being read sits beside the list, Outlook's three ways. */
+  mailPane: 'right' | 'bottom' | 'off';
 }
 
 export interface Ephemeral {
@@ -771,6 +790,26 @@ export interface Ephemeral {
     /** The deadline the email is about, when it was opened from one. */
     itemId: string;
   } | null;
+  /**
+   * An announcement handed to the Changes screen, read once.
+   *
+   * Set from the mailbox: the message that moved a deadline is already in the
+   * app, and retyping it into the box on another screen is the step at which
+   * nobody bothers. Ephemeral, like every other handover of this shape.
+   */
+  changeText: string;
+  /** Which mailbox folder is open. */
+  mailFolder: FolderId;
+  /** The message open in the reading pane, or null for the list alone. */
+  mailOpen: string | null;
+  /**
+   * The draft the composer is holding, or null when it is shut.
+   *
+   * A draft record exists from the moment Compose is pressed, the way it does
+   * in Gmail: that is what makes closing the window safe, and what puts a half
+   * written email in Drafts instead of nowhere.
+   */
+  mailDraftId: string | null;
   /**
    * Whether the search overlay is up.
    *
@@ -905,6 +944,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   feedEvents: [],
   linkUrls: {},
   extraLinks: [],
+  mailDrafts: [],
+  mailMarks: {},
+  mailPane: 'right',
   courses: [],
   /**
    * A fresh install opens with the semester in it.
@@ -1076,6 +1118,10 @@ export function initialEphemeral(now: Date): Ephemeral {
     roomDraft: '',
     dueTab: 'ahead',
     mailSeed: null,
+    changeText: '',
+    mailFolder: 'inbox',
+    mailOpen: null,
+    mailDraftId: null,
     finder: false,
     apps: false,
     studyTab: 'guides',
@@ -1175,6 +1221,9 @@ export function loadPersisted(): Persisted {
       feedEvents: list(saved.feedEvents),
       linkUrls: record(saved.linkUrls),
       extraLinks: list(saved.extraLinks),
+      mailDrafts: list(saved.mailDrafts),
+      mailMarks: record(saved.mailMarks),
+      mailPane: saved.mailPane === 'bottom' || saved.mailPane === 'off' ? saved.mailPane : 'right',
       // Not `list()`: that checks the list is a list and casts what is in it.
       // The catalogue is built from these before any screen is drawn, so there
       // is no error boundary between a damaged course and a blank document.
@@ -1349,6 +1398,9 @@ export function pickPersisted(state: State): Persisted {
     feedEvents: state.feedEvents,
     linkUrls: state.linkUrls,
     extraLinks: state.extraLinks,
+    mailDrafts: state.mailDrafts,
+    mailMarks: state.mailMarks,
+    mailPane: state.mailPane,
     courses: state.courses,
     sample: state.sample,
     term: state.term,
@@ -1787,6 +1839,35 @@ export type Action =
   | { type: 'attachFile'; noteId: string; fileId: string }
   | { type: 'detachFile'; noteId: string; fileId: string }
   | { type: 'deleteNote'; id: string }
+  /* ── The mailbox ─────────────────────────────────────────────────────── */
+  /** Hand a message to the screen that reads announcements into dates. */
+  | { type: 'tellChange'; text: string }
+  | { type: 'mailFolder'; folder: FolderId }
+  | { type: 'openMail'; id: string | null }
+  /**
+   * Read, unread, starred — one message or many.
+   *
+   * Not undoable, and that is the difference from `moveMail` below rather than
+   * an oversight: opening a message marks it read, and an app that put "Moved
+   * · Undo" across the top of the screen every time you read an email would be
+   * unusable. Both are reversed by doing them again.
+   *
+   * `mark: null` clears everything marked on those messages. Nothing here
+   * reaches the provider; see `lib/mailbox.ts`.
+   */
+  | { type: 'markMail'; ids: string[]; mark: Mark | null }
+  /**
+   * Archive, delete, snooze, put back — the ones that take a conversation off
+   * the screen, and therefore the ones worth an undo.
+   */
+  | { type: 'moveMail'; ids: string[]; to?: FolderId; snooze?: number }
+  /** Open the composer on a new draft, or `null` to shut it. */
+  | { type: 'composeMail'; draft: Partial<MailDraft> | null }
+  | { type: 'openMailDraft'; id: string }
+  | { type: 'editMailDraft'; id: string; patch: Partial<Omit<MailDraft, 'id' | 'updated'>> }
+  | { type: 'handedMail'; id: string; at: number }
+  | { type: 'dropMailDraft'; id: string }
+  | { type: 'setMailPane'; pane: State['mailPane'] }
   | { type: 'openLesson'; unit: number }
   | { type: 'openDeck'; unit: number }
   | { type: 'openUpdate'; courseId: CourseId; unit?: number | null }

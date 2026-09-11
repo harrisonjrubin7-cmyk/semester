@@ -38,7 +38,14 @@ export function FromText() {
 
 
   const [courseId, setCourseId] = useState(state.courseId || catalog.courses[0]?.id || '');
-  const [text, setText] = useState('');
+  /*
+   * Already filled in, when the mailbox sent you here with a message.
+   *
+   * Read once, at the first render, rather than followed: this is a box
+   * somebody then edits, and a field that reset itself to the email every
+   * time the store changed would undo their trimming mid-sentence.
+   */
+  const [text, setText] = useState(state.changeText);
   const [found, setFound] = useState<Change[] | null>(null);
   const [taken, setTaken] = useState<Record<number, boolean>>({});
   const [busy, setBusy] = useState(false);
