@@ -677,6 +677,32 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
+    screen: 'profile',
+    label: 'Profile',
+    short: 'Profile',
+    /*
+     * Life rather than Data, and the two readings of this screen are what
+     * decides it. Data is the shelf you go to when something needs correcting:
+     * what comes in, what is held, what is sent, how to take it out. This is
+     * not a correction — it is the one screen that is about the person rather
+     * than about the semester, and it sits beside the other things that are
+     * theirs rather than the syllabus's. Data is also at eight, which is the
+     * ceiling `nav.test.ts` holds.
+     */
+    blurb: 'Your name, your account, and everything the app holds about you.',
+    // "Profile" is not a word anybody types. The searches that have to land
+    // here are the ones a person makes when looking for themselves — and the
+    // account words, because the row above the fold on this screen is the
+    // account and somebody typing "sign in" should be offered both.
+    keywords:
+      'profile me you your account avatar picture initials name what should the app call me ' +
+      'who am i my details personal details identity sign in signed in log in login email address ' +
+      'school university role student teaching what am i here to do',
+    group: 'Life',
+    taskTags: ['data', 'app'],
+    root: 'me',
+  },
+  {
     screen: 'links',
     label: 'Links',
     short: 'Links',

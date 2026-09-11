@@ -482,6 +482,10 @@ export type Screen =
   | 'calendar'
   | 'event'
   | 'me'
+  // You: the name, the account, and what the app holds about you. `me` is the
+  // progress report and the directory — it was called Me once, and the note in
+  // `lib/nav.ts` beside its label says why that name never fitted it.
+  | 'profile'
   | 'notifs'
   | 'settings'
   | 'import'

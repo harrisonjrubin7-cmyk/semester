@@ -308,6 +308,36 @@ you have not seen, so it climbs back into tonight's plan.
 Nothing added is invented. Prose that does not split cleanly into a question
 and an answer stays prose.
 
+## Your profile
+
+The round button at the top right of every root screen, which is where every
+phone puts it. It opens **Profile**: the name the app calls you, what the app
+is holding of yours, and a row into each of the screens that own the rest —
+Account, Your data, Privacy, Take it with you, Settings.
+
+The name is the one thing the screen owns rather than points at. It was a field
+on Settings → Courses, because until there was a profile there was nowhere else
+to put it; there is one box for it now and Settings keeps a row saying where it
+went. Everything else on the profile is a link, deliberately: signing in is
+explained by the account screen, byte counts belong to the data screen, and a
+profile that re-implemented either would be a second door onto a room that
+already has one.
+
+The avatar is your initials, and only ever from the name you typed. It is never
+guessed at from an email address — that is the promise
+[`app/src/state/shape.ts`](app/src/state/shape.ts) makes where the field is
+declared, and an avatar is exactly where it would get broken quietly, because
+`H` from `harrison@…` looks like a reasonable guess and is somebody's name
+invented and shown back to them as fact. With no name there are no initials:
+the button draws a figure, and the screen asks.
+
+There is no photograph, no bio and no "member since". A photograph needs bytes
+in the same quota that already sheds data when it fills, and uploading one
+needs a server this app does not have. A bio is for other people to read and
+there are no other people here. The line at the foot says how long your
+semester has been on this device, which is the date you would actually want
+before wiping a phone.
+
 ## Connecting accounts
 
 **Me → Connect accounts.** Two routes, and the screen says which is which:
