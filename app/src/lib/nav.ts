@@ -450,6 +450,16 @@ export const DESTINATIONS: Destination[] = [
     root: 'courses',
   },
   {
+    screen: 'call',
+    label: 'Video call',
+    short: 'Call',
+    blurb: 'A call with the people in your course — a code you can read down a phone, and a link that opens straight into it.',
+    keywords: 'call calls video call videocall video chat zoom meet google meet teams webex facetime meeting meetings join join a meeting host start a meeting room study room study group group call screen share sharescreen share my screen present presentation camera webcam mic microphone mute unmute raise hand hand up office hours virtual remote online face to face together live huddle standup check in link invite code dial in gallery speaker view',
+    group: 'Campus',
+    taskTags: ['campus'],
+    root: 'courses',
+  },
+  {
     screen: 'groupwork',
     label: 'Group work',
     short: 'Group',
