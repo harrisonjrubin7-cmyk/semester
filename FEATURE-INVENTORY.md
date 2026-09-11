@@ -203,8 +203,14 @@ Four selectable navigation modes (`NavMode`): `tabs`, `feed`, `springboard`,
   (`AllApps`, `AppGrid`, `ByTask`, `Folder`, `Launcher`, `ShelfNav`, `TileSheet`).
   Shelves in `GROUPS` order, tiles reorderable and saved as `groupOrder`.
 - **Springboard** — `lib/springboard.ts`, dock stored under the `dock` look key.
-- **Command palette / universal search** — `components/Command.tsx` + `lib/find.ts`,
-  an overlay rather than a screen. Searches destinations by label, blurb and
+- **The app's browser — tabs and universal search** — `components/Command.tsx` +
+  `lib/find.ts` + `lib/browser.ts` + `lib/typeahead.ts`, an overlay rather than a
+  screen. A strip of tabs across the top, each holding a place in the app (the
+  page a tab shows is the app itself); a new tab is the search page — wordmark,
+  one box, and shortcuts ordered by `state.recent`. The box offers your recent
+  searches and completions drawn from what can actually be found; Enter turns
+  the page into results, with chips that narrow them to one kind and a
+  per-result "open in a new tab". Searches destinations by label, blurb and
   keywords, plus live records.
 - **By task** — `taskTags` on each destination drive the "what are you trying to
   do" view.

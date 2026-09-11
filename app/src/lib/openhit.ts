@@ -9,6 +9,7 @@
  */
 
 import type { Hit } from './find';
+import type { Screen } from './types';
 import type { Action } from '../state/shape';
 
 export function openHit(hit: Hit, dispatch: (a: Action) => void): void {
@@ -44,6 +45,42 @@ export function openHit(hit: Hit, dispatch: (a: Action) => void): void {
       return dispatch({ type: 'editDeck', id: hit.id });
     case 'screen':
       return dispatch({ type: 'go', screen: hit.screen });
+  }
+}
+
+/**
+ * Which screen a hit lands on, for the tab that is about to hold it.
+ *
+ * The same table as `openHit`, read the other way round, and it is in this
+ * file for exactly the reason that function is: two copies would drift the
+ * first time a kind was added, and a tab labelled "the thing you opened"
+ * pointing at the wrong screen is worse than no tab. Every arm here is the
+ * screen its action above pushes — `openDocument` pushes `write`, `editDeck`
+ * pushes `deck` — so a change to one is a change to both, side by side.
+ */
+export function landingOf(hit: Hit): Screen {
+  switch (hit.kind) {
+    case 'item':
+      return 'item';
+    case 'course':
+      return 'course';
+    case 'unit':
+      return 'guide';
+    case 'note':
+      return 'note';
+    // Neither a task nor an appointment has a screen of its own; the tab that
+    // holds them is where `openHit` sends both.
+    case 'task':
+    case 'appointment':
+      return 'mine';
+    case 'document':
+      return 'write';
+    case 'sheet':
+      return 'sheet';
+    case 'deck':
+      return 'deck';
+    case 'screen':
+      return hit.screen;
   }
 }
 
