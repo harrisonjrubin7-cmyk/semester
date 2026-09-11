@@ -355,9 +355,10 @@ Once an account is connected, the same screen lists its recent files, so the
 syllabus sitting in Drive or OneDrive can be opened without downloading and
 re-uploading it. There was a second screen behind this one — Files & mail —
 that listed the same files again, swept the inbox for course mail and pushed
-deadlines out to Google or Microsoft. It has been deleted: two of its three
-tabs were already here or under Write an email, and the whole thing was one
-more thing to find. Nothing sends mail as you, and nothing did before.
+deadlines out to Google or Microsoft. It has been deleted: its files tab was
+already here, its mail tab is now the Email screen itself — a whole mailbox
+rather than a sweep — and pushing dates out lives here, under the accounts it
+writes to. Nothing sends mail as you, and nothing did before.
 
 Apple is a third case, and the screen says which half is which: **iCloud
 calendars** come in with no account and no key — publish one from the Calendar
@@ -374,6 +375,58 @@ opening the installed app where the phone recognises the address. Every address
 is editable and your edit is what persists — myVU ships with none at all,
 because where it opens differs between people and a confident wrong link is
 worse than a field that asks. You can add links of your own beside them.
+
+## Email, in the shape you already know
+
+**Email** is a mailbox: a rail of folders down the left, a list of
+conversations, the message in a pane beside it, and compose docked over the
+bottom right. That is Gmail's layout and Outlook's, to within a few pixels, and
+it is deliberate — a mailbox that invented its own arrangement is one nobody
+can use without being taught.
+
+What is in it is the same vocabulary: **Inbox, Starred, Snoozed, Drafts, Sent,
+Archive, Spam, Trash**; Gmail's **Primary / Social / Promotions / Updates**
+tabs; conversations gathered by the provider's own thread; unread in bold; a
+star you can hit without opening anything; archive, delete, snooze and mark-read
+under the pointer where the date was, and across the top for everything
+selected; date headings — Today, Yesterday, This week — the way Outlook cuts a
+long list; `1–50 of 566` in the corner; reply, reply-all and forward with the
+original quoted and folded; a reading pane you can put on the right, underneath,
+or switch off. Search takes the operators both clients take — `from:stromme`,
+`subject:"problem set"`, `is:unread`, `has:attachment`, `label:` — and asks the
+provider as well as what is already loaded, so it reaches past the page in front
+of you. On a phone it is the phone client: one pane at a time, folders behind a
+button, compose as a sheet.
+
+Two things in it are this app's rather than a mail client's. Every message that
+names one of your courses wears that course's colour, and your courses are
+labels in the rail — no filter to set up. And a message can become a task, or be
+handed to **A change to a date**, which reads an announcement into proposed
+edits with the sentence each one rests on quoted beside it.
+
+**It reads; it never sends.** The scopes are `gmail.readonly` and `Mail.Read`,
+and they are not going to change: a study app that could delete a professor's
+email or post one as you is a bigger promise than this one makes, and the
+failure mode is unrecoverable. Everything above still works, because reading,
+starring, archiving, snoozing and deleting here are *your* marks kept over the
+provider's copy — the app's own view of your inbox. What they do not do is reach
+back into Gmail, and the screen says so rather than letting you find out. Every
+message carries a link to the real one.
+
+Writing is the screen this used to be, now inside the compose window under
+**Help me write**: the nine things a student email ever is — an extension, a
+question, a meeting, an absence, a grade, a recommendation, a follow-up, a
+reply, a thank-you — the deadline it is about, and a box for the facts in your
+own words. Nothing factual about you is invented: a reason you have not given
+comes back as `[a blank]` to fill in, because putting a made-up excuse in your
+name into a professor's inbox is a lie told on your behalf. **Send** opens the
+finished draft in Gmail or Outlook with every field filled in, and you press
+send there; the draft moves to Sent here at that moment, which is the last thing
+the app can honestly know about it.
+
+Drafts and Sent need no account at all — they are the app's own, and they
+persist, because the commonest thing that happens to a student email is that it
+gets half written and left.
 
 ## Making things: documents, sheets, tables and equations
 

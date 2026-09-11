@@ -64,10 +64,16 @@ export function isExempt(screen: Screen): boolean {
  * setting are already about. A flashcard does not either — it is one card, and
  * a card the width of a monitor is a poster.
  *
+ * The mailbox is here for the same reason as the month grid rather than by
+ * analogy: it is three columns — folders, the list, the message — and the
+ * narrower the window the sooner the middle one stops fitting a subject and
+ * its first line on one row. Its own reading column is set inside it, on the
+ * message, where the prose actually is.
+ *
  * So the drawn screens take `--canvas` on a desktop and everything else takes
  * `--measure`. Below 1180px the two are both `100%` and this changes nothing.
  */
-export const CANVAS: Screen[] = ['calendar', 'maps', 'draw'];
+export const CANVAS: Screen[] = ['calendar', 'maps', 'draw', 'mail'];
 
 export function isCanvas(screen: Screen): boolean {
   return CANVAS.includes(screen);
@@ -88,14 +94,20 @@ export function isCanvas(screen: Screen): boolean {
  * reserve space beneath it — see `.scrollarea.is-filled` in `styles/app.css`
  * for what that reservation was doing there and why it is wrong here.
  *
- * There are two of them now, and the second is the reason to state the test
- * rather than the name: Classmates is a class conversation with a list of
- * rooms beside it, so it is the same shape for the same reason — a scrolling
- * transcript, a composer on the bottom edge, and its own scroller inside.
+ * There are three of them now, and the third is the reason to state the test
+ * rather than the name. Classmates is a class conversation with a list of
+ * rooms beside it: a scrolling transcript, a composer on the bottom edge, its
+ * own scroller inside. The mailbox is the same shape from the other side — a
+ * rail that does not move, a list that scrolls, a message that scrolls
+ * separately beside it, and a toolbar across the top of all three; every mail
+ * client anybody has used is built that way, and none of it works inside a
+ * page that scrolls as one, where the folders would scroll off the top and
+ * the list and the reading pane would be one long column.
+ *
  * Whatever is added here has to answer the same question, and the answer is
- * about the screen's own layout rather than about whose messages it shows.
+ * about the screen's own layout rather than about what it holds.
  */
-export const FILLS: Screen[] = ['ask', 'classmates'];
+export const FILLS: Screen[] = ['ask', 'classmates', 'mail'];
 
 export function fills(screen: Screen): boolean {
   return FILLS.includes(screen);
