@@ -6,15 +6,19 @@ import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
 import { ActionButton, ChipRow, EmptyState, FilePick, SectionLabel } from '../components/ui';
-import { Bench } from '../components/Bench';
+import { Bench, Tool, ToolRule } from '../components/Bench';
 import { ChevronRight, Plus, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
 import {
+  BASE_SIZE,
+  INKS,
+  INK_NAMES,
   MAX_COLS,
   MAX_DECIMALS,
   MAX_ROWS,
+  SIZES,
   colIndex,
   colName,
   display,
@@ -22,6 +26,7 @@ import {
   extent,
   filled,
   fromRows,
+  inkOn,
   isError,
   isFormula,
   parseRef,
@@ -34,9 +39,11 @@ import {
   styledDisplay,
   toCsv,
   toMarkdown,
+  washOn,
   weighted,
   type Align,
   type CellStyle,
+  type Ink,
   type NumFormat,
   type Sheet as SheetModel,
 } from '../lib/sheet';
@@ -62,6 +69,28 @@ import {
   undo,
   type History,
 } from '../lib/history';
+import {
+  autoSum,
+  bodyOf,
+  clear as clearOut,
+  clipText,
+  copy as copyOut,
+  deleteCols,
+  deleteRows,
+  fill,
+  find as findIn,
+  insertCols,
+  insertRows,
+  paste as pasteAt,
+  readClip,
+  replaceAll,
+  sortRange,
+  sortable,
+  type Body,
+  type Clip,
+} from '../lib/sheetedit';
+import { ZOOMS, stepZoom, type Tab as RibbonTab } from '../lib/ribbon';
+import { FormulaBar, Ribbon, SheetTabs, StatusBar } from '../components/Ribbon';
 import { TEMPLATES, fromTemplate } from '../lib/sheettemplates';
 import { fromSheet, sheetFileName, widthsFor, xlsx } from '../lib/xlsx';
 import { canBuild, gradeSheet } from '../lib/gradesheet';
@@ -630,20 +659,43 @@ interface Snap {
   cols: number;
 }
 
-/** The pictures on the toolbar, in the order a spreadsheet puts them. */
-const FORMATS: { id: NumFormat; label: string; says: string }[] = [
-  { id: 'plain', label: '123', says: 'Show what is there' },
-  { id: 'number', label: '1,000', says: 'A number, grouped' },
-  { id: 'percent', label: '%', says: 'A percentage' },
-  { id: 'money', label: '$', says: 'Money' },
-  { id: 'date', label: 'Date', says: 'A date, from a day count' },
+/**
+ * The pictures, in the order a spreadsheet puts them.
+ *
+ * Three names each, and they are not redundant: `label` is the glyph for a
+ * button, `short` is what fits in a dropdown, and `says` is the sentence a
+ * menu and a screen reader need. Writing one and abbreviating it at the call
+ * site is how "A date, from a day count" ends up as "A date, from a d…" in a
+ * select box a third of the ribbon wide.
+ */
+const FORMATS: { id: NumFormat; label: string; short: string; says: string }[] = [
+  { id: 'plain', label: '123', short: 'Plain', says: 'Show what is there' },
+  { id: 'number', label: '1,000', short: 'Number', says: 'A number, grouped' },
+  { id: 'percent', label: '%', short: 'Percent', says: 'A percentage' },
+  { id: 'money', label: '$', short: 'Money', says: 'Money' },
+  { id: 'date', label: 'Date', short: 'Date', says: 'A date, from a day count' },
 ];
 
-const ALIGNS: { id: Align; label: string }[] = [
-  { id: 'left', label: 'Left' },
-  { id: 'center', label: 'Middle' },
-  { id: 'right', label: 'Right' },
+const ALIGNS: { id: Align; label: string; glyph: string }[] = [
+  { id: 'left', label: 'Left', glyph: '⇤' },
+  { id: 'center', label: 'Middle', glyph: '↔' },
+  { id: 'right', label: 'Right', glyph: '⇥' },
 ];
+
+/**
+ * What the borders dropdown offers.
+ *
+ * Three, not Excel's thirteen. `All` rules every cell, which is the one that
+ * makes a block read as a table; `Outline` rules only the outside, which is
+ * what an underlined total or a boxed answer wants; `None` takes them off.
+ * The other ten in Excel are combinations nobody picks from a list — they
+ * pick one of these and adjust.
+ */
+const EDGES = [
+  { id: '', label: 'No borders' },
+  { id: 'all', label: 'All borders' },
+  { id: 'box', label: 'Outline' },
+] as const;
 
 function Grid({ sheet }: { sheet: SheetModel }) {
   const { state, dispatch, say } = useStore();
@@ -651,8 +703,26 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   /** Which cell has the text cursor in it, so it shows its formula not its answer. */
   const [typing, setTyping] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [jump, setJump] = useState('');
   const [allDeadlines, setAllDeadlines] = useState(false);
+  /** Which ribbon tab is open. Held here so it survives every re-render. */
+  const [ribbon, setRibbon] = useState('home');
+  const [zoom, setZoom] = useState(100);
+  /**
+   * What was last cut or copied, kept in the app rather than only on the
+   * system clipboard.
+   *
+   * The system clipboard carries tab-separated text and nothing else, so a
+   * block copied through it arrives with its formulas turned into whatever
+   * they computed to. Keeping the block here as well is what lets a copied
+   * `=SUM(B2:B9)` land two columns over as `=SUM(D2:D9)`. Both are written:
+   * this for pasting back into the app, the text for pasting into Excel.
+   */
+  const [clip, setClip] = useState<Clip | null>(null);
+  /** What the View tab is showing, and what it is hiding. */
+  const [view, setView] = useState({ lines: true, heads: true, formulas: false, freeze: true });
+  const [seeking, setSeeking] = useState(false);
+  const [needle, setNeedle] = useState('');
+  const [instead, setInstead] = useState('');
   const boxes = useRef<Record<string, HTMLInputElement | null>>({});
 
   /*
@@ -660,9 +730,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    *
    * `lib/undo.ts` offers one step in a toast for eight seconds, which is the
    * right shape for deleting a note and the wrong one for typing into a grid.
-   * See `lib/history.ts`. It is held in a ref rather than in state because
-   * nothing renders from it except the two buttons' disabled flags, and those
-   * are re-read on every render anyway.
+   * See `lib/history.ts`.
    */
   const [history, setHistory] = useState<History<Snap>>(() =>
     start({ cells: sheet.cells, styles: sheet.styles ?? {}, rows: sheet.rows, cols: sheet.cols }),
@@ -691,6 +759,9 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     setHistory((h) => remember(h, after, tag, Date.now()));
     patch(after);
   };
+
+  /** The grid as `lib/sheetedit.ts` takes it, and the way a result comes back. */
+  const body = (): Body => bodyOf(sheet);
 
   const write = (address: string, value: string) => {
     const cells = { ...sheet.cells };
@@ -739,6 +810,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const style = styleOf(sheet, focus) ?? {};
   const selected = useMemo(() => cellsIn(sel), [sel]);
   const totals = useMemo(() => summarise(sheet.cells, selected), [sheet.cells, selected]);
+  const spot = box(sel);
 
   /** Move the cursor, and take the browser's focus with it. */
   const go = (address: string, extend = false) => {
@@ -751,16 +823,104 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     }
   };
 
+  // ── What the ribbon's buttons do ───────────────────────────────────────
+
+  const cutOrCopy = (andClear: boolean) => {
+    const taken = copyOut(body(), sel);
+    setClip(taken);
+    void navigator.clipboard?.writeText(clipText(taken));
+    if (andClear) change(clearOut(body(), sel), `cut:${rangeLabel(sel)}`);
+    say(andClear ? `${rangeLabel(sel)} cut.` : `${rangeLabel(sel)} copied.`);
+  };
+
+  /**
+   * Paste, from the app's own clipboard where there is one and from the
+   * system's where there is not.
+   *
+   * In that order on purpose: a block copied in this app carries its formulas
+   * and the text version of the same block does not, so preferring the text
+   * would throw the working away on every internal copy.
+   */
+  const pasteIn = async () => {
+    let taken = clip;
+    if (!taken) {
+      const text = await navigator.clipboard?.readText?.().catch(() => '');
+      taken = text ? readClip(text) : null;
+    }
+    if (!taken) {
+      say('There is nothing to paste.');
+      return;
+    }
+    change(pasteAt(body(), focus, taken), `paste:${focus}`);
+    say(`Pasted into ${focus}.`);
+  };
+
+  const sum = (fn: string) => {
+    const put = autoSum(body(), sel, fn);
+    if (!put) {
+      say('There is nothing above or to the left of this cell to add up.');
+      return;
+    }
+    /*
+     * The grid grows by a row where the total needs one.
+     *
+     * A whole column selected has no row under it, and the two alternatives
+     * were both wrong: putting the `SUM` in the last cell of the block makes
+     * it part of its own range — `#CYCLE!` — and refusing does nothing and
+     * looks broken. Growing is what Excel does and what pressing Σ means.
+     */
+    const where = parseRef(put.at);
+    change(
+      {
+        cells: { ...sheet.cells, [put.at]: put.formula },
+        rows: Math.max(sheet.rows, (where?.row ?? 0) + 1),
+      },
+      `sum:${put.at}`,
+    );
+    go(put.at);
+  };
+
+  const sortBy = (direction: 'asc' | 'desc') => {
+    if (!sortable(body(), sel)) {
+      say('This block has a formula in it, so sorting it would break the formula. Sort the values instead.');
+      return;
+    }
+    change(sortRange(body(), sel, spot.left, direction), `sort:${rangeLabel(sel)}`);
+    say(`Sorted by column ${colName(spot.left)}.`);
+  };
+
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>, address: string) => {
     const input = e.currentTarget;
     const ends = input.selectionStart === input.selectionEnd;
     const atStart = ends && input.selectionStart === 0;
     const atEnd = ends && input.selectionStart === input.value.length;
+    const meta = e.metaKey || e.ctrlKey;
 
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
-      e.preventDefault();
-      rewind(e.shiftKey ? redo(history) : undo(history));
-      return;
+    if (meta) {
+      const key = e.key.toLowerCase();
+      if (key === 'z') {
+        e.preventDefault();
+        rewind(e.shiftKey ? redo(history) : undo(history));
+        return;
+      }
+      /*
+       * Fill down and fill right, on the two keys every spreadsheet binds them
+       * to. These are the one place `lib/keys.ts`'s rule about not taking a
+       * Meta chord is worth the exception it makes elsewhere in this file:
+       * neither ⌘D nor ⌘R means anything in a text box, and both mean exactly
+       * this in Excel, Sheets and Numbers.
+       */
+      if ((key === 'd' || key === 'r') && many(sel)) {
+        e.preventDefault();
+        change(fill(body(), sel, key === 'd' ? 'down' : 'right'), `fill:${rangeLabel(sel)}`);
+        return;
+      }
+      if (key === 'c' || key === 'x') {
+        if (!many(sel)) return; // one cell is the text box's own copy
+        e.preventDefault();
+        cutOrCopy(key === 'x');
+        return;
+      }
     }
     /*
      * Up and down always move; left and right move only from the end they
@@ -799,25 +959,20 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     // a text box does, or there would be no way to backspace a typo.
     if ((e.key === 'Delete' || e.key === 'Backspace') && many(sel) && input.value === '') {
       e.preventDefault();
-      const cells = { ...sheet.cells };
-      for (const cell of selected) delete cells[cell];
-      change({ cells }, 'clear');
+      change(clearOut(body(), sel), 'clear');
     }
   };
 
-  /** The run of cells above the cursor, as a range, for the four sums. */
-  const above = (over = 0) => columnAbove(focus, over);
-
   /*
-   * The menu bar, which `Toolbar` below is not and does not replace.
+   * The menu bar, which the ribbon below is not and does not replace.
    *
-   * `Toolbar` is the pictures a spreadsheet keeps one press away — the number
-   * formats, bold, the alignments, undo. The menus are everything else the
-   * screen can do, including those, which is not a duplication anybody has
-   * ever objected to: Excel and Sheets both put the format buttons on the bar
-   * and the same formats on the Format menu, because a button is for the hand
-   * that knows where it is and a menu is for everybody else. See
-   * `lib/menus.ts`.
+   * The ribbon is what you press while the cursor is in a cell; the menus are
+   * everything the screen can do to the *file* — new, copy, download, print,
+   * delete — plus, on Edit and Format, a named way to reach what the ribbon
+   * draws as a glyph. That is not a duplication anybody has ever objected to:
+   * Excel and Sheets both put the format buttons on the bar and the same
+   * formats on a menu, because a button is for the hand that knows where it
+   * is and a menu is for everybody else. See `lib/menus.ts`.
    */
   const menus: Menu[] = [
     {
@@ -895,14 +1050,25 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         ],
         [
           {
+            id: 'edit.cut',
+            label: `Cut ${rangeLabel(sel)}`,
+            run: selected.some((cell) => sheet.cells[cell]) ? () => cutOrCopy(true) : undefined,
+          },
+          {
+            id: 'edit.copy',
+            label: `Copy ${rangeLabel(sel)}`,
+            run: selected.some((cell) => sheet.cells[cell]) ? () => cutOrCopy(false) : undefined,
+          },
+          {
+            id: 'edit.paste',
+            label: `Paste into ${focus}`,
+            run: () => void pasteIn(),
+          },
+          {
             id: 'edit.clear',
             label: `Clear ${rangeLabel(sel)}`,
             run: selected.some((cell) => sheet.cells[cell])
-              ? () => {
-                  const cells = { ...sheet.cells };
-                  for (const cell of selected) delete cells[cell];
-                  change({ cells }, 'clear');
-                }
+              ? () => change(clearOut(body(), sel), 'clear')
               : undefined,
           },
         ],
@@ -939,25 +1105,83 @@ function Grid({ sheet }: { sheet: SheetModel }) {
       ],
     },
     {
+      id: 'view',
+      label: 'View',
+      groups: [
+        [
+          {
+            id: 'view.lines',
+            label: 'Gridlines',
+            on: view.lines,
+            run: () => setView((was) => ({ ...was, lines: !was.lines })),
+          },
+          {
+            id: 'view.heads',
+            label: 'Row and column headings',
+            on: view.heads,
+            run: () => setView((was) => ({ ...was, heads: !was.heads })),
+          },
+          {
+            id: 'view.freeze',
+            label: 'Freeze the top row',
+            on: view.freeze,
+            run: () => setView((was) => ({ ...was, freeze: !was.freeze })),
+          },
+          {
+            id: 'view.formulas',
+            label: 'Show formulas rather than answers',
+            hint: 'What is typed in every cell, which is how a sheet is checked.',
+            on: view.formulas,
+            run: () => setView((was) => ({ ...was, formulas: !was.formulas })),
+          },
+        ],
+      ],
+    },
+    {
       id: 'insert',
       label: 'Insert',
       groups: [
         [
           {
-            id: 'insert.rows',
-            label: 'Five more rows',
+            id: 'insert.rowabove',
+            label: `Row above ${rangeLabel(sel)}`,
+            hint: 'The formulas below it move with it.',
             run:
               sheet.rows >= MAX_ROWS
                 ? undefined
-                : () => change({ rows: Math.min(MAX_ROWS, sheet.rows + 5) }, 'grow'),
+                : () => change(insertRows(body(), spot.top), 'insert:row'),
           },
           {
-            id: 'insert.col',
-            label: 'Another column',
+            id: 'insert.colleft',
+            label: `Column left of ${colName(spot.left)}`,
             run:
               sheet.cols >= MAX_COLS
                 ? undefined
-                : () => change({ cols: Math.min(MAX_COLS, sheet.cols + 1) }, 'grow'),
+                : () => change(insertCols(body(), spot.left), 'insert:col'),
+          },
+          {
+            id: 'insert.delrow',
+            label: `Delete row ${spot.top + 1}`,
+            run:
+              sheet.rows <= 1
+                ? undefined
+                : () =>
+                    change(
+                      deleteRows(body(), spot.top, spot.bottom - spot.top + 1),
+                      'delete:row',
+                    ),
+          },
+          {
+            id: 'insert.delcol',
+            label: `Delete column ${colName(spot.left)}`,
+            run:
+              sheet.cols <= 1
+                ? undefined
+                : () =>
+                    change(
+                      deleteCols(body(), spot.left, spot.right - spot.left + 1),
+                      'delete:col',
+                    ),
           },
         ],
         [
@@ -971,17 +1195,16 @@ function Grid({ sheet }: { sheet: SheetModel }) {
           ).map(([id, label, fn]) => ({
             id: `insert.${id}`,
             label,
-            hint: above() ? `Over ${above()}, in ${focus}.` : 'Nothing above this cell to add up.',
-            run: above() ? () => write(focus, `=${fn}(${above()})`) : undefined,
+            hint: many(sel)
+              ? `Over ${rangeLabel(sel)}, in the cell under it.`
+              : `In ${focus}, over the run of cells above it.`,
+            run: () => sum(fn),
           })),
           {
             id: 'insert.weighted',
             label: 'Weighted mark',
             hint: 'Scores in the column above, weights in the one to its right.',
-            run:
-              above() && above(1)
-                ? () => write(focus, weighted(above() as string, above(1) as string))
-                : undefined,
+            run: weightedHere() ? () => write(focus, weightedHere() as string) : undefined,
           },
         ],
       ],
@@ -996,9 +1219,9 @@ function Grid({ sheet }: { sheet: SheetModel }) {
           on: (style.num ?? 'plain') === f.id,
           run: () => restyleSelection((was) => ({ ...was, num: f.id }), `format:${rangeLabel(sel)}`),
         })),
-        (['bold', 'italic'] as const).map((key) => ({
+        (['bold', 'italic', 'under'] as const).map((key) => ({
           id: `format.${key}`,
-          label: key === 'bold' ? 'Bold' : 'Italic',
+          label: key === 'bold' ? 'Bold' : key === 'italic' ? 'Italic' : 'Underline',
           on: Boolean(style[key]),
           run: () =>
             restyleSelection((was) => ({ ...was, [key]: !was[key] }), `${key}:${rangeLabel(sel)}`),
@@ -1016,6 +1239,52 @@ function Grid({ sheet }: { sheet: SheetModel }) {
       ],
     },
     {
+      id: 'data',
+      label: 'Data',
+      groups: [
+        [
+          {
+            id: 'data.asc',
+            label: `Sort ${rangeLabel(sel)} A → Z`,
+            run: many(sel) ? () => sortBy('asc') : undefined,
+          },
+          {
+            id: 'data.desc',
+            label: `Sort ${rangeLabel(sel)} Z → A`,
+            run: many(sel) ? () => sortBy('desc') : undefined,
+          },
+        ],
+        [
+          {
+            id: 'data.filldown',
+            label: 'Fill down',
+            hint: 'The top row of the selection, copied down it, formulas moved.',
+            run: many(sel) ? () => change(fill(body(), sel, 'down'), 'fill:down') : undefined,
+          },
+          {
+            id: 'data.fillright',
+            label: 'Fill right',
+            run: many(sel) ? () => change(fill(body(), sel, 'right'), 'fill:right') : undefined,
+          },
+        ],
+        [
+          {
+            /*
+             * Find and replace lives here rather than on Edit, with sort and
+             * fill, because all three are things done to a body of data
+             * rather than to the cell under the cursor — and because it
+             * searches what was *typed*, which is the same promise the other
+             * two keep about formulas.
+             */
+            id: 'data.find',
+            label: 'Find and replace',
+            hint: 'Searches the formulas, not the answers they produced.',
+            run: () => setSeeking(true),
+          },
+        ],
+      ],
+    },
+    {
       id: 'help',
       label: 'Help',
       groups: [
@@ -1025,7 +1294,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             label: 'What the formulas can do',
             run: () =>
               say(
-                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND and SUMPRODUCT are all here, and so are the scientific ones — SIN, COS, TAN, LOG to any base, FACT, COMBIN — and the fitted line: SLOPE, INTERCEPT, RSQ and FORECAST over two columns. All computed on this device.',
+                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT, VLOOKUP and SUMPRODUCT are all here, and so are the scientific ones — SIN, COS, TAN, LOG to any base, FACT, COMBIN — and the fitted line: SLOPE, INTERCEPT, RSQ and FORECAST over two columns. All computed on this device.',
               ),
           },
           {
@@ -1044,14 +1313,597 @@ function Grid({ sheet }: { sheet: SheetModel }) {
                 'Nothing. A format is a picture over the cell, kept apart from what is in it, so a formula always reads the value you typed.',
               ),
           },
+          {
+            id: 'help.dollar',
+            label: 'What a $ in a reference does',
+            run: () =>
+              say(
+                'It holds that part still when the formula is filled or pasted. =B2*$F$1 dragged down column C becomes =B3*$F$1, so the rate in F1 keeps being the rate.',
+              ),
+          },
         ],
       ],
     },
   ];
 
+  /** The weighted-average formula for where the cursor is, or nothing. */
+  function weightedHere(): string | null {
+    const scores = columnAbove(focus);
+    const weights = columnAbove(focus, 1);
+    return scores && weights ? weighted(scores, weights) : null;
+  }
+
+  // ── The ribbon ─────────────────────────────────────────────────────────
+
+  const anySelected = selected.some((cell) => sheet.cells[cell]);
+  const inks = INKS.map((ink) => ({ id: ink, label: INK_NAMES[ink] }));
+
+  const tabs: RibbonTab[] = [
+    {
+      id: 'home',
+      label: 'Home',
+      groups: [
+        {
+          id: 'g.clip',
+          label: 'Clipboard',
+          controls: [
+            {
+              kind: 'button',
+              id: 'c.paste',
+              label: 'Paste',
+              glyph: '⎘',
+              run: () => void pasteIn(),
+            },
+            {
+              kind: 'button',
+              id: 'c.cut',
+              label: 'Cut',
+              glyph: '✂',
+              run: anySelected ? () => cutOrCopy(true) : undefined,
+            },
+            {
+              kind: 'button',
+              id: 'c.copy',
+              label: 'Copy',
+              glyph: '⧉',
+              run: anySelected ? () => cutOrCopy(false) : undefined,
+            },
+          ],
+        },
+        {
+          id: 'g.font',
+          label: 'Font',
+          controls: [
+            {
+              kind: 'pick',
+              id: 'f.size',
+              label: 'Type size',
+              value: String(style.size ?? BASE_SIZE),
+              options: SIZES.map((n) => ({ id: String(n), label: String(n) })),
+              onPick: (id) =>
+                restyleSelection(
+                  (was) => ({ ...was, size: Number(id) }),
+                  `size:${rangeLabel(sel)}`,
+                ),
+            },
+            ...(
+              [
+                ['bold', 'Bold', 'B'],
+                ['italic', 'Italic', 'I'],
+                ['under', 'Underline', 'U'],
+                ['strike', 'Strikethrough', 'S'],
+              ] as const
+            ).map(([key, label, glyph]) => ({
+              kind: 'button' as const,
+              id: `f.${key}`,
+              label,
+              glyph,
+              on: Boolean(style[key]),
+              run: () =>
+                restyleSelection(
+                  (was) => ({ ...was, [key]: !was[key] }),
+                  `${key}:${rangeLabel(sel)}`,
+                ),
+            })),
+            {
+              kind: 'swatches',
+              id: 'f.ink',
+              label: 'Type colour',
+              glyph: 'A',
+              value: style.ink,
+              options: inks,
+              onPick: (id) =>
+                restyleSelection(
+                  (was) => ({ ...was, ink: (id as Ink | null) ?? undefined }),
+                  `ink:${rangeLabel(sel)}`,
+                ),
+            },
+            {
+              kind: 'swatches',
+              id: 'f.wash',
+              label: 'Fill colour',
+              glyph: '▦',
+              value: style.wash,
+              options: inks,
+              onPick: (id) =>
+                restyleSelection(
+                  (was) => ({ ...was, wash: (id as Ink | null) ?? undefined }),
+                  `wash:${rangeLabel(sel)}`,
+                ),
+            },
+            {
+              kind: 'pick',
+              id: 'f.edge',
+              label: 'Borders',
+              value: style.edge ?? '',
+              options: EDGES,
+              onPick: (id) => rule(id),
+            },
+          ],
+        },
+        {
+          id: 'g.align',
+          label: 'Alignment',
+          controls: ALIGNS.map((a) => ({
+            kind: 'button' as const,
+            id: `a.${a.id}`,
+            label: `Align ${a.label.toLowerCase()}`,
+            glyph: a.glyph,
+            on: style.align === a.id,
+            run: () =>
+              restyleSelection(
+                (was) => ({ ...was, align: was.align === a.id ? undefined : a.id }),
+                `align:${rangeLabel(sel)}`,
+              ),
+          })),
+        },
+        {
+          id: 'g.number',
+          label: 'Number',
+          controls: [
+            {
+              kind: 'pick',
+              id: 'n.format',
+              label: 'Number format',
+              value: style.num ?? 'plain',
+              options: FORMATS.map((f) => ({ id: f.id, label: f.short })),
+              onPick: (id) =>
+                restyleSelection(
+                  (was) => ({ ...was, num: id as NumFormat }),
+                  `format:${rangeLabel(sel)}`,
+                ),
+            },
+            {
+              kind: 'button',
+              id: 'n.less',
+              label: 'Fewer decimal places',
+              glyph: '.0',
+              run: () => decimals(-1),
+            },
+            {
+              kind: 'button',
+              id: 'n.more',
+              label: 'More decimal places',
+              glyph: '.00',
+              run: () => decimals(1),
+            },
+          ],
+        },
+        {
+          id: 'g.cells',
+          label: 'Cells',
+          controls: [
+            {
+              kind: 'button',
+              id: 'x.rowin',
+              label: 'Insert a row above the selection',
+              glyph: '+↔',
+              run:
+                sheet.rows >= MAX_ROWS
+                  ? undefined
+                  : () => change(insertRows(body(), spot.top), 'insert:row'),
+            },
+            {
+              kind: 'button',
+              id: 'x.colin',
+              label: 'Insert a column to the left of the selection',
+              glyph: '+↕',
+              run:
+                sheet.cols >= MAX_COLS
+                  ? undefined
+                  : () => change(insertCols(body(), spot.left), 'insert:col'),
+            },
+            {
+              kind: 'button',
+              id: 'x.rowout',
+              label: 'Delete the selected rows',
+              glyph: '−↔',
+              run:
+                sheet.rows <= 1
+                  ? undefined
+                  : () =>
+                      change(deleteRows(body(), spot.top, spot.bottom - spot.top + 1), 'delete:row'),
+            },
+            {
+              kind: 'button',
+              id: 'x.colout',
+              label: 'Delete the selected columns',
+              glyph: '−↕',
+              run:
+                sheet.cols <= 1
+                  ? undefined
+                  : () =>
+                      change(deleteCols(body(), spot.left, spot.right - spot.left + 1), 'delete:col'),
+            },
+          ],
+        },
+        {
+          id: 'g.editing',
+          label: 'Editing',
+          controls: [
+            { kind: 'button', id: 'e.sum', label: 'AutoSum', glyph: 'Σ', run: () => sum('SUM') },
+            {
+              kind: 'button',
+              id: 'e.filldown',
+              label: 'Fill down',
+              glyph: '↓',
+              run: many(sel) ? () => change(fill(body(), sel, 'down'), 'fill:down') : undefined,
+            },
+            {
+              kind: 'button',
+              id: 'e.fillright',
+              label: 'Fill right',
+              glyph: '→',
+              run: many(sel) ? () => change(fill(body(), sel, 'right'), 'fill:right') : undefined,
+            },
+            {
+              kind: 'button',
+              id: 'e.clear',
+              label: 'Clear what is selected',
+              glyph: '⌫',
+              run: anySelected ? () => change(clearOut(body(), sel), 'clear') : undefined,
+            },
+            {
+              kind: 'button',
+              id: 'e.find',
+              label: 'Find and replace',
+              glyph: '⌕',
+              run: () => setSeeking((was) => !was),
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'insert',
+      label: 'Insert',
+      groups: [
+        {
+          id: 'g.calc',
+          label: 'Working',
+          controls: [
+            {
+              kind: 'button',
+              id: 'i.total',
+              label: 'Total',
+              wide: true,
+              run: () => sum('SUM'),
+            },
+            {
+              kind: 'button',
+              id: 'i.average',
+              label: 'Average',
+              wide: true,
+              run: () => sum('AVERAGE'),
+            },
+            {
+              kind: 'button',
+              id: 'i.count',
+              label: 'Count',
+              wide: true,
+              run: () => sum('COUNT'),
+            },
+            {
+              kind: 'button',
+              id: 'i.stdev',
+              label: 'Std deviation',
+              wide: true,
+              run: () => sum('STDEV'),
+            },
+            {
+              kind: 'button',
+              id: 'i.weighted',
+              label: 'Weighted mark',
+              wide: true,
+              run: weightedHere() ? () => write(focus, weightedHere() as string) : undefined,
+            },
+          ],
+        },
+        {
+          id: 'g.size',
+          label: 'The grid',
+          controls: [
+            {
+              kind: 'button',
+              id: 'i.rows',
+              label: 'Five more rows',
+              wide: true,
+              run:
+                sheet.rows >= MAX_ROWS
+                  ? undefined
+                  : () => change({ rows: Math.min(MAX_ROWS, sheet.rows + 5) }, 'grow'),
+            },
+            {
+              kind: 'button',
+              id: 'i.cols',
+              label: 'Another column',
+              wide: true,
+              run:
+                sheet.cols >= MAX_COLS
+                  ? undefined
+                  : () => change({ cols: Math.min(MAX_COLS, sheet.cols + 1) }, 'grow'),
+            },
+          ],
+        },
+        {
+          id: 'g.out',
+          label: 'Elsewhere',
+          controls: [
+            {
+              kind: 'button',
+              id: 'i.doc',
+              label: 'Table in a document',
+              wide: true,
+              run: nothing
+                ? undefined
+                : () => {
+                    dispatch({
+                      type: 'makeDocument',
+                      doc: {
+                        title: sheet.title || 'Table',
+                        subtitle: '',
+                        courseId: sheet.courseId,
+                        blocks: [{ kind: 'table', rows, header: rows.length > 1, caption: '' }],
+                      },
+                    });
+                    say('A document has been made with this table in it.');
+                  },
+            },
+            {
+              kind: 'button',
+              id: 'i.md',
+              label: 'Copy as Markdown',
+              wide: true,
+              run: nothing
+                ? undefined
+                : () => {
+                    void navigator.clipboard?.writeText(toMarkdown(rows));
+                    say('Table copied as Markdown.');
+                  },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'formulas',
+      label: 'Formulas',
+      groups: [
+        {
+          id: 'g.lib',
+          label: 'Function library',
+          controls: (['SUM', 'AVERAGE', 'MEDIAN', 'STDEV', 'MIN', 'MAX', 'COUNT'] as const).map((fn) => ({
+            kind: 'button' as const,
+            id: `fn.${fn}`,
+            label: fn,
+            wide: true,
+            run: () => sum(fn),
+          })),
+        },
+        {
+          id: 'g.write',
+          label: 'Write one',
+          // The fitted line and the quartiles sit here rather than in the
+          // library above, because neither takes a single range: `SLOPE` wants
+          // the y column and the x column, and `QUARTILE` a range and which
+          // quarter. The spelling is what this list is for.
+          controls: (
+            [
+              'IF', 'ROUND', 'VLOOKUP', 'SUMPRODUCT', 'SUMIF',
+              'QUARTILE', 'PERCENTILE', 'SLOPE', 'INTERCEPT', 'RSQ', 'FORECAST', 'LOG',
+            ] as const
+          ).map((fn) => ({
+            kind: 'button' as const,
+            id: `fw.${fn}`,
+            label: fn,
+            wide: true,
+            /*
+             * The name and its brackets, with the cursor left in them.
+             *
+             * Not a wizard and not a guess at the arguments: what somebody
+             * needs from a function list is the spelling, because a misspelt
+             * name is `#NAME?` and a wrong range is a number that looks right.
+             */
+            run: () => write(focus, `=${fn}()`),
+          })),
+        },
+        {
+          id: 'g.audit',
+          label: 'Checking',
+          controls: [
+            {
+              kind: 'button',
+              id: 'fa.show',
+              label: 'Show formulas',
+              wide: true,
+              on: view.formulas,
+              run: () => setView((was) => ({ ...was, formulas: !was.formulas })),
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'data',
+      label: 'Data',
+      groups: [
+        {
+          id: 'g.sort',
+          label: 'Sort',
+          controls: [
+            {
+              kind: 'button',
+              id: 'd.asc',
+              label: 'Sort A to Z',
+              glyph: '↓A',
+              run: many(sel) ? () => sortBy('asc') : undefined,
+            },
+            {
+              kind: 'button',
+              id: 'd.desc',
+              label: 'Sort Z to A',
+              glyph: '↑A',
+              run: many(sel) ? () => sortBy('desc') : undefined,
+            },
+          ],
+        },
+        {
+          id: 'g.tools',
+          label: 'Tools',
+          controls: [
+            {
+              kind: 'button',
+              id: 'd.find',
+              label: 'Find and replace',
+              wide: true,
+              on: seeking,
+              run: () => setSeeking((was) => !was),
+            },
+            {
+              kind: 'button',
+              id: 'd.filldown',
+              label: 'Fill down',
+              wide: true,
+              run: many(sel) ? () => change(fill(body(), sel, 'down'), 'fill:down') : undefined,
+            },
+            {
+              kind: 'button',
+              id: 'd.fillright',
+              label: 'Fill right',
+              wide: true,
+              run: many(sel) ? () => change(fill(body(), sel, 'right'), 'fill:right') : undefined,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'view',
+      label: 'View',
+      groups: [
+        {
+          id: 'g.show',
+          label: 'Show',
+          controls: (
+            [
+              ['lines', 'Gridlines'],
+              ['heads', 'Headings'],
+              ['freeze', 'Freeze top row'],
+              ['formulas', 'Formulas'],
+            ] as const
+          ).map(([key, label]) => ({
+            kind: 'button' as const,
+            id: `v.${key}`,
+            label,
+            wide: true,
+            on: view[key],
+            run: () => setView((was) => ({ ...was, [key]: !was[key] })),
+          })),
+        },
+        {
+          id: 'g.zoom',
+          label: 'Zoom',
+          controls: [
+            {
+              kind: 'slider',
+              id: 'v.zoom',
+              label: 'Zoom',
+              value: ZOOMS.indexOf(zoom as (typeof ZOOMS)[number]),
+              min: 0,
+              max: ZOOMS.length - 1,
+              step: 1,
+              onSlide: (at) => setZoom(ZOOMS[at]),
+            },
+            {
+              kind: 'button',
+              id: 'v.reset',
+              label: 'Back to 100%',
+              wide: true,
+              run: zoom === 100 ? undefined : () => setZoom(100),
+            },
+          ],
+        },
+      ],
+    },
+  ];
+
+  /** More or fewer decimal places on everything selected. */
+  function decimals(by: number) {
+    restyleSelection(
+      (was) => ({
+        ...was,
+        // Pressing `.00` on a plain cell makes it a number, which is what the
+        // button means — otherwise it does nothing and looks broken.
+        num: was.num && was.num !== 'plain' ? was.num : 'number',
+        decimals: Math.min(MAX_DECIMALS, Math.max(0, places(was) + by)),
+      }),
+      `decimals:${rangeLabel(sel)}`,
+    );
+  }
+
+  /**
+   * Rule the selection.
+   *
+   * `all` puts four sides on every cell and `box` puts them only round the
+   * outside, which is the difference between a table and an outline and is
+   * why this cannot be one value written to every cell: the bottom-left cell
+   * of an outlined block wants `b` and `l` and nothing else.
+   */
+  function rule(kind: string) {
+    change(
+      {
+        styles: (() => {
+          let styles = sheet.styles ?? {};
+          for (const address of selected) {
+            const where = parseRef(address);
+            if (!where) continue;
+            const edge =
+              kind === ''
+                ? ''
+                : kind === 'all'
+                  ? 'tblr'
+                  : [
+                      where.row === spot.top ? 't' : '',
+                      where.row === spot.bottom ? 'b' : '',
+                      where.col === spot.left ? 'l' : '',
+                      where.col === spot.right ? 'r' : '',
+                    ].join('');
+            styles = restyle({ ...sheet, styles }, [address], (was) => ({ ...was, edge }));
+          }
+          return styles;
+        })(),
+      },
+      `edge:${rangeLabel(sel)}`,
+    );
+  }
+
+  const found = seeking ? findIn(body(), needle) : [];
+
   return (
     <Page
-      blurb={nothing ? 'Type into a cell. A cell starting with = is a formula.' : `${size.rows} × ${size.cols}`}
+      blurb={
+        nothing ? 'Type into a cell. A cell starting with = is a formula.' : `${size.rows} × ${size.cols}`
+      }
     >
       <Bench
         mark={<SheetIcon size={18} />}
@@ -1060,6 +1912,15 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         titleLabel="Sheet title"
         placeholder="Untitled spreadsheet"
         menus={menus}
+        tools={
+          <>
+            <Tool label="Save as an Excel file" icon="⤓" disabled={nothing || busy} onClick={() => void saveExcel()} />
+            <Tool label="Undo" icon="↶" disabled={!canUndo(history)} onClick={() => rewind(undo(history))} />
+            <Tool label="Redo" icon="↷" disabled={!canRedo(history)} onClick={() => rewind(redo(history))} />
+            <ToolRule />
+            <Tool label="Print, or save as PDF" icon="⎙" onClick={() => window.print()} />
+          </>
+        }
         actions={
           <ActionButton
             onClick={() => dispatch({ type: 'closeSheet' })}
@@ -1084,331 +1945,244 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         onShowAll={() => setAllDeadlines(true)}
       />
 
-      <Toolbar
-        style={style}
-        canUndo={canUndo(history)}
-        canRedo={canRedo(history)}
-        onUndo={() => rewind(undo(history))}
-        onRedo={() => rewind(redo(history))}
-        onFormat={(num) => restyleSelection((was) => ({ ...was, num }), `format:${rangeLabel(sel)}`)}
-        onDecimals={(by) =>
-          restyleSelection(
-            (was) => ({
-              ...was,
-              // Pressing `.00` on a plain cell makes it a number, which is what
-              // the button means — otherwise it does nothing and looks broken.
-              num: was.num && was.num !== 'plain' ? was.num : 'number',
-              decimals: Math.min(MAX_DECIMALS, Math.max(0, places(was) + by)),
-            }),
-            `decimals:${rangeLabel(sel)}`,
-          )
-        }
-        onWeight={(key) => restyleSelection((was) => ({ ...was, [key]: !was[key] }), `${key}:${rangeLabel(sel)}`)}
-        onAlign={(align) =>
-          restyleSelection(
-            (was) => ({ ...was, align: was.align === align ? undefined : align }),
-            `align:${rangeLabel(sel)}`,
-          )
-        }
-      />
+      <Ribbon tabs={tabs} on={ribbon} onTab={setRibbon} />
+
+      {seeking && (
+        <Seek
+          needle={needle}
+          instead={instead}
+          hits={found.length}
+          onNeedle={setNeedle}
+          onInstead={setInstead}
+          onGo={() => found[0] && go(found[0].address)}
+          onReplace={() => {
+            const done = replaceAll(body(), needle, instead);
+            if (done.changed === 0) {
+              say('Nothing matched.');
+              return;
+            }
+            change(done.body, 'replace');
+            say(`${done.changed} ${done.changed === 1 ? 'cell' : 'cells'} changed.`);
+          }}
+          onClose={() => setSeeking(false)}
+        />
+      )}
 
       {/*
-        The name box and the formula bar, which is where a spreadsheet's
-        chrome earns its place: the cell is 92 pixels wide and the formula in
-        it is not, so without this the only way to read `=SUMPRODUCT(B2:B9,C2:C9)`
+        The name box and the formula bar, which is where a spreadsheet's chrome
+        earns its place: the cell is 92 pixels wide and the formula in it is
+        not, so without this the only way to read `=SUMPRODUCT(B2:B9,C2:C9)`
         was to put the cursor in the cell and scroll it sideways.
       */}
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-4)' }}>
-        <input
-          className="input"
-          value={jump}
-          onChange={(e) => setJump(e.target.value)}
-          onFocus={(e) => e.currentTarget.select()}
-          onBlur={() => setJump('')}
-          onKeyDown={(e) => {
-            if (e.key !== 'Enter') return;
-            const where = parseRef(jump.trim());
-            if (!where) return;
-            e.preventDefault();
-            setJump('');
-            go(ref(Math.min(where.row, sheet.rows - 1), Math.min(where.col, sheet.cols - 1)));
-          }}
-          placeholder={rangeLabel(sel)}
-          aria-label={`Selected: ${saySize(sel)}. Type a cell to go to it.`}
-          spellCheck={false}
-          style={{
-            width: 84,
-            flex: 'none',
-            fontSize: 'var(--type-sm)',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        />
-        <input
-          className="input"
-          value={raw}
-          onChange={(e) => write(focus, e.target.value)}
-          aria-label={`What is in ${focus}`}
-          placeholder="fx"
-          spellCheck={false}
-          style={{
-            flex: 1,
-            minWidth: 0,
-            fontSize: 'var(--type-sm)',
-            fontFamily: isFormula(raw) ? 'ui-monospace, SFMono-Regular, Menlo, monospace' : undefined,
-          }}
-        />
-      </div>
+      <FormulaBar
+        where={rangeLabel(sel)}
+        says={`Selected: ${saySize(sel)}`}
+        onGo={(text) => {
+          const where = parseRef(text);
+          if (!where) return;
+          go(ref(Math.min(where.row, sheet.rows - 1), Math.min(where.col, sheet.cols - 1)));
+        }}
+        value={raw}
+        onChange={(next) => write(focus, next)}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          go(step(focus, 1, 0, sheet.rows, sheet.cols));
+        }}
+        mono={isFormula(raw)}
+      />
 
-      <div style={{ overflowX: 'auto', marginTop: 'var(--sp-4)' }}>
-        <table style={{ borderCollapse: 'collapse' }}>
-          <thead>
-            <tr>
-              <th aria-label="Row numbers" style={{ width: 28 }} />
-              {Array.from({ length: sheet.cols }, (_, c) => (
-                <th key={c} scope="col" style={{ padding: 0 }}>
+      <div className={view.lines ? 'sgrid' : 'sgrid sgrid-plain'}>
+        <table>
+          {view.heads && (
+            <thead>
+              <tr>
+                <th>
                   <button
                     type="button"
-                    className="bare tappable"
-                    // Selecting a whole column, which is how anybody totals
-                    // one: press the letter, read the sum off the status line.
+                    className="shead"
+                    // The corner box, which selects the whole sheet — the one
+                    // control every spreadsheet puts where the two headers
+                    // cross, and the fastest way to format a table at once.
                     onClick={() =>
-                      setSel({ anchor: ref(0, c), focus: ref(sheet.rows - 1, c) })
+                      setSel({ anchor: 'A1', focus: ref(sheet.rows - 1, sheet.cols - 1) })
                     }
-                    aria-label={`Select column ${colName(c)}`}
-                    style={{
-                      ...secondLine(),
-                      width: '100%',
-                      fontSize: 'var(--type-xs)',
-                      padding: 'var(--sp-1)',
-                      background:
-                        box(sel).left <= c && c <= box(sel).right
-                          ? 'var(--app-accent-wash)'
-                          : 'transparent',
-                    }}
+                    aria-label="Select the whole sheet"
                   >
-                    {colName(c)}
+                    ◤
                   </button>
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: sheet.rows }, (_, r) => (
-              <tr key={r}>
-                <th scope="row" style={{ padding: 0 }}>
-                  <button
-                    type="button"
-                    className="bare tappable"
-                    onClick={() =>
-                      setSel({ anchor: ref(r, 0), focus: ref(r, sheet.cols - 1) })
-                    }
-                    aria-label={`Select row ${r + 1}`}
-                    style={{
-                      ...secondLine(),
-                      width: '100%',
-                      fontSize: 'var(--type-xs)',
-                      padding: 'var(--sp-1)',
-                      textAlign: 'right',
-                      background:
-                        box(sel).top <= r && r <= box(sel).bottom
-                          ? 'var(--app-accent-wash)'
-                          : 'transparent',
-                    }}
-                  >
-                    {r + 1}
-                  </button>
-                </th>
-                {Array.from({ length: sheet.cols }, (_, c) => {
-                  const address = ref(r, c);
-                  return (
-                    <Cell
-                      key={c}
-                      sheet={sheet}
-                      address={address}
-                      inside={holds(sel, address)}
-                      cursor={sel.focus === address}
-                      editing={typing === address}
-                      hold={(el) => {
-                        boxes.current[address] = el;
-                      }}
-                      onWrite={(value) => write(address, value)}
-                      onFocus={() => {
-                        setTyping(address);
-                        setSel(oneCell(address));
-                      }}
-                      onExtend={() => setSel((was) => ({ ...was, focus: address }))}
-                      onBlur={() => setTyping((was) => (was === address ? null : was))}
-                      onKeyDown={(e) => onKey(e, address)}
-                    />
-                  );
-                })}
+                {Array.from({ length: sheet.cols }, (_, c) => (
+                  <th key={c} scope="col">
+                    <button
+                      type="button"
+                      className="shead"
+                      // Selecting a whole column, which is how anybody totals
+                      // one: press the letter, read the sum off the status bar.
+                      onClick={() => setSel({ anchor: ref(0, c), focus: ref(sheet.rows - 1, c) })}
+                      aria-label={`Select column ${colName(c)}`}
+                      aria-pressed={spot.left <= c && c <= spot.right}
+                    >
+                      {colName(c)}
+                    </button>
+                  </th>
+                ))}
               </tr>
-            ))}
+            </thead>
+          )}
+          <tbody>
+            {Array.from({ length: sheet.rows }, (_, r) => {
+              const frozen = view.freeze && view.heads && r === 0;
+              return (
+                <tr key={r}>
+                  {view.heads && (
+                    <th scope="row" className={frozen ? 'sfreeze' : undefined}>
+                      <button
+                        type="button"
+                        className="shead srow"
+                        onClick={() => setSel({ anchor: ref(r, 0), focus: ref(r, sheet.cols - 1) })}
+                        aria-label={`Select row ${r + 1}`}
+                        aria-pressed={spot.top <= r && r <= spot.bottom}
+                      >
+                        {r + 1}
+                      </button>
+                    </th>
+                  )}
+                  {Array.from({ length: sheet.cols }, (_, c) => {
+                    const address = ref(r, c);
+                    return (
+                      <Cell
+                        key={c}
+                        sheet={sheet}
+                        address={address}
+                        inside={holds(sel, address)}
+                        cursor={sel.focus === address}
+                        editing={typing === address || view.formulas}
+                        frozen={frozen}
+                        zoom={zoom}
+                        hold={(el) => {
+                          boxes.current[address] = el;
+                        }}
+                        onWrite={(value) => write(address, value)}
+                        onFocus={() => {
+                          setTyping(address);
+                          setSel(oneCell(address));
+                        }}
+                        onExtend={() => setSel((was) => ({ ...was, focus: address }))}
+                        onBlur={() => setTyping((was) => (was === address ? null : was))}
+                        onKeyDown={(e) => onKey(e, address)}
+                      />
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/*
-        The status line, which is the bottom-right corner of every spreadsheet
-        and the answer to the commonest question anybody asks one: select the
-        column, read what it comes to. Before this the only way to find out was
-        to write a `SUM`, look at it, and delete it again.
-      */}
-      <div
-        role="status"
-        style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}
-      >
-        {many(sel)
-          ? [
-              saySize(sel),
-              totals.count > 0 ? `Sum ${show(totals.sum)}` : `${totals.filled} filled`,
-              totals.count > 0 ? `Average ${show(totals.average)}` : '',
-              totals.count > 0 ? `Count ${totals.count}` : '',
-              totals.count > 0 ? `Min ${show(totals.min)} · Max ${show(totals.max)}` : '',
-              totals.wrong ? 'and something in it is an error' : '',
-            ]
-              .filter(Boolean)
-              .join(' · ')
-          : `${focus}${raw ? `: ${raw}` : ' is empty'}${
-              isFormula(raw) ? ` → ${answer}${wrong ? ' — that is what is wrong, not a value' : ''}` : ''
-            }`}
-      </div>
-
-      <Tabs
+      <SheetTabs
         sheets={state.sheets}
         on={sheet.id}
         onGo={(id) => dispatch({ type: 'openSheet', id })}
         onNew={() => dispatch({ type: 'newSheet', courseId: sheet.courseId })}
       />
 
-      <SectionLabel>The grid’s size</SectionLabel>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
-        <ActionButton
-          disabled={sheet.rows >= MAX_ROWS}
-          onClick={() => change({ rows: Math.min(MAX_ROWS, sheet.rows + 5) }, 'rows')}
-        >
-          Five more rows
-        </ActionButton>
-        <ActionButton
-          disabled={sheet.cols >= MAX_COLS}
-          onClick={() => change({ cols: Math.min(MAX_COLS, sheet.cols + 1) }, 'cols')}
-        >
-          Another column
-        </ActionButton>
-      </div>
-
-      <SectionLabel>A sum, written for you</SectionLabel>
-      <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-4)' }}>
-        {/*
-          With a block selected these use it, which is the honest version of
-          what this did before: it guessed the column above the cursor and
-          hoped. The guess is still here for a single cell, where there is
-          nothing else to go on, and what lands in the cell is the formula
-          rather than the number so the range can be seen and changed.
-        */}
-        {many(sel)
-          ? `Puts a formula over ${rangeLabel(sel)} in the cell under it.`
-          : `Puts a formula in ${focus}. Edit the range afterwards — it guesses the column above.`}
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
-        {(
-          [
-            ['Total', (range: string) => `=SUM(${range})`],
-            ['Average', (range: string) => `=AVERAGE(${range})`],
-            ['Std deviation', (range: string) => `=STDEV(${range})`],
-            ['Count', (range: string) => `=COUNT(${range})`],
-            // The median and the quartiles, which is the five-number summary a
-            // first statistics course marks by hand.
-            ['Median', (range: string) => `=MEDIAN(${range})`],
-            ['Lower quartile', (range: string) => `=QUARTILE(${range},1)`],
-            ['Upper quartile', (range: string) => `=QUARTILE(${range},3)`],
-          ] as const
-        ).map(([text, build]) => (
-          <ActionButton
-            key={text}
-            onClick={() => {
-              const b = box(sel);
-              if (many(sel)) {
-                const under = ref(Math.min(sheet.rows - 1, b.bottom + 1), b.left);
-                write(under, build(rangeLabel(sel)));
-                go(under);
-                return;
-              }
-              const above = columnAbove(focus);
-              if (above) write(focus, build(above));
-            }}
-          >
-            {text}
-          </ActionButton>
-        ))}
-        <ActionButton
-          disabled={many(sel)}
-          onClick={() => {
-            const scores = columnAbove(focus);
-            const weights = columnAbove(focus, 1);
-            if (scores && weights) write(focus, weighted(scores, weights));
-          }}
-        >
-          Weighted mark
-        </ActionButton>
-      </div>
-
-      <SectionLabel>Take it away</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-        <ActionButton tone="primary" disabled={nothing || busy} onClick={saveExcel}>
-          {busy ? 'Writing…' : 'Excel file (.xlsx), formulas and all'}
-        </ActionButton>
-        <ActionButton
-          disabled={nothing}
-          onClick={() => {
-            download({
-              name: sheetFileName(sheet.title).replace(/\.xlsx$/, '.csv'),
-              body: toCsv(rows),
-              mime: 'text/csv',
-            });
-            say('CSV saved.');
-          }}
-        >
-          CSV
-        </ActionButton>
-        <ActionButton
-          disabled={nothing}
-          onClick={() => {
-            void navigator.clipboard?.writeText(toMarkdown(rows));
-            say('Table copied as Markdown.');
-          }}
-        >
-          Copy as a Markdown table
-        </ActionButton>
-        <ActionButton
-          disabled={nothing}
-          onClick={() => {
-            dispatch({
-              type: 'makeDocument',
-              doc: {
-                title: sheet.title || 'Table',
-                subtitle: '',
-                courseId: sheet.courseId,
-                blocks: [{ kind: 'table', rows, header: rows.length > 1, caption: '' }],
-              },
-            });
-            say('A document has been made with this table in it.');
-          }}
-        >
-          Put it in a new document
-        </ActionButton>
-      </div>
-
-      <SectionLabel>This sheet</SectionLabel>
-      <ActionButton
-        onClick={() => {
-          dispatch({ type: 'deleteSheet', id: sheet.id });
-          say('Sheet deleted.');
-        }}
-      >
-        Delete it
-      </ActionButton>
+      {/*
+        The status bar, which is the bottom of every spreadsheet and the answer
+        to the commonest question anybody asks one: select the column, read
+        what it comes to. Before this the only way to find out was to write a
+        `SUM`, look at it, and delete it again.
+      */}
+      <StatusBar
+        mode={typing === null ? 'Ready' : 'Enter'}
+        stats={
+          many(sel)
+            ? [
+                saySize(sel),
+                totals.count > 0 ? `Sum ${show(totals.sum)}` : `${totals.filled} filled`,
+                totals.count > 0 ? `Average ${show(totals.average)}` : '',
+                totals.count > 0 ? `Count ${totals.count}` : '',
+                totals.count > 0 ? `Min ${show(totals.min)} · Max ${show(totals.max)}` : '',
+                totals.wrong ? 'and something in it is an error' : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')
+            : `${focus}${raw ? `: ${raw}` : ' is empty'}${
+                isFormula(raw)
+                  ? ` → ${answer}${wrong ? ' — that is what is wrong, not a value' : ''}`
+                  : ''
+              }`
+        }
+        zoom={zoom}
+        onZoom={(by) => setZoom(stepZoom(zoom, by > 0 ? 1 : -1))}
+      />
     </Page>
+  );
+}
+
+/**
+ * Find and replace, as a strip over the grid.
+ *
+ * It searches what was *typed* rather than what is shown — see `find` in
+ * `lib/sheetedit.ts` — which is the choice that makes replace worth having: a
+ * search of the answers would find the `162` a `SUM` produced and not the
+ * `=SUM(D2:D5)` that produced it, so replacing it would do nothing anybody
+ * could see.
+ */
+function Seek({
+  needle,
+  instead,
+  hits,
+  onNeedle,
+  onInstead,
+  onGo,
+  onReplace,
+  onClose,
+}: {
+  needle: string;
+  instead: string;
+  hits: number;
+  onNeedle: (next: string) => void;
+  onInstead: (next: string) => void;
+  onGo: () => void;
+  onReplace: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fx" role="search">
+      <input
+        className="fx-in"
+        value={needle}
+        onChange={(e) => onNeedle(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && onGo()}
+        placeholder="Find what was typed"
+        aria-label="Find"
+        spellCheck={false}
+      />
+      <input
+        className="fx-in"
+        value={instead}
+        onChange={(e) => onInstead(e.target.value)}
+        placeholder="Replace with"
+        aria-label="Replace with"
+        spellCheck={false}
+      />
+      <button type="button" className="rib-btn rib-btn-wide" onClick={onGo} disabled={hits === 0}>
+        {needle === '' ? 'Find' : `${hits} found`}
+      </button>
+      <button
+        type="button"
+        className="rib-btn rib-btn-wide"
+        onClick={onReplace}
+        disabled={hits === 0}
+      >
+        Replace all
+      </button>
+      <button type="button" className="rib-btn" aria-label="Close find and replace" onClick={onClose}>
+        ✕
+      </button>
+    </div>
   );
 }
 
@@ -1428,6 +2202,8 @@ function Cell({
   inside,
   cursor,
   editing,
+  frozen,
+  zoom,
   hold,
   onWrite,
   onFocus,
@@ -1440,6 +2216,9 @@ function Cell({
   inside: boolean;
   cursor: boolean;
   editing: boolean;
+  /** In the row held under the headings, so it is drawn sticky. */
+  frozen: boolean;
+  zoom: number;
   hold: (el: HTMLInputElement | null) => void;
   onWrite: (value: string) => void;
   onFocus: () => void;
@@ -1462,10 +2241,15 @@ function Cell({
    * has to be read across. `align` on the style overrides it.
    */
   const numeric = typeof answer === 'number';
+  const scale = ((style?.size ?? BASE_SIZE) / BASE_SIZE) * (zoom / 100);
+  const line = '1px solid var(--app-accent-deep)';
+  const edge = style?.edge ?? '';
   return (
-    <td style={{ padding: 0 }}>
+    <td className={frozen ? 'sfreeze' : undefined}>
       <input
-        className="input"
+        className={['scell', inside && !cursor ? 'scell-in' : '', bad ? 'scell-bad' : '']
+          .filter(Boolean)
+          .join(' ')}
         ref={hold}
         value={editing ? raw : value}
         onChange={(e) => onWrite(e.target.value)}
@@ -1484,18 +2268,22 @@ function Cell({
         aria-label={`Cell ${address}`}
         spellCheck={false}
         style={{
-          width: 92,
-          height: 32,
-          borderRadius: 0,
-          fontSize: 'var(--type-sm)',
-          fontVariantNumeric: 'tabular-nums',
+          width: Math.round(92 * (zoom / 100)),
+          height: Math.round(26 * (zoom / 100)),
+          fontSize: `calc(var(--type-sm) * ${scale})`,
           textAlign: style?.align ?? (numeric ? 'right' : 'left'),
           fontWeight: style?.bold ? 600 : undefined,
           fontStyle: style?.italic ? 'italic' : undefined,
-          textDecoration: style?.strike ? 'line-through' : undefined,
-          color: bad ? 'var(--app-accent-bright)' : undefined,
-          background: inside && !cursor ? 'var(--app-accent-wash)' : undefined,
-          outline: cursor ? '1px solid var(--app-accent)' : undefined,
+          textDecoration:
+            [style?.strike ? 'line-through' : '', style?.under ? 'underline' : '']
+              .filter(Boolean)
+              .join(' ') || undefined,
+          color: style?.ink && !bad ? inkOn(style.ink) : undefined,
+          background: style?.wash ? washOn(style.wash) : undefined,
+          borderTop: edge.includes('t') ? line : undefined,
+          borderBottom: edge.includes('b') ? line : undefined,
+          borderLeft: edge.includes('l') ? line : undefined,
+          borderRight: edge.includes('r') ? line : undefined,
           fontFamily: isFormula(raw)
             ? 'ui-monospace, SFMono-Regular, Menlo, monospace'
             : undefined,
@@ -1506,187 +2294,13 @@ function Cell({
 }
 
 /**
- * The toolbar.
- *
- * Small buttons in a row that wraps, rather than the icon strip a desktop
- * spreadsheet has: the app is read on a phone first, an icon nobody
- * recognises is a button nobody presses, and `B`, `I`, `S`, `%` and `$` are
- * the five that everybody does recognise. Each one carries a real label for
- * anybody listening rather than looking.
- *
- * Everything here acts on the whole selection. That is the point of having a
- * selection: a picture is put over a column by pressing the column's letter
- * and then one button.
- */
-function Toolbar({
-  style,
-  canUndo: undoable,
-  canRedo: redoable,
-  onUndo,
-  onRedo,
-  onFormat,
-  onDecimals,
-  onWeight,
-  onAlign,
-}: {
-  style: CellStyle;
-  canUndo: boolean;
-  canRedo: boolean;
-  onUndo: () => void;
-  onRedo: () => void;
-  onFormat: (num: NumFormat) => void;
-  onDecimals: (by: number) => void;
-  onWeight: (key: 'bold' | 'italic' | 'strike') => void;
-  onAlign: (align: Align) => void;
-}) {
-  const tool = (
-    text: string,
-    says: string,
-    onClick: () => void,
-    on = false,
-    off = false,
-  ) => (
-    <button
-      key={says}
-      type="button"
-      className="btn btn-ghost"
-      onClick={onClick}
-      disabled={off}
-      aria-label={says}
-      aria-pressed={on}
-      style={{
-        flex: 'none',
-        width: 'auto',
-        padding: 'var(--sp-2) var(--sp-4)',
-        fontSize: 'var(--type-xs)',
-        background: on ? 'var(--app-accent-wash)' : undefined,
-      }}
-    >
-      {text}
-    </button>
-  );
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 'var(--sp-2)',
-        alignItems: 'center',
-        marginTop: 'var(--sp-4)',
-        paddingBottom: 'var(--sp-3)',
-        borderBottom: '1px solid var(--app-line)',
-      }}
-    >
-      {tool('↶', 'Undo', onUndo, false, !undoable)}
-      {tool('↷', 'Redo', onRedo, false, !redoable)}
-      <Rule />
-      {FORMATS.map((f) =>
-        tool(f.label, f.says, () => onFormat(f.id), (style.num ?? 'plain') === f.id),
-      )}
-      {tool('.0', 'Fewer decimal places', () => onDecimals(-1))}
-      {tool('.00', 'More decimal places', () => onDecimals(1))}
-      <Rule />
-      {tool('B', 'Bold', () => onWeight('bold'), style.bold === true)}
-      {tool('I', 'Italic', () => onWeight('italic'), style.italic === true)}
-      {tool('S', 'Strikethrough', () => onWeight('strike'), style.strike === true)}
-      <Rule />
-      {ALIGNS.map((a) => tool(a.label, `Align ${a.label.toLowerCase()}`, () => onAlign(a.id), style.align === a.id))}
-    </div>
-  );
-}
-
-/** The hairline between groups of tools. */
-function Rule() {
-  return (
-    <span
-      aria-hidden="true"
-      style={{ width: 1, height: 16, background: 'var(--app-line)', margin: '0 var(--sp-1)' }}
-    />
-  );
-}
-
-/**
- * The tab strip along the bottom.
- *
- * Every spreadsheet has one and this app's sheets were four taps apart: close
- * the sheet, find the shelf, read the list, open the other one. A gradebook
- * and the budget beside it are two things somebody moves between constantly,
- * and the strip is the whole of what makes that one tap.
- *
- * It is the account's sheets rather than tabs inside one workbook, because
- * that is what this app has: an imported workbook's tabs each arrive as a
- * sheet of their own — see `lib/xlsxin.ts` — so the strip shows exactly what
- * the file had in it, with everything else alongside.
- */
-function Tabs({
-  sheets,
-  on,
-  onGo,
-  onNew,
-}: {
-  sheets: SheetModel[];
-  on: string;
-  onGo: (id: string) => void;
-  onNew: () => void;
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        gap: 'var(--sp-2)',
-        overflowX: 'auto',
-        marginTop: 'var(--sp-4)',
-        paddingTop: 'var(--sp-3)',
-        borderTop: '1px solid var(--app-line)',
-      }}
-    >
-      {sheets.map((sheet) => (
-        <button
-          key={sheet.id}
-          type="button"
-          className="btn btn-ghost"
-          onClick={() => sheet.id !== on && onGo(sheet.id)}
-          aria-current={sheet.id === on ? 'true' : undefined}
-          style={{
-            flex: 'none',
-            width: 'auto',
-            maxWidth: 140,
-            padding: 'var(--sp-2) var(--sp-5)',
-            fontSize: 'var(--type-xs)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            background: sheet.id === on ? 'var(--app-accent-wash)' : undefined,
-          }}
-        >
-          {sheet.title || 'Untitled'}
-        </button>
-      ))}
-      <button
-        type="button"
-        className="btn btn-ghost"
-        onClick={onNew}
-        aria-label="A new sheet"
-        style={{ flex: 'none', width: 'auto', padding: 'var(--sp-2) var(--sp-5)' }}
-      >
-        <Plus size={13} />
-      </button>
-    </div>
-  );
-}
-
-/**
  * The run of cells above the one selected, as a range.
  *
- * What "Total" means when somebody presses it at the bottom of a column with
- * nothing selected, and a guess rather than an answer — which is why what
- * lands in the cell is the formula rather than the number. They can see the
- * range, and change it. With a block selected the buttons use that instead and
- * this is not called.
+ * What a weighted mark needs and the one thing `autoSum` does not answer: two
+ * columns rather than one, the scores and the weights beside them. Nothing is
+ * returned from row 1, where there is nothing above.
  *
- * `over` shifts the column right, for the second range a weighted average
- * needs. Nothing is returned from row 1, where there is nothing above.
+ * `over` shifts the column right, for the second of the two ranges.
  */
 function columnAbove(address: string, over = 0): string | null {
   const m = /^([A-Z]+)(\d+)$/.exec(address.toUpperCase());

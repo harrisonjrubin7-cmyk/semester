@@ -63,9 +63,10 @@ import { WAKING_HOURS, hoursOn } from './windows';
 import { tally } from './review';
 import { liveGuide } from './live';
 import { meetings, pairings } from './meet';
+import { codeOf } from './call';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
-import { dateToIso, shiftIso } from './date';
+import { dateToIso, isoToDate, longLabel, shiftIso } from './date';
 import { billFor, money } from './bill';
 import { forTerm as costsFor, total } from './cost';
 
@@ -611,6 +612,25 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         hero: { label: 'Classmates', figure: num(courses), foot: courses === 0 ? 'No courses to share yet' : 'rooms, one per class' },
         stats: term,
       };
+
+    case 'call': {
+      /*
+       * The next call in the diary, because a scheduled call is an ordinary
+       * appointment — see `whereFor` in `lib/call.ts`. Counting them is the
+       * only honest fact this screen has above the fold: how many people are
+       * in a call right now is a thing nobody knows until they walk in.
+       */
+      const scheduled = state.appointments
+        .filter((a) => codeOf(a) && a.date >= iso)
+        .sort((a, b) => (a.date === b.date ? a.at - b.at : a.date < b.date ? -1 : 1));
+      const next = scheduled[0];
+      return {
+        hero: next
+          ? { label: 'Next call', meta: next.time, said: next.title, foot: longLabel(isoToDate(next.date)) }
+          : { label: 'Video call', said: 'Nothing scheduled.', foot: 'Start one, or join with a code' },
+        stats: term,
+      };
+    }
 
     case 'activities':
       // Active ones, because that is what the screen this opens counts, and a

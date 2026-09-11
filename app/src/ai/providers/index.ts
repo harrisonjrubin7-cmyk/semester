@@ -89,6 +89,7 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   mail: campus.mail,
   yes: campus.yes,
   classmates: campus.classmates,
+  call: campus.call,
   activities: campus.activities,
   links: campus.links,
 

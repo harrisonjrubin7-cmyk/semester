@@ -48,6 +48,9 @@ const Behind = lazy(() => import('./screens/Behind').then((m) => ({ default: m.B
 const Degree = lazy(() => import('./screens/Degree').then((m) => ({ default: m.Degree })));
 const People = lazy(() => import('./screens/People').then((m) => ({ default: m.People })));
 const Meet = lazy(() => import('./screens/Meet').then((m) => ({ default: m.Meet })));
+// The call, and everything it drags in — a peer connection, an audio meter,
+// the signalling channel. Nobody opening Today should download any of it.
+const Call = lazy(() => import('./screens/call/Index').then((m) => ({ default: m.Call })));
 const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
 const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
@@ -134,6 +137,7 @@ import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
 import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
+import { TabStrip, TabsFollow } from './components/Tabs';
 import { AllApps } from './components/nav/AllApps';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
@@ -414,6 +418,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'One thumb, and the walk taken off', title: 'Between classes' };
     case 'groupwork':
       return { kicker: 'Who has what, and by when', title: 'Group work' };
+    case 'call':
+      return { kicker: 'A code, a link, and who is in it', title: 'Video call' };
     case 'meals':
       return { kicker: 'Swipes, cash, and the week they run out', title: 'Meal plan' };
     case 'housing':
@@ -1021,6 +1027,8 @@ function CurrentScreen() {
       return <Gap />;
     case 'groupwork':
       return <Groupwork />;
+    case 'call':
+      return <Call />;
     case 'meals':
       return <Meals />;
     case 'housing':
@@ -1377,11 +1385,33 @@ export default function App() {
               portals it into `.device` regardless — mounted here so the two
               overlays are read in one place rather than found separately. */}
           {state.apps && <AllApps onClose={() => dispatch({ type: 'apps', open: false })} />}
+          {/* And the piece that keeps the tab strip honest: a tab records the
+              place you navigated to, however you got there — from the strip,
+              the tab bar, a link in an answer, or the browser's own Back. See
+              `components/Tabs.tsx`. */}
+          <TabsFollow />
           {/* And the capture box, for the same reason and with the same
               answer: its one field was a white browser textbox out here, and
               with nothing capping it its explanation ran the full width of a
               laptop in a single line. See its own `position`. */}
           {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+          {/*
+            The tabs, on the window rather than only inside the search
+            overlay.
+
+            This is what makes them worth having: the places you have open
+            are one click away from wherever you are, with nothing opened and
+            nothing dismissed on the way. It draws itself from the second tab
+            onwards — a row of chrome that can never do anything is a row
+            people learn to look past — and it is above the header because a
+            strip that sat under the title of the screen it switches would
+            read as part of that screen.
+
+            The phone reaches the same strip through the search overlay.
+            Forty pixels of permanent chrome is a different trade on a screen
+            that is 800 tall and mostly thumb.
+          */}
+          <TabStrip />
           <Header />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
@@ -1466,6 +1496,19 @@ export default function App() {
       {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
       {/* The launcher, on this layout too. See the wide layout's copy. */}
       {state.apps && <AllApps onClose={() => dispatch({ type: 'apps', open: false })} />}
+      {/* And the follower, on this layout too. See the wide layout's copy. */}
+      <TabsFollow />
+      {/*
+        The tabs on this layout too, from the second one onwards.
+
+        A phone has no room for permanent chrome, and this is not permanent:
+        with one tab open it is not drawn at all. It appears the moment there
+        is somewhere to switch to — which is the point at which a row of tabs
+        is worth forty pixels, and the moment a result opened from search
+        stops being a place you could only get back to by searching for it
+        again.
+      */}
+      <TabStrip />
       <Header />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />

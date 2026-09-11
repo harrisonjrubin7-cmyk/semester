@@ -702,6 +702,15 @@ export interface Ephemeral {
   itemId: string;
   eventId: string;
   guideId: CourseId;
+  /**
+   * The call this device is in or about to join — a code, or ''.
+   *
+   * Ephemeral, and that is the whole design of it: a call is a thing happening
+   * now, and a code restored from last week's storage would put somebody in a
+   * green room for a call that ended on Tuesday. It is in the URL, though,
+   * which is what makes a link worth sending — see `lib/route.ts`.
+   */
+  callCode: string;
   mode: StudyMode;
   episodeId: string | null;
   filter: string;
@@ -1080,6 +1089,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     itemId: 'bus-ga1',
     eventId: 'e1',
     guideId: 'econ',
+    callCode: '',
     mode: 'cards',
     episodeId: null,
     filter: 'All',
@@ -1514,6 +1524,16 @@ export type Action =
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }
   | { type: 'openEvent'; id: string }
+  /**
+   * Open the call screen on a code — or on none, which is the lobby.
+   *
+   * One action for both directions, including the one that looks like it
+   * should not need it: leaving a call dispatches this with an empty code, so
+   * the address bar stops naming a call nobody is in. Doing that as a plain
+   * `go` would leave `#/call/bcd-fghj-kmn` in the history, and Back would walk
+   * somebody straight into a green room for the call they just left.
+   */
+  | { type: 'openCall'; code: string }
   | { type: 'openGuide'; id: CourseId; mode?: StudyMode; from?: Screen; unit?: number }
   | { type: 'setMode'; mode: StudyMode }
   | { type: 'setEpisode'; id: string }

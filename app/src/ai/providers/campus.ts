@@ -1,6 +1,8 @@
 import { forTerm as balancesFor, pace } from '../../lib/meals';
 import { forTerm as costsFor, money, total } from '../../lib/cost';
 import { aidKindOf, billFor, chargeKindOf, forTerm as billRowsFor } from '../../lib/bill';
+import { codeOf } from '../../lib/call';
+import { dateToIso } from '../../lib/date';
 import type { Provide } from '../shape';
 
 /**
@@ -260,6 +262,40 @@ export const classmates: Provide = (look) => ({
   actions: ['open_screen'],
   suggestions: ['What is worth asking a classmate rather than the professor?'],
 });
+
+/**
+ * A call — what is booked, and the code for it.
+ *
+ * Nothing about a call in progress: the assistant is not in the call, nobody
+ * in it agreed to be described to a model, and the chat inside one is never
+ * saved unless somebody chooses to keep it. What is here is the diary — the
+ * calls that are booked are ordinary appointments, and an appointment is
+ * already something the student asked the app to hold.
+ */
+export const call: Provide = (look) => {
+  const { state, now } = look;
+  const iso = dateToIso(now);
+  const booked = state.appointments
+    .filter((a) => codeOf(a) && a.date >= iso)
+    .sort((a, b) => (a.date === b.date ? a.at - b.at : a.date < b.date ? -1 : 1));
+  return {
+    summary:
+      booked.length === 0
+        ? 'Video call — nothing booked. A call can be started now, or scheduled into the calendar.'
+        : `Video call — ${booked.length} booked, the next on ${booked[0].date} at ${booked[0].time}.`,
+    visible: booked.slice(0, 10).map((a) => ({
+      title: a.title,
+      date: a.date,
+      time: a.time,
+      code: codeOf(a),
+    })),
+    actions: ['open_screen'],
+    suggestions: [
+      'When is my next study call?',
+      'What should we cover on the call?',
+    ],
+  };
+};
 
 /** Activities — clubs, a job, research, a team, and what the week costs. */
 export const activities: Provide = (look) => {
