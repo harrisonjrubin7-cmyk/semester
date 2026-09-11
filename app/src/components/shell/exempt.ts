@@ -38,6 +38,7 @@ export const EXEMPT: Screen[] = [
   'ask',
   'mail',
   'proof',
+  'classmates',
   // Drawn output, and one large object rather than a list.
   'calendar',
   'drill',
@@ -86,8 +87,15 @@ export function isCanvas(screen: Screen): boolean {
  * way it does in every other chat anybody has used. So the shell must not
  * reserve space beneath it — see `.scrollarea.is-filled` in `styles/app.css`
  * for what that reservation was doing there and why it is wrong here.
+ *
+ * There are two of them now, and the second is the reason to state the test
+ * rather than the name: Classmates is a class conversation with a list of
+ * rooms beside it, so it is the same shape for the same reason — a scrolling
+ * transcript, a composer on the bottom edge, and its own scroller inside.
+ * Whatever is added here has to answer the same question, and the answer is
+ * about the screen's own layout rather than about whose messages it shows.
  */
-export const FILLS: Screen[] = ['ask'];
+export const FILLS: Screen[] = ['ask', 'classmates'];
 
 export function fills(screen: Screen): boolean {
   return FILLS.includes(screen);

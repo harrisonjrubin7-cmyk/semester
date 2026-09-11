@@ -148,6 +148,25 @@ all three on screen:
   `ALL CHECKS PASSED`. What it cannot cover is realtime delivery, which is a
   websocket rather than a policy and still wants one real second device.
 
+### Optional · Reactions, and who is in the room
+
+The class chat works on `classmates.sql` alone. Two things in it need one more
+file: the faces under a message, and the dot beside somebody who has the room
+open. SQL Editor → New query → paste [`supabase/rooms.sql`](supabase/rooms.sql)
+→ Run, after `classmates.sql`. Safe to run twice.
+
+Both fail to nothing rather than to an error. Without the table the room draws
+the conversation and no reactions, and the first tap on a face says which file
+to run. Without the presence policies the live channel is refused and the room
+shows no dots — which costs an ornament, not the conversation.
+
+The presence half is the only place in this project that writes a policy on
+`realtime.messages`. A channel with no authorization is joinable by anything
+holding the publishable key, so presence on one would publish which accounts
+are online in which class to anybody who guessed the topic. The policy puts
+that channel behind the same two questions as every table here: are you
+verified, and are you in this class.
+
 ### Optional · Group work
 
 A shared checklist for a group project, inside a class room. SQL Editor → New
