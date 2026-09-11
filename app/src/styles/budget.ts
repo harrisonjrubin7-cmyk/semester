@@ -41,7 +41,7 @@ export const BUDGET: Budget = {
   'components/CheckIt.tsx': { type: 6, leading: 1, space: 7, shorthand: 3, dim: 5 },
   'components/Clashes.tsx': { leading: 1, space: 2, shorthand: 2, dim: 2 },
   'components/CloseTerm.tsx': { type: 2, space: 3, shorthand: 1, dim: 6 },
-  'components/Command.tsx': { type: 1, leading: 2, space: 1, shorthand: 6, dim: 4 },
+  'components/Command.tsx': { type: 1 },
   'components/Credentials.tsx': { space: 5, dim: 4 },
   'components/Cutoffs.tsx': { type: 2, space: 1, shorthand: 2, dim: 5 },
   'components/DeadlineRow.tsx': { space: 1, shorthand: 1 },
