@@ -91,7 +91,26 @@ export function DeadlinePicker({
    */
   if (options.length === 0 && !stray) return null;
 
-  const capped = showAll ? options : options.slice(0, VISIBLE);
+  /*
+   * The first eight — plus the chosen one, wherever it sits.
+   *
+   * The cap used to hide the selection: a sheet filed against the ninth
+   * deadline of a heavy course drew eight chips with none of them pressed, so
+   * the screen said the sheet was for nothing while the record said otherwise,
+   * and the only way to see the truth was to press "N more" on a hunch. The
+   * caller cannot fix this by seeding `showAll` — it would have to know the
+   * cap — so it is fixed here, for all six of them at once.
+   *
+   * Appended rather than promoted, so the order of the first eight does not
+   * shuffle under somebody comparing them, and the count below stays exact.
+   */
+  const first = options.slice(0, VISIBLE);
+  const chosen = options.find((o) => o.id === value);
+  const capped = showAll
+    ? options
+    : chosen && !first.includes(chosen)
+      ? [...first, chosen]
+      : first;
   const hidden = options.length - capped.length;
 
   return (

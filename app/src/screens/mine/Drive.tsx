@@ -237,13 +237,21 @@ export function Drive() {
    * and the next one added would have been the tenth to forget. `refresh` runs
    * either way: after a failure it is what puts the row back to what is
    * actually stored, which is the honest thing to show.
+   *
+   * It answers whether the write landed, and that is not decoration. Catching
+   * without saying so was its own bug: a caller that does two writes in a row
+   * carried on to the second after the first had failed, and finished by
+   * telling the panel a change had happened that had not. A caller doing one
+   * write can ignore the answer; a caller doing two must not.
    */
-  const act = async (run: Promise<unknown>, what = 'That change') => {
+  const act = async (run: Promise<unknown>, what = 'That change'): Promise<boolean> => {
     try {
       await run;
       setTrouble('');
+      return true;
     } catch {
       setTrouble(`${what} could not be saved. There may be no room left on this device.`);
+      return false;
     } finally {
       refresh();
     }
@@ -589,14 +597,20 @@ export function Drive() {
            * filing names something the new course does not contain.
            */
           onCourse={async (courseId) => {
-            await act(tagFile(filing.id, courseId), 'The course');
-            await act(pinFile(filing.id, null), 'The deadline');
+            // Stop on the first failure. Going on would clear the deadline of
+            // a file that is still in its old course, and then tell the panel
+            // it had moved — two writes disagreeing with the one record they
+            // both describe.
+            if (!(await act(tagFile(filing.id, courseId), 'The course'))) return;
+            if (!(await act(pinFile(filing.id, null), 'The deadline'))) return;
             setFiling({ ...filing, courseId, itemId: null });
           }}
           onClose={() => setFiling(null)}
           onPick={async (itemId) => {
-            await act(pinFile(filing.id, itemId), 'The deadline');
-            setFiling(null);
+            // The panel stays open on a failure, with the sentence above the
+            // list saying why — closing it would report a write that did not
+            // happen as done.
+            if (await act(pinFile(filing.id, itemId), 'The deadline')) setFiling(null);
           }}
         />
       )}

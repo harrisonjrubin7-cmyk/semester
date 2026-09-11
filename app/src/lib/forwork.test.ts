@@ -298,3 +298,24 @@ describe('naming a deadline from any term', () => {
     expect(forLine([{ id: 'a', title: 'A' }], 'gone')).toBe('');
   });
 });
+
+describe('the picker cap', () => {
+  /*
+   * `DeadlinePicker` shows the first eight and hides the rest behind "N more".
+   * The list it caps is this one, and the property that matters is that the
+   * chosen deadline is reachable at all — a course whose ninth deadline is the
+   * one somebody filed against drew eight chips with none pressed, which said
+   * the thing was filed nowhere while the record said otherwise. The component
+   * appends the chosen one; this holds the ordering it appends from.
+   */
+  it('puts a deadline three weeks out beyond the first eight of a heavy course', () => {
+    const many = Array.from({ length: 12 }, (_, n) =>
+      item(`q${n}`, { date: new Date(2026, 8, n + 1) }),
+    );
+    const order = pickable(many, 'econ').map((i) => i.id);
+    expect(order).toHaveLength(12);
+    expect(order.slice(0, 8)).toEqual(['q0', 'q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7']);
+    // The one the component has to append rather than drop.
+    expect(order.indexOf('q11')).toBe(11);
+  });
+});

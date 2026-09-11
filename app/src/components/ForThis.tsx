@@ -206,6 +206,12 @@ export function ForThis({ item }: { item: DatedItem }) {
         <FilePick
           block={false}
           tone="bare"
+          /* Shut while a write is in flight. The picker used to stay live
+             through the await, so a second selection started a second handler
+             over the same list and filed the same reading twice. `busy` is
+             cleared in the loop's `finally`, which re-opens it. The drive's
+             own Add files does this and this did not. */
+          disabled={busy !== ''}
           onPick={onPick}
           style={{ display: 'inline-flex', width: 'auto' }}
         >
