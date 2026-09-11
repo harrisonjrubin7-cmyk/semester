@@ -269,6 +269,18 @@ export function Drive() {
     await moveFile(id, folderId);
     if (isCourseFolder(folderId)) {
       await tagFile(id, (folderId as string).slice('course:'.length));
+      /*
+       * And the deadline goes with the course, exactly as it does when the
+       * course is chosen by chip.
+       *
+       * This is the one path that retags a course without going through a
+       * `CoursePicker`, so it was the one that could leave a file tagged PSCI
+       * with an ECON deadline on it — the cross-course state the pickers were
+       * taught to make impossible. Dragging a reading into a course folder is
+       * a common thing to do and it must not be the way round the rule. See
+       * the note in `screens/Write.tsx`.
+       */
+      await pinFile(id, null);
     }
     refresh();
   };
@@ -603,14 +615,26 @@ export function Drive() {
             // both describe.
             if (!(await act(tagFile(filing.id, courseId), 'The course'))) return;
             if (!(await act(pinFile(filing.id, null), 'The deadline'))) return;
-            setFiling({ ...filing, courseId, itemId: null });
+            /*
+             * Only if the panel is still the one that asked.
+             *
+             * Two awaits sit between the press and here, and Done is reachable
+             * throughout them — so a plain `setFiling` reopened a panel
+             * somebody had already closed, over a file they had stopped
+             * looking at. Comparing the object rather than the id because that
+             * is what identifies *this* opening of it.
+             */
+            setFiling((open) => (open === filing ? { ...filing, courseId, itemId: null } : open));
           }}
           onClose={() => setFiling(null)}
           onPick={async (itemId) => {
             // The panel stays open on a failure, with the sentence above the
             // list saying why — closing it would report a write that did not
             // happen as done.
-            if (await act(pinFile(filing.id, itemId), 'The deadline')) setFiling(null);
+            // Closed only if it is still open on this file, for the reason above.
+            if (await act(pinFile(filing.id, itemId), 'The deadline')) {
+              setFiling((open) => (open === filing ? null : open));
+            }
           }}
         />
       )}
