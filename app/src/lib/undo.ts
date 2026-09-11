@@ -91,6 +91,22 @@ export const UNDOABLE: Record<string, Undoable> = {
   deleteNote: { label: 'Note deleted', fields: ['notes'] },
   dropSource: { label: 'Source removed', fields: ['sources'] },
   dropSitting: { label: 'Paper removed', fields: ['sittings'] },
+  /*
+   * The three things you make in this app and can delete from a menu.
+   *
+   * They were deleted by a full-width button at the foot of the editor, which
+   * is a place nobody presses by accident. They are deleted from the File menu
+   * now — the place every other application puts it, and one slip from Save
+   * — so the toast matters more here than anywhere else in this table.
+   *
+   * A document's earlier drafts do not come back with it: they are dropped
+   * from IndexedDB at the moment of deleting, on purpose, and undo restores
+   * state rather than storage. The thing you were writing comes back; the
+   * twenty copies of it do not.
+   */
+  deleteDocument: { label: 'Document deleted', fields: ['documents'] },
+  deleteSheet: { label: 'Sheet deleted', fields: ['sheets'] },
+  deleteDeck: { label: 'Deck deleted', fields: ['decks'] },
 };
 
 /** How long the toast stays up. Long enough to notice, short enough to ignore. */

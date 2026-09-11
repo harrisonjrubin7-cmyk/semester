@@ -304,6 +304,56 @@ be asked for — and `lookup.test.ts` runs every lookup against a state holding 
 private note, a task note, another person and a letter, and asserts none of them
 comes back.
 
+## The three screens that make a file
+
+Write, Sheet and the deck editor are the app's answers to a word processor, a
+spreadsheet and a slide deck, and each of them had grown its own furniture.
+The title was a form field on two of them and absent on the third. The exports
+were three stacked buttons under "Take it away" on one, four under the same
+words on the next, and a single button in a corner on the third. Deleting the
+thing you were editing was a full-width button at the very bottom of the page,
+under the exports. None of them had the one thing every editor a student has
+ever opened has: a bar across the top reading **File Edit View Insert Format
+Tools Help**.
+
+All three open the same way now, and it is the way those applications open.
+
+- **`lib/menus.ts`** holds a menu bar as a value — a list of menus, each a list
+  of groups, each a list of commands. The rules are testable because of that:
+  a command with nothing behind it is drawn greyed rather than live, the menus
+  read in the order Word, Docs, Excel, Sheets, PowerPoint and Keynote all use,
+  and an id used twice fails the suite rather than silently dropping an item.
+- **`components/Bench.tsx`** draws it: the type's glyph, the title as the
+  heading it is rather than as a box, the menu bar, and a toolbar. Above 760px
+  the bar is the row of names; below it, all of them fold into one button whose
+  panel lists every menu under its own name. That is the whole responsive rule
+  — the title, the toolbar and everything under them are identical at every
+  width.
+- **`components/Gallery.tsx`** is the screen each of them opens on: a row of
+  things to start from, then everything you already have, cut into Today /
+  Previous 7 days / Previous 30 days / Earlier, as thumbnails or as rows, sorted
+  by when you last opened it, by name, or by when it was made. `lib/shelf.ts`
+  does the sorting and the grouping and is tested on its own.
+
+The thumbnails are the real thing at small size: a document's own first lines,
+a sheet's top-left corner as a grid, a deck's first slide as a slide. So is the
+row of starters — the seven document shapes in `lib/doctemplates.ts` used to be
+behind a button that had to be pressed before anybody could find out there were
+any, and the gradebook Sheet can build from a syllabus's own weights is now a
+card with that gradebook drawn on it.
+
+Two things are deliberately not here. There are **no keystrokes printed beside
+the commands**, because `lib/keys.ts` is right that a shortcut carrying Meta or
+Control belongs to the browser — and a label for a binding the app has not made
+would be worse than no label. And the **formula bar** Sheet gained is a full
+field above the grid rather than the sentence under it that it replaced,
+because a sentence saying `B7: =SUM(B1:B6) → 88` is honest and cannot be typed
+into.
+
+`screens/files.test.tsx` mounts all three cold, starts a file from the shelf the
+way somebody would, and reads the bar off the DOM — at a laptop width and at a
+phone's.
+
 ## What persists
 
 `localStorage`, under `semester.v1`: ticked tasks, saved events, alert

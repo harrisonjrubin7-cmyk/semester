@@ -394,6 +394,44 @@ any of them — `make_document`, `make_sheet` and `save_equation` in
 `app/src/lib/tools.ts` — as a confirmation you accept, with an undo decided
 before the write happens like every other tool in that file.
 
+### They open the way every editor opens
+
+Three screens that make a file, and until now each had invented its own
+furniture: the title was a form field on two of them and absent on the third,
+the exports were three stacked buttons under "Take it away" on one and four
+under the same words on the next, and deleting the thing you were editing was a
+full-width button at the very bottom of the page. None of them had the one thing
+Word, Pages, Excel, Docs, Sheets and Keynote all have — a bar across the top
+reading **File · Edit · View · Insert · Format · Tools · Help**.
+
+They all have it now, and it is the same bar, drawn once from a list. A menu
+item with nothing behind it is greyed rather than left live, because a control
+that does nothing when pressed cannot be told from a broken one. The menus read
+in the order those applications read them, which is the order in the muscle
+memory of anybody who has used any of them — so the reading is free, and a test
+fails rather than a screen inventing a seventh menu called Actions. On a phone
+the whole bar folds into one button whose panel lists every menu under its own
+name; nothing is hidden, because a menu you have to discover by dragging a row
+sideways is a menu that does not exist.
+
+Each of the three opens on the same shelf, too: a row of things to start
+from — a blank, then the seven document shapes that used to be behind a button
+nobody pressed, or the gradebook built from a course's own syllabus weights —
+and then everything you already have, under **Today**, **Previous 7 days**,
+**Previous 30 days** and **Earlier**, as thumbnails or as rows, narrowable to
+one course. The thumbnails are the real thing small: a document's own first
+lines, a sheet's top-left corner as a grid, a deck's first slide as a slide.
+
+Sheet gained the two things a spreadsheet has had since 1985 and this one did
+not — a **formula bar**, which is the sentence that used to sit under the grid
+turned into a field you can actually type into, and the **strip of tabs along
+the bottom** that says what else is in here.
+
+What is deliberately absent is keystrokes printed beside the commands.
+`app/src/lib/keys.ts` is right that a shortcut carrying Meta or Control belongs
+to the browser, and a label for a binding the app has not made is worse than no
+label at all.
+
 ## Claude, in the app
 
 **Study → Ask Claude.** The course guide, its deadlines and what you are
