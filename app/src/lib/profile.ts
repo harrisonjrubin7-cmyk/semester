@@ -179,16 +179,32 @@ export function held(rows: Row[], courses: number): Held[] {
 }
 
 /**
- * One line saying how long this semester has been kept.
+ * One line about the age of what is here.
  *
- * Empty where there is nothing dated to measure, which is a new install — and
- * "kept since today" is a sentence that says nothing.
+ * ## What this is careful not to claim
+ *
+ * It said "your semester has been on this device for N days", and the number
+ * came from `inventory`'s span — the oldest timestamp found anywhere in the
+ * saved state. Those are not the same fact. Restore a backup, sign in on a
+ * second device, or import a course from last spring, and the oldest record is
+ * older than this device has held anything; the app would have reported the
+ * age of a note as the age of an install, confidently and wrongly, on the one
+ * screen whose job is to say what it knows about you.
+ *
+ * There is no arrival timestamp to use instead. Nothing in `Persisted` records
+ * when the app first ran here — `lastSeen` is when this device last had it
+ * *open*, which is a different thing again — so rather than invent one, the
+ * sentence now says the thing the span actually measures. `screens/Data.tsx`
+ * words the same figure the same way: "Spanning <date> to <date>."
+ *
+ * Empty where there is nothing dated to measure, which is a new install, and
+ * empty under a day, where "0 days old" is a sentence that says nothing.
  */
-export function sinceLine(span: { from: number; to: number } | null, now = Date.now()): string {
+export function oldestLine(span: { from: number; to: number } | null, now = Date.now()): string {
   if (!span) return '';
   const days = Math.floor((now - span.from) / 86_400_000);
   if (days < 1) return '';
-  if (days < 30) return `Your semester has been on this device for ${days} days.`;
+  if (days < 30) return `The oldest record here is ${days} days old.`;
   const months = Math.round(days / 30);
-  return `Your semester has been on this device for about ${months} month${months === 1 ? '' : 's'}.`;
+  return `The oldest record here is about ${months} month${months === 1 ? '' : 's'} old.`;
 }

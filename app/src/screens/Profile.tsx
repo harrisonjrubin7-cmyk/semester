@@ -7,7 +7,7 @@ import { Avatar } from '../components/Avatar';
 import { ActionButton, SectionLabel } from '../components/ui';
 import { CustomRow, Group, NavRow } from '../components/shell/Rows';
 import { inventory } from '../lib/inventory';
-import { heading, held, named, saidAbout, sinceLine } from '../lib/profile';
+import { heading, held, named, oldestLine, saidAbout } from '../lib/profile';
 import { roleOf } from '../lib/role';
 import { cloudConfigured } from '../lib/cloud';
 
@@ -64,7 +64,7 @@ export function Profile() {
   const store = useMemo(() => inventory(pickPersisted(state)), [state]);
   const holdings = held(store.rows, catalog.courses.length);
   const said = saidAbout({ account, status: sync.status, at: sync.at });
-  const kept = sinceLine(store.span);
+  const kept = oldestLine(store.span);
   const role = roleOf(state.role);
 
   return (

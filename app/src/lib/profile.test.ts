@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
-import { agoLine, held, heading, initials, named, saidAbout, sinceLine } from './profile';
+import { agoLine, held, heading, initials, named, oldestLine, saidAbout } from './profile';
 import type { Row } from './inventory';
 import { sources, withoutComments } from '../styles/rules';
 
@@ -140,18 +140,35 @@ describe('what the app holds about you', () => {
   });
 });
 
-describe('how long it has been kept', () => {
+describe('the age of what is here', () => {
   const now = Date.UTC(2026, 8, 11, 12, 0);
 
   it('says nothing on a first day, because there is nothing to say', () => {
-    expect(sinceLine(null, now)).toBe('');
-    expect(sinceLine({ from: now - 3_600_000, to: now }, now)).toBe('');
+    expect(oldestLine(null, now)).toBe('');
+    expect(oldestLine({ from: now - 3_600_000, to: now }, now)).toBe('');
   });
 
   it('counts days, then months', () => {
-    expect(sinceLine({ from: now - 9 * 86_400_000, to: now }, now)).toContain('9 days');
-    expect(sinceLine({ from: now - 90 * 86_400_000, to: now }, now)).toContain('3 months');
-    expect(sinceLine({ from: now - 32 * 86_400_000, to: now }, now)).toContain('1 month.');
+    expect(oldestLine({ from: now - 9 * 86_400_000, to: now }, now)).toContain('9 days');
+    expect(oldestLine({ from: now - 90 * 86_400_000, to: now }, now)).toContain('3 months');
+    expect(oldestLine({ from: now - 32 * 86_400_000, to: now }, now)).toContain('1 month old');
+  });
+
+  /*
+   * The claim this line is not allowed to make.
+   *
+   * `inventory`'s span is the oldest timestamp in the saved state, which after
+   * a restore, a sync from a second device or an import of last spring's
+   * course is older than this device has held anything. The sentence used to
+   * report that as how long the semester had been on this device. Nothing in
+   * `Persisted` records an arrival, so the line says what it measures instead.
+   */
+  it('talks about the record, never about the device or an install', () => {
+    const said = oldestLine({ from: now - 200 * 86_400_000, to: now }, now);
+    expect(said).toContain('record');
+    for (const claim of ['device', 'installed', 'since you', 'using']) {
+      expect(said.toLowerCase(), claim).not.toContain(claim);
+    }
   });
 });
 
