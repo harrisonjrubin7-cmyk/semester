@@ -49,25 +49,26 @@ begin
   raise notice 'ok  % (% rows)', what, got;
 end $$;
 
--- Ana and Ben take BUS 1600. Cara takes something else.
+-- Ana and Ben take BUS 1600. Cara takes something else. The codes carry the
+-- school, because that is what a room is keyed by — see classmates-schools.sql.
 do $$
 begin
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   insert into public.profiles (user_id, handle) values (auth.uid(), 'ana')
     on conflict (user_id) do update set handle = 'ana';
-  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'BUS 1600')
+  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'vanderbilt/BUS 1600')
     on conflict do nothing;
 
   perform pg_temp.become('22222222-2222-2222-2222-222222222222');
   insert into public.profiles (user_id, handle) values (auth.uid(), 'ben')
     on conflict (user_id) do update set handle = 'ben';
-  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'BUS 1600')
+  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'vanderbilt/BUS 1600')
     on conflict do nothing;
 
   perform pg_temp.become('33333333-3333-3333-3333-333333333333');
   insert into public.profiles (user_id, handle) values (auth.uid(), 'cara')
     on conflict (user_id) do update set handle = 'cara';
-  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'ECON 1020')
+  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'vanderbilt/ECON 1020')
     on conflict do nothing;
 end $$;
 
@@ -78,7 +79,7 @@ declare g uuid; n bigint;
 begin
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   insert into public.groups (term, code, name, created_by)
-  values ('2026FA', 'BUS 1600', 'Opera Philadelphia case', auth.uid())
+  values ('2026FA', 'vanderbilt/BUS 1600', 'Opera Philadelphia case', auth.uid())
   returning id into g;
   insert into public.group_members (group_id, user_id) values (g, auth.uid());
 
@@ -102,7 +103,7 @@ begin
   perform pg_temp.become('33333333-3333-3333-3333-333333333333');
   begin
     insert into public.groups (term, code, name, created_by)
-    values ('2026FA', 'BUS 1600', 'Sneaking in', auth.uid());
+    values ('2026FA', 'vanderbilt/BUS 1600', 'Sneaking in', auth.uid());
     raise exception 'FAILED: an outsider started a group in a class';
   exception
     when insufficient_privilege then
