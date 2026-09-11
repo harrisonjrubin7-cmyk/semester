@@ -32,6 +32,29 @@ describe('the letters in the circle', () => {
 
   it('keeps letters that are not Latin', () => {
     expect(initials('Ямал Ким')).toBe('ЯК');
+    // Scripts with no capitals at all keep their letter rather than losing it
+    // to a search for one that does not exist.
+    expect(initials('明 华')).toBe('明华');
+    expect(initials('سارة')).toBe('س');
+  });
+
+  /*
+   * Uppercasing can make a letter longer, which is the one way a function that
+   * takes two code points returns three glyphs.
+   *
+   * `'ß'.toUpperCase()` is `SS`, `'ﬁ'` is `FI`, `'ŉ'` is `ʼN`. Uppercasing the
+   * *pair* — the obvious way to write this — put three characters in a box
+   * drawn for two, on a 22px button in the header.
+   */
+  it('stays at two letters where uppercasing a letter makes it longer', () => {
+    expect(initials('ßarah Aoki')).toBe('SA');
+    expect(initials('ﬁona')).toBe('F');
+    // The first capital in the expansion, not the first code point: `ŉ`
+    // uppercases to `ʼN`, and an apostrophe is not an initial.
+    expect(initials('ŉora Vance')).toBe('NV');
+    for (const name of ['ßarah Aoki', 'ﬁona', 'ŉora Vance', 'Harrison Rubin', 'Ямал Ким']) {
+      expect([...initials(name)].length, name).toBeLessThanOrEqual(2);
+    }
   });
 
   /*

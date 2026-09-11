@@ -36,16 +36,31 @@ import type { Row } from './inventory';
  * Two words give two letters, one word gives one, and no name gives an empty
  * string — see the note above about why this does not look at the email.
  * Non-letters are skipped rather than drawn: "J.R.R." is `JR`, not `J.`.
+ *
+ * ## Why the case conversion happens one letter at a time
+ *
+ * Because uppercasing can make a letter longer. `'ß'.toUpperCase()` is `SS`,
+ * `'ﬁ'` is `FI`, `'ŉ'` is `ʼN` — one code point in, two out. Taking two code
+ * points and uppercasing the pair, which is the obvious way to write this,
+ * turned "SSarah Aoki" into `SSA`: three glyphs in a box drawn for two, on a
+ * 22px button in the header. So each letter is uppercased on its own and the
+ * first code point of the result is what is kept, which is the initial
+ * somebody would actually write.
  */
+function initial(word: string): string {
+  const letter = [...word].find((c) => /\p{L}/u.test(c)) ?? '';
+  // Of the *uppercased* letter, not the uppercase of the first — see above.
+  // The first capital in it where it has one, so `ŉ` → `ʼN` → `N` rather than
+  // an apostrophe; and the first code point where it has none, which is every
+  // script that does not have capitals at all: 明, א, ا keep their letter.
+  const upper = [...letter.toUpperCase()];
+  return upper.find((c) => /\p{Lu}/u.test(c)) ?? upper[0] ?? '';
+}
+
 export function initials(name: string): string {
-  const words = name
-    .trim()
-    .split(/[\s.]+/)
-    .map((w) => [...w].find((c) => /\p{L}/u.test(c)) ?? '')
-    .filter(Boolean);
-  if (words.length === 0) return '';
-  const letters = words.length === 1 ? [words[0]] : [words[0], words[words.length - 1]];
-  return letters.join('').toUpperCase();
+  const letters = name.trim().split(/[\s.]+/).map(initial).filter(Boolean);
+  if (letters.length === 0) return '';
+  return letters.length === 1 ? letters[0] : letters[0] + letters[letters.length - 1];
 }
 
 /**
