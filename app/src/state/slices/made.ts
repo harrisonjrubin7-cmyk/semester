@@ -49,7 +49,25 @@ export function made(state: State, action: Action): State | null {
     }
 
     case 'openDocument':
-      return push({ ...state, documentId: action.id, blockAt: null }, 'write');
+      /*
+       * Opening is recorded, the way `openSheet` below records it.
+       *
+       * Without it the shelf's default order is called "Last opened" and is
+       * last *edited* — so a document you read this morning and did not type
+       * into sits where it was, under a heading that says it has not been
+       * touched in a month. Same field, same reason, as a sheet's.
+       */
+      return push(
+        {
+          ...state,
+          documents: state.documents.map((d) =>
+            d.id === action.id ? { ...d, opened: Date.now() } : d,
+          ),
+          documentId: action.id,
+          blockAt: null,
+        },
+        'write',
+      );
 
     case 'closeDocument':
       return { ...state, documentId: null, blockAt: null };
@@ -195,7 +213,14 @@ export function made(state: State, action: Action): State | null {
     }
 
     case 'editDeck':
-      return push({ ...state, deckId: action.id }, 'deck');
+      return push(
+        {
+          ...state,
+          decks: state.decks.map((d) => (d.id === action.id ? { ...d, opened: Date.now() } : d)),
+          deckId: action.id,
+        },
+        'deck',
+      );
 
     case 'closeDeck':
       return { ...state, deckId: null };

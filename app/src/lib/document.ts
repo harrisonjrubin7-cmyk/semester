@@ -72,6 +72,16 @@ export interface Doc {
   blocks: Block[];
   created: number;
   updated: number;
+  /**
+   * When it was last opened, which is not when it was last changed.
+   *
+   * What the shelf's default order sorts by, and the reason it can be called
+   * "Last opened" honestly. Absent on everything made before this existed, and
+   * read as "not since" rather than as the epoch — `lib/shelf.ts` falls back to
+   * when it was last written to. The same field, for the same reason, as
+   * `opened` on `Sheet` in `lib/sheet.ts`.
+   */
+  opened?: number;
 }
 
 /** What each kind is called where somebody has to choose one. */

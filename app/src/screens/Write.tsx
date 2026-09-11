@@ -6,9 +6,10 @@ import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
 import { Equation } from '../components/Equation';
-import { ActionButton, EmptyState, SectionLabel, Toggle } from '../components/ui';
-import { PrintButton } from '../components/PrintButton';
-import { ChevronRight, Plus, WriteIcon } from '../components/Icons';
+import { ActionButton, SectionLabel, Toggle } from '../components/ui';
+import { Bench, Tool, ToolPick, ToolRule } from '../components/Bench';
+import { Gallery, type Starter } from '../components/Gallery';
+import { WriteIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
@@ -28,7 +29,8 @@ import {
 } from '../lib/document';
 import { filled } from '../lib/sheet';
 import { TEMPLATES, fromTemplate } from '../lib/doctemplates';
-import { characters, findAll, outline, readingMinutes, replaceAll } from '../lib/doctools';
+import { characters, findAll, glance, outline, readingMinutes, replaceAll } from '../lib/doctools';
+import type { Menu } from '../lib/menus';
 import { revealKindly } from '../lib/prefers';
 import { change, forget, keep, restored, versionsOf, type Version } from '../lib/docversions';
 
@@ -69,112 +71,79 @@ export function Write() {
 // ── The list ─────────────────────────────────────────────────────────────
 
 function Shelf() {
-  const { state, dispatch, courseCode, allItems } = useStore();
-  const [picking, setPicking] = useState(false);
+  const { state, dispatch, allItems } = useStore();
+
+  /*
+   * A blank, then the shapes. In that order and on one row, rather than behind
+   * a "Start from a shape" button that had to be pressed before anybody could
+   * find out there were any — which is where the seven templates in
+   * `lib/doctemplates.ts` spent their whole existence.
+   *
+   * None of them contains a sentence you could hand in. That sentence used to
+   * sit inside the panel the button opened; it is in the screen's blurb now,
+   * where it is read whether or not anybody opens anything.
+   */
+  const starters: Starter[] = [
+    {
+      id: 'blank',
+      label: 'Blank document',
+      onPick: () => dispatch({ type: 'newDocument', courseId: null }),
+    },
+    ...TEMPLATES.map((template) => ({
+      id: template.id,
+      label: template.label,
+      blurb: template.blurb,
+      preview: <Paper doc={fromTemplate(template, template.label)} />,
+      onPick: () =>
+        dispatch({
+          type: 'makeDocument',
+          doc: fromTemplate(template, template.label),
+          open: true,
+        }),
+    })),
+  ];
 
   return (
-    <Page blurb="Headings, tables and equations, arranged into a real Word file — or printed straight from here as a PDF.">
-      <ActionButton
-        tone="primary"
-        onClick={() => dispatch({ type: 'newDocument', courseId: null })}
-        style={{ marginBottom: 'var(--sp-4)' }}
-      >
-        New document
-      </ActionButton>
-
-      <ActionButton onClick={() => setPicking(!picking)} style={{ marginBottom: 'var(--sp-5)' }}>
-        {picking ? 'Never mind' : 'Start from a shape'}
-      </ActionButton>
-
-      {picking && (
-        <Blueprint style={{ padding: 'var(--sp-5)', marginBottom: 'var(--sp-7)' }}>
-          <SectionLabel>A shape, not a draft</SectionLabel>
-          <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-5)' }}>
-            Headings and blanks. None of them contains a sentence you could hand in — the app does
-            not write coursework.
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-            {TEMPLATES.map((template) => (
-              <Blueprint
-                key={template.id}
-                as="button"
-                plain
-                onClick={() => {
-                  dispatch({ type: 'makeDocument', doc: fromTemplate(template, template.label) });
-                  setPicking(false);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--sp-5)',
-                  padding: 'var(--sp-5)',
-                  textAlign: 'left',
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 'var(--type-md)' }}>{template.label}</div>
-                  <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>{template.blurb}</div>
-                </div>
-                <ChevronRight size={15} />
-              </Blueprint>
-            ))}
-          </div>
-        </Blueprint>
-      )}
-
-      {state.documents.length === 0 ? (
-        <EmptyState
-          title="Nothing written yet"
-          body="A memo, a report, a handout, a one-page brief. It stays on this device unless you are signed in."
-          icon={<WriteIcon />}
-        />
-      ) : (
-        <Folding name="Documents">
-          <SectionLabel>
-            {state.documents.length} {state.documents.length === 1 ? 'document' : 'documents'}
-          </SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-            {state.documents.map((doc) => (
-              <Blueprint
-                key={doc.id}
-                as="button"
-                plain
-                onClick={() => dispatch({ type: 'openDocument', id: doc.id })}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--sp-5)',
-                  padding: 'var(--sp-6)',
-                  textAlign: 'left',
-                }}
-              >
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 'var(--type-md)' }}>{doc.title || 'Untitled document'}</div>
-                  <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-1)' }}>
-                    {[
-                      doc.courseId ? courseCode(doc.courseId) : 'Personal',
-                      /* What it is for, where it is for something. Second,
-                         after whose it is: the course narrows a shelf of
-                         twenty to five and the deadline picks one out of
-                         those five. */
-                      forLine(allItems, doc.itemId),
-                      `${words(doc)} words`,
-                      new Date(doc.updated).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                      }),
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </div>
-                </div>
-                <ChevronRight size={16} />
-              </Blueprint>
-            ))}
-          </div>
-        </Folding>
-      )}
+    <Page blurb="Headings, tables and equations, arranged into a real Word file — or printed straight from here as a PDF. The shapes are headings and blanks: none of them contains a sentence you could hand in, because the app does not write coursework.">
+      <Gallery
+        startLabel="Start a new document"
+        starters={starters}
+        recentLabel="Recent documents"
+        items={state.documents}
+        fallback="Untitled document"
+        onOpen={(doc) => dispatch({ type: 'openDocument', id: doc.id })}
+        preview={(doc) => <Paper doc={doc} />}
+        /* What it is for, where it is for something, then how long it is.
+           The deadline identifies the document and the word count describes
+           it, and on a card with one line to spare the first wins. */
+        under={(doc) =>
+          [forLine(allItems, doc.itemId), `${words(doc)} ${words(doc) === 1 ? 'word' : 'words'}`]
+            .filter(Boolean)
+            .join(' · ')
+        }
+        shape="page"
+        empty={{
+          title: 'Nothing written yet',
+          body: 'A memo, a report, a handout, a one-page brief. It stays on this device unless you are signed in.',
+          icon: <WriteIcon />,
+        }}
+      />
     </Page>
+  );
+}
+
+/** A document at thumbnail size: its own first lines, on a page. */
+function Paper({ doc }: { doc: Pick<Doc, 'blocks'> }) {
+  const lines = glance(doc, 7);
+  if (lines.length === 0) return <WriteIcon size={20} />;
+  return (
+    <span className="paper" aria-hidden="true">
+      {lines.map((line, at) => (
+        <span key={at} className="paper-line">
+          {line}
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -182,8 +151,42 @@ function Shelf() {
 
 const KINDS: BlockKind[] = ['heading', 'text', 'bullets', 'quote', 'table', 'equation', 'break'];
 
+/**
+ * What the toolbar's insert buttons are called.
+ *
+ * Spelled out rather than built from `BLOCK_LABEL` with an article in front,
+ * which produced "Insert a equation" — the sort of thing nobody reads in a
+ * tooltip and every screen reader says out loud.
+ */
+const INSERT_LABEL: Record<BlockKind, string> = {
+  heading: 'Insert a heading',
+  text: 'Insert a paragraph',
+  bullets: 'Insert a list',
+  quote: 'Insert a quotation',
+  table: 'Insert a table',
+  equation: 'Insert an equation',
+  break: 'Insert a page break',
+};
+
+/** What the style picker offers, and what each means as a block. */
+const STYLES = [
+  { id: 'text', label: 'Normal text' },
+  { id: 'h1', label: 'Heading 1' },
+  { id: 'h2', label: 'Heading 2' },
+  { id: 'h3', label: 'Heading 3' },
+] as const;
+
+type Style = (typeof STYLES)[number]['id'];
+
+/** The three panels the View menu turns on and off. */
+interface Showing {
+  outline: boolean;
+  find: boolean;
+  history: boolean;
+}
+
 function Editor({ doc }: { doc: Doc }) {
-  const { dispatch, say } = useStore();
+  const { state, dispatch, say } = useStore();
   const [busy, setBusy] = useState(false);
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
@@ -191,18 +194,54 @@ function Editor({ doc }: { doc: Doc }) {
      the control is remounted when the course changes and a cap that reapplied
      itself would be the list closing under somebody's hand. */
   const [allDeadlines, setAllDeadlines] = useState(false);
+  /*
+   * Which of the three panels are drawn.
+   *
+   * All three used to be drawn always, between the title and the document —
+   * find and replace, earlier drafts and the outline, folded but present,
+   * pushing the first paragraph a screen and a half down on a phone. They are
+   * tools, they belong on a menu, and the outline is the one of the three a
+   * long document wants open, so it is the one that starts open.
+   */
+  const [showing, setShowing] = useState<Showing>({
+    outline: true,
+    find: false,
+    history: false,
+  });
+  const show = (which: keyof Showing) =>
+    setShowing((was) => ({ ...was, [which]: !was[which] }));
 
   const patch = (next: Partial<Omit<Doc, 'id'>>) =>
     dispatch({ type: 'updateDocument', id: doc.id, patch: next });
 
+  /*
+   * The block the caret is in — clamped, and read everywhere instead of
+   * `state.blockAt`.
+   *
+   * `blockAt` is an index into a list that changes under it. Restore an
+   * earlier, shorter draft and it points past the end; move a block and it
+   * points at whatever took that place. The clamp is what makes "the block you
+   * are in" answerable at all, and reading the raw value anywhere is how the
+   * Insert commands came to splice at an index the document did not have.
+   */
+  const openAt =
+    state.blockAt !== null && state.blockAt < doc.blocks.length ? state.blockAt : null;
+
   const setBlock = (at: number, block: Block) =>
     patch({ blocks: doc.blocks.map((b, i) => (i === at ? block : b)) });
 
-  const addBlock = (kind: BlockKind, at = doc.blocks.length) => {
+  /*
+   * A new block lands after the one being edited rather than at the very end.
+   *
+   * Insert has always meant "here" in every editor there has ever been, and
+   * the old behaviour — always append — meant writing the middle of a document
+   * was: add a paragraph, then press the up arrow eleven times.
+   */
+  const addBlock = (kind: BlockKind, index = (openAt ?? doc.blocks.length - 1) + 1) => {
     const blocks = [...doc.blocks];
-    blocks.splice(at, 0, blankBlock(kind));
+    blocks.splice(index, 0, blankBlock(kind));
     patch({ blocks });
-    dispatch({ type: 'editBlock', at });
+    dispatch({ type: 'editBlock', at: index });
   };
 
   const removeBlock = (at: number) => {
@@ -214,6 +253,30 @@ function Editor({ doc }: { doc: Doc }) {
   const count = words(doc);
   const empty = !hasContent(doc);
   const headings = outline(doc);
+
+  const open = openAt === null ? null : doc.blocks[openAt];
+  const style: Style =
+    open?.kind === 'heading' ? (`h${open.level}` as Style) : 'text';
+
+  /**
+   * Turn the open block into a heading of some level, or back into a paragraph.
+   *
+   * Only between those two kinds, and only when the block holds nothing but
+   * text. Re-styling a table into a heading would have to throw its rows away,
+   * which is not what anybody choosing from a style menu is asking for — so
+   * the picker is disabled on those blocks rather than silently destroying
+   * them.
+   */
+  const restyle = (next: Style) => {
+    if (openAt === null || !open || !plainText(open)) return;
+    const text = open.kind === 'heading' || open.kind === 'text' ? open.text : '';
+    setBlock(
+      openAt,
+      next === 'text'
+        ? { kind: 'text', text }
+        : { kind: 'heading', level: Number(next.slice(1)) as 1 | 2 | 3, text },
+    );
+  };
 
   const saveWord = async () => {
     setBusy(true);
@@ -239,30 +302,265 @@ function Editor({ doc }: { doc: Doc }) {
     say('Markdown saved.');
   };
 
+  const menus: Menu[] = [
+    {
+      id: 'file',
+      label: 'File',
+      groups: [
+        [
+          {
+            id: 'file.new',
+            label: 'New document',
+            run: () => dispatch({ type: 'newDocument', courseId: doc.courseId }),
+          },
+          {
+            id: 'file.copy',
+            label: 'Make a copy',
+            run: () => {
+              const { id: _id, ...rest } = doc;
+              dispatch({
+                type: 'makeDocument',
+                doc: { ...rest, title: `${doc.title || 'Untitled document'} (copy)` },
+                open: true,
+              });
+              say('Copied. You are now in the copy.');
+            },
+          },
+        ],
+        [
+          {
+            id: 'file.docx',
+            label: busy ? 'Writing the Word file…' : 'Download as Word (.docx)',
+            run: empty || busy ? undefined : () => void saveWord(),
+          },
+          {
+            id: 'file.md',
+            label: 'Download as Markdown (.md)',
+            run: empty ? undefined : saveMarkdown,
+          },
+          {
+            id: 'file.print',
+            label: 'Print, or save as PDF',
+            run: () => window.print(),
+          },
+        ],
+        [
+          {
+            id: 'file.delete',
+            label: 'Move to the bin',
+            hint: 'Undo is offered for a few seconds afterwards.',
+            run: () => {
+              /*
+               * The drafts go with the document. Leaving them would keep every
+               * paragraph of something deliberately deleted, in a store with
+               * nothing left pointing at it. Undo brings the document back but
+               * not those, which is the honest trade: the thing you were
+               * writing, without the twenty copies of it.
+               */
+              void forget(doc.id);
+              dispatch({ type: 'deleteDocument', id: doc.id });
+            },
+          },
+        ],
+      ],
+    },
+    {
+      id: 'edit',
+      label: 'Edit',
+      groups: [
+        [
+          {
+            id: 'edit.find',
+            label: 'Find and replace',
+            on: showing.find,
+            run: () => show('find'),
+          },
+        ],
+        [
+          {
+            id: 'edit.remove',
+            label: 'Delete this block',
+            run: openAt === null ? undefined : () => removeBlock(openAt),
+          },
+        ],
+      ],
+    },
+    {
+      id: 'view',
+      label: 'View',
+      groups: [
+        [
+          {
+            id: 'view.outline',
+            label: 'Outline',
+            on: showing.outline,
+            run: () => show('outline'),
+          },
+          {
+            id: 'view.history',
+            label: 'Earlier drafts',
+            on: showing.history,
+            run: () => show('history'),
+          },
+        ],
+      ],
+    },
+    {
+      id: 'insert',
+      label: 'Insert',
+      groups: [
+        KINDS.map((kind) => ({
+          id: `insert.${kind}`,
+          label: BLOCK_LABEL[kind],
+          run: () => addBlock(kind),
+        })),
+        [
+          {
+            id: 'insert.paste',
+            label: 'Notes or Markdown…',
+            hint: 'Headings, lists and tables are read in as blocks.',
+            on: pasting,
+            run: () => setPasting(!pasting),
+          },
+        ],
+      ],
+    },
+    {
+      id: 'format',
+      label: 'Format',
+      groups: [
+        STYLES.map((s) => ({
+          id: `format.${s.id}`,
+          label: s.label,
+          on: open !== null && plainText(open) && style === s.id,
+          run: open && plainText(open) ? () => restyle(s.id) : undefined,
+        })),
+        [
+          {
+            id: 'format.numbered',
+            label: 'Numbered list',
+            on: open?.kind === 'bullets' && open.numbered,
+            run:
+              openAt !== null && open?.kind === 'bullets'
+                ? () => setBlock(openAt, { ...open, numbered: !open.numbered })
+                : undefined,
+          },
+          {
+            id: 'format.header',
+            label: 'Table has a header row',
+            on: open?.kind === 'table' && open.header,
+            run:
+              openAt !== null && open?.kind === 'table'
+                ? () => setBlock(openAt, { ...open, header: !open.header })
+                : undefined,
+          },
+        ],
+      ],
+    },
+    {
+      id: 'tools',
+      label: 'Tools',
+      groups: [
+        [
+          {
+            id: 'tools.count',
+            label: 'Word count',
+            run: () =>
+              say(
+                `${count} ${count === 1 ? 'word' : 'words'}, ${characters(doc)} characters, about ${readingMinutes(doc)} minutes to read.`,
+              ),
+          },
+          {
+            id: 'tools.quotes',
+            label: 'Check the quotations in this',
+            hint: 'Opens Check the writing, which searches your own readings.',
+            run: () => dispatch({ type: 'go', screen: 'proof' }),
+          },
+        ],
+      ],
+    },
+    {
+      id: 'help',
+      label: 'Help',
+      groups: [
+        [
+          {
+            id: 'help.what',
+            label: 'What this screen will not do',
+            run: () =>
+              say(
+                'Nothing here writes for you. There is no model on this screen and no key needed — you type, and it arranges.',
+              ),
+          },
+        ],
+      ],
+    },
+  ];
+
   return (
     <Page
       blurb={`${count} ${count === 1 ? 'word' : 'words'} · ${characters(doc)} characters · about ${readingMinutes(doc)} min to read · ${summary(doc.blocks)}`}
-      actions={
-        <ActionButton onClick={() => dispatch({ type: 'closeDocument' })}>
-          All documents
-        </ActionButton>
-      }
     >
-      <input
-        className="input"
-        value={doc.title}
-        onChange={(e) => patch({ title: e.target.value })}
-        placeholder="Title"
-        aria-label="Document title"
-        style={{ width: '100%', height: 46, fontSize: 'var(--type-lg)' }}
+      <Bench
+        mark={<WriteIcon size={18} />}
+        title={doc.title}
+        onTitle={(title) => patch({ title })}
+        titleLabel="Document title"
+        placeholder="Untitled document"
+        menus={menus}
+        actions={
+          <ActionButton
+            onClick={() => dispatch({ type: 'closeDocument' })}
+            style={{ width: 'auto', padding: '0 var(--sp-6)', flex: 'none' }}
+          >
+            All documents
+          </ActionButton>
+        }
+        tools={
+          <>
+            <ToolPick
+              label="Paragraph style"
+              value={style}
+              options={STYLES}
+              disabled={open === null || !plainText(open)}
+              onChange={restyle}
+            />
+            <ToolRule />
+            {(['heading', 'text', 'bullets'] as BlockKind[]).map((kind) => (
+              <Tool
+                key={kind}
+                label={INSERT_LABEL[kind]}
+                icon={BLOCK_LABEL[kind]}
+                onClick={() => addBlock(kind)}
+              />
+            ))}
+            <ToolRule />
+            {(['quote', 'table', 'equation', 'break'] as BlockKind[]).map((kind) => (
+              <Tool
+                key={kind}
+                label={INSERT_LABEL[kind]}
+                icon={BLOCK_LABEL[kind]}
+                onClick={() => addBlock(kind)}
+              />
+            ))}
+            <ToolRule />
+            <Tool
+              label="Outline"
+              pressed={showing.outline}
+              onClick={() => show('outline')}
+            />
+            <Tool label="Find and replace" pressed={showing.find} onClick={() => show('find')} />
+          </>
+        }
       />
+
       <input
         className="input"
         value={doc.subtitle}
         onChange={(e) => patch({ subtitle: e.target.value })}
         placeholder="Subtitle, your name, the course — optional"
         aria-label="Subtitle"
-        style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
+        style={{ width: '100%', height: 40 }}
       />
       {/* The deadline goes with the course. A deadline belongs to one
           course, so the old filing is not merely stale after this — it names
@@ -285,118 +583,82 @@ function Editor({ doc }: { doc: Doc }) {
       />
 
       <Saved doc={doc} words={count} />
-      {headings.length > 1 && <Outline headings={headings} />}
-      <FindReplace doc={doc} onReplace={(next) => patch({ blocks: next.blocks })} />
-      <History doc={doc} onRestore={(version) => patch(restored(doc, version))} />
+      {showing.outline && headings.length > 1 && <Outline headings={headings} />}
+      {showing.find && <FindReplace doc={doc} onReplace={(next) => patch({ blocks: next.blocks })} />}
+      {showing.history && <History doc={doc} onRestore={(version) => patch(restored(doc, version))} />}
+
+      {pasting && (
+        <>
+          <SectionLabel>Read something in</SectionLabel>
+          <Blueprint style={{ padding: 'var(--sp-6)' }}>
+            <textarea
+              className="input"
+              value={pasted}
+              onChange={(e) => setPasted(e.target.value)}
+              placeholder={'## A heading\n\nSome prose.\n\n- a list\n\n| a | b |\n| --- | --- |\n| 1 | 2 |'}
+              aria-label="Markdown to read in"
+              rows={7}
+              style={{ width: '100%', fontSize: 'var(--type-base)' }}
+            />
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+              <ActionButton
+                onClick={() => {
+                  setPasting(false);
+                  setPasted('');
+                }}
+              >
+                Cancel
+              </ActionButton>
+              <ActionButton
+                tone="primary"
+                disabled={!pasted.trim()}
+                onClick={() => {
+                  const read = fromMarkdown(pasted);
+                  patch({ blocks: [...(empty ? [] : doc.blocks), ...read] });
+                  say(`Read in ${summary(read)}.`);
+                  setPasting(false);
+                  setPasted('');
+                }}
+              >
+                Read it in
+              </ActionButton>
+            </div>
+          </Blueprint>
+        </>
+      )}
 
       <SectionLabel>The document</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
-        {doc.blocks.map((block, at) => (
+        {doc.blocks.map((block, index) => (
           <BlockCard
-            key={at}
+            key={index}
             block={block}
-            at={at}
+            at={index}
             of={doc.blocks.length}
-            onChange={(next) => setBlock(at, next)}
-            onRemove={() => removeBlock(at)}
-            onMove={(to) => patch({ blocks: moved(doc.blocks, at, to) })}
-          />
-        ))}
-      </div>
-
-      <SectionLabel>Add</SectionLabel>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
-        {KINDS.map((kind) => (
-          <button
-            key={kind}
-            type="button"
-            className="bare tappable"
-            onClick={() => addBlock(kind)}
-            style={{
-              width: 'auto',
-              padding: 'var(--sp-4) var(--sp-6)',
-              borderRadius: 'var(--r-sm)',
-              border: '1px solid var(--app-line)',
-              fontSize: 'var(--type-sm)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--sp-2)',
+            onOpen={() => dispatch({ type: 'editBlock', at: index })}
+            onChange={(next) => setBlock(index, next)}
+            onRemove={() => removeBlock(index)}
+            onMove={(to) => {
+              patch({ blocks: moved(doc.blocks, index, to) });
+              dispatch({ type: 'editBlock', at: to });
             }}
-          >
-            <Plus size={13} />
-            {BLOCK_LABEL[kind]}
-          </button>
+          />
         ))}
       </div>
-
-      <SectionLabel>Paste something in</SectionLabel>
-      {pasting ? (
-        <Blueprint style={{ padding: 'var(--sp-6)' }}>
-          <textarea
-            className="input"
-            value={pasted}
-            onChange={(e) => setPasted(e.target.value)}
-            placeholder={'## A heading\n\nSome prose.\n\n- a list\n\n| a | b |\n| --- | --- |\n| 1 | 2 |'}
-            aria-label="Markdown to read in"
-            rows={7}
-            style={{ width: '100%', fontSize: 'var(--type-base)' }}
-          />
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
-            <ActionButton
-              onClick={() => {
-                setPasting(false);
-                setPasted('');
-              }}
-            >
-              Cancel
-            </ActionButton>
-            <ActionButton
-              tone="primary"
-              disabled={!pasted.trim()}
-              onClick={() => {
-                const read = fromMarkdown(pasted);
-                patch({ blocks: [...(empty ? [] : doc.blocks), ...read] });
-                say(`Read in ${summary(read)}.`);
-                setPasting(false);
-                setPasted('');
-              }}
-            >
-              Read it in
-            </ActionButton>
-          </div>
-        </Blueprint>
-      ) : (
-        <ActionButton onClick={() => setPasting(true)}>
-          Paste notes or Markdown
-        </ActionButton>
-      )}
-
-      <SectionLabel>Take it away</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
-        <ActionButton tone="primary" disabled={empty || busy} onClick={saveWord}>
-          {busy ? 'Writing…' : 'Word file (.docx)'}
-        </ActionButton>
-        <ActionButton disabled={empty} onClick={saveMarkdown}>
-          Markdown (.md)
-        </ActionButton>
-        <PrintButton label="Print or save as PDF" />
-      </div>
-
-      <SectionLabel>This document</SectionLabel>
-      <ActionButton
-        onClick={() => {
-          // The drafts go with the document. Leaving them would keep every
-          // paragraph of something somebody deliberately deleted, in a store
-          // with nothing left pointing at it.
-          void forget(doc.id);
-          dispatch({ type: 'deleteDocument', id: doc.id });
-          say('Document deleted.');
-        }}
-      >
-        Delete it
-      </ActionButton>
     </Page>
   );
+}
+
+/**
+ * Whether a block is nothing but a line of text, and so can change style.
+ *
+ * A heading and a paragraph hold the same thing and differ only in how it is
+ * drawn, which is exactly what a style menu is for. A table, an equation and a
+ * page break are not that, and turning one into a heading would mean throwing
+ * away what it holds — so the picker greys out on them instead.
+ */
+function plainText(block: Block): boolean {
+  return block.kind === 'heading' || block.kind === 'text';
 }
 
 /**
@@ -620,6 +882,7 @@ function BlockCard({
   block,
   at,
   of,
+  onOpen,
   onChange,
   onRemove,
   onMove,
@@ -627,13 +890,26 @@ function BlockCard({
   block: Block;
   at: number;
   of: number;
+  /**
+   * The caret has arrived in this block.
+   *
+   * What makes the Format menu and the style picker mean anything: they act on
+   * "the block you are in", and until this existed nothing told the screen
+   * which that was — `blockAt` was set when a block was added and never again,
+   * so the picker described whatever had last been inserted rather than what
+   * anybody was looking at.
+   */
+  onOpen: () => void;
   onChange: (next: Block) => void;
   onRemove: () => void;
   onMove: (to: number) => void;
 }) {
   return (
     // The id is what the outline scrolls to. Nothing else reads it.
-    <Blueprint plain id={`block-${at}`} style={{ padding: 'var(--sp-6)' }}>
+    // `onFocusCapture` rather than `onFocus`: focus lands on the field inside,
+    // and capture is what lets the card hear about it without every editor
+    // having to forward an event it has no other use for.
+    <Blueprint plain id={`block-${at}`} onFocusCapture={onOpen} style={{ padding: 'var(--sp-6)' }}>
       <div
         style={{
           display: 'flex',
