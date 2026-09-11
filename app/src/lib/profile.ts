@@ -167,6 +167,30 @@ export interface Held {
 }
 
 /**
+ * What the summary says when all six of them are empty.
+ *
+ * It said "Nothing yet", which is a claim about the app rather than about the
+ * six things above it — and it is not true of somebody whose semester is a
+ * saved place, a club and three alarms. `SUMMARY` is six collections out of
+ * the thirty-odd `inventory` walks, so an empty summary means "none of these
+ * six", never "nothing at all". A profile that told a person the app was
+ * holding nothing of theirs, while the data screen one tap below listed what
+ * it was holding, would be the one kind of wrong this screen cannot afford.
+ *
+ * Scoped rather than hedged. "Other data may still be stored" would be the
+ * easy fix and is a worse sentence: the app knows exactly what it holds, and
+ * `screens/Data.tsx` is the screen that says so — this points at it instead of
+ * guessing on its behalf.
+ */
+export function nothingHeld(): string {
+  return (
+    'Nothing in this summary yet. Add a course and it fills in on its own — ' +
+    'Your data, below, lists every record the app holds, including the kinds ' +
+    'this does not count.'
+  );
+}
+
+/**
  * What the app holds, as the handful of figures a person would recognise.
  *
  * Rows with nothing in them are dropped rather than shown as zero: a column of

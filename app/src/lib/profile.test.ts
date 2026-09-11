@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { join } from 'node:path';
-import { agoLine, held, heading, initials, named, oldestLine, saidAbout } from './profile';
+import { agoLine, held, heading, initials, named, nothingHeld, oldestLine, saidAbout } from './profile';
 import type { Row } from './inventory';
 import { sources, withoutComments } from '../styles/rules';
 
@@ -160,6 +160,25 @@ describe('what the app holds about you', () => {
   it('drops the empty ones rather than showing a column of noughts', () => {
     expect(held(rows, 4).map((r) => r.label)).not.toContain('Tasks');
     expect(held([], 0)).toEqual([]);
+  });
+
+  /*
+   * The claim the empty state is not allowed to make.
+   *
+   * It said "Nothing yet", which is about the app rather than about the six
+   * things above it — and false for anybody whose semester so far is a saved
+   * place, a club and three alarms, all of which `inventory` counts and this
+   * summary does not. The data screen one tap below would have been listing
+   * what the profile had just said was not there.
+   */
+  it('scopes the empty state to the summary rather than to the app', () => {
+    const said = nothingHeld();
+    expect(said).toContain('this summary');
+    expect(said).toContain('Your data');
+    // Not the claim, and not a hedge in place of it either: the app knows what
+    // it holds, so "may" would be guessing on the data screen's behalf.
+    expect(said).not.toMatch(/^Nothing yet/);
+    expect(said.toLowerCase()).not.toContain('may still');
   });
 });
 

@@ -7,7 +7,7 @@ import { Avatar } from '../components/Avatar';
 import { ActionButton, SectionLabel } from '../components/ui';
 import { CustomRow, Group, NavRow } from '../components/shell/Rows';
 import { inventory } from '../lib/inventory';
-import { heading, held, named, oldestLine, saidAbout } from '../lib/profile';
+import { heading, held, named, nothingHeld, oldestLine, saidAbout } from '../lib/profile';
 import { roleOf } from '../lib/role';
 import { cloudConfigured } from '../lib/cloud';
 
@@ -195,7 +195,7 @@ export function Profile() {
             textWrap: 'pretty',
           }}
         >
-          Nothing yet. Add a course and this fills in on its own.
+          {nothingHeld()}
         </div>
       ) : (
         <div
