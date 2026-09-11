@@ -17,11 +17,10 @@
  *
  * The second is that the app shows one screen at a time. "I was reading the
  * guide, let me check when it is due, now where was I" is three navigations
- * and a lost place. Tabs are the answer nobody has to be taught: the strip
- * holds the places you have open, picking one goes there, and a new tab is
- * empty. What a tab *shows* is the app itself — this is chrome over the one
- * pane the app has always had, which is why landing on a screen closes the
- * overlay rather than drawing the screen in here a second time.
+ * and a lost place. Tabs are the answer nobody has to be taught. The strip
+ * itself lives in `components/Tabs.tsx`, drawn here and again above the header
+ * on a window wide enough to hold it, which is what makes it worth having:
+ * the places you have open are one click away without opening anything.
  *
  * ## Why it works like a search engine
  *
@@ -29,14 +28,23 @@
  * you to know the word. So it does what the box everybody uses does, and the
  * order is deliberate: your recent searches first, then completions drawn
  * from the names of things that can actually be found — nothing offered can
- * come back empty — then, on an empty box, somewhere to start. `lib/suggest.ts`
- * holds the rules; this draws them.
+ * come back empty — then, on an empty box, somewhere to start.
+ * `lib/typeahead.ts` holds the rules; this draws them.
  *
  * A new tab is the search page, with the wordmark, the box and a row of
  * shortcuts to where you have been. Enter turns it into a results page: the
  * box moves to the top, the results come under it, and a row of chips narrows
  * them to one kind. That is the whole model, and every part of it is a thing
  * the person holding the phone has done ten thousand times somewhere else.
+ *
+ * ## On a laptop it is the same page, drawn at the size of the window
+ *
+ * A phone-sized search page in the middle of a 1,920px window is not the same
+ * design at a different size; it is a small thing lost in a field of black,
+ * and it reads as the app having failed to fill the screen. So the wordmark,
+ * the box, the tiles and the results column all take their size from the
+ * window — see `SIZES` below. Nothing moves and nothing is added: the
+ * proportions a phone has are the proportions a laptop gets.
  *
  * ## No commands
  *
@@ -52,55 +60,52 @@ import { useModal } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { useAI } from '../ai/store';
 import { countHits, findEverything, spelled } from '../lib/find';
-import { flatten, hitKey, landingOf, openHit } from '../lib/openhit';
+import { actionsFor, flatten, hitKey, landingOf } from '../lib/openhit';
 import { DESKTOP, useMedia } from '../lib/media';
 import { offered, screenName } from '../lib/nav';
 import { secondLine } from '../lib/dim';
-import { AskIcon, ClocksIcon, Plus, Search as SearchIcon } from './Icons';
+import { AskIcon, ClocksIcon, Search as SearchIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
+import { TabStrip } from './Tabs';
+import { here, openInNew, record, recordSearch, useStrip } from '../lib/browser.hook';
+import { justGo } from '../lib/browser';
 import { readSearches, remember, forget, suggestions, writeSearches } from '../lib/typeahead';
-import {
-  NEW_TAB,
-  add,
-  close as shutTab,
-  current,
-  openBeside,
-  read as readStrip,
-  select,
-  visit,
-  write as writeStrip,
-  type Strip,
-} from '../lib/browser';
 import type { Screen } from '../lib/types';
 
-/** How wide the results column gets, matching the app's own pane. */
-const COLUMN = 620;
-
-/** And the box on the search page, which is a shape people recognise. */
-const BOX = 540;
+/**
+ * Every size on this page, at the two scales it is drawn at.
+ *
+ * One table rather than a `wide ?` at each of eleven places: the reason a
+ * laptop got a phone's search page in the middle of a black field is that
+ * sizes written inline are sizes nobody can see all of at once.
+ */
+const SIZES = {
+  phone: { column: 620, box: 540, mark: 44, tile: 46, tileBox: 78, glyph: 20, gap: 'var(--sp-6)' },
+  desk: { column: 860, box: 720, mark: 64, tile: 58, tileBox: 104, glyph: 24, gap: 'var(--sp-7)' },
+} as const;
 
 /** How many shortcuts the search page shows before "Show more". */
 const SHORTCUTS = 7;
-
-/**
- * A screen this build still has.
- *
- * `screenName` answers with the id itself for anything it cannot name, and
- * `nav.test.ts` holds that every real screen is named by one of its three
- * registries — so this is the same question asked cheaply. It matters at the
- * one place a stale name can arrive: a strip of tabs saved by an older build.
- */
-const known = (screen: string) => screenName(screen as Screen) !== screen;
 
 export function Command({ onClose }: { onClose: () => void }) {
   const { state, dispatch, now, catalog, school } = useStore();
   const ai = useAI();
   const wide = useMedia(DESKTOP);
+  const size = wide ? SIZES.desk : SIZES.phone;
   // Empty every time. It used to open seeded from a screen's own filter box,
   // and there are no filter boxes any more — this is where searching starts.
-  const [text, setText] = useState('');
+  /*
+   * The box opens on whatever this tab was last searching for.
+   *
+   * Which is the difference between a search you can follow a result out of
+   * and one you cannot: click a deadline, read it, press the search key, and
+   * your results are still there — the way Back works on a page of results.
+   * A tab nobody has searched in opens blank, and emptying the box forgets
+   * it, so nothing follows you around that you did not ask to keep.
+   */
+  const [text, setText] = useState(() => here().query ?? '');
   /** The query that has been searched. Empty means the new-tab page is up. */
-  const [sent, setSent] = useState('');
+  const [sent, setSent] = useState(() => here().query ?? '');
   /** Which kind of result the chips are narrowed to, or everything. */
   const [only, setOnly] = useState('All');
   const [at, setAt] = useState(0);
@@ -121,34 +126,19 @@ export function Command({ onClose }: { onClose: () => void }) {
   const box = useRef<HTMLInputElement>(null);
   const list = useRef<HTMLDivElement>(null);
 
-  /**
-   * The strip, as it was left — with the tab you are on brought up to date.
+  /*
+   * The strip, from the one place it lives.
    *
-   * A tab that has been somewhere follows the app: the page it is showing is
-   * whatever screen is behind this overlay, so it says so. A tab that has
-   * never been anywhere stays a new tab, which is what makes "open a tab, do
-   * not go anywhere, come back to it" behave the way it does in a browser.
-   */
-  const [strip, setStrip] = useState<Strip>(() => {
-    const saved = readStrip(known);
-    return current(saved).screen === null
-      ? saved
-      : visit(saved, state.screen, screenName(state.screen));
-  });
-
-  /**
-   * A new strip, kept where it will be found tomorrow.
+   * `lib/browser.hook.ts` holds it, because the bar above the header holds
+   * the same strip and two copies would disagree about which tab is on the
+   * first time either was touched. Keeping the app and the strip in step as
+   * you navigate is `TabsFollow`'s job, next to where this is mounted.
    *
-   * Written from the handler rather than from an effect, because half of
-   * these handlers close the overlay in their next breath — and an effect
-   * scheduled on a component that is unmounting is an effect that does not
-   * run. The tab you just opened something in is exactly the one worth
-   * keeping.
+   * Subscribed for its own sake: nothing here needs the list itself — the
+   * strip draws itself — but the line under the box names the tab this is
+   * sitting on, and `here()` is a plain read React cannot see changing.
    */
-  const keep = (next: Strip) => {
-    setStrip(next);
-    writeStrip(next);
-  };
+  useStrip();
 
   // The field, not the first button — opening a search anywhere but in its
   // box is opening it wrong. `useModal` takes Escape and the tab ring; where
@@ -259,7 +249,7 @@ export function Command({ onClose }: { onClose: () => void }) {
   const showRows = dropped && rows.length > 0;
 
   /** Remember a search, in this session and in the next one. */
-  const record = (query: string) => {
+  const keepSearch = (query: string) => {
     const kept = remember(recents, query);
     setRecents(kept);
     writeSearches(kept);
@@ -281,77 +271,51 @@ export function Command({ onClose }: { onClose: () => void }) {
     setAt(0);
     setPick(-1);
     setDropped(false);
-    record(q);
+    keepSearch(q);
+    recordSearch(q);
     box.current?.focus();
   };
 
   /** Go to a screen in the tab that is on, which is the app's own screen. */
-  const land = (screen: Screen, title: string, beside = false) => {
-    keep(beside ? openBeside(strip, screen, title) : visit(strip, screen, title));
+  const land = (screen: Screen) => {
+    record(screen, screenName(screen), justGo(screen));
     dispatch({ type: 'go', screen });
     onClose();
   };
 
-  const go = (i: number, beside = false) => {
+  /**
+   * Open a result — in a tab of its own when this tab is showing a page.
+   *
+   * Which is the rule a browser follows and the reason tabs are worth having
+   * here. You are reading a deadline, you press the search key, you pick a
+   * course: the deadline does not vanish, it stays in the strip and the
+   * course comes up beside it. Only a tab that is showing the search page
+   * itself — one you opened empty — is a tab there is nothing to keep, and a
+   * result loads in that one rather than leaving an empty tab behind.
+   *
+   * `always` is the ⧉ on the row and the browser's own modifier: keep this
+   * page too, whatever page it is.
+   */
+  const go = (i: number, always = false) => {
     const hit = hits[i];
     if (!hit) return;
-    if (sent.trim()) record(sent.trim());
-    keep(
-      beside
-        ? openBeside(strip, landingOf(hit), hit.title)
-        : visit(strip, landingOf(hit), hit.title),
-    );
-    openHit(hit, dispatch);
+    if (sent.trim()) keepSearch(sent.trim());
+    // The actions that open it are also what the tab keeps, so picking that
+    // tab next week reopens this deadline rather than the deadline screen.
+    const place = actionsFor(hit);
+    if (always || here().screen) openInNew(landingOf(hit), hit.title, place, sent.trim());
+    else record(landingOf(hit), hit.title, place);
+    for (const action of place) dispatch(action);
     onClose();
   };
 
-  /** Pick a tab: its page is the app, so going to it is going there. */
-  const goTab = (which: number) => {
-    const next = select(strip, which);
-    keep(next);
-    const tab = current(next);
-    if (tab.screen) {
-      dispatch({ type: 'go', screen: tab.screen });
-      onClose();
-      return;
-    }
-    setText('');
-    setSent('');
-    setAt(0);
-    setDropped(true);
-    box.current?.focus();
-  };
-
-  const newTab = () => {
-    keep(add(strip));
-    setText('');
-    setSent('');
+  /** Back to the search page, which is where a new tab starts. */
+  const blank = () => {
+    setText(here().query ?? '');
+    setSent(here().query ?? '');
     setAt(0);
     setPick(-1);
-    setDropped(true);
-    box.current?.focus();
-  };
-
-  /**
-   * Close a tab, and land where a browser lands: on its right-hand neighbour.
-   *
-   * Which means closing the tab you are *on* reveals the next one — and since
-   * a tab's page is the app, revealing a tab that holds a screen is going to
-   * it. A new tab reveals the search page, and the overlay stays.
-   */
-  const closeTab = (which: number) => {
-    const next = shutTab(strip, which);
-    keep(next);
-    if (which !== strip.at) return;
-    const tab = current(next);
-    if (tab.screen) {
-      dispatch({ type: 'go', screen: tab.screen });
-      onClose();
-      return;
-    }
-    setText('');
-    setSent('');
-    setAt(0);
+    setDropped(false);
     box.current?.focus();
   };
 
@@ -376,7 +340,7 @@ export function Command({ onClose }: { onClose: () => void }) {
 
   const onSearchPage = sent.trim() === '';
   /** The tab the strip is on, which is what the app behind this is showing. */
-  const here = current(strip);
+  const tab = here();
 
   return (
     <div
@@ -490,20 +454,13 @@ export function Command({ onClose }: { onClose: () => void }) {
         }
       }}
     >
-      <Tabs
-        strip={strip}
-        searching={sent}
-        onPick={goTab}
-        onClose={closeTab}
-        onNew={newTab}
-        onDismiss={onClose}
-      />
+      <TabStrip inOverlay searching={sent} onOpened={onClose} onBlank={blank} onDismiss={onClose} />
 
       {/* The box. On the search page it is drawn again, in the middle — this
           one is the results page's, the way a search engine keeps the query
           in a bar at the top once it has answered. */}
       {!onSearchPage && (
-        <div style={{ width: '100%', maxWidth: COLUMN, margin: '0 auto', padding: 'var(--sp-5) var(--sp-7) 0' }}>
+        <div style={{ width: '100%', maxWidth: size.column, margin: '0 auto', padding: 'var(--sp-5) var(--sp-7) 0' }}>
           <Box
             box={box}
             text={text}
@@ -512,7 +469,10 @@ export function Command({ onClose }: { onClose: () => void }) {
               setAt(0);
               setPick(-1);
               setDropped(true);
-              if (v.trim() === '') setSent('');
+              if (v.trim() === '') {
+                setSent('');
+                recordSearch('');
+              }
             }}
             onOpen={() => setDropped(true)}
             onAsk={() => {
@@ -543,13 +503,13 @@ export function Command({ onClose }: { onClose: () => void }) {
           <div
             style={{
               width: '100%',
-              maxWidth: BOX,
+              maxWidth: size.box,
               margin: '0 auto',
               padding: 'var(--sp-7)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 'var(--sp-6)',
+              gap: size.gap,
             }}
           >
             {/* The wordmark, which is the one piece of this that is decoration
@@ -557,9 +517,12 @@ export function Command({ onClose }: { onClose: () => void }) {
                 field reads as a screen that has failed to load. */}
             <div
               style={{
-                marginTop: 'var(--sp-7)',
+                // Down the page a little on a laptop, the way every page of
+                // this shape sits: hard against the tab strip it reads as a
+                // header rather than as the middle of a page.
+                marginTop: wide ? '7vh' : 'var(--sp-6)',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(44px * var(--text-scale, 1))',
+                fontSize: `calc(${size.mark}px * var(--text-scale, 1))`,
                 letterSpacing: '-0.03em',
                 lineHeight: 'var(--leading-tight)',
               }}
@@ -599,7 +562,7 @@ export function Command({ onClose }: { onClose: () => void }) {
               the way back to it is the same button as everywhere else:
               closing the search leaves you on the page you were on.
             */}
-            {here.screen ? (
+            {tab.screen ? (
               <button
                 type="button"
                 className="bare tappable"
@@ -616,8 +579,8 @@ export function Command({ onClose }: { onClose: () => void }) {
                   ...secondLine(),
                 }}
               >
-                <TabGlyph screen={here.screen} size={15} />
-                This tab is on {here.title} — go back to it
+                <TabGlyph screen={tab.screen} size={15} />
+                This tab is on {tab.title} — go back to it
               </button>
             ) : (
               <div
@@ -642,7 +605,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'center',
-                gap: 'var(--sp-6)',
+                gap: size.gap,
                 marginTop: 'var(--sp-4)',
               }}
             >
@@ -651,9 +614,9 @@ export function Command({ onClose }: { onClose: () => void }) {
                   key={s.screen}
                   type="button"
                   className="bare tappable"
-                  onClick={() => land(s.screen, screenName(s.screen))}
+                  onClick={() => land(s.screen)}
                   style={{
-                    width: 78,
+                    width: size.tileBox,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -664,8 +627,8 @@ export function Command({ onClose }: { onClose: () => void }) {
                 >
                   <span
                     style={{
-                      width: 46,
-                      height: 46,
+                      width: size.tile,
+                      height: size.tile,
                       borderRadius: 999,
                       background: 'var(--app-hero)',
                       border: '1px solid var(--app-line)',
@@ -674,11 +637,11 @@ export function Command({ onClose }: { onClose: () => void }) {
                       justifyContent: 'center',
                     }}
                   >
-                    <TabGlyph screen={s.screen} size={20} />
+                    <TabGlyph screen={s.screen} size={size.glyph} />
                   </span>
                   <span
                     style={{
-                      fontSize: 'var(--type-xs)',
+                      fontSize: wide ? 'var(--type-sm)' : 'var(--type-xs)',
                       textAlign: 'center',
                       lineHeight: 'var(--leading-tight)',
                       width: '100%',
@@ -697,7 +660,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                   className="bare tappable"
                   onClick={() => setMore(!more)}
                   style={{
-                    width: 78,
+                    width: size.tileBox,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -708,8 +671,8 @@ export function Command({ onClose }: { onClose: () => void }) {
                 >
                   <span
                     style={{
-                      width: 46,
-                      height: 46,
+                      width: size.tile,
+                      height: size.tile,
                       borderRadius: 999,
                       background: 'var(--app-hero)',
                       border: '1px solid var(--app-line)',
@@ -723,7 +686,7 @@ export function Command({ onClose }: { onClose: () => void }) {
                   </span>
                   <span
                     style={{
-                      fontSize: 'var(--type-xs)',
+                      fontSize: wide ? 'var(--type-sm)' : 'var(--type-xs)',
                       lineHeight: 'var(--leading-tight)',
                       ...secondLine(),
                     }}
@@ -735,7 +698,7 @@ export function Command({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         ) : (
-          <div style={{ width: '100%', maxWidth: COLUMN, margin: '0 auto', padding: '0 var(--sp-7) var(--sp-7)' }}>
+          <div style={{ width: '100%', maxWidth: size.column, margin: '0 auto', padding: '0 var(--sp-7) var(--sp-7)' }}>
             {/* The chips: everything, then one kind. A search engine's row of
                 verticals, built from what came back rather than from a list
                 that can promise a kind with nothing in it. */}
@@ -869,8 +832,8 @@ export function Command({ onClose }: { onClose: () => void }) {
                         type="button"
                         className="bare tappable"
                         onClick={() => go(i, true)}
-                        aria-label={`Open ${hit.title} in a new tab`}
-                        title="Open in a new tab"
+                        aria-label={`Open ${hit.title} in a new tab, keeping this page`}
+                        title="Open in a new tab, keeping this page"
                         style={{
                           width: 'auto',
                           flex: 'none',
@@ -911,151 +874,6 @@ export function Command({ onClose }: { onClose: () => void }) {
 }
 
 /**
- * The strip: what is open, which one is on, and the way to open another.
- *
- * Scrolls sideways rather than shrinking past legibility, and every tab keeps
- * its glyph even when the title is elided — the glyph is what people actually
- * aim at once there are more than four.
- */
-function Tabs({
-  strip,
-  searching,
-  onPick,
-  onClose,
-  onNew,
-  onDismiss,
-}: {
-  strip: Strip;
-  /** What the tab you are on is searching for, if it is searching. */
-  searching: string;
-  onPick: (i: number) => void;
-  onClose: (i: number) => void;
-  onNew: () => void;
-  onDismiss: () => void;
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--sp-1)',
-        padding: 'var(--sp-2) var(--sp-4)',
-        borderBottom: '1px solid var(--app-line)',
-        background: 'var(--app-void)',
-      }}
-    >
-      <div style={{ display: 'flex', gap: 'var(--sp-1)', overflowX: 'auto', flex: 1, minWidth: 0 }}>
-        {strip.tabs.map((tab, i) => {
-          const on = i === strip.at;
-          /*
-           * A tab in the middle of a search is named after the search, which
-           * is what the tab in a browser does and is the only thing that
-           * tells two new tabs apart. Not written into the strip: the query
-           * is this session's, and a tab reopened tomorrow is a new tab
-           * again rather than one carrying a question nobody asked twice.
-           */
-          const title = (on && searching.trim() ? searching : tab.title) || NEW_TAB;
-          return (
-            <div
-              key={tab.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                flex: 'none',
-                maxWidth: 190,
-                borderRadius: 'var(--r-lg) var(--r-lg) 0 0',
-                background: on ? 'var(--app-panel)' : 'transparent',
-                border: `1px solid ${on ? 'var(--app-line)' : 'transparent'}`,
-                borderBottom: 'none',
-              }}
-            >
-              <button
-                type="button"
-                className="bare tappable"
-                onClick={() => onPick(i)}
-                aria-current={on ? 'page' : undefined}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--sp-3)',
-                  minWidth: 0,
-                  width: 'auto',
-                  textAlign: 'left',
-                  padding: 'var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-4)',
-                  fontSize: 'var(--type-sm)',
-                  ...(on ? {} : secondLine()),
-                }}
-              >
-                {tab.screen ? (
-                  <TabGlyph screen={tab.screen} size={15} />
-                ) : (
-                  <SearchIcon size={15} />
-                )}
-                <span
-                  style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {title}
-                </span>
-              </button>
-              <button
-                type="button"
-                className="bare tappable"
-                onClick={() => onClose(i)}
-                aria-label={`Close ${title}`}
-                style={{
-                  width: 'auto',
-                  flex: 'none',
-                  padding: 'var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-1)',
-                  fontSize: 'var(--type-sm)',
-                  ...secondLine(),
-                }}
-              >
-                ✕
-              </button>
-            </div>
-          );
-        })}
-        <button
-          type="button"
-          className="bare tappable"
-          onClick={onNew}
-          aria-label="New tab"
-          title="New tab"
-          style={{
-            width: 'auto',
-            flex: 'none',
-            padding: 'var(--sp-3) var(--sp-4)',
-            borderRadius: 'var(--r-sm)',
-            ...secondLine(),
-          }}
-        >
-          <Plus size={15} />
-        </button>
-      </div>
-      <button
-        type="button"
-        className="bare"
-        onClick={onDismiss}
-        style={{
-          width: 'auto',
-          flex: 'none',
-          padding: 'var(--sp-4) var(--sp-2)',
-          fontSize: 'var(--type-xs)',
-          letterSpacing: '0.12em',
-          ...secondLine(),
-        }}
-      >
-        CLOSE
-      </button>
-    </div>
-  );
-}
-
-/**
  * The box, and what it offers underneath.
  *
  * One component drawn in two places — big in the middle of the search page,
@@ -1090,6 +908,8 @@ function Box({
   onPickRow: (row: string) => void;
   onForget: (row: string) => void;
 }) {
+  const wide = useMedia(DESKTOP);
+  const tall = hero ? (wide ? 52 : 42) : 34;
   const explore = rows.findIndex((r) => r.kind === 'explore');
   return (
     <div style={{ position: 'relative', width: '100%' }}>
@@ -1116,7 +936,7 @@ function Box({
           style={{
             flex: 1,
             minWidth: 0,
-            height: hero ? 42 : 34,
+            height: tall,
             fontSize: 'var(--type-lg)',
             // The pill is the control; the field inside it is only a place to
             // type. A second border and a second ground here is two boxes.

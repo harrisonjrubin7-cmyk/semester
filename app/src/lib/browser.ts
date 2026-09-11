@@ -38,7 +38,8 @@
  * tested without a DOM and cannot be quietly broken by a storage failure.
  */
 
-import type { Screen } from './types';
+import type { CourseId, Screen, StudyMode } from './types';
+import type { Action } from '../state/shape';
 
 export interface AppTab {
   /** Stable for the life of the tab, so React keys survive a reorder. */
@@ -47,6 +48,101 @@ export interface AppTab {
   screen: Screen | null;
   /** What the strip shows. The screen's name, or `NEW_TAB`. */
   title: string;
+  /**
+   * What puts the app back exactly here.
+   *
+   * The screen alone is not a place. "Course" is not a tab worth having;
+   * "ECON 1020" is — and the difference is one id. So a tab keeps the actions
+   * that opened it (`actionsFor` in `lib/openhit.ts` makes them, `placeFor`
+   * below makes them for wherever the app already is) and replays them when
+   * it is picked. They are plain objects, so a tab survives being written to
+   * the device and read back next week.
+   */
+  place: Action[];
+  /**
+   * The search this tab last made, if it made one.
+   *
+   * A tab that searched and then followed a result is still a tab that
+   * searched: opening the box again shows the results it was showing, the way
+   * Back does in a browser, rather than a blank page and a query to retype.
+   * Cleared by emptying the box, and never carried into a new tab — a tab
+   * nobody has typed in has nothing to remember.
+   */
+  query?: string;
+}
+
+/**
+ * The one action that stands for "just go there".
+ *
+ * Every screen has this as its place; only the ones that are about something
+ * need more. Kept as a function rather than written out at each call so the
+ * shape of a place is defined once.
+ */
+export function justGo(screen: Screen): Action[] {
+  return [{ type: 'go', screen }];
+}
+
+/** The ids the app is holding, which is what turns a screen into a place. */
+export interface Where {
+  courseId: CourseId;
+  itemId: string;
+  eventId: string;
+  guideId: CourseId;
+  /*
+   * Nullable, because the store's are: a note, a document, a sheet and a deck
+   * are each "the one that is open, or none". Written out rather than taken
+   * as `State` so this file stays a model of a strip of tabs rather than
+   * something that has to be given the whole app to answer a question.
+   */
+  noteId: string | null;
+  documentId: string | null;
+  sheetId: string | null;
+  deckId: string | null;
+  mode: StudyMode;
+}
+
+/**
+ * The place the app is in right now, as actions that would return to it.
+ *
+ * The mirror of `actionsFor`: that one reads a search result, this one reads
+ * the app itself, so a tab records where you actually are rather than only
+ * where search sent you. The screens that are about something are the ones
+ * listed; everything else is a screen you are simply on.
+ *
+ * The four screens under a guide — the drill, the quiz, the lesson, the
+ * slides — take two actions, because there is no action that opens a quiz
+ * about a particular course: opening the guide carries the id, and going to
+ * the screen carries which of the four it was.
+ */
+export function placeFor(screen: Screen, at: Where): Action[] {
+  switch (screen) {
+    case 'course':
+    case 'edit':
+      return at.courseId ? [{ type: 'openCourse', id: at.courseId }] : justGo(screen);
+    case 'item':
+      return at.itemId ? [{ type: 'openItem', id: at.itemId }] : justGo(screen);
+    case 'event':
+      return at.eventId ? [{ type: 'openEvent', id: at.eventId }] : justGo(screen);
+    case 'guide':
+      return at.guideId ? [{ type: 'openGuide', id: at.guideId, mode: at.mode }] : justGo(screen);
+    case 'drill':
+    case 'quiz':
+    case 'lesson':
+    case 'slides':
+      return at.guideId
+        ? [{ type: 'openGuide', id: at.guideId, mode: at.mode }, { type: 'go', screen }]
+        : justGo(screen);
+    case 'note':
+      return at.noteId ? [{ type: 'openNote', id: at.noteId }] : justGo(screen);
+    case 'write':
+      return at.documentId ? [{ type: 'openDocument', id: at.documentId }] : justGo(screen);
+    case 'sheet':
+      return at.sheetId ? [{ type: 'openSheet', id: at.sheetId }] : justGo(screen);
+    case 'deck':
+      return at.deckId ? [{ type: 'editDeck', id: at.deckId }] : justGo(screen);
+    default:
+      return justGo(screen);
+  }
 }
 
 /** The strip: what is open, and which one of them is on. */
@@ -78,7 +174,7 @@ export function tabId(): string {
 
 /** A tab with nothing in it — the search page. */
 export function fresh(id: string = tabId()): AppTab {
-  return { id, screen: null, title: NEW_TAB };
+  return { id, screen: null, title: NEW_TAB, place: [] };
 }
 
 /** The strip somebody who has never opened one gets. */
@@ -146,13 +242,34 @@ export function select(strip: Strip, which: number): Strip {
  * Same screen, same strip — reference-equal, so this can be called from an
  * effect without looping.
  */
-export function visit(strip: Strip, screen: Screen, title: string): Strip {
+export function visit(strip: Strip, screen: Screen, title: string, place: Action[]): Strip {
   const at = clamp(strip, strip.at);
   const tab = strip.tabs[at];
-  if (!tab || (tab.screen === screen && tab.title === title)) return strip;
+  if (!tab) return strip;
+  // The query is not touched here: following a result is what a tab does
+  // *after* a search, and the search is what you come back to.
+  // Compared by what it says and where it goes, not by identity: this is
+  // called on every navigation and on every open, and a new object each time
+  // is a re-render of the strip each time.
+  if (tab.screen === screen && tab.title === title && sameplace(tab.place, place)) return strip;
   const tabs = [...strip.tabs];
-  tabs[at] = { ...tab, screen, title };
+  tabs[at] = { ...tab, screen, title, place };
   return { tabs, at };
+}
+
+/** What this tab last searched for. Empty forgets it. */
+export function asked(strip: Strip, query: string): Strip {
+  const at = clamp(strip, strip.at);
+  const tab = strip.tabs[at];
+  if (!tab || (tab.query ?? '') === query) return strip;
+  const tabs = [...strip.tabs];
+  tabs[at] = { ...tab, query: query || undefined };
+  return { tabs, at };
+}
+
+/** Whether two places are the same place. Shallow: an action is flat. */
+export function sameplace(a: Action[], b: Action[]): boolean {
+  return a.length === b.length && a.every((x, i) => JSON.stringify(x) === JSON.stringify(b[i]));
 }
 
 /** Open a screen in a tab of its own — the middle-click, as a button. */
@@ -160,13 +277,64 @@ export function openBeside(
   strip: Strip,
   screen: Screen,
   title: string,
+  place: Action[],
   id: string = tabId(),
 ): Strip {
-  return visit(add(strip, id), screen, title);
+  return visit(add(strip, id), screen, title, place);
 }
 
 /** Where the strip is kept between sessions. */
 export const TABS_KEY = 'semester.tabs.v1';
+
+/**
+ * A stored strip, read back.
+ *
+ * Anything malformed becomes a blank strip rather than an exception or a
+ * half-read one: the worst case for a wrong answer here is somebody losing a
+ * row of tabs, and the worst case for throwing is a search box that will not
+ * open. `known` is asked about every screen, so a tab pointing at something
+ * this build no longer has — a screen removed, a school without that
+ * capability — is dropped instead of becoming a dead click.
+ */
+/**
+ * The actions a stored tab is allowed to carry.
+ *
+ * The store on the device is not a trusted input — it holds whatever an older
+ * build, a newer build or a half-finished sync wrote — and a tab's place is
+ * *dispatched*. Without this list, a strip edited by hand in devtools would be
+ * a way to make the app do anything the reducer can do, including the things
+ * that delete data. So: opening actions only, and everything else is dropped
+ * rather than repaired.
+ *
+ * Adding an arm to `actionsFor` or `placeFor` means adding its type here, and
+ * `browser.test.ts` holds that the two lists agree.
+ */
+export const PLACE_ACTIONS = [
+  'go',
+  'openItem',
+  'openCourse',
+  'openEvent',
+  'openGuide',
+  'openNote',
+  'openDocument',
+  'openSheet',
+  'editDeck',
+  'setMineTab',
+] as const;
+
+const ALLOWED = new Set<string>(PLACE_ACTIONS);
+
+/** One stored action, if it is one of the openers and nothing but flat data. */
+function placeAction(raw: unknown): Action | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const action = raw as Record<string, unknown>;
+  if (typeof action.type !== 'string' || !ALLOWED.has(action.type)) return null;
+  for (const value of Object.values(action)) {
+    const kind = typeof value;
+    if (kind !== 'string' && kind !== 'number' && kind !== 'boolean') return null;
+  }
+  return action as unknown as Action;
+}
 
 /**
  * A stored strip, read back.
@@ -188,14 +356,23 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
       const tab = entry as Partial<AppTab>;
       if (typeof tab?.id !== 'string') continue;
       if (tab.screen === null || tab.screen === undefined) {
-        tabs.push({ id: tab.id, screen: null, title: NEW_TAB });
+        tabs.push(fresh(tab.id));
         continue;
       }
       if (typeof tab.screen !== 'string' || !known(tab.screen)) continue;
+      const screen = tab.screen as Screen;
+      const place = Array.isArray(tab.place)
+        ? tab.place.map(placeAction).filter((a): a is Action => a !== null)
+        : [];
       tabs.push({
         id: tab.id,
-        screen: tab.screen as Screen,
-        title: typeof tab.title === 'string' && tab.title ? tab.title : tab.screen,
+        screen,
+        title: typeof tab.title === 'string' && tab.title ? tab.title : screen,
+        ...(typeof tab.query === 'string' && tab.query ? { query: tab.query } : {}),
+        // A tab whose place did not survive the check still knows its screen,
+        // so it lands you there rather than nowhere. Losing the deadline you
+        // had open is a smaller failure than a tab that does nothing.
+        place: place.length > 0 ? place : justGo(screen),
       });
     }
     if (tabs.length === 0) return blank();
