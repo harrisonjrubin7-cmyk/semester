@@ -130,6 +130,35 @@ describe('the header buttons a thumb has to hit', () => {
     expect([...src().matchAll(/className="btn btn-ghost btn-icon tap"/g)].length).toBeGreaterThanOrEqual(4);
   });
 
+  /*
+   * The avatar, which is the one header control that is a *place* rather than
+   * an action — and the one most easily broken by a well-meant tidy.
+   *
+   * Two halves, and neither is visible in a screenshot of the screen it is
+   * wrong on. It must be on every navigation: it began as the feed layout's
+   * own button, going to Progress because there was no profile to go to, and
+   * putting it back behind `state.nav === 'feed'` would hide the app's own
+   * profile from three of its four navigations. And it must stay behind
+   * `atRoot`: a walked-into screen spends that corner on Back, and the title
+   * is what pays for a fifth icon — four already cost it 44px, and at a root
+   * the title is a tab name, which is short by construction.
+   */
+  it('puts the avatar at every navigation’s root, and only at a root', () => {
+    const at = src().indexOf('<Avatar name={state.myName}');
+    expect(at, 'the header avatar has moved; point this test at it').toBeGreaterThan(-1);
+    // The last condition opened before it, which is the one it is drawn under.
+    const guards = [...src().slice(0, at).matchAll(/\{([^{}\n]*?)&& \(/g)];
+    const last = guards[guards.length - 1]?.[1].trim();
+    expect(last, 'the avatar should be gated on atRoot alone').toBe('atRoot');
+  });
+
+  it('sends the avatar to the profile, not to the progress report', () => {
+    // It went to `me` for as long as there was no screen about the person.
+    const at = src().indexOf('<Avatar name={state.myName}');
+    const opening = src().slice(0, at).split('<button').pop() ?? '';
+    expect(opening).toContain("screen: 'profile'");
+  });
+
   it('keeps the action row wide enough that those areas do not overlap', () => {
     // 36px button + 8px gap = 44px pitch, which is the overlay's own width.
     // --sp-1 (2px) and --sp-2 (4px) both put the buttons back on top of one

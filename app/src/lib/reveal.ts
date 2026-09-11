@@ -86,6 +86,12 @@ export const FIRST: string[] = [
   'settings',
   'account',
   'privacy',
+  // Eleven. A profile is not a thing you earn by importing a syllabus — it is
+  // where you tell the app your name, which is a first-morning act, and it is
+  // behind the avatar in the header from the first paint. A locked screen
+  // reachable by a control that is always drawn would be the gate contradicting
+  // itself.
+  'profile',
 ];
 
 /**

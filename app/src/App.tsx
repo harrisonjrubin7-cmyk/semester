@@ -6,10 +6,10 @@ import {
   Bell,
   Check,
   ChevronLeft,
-  Person,
   Plus,
   Search as SearchIcon,
 } from './components/Icons';
+import { Avatar } from './components/Avatar';
 import { creditHoursOr0 } from './lib/credits';
 import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
@@ -108,6 +108,7 @@ const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work 
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
+const Profile = lazy(() => import('./screens/Profile').then((m) => ({ default: m.Profile })));
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
 const Help = lazy(() => import('./screens/Help').then((m) => ({ default: m.Help })));
 
@@ -216,7 +217,7 @@ function Titled() {
 
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
-  const { state, now, catalog } = useStore();
+  const { state, now, catalog, school } = useStore();
   // Not `guide.code`. Opening a study screen by its own URL — which is the
   // point of having URLs — arrives with no course chosen, and the four study
   // kickers below then read a field off `undefined` and take the whole app
@@ -291,6 +292,17 @@ function useHeader(): { kicker: string; title: string } {
     }
     case 'me':
       return { kicker: load, title: 'Progress' };
+    /*
+     * The one screen whose kicker is not about the semester.
+     *
+     * `load` — "4 courses · 11 credits" — is right above every screen that is
+     * about the term and wrong above this one, which is about the person
+     * holding it. The school is the context that belongs here, and where
+     * nobody has said which school it falls back to the app's own name rather
+     * than to an empty kicker, which draws as a gap where a line should be.
+     */
+    case 'profile':
+      return { kicker: school.name || 'Semester', title: 'Profile' };
     case 'notifs':
       return { kicker: 'Today', title: 'Alerts' };
     case 'settings':
@@ -714,14 +726,33 @@ function Header() {
             )}
           </button>
           )}
-          {state.nav === 'feed' && atRoot && (
+          {/*
+            You, last in the row, on every navigation.
+
+            This was the feed layout's own button and it went to Progress — a
+            person glyph opening a report, because there was no screen it could
+            honestly open. There is one now, and the button is the thing every
+            phone puts at this exact corner: your picture, opening you.
+
+            `atRoot` for the same reason Alerts is. A screen you walked into
+            gives the row its Back button, and the title is what has to survive
+            the squeeze — four icons already cost 44px of it. At a root the
+            title is a tab name, which is short by construction, so the fifth
+            icon lands where there is room for it. See `lib/header.test.ts`,
+            which holds both halves of that.
+
+            The label carries the name when there is one. A screen reader
+            saying "Profile, Harrison" is the same information the letters in
+            the box carry, and "HR" read out as letters is not.
+          */}
+          {atRoot && (
             <button
               type="button"
               className="btn btn-ghost btn-icon tap"
-              onClick={() => dispatch({ type: 'go', screen: 'me' })}
-              aria-label="Me"
+              onClick={() => dispatch({ type: 'go', screen: 'profile' })}
+              aria-label={state.myName.trim() ? `Profile — ${state.myName.trim()}` : 'Profile'}
             >
-              <Person size={19} />
+              <Avatar name={state.myName} size={22} />
             </button>
           )}
         </div>
@@ -867,6 +898,8 @@ function CurrentScreen() {
       return <EventDetail />;
     case 'me':
       return <Me />;
+    case 'profile':
+      return <Profile />;
     case 'notifs':
       return <Notifications />;
     case 'settings':

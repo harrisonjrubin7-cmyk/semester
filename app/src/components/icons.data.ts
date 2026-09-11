@@ -370,6 +370,26 @@ export const SHAPES = {
     { d: 'M8.5 20.5h7l-.8-4H9.3z' },
   ],
 
+  /**
+   * Profile — the same person as `person`, inside a ring.
+   *
+   * Two glyphs this close together would normally be the near-collision the
+   * grid exists to make visible, and here the collision is the point: the ring
+   * is what every phone draws around the little picture of you, and the header
+   * button that opens this screen is that picture. `person` stays the plain
+   * figure used wherever a *person* is meant — a classmate, a professor — and
+   * this is the one that means *you*.
+   *
+   * The shoulders are cut narrower than `person`'s so the figure sits inside
+   * the ring rather than touching it at 19px, where a stroke meeting a stroke
+   * reads as a smudge.
+   */
+  profile: [
+    { c: [12, 12, 9] },
+    { c: [12, 10, 2.4] },
+    { d: 'M6.8 18.7a5.6 5.6 0 0 1 10.4 0' },
+  ],
+
   /** Guide — the question the screen exists to answer. */
   help: [
     { c: [12, 12, 8.5] },

@@ -104,13 +104,22 @@ export function SettingsIndex() {
           grid would leave a hole under the short one. See `styles/app.css`.
         */
         <nav aria-label="Settings" className="flow-cols" style={{ padding: '0 var(--page-pad)' }}>
+          {/*
+            The row every phone's settings opens with, and it now opens the
+            same thing theirs do.
+
+            It went to Account, which is the screen about signing in and
+            syncing — so a row headed with somebody's *name* answered with a
+            password field. It opens the profile instead: the name is what that
+            screen owns, and Account is its first row.
+          */}
           <Group>
             <NavRow
               tall
-              label={state.myName.trim() || 'Your account'}
+              label={state.myName.trim() || 'Your profile'}
               sub={school.name}
               value={standing}
-              onClick={() => dispatch({ type: 'go', screen: 'account' })}
+              onClick={() => dispatch({ type: 'go', screen: 'profile' })}
             />
           </Group>
 
