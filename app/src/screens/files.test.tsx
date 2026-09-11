@@ -140,7 +140,7 @@ const SCREENS = [
   {
     name: 'Sheet',
     node: <Sheet />,
-    blank: /^Blank spreadsheet$/,
+    blank: /^Blank sheet/,
     title: 'Sheet title',
     into: 'Cell A1',
     text: '12',
@@ -151,7 +151,7 @@ const SCREENS = [
     node: <Deck />,
     blank: /^Blank presentation$/,
     title: 'Deck title',
-    into: 'Title of slide 1',
+    into: 'Title on slide 1',
     text: 'Federalism',
     exports: /Download as PowerPoint/,
   },

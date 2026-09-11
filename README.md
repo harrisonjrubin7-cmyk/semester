@@ -363,11 +363,22 @@ model in it or needs a key:
   `$$…$$` equations into blocks you can edit.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
-  `ROUND`, `SQRT`, `SUMPRODUCT` and the arithmetic around them. Out as a real
-  `.xlsx` **with the formulas still in it** — a CSV of a gradebook is the
-  answers with the working thrown away — or as a CSV, a Markdown table, or a
-  table dropped into a document. A pasted table is read whether it is a copy
-  out of Excel, a CSV or Markdown.
+  `ROUND`, `SQRT`, `SUMPRODUCT` and the arithmetic around them. It is a
+  spreadsheet rather than a grid of text boxes: a **selection** you drag or
+  arrow across, whose sum, average, count and range are read off the status
+  line rather than written as a formula and deleted again; a **name box and
+  formula bar**, because the cell is 92 pixels wide and `=SUMPRODUCT(B2:B9,C2:C9)`
+  is not; a **toolbar** that puts a picture over a number — percentages,
+  money, decimal places, bold, alignment — without changing the number
+  underneath it; **undo and redo** inside the grid; and a **tab strip** along
+  the bottom, so the gradebook and the budget beside it are one tap apart.
+  It opens on **templates** — a to-do list, a monthly and a term budget, a
+  reading tracker, a lab's readings — each arriving with its totals already
+  written, beside the gradebook built from your own syllabus's weights. Out as
+  a real `.xlsx` **with the formulas and the formats still in it** — a CSV of a
+  gradebook is the answers with the working thrown away — or as a CSV, a
+  Markdown table, or a table dropped into a document. A pasted table is read
+  whether it is a copy out of Excel, a CSV or Markdown.
 - **Equations.** A small piece of LaTeX — `\frac{a}{b}`, `x^2`, `x_i`,
   `\sqrt{x}`, `\sum_{i=1}^{n}`, `\bar{x}`, the greek and the relations —
   written once and rendered three ways: MathML on screen, a real Word equation
@@ -380,6 +391,19 @@ model in it or needs a key:
 **From a sheet** puts a table you built onto slides as a real PowerPoint table
 you can still edit, split across several slides when it is long rather than
 shrunk until nobody at the back can read it.
+
+And editing a deck is **the slide**, not a form about it. The middle of the
+screen is the slide itself at sixteen by nine, in the deck's own colours, with
+the title and the points where the exported file puts them — because the two
+faults you cannot fix afterwards are a title that runs to three lines and
+eleven points on a slide that holds six, and a stack of labelled boxes hides
+both until the export. A rail of real thumbnails down the side, a layout you
+can change on a slide that already exists (and which says what the change would
+throw away before it does it), four **themes** — two for a projector, two for
+printing — that go into the `.pptx` so the file opens in the colours you chose,
+and speaker notes under the canvas where every slide editor puts them. The
+presenter view draws from the same code, so what is on the wall is what is in
+the file.
 
 Nothing here computes what it renders and nothing here renders what it computes:
 the sheet does arithmetic and says so, the equation screen writes a formula and
@@ -396,13 +420,13 @@ before the write happens like every other tool in that file.
 
 ### They open the way every editor opens
 
-Three screens that make a file, and until now each had invented its own
-furniture: the title was a form field on two of them and absent on the third,
-the exports were three stacked buttons under "Take it away" on one and four
-under the same words on the next, and deleting the thing you were editing was a
-full-width button at the very bottom of the page. None of them had the one thing
-Word, Pages, Excel, Docs, Sheets and Keynote all have — a bar across the top
-reading **File · Edit · View · Insert · Format · Tools · Help**.
+Three screens that make a file, and each had invented its own furniture: the
+title was a form field on two of them and absent on the third, the exports were
+three stacked buttons under "Take it away" on one and four under the same words
+on the next, and deleting the thing you were editing was a full-width button at
+the very bottom of the page. None of them had the one thing Word, Pages, Excel,
+Docs, Sheets and Keynote all have — a bar across the top reading **File · Edit ·
+View · Insert · Format · Tools · Help**.
 
 They all have it now, and it is the same bar, drawn once from a list. A menu
 item with nothing behind it is greyed rather than left live, because a control
@@ -414,18 +438,22 @@ the whole bar folds into one button whose panel lists every menu under its own
 name; nothing is hidden, because a menu you have to discover by dragging a row
 sideways is a menu that does not exist.
 
-Each of the three opens on the same shelf, too: a row of things to start
-from — a blank, then the seven document shapes that used to be behind a button
-nobody pressed, or the gradebook built from a course's own syllabus weights —
-and then everything you already have, under **Today**, **Previous 7 days**,
-**Previous 30 days** and **Earlier**, as thumbnails or as rows, narrowable to
-one course. The thumbnails are the real thing small: a document's own first
-lines, a sheet's top-left corner as a grid, a deck's first slide as a slide.
+The bar does not replace a toolbar and is not replaced by one. Sheet keeps its
+pictures — the formats, bold, the alignments, undo — one press away, and the
+deck keeps its six slide actions, for the same reason Excel and PowerPoint keep
+both: a button is for the hand that knows where it is, and a menu is for
+everybody else.
 
-Sheet gained the two things a spreadsheet has had since 1985 and this one did
-not — a **formula bar**, which is the sentence that used to sit under the grid
-turned into a field you can actually type into, and the **strip of tabs along
-the bottom** that says what else is in here.
+**Write** and **Make a deck** now open on a shelf rather than a list: a row of
+things to start from — a blank, then the seven document shapes that used to be
+behind a button nobody pressed — and then everything you already have, under
+**Today**, **Previous 7 days**, **Previous 30 days** and **Earlier**, as
+thumbnails or as rows, sorted three ways and narrowable to one course. The
+thumbnails are the real thing small: a document's own first lines, a deck's
+first slide as a slide. Sheet has a shelf of its own, built alongside this one
+and richer in one way this is not — it knows when a sheet was last *opened* as
+well as last edited. Folding the two into one is worth doing and is not done
+here.
 
 What is deliberately absent is keystrokes printed beside the commands.
 `app/src/lib/keys.ts` is right that a shortcut carrying Meta or Control belongs

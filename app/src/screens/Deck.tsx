@@ -230,8 +230,8 @@ function Build() {
           marginBottom: 'var(--sp-5)',
         }}
       >
-        A real PowerPoint file, built here. It opens in PowerPoint, Keynote and Google Slides, and
-        it comes out in the app's own palette rather than a template's.
+        A real PowerPoint file, built here. It opens in PowerPoint, Keynote and Google Slides, in
+        whichever of the four themes you choose — two for a projector, two for printing.
       </div>
 
       <Segmented
