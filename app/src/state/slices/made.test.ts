@@ -197,3 +197,48 @@ describe('filing against a deadline', () => {
     expect(after.documents[0].courseId).toBe('econ');
   });
 });
+
+/**
+ * Changing the course takes the deadline with it.
+ *
+ * A deadline belongs to one course, so a document moved from ECON to PSCI is
+ * not merely stale — its `itemId` names something the new course does not
+ * contain. Left behind, the document read as Personal on its own screen while
+ * still turning up under last week's essay, and the picker drew no control to
+ * clear it because the new course had no deadlines to draw.
+ *
+ * The screens send both fields in one patch, which is what these hold: the
+ * reducer must not drop half of it. See the note in `screens/Write.tsx`.
+ */
+describe('moving work to another course', () => {
+  it('clears the deadline in the same patch', () => {
+    const made = run(start(), { type: 'newDocument', courseId: 'econ', itemId: 'econ-m1' });
+    const id = made.documents[0].id;
+    const after = run(made, {
+      type: 'updateDocument',
+      id,
+      patch: { courseId: 'psci', itemId: null },
+    });
+    expect(after.documents[0].courseId).toBe('psci');
+    expect(after.documents[0].itemId).toBeNull();
+  });
+
+  it('does the same for a sheet, a deck and a note', () => {
+    const made = run(
+      start(),
+      { type: 'newSheet', courseId: 'econ', itemId: 'econ-m1' },
+      { type: 'newDeck', courseId: 'econ', itemId: 'econ-m1' },
+      { type: 'newNote', courseId: 'econ', itemId: 'econ-m1' },
+    );
+    const after = run(
+      made,
+      { type: 'updateSheet', id: made.sheets[0].id, patch: { courseId: null, itemId: null } },
+      { type: 'updateDeck', id: made.decks[0].id, patch: { courseId: null, itemId: null } },
+      { type: 'updateNote', id: made.notes[0].id, patch: { courseId: null, itemId: null } },
+    );
+    expect(after.sheets[0].itemId).toBeNull();
+    expect(after.decks[0].itemId).toBeNull();
+    expect(after.notes[0].itemId).toBeNull();
+    expect(after.notes[0].courseId).toBeNull();
+  });
+});

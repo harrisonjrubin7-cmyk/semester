@@ -65,20 +65,34 @@ export function DeadlinePicker({
   const { catalog, now } = useStore();
   const options = useMemo(() => pickable(datedItems(catalog, now), courseId), [catalog, now, courseId]);
 
-  if (options.length === 0) return null;
-
-  const capped = showAll ? options : options.slice(0, VISIBLE);
-  const hidden = options.length - capped.length;
   /*
    * A value pointing at a deadline that is not in the list.
    *
-   * Two ways to get here and both are ordinary: the course was changed under a
-   * document that was already filed against a deadline of the old one, and a
-   * deadline that has been edited out of the course since. Either way the
-   * chips would draw with nothing selected while the thing still claimed to be
-   * filed — so the row says so, in the one place somebody can act on it.
+   * A deadline that has been edited out of the course since it was filed
+   * against. The chips would draw with nothing selected while the thing still
+   * claimed to be filed — so the row says so, in the one place somebody can
+   * act on it.
+   *
+   * (Changing the *course* used to land here too. It no longer can: every
+   * screen that draws this clears `itemId` in the same patch that changes
+   * `courseId`, because a deadline belongs to a course and the old one is not
+   * in the new course by definition. See the note in `screens/Write.tsx`.)
    */
   const stray = value != null && !options.some((o) => o.id === value);
+
+  /*
+   * Nothing to draw only when there is also nothing to *clear*.
+   *
+   * The early return used to be unconditional, and that was the hole: a
+   * course with no deadlines left drew no control at all, so a filing left
+   * over from before they were deleted was invisible and — because it is
+   * still on the record — came back the moment the course had a deadline
+   * again. A stray with no options gets the one chip that ends it.
+   */
+  if (options.length === 0 && !stray) return null;
+
+  const capped = showAll ? options : options.slice(0, VISIBLE);
+  const hidden = options.length - capped.length;
 
   return (
     <div style={{ marginTop: 'var(--sp-5)', ...style }}>

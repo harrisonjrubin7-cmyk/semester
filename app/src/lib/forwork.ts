@@ -75,6 +75,23 @@ export const WORK_LABEL: Record<WorkKind, string> = {
   file: 'File',
 };
 
+/**
+ * The least a deadline has to be to be named.
+ *
+ * `nameFor` and `forLine` read an id and a title and nothing else, and taking
+ * the least means they can be handed the account's *whole* list of deadlines
+ * rather than the decorated ones for the term that happens to be open. That
+ * distinction is the whole of a bug this had: `catalog` is one term by design
+ * (see `state/store.tsx`), so a file filed against last term's essay drew as
+ * having no deadline at all the moment somebody switched terms — a live link
+ * reported as a dangling one. The drive already reaches across terms for its
+ * folders, for the same reason and with the same comment.
+ */
+export interface Named {
+  id: string;
+  title: string;
+}
+
 /** One piece of work, as the panel and the pickers need it. */
 export interface Attached {
   kind: WorkKind;
@@ -253,7 +270,7 @@ export function pickable(items: readonly DatedItem[], courseId: string | null): 
  * every caller writes "for X" only when this answers, so nothing in the app
  * can draw a link to a deadline that has been edited away.
  */
-export function nameFor(items: readonly DatedItem[], itemId: string | null | undefined): string | undefined {
+export function nameFor(items: readonly Named[], itemId: string | null | undefined): string | undefined {
   if (!itemId) return undefined;
   return items.find((i) => i.id === itemId)?.title;
 }
@@ -267,7 +284,7 @@ export function nameFor(items: readonly DatedItem[], itemId: string | null | und
  * Empty rather than a placeholder, so it drops out of a `.filter(Boolean)`
  * joined line instead of leaving a dangling separator.
  */
-export function forLine(items: readonly DatedItem[], itemId: string | null | undefined): string {
+export function forLine(items: readonly Named[], itemId: string | null | undefined): string {
   const name = nameFor(items, itemId);
   return name ? `for ${name}` : '';
 }
@@ -278,10 +295,10 @@ export function forLine(items: readonly DatedItem[], itemId: string | null | und
  * `nameFor` covers the common case of a single line of text; this is for the
  * two places that need the date and the course as well.
  */
-export function itemFor(
-  items: readonly DatedItem[],
+export function itemFor<T extends Named>(
+  items: readonly T[],
   itemId: string | null | undefined,
-): DatedItem | undefined {
+): T | undefined {
   if (!itemId) return undefined;
   return items.find((i) => i.id === itemId);
 }

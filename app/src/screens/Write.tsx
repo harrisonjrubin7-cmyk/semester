@@ -5,7 +5,6 @@ import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
-import { datedItems } from '../lib/select';
 import { Equation } from '../components/Equation';
 import { ActionButton, EmptyState, SectionLabel, Toggle } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -70,11 +69,8 @@ export function Write() {
 // ── The list ─────────────────────────────────────────────────────────────
 
 function Shelf() {
-  const { state, dispatch, courseCode, catalog, now } = useStore();
+  const { state, dispatch, courseCode, allItems } = useStore();
   const [picking, setPicking] = useState(false);
-  /* One list for the whole shelf, so the "for Friday's paper" line on twenty
-     rows does not decorate the term's deadlines twenty times. */
-  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
 
   return (
     <Page blurb="Headings, tables and equations, arranged into a real Word file — or printed straight from here as a PDF.">
@@ -161,7 +157,7 @@ function Shelf() {
                          after whose it is: the course narrows a shelf of
                          twenty to five and the deadline picks one out of
                          those five. */
-                      forLine(items, doc.itemId),
+                      forLine(allItems, doc.itemId),
                       `${words(doc)} words`,
                       new Date(doc.updated).toLocaleDateString(undefined, {
                         month: 'short',
@@ -268,7 +264,16 @@ function Editor({ doc }: { doc: Doc }) {
         aria-label="Subtitle"
         style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
       />
-      <CoursePicker value={doc.courseId} onChange={(id) => patch({ courseId: id })} />
+      {/* The deadline goes with the course. A deadline belongs to one
+          course, so the old filing is not merely stale after this — it names
+          something that is not in the new course at all, and leaving it would
+          be a document that reads as Personal on this screen while still
+          turning up under last week's essay. Cleared in the same patch, so
+          the two can never disagree. */}
+      <CoursePicker
+        value={doc.courseId}
+        onChange={(id) => patch({ courseId: id, itemId: null })}
+      />
       {/* What it is for, under whose it is. A document filed against Friday's
           paper turns up on that deadline — see `components/ForThis.tsx`. */}
       <DeadlinePicker

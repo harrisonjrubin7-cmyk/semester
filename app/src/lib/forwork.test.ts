@@ -3,6 +3,7 @@ import {
   attachable,
   attachedTo,
   countsByItem,
+  forLine,
   itemFor,
   nameFor,
   pickable,
@@ -271,5 +272,29 @@ describe('a link with nothing on the other end', () => {
     expect(nameFor(items, undefined)).toBeUndefined();
     expect(itemFor(items, 'gone')).toBeUndefined();
     expect(itemFor(items, 'here')?.id).toBe('here');
+  });
+});
+
+describe('naming a deadline from any term', () => {
+  /*
+   * The catalogue is one term by design, so a lookup built from it reports a
+   * perfectly good link to last term's essay as no link at all — a live
+   * association drawn as a dangling one, on the screens whose whole job is to
+   * say what a file is for. `nameFor` therefore asks for the least it needs,
+   * so the store can hand it every term's deadlines. See `allItems` in
+   * `state/store.tsx`.
+   */
+  it('reads an id and a title and nothing else', () => {
+    const acrossTerms = [
+      { id: 'last-term-essay', title: 'Final essay' },
+      { id: 'this-term-quiz', title: 'Quiz #1' },
+    ];
+    expect(nameFor(acrossTerms, 'last-term-essay')).toBe('Final essay');
+    expect(forLine(acrossTerms, 'last-term-essay')).toBe('for Final essay');
+    expect(itemFor(acrossTerms, 'this-term-quiz')?.title).toBe('Quiz #1');
+  });
+
+  it('still answers nothing for an id no term holds', () => {
+    expect(forLine([{ id: 'a', title: 'A' }], 'gone')).toBe('');
   });
 });

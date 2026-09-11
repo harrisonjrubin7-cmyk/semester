@@ -44,6 +44,8 @@ export function ForThis({ item }: { item: DatedItem }) {
   const [files, setFiles] = useState<Settled[]>([]);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState('');
+  /** What went wrong with the last write, in a sentence, or empty. */
+  const [trouble, setTrouble] = useState('');
 
   /*
    * Files live in IndexedDB, not in the store, so they arrive after the first
@@ -59,27 +61,81 @@ export function ForThis({ item }: { item: DatedItem }) {
   const mine = attachedTo(held, item.id);
   const free = adding ? attachable(held, item.c) : [];
 
+  /*
+   * Attaching something that already exists.
+   *
+   * The five kinds in the store go through the reducer and cannot fail. A
+   * file is a write to IndexedDB and can: no room left, a browser that
+   * refuses to store, a transaction aborted as the tab closes. The first
+   * version discarded that rejection with `void`, which meant the panel
+   * stayed open, nothing was attached, and nothing anywhere said so — the
+   * press simply did nothing, which is the worst thing a control can do.
+   *
+   * So the panel only closes once the write has landed, and a failure is a
+   * sentence rather than a silence.
+   */
   const attach = async (a: Attached) => {
     if (a.kind === 'file') {
-      await pinFile(a.id, item.id);
+      try {
+        await pinFile(a.id, item.id);
+      } catch {
+        setTrouble(`${a.title} could not be filed against this. There may be no room left on this device.`);
+        refresh();
+        return;
+      }
       refresh();
     } else {
-      dispatch(pin(a, item.id));
+      dispatch(filing(a, item.id));
     }
+    setTrouble('');
     setAdding(false);
+  };
+
+  /** Taking the link off, with the same failure to report as putting it on. */
+  const loose = async (a: Attached) => {
+    if (a.kind !== 'file') {
+      dispatch(filing(a, null));
+      return;
+    }
+    try {
+      await pinFile(a.id, null);
+      setTrouble('');
+    } catch {
+      setTrouble(`${a.title} could not be unfiled. There may be no room left on this device.`);
+    } finally {
+      refresh();
+    }
   };
 
   const onPick = async (list: File[]) => {
     if (list.length === 0) return;
-    setBusy('Adding…');
+    const failed: string[] = [];
     try {
-      for (const f of list) await addFile(f, item.c, null, '', item.id);
-    } catch {
-      // The same failure the drive handles: no room left, or a browser that
-      // refuses to store. Whatever landed before it stays, and the count below
-      // is the honest report of that.
+      for (const [n, f] of list.entries()) {
+        setBusy(list.length > 1 ? `Adding ${n + 1} of ${list.length}…` : 'Adding…');
+        /*
+         * Per file, not around the loop.
+         *
+         * One file that will not store — a video past the quota, a name the
+         * browser refuses — must not take the rest of the selection with it.
+         * Around the loop it did: pick five readings, have the second fail,
+         * and the last three were never attempted and never mentioned. This
+         * is the shape `screens/mine/Drive.tsx` already uses for the same
+         * job, and the report below names what was lost.
+         */
+        try {
+          await addFile(f, item.c, null, '', item.id);
+        } catch {
+          failed.push(f.name);
+        }
+      }
     } finally {
       setBusy('');
+      setTrouble(
+        failed.length === 0
+          ? ''
+          : `${failed.join(', ')} could not be stored. There may be no room left on this device.`,
+      );
       refresh();
     }
   };
@@ -87,6 +143,20 @@ export function ForThis({ item }: { item: DatedItem }) {
   return (
     <div style={{ marginTop: 'var(--sp-7)' }}>
       <SectionLabel style={{ margin: '0 0 var(--sp-4)' }}>Work for this</SectionLabel>
+
+      {/*
+        A write that did not land, said rather than swallowed.
+        Above the list, because it is about the list: the row somebody
+        expected is not in it, and this is the only thing on the screen that
+        can say why.
+      */}
+      {trouble !== '' && (
+        <Panel style={{ marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
+            {trouble}
+          </div>
+        </Panel>
+      )}
 
       {mine.length === 0 ? (
         <div
@@ -103,7 +173,12 @@ export function ForThis({ item }: { item: DatedItem }) {
       ) : (
         <div style={{ marginBottom: 'var(--sp-5)' }}>
           {mine.map((a) => (
-            <Row key={`${a.kind}:${a.id}`} work={a} onOpen={() => open(a, dispatch)} onLoose={() => loosen(a, dispatch, refresh)} />
+            <Row
+              key={`${a.kind}:${a.id}`}
+              work={a}
+              onOpen={() => open(a, dispatch)}
+              onLoose={() => void loose(a)}
+            />
           ))}
         </div>
       )}
@@ -348,32 +423,16 @@ function open(work: Attached, dispatch: (action: Action) => void) {
   }
 }
 
-/** Take the link off, leaving the thing itself alone. */
-function loosen(work: Attached, dispatch: (action: Action) => void, refresh: () => void) {
-  switch (work.kind) {
-    case 'document':
-      dispatch({ type: 'updateDocument', id: work.id, patch: { itemId: null } });
-      return;
-    case 'sheet':
-      dispatch({ type: 'updateSheet', id: work.id, patch: { itemId: null } });
-      return;
-    case 'deck':
-      dispatch({ type: 'updateDeck', id: work.id, patch: { itemId: null } });
-      return;
-    case 'note':
-      dispatch({ type: 'updateNote', id: work.id, patch: { itemId: null } });
-      return;
-    case 'equation':
-      dispatch({ type: 'fileEquation', id: work.id, itemId: null });
-      return;
-    case 'file':
-      void pinFile(work.id, null).then(refresh);
-      return;
-  }
-}
-
-/** The same four, pointed the other way. */
-function pin(work: Attached, itemId: string): Action {
+/**
+ * Filing one of the five store-held kinds against a deadline, or against none.
+ *
+ * One function for both directions rather than a `pin` and a `loosen` that
+ * were the same switch written twice — the pair had already drifted, with the
+ * unfile half reaching into IndexedDB itself while its twin returned an
+ * action. A file is not here at all: it is a write that can fail, so it is
+ * handled where a failure can be reported. See `attach` and `loose` above.
+ */
+function filing(work: Attached, itemId: string | null): Action {
   switch (work.kind) {
     case 'document':
       return { type: 'updateDocument', id: work.id, patch: { itemId } };

@@ -5,7 +5,6 @@ import { Blueprint } from '../../components/Blueprint';
 import { CoursePicker } from '../../components/CoursePicker';
 import { DeadlinePicker } from '../../components/DeadlinePicker';
 import { forLine } from '../../lib/forwork';
-import { datedItems } from '../../lib/select';
 import { Folding } from '../../components/Fold';
 import { ActionButton, EmptyState, SectionLabel } from '../../components/ui';
 import { ChevronLeft, ChevronRight, DeckIcon } from '../../components/Icons';
@@ -171,7 +170,11 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
         aria-label="Deck subtitle"
         style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
       />
-      <CoursePicker value={deck.courseId} onChange={(id) => patch({ courseId: id })} />
+      {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
+      <CoursePicker
+        value={deck.courseId}
+        onChange={(id) => patch({ courseId: id, itemId: null })}
+      />
       {/* A deck is nearly always for one presentation on one day, which is
           exactly what a deadline is. */}
       <DeadlinePicker
@@ -717,10 +720,8 @@ function Presenter({
 
 /** The list of decks somebody has kept, above the builders on `screens/Deck.tsx`. */
 export function DeckShelf() {
-  const { state, dispatch, courseCode, catalog, now } = useStore();
+  const { state, dispatch, courseCode, allItems } = useStore();
   const rows = useMemo(() => [...state.decks].sort((a, b) => b.updated - a.updated), [state.decks]);
-  /* One list for the whole shelf — see the same note in `screens/Write.tsx`. */
-  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
 
   if (rows.length === 0) return null;
 
@@ -749,7 +750,7 @@ export function DeckShelf() {
               <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-1)' }}>
                 {[
                   deck.courseId ? courseCode(deck.courseId) : 'Personal',
-                  forLine(items, deck.itemId),
+                  forLine(allItems, deck.itemId),
                   `${running(deck).length} slides`,
                   `about ${minutes(deck)} min`,
                 ]

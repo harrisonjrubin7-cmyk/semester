@@ -54,7 +54,6 @@ import {
 import { CoursePicker } from '../../components/CoursePicker';
 import { DeadlinePicker } from '../../components/DeadlinePicker';
 import { forLine, nameFor } from '../../lib/forwork';
-import { datedItems } from '../../lib/select';
 
 /**
  * The drive.
@@ -125,10 +124,7 @@ const SORT_LABELS: Record<Sort, string> = {
 const INDEX_CHARS = 20_000;
 
 export function Drive() {
-  /* `now: clock` rather than `now` — see the same note in `screens/Sheet.tsx`.
-     The store's is a ticking `Date` that dates a deadline; the `now` below is
-     a stamp frozen at mount so a suggestion's reason stays still. */
-  const { state, dispatch, courseCode, catalog, now: clock } = useStore();
+  const { state, dispatch, courseCode, allItems } = useStore();
   const [files, setFiles] = useState<Settled[]>([]);
   const [binned, setBinned] = useState<Settled[]>([]);
   const [at, setAt] = useState<string | null>(null);
@@ -179,9 +175,6 @@ export function Drive() {
     [state.folders, state.courses],
   );
 
-  /* This term's deadlines, for the "for Friday's paper" line on a row. One
-     list for the whole screen rather than one per row. */
-  const items = useMemo(() => datedItems(catalog, clock), [catalog, clock]);
 
   /*
    * Reading the text out of a file so search can look inside it.
@@ -229,9 +222,31 @@ export function Drive() {
     }
   };
 
-  const act = async (run: Promise<unknown>) => {
-    await run;
-    refresh();
+  /*
+   * Every write to a file goes through here, and every one of them can fail.
+   *
+   * IndexedDB rejects for reasons that have nothing to do with the press: the
+   * disk is full, the browser is in a mode that refuses to store, the
+   * transaction is aborted while the tab is being closed. `act` used to
+   * `await run` with no catch, so the rejection escaped into an unhandled
+   * promise and the screen carried on as though the write had landed — a star
+   * that un-stars itself on the next read, a deadline that was never saved,
+   * and no sentence anywhere saying so.
+   *
+   * Caught here rather than at each call site, because there are nine of them
+   * and the next one added would have been the tenth to forget. `refresh` runs
+   * either way: after a failure it is what puts the row back to what is
+   * actually stored, which is the honest thing to show.
+   */
+  const act = async (run: Promise<unknown>, what = 'That change') => {
+    try {
+      await run;
+      setTrouble('');
+    } catch {
+      setTrouble(`${what} could not be saved. There may be no room left on this device.`);
+    } finally {
+      refresh();
+    }
   };
 
   /**
@@ -437,7 +452,7 @@ export function Drive() {
           folders={suggestFolders(folders, files, now)}
           files={suggest(files, now)}
           courseCode={courseCode}
-          due={(itemId) => forLine(items, itemId)}
+          due={(itemId) => forLine(allItems, itemId)}
           onFolder={(id) => {
             setView('drive');
             setAt(id);
@@ -538,7 +553,7 @@ export function Drive() {
                 /* `nameFor` answers undefined for an id whose deadline has
                    been edited out of the course, so a stale link draws as no
                    link rather than as a broken one. See `lib/forwork.ts`. */
-                due={nameFor(items, file.itemId)}
+                due={nameFor(allItems, file.itemId)}
                 notes={state.notes.filter((n) => n.fileIds.includes(file.id)).length}
                 onOpen={() => void openFile(file.id).then(refresh)}
                 onStar={() => void act(starFile(file.id, !file.starred))}
@@ -559,13 +574,28 @@ export function Drive() {
       {filing && (
         <FileAgainst
           file={filing}
-          onCourse={(courseId) => {
-            void act(tagFile(filing.id, courseId));
-            setFiling({ ...filing, courseId });
+          /*
+           * Both writes land before the panel is told anything.
+           *
+           * The first version set `filing` optimistically and started the
+           * write without waiting, so a rejected `tagFile` left the panel
+           * offering the new course's deadlines over a file still filed under
+           * the old one. `act` reports the failure and `refresh` puts the list
+           * back to what is stored; `filing` is only moved once the write is
+           * known to have landed.
+           *
+           * The deadline is cleared with the course, for the reason in
+           * `screens/Write.tsx`: a deadline belongs to a course, so the old
+           * filing names something the new course does not contain.
+           */
+          onCourse={async (courseId) => {
+            await act(tagFile(filing.id, courseId), 'The course');
+            await act(pinFile(filing.id, null), 'The deadline');
+            setFiling({ ...filing, courseId, itemId: null });
           }}
           onClose={() => setFiling(null)}
-          onPick={(itemId) => {
-            void act(pinFile(filing.id, itemId));
+          onPick={async (itemId) => {
+            await act(pinFile(filing.id, itemId), 'The deadline');
             setFiling(null);
           }}
         />

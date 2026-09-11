@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
-import { datedItems } from '../lib/select';
 import { Equation } from '../components/Equation';
 import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { Folding } from '../components/Fold';
@@ -165,7 +164,14 @@ function Writer() {
         aria-label="Name for this equation"
         style={{ width: '100%', height: 40 }}
       />
-      <CoursePicker value={courseId} onChange={setCourseId} />
+      {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
+      <CoursePicker
+        value={courseId}
+        onChange={(id) => {
+          setCourseId(id);
+          setItemId(null);
+        }}
+      />
       {/* The problem set it was written out for, so it is beside that deadline
           the next time the same substitution is needed. */}
       <DeadlinePicker
@@ -330,9 +336,7 @@ function FormulaCard({ formula, onKeep }: { formula: Formula; onKeep: () => void
 // ── What has been kept ───────────────────────────────────────────────────
 
 function Kept() {
-  const { state, dispatch, say, courseCode, catalog, now } = useStore();
-  /* One list for the whole shelf — see the same note in `screens/Write.tsx`. */
-  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
+  const { state, dispatch, say, courseCode, allItems } = useStore();
 
   if (state.equations.length === 0) {
     return (
@@ -349,7 +353,7 @@ function Kept() {
         <Blueprint key={saved.id} plain style={{ padding: 'var(--sp-6)' }}>
           <div style={{ fontSize: 'var(--type-md)' }}>{saved.name}</div>
           <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-1)' }}>
-            {[saved.courseId ? courseCode(saved.courseId) : 'Personal', forLine(items, saved.itemId)]
+            {[saved.courseId ? courseCode(saved.courseId) : 'Personal', forLine(allItems, saved.itemId)]
               .filter(Boolean)
               .join(' · ')}
           </div>

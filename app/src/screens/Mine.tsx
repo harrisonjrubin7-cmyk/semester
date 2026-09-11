@@ -7,7 +7,6 @@ import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
-import { datedItems } from '../lib/select';
 import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
@@ -562,10 +561,8 @@ function Appointments() {
 }
 
 function Notes({ rows }: { rows?: Note[] }) {
-  const { state, dispatch, courseCode, catalog, now } = useStore();
+  const { state, dispatch, courseCode, allItems } = useStore();
   const rowThirteen = useRowStyle(13);
-  /* One list for the whole tab — see the same note in `screens/Write.tsx`. */
-  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
   const all = [...state.notes].sort((a, b) => b.updated - a.updated);
   /*
    * The filtered rows when the box has something in it, all of them when it
@@ -622,7 +619,7 @@ function Notes({ rows }: { rows?: Note[] }) {
                   {n.courseId ? `${courseCode(n.courseId)} · ` : ''}
                   {/* What it is for, where it is for something — the same
                       phrase the drive and the three shelves use. */}
-                  {forLine(items, n.itemId) && `${forLine(items, n.itemId)} · `}
+                  {forLine(allItems, n.itemId) && `${forLine(allItems, n.itemId)} · `}
                   {n.fileIds.length > 0 ? `${n.fileIds.length} file · ` : ''}
                   {n.body.slice(0, 60) || 'Empty'}
                 </span>
@@ -754,9 +751,12 @@ export function NoteEditor() {
         aria-label="Note title"
       />
 
+      {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
       <CoursePicker
         value={note.courseId}
-        onChange={(courseId) => dispatch({ type: 'updateNote', id: note.id, patch: { courseId } })}
+        onChange={(courseId) =>
+          dispatch({ type: 'updateNote', id: note.id, patch: { courseId, itemId: null } })
+        }
       />
       {/* Reading notes for a seminar are notes for the response paper that
           seminar is assessed by, and this is what puts them there. */}
@@ -798,6 +798,7 @@ export function NoteEditor() {
       <div style={{ marginTop: 'var(--sp-5)' }}>
         <RecordButton
           courseId={note.courseId ?? null}
+          itemId={note.itemId ?? null}
           label={note.title || 'note'}
           onSaved={(meta, _seconds, transcript) => {
             dispatch({ type: 'attachFile', noteId: note.id, fileId: meta.id });

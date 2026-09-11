@@ -5,7 +5,6 @@ import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
-import { datedItems } from '../lib/select';
 import { ActionButton, ChipRow, EmptyState, FilePick, SectionLabel } from '../components/ui';
 import { ChevronRight, Plus, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
@@ -157,18 +156,7 @@ function whenBand(at: number, now: number): string {
 }
 
 function Shelf() {
-  /*
-   * `now: clock` rather than `now`, because this screen already has one.
-   *
-   * They are two different clocks on purpose. The store's is a `Date` that
-   * ticks once a minute, which is what dates a deadline; the `now` below is a
-   * millisecond stamp frozen at mount so the bands do not resort themselves
-   * under somebody's hand. Aliasing here keeps both, and keeps the frozen one
-   * called what the code below already calls it.
-   */
-  const { state, dispatch, courseCode, catalog, now: clock } = useStore();
-  /* One list for the whole shelf — see the same note in `screens/Write.tsx`. */
-  const items = useMemo(() => datedItems(catalog, clock), [catalog, clock]);
+  const { state, dispatch, courseCode, catalog, allItems } = useStore();
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
   /*
@@ -491,7 +479,7 @@ function Shelf() {
                         >
                           {[
                             sheet.courseId ? courseCode(sheet.courseId) : 'Personal',
-                            forLine(items, sheet.itemId),
+                            forLine(allItems, sheet.itemId),
                             size.rows === 0 ? 'empty' : `${size.rows} × ${size.cols}`,
                             new Date(order === 'edited' ? sheet.updated : seenAt(sheet)).toLocaleDateString(
                               undefined,
@@ -828,7 +816,11 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         aria-label="Sheet title"
         style={{ width: '100%', height: 44, fontSize: 'var(--type-lg)' }}
       />
-      <CoursePicker value={sheet.courseId} onChange={(id) => patch({ courseId: id })} />
+      {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
+      <CoursePicker
+        value={sheet.courseId}
+        onChange={(id) => patch({ courseId: id, itemId: null })}
+      />
       {/* A grade calculator is for a course; a marked problem set is for one
           deadline, and that is the one somebody goes looking for. */}
       <DeadlinePicker
