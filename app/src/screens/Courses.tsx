@@ -19,6 +19,7 @@ import { ReadingProgress } from '../components/ReadingProgress';
 import { CameBack } from '../components/CameBack';
 import { BreakItUp } from '../components/BreakItUp';
 import { AskForTime } from '../components/AskForTime';
+import { ForThis } from '../components/ForThis';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { longLabel } from '../lib/date';
@@ -733,6 +734,12 @@ export function ItemDetail() {
       {/* Only when there is time to ask about and something to ask about it
           for. See `canAskForTime`. */}
       <AskForTime item={item} />
+
+      {/* Everything you have made for this — and the four buttons that make
+          something new already filed against it. Under the plan rather than
+          above it, because the order on this screen is understand it, break it
+          up, then do it. */}
+      <ForThis item={item} />
 
       <SectionLabel style={{ margin: '22px 0 8px' }}>Straight from the syllabus</SectionLabel>
       <div

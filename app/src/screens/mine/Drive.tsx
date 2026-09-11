@@ -34,6 +34,7 @@ import {
   openFile,
   restoreFile,
   search,
+  pinFile,
   starFile,
   tagFile,
   trashFile,
@@ -50,6 +51,9 @@ import {
   withCourses,
   type Shown,
 } from '../../lib/folders';
+import { CoursePicker } from '../../components/CoursePicker';
+import { DeadlinePicker } from '../../components/DeadlinePicker';
+import { forLine, nameFor } from '../../lib/forwork';
 
 /**
  * The drive.
@@ -120,7 +124,7 @@ const SORT_LABELS: Record<Sort, string> = {
 const INDEX_CHARS = 20_000;
 
 export function Drive() {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode, allItems } = useStore();
   const [files, setFiles] = useState<Settled[]>([]);
   const [binned, setBinned] = useState<Settled[]>([]);
   const [at, setAt] = useState<string | null>(null);
@@ -132,6 +136,11 @@ export function Drive() {
   const [busy, setBusy] = useState('');
   const [trouble, setTrouble] = useState('');
   const [moving, setMoving] = useState<Settled | null>(null);
+  /* The file whose deadline is being changed. A second panel rather than a
+     second control on every row: the row already carries a star, a Move and a
+     Bin, and a fourth button on a 390px phone is the point at which the file's
+     own name stops being readable. */
+  const [filing, setFiling] = useState<Settled | null>(null);
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState('');
 
@@ -165,6 +174,7 @@ export function Drive() {
     () => withCourses(state.folders, state.courses.map((m) => m.course)),
     [state.folders, state.courses],
   );
+
 
   /*
    * Reading the text out of a file so search can look inside it.
@@ -212,9 +222,39 @@ export function Drive() {
     }
   };
 
-  const act = async (run: Promise<unknown>) => {
-    await run;
-    refresh();
+  /*
+   * Every write to a file goes through here, and every one of them can fail.
+   *
+   * IndexedDB rejects for reasons that have nothing to do with the press: the
+   * disk is full, the browser is in a mode that refuses to store, the
+   * transaction is aborted while the tab is being closed. `act` used to
+   * `await run` with no catch, so the rejection escaped into an unhandled
+   * promise and the screen carried on as though the write had landed — a star
+   * that un-stars itself on the next read, a deadline that was never saved,
+   * and no sentence anywhere saying so.
+   *
+   * Caught here rather than at each call site, because there are nine of them
+   * and the next one added would have been the tenth to forget. `refresh` runs
+   * either way: after a failure it is what puts the row back to what is
+   * actually stored, which is the honest thing to show.
+   *
+   * It answers whether the write landed, and that is not decoration. Catching
+   * without saying so was its own bug: a caller that does two writes in a row
+   * carried on to the second after the first had failed, and finished by
+   * telling the panel a change had happened that had not. A caller doing one
+   * write can ignore the answer; a caller doing two must not.
+   */
+  const act = async (run: Promise<unknown>, what = 'That change'): Promise<boolean> => {
+    try {
+      await run;
+      setTrouble('');
+      return true;
+    } catch {
+      setTrouble(`${what} could not be saved. There may be no room left on this device.`);
+      return false;
+    } finally {
+      refresh();
+    }
   };
 
   /**
@@ -229,6 +269,18 @@ export function Drive() {
     await moveFile(id, folderId);
     if (isCourseFolder(folderId)) {
       await tagFile(id, (folderId as string).slice('course:'.length));
+      /*
+       * And the deadline goes with the course, exactly as it does when the
+       * course is chosen by chip.
+       *
+       * This is the one path that retags a course without going through a
+       * `CoursePicker`, so it was the one that could leave a file tagged PSCI
+       * with an ECON deadline on it — the cross-course state the pickers were
+       * taught to make impossible. Dragging a reading into a course folder is
+       * a common thing to do and it must not be the way round the rule. See
+       * the note in `screens/Write.tsx`.
+       */
+      await pinFile(id, null);
     }
     refresh();
   };
@@ -420,6 +472,7 @@ export function Drive() {
           folders={suggestFolders(folders, files, now)}
           files={suggest(files, now)}
           courseCode={courseCode}
+          due={(itemId) => forLine(allItems, itemId)}
           onFolder={(id) => {
             setView('drive');
             setAt(id);
@@ -517,10 +570,15 @@ export function Drive() {
                     : ''
                 }
                 course={file.courseId ? courseCode(file.courseId) : ''}
+                /* `nameFor` answers undefined for an id whose deadline has
+                   been edited out of the course, so a stale link draws as no
+                   link rather than as a broken one. See `lib/forwork.ts`. */
+                due={nameFor(allItems, file.itemId)}
                 notes={state.notes.filter((n) => n.fileIds.includes(file.id)).length}
                 onOpen={() => void openFile(file.id).then(refresh)}
                 onStar={() => void act(starFile(file.id, !file.starred))}
                 onMove={() => setMoving(file)}
+                onFile={() => setFiling(file)}
                 onTrash={() => void act(trashFile(file.id))}
                 onRestore={() => void act(restoreFile(file.id))}
                 onPurge={() => void act(deleteFile(file.id))}
@@ -532,6 +590,54 @@ export function Drive() {
 
         </div>
       </div>
+
+      {filing && (
+        <FileAgainst
+          file={filing}
+          /*
+           * Both writes land before the panel is told anything.
+           *
+           * The first version set `filing` optimistically and started the
+           * write without waiting, so a rejected `tagFile` left the panel
+           * offering the new course's deadlines over a file still filed under
+           * the old one. `act` reports the failure and `refresh` puts the list
+           * back to what is stored; `filing` is only moved once the write is
+           * known to have landed.
+           *
+           * The deadline is cleared with the course, for the reason in
+           * `screens/Write.tsx`: a deadline belongs to a course, so the old
+           * filing names something the new course does not contain.
+           */
+          onCourse={async (courseId) => {
+            // Stop on the first failure. Going on would clear the deadline of
+            // a file that is still in its old course, and then tell the panel
+            // it had moved — two writes disagreeing with the one record they
+            // both describe.
+            if (!(await act(tagFile(filing.id, courseId), 'The course'))) return;
+            if (!(await act(pinFile(filing.id, null), 'The deadline'))) return;
+            /*
+             * Only if the panel is still the one that asked.
+             *
+             * Two awaits sit between the press and here, and Done is reachable
+             * throughout them — so a plain `setFiling` reopened a panel
+             * somebody had already closed, over a file they had stopped
+             * looking at. Comparing the object rather than the id because that
+             * is what identifies *this* opening of it.
+             */
+            setFiling((open) => (open === filing ? { ...filing, courseId, itemId: null } : open));
+          }}
+          onClose={() => setFiling(null)}
+          onPick={async (itemId) => {
+            // The panel stays open on a failure, with the sentence above the
+            // list saying why — closing it would report a write that did not
+            // happen as done.
+            // Closed only if it is still open on this file, for the reason above.
+            if (await act(pinFile(filing.id, itemId), 'The deadline')) {
+              setFiling((open) => (open === filing ? null : open));
+            }
+          }}
+        />
+      )}
 
       {moving && (
         <MoveTo
@@ -668,6 +774,7 @@ function Home({
   folders,
   files,
   courseCode,
+  due,
   onFolder,
   onOpen,
   onEverything,
@@ -675,6 +782,15 @@ function Home({
   folders: FolderHint[];
   files: Suggestion[];
   courseCode: (id: string) => string;
+  /**
+   * What a file is for, by its deadline id — "for Quiz #1", or nothing.
+   *
+   * A resolver rather than the list of deadlines, so this component stays
+   * ignorant of the catalogue: it is handed the six words it draws. Empty for
+   * a file filed against no deadline, and for one whose deadline has been
+   * edited out of its course — see `lib/forwork.ts`.
+   */
+  due: (itemId: string | null) => string;
   onFolder: (id: string) => void;
   onOpen: (id: string) => void;
   onEverything: () => void;
@@ -775,7 +891,11 @@ function Home({
                       marginTop: 'var(--sp-1)',
                     }}
                   >
-                    {[says, file.courseId ? courseCode(file.courseId) : '']
+                    {/* The reason, then whose it is, then what it is for —
+                        the same three facts in the same order as a row in the
+                        drive proper, so the landing screen and the list do not
+                        describe one file two ways. */}
+                    {[says, file.courseId ? courseCode(file.courseId) : '', due(file.itemId)]
                       .filter(Boolean)
                       .join(' · ')}
                   </div>
@@ -938,10 +1058,12 @@ function FileRow({
   binned,
   where,
   course,
+  due,
   notes,
   onOpen,
   onStar,
   onMove,
+  onFile,
   onTrash,
   onRestore,
   onPurge,
@@ -952,10 +1074,13 @@ function FileRow({
   binned: boolean;
   where: string;
   course: string;
+  /** The deadline this is for, where it is for one that still exists. */
+  due?: string;
   notes: number;
   onOpen: () => void;
   onStar: () => void;
   onMove: () => void;
+  onFile: () => void;
   onTrash: () => void;
   onRestore: () => void;
   onPurge: () => void;
@@ -963,6 +1088,12 @@ function FileRow({
   const second = [
     formatBytes(file.size),
     course,
+    /*
+     * Before the folder rather than after it, and it is the one line on this
+     * row somebody scans for. A drive says where a file *is*; this says what it
+     * is *for*, which is the question that brought them here.
+     */
+    due ? `for ${due}` : '',
     where,
     inText ? 'found in the text' : '',
     notes > 0 ? `attached to ${notes} ${notes === 1 ? 'note' : 'notes'}` : '',
@@ -1050,6 +1181,19 @@ function FileRow({
             <button
               type="button"
               className="btn btn-ghost"
+              onClick={onFile}
+              aria-label={
+                due
+                  ? `${file.name} is for ${due}. Change which deadline it is for.`
+                  : `Say which deadline ${file.name} is for`
+              }
+              style={{ fontSize: 'var(--type-xs)', padding: 'var(--sp-2) var(--sp-3)' }}
+            >
+              For
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
               onClick={onTrash}
               aria-label={`Move ${file.name} to the bin`}
               style={{ fontSize: 'var(--type-xs)', padding: 'var(--sp-2) var(--sp-3)' }}
@@ -1060,6 +1204,73 @@ function FileRow({
         )}
       </div>
     </Blueprint>
+  );
+}
+
+/**
+ * Which deadline a file is for.
+ *
+ * A sibling of `MoveTo` below and drawn the same way, because they are the same
+ * act asked twice — where does this belong. The difference is that a folder is
+ * the student's own filing and a deadline is the syllabus's, so they are two
+ * questions rather than one control with two halves.
+ *
+ * The picker needs a course to offer deadlines from, and a file may have none.
+ * Rather than refuse, this offers the course first: a file tagged nothing is
+ * almost always a file nobody has got round to tagging, and tagging it here is
+ * a tap rather than a trip to another screen. Both writes are independent —
+ * `tagFile` and `pinFile` — so neither moves the other behind anybody's back.
+ */
+function FileAgainst({
+  file,
+  onCourse,
+  onClose,
+  onPick,
+}: {
+  file: Settled;
+  onCourse: (courseId: string | null) => void;
+  onClose: () => void;
+  onPick: (itemId: string | null) => void;
+}) {
+  const [allDeadlines, setAllDeadlines] = useState(false);
+
+  return (
+    <Folding name={`What ${file.name} is for`}>
+      <Blueprint style={{ padding: 'var(--sp-5)' }}>
+        {/* "Where this belongs" rather than "What it is for": the picker
+            below writes its own "What it is for" over the deadline chips, and
+            the same three words twice on one panel reads as a rendering
+            fault. This heading is the question both halves answer. */}
+        <SectionLabel>Where this belongs</SectionLabel>
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
+          {file.name}
+        </div>
+        <CoursePicker value={file.courseId} onChange={onCourse} />
+        {file.courseId === null ? (
+          <div
+            style={{
+              ...secondLine(),
+              fontSize: 'var(--type-xs)',
+              marginTop: 'var(--sp-4)',
+              lineHeight: 'var(--leading-relaxed)',
+            }}
+          >
+            Pick a course and its deadlines appear here.
+          </div>
+        ) : (
+          <DeadlinePicker
+            courseId={file.courseId}
+            value={file.itemId}
+            onChange={onPick}
+            showAll={allDeadlines}
+            onShowAll={() => setAllDeadlines(true)}
+          />
+        )}
+        <ActionButton onClick={onClose} style={{ marginTop: 'var(--sp-5)' }}>
+          Done
+        </ActionButton>
+      </Blueprint>
+    </Folding>
   );
 }
 

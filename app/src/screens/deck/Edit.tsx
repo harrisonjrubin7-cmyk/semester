@@ -3,6 +3,7 @@ import { useStore } from '../../state/store';
 import { Page } from '../../components/Page';
 import { Blueprint } from '../../components/Blueprint';
 import { CoursePicker } from '../../components/CoursePicker';
+import { DeadlinePicker } from '../../components/DeadlinePicker';
 import { Folding } from '../../components/Fold';
 import { ActionButton, EmptyState, SectionLabel } from '../../components/ui';
 import { Bench } from '../../components/Bench';
@@ -77,6 +78,7 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
   const [at, setAt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [presenting, setPresenting] = useState(false);
+  const [allDeadlines, setAllDeadlines] = useState(false);
   /** Which of the two pickers is open, if either. Never both. */
   const [picking, setPicking] = useState<'add' | 'layout' | 'theme' | null>(null);
   /** A layout change that would lose something, waiting to be confirmed. */
@@ -357,7 +359,20 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
         aria-label="Deck subtitle"
         style={{ width: '100%', height: 40 }}
       />
-      <CoursePicker value={deck.courseId} onChange={(id) => patch({ courseId: id })} />
+      {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
+      <CoursePicker
+        value={deck.courseId}
+        onChange={(id) => patch({ courseId: id, itemId: null })}
+      />
+      {/* A deck is nearly always for one presentation on one day, which is
+          exactly what a deadline is. */}
+      <DeadlinePicker
+        courseId={deck.courseId}
+        value={deck.itemId}
+        onChange={(itemId) => patch({ itemId })}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
+      />
 
       <ActionButton
         tone="primary"

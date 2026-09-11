@@ -3,6 +3,8 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
+import { DeadlinePicker } from '../components/DeadlinePicker';
+import { forLine } from '../lib/forwork';
 import { Equation } from '../components/Equation';
 import { ActionButton, SectionLabel, Toggle } from '../components/ui';
 import { Bench, Tool, ToolPick, ToolRule } from '../components/Bench';
@@ -69,7 +71,7 @@ export function Write() {
 // ── The list ─────────────────────────────────────────────────────────────
 
 function Shelf() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, allItems } = useStore();
 
   /*
    * A blank, then the shapes. In that order and on one row, rather than behind
@@ -111,7 +113,14 @@ function Shelf() {
         fallback="Untitled document"
         onOpen={(doc) => dispatch({ type: 'openDocument', id: doc.id })}
         preview={(doc) => <Paper doc={doc} />}
-        under={(doc) => `${words(doc)} ${words(doc) === 1 ? 'word' : 'words'}`}
+        /* What it is for, where it is for something, then how long it is.
+           The deadline identifies the document and the word count describes
+           it, and on a card with one line to spare the first wins. */
+        under={(doc) =>
+          [forLine(allItems, doc.itemId), `${words(doc)} ${words(doc) === 1 ? 'word' : 'words'}`]
+            .filter(Boolean)
+            .join(' · ')
+        }
         shape="page"
         empty={{
           title: 'Nothing written yet',
@@ -181,6 +190,10 @@ function Editor({ doc }: { doc: Doc }) {
   const [busy, setBusy] = useState(false);
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
+  /* Held here rather than inside the picker, for the reason written on it:
+     the control is remounted when the course changes and a cap that reapplied
+     itself would be the list closing under somebody's hand. */
+  const [allDeadlines, setAllDeadlines] = useState(false);
   /*
    * Which of the three panels are drawn.
    *
@@ -549,7 +562,25 @@ function Editor({ doc }: { doc: Doc }) {
         aria-label="Subtitle"
         style={{ width: '100%', height: 40 }}
       />
-      <CoursePicker value={doc.courseId} onChange={(id) => patch({ courseId: id })} />
+      {/* The deadline goes with the course. A deadline belongs to one
+          course, so the old filing is not merely stale after this — it names
+          something that is not in the new course at all, and leaving it would
+          be a document that reads as Personal on this screen while still
+          turning up under last week's essay. Cleared in the same patch, so
+          the two can never disagree. */}
+      <CoursePicker
+        value={doc.courseId}
+        onChange={(id) => patch({ courseId: id, itemId: null })}
+      />
+      {/* What it is for, under whose it is. A document filed against Friday's
+          paper turns up on that deadline — see `components/ForThis.tsx`. */}
+      <DeadlinePicker
+        courseId={doc.courseId}
+        value={doc.itemId}
+        onChange={(itemId) => patch({ itemId })}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
+      />
 
       <Saved doc={doc} words={count} />
       {showing.outline && headings.length > 1 && <Outline headings={headings} />}

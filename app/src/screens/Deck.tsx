@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
+import { forLine } from '../lib/forwork';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -58,7 +59,7 @@ export function Deck() {
 }
 
 function Build() {
-  const { state, catalog, dispatch, courseCode } = useStore();
+  const { state, catalog, dispatch, courseCode, allItems } = useStore();
   const { guide, figuresOn, onUnit } = useLive(state.guideId);
 
   const [source, setSource] = useState<'unit' | 'brief' | 'sheet'>('unit');
@@ -208,8 +209,17 @@ function Build() {
         fallback="Untitled presentation"
         onOpen={(deck) => dispatch({ type: 'editDeck', id: deck.id })}
         preview={(deck) => <MiniSlide deck={deck} />}
+        /* What it is for first, where it is for something: a deck is nearly
+           always for one presentation on one day, and that names it better
+           than its length does. */
         under={(deck) =>
-          `${running(deck).length} ${running(deck).length === 1 ? 'slide' : 'slides'} · about ${deckMinutes(deck)} min`
+          [
+            forLine(allItems, deck.itemId),
+            `${running(deck).length} ${running(deck).length === 1 ? 'slide' : 'slides'}`,
+            `about ${deckMinutes(deck)} min`,
+          ]
+            .filter(Boolean)
+            .join(' · ')
         }
         shape="wide"
         empty={{

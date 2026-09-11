@@ -3,6 +3,8 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
+import { DeadlinePicker } from '../components/DeadlinePicker';
+import { forLine } from '../lib/forwork';
 import { ActionButton, ChipRow, EmptyState, FilePick, SectionLabel } from '../components/ui';
 import { Bench } from '../components/Bench';
 import { ChevronRight, Plus, SheetIcon } from '../components/Icons';
@@ -156,7 +158,7 @@ function whenBand(at: number, now: number): string {
 }
 
 function Shelf() {
-  const { state, dispatch, courseCode, catalog } = useStore();
+  const { state, dispatch, courseCode, catalog, allItems } = useStore();
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
   /*
@@ -479,12 +481,15 @@ function Shelf() {
                         >
                           {[
                             sheet.courseId ? courseCode(sheet.courseId) : 'Personal',
+                            forLine(allItems, sheet.itemId),
                             size.rows === 0 ? 'empty' : `${size.rows} × ${size.cols}`,
                             new Date(order === 'edited' ? sheet.updated : seenAt(sheet)).toLocaleDateString(
                               undefined,
                               { month: 'short', day: 'numeric' },
                             ),
-                          ].join(' · ')}
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
                         </div>
                       </div>
                       <ChevronRight size={16} />
@@ -647,6 +652,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const [typing, setTyping] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [jump, setJump] = useState('');
+  const [allDeadlines, setAllDeadlines] = useState(false);
   const boxes = useRef<Record<string, HTMLInputElement | null>>({});
 
   /*
@@ -1063,7 +1069,20 @@ function Grid({ sheet }: { sheet: SheetModel }) {
           </ActionButton>
         }
       />
-      <CoursePicker value={sheet.courseId} onChange={(id) => patch({ courseId: id })} />
+      {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
+      <CoursePicker
+        value={sheet.courseId}
+        onChange={(id) => patch({ courseId: id, itemId: null })}
+      />
+      {/* A grade calculator is for a course; a marked problem set is for one
+          deadline, and that is the one somebody goes looking for. */}
+      <DeadlinePicker
+        courseId={sheet.courseId}
+        value={sheet.itemId}
+        onChange={(itemId) => patch({ itemId })}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
+      />
 
       <Toolbar
         style={style}

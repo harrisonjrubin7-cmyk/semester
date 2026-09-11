@@ -22,6 +22,12 @@ import type { CourseId } from './types';
 export interface StoredDeck extends Deck {
   id: string;
   courseId: CourseId | null;
+  /**
+   * The deadline it is for — a presentation is nearly always for one. See
+   * `Doc.itemId` in `lib/document.ts` for why it is optional, and read it
+   * through `lib/forwork.ts`.
+   */
+  itemId?: string | null;
   created: number;
   updated: number;
   /**
@@ -111,13 +117,18 @@ export function themeOf(deck: Pick<StoredDeck, 'theme'>): Theme {
   return THEMES.find((t) => t.id === deck.theme) ?? THEMES[0];
 }
 
-export function blankDeck(title: string, courseId: CourseId | null = null): Omit<StoredDeck, 'id'> {
+export function blankDeck(
+  title: string,
+  courseId: CourseId | null = null,
+  itemId: string | null = null,
+): Omit<StoredDeck, 'id'> {
   const now = Date.now();
   return {
     title: title.trim() || 'Untitled deck',
     subtitle: '',
     slides: [{ title: title.trim() || 'Untitled deck', bullets: [], opening: true }],
     courseId,
+    itemId,
     created: now,
     updated: now,
     hidden: [],

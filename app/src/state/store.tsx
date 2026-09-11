@@ -20,6 +20,7 @@ import {
 } from 'react';
 import type { CourseModule, Screen } from '../lib/types';
 import { buildCatalog, type Catalog } from '../data/catalog';
+import type { Named } from '../lib/forwork';
 import { arrange } from '../lib/yours';
 import { setSessionToken } from '../lib/claude';
 import {
@@ -130,6 +131,21 @@ interface Store {
    * this rather than the catalogue.
    */
   courseCode: (id: string) => string;
+  /**
+   * Every deadline the account holds, from every term — an id and a title each.
+   *
+   * The deadline half of `courseCode` above, and it exists for exactly the
+   * same reason. The catalogue is one term, so a document filed against last
+   * semester's essay resolved to nothing the moment the term switched, and
+   * `lib/forwork.ts`'s rule turned that into "filed against no deadline" — a
+   * live link reported as a dangling one, on the screen whose whole job is to
+   * say what a file is for.
+   *
+   * Titles only, and undecorated. Anything that needs a date or a course —
+   * the picker — is choosing from the open term by definition and reads the
+   * catalogue instead.
+   */
+  allItems: Named[];
   /**
    * The colour this course is drawn in, everywhere it appears.
    *
@@ -766,6 +782,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
   const courseCode = useCallback((id: string) => codes[id] ?? id.toUpperCase(), [codes]);
 
+  /*
+   * Every deadline in the account, across terms. See the note on the field.
+   *
+   * From `allModules` rather than from the catalogue, which is one term. Flat
+   * and unsorted: it is read by id, never drawn in order.
+   */
+  const allItems = useMemo(
+    () => allModules.flatMap((m) => m.items.map((i) => ({ id: i.id, title: i.title }))),
+    [allModules],
+  );
+
   /**
    * The catalogue is one term's worth.
    *
@@ -1111,8 +1138,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
-    [state, now, catalog, terms, courseCode, tint, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
+    () => ({ state, dispatch, now, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
+    [state, now, catalog, terms, courseCode, allItems, tint, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
   );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }

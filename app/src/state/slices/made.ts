@@ -34,7 +34,7 @@ export const LIMIT = 200;
 export function made(state: State, action: Action): State | null {
   switch (action.type) {
     case 'newDocument': {
-      const doc: Doc = { ...blankDoc('', action.courseId), id: newId() };
+      const doc: Doc = { ...blankDoc('', action.courseId, action.itemId ?? null), id: newId() };
       return push(
         { ...state, documents: [doc, ...state.documents], documentId: doc.id, blockAt: 0 },
         'write',
@@ -92,7 +92,7 @@ export function made(state: State, action: Action): State | null {
       return { ...state, blockAt: action.at };
 
     case 'newSheet': {
-      const sheet: Sheet = { ...blankSheet('', action.courseId), id: newId() };
+      const sheet: Sheet = { ...blankSheet('', action.courseId, action.itemId ?? null), id: newId() };
       return push({ ...state, sheets: [sheet, ...state.sheets], sheetId: sheet.id }, 'sheet');
     }
 
@@ -201,7 +201,7 @@ export function made(state: State, action: Action): State | null {
     }
 
     case 'newDeck': {
-      const deck: StoredDeck = { ...blankDeck('', action.courseId), id: newId() };
+      const deck: StoredDeck = { ...blankDeck('', action.courseId, action.itemId ?? null), id: newId() };
       return push({ ...state, decks: [deck, ...state.decks], deckId: deck.id }, 'deck');
     }
 
@@ -249,6 +249,14 @@ export function made(state: State, action: Action): State | null {
       };
       return { ...state, equations: [equation, ...state.equations].slice(0, LIMIT) };
     }
+
+    case 'fileEquation':
+      return {
+        ...state,
+        equations: state.equations.map((e) =>
+          e.id === action.id ? { ...e, itemId: action.itemId } : e,
+        ),
+      };
 
     case 'deleteEquation':
       return { ...state, equations: state.equations.filter((e) => e.id !== action.id) };

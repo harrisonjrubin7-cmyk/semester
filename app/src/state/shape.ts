@@ -721,6 +721,16 @@ export interface Ephemeral {
   coursesTab: CoursesTab;
   /** Which half of the money screen is showing. See `lib/types.ts`. */
   costsTab: CostsTab;
+  /**
+   * Which third of the equations screen is showing.
+   *
+   * Here rather than in the screen for the reason every other tab on this list
+   * is here: something outside the screen has to be able to land on a
+   * particular half of it. A formula kept for Friday's problem set is reachable
+   * from that deadline now, and a link that arrived on Write — an empty box —
+   * would be a link that looked broken.
+   */
+  mathTab: 'write' | 'library' | 'kept';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all' | 'task';
   /** Which shelf of the directory is showing under Everything. */
@@ -1056,6 +1066,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     calSource: 'all',
     calDay: null,
     mineTab: 'tasks',
+    mathTab: 'write',
     homeTab: 'today',
     coursesTab: 'courses',
     costsTab: 'bill',
@@ -1676,7 +1687,12 @@ export type Action =
    * is the same loss `keepNote` avoids. Same split, same reason. See
    * `state/slices/made.ts`.
    */
-  | { type: 'newDocument'; courseId: CourseId | null }
+  /**
+   * `itemId` says which deadline the new thing is for, and is what the New
+   * buttons on a deadline pass. Optional and last, so every caller that only
+   * knows a course is unchanged. See `lib/forwork.ts`.
+   */
+  | { type: 'newDocument'; courseId: CourseId | null; itemId?: string | null }
   | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'>; open?: boolean }
   | { type: 'openDocument'; id: string }
   /** Back to the shelf. Its own action rather than an open with no id. */
@@ -1684,7 +1700,7 @@ export type Action =
   | { type: 'updateDocument'; id: string; patch: Partial<Omit<Doc, 'id'>> }
   | { type: 'deleteDocument'; id: string }
   | { type: 'editBlock'; at: number | null }
-  | { type: 'newSheet'; courseId: CourseId | null }
+  | { type: 'newSheet'; courseId: CourseId | null; itemId?: string | null }
   /*
    * `open` is the one exception to the split above, and it is the button's,
    * not the assistant's. A tool proposal leaves it unset and nothing moves. A
@@ -1709,7 +1725,7 @@ export type Action =
    * `makeDeck` is what a generated deck dispatches, and being thrown into an
    * editor is a loss the generator should not be able to cause.
    */
-  | { type: 'newDeck'; courseId: CourseId | null }
+  | { type: 'newDeck'; courseId: CourseId | null; itemId?: string | null }
   | { type: 'makeDeck'; deck: Omit<StoredDeck, 'id' | 'created' | 'updated'>; open?: boolean }
   /* `editDeck`, not `openDeck`: that name is taken by the study slideshow,
      which opens a guide unit at `#/slides` and is a different thing. */
@@ -1722,6 +1738,14 @@ export type Action =
   | { type: 'moveFolder'; id: string; parentId: string | null }
   /** Takes everything under it with it. The files inside go to the drive's top. */
   | { type: 'deleteFolder'; id: string }
+  /**
+   * File a kept equation against a deadline, or against none.
+   *
+   * Its own action rather than a general `updateEquation`, because an equation
+   * is kept rather than edited — there is no editor to patch it from, and the
+   * one field anybody changes after keeping it is this.
+   */
+  | { type: 'fileEquation'; id: string; itemId: string | null }
   | { type: 'deleteEquation'; id: string }
   | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
   | { type: 'clearPaperPreset' }
@@ -1754,11 +1778,12 @@ export type Action =
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   | { type: 'setAppointmentKind'; id: string; kind: string }
   | { type: 'deleteAppointment'; id: string }
-  | { type: 'newNote'; courseId: CourseId | null }
+  | { type: 'setMathTab'; tab: State['mathTab'] }
+  | { type: 'newNote'; courseId: CourseId | null; itemId?: string | null }
   /** Save a finished piece of text as a note without leaving the screen. */
   | { type: 'keepNote'; title: string; body: string; courseId: CourseId | null }
   | { type: 'openNote'; id: string }
-  | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId'>> }
+  | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId' | 'itemId'>> }
   | { type: 'attachFile'; noteId: string; fileId: string }
   | { type: 'detachFile'; noteId: string; fileId: string }
   | { type: 'deleteNote'; id: string }

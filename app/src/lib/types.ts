@@ -345,6 +345,12 @@ export interface Note {
   created: number;
   updated: number;
   courseId: CourseId | null;
+  /**
+   * The deadline it is for, where it is for one. See `Doc.itemId` in
+   * `lib/document.ts` for why every made thing carries this and why it is
+   * optional. Read through `lib/forwork.ts`.
+   */
+  itemId?: string | null;
   /** Ids of files attached to this note, held in IndexedDB. */
   fileIds: string[];
 }

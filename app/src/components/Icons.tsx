@@ -58,6 +58,7 @@ export const CoursesIcon = svg('courses');
 export const StudyIcon = svg('study');
 export const NotesIcon = svg('notes');
 export const FolderIcon = svg('folder');
+export const Paperclip = svg('paperclip');
 
 /**
  * The one icon that carries a state.

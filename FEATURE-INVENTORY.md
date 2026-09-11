@@ -482,7 +482,9 @@ This is the real gap list — the honest version of §2 of the build prompt.
 - No search across file *contents*.
 - No star/favourite, no recents view, **no trash and no restore** (delete is
   immediate and final).
-- No link between a file and an *assignment* — only to a course and to notes.
+- ~~No link between a file and an *assignment* — only to a course and to notes.~~
+  — **closed.** `StoredFile.itemId`, set from the drive's own **For** button or
+  from the deadline's *Work for this* panel, and shown on the file's row.
 - Quota exists (`lib/quota.ts`) but is on the Data screen, not over the files.
 
 **Docs**
@@ -557,11 +559,25 @@ This is the real gap list — the honest version of §2 of the build prompt.
   own material rather than from a gallery.)
 
 **Cross-app**
-- No single "＋ New" button offering Folder/Document/Presentation/Spreadsheet/Upload.
+- ~~No single "＋ New" button offering Folder/Document/Presentation/Spreadsheet/Upload.~~
+  — **closed on the deadline, where the question is actually asked.** *Work for
+  this* on a deadline offers ＋ Document · Sheet · Deck · Note · Upload, and each
+  makes something already filed against that deadline and its course. There is
+  still no such row on a *folder*, which is the half of this entry that remains.
 - No paste-a-range-into-Docs-as-a-table.
-- Universal search does not return documents, sheets or files. (The drive has a
+- ~~Universal search does not return documents, sheets or files.~~ — closed
+  earlier; and search now matches a document, sheet or deck on the *deadline*
+  it is for as well as on its own name and contents. (The drive also has a
   search of its own, which reads names and the text inside.)
-- No assignment-attachment flow for any of these.
+- ~~No assignment-attachment flow for any of these.~~ — **closed.** An optional
+  `itemId` on `Doc`, `Sheet`, `StoredDeck`, `SavedEquation`, `Note` and
+  `StoredFile` links work to one deadline rather than to a term-wide course.
+  `app/src/lib/forwork.ts` is the only reader of it, `app/src/lib/clips.ts`
+  makes the count affordable per row, and the link is drawn from both ends —
+  a panel on the deadline, a *What it is for* picker on every screen that makes
+  something, a paperclip and a count on every deadline row, and a *for Quiz #1*
+  line on a file in the drive. A link whose deadline has been edited away reads
+  as no link rather than as a broken one.
 
 > **Two entries above were wrong when this was written**, and are struck
 > through rather than deleted so the correction is visible. Both were found by
