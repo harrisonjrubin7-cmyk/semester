@@ -393,21 +393,45 @@ model in it or needs a key:
   `$$…$$` equations into blocks you can edit.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
-  `ROUND`, `SQRT`, `SUMPRODUCT` and the arithmetic around them. It is a
-  spreadsheet rather than a grid of text boxes: a **selection** you drag or
-  arrow across, whose sum, average, count and range are read off the status
-  line rather than written as a formula and deleted again; a **name box and
-  formula bar**, because the cell is 92 pixels wide and `=SUMPRODUCT(B2:B9,C2:C9)`
-  is not; a **toolbar** that puts a picture over a number — percentages,
-  money, decimal places, bold, alignment — without changing the number
-  underneath it; **undo and redo** inside the grid; and a **tab strip** along
-  the bottom, so the gradebook and the budget beside it are one tap apart.
+  `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It
+  has the shape every spreadsheet has, because that shape is already in the
+  hands of anybody who has opened one:
+  - a **ribbon** — Home, Insert, Formulas, Data, View — with its controls in
+    named groups (Clipboard, Font, Alignment, Number, Cells, Editing), rather
+    than the flat row of fifteen buttons it was;
+  - a **name box and formula bar**, because the cell is 92 pixels wide and
+    `=SUMPRODUCT(B2:B9,C2:C9)` is not, and because typing `C14` into the name
+    box should go there;
+  - **frozen headings** and a **corner box** that selects the whole sheet, so a
+    column of numbers whose heading has scrolled away stops happening;
+  - a **status bar** carrying the selection's sum, average, count and range —
+    the commonest question anybody asks a spreadsheet, answered by looking
+    rather than by writing a `SUM` and deleting it again — plus the zoom;
+  - a **tab strip** along the bottom, so the gradebook and the budget beside it
+    are one tap apart.
+
+  What it can now do to a sheet, none of which it could before: **rows and
+  columns inserted and deleted in the middle**, with every formula rewritten to
+  follow — a range a deletion reached into *shrinks* rather than breaking, and
+  a reference to something genuinely gone says `#REF!` rather than quietly
+  pointing one row down; **fill down and fill right** (⌘D and ⌘R), where `$`
+  finally means what it means everywhere else — `=B2*$F$1` dragged down a
+  column keeps the rate in F1; **cut, copy and paste** of a block, carrying its
+  formulas in the app and tab-separated text to and from Excel; **sort** a
+  block by one of its columns, refused outright where a formula in it would be
+  broken by the move; **find and replace** over what was *typed*, not over the
+  answers; and **type colour, fill colour, borders, underline and type size**
+  beside the pictures — percentages, money, decimal places, bold, alignment —
+  none of which change the number underneath. **Undo and redo** cover all of
+  it, one step per thing you did.
   It opens on **templates** — a to-do list, a monthly and a term budget, a
   reading tracker, a lab's readings — each arriving with its totals already
   written, beside the gradebook built from your own syllabus's weights. Out as
-  a real `.xlsx` **with the formulas and the formats still in it** — a CSV of a
-  gradebook is the answers with the working thrown away — or as a CSV, a
-  Markdown table, or a table dropped into a document. A pasted table is read
+  a real `.xlsx` **with the formulas and the formats still in it**, colours and
+  borders included — a CSV of a gradebook is the answers with the working
+  thrown away — or as a CSV, a Markdown table, or a table dropped into a
+  document. The six colours are chosen twice, once for this app's dark panel
+  and once for Excel's white page, so a cell marked red reads as red in both. A pasted table is read
   whether it is a copy out of Excel, a CSV or Markdown.
 - **Equations.** A small piece of LaTeX — `\frac{a}{b}`, `x^2`, `x_i`,
   `\sqrt{x}`, `\sum_{i=1}^{n}`, `\bar{x}`, the greek and the relations —

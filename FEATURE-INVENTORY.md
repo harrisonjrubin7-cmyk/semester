@@ -314,28 +314,55 @@ merge as unions and are never shed by `lib/keep.ts`.
 
 - Model `Sheet { id, title, courseId, cells: Record<A1,string>,
   styles?: Record<A1,CellStyle>, rows, cols, created, updated, opened? }`.
-- `CellStyle { num?, decimals?, bold?, italic?, strike?, align? }` — the picture
-  over a cell, stored apart from the cell so formatting never rewrites the
-  value a formula reads. `picture()`, `styledDisplay()`, `restyle()`.
+- `CellStyle { num?, decimals?, bold?, italic?, strike?, under?, align?, ink?,
+  wash?, edge?, size? }` — the picture over a cell, stored apart from the cell
+  so formatting never rewrites the value a formula reads. `picture()`,
+  `styledDisplay()`, `restyle()`. `ink`/`wash` name one of six colours rather
+  than holding a hex, and each surface picks its own: `inkOn`/`washOn` for the
+  app's dark panel, `inkPaper`/`washPaper` for Excel's white page. `edge` is
+  any of `t`, `b`, `l`, `r`, so one cell can be two sides of an outline.
 - Selection in `lib/grid.ts` (`Range` as two corners; `box`, `cells`, `label`,
   `step`, `summarise`) — the name box, the status line's sum/average/count/
   min/max, shift-click and shift-arrow, and column and row headers that select.
 - Editor undo/redo in `lib/history.ts` — coalesced by cell so a run of typing
   is one step. Distinct from `lib/undo.ts`, which is the app's one-step toast.
+- **The ribbon** — `lib/ribbon.ts` holds it as a value (tabs, named groups,
+  four kinds of control) with the same rules the menu bar has: a control with
+  no handler is dead rather than drawn live, ids are unique, the tab order is
+  fixed (`TABS = home insert formulas data view`). `components/Ribbon.tsx`
+  draws it, along with the formula bar, the sheet tab strip and the status bar.
+  There is no File tab: the app's one menu bar already owns the file.
+- **Editing the shape of a sheet** — `lib/sheetedit.ts`, all of it pure:
+  `insertRows`/`deleteRows`/`insertCols`/`deleteCols` (the grid moves under the
+  formulas), `fill` down and right (the formulas move with them), `sortRange`
+  and `sortable`, `find`/`replaceAll` over what was typed, `copy`/`clear`/
+  `paste` with `clipText`/`readClip` for the system clipboard, and `autoSum`.
+  Under all of it: `rewrite`, `translate` (a formula moved — `$` holds a row or
+  a column still) and `shift` (the grid moved — a deletion *shrinks* a range it
+  reached into and only breaks one it took entirely).
 - Templates in `lib/sheettemplates.ts` — to-do list, monthly budget, term
   budget, reading tracker, lab readings, each with its formulas already in it.
 - New sheets open at 12×6; ceiling `MAX_ROWS = 200`, `MAX_COLS = 26`.
 - A1 addressing: `colName`, `colIndex`, `ref`, `parseRef`, `expand` (ranges).
-- **32 formula functions**: `IF SUMPRODUCT AND OR NOT COUNTA CONCAT LEN UPPER
-  LOWER TRIM SUM PRODUCT COUNT AVERAGE AVG MEDIAN MIN MAX STDEV STDEVP VAR VARP
-  ABS INT SQRT EXP LN LOG10 POWER MOD ROUND`.
-- Five real errors said in the cell rather than swallowed: `#DIV/0!`, `#REF!`,
-  `#NAME?`, `#VALUE!`, `#CYCLE!`. Cycle detection via a `seen` set.
+- **63 formula functions** (the figure here said 32 and had not been counted
+  since; the lookups, the dates, the conditionals and the finance were all
+  added after it): `IF IFS IFERROR AND OR NOT SUMPRODUCT COUNTA CONCAT LEN
+  LEFT RIGHT MID SPLIT TEXT TRIM UPPER LOWER VLOOKUP HLOOKUP XLOOKUP INDEX
+  MATCH TODAY NOW DATE DATEDIF WEEKDAY EOMONTH COUNTIF SUMIF AVERAGEIF
+  COUNTIFS SUMIFS SUM PRODUCT COUNT AVERAGE AVG MEDIAN MODE MIN MAX STDEV
+  STDEVP VAR VARP CORREL ABS INT SQRT EXP LN LOG10 POWER MOD ROUND NPV IRR
+  PMT FV PV RATE`.
+- Seven real errors said in the cell rather than swallowed: `#DIV/0!`, `#REF!`,
+  `#NAME?`, `#VALUE!`, `#CYCLE!`, `#N/A`, `#DEEP!`. Cycle detection via a
+  `seen` set. An error written *into* a formula — which is what a deleted
+  reference leaves behind — is read back as that error rather than degraded to
+  `#VALUE!`.
 - `weighted(scores, weights)` — the syllabus-weighted gradebook helper.
 - Out: **`.xlsx` with the formulas and the formats still in it**
-  (`lib/xlsx.ts`; `styleTable()` builds `cellXfs` from the distinct `Look`s the
-  book uses), `.csv` (`toCsv`), and a Markdown table for a document
-  (`toMarkdown`).
+  (`lib/xlsx.ts`; `styleTable()` builds `cellXfs`, `fonts`, `fills` and
+  `borders` from the distinct `Look`s the book uses — fills start at index 2,
+  because 0 and 1 are reserved and a workbook pointing at 1 opens striped),
+  `.csv` (`toCsv`), and a Markdown table for a document (`toMarkdown`).
 - In: `readTable()` parses pasted TSV/CSV.
 - Reducer actions: `newSheet`, `makeSheet`, `openSheet`, `closeSheet`,
   `updateSheet`, `deleteSheet`.

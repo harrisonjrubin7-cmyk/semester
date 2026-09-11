@@ -96,6 +96,7 @@ export interface CellStyle {
   bold?: boolean;
   italic?: boolean;
   strike?: boolean;
+  under?: boolean;
   /**
    * Where the text sits in the cell.
    *
@@ -104,10 +105,126 @@ export interface CellStyle {
    * point without anybody being asked. Setting it overrides that.
    */
   align?: Align;
+  /** The colour of the type. A name, not a hex — see {@link Ink}. */
+  ink?: Ink;
+  /** The colour behind it, which is the one people actually reach for. */
+  wash?: Ink;
+  /**
+   * Which sides of the cell are ruled, as any of `t`, `b`, `l`, `r`.
+   *
+   * A set of letters rather than an enum because a cell really can want two
+   * of them at once: the bottom-left corner of an outlined block is ruled
+   * `b` and `l` and nothing else, and an enum would have needed a member per
+   * combination — sixteen names for four facts.
+   */
+  edge?: string;
+  /**
+   * Type size in points, on Excel's own scale, where 11 is the default.
+   *
+   * Points rather than a multiplier so the number means the same thing here
+   * and in the exported file, and so the dropdown can say `14` and be telling
+   * the truth. On the screen it is read as a ratio against the grid's own
+   * size, which keeps it answering to the Text size setting — an absolute
+   * 14px in a cell would be a piece of the app that setting cannot reach.
+   */
+  size?: number;
 }
 
 export type NumFormat = 'plain' | 'number' | 'percent' | 'money' | 'date';
 export type Align = 'left' | 'center' | 'right';
+
+/**
+ * A colour, named rather than picked.
+ *
+ * Excel gives you a colour wheel and a student gives it a mid-grey on a white
+ * ground, which is fine there and unreadable here: this app is dark. So the
+ * sheet stores *which* colour somebody meant and each surface decides what
+ * that looks like on the ground it has — {@link inkOn} for the screen's dark
+ * panel, {@link inkPaper} for the file's white page. The same cell reads as
+ * red in both, at a contrast somebody chose in both, and neither is a hex
+ * typed once and hoped over.
+ *
+ * Six, because six is the number of colours a gradebook ever needs and a
+ * palette people can hold in their head is a palette they use consistently.
+ */
+export type Ink = 'red' | 'amber' | 'green' | 'blue' | 'violet' | 'grey';
+
+export const INKS = ['red', 'amber', 'green', 'blue', 'violet', 'grey'] as const;
+
+/** What each ink is called, for the button and for anybody listening to one. */
+export const INK_NAMES: Record<Ink, string> = {
+  red: 'Red',
+  amber: 'Amber',
+  green: 'Green',
+  blue: 'Blue',
+  violet: 'Violet',
+  grey: 'Grey',
+};
+
+/** Type of that colour on the app's dark panel: light enough to read. */
+export function inkOn(ink: Ink): string {
+  return {
+    red: '#ff8c7a',
+    amber: '#f0c274',
+    green: '#86d6a2',
+    blue: '#8ec2f5',
+    violet: '#c3a9f0',
+    grey: '#a6acb8',
+  }[ink];
+}
+
+/** The same colour as a wash behind the type, at an alpha the type survives. */
+export function washOn(ink: Ink): string {
+  return {
+    red: 'rgba(255, 140, 122, 0.18)',
+    amber: 'rgba(240, 194, 116, 0.18)',
+    green: 'rgba(134, 214, 162, 0.18)',
+    blue: 'rgba(142, 194, 245, 0.18)',
+    violet: 'rgba(195, 169, 240, 0.18)',
+    grey: 'rgba(166, 172, 184, 0.18)',
+  }[ink];
+}
+
+/**
+ * The same ink on Excel's white page, as the `AARRGGBB` the format wants.
+ *
+ * Darker than the screen's, because these are read on white. A file that
+ * carried the screen's pale green would arrive as a highlighter on paper.
+ */
+export function inkPaper(ink: Ink): string {
+  return {
+    red: 'FFB03A28',
+    amber: 'FF9A6B12',
+    green: 'FF1E7A47',
+    blue: 'FF1F5FA8',
+    violet: 'FF6A45B0',
+    grey: 'FF5B6270',
+  }[ink];
+}
+
+/** And the wash, pale enough on white that black type still reads over it. */
+export function washPaper(ink: Ink): string {
+  return {
+    red: 'FFFBE4E0',
+    amber: 'FFFCF0D8',
+    green: 'FFE1F4E8',
+    blue: 'FFE2EDFB',
+    violet: 'FFEDE4FA',
+    grey: 'FFECEEF2',
+  }[ink];
+}
+
+/**
+ * The type sizes the dropdown offers, in points.
+ *
+ * Excel's own short list. 11 is the default and is what an absent `size`
+ * means, so choosing it takes the property back off the cell rather than
+ * writing it down — see {@link restyle}.
+ */
+export const SIZES = [8, 9, 10, 11, 12, 14, 18, 24] as const;
+
+/** The default, and the number the screen's own grid type stands for. */
+export const BASE_SIZE = 11;
 
 /** As many places as the buttons will add. Past this the number is noise. */
 export const MAX_DECIMALS = 6;
@@ -192,8 +309,24 @@ export function restyle(
   for (const address of addresses) {
     const at = key(address);
     const next = change(out[at] ?? {});
+    /*
+     * What counts as "nothing on this cell", in one list.
+     *
+     * `false`, absent and `plain` were always the same thing; `''` and the
+     * default type size joined them when the edges and the size dropdown
+     * arrived. Each of those is a property whose value *is* the default, and
+     * writing it down would mean a style entry per cell somebody had ruled
+     * and unruled — the megabyte of nothing this filter exists to prevent.
+     */
     const kept = Object.fromEntries(
-      Object.entries(next).filter(([, v]) => v !== undefined && v !== false && v !== 'plain'),
+      Object.entries(next).filter(
+        ([k, v]) =>
+          v !== undefined &&
+          v !== false &&
+          v !== 'plain' &&
+          v !== '' &&
+          !(k === 'size' && v === BASE_SIZE),
+      ),
     ) as CellStyle;
     if (Object.keys(kept).length === 0) delete out[at];
     else out[at] = kept;
@@ -521,6 +654,8 @@ type Token =
   | { kind: 'str'; value: string }
   | { kind: 'ref'; value: string }
   | { kind: 'name'; value: string }
+  /** An error written into the formula itself — `=#REF!+1`. See {@link lex}. */
+  | { kind: 'err'; value: Err }
   | { kind: 'op'; value: string };
 
 const OPS = ['<>', '<=', '>=', '<', '>', '=', '+', '-', '*', '/', '^', '&', '(', ')', ',', ':', '%'];
@@ -539,6 +674,23 @@ function lex(text: string): Token[] | null {
       if (end < 0) return null;
       out.push({ kind: 'str', value: text.slice(i + 1, end) });
       i = end + 1;
+      continue;
+    }
+    /*
+     * An error the formula itself carries.
+     *
+     * Nothing used to write one, so `#` was simply not a character this
+     * understood and `=#REF!+1` came back `#VALUE!` — the honest answer
+     * downgraded to a vaguer one on its way through. Deleting a row a formula
+     * pointed at now writes `#REF!` into that formula (see
+     * `lib/sheetedit.ts`), so the engine has to read one back as what it is:
+     * the cell says the reference is gone, which is the thing to go and fix,
+     * rather than that something about the formula is wrong.
+     */
+    const err = /^#[A-Z0-9/]+[!?]/.exec(text.slice(i));
+    if (err && isError(err[0])) {
+      out.push({ kind: 'err', value: err[0] });
+      i += err[0].length;
       continue;
     }
     const num = /^\d+(\.\d+)?|^\.\d+/.exec(text.slice(i));
@@ -715,6 +867,10 @@ class Parser {
       return t.value;
     }
     if (t.kind === 'str') {
+      this.at += 1;
+      return t.value;
+    }
+    if (t.kind === 'err') {
       this.at += 1;
       return t.value;
     }
