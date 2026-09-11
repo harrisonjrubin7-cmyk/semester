@@ -397,6 +397,186 @@ export function listen(
   };
 }
 
+/**
+ * The last stretch of every room at once.
+ *
+ * The list of chats needs the last line and an unread count for every class
+ * somebody is in, and asking room by room is one request per class on every
+ * open — five classes, five round trips, on a phone. One request ordered by
+ * time and split on the device is the same answer for the cost of one; see
+ * `bucket` in `lib/roomchat.ts`.
+ *
+ * The limit is a screenful of list, not a screenful of conversation. A room
+ * busier than its share of 200 shows a truthful last line and a count that
+ * stops at "9+", which is where a count stops being read anyway.
+ */
+export async function across(term: string, codes: string[], limit = 200): Promise<Message[]> {
+  if (codes.length === 0) return [];
+  const { data, error } = await (await cloud())
+    .from('messages')
+    .select('id, term, code, user_id, body, created_at')
+    .eq('term', term)
+    .in('code', codes)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(explain(error.message));
+  return (data ?? []) as Message[];
+}
+
+/** One person's one tap on one message. `supabase/rooms.sql` holds the policies. */
+export interface Reaction {
+  message_id: string;
+  user_id: string;
+  emoji: string;
+  term: string;
+  code: string;
+}
+
+/**
+ * Every reaction in a room.
+ *
+ * Answers with nothing rather than throwing when the table is not there. A
+ * reaction is an ornament on a conversation that works without it, and an
+ * instance whose owner has not run `supabase/rooms.sql` should show the
+ * conversation rather than an error where the messages go. Leaving one says so
+ * properly — `react` below throws, and `explain` turns the refusal into the
+ * sentence naming the file to run.
+ */
+export async function reactionsIn(term: string, code: string, limit = 400): Promise<Reaction[]> {
+  const { data, error } = await (await cloud())
+    .from('message_reactions')
+    .select('message_id, user_id, emoji, term, code')
+    .eq('term', term)
+    .eq('code', code)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) {
+    if (/does not exist/i.test(error.message)) return [];
+    throw new Error(explain(error.message));
+  }
+  return (data ?? []) as Reaction[];
+}
+
+export async function react(
+  userId: string,
+  term: string,
+  code: string,
+  messageId: string,
+  emoji: string,
+): Promise<void> {
+  const { error } = await (await cloud())
+    .from('message_reactions')
+    .upsert(
+      { message_id: messageId, user_id: userId, emoji, term, code },
+      { onConflict: 'message_id,user_id,emoji' },
+    );
+  if (error) throw new Error(explain(error.message));
+}
+
+/** Taking one back. Only ever your own — the policy would refuse anything else. */
+export async function unreact(userId: string, messageId: string, emoji: string): Promise<void> {
+  const { error } = await (await cloud())
+    .from('message_reactions')
+    .delete()
+    .eq('message_id', messageId)
+    .eq('user_id', userId)
+    .eq('emoji', emoji);
+  if (error) throw new Error(explain(error.message));
+}
+
+/**
+ * Reactions as they are left and taken back.
+ *
+ * Both events, because a reaction that disappears from one screen and stays on
+ * another is worse than one that never arrived. A delete payload carries only
+ * the primary key — message, person, emoji — which is exactly what the screen
+ * needs to take it off.
+ */
+export function listenReactions(
+  term: string,
+  code: string,
+  onLeft: (r: Reaction) => void,
+  onTaken: (r: Pick<Reaction, 'message_id' | 'user_id' | 'emoji'>) => void,
+): () => void {
+  let close: (() => void) | null = null;
+  let cancelled = false;
+
+  void cloud()
+    .then((db) => {
+      if (cancelled) return;
+      const channel = db
+        .channel(`reactions:${term}:${code}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'message_reactions', filter: `code=eq.${code}` },
+          (payload) => {
+            const r = payload.new as Reaction;
+            if (r.term === term && r.code === code) onLeft(r);
+          },
+        )
+        .on(
+          'postgres_changes',
+          { event: 'DELETE', schema: 'public', table: 'message_reactions' },
+          (payload) => onTaken(payload.old as Pick<Reaction, 'message_id' | 'user_id' | 'emoji'>),
+        )
+        .subscribe();
+      close = () => void db.removeChannel(channel);
+    })
+    .catch(() => {
+      // No table, no project, no reactions. The conversation is unaffected.
+    });
+
+  return () => {
+    cancelled = true;
+    close?.();
+  };
+}
+
+/**
+ * Who has this room open right now.
+ *
+ * Presence rather than a table: being in a room is true for as long as a tab is
+ * open, and a row saying so is wrong the moment a phone goes in a pocket. The
+ * channel is private, so Realtime puts the same question to the same policies
+ * as everything else here — see the presence section of `supabase/rooms.sql`.
+ *
+ * It fails to nothing on purpose. Without those policies the join is refused
+ * and the room shows no dots, which costs an ornament rather than the
+ * conversation.
+ */
+export function here(
+  term: string,
+  code: string,
+  me: string,
+  onHere: (ids: string[]) => void,
+): () => void {
+  let close: (() => void) | null = null;
+  let cancelled = false;
+
+  void cloud()
+    .then((db) => {
+      if (cancelled) return;
+      const channel = db.channel(`here:${term}:${code}`, {
+        config: { private: true, presence: { key: me } },
+      });
+      channel
+        .on('presence', { event: 'sync' }, () => onHere(Object.keys(channel.presenceState())))
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') void channel.track({ at: new Date().toISOString() });
+          // Anything else — a refusal, a closed socket — leaves the room with
+          // nobody marked present, which is what it looked like before.
+          else if (status !== 'CHANNEL_ERROR') onHere([]);
+        });
+      close = () => void db.removeChannel(channel);
+    })
+    .catch(() => onHere([]));
+
+  return () => {
+    cancelled = true;
+    close?.();
+  };
+}
+
 export async function block(userId: string, blocked: string): Promise<void> {
   const { error } = await (await cloud())
     .from('blocks')

@@ -10,6 +10,7 @@
  */
 
 import type { Screen } from '../../lib/types';
+import { NAMED } from '../../lib/route';
 import { ROOTS, type Action, type State } from '../shape';
 import { ONB_STEPS } from '../../data/misc';
 import { dayOf } from '../../lib/date';
@@ -80,21 +81,17 @@ export function navigate(state: State, action: Action): State | null {
     case 'landed': {
       if (action.screen === state.screen && !action.id && !action.mode) return state;
       const back = state.history[state.history.length - 1] === action.screen;
-      const field = action.id
-        ? {
-            course: 'courseId',
-            edit: 'courseId',
-            grades: 'courseId',
-            item: 'itemId',
-            event: 'eventId',
-            guide: 'guideId',
-            drill: 'guideId',
-            quiz: 'guideId',
-            lesson: 'guideId',
-            slides: 'guideId',
-            note: 'noteId',
-          }[action.screen as string]
-        : undefined;
+      /*
+       * Which field the id in the address belongs in.
+       *
+       * `NAMED` in `lib/route.ts`, not a copy of it. This was a second table
+       * with the same ten rows in it, which is the arrangement where a screen
+       * added to one is missing from the other: the address bar would carry
+       * `#/call/bcd-fghj-kmn` and Back would land on the call screen with no
+       * code in it. `lib/route.ts` imports nothing at runtime, so reading the
+       * one table here costs nothing and cannot drift.
+       */
+      const field = action.id ? NAMED[action.screen] : undefined;
       return {
         ...state,
         screen: action.screen,
@@ -118,6 +115,17 @@ export function navigate(state: State, action: Action): State | null {
 
     case 'openEvent':
       return push({ ...state, eventId: action.id }, 'event');
+
+    case 'openCall': {
+      /*
+       * `push` refuses to move to the screen you are already on, which is
+       * right for every other screen and wrong for this one: joining a call
+       * from the lobby changes the code without changing the screen, and the
+       * early return would drop the code on the floor.
+       */
+      const next = { ...state, callCode: action.code };
+      return state.screen === 'call' ? next : push(next, 'call' as Screen);
+    }
 
     case 'openGuide':
       return push(

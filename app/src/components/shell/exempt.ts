@@ -38,6 +38,7 @@ export const EXEMPT: Screen[] = [
   'ask',
   'mail',
   'proof',
+  'classmates',
   // Drawn output, and one large object rather than a list.
   'calendar',
   'drill',
@@ -93,14 +94,20 @@ export function isCanvas(screen: Screen): boolean {
  * reserve space beneath it — see `.scrollarea.is-filled` in `styles/app.css`
  * for what that reservation was doing there and why it is wrong here.
  *
- * The mailbox is the second, and it is the same shape rather than a new
- * argument for one: a rail that does not move, a list that scrolls, a message
- * that scrolls separately beside it, and a toolbar across the top of all
- * three. Every mail client anybody has used is built this way, and none of it
- * works inside a page that scrolls as one — the folders would scroll off the
- * top, and the reading pane and the list would be one long column.
+ * There are three of them now, and the third is the reason to state the test
+ * rather than the name. Classmates is a class conversation with a list of
+ * rooms beside it: a scrolling transcript, a composer on the bottom edge, its
+ * own scroller inside. The mailbox is the same shape from the other side — a
+ * rail that does not move, a list that scrolls, a message that scrolls
+ * separately beside it, and a toolbar across the top of all three; every mail
+ * client anybody has used is built that way, and none of it works inside a
+ * page that scrolls as one, where the folders would scroll off the top and
+ * the list and the reading pane would be one long column.
+ *
+ * Whatever is added here has to answer the same question, and the answer is
+ * about the screen's own layout rather than about what it holds.
  */
-export const FILLS: Screen[] = ['ask', 'mail'];
+export const FILLS: Screen[] = ['ask', 'classmates', 'mail'];
 
 export function fills(screen: Screen): boolean {
   return FILLS.includes(screen);

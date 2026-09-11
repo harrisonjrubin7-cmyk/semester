@@ -251,7 +251,91 @@ export const SHAPES = {
   /** Overlap — two courses, and the part that is in both. */
   meet: [{ c: [9.5, 12, 5.5] }, { c: [14.5, 12, 5.5] }],
 
+  /*
+   * A call — the camera body and the lens flare beside it.
+   *
+   * The one glyph in this set that is borrowed rather than drawn: a rectangle
+   * with a wedge on its right is what "video call" has meant since the first
+   * one, and every app the student already has uses it. A more original
+   * drawing would be a worse icon.
+   */
+  call: [
+    { d: 'M3 7.5a1.5 1.5 0 0 1 1.5-1.5h9A1.5 1.5 0 0 1 15 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5z' },
+    { d: 'm15 10.8 6-3.3v9l-6-3.3z' },
+  ],
+
   /** Group — two people, because it is the one screen about other people’s parts. */
+  /*
+   * The call's own controls, which are the one set in this app that may not be
+   * invented.
+   *
+   * Every other glyph here can be drawn however it reads best, because nobody
+   * arrives at a study screen with an expectation. A call is the opposite: a
+   * student has sat in four hundred of them, and the microphone, the crossed
+   * microphone, the arrow out of a box and the tipped handset mean exactly one
+   * thing each in every app they have ever used. Drawn in this set's line
+   * weight and on its grid, and otherwise deliberately unoriginal.
+   */
+  mic: [
+    { d: 'M12 4.5a2.5 2.5 0 0 1 2.5 2.5v5a2.5 2.5 0 0 1-5 0V7A2.5 2.5 0 0 1 12 4.5z' },
+    { d: 'M6.5 11.5a5.5 5.5 0 0 0 11 0' },
+    { d: 'M12 17v3' },
+  ],
+
+  /** Muted — the same microphone with the line every app draws through it. */
+  micOff: [
+    { d: 'M9.5 6.6A2.5 2.5 0 0 1 14.5 7v3.6' },
+    { d: 'M14.5 14.3a2.5 2.5 0 0 1-5-1.3V9.4' },
+    { d: 'M6.5 11.5a5.5 5.5 0 0 0 8.9 4.3M17.5 11.5v.6' },
+    { d: 'M12 17v3' },
+    { d: 'm4 4 16 16' },
+  ],
+
+  /** Camera off — the call glyph, struck through. */
+  camOff: [
+    { d: 'M3 7.5a1.5 1.5 0 0 1 1.5-1.5h6.7M15 10.8l6-3.3v9l-3.4-1.9' },
+    { d: 'M15 13.4v3.1a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16.5v-6' },
+    { d: 'm4 4 16 16' },
+  ],
+
+  /** Share — a screen with an arrow coming out of it. */
+  screenShare: [
+    { d: 'M4 5.5h16v10H4z' },
+    { d: 'M9 19.5h6' },
+    { d: 'M12 12.5V7M9.6 9.4 12 7l2.4 2.4' },
+  ],
+
+  /** A hand, up. */
+  hand: [
+    { d: 'M9 11V5.8a1.4 1.4 0 0 1 2.8 0V11' },
+    { d: 'M11.8 10.6V4.6a1.4 1.4 0 0 1 2.8 0V11' },
+    { d: 'M14.6 11V7.4a1.4 1.4 0 0 1 2.8 0V15a5 5 0 0 1-5 5h-.6a5 5 0 0 1-4.3-2.5L5 13.4a1.4 1.4 0 0 1 2.3-1.6L9 14' },
+  ],
+
+  /** Chat — a speech bubble with its tail. */
+  chat: [
+    { d: 'M20 12.5a7 7 0 0 1-7 7H7.5L4 22v-9.5a7 7 0 0 1 7-7h2a7 7 0 0 1 7 7z' },
+  ],
+
+  /** More — the three dots every app puts the rest behind. */
+  more: [{ c: [6, 12, 1.2] }, { c: [12, 12, 1.2] }, { c: [18, 12, 1.2] }],
+
+  /** Leave — the handset, tipped down, which has meant "hang up" for a century. */
+  leave: [
+    { d: 'M3.2 9.6a14 14 0 0 1 17.6 0l-1.6 3.1a1.5 1.5 0 0 1-1.8.7l-2.6-.9a1.5 1.5 0 0 1-1-1.6l.2-1.3a10 10 0 0 0-4 0l.2 1.3a1.5 1.5 0 0 1-1 1.6l-2.6.9a1.5 1.5 0 0 1-1.8-.7z' },
+  ],
+
+  /** Gallery — the even grid of tiles. */
+  gallery: [
+    { d: 'M4 5.5h7v5.5H4zM13 5.5h7v5.5h-7zM4 13h7v5.5H4zM13 13h7v5.5h-7z' },
+  ],
+
+  /** Speaker view — one big tile and the strip beside it. */
+  spotlight: [
+    { d: 'M4 5.5h11v13H4z' },
+    { d: 'M17 5.5h3v4h-3zM17 11h3v4h-3zM17 16.5h3v2h-3z' },
+  ],
+
   groupwork: [
     { c: [9, 8, 3.2] },
     { d: 'M3 20c0-3.3 2.7-5.2 6-5.2s6 1.9 6 5.2' },
@@ -477,9 +561,6 @@ export const SHAPES = {
     { d: 'M3.5 13a8.5 8.5 0 0 0 14.6 5l3.4-3' },
     { d: 'M21.5 19.5V15H17' },
   ],
-
-  /** More — the three dots that mean "and the rest of them". */
-  more: [{ c: [5, 12, 1.3] }, { c: [12, 12, 1.3] }, { c: [19, 12, 1.3] }],
 
   /** The folders, behind a button, on a phone. */
   menu: [{ d: 'M4 7h16' }, { d: 'M4 12h16' }, { d: 'M4 17h16' }],

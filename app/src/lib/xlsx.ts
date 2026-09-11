@@ -38,7 +38,30 @@
  * application is a spreadsheet somebody will fill in by hand.
  */
 
-import { asNumber, asPercent, filled, isFormula, picture, ref, styleOf, type Sheet } from './sheet';
+import {
+  BASE_SIZE,
+  asNumber,
+  asPercent,
+  filled,
+  inkPaper,
+  isFormula,
+  picture,
+  ref,
+  styleOf,
+  washPaper,
+  type Sheet,
+} from './sheet';
+
+/**
+ * A look with nothing on it is no look at all.
+ *
+ * A style somebody applied and took off again leaves `{}` behind, and writing
+ * that as a look would be a `cellXfs` entry per such cell — the table growing
+ * by a row for every cell that has been bolded and unbolded.
+ */
+function dropEmpty(look: Look): Look | undefined {
+  return Object.keys(look).length ? look : undefined;
+}
 
 /** XML text escaping. Every string that reaches the file goes through here. */
 export function xml(s: string): string {
@@ -97,7 +120,16 @@ export interface Look {
   bold?: boolean;
   italic?: boolean;
   strike?: boolean;
+  under?: boolean;
   align?: 'left' | 'center' | 'right';
+  /** Type colour as `AARRGGBB`, already chosen for a white page. */
+  ink?: string;
+  /** The fill behind it, same spelling. */
+  wash?: string;
+  /** Which sides are ruled, as any of `t`, `b`, `l`, `r`. */
+  edge?: string;
+  /** Type size in points. Absent is 11, which is Excel's own default. */
+  size?: number;
 }
 
 export interface Tab {
@@ -231,7 +263,12 @@ function lookKey(look: Look): string {
     look.bold ? 'b' : '',
     look.italic ? 'i' : '',
     look.strike ? 's' : '',
+    look.under ? 'u' : '',
     look.align ?? '',
+    look.ink ?? '',
+    look.wash ?? '',
+    look.edge ?? '',
+    look.size ?? '',
   ].join('|');
 }
 
@@ -264,9 +301,61 @@ function numFmtIds(looks: Look[]): { id: (fmt: string) => number; xml: string } 
   return { id, xml: xml_ };
 }
 
-/** A font as a string, for the same reason `lookKey` exists. */
+/**
+ * A font as a string, for the same reason `lookKey` exists.
+ *
+ * Colour and size are part of the font rather than of the cell in this format,
+ * which is why they are keyed here: two cells in red 14pt bold share one
+ * `<font>` entry however many of them there are.
+ */
 function fontKey(look: Look): string {
-  return `${look.bold ? 'b' : ''}${look.italic ? 'i' : ''}${look.strike ? 's' : ''}`;
+  return [
+    look.bold ? 'b' : '',
+    look.italic ? 'i' : '',
+    look.strike ? 's' : '',
+    look.under ? 'u' : '',
+    look.ink ?? '',
+    look.size ?? '',
+  ].join('~');
+}
+
+/** The `<font>` a key stands for, read back out of the key's own parts. */
+function fontXmlFor(look: Look): string {
+  return (
+    '<font>' +
+    (look.bold ? '<b/>' : '') +
+    (look.italic ? '<i/>' : '') +
+    (look.strike ? '<strike/>' : '') +
+    (look.under ? '<u/>' : '') +
+    (look.ink ? `<color rgb="${xml(look.ink)}"/>` : '') +
+    `<sz val="${look.size ?? 11}"/><name val="Calibri"/></font>`
+  );
+}
+
+/** A fill is a solid patch of one colour, or nothing at all. */
+function fillXmlFor(wash: string): string {
+  return `<fill><patternFill patternType="solid"><fgColor rgb="${xml(wash)}"/><bgColor indexed="64"/></patternFill></fill>`;
+}
+
+/**
+ * The four sides of a cell, thin and in the type's own colour.
+ *
+ * Every side the cell did not ask for is written as an empty element rather
+ * than left out: the format wants all five children of `<border>` in order,
+ * and a reader that meets them out of order reports the whole workbook as
+ * unreadable content with no hint of where.
+ */
+function borderXmlFor(edge: string): string {
+  const side = (name: string, letter: string) =>
+    edge.includes(letter) ? `<${name} style="thin"><color indexed="64"/></${name}>` : `<${name}/>`;
+  return (
+    '<border>' +
+    side('left', 'l') +
+    side('right', 'r') +
+    side('top', 't') +
+    side('bottom', 'b') +
+    '<diagonal/></border>'
+  );
 }
 
 export interface Styles {
@@ -290,31 +379,63 @@ export function styleTable(tabs: Tab[]): Styles {
     }
   }
 
+  /*
+   * Three tables the cells point into, each built the same way: a key per
+   * distinct thing, in the order they were met, with the plain one first.
+   *
+   * Fills start at two entries whatever happens. The format reserves 0 for
+   * "none" and 1 for the grey-125 pattern, and a workbook whose first real
+   * fill sits at index 1 opens with every coloured cell striped — a rule with
+   * no error attached to it, which is why it is written down here.
+   */
   const fonts = new Map<string, number>();
+  const fontLooks: Look[] = [];
   for (const look of looks) {
     const key = fontKey(look);
-    if (!fonts.has(key)) fonts.set(key, fonts.size);
+    if (fonts.has(key)) continue;
+    fonts.set(key, fonts.size);
+    fontLooks.push(look);
   }
-  const fontXml = [...fonts.keys()]
-    .map(
-      (key) =>
-        '<font>' +
-        (key.includes('b') ? '<b/>' : '') +
-        (key.includes('i') ? '<i/>' : '') +
-        (key.includes('s') ? '<strike/>' : '') +
-        '<sz val="11"/><name val="Calibri"/></font>',
-    )
-    .join('');
+  const fontXml = fontLooks.map(fontXmlFor).join('');
+
+  const fills = new Map<string, number>(['', ''].map((_, i) => [`reserved${i}`, i]));
+  const washes: string[] = [];
+  for (const look of looks) {
+    const wash = look.wash ?? '';
+    if (wash === '' || fills.has(wash)) continue;
+    fills.set(wash, fills.size);
+    washes.push(wash);
+  }
+  const fillXml =
+    '<fill><patternFill patternType="none"/></fill>' +
+    '<fill><patternFill patternType="gray125"/></fill>' +
+    washes.map(fillXmlFor).join('');
+
+  const borders = new Map<string, number>([['', 0]]);
+  const edges: string[] = [];
+  for (const look of looks) {
+    const edge = look.edge ?? '';
+    if (edge === '' || borders.has(edge)) continue;
+    borders.set(edge, borders.size);
+    edges.push(edge);
+  }
+  const borderXml =
+    '<border><left/><right/><top/><bottom/><diagonal/></border>' +
+    edges.map(borderXmlFor).join('');
 
   const numbers = numFmtIds(looks);
   const xfs = looks
     .map((look) => {
       const fmt = numbers.id(look.fmt ?? '');
       const font = fonts.get(fontKey(look)) ?? 0;
+      const fill = fills.get(look.wash ?? '') ?? 0;
+      const border = borders.get(look.edge ?? '') ?? 0;
       const attrs =
-        `numFmtId="${fmt}" fontId="${font}" fillId="0" borderId="0" xfId="0"` +
+        `numFmtId="${fmt}" fontId="${font}" fillId="${fill}" borderId="${border}" xfId="0"` +
         (fmt ? ' applyNumberFormat="1"' : '') +
         (font ? ' applyFont="1"' : '') +
+        (fill ? ' applyFill="1"' : '') +
+        (border ? ' applyBorder="1"' : '') +
         (look.align ? ' applyAlignment="1"' : '');
       return look.align
         ? `<xf ${attrs}><alignment horizontal="${look.align}"/></xf>`
@@ -328,9 +449,8 @@ export function styleTable(tabs: Tab[]): Styles {
       `${HEAD}<styleSheet xmlns="${MAIN}">` +
       numbers.xml +
       `<fonts count="${fonts.size}">${fontXml}</fonts>` +
-      '<fills count="2"><fill><patternFill patternType="none"/></fill>' +
-      '<fill><patternFill patternType="gray125"/></fill></fills>' +
-      '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>' +
+      `<fills count="${fills.size}">${fillXml}</fills>` +
+      `<borders count="${borders.size}">${borderXml}</borders>` +
       '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
       `<cellXfs count="${looks.length}">${xfs}</cellXfs>` +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
@@ -444,16 +564,26 @@ export function fromSheet(sheet: Sheet, header = true): Tab {
        */
       const style = styleOf(sheet, address);
       const fmt = picture(style);
-      const look: Look | undefined =
-        style && (fmt || style.bold || style.italic || style.strike || style.align)
-          ? {
-              ...(fmt ? { fmt } : {}),
-              ...(style.bold ? { bold: true } : {}),
-              ...(style.italic ? { italic: true } : {}),
-              ...(style.strike ? { strike: true } : {}),
-              ...(style.align ? { align: style.align } : {}),
-            }
-          : undefined;
+      /*
+       * The colours are translated as well as the format, and translated
+       * rather than copied: the screen's red is a pale one chosen to read on
+       * a dark panel, and the same hex on Excel's white page is a highlighter.
+       * `inkPaper` and `washPaper` are the same six colours picked for paper.
+       */
+      const look: Look | undefined = style
+        ? dropEmpty({
+            ...(fmt ? { fmt } : {}),
+            ...(style.bold ? { bold: true } : {}),
+            ...(style.italic ? { italic: true } : {}),
+            ...(style.strike ? { strike: true } : {}),
+            ...(style.under ? { under: true } : {}),
+            ...(style.align ? { align: style.align } : {}),
+            ...(style.ink ? { ink: inkPaper(style.ink) } : {}),
+            ...(style.wash ? { wash: washPaper(style.wash) } : {}),
+            ...(style.edge ? { edge: style.edge } : {}),
+            ...(style.size && style.size !== BASE_SIZE ? { size: style.size } : {}),
+          })
+        : undefined;
       const worn = <T extends Cell>(cell: T): Formatted => (look ? { ...cell, look } : cell);
 
       if (raw === '' && value === '') return worn({ kind: 'blank' });

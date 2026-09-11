@@ -48,6 +48,9 @@ const Behind = lazy(() => import('./screens/Behind').then((m) => ({ default: m.B
 const Degree = lazy(() => import('./screens/Degree').then((m) => ({ default: m.Degree })));
 const People = lazy(() => import('./screens/People').then((m) => ({ default: m.People })));
 const Meet = lazy(() => import('./screens/Meet').then((m) => ({ default: m.Meet })));
+// The call, and everything it drags in — a peer connection, an audio meter,
+// the signalling channel. Nobody opening Today should download any of it.
+const Call = lazy(() => import('./screens/call/Index').then((m) => ({ default: m.Call })));
 const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
 const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
@@ -414,6 +417,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'One thumb, and the walk taken off', title: 'Between classes' };
     case 'groupwork':
       return { kicker: 'Who has what, and by when', title: 'Group work' };
+    case 'call':
+      return { kicker: 'A code, a link, and who is in it', title: 'Video call' };
     case 'meals':
       return { kicker: 'Swipes, cash, and the week they run out', title: 'Meal plan' };
     case 'housing':
@@ -1021,6 +1026,8 @@ function CurrentScreen() {
       return <Gap />;
     case 'groupwork':
       return <Groupwork />;
+    case 'call':
+      return <Call />;
     case 'meals':
       return <Meals />;
     case 'housing':

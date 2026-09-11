@@ -12,6 +12,7 @@ import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { Drive } from './mine/Drive';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
+import { codeOf } from '../lib/call';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 import { CheckIt } from '../components/CheckIt';
@@ -543,6 +544,25 @@ function Appointments() {
                 {[kindOf(a.kind).label, a.where].filter(Boolean).join(' · ')}
               </div>
             </div>
+            {/*
+              A call in the diary opens into the call.
+
+              This is the whole reason a scheduled call is an appointment
+              rather than a fifth kind of dated thing — see `whereFor` in
+              `lib/call.ts`. The code is on the row already, because `where`
+              is where it was written; this turns it into the way in.
+            */}
+            {codeOf(a) ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => dispatch({ type: 'openCall', code: codeOf(a) })}
+                aria-label={`Join ${a.title}`}
+                style={{ flex: 'none', height: 32, paddingInline: 'var(--sp-6)', fontSize: 'var(--type-xs)', width: 'auto' }}
+              >
+                Join
+              </button>
+            ) : null}
             <button
               type="button"
               className="btn btn-ghost"

@@ -9,7 +9,8 @@ import { standingOf } from '../lib/standing';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
-import { ChevronLeft, ChevronRight } from '../components/Icons';
+import { CallIcon, ChevronLeft, ChevronRight } from '../components/Icons';
+import { codeOf } from '../lib/call';
 import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
 import { WeekGrid } from '../components/WeekGrid';
@@ -1559,6 +1560,49 @@ function MonthView() {
               <ChevronRight size={14} style={{ opacity: 0.4, flex: 'none' }} />
             </button>
           ))}
+        </>
+      )}
+
+      {/*
+        The calls booked that day, with the way into them.
+
+        A scheduled call is an appointment — see `whereFor` in `lib/call.ts` —
+        so it is already drawn in the row above. What it needs here is the
+        thing an appointment does not have: on Thursday at four, the useful
+        control is not "edit this", it is "join".
+      */}
+      {selAppts.some((a) => codeOf(a)) && (
+        <>
+          <SectionLabel>Calls</SectionLabel>
+          {selAppts
+            .filter((a) => codeOf(a))
+            .map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                className="bare tappable"
+                onClick={() => dispatch({ type: 'openCall', code: codeOf(a) })}
+                style={{
+                  display: 'flex',
+                  gap: 'var(--sp-5)',
+                  alignItems: 'center',
+                  width: '100%',
+                  textAlign: 'left',
+                  ...monthTaskRow,
+                }}
+              >
+                <CallIcon size={16} />
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
+                    {a.title}
+                  </span>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine() }}>
+                    {a.time} · {codeOf(a)}
+                  </span>
+                </span>
+                <span className="tag tag-outline">Join</span>
+              </button>
+            ))}
         </>
       )}
 

@@ -29,7 +29,7 @@ own application.
 
 ## What is in it
 
-<!--tabs-->Five<!--/--> tabs, <!--screens-->fifty-three<!--/--> screens. The tabs
+<!--tabs-->Five<!--/--> tabs, <!--screens-->fifty-four<!--/--> screens. The tabs
 are below; the screens are the registry in `src/lib/nav.ts`, which is also what
 the directory, the search box and the home-screen icons are drawn from — there
 is one list, and it is that one.
@@ -303,6 +303,106 @@ Nothing about the boundary moved. Every lookup reaches a category
 be asked for — and `lookup.test.ts` runs every lookup against a state holding a
 private note, a task note, another person and a letter, and asserts none of them
 comes back.
+
+## The call
+
+**Video call** (`#/call`) is a call between the browsers in it, with no media
+server anywhere. It is the only screen in the app where another person's face
+is on the glass, and the only one whose central claim — that this works — is
+not something the test suite can check on its own.
+
+The parts, and the line between them:
+
+| File | What it is |
+| --- | --- |
+| `src/lib/call.ts` | Codes, links, the gallery's packing arithmetic, the order tiles are drawn in, who is talking, the clock. Pure, and 49 tests. |
+| `src/lib/mesh.ts` | The signalling protocol: the messages, who offers to whom, the roster, the heartbeat, reactions, the chat. Pure, and 39 tests. |
+| `src/lib/rtc.ts` | The browser: `getUserMedia`, one `RTCPeerConnection` per peer, the channel the introductions ride on. The only part that cannot be run in a test. |
+| `src/screens/call/` | The lobby, the green room, and the stage. |
+
+**A code is `bcd-fghj-kmn`** — Meet's three-four-three, because that shape
+survives being read down a phone, out of an alphabet with no vowels in it, so
+three random letters cannot spell a word somebody has to say to their study
+group. A link is the code: `#/call/bcd-fghj-kmn` opens the green room for that
+call, which is the one address in this app somebody sends to another person on
+purpose.
+
+**A scheduled call is an appointment.** There is no list of booked calls and
+there is not going to be one: `whereFor` writes the code into an appointment's
+`where`, `codeOf` reads it back, and a call at four on Thursday is therefore in
+the rail with your classes, on Today, in the week ahead, in the export and in
+the sync — all of which already knew how to draw an appointment and none of
+which had to be taught about calls.
+
+**The green room is Google Meet's idea and is worth copying exactly.** Camera,
+microphone, both pickers and the level meter, *before* anybody else sees you —
+the alternative is discovering the wrong microphone in front of the people you
+are meeting.
+
+**The control bar is Zoom's** — round target, glyph, caption under it, the red
+one on its own. The muscle memory is worth more than any arrangement of this
+app's own.
+
+**What it will not claim.** There is no host with a switch. "Ask everybody to
+mute" asks: a mesh has no server, nothing here can reach into somebody else's
+microphone, and a button that implied otherwise is one somebody would rely on
+in a seminar. Nothing is recorded. The in-call chat lives as long as the call
+unless somebody keeps it as a note.
+
+### Why every camera goes to every other person
+
+There is no SFU, because an SFU is a machine somebody rents by the hour. The
+cost is arithmetic and the screen states it: each person uploads and downloads
+`n − 1` streams, so a call of `n` carries `n × (n − 1)`. Four people is twelve
+and unremarkable; eight is fifty-six, which is a warm laptop and a phone that
+gives up. `ROOMY` (6) is where the screen says so and `FULL` (12) is where it
+stops.
+
+STUN is free and Google runs one. TURN — the relay for the roughly one network
+in ten that refuses a direct path, and rather more than that on a locked-down
+campus — is not, so there is none configured by default and both the lobby and
+the green room say which of the two you have. `VITE_TURN_URL`, `VITE_TURN_USER`
+and `VITE_TURN_PASS` add one; see [SETUP.md](../SETUP.md#a-relay-for-calls).
+
+### How the negotiation was actually checked
+
+Two browsers cannot be run by `vitest`, and the hard part of a call is not the
+video — browsers do the video — it is the introductions: two offers crossing is
+*glare*, and it fails in the way that looks like the network's fault. So
+`lib/mesh.ts` holds every decision that can be made without a browser (`polite`,
+`greets`, `reconcile`, `seen`, `expired`) and tests them, and `join` in
+`lib/rtc.ts` takes its transport as an argument — `Opener`, defaulting to the
+Supabase channel.
+
+That seam is what makes the negotiation checkable. With the dev server up, a
+headless Chromium can import the real module and drive real peer connections at
+each other over a channel that never leaves the page:
+
+```js
+const rtc = await import('/src/lib/rtc.ts');
+const bus = new EventTarget();
+const overBus = async (code, onSignal) => {
+  const on = (e) => onSignal(e.detail);
+  bus.addEventListener(code, on);
+  return {
+    send: (s) => bus.dispatchEvent(new CustomEvent(code, { detail: s })),
+    close: () => bus.removeEventListener(code, on),
+  };
+};
+const s = await rtc.join(code, media, flags, ears, overBus);
+```
+
+Three peers joining at the same instant — which is the case that makes offers
+cross — each ended with both other names in the roster and both other streams
+playing, in about 800ms, with nothing reported as trouble.
+
+It is also how the one real bug in this feature was found. The hello was sent
+once, on arrival: the person already in the call heard the newcomer, and the
+newcomer heard nobody. Their video still arrived, because `ontrack` does not
+wait for a roster — so a tile appeared with no name, no mute state and no hand
+on it, and stayed that way for the five seconds until the next heartbeat. The
+fix is `greets` in `lib/mesh.ts`, a hello answered with a hello, and the test
+beside it is that it terminates.
 
 ## The three screens that make a file
 

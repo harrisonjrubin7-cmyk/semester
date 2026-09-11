@@ -28,13 +28,14 @@ const src = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8
 const css = () => src('../styles/app.css');
 
 describe('the screens that fill their box', () => {
-  it('are the chat and the mailbox, and nothing else', () => {
+  it('are the two chats and the mailbox, and nothing else', () => {
     // Not a list anyone should grow casually. A screen belongs here when its
-    // own body pins something to an edge and scrolls the rest — a chat with a
-    // composer on the bottom, and a mailbox whose rail, list and message each
-    // hold their own place while one of them scrolls.
-    expect(FILLS).toEqual(['ask', 'mail']);
+    // own body pins something to an edge and scrolls the rest — the two
+    // chats, each with a composer on the bottom, and the mailbox, whose rail,
+    // list and message each hold their own place while one of them scrolls.
+    expect(FILLS).toEqual(['ask', 'classmates', 'mail']);
     expect(fills('ask')).toBe(true);
+    expect(fills('classmates')).toBe(true);
     expect(fills('mail')).toBe(true);
     expect(fills('today' as never)).toBe(false);
   });
@@ -59,9 +60,13 @@ describe('the screens that fill their box', () => {
 
   it('because the button really is not drawn there', () => {
     // The other half of the argument. If the assistant ever starts drawing
-    // its button on this screen the reservation stops being dead space and
+    // its button on these screens the reservation stops being dead space and
     // this whole exception is wrong.
-    expect(src('./Assistant.tsx')).toContain("state.screen !== 'ask'");
+    //
+    // Asked of the list rather than of one screen's name: the button sits
+    // over the composer of whichever chat is open, so the rule that keeps it
+    // away has to be the same rule that took the padding back.
+    expect(src('./Assistant.tsx')).toContain('!fills(state.screen)');
   });
 });
 
