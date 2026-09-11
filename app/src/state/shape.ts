@@ -54,6 +54,7 @@ import type { NewSource, Source } from '../lib/sources';
 import type { Doc } from '../lib/document';
 import type { Sheet } from '../lib/sheet';
 import type { SavedEquation } from '../lib/maths';
+import type { PlotLine } from '../lib/plot';
 import type { Folder } from '../lib/folders';
 import type { StoredDeck } from '../lib/decks';
 import { type Reviews } from '../lib/review';
@@ -366,6 +367,27 @@ export interface Persisted {
   documents: Doc[];
   sheets: Sheet[];
   equations: SavedEquation[];
+  /**
+   * What is on the graph.
+   *
+   * A list of lines rather than a list of graphs: there is one plot, the way
+   * there is one drawing on a graphing calculator, and it holds whatever was
+   * last being worked on. Saving a *curve* is saving its equation, which
+   * `equations` above already does — a second store of the same notation under
+   * a different name would be two places to look for one formula.
+   */
+  plots: PlotLine[];
+  /**
+   * What the calculator is working on, and the values given to its letters.
+   *
+   * In the store for the same reason `plots` is: a formula half filled in is
+   * work, and a tab switch to look up the symbol you are stuck on should not
+   * throw it away. `given` is keyed by the letter — `r`, `n`, `P_2` — and
+   * holds what was typed rather than what it came to, so `1/3` stays a third
+   * rather than becoming 0.333.
+   */
+  mathWorking: string;
+  mathGiven: Record<string, string>;
   /**
    * Decks, which until now were built and forgotten.
    *
@@ -730,7 +752,7 @@ export interface Ephemeral {
    * from that deadline now, and a link that arrived on Write — an empty box —
    * would be a link that looked broken.
    */
-  mathTab: 'write' | 'library' | 'kept';
+  mathTab: 'write' | 'calculate' | 'graph' | 'library' | 'kept';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all' | 'task';
   /** Which shelf of the directory is showing under Everything. */
@@ -976,6 +998,9 @@ export const DEFAULT_PERSISTED: Persisted = {
   documents: [],
   sheets: [],
   equations: [],
+  plots: [],
+  mathWorking: '',
+  mathGiven: {},
   decks: [],
   folders: [],
   registrar: [],
@@ -1292,6 +1317,9 @@ export function loadPersisted(): Persisted {
       documents: list(saved.documents),
       sheets: list(saved.sheets),
       equations: list(saved.equations),
+      plots: list(saved.plots),
+      mathWorking: typeof saved.mathWorking === 'string' ? saved.mathWorking : '',
+      mathGiven: record(saved.mathGiven),
       decks: readList(saved.decks, readDeck),
       folders: readList(saved.folders, readFolder),
       registrar: list(saved.registrar),
@@ -1403,6 +1431,9 @@ export function pickPersisted(state: State): Persisted {
     documents: state.documents,
     sheets: state.sheets,
     equations: state.equations,
+    plots: state.plots,
+    mathWorking: state.mathWorking,
+    mathGiven: state.mathGiven,
     decks: state.decks,
     folders: state.folders,
     registrar: state.registrar,
@@ -1747,6 +1778,11 @@ export type Action =
    */
   | { type: 'fileEquation'; id: string; itemId: string | null }
   | { type: 'deleteEquation'; id: string }
+  | { type: 'addPlot'; text?: string }
+  | { type: 'writePlot'; id: string; patch: Partial<Omit<PlotLine, 'id'>> }
+  | { type: 'dropPlot'; id: string }
+  | { type: 'setPlot'; lines: string[] }
+  | { type: 'writeMaths'; text?: string; given?: Record<string, string> }
   | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
   | { type: 'clearPaperPreset' }
   | { type: 'writeRoomDraft'; text: string }

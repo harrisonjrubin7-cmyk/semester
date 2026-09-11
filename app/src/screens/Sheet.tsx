@@ -1025,7 +1025,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             label: 'What the formulas can do',
             run: () =>
               say(
-                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT and SUMPRODUCT are all here, computed on this device.',
+                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND and SUMPRODUCT are all here, and so are the scientific ones — SIN, COS, TAN, LOG to any base, FACT, COMBIN — and the fitted line: SLOPE, INTERCEPT, RSQ and FORECAST over two columns. All computed on this device.',
               ),
           },
           {
@@ -1317,6 +1317,11 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             ['Average', (range: string) => `=AVERAGE(${range})`],
             ['Std deviation', (range: string) => `=STDEV(${range})`],
             ['Count', (range: string) => `=COUNT(${range})`],
+            // The median and the quartiles, which is the five-number summary a
+            // first statistics course marks by hand.
+            ['Median', (range: string) => `=MEDIAN(${range})`],
+            ['Lower quartile', (range: string) => `=QUARTILE(${range},1)`],
+            ['Upper quartile', (range: string) => `=QUARTILE(${range},3)`],
           ] as const
         ).map(([text, build]) => (
           <ActionButton

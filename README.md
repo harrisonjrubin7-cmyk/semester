@@ -409,13 +409,35 @@ model in it or needs a key:
   gradebook is the answers with the working thrown away — or as a CSV, a
   Markdown table, or a table dropped into a document. A pasted table is read
   whether it is a copy out of Excel, a CSV or Markdown.
-- **Equations.** A small piece of LaTeX — `\frac{a}{b}`, `x^2`, `x_i`,
-  `\sqrt{x}`, `\sum_{i=1}^{n}`, `\bar{x}`, the greek and the relations —
-  written once and rendered three ways: MathML on screen, a real Word equation
-  object in the `.docx`, and one line of ordinary text for anywhere else. It
-  opens on a library of the fifteen formulas these courses actually use, each
-  with **every symbol named**, because that is the half a picture of an equation
-  loses and the half a marker looks for.
+- **Equations, worked out and drawn.** A small piece of LaTeX — `\frac{a}{b}`,
+  `x^2`, `x_i`, `\sqrt{x}`, `\sum_{i=1}^{n}`, `\bar{x}`, the greek and the
+  relations — written once and rendered three ways: MathML on screen, a real
+  Word equation object in the `.docx`, and one line of ordinary text for
+  anywhere else. It opens on a library of the fifteen formulas these courses
+  actually use, each with **every symbol named**, because that is the half a
+  picture of an equation loses and the half a marker looks for.
+
+  The same notation is now also **worked out** and **graphed**, by one engine
+  with one test file: `app/src/lib/calc.ts`. *Work out* takes the formula you
+  wrote — or one from the library, or one you kept — lists its letters, and
+  fills in the answer as you name them, so a present value is `FV`, `r` and `n`
+  rather than a line of brackets retyped into a phone keypad, which is where
+  the bracket goes missing and the answer comes out plausible. *Graph* is the
+  expression list beside the picture that every graphing calculator has:
+  `y = 2x + 3`, `x = 4`, `x^2 + y^2 = 25` drawn as a relation by marching
+  squares, `f(x) = …` for definitions, `a = 2` with a **slider**, `(2, 3)` for
+  a point, and a list — `a = [1, 1.5, …, 4]` — drawn as a family of curves.
+  Drag to move, pinch to zoom, press to read a point off it, and one button to
+  fit the window to what is actually on it.
+
+  Then the part a calculator leaves you to hunt with a cursor, written out
+  instead: **where it crosses zero, where it turns, where two curves meet, the
+  slope under your finger, and the area between two values** — bisection,
+  thirds and Simpson's rule in `app/src/lib/plot.ts`, each with the test that
+  holds it. An asymptote breaks the line rather than being joined through, one
+  unit across is one unit down so a circle is round, and a reading is reported
+  to the precision it was measured at rather than to twelve figures of false
+  confidence.
 
 **Make a deck** gained a third door beside *From a unit* and *From a brief*:
 **From a sheet** puts a table you built onto slides as a real PowerPoint table
@@ -435,11 +457,23 @@ and speaker notes under the canvas where every slide editor puts them. The
 presenter view draws from the same code, so what is on the wall is what is in
 the file.
 
-Nothing here computes what it renders and nothing here renders what it computes:
-the sheet does arithmetic and says so, the equation screen writes a formula and
-will not evaluate one. An error in a cell is said — `#DIV/0!`, `#CYCLE!`,
-`#NAME?` — rather than resolved to a zero that looks like an answer, because a
-spreadsheet is the format where an invented figure travels furthest.
+Two arithmetic engines, and they stay two. `app/src/lib/sheet.ts` evaluates
+`=SUM(B2:B9)` against a grid of cells — A1 references, ranges, lookups, dates,
+and now the scientific functions and a fitted line: `SIN`, `LOG` to any base,
+`FACT`, `COMBIN`, `QUARTILE`, and `SLOPE`, `INTERCEPT`, `RSQ` and `FORECAST`
+over two columns. `app/src/lib/calc.ts` works out a formula with *letters* in
+it. Neither of those is the other wearing a hat, and what was refused before —
+an equation renderer that quietly computed — is still refused: the engine that
+does the arithmetic here is one engine with a test file that makes the sentence
+true. Neither will rearrange: `x + 3 = 7` is drawn and tested, never solved for
+x, because symbolic algebra is a different program and one that half-solved
+would be worse than none.
+
+An error is said rather than resolved to something that looks like an answer —
+`#DIV/0!`, `#CYCLE!`, `#NAME?` in a cell; a blank and the name of the letter
+you have not given a value to, on the calculator — because a spreadsheet is the
+format where an invented figure travels furthest and a graph is the one where
+it is hardest to notice.
 
 Three writers, no libraries: `app/src/lib/docx.ts`, `app/src/lib/xlsx.ts` and
 the `app/src/lib/pptx.ts` that was already here each write OOXML directly, the
