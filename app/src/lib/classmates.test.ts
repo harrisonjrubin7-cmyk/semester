@@ -225,6 +225,30 @@ describe('explain', () => {
     expect(explain('relation "public.messages" does not exist')).toContain('classmates.sql');
   });
 
+  /*
+   * The wording that actually reaches a student.
+   *
+   * Postgres says "relation ... does not exist", and that was the only wording
+   * recognised — but the app talks to PostgREST, which says "Could not find
+   * the table ... in the schema cache". So the group work screen showed that
+   * sentence verbatim, which reads like a caching bug rather than a setup file
+   * nobody ran.
+   */
+  it('recognises the wording PostgREST uses, not just Postgres', () => {
+    const said = explain("Could not find the table 'public.groups' in the schema cache");
+    expect(said).toContain('groups.sql');
+    expect(said).not.toContain('Could not find the table');
+  });
+
+  it('names the file that creates the table that is missing', () => {
+    expect(explain("Could not find the table 'public.group_tasks' in the schema cache")).toContain(
+      'groups.sql',
+    );
+    expect(explain("Could not find the table 'public.messages' in the schema cache")).toContain(
+      'classmates.sql',
+    );
+  });
+
   it('passes an error it has nothing to add to straight through', () => {
     expect(explain('connection reset')).toBe('connection reset');
   });

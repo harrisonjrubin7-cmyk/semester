@@ -26,11 +26,22 @@
 -- refuses it. `in_group` is security definer for exactly that reason, the
 -- same shape `in_class` already uses in classmates.sql.
 
+-- ## `code` is a room key, not a course code
+--
+-- classmates-schools.sql made a room belong to a school, so the string stored
+-- here is `vanderbilt/BUS 1600` — the same string `enrollments.code` holds,
+-- because `in_class(term, code)` compares the two directly. A bare `BUS 1600`
+-- is not wrong in a way anything reports: it simply matches no enrolment, so
+-- every policy below refuses, the class sees no groups, and starting one fails
+-- against a rule the person satisfies. `roomKey()` in lib/classmates.ts is the
+-- only thing that builds it.
+
 -- ── Groups ────────────────────────────────────────────────────────────────
 
 create table if not exists public.groups (
   id          uuid        primary key default gen_random_uuid(),
   term        text        not null,
+  -- The school and the course together: "vanderbilt/BUS 1600". See above.
   code        text        not null,
   name        text        not null check (length(trim(name)) between 1 and 120),
   -- What it is for, in one line. Optional.
