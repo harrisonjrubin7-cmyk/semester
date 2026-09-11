@@ -3,6 +3,9 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
+import { DeadlinePicker } from '../components/DeadlinePicker';
+import { forLine } from '../lib/forwork';
+import { datedItems } from '../lib/select';
 import { Equation } from '../components/Equation';
 import { ActionButton, EmptyState, SectionLabel, Toggle } from '../components/ui';
 import { PrintButton } from '../components/PrintButton';
@@ -67,8 +70,11 @@ export function Write() {
 // ── The list ─────────────────────────────────────────────────────────────
 
 function Shelf() {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode, catalog, now } = useStore();
   const [picking, setPicking] = useState(false);
+  /* One list for the whole shelf, so the "for Friday's paper" line on twenty
+     rows does not decorate the term's deadlines twenty times. */
+  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
 
   return (
     <Page blurb="Headings, tables and equations, arranged into a real Word file — or printed straight from here as a PDF.">
@@ -151,12 +157,19 @@ function Shelf() {
                   <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-1)' }}>
                     {[
                       doc.courseId ? courseCode(doc.courseId) : 'Personal',
+                      /* What it is for, where it is for something. Second,
+                         after whose it is: the course narrows a shelf of
+                         twenty to five and the deadline picks one out of
+                         those five. */
+                      forLine(items, doc.itemId),
                       `${words(doc)} words`,
                       new Date(doc.updated).toLocaleDateString(undefined, {
                         month: 'short',
                         day: 'numeric',
                       }),
-                    ].join(' · ')}
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
                   </div>
                 </div>
                 <ChevronRight size={16} />
@@ -178,6 +191,10 @@ function Editor({ doc }: { doc: Doc }) {
   const [busy, setBusy] = useState(false);
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
+  /* Held here rather than inside the picker, for the reason written on it:
+     the control is remounted when the course changes and a cap that reapplied
+     itself would be the list closing under somebody's hand. */
+  const [allDeadlines, setAllDeadlines] = useState(false);
 
   const patch = (next: Partial<Omit<Doc, 'id'>>) =>
     dispatch({ type: 'updateDocument', id: doc.id, patch: next });
@@ -252,6 +269,15 @@ function Editor({ doc }: { doc: Doc }) {
         style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
       />
       <CoursePicker value={doc.courseId} onChange={(id) => patch({ courseId: id })} />
+      {/* What it is for, under whose it is. A document filed against Friday's
+          paper turns up on that deadline — see `components/ForThis.tsx`. */}
+      <DeadlinePicker
+        courseId={doc.courseId}
+        value={doc.itemId}
+        onChange={(itemId) => patch({ itemId })}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
+      />
 
       <Saved doc={doc} words={count} />
       {headings.length > 1 && <Outline headings={headings} />}

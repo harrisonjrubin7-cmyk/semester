@@ -26,6 +26,7 @@ import {
   openFile,
   restoreFile,
   search,
+  pinFile,
   starFile,
   tagFile,
   trashFile,
@@ -42,6 +43,10 @@ import {
   withCourses,
   type Shown,
 } from '../../lib/folders';
+import { CoursePicker } from '../../components/CoursePicker';
+import { DeadlinePicker } from '../../components/DeadlinePicker';
+import { nameFor } from '../../lib/forwork';
+import { datedItems } from '../../lib/select';
 
 /**
  * The drive.
@@ -92,7 +97,7 @@ const SORT_LABELS: Record<Sort, string> = {
 const INDEX_CHARS = 20_000;
 
 export function Drive() {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode, catalog, now } = useStore();
   const [files, setFiles] = useState<Settled[]>([]);
   const [binned, setBinned] = useState<Settled[]>([]);
   const [at, setAt] = useState<string | null>(null);
@@ -103,6 +108,11 @@ export function Drive() {
   const [busy, setBusy] = useState('');
   const [trouble, setTrouble] = useState('');
   const [moving, setMoving] = useState<Settled | null>(null);
+  /* The file whose deadline is being changed. A second panel rather than a
+     second control on every row: the row already carries a star, a Move and a
+     Bin, and a fourth button on a 390px phone is the point at which the file's
+     own name stops being readable. */
+  const [filing, setFiling] = useState<Settled | null>(null);
   const [naming, setNaming] = useState(false);
   const [name, setName] = useState('');
 
@@ -127,6 +137,10 @@ export function Drive() {
     () => withCourses(state.folders, state.courses.map((m) => m.course)),
     [state.folders, state.courses],
   );
+
+  /* This term's deadlines, for the "for Friday's paper" line on a row. One
+     list for the whole screen rather than one per row. */
+  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
 
   /*
    * Reading the text out of a file so search can look inside it.
@@ -445,10 +459,15 @@ export function Drive() {
                     : ''
                 }
                 course={file.courseId ? courseCode(file.courseId) : ''}
+                /* `nameFor` answers undefined for an id whose deadline has
+                   been edited out of the course, so a stale link draws as no
+                   link rather than as a broken one. See `lib/forwork.ts`. */
+                due={nameFor(items, file.itemId)}
                 notes={state.notes.filter((n) => n.fileIds.includes(file.id)).length}
                 onOpen={() => void openFile(file.id).then(refresh)}
                 onStar={() => void act(starFile(file.id, !file.starred))}
                 onMove={() => setMoving(file)}
+                onFile={() => setFiling(file)}
                 onTrash={() => void act(trashFile(file.id))}
                 onRestore={() => void act(restoreFile(file.id))}
                 onPurge={() => void act(deleteFile(file.id))}
@@ -456,6 +475,21 @@ export function Drive() {
             ))}
           </div>
         </>
+      )}
+
+      {filing && (
+        <FileAgainst
+          file={filing}
+          onCourse={(courseId) => {
+            void act(tagFile(filing.id, courseId));
+            setFiling({ ...filing, courseId });
+          }}
+          onClose={() => setFiling(null)}
+          onPick={(itemId) => {
+            void act(pinFile(filing.id, itemId));
+            setFiling(null);
+          }}
+        />
       )}
 
       {moving && (
@@ -617,10 +651,12 @@ function FileRow({
   binned,
   where,
   course,
+  due,
   notes,
   onOpen,
   onStar,
   onMove,
+  onFile,
   onTrash,
   onRestore,
   onPurge,
@@ -631,10 +667,13 @@ function FileRow({
   binned: boolean;
   where: string;
   course: string;
+  /** The deadline this is for, where it is for one that still exists. */
+  due?: string;
   notes: number;
   onOpen: () => void;
   onStar: () => void;
   onMove: () => void;
+  onFile: () => void;
   onTrash: () => void;
   onRestore: () => void;
   onPurge: () => void;
@@ -642,6 +681,12 @@ function FileRow({
   const second = [
     formatBytes(file.size),
     course,
+    /*
+     * Before the folder rather than after it, and it is the one line on this
+     * row somebody scans for. A drive says where a file *is*; this says what it
+     * is *for*, which is the question that brought them here.
+     */
+    due ? `for ${due}` : '',
     where,
     inText ? 'found in the text' : '',
     notes > 0 ? `attached to ${notes} ${notes === 1 ? 'note' : 'notes'}` : '',
@@ -729,6 +774,19 @@ function FileRow({
             <button
               type="button"
               className="btn btn-ghost"
+              onClick={onFile}
+              aria-label={
+                due
+                  ? `${file.name} is for ${due}. Change which deadline it is for.`
+                  : `Say which deadline ${file.name} is for`
+              }
+              style={{ fontSize: 'var(--type-xs)', padding: 'var(--sp-2) var(--sp-3)' }}
+            >
+              For
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
               onClick={onTrash}
               aria-label={`Move ${file.name} to the bin`}
               style={{ fontSize: 'var(--type-xs)', padding: 'var(--sp-2) var(--sp-3)' }}
@@ -739,6 +797,73 @@ function FileRow({
         )}
       </div>
     </Blueprint>
+  );
+}
+
+/**
+ * Which deadline a file is for.
+ *
+ * A sibling of `MoveTo` below and drawn the same way, because they are the same
+ * act asked twice — where does this belong. The difference is that a folder is
+ * the student's own filing and a deadline is the syllabus's, so they are two
+ * questions rather than one control with two halves.
+ *
+ * The picker needs a course to offer deadlines from, and a file may have none.
+ * Rather than refuse, this offers the course first: a file tagged nothing is
+ * almost always a file nobody has got round to tagging, and tagging it here is
+ * a tap rather than a trip to another screen. Both writes are independent —
+ * `tagFile` and `pinFile` — so neither moves the other behind anybody's back.
+ */
+function FileAgainst({
+  file,
+  onCourse,
+  onClose,
+  onPick,
+}: {
+  file: Settled;
+  onCourse: (courseId: string | null) => void;
+  onClose: () => void;
+  onPick: (itemId: string | null) => void;
+}) {
+  const [allDeadlines, setAllDeadlines] = useState(false);
+
+  return (
+    <Folding name={`What ${file.name} is for`}>
+      <Blueprint style={{ padding: 'var(--sp-5)' }}>
+        {/* "Where this belongs" rather than "What it is for": the picker
+            below writes its own "What it is for" over the deadline chips, and
+            the same three words twice on one panel reads as a rendering
+            fault. This heading is the question both halves answer. */}
+        <SectionLabel>Where this belongs</SectionLabel>
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
+          {file.name}
+        </div>
+        <CoursePicker value={file.courseId} onChange={onCourse} />
+        {file.courseId === null ? (
+          <div
+            style={{
+              ...secondLine(),
+              fontSize: 'var(--type-xs)',
+              marginTop: 'var(--sp-4)',
+              lineHeight: 'var(--leading-relaxed)',
+            }}
+          >
+            Pick a course and its deadlines appear here.
+          </div>
+        ) : (
+          <DeadlinePicker
+            courseId={file.courseId}
+            value={file.itemId}
+            onChange={onPick}
+            showAll={allDeadlines}
+            onShowAll={() => setAllDeadlines(true)}
+          />
+        )}
+        <ActionButton onClick={onClose} style={{ marginTop: 'var(--sp-5)' }}>
+          Done
+        </ActionButton>
+      </Blueprint>
+    </Folding>
   );
 }
 

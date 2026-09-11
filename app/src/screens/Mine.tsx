@@ -5,6 +5,9 @@ import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
+import { DeadlinePicker } from '../components/DeadlinePicker';
+import { forLine } from '../lib/forwork';
+import { datedItems } from '../lib/select';
 import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
@@ -559,8 +562,10 @@ function Appointments() {
 }
 
 function Notes({ rows }: { rows?: Note[] }) {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode, catalog, now } = useStore();
   const rowThirteen = useRowStyle(13);
+  /* One list for the whole tab — see the same note in `screens/Write.tsx`. */
+  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
   const all = [...state.notes].sort((a, b) => b.updated - a.updated);
   /*
    * The filtered rows when the box has something in it, all of them when it
@@ -615,6 +620,9 @@ function Notes({ rows }: { rows?: Note[] }) {
                   }}
                 >
                   {n.courseId ? `${courseCode(n.courseId)} · ` : ''}
+                  {/* What it is for, where it is for something — the same
+                      phrase the drive and the three shelves use. */}
+                  {forLine(items, n.itemId) && `${forLine(items, n.itemId)} · `}
                   {n.fileIds.length > 0 ? `${n.fileIds.length} file · ` : ''}
                   {n.body.slice(0, 60) || 'Empty'}
                 </span>
@@ -688,6 +696,7 @@ export function NoteEditor() {
   const { state, dispatch } = useStore();
   const note = state.notes.find((n) => n.id === state.noteId);
   const [files, setFiles] = useState<FileMeta[]>([]);
+  const [allDeadlines, setAllDeadlines] = useState(false);
 
   useEffect(() => {
     void listFiles().then(setFiles);
@@ -725,7 +734,10 @@ export function NoteEditor() {
   const attach = async (list: File[]) => {
     if (list.length === 0) return;
     for (const f of list) {
-      const meta = await addFile(f, note.courseId);
+      /* The note's deadline as well as its course. A reading attached to
+         notes for Friday's paper is a file for Friday's paper, and asking
+         somebody to say so twice is how one of the two ends up wrong. */
+      const meta = await addFile(f, note.courseId, null, '', note.itemId ?? null);
       dispatch({ type: 'attachFile', noteId: note.id, fileId: meta.id });
     }
     void listFiles().then(setFiles);
@@ -745,6 +757,15 @@ export function NoteEditor() {
       <CoursePicker
         value={note.courseId}
         onChange={(courseId) => dispatch({ type: 'updateNote', id: note.id, patch: { courseId } })}
+      />
+      {/* Reading notes for a seminar are notes for the response paper that
+          seminar is assessed by, and this is what puts them there. */}
+      <DeadlinePicker
+        courseId={note.courseId}
+        value={note.itemId}
+        onChange={(itemId) => dispatch({ type: 'updateNote', id: note.id, patch: { itemId } })}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
       />
 
       <textarea

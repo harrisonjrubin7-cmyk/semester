@@ -172,6 +172,9 @@ export function navigate(state: State, action: Action): State | null {
     case 'setMineTab':
       return { ...state, mineTab: action.tab };
 
+    case 'setMathTab':
+      return { ...state, mathTab: action.tab };
+
     case 'onbNext':
       return state.onb >= ONB_STEPS - 1
         ? { ...state, screen: 'home', history: [], seenOnboarding: true, onb: 0 }

@@ -430,6 +430,43 @@ What it will not do is write the work you submit. Ask it to and it says so in
 one line and offers the version that helps you write it. Vanderbilt's Honor Code
 is student-run and the work has to be yours.
 
+## Work that knows which deadline it is for
+
+Everything the app can make — a document, a sheet, a deck, an equation, a note,
+a file dropped into the drive — could say which **course** it belonged to, and a
+course is four months and a dozen deadlines wide. So the response paper due
+Friday, the one due in November and week two's reading notes were all filed
+identically as "ECON 1010", and the last step of every evening's work was the
+same hunt: open Make, open Write, read six documents called *Draft* and guess.
+Nothing was lost. It was just never in the same place as the thing it was for.
+
+Each of those six now carries the deadline it is for as well as the course, and
+the link is shown from both ends:
+
+- **On the deadline.** Under the plan that breaks it into evenings, *Work for
+  this* lists everything filed against it, and **＋ Document · Sheet · Deck ·
+  Note · Upload** make something **already** filed against it — a picker you
+  have to remember to use is a picker most work never reaches. Anything that
+  already exists attaches from the same panel. **Unfile** takes the link off and
+  leaves the work alone; nothing here deletes a draft.
+- **On everything that makes something.** *What it is for* sits under the course
+  chips in the document editor, the sheet, the deck editor, the equation screen,
+  the note editor and the drive — the course's own deadlines, what is still
+  ahead first and what has gone by after it, because the second commonest case
+  is the thing that was due yesterday and is being finished now.
+- **Back on the lists.** A deadline with work against it wears a paperclip and a
+  count wherever it is drawn — Today, the calendar, the course page. A file in
+  the drive says *for Quiz #1* beside its size and its course, and search finds
+  a document by the deadline's name as well as by its own, because "the Rawls
+  essay" is how people refer to a document called *Draft 3*.
+
+A deadline can be edited out of a course, so a link can lose its other end. One
+rule, in one place: a dangling link reads as **no link** rather than as a broken
+one, and the id is left on the work rather than scrubbed, so re-importing the
+course brings the filing back. `app/src/lib/forwork.ts` is the only module that
+reads it; `app/src/lib/clips.ts` is what makes asking "how much is filed against
+this" affordable on forty rows at once.
+
 ## Phone, iPad, laptop, or its own window
 
 One build, three layouts and a way of installing it. The two boundaries are

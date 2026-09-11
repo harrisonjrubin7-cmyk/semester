@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
+import { DeadlinePicker } from '../components/DeadlinePicker';
+import { forLine } from '../lib/forwork';
+import { datedItems } from '../lib/select';
 import { ActionButton, EmptyState, FilePick, SectionLabel } from '../components/ui';
 import { ChevronRight, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
@@ -66,7 +69,9 @@ export function Sheet() {
 }
 
 function Shelf() {
-  const { state, dispatch, courseCode, catalog } = useStore();
+  const { state, dispatch, courseCode, catalog, now } = useStore();
+  /* One list for the whole shelf — see the same note in `screens/Write.tsx`. */
+  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
   /*
@@ -310,6 +315,7 @@ function Shelf() {
                     <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-1)' }}>
                       {[
                         sheet.courseId ? courseCode(sheet.courseId) : 'Personal',
+                        forLine(items, sheet.itemId),
                         size.rows === 0
                           ? 'empty'
                           : `${size.rows} × ${size.cols}`,
@@ -317,7 +323,9 @@ function Shelf() {
                           month: 'short',
                           day: 'numeric',
                         }),
-                      ].join(' · ')}
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
                     </div>
                   </div>
                   <ChevronRight size={16} />
@@ -337,6 +345,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const { dispatch, say } = useStore();
   const [at, setAt] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [allDeadlines, setAllDeadlines] = useState(false);
 
   const patch = (next: Partial<Omit<SheetModel, 'id'>>) =>
     dispatch({ type: 'updateSheet', id: sheet.id, patch: next });
@@ -388,6 +397,15 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         style={{ width: '100%', height: 44, fontSize: 'var(--type-lg)' }}
       />
       <CoursePicker value={sheet.courseId} onChange={(id) => patch({ courseId: id })} />
+      {/* A grade calculator is for a course; a marked problem set is for one
+          deadline, and that is the one somebody goes looking for. */}
+      <DeadlinePicker
+        courseId={sheet.courseId}
+        value={sheet.itemId}
+        onChange={(itemId) => patch({ itemId })}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
+      />
 
       <SectionLabel>The grid</SectionLabel>
       <div style={{ overflowX: 'auto' }}>

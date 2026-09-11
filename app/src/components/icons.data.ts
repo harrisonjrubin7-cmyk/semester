@@ -370,6 +370,16 @@ export const SHAPES = {
     { d: 'M8.5 20.5h7l-.8-4H9.3z' },
   ],
 
+  /**
+   * A paperclip — work filed against a deadline.
+   *
+   * One stroke, and the bend at the bottom is what makes it read as a clip
+   * rather than as a slash: a single diagonal at this size is the "no" glyph.
+   * Drawn open rather than as the closed double loop the real object has,
+   * because two nested loops at 15px collapse into a blob at stroke 1.5.
+   */
+  paperclip: [{ d: 'M20 11.5 11 20.5a4.6 4.6 0 0 1-6.5-6.5l8-8a3 3 0 0 1 4.3 4.3l-8 8a1.4 1.4 0 0 1-2-2l7.3-7.3' }],
+
   /** Guide — the question the screen exists to answer. */
   help: [
     { c: [12, 12, 8.5] },

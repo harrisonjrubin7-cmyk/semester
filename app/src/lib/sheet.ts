@@ -45,6 +45,12 @@ export interface Sheet {
   title: string;
   /** A course to file it under, or nothing. */
   courseId: CourseId | null;
+  /**
+   * The deadline it is for, where it is for one. See `Doc.itemId` in
+   * `lib/document.ts` for why every made thing carries this and why it is
+   * optional. Read through `lib/forwork.ts`.
+   */
+  itemId?: string | null;
   /** What has actually been typed, by A1 reference. */
   cells: Record<string, string>;
   /** How far the grid has been dragged out. Never smaller than what is in it. */
@@ -1512,10 +1518,15 @@ export function extent(sheet: Sheet): { rows: number; cols: number } {
   return { rows: body.length, cols: body[0]?.length ?? 0 };
 }
 
-export function blankSheet(title: string, courseId: CourseId | null = null): Omit<Sheet, 'id'> {
+export function blankSheet(
+  title: string,
+  courseId: CourseId | null = null,
+  itemId: string | null = null,
+): Omit<Sheet, 'id'> {
   return {
     title: title.trim() || 'Untitled sheet',
     courseId,
+    itemId,
     cells: {},
     rows: NEW_ROWS,
     cols: NEW_COLS,

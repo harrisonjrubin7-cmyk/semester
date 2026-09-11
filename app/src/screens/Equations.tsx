@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
+import { DeadlinePicker } from '../components/DeadlinePicker';
+import { forLine } from '../lib/forwork';
+import { datedItems } from '../lib/select';
 import { Equation } from '../components/Equation';
 import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { Folding } from '../components/Fold';
@@ -46,8 +49,9 @@ import type { CourseId } from '../lib/types';
  * be a second calculator nobody had tested.
  */
 export function Equations() {
-  const [tab, setTab] = useState<'write' | 'library' | 'kept'>('write');
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
+  const tab = state.mathTab;
+  const setTab = (next: typeof tab) => dispatch({ type: 'setMathTab', tab: next });
 
   return (
     <Page blurb="On screen, into a document, or as one line you can paste anywhere. Nothing here computes — it writes.">
@@ -94,6 +98,8 @@ function Writer() {
   const [latex, setLatex] = useState('');
   const [name, setName] = useState('');
   const [courseId, setCourseId] = useState<CourseId | null>(null);
+  const [itemId, setItemId] = useState<string | null>(null);
+  const [allDeadlines, setAllDeadlines] = useState(false);
 
   const line = plain(parse(latex));
   const ready = latex.trim().length > 0;
@@ -160,6 +166,15 @@ function Writer() {
         style={{ width: '100%', height: 40 }}
       />
       <CoursePicker value={courseId} onChange={setCourseId} />
+      {/* The problem set it was written out for, so it is beside that deadline
+          the next time the same substitution is needed. */}
+      <DeadlinePicker
+        courseId={courseId}
+        value={itemId}
+        onChange={setItemId}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
+      />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
         <ActionButton
           tone="primary"
@@ -167,7 +182,7 @@ function Writer() {
           onClick={() => {
             dispatch({
               type: 'saveEquation',
-              equation: { name, latex, note: '', courseId },
+              equation: { name, latex, note: '', courseId, itemId },
             });
             say(`${name.trim() || 'The equation'} is kept.`);
             setName('');
@@ -193,6 +208,7 @@ function Writer() {
                 title: name.trim() || 'Equation',
                 subtitle: '',
                 courseId,
+                itemId,
                 blocks: [{ kind: 'equation', latex, caption: name.trim() }],
               },
             });
@@ -314,7 +330,9 @@ function FormulaCard({ formula, onKeep }: { formula: Formula; onKeep: () => void
 // ── What has been kept ───────────────────────────────────────────────────
 
 function Kept() {
-  const { state, dispatch, say, courseCode } = useStore();
+  const { state, dispatch, say, courseCode, catalog, now } = useStore();
+  /* One list for the whole shelf — see the same note in `screens/Write.tsx`. */
+  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
 
   if (state.equations.length === 0) {
     return (
@@ -331,7 +349,9 @@ function Kept() {
         <Blueprint key={saved.id} plain style={{ padding: 'var(--sp-6)' }}>
           <div style={{ fontSize: 'var(--type-md)' }}>{saved.name}</div>
           <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-1)' }}>
-            {saved.courseId ? courseCode(saved.courseId) : 'Personal'}
+            {[saved.courseId ? courseCode(saved.courseId) : 'Personal', forLine(items, saved.itemId)]
+              .filter(Boolean)
+              .join(' · ')}
           </div>
           <div style={{ margin: 'var(--sp-6) 0' }}>
             <Equation latex={saved.latex} showPlain />

@@ -24,6 +24,7 @@ export function notes(state: State, action: Action): State | null {
         created: Date.now(),
         updated: Date.now(),
         courseId: action.courseId,
+        itemId: action.itemId ?? null,
         fileIds: [],
       };
       return push({ ...state, notes: [note, ...state.notes], noteId: note.id }, 'note');

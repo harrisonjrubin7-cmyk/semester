@@ -27,6 +27,7 @@
 
 import type { Catalog } from '../data/catalog';
 import { datedItems } from './select';
+import { forLine } from './forwork';
 import { dueLabel, isoToDate } from './date';
 import { DESTINATIONS, saysFor } from './nav';
 import { anyAnswered, cardKey, type Reviews } from './review';
@@ -488,16 +489,32 @@ export function findEverything(
      * ten-thousandth cell of a spreadsheet nobody is looking for by its
      * contents.
      */
+    /*
+     * The deadlines, once, for the "for Friday's paper" half of the three
+     * searches below.
+     *
+     * A document filed against a deadline is findable by that deadline's name
+     * as well as by its own, because "the Rawls essay" is how a student refers
+     * to a document called "Draft 3" — and the deadline's title is the only
+     * place those words exist. Built here rather than inside each loop: the
+     * three of them would otherwise decorate every item three times over.
+     */
+    const dated = datedItems(cat, now);
+
     const docHits: Hit[] = [];
     for (const d of made.documents ?? []) {
       const body = bodyOf(d.blocks.map(textOfBlock));
-      const s = score(q, d.title || 'Untitled', `${d.subtitle} ${body}`, spell ? d.title : '');
+      const due = forLine(dated, d.itemId);
+      const s = score(q, d.title || 'Untitled', `${d.subtitle} ${due} ${body}`, spell ? d.title : '');
       if (s) {
         docHits.push({
           kind: 'document',
           id: d.id,
           title: d.title || 'Untitled document',
-          sub: d.subtitle || first(body.replace(/\s+/g, ' ')) || 'Empty',
+          // What it is for beats what is in it: a second line that says
+          // "for Reflection #2" identifies the document, and the first
+          // sentence of its text mostly identifies the reading.
+          sub: due || d.subtitle || first(body.replace(/\s+/g, ' ')) || 'Empty',
           tag: d.courseId ? (cat.byId[d.courseId]?.code ?? 'Document') : 'Document',
           score: s,
         });
@@ -507,7 +524,8 @@ export function findEverything(
     const sheetHits: Hit[] = [];
     for (const sh of made.sheets ?? []) {
       const typed = Object.values(sh.cells).filter(Boolean);
-      const s = score(q, sh.title || 'Untitled', bodyOf(typed), spell ? sh.title : '');
+      const dueSheet = forLine(dated, sh.itemId);
+      const s = score(q, sh.title || 'Untitled', `${dueSheet} ${bodyOf(typed)}`, spell ? sh.title : '');
       if (s) {
         sheetHits.push({
           kind: 'sheet',
@@ -516,7 +534,11 @@ export function findEverything(
           // What is in it, not how big the grid was dragged: a sheet with four
           // numbers in a 40×20 grid is four cells of work, and "40 × 20" would
           // describe the dragging rather than the sheet.
-          sub: typed.length === 0 ? 'Empty' : `${typed.length} ${typed.length === 1 ? 'cell' : 'cells'}`,
+          sub:
+            dueSheet ||
+            (typed.length === 0
+              ? 'Empty'
+              : `${typed.length} ${typed.length === 1 ? 'cell' : 'cells'}`),
           tag: sh.courseId ? (cat.byId[sh.courseId]?.code ?? 'Sheet') : 'Sheet',
           score: s,
         });
@@ -526,13 +548,15 @@ export function findEverything(
     const deckHits: Hit[] = [];
     for (const d of made.decks ?? []) {
       const body = bodyOf(d.slides.flatMap((sl) => [sl.title, ...sl.bullets]));
-      const s = score(q, d.title || 'Untitled', `${d.subtitle} ${body}`, spell ? d.title : '');
+      const dueDeck = forLine(dated, d.itemId);
+      const s = score(q, d.title || 'Untitled', `${d.subtitle} ${dueDeck} ${body}`, spell ? d.title : '');
       if (s) {
         deckHits.push({
           kind: 'deck',
           id: d.id,
           title: d.title || 'Untitled deck',
-          sub: `${d.slides.length} ${d.slides.length === 1 ? 'slide' : 'slides'}`,
+          sub:
+            dueDeck || `${d.slides.length} ${d.slides.length === 1 ? 'slide' : 'slides'}`,
           tag: d.courseId ? (cat.byId[d.courseId]?.code ?? 'Deck') : 'Deck',
           score: s,
         });

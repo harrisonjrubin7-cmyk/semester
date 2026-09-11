@@ -3,6 +3,9 @@ import { useStore } from '../../state/store';
 import { Page } from '../../components/Page';
 import { Blueprint } from '../../components/Blueprint';
 import { CoursePicker } from '../../components/CoursePicker';
+import { DeadlinePicker } from '../../components/DeadlinePicker';
+import { forLine } from '../../lib/forwork';
+import { datedItems } from '../../lib/select';
 import { Folding } from '../../components/Fold';
 import { ActionButton, EmptyState, SectionLabel } from '../../components/ui';
 import { ChevronLeft, ChevronRight, DeckIcon, Plus } from '../../components/Icons';
@@ -52,6 +55,7 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
   const [at, setAt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [presenting, setPresenting] = useState(false);
+  const [allDeadlines, setAllDeadlines] = useState(false);
 
   const patch = (next: Partial<Omit<StoredDeck, 'id'>>) =>
     dispatch({ type: 'updateDeck', id: deck.id, patch: next });
@@ -107,6 +111,15 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
         style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
       />
       <CoursePicker value={deck.courseId} onChange={(id) => patch({ courseId: id })} />
+      {/* A deck is nearly always for one presentation on one day, which is
+          exactly what a deadline is. */}
+      <DeadlinePicker
+        courseId={deck.courseId}
+        value={deck.itemId}
+        onChange={(itemId) => patch({ itemId })}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
+      />
 
       <ActionButton
         tone="primary"
@@ -658,8 +671,10 @@ function Presenter({
 
 /** The list of decks somebody has kept, above the builders on `screens/Deck.tsx`. */
 export function DeckShelf() {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode, catalog, now } = useStore();
   const rows = useMemo(() => [...state.decks].sort((a, b) => b.updated - a.updated), [state.decks]);
+  /* One list for the whole shelf — see the same note in `screens/Write.tsx`. */
+  const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
 
   if (rows.length === 0) return null;
 
@@ -688,9 +703,12 @@ export function DeckShelf() {
               <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-1)' }}>
                 {[
                   deck.courseId ? courseCode(deck.courseId) : 'Personal',
+                  forLine(items, deck.itemId),
                   `${running(deck).length} slides`,
                   `about ${minutes(deck)} min`,
-                ].join(' · ')}
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </div>
             </div>
             <ChevronRight size={16} />

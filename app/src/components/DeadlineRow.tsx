@@ -7,6 +7,8 @@ import { useRowStyle } from './shell/useShell';
 import { useAskAbout } from '../ai/AskAbout';
 import { CourseTag } from './CourseTag';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
+import { clipCounts, useFiles } from '../lib/clips';
+import { Paperclip } from './Icons';
 import type { DatedItem } from '../lib/types';
 
 /**
@@ -81,6 +83,17 @@ export function DeadlineRow({
   // mark is knowing which of eleven things you have already opened, and that
   // is a question asked while looking at Ahead.
   const going = isUnderway(item.id, state.started, state.done);
+  /*
+   * How many things are filed against this one.
+   *
+   * The marker is the whole reason the filing is worth doing: work put against
+   * a deadline and then invisible everywhere but on that deadline's own screen
+   * is work nobody trusts the app to be holding. `lib/clips.ts` makes asking
+   * this once per row affordable, and includes the files — which are in
+   * IndexedDB and so arrive a frame after the first paint.
+   */
+  const files = useFiles();
+  const clipped = clipCounts({ ...state, files })[item.id] ?? 0;
   const tight = style === 'rows';
   const pad = tight ? '8px 0' : '13px 0';
 
@@ -230,6 +243,33 @@ export function DeadlineRow({
             )}
           </span>
         </span>
+        {clipped > 0 && (
+          /*
+             A clip and a number, before the countdown rather than after it.
+             The countdown is the rightmost thing on every row in the app and
+             moving it would move it on four screens; this reads as part of the
+             row's own detail, which is what it is.
+
+             `aria-label` on the wrapper and `aria-hidden` on the glyph, so a
+             screen reader hears "two things filed against this" once rather
+             than an unnamed image and a bare 2.
+          */
+          <span
+            aria-label={`${clipped} ${clipped === 1 ? 'thing' : 'things'} filed against this`}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 'var(--sp-1)',
+              flex: 'none',
+              fontSize: 'var(--type-xs)',
+              fontVariantNumeric: 'tabular-nums',
+              ...secondLine(done),
+            }}
+          >
+            <Paperclip size={13} />
+            {clipped}
+          </span>
+        )}
         {marker != null && (
           <span
             style={{

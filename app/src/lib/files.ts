@@ -38,6 +38,16 @@ export interface StoredFile {
   /** Last time it was opened, for the recents list. */
   openedAt?: number | null;
   /**
+   * The deadline this file is for, where it is for one.
+   *
+   * The one link the drive never had. A file could say which course it
+   * belonged to and which note it was attached to, and a course is a term
+   * wide — so "which of these eleven PDFs is the reading for Friday" was a
+   * question the drive held the answer to and could not be asked. See
+   * `Doc.itemId` in `lib/document.ts`, and read it through `lib/forwork.ts`.
+   */
+  itemId?: string | null;
+  /**
    * Text pulled out of it when it arrived, so search can look inside.
    *
    * Only for the formats `lib/extract.ts` can read, only the first few
@@ -61,6 +71,7 @@ export type Settled = FileMeta & {
   starred: boolean;
   trashedAt: number | null;
   openedAt: number | null;
+  itemId: string | null;
 };
 
 export function settled(meta: FileMeta): Settled {
@@ -70,24 +81,57 @@ export function settled(meta: FileMeta): Settled {
     starred: meta.starred ?? false,
     trashedAt: meta.trashedAt ?? null,
     openedAt: meta.openedAt ?? null,
+    itemId: meta.itemId ?? null,
   };
 }
 
 /** How long a file sits in the bin before `emptyOld` will take it. */
 export const TRASH_DAYS = 30;
 
+/*
+ * Who to tell when a file changes.
+ *
+ * The drive re-reads on its own after every press it makes, which was enough
+ * while the drive was the only screen that knew files existed. It is not any
+ * more: a deadline's own panel adds and unfiles them, and the marker on every
+ * deadline row counts them. Three screens each re-reading on their own presses
+ * is three screens showing yesterday's count after somebody used one of the
+ * other two.
+ *
+ * So every write here says so, once, and `lib/clips.ts` turns that into a
+ * React subscription. Deliberately a bare signal with no payload: a listener
+ * that wants the files reads them, and a notification carrying a list would be
+ * a second copy of the store to keep in step.
+ */
+const watchers = new Set<() => void>();
+
+/** Called after every write below. Exported only for the tests that assert it. */
+export function changed(): void {
+  for (const w of [...watchers]) w();
+}
+
+/** Subscribe to file changes. Returns the unsubscribe, as React wants. */
+export function onFilesChanged(fn: () => void): () => void {
+  watchers.add(fn);
+  return () => {
+    watchers.delete(fn);
+  };
+}
+
 /** This file's own database and store. The wrapper is `lib/idb.ts`. */
 const { tx, work } = store(DB_NAME, STORE, DB_VERSION);
 
 /**
- * `folderId` and `text` are optional and last, so every caller written before
- * folders existed still compiles and still files to the top of the drive.
+ * `folderId`, `text` and `itemId` are optional and last, so every caller
+ * written before folders or deadline links existed still compiles and still
+ * files to the top of the drive against no deadline.
  */
 export async function addFile(
   file: File,
   courseId: string | null,
   folderId: string | null = null,
   text = '',
+  itemId: string | null = null,
 ): Promise<FileMeta> {
   const record: StoredFile = {
     id: newId(),
@@ -100,10 +144,12 @@ export async function addFile(
     starred: false,
     trashedAt: null,
     openedAt: null,
+    itemId,
     ...(text ? { text } : {}),
     blob: file,
   };
   await tx('readwrite', (s) => s.put(record));
+  changed();
   const { blob: _blob, ...meta } = record;
   return meta;
 }
@@ -177,6 +223,7 @@ async function patch(id: string, change: Partial<StoredFile>): Promise<void> {
       done(undefined);
     };
   });
+  changed();
 }
 
 /** Move a file into a folder, or to the top of the drive with null. */
@@ -187,6 +234,19 @@ export async function moveFile(id: string, folderId: string | null): Promise<voi
 /** File it against a course, or against none. Independent of which folder it is in. */
 export async function tagFile(id: string, courseId: string | null): Promise<void> {
   await patch(id, { courseId });
+}
+
+/**
+ * File it against a deadline, or against none.
+ *
+ * Independent of both the folder and the course, deliberately. A file can sit
+ * in a folder called "Readings", be tagged PSCI 1100 and be the thing being
+ * handed in on Friday, and all three are true at once — a link that implied
+ * either of the other two would be a link that moved somebody's filing behind
+ * their back.
+ */
+export async function pinFile(id: string, itemId: string | null): Promise<void> {
+  await patch(id, { itemId });
 }
 
 export async function starFile(id: string, starred: boolean): Promise<void> {
@@ -212,6 +272,7 @@ export async function restoreFile(id: string): Promise<void> {
 /** Gone. The bytes, not a flag. */
 export async function deleteFile(id: string): Promise<void> {
   await tx('readwrite', (s) => s.delete(id));
+  changed();
 }
 
 /**
@@ -232,6 +293,10 @@ export async function emptyTrash(days = 0, now = Date.now()): Promise<number> {
     const took = await deleteIfStillBinned(f.id, cutoff);
     if (took) gone += 1;
   }
+  // Once for the whole sweep rather than once per file: emptying a bin of
+  // forty is one change as far as anything watching is concerned, and forty
+  // notifications would be forty re-reads of the same list.
+  if (gone > 0) changed();
   return gone;
 }
 
@@ -282,6 +347,7 @@ export async function touchFile(id: string, at = Date.now()): Promise<void> {
  */
 export async function clearFiles(): Promise<void> {
   await tx('readwrite', (s) => s.clear());
+  changed();
 }
 
 /**

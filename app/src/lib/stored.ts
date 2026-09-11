@@ -258,6 +258,14 @@ export function readDeck(value: unknown): StoredDeck | null {
     title: str(row.title),
     subtitle: str(row.subtitle),
     courseId: course === '' ? null : course,
+    /*
+     * The deadline it is for, read the same way as the course above.
+     *
+     * `str` answers '' for anything that is not a string, so a number or an
+     * object arriving from a build nobody has now becomes "filed nowhere"
+     * rather than an id that matches no deadline and can never be cleared.
+     */
+    itemId: str(row.itemId) === '' ? null : str(row.itemId),
     slides: arr<unknown>(row.slides)
       .map((slide) => {
         const s = obj(slide);
