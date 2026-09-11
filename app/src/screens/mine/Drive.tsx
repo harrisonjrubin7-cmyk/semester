@@ -53,7 +53,7 @@ import {
 } from '../../lib/folders';
 import { CoursePicker } from '../../components/CoursePicker';
 import { DeadlinePicker } from '../../components/DeadlinePicker';
-import { nameFor } from '../../lib/forwork';
+import { forLine, nameFor } from '../../lib/forwork';
 import { datedItems } from '../../lib/select';
 
 /**
@@ -437,6 +437,7 @@ export function Drive() {
           folders={suggestFolders(folders, files, now)}
           files={suggest(files, now)}
           courseCode={courseCode}
+          due={(itemId) => forLine(items, itemId)}
           onFolder={(id) => {
             setView('drive');
             setAt(id);
@@ -705,6 +706,7 @@ function Home({
   folders,
   files,
   courseCode,
+  due,
   onFolder,
   onOpen,
   onEverything,
@@ -712,6 +714,15 @@ function Home({
   folders: FolderHint[];
   files: Suggestion[];
   courseCode: (id: string) => string;
+  /**
+   * What a file is for, by its deadline id — "for Quiz #1", or nothing.
+   *
+   * A resolver rather than the list of deadlines, so this component stays
+   * ignorant of the catalogue: it is handed the six words it draws. Empty for
+   * a file filed against no deadline, and for one whose deadline has been
+   * edited out of its course — see `lib/forwork.ts`.
+   */
+  due: (itemId: string | null) => string;
   onFolder: (id: string) => void;
   onOpen: (id: string) => void;
   onEverything: () => void;
@@ -812,7 +823,11 @@ function Home({
                       marginTop: 'var(--sp-1)',
                     }}
                   >
-                    {[says, file.courseId ? courseCode(file.courseId) : '']
+                    {/* The reason, then whose it is, then what it is for —
+                        the same three facts in the same order as a row in the
+                        drive proper, so the landing screen and the list do not
+                        describe one file two ways. */}
+                    {[says, file.courseId ? courseCode(file.courseId) : '', due(file.itemId)]
                       .filter(Boolean)
                       .join(' · ')}
                   </div>
