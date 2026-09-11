@@ -405,7 +405,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'sheet':
       return { kicker: 'Added up here, not guessed', title: 'Sheet or table' };
     case 'equations':
-      return { kicker: 'Written, never computed', title: 'Equations' };
+      return { kicker: 'Written, worked out, drawn', title: 'Equations' };
     case 'exam':
       return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
     case 'ahead':

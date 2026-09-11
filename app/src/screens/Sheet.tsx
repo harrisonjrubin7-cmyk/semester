@@ -1294,7 +1294,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             label: 'What the formulas can do',
             run: () =>
               say(
-                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT, VLOOKUP and SUMPRODUCT are all here, computed on this device.',
+                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT, VLOOKUP and SUMPRODUCT are all here, and so are the scientific ones — SIN, COS, TAN, LOG to any base, FACT, COMBIN — and the fitted line: SLOPE, INTERCEPT, RSQ and FORECAST over two columns. All computed on this device.',
               ),
           },
           {
@@ -1692,7 +1692,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         {
           id: 'g.lib',
           label: 'Function library',
-          controls: (['SUM', 'AVERAGE', 'MEDIAN', 'MIN', 'MAX', 'COUNT'] as const).map((fn) => ({
+          controls: (['SUM', 'AVERAGE', 'MEDIAN', 'STDEV', 'MIN', 'MAX', 'COUNT'] as const).map((fn) => ({
             kind: 'button' as const,
             id: `fn.${fn}`,
             label: fn,
@@ -1703,7 +1703,16 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         {
           id: 'g.write',
           label: 'Write one',
-          controls: (['IF', 'ROUND', 'VLOOKUP', 'SUMPRODUCT', 'SUMIF'] as const).map((fn) => ({
+          // The fitted line and the quartiles sit here rather than in the
+          // library above, because neither takes a single range: `SLOPE` wants
+          // the y column and the x column, and `QUARTILE` a range and which
+          // quarter. The spelling is what this list is for.
+          controls: (
+            [
+              'IF', 'ROUND', 'VLOOKUP', 'SUMPRODUCT', 'SUMIF',
+              'QUARTILE', 'PERCENTILE', 'SLOPE', 'INTERCEPT', 'RSQ', 'FORECAST', 'LOG',
+            ] as const
+          ).map((fn) => ({
             kind: 'button' as const,
             id: `fw.${fn}`,
             label: fn,

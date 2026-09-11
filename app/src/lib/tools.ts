@@ -337,7 +337,8 @@ export const TOOLS: ToolSpec[] = [
           description:
             'The rows, one per line, cells separated by tabs or written as a Markdown table. ' +
             'The first row is the headings. A cell may be a formula starting with `=` — ' +
-            'SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT and SUMPRODUCT.',
+            'SUM, AVERAGE, MEDIAN, STDEV, QUARTILE, MIN, MAX, COUNT, IF, ROUND, SQRT, SUMPRODUCT, ' +
+            'the trigonometric and log functions, and SLOPE, INTERCEPT, RSQ and FORECAST for a fitted line.',
         },
       },
       required: ['title', 'courseId', 'rows'],
