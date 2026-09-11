@@ -28,12 +28,14 @@ const src = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8
 const css = () => src('../styles/app.css');
 
 describe('the screen that fills its box', () => {
-  it('is the chat, and the chat only', () => {
+  it('is a chat, and only a chat', () => {
     // Not a list anyone should grow casually. A screen belongs here when its
     // own body pins something to the bottom edge and scrolls the rest — which
-    // is a chat, and so far nothing else in the app.
-    expect(FILLS).toEqual(['ask']);
+    // is a chat, and both of the app's chats are here: the assistant, and the
+    // class conversation on Classmates.
+    expect(FILLS).toEqual(['ask', 'classmates']);
     expect(fills('ask')).toBe(true);
+    expect(fills('classmates')).toBe(true);
     expect(fills('today' as never)).toBe(false);
   });
 
@@ -57,9 +59,13 @@ describe('the screen that fills its box', () => {
 
   it('because the button really is not drawn there', () => {
     // The other half of the argument. If the assistant ever starts drawing
-    // its button on this screen the reservation stops being dead space and
+    // its button on these screens the reservation stops being dead space and
     // this whole exception is wrong.
-    expect(src('./Assistant.tsx')).toContain("state.screen !== 'ask'");
+    //
+    // Asked of the list rather than of one screen's name: the button sits
+    // over the composer of whichever chat is open, so the rule that keeps it
+    // away has to be the same rule that took the padding back.
+    expect(src('./Assistant.tsx')).toContain('!fills(state.screen)');
   });
 });
 

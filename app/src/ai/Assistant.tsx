@@ -14,6 +14,7 @@ import { configured, modelLabel } from '../lib/claude';
 import { nameOf } from '../lib/threads';
 import { Trouble } from '../components/Trouble';
 import { Applied, Locally, Proposals } from './Actions';
+import { fills } from '../components/shell/exempt';
 
 /**
  * The assistant, everywhere.
@@ -471,7 +472,7 @@ export function Assistant() {
       {/* Select a sentence anywhere and ask about that instead of the page. */}
       <AskSelection />
       {/*
-        Not on the chat screen itself.
+        Not on a screen whose composer is on the bottom edge.
 
         The button's whole job is to bring the assistant over what you are
         looking at. On the Ask tab you are looking at the assistant, so it
@@ -479,8 +480,14 @@ export function Assistant() {
         same conversation — and the sheet's header would have read "Looking
         at: Ask Claude". It also sat over the composer, which is the one
         control on that screen that matters.
+
+        That second reason is the general one, and it is why this asks
+        `fills()` rather than naming the Ask tab. A screen on that list ends
+        at the bottom edge with something you type into there — the class
+        conversation does too — so the floating button lands on the send
+        control of whatever chat is open. See `shell/exempt.ts`.
       */}
-      {!ai.open && state.screen !== 'ask' && (
+      {!ai.open && !fills(state.screen) && (
         <button
           type="button"
           ref={fab}
