@@ -145,6 +145,17 @@ export const UNLOCKS: Record<string, (f: Facts) => boolean> = {
   ahead: (f) => f.terms > 1 || f.courses > 0,
 
   connect: (f) => f.courses > 0,
+
+  /*
+   * A call needs nobody's syllabus.
+   *
+   * The only screen here that is useful with an empty account: two people can
+   * be on a call about anything, and a first-year who has not imported a
+   * course yet is exactly the person who wants to ring somebody about it. The
+   * default — "wait for a course" — would hide it on the one evening it was
+   * most obviously wanted.
+   */
+  call: () => true,
 };
 
 /** Whether a screen has been earned yet. */
